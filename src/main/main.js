@@ -50,7 +50,7 @@ function mountedPath(relative = '') {
 }
 async function openPath(filename) { const error = await shell.openPath(filename); if (error) throw new Error(error); }
 async function request(method, params) {
-  validateRequest(method, params);
+  params = validateRequest(method, params);
   if (method === 'getState') return snapshot();
   if (method === 'chooseFiles') { const picked = await dialog.showOpenDialog(window, { title: 'Import files into encrypted storage', properties: ['openFile', 'multiSelections'] }); if (picked.canceled) return []; for (const filename of picked.filePaths) selectedImports.add(filename); return picked.filePaths; }
   if (method === 'chooseExport') { const picked = await dialog.showSaveDialog(window, { title: 'Export a readable copy', defaultPath: path.win32.basename(params.name) }); if (picked.canceled) return null; selectedExports.add(picked.filePath); return picked.filePath; }
@@ -107,7 +107,7 @@ async function request(method, params) {
 }
 function showWindow() { window.show(); window.focus(); }
 async function quit() {
-  try { if (helper && !state.locked) await perform('unmounting', () => backend('lock')); shuttingDown = true; helper?.dispose(); app.quit(); }
+  try { if (helper && !state.locked) await perform('unmounting', () => backend('lock')); shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit()); }
   catch (error) { showWindow(); await dialog.showMessageBox(window, { type: 'error', title: 'Close open drive files first', message: error.message }); }
 }
 if (squirrelStartup || !app.requestSingleInstanceLock()) app.quit();

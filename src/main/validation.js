@@ -33,7 +33,7 @@ export function validateRequest(method, value = {}) {
     if (!valid) throw new Error(`Invalid ${key}.`);
   }
   if (['createVault', 'unlockVault'].includes(method) && Boolean(value.password) === Boolean(value.keyFilePath)) throw new Error('Choose either a password or a key file.');
-  return value;
+  return value.driveLetter === undefined ? value : { ...value, driveLetter: value.driveLetter[0].toUpperCase() + ':' };
 }
 export function trustedFrame(event, window, rendererURL) {
   return Boolean(window && event.sender === window.webContents && event.senderFrame === window.webContents.mainFrame && event.senderFrame.url === rendererURL);

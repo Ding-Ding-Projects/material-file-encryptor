@@ -23,6 +23,7 @@ jobs:
         shell: powershell
         run: .\scripts\windows-mounted-check.ps1
       - name: Capture and exercise the real Electron application
+        timeout-minutes: 6
         shell: powershell
         run: |
           . .\scripts\bootstrap.ps1

@@ -23,3 +23,9 @@ test('bridge accepts only the app main frame at its exact local URL', () => {
   frame.url = 'https://evil.example';
   assert.equal(trustedFrame({ sender: contents, senderFrame: frame }, window, url), false);
 });
+
+test('drive letters selected by the renderer reach the native host in canonical form', () => {
+  assert.equal(validateRequest('unlockVault', { storageDir: 'storage', cacheDir: 'cache', driveLetter: 'm', password: 'test' }).driveLetter, 'M:');
+  assert.equal(validateRequest('mount', { driveLetter: 'z:' }).driveLetter, 'Z:');
+  assert.equal(validateRequest('setPreferences', { driveLetter: 'D' }).driveLetter, 'D:');
+});

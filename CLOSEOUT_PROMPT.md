@@ -18,6 +18,8 @@ Windows run37858403508 passed the expanded genuine WinFsp mounted acceptance, in
 
 Fresh actual Linux Electron images and an application-renderer recording are retained with source1544b2d, image dimensions, scale, themes and hashes. They show the corrected controls and contain no default machine-specific setup path. The README links the recording and interactive explanation; the website gallery identifies its Linux scope.
 
+The packaged-app route exposed two integration defects after native acceptance passed: the renderer's colon-free letter needed canonicalization before native calls and persisted preferences, and synchronous app.quit reentry prevented the normal locked app from exiting. Both are corrected. Sixteen Node checks pass; a real normal-lifecycle Linux repro now quits in under one second instead of timing out. The harness has bounded graceful cleanup, safe phase receipts and a CI step ceiling; it preserves busy fixtures and never forces a production unmount. The known-bad packaged runs were canceled and must be replaced by a new source-bound Windows run.
+
 The separate private instruction repository merged compression PR52 on explicit instruction and preserved its generated-diagram policy. A later independent change requires active documentation diagrams with accessible interactive controls, animation, pause/replay, reduced motion and honest illustrative state.
 
 Continue native storage, WinFsp integration, desktop interface, and build work in their owned paths. Run meaningful native and desktop checks, collect actual Windows evidence, update the README and goal checklist to factual results, and preserve frequent source checkpoints. Report unavailable verification explicitly.

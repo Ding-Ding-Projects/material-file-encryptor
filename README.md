@@ -2,7 +2,7 @@
 
 A Windows Explorer drive that encrypts files into a folder managed by OneDrive, Google Drive, or any other folder-sync client. Open and edit files normally; keep selected files available offline in an encrypted local cache.
 
-**Development status:** seventeen native storage checks and fifteen desktop/site checks pass locally. The real Windows mounted-workflow checks pass; packaged desktop and installer verification are pending. The diagrams explain the architecture and are separate from real application captures. No installer is published yet.
+**Development status:** seventeen native storage checks and sixteen desktop/site checks pass locally. The real Windows mounted-workflow checks pass; packaged desktop and installer verification are pending. The diagrams explain the architecture and are separate from real application captures. No installer is published yet.
 
 [Project goal](GOAL.md) · [Interface design](DESIGN.md) · [Source](https://github.com/Ding-Ding-Projects/material-file-encryptor) · [Documentation site](https://ding-ding-projects.github.io/material-file-encryptor/) · [Windows verification](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/workflows/windows.yml)
 
