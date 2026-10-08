@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
+using System.Diagnostics;
 
 namespace MaterialFileEncryptor.Host;
 
@@ -28,6 +29,26 @@ internal static class WindowsSelfTest
         name.CopyTo(info, nameOffset);
         if (!SetFileInformationByHandle(handle, 22 /* FileRenameInfoEx */, info, (uint)info.Length))
             throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+    }
+    private static void RequireCrossProcessFilesystem(string drive)
+    {
+        string root = drive + "\\";
+        // Only the public mounted root is passed to a child. The child performs
+        // ordinary Windows filesystem I/O under its inherited user identity.
+        const string script = "& { param([string]$root) $ErrorActionPreference='Stop'; $target=Join-Path $root 'cross-process-fixture.txt'; try { if (!(Test-Path -LiteralPath $root -PathType Container)) { throw 'root'; }; $data='Synthetic inherited-process filesystem fixture'; [System.IO.File]::WriteAllText($target,$data); if ([System.IO.File]::ReadAllText($target) -ne $data) { throw 'read'; }; [System.IO.File]::Delete($target); [Console]::Out.WriteLine('cross-process-ok'); exit 0 } catch { [Console]::Out.WriteLine('cross-process-failed'); exit 1 } }";
+        var start = new ProcessStartInfo
+        {
+            FileName = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell", "v1.0", "powershell.exe"),
+            UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true
+        };
+        foreach (string argument in new[] { "-NoLogo", "-NoProfile", "-NonInteractive", "-Command", script, root }) start.ArgumentList.Add(argument);
+        using var child = Process.Start(start) ?? throw new InvalidOperationException("Cross-process filesystem probe could not start.");
+        var stdout = child.StandardOutput.ReadToEndAsync();
+        var stderr = child.StandardError.ReadToEndAsync();
+        if (!child.WaitForExit(20000)) { child.Kill(entireProcessTree: true); throw new InvalidOperationException("Cross-process filesystem probe exceeded its bounded lifetime."); }
+        string output = stdout.GetAwaiter().GetResult().Trim();
+        _ = stderr.GetAwaiter().GetResult();
+        Require(child.ExitCode == 0 && output == "cross-process-ok", "normal inherited process can stat, write, read, and delete on mounted drive");
     }
     private static void RequireLegacyBusyReplacementDenied(string source, string target, byte[] sourceContent, byte[] targetContent)
     {
@@ -84,6 +105,8 @@ internal static class WindowsSelfTest
             check = "create-mount";
             controller.Execute("create", Args(new { storageDir = storage, cacheDir = cache, driveLetter = drive, password, partSizeBytes = 131072 }));
             controller.Execute("mount", Args(new { driveLetter = drive }));
+            check = "cross-process-mounted-filesystem";
+            RequireCrossProcessFilesystem(drive);
             string mounted = drive + "\\";
             byte[] content = RandomNumberGenerator.GetBytes(180013), edit = RandomNumberGenerator.GetBytes(70001);
             string folder = System.IO.Path.Combine(mounted, "Explorer fixture");
@@ -303,9 +326,9 @@ internal static class WindowsSelfTest
             catch (FileNotFoundException) { forgottenRejected = true; }
             Require(forgottenRejected && Status(controller).GetProperty("locked").GetBoolean(), "forgotten auto-unlock cannot reopen vault");
             passed = true;
-            Console.Out.WriteLine("{\"selfTest\":true,\"filesystem\":\"WinFsp\",\"checks\":[\"create\",\"read\",\"range-write\",\"flush\",\"truncate\",\"share-modes\",\"busy-unmount\",\"mapped-view-unmount\",\"replace-open\",\"rename-directory\",\"enumerate\",\"reopen\",\"delete-open\",\"delete-directory\",\"dpapi-unlock\",\"physical-part-cap\",\"future-and-edited-cap\",\"explicit-resplit\",\"pinned-offline-mounted-read\",\"ciphertext-cache\",\"copy-outside-plaintext\",\"offline-unpin-dirty-reopen\",\"offline-reconnect-fresh-cache\",\"keyfile-create-reopen\",\"wrong-keyfile\",\"keyfile-optional-dpapi\",\"forget-auto-unlock\",\"legacy-local-baseline\",\"closed-target-replace\",\"legacy-busy-replace-denied\",\"posix-open-replace\",\"posix-directory-open-child\"]}");
+            Console.Out.WriteLine("{\"selfTest\":true,\"filesystem\":\"WinFsp\",\"checks\":[\"create\",\"cross-process-filesystem\",\"read\",\"range-write\",\"flush\",\"truncate\",\"share-modes\",\"busy-unmount\",\"mapped-view-unmount\",\"replace-open\",\"rename-directory\",\"enumerate\",\"reopen\",\"delete-open\",\"delete-directory\",\"dpapi-unlock\",\"physical-part-cap\",\"future-and-edited-cap\",\"explicit-resplit\",\"pinned-offline-mounted-read\",\"ciphertext-cache\",\"copy-outside-plaintext\",\"offline-unpin-dirty-reopen\",\"offline-reconnect-fresh-cache\",\"keyfile-create-reopen\",\"wrong-keyfile\",\"keyfile-optional-dpapi\",\"forget-auto-unlock\",\"legacy-local-baseline\",\"closed-target-replace\",\"legacy-busy-replace-denied\",\"posix-open-replace\",\"posix-directory-open-child\"]}");
         }
-        catch (Exception error) { Console.Out.WriteLine(JsonSerializer.Serialize(new { selfTest = false, check, errorType = error.GetType().Name, driver = JsonSerializer.SerializeToElement(controller.Status()).GetProperty("driver"), error = "A real Windows filesystem operation failed. See the driver and encrypted-storage test documentation." })); }
+        catch (Exception error) { Console.Out.WriteLine(JsonSerializer.Serialize(new { selfTest = false, check, errorType = error.GetType().Name, driver = JsonSerializer.SerializeToElement(controller.Status()).GetProperty("driver"), mountDiagnostic = Status(controller).GetProperty("mountDiagnostic"), error = "A real Windows filesystem operation failed. See the driver and encrypted-storage test documentation." })); }
         finally
         {
             try { controller.Execute("forgetSavedCredential", Args(new { })); } catch { }

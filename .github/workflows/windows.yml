@@ -29,9 +29,19 @@ jobs:
           . .\scripts\bootstrap.ps1
           npm.cmd run test:desktop
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Snapshot the verified packaged runtime
+        shell: powershell
+        run: .\scripts\windows-installer-check.ps1 -Mode Snapshot
       - name: Create the genuine unsigned Squirrel installer
         shell: cmd
         run: build-installer.bat /s
+      - name: Verify installer contents and per-user install lifecycle
+        timeout-minutes: 10
+        shell: powershell
+        run: |
+          . .\scripts\bootstrap.ps1
+          .\scripts\windows-installer-check.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Record safe build receipt
         if: always()
         shell: powershell
@@ -53,5 +63,17 @@ jobs:
             out/evidence/*.png
             out/evidence/*.json
             out/evidence/*.webm
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload bounded verification evidence separately
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-verification-evidence
+          path: |
+            out/evidence/**/*.png
+            out/evidence/**/*.json
+            out/evidence/**/*.webm
           if-no-files-found: warn
           retention-days: 14

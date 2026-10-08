@@ -111,6 +111,9 @@ async function quit() {
   try { if (helper && !state.locked) await perform('unmounting', () => backend('lock')); shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit()); }
   catch (error) { showWindow(); await dialog.showMessageBox(window, { type: 'error', title: 'Close open drive files first', message: error.message }); }
 }
+if (process.platform === 'win32' && process.argv.includes('--squirrel-uninstall')) {
+  app.setLoginItemSettings({ openAtLogin: false, path: process.execPath, args: ['--startup'] });
+}
 if (squirrelStartup || !app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => window && showWindow());

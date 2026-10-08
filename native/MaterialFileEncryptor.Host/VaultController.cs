@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
 
 namespace MaterialFileEncryptor.Host;
@@ -16,6 +17,18 @@ internal sealed class VaultController : IDisposable
     private VaultFileSystem? fileSystem;
     private string? storageDir, cacheDir, identity;
     private string driveLetter = "M:";
+    private string? registeredDriveLetter;
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern uint QueryDosDeviceW(string deviceName, StringBuilder targetPath, uint maximum);
+    private object MountDiagnostic()
+    {
+        if (!OperatingSystem.IsWindows() || host is null) return new { requestedDriveLetter = driveLetter, registeredDriveLetter, dosDeviceFound = false, win32Error = (int?)null };
+        // This inspects the DOS namespace only; it never enters a filesystem
+        // callback while the controller gate is held. Device target paths are not emitted.
+        var target = new StringBuilder(4096);
+        uint length = QueryDosDeviceW(driveLetter, target, (uint)target.Capacity);
+        return new { requestedDriveLetter = driveLetter, registeredDriveLetter, dosDeviceFound = length != 0, win32Error = length == 0 ? (int?)Marshal.GetLastWin32Error() : null };
+    }
     private string? syncError;
     private DateTimeOffset? lastSync;
     private object? lastOfflineRelease;
@@ -64,7 +77,7 @@ internal sealed class VaultController : IDisposable
             return new
             {
                 locked = vault is null, mounted = host is not null, unmountBusy, driveLetter, storageDir, cacheDir, files,
-                partSizeBytes = vault?.PartSizeBytes ?? 10L * 1024 * 1024, lastOfflineRelease,
+                partSizeBytes = vault?.PartSizeBytes ?? 10L * 1024 * 1024, lastOfflineRelease, mountDiagnostic = MountDiagnostic(),
                 sync = new { running = syncing, lastSync, error = fileSystem?.LastError ?? syncError ?? (vault?.Status.LastError is null ? null : "Encrypted storage synchronization needs attention."), pendingCommits = vault?.Status.PendingCommits ?? 0, sourceAvailable = vault?.Status.IsSourceAvailable ?? false },
                 driver = new
                 {
@@ -181,6 +194,8 @@ internal sealed class VaultController : IDisposable
             if (result < 0) throw new InvalidOperationException("WinFsp could not reserve the selected drive letter.");
             result = mountedHost.Mount(selected, null!, true, 0);
             if (result < 0) throw new InvalidOperationException("WinFsp could not mount the encrypted drive. Check the driver installation and drive letter.");
+            string actualMountPoint = mountedHost.MountPoint();
+            registeredDriveLetter = actualMountPoint is { Length: 2 } && actualMountPoint[0] is >= 'A' and <= 'Z' && actualMountPoint[1] == ':' ? actualMountPoint : null;
             host = mountedHost; fileSystem = adapter; driveLetter = selected; unmountBusy = false;
         }
         catch { mountedHost.Dispose(); throw; }
@@ -196,7 +211,7 @@ internal sealed class VaultController : IDisposable
         }
         try { mountedHost.Unmount(); }
         catch { lock (gate) fileSystem?.CancelUnmount(); throw; }
-        lock (gate) { host = null; fileSystem = null; unmountBusy = false; }
+        lock (gate) { host = null; fileSystem = null; registeredDriveLetter = null; unmountBusy = false; }
     }
     private void LockEngine()
     {

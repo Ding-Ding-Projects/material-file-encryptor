@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue' # Avoid per-byte/per-file progress overhead in Windows PowerShell.
 $root = Split-Path $PSScriptRoot -Parent
 $manifest = Get-Content (Join-Path $root 'dependencies.json') -Raw | ConvertFrom-Json
-$tools = Join-Path $env:LOCALAPPDATA 'MaterialFileEncryptor\BuildTools'
+$tools = Join-Path $env:LOCALAPPDATA 'MaterialFileEncryptor-BuildTools'
 New-Item -ItemType Directory -Force $tools | Out-Null
 function Get-Verified($entry, $file) {
   if (!(Test-Path $file)) { Write-Host "Downloading pinned dependency $($entry.version)."; Invoke-WebRequest -Uri $entry.url -OutFile $file -UseBasicParsing }

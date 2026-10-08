@@ -4,8 +4,10 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { randomBytes } from 'node:crypto';
-await fs.mkdir('out/evidence', { recursive: true });
-const packagedExecutable = process.platform === 'win32' ? path.resolve('out/material-file-encryptor-win32-x64/MaterialFileEncryptor.exe') : undefined;
+const evidenceDirectory = path.resolve(process.env.MFE_DESKTOP_EVIDENCE_DIR || 'out/evidence');
+const evidencePath = name => path.join(evidenceDirectory, name);
+await fs.mkdir(evidenceDirectory, { recursive: true });
+const packagedExecutable = process.platform === 'win32' ? path.resolve(process.env.MFE_DESKTOP_EXECUTABLE || 'out/material-file-encryptor-win32-x64/MaterialFileEncryptor.exe') : undefined;
 if (packagedExecutable) await fs.access(packagedExecutable);
 const launchArgs = packagedExecutable ? ['--desktop-check'] : ['.', '--desktop-check'];
 if (process.platform === 'linux') launchArgs.push('--no-sandbox'); // Isolated development capture only; packaged Windows sandbox stays enabled.
@@ -13,7 +15,7 @@ let application, page, phase = 'launch', failure, checkReceipt;
 const milestones = [];
 const checkpoint = async name => {
   phase = name; milestones.push(name); console.log(`Desktop check: ${name}.`);
-  await fs.writeFile('out/evidence/desktop-progress.json', JSON.stringify({ platform: process.platform, phase, milestones }));
+  await fs.writeFile(evidencePath('desktop-progress.json'), JSON.stringify({ platform: process.platform, phase, milestones }));
 };
 const bounded = async (promise, name, milliseconds = 30000) => {
   let timer;
@@ -27,11 +29,11 @@ const watchdog = setTimeout(() => { console.error(`Desktop check exceeded its fo
 watchdog.unref();
 const errors = [];
 let fixtureRoot, fixtureDriveRoot, video, originalStartup;
-let startupRegistration = null;
+let startupRegistration = null, mountEvidence = null;
 const packagedEvidence = { launchedBuiltArtifact: Boolean(packagedExecutable), asar: false, nativeHelperPresent: false, driverInstallerPresent: false };
 try {
   await checkpoint('launch');
-  application = await electron.launch({ executablePath: packagedExecutable, args: launchArgs, cwd: process.cwd(), timeout: 60000, recordVideo: { dir: 'out/evidence/video', size: { width: 1180, height: 850 }, fps: 15 } });
+  application = await electron.launch({ executablePath: packagedExecutable, args: launchArgs, cwd: process.cwd(), timeout: 60000, recordVideo: { dir: evidencePath('video'), size: { width: 1180, height: 850 }, fps: 15 } });
   application.context().setDefaultTimeout(30000);
   page = await application.firstWindow({ timeout: 30000 });
   await checkpoint('window-ready');
@@ -65,26 +67,31 @@ try {
     assert.equal(await readStartup(), originalStartup, 'Restore the original startup preference and registration.');
     startupRegistration = { initial: originalStartup, disabledReadback: false, enabledReadback: true, restored: originalStartup, signInTested: false };
   }
+  if (process.platform === 'win32') {
+    await checkpoint('drive-discovery');
+    await page.waitForFunction(async () => !(await window.drive.status()).driver.checking, null, { timeout: 30000 });
+  }
   await checkpoint('locked-and-settings-captures');
   await settle();
-  await page.screenshot({ path: 'out/evidence/desktop-locked.png', fullPage: true });
+  await page.screenshot({ path: evidencePath('desktop-locked.png'), fullPage: true });
   await page.click('#create-button');
   await page.waitForSelector('#vault-dialog[open]');
-  await page.fill('#cache-input', ''); // Capture the real empty form without a machine-specific default path.
+  await page.fill('#storage-input', '');
+  await page.fill('#cache-input', ''); // Clear previous fixture/default paths through the actual form before capture.
   await settle();
-  await page.screenshot({ path: 'out/evidence/desktop-create.png', fullPage: true });
+  await page.screenshot({ path: evidencePath('desktop-create.png'), fullPage: true });
   await page.locator('.credential-selector label').filter({ has: page.locator('input[value="keyFile"]') }).click();
   await settle();
-  await page.screenshot({ path: 'out/evidence/desktop-keyfile-choice.png', fullPage: true });
+  await page.screenshot({ path: evidencePath('desktop-keyfile-choice.png'), fullPage: true });
   await page.click('#dialog-cancel');
   await page.click('[data-view="settings"]');
   await page.selectOption('#theme-setting', 'dark');
   await settle();
-  await page.screenshot({ path: 'out/evidence/desktop-settings-dark.png', fullPage: true });
+  await page.screenshot({ path: evidencePath('desktop-settings-dark.png'), fullPage: true });
   await page.selectOption('#theme-setting', 'light');
   await page.click('[data-view="help"]');
   await settle();
-  await page.screenshot({ path: 'out/evidence/desktop-help.png', fullPage: true });
+  await page.screenshot({ path: evidencePath('desktop-help.png'), fullPage: true });
   const status = await evaluatePage(() => window.drive.status());
   if (process.platform === 'win32') assert.equal(status.driver.available, true, status.driver.error || 'WinFsp must be installed for the Windows desktop check.');
   if (process.platform === 'win32') {
@@ -98,27 +105,41 @@ try {
     await page.fill('#storage-input', storageDir); await page.fill('#cache-input', cacheDir); await page.selectOption('#drive-letter', driveLetter.replace(':', ''));
     const password = randomBytes(24).toString('base64url');
     await page.fill('#password-input', password); await page.fill('#confirm-password', password); await page.click('#dialog-submit');
-    await page.waitForFunction(async () => (await window.drive.status()).mounted, null, { timeout: 60000 });
+    await page.waitForSelector('#vault-dialog', { state: 'hidden', timeout: 60000 });
+    await page.waitForFunction(async () => { const state = await window.drive.status(); return state.mounted && !state.operation; }, null, { timeout: 60000 });
+    const completedMount = await evaluatePage(() => window.drive.status());
+    mountEvidence = { requestedDriveMatchesActual: completedMount.driveLetter === driveLetter, actualDriveLetter: /^[A-Z]:$/.test(completedMount.driveLetter || '') ? completedMount.driveLetter : null };
+    const namespace = completedMount.mountDiagnostic;
+    if (namespace) mountEvidence.helperNamespace = {
+      requestedDriveLetter: /^[A-Z]:$/.test(namespace.requestedDriveLetter || '') ? namespace.requestedDriveLetter : null,
+      registeredDriveLetter: /^[A-Z]:$/.test(namespace.registeredDriveLetter || '') ? namespace.registeredDriveLetter : null,
+      dosDeviceFound: namespace.dosDeviceFound === true,
+      win32Error: Number.isInteger(namespace.win32Error) ? namespace.win32Error : null,
+    };
+    assert.equal(mountEvidence.requestedDriveMatchesActual, true, 'Completed mount must use the selected drive letter.');
     await checkpoint('mounted-file-write');
     const mountedRoot = driveLetter + '\\';
     fixtureDriveRoot = mountedRoot;
     await fs.writeFile(path.join(mountedRoot, 'Welcome.txt'), 'A real Windows mounted drive.\n');
     await checkpoint('mounted-file-sync');
-    await evaluatePage(() => window.drive.sync());
+    await page.click('#sync-button');
+    await page.waitForFunction(() => !document.querySelector('#sync-button').disabled);
+    assert.equal(await page.locator('#main-error').isVisible(), false, 'The real Sync action must finish without an application error.');
     await checkpoint('mounted-file-read');
     assert.equal(await fs.readFile(path.join(mountedRoot, 'Welcome.txt'), 'utf8'), 'A real Windows mounted drive.\n');
     await page.waitForFunction(() => document.querySelector('#file-list').textContent.includes('Welcome.txt'));
     await settle();
-    await page.screenshot({ path: 'out/evidence/desktop-mounted.png', fullPage: true });
+    await page.screenshot({ path: evidencePath('desktop-mounted.png'), fullPage: true });
     await checkpoint('encrypted-offline-pin');
     await page.getByRole('radio', { name: 'Select Welcome.txt', exact: true }).check();
     await page.click('#offline-button');
     await page.waitForFunction(async () => (await window.drive.status()).files.some(file => file.path === 'Welcome.txt' && file.offline));
     await page.click('[data-view="offline"]');
     await settle();
-    await page.screenshot({ path: 'out/evidence/desktop-offline.png', fullPage: true });
+    await page.screenshot({ path: evidencePath('desktop-offline.png'), fullPage: true });
     await checkpoint('lock');
-    await evaluatePage(() => window.drive.lock());
+    await page.click('#lock-button');
+    await page.waitForFunction(async () => (await window.drive.status()).locked);
     assert.equal((await evaluatePage(() => window.drive.status())).locked, true);
   }
   assert.deepEqual(errors, []);
@@ -150,7 +171,7 @@ try {
     catch (error) { cleanupErrors.push({ phase: 'application-close', errorType: errorType(error) }); }
     if (video && closed) {
       try {
-        const recording = `out/evidence/desktop-${process.platform}.webm`;
+        const recording = evidencePath(`desktop-${process.platform}.webm`);
         await bounded(video.saveAs(recording), 'recording finalization', 10000); await video.delete();
         assert.ok((await fs.stat(recording)).size > 0, 'The real Electron recording must contain data.');
       } catch (error) { cleanupErrors.push({ phase: 'recording', errorType: errorType(error) }); }
@@ -161,7 +182,7 @@ try {
     catch (error) { cleanupErrors.push({ phase: 'fixture-removal', errorType: errorType(error) }); }
   }
   const passed = Boolean(checkReceipt) && !failure && cleanupErrors.length === 0;
-  await fs.writeFile('out/evidence/desktop-check.json', JSON.stringify({ ...checkReceipt, platform: process.platform, packagedArtifact: packagedEvidence, startupRegistration, passed, failure, cleanupErrors, milestones, fixtureRetained: Boolean(fixtureRoot && (!safeToRemoveFixture || !closed)) }, null, 2));
+  await fs.writeFile(evidencePath('desktop-check.json'), JSON.stringify({ ...checkReceipt, platform: process.platform, packagedArtifact: packagedEvidence, startupRegistration, mountEvidence, passed, failure, cleanupErrors, milestones, fixtureRetained: Boolean(fixtureRoot && (!safeToRemoveFixture || !closed)) }, null, 2));
   clearTimeout(watchdog);
   if (!passed) { console.error('Desktop verification failed; see the safe phase receipt. No busy drive was force-unmounted.'); process.exit(1); }
   console.log('Electron checks and graceful cleanup passed.');
