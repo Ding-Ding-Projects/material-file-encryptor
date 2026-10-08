@@ -20,4 +20,4 @@ The language selector covers English, Cantonese, and bilingual text, including g
 
 The interactive architecture explainer is conceptual. Its part-size calculation uses an illustrative 16 MB file with the current engine’s 36-byte record framing and up-to-64-KB data records, packed within the chosen physical part cap. The input matches the application’s inclusive 1 KB–1 GB limits (1 KB = 1,024 bytes) and requires a whole number of bytes. It describes example data, not the user’s files. Availability changes the read/write explanation. Playback runs only after a user action, pauses when hidden or offscreen, and becomes manual stepping under reduced motion. No diagram action invokes a filesystem or native driver.
 
-The gallery contains genuine Linux Electron captures at source revision `1c5b67b`. Its captions distinguish interface evidence from pending native Windows mounting and release verification.
+The gallery contains genuine Linux Electron captures at source revision `1544b2d`. Its captions distinguish interface evidence from pending native Windows mounting and release verification.

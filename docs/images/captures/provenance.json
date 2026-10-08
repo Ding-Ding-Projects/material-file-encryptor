@@ -1,5 +1,5 @@
 {
-  "sourceCommit": "1c5b67b38c0dcb56fa8c9c6644decba973be8415",
+  "sourceCommit": "1544b2dbd2e9515a20698cebd84d6c9d7c3be211",
   "platform": "linux",
   "method": "Real Electron application on a task-owned isolated Xorg display; Playwright drove the actual sandboxed renderer and native preload.",
   "nativeMountVerified": false,
@@ -10,19 +10,45 @@
   "images": [
     {
       "file": "desktop-locked.png",
-      "sha256": "32e094af6b113302868ec7b72e9d04faabe835dec03e4212d739ef95316512b2"
+      "sha256": "02107529d62d1bfca0407b4a69360e301ea9edfb43e79b2becda483c66d15de9",
+      "width": 1180,
+      "height": 850,
+      "scale": 1,
+      "theme": "dark",
+      "state": "locked"
     },
     {
       "file": "desktop-create.png",
-      "sha256": "1c7bf8b376257634756a4146104a388b944d20e98caa25f6fc61376e9fcea02f"
+      "sha256": "50030a4d68d4083733a15bbcdf4fba1797f1b77c7607205872aa1b59af1a2fed",
+      "width": 1180,
+      "height": 850,
+      "scale": 1,
+      "theme": "dark",
+      "state": "create"
     },
     {
       "file": "desktop-settings-dark.png",
-      "sha256": "5046a7563b1bd2c50f185fb432147c73f2f610ca1d7e1459d171c9a1a31a8bc7"
+      "sha256": "32f9800e39c0df2c3e3095ba9b0ca97b2f193338ca661799e45519521973ff59",
+      "width": 1168,
+      "height": 1360,
+      "scale": 1,
+      "theme": "dark",
+      "state": "settings-dark"
     },
     {
       "file": "desktop-help.png",
-      "sha256": "c2d15e7111c730b7781f47565ce543ba22059c9d79422b7f38730b5623521b2b"
+      "sha256": "a02fd3f5c74f2c8737949f6a4c3c276a9adde5c9482bb888b9d910b6d268e52e",
+      "width": 1168,
+      "height": 1014,
+      "scale": 1,
+      "theme": "light",
+      "state": "help"
     }
-  ]
+  ],
+  "recording": {
+    "file": "desktop-linux.webm",
+    "sha256": "b3bd897fb9f8fdfd447c4e3dcf75fae12269fc633557492789df83b6b49f0219",
+    "framesPerSecond": 15,
+    "scope": "Actual application renderer: locked screen, create dialog, dark settings, Help. No Windows mount is performed on Linux."
+  }
 }

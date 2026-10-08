@@ -2,7 +2,7 @@
 
 A Windows Explorer drive that encrypts files into a folder managed by OneDrive, Google Drive, or any other folder-sync client. Open and edit files normally; keep selected files available offline in an encrypted local cache.
 
-**Development status:** the native engine and desktop interface are implemented. Thirteen native storage checks and fifteen desktop/site checks pass locally; actual Windows mounting and installer verification are pending. The diagrams describe the architecture and are separate from real application captures. No installer is published yet.
+**Development status:** seventeen native storage checks and fifteen desktop/site checks pass locally. The real Windows mounted-workflow checks pass; packaged desktop and installer verification are pending. The diagrams explain the architecture and are separate from real application captures. No installer is published yet.
 
 [Project goal](GOAL.md) · [Interface design](DESIGN.md) · [Source](https://github.com/Ding-Ding-Projects/material-file-encryptor) · [Documentation site](https://ding-ding-projects.github.io/material-file-encryptor/) · [Windows verification](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/workflows/windows.yml)
 
@@ -17,7 +17,9 @@ The documentation site includes an [interactive workflow explanation](https://di
 <details>
 <summary>Real application captures</summary>
 
-These captures show the actual Electron application at source commit `1c5b67b38c0dcb56fa8c9c6644decba973be8415`, driven through its sandboxed renderer on an isolated Linux display at 1180 × 850. They verify interface states; Windows mounting remains pending. [Capture provenance and image hashes](docs/images/captures/provenance.json).
+These captures show the actual Electron application at source commit `1544b2dbd2e9515a20698cebd84d6c9d7c3be211`, driven through its sandboxed renderer on an isolated Linux display at 1180 × 850. They verify interface states; native Windows evidence is recorded separately in the linked workflow. [Capture provenance and image hashes](docs/images/captures/provenance.json).
+
+[Watch the real application-window walkthrough](docs/images/captures/desktop-linux.webm) (Linux, 15 fps; interface behavior only).
 
 ![Real application: locked drive screen with create and unlock actions, navigation, and an honest unavailable Windows driver state on Linux.](docs/images/captures/desktop-locked.png)
 

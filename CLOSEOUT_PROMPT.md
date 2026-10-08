@@ -14,7 +14,9 @@ Targeted encrypted-cache release is implemented and seventeen native storage che
 
 The user identified generic scrollbars and radio buttons. Custom lock/key credential segments, file selection, themed dropdowns and slider tracks now replace their browser-default appearance. Slim tonal scrollbars reveal during use and focus. Actual Electron light/dark states at390,768,1440px and keyboard selection/focus/scroll tests pass. Website equivalents pass responsive keyboard checks from320to1440px. Fresh retained captures follow this source checkpoint; existing images explicitly identify their earlier source.
 
-Windows run37858403508 is verifying the expanded native and packaged acceptance. No completed Windows installer, release, or actual sign-in is claimed yet. Documentation-only changes no longer repeat the native Windows build; source, packaging and workflow changes still do.
+Windows run37858403508 passed the expanded genuine WinFsp mounted acceptance, including offline reads/edits/reconnect, physical caps and re-splitting, key-file credentials, DPAPI and both legacy/modern rename semantics. Packaged desktop capture remains in progress; run37858733817 verifies the custom-control source1544b2dbd2e9515a20698cebd84d6c9d7c3be211. No completed installer, release, or actual sign-in is claimed yet. Documentation-only changes no longer repeat the native Windows build; source, packaging and workflow changes still do.
+
+Fresh actual Linux Electron images and an application-renderer recording are retained with source1544b2d, image dimensions, scale, themes and hashes. They show the corrected controls and contain no default machine-specific setup path. The README links the recording and interactive explanation; the website gallery identifies its Linux scope.
 
 The separate private instruction repository merged compression PR52 on explicit instruction and preserved its generated-diagram policy. A later independent change requires active documentation diagrams with accessible interactive controls, animation, pause/replay, reduced motion and honest illustrative state.
 
