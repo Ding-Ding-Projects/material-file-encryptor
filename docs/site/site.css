@@ -24,3 +24,75 @@ dialog{background:var(--surface);color:var(--on-surface);border:1px solid var(--
 @media(prefers-reduced-motion:reduce){.flow-link::after{animation:none!important;display:none}.flow-node{transition:none}}
 
 @media(max-width:599px){.interactive-workflow[data-step=read] .flow-link,.interactive-workflow[data-step=offline] .flow-link{transform:rotate(-90deg)!important}}
+
+/* Shared Material control surfaces retain native semantics and keyboard input. */
+html { scrollbar-gutter: stable; }
+* { scrollbar-width: thin; scrollbar-color: var(--outline) var(--surface-low); }
+@supports selector(::-webkit-scrollbar) {
+  * { scrollbar-width: auto; scrollbar-color: auto; }
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-track { background: var(--surface-low); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--outline); border: 3px solid var(--surface-low); border-radius: 10px; min-height: 44px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+  ::-webkit-scrollbar-thumb:active { background: var(--primary); border-width: 2px; }
+  ::-webkit-scrollbar-corner { background: var(--surface-low); }
+}
+dialog { scrollbar-gutter: stable; }
+.select-field { position: relative; display: block; width: 100%; min-width: 0; }
+.select-field > select { appearance: none; -webkit-appearance: none; width: 100%; padding-right: 44px; cursor: pointer; transition: border-color 160ms var(--ease), background-color 160ms var(--ease); }
+.select-field > svg { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--muted); pointer-events: none; transition: transform 160ms var(--ease), color 160ms var(--ease); }
+.select-field:hover > select { border-color: var(--primary); background-color: var(--surface-low); }
+.select-field:focus-within > svg { color: var(--primary); }
+.select-field:has(select:open) > svg { transform: translateY(-50%) rotate(180deg); }
+.select-field > select:disabled { cursor: not-allowed; opacity: .55; }
+.size-control .select-field { width: 80px; flex: 0 0 80px; }
+.size-control .select-field > select { width: 100%; padding-right: 32px; }
+.size-control .select-field > svg { right: 10px; }
+@supports (appearance: base-select) {
+  .select-field > select, ::picker(select) { appearance: base-select; }
+  .select-field > select { align-items: center; }
+  select::picker-icon { display: none; }
+  ::picker(select) { color: var(--on-surface); background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 6px; margin-block: 6px; max-width: calc(100vw - 40px); box-shadow: 0 8px 24px #0002; }
+  option { min-height: 44px; padding: 10px 14px; border-radius: 10px; font-size: 14px; line-height: 1.5; white-space: normal; transition: background-color 120ms var(--ease); }
+  option:hover, option:focus-visible { background: var(--surface-container); outline-offset: -3px; }
+  option:checked { background: var(--primary-container); color: var(--on-primary-container); }
+  option::checkmark { content: ''; width: 6px; height: 11px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); margin-right: 6px; }
+}
+.toggle-label input[type=checkbox] { appearance: none; -webkit-appearance: none; position: relative; display: inline-grid; place-content: center; flex: 0 0 20px; width: 20px; height: 20px; margin: 0 4px 0 0; border: 2px solid var(--outline); border-radius: 5px; background: var(--surface); cursor: pointer; transition: border-color 150ms var(--ease), background-color 150ms var(--ease), box-shadow 150ms var(--ease); }
+.toggle-label input[type=checkbox]::before { content: ''; width: 5px; height: 10px; border-right: 2px solid var(--on-primary); border-bottom: 2px solid var(--on-primary); transform: translateY(-1px) rotate(45deg) scale(0); transition: transform 130ms var(--ease); }
+.toggle-label input[type=checkbox]:checked { background: var(--primary); border-color: var(--primary); }
+.toggle-label input[type=checkbox]:checked::before { transform: translateY(-1px) rotate(45deg) scale(1); }
+.toggle-label:hover input[type=checkbox], .toggle-label input[type=checkbox]:focus-visible { box-shadow: 0 0 0 10px color-mix(in srgb, var(--primary) 10%, transparent); }
+.toggle-label input[type=checkbox]:disabled { cursor: not-allowed; opacity: .5; }
+input[type=range] { appearance: none; -webkit-appearance: none; --range-progress: 0%; height: 44px; min-height: 44px; padding: 0; margin: 4px 0; background: transparent; cursor: pointer; border-radius: 12px; }
+input[type=range]::-webkit-slider-runnable-track { height: 12px; border-radius: 8px; background: linear-gradient(to right, var(--primary) 0 var(--range-progress), var(--primary-container) var(--range-progress) 100%); }
+input[type=range]::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 5px; height: 30px; margin-top: -9px; border: 0; border-radius: 3px; background: var(--primary); box-shadow: 0 0 0 5px var(--surface); transition: width 120ms var(--ease), background-color 120ms var(--ease); }
+input[type=range]:hover::-webkit-slider-thumb, input[type=range]:active::-webkit-slider-thumb { width: 7px; }
+input[type=range]::-moz-range-track { height: 12px; border-radius: 8px; background: var(--primary-container); }
+input[type=range]::-moz-range-progress { height: 12px; border-radius: 8px; background: var(--primary); }
+input[type=range]::-moz-range-thumb { width: 5px; height: 30px; border: 0; border-radius: 3px; background: var(--primary); box-shadow: 0 0 0 5px var(--surface); transition: width 120ms var(--ease); }
+input[type=range]:hover::-moz-range-thumb, input[type=range]:active::-moz-range-thumb { width: 7px; }
+input[type=range]:disabled { cursor: not-allowed; opacity: .5; }
+input[type=file]::file-selector-button { transition: background-color 150ms var(--ease), border-color 150ms var(--ease); }
+input[type=file]:hover::file-selector-button { background: var(--primary-container); border-color: var(--primary); }
+@media (forced-colors: active) {
+  .toggle-label input[type=checkbox] { border-color: ButtonText; background: Canvas; forced-color-adjust: none; }
+  .toggle-label input[type=checkbox]:checked { border-color: Highlight; background: Highlight; }
+  .toggle-label input[type=checkbox]::before { border-color: HighlightText; }
+  input[type=range]::-webkit-slider-runnable-track { background: GrayText; }
+  input[type=range]::-webkit-slider-thumb { background: Highlight; box-shadow: 0 0 0 4px Canvas; }
+  input[type=range]::-moz-range-track { background: GrayText; }
+  input[type=range]::-moz-range-progress, input[type=range]::-moz-range-thumb { background: Highlight; }
+  .select-field > svg { color: ButtonText; }
+}
+/* Keep the rail quiet until its scroll surface is being used. */
+html, dialog { scrollbar-color: transparent var(--surface-low); }
+html:focus-within, html.is-scrolling, dialog:hover, dialog:focus-within, dialog.is-scrolling { scrollbar-color: var(--outline) var(--surface-low); }
+@supports selector(::-webkit-scrollbar) {
+  html, dialog { scrollbar-color: auto; }
+  html::-webkit-scrollbar-thumb, dialog::-webkit-scrollbar-thumb { background: transparent; }
+  html:focus-within::-webkit-scrollbar-thumb, html.is-scrolling::-webkit-scrollbar-thumb,
+  dialog:hover::-webkit-scrollbar-thumb, dialog:focus-within::-webkit-scrollbar-thumb,
+  dialog.is-scrolling::-webkit-scrollbar-thumb { background: var(--outline); }
+  html::-webkit-scrollbar-thumb:hover, dialog::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+}

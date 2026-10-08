@@ -58,6 +58,8 @@ function updateSearch() {
     : localized('Four guides. Search stays in your browser.', preferences.language);
 }
 function updateMessages() {
+  successTone.style.setProperty('--range-progress', `${(preferences.successTone - 1) * 25}%`);
+  searchTone.style.setProperty('--range-progress', `${(preferences.searchTone - 1) * 25}%`);
   document.querySelector('#success-tone-value').textContent = `${preferences.successTone} / 5`;
   document.querySelector('#search-tone-value').textContent = `${preferences.searchTone} / 5`;
   document.querySelector('#success-preview').textContent = pair('Example message: ', '訊息示例：') + friendly('success', 2);
@@ -137,3 +139,13 @@ vocabularyFile.addEventListener('change', async () => {
 });
 document.querySelector('#vocabulary-reset').addEventListener('click', () => { uploadVersion++; vocabulary = { version: 1, replacements: [] }; vocabularyFile.value = ''; vocabularyState = { kind: 'default' }; renderCopy(); });
 renderCopy(); revealHash();
+
+// Native scrolling stays intact; this only reveals the themed thumb briefly.
+const scrollIdleTimers = new WeakMap();
+document.addEventListener('scroll', event => {
+  const surface = event.target === document ? document.documentElement : event.target;
+  if (!(surface instanceof Element)) return;
+  clearTimeout(scrollIdleTimers.get(surface));
+  surface.classList.add('is-scrolling');
+  scrollIdleTimers.set(surface, setTimeout(() => surface.classList.remove('is-scrolling'), 900));
+}, { capture: true, passive: true });

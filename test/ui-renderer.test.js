@@ -25,7 +25,7 @@ async function fixture(page) {
    mount:async value => { record('mount',value); return change({mounted:true}); },
    importFiles:async value => { record('importFiles',value); return change({files:[{id:'file-1',path:'notes.txt',size:4096,modified:'2026-01-01',partCount:1,partSizeBytes:10485760,offline:false}]}); },
    open:async id => record('open',id), openExplorer:async () => record('openExplorer'),exportFile:async value => record('exportFile',value),
-   keepOffline:async id => {record('keepOffline',id);window.testState.files.find(file => file.id === id).offline=true;return change({});},releaseOffline:async id => {record('releaseOffline',id);window.testState.files.find(file => file.id === id).offline=false;return change({});},
+   keepOffline:async id => {record('keepOffline',id);window.testState.files.find(file => file.id === id).offline=true;return change({});},releaseOffline:async id => {record('releaseOffline',id);const file=window.testState.files.find(file => file.id === id);file.offline=false;return change({lastOfflineRelease:{path:file.path,bytesFreed:window.releaseBytes ?? 4096}});},
    sync:async () => {record('sync');return change({sync:{running:false,lastSync:'2026-01-01'}});},setPartSize:async value => {record('setPartSize',value);return change({partSizeBytes:value});},resplit:async () => record('resplit'),
    setStartup:async value => {record('setStartup',value);return change({startup:value});},setAutoUnlock:async value => {record('setAutoUnlock',value);return change({autoUnlock:value});},forgetSavedCredential:async () => {record('forgetSavedCredential');return change({autoUnlock:false});},windowControl:async value => record('windowControl',value),openExternal:async value => record('openExternal',value)
   };
@@ -48,6 +48,10 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   await page.click('[data-view=help]');await page.click('#project-website-link');assert.equal(await page.evaluate(() => window.calls.find(call => call.name === 'openExternal').value),'https://ding-ding-projects.github.io/material-file-encryptor/');await page.click('[data-view=drive]');
   await page.click('#create-button'); assert.equal(await page.locator('#cache-input').inputValue(),'C:\\EncryptedCache'); assert.equal(await page.locator('#drive-letter').inputValue(),'M');
   await page.click('[data-browse="storage-input"]'); await page.fill('#password-input','correct horse battery staple');await page.fill('#confirm-password','wrong');await page.click('#dialog-submit');assert.match(await page.locator('#dialog-error').textContent(),/do not match/);
+  await page.locator('[name=credential-mode][value=password]').focus();await page.keyboard.press('ArrowRight');
+  assert.equal(await page.locator('[name=credential-mode][value=keyFile]').isChecked(),true);
+  assert.equal(await page.locator('[name=credential-mode][value=keyFile]').evaluate(el => el.matches(':focus-visible')),true);
+  await page.keyboard.press('ArrowLeft');assert.equal(await page.locator('[name=credential-mode][value=password]').isChecked(),true);
   await page.check('[name=credential-mode][value=keyFile]'); await page.click('#generate-key');assert.equal(await page.locator('#key-path').inputValue(),'C:\\Keys\\generated.key');
   await page.fill('#create-split-value','0.5');await page.selectOption('#create-split-unit','KB');await page.click('#dialog-submit');assert.match(await page.locator('#dialog-error').textContent(),/between 1 KB and 1 GB/);
   await page.fill('#create-split-value','10');await page.selectOption('#create-split-unit','MB');await page.click('#dialog-submit');await page.waitForFunction(() => !document.querySelector('#vault-dialog').open);
@@ -56,7 +60,17 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   await page.click('#offline-button');await page.waitForFunction(() => document.querySelector('#offline-count').textContent === '1');
   await page.click('[data-view=offline]');assert.equal(await page.locator('#file-list tr').count(),1);
   await page.click('#release-button');assert.equal(await page.locator('#confirm-dialog button[value=cancel]').evaluate(el => document.activeElement === el),true);await page.keyboard.press('Escape');assert.equal(await page.locator('#confirm-dialog').evaluate(el => el.open),false);
-  await page.click('[data-view=drive]');await page.click('#resplit-button');assert.equal(await page.evaluate(() => window.calls.some(call => call.name === 'resplit')),false);await page.click('#confirm-action');await page.waitForFunction(() => window.calls.some(call => call.name === 'resplit'));
+  await page.click('[data-view=drive]');await page.click('#release-button');await page.click('#confirm-action');
+  await page.waitForFunction(() => document.querySelector('#snackbar').textContent.includes('Released 4 KB of encrypted cache'));
+  assert.match(await page.locator('#snackbar').textContent(),/Protected data is retained/);
+  await page.click('#offline-button');await page.evaluate(() => { window.releaseBytes=0; });
+  await page.click('[data-view=settings]');await page.selectOption('#language-setting','yue');await page.click('[data-view=drive]');
+  await page.click('#release-button');await page.click('#confirm-action');
+  await page.waitForFunction(() => document.querySelector('#snackbar').textContent.includes('未有釋放加密快取'));
+  assert.match(await page.locator('#snackbar').textContent(),/繼續加密保留/);
+  assert.equal(await page.locator('#offline-count').textContent(),'0');
+  await page.click('[data-view=settings]');await page.selectOption('#language-setting','en');await page.click('[data-view=drive]');
+  await page.click('#resplit-button');assert.equal(await page.evaluate(() => window.calls.some(call => call.name === 'resplit')),false);await page.click('#confirm-action');await page.waitForFunction(() => window.calls.some(call => call.name === 'resplit'));
   await page.evaluate(() => window.pushState({files:[{id:'unsafe',path:'<img src=x onerror=alert(1)>.txt',size:12,modified:'2026-01-01',offline:false}]}));assert.equal(await page.locator('#file-list img').count(),0);assert.match(await page.locator('#file-list').textContent(),/<img src=x/);
   await page.evaluate(() => { window.blockLock = true; });await page.click('#lock-button');await page.waitForSelector('#main-error:not([hidden])');assert.match(await page.locator('#main-error').textContent(),/Close open files/);assert.equal(await page.locator('#vault-badge').textContent(),'Mounted');
   await page.evaluate(() => window.pushState({locked:false,mounted:false}));await page.click('#mount-button');await page.waitForFunction(() => window.calls.some(call => call.name === 'mount'));
@@ -67,6 +81,15 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
    await page.setViewportSize({width,height:720});
    for (const theme of ['light','dark']) {
     await page.click('[data-view=settings]');await page.selectOption('#theme-setting',theme);
+    await page.locator('#theme-setting').focus();await page.keyboard.press('Space');
+    assert.equal(await page.locator('#theme-setting').evaluate(el => el.matches(':open')),true);await page.keyboard.press('Escape');
+    const prior = Number(await page.locator('#celebration-setting').inputValue());await page.locator('#celebration-setting').focus();await page.keyboard.press('ArrowRight');
+    assert.equal(Number(await page.locator('#celebration-output').textContent()),prior+1);
+    await page.click('[data-view=drive]');await page.click('#create-button');await page.locator('#create-split-value').scrollIntoViewIfNeeded();
+    assert.equal(await page.locator('#vault-dialog .dialog-body').evaluate(el => el.scrollTop > 0),true);
+    assert.equal(await page.locator('#dialog-submit').evaluate(el => el.getBoundingClientRect().bottom <= innerHeight),true);
+    await page.locator('[name=credential-mode][value=password]').focus();await page.keyboard.press('ArrowRight');assert.equal(await page.locator('[name=credential-mode][value=keyFile]').isChecked(),true);
+    await page.click('#dialog-cancel');
     for (const destination of ['settings','drive','help']) { await page.click(`[data-view=${destination}]`);assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),true,`${destination} ${width} ${theme} must not overflow`); }
    }
   }

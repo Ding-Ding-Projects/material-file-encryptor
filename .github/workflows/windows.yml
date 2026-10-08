@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths: ['native/**', 'src/**', 'scripts/**', 'test/**', 'package.json', 'package-lock.json', 'forge.config.cjs', 'dependencies.json', '*.bat', '.github/workflows/windows.yml']
   pull_request:
 permissions:
   contents: read

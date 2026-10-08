@@ -12,7 +12,9 @@ Windows run37855288999 passed the documented build and failed before mounting at
 
 Targeted encrypted-cache release is implemented and seventeen native storage checks pass. Independent JSONL verification confirms exact bytes freed, unrelated cache retained, cloud objects preserved and zero release while offline. The expanded Windows acceptance now covers offline reads/edits/reconnection, physical caps, re-splitting, key-file credentials and DPAPI. Its actual Windows execution remains pending. The capture harness now targets the packaged Windows executable and checks ASAR/native resources and startup registration readback; actual sign-in is outside this check.
 
-The user identified generic scrollbars and radio buttons. Custom credential segments, themed scrollbars and remaining control styling are being corrected before final captures. Existing Linux interface images are source-bound evidence of earlier states. No completed Windows installer, release, or final custom-control verification is claimed yet.
+The user identified generic scrollbars and radio buttons. Custom lock/key credential segments, file selection, themed dropdowns and slider tracks now replace their browser-default appearance. Slim tonal scrollbars reveal during use and focus. Actual Electron light/dark states at390,768,1440px and keyboard selection/focus/scroll tests pass. Website equivalents pass responsive keyboard checks from320to1440px. Fresh retained captures follow this source checkpoint; existing images explicitly identify their earlier source.
+
+Windows run37858403508 is verifying the expanded native and packaged acceptance. No completed Windows installer, release, or actual sign-in is claimed yet. Documentation-only changes no longer repeat the native Windows build; source, packaging and workflow changes still do.
 
 The separate private instruction repository merged compression PR52 on explicit instruction and preserved its generated-diagram policy. A later independent change requires active documentation diagrams with accessible interactive controls, animation, pause/replay, reduced motion and honest illustrative state.
 

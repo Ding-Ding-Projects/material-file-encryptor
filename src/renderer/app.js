@@ -8,6 +8,14 @@ let state = null, selected = null, view = 'drive', busy = false, dialogMode = 'c
 const dictionary = new Map();
 document.querySelectorAll('[data-i18n]').forEach(el => dictionary.set(el, el.textContent));
 initializeIcons();
+const scrollTimers = new WeakMap();
+document.addEventListener('scroll', event => {
+ const surface = event.target === document ? document.documentElement : event.target;
+ if (!(surface instanceof Element)) return;
+ surface.classList.add('is-scrolling');
+ clearTimeout(scrollTimers.get(surface));
+ scrollTimers.set(surface, setTimeout(() => { surface.classList.remove('is-scrolling'); scrollTimers.delete(surface); }, 900));
+}, {capture:true,passive:true});
 document.querySelector('main').prepend($('operation'), $('main-error'));
 function t(source) {
  let value = preferences.language === 'yue' ? cantonese[source] || source : preferences.language === 'bilingual' && cantonese[source] ? `${source} · ${cantonese[source]}` : source;
@@ -30,7 +38,7 @@ function applyPreferences() {
  $('file-search').placeholder = t('Search files');
  $('file-search').setAttribute('aria-label',t('Search files'));
  $('theme-setting').value = preferences.theme; $('language-setting').value = preferences.language; $('emoji-setting').checked = preferences.emoji;
- for (const key of ['celebration','patience']) { $(`${key}-setting`).value = preferences[key]; $(`${key}-output`).textContent = preferences[key]; }
+ for (const key of ['celebration','patience']) { $(`${key}-setting`).value = preferences[key]; $(`${key}-output`).textContent = preferences[key]; $(`${key}-setting`).style.setProperty('--range-progress', `${preferences[key]}%`); }
  $('vocabulary-summary').textContent = preferences.language === 'yue' ? `已儲存 ${preferences.vocabulary.replacements.length} 個替換詞。` : `${preferences.vocabulary.replacements.length} label replacements saved on this device.`;
  if (state) { render(); changeView(view); }
  if ($('vault-dialog').open) updateDialog();
@@ -42,9 +50,10 @@ function showError(error, inDialog = false) {
  $(inDialog ? 'dialog-error' : 'main-error').hidden = false;
  if (!inDialog) $('main-error').scrollIntoView({block:'nearest'});
 }
-function toast(source) {
+function toast(source, values = {}) {
  clearTimeout(snackbarTimer);
- $('snackbar').textContent = `${t(source)}${preferences.celebration >= 75 ? ` ${t('All set!')}` : ''}`;
+ const message = t(source).replace(/\{(\w+)\}/g, (placeholder, key) => Object.hasOwn(values, key) ? String(values[key]) : placeholder);
+ $('snackbar').textContent = `${message}${preferences.celebration >= 75 ? ` ${t('All set!')}` : ''}`;
  $('snackbar').hidden = false;
  snackbarTimer = setTimeout(() => { $('snackbar').hidden = true; }, 5500);
 }
@@ -118,7 +127,7 @@ function renderFiles() {
  for (const file of filtered) {
   const row = document.createElement('tr'); row.classList.toggle('selected',file.id === selected);
   const cell = () => { const td = document.createElement('td'); row.append(td); return td; };
-  const select = document.createElement('input'); select.type = 'radio'; select.name = 'selected-file'; select.checked = file.id === selected; select.setAttribute('aria-label',`${t('Select')} ${file.path}`);
+  const select = document.createElement('input'); select.type = 'radio'; select.className = 'file-selection'; select.name = 'selected-file'; select.checked = file.id === selected; select.setAttribute('aria-label',`${t('Select')} ${file.path}`);
   select.addEventListener('change',() => { selected = file.id; renderFiles(); renderAvailability(); $('file-list').querySelector('input:checked')?.focus(); }); cell().append(select);
   const name = document.createElement('div'); name.className = 'file-name'; const filename = document.createElement('span'); filename.textContent = file.path; name.append(icon('file'),filename); const nameCell = cell(); nameCell.append(name); nameCell.title = file.path;
   const availability = cell(); availability.className = 'availability'; const av = document.createElement('span'); av.className = 'availability-content'; const label = document.createElement('span'); label.textContent = t(file.offline ? 'Available offline' : 'Encrypted storage only'); av.append(icon(file.offline ? 'offline' : 'shield'),label); availability.append(av);
@@ -163,7 +172,7 @@ function openVaultDialog(mode) {
  for (const candidate of letters) { const letter = String(candidate).replace(/[:\\]+$/,''); const option = document.createElement('option'); option.value = letter; option.textContent = `${letter}:`; $('drive-letter').append(option); }
  const preferred = state?.driveLetter || state?.defaults?.driveLetter;
  if (preferred) $('drive-letter').value = String(preferred).replace(/[:\\]+$/,'');
- if (!$('drive-letter').value && letters.length) $('drive-letter').selectedIndex = 1;
+ if (!$('drive-letter').value) $('drive-letter').selectedIndex = letters.length ? 1 : 0;
  updateDialog(); renderAvailability(); $('vault-dialog').showModal(); $('storage-input').focus();
 }
 function closeVaultDialog() { if (busy) return; $('vault-dialog').close(); $('password-input').value = ''; $('confirm-password').value = ''; $('key-path').value = ''; }
@@ -213,7 +222,20 @@ listen('export-button','click',async () => {
  if (destination) await run('Exporting copy…',() => api.exportFile({id:file.id,destination}),'Copy exported.');
 });
 listen('offline-button','click',() => run('Keeping encrypted parts offline…',() => api.keepOffline(selected),'Offline copy retained.'));
-listen('release-button','click',async () => { const id = selected; if (await confirmAction('Remove this offline copy?','Release unneeded encrypted cache for this file. The encrypted storage copy remains. You may need your storage connection to open it again.','Remove copy')) await run('Removing offline copy…',() => api.releaseOffline(id),'Offline copy removed.'); });
+listen('release-button','click',async () => {
+ const file = state.files.find(file => file.id === selected); if (!file) return;
+ if (!await confirmAction('Remove this offline copy?','Release unneeded encrypted cache for this file. The encrypted storage copy remains. You may need your storage connection to open it again.','Remove copy')) return;
+ const outcome = await run('Removing offline copy…',() => api.releaseOffline(file.id));
+ if (!outcome?.ok) return;
+ const release = outcome.result?.lastOfflineRelease || state.lastOfflineRelease;
+ if (release?.path !== file.path || !Number.isFinite(release.bytesFreed) || release.bytesFreed < 0) {
+  toast('Offline pin removed. Cache release details are unavailable.');
+ } else if (release.bytesFreed > 0) {
+  toast('Offline pin removed. Released {size} of encrypted cache. Protected data is retained.', {size:formatBytes(release.bytesFreed)});
+ } else {
+  toast('Offline pin removed. No encrypted cache was released. Cache needed for safe or offline access stays encrypted.');
+ }
+});
 listen('sync-button','click',() => run('Syncing encrypted files…',() => api.sync(),'Encrypted parts updated.'));
 listen('split-form','submit',async event => { event.preventDefault(); const bytes = parsePartSize($('split-value').value,$('split-unit').value); await run('Applying part size…',() => api.setPartSize(bytes),'Part size saved for new and edited files.'); });
 listen('resplit-button','click',async () => { if (await confirmAction('Re-split all existing files?','Create replacement encrypted parts using the current limit. This can take time. Existing committed data remains until replacement succeeds.','Re-split files')) await run('Re-splitting encrypted files…',() => api.resplit(),'Encrypted parts updated.'); });
