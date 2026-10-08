@@ -27,7 +27,7 @@ async function fixture(page) {
    open:async id => record('open',id), openExplorer:async () => record('openExplorer'),exportFile:async value => record('exportFile',value),
    keepOffline:async id => {record('keepOffline',id);window.testState.files.find(file => file.id === id).offline=true;return change({});},releaseOffline:async id => {record('releaseOffline',id);window.testState.files.find(file => file.id === id).offline=false;return change({});},
    sync:async () => {record('sync');return change({sync:{running:false,lastSync:'2026-01-01'}});},setPartSize:async value => {record('setPartSize',value);return change({partSizeBytes:value});},resplit:async () => record('resplit'),
-   setStartup:async value => {record('setStartup',value);return change({startup:value});},setAutoUnlock:async value => {record('setAutoUnlock',value);return change({autoUnlock:value});},forgetSavedCredential:async () => {record('forgetSavedCredential');return change({autoUnlock:false});},windowControl:async value => record('windowControl',value)
+   setStartup:async value => {record('setStartup',value);return change({startup:value});},setAutoUnlock:async value => {record('setAutoUnlock',value);return change({autoUnlock:value});},forgetSavedCredential:async () => {record('forgetSavedCredential');return change({autoUnlock:false});},windowControl:async value => record('windowControl',value),openExternal:async value => record('openExternal',value)
   };
  });
 }
@@ -45,6 +45,7 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   const errors = []; page.on('pageerror',error => {errors.push(error.message);console.error(error.message);});
   await page.goto(`http://127.0.0.1:${server.address().port}`); await page.waitForFunction(() => document.querySelector('#vault-badge').textContent !== 'Checking drive…');
   assert.equal(await page.locator('#vault-badge').textContent(),'Locked'); assert.equal(await page.locator('#file-list tr').count(),0);
+  await page.click('[data-view=help]');await page.click('#project-website-link');assert.equal(await page.evaluate(() => window.calls.find(call => call.name === 'openExternal').value),'https://ding-ding-projects.github.io/material-file-encryptor/');await page.click('[data-view=drive]');
   await page.click('#create-button'); assert.equal(await page.locator('#cache-input').inputValue(),'C:\\EncryptedCache'); assert.equal(await page.locator('#drive-letter').inputValue(),'M');
   await page.click('[data-browse="storage-input"]'); await page.fill('#password-input','correct horse battery staple');await page.fill('#confirm-password','wrong');await page.click('#dialog-submit');assert.match(await page.locator('#dialog-error').textContent(),/do not match/);
   await page.check('[name=credential-mode][value=keyFile]'); await page.click('#generate-key');assert.equal(await page.locator('#key-path').inputValue(),'C:\\Keys\\generated.key');
@@ -61,7 +62,7 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   await page.evaluate(() => window.pushState({locked:false,mounted:false}));await page.click('#mount-button');await page.waitForFunction(() => window.calls.some(call => call.name === 'mount'));
   await page.click('[data-view=settings]');await page.uncheck('#startup-setting');await page.waitForFunction(() => window.calls.some(call => call.name === 'setStartup' && call.value === false));
   await page.check('#auto-unlock-setting');await page.click('#confirm-action');await page.waitForFunction(() => window.calls.some(call => call.name === 'setAutoUnlock' && call.value === true));await page.click('#forget-credential');
-  await page.selectOption('#theme-setting','dark');await page.selectOption('#language-setting','bilingual');await page.reload();await page.waitForFunction(() => document.querySelector('#vault-badge').textContent !== 'Checking drive…');assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+  await page.selectOption('#theme-setting','dark');await page.selectOption('#language-setting','bilingual');await page.reload();await page.waitForFunction(() => document.querySelector('#vault-badge').textContent !== 'Checking drive…');assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');assert.match(await page.locator('#project-website-link').textContent(),/Project website · 項目網站/);
   for (const width of [1440,768,390]) {
    await page.setViewportSize({width,height:720});
    for (const theme of ['light','dark']) {

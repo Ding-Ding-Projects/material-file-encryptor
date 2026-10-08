@@ -50,5 +50,6 @@ jobs:
             out/make/squirrel.windows/x64/RELEASES
             out/evidence/*.png
             out/evidence/*.json
+            out/evidence/*.webm
           if-no-files-found: warn
           retention-days: 14

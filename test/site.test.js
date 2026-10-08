@@ -44,4 +44,45 @@ test('all same-page links resolve, asset links fit repository Pages, and release
   assert.match(html, /not a native Windows capture/);
   assert.doesNotMatch(html, /href="[^"]+\.(?:exe|msi)"/);
   assert.doesNotMatch(html, /—/);
+  assert.doesNotMatch(html, /github\.com\/DingDingProjects\//);
+  for (const match of html.matchAll(/href="(https:\/\/github\.com[^"]+)"/g)) assert.ok(match[1].startsWith('https://github.com/Ding-Ding-Projects/material-file-encryptor'), 'GitHub links must use the real repository owner');
+});
+
+test('message preferences accept only supported locales, booleans, and 1–5 integer levels', async () => {
+  const { loadMessagePreferences, messagePair, localized } = await import('../docs/site/locales.js');
+  const storage = value => ({ getItem: () => JSON.stringify(value) });
+  assert.deepEqual(loadMessagePreferences(storage({ language: 'yue', emoji: true, successTone: 5, searchTone: 2 })), { language: 'yue', emoji: true, successTone: 5, searchTone: 2 });
+  assert.deepEqual(loadMessagePreferences(storage({ language: 'unknown', emoji: 'yes', successTone: 6, searchTone: 1.5 })), { language: 'en', emoji: false, successTone: 1, searchTone: 1 });
+  assert.equal(loadMessagePreferences({ getItem: () => '{invalid' }).language, 'en');
+  for (const kind of ['success', 'search']) {
+    const levels = [1, 2, 3, 4, 5].map(level => messagePair(kind, level, 3));
+    assert.equal(new Set(levels.map(pair => pair[0])).size, 5);
+    assert.equal(new Set(levels.map(pair => pair[1])).size, 5);
+    assert.ok(levels.every(pair => /[\u3400-\u9fff]/u.test(pair[1])));
+  }
+  assert.equal(localized('Security', 'yue'), '保安');
+  assert.equal(localized('Security', 'bilingual'), 'Security / 保安');
+  assert.equal(localized('build.bat /s', 'yue'), 'build.bat /s');
+});
+
+test('interactive part illustration counts overhead and rejects unusable limits', async () => {
+  const { exampleParts, EXAMPLE_FILE_BYTES, EXAMPLE_OVERHEAD } = await import('../docs/site/explainer.js');
+  assert.equal(exampleParts('4', 'MB').parts, 5);
+  assert.equal(exampleParts('8', 'MB').parts, 3);
+  assert.equal(exampleParts('1', 'GB').parts, 1);
+  assert.equal(exampleParts('128', 'KB').parts, 256);
+  assert.equal(exampleParts('64', 'KB').parts, 257);
+  assert.equal(exampleParts('4', 'MB').total, EXAMPLE_FILE_BYTES + 256 * EXAMPLE_OVERHEAD);
+  for (const [value, unit] of [['0', 'MB'], ['-1', 'MB'], ['abc', 'GB'], ['2', 'GB'], ['1', 'TB'], ['0.00001', 'KB'], ['1e3', 'KB']]) assert.equal(exampleParts(value, unit), null);
+});
+
+test('capture gallery identifies actual Linux evidence and conceptual animation controls', async () => {
+  const html = await readFile(new URL('../docs/site/index.html', import.meta.url), 'utf8');
+  for (const capture of ['locked', 'create', 'settings-dark', 'help']) assert.match(html, new RegExp(`src="images/captures/desktop-${capture}\\.png"`));
+  assert.match(html, /Actual Electron application captures from Linux/);
+  assert.match(html, /not proof of a Windows filesystem mount/);
+  assert.match(html, /Conceptual demonstration only/);
+  assert.match(html, /id="workflow-play"/);
+  assert.match(html, /id="workflow-replay"/);
+  assert.match(html, /id="success-tone" min="1" max="5"/);
 });

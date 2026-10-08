@@ -2,15 +2,32 @@
 
 A Windows Explorer drive that encrypts files into a folder managed by OneDrive, Google Drive, or any other folder-sync client. Open and edit files normally; keep selected files available offline in an encrypted local cache.
 
-**Development status:** the native engine and desktop interface are implemented. Thirteen native storage checks and twelve desktop/site checks pass locally; actual Windows mounting and installer verification are pending. The diagrams describe the architecture and are separate from real application captures. No installer is published yet.
+**Development status:** the native engine and desktop interface are implemented. Thirteen native storage checks and fifteen desktop/site checks pass locally; actual Windows mounting and installer verification are pending. The diagrams describe the architecture and are separate from real application captures. No installer is published yet.
 
-[Project goal](GOAL.md) · [Interface design](DESIGN.md) · [Source](https://github.com/Ding-Ding-Projects/material-file-encryptor) · [Planned documentation site](https://ding-ding-projects.github.io/material-file-encryptor/)
+[Project goal](GOAL.md) · [Interface design](DESIGN.md) · [Source](https://github.com/Ding-Ding-Projects/material-file-encryptor) · [Documentation site](https://ding-ding-projects.github.io/material-file-encryptor/) · [Windows verification](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/workflows/windows.yml)
 
 ## How it works
 
 ![Planned architecture: Explorer accesses a mounted WinFsp virtual drive, which encrypts files and metadata in the selected sync folder and maintains an encrypted offline cache. Password or key file unlocks the drive.](docs/images/drive-workflow.png)
 
 The mounted drive returns authenticated, decrypted bytes when applications read files. New and edited files become encrypted records and parts in the selected backing folder. Your existing cloud client transfers those encrypted objects between devices.
+
+The documentation site includes an [interactive workflow explanation](https://ding-ding-projects.github.io/material-file-encryptor/#interactive-workflow) with selectable steps, access modes, and encrypted part sizes. Its illustrations explain the design; they are separate from native verification.
+
+<details>
+<summary>Real application captures</summary>
+
+These captures show the actual Electron application at source commit `1c5b67b38c0dcb56fa8c9c6644decba973be8415`, driven through its sandboxed renderer on an isolated Linux display at 1180 × 850. They verify interface states; Windows mounting remains pending. [Capture provenance and image hashes](docs/images/captures/provenance.json).
+
+![Real application: locked drive screen with create and unlock actions, navigation, and an honest unavailable Windows driver state on Linux.](docs/images/captures/desktop-locked.png)
+
+![Real application: create-drive dialog with encrypted storage and cache folders, password or key-file credentials, drive letter, and split-size controls.](docs/images/captures/desktop-create.png)
+
+![Real application: dark settings screen with appearance, language, message preferences, startup, automatic unlock, and part-size controls.](docs/images/captures/desktop-settings-dark.png)
+
+![Real application: help screen explaining encryption, offline access, and copying plaintext outside the drive.](docs/images/captures/desktop-help.png)
+
+</details>
 
 <details>
 <summary>Access, offline use, startup, and split sizes</summary>

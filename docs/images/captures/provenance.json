@@ -1,0 +1,28 @@
+{
+  "sourceCommit": "1c5b67b38c0dcb56fa8c9c6644decba973be8415",
+  "platform": "linux",
+  "method": "Real Electron application on a task-owned isolated Xorg display; Playwright drove the actual sandboxed renderer and native preload.",
+  "nativeMountVerified": false,
+  "viewport": {
+    "width": 1180,
+    "height": 850
+  },
+  "images": [
+    {
+      "file": "desktop-locked.png",
+      "sha256": "32e094af6b113302868ec7b72e9d04faabe835dec03e4212d739ef95316512b2"
+    },
+    {
+      "file": "desktop-create.png",
+      "sha256": "1c7bf8b376257634756a4146104a388b944d20e98caa25f6fc61376e9fcea02f"
+    },
+    {
+      "file": "desktop-settings-dark.png",
+      "sha256": "5046a7563b1bd2c50f185fb432147c73f2f610ca1d7e1459d171c9a1a31a8bc7"
+    },
+    {
+      "file": "desktop-help.png",
+      "sha256": "c2d15e7111c730b7781f47565ce543ba22059c9d79422b7f38730b5623521b2b"
+    }
+  ]
+}

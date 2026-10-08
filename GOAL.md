@@ -14,6 +14,6 @@ Deliver Material File Encryptor as a real Windows Explorer virtual drive with en
 - [x] Deliver a tailored Material Design 3 desktop interface with accessible motion and reduced-motion support.
 - [ ] Publish a separate GitHub Pages documentation site with truthful downloads, diagrams, and real application captures.
 - [ ] Verify native behavior on Windows and record unsupported or unverified paths honestly.
-- [ ] Preserve frequent source checkpoints and integrate verified work into the default branch.
+- [x] Preserve frequent source checkpoints and integrate verified work into the default branch.
 
 The task plan is the active tracker. Native app-level goal tooling is unavailable in the current session; no tool-created goal or token budget is claimed.

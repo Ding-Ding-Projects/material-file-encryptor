@@ -200,6 +200,7 @@ listen('vault-form','submit',async event => {
 });
 listen('lock-button','click',() => run('Locking drive…',() => api.lock(),'Drive locked.'));
 listen('mount-button','click',() => run('Mounting drive…',() => api.mount({driveLetter:state.driveLetter || state.defaults?.driveLetter}),'Drive unlocked.'));
+listen('project-website-link','click',() => api.openExternal('https://ding-ding-projects.github.io/material-file-encryptor/'));
 listen('winfsp-link','click',() => api.openExternal('https://winfsp.dev/'));
 listen('install-driver','click',() => run('Working…',() => api.installDriver()));
 listen('explorer-button','click',() => run('Working…',() => api.openExplorer()));

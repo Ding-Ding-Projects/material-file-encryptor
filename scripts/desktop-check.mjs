@@ -7,11 +7,12 @@ import { randomBytes } from 'node:crypto';
 await fs.mkdir('out/evidence', { recursive: true });
 const launchArgs = ['.', '--desktop-check'];
 if (process.platform === 'linux') launchArgs.push('--no-sandbox'); // Isolated development capture only; packaged Windows sandbox stays enabled.
-const application = await electron.launch({ args: launchArgs, cwd: process.cwd(), timeout: 60000 });
+const application = await electron.launch({ args: launchArgs, cwd: process.cwd(), timeout: 60000, recordVideo: { dir: 'out/evidence/video', size: { width: 1180, height: 850 }, fps: 15 } });
 const errors = [];
-let fixtureRoot;
+let fixtureRoot, video;
 try {
   const page = await application.firstWindow();
+  video = page.video();
   const settle = () => page.evaluate(() => Promise.all(document.getAnimations().filter(animation => animation.effect?.getTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {}))));
   page.on('pageerror', error => errors.push(error.message));
   await page.waitForSelector('#create-button');
@@ -53,11 +54,19 @@ try {
     assert.equal(await fs.readFile(path.join(mountedRoot, 'Welcome.txt'), 'utf8'), 'A real Windows mounted drive.\n');
     await page.waitForFunction(() => document.querySelector('#file-list').textContent.includes('Welcome.txt'));
     await settle();
-  await page.screenshot({ path: 'out/evidence/desktop-mounted.png', fullPage: true });
+    await page.screenshot({ path: 'out/evidence/desktop-mounted.png', fullPage: true });
     await page.evaluate(() => window.drive.lock());
     assert.equal((await page.evaluate(() => window.drive.status())).locked, true);
   }
   assert.deepEqual(errors, []);
-  await fs.writeFile(path.resolve('out/evidence/desktop-check.json'), JSON.stringify({ platform: process.platform, security, driverAvailable: status.driver.available, pageErrors: errors, checked: ['locked screen', 'create dialog', 'settings theme', 'help', 'preload isolation'] }, null, 2));
+  await fs.writeFile(path.resolve('out/evidence/desktop-check.json'), JSON.stringify({ platform: process.platform, security, driverAvailable: status.driver.available, pageErrors: errors, recording: `desktop-${process.platform}.webm`, mountedFilesystemChecked: process.platform === 'win32', checked: ['locked screen', 'create dialog', 'settings theme', 'help', 'preload isolation', ...(process.platform === 'win32' ? ['create and mount', 'mounted file write/read', 'lock'] : [])] }, null, 2));
   console.log('Electron checks passed: real app window, create dialog, settings theme, help and sandbox.');
-} finally { await application.close(); if (fixtureRoot) await fs.rm(fixtureRoot, { recursive: true, force: true }); }
+} finally {
+  await application.close();
+  if (video) {
+    const recording = `out/evidence/desktop-${process.platform}.webm`;
+    await video.saveAs(recording); await video.delete();
+    assert.ok((await fs.stat(recording)).size > 0, 'The real Electron recording must contain data.');
+  }
+  if (fixtureRoot) await fs.rm(fixtureRoot, { recursive: true, force: true });
+}

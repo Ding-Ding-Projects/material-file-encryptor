@@ -1,11 +1,13 @@
 param([switch]$InstallDriver)
 $ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue' # Avoid per-byte/per-file progress overhead in Windows PowerShell.
 $root = Split-Path $PSScriptRoot -Parent
 $manifest = Get-Content (Join-Path $root 'dependencies.json') -Raw | ConvertFrom-Json
 $tools = Join-Path $env:LOCALAPPDATA 'MaterialFileEncryptor\BuildTools'
 New-Item -ItemType Directory -Force $tools | Out-Null
 function Get-Verified($entry, $file) {
-  if (!(Test-Path $file)) { Invoke-WebRequest -Uri $entry.url -OutFile $file -UseBasicParsing }
+  if (!(Test-Path $file)) { Write-Host "Downloading pinned dependency $($entry.version)."; Invoke-WebRequest -Uri $entry.url -OutFile $file -UseBasicParsing }
+  Write-Host "Verifying pinned dependency $($entry.version)."
   $algorithm = if ($entry.sha512) { 'SHA512' } else { 'SHA256' }
   $expected = if ($entry.sha512) { $entry.sha512 } else { $entry.sha256 }
   if ((Get-FileHash $file -Algorithm $algorithm).Hash.ToLowerInvariant() -ne $expected) {
@@ -16,11 +18,11 @@ function Get-Verified($entry, $file) {
 $nodeArchive = Join-Path $tools "node-$($manifest.node.version).zip"
 Get-Verified $manifest.node $nodeArchive
 $node = Join-Path $tools "node-v$($manifest.node.version)-win-x64"
-if (!(Test-Path (Join-Path $node 'node.exe'))) { Expand-Archive $nodeArchive $tools -Force }
+if (!(Test-Path (Join-Path $node 'node.exe'))) { Write-Host 'Extracting Node.'; Expand-Archive $nodeArchive $tools -Force }
 $dotnetArchive = Join-Path $tools "dotnet-$($manifest.dotnet.version).zip"
 Get-Verified $manifest.dotnet $dotnetArchive
 $dotnet = Join-Path $tools "dotnet-$($manifest.dotnet.version)"
-if (!(Test-Path (Join-Path $dotnet 'dotnet.exe'))) { Expand-Archive $dotnetArchive $dotnet -Force }
+if (!(Test-Path (Join-Path $dotnet 'dotnet.exe'))) { Write-Host 'Extracting the .NET SDK.'; Expand-Archive $dotnetArchive $dotnet -Force }
 $driverFolder = Join-Path $root '.cache\driver'
 New-Item -ItemType Directory -Force $driverFolder | Out-Null
 $driver = Join-Path $driverFolder "winfsp-$($manifest.winfsp.version).msi"
@@ -30,6 +32,7 @@ if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notm
   throw 'WinFsp installer does not have a valid trusted Navimatics signature.'
 }
 if ($InstallDriver) {
+  Write-Host 'Installing the verified signed WinFsp driver.'
   $process = Start-Process msiexec.exe -ArgumentList @('/i', "`"$driver`"", '/qn', '/norestart', 'ADDLOCAL=ALL') -Wait -PassThru
   if ($process.ExitCode -notin @(0,3010)) { throw "WinFsp installation failed: $($process.ExitCode)" }
 }
