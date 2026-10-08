@@ -1,4 +1,5 @@
 export const cantonese = {
+ 'Checking available drive letters…':'檢查緊可用磁碟代號…', 'No available drive letters':'暫時冇可用磁碟代號',
  'Offline pin removed. Cache release details are unavailable.':'已取消保留離線副本，暫時無法取得快取釋放詳情。',
  'Offline pin removed. Released {size} of encrypted cache. Protected data is retained.':'已取消保留離線副本，釋放咗 {size} 加密快取。受保護資料仍然保留。',
  'Offline pin removed. No encrypted cache was released. Cache needed for safe or offline access stays encrypted.':'已取消保留離線副本，未有釋放加密快取。安全或離線存取所需嘅快取會繼續加密保留。',

@@ -17,16 +17,17 @@ const selectedImports = new Set();
 const selectedExports = new Set();
 let window, tray, helper, shuttingDown = false, operation = null;
 let preferences = { startup: true, autoUnlock: false, driveLetter: 'M:' };
-let state = { locked: true, mounted: false, files: [], availableDriveLetters: [], sync: { running: false, lastSync: null, error: null }, driver: { available: false, error: 'Checking WinFsp availability.' } };
+let state = { locked: true, mounted: false, files: [], availableDriveLetters: [], sync: { running: false, lastSync: null, error: null }, driver: { available: false, checking: true, error: 'Checking WinFsp availability.' } };
 const inside = (parent, child) => { const rel = path.relative(parent, child); return rel === '' || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel)); };
+const nativeState = value => ({ ...value, driver: { ...value.driver, checking: false } });
 const snapshot = () => ({ ...state, operation, defaults: { cacheDir: preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache'), driveLetter: preferences.driveLetter }, preferences: { ...preferences }, cacheDir: state.cacheDir || preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache') });
 function publish() { if (window && !window.isDestroyed()) window.webContents.send('vault:state', snapshot()); }
 async function savePreferences() { await fs.mkdir(app.getPath('userData'), { recursive: true }); await fs.writeFile(configPath(), JSON.stringify(preferences), { mode: 0o600 }); }
 async function backend(method, params = {}) {
   if (!helper) throw new Error('The mounted drive is available on Windows.');
   const result = await helper.request(method, params);
-  if (result && typeof result.locked === 'boolean') state = result;
-  else state = await helper.request('status');
+  if (result && typeof result.locked === 'boolean') state = nativeState(result);
+  else state = nativeState(await helper.request('status'));
   publish(); return snapshot();
 }
 async function perform(label, task) {
@@ -129,9 +130,9 @@ else {
     if (!process.argv.includes('--startup') || testMode) showWindow();
     if (process.platform === 'win32') {
       const executable = app.isPackaged ? path.join(process.resourcesPath, 'native/MaterialFileEncryptor.Host.exe') : path.resolve('out/native/MaterialFileEncryptor.Host.exe');
-      helper = new NativeClient(executable); helper.on('status', result => { if (result && typeof result.locked === 'boolean') { state = result; publish(); } }); helper.on('exit', () => { state = { ...state, mounted: false, locked: true, files: [], sync: { ...state.sync, error: 'The native helper stopped. Reopen the application.' } }; publish(); });
-      try { await backend('status'); if (preferences.autoUnlock && preferences.storageDir) { await backend('autoUnlock', { storageDir: preferences.storageDir, cacheDir: preferences.cacheDir, driveLetter: preferences.driveLetter }); await backend('mount', { driveLetter: preferences.driveLetter }); } } catch (error) { state.sync.error = error.message; publish(); }
-    } else { state.driver.error = 'Windows and WinFsp are required to mount a drive.'; publish(); }
+      helper = new NativeClient(executable); helper.on('status', result => { if (result && typeof result.locked === 'boolean') { state = nativeState(result); publish(); } }); helper.on('exit', () => { state = { ...state, mounted: false, locked: true, files: [], sync: { ...state.sync, error: 'The native helper stopped. Reopen the application.' } }; publish(); });
+      try { await backend('status'); if (preferences.autoUnlock && preferences.storageDir) { await backend('autoUnlock', { storageDir: preferences.storageDir, cacheDir: preferences.cacheDir, driveLetter: preferences.driveLetter }); await backend('mount', { driveLetter: preferences.driveLetter }); } } catch (error) { state.driver.checking = false; state.sync.error = error.message; publish(); }
+    } else { state.driver.checking = false; state.driver.error = 'Windows and WinFsp are required to mount a drive.'; publish(); }
   }).catch(() => { app.exit(1); });
   app.on('before-quit', event => { if (!shuttingDown && !testMode) { event.preventDefault(); void quit(); } });
   app.on('window-all-closed', () => { if (testMode) { shuttingDown = true; helper?.dispose(); app.quit(); } });

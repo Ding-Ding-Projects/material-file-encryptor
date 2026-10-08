@@ -2,7 +2,7 @@ export interface DriveFile { id: string; path: string; size: number; modified: s
 export interface DriveState {
   locked: boolean; mounted: boolean; driveLetter?: string; storageDir?: string; cacheDir: string;
   files: DriveFile[]; availableDriveLetters: string[]; partSizeBytes?: number; autoUnlock?: boolean;
-  operation: string | null; driver: { available: boolean; error?: string | null };
+  operation: string | null; driver: { available: boolean; checking?: boolean; error?: string | null };
   defaults: { cacheDir: string; driveLetter: string };
   preferences: { startup: boolean; autoUnlock: boolean; driveLetter: string; storageDir?: string; cacheDir?: string };
   sync: { running: boolean; lastSync: string | null; error: string | null };

@@ -71,7 +71,7 @@ async function run(label, task, success, inDialog = false) {
  finally { busy = false; operation(state?.operation || (state?.sync?.running ? 'Syncing encrypted files…' : '')); renderAvailability(); }
 }
 function mountState() {
- if (!state) return 'Checking drive…';
+ if (!state || state.driver?.checking) return 'Checking drive…';
  if (state.unmountbusy || state.unmountBusy || state.mountState === 'unmountbusy' || state.phase === 'unmountbusy') return 'Waiting for open files';
  if (state.operation === 'mounting' || state.mounting || state.mountState === 'mounting' || state.phase === 'mounting') return 'Mounting…';
  return state.locked ? 'Locked' : state.mounted ? 'Mounted' : 'Unlocked · not mounted';
@@ -90,13 +90,14 @@ function renderAvailability() {
  $('auto-unlock-setting').disabled = busy || !unlocked;
  $('forget-credential').disabled = busy || !state;
  for (const el of $('vault-form').querySelectorAll('button,input,select')) el.disabled = busy;
- $('dialog-submit').disabled = busy || !$('drive-letter').value;
+ $('drive-letter').disabled = busy || state?.driver?.checking === true;
+ $('dialog-submit').disabled = busy || state?.driver?.checking === true || !$('drive-letter').value;
 }
 function render() {
  if (!state) return;
  const status = mountState(); setText('vault-badge',status); $('vault-badge').dataset.state = state.mounted ? 'mounted' : 'locked';
  $('locked-state').hidden = !state.locked; $('drive-content').hidden = state.locked; $('lock-button').hidden = state.locked;
- $('driver-notice').hidden = state.driver?.available !== false;
+ $('driver-notice').hidden = state.driver?.checking || state.driver?.available !== false;
  $('install-driver').hidden = !api.installDriver || state.driver?.available !== false || !/Windows/i.test(navigator.userAgent);
  $('mount-button').hidden = state.locked || state.mounted;
  $('driver-error').textContent = state.driver?.error || 'Install WinFsp on Windows to mount this drive. Encrypted storage can still be configured.';
@@ -115,6 +116,7 @@ function render() {
  else if (state.sync?.running) setText('sync-detail','Syncing encrypted files…');
  else if (state.sync?.lastSync) $('sync-detail').textContent = `${preferences.language === 'yue' ? '加密儲存已更新' : 'Encrypted storage updated'} · ${formatDate(state.sync.lastSync)}`;
  else setText('sync-detail','Not synced yet');
+ if ($('vault-dialog').open) updateDriveLetters();
  renderFiles(); renderAvailability();
 }
 function formatDate(date) { const d = new Date(date); return Number.isNaN(d.getTime()) ? '' : new Intl.DateTimeFormat(preferences.language === 'yue' ? 'zh-HK' : 'en', { month:'short',day:'numeric',hour:'2-digit',minute:'2-digit' }).format(d); }
@@ -162,17 +164,28 @@ function updateDialog() {
  $('password-input').required = !isKey; $('confirm-password').required = creating && !isKey; $('key-path').required = isKey;
  $('password-input').autocomplete = creating ? 'new-password' : 'current-password';
 }
+function updateDriveLetters(preserveSelection = true) {
+ const normalize = value => String(value || '').replace(/[:\\]+$/, '').toUpperCase();
+ const checking = state?.driver?.checking === true;
+ const letters = checking ? [] : [...new Set((state?.availableDriveLetters || state?.defaults?.availableDriveLetters || []).map(normalize))];
+ const select = $('drive-letter');
+ const placeholderText = t(checking ? 'Checking available drive letters…' : letters.length ? 'Drive letter' : 'No available drive letters');
+ const signature = JSON.stringify([placeholderText, letters]);
+ if (preserveSelection && select.dataset.choices === signature) return;
+ const current = preserveSelection ? select.value : '';
+ const preferred = normalize(state?.driveLetter || state?.defaults?.driveLetter);
+ const fragment = document.createDocumentFragment();
+ const placeholder = document.createElement('option'); placeholder.value = ''; placeholder.textContent = placeholderText; fragment.append(placeholder);
+ for (const letter of letters) { const option = document.createElement('option'); option.value = letter; option.textContent = `${letter}:`; fragment.append(option); }
+ select.replaceChildren(fragment); select.dataset.choices = signature;
+ select.value = letters.includes(current) ? current : letters.includes(preferred) ? preferred : letters[0] || '';
+ select.setAttribute('aria-busy', String(checking));
+}
 function openVaultDialog(mode) {
  dialogMode = mode; $('vault-form').reset(); $('dialog-error').hidden = true;
  $('storage-input').value = state?.storageDir || ''; $('cache-input').value = state?.cacheDir || state?.defaults?.cacheDir || '';
  $('password-input').type = 'password'; $('show-password').setAttribute('aria-pressed','false'); setText('show-password','Show');
- const letters = state?.availableDriveLetters || state?.defaults?.availableDriveLetters || [];
- $('drive-letter').replaceChildren();
- const placeholder = document.createElement('option'); placeholder.value = ''; placeholder.textContent = letters.length ? t('Drive letter') : 'No available drive letters'; $('drive-letter').append(placeholder);
- for (const candidate of letters) { const letter = String(candidate).replace(/[:\\]+$/,''); const option = document.createElement('option'); option.value = letter; option.textContent = `${letter}:`; $('drive-letter').append(option); }
- const preferred = state?.driveLetter || state?.defaults?.driveLetter;
- if (preferred) $('drive-letter').value = String(preferred).replace(/[:\\]+$/,'');
- if (!$('drive-letter').value) $('drive-letter').selectedIndex = letters.length ? 1 : 0;
+ updateDriveLetters(false);
  updateDialog(); renderAvailability(); $('vault-dialog').showModal(); $('storage-input').focus();
 }
 function closeVaultDialog() { if (busy) return; $('vault-dialog').close(); $('password-input').value = ''; $('confirm-password').value = ''; $('key-path').value = ''; }

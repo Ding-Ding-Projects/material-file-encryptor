@@ -26,7 +26,7 @@ const evaluateApplication = (...args) => bounded(application.evaluate(...args), 
 const watchdog = setTimeout(() => { console.error(`Desktop check exceeded its four-minute limit during ${phase}.`); process.exit(1); }, 240000);
 watchdog.unref();
 const errors = [];
-let fixtureRoot, video, originalStartup;
+let fixtureRoot, fixtureDriveRoot, video, originalStartup;
 let startupRegistration = null;
 const packagedEvidence = { launchedBuiltArtifact: Boolean(packagedExecutable), asar: false, nativeHelperPresent: false, driverInstallerPresent: false };
 try {
@@ -99,10 +99,13 @@ try {
     const password = randomBytes(24).toString('base64url');
     await page.fill('#password-input', password); await page.fill('#confirm-password', password); await page.click('#dialog-submit');
     await page.waitForFunction(async () => (await window.drive.status()).mounted, null, { timeout: 60000 });
-    await checkpoint('mounted-file-io');
+    await checkpoint('mounted-file-write');
     const mountedRoot = driveLetter + '\\';
+    fixtureDriveRoot = mountedRoot;
     await fs.writeFile(path.join(mountedRoot, 'Welcome.txt'), 'A real Windows mounted drive.\n');
+    await checkpoint('mounted-file-sync');
     await evaluatePage(() => window.drive.sync());
+    await checkpoint('mounted-file-read');
     assert.equal(await fs.readFile(path.join(mountedRoot, 'Welcome.txt'), 'utf8'), 'A real Windows mounted drive.\n');
     await page.waitForFunction(() => document.querySelector('#file-list').textContent.includes('Welcome.txt'));
     await settle();
@@ -122,7 +125,10 @@ try {
   checkReceipt = { platform: process.platform, packagedArtifact: packagedEvidence, startupRegistration, security, driverAvailable: status.driver.available, pageErrors: errors, recording: `desktop-${process.platform}.webm`, mountedFilesystemChecked: process.platform === 'win32', checked: ['locked screen', 'create dialog', 'key-file choice', 'settings theme', 'help', 'preload isolation', ...(process.platform === 'win32' ? ['packaged ASAR and resources', 'startup registration toggle and restore', 'create and mount', 'mounted file write/read', 'encrypted offline pin and pane', 'lock'] : [])] };
   await checkpoint('checks-passed');
 } catch (error) {
-  failure = { phase, errorType: errorType(error) };
+  failure = { phase, errorType: errorType(error), code: typeof error.code === 'string' && /^[A-Z_0-9]+$/.test(error.code) ? error.code : null, syscall: ['open', 'write', 'read', 'stat', 'mkdir', 'unlink', 'rename'].includes(error.syscall) ? error.syscall : null };
+  if (['mounted-file-write', 'mounted-file-sync', 'mounted-file-read'].includes(phase) && application && fixtureDriveRoot) {
+    try { failure.driveVisibility = await bounded(application.evaluate(async (_electron, root) => { const io = process.getBuiltinModule('fs').promises; try { await io.stat(root); return { electronMainCanStatDrive: true }; } catch (error) { return { electronMainCanStatDrive: false, code: /^[A-Z_0-9]+$/.test(error.code || '') ? error.code : null }; } }, fixtureDriveRoot), 'drive visibility diagnostic', 5000); } catch { failure.driveVisibility = { probeFailed: true }; }
+  }
   console.error(`Desktop check failed during ${phase} (${failure.errorType}).`);
 } finally {
   const cleanupErrors = [];
@@ -155,7 +161,7 @@ try {
     catch (error) { cleanupErrors.push({ phase: 'fixture-removal', errorType: errorType(error) }); }
   }
   const passed = Boolean(checkReceipt) && !failure && cleanupErrors.length === 0;
-  await fs.writeFile('out/evidence/desktop-check.json', JSON.stringify({ ...checkReceipt, platform: process.platform, passed, failure, cleanupErrors, milestones, fixtureRetained: Boolean(fixtureRoot && (!safeToRemoveFixture || !closed)) }, null, 2));
+  await fs.writeFile('out/evidence/desktop-check.json', JSON.stringify({ ...checkReceipt, platform: process.platform, packagedArtifact: packagedEvidence, startupRegistration, passed, failure, cleanupErrors, milestones, fixtureRetained: Boolean(fixtureRoot && (!safeToRemoveFixture || !closed)) }, null, 2));
   clearTimeout(watchdog);
   if (!passed) { console.error('Desktop verification failed; see the safe phase receipt. No busy drive was force-unmounted.'); process.exit(1); }
   console.log('Electron checks and graceful cleanup passed.');

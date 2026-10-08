@@ -46,7 +46,17 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   await page.goto(`http://127.0.0.1:${server.address().port}`); await page.waitForFunction(() => document.querySelector('#vault-badge').textContent !== 'Checking drive…');
   assert.equal(await page.locator('#vault-badge').textContent(),'Locked'); assert.equal(await page.locator('#file-list tr').count(),0);
   await page.click('[data-view=help]');await page.click('#project-website-link');assert.equal(await page.evaluate(() => window.calls.find(call => call.name === 'openExternal').value),'https://ding-ding-projects.github.io/material-file-encryptor/');await page.click('[data-view=drive]');
-  await page.click('#create-button'); assert.equal(await page.locator('#cache-input').inputValue(),'C:\\EncryptedCache'); assert.equal(await page.locator('#drive-letter').inputValue(),'M');
+  await page.evaluate(() => window.pushState({availableDriveLetters:[],driver:{available:false,checking:true}}));
+  await page.click('#create-button');assert.match(await page.locator('#drive-letter').textContent(),/Checking available drive letters/);
+  assert.equal(await page.locator('#dialog-submit').isDisabled(),true);assert.equal(await page.locator('#driver-notice').isVisible(),false);
+  await page.fill('#password-input','entry survives discovery');
+  await page.evaluate(() => window.pushState({availableDriveLetters:['M:','N:'],driver:{available:true,checking:false}}));
+  assert.equal(await page.locator('#drive-letter').inputValue(),'M');assert.equal(await page.locator('#dialog-submit').isEnabled(),true);
+  assert.equal(await page.locator('#password-input').inputValue(),'entry survives discovery');assert.equal(await page.locator('#password-input').evaluate(el => el===document.activeElement),true);
+  await page.selectOption('#drive-letter','N');await page.evaluate(() => window.pushState({availableDriveLetters:['L:','M:','N:']}));
+  assert.equal(await page.locator('#drive-letter').inputValue(),'N','ready status must preserve a chosen available letter');
+  await page.selectOption('#drive-letter','M');assert.equal(await page.locator('#cache-input').inputValue(),'C:\\EncryptedCache');
+
   await page.click('[data-browse="storage-input"]'); await page.fill('#password-input','correct horse battery staple');await page.fill('#confirm-password','wrong');await page.click('#dialog-submit');assert.match(await page.locator('#dialog-error').textContent(),/do not match/);
   await page.locator('[name=credential-mode][value=password]').focus();await page.keyboard.press('ArrowRight');
   assert.equal(await page.locator('[name=credential-mode][value=keyFile]').isChecked(),true);
