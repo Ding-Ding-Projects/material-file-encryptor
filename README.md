@@ -2,7 +2,7 @@
 
 A Windows Explorer drive that encrypts files into a folder managed by OneDrive, Google Drive, or any other folder-sync client. Open and edit files normally; keep selected files available offline in an encrypted local cache.
 
-**Development status:** the native drive and desktop interface are being implemented. The diagrams below describe the agreed architecture, not a verified release. No installer is published yet.
+**Development status:** the native engine and desktop interface are implemented. Thirteen native storage checks and twelve desktop/site checks pass locally; actual Windows mounting and installer verification are pending. The diagrams describe the architecture and are separate from real application captures. No installer is published yet.
 
 [Project goal](GOAL.md) · [Interface design](DESIGN.md) · [Source](https://github.com/Ding-Ding-Projects/material-file-encryptor) · [Planned documentation site](https://ding-ding-projects.github.io/material-file-encryptor/)
 
@@ -29,6 +29,14 @@ The mounted drive returns authenticated, decrypted bytes when applications read 
 <details>
 <summary>Build and verification status</summary>
 
-Windows is the delivery target. Explorer integration requires the genuine WinFsp filesystem driver. Build scripts, native tests, installer packaging, and screenshot capture are in development. This README will record actual results and real captures when they are available; a Linux renderer check will not be presented as Windows Explorer verification.
+Windows 10/11 x64 is the delivery target. Explorer integration requires the genuine WinFsp filesystem driver. From a fresh Windows checkout, build and start the app with:
+
+```powershell
+cmd /c "build.bat /s && out\material-file-encryptor-win32-x64\MaterialFileEncryptor.exe"
+```
+
+The build obtains verified user-scoped Node and .NET tools, the pinned browser used by UI tests, and the signed WinFsp installer. If the driver is missing, **Install WinFsp** opens the bundled installer with its normal Windows elevation flow. Reopen the app after driver installation. `build-installer.bat /s` produces a genuine unsigned Squirrel.Windows installer; Windows publisher warnings are expected for the app installer.
+
+Local verification covers the encrypted engine, range I/O, recovery, conflicts, offline pins, part limits, desktop bridge and renderer interactions. Real Electron captures on Linux verify interface behavior and isolation; they do not prove Windows Explorer mounting. Windows CI exercises a real drive through ordinary file operations and produces separate evidence.
 
 </details>

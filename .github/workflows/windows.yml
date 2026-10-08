@@ -1,0 +1,54 @@
+name: Windows build and mounted drive verification
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Verify dependencies and install trusted WinFsp
+        shell: powershell
+        run: .\scripts\bootstrap.ps1 -InstallDriver
+      - name: Build using the documented entry point
+        shell: cmd
+        run: build.bat /s
+      - name: Exercise the mounted filesystem using standard Windows file operations
+        shell: powershell
+        run: .\scripts\windows-mounted-check.ps1
+      - name: Capture and exercise the real Electron application
+        shell: powershell
+        run: |
+          . .\scripts\bootstrap.ps1
+          npm.cmd run test:desktop
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Create the genuine unsigned Squirrel installer
+        shell: cmd
+        run: build-installer.bat /s
+      - name: Record safe build receipt
+        if: always()
+        shell: powershell
+        env:
+          VERIFICATION_JOB_STATUS: ${{ job.status }}
+        run: |
+          New-Item -ItemType Directory -Force out/evidence | Out-Null
+          @{ commit = $env:GITHUB_SHA; runId = $env:GITHUB_RUN_ID; runAttempt = $env:GITHUB_RUN_ATTEMPT; jobStatus = $env:VERIFICATION_JOB_STATUS; runnerOS = $env:RUNNER_OS; imageVersion = $env:ImageVersion; unsignedInstaller = $true } | ConvertTo-Json | Set-Content out/evidence/build-receipt.json
+      - name: Upload installer and verification evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-installer-and-evidence
+          path: |
+            out/make/squirrel.windows/x64/*.exe
+            out/make/squirrel.windows/x64/*.nupkg
+            out/make/squirrel.windows/x64/RELEASES
+            out/evidence/*.png
+            out/evidence/*.json
+          if-no-files-found: warn
+          retention-days: 14

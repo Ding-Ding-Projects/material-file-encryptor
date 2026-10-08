@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "node": {
+    "version": "24.19.0",
+    "url": "https://nodejs.org/dist/v24.19.0/node-v24.19.0-win-x64.zip",
+    "sha256": "57f71ab3652e797d84acddc79c81cc9ff1c6ddb2a1974cdb83f00fee9bff4c73"
+  },
+  "dotnet": {
+    "version": "8.0.425",
+    "url": "https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.425/dotnet-sdk-8.0.425-win-x64.zip",
+    "sha512": "f0b6f15bf6f1a0507205c0cb102ab99e1dee875c4682c8ed94665be1d580186a06b21455e83b3a01a0ff7f4cd887b67420f2e2fe09ed985534a4cea488ae1af9"
+  },
+  "winfsp": {
+    "version": "2.1.25156",
+    "url": "https://github.com/winfsp/winfsp/releases/download/v2.1/winfsp-2.1.25156.msi",
+    "sha256": "073a70e00f77423e34bed98b86e600def93393ba5822204fac57a29324db9f7a",
+    "publisher": "Navimatics"
+  }
+}
