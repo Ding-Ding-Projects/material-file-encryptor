@@ -407,6 +407,48 @@ public sealed class VaultEngine : IDisposable
         finally { partSize=oldCap; }
         e.Records=records; e.ChunkSize=chunkSize; e.PartSize=newPartSize;
     }
+    /// <summary>Evicts safe ciphertext referenced by an entry or subtree, preserving unrelated and shared content.</summary>
+    public long EvictEntryCache(string path)
+    {
+        lock(gate)
+        {
+            Check(); path=VaultPath.Normalize(path); if(path!="")Find(path);
+            VaultCrypto.ValidatePhysicalPath(source); VaultCrypto.ValidatePhysicalPath(Path.Combine(cache,"parts"));
+            sourceAvailable=Directory.Exists(source); if(!sourceAvailable)return 0;
+
+            var selected=entries.Where(p=>path=="" || p.Key.Equals(path,StringComparison.OrdinalIgnoreCase) || p.Key.StartsWith(path+"/",StringComparison.OrdinalIgnoreCase)).ToArray();
+            var selectedPaths=selected.Select(p=>p.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var candidates=selected.SelectMany(p=>p.Value.Records.Values).Select(r=>r.Part).ToHashSet(StringComparer.Ordinal);
+            var protectedParts=new HashSet<string>(StringComparer.Ordinal);
+            var cleanVersions=baseline.Values.Select(e=>e.Version).ToHashSet(StringComparer.Ordinal);
+            foreach(var pair in entries)
+                if(!selectedPaths.Contains(pair.Key) || IsPinned(pair.Key,pair.Value) || open.ContainsKey(pair.Value.Id) || !cleanVersions.Contains(pair.Value.Version))
+                    protectedParts.UnionWith(pair.Value.Records.Values.Select(r=>r.Part));
+            foreach(var orphan in orphans.Values)protectedParts.UnionWith(orphan.Records.Values.Select(r=>r.Part));
+            foreach(var id in pending)protectedParts.UnionWith(Parts(ReadMetadata<Commit>(ObjectPath(cache,"commits",id),"commit",id)));
+            candidates.ExceptWith(protectedParts);
+
+            // A failure during source verification leaves the cache intact.
+            var eligible=new List<(string Path,long Length)>();
+            try
+            {
+                foreach(var id in candidates.Order(StringComparer.Ordinal))
+                {
+                    var local=ObjectPath(cache,"parts",id); var remote=ObjectPath(source,"parts",id);
+                    if(!File.Exists(local)||!File.Exists(remote))continue;
+                    VerifyPart(remote,id); eligible.Add((local,new FileInfo(local).Length));
+                }
+            }
+            catch(Exception ex) when(ex is IOException or UnauthorizedAccessException)
+            {
+                sourceAvailable=Directory.Exists(source); lastError=ex.Message; return 0;
+            }
+            long removed=0;
+            foreach(var part in eligible) { VaultCrypto.ValidatePhysicalPath(part.Path); File.Delete(part.Path); removed=checked(removed+part.Length); }
+            return removed;
+        }
+    }
+
     /// <summary>Evicts only published, closed, unpinned content. Cloud objects are never garbage-collected.</summary>
     public long EvictCache(long desiredBytes)
     {

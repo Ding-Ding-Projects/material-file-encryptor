@@ -16,6 +16,10 @@ var cases = new (string,Action)[] {
     ("remote deletion retains open-handle content",RemoteOpen),
     ("root and managed-child symbolic links are rejected",Links),
     ("folder pin inheritance and sparse terabyte lengths",FolderPin),
+    ("targeted release removes only selected clean cache parts",TargetedRelease),
+    ("targeted release protects pins, open, dirty, pending and offline state",TargetedProtection),
+    ("targeted release preserves shared and orphaned ciphertext",TargetedShared),
+    ("targeted release authenticates source before deleting cache",TargetedAuthentication),
 };
 if(args.Length==2 && args[0]=="crash-write") {
     var options=Options(args[1]); using var c=VaultCredentials.Password("strong test credential"); var v=VaultEngine.Open(options,c);
@@ -67,3 +71,43 @@ static void DirectoryConflict() {var root=Temp();try{using(var initial=Create(ro
 static void RemoteOpen() {var root=Temp();try{using(var initial=Create(root)){initial.CreateFile("open");initial.WriteRange("open",0,"open bytes"u8);initial.FlushAsync().GetAwaiter().GetResult();}using var a=Open(root,"a");using var b=Open(root,"b");var id=a.GetInfo("open")!.EntryId;using var lease=a.AcquireOpenById(id);b.Delete("open");b.FlushAsync().GetAwaiter().GetResult();a.SyncAsync().GetAwaiter().GetResult();Assert(a.GetInfo("open")==null);var bytes=new byte[10];Assert(a.ReadRangeById(id,0,bytes)==10);Equal("open bytes"u8.ToArray(),bytes);}finally{Directory.Delete(root,true);}}
 static void Links() {var root=Temp();try{Directory.CreateDirectory(Path.Combine(root,"source"));Directory.CreateSymbolicLink(Path.Combine(root,"cache"),Path.Combine(root,"source"));Throws<ArgumentException>(()=>Create(root));Directory.Delete(Path.Combine(root,"cache"));Directory.CreateDirectory(Path.Combine(root,"cache"));Directory.CreateDirectory(Path.Combine(root,"source","parts"));Directory.CreateSymbolicLink(Path.Combine(root,"cache","parts"),Path.Combine(root,"source","parts"));Throws<ArgumentException>(()=>Create(root));}finally{Directory.Delete(root,true);}}
 static void FolderPin() {var root=Temp();try{using var v=Create(root);v.CreateDirectory("p");v.SetPinnedAsync("p",true).GetAwaiter().GetResult();v.CreateFile("p/new");v.WriteRange("p/new",0,"pinned child"u8);v.SetLength("p/new",1L<<40);Assert(v.GetInfo("p/new")!.IsPinned);var tail=new byte[20];Assert(v.ReadRange("p/new",(1L<<40)-20,tail)==20);Assert(tail.All(b=>b==0));v.FlushAsync().GetAwaiter().GetResult();Assert(v.EvictCache(long.MaxValue)==0);v.SetPinnedAsync("p",false).GetAwaiter().GetResult();Assert(!v.GetInfo("p/new")!.IsPinned);}finally{Directory.Delete(root,true);}}
+
+static HashSet<string> CachedParts(string root,string cache="cache") => Directory.GetFiles(Path.Combine(root,cache,"parts"),"*.mfe").ToHashSet(StringComparer.Ordinal);
+static void TargetedRelease() {
+    var root=Temp();try {
+        using var v=Create(root);v.CreateDirectory("selected");v.CreateFile("selected/a");v.WriteRange("selected/a",0,RandomNumberGenerator.GetBytes(1300));v.CreateFile("selected/b");v.WriteRange("selected/b",0,"subtree"u8);
+        var selected=CachedParts(root);var expectedBytes=selected.Sum(p=>new FileInfo(p).Length);
+        v.CreateFile("unrelated");v.WriteRange("unrelated",0,"retain unrelated cached bytes"u8);v.FlushAsync().GetAwaiter().GetResult();
+        var all=CachedParts(root);var unrelated=all.Except(selected).ToHashSet();var sourceParts=Directory.GetFiles(Path.Combine(root,"source","parts")).ToHashSet();var journal=File.ReadAllBytes(Path.Combine(root,"cache","journal.mfe"));
+        v.SetPinnedAsync("selected",true).GetAwaiter().GetResult();Assert(v.EvictEntryCache("selected")==0);v.SetPinnedAsync("selected",false).GetAwaiter().GetResult();journal=File.ReadAllBytes(Path.Combine(root,"cache","journal.mfe"));
+        Assert(v.EvictEntryCache("SELECTED")==expectedBytes,"Removed-byte count is not the selected ciphertext size.");Assert(CachedParts(root).SetEquals(unrelated),"Unrelated cache content was evicted.");
+        Assert(Directory.GetFiles(Path.Combine(root,"source","parts")).ToHashSet().SetEquals(sourceParts),"Source ciphertext changed during cache release.");Equal(journal,File.ReadAllBytes(Path.Combine(root,"cache","journal.mfe")));Assert(v.GetInfo("selected/a")!.Length==1300);Equal("subtree"u8.ToArray(),Read(v,"selected/b"));
+        Throws<FileNotFoundException>(()=>v.EvictEntryCache("absent"));Throws<ArgumentException>(()=>v.EvictEntryCache("../selected"));
+    }finally{Directory.Delete(root,true);}
+}
+static void TargetedProtection() {
+    var root=Temp();try {
+        using var v=Create(root);v.CreateDirectory("p");v.CreateFile("p/file");v.WriteRange("p/file",0,RandomNumberGenerator.GetBytes(1300));v.FlushAsync().GetAwaiter().GetResult();
+        v.SetPinnedAsync("p",true).GetAwaiter().GetResult();Assert(v.EvictEntryCache("p/file")==0,"An inherited folder pin was ignored.");v.SetPinnedAsync("p",false).GetAwaiter().GetResult();
+        using(var lease=v.AcquireOpen("p/file"))Assert(v.EvictEntryCache("p/file")==0,"An open file was evicted.");
+        v.WriteRange("p/file",0,"dirty"u8);var dirty=CachedParts(root);Assert(v.EvictEntryCache("p/file")==0,"Dirty file's unchanged published chunks were evicted.");Assert(CachedParts(root).SetEquals(dirty));
+        Directory.Move(Path.Combine(root,"source"),Path.Combine(root,"away"));Assert(v.EvictEntryCache("p")==0,"Offline cache release returned removed bytes.");v.FlushAsync().GetAwaiter().GetResult();Assert(v.Status.PendingCommits>0);Assert(v.EvictEntryCache("p/file")==0);Assert(CachedParts(root).SetEquals(dirty));
+        Directory.Move(Path.Combine(root,"away"),Path.Combine(root,"source"));Assert(v.EvictEntryCache("p/file")==0,"Unpublished commit chunks were evicted.");Assert(CachedParts(root).SetEquals(dirty));v.SyncAsync().GetAwaiter().GetResult();Assert(v.Status.PendingCommits==0);Assert(v.EvictEntryCache("p/file")>0);
+    }finally{Directory.Delete(root,true);}
+}
+static void TargetedShared() {
+    var root=Temp();try {
+        using(var initial=Create(root)){initial.CreateFile("shared");initial.WriteRange("shared",0,RandomNumberGenerator.GetBytes(1500));initial.FlushAsync().GetAwaiter().GetResult();}
+        using var a=Open(root,"a");using var b=Open(root,"b");a.WriteRange("shared",0,"AAAA"u8);b.WriteRange("shared",0,"BBBB"u8);a.FlushAsync().GetAwaiter().GetResult();b.FlushAsync().GetAwaiter().GetResult();a.SyncAsync().GetAwaiter().GetResult();
+        var files=a.Enumerate("");Assert(files.Count==2);var target=files[0];var other=files[1];var before=CachedParts(root,"a");var otherBytes=Read(a,other.Path);var targetBytes=Read(a,target.Path);
+        Assert(a.EvictEntryCache(target.Path)>0);var removed=before.Except(CachedParts(root,"a")).ToArray();Assert(removed.Length==1,"A shared part or unrelated historical part was evicted.");
+        Equal(otherBytes,Read(a,other.Path));Assert(before.Except(CachedParts(root,"a")).SequenceEqual(removed),"Reading the other entry had to refetch its shared cache content.");Equal(targetBytes,Read(a,target.Path));
+        using var lease=a.AcquireOpenById(other.EntryId);a.Delete(other.Path);a.FlushAsync().GetAwaiter().GetResult();var withOrphan=CachedParts(root,"a");Assert(a.EvictEntryCache(target.Path)>0);var after=CachedParts(root,"a");Assert(withOrphan.Except(after).Count()==1,"An orphaned open handle's shared part was evicted.");var openedBytes=new byte[other.Length];Assert(a.ReadRangeById(other.EntryId,0,openedBytes)==openedBytes.Length);Equal(otherBytes,openedBytes);Assert(CachedParts(root,"a").SetEquals(after),"Orphaned content had to be refetched after targeted release.");
+    }finally{Directory.Delete(root,true);}
+}
+static void TargetedAuthentication() {
+    var root=Temp();try {
+        using var v=Create(root);v.CreateFile("verified");v.WriteRange("verified",0,RandomNumberGenerator.GetBytes(2000));v.FlushAsync().GetAwaiter().GetResult();var before=CachedParts(root);var sourcePart=Directory.GetFiles(Path.Combine(root,"source","parts")).Last();var bytes=File.ReadAllBytes(sourcePart);bytes[^1]^=1;File.WriteAllBytes(sourcePart,bytes);
+        Throws<CryptographicException>(()=>v.EvictEntryCache("verified"));Assert(CachedParts(root).SetEquals(before),"Cache changed before all source copies authenticated.");Assert(Read(v,"verified").Length==2000);
+    }finally{Directory.Delete(root,true);}
+}

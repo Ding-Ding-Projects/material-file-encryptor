@@ -52,6 +52,9 @@ internal sealed class VaultFileSystem : FileSystemBase
         host.PersistentAcls = false;
         host.NamedStreams = false;
         host.ReparsePoints = false;
+        // Stable entry leases support Windows' extended rename/delete requests.
+        // Legacy MoveFileEx still obeys the kernel's open-handle restrictions.
+        host.SupportsPosixUnlinkRename = true;
         host.FileInfoTimeout = 0;
         host.FlushAndPurgeOnCleanup = true;
         host.PostCleanupWhenModifiedOnly = false;

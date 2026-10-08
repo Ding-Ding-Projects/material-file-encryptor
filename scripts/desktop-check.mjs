@@ -5,11 +5,15 @@ import path from 'node:path';
 import os from 'node:os';
 import { randomBytes } from 'node:crypto';
 await fs.mkdir('out/evidence', { recursive: true });
-const launchArgs = ['.', '--desktop-check'];
+const packagedExecutable = process.platform === 'win32' ? path.resolve('out/material-file-encryptor-win32-x64/MaterialFileEncryptor.exe') : undefined;
+if (packagedExecutable) await fs.access(packagedExecutable);
+const launchArgs = packagedExecutable ? ['--desktop-check'] : ['.', '--desktop-check'];
 if (process.platform === 'linux') launchArgs.push('--no-sandbox'); // Isolated development capture only; packaged Windows sandbox stays enabled.
-const application = await electron.launch({ args: launchArgs, cwd: process.cwd(), timeout: 60000, recordVideo: { dir: 'out/evidence/video', size: { width: 1180, height: 850 }, fps: 15 } });
+const application = await electron.launch({ executablePath: packagedExecutable, args: launchArgs, cwd: process.cwd(), timeout: 60000, recordVideo: { dir: 'out/evidence/video', size: { width: 1180, height: 850 }, fps: 15 } });
 const errors = [];
-let fixtureRoot, video;
+let fixtureRoot, video, originalStartup;
+let startupRegistration = null;
+const packagedEvidence = { launchedBuiltArtifact: Boolean(packagedExecutable), asar: false, nativeHelperPresent: false, driverInstallerPresent: false };
 try {
   const page = await application.firstWindow();
   video = page.video();
@@ -20,6 +24,27 @@ try {
   assert.equal(await page.evaluate(() => typeof window.drive.status), 'function');
   const security = await application.evaluate(({ BrowserWindow }) => { const preferences = BrowserWindow.getAllWindows()[0].webContents.getLastWebPreferences(); return { sandbox: preferences.sandbox, contextIsolation: preferences.contextIsolation, nodeIntegration: preferences.nodeIntegration }; });
   assert.deepEqual(security, { sandbox: true, contextIsolation: true, nodeIntegration: false });
+  if (packagedExecutable) {
+    const runtime = await application.evaluate(({ app }) => ({ packaged: app.isPackaged, executable: process.execPath, appPath: app.getAppPath(), resources: process.resourcesPath }));
+    assert.equal(runtime.packaged, true, 'Windows checks must exercise the packaged application.');
+    assert.equal(path.resolve(runtime.executable).toLowerCase(), packagedExecutable.toLowerCase());
+    assert.equal(path.basename(runtime.appPath), 'app.asar', 'The renderer and preload must run from the packaged ASAR.');
+    await fs.access(runtime.appPath);
+    await fs.access(path.join(runtime.resources, 'native', 'MaterialFileEncryptor.Host.exe'));
+    const manifest = JSON.parse(await fs.readFile(path.join(runtime.resources, 'dependencies.json'), 'utf8'));
+    await fs.access(path.join(runtime.resources, 'driver', `winfsp-${manifest.winfsp.version}.msi`));
+    Object.assign(packagedEvidence, { asar: true, nativeHelperPresent: true, driverInstallerPresent: true });
+    const readStartup = () => application.evaluate(({ app }) => app.getLoginItemSettings({ path: process.execPath, args: ['--startup'] }).openAtLogin);
+    originalStartup = (await page.evaluate(() => window.drive.status())).preferences.startup;
+    assert.equal(await readStartup(), originalStartup, 'Windows registration must match the saved preference.');
+    await page.evaluate(() => window.drive.setStartup(false));
+    assert.equal(await readStartup(), false, 'Disabling startup must remove its Windows registration.');
+    await page.evaluate(() => window.drive.setStartup(true));
+    assert.equal(await readStartup(), true, 'Enabling startup must create its Windows registration.');
+    await page.evaluate(value => window.drive.setStartup(value), originalStartup);
+    assert.equal(await readStartup(), originalStartup, 'Restore the original startup preference and registration.');
+    startupRegistration = { initial: originalStartup, disabledReadback: false, enabledReadback: true, restored: originalStartup, signInTested: false };
+  }
   await settle();
   await page.screenshot({ path: 'out/evidence/desktop-locked.png', fullPage: true });
   await page.click('#create-button');
@@ -60,9 +85,13 @@ try {
     assert.equal((await page.evaluate(() => window.drive.status())).locked, true);
   }
   assert.deepEqual(errors, []);
-  await fs.writeFile(path.resolve('out/evidence/desktop-check.json'), JSON.stringify({ platform: process.platform, security, driverAvailable: status.driver.available, pageErrors: errors, recording: `desktop-${process.platform}.webm`, mountedFilesystemChecked: process.platform === 'win32', checked: ['locked screen', 'create dialog', 'settings theme', 'help', 'preload isolation', ...(process.platform === 'win32' ? ['create and mount', 'mounted file write/read', 'lock'] : [])] }, null, 2));
+  await fs.writeFile(path.resolve('out/evidence/desktop-check.json'), JSON.stringify({ platform: process.platform, packagedArtifact: packagedEvidence, startupRegistration, security, driverAvailable: status.driver.available, pageErrors: errors, recording: `desktop-${process.platform}.webm`, mountedFilesystemChecked: process.platform === 'win32', checked: ['locked screen', 'create dialog', 'settings theme', 'help', 'preload isolation', ...(process.platform === 'win32' ? ['packaged ASAR and resources', 'startup registration toggle and restore', 'create and mount', 'mounted file write/read', 'lock'] : [])] }, null, 2));
   console.log('Electron checks passed: real app window, create dialog, settings theme, help and sandbox.');
 } finally {
+  if (originalStartup !== undefined) {
+    const page = await application.firstWindow();
+    await page.evaluate(value => window.drive.setStartup(value), originalStartup);
+  }
   await application.close();
   if (video) {
     const recording = `out/evidence/desktop-${process.platform}.webm`;

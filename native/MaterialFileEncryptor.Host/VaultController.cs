@@ -18,6 +18,7 @@ internal sealed class VaultController : IDisposable
     private string driveLetter = "M:";
     private string? syncError;
     private DateTimeOffset? lastSync;
+    private object? lastOfflineRelease;
     private bool syncing, unmountBusy;
     private readonly bool driverAvailable;
     private readonly string? driverError;
@@ -63,7 +64,7 @@ internal sealed class VaultController : IDisposable
             return new
             {
                 locked = vault is null, mounted = host is not null, unmountBusy, driveLetter, storageDir, cacheDir, files,
-                partSizeBytes = vault?.PartSizeBytes ?? 10L * 1024 * 1024,
+                partSizeBytes = vault?.PartSizeBytes ?? 10L * 1024 * 1024, lastOfflineRelease,
                 sync = new { running = syncing, lastSync, error = fileSystem?.LastError ?? syncError ?? (vault?.Status.LastError is null ? null : "Encrypted storage synchronization needs attention."), pendingCommits = vault?.Status.PendingCommits ?? 0, sourceAvailable = vault?.Status.IsSourceAvailable ?? false },
                 driver = new
                 {
@@ -111,7 +112,11 @@ internal sealed class VaultController : IDisposable
                 case "mount": Mount(args); break;
                 case "importFiles": Import(args); break;
                 case "keepOffline": Engine.SetPinnedAsync(RequiredString(args, "path"), true).GetAwaiter().GetResult(); break;
-                case "releaseOffline": Engine.SetPinnedAsync(RequiredString(args, "path"), false).GetAwaiter().GetResult(); break;
+                case "releaseOffline":
+                    string releasedPath = VaultPath.Normalize(RequiredString(args, "path"));
+                    Engine.SetPinnedAsync(releasedPath, false).GetAwaiter().GetResult();
+                    lastOfflineRelease = new { path = releasedPath, bytesFreed = Engine.EvictEntryCache(releasedPath) };
+                    break;
                 case "setPartSize": Engine.SetPartSize(RequiredLong(args, "partSizeBytes")); Engine.FlushAsync().GetAwaiter().GetResult(); break;
                 case "resplit": Engine.ResplitAsync(RequiredString(args, "path"), RequiredLong(args, "partSizeBytes")).GetAwaiter().GetResult(); break;
                 case "sync": SyncLocked(); break;
@@ -156,7 +161,7 @@ internal sealed class VaultController : IDisposable
             using (credential) opened = create ? VaultEngine.Create(options, credential) : VaultEngine.Open(options, credential);
         }
         vault = opened; storageDir = options.StorageRoot; cacheDir = options.CacheRoot; identity = opened.VaultId; driveLetter = chosenDrive;
-        syncError = null; unmountBusy = false;
+        syncError = null; unmountBusy = false; lastOfflineRelease = null;
         if (OptionalBool(args, "autoUnlock")) SaveCredential();
         // Unlock and mount are separate operations; a missing driver never prevents
         // inspection/import/sync of an authenticated vault.

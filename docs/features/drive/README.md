@@ -15,7 +15,7 @@ https://github.com/winfsp/winfsp
 - Import streams a user-selected original directly into the encryption engine. The original remains in its original location. A name collision imports under a numbered name; it never overwrites an existing vault file.
 - Passwords and key-file bytes are used only for unlocking. Credential byte buffers and master-key exports are cleared after use. A .NET password string received over the inherited pipe remains subject to garbage collection; there is no claim that managed strings can be reliably erased.
 - Optional saved unlock stores the 32-byte master key under current-user Windows DPAPI, bound to the vault identity. The protected file lives in the user's local application-data credentials folder, with a protected owner/System ACL. Passwords and key-file paths are not persisted there. Forgetting saved unlock deletes that protected credential.
-- Windows kernel share modes and byte-range locks are enforced by WinFsp. Open handles refer to stable entry identities; rename, replacement, and deletion retain the content associated with an existing handle until its final descriptor closes, including retained memory-mapped views.
+- Windows kernel share modes and byte-range locks are enforced by WinFsp. Open handles refer to stable entry identities; rename, replacement, and deletion retain the content associated with an existing handle until its final descriptor closes, including retained memory-mapped views. Extended Windows rename requests with POSIX semantics permit shared-delete open replacement; legacy `MoveFileEx` requests follow Windows open-handle restrictions and can return access denied until the affected handles close.
 
 A busy unmount fails with a clear message and keeps the drive unlocked. Close applications and Explorer windows using that drive, then retry. The helper does not force-unmount automatically. During orderly pipe shutdown it waits for live handles to close. Abrupt process termination cannot run a graceful unmount; acknowledged writes are retained in the encrypted journal for the next unlock.
 
@@ -41,7 +41,7 @@ Responses are `{ "id": 1, "result": ... }` or `{ "id": 1, "error": "..." }`. The
 | `lock` | None; gracefully unmounts, flushes, and clears the engine key |
 | `importFiles` | `paths`: array of user-selected original file paths |
 | `keepOffline`, `releaseOffline` | `path`: virtual vault path |
-| `setPartSize` | `partSizeBytes`: default cap for new files (initially 10 MiB) |
+| `setPartSize` | `partSizeBytes`: default cap for new and subsequently edited files (initially 10 MiB) |
 | `resplit` | `path`, `partSizeBytes`: rewrite that file's encrypted parts |
 | `sync` | None |
 | `setAutoUnlock` | `enabled`; enabling requires an unlocked vault |
@@ -49,7 +49,7 @@ Responses are `{ "id": 1, "result": ... }` or `{ "id": 1, "error": "..." }`. The
 
 Create and unlock authenticate the vault; mount is a separate request. The desktop opens `driveLetter + "\\"` through Explorer after mounting.
 
-Status contains `locked`, `mounted`, `unmountBusy`, `driveLetter`, `storageDir`, `cacheDir`, `files`, `partSizeBytes`, `sync`, `driver`, `autoUnlock`, and `availableDriveLetters`. Each file reports `id`, virtual `path`, logical `size`, `modified`, actual encrypted `partCount`, its `partSizeBytes`, and `offline`. Part size includes authenticated-record overhead; encrypted parts do not exceed their cap.
+Status contains `locked`, `mounted`, `unmountBusy`, `driveLetter`, `storageDir`, `cacheDir`, `files`, `partSizeBytes`, `sync`, `driver`, `autoUnlock`, `availableDriveLetters`, and `lastOfflineRelease`. A successful offline release records its virtual `path` and actual `bytesFreed`; zero means no eligible local ciphertext was removed. Targeted eviction retains dirty, pending, pinned, open, and shared content, and verifies the source copy before deletion. Each file reports `id`, virtual `path`, logical `size`, `modified`, actual encrypted `partCount`, its `partSizeBytes`, and `offline`. Part size includes authenticated-record overhead; encrypted parts do not exceed their cap.
 
 ## Verification
 
