@@ -122,7 +122,7 @@ internal static class WindowsSelfTest
             passed = true;
             Console.Out.WriteLine("{\"selfTest\":true,\"filesystem\":\"WinFsp\",\"checks\":[\"create\",\"read\",\"range-write\",\"flush\",\"truncate\",\"share-modes\",\"busy-unmount\",\"mapped-view-unmount\",\"replace-open\",\"rename-directory\",\"enumerate\",\"reopen\",\"delete-open\",\"delete-directory\",\"dpapi-unlock\"]}");
         }
-        catch (Exception error) { Console.Out.WriteLine(JsonSerializer.Serialize(new { selfTest = false, check, errorType = error.GetType().Name, error = "A real Windows filesystem operation failed. See the driver and encrypted-storage test documentation." })); }
+        catch (Exception error) { Console.Out.WriteLine(JsonSerializer.Serialize(new { selfTest = false, check, errorType = error.GetType().Name, driver = JsonSerializer.SerializeToElement(controller.Status()).GetProperty("driver"), error = "A real Windows filesystem operation failed. See the driver and encrypted-storage test documentation." })); }
         finally
         {
             try { controller.Execute("forgetSavedCredential", Args(new { })); } catch { }

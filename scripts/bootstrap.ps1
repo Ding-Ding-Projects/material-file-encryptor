@@ -34,6 +34,27 @@ if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notm
 if ($InstallDriver) {
   Write-Host 'Installing the verified signed WinFsp driver.'
   $process = Start-Process msiexec.exe -ArgumentList @('/i', "`"$driver`"", '/qn', '/norestart', 'ADDLOCAL=ALL') -Wait -PassThru
+  $installations = @()
+  foreach ($registryPath in @('HKLM:\SOFTWARE\WOW6432Node\WinFsp', 'HKLM:\SOFTWARE\WinFsp')) {
+    $registration = Get-ItemProperty $registryPath -ErrorAction SilentlyContinue
+    if ($registration -and $registration.InstallDir) {
+      $nativeDll = Join-Path $registration.InstallDir 'bin\winfsp-x64.dll'
+      $dllPresent = Test-Path $nativeDll
+      $dllVersion = $null
+      $dllSignature = $null
+      if ($dllPresent) {
+        $dllVersion = (Get-Item $nativeDll).VersionInfo.FileVersion
+        $dllSignature = (Get-AuthenticodeSignature $nativeDll).Status.ToString()
+      }
+      $installations += @{ registryView = $registryPath; nativeDllPresent = $dllPresent; nativeDllVersion = $dllVersion; nativeDllSignature = $dllSignature }
+    }
+  }
+  $driverServices = @(Get-CimInstance Win32_SystemDriver -Filter "Name LIKE 'WinFsp%'" -ErrorAction SilentlyContinue | ForEach-Object { @{ name = $_.Name; state = $_.State; startMode = $_.StartMode } })
+  $receipt = @{ version = $manifest.winfsp.version; msiDigestVerified = $true; msiSignature = $signature.Status.ToString(); installerExitCode = $process.ExitCode; rebootRequested = ($process.ExitCode -eq 3010); installations = $installations; driverServices = $driverServices }
+  $evidence = Join-Path $root 'out\evidence'
+  New-Item -ItemType Directory -Force $evidence | Out-Null
+  $receipt | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $evidence 'driver-install.json')
+  Write-Host "WinFsp installer exit code: $($process.ExitCode). Native registration entries: $($installations.Count)."
   if ($process.ExitCode -notin @(0,3010)) { throw "WinFsp installation failed: $($process.ExitCode)" }
 }
 $env:PATH = "$node;$dotnet;$env:PATH"

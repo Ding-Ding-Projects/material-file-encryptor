@@ -3,7 +3,7 @@
 Source: https://github.com/winfsp/winfsp/tree/ddca7bd5481857a65ba552f643b8776fd070836f/src/dotnet
 
 Pinned release: v2.1; commit `ddca7bd5481857a65ba552f643b8776fd070836f`.
-The five `.cs` files are unmodified upstream source. `License.txt` is the upstream GPLv3 license and FLOSS linking exception. The local project file only builds these sources with .NET 8.
+The five `.cs` files are unmodified upstream source. `License.txt` is the upstream GPLv3 license and FLOSS linking exception. The local project file builds these sources with .NET 8 and preserves the upstream `Product=WinFsp` and 2.1 file-version metadata required by its native-library resolver and ABI check.
 
 WinFsp - Windows File System Proxy, Copyright (C) Bill Zissimopoulos.
 https://github.com/winfsp/winfsp

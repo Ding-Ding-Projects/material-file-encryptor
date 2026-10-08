@@ -70,6 +70,10 @@ test('interactive part illustration counts overhead and rejects unusable limits'
   assert.equal(exampleParts('4', 'MB').parts, 5);
   assert.equal(exampleParts('8', 'MB').parts, 3);
   assert.equal(exampleParts('1', 'GB').parts, 1);
+  assert.equal(exampleParts('1', 'KB').limit, 1024);
+  assert.deepEqual(exampleParts('0.0009765625', 'MB'), exampleParts('1', 'KB'));
+  assert.equal(exampleParts('0.9990234375', 'KB'), null);
+  assert.equal(exampleParts('1.0000000009313226', 'GB'), null);
   assert.equal(exampleParts('128', 'KB').parts, 256);
   assert.equal(exampleParts('64', 'KB').parts, 257);
   assert.equal(exampleParts('4', 'MB').total, EXAMPLE_FILE_BYTES + 256 * EXAMPLE_OVERHEAD);

@@ -24,6 +24,7 @@ try {
   await page.screenshot({ path: 'out/evidence/desktop-locked.png', fullPage: true });
   await page.click('#create-button');
   await page.waitForSelector('#vault-dialog[open]');
+  await page.fill('#cache-input', ''); // Capture the real empty form without a machine-specific default path.
   await settle();
   await page.screenshot({ path: 'out/evidence/desktop-create.png', fullPage: true });
   await page.click('#dialog-cancel');

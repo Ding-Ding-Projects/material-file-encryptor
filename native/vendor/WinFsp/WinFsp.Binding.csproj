@@ -7,5 +7,11 @@
     <Nullable>disable</Nullable>
     <NoWarn>$(NoWarn);CA1416;SYSLIB0003;SYSLIB0004</NoWarn>
     <AssemblyName>WinFsp.Binding</AssemblyName>
+    <!-- Upstream uses Product to resolve the registered native DLL and FileVersion
+         to check its ABI. SDK defaults here would search the wrong product. -->
+    <Product>WinFsp</Product>
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
+    <FileVersion>2.1.25156.0</FileVersion>
+    <Version>2.1.25156</Version>
   </PropertyGroup>
 </Project>

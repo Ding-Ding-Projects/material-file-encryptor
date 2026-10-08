@@ -26,6 +26,13 @@ internal static class Program
         if (args.Contains("--self-test", StringComparer.Ordinal)) return await WindowsSelfTest.RunAsync();
         int exitCode = 0;
         var controller = new VaultController();
+        if (args.Contains("--driver-check", StringComparer.Ordinal))
+        {
+            var driver = JsonSerializer.SerializeToElement(controller.Status()).GetProperty("driver");
+            Send(new { driver });
+            controller.Dispose();
+            return driver.GetProperty("available").GetBoolean() ? 0 : 1;
+        }
         using var cancellation = new CancellationTokenSource();
         Task background = Task.Run(async () =>
         {

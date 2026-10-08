@@ -1,6 +1,9 @@
 using Fsp;
 using MaterialFileEncryptor.Core;
 using System.Security.Cryptography;
+using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 
 namespace MaterialFileEncryptor.Host;
@@ -18,18 +21,37 @@ internal sealed class VaultController : IDisposable
     private bool syncing, unmountBusy;
     private readonly bool driverAvailable;
     private readonly string? driverError;
+    private readonly string? driverReason;
+    private readonly string? driverNtStatus;
 
     public VaultController()
     {
-        if (!OperatingSystem.IsWindows()) { driverError = "Explorer drive mounting requires Windows and the official WinFsp driver."; return; }
+        if (!OperatingSystem.IsWindows()) { driverReason = "windows-required"; driverError = "Explorer drive mounting requires Windows and the official WinFsp driver."; return; }
         try
         {
             using var probe = new FileSystemHost(new FileSystemBase());
             int result = probe.Preflight(null!);
             driverAvailable = result >= 0;
-            if (!driverAvailable) driverError = "The WinFsp driver is unavailable. Install the official signed WinFsp 2.1 release and restart the application.";
+            if (!driverAvailable)
+            {
+                driverReason = "preflight-failed";
+                driverNtStatus = "0x" + unchecked((uint)result).ToString("X8");
+                driverError = "The WinFsp driver could not start or open its filesystem device. Check the official signed WinFsp installation and restart Windows if installation requested it.";
+            }
         }
-        catch { driverError = "The WinFsp driver is unavailable. Install the official signed WinFsp 2.1 release and restart the application."; }
+        catch (Exception error)
+        {
+            while (error.InnerException is not null) error = error.InnerException;
+            driverReason = error switch
+            {
+                DllNotFoundException => "native-library-missing",
+                BadImageFormatException => "native-library-architecture-mismatch",
+                EntryPointNotFoundException => "native-entry-point-missing",
+                TypeLoadException => "native-binding-version-mismatch",
+                _ => "native-binding-initialization-failed"
+            };
+            driverError = "The WinFsp native library could not initialize. Install the official signed WinFsp 2.1 release and restart the application.";
+        }
     }
     private VaultEngine Engine => vault ?? throw new InvalidOperationException("Unlock the vault first.");
     public object Status()
@@ -43,7 +65,18 @@ internal sealed class VaultController : IDisposable
                 locked = vault is null, mounted = host is not null, unmountBusy, driveLetter, storageDir, cacheDir, files,
                 partSizeBytes = vault?.PartSizeBytes ?? 10L * 1024 * 1024,
                 sync = new { running = syncing, lastSync, error = fileSystem?.LastError ?? syncError ?? (vault?.Status.LastError is null ? null : "Encrypted storage synchronization needs attention."), pendingCommits = vault?.Status.PendingCommits ?? 0, sourceAvailable = vault?.Status.IsSourceAvailable ?? false },
-                driver = new { available = driverAvailable, error = driverError },
+                driver = new
+                {
+                    available = driverAvailable, error = driverError,
+                    diagnostic = new
+                    {
+                        reason = driverReason, ntStatus = driverNtStatus,
+                        processArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
+                        nativeLibraryExpected = RuntimeInformation.ProcessArchitecture switch { Architecture.Arm64 => "winfsp-a64.dll", Architecture.X86 => "winfsp-x86.dll", _ => "winfsp-x64.dll" },
+                        bindingProduct = typeof(FileSystemHost).Assembly.GetCustomAttribute<AssemblyProductAttribute>()?.Product,
+                        bindingVersion = FileVersionInfo.GetVersionInfo(typeof(FileSystemHost).Assembly.Location).FileVersion
+                    }
+                },
                 autoUnlock = identity is not null && SavedCredentialStore.Exists(identity),
                 availableDriveLetters = FreeDriveLetters()
             };
