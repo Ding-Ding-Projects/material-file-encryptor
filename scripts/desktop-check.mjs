@@ -1,4 +1,5 @@
 import { _electron as electron } from 'playwright';
+import { waitForDesktopState } from './desktop-state.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -69,7 +70,7 @@ try {
   }
   if (process.platform === 'win32') {
     await checkpoint('drive-discovery');
-    await page.waitForFunction(async () => !(await window.drive.status()).driver.checking, null, { timeout: 30000 });
+    await waitForDesktopState(page, state => !state.driver.checking);
   }
   await checkpoint('locked-and-settings-captures');
   await settle();
@@ -96,7 +97,10 @@ try {
   if (process.platform === 'win32') assert.equal(status.driver.available, true, status.driver.error || 'WinFsp must be installed for the Windows desktop check.');
   if (process.platform === 'win32') {
     await checkpoint('create-and-mount');
-    fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'mfe-desktop-'));
+    const fixturePrefix = process.env.GITHUB_ACTIONS === 'true'
+      ? path.join(path.parse(os.tmpdir()).root, 'MaterialFileEncryptor-Capture-')
+      : path.join(os.tmpdir(), 'mfe-desktop-');
+    fixtureRoot = await fs.mkdtemp(fixturePrefix);
     const storageDir = path.join(fixtureRoot, 'encrypted-storage'); const cacheDir = path.join(fixtureRoot, 'encrypted-cache');
     await fs.mkdir(storageDir); await fs.mkdir(cacheDir);
     const driveLetter = status.availableDriveLetters.includes('M:') ? 'M:' : status.availableDriveLetters[0];
@@ -106,7 +110,7 @@ try {
     const password = randomBytes(24).toString('base64url');
     await page.fill('#password-input', password); await page.fill('#confirm-password', password); await page.click('#dialog-submit');
     await page.waitForSelector('#vault-dialog', { state: 'hidden', timeout: 60000 });
-    await page.waitForFunction(async () => { const state = await window.drive.status(); return state.mounted && !state.operation; }, null, { timeout: 60000 });
+    await waitForDesktopState(page, state => state.mounted && !state.operation, 60000);
     const completedMount = await evaluatePage(() => window.drive.status());
     mountEvidence = { requestedDriveMatchesActual: completedMount.driveLetter === driveLetter, actualDriveLetter: /^[A-Z]:$/.test(completedMount.driveLetter || '') ? completedMount.driveLetter : null };
     const namespace = completedMount.mountDiagnostic;
@@ -133,13 +137,13 @@ try {
     await checkpoint('encrypted-offline-pin');
     await page.getByRole('radio', { name: 'Select Welcome.txt', exact: true }).check();
     await page.click('#offline-button');
-    await page.waitForFunction(async () => (await window.drive.status()).files.some(file => file.path === 'Welcome.txt' && file.offline));
+    await waitForDesktopState(page, state => !state.operation && state.files.some(file => file.path === 'Welcome.txt' && file.offline));
     await page.click('[data-view="offline"]');
     await settle();
     await page.screenshot({ path: evidencePath('desktop-offline.png'), fullPage: true });
     await checkpoint('lock');
     await page.click('#lock-button');
-    await page.waitForFunction(async () => (await window.drive.status()).locked);
+    await waitForDesktopState(page, state => state.locked && !state.mounted && !state.operation);
     assert.equal((await evaluatePage(() => window.drive.status())).locked, true);
   }
   assert.deepEqual(errors, []);
@@ -157,7 +161,7 @@ try {
   if (application) {
     await checkpoint('graceful-cleanup');
     try {
-      const lastState = await bounded(page.evaluate(() => window.drive.status()), 'cleanup status', 5000);
+      const lastState = await waitForDesktopState(page, state => !state.operation, 20000);
       if (!lastState.locked) await bounded(page.evaluate(() => window.drive.lock()), 'cleanup lock', 20000);
       const locked = await bounded(page.evaluate(() => window.drive.status()), 'cleanup lock verification', 5000);
       safeToRemoveFixture = locked.locked && !locked.mounted;

@@ -2,13 +2,13 @@
 
 A Windows Explorer drive that encrypts files into a folder managed by OneDrive, Google Drive, or any other folder-sync client. Open and edit files normally; keep selected files available offline in an encrypted local cache.
 
-**Development status:** seventeen native storage checks and sixteen desktop/site checks pass locally. The real Windows mounted-workflow checks pass; packaged desktop and installer verification are pending. The diagrams explain the architecture and are separate from real application captures. No installer is published yet.
+**Development status:** seventeen native storage checks and seventeen desktop/site checks pass locally. All 33 real Windows mounted-workflow checks pass, including access from a separate process; packaged desktop and installer verification are pending. The diagrams explain the architecture and are separate from real application captures. No installer is published yet.
 
 [Project goal](GOAL.md) · [Interface design](DESIGN.md) · [Source](https://github.com/Ding-Ding-Projects/material-file-encryptor) · [Documentation site](https://ding-ding-projects.github.io/material-file-encryptor/) · [Windows verification](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/workflows/windows.yml)
 
 ## How it works
 
-![Planned architecture: Explorer accesses a mounted WinFsp virtual drive, which encrypts files and metadata in the selected sync folder and maintains an encrypted offline cache. Password or key file unlocks the drive.](docs/images/drive-workflow.png)
+![Conceptual architecture: Explorer accesses a mounted WinFsp virtual drive, which encrypts files and metadata in the selected sync folder and maintains an encrypted offline cache. Password or key file unlocks the drive.](docs/images/drive-workflow.png)
 
 The mounted drive returns authenticated, decrypted bytes when applications read files. New and edited files become encrypted records and parts in the selected backing folder. Your existing cloud client transfers those encrypted objects between devices.
 
@@ -17,13 +17,15 @@ The documentation site includes an [interactive workflow explanation](https://di
 <details>
 <summary>Real application captures</summary>
 
-These captures show the actual Electron application at source commit `1544b2dbd2e9515a20698cebd84d6c9d7c3be211`, driven through its sandboxed renderer on an isolated Linux display at 1180 × 850. They verify interface states; native Windows evidence is recorded separately in the linked workflow. [Capture provenance and image hashes](docs/images/captures/provenance.json).
+These captures show the actual Electron application at source commit `2a9887009f3bb2b64a3e5be37754d1d6612b6fd1`, driven through its sandboxed renderer on an isolated Linux display at 1180 × 850. They verify interface states; native Windows evidence is recorded separately in the linked workflow. [Capture provenance and image hashes](docs/images/captures/provenance.json).
 
 [Watch the real application-window walkthrough](docs/images/captures/desktop-linux.webm) (Linux, 15 fps; interface behavior only).
 
 ![Real application: locked drive screen with create and unlock actions, navigation, and an honest unavailable Windows driver state on Linux.](docs/images/captures/desktop-locked.png)
 
 ![Real application: create-drive dialog with encrypted storage and cache folders, password or key-file credentials, drive letter, and split-size controls.](docs/images/captures/desktop-create.png)
+
+![Real application: key-file credential segment selected, with tailored lock/key icons and a slim themed scrollbar.](docs/images/captures/desktop-keyfile-choice.png)
 
 ![Real application: dark settings screen with appearance, language, message preferences, startup, automatic unlock, and part-size controls.](docs/images/captures/desktop-settings-dark.png)
 
@@ -34,7 +36,7 @@ These captures show the actual Electron application at source commit `1544b2dbd2
 <details>
 <summary>Access, offline use, startup, and split sizes</summary>
 
-![Planned lifecycle: writes use an encrypted journal; reads decrypt on access; offline pins retain ciphertext; Windows startup supports manual or protected automatic unlock; new split sizes affect future writes with a separate re-split action.](docs/images/offline-workflow.png)
+![Conceptual lifecycle: writes use an encrypted journal; reads decrypt on access; offline pins retain ciphertext; Windows startup supports manual or protected automatic unlock; new split sizes affect future writes with a separate re-split action.](docs/images/offline-workflow.png)
 
 - Unlock with a password or key file. Optional automatic unlock protects the remembered vault key for the current Windows user.
 - Start the app with Windows; choose whether to unlock automatically.

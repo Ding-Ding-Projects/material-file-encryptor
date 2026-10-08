@@ -40,7 +40,7 @@ test('all same-page links resolve, asset links fit repository Pages, and release
   assert.match(html, /src="images\/offline-workflow\.png"/);
   assert.doesNotMatch(html, /(?:src|href)="(?:\.\.\/|https?:\/\/[^"\s]+\.(?:js|css|woff2?))/);
   assert.match(html, /disabled aria-describedby="download-help"/);
-  assert.match(html, /Planned drive architecture/);
+  assert.match(html, /Conceptual drive architecture/);
   assert.match(html, /not a native Windows capture/);
   assert.doesNotMatch(html, /href="[^"]+\.(?:exe|msi)"/);
   assert.doesNotMatch(html, /—/);
@@ -61,6 +61,7 @@ test('message preferences accept only supported locales, booleans, and 1–5 int
     assert.ok(levels.every(pair => /[\u3400-\u9fff]/u.test(pair[1])));
   }
   assert.equal(localized('Security', 'yue'), '保安');
+  assert.equal(localized('Linux Electron interface · source', 'yue'), 'Linux Electron 介面 · 原始碼');
   assert.equal(localized('Security', 'bilingual'), 'Security / 保安');
   assert.equal(localized('build.bat /s', 'yue'), 'build.bat /s');
 });
@@ -82,9 +83,13 @@ test('interactive part illustration counts overhead and rejects unusable limits'
 
 test('capture gallery identifies actual Linux evidence and conceptual animation controls', async () => {
   const html = await readFile(new URL('../docs/site/index.html', import.meta.url), 'utf8');
-  for (const capture of ['locked', 'create', 'settings-dark', 'help']) assert.match(html, new RegExp(`src="images/captures/desktop-${capture}\\.png"`));
+  for (const capture of ['locked', 'create', 'keyfile-choice', 'settings-dark', 'help']) assert.match(html, new RegExp(`src="images/captures/desktop-${capture}\\.png"`));
   assert.match(html, /Actual Electron application captures from Linux/);
   assert.match(html, /not proof of a Windows filesystem mount/);
+  assert.match(html, /Linux Electron interface · source <code>[a-f0-9]+<\/code>/);
+  assert.match(html, /<video controls preload="metadata"/);
+  assert.doesNotMatch(html, /<video[^>]*autoplay/);
+  assert.match(html, /src="images\/captures\/desktop-linux\.webm"/);
   assert.match(html, /Conceptual demonstration only/);
   assert.match(html, /id="workflow-play"/);
   assert.match(html, /id="workflow-replay"/);

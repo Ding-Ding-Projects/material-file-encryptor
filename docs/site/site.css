@@ -96,3 +96,5 @@ html:focus-within, html.is-scrolling, dialog:hover, dialog:focus-within, dialog.
   dialog.is-scrolling::-webkit-scrollbar-thumb { background: var(--outline); }
   html::-webkit-scrollbar-thumb:hover, dialog::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 }
+
+.capture-gallery video{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface-low)}.capture-recording figcaption p{margin-top:10px;font-size:12px}
