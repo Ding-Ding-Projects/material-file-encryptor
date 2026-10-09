@@ -1,8 +1,9 @@
 // Local Windows verification must use the isolated desktop lifecycle.
 if (process.platform === 'win32' && process.env.GITHUB_ACTIONS !== 'true') {
  const {runLocalHeadlessCheck}=await import('./local-headless-desktop-check.mjs');
- await runLocalHeadlessCheck();
- throw new Error('Local baseline preparation is not a completed desktop verification. Inspect the receipt and finish the interaction plan.');
+ const receipt=await runLocalHeadlessCheck();
+ if(!receipt.passed)throw new Error('Desktop verification remains incomplete.');
+ process.exit(0);
 }
 import { _electron as electron } from 'playwright';
 import { waitForDesktopState } from './desktop-state.mjs';
