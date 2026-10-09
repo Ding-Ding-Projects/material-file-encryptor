@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import os from 'node:os';
-import {makeLaunch,makeBaselinePlan,makeInterfacePlan} from '../scripts/local-headless-desktop-check.mjs';
+import {makeLaunch,makeBaselinePlan,makeInterfacePlan,validateCaptureReview,finalVerdict} from '../scripts/local-headless-desktop-check.mjs';
 test('local launch binds exact executable, isolated profile and loopback debugging to one run',()=>{
  const root=path.join(os.tmpdir(),'owned-run');const executable=path.join(root,'package','MaterialFileEncryptor.exe');
  const launch=makeLaunch({executable,runRoot:root,port:9333});
@@ -39,4 +39,16 @@ for code in [5,6,87]:
  value=dict(missing);value['error']=value['error'].replace('GetLastError=2:','GetLastError='+str(code)+':');assert not p.automatically_closed(value,'owned',owned,lambda _:True)
 value=dict(missing);value['windows']=[{'pid':88}];assert not p.automatically_closed(value,'owned',owned,lambda _:True)
 `],{encoding:'utf8'});assert.equal(result.status,0,result.stderr);
+});
+
+test('final review binds every exact image, source and executable, with explicit inspection and privacy',()=>{
+ const binding={sourceCommit:'a'.repeat(40),executableSha256:'b'.repeat(64)};const inventory=[{path:'/owned/a.png',sha256:'c'.repeat(64)},{path:'/owned/b.png',sha256:'d'.repeat(64)}];const review={version:1,...binding,captures:inventory.map(item=>({...item,inspected:true,privacyPassed:true}))};
+ assert.equal(validateCaptureReview(review,inventory,binding),true);assert.equal(validateCaptureReview({...review,captures:review.captures.slice(1)},inventory,binding),false);
+ for(const key of ['inspected','privacyPassed']) {const value=structuredClone(review);value.captures[0][key]=false;assert.equal(validateCaptureReview(value,inventory,binding),false);}
+ const stale=structuredClone(review);stale.captures[0].sha256='e'.repeat(64);assert.equal(validateCaptureReview(stale,inventory,binding),false);assert.equal(validateCaptureReview({...review,sourceCommit:'f'.repeat(40)},inventory,binding),false);
+});
+test('passing receipt requires runtime, real keyboard, pixels, cleanup, startup and owned credential proof',()=>{
+ const receipt={sourceCommit:'a'.repeat(40),executableSha256:'b'.repeat(64),resourceHashes:{asar:'c'.repeat(64),nativeHost:'d'.repeat(64)},launched:true,runtime:{mountedFilesystemVerified:true,rendererAssertionsVerified:true,startupRegistration:{restored:true,verificationOnly:true,enabledReadback:true,disabledReadback:false}},keyboard:{verified:true},captureReview:{verified:true},cleanup:{client_ok:true,recordedProcessesAbsent:true,desktopClosed:true},fixtureCleanup:{ownedCredentialForgotten:true}};
+ assert.equal(finalVerdict(receipt).passed,true);for(const key of ['runtime','keyboard','captureReview','cleanup','fixtureCleanup']) {const value=structuredClone(receipt);delete value[key];assert.equal(finalVerdict(value).passed,false);}
+ assert.equal(finalVerdict({...receipt,failure:'runtime failure'}).passed,false);assert.equal(finalVerdict({...receipt,sourceCommit:undefined}).passed,false);
 });

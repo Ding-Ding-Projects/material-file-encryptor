@@ -38,6 +38,43 @@ async function requirePixelReview(runRoot,image) {
  while(Date.now()<deadline) {try {const marker=JSON.parse(await fs.readFile(path.join(runRoot,'baseline-reviewed.json'),'utf8'));if(marker.sha256===hash&&marker.inspected===true&&marker.privacyPassed===true)return {sha256:hash,inspected:true,privacyPassed:true};throw new Error('Baseline review marker does not bind the capture.');}catch(error){if(error.code!=='ENOENT')throw error;}await new Promise(resolve=>setTimeout(resolve,250));}
  throw new Error('Baseline pixel review was not supplied within 60 seconds.');
 }
+export function validateCaptureReview(review,inventory,binding) {
+ if(!review||review.version!==1||review.sourceCommit!==binding.sourceCommit||review.executableSha256!==binding.executableSha256||!Array.isArray(review.captures)||review.captures.length!==inventory.length||!inventory.length)return false;
+ const reviewed=new Map(review.captures.map(item=>[item.path,item]));if(reviewed.size!==inventory.length)return false;
+ return inventory.every(item=>{const value=reviewed.get(item.path);return value?.sha256===item.sha256&&value.inspected===true&&value.privacyPassed===true;});
+}
+export function finalVerdict(receipt) {
+ const pending=[];
+ if(!/^[a-f0-9]{40}$/.test(receipt.sourceCommit||'')||!/^[a-f0-9]{64}$/.test(receipt.executableSha256||'')||!/^[a-f0-9]{64}$/.test(receipt.resourceHashes?.asar||'')||!/^[a-f0-9]{64}$/.test(receipt.resourceHashes?.nativeHost||''))pending.push('Exact packaged source and resource hash binding');
+ if(!receipt.launched)pending.push('Exact packaged application launch');
+ if(receipt.runtime?.mountedFilesystemVerified!==true||receipt.runtime?.rendererAssertionsVerified!==true)pending.push('Mounted filesystem and history/recycling workflow');
+ if(receipt.keyboard?.verified!==true)pending.push('Background native keyboard and observed focus transition');
+ if(receipt.captureReview?.verified!==true)pending.push('Every capture inspected with matching hash and privacy verdict');
+ if(receipt.cleanup?.client_ok!==true||receipt.cleanup?.recordedProcessesAbsent!==true||receipt.cleanup?.desktopClosed!==true)pending.push('Owned processes absent and hidden desktop closed');
+ if(receipt.runtime?.startupRegistration?.restored!==true||receipt.runtime?.startupRegistration?.verificationOnly!==true||receipt.runtime?.startupRegistration?.enabledReadback!==true||receipt.runtime?.startupRegistration?.disabledReadback!==false)pending.push('Verification startup registration restored');
+ if(receipt.fixtureCleanup?.ownedCredentialForgotten!==true)pending.push('Owned fixture credential forgotten');
+ if(receipt.failure)pending.push('Resolve recorded runtime failure');
+ return {passed:pending.length===0,pending};
+}
+async function reviewAllCaptures(receipt,runRoot,outputRoot) {
+ const captures=[];for(const name of (await fs.readdir(outputRoot)).filter(name=>name.endsWith('.png')).sort()){const file=path.join(outputRoot,name);const stat=await fs.lstat(file);if(!stat.isFile()||stat.isSymbolicLink())throw new Error('Capture inventory contains a non-file or link.');const bytes=await fs.readFile(file);captures.push({path:file,sha256:createHash('sha256').update(bytes).digest('hex'),bytes:bytes.length});}
+ const inventory={version:1,sourceCommit:receipt.sourceCommit,executableSha256:receipt.executableSha256,captures};await fs.writeFile(path.join(runRoot,'capture-inventory.json'),JSON.stringify(inventory,null,2));
+ if(!captures.some(item=>path.basename(item.path)==='native-baseline.png')||!captures.some(item=>path.basename(item.path)==='native-keyboard-tab.png'))throw new Error('Required native baseline or keyboard capture is missing.');
+ const markerPath=path.join(runRoot,'captures-reviewed.json');console.log(JSON.stringify({state:'all-captures-review-required',inventory:path.join(runRoot,'capture-inventory.json'),marker:markerPath,captures}));
+ const deadline=Date.now()+180000;while(Date.now()<deadline){try{const review=JSON.parse(await fs.readFile(markerPath,'utf8'));if(!validateCaptureReview(review,captures,receipt))throw new Error('Final review does not bind every capture and source hash.');return {verified:true,inventory,reviewedAt:new Date().toISOString()};}catch(error){if(error.code!=='ENOENT')throw error;}await new Promise(resolve=>setTimeout(resolve,250));}
+ throw new Error('Final capture review remains pending after 180 seconds.');
+}
+async function verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,launch,cdp}) {
+ await command(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30']);const lifecycle=JSON.parse(await fs.readFile(statePath,'utf8'));
+ const make=steps=>({version:1,receipt:statePath,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:15000,steps});
+ await command(process.execPath,[cdp,'run'],make([{id:'keyboard-target-ready',op:'poll',expression:"document.querySelector('#file-search').getClientRects().length > 0 && !document.querySelector('#import-button').disabled",equals:true,intervalMs:200},{id:'keyboard-focus-setup',op:'evaluate',expression:"document.querySelector('#file-search').focus();document.activeElement.id === 'file-search'"},{id:'keyboard-before',op:'poll',expression:"document.activeElement.id",equals:'file-search',intervalMs:100}]));
+ const input=await command(python,[lowlevel,'call','win_send_keys',...transportArgs],{hwnd:lifecycle.hwnd,keys:['tab']});
+ if(input.window_hwnd!==lifecycle.hwnd)throw new Error('Native key result does not bind the owned window.');
+ await command(process.execPath,[cdp,'run'],make([{id:'native-tab-transition',op:'poll',expression:"document.activeElement.id",equals:'import-button',intervalMs:100}]));
+ const capture=await command(python,[lowlevel,'call','screenshot',...transportArgs],{hwnd:lifecycle.hwnd,output_path:path.join(launch.outputRoot,'native-keyboard-tab.png')});
+ await fs.access(path.join(launch.outputRoot,'native-keyboard-tab.png'));
+ return {verified:true,hwnd:lifecycle.hwnd,input,before:'file-search',after:'import-button',capture,pixelsInspected:false};
+}
 function command(executable,args,input) {return new Promise((resolve,reject)=>{const child=spawn(executable,args,{windowsHide:true,stdio:['pipe','pipe','pipe']});let output='',bytes=0;const timer=setTimeout(()=>{child.kill();reject(new Error('Verification helper timed out.'));},90000);child.stdout.on('data',data=>{bytes+=data.length;if(bytes>1048576){child.kill();reject(new Error('Verification helper output exceeded limit.'));}else output+=data;});child.stderr.resume();child.on('error',error=>{clearTimeout(timer);reject(error);});child.on('close',code=>{clearTimeout(timer);try{const result=JSON.parse(output);if(code!==0||result.client_ok===false||result.ok===false)throw new Error(result.code||'Verification helper failed.');resolve(result);}catch(error){reject(error);}});child.stdin.end(input===undefined?'':JSON.stringify(input));});}
 async function freePort(){const server=net.createServer();await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});const port=server.address().port;await new Promise(resolve=>server.close(resolve));return port;}
 export async function runLocalHeadlessCheck(env=process.env) {
@@ -55,10 +92,13 @@ export async function runLocalHeadlessCheck(env=process.env) {
  const transportArgs=env.MFE_LOWLEVEL_URL?['--url',env.MFE_LOWLEVEL_URL]:[];
  const statePath=path.join(runRoot,'lifecycle.json');const plan=makeBaselinePlan(launch,statePath);
  const source=await new Promise((resolve,reject)=>{const child=spawn('git',['rev-parse','HEAD'],{windowsHide:true});let value='';child.stdout.on('data',data=>value+=data);child.on('close',code=>code===0?resolve(value.trim()):reject(new Error('Source identity unavailable.')));});
+ if(env.MFE_HEADLESS_EXECUTE==='1'&&!/^[a-f0-9]{40}$/.test(env.MFE_SOURCE_COMMIT||''))throw new Error('Provide the exact packaged build source commit through MFE_SOURCE_COMMIT.');
+ const sourceBinding=env.MFE_SOURCE_COMMIT||source;
  const resourceHashes={};for(const [name,file] of Object.entries({asar:path.join(path.dirname(executable),'resources','app.asar'),nativeHost:path.join(path.dirname(executable),'resources','native','MaterialFileEncryptor.Host.exe')}))resourceHashes[name]=createHash('sha256').update(await fs.readFile(file)).digest('hex');
- const receipt={version:1,transport:cli?'direct-cli-adapter':'streamable-http',resourceHashes,route:'cheap-lowlevel-headless',sourceCommit:source,executableSha256:createHash('sha256').update(await fs.readFile(executable)).digest('hex'),launch,preparedAt:new Date().toISOString(),launched:false,pixelsInspected:false,interactionsVerified:false};
+ const receipt={version:1,transport:cli?'direct-cli-adapter':'streamable-http',resourceHashes,route:'cheap-lowlevel-headless',sourceCommit:sourceBinding,executableSha256:createHash('sha256').update(await fs.readFile(executable)).digest('hex'),launch,preparedAt:new Date().toISOString(),launched:false,pixelsInspected:false,interactionsVerified:false};
  await fs.writeFile(path.join(runRoot,'prepared.json'),JSON.stringify(receipt,null,2));
  if(env.MFE_HEADLESS_EXECUTE!=='1') {console.log(JSON.stringify({prepared:true,launched:false,runRoot,requires:'Set MFE_HEADLESS_EXECUTE=1 only after reviewing the packaged executable and isolated profile arguments.'}));return receipt;}
+ console.log(JSON.stringify({state:'source-bound-launch-prepared',runRoot,sourceCommit:receipt.sourceCommit,executableSha256:receipt.executableSha256,resourceHashes}));
  const python=env.MFE_PYTHON||'python';let cleanup;let failure;let fixture;let runtime;
  try {
   await command(python,[installedLowlevel,'self-test']);await command(process.execPath,[cdp,'self-test']);
@@ -70,12 +110,17 @@ export async function runLocalHeadlessCheck(env=process.env) {
   const initial=await command(python,[lowlevel,'call','screenshot',...transportArgs],{hwnd:lifecycle.hwnd,output_path:path.join(launch.outputRoot,'native-baseline.png')});
   await fs.writeFile(path.join(runRoot,'initial-capture-result.json'),JSON.stringify(initial,null,2));
   receipt.cdp=await command(process.execPath,[cdp,'run'],plan);
-  if(env.MFE_HEADLESS_INTERACTIONS==='1'||fixture) {receipt.baselineReview=await requirePixelReview(runRoot,path.join(launch.outputRoot,'native-baseline.png'));if(fixture){runtime=await checkMountedRuntime({fixture,launch,receipt:statePath,executePlan:plan=>command(process.execPath,[cdp,'run'],plan),prepareExit:()=>command(python,[lowlevel,'prepare-exit',statePath])});receipt.runtime=runtime;}else receipt.interfaceWorkflow=await command(process.execPath,[cdp,'run'],makeInterfacePlan(launch,statePath));receipt.rendererAssertionsVerified=true;}
+  if(env.MFE_HEADLESS_INTERACTIONS==='1'||fixture) {receipt.baselineReview=await requirePixelReview(runRoot,path.join(launch.outputRoot,'native-baseline.png'));if(fixture){receipt.keyboard=await verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,launch,cdp});runtime=await checkMountedRuntime({fixture,launch,receipt:statePath,executePlan:plan=>command(process.execPath,[cdp,'run'],plan),prepareExit:()=>command(python,[lowlevel,'prepare-exit',statePath])});receipt.runtime=runtime;}else receipt.interfaceWorkflow=await command(process.execPath,[cdp,'run'],makeInterfacePlan(launch,statePath));receipt.rendererAssertionsVerified=true;}
  } catch(error) {failure=String(error.message).slice(0,200);}
  finally {try {await fs.access(statePath);cleanup=runtime?.quitRequested?await command(python,[lowlevel,'confirm-exit',statePath]):await command(python,[lowlevel,'cleanup','--state',statePath,'--allow-saved-pid-kill','--timeout','20']);if(fixture&&runtime?.quitRequested&&cleanup.client_ok)receipt.fixtureCleanup=await forgetRuntimeFixture(fixture);}catch(error){cleanup={ok:false,reason:String(error.message).slice(0,200)};}
-  Object.assign(receipt,{finishedAt:new Date().toISOString(),failure,cleanup,passed:false,pending:['Inspect all retained captures','Verify mounted filesystem and history mutations with real fixture credentials','Verify native input separately'],profileRetained:true});
-  await fs.writeFile(path.join(runRoot,'verification.json'),JSON.stringify(receipt,null,2));}
- console.log(JSON.stringify({runRoot,launched:receipt.launched,passed:false,pixelsInspected:false}));
- if(failure||cleanup?.ok===false)throw new Error(failure||'Owned lifecycle cleanup failed.');return receipt;
+  Object.assign(receipt,{finishedAt:new Date().toISOString(),failure,cleanup,profileRetained:true});
+  if(!failure&&runtime&&cleanup?.client_ok){try{receipt.captureReview=await reviewAllCaptures(receipt,runRoot,launch.outputRoot);}catch(error){receipt.reviewPending=String(error.message).slice(0,200);}}
+  Object.assign(receipt,finalVerdict(receipt));receipt.pixelsInspected=receipt.captureReview?.verified===true;receipt.interactionsVerified=runtime?.rendererAssertionsVerified===true;
+  await fs.writeFile(path.join(runRoot,'verification.json'),JSON.stringify(receipt,null,2));
+  const evidenceDir=path.resolve(env.MFE_DESKTOP_EVIDENCE_DIR||'out/evidence');await fs.mkdir(evidenceDir,{recursive:true});
+  const compatible={...receipt,platform:'win32',packagedArtifact:{launchedBuiltArtifact:receipt.launched,asar:Boolean(resourceHashes.asar),nativeHelperPresent:Boolean(resourceHashes.nativeHost)},mountedFilesystemChecked:runtime?.mountedFilesystemVerified===true,startupRegistration:runtime?.startupRegistration||null,fixtureRetained:Boolean(fixture&&!(receipt.fixtureCleanup?.ownedCredentialForgotten&&cleanup?.client_ok&&cleanup?.recordedProcessesAbsent)),fixturePreservedByDesign:Boolean(fixture),fixtureRetentionReason:fixture?'Owned evidence retained; safe only after credential removal and process exit':null,cleanupErrors:cleanup?.client_ok===true?[]:[{phase:'owned-lifecycle',reason:cleanup?.reason||'Cleanup not verified'}]};
+  await fs.writeFile(path.join(evidenceDir,'desktop-check.json'),JSON.stringify(compatible,null,2));}
+ console.log(JSON.stringify({runRoot,launched:receipt.launched,passed:receipt.passed,pixelsInspected:receipt.pixelsInspected,pending:receipt.pending}));
+ if(failure||cleanup?.ok===false)throw new Error(failure||'Owned lifecycle cleanup failed.');if(!receipt.passed)throw new Error('Desktop verification is incomplete: '+receipt.pending.join('; '));return receipt;
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))await runLocalHeadlessCheck();
