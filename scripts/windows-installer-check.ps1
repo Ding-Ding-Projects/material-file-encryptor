@@ -24,6 +24,7 @@ $safeToUninstall = $false
 $installRoot = $null
 $updateExecutable = $null
 $updateHash = $null
+. "$PSScriptRoot\squirrel-uninstall-residue.ps1"
 
 function Assert-Check([bool]$condition, [string]$code) { if (!$condition) { throw [InvalidOperationException]::new($code) } }
 function File-Digest([string]$filename, [string]$algorithm = 'SHA256') { return (Get-FileHash -LiteralPath $filename -Algorithm $algorithm).Hash.ToLowerInvariant() }
@@ -97,14 +98,18 @@ function Uninstall-Owned {
     $receipt.uninstall.attempted = $true
     $receipt.uninstall.exitCode = Run-Bounded $updateExecutable @('--uninstall', '--silent') 180
     Assert-Check ($receipt.uninstall.exitCode -eq 0) 'UNINSTALL_EXIT_CODE'
-    Wait-Check { @(Get-ChildItem -LiteralPath $installRoot -Directory -Filter 'app-*' -ErrorAction SilentlyContinue).Count -eq 0 -and (Owned-Processes).Count -eq 0 } 45 'UNINSTALL_PAYLOAD_REMAINS'
-    $remainingApps = @(Get-ChildItem -LiteralPath $installRoot -Directory -Filter 'app-*' -ErrorAction SilentlyContinue)
-    $receipt.uninstall.applicationDirectoriesRemoved = $remainingApps.Count -eq 0
+    Wait-Check { (Owned-Processes).Count -eq 0 } 45 'UNINSTALL_PROCESS_REMAINS'
+    $residue = Get-SquirrelUninstallResidue -Root $installRoot -ExpectedVersion $sourcePackage.version -UpdaterSha256 $updateHash
+    $receipt.uninstall.applicationDirectoriesRemoved = $residue.applicationDirectoriesRemoved
+    $receipt.uninstall.applicationPayloadRemoved = $residue.applicationPayloadRemoved
+    $receipt.uninstall.residueClassification = $residue.classification
+    $receipt.uninstall.residueFailureCode = $residue.failureCode
+    $receipt.uninstall.remainingRootEntries = $residue.residue
     $receipt.uninstall.registrationRemoved = (Owned-UninstallEntries).Count -eq 0
     $receipt.uninstall.startupRemoved = (Owned-StartupEntries).Count -eq 0
     $receipt.uninstall.noInstalledProcesses = (Owned-Processes).Count -eq 0
-    $receipt.uninstall.remainingRootEntries = @(Get-ChildItem -LiteralPath $installRoot -Force -Recurse -ErrorAction SilentlyContinue | ForEach-Object { @{ relativePath = $_.FullName.Substring($installRoot.Length + 1); directory = $_.PSIsContainer; bytes = if ($_.PSIsContainer) { 0 } else { $_.Length } } })
-    Assert-Check $receipt.uninstall.applicationDirectoriesRemoved 'UNINSTALL_APPLICATION_REMAINS'
+    Assert-Check $receipt.uninstall.noInstalledProcesses 'UNINSTALL_PROCESS_REMAINS'
+    Assert-Check $receipt.uninstall.applicationPayloadRemoved $(if ($residue.failureCode) { $residue.failureCode } else { 'UNINSTALL_APPLICATION_REMAINS' })
     Assert-Check $receipt.uninstall.registrationRemoved 'UNINSTALL_REGISTRATION_REMAINS'
     Assert-Check $receipt.uninstall.startupRemoved 'UNINSTALL_STARTUP_REMAINS'
     # Squirrel intentionally leaves a .dead marker; do not manually delete its root.
@@ -297,7 +302,7 @@ try {
     if ((Test-Path -LiteralPath $fixtureRoot) -and @(Get-ChildItem -LiteralPath $fixtureRoot -Force).Count -eq 0) { Remove-Item -LiteralPath $fixtureRoot }
     if ($Mode -eq 'Verify') {
         $receipt.phase = $phase
-        $receipt.installRetained = $ownedInstall -and !$receipt.uninstall.applicationDirectoriesRemoved
+        $receipt.installRetained = $ownedInstall -and !$receipt.uninstall.applicationPayloadRemoved
         $receipt | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $receiptFile -Encoding UTF8
     }
 }
