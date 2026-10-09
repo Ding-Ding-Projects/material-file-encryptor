@@ -81,7 +81,15 @@ try
     try { await runner.RunAsync("git", ["-c", "alias.pause=!sleep 30", "pause"], root, cancellation.Token); throw new Exception("ignored cancellation"); } catch (OperationCanceledException) { Check(watch.Elapsed < TimeSpan.FromSeconds(5), "process cancellation terminates child tree promptly"); }
     Console.WriteLine($"Passed {count} transport checks.");
 }
-finally { foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)) File.SetAttributes(file, FileAttributes.Normal); Directory.Delete(root, true); }
+finally
+{
+    foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)) File.SetAttributes(file, FileAttributes.Normal);
+    for (var attempt = 0; ; attempt++)
+    {
+        try { Directory.Delete(root, true); break; }
+        catch (IOException) when (attempt < 2) { await Task.Delay(100); }
+    }
+}
 sealed class FakeRunner(bool isPrivate) : IVaultProcessRunner
 {
     public int Calls { get; private set; }

@@ -30,7 +30,7 @@ public sealed class VaultProcessRunner : IVaultProcessRunner
         var start = new ProcessStartInfo(Resolve(executable)) { WorkingDirectory = workingDirectory, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
         if (executable == "git")
         {
-            foreach (var setting in new[] { "core.fsmonitor=false", "core.hooksPath=" + Path.Combine(workingDirectory, ".disabled-hooks"), "core.attributesFile=" + ("/dev/null"), "credential.helper=", "credential.helper=!'" + Resolve("gh").Replace("\\", "/").Replace("'", "'\"'\"'") + "' auth git-credential", "commit.gpgsign=false" }) { start.ArgumentList.Add("-c"); start.ArgumentList.Add(setting); }
+            foreach (var setting in new[] { "core.fsmonitor=false", "core.hooksPath=/dev/null", "core.attributesFile=" + ("/dev/null"), "credential.helper=", "credential.helper=!'" + Resolve("gh").Replace("\\", "/").Replace("'", "'\"'\"'") + "' auth git-credential", "commit.gpgsign=false" }) { start.ArgumentList.Add("-c"); start.ArgumentList.Add(setting); }
         }
         foreach (var argument in arguments) start.ArgumentList.Add(argument);
         start.Environment["GIT_TERMINAL_PROMPT"] = "0";
@@ -38,7 +38,7 @@ public sealed class VaultProcessRunner : IVaultProcessRunner
         start.Environment["GIT_CONFIG_GLOBAL"] = "/dev/null";
         start.Environment["GIT_CONFIG_COUNT"] = "0";
         start.Environment["GIT_ATTR_NOSYSTEM"] = "1";
-        foreach (var variable in new[] { "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_CONFIG", "GIT_CONFIG_PARAMETERS" }) start.Environment.Remove(variable);
+        foreach (var variable in new[] { "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_CONFIG", "GIT_CONFIG_PARAMETERS", "GIT_EXEC_PATH", "GIT_TEMPLATE_DIR", "GIT_ASKPASS", "SSH_ASKPASS", "GIT_SSH", "GIT_SSH_COMMAND", "GIT_PROXY_COMMAND" }) start.Environment.Remove(variable);
         start.Environment["GIT_AUTHOR_NAME"] = "Vault storage";
         start.Environment["GIT_AUTHOR_EMAIL"] = "vault@localhost";
         start.Environment["GIT_COMMITTER_NAME"] = "Vault storage";
@@ -51,7 +51,7 @@ public sealed class VaultProcessRunner : IVaultProcessRunner
         var copy = process.StandardOutput.BaseStream.CopyToAsync(output, ct);
         var error = process.StandardError.ReadToEndAsync(ct);
         try { await Task.WhenAll(copy, process.WaitForExitAsync(ct)); }
-        catch { if (!process.HasExited) process.Kill(true); throw; }
+        catch { if (!process.HasExited) process.Kill(true); using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(5)); await process.WaitForExitAsync(stop.Token); throw; }
         return new(process.ExitCode, output.ToArray(), await error);
     }
 }
@@ -90,8 +90,10 @@ public sealed class GitVaultHistory
     public async Task InitializeAsync(CancellationToken ct = default)
     {
         Directory.CreateDirectory(HistoryRoot); CheckPath(HistoryRoot);
+        CheckPath(Path.Combine(HistoryRoot, ".git"));
+        if (File.Exists(Path.Combine(HistoryRoot, ".git"))) throw new IOException("Storage history requires its own Git directory.");
         if (!Directory.Exists(Path.Combine(HistoryRoot, ".git"))) await Git(ct, "init", "-b", "main");
-        await Git(ct, "config", "core.hooksPath", Path.Combine(HistoryRoot, ".disabled-hooks"));
+        await Git(ct, "config", "core.hooksPath", "/dev/null");
         await Git(ct, "config", "commit.gpgsign", "false");
     }
     internal async Task<Dictionary<string,string>> TreeAsync(string reference, CancellationToken ct)
