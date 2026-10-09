@@ -8,6 +8,8 @@ Assert ($env:GITHUB_RUN_NUMBER -match '^[1-9][0-9]*$' -and $env:GITHUB_RUN_ATTEM
 $tag="v0.1.0-preview.$($env:GITHUB_RUN_NUMBER).$($env:GITHUB_RUN_ATTEMPT)"
 $output='release-output'; New-Item -ItemType Directory -Force $output | Out-Null
 $directory='out/make/squirrel.windows/x64'
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/verify-package-crc.ps1 -PackageDirectory $directory
+if ($LASTEXITCODE -ne 0) { throw 'PACKAGE_CRC_VALIDATION_FAILED' }
 $setup=Join-Path $directory 'MaterialFileEncryptor-Setup.exe'; $releases=Join-Path $directory 'RELEASES'
 Assert ((Test-Path $setup) -and (Test-Path $releases)) 'INSTALLER_ASSETS_MISSING'
 Assert ((Get-AuthenticodeSignature $setup).Status -eq 'NotSigned') 'EXPECTED_UNSIGNED_SETUP'
