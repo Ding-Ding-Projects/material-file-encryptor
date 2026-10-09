@@ -110,16 +110,43 @@ async function reviewAllCaptures(receipt,runRoot,outputRoot) {
 async function verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,launch,executePlan}) {
  await command(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30']);const lifecycle=JSON.parse(await fs.readFile(statePath,'utf8'));
  const make=steps=>({version:1,receipt:statePath,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:15000,steps});
- await executePlan(make([{id:'keyboard-target-ready',op:'poll',expression:"document.querySelector('#file-search').getClientRects().length > 0 && !document.querySelector('#import-button').disabled",equals:true,intervalMs:200},{id:'keyboard-focus-setup',op:'evaluate',expression:"document.querySelector('#file-search').focus();document.activeElement.id === 'file-search'"},{id:'keyboard-before',op:'poll',expression:"document.activeElement.id",equals:'file-search',intervalMs:100}]));
+ await executePlan(make([{id:'keyboard-target-ready',op:'poll',expression:"document.querySelector('#file-search').getClientRects().length > 0 && !document.querySelector('#import-button').disabled",equals:true,intervalMs:200},{id:'keyboard-focus-setup',op:'evaluate',expression:"document.querySelector('#file-search').focus();document.activeElement.id === 'file-search'"},{id:'keyboard-empty-baseline',op:'poll',expression:"document.querySelector('#file-search').value === ''",equals:true,intervalMs:100},{id:'keyboard-before',op:'poll',expression:"document.activeElement.id",equals:'file-search',intervalMs:100}]));
  const input=await command(python,[lowlevel,'call','win_send_keys',...transportArgs],{hwnd:lifecycle.hwnd,keys:['tab']});
  if(input.window_hwnd!==lifecycle.hwnd)throw new Error('Native key result does not bind the owned window.');
+ await executePlan(make([{id:'native-tab-clear-transition',op:'poll',expression:"document.activeElement === document.querySelector('#file-search').parentElement.querySelector('.field-clear')",equals:true,intervalMs:100}]));
+ const secondInput=await command(python,[lowlevel,'call','win_send_keys',...transportArgs],{hwnd:lifecycle.hwnd,keys:['tab']});
+ if(secondInput.window_hwnd!==lifecycle.hwnd)throw new Error('Second native key result does not bind the owned window.');
  await executePlan(make([{id:'native-tab-transition',op:'poll',expression:"document.activeElement.id",equals:'import-button',intervalMs:100}]));
  const capture=await recordNativeCapture(launch.runRoot,path.join(launch.outputRoot,'native-keyboard-tab.png'),'native-keyboard-tab',()=>command(python,[lowlevel,'call','screenshot',...transportArgs],{hwnd:lifecycle.hwnd,output_path:path.join(launch.outputRoot,'native-keyboard-tab.png')}));
  await fs.access(path.join(launch.outputRoot,'native-keyboard-tab.png'));
- return {verified:true,hwnd:lifecycle.hwnd,input,before:'file-search',after:'import-button',capture,pixelsInspected:false};
+ return {verified:true,hwnd:lifecycle.hwnd,input,secondInput,before:'file-search',intermediate:'file-search-clear',after:'import-button',capture,pixelsInspected:false};
 }
 function command(executable,args,input) {return new Promise((resolve,reject)=>{const child=spawn(executable,args,{windowsHide:true,stdio:['pipe','pipe','pipe']});let output='',bytes=0;const timer=setTimeout(()=>{child.kill();reject(new Error('Verification helper timed out.'));},90000);child.stdout.on('data',data=>{bytes+=data.length;if(bytes>1048576){child.kill();reject(new Error('Verification helper output exceeded limit.'));}else output+=data;});child.stderr.resume();child.on('error',error=>{clearTimeout(timer);reject(error);});child.on('close',code=>{clearTimeout(timer);try{const result=JSON.parse(output);if(code!==0||result.client_ok===false||result.ok===false)throw helperFailure(result,input);resolve(result);}catch(error){reject(error);}});child.stdin.end(input===undefined?'':JSON.stringify(input));});}
 async function freePort(){const server=net.createServer();await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});const port=server.address().port;await new Promise(resolve=>server.close(resolve));return port;}
+export async function finishOwnedLifecycle({runtime,launch,statePath,python,lowlevel,transportArgs=[],runCommand=command,executePlan}) {
+ let quitRequested=runtime?.quitRequested===true;let recovery;
+ if(!quitRequested) {
+  recovery={attempted:true,restored:false};
+  try {
+   await runCommand(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','5']);
+   await runCommand(python,[lowlevel,'prepare-exit',statePath]);
+   const quit=await executePlan({version:1,receipt:statePath,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:15000,steps:[
+    {id:'recovery-quit-route',op:'poll',expression:"typeof window.drive?.verificationQuit === 'function'",equals:true,intervalMs:100},
+    {id:'recovery-quit',op:'evaluate',expression:"window.__mfeRecoveryQuit={done:false};window.drive.verificationQuit().then(value=>{window.__mfeRecoveryQuit={done:true,value}},()=>{window.__mfeRecoveryQuit={done:true,failed:true}});true"},
+    {id:'recovery-quit-settled',op:'poll',expression:'window.__mfeRecoveryQuit.done',equals:true,intervalMs:50},
+    {id:'recovery-quit-proof',op:'evaluate',expression:'window.__mfeRecoveryQuit'}
+   ]});
+   const proof=quit.results?.at(-1)?.value;
+   if(proof?.done!==true||proof.failed||proof.value?.restored!==true)throw Object.assign(new Error('Verification quit did not confirm startup restoration.'),{helperCode:'VERIFICATION_QUIT_NOT_RESTORED'});
+   recovery.restored=true;quitRequested=true;
+  } catch(error) {
+   recovery.code=error.helperCode||error.code||'VERIFICATION_QUIT_FAILED';
+   if(['PROCESS_IDENTITY_CHANGED','INVALID_PROCESS_IDENTITY','INVALID_PROCESS_TREE','PROCESS_PROOF_FAILED','IDENTITY_BOUND_TERMINATION_UNAVAILABLE'].includes(recovery.code))return {quitRequested:false,recovery,cleanup:{ok:false,client_ok:false,code:recovery.code}};
+  }
+ }
+ const cleanup=quitRequested?await runCommand(python,[lowlevel,'confirm-exit',statePath]):await runCommand(python,[lowlevel,'cleanup','--state',statePath,'--timeout','20']);
+ return {quitRequested,recovery,cleanup};
+}
 export async function runLocalHeadlessCheck(env=process.env) {
  if(process.platform!=='win32')throw new Error('The local isolated desktop route requires Windows.');
  const executable=await fs.realpath(path.resolve(env.MFE_DESKTOP_EXECUTABLE||'out/material-file-encryptor-win32-x64/MaterialFileEncryptor.exe'));
@@ -146,7 +173,7 @@ export async function runLocalHeadlessCheck(env=process.env) {
  const executePlan=createPlanRecorder(runRoot,plan=>command(process.execPath,[cdp,'run'],plan));
  try {
   await command(python,[installedLowlevel,'self-test']);await command(process.execPath,[cdp,'self-test']);
-  await command(python,[lowlevel,'preflight',...transportArgs,'--require','launch_on_headless_desktop','--require','list_headless_windows','--require','screenshot','--require','close_headless_desktop','--require','kill_process']);
+  await command(python,[lowlevel,'preflight',...transportArgs,'--require','launch_on_headless_desktop','--require','list_headless_windows','--require','screenshot','--require','close_headless_desktop']);
   if(env.MFE_RUNTIME_FIXTURE==='1') {if(!cli)throw new Error('Runtime graceful-exit proof requires the direct CLI adapter.');fixture=await prepareRuntimeFixture({executable,profile:path.join(runRoot,'profile')});receipt.fixture={root:fixture.root,prepared:fixture.prepared,driveLetter:fixture.driveLetter};}
   await command(python,[lowlevel,'launch',...transportArgs,'--state',statePath],launch);receipt.launched=true;
   await command(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30']);
@@ -156,7 +183,7 @@ export async function runLocalHeadlessCheck(env=process.env) {
   receipt.cdp=await executePlan(plan);
   if(env.MFE_HEADLESS_INTERACTIONS==='1'||fixture) {receipt.baselineReview=await requirePixelReview(runRoot,path.join(launch.outputRoot,'native-baseline.png'));if(fixture){receipt.keyboard=await verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,launch,executePlan});runtime=await checkMountedRuntime({fixture,launch,receipt:statePath,executePlan,prepareExit:()=>command(python,[lowlevel,'prepare-exit',statePath])});receipt.runtime=runtime;}else receipt.interfaceWorkflow=await executePlan(makeInterfacePlan(launch,statePath));receipt.rendererAssertionsVerified=true;}
  } catch(error) {failure=String(error.message).slice(0,200);}
- finally {try {await fs.access(statePath);cleanup=runtime?.quitRequested?await command(python,[lowlevel,'confirm-exit',statePath]):await command(python,[lowlevel,'cleanup','--state',statePath,'--allow-saved-pid-kill','--timeout','20']);if(fixture&&runtime?.quitRequested&&cleanup.client_ok)receipt.fixtureCleanup=await forgetRuntimeFixture(fixture);}catch(error){cleanup={ok:false,reason:String(error.message).slice(0,200)};}
+ finally {try {await fs.access(statePath);const finished=await finishOwnedLifecycle({runtime,launch,statePath,python,lowlevel,transportArgs,executePlan});cleanup=finished.cleanup;receipt.quitRecovery=finished.recovery;if(fixture&&finished.quitRequested&&cleanup.client_ok)receipt.fixtureCleanup=await forgetRuntimeFixture(fixture);}catch(error){cleanup={ok:false,code:error.helperCode||error.code||'OWNED_LIFECYCLE_FAILED',reason:String(error.message).slice(0,200)};}
   Object.assign(receipt,{finishedAt:new Date().toISOString(),failure,cleanup,profileRetained:true});
   if(!failure&&runtime&&cleanup?.client_ok){try{receipt.captureReview=await reviewAllCaptures(receipt,runRoot,launch.outputRoot);}catch(error){receipt.reviewPending=String(error.message).slice(0,200);}}
   Object.assign(receipt,finalVerdict(receipt));receipt.pixelsInspected=receipt.captureReview?.verified===true;receipt.interactionsVerified=runtime?.rendererAssertionsVerified===true;
