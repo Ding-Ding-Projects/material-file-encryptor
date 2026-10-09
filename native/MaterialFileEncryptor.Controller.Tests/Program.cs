@@ -221,7 +221,20 @@ static class Regression
             }
             finally { System.Runtime.InteropServices.Marshal.FreeHGlobal(writePointer); }
             Assert(JsonSerializer.Serialize(new { entry=engine.GetInfo("remote.bin"), versions=engine.ListVersions(), bin=engine.ListDeleted() })==before,"Failed hydration changed file or history/bin state");
-            Console.WriteLine("PASS actual filesystem hydration allows status/cached callback, retains busy handle, retrieves only requested chunk, missing write leaves file/history/bin unchanged");
+            engine.SetPartSize(2*1024*1024);
+            int overwriteFetches=0;
+            engine.HydrateEncryptedFileAsync=async(relative,ct)=>
+            {
+                Interlocked.Increment(ref overwriteFetches);
+                await Task.Run(()=> { Call(controller,"Status"); Assert(Read(cachedNode!,cachedHandle!,3).SequenceEqual(new byte[]{3,4,5}),"Overwrite hydration blocked cached callback"); }).WaitAsync(TimeSpan.FromSeconds(2));
+                File.Copy(Path.Combine(backup,Path.GetFileName(relative)),Path.Combine(root,"source",relative),true);
+            };
+            object?[] overwriteArgs={remoteNode,remoteHandle,32U,true,0UL,null};
+            Assert((int)Invoke("Overwrite",overwriteArgs)! == 0,"Prepared overwrite failed after part-cap change");
+            Assert(overwriteFetches>0,"Overwrite fixture did not retrieve missing old payload");
+            var overwritten=engine.GetInfo("remote.bin")!;
+            Assert(overwritten.Length==0&&overwritten.Attributes==32U,"Overwrite did not atomically truncate and set attributes");
+            Console.WriteLine("PASS actual filesystem hydration allows status/cached callback, retains busy handle, retrieves only requested chunk, missing write unchanged, prepared overwrite after cap change");
         }
         finally
         {

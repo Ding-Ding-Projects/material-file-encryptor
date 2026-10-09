@@ -190,13 +190,17 @@ internal sealed class VaultFileSystem : FileSystemBase
     }
     public override int Overwrite(object node, object desc, uint attributes, bool replaceAttributes, ulong allocationSize, out FsInfo info)
     {
-        lock (gate)
-        {
-            var entry = Info(node);
-            vault.SetLengthById(entry.EntryId, 0);
-            vault.SetBasicInfoById(entry.EntryId, replaceAttributes ? attributes : entry.Attributes | attributes, null, null);
-            Durable(); info = ToInfo(Info(node)); return STATUS_SUCCESS;
-        }
+        FsInfo completedInfo = default;
+        int result = WithHydration(node, desc,
+            id => vault.PrepareSetLengthAsync(id, 0).GetAwaiter().GetResult(),
+            id =>
+            {
+                var entry = vault.GetInfoById(id);
+                vault.SetLengthById(id, 0);
+                vault.SetBasicInfoById(id, replaceAttributes ? attributes : entry.Attributes | attributes, null, null);
+                Durable(); completedInfo = ToInfo(vault.GetInfoById(id)); return STATUS_SUCCESS;
+            });
+        info = completedInfo; return result;
     }
     private int WithHydration(object node, object desc, Action<string> prepare, Func<string, int> operation)
     {
