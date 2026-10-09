@@ -33,7 +33,7 @@ internal sealed class VaultController : IDisposable
     private DateTimeOffset? lastSync;
     private object? lastOfflineRelease;
     private bool syncing, unmountBusy;
-    private int syncFlight;
+    private int syncFlight, activePreparedOperations;
     private long engineGeneration;
     private CancellationTokenSource? syncCancellation;
     private int? historyRetentionDays;
@@ -134,15 +134,15 @@ internal sealed class VaultController : IDisposable
         if (method is "lock" or "unmount") { Unmount(); if (method == "lock") LockEngine(); return Status(); }
         if (method == "sync") { SyncIfUnlocked(); return Status(); }
         if (method == "importFiles") { lock (gate) Import(args); SyncIfUnlocked(); return Status(); }
+        if (method is "restoreVersion" or "restoreDeleted" or "keepOffline" or "resplit") return ExecutePrepared(method, args);
         if (method == "copyUpgrade")
         {
             Unmount();
             lock (gate)
             {
                 if (Volatile.Read(ref syncFlight) != 0) { syncCancellation?.Cancel(); throw new InvalidOperationException("Synchronization is stopping. Wait before copying the vault."); }
-                Upgrade(args);
             }
-            return Status();
+            return ExecutePrepared(method, args);
         }
         lock (gate)
         {
@@ -159,29 +159,18 @@ internal sealed class VaultController : IDisposable
                     return Engine.ListVersions(OptionalString(args, "entryId"), retention).Select(VersionInfo).ToArray();
                 case "listDeleted": return Engine.ListDeleted().Select(VersionInfo).ToArray();
                 case "saveVersion": Engine.SaveVersionAsync(OptionalString(args, "path")).GetAwaiter().GetResult(); break;
-                case "restoreVersion":
-                    try { Engine.RestoreVersionAsync(RequiredString(args, "versionId")).GetAwaiter().GetResult(); }
-                    catch (IOException) when (transportMode == "privateGit" && !transportAvailable) { throw new InvalidOperationException("Connect to private storage to retrieve unavailable historical content."); }
-                    break;
-                case "restoreDeleted":
-                    if (!args.TryGetProperty("ids", out var ids) || ids.ValueKind != JsonValueKind.Array || ids.GetArrayLength() is < 1 or > 1000) throw new ArgumentException("Select between one and 1000 deleted entries.");
-                    try { Engine.RestoreDeletedAsync(ids.EnumerateArray().Select(value => value.GetString() ?? throw new ArgumentException("Invalid deleted entry.")).ToArray()).GetAwaiter().GetResult(); }
-                    catch (IOException) when (transportMode == "privateGit" && !transportAvailable) { throw new InvalidOperationException("Connect to private storage to retrieve unavailable historical content."); }
-                    break;
                 case "emptyRecycleBin": Engine.EmptyRecycleBinAsync().GetAwaiter().GetResult(); break;
                 case "setHistoryRetention":
                     int? selectedRetention = args.TryGetProperty("days", out var period) && period.ValueKind != JsonValueKind.Null ? period.GetInt32() : null;
                     if (selectedRetention is < 1 or > 36500) throw new ArgumentException("Choose a history period between one and 36500 days, or forever.");
                     historyRetentionDays = selectedRetention;
                     break;
-                case "keepOffline": Engine.SetPinnedAsync(RequiredString(args, "path"), true).GetAwaiter().GetResult(); break;
                 case "releaseOffline":
                     string releasedPath = VaultPath.Normalize(RequiredString(args, "path"));
                     Engine.SetPinnedAsync(releasedPath, false).GetAwaiter().GetResult();
                     lastOfflineRelease = new { path = releasedPath, bytesFreed = Engine.EvictEntryCache(releasedPath) };
                     break;
                 case "setPartSize": Engine.SetPartSize(RequiredLong(args, "partSizeBytes")); Engine.FlushAsync().GetAwaiter().GetResult(); break;
-                case "resplit": Engine.ResplitAsync(RequiredString(args, "path"), RequiredLong(args, "partSizeBytes")).GetAwaiter().GetResult(); break;
 
                 case "forgetSavedCredential": Forget(args); break;
                 case "setAutoUnlock":
@@ -191,6 +180,55 @@ internal sealed class VaultController : IDisposable
             }
             return Status();
         }
+    }
+    private object ExecutePrepared(string method, JsonElement args)
+    {
+        VaultEngine captured;
+        lock (gate) { captured = Engine; ++activePreparedOperations; }
+        try
+        {
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                string? path = method is "keepOffline" or "resplit" ? RequiredString(args, "path") : null;
+                string[] ids = [];
+                if (method == "restoreDeleted")
+                {
+                    if (!args.TryGetProperty("ids", out var selected) || selected.ValueKind != JsonValueKind.Array || selected.GetArrayLength() is < 1 or > 1000) throw new ArgumentException("Select between one and 1000 deleted entries.");
+                    ids = selected.EnumerateArray().Select(value => value.GetString() ?? throw new ArgumentException("Invalid deleted entry.")).ToArray();
+                }
+                // All external retrieval occurs without the callback lock. Core
+                // preparation authenticates immutable refs and revalidates state.
+                switch (method)
+                {
+                    case "restoreVersion": captured.PrepareVersionsAsync([RequiredString(args, "versionId")]).GetAwaiter().GetResult(); break;
+                    case "restoreDeleted": captured.PrepareVersionsAsync(ids, deleted: true).GetAwaiter().GetResult(); break;
+                    case "keepOffline": captured.PreparePinnedAsync(path!).GetAwaiter().GetResult(); break;
+                    case "resplit": VaultEngine.ValidatePartSize(RequiredLong(args, "partSizeBytes")); captured.PrepareEntryAsync(captured.GetInfo(path!)?.EntryId ?? throw new FileNotFoundException()).GetAwaiter().GetResult(); break;
+                    case "copyUpgrade": captured.PrepareUpgradeAsync().GetAwaiter().GetResult(); break;
+                }
+                lock (gate)
+                {
+                    if (!ReferenceEquals(vault, captured)) throw new InvalidOperationException("The vault changed during retrieval.");
+                    try
+                    {
+                        switch (method)
+                        {
+                            case "restoreVersion": captured.RestoreVersionAsync(RequiredString(args, "versionId")).GetAwaiter().GetResult(); break;
+                            case "restoreDeleted": captured.RestoreDeletedAsync(ids).GetAwaiter().GetResult(); break;
+                            case "keepOffline": captured.SetPinnedAsync(path!, true).GetAwaiter().GetResult(); break;
+                            case "resplit": captured.ResplitAsync(path!, RequiredLong(args, "partSizeBytes")).GetAwaiter().GetResult(); break;
+                            case "copyUpgrade": Upgrade(args); break;
+                        }
+                        return Status();
+                    }
+                    catch (VaultHydrationRequiredException) when (attempt < 2) { }
+                }
+            }
+            throw new IOException("Vault content changed repeatedly during retrieval. Retry the operation.");
+        }
+        catch (Exception error) when ((error is IOException or VaultHydrationRequiredException) && transportMode == "privateGit" && !transportAvailable)
+        { throw new InvalidOperationException("Connect to private storage to retrieve unavailable historical content."); }
+        finally { lock (gate) --activePreparedOperations; }
     }
     private void Open(JsonElement args, bool create, bool automatic)
     {
@@ -315,7 +353,7 @@ internal sealed class VaultController : IDisposable
         using (var upgraded = original.CopyUpgradeAsync(destination, credential).GetAwaiter().GetResult()) { }
         // The verified copy exists before the original is closed. A later transport
         // or mount failure leaves both vaults intact and independently unlockable.
-        LockEngine();
+        LockEngine(completingPreparedOperation: true);
         Open(args, false, false);
     }
     private void Mount(JsonElement args)
@@ -352,11 +390,12 @@ internal sealed class VaultController : IDisposable
         catch { lock (gate) fileSystem?.CancelUnmount(); throw; }
         lock (gate) { host = null; fileSystem = null; registeredDriveLetter = null; unmountBusy = false; }
     }
-    private void LockEngine()
+    private void LockEngine(bool completingPreparedOperation = false)
     {
         lock (gate)
         {
             if (host is not null) throw new InvalidOperationException("Unmount the drive before locking.");
+            if (activePreparedOperations > (completingPreparedOperation ? 1 : 0)) throw new InvalidOperationException("A vault operation is retrieving content. Wait before locking.");
             if (vault is null) return;
             vault.SaveDueVersionsAsync(DateTimeOffset.MaxValue).GetAwaiter().GetResult();
             vault.FlushAsync().GetAwaiter().GetResult();
@@ -418,7 +457,7 @@ internal sealed class VaultController : IDisposable
         {
             lock (gate)
             {
-                if (vault is null) return;
+                if (vault is null || activePreparedOperations != 0) return;
                 capturedEngine = vault; capturedTransport = transport; generation = engineGeneration;
                 syncing = true; syncCancellation = cancellation;
                 nextSyncAttempt = DateTimeOffset.UtcNow.AddSeconds(15);
@@ -468,7 +507,7 @@ internal sealed class VaultController : IDisposable
     {
         lock (gate)
         {
-            if (vault is null) return;
+            if (vault is null || activePreparedOperations != 0) return;
             Engine.SaveDueVersionsAsync(DateTimeOffset.UtcNow).GetAwaiter().GetResult();
             if (DateTimeOffset.UtcNow < nextSyncAttempt || Volatile.Read(ref syncFlight) != 0) return;
         }

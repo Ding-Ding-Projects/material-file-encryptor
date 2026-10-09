@@ -172,7 +172,65 @@ static class Regression
             return await new VaultProcessRunner().RunAsync(executable,arguments,directory,ct);
         }
     }
-    public static async Task Main() { Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); await PartialHistoryRetry(); await OfflineUnlock(); await HistorySubprocessCallback(); }
+    static async Task FilesystemHydrationCallback()
+    {
+        var root=Path.Combine(Path.GetTempPath(),"mfe-controller-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
+        var engine=Create(root,1024*1024); var controller=Make(engine,root,new ImmediateTransport());
+        var fsType=Assembly.Load("MaterialFileEncryptor.Host").GetType("MaterialFileEncryptor.Host.VaultFileSystem",true)!;
+        object? adapter=null, remoteNode=null, remoteHandle=null, cachedNode=null, cachedHandle=null;
+        var started=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously); var release=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously); int fetched=0;
+        object? Invoke(string method,object?[] args)=>fsType.GetMethod(method)!.Invoke(adapter,args);
+        byte[] Read(object node,object handle,int length)
+        {
+            var pointer=System.Runtime.InteropServices.Marshal.AllocHGlobal(length);
+            try { object?[] args={node,handle,pointer,0UL,(uint)length,0U}; var result=(int)Invoke("Read",args)!; Assert(result==0,"Filesystem read returned failure"); var bytes=new byte[(uint)args[5]!]; System.Runtime.InteropServices.Marshal.Copy(pointer,bytes,0,bytes.Length); return bytes; }
+            finally { System.Runtime.InteropServices.Marshal.FreeHGlobal(pointer); }
+        }
+        try
+        {
+            var remote=RandomNumberGenerator.GetBytes(4*1024*1024); engine.CreateFile("remote.bin"); engine.WriteRange("remote.bin",0,remote); await engine.FlushAsync();
+            var parts=Directory.GetFiles(Path.Combine(root,"source","parts"),"*.mfe"); var backup=Path.Combine(root,"remote-backup"); Directory.CreateDirectory(backup);
+            foreach(var part in parts) { File.Copy(part,Path.Combine(backup,Path.GetFileName(part))); }
+            engine.CreateFile("cached.bin"); engine.WriteRange("cached.bin",0,new byte[]{3,4,5}); await engine.SetPinnedAsync("cached.bin",true); await engine.FlushAsync();
+            foreach(var part in parts) { File.Delete(part); File.Delete(Path.Combine(root,"cache","parts",Path.GetFileName(part))); }
+            var callbackGate=ControllerType.GetField("gate",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(controller)!;
+            adapter=Activator.CreateInstance(fsType,engine,callbackGate)!;
+            object?[] cachedOpen={"\\cached.bin",0U,0U,null,null,null,null}; Assert((int)Invoke("Open",cachedOpen)! == 0,"Cached open failed"); cachedNode=cachedOpen[3]; cachedHandle=cachedOpen[4];
+            object?[] remoteOpen={"\\remote.bin",0U,0U,null,null,null,null}; Assert((int)Invoke("Open",remoteOpen)! == 0,"Remote open failed"); remoteNode=remoteOpen[3]; remoteHandle=remoteOpen[4];
+            engine.HydrateEncryptedFileAsync=async(relative,ct)=>
+            {
+                Interlocked.Increment(ref fetched);
+                await Task.Run(()=> { Call(controller,"Status"); Assert(Read(cachedNode!,cachedHandle!,3).SequenceEqual(new byte[]{3,4,5}),"Cached callback blocked or changed"); }).WaitAsync(TimeSpan.FromSeconds(2));
+                started.TrySetResult(); await release.Task.WaitAsync(ct);
+                File.Copy(Path.Combine(backup,Path.GetFileName(relative)),Path.Combine(root,"source",relative),true);
+            };
+            var pending=Task.Run(()=>Read(remoteNode!,remoteHandle!,4096)); await started.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            await Task.Run(()=>Call(controller,"Status")).WaitAsync(TimeSpan.FromSeconds(2));
+            Assert(!(bool)Invoke("BeginUnmount",Array.Empty<object>())!,"Pending file hydration allowed unmount");
+            release.TrySetResult(); var actual=await pending.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert(actual.SequenceEqual(remote.Take(4096)),"Hydrated range bytes changed"); Assert(fetched==1,"A small read eagerly fetched unrelated file chunks");
+            var before=JsonSerializer.Serialize(new { entry=engine.GetInfo("remote.bin"), versions=engine.ListVersions(), bin=engine.ListDeleted() });
+            engine.HydrateEncryptedFileAsync=(_,_)=>Task.FromException(new IOException("intentional missing hydration"));
+            var writePointer=System.Runtime.InteropServices.Marshal.AllocHGlobal(1);
+            try
+            {
+                System.Runtime.InteropServices.Marshal.WriteByte(writePointer,123);
+                object?[] writeArgs={remoteNode,remoteHandle,writePointer,2UL*1024*1024,1U,false,false,0U,null};
+                try { Invoke("Write",writeArgs); throw new Exception("Missing write hydration succeeded"); }
+                catch(TargetInvocationException error) when(error.InnerException is IOException) { }
+            }
+            finally { System.Runtime.InteropServices.Marshal.FreeHGlobal(writePointer); }
+            Assert(JsonSerializer.Serialize(new { entry=engine.GetInfo("remote.bin"), versions=engine.ListVersions(), bin=engine.ListDeleted() })==before,"Failed hydration changed file or history/bin state");
+            Console.WriteLine("PASS actual filesystem hydration allows status/cached callback, retains busy handle, retrieves only requested chunk, missing write leaves file/history/bin unchanged");
+        }
+        finally
+        {
+            release.TrySetResult();
+            if(remoteHandle is not null) Invoke("Close",new[]{remoteNode,remoteHandle}); if(cachedHandle is not null) Invoke("Close",new[]{cachedNode,cachedHandle});
+            ((IDisposable)controller).Dispose(); foreach(var file in Directory.EnumerateFiles(root,"*",SearchOption.AllDirectories)) File.SetAttributes(file,FileAttributes.Normal); Directory.Delete(root,true);
+        }
+    }
+    public static async Task Main() { Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); await PartialHistoryRetry(); await OfflineUnlock(); await HistorySubprocessCallback(); await FilesystemHydrationCallback(); }
     sealed class ImmediateTransport : IVaultTransport
     {
         public Task InitializeAsync(CancellationToken ct=default)=>Task.CompletedTask;

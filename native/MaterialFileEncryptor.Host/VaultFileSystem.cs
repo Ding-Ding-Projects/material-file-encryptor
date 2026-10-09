@@ -24,7 +24,8 @@ internal sealed class VaultFileSystem : FileSystemBase
     private readonly byte[] security;
     private readonly Dictionary<string, Node> nodes = new(StringComparer.Ordinal);
     private readonly HashSet<string> pendingDeletes = new(StringComparer.Ordinal);
-    private int activeHandles;
+    private int activeHandles, activeIo;
+    private readonly string cacheVolumeRoot;
     private bool stopping;
     public string? LastError { get; private set; }
     public int ActiveHandles { get { lock (gate) return activeHandles; } }
@@ -33,6 +34,7 @@ internal sealed class VaultFileSystem : FileSystemBase
     {
         this.vault = vault;
         this.gate = gate;
+        cacheVolumeRoot = System.IO.Path.GetPathRoot(vault.CacheRoot) ?? throw new InvalidOperationException("Cache volume root is unavailable.");
         string sid = WindowsIdentity.GetCurrent().User?.Value ?? throw new InvalidOperationException("Windows user identity is unavailable.");
         var descriptor = new RawSecurityDescriptor($"O:{sid}G:{sid}D:P(A;;FA;;;SY)(A;;FA;;;{sid})");
         security = new byte[descriptor.BinaryLength];
@@ -70,7 +72,7 @@ internal sealed class VaultFileSystem : FileSystemBase
     {
         lock (gate)
         {
-            if (activeHandles != 0) return false;
+            if (activeHandles != 0 || activeIo != 0) return false;
             RecoverPending();
             stopping = true;
             LastError = null;
@@ -134,7 +136,7 @@ internal sealed class VaultFileSystem : FileSystemBase
         // free capacity since dirty writes must first be durable there.
         try
         {
-            var drive = new DriveInfo(System.IO.Path.GetPathRoot(vault.CacheRoot)!);
+            var drive = new DriveInfo(cacheVolumeRoot);
             info.TotalSize = (ulong)drive.TotalSize;
             info.FreeSize = (ulong)drive.AvailableFreeSpace;
         }
@@ -196,35 +198,73 @@ internal sealed class VaultFileSystem : FileSystemBase
             Durable(); info = ToInfo(Info(node)); return STATUS_SUCCESS;
         }
     }
-    public override unsafe int Read(object node, object desc, IntPtr buffer, ulong offset, uint length, out uint transferred)
+    private int WithHydration(object node, object desc, Action<string> prepare, Func<string, int> operation)
     {
+        string id;
+        IDisposable lease;
         lock (gate)
         {
-            transferred = 0;
-            var entry = Info(node);
-            if (entry.IsDirectory) return STATUS_FILE_IS_A_DIRECTORY;
-            if (offset >= (ulong)entry.Length) return STATUS_END_OF_FILE;
-            int count = checked((int)Math.Min((ulong)length, (ulong)entry.Length - offset));
-            transferred = checked((uint)vault.ReadRangeById(entry.EntryId, checked((long)offset), new Span<byte>((void*)buffer, count)));
-            return STATUS_SUCCESS;
+            if (stopping || ((Handle)desc).Closed) return STATUS_DEVICE_NOT_READY;
+            id = ((Node)node).Id;
+            lease = vault.AcquireOpenById(id);
+            ++activeIo;
         }
+        try
+        {
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                // Process startup can query this mounted volume. Neither the
+                // callback lock nor the core lock is held during preparation.
+                prepare(id);
+                lock (gate)
+                {
+                    if (stopping || ((Handle)desc).Closed) return STATUS_DEVICE_NOT_READY;
+                    try { return operation(id); }
+                    catch (VaultHydrationRequiredException) when (attempt < 2) { }
+                }
+            }
+            throw new IOException("Encrypted entry changed repeatedly during retrieval. Retry the operation.");
+        }
+        finally { lock (gate) { try { lease.Dispose(); } finally { --activeIo; } } }
+    }
+    public override unsafe int Read(object node, object desc, IntPtr buffer, ulong offset, uint length, out uint transferred)
+    {
+        uint completed = 0;
+        int result = WithHydration(node, desc,
+            id => vault.PrepareReadRangeAsync(id, checked((long)offset), checked((int)length)).GetAwaiter().GetResult(),
+            id =>
+            {
+                var entry = vault.GetInfoById(id);
+                if (entry.IsDirectory) return STATUS_FILE_IS_A_DIRECTORY;
+                if (offset >= (ulong)entry.Length) return STATUS_END_OF_FILE;
+                int count = checked((int)Math.Min((ulong)length, (ulong)entry.Length - offset));
+                completed = checked((uint)vault.ReadRangeById(id, checked((long)offset), new Span<byte>((void*)buffer, count)));
+                return STATUS_SUCCESS;
+            });
+        transferred = completed; return result;
     }
     public override unsafe int Write(object node, object desc, IntPtr buffer, ulong offset, uint length, bool append, bool constrained, out uint transferred, out FsInfo info)
     {
-        lock (gate)
-        {
-            transferred = 0; info = default;
-            var entry = Info(node);
-            if (entry.IsDirectory) return STATUS_FILE_IS_A_DIRECTORY;
-            if (append) offset = (ulong)entry.Length;
-            if (constrained && offset >= (ulong)entry.Length) { info = ToInfo(entry); return STATUS_SUCCESS; }
-            int count = checked((int)(constrained ? Math.Min((ulong)length, (ulong)entry.Length - offset) : length));
-            vault.WriteRangeById(entry.EntryId, checked((long)offset), new ReadOnlySpan<byte>((void*)buffer, count));
-            // Cleanup cannot return errors. A successful Write therefore includes
-            // durable encrypted journal persistence, before acknowledging bytes.
-            Durable();
-            transferred = (uint)count; info = ToInfo(Info(node)); return STATUS_SUCCESS;
-        }
+        uint completed = 0; FsInfo completedInfo = default;
+        int result = WithHydration(node, desc,
+            id =>
+            {
+                var entry = vault.GetInfoById(id);
+                long start = append ? entry.Length : checked((long)offset);
+                int count = checked((int)(constrained ? Math.Max(0, Math.Min((long)length, entry.Length - start)) : length));
+                vault.PrepareWriteRangeAsync(id, start, count).GetAwaiter().GetResult();
+            },
+            id =>
+            {
+                var entry = vault.GetInfoById(id);
+                if (entry.IsDirectory) return STATUS_FILE_IS_A_DIRECTORY;
+                ulong start = append ? (ulong)entry.Length : offset;
+                if (constrained && start >= (ulong)entry.Length) { completedInfo = ToInfo(entry); return STATUS_SUCCESS; }
+                int count = checked((int)(constrained ? Math.Min((ulong)length, (ulong)entry.Length - start) : length));
+                vault.WriteRangeById(id, checked((long)start), new ReadOnlySpan<byte>((void*)buffer, count));
+                Durable(); completed = (uint)count; completedInfo = ToInfo(vault.GetInfoById(id)); return STATUS_SUCCESS;
+            });
+        transferred = completed; info = completedInfo; return result;
     }
     public override int Flush(object node, object desc, out FsInfo info)
     {
@@ -236,12 +276,16 @@ internal sealed class VaultFileSystem : FileSystemBase
     }
     public override int SetFileSize(object node, object desc, ulong size, bool allocation, out FsInfo info)
     {
-        lock (gate)
-        {
-            var entry = Info(node);
-            if (!allocation || size < (ulong)entry.Length) vault.SetLengthById(entry.EntryId, checked((long)size));
-            Durable(); info = ToInfo(Info(node)); return STATUS_SUCCESS;
-        }
+        FsInfo completedInfo = default;
+        int result = WithHydration(node, desc,
+            id => { if (!allocation || size < (ulong)vault.GetInfoById(id).Length) vault.PrepareSetLengthAsync(id, checked((long)size)).GetAwaiter().GetResult(); },
+            id =>
+            {
+                var entry = vault.GetInfoById(id);
+                if (!allocation || size < (ulong)entry.Length) vault.SetLengthById(id, checked((long)size));
+                Durable(); completedInfo = ToInfo(vault.GetInfoById(id)); return STATUS_SUCCESS;
+            });
+        info = completedInfo; return result;
     }
     public override int SetBasicInfo(object node, object desc, uint attributes, ulong creation, ulong access, ulong modified, ulong change, out FsInfo info)
     {
