@@ -25,11 +25,14 @@ foreach ($line in Get-Content $releases) {
 }
 Assert ($indexed.Count -eq $packages.Count) 'PACKAGE_SET_MISMATCH'
 foreach ($package in $packages) { Assert ($indexed.ContainsKey($package.Name)) 'UNINDEXED_PACKAGE' }
+& scripts/package-integrity.ps1 -Packages @($packages.FullName)
 $catalog=Get-Content docs/release-assets/catalog.json -Raw | ConvertFrom-Json
 $imageEntry=@($catalog.images | Where-Object id -eq 'hk-dish-0001')[0]
-$image=Join-Path 'docs/release-assets' $imageEntry.file
-Assert ((Get-Item $image).Length -eq $imageEntry.bytes -and (Digest $image) -eq $imageEntry.sha256) 'DIM_SUM_DIGEST_MISMATCH'
-$assets=@($setup,$releases)+@($packages.FullName)+@($image)
+$catalogRelease=(Gh @('release','view',$imageEntry.sourceReleaseTag,'--repo',$imageEntry.sourceRepository,'--json','isDraft,assets')) | ConvertFrom-Json
+$catalogAsset=@($catalogRelease.assets | Where-Object name -eq $imageEntry.file)
+Assert (!$catalogRelease.isDraft -and $catalogAsset.Count -eq 1 -and $catalogAsset[0].size -eq $imageEntry.bytes -and $catalogAsset[0].url -match '^https://github.com/') 'PUBLIC_CATALOG_IMAGE_REQUIRED'
+$imageUrl=$catalogAsset[0].url
+$assets=@($setup,$releases)+@($packages.FullName)
 $receipt=[ordered]@{schemaVersion=1; sourceCommit=$source; tag=$tag; packageVersion=(Get-Content package.json -Raw | ConvertFrom-Json).version; runId=$env:GITHUB_RUN_ID; runAttempt=$env:GITHUB_RUN_ATTEMPT; buildStartedAtUtc=$env:BUILD_STARTED_AT; packagingCompletedAtUtc=[DateTime]::UtcNow.ToString('o'); testsRunInCI=$false; runtimeVerification='pending independent local receipt'; unsignedInstaller=$true; assets=@($assets | ForEach-Object { @{name=(Split-Path $_ -Leaf); bytes=(Get-Item $_).Length; sha256=Digest $_} })}
 $receipt | ConvertTo-Json -Depth 8 | Set-Content "$output/build-provenance.json" -Encoding utf8
 $notes=@"
@@ -41,7 +44,7 @@ Build and packaging only. CI runs no tests, lint, GUI checks, installation, or u
 
 Build started UTC: $($receipt.buildStartedAtUtc). Packaging completed UTC: $($receipt.packagingCompletedAtUtc).
 
-![Classic Har Gow 蝦餃](https://github.com/$repo/releases/download/$tag/$($imageEntry.file))
+![Classic Har Gow 蝦餃]($imageUrl)
 "@
 $notes | Set-Content "$output/release-notes.md" -Encoding utf8
 $assets+=@("$output/build-provenance.json")

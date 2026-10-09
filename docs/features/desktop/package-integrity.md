@@ -1,0 +1,13 @@
+# Package integrity and local installer verification
+
+`build-installer.bat /s` bootstraps official 7-Zip 26.04 from the upstream release, verifies the archive, extraction helper and x64 standalone executable against `dependencies.json`, and stages the existing Squirrel.Windows vendor distribution. The supported `vendorDirectory` option selects that distribution with its legacy ZIP writer replaced by the verified standalone writer. Squirrel's updater and setup components remain unchanged and unsigned.
+
+After production, `scripts/package-integrity.ps1` runs the pinned reader's archive test over every full and delta `.nupkg`. It verifies decompression and stored CRC for every entry, including entries outside the runtime comparison manifest. Failure prevents successful packaging and preview publication. The receipt records the reader digest, source commit and each package's digest, size, entry count and exit result. Selected runtime hashes and `RELEASES` hashes remain separate checks.
+
+Run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-package-integrity.ps1` for the focused regression. A valid archive passes; corruption in an otherwise unselected entry must fail. The test removes only its exact synthetic files.
+
+Local installer verification requires `MFE_LOWLEVEL_CLI` pointing to the installed cheap hidden-desktop tool and its installed lifecycle helper. `windows-installer-check.ps1 -Local -ExpectedCommit <full-sha>` uses `local-installer-process.py` for Setup and Update. A Python worker launched through Lowlevel inherits the unique hidden desktop, retains the child process handle and records its creation time and exit result. The parent records process identities, waits for their absence, and closes only the empty owned desktop. Timeouts retain evidence and running processes rather than terminating installation.
+
+The installed desktop check uses `local-headless-desktop-check.mjs` and the same independently reviewed capture and mounted-runtime flow as local packaged verification. Interactive pixel review remains required. Installation, startup registration, mounted operation, normal exit and uninstall require their own successful receipt; packaging success proves none of those outcomes. Uninstall records every remaining installation-root entry, including any Squirrel marker or log, instead of claiming the directory disappeared.
+
+Preview notes link the verified public dim-sum catalog release image. The product release does not attach a copied catalog image. Publication rechecks package integrity before writing its release plan. Existing source-owned image files are retained until separately authorized migration.

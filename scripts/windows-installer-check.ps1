@@ -42,6 +42,15 @@ function Wait-Check([scriptblock]$condition, [int]$seconds, [string]$code) {
     throw [InvalidOperationException]::new($code)
 }
 function Run-Bounded([string]$executable, [string[]]$arguments, [int]$seconds) {
+    if ($Local) {
+        $processReceipt = Join-Path $evidence ('installer-process-' + [Guid]::NewGuid().ToString('N') + '.json')
+        $request = @{ executable = $executable; arguments = $arguments; seconds = $seconds; receipt = $processReceipt } | ConvertTo-Json -Compress
+        $request | & python "$PSScriptRoot\local-installer-process.py"
+        Assert-Check ($LASTEXITCODE -eq 0) 'HEADLESS_INSTALLER_PROCESS_FAILED'
+        $result = Get-Content -LiteralPath $processReceipt -Raw | ConvertFrom-Json
+        Assert-Check ($result.passed -eq $true -and $result.desktopClosed -eq $true -and $result.recordedProcessesAbsent -eq $true) 'HEADLESS_INSTALLER_PROCESS_UNVERIFIED'
+        return $result.exitCode
+    }
     $process = Start-Process -FilePath $executable -ArgumentList $arguments -WindowStyle Hidden -PassThru
     $null = $process.Handle # Retain the handle so Windows PowerShell can read ExitCode after exit.
     # A timeout fails without terminating the installer, application, or a mounted drive.
@@ -94,6 +103,7 @@ function Uninstall-Owned {
     $receipt.uninstall.registrationRemoved = (Owned-UninstallEntries).Count -eq 0
     $receipt.uninstall.startupRemoved = (Owned-StartupEntries).Count -eq 0
     $receipt.uninstall.noInstalledProcesses = (Owned-Processes).Count -eq 0
+    $receipt.uninstall.remainingRootEntries = @(Get-ChildItem -LiteralPath $installRoot -Force -Recurse -ErrorAction SilentlyContinue | ForEach-Object { @{ relativePath = $_.FullName.Substring($installRoot.Length + 1); directory = $_.PSIsContainer; bytes = if ($_.PSIsContainer) { 0 } else { $_.Length } } })
     Assert-Check $receipt.uninstall.applicationDirectoriesRemoved 'UNINSTALL_APPLICATION_REMAINS'
     Assert-Check $receipt.uninstall.registrationRemoved 'UNINSTALL_REGISTRATION_REMAINS'
     Assert-Check $receipt.uninstall.startupRemoved 'UNINSTALL_STARTUP_REMAINS'
@@ -111,6 +121,10 @@ try {
     $desktop = Get-Content -LiteralPath (Join-Path $evidence 'desktop-check.json') -Raw | ConvertFrom-Json
     Assert-Check ($desktop.passed -eq $true -and $desktop.packagedArtifact.launchedBuiltArtifact -eq $true -and $desktop.platform -eq 'win32') 'PACKAGED_DESKTOP_PASS_REQUIRED'
     $packageRoot = Join-Path $root 'out\material-file-encryptor-win32-x64'
+    if ($Local) {
+        Assert-Check ($desktop.route -eq 'cheap-lowlevel-headless' -and $desktop.sourceCommit -eq $sourceCommit) 'LOCAL_DESKTOP_SOURCE_OR_ROUTE_MISMATCH'
+        Assert-Check ($desktop.executableSha256 -eq (File-Digest (Join-Path $packageRoot 'MaterialFileEncryptor.exe')) -and $desktop.resourceHashes.asar -eq (File-Digest (Join-Path $packageRoot 'resources\app.asar'))) 'LOCAL_DESKTOP_ARTIFACT_MISMATCH'
+    }
     if ($Mode -eq 'Snapshot') {
         $files = @(Get-ChildItem -LiteralPath $packageRoot -File -Recurse | ForEach-Object {
             $relative = $_.FullName.Substring($packageRoot.Length + 1).Replace('\', '/')
@@ -147,6 +161,8 @@ try {
     $allPackages = @(Get-ChildItem -LiteralPath $artifacts -Filter '*.nupkg' -File)
     Assert-Check ($releaseNames.Count -eq $allPackages.Count -and $releaseNames.ContainsKey($package.Name)) 'UNINDEXED_RELEASE_PACKAGE'
     foreach ($candidate in $allPackages) { Assert-Check ($releaseNames.ContainsKey($candidate.Name)) 'UNINDEXED_RELEASE_PACKAGE' }
+    $phase = 'full-archive-integrity'
+    & "$PSScriptRoot\package-integrity.ps1" -Packages @($allPackages | ForEach-Object FullName)
     Assert-Check ((Get-AuthenticodeSignature -LiteralPath $setup).Status -eq 'NotSigned') 'EXPECTED_UNSIGNED_SETUP'
     $receipt.artifactHashes = @{ setupSha256 = File-Digest $setup; nupkgSha256 = File-Digest $package.FullName; releasesSha256 = File-Digest $releases; testedManifestSha256 = File-Digest $snapshotFile; releasesDigestAndSizeVerified = $true; fullPackages = $packages.Count; deltaPackages = @($allPackages | Where-Object { $_.Name.EndsWith('-delta.nupkg') }).Count }
 
@@ -201,6 +217,7 @@ try {
     $updateHash = Stream-Digest $entries['squirrel.exe']
     $receipt.payload = @{ comparisonScope = $manifest.comparisonScope; testedEntries = @($manifest.files).Count; nupkgEntriesMatched = $selectedEntries.Count; nativeEntries = @($manifest.files | Where-Object { $_.entry.StartsWith('resources/native/') }).Count; requiredResourcesPresent = $true; trustedDriverDigestAndSignature = $true }
     $zip.Dispose(); $zip = $null
+    $receipt.payload.allArchiveEntriesIntegrityVerified = $true
 
     $phase = 'install-preflight'
     $installRoot = Join-Path $env:LOCALAPPDATA 'MaterialFileEncryptor'
@@ -243,9 +260,13 @@ try {
         $env:MFE_DESKTOP_EXECUTABLE = Join-Path $installedRoot 'MaterialFileEncryptor.exe'
         $env:MFE_DESKTOP_EVIDENCE_DIR = Join-Path $evidence 'installed'
         $safeToUninstall = $false
-        & node.exe scripts/desktop-check.mjs
+        if ($Local) { & node.exe scripts/local-headless-desktop-check.mjs }
+        else { & node.exe scripts/desktop-check.mjs }
         $desktopExit = $LASTEXITCODE
         $installedReceipt = Get-Content -LiteralPath (Join-Path $env:MFE_DESKTOP_EVIDENCE_DIR 'desktop-check.json') -Raw | ConvertFrom-Json
+        if ($Local) {
+            Assert-Check ($installedReceipt.route -eq 'cheap-lowlevel-headless' -and $installedReceipt.sourceCommit -eq $sourceCommit -and $installedReceipt.executableSha256 -eq $receipt.install.installedExecutableSha256) 'INSTALLED_LOCAL_SOURCE_OR_ARTIFACT_MISMATCH'
+        }
         $safeToUninstall = !$installedReceipt.fixtureRetained -and @($installedReceipt.cleanupErrors).Count -eq 0
         $receipt.installedApplication = @{ harnessExitCode = $desktopExit; passed = $installedReceipt.passed; mountedFilesystemChecked = $installedReceipt.mountedFilesystemChecked; startupRegistration = $installedReceipt.startupRegistration; gracefulCleanup = $safeToUninstall }
         Assert-Check ($desktopExit -eq 0 -and $installedReceipt.passed -eq $true -and $installedReceipt.mountedFilesystemChecked -eq $true -and $safeToUninstall) 'INSTALLED_DESKTOP_CHECK_FAILED'
