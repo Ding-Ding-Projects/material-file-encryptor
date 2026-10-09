@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import time
 
 helper = Path(os.environ['MFE_LOWLEVEL_CLIENT'])
 cli = Path(os.environ['MFE_LOWLEVEL_CLI'])
@@ -38,4 +39,31 @@ class DirectClient:
 # Retain the installed versioned state, creation-time checks, process-tree checks,
 # window ownership checks and teardown. Only tool transport changes.
 module._connect = lambda endpoint, timeout: DirectClient(timeout)
+if len(sys.argv) == 3 and sys.argv[1] in ['prepare-exit', 'confirm-exit']:
+    state_path, state = module._read_state(sys.argv[2])
+    proof_path = state_path.with_name('exit-processes.json')
+    client = DirectClient(20)
+    if sys.argv[1] == 'prepare-exit':
+        tree = module._process_tree(state['process'])
+        proof_path.write_text(json.dumps({'root': state['process'], 'processes': tree}), encoding='utf-8')
+        print(json.dumps({'ok': True, 'client_ok': True, 'recordedProcesses': len(tree)}))
+    else:
+        proof = json.loads(proof_path.read_text(encoding='utf-8'))
+        if proof['root'] != state['process']:
+            raise SystemExit('Exit process proof belongs to a different launch.')
+        deadline = time.monotonic() + 20
+        while not module._recorded_tree_absent(proof['processes']):
+            if time.monotonic() >= deadline:
+                raise SystemExit('Recorded processes did not exit gracefully.')
+            time.sleep(0.25)
+        windows = client.call_tool('list_headless_windows', {'name': state['desktop']})
+        if not windows.get('client_ok') or windows.get('windows'):
+            raise SystemExit('Desktop is not proven empty after exit.')
+        closed = client.call_tool('close_headless_desktop', {'name': state['desktop']})
+        if not module._desktop_close_confirmed(closed):
+            raise SystemExit('Owned desktop close was not confirmed.')
+        state['cleaned'] = True
+        state_path.write_text(json.dumps(state), encoding='utf-8')
+        print(json.dumps({'ok': True, 'client_ok': True, 'gracefulExit': True, 'recordedProcessesAbsent': True, 'desktopClosed': True}))
+    raise SystemExit(0)
 raise SystemExit(module.main())
