@@ -4,11 +4,12 @@ $workflow = Get-Content (Join-Path $root '.github/workflows/windows.yml') -Raw
 $checks = 0
 function Check([bool]$Value, [string]$Name) { if (!$Value) { throw $Name }; $script:checks++; Write-Host "PASS $Name" }
 function PublicationEnabled([string]$Text) {
- return $Text -match '(?m)^  push:\s*$' -and $Text -match '(?m)^  workflow_dispatch:' -and $Text -notmatch '(?m)^\s+(branches|branches-ignore|paths|paths-ignore):' -and $Text -notmatch 'pull_request|github\.ref\s*==' -and $Text -match '(?s)- name: Prepare and publish unique release\s+shell: powershell\s+run:'
+ return $Text -match '(?m)^  push:\r?\n    branches: \[\x27\*\*\x27\]\s*$' -and $Text -match '(?m)^  workflow_dispatch:' -and $Text -notmatch '(?m)^\s+(tags|tags-ignore|branches-ignore|paths|paths-ignore):' -and $Text -notmatch 'pull_request|github\.ref\s*==' -and $Text -match '(?s)- name: Prepare and publish unique release\s+shell: powershell\s+run:'
 }
-Check (PublicationEnabled $workflow) 'push and dispatch publish without branch or event exclusions'
+Check (PublicationEnabled $workflow) 'every branch push and dispatch publish while tags cannot trigger delivery'
+Check (!(PublicationEnabled ($workflow.Replace("    branches: ['**']", '')))) 'unrestricted tag-admitting push is rejected'
 Check (!(PublicationEnabled ($workflow.Replace('      - name: Prepare and publish unique release', "      - name: Prepare and publish unique release`n        if: github.event_name == 'workflow_dispatch'")))) 'dispatch-only publication is rejected'
-Check (!(PublicationEnabled ($workflow.Replace('  push:', '  push: [main]').Replace('    runs-on:', "    if: github.ref == 'refs/heads/main'`n    runs-on:")))) 'main-only delivery is rejected'
+Check (!(PublicationEnabled ($workflow.Replace("branches: ['**']", 'branches: [main]').Replace('    runs-on:', "    if: github.ref == 'refs/heads/main'`n    runs-on:")))) 'main-only delivery is rejected'
 Check ($workflow.Contains('required: false') -and $workflow.Contains('./scripts/check-publication-source.ps1 -ExpectedSourceCommit $env:EXPECTED_SOURCE_COMMIT')) 'optional source constraint is wired'
 Check ($workflow.Contains('run: build.bat /s') -and $workflow.Contains('run: build-installer.bat /s') -and $workflow.Contains('runs-on: windows-2022')) 'pinned Windows entrypoints retained'
 Check ($workflow -notmatch '(?im)^\s*run:.*(test|lint|typecheck)' -and $workflow -notmatch '(?m)^\s+needs:') 'workflow contains no quality test or lint steps'
