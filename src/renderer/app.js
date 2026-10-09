@@ -378,20 +378,24 @@ function initializeArchive() {
 }
 async function archiveMutation(kind,task) {const result=await run('Working…',task,'Saved.');if(result?.ok){recycledSelection.clear();await loadArchive(kind);}}
 async function loadArchive(kind) {
+ const surface=$('view-'+kind);
  const request=++archiveRequests[kind]; archiveRows[kind]=[];$(kind+'-list').replaceChildren();
- if(!state || state.locked) {setArchiveMessage(kind,'Unlock a drive to view its history and recycle bin.');return;}
+ surface.dataset.archiveRequest=String(request);surface.dataset.archiveState='loading';surface.setAttribute('aria-busy','true');
+ if(!state || state.locked) {setArchiveMessage(kind,'Unlock a drive to view its history and recycle bin.');surface.dataset.archiveState='locked';surface.dataset.archiveCompletedRequest=String(request);surface.setAttribute('aria-busy','false');return;}
  setArchiveMessage(kind,'Loading…');
  try {const rows=await (kind==='history'?api.history():api.recycled());if(request!==archiveRequests[kind])return;if(!Array.isArray(rows))throw new Error(t('History is unavailable.'));archiveRows[kind]=rows;await renderArchive(kind);
- const value=state.preferences?.historyRetentionDays ?? state.history?.retentionDays ?? null; if(kind==='history') {$('history-retention').value=value===null?'forever':[30,90].includes(value)?String(value):'custom';$('history-days').hidden=$('history-retention').value!=='custom';if(value!==null)$('history-days').value=value;}}
- catch(error){if(request===archiveRequests[kind]){setArchiveMessage(kind,'History is unavailable.');showError(error);}}
+ if(request!==archiveRequests[kind])return;
+ const value=state.preferences?.historyRetentionDays ?? state.history?.retentionDays ?? null; if(kind==='history') {$('history-retention').value=value===null?'forever':[30,90].includes(value)?String(value):'custom';$('history-days').hidden=$('history-retention').value!=='custom';if(value!==null)$('history-days').value=value;}
+ surface.dataset.archiveCompletedRequest=String(request);surface.dataset.archiveState='ready';surface.setAttribute('aria-busy','false');}
+ catch(error){if(request===archiveRequests[kind]){surface.dataset.archiveState='error';surface.setAttribute('aria-busy','false');setArchiveMessage(kind,'History is unavailable.');showError(error);}}
 }
 async function renderArchive(kind) {
- const generation=++archiveRenders[kind];const rows=await (kind==='history'?historySearch:recycleSearch).filter(archiveRows[kind]);if(generation!==archiveRenders[kind])return;const fragment=document.createDocumentFragment();
+ const generation=++archiveRenders[kind];$('view-'+kind).dataset.archiveRender=String(generation);const rows=await (kind==='history'?historySearch:recycleSearch).filter(archiveRows[kind]);if(generation!==archiveRenders[kind])return;const fragment=document.createDocumentFragment();
  for(const version of rows) {const row=document.createElement('tr');const cell=text=>{const el=document.createElement('td');el.textContent=text;row.append(el);return el;};
  const selection=cell('');if(kind==='recycle'){const check=document.createElement('input');check.type='checkbox';check.value=version.id;check.checked=recycledSelection.has(version.id);check.disabled=!version.isAvailable;check.setAttribute('aria-label',t('Select')+' '+version.path);check.onchange=()=>{check.checked?recycledSelection.add(version.id):recycledSelection.delete(version.id);renderAvailability();};selection.append(check);}
  cell(version.path);cell(formatDate(version.timestampUtc));cell(version.isDirectory?t('Folder'):formatBytes(version.length));cell(t(version.isAvailable?'Available':'Encrypted data unavailable'));const actions=cell('');
  if(kind==='history'){const restore=document.createElement('button');restore.className='button small';restore.textContent=t('Restore as new version');restore.disabled=busy||!version.isAvailable;restore.dataset.archiveRestore='true';restore.dataset.available=String(version.isAvailable);restore.onclick=async()=>{if(await confirmAction('Restore this version?','Restoring creates a new current version. Existing history remains encrypted.','Restore as new version'))archiveMutation('history',()=>api.restoreVersion(version.id));};actions.append(restore);}fragment.append(row);}
- $(kind+'-list').replaceChildren(fragment);setArchiveMessage(kind,rows.length?'':'No matching entries.');renderAvailability();
+ $(kind+'-list').replaceChildren(fragment);setArchiveMessage(kind,rows.length?'':'No matching entries.');renderAvailability();$('view-'+kind).dataset.archiveRendered=String(generation);
 }
 
 async function restoreRecycledSelection() {
