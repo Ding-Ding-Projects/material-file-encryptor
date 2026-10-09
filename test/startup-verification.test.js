@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import { execFileSync } from 'node:child_process';
+const desktopSource = fs.readFileSync(new URL('../scripts/desktop-check.mjs', import.meta.url), 'utf8');
+const desktopReadback = desktopSource.split('    const readStartup = ')[1].split(';')[0];
 const source = fs.readFileSync(new URL('../src/main/main.js', import.meta.url), 'utf8');
 const helperStart = source.indexOf('function startupReadbackOptions(');
 const body = source.slice(helperStart >= 0 ? helperStart : source.indexOf('function createVerificationStartup('), source.indexOf('\nlet verificationStartup;'));
@@ -70,6 +72,8 @@ $results | ConvertTo-Json -Compress
     assert.equal(seam.read().enabled, false);
     seam.set(true); assert.equal(seam.read().enabled, true, 'Enabled native entry must be found for this executable.');
     assert.equal(readOrdinary().enabled, true, 'Ordinary readback must normalize the same native lookup.');
+    const readDesktop = vm.runInNewContext(desktopReadback, { process: { execPath: executable }, evaluateApplication: callback => callback({ app }) });
+    assert.equal(readDesktop(), true, 'Direct desktop readback must find the same native entry.');
     seam.set(false); assert.equal(seam.read().enabled, false);
     assert.equal(readOrdinary().enabled, false);
     assert.equal(seam.restore().restored, true);

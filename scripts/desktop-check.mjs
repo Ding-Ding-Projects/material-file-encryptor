@@ -69,7 +69,7 @@ try {
     const manifest = JSON.parse(await fs.readFile(path.join(runtime.resources, 'dependencies.json'), 'utf8'));
     await fs.access(path.join(runtime.resources, 'driver', `winfsp-${manifest.winfsp.version}.msi`));
     Object.assign(packagedEvidence, { asar: true, nativeHelperPresent: true, driverInstallerPresent: true });
-    const readStartup = () => evaluateApplication(({ app }) => app.getLoginItemSettings({ path: process.execPath, args: ['--startup'] }).openAtLogin);
+    const readStartup = () => evaluateApplication(({ app }) => app.getLoginItemSettings({ path: '"' + process.execPath.replace(/^"|"$/g, '') + '"', args: ['--startup'] }).openAtLogin);
     originalStartup = (await evaluatePage(() => window.drive.status())).preferences.startup;
     assert.equal(await readStartup(), originalStartup, 'Windows registration must match the saved preference.');
     await evaluatePage(() => window.drive.setStartup(false));
