@@ -2,7 +2,7 @@
 $ErrorActionPreference = 'Stop'
 function Assert([bool]$condition, [string]$message) { if (!$condition) { throw $message } }
 function Digest([string]$path, [string]$algorithm='SHA256') { (Get-FileHash -LiteralPath $path -Algorithm $algorithm).Hash.ToLowerInvariant() }
-function Gh([Parameter(ValueFromRemainingArguments=$true)][string[]]$Arguments) { $result = & gh @Arguments; if ($LASTEXITCODE -ne 0) { throw 'GITHUB_CLI_OPERATION_FAILED' }; return $result }
+function Gh([Parameter(ValueFromRemainingArguments=$true)][string[]]$Arguments) { $result = & (Get-Command gh.exe -CommandType Application -ErrorAction Stop).Source @Arguments; if ($LASTEXITCODE -ne 0) { throw 'GITHUB_CLI_OPERATION_FAILED' }; return $result }
 $repo=$env:GITHUB_REPOSITORY; $source=$env:GITHUB_SHA
 Assert ($env:GITHUB_RUN_NUMBER -match '^[1-9][0-9]*$' -and $env:GITHUB_RUN_ATTEMPT -match '^[1-9][0-9]*$') 'INVALID_RUN_IDENTITY'
 $tag="v0.1.0-preview.$($env:GITHUB_RUN_NUMBER).$($env:GITHUB_RUN_ATTEMPT)"
