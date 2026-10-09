@@ -1,12 +1,39 @@
-# Current automatic release and runtime status
+# Preservation closeout, 2026-10-09
 
-Latest direction, 2026-10-09: every delivery must be a normal release, never draft or prerelease. The existing v0.1.0-preview.16.1 entry was promoted without changing its tag or four asset bytes; GitHub readback confirms both classification flags false. Its original startup-readback warning remains.
+The user requested preservation and safe task-owned cleanup. Further implementation and runtime launches stopped. The broader application-verification objective remains unfinished.
 
-Current integration includes the automatic publisher and tag-loop correction at bf432f19. Every branch push and manual dispatch builds through both root entrypoints and publishes a unique v1.<run_number>.<run_attempt> normal release with exact source, package version, downloadable assets and measured workflow timing. Twenty focused release checks pass. Live delivery of this integration remains pending until observed after the next push. Tests and lint are not run in CI, and local runtime verification is separate from publication.
+## Delivered and independently verified
 
-Both exact builds and 739-entry package integrity passed at 5f0f54df. Its genuine packaged run inspected four captures and verified native keyboard focus, then stopped before History at UNPROVEN_PROCESS_ANCESTRY. A later separate identity-checked recovery used normal quit, proved six processes absent and forgot only the synthetic credential. Original failed receipts remain unchanged; the exact rejected edge is unknown. Adapter 458db5d4 now preserves structured rejection codes. Layout c0170b4 adds independently bound prospective observations and actual HWND-owner proof; its complete 48-tuple runtime matrix is still pending. Website 872744b now builds through the root entrypoint and its responsive verification remains in progress.
+Automatic normal-release delivery is repaired. Main source `57a04e16bad55ea15a3c6f2f488f1a5257e41f02` produced [v1.19.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.19.1) through [successful workflow 37993136207](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/37993136207). GitHub readback confirms `isDraft:false` and `isPrerelease:false`. Earlier concurrent delivery runs published v1.17.1 and v1.18.1 with the same normal classification. Publication runs on every branch push and manual dispatch, excludes tag-created loops, invokes both root build entrypoints, and runs no tests or lint in CI.
 
-Next: push this coherent source to main and verify automatic normal release delivery. Independently build the final frozen source, run genuine layout/clear-control/packaged/installed verification, download and verify current released bytes, and update public evidence only from observed results. Do not wait on local quality checks to publish and do not claim runtime acceptance from publication. CLOSEOUT_PROMPT.md contains the current continuation boundaries.
+All four v1.19.1 assets were independently downloaded and matched their hosted sizes and SHA-256 values. Provenance payload hashes and RELEASES SHA-1/size passed. All 739 archive entries passed decompression/CRC checks; the 648-file inventory passed safety and hash checks. This proves delivered bytes and packaging integrity, not installed execution. The application archive SHA-256 is `2ce655778eb2f7d831046dc850c6b7cf5c30784e627a628d09051828f47193ef`.
+
+## Local package quarantine
+
+Both exact local entrypoints, `build.bat /s` and `build-installer.bat /s`, exited zero at source 57a04e16 between 21:25:00Z and 21:34:02Z. A subsequent audit found 11 private local announcement entries in the local application archive. `forge.config.cjs` does not exclude `.agent`. Both local output directories were moved into a private quarantine at 21:40:49Z, with identical hashes before and after. They must not be distributed or reused as accepted runtime evidence.
+
+The independently downloaded v1.19.1 application archive contains zero private announcement entries. No public release leak was observed. This does not repair the local packaging exclusion. The next implementation must exclude local agent data, add a deliberate negative regression, rebuild through both exact entrypoints and inspect the actual package before any new local runtime acceptance.
+
+## Unfinished verification
+
+- Modern interface and all editable-field clear controls are implemented and source-reviewed. The final 48-tuple built matrix, startup readback, packaged execution and installed lifecycle are still pending.
+- Source 5f0f54df produced four inspected private captures and native keyboard-focus evidence, then stopped before History at `UNPROVEN_PROCESS_ANCESTRY`. The exact rejected ancestry edge was not retained. Separate recovery proved exact ownership, requested normal quit, observed all six processes absent and removed only synthetic verification state. The original failed receipt remains unchanged.
+- Lifecycle diagnostics 458db5d4 preserve sanitized rejection codes. Modern observation c0170b4 requires a bound build receipt, actual window owner, exact target and prospective event interval. Focused checks and independent review pass; source assurance is not runtime acceptance.
+- Website 872744b builds through the root entrypoint. Three bounded responsive attempts ended with proven owned teardown. Native input activated 12 clear controls in one attempt, but actual captured dimensions invalidated the intended viewport tuples. The later persistent-metrics attempt failed strict target isolation before capture. Do not relax isolation or count these as passed responsive tuples.
+- Historical 1e16dea8 evidence remains 70 packaged checks/73 inspected captures and 70 installed checks/72 inspected captures. The original uninstall failure plus separate updater-residue diagnosis remain distinct. Downloaded-current-release installation and complete removal are unverified.
+
+## Preservation and continuation
+
+Source, metadata, ignored announcement variants and private verification receipts are being archived separately with hash inventories. Task-owned removal requires verified archives, clean source, remote preservation and source-tip ancestry in pushed main. Retain the primary checkout, private quarantined outputs, unfinished evidence and unrelated branches. Final archive and deletion receipts are private; do not copy machine paths or private data into public records.
+
+The dedicated public capture repository is [material-file-encryptor-captures](https://github.com/Ding-Ding-Projects/material-file-encryptor-captures). It contains only the four previously reviewed original captures at 1e16dea8. Publication and its live-image checks are recorded by that repository; no current-GUI acceptance is inferred from historical images.
+
+Next order: repair local packaging exclusion; rebuild a frozen candidate; complete the actual modern layout/clear-control matrix; verify packaged and downloaded installed lifecycle; repair responsive capture diagnostics without weakening ownership; refresh public images only from accepted current evidence. No automatic updates, permanent history purge, broad provider/platform certification, visible-desktop interaction or host power/login action is authorized by this handoff.
+
+Projects lacks the required authorization. Wiki metadata is enabled but its Git endpoint is unavailable. No live-status delivery is claimed. The goal remains incomplete; release publication is a separate verified result.
+
+Task: https://github.com/Ding-Ding-Projects/material-file-encryptor/issues/1
+Progress: https://github.com/Ding-Ding-Projects/material-file-encryptor/discussions/2
 
 ## Historical first-preview record
 

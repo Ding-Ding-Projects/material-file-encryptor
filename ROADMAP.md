@@ -29,8 +29,8 @@
 - [x] Resolve installation registration detection and verify 573 installed payload entries plus the real installed 70-check desktop flow.
 - [x] Verify exact updater-only residue with 17 focused cases and a read-only diagnostic; preserve the original directory-presence failure.
 - [ ] Run the revised full installer lifecycle against independently downloaded release bytes.
-- [ ] Build and publish an unsigned Squirrel preview with exact source and package evidence.
-- [ ] Independently download, hash and verify the released installer.
+- [x] Build and publish unsigned Squirrel normal release v1.19.1 with exact source and package evidence.
+- [x] Independently download and hash v1.19.1 installer/package/feed/provenance; retain runtime verification as a separate unfinished item.
 - [ ] Refresh documentation and real captures from the final verified candidate.
 - [x] Promote four original public-safe captures from the reviewed 73-capture packaged run at `1e16dea8`; retain path-bearing captures privately.
 - [x] Replace the old archive writer and verify every Squirrel package entry through decompression and CRC checks.
@@ -43,6 +43,12 @@
 - [ ] Real cloud-provider certification (outside this preview).
 - [ ] Permanent history purge (outside this preview; emptying the bin retains historical recovery).
 
-- [ ] Confirm the restored automatic per-push normal release publisher on a real workflow run, including downloadable installer assets and timing notes. Local workflow/source checks pass; live publication is pending.
+- [x] Confirm automatic normal release delivery at v1.19.1, source 57a04e16, workflow 37993136207; independently verify all four assets and recorded timing.
 
 - [x] Promote the existing release in place to non-draft and non-prerelease, retain its tag and bytes, and verify GitHub classification readback.
+
+## Preservation follow-up
+
+- [ ] Exclude private local agent data from packaged archives, prove the negative regression and inspect a rebuilt package. Local 57a04e16 outputs are quarantined; downloaded v1.19.1 contains zero private announcement entries.
+- [ ] Complete the final modern 48-tuple runtime matrix and source-bound installed verification.
+- [ ] Complete responsive website acceptance with actual captured dimensions and strict target isolation.
