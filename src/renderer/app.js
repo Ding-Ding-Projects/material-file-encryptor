@@ -1,3 +1,4 @@
+import { installClearFields } from './clear-fields.js';
 import { deletedDescendantCandidates } from './recycle-selection.js';
 import { createScopedSearch } from './scoped-search.js';
 import { parsePartSize, displayPartSize, parseVocabulary, loadSettings } from './preferences.js';
@@ -35,6 +36,7 @@ function t(source) {
 }
 function setText(id, source) { $(id).textContent = t(source); }
 function savePreferences() { try { localStorage.setItem('material-drive.preferences.v1', JSON.stringify(preferences)); } catch { showError('Your device could not save these preferences.'); } }
+const clearFields = installClearFields(document.body, t);
 const colorQuery = window.matchMedia('(prefers-color-scheme: dark)');
 function applyPreferences() {
  document.documentElement.dataset.theme = preferences.theme === 'system' ? colorQuery.matches ? 'dark' : 'light' : preferences.theme;
@@ -47,6 +49,8 @@ function applyPreferences() {
  for (const key of ['celebration','patience']) { $(`${key}-setting`).value = preferences[key]; $(`${key}-output`).textContent = preferences[key]; $(`${key}-setting`).style.setProperty('--range-progress', `${preferences[key]}%`); }
  $('vocabulary-summary').textContent = preferences.language === 'yue' ? `已儲存 ${preferences.vocabulary.replacements.length} 個替換詞。` : `${preferences.vocabulary.replacements.length} label replacements saved on this device.`;
  historySearch?.refresh(); recycleSearch?.refresh();
+ $('history-days')?.setAttribute('aria-label',t('Custom days'));
+ clearFields.refresh();
  if (state) { render(); changeView(view); }
  if ($('vault-dialog').open) updateDialog();
 }
