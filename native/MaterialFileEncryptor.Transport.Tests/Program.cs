@@ -1,4 +1,7 @@
 using MaterialFileEncryptor.Core;
+if (args.SequenceEqual(new[] { "--stdin-eof-child" })) { await ProcessInputChecks.RunChildAsync(); return; }
+if (args.SequenceEqual(new[] { "--stdin-eof" })) { await ProcessInputChecks.VerifyAsync(); Console.WriteLine("PASS transport children cannot inherit the helper request pipe"); return; }
+if (args.SequenceEqual(new[] { "--pipe-deadline" })) { await ProcessDeadlineChecks.VerifyAsync(); Console.WriteLine("PASS nonresponsive output drain cannot defeat cancellation"); return; }
 if (args.Length == 2 && args[0] == "--live-private") { await LiveTransportChecks.RunAsync(args[1]); return; }
 var root = Path.Combine(Path.GetTempPath(), "mfe-transport-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(root);
@@ -122,6 +125,8 @@ try
     using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
     var watch = System.Diagnostics.Stopwatch.StartNew();
     try { await runner.RunAsync("git", ["-c", "alias.pause=!sleep 30", "pause"], root, cancellation.Token); throw new Exception("ignored cancellation"); } catch (OperationCanceledException) { Check(watch.Elapsed < TimeSpan.FromSeconds(5), "process cancellation terminates child tree promptly"); }
+    await ProcessDeadlineChecks.VerifyAsync(); Check(true, "nonresponsive output drain cannot defeat cancellation");
+    await ProcessInputChecks.VerifyAsync(); Check(true, "transport children cannot inherit the helper request pipe");
     Console.WriteLine($"Passed {count} transport checks.");
 }
 finally

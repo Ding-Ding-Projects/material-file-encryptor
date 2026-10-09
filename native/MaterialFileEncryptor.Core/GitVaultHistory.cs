@@ -15,7 +15,8 @@ public sealed class VaultProcessRunner : IVaultProcessRunner
 {
     private readonly string? gitExecutable, ghExecutable;
     private readonly string baseDirectory;
-    public VaultProcessRunner(string? gitExecutable = null, string? ghExecutable = null, string? baseDirectory = null) { this.gitExecutable = gitExecutable; this.ghExecutable = ghExecutable; this.baseDirectory = Path.GetFullPath(baseDirectory ?? AppContext.BaseDirectory); }
+    private readonly Func<Stream, Stream, CancellationToken, Task> copyOutput;
+    public VaultProcessRunner(string? gitExecutable = null, string? ghExecutable = null, string? baseDirectory = null, Func<Stream, Stream, CancellationToken, Task>? copyOutput = null) { this.copyOutput = copyOutput ?? ((input, output, ct) => input.CopyToAsync(output, ct)); this.gitExecutable = gitExecutable; this.ghExecutable = ghExecutable; this.baseDirectory = Path.GetFullPath(baseDirectory ?? AppContext.BaseDirectory); }
     public string ResolveExecutable(string name)
     {
         var explicitPath = name == "git" ? gitExecutable : name == "gh" ? ghExecutable : null;
@@ -32,7 +33,7 @@ public sealed class VaultProcessRunner : IVaultProcessRunner
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(TimeSpan.FromSeconds(60));
         var ct = deadline.Token;
-        var start = new ProcessStartInfo(ResolveExecutable(executable)) { WorkingDirectory = workingDirectory, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
+        var start = new ProcessStartInfo(ResolveExecutable(executable)) { WorkingDirectory = workingDirectory, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
         if (executable == "git")
         {
             foreach (var setting in new[] { "core.fsmonitor=false", "core.hooksPath=/dev/null", "core.attributesFile=" + ("/dev/null"), "credential.helper=", "credential.helper=!'" + ResolveExecutable("gh").Replace("\\", "/").Replace("'", "'\"'\"'") + "' auth git-credential", "commit.gpgsign=false" }) { start.ArgumentList.Add("-c"); start.ArgumentList.Add(setting); }
@@ -52,12 +53,30 @@ public sealed class VaultProcessRunner : IVaultProcessRunner
         try { process = Process.Start(start) ?? throw new IOException("Unable to start storage tool."); }
         catch (System.ComponentModel.Win32Exception) { throw new IOException("Required storage tool is unavailable. Install the bundled Git and GitHub CLI tools."); }
         using var ownedProcess = process;
+        // Storage tools never consume helper JSON requests or credentials.
+        process.StandardInput.Close();
         using var output = new MemoryStream();
-        var copy = process.StandardOutput.BaseStream.CopyToAsync(output, ct);
+        var copy = copyOutput(process.StandardOutput.BaseStream, output, ct);
         var error = process.StandardError.ReadToEndAsync(ct);
-        try { await Task.WhenAll(copy, process.WaitForExitAsync(ct)); }
-        catch { if (!process.HasExited) process.Kill(true); using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(5)); await process.WaitForExitAsync(stop.Token); throw; }
-        return new(process.ExitCode, output.ToArray(), await error);
+        try
+        {
+            // Termination and drains have separate deadlines. A pipe that ignores
+            // cancellation must never postpone terminating the owned process.
+            await process.WaitForExitAsync(ct).ConfigureAwait(false);
+            await copy.WaitAsync(ct).ConfigureAwait(false);
+            var diagnostic = await error.WaitAsync(ct).ConfigureAwait(false);
+            return new(process.ExitCode, output.ToArray(), diagnostic);
+        }
+        catch
+        {
+            if (!process.HasExited) process.Kill(true);
+            using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await process.WaitForExitAsync(stop.Token).ConfigureAwait(false);
+            process.StandardOutput.Dispose(); process.StandardError.Dispose();
+            _ = copy.ContinueWith(task => _ = task.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
+            _ = error.ContinueWith(task => _ = task.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
+            throw;
+        }
     }
 }
 
