@@ -111,7 +111,7 @@ try {
     const driveLetter = status.availableDriveLetters.includes('M:') ? 'M:' : status.availableDriveLetters[0];
     assert.ok(driveLetter, 'A free drive letter is required.');
     await page.click('[data-view="drive"]'); await page.click('#create-button');
-    await page.fill('#storage-input', storageDir); await page.fill('#cache-input', cacheDir); await page.selectOption('#drive-letter', driveLetter.replace(':', ''));
+    await page.fill('#storage-input', storageDir); await page.fill('#cache-input', cacheDir); await page.click('#drive-letter-toggle'); await page.getByRole('option', { name: driveLetter, exact: true }).click();
     const password = randomBytes(24).toString('base64url');
     await page.fill('#password-input', password); await page.fill('#confirm-password', password); await page.click('#dialog-submit');
     await page.waitForSelector('#vault-dialog', { state: 'hidden', timeout: 60000 });

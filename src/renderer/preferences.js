@@ -3,7 +3,7 @@ export function parsePartSize(value, unit) {
   const text = String(value).trim();
   if (!/^\d+(?:\.\d+)?$/.test(text) || !Object.hasOwn(UNITS, unit)) throw new Error('Enter a positive number and choose KB, MB or GB.');
   const bytes = Number(text) * UNITS[unit];
-  if (!Number.isSafeInteger(bytes) || bytes < UNITS.KB || bytes > UNITS.GB) throw new Error('Part size must be a whole number of bytes between 1 KB and 1 GB (1024-based units).');
+  if (!Number.isSafeInteger(bytes) || bytes < UNITS.KB || bytes > 90000000) throw new Error('Part size must be a whole number of bytes between 1 KiB and 90,000,000 physical bytes.');
   return bytes;
 }
 export function displayPartSize(bytes) {

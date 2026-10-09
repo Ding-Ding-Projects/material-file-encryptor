@@ -18,6 +18,7 @@ async function fixture(page) {
   const change = patch => { Object.assign(window.testState,patch); subscriber(clone(window.testState)); return clone(window.testState); };
   window.pushState = change;
   window.drive = {
+   history: async () => [{id:'version-1',entryId:'file-1',path:'notes.txt',timestampUtc:'2026-01-01',length:4096,isDirectory:false,deleted:false,isAvailable:true}], recycled: async () => [{id:'deleted-1',entryId:'file-2',path:'deleted.txt',timestampUtc:'2026-01-01',length:20,isDirectory:false,deleted:true,isAvailable:true}], saveVersion:async()=>record('saveVersion'),restoreVersion:async id=>record('restoreVersion',id),restoreDeleted:async ids=>record('restoreDeleted',ids),emptyRecycleBin:async()=>record('emptyRecycleBin'),setHistoryRetention:async value=>{record('setHistoryRetention',value);return change({preferences:{historyRetentionDays:value}});},
    status: async () => clone(window.testState), onStatus: callback => { subscriber = callback; return () => {}; },
    chooseFolder: async kind => kind === 'cache' ? 'C:\\EncryptedCache' : 'C:\\EncryptedStorage', chooseFiles:async () => ['C:\\Import\\notes.txt'],chooseExport:async () => 'C:\\Export\\notes.txt',chooseKeyFile:async () => 'C:\\Keys\\test.key',generateKeyFile:async () => 'C:\\Keys\\generated.key',
    create:async value => { record('create',value); return change({...value,locked:false,mounted:true}); },unlock:async value => { record('unlock',value); return change({...value,locked:false,mounted:true}); },
@@ -47,15 +48,15 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   assert.equal(await page.locator('#vault-badge').textContent(),'Locked'); assert.equal(await page.locator('#file-list tr').count(),0);
   await page.click('[data-view=help]');await page.click('#project-website-link');assert.equal(await page.evaluate(() => window.calls.find(call => call.name === 'openExternal').value),'https://ding-ding-projects.github.io/material-file-encryptor/');await page.click('[data-view=drive]');
   await page.evaluate(() => window.pushState({availableDriveLetters:[],driver:{available:false,checking:true}}));
-  await page.click('#create-button');assert.match(await page.locator('#drive-letter').textContent(),/Checking available drive letters/);
+  await page.click('#create-button');assert.match(await page.locator('#drive-letter-status').textContent(),/Checking available drive letters/);
   assert.equal(await page.locator('#dialog-submit').isDisabled(),true);assert.equal(await page.locator('#driver-notice').isVisible(),false);
   await page.fill('#password-input','entry survives discovery');
   await page.evaluate(() => window.pushState({availableDriveLetters:['M:','N:'],driver:{available:true,checking:false}}));
-  assert.equal(await page.locator('#drive-letter').inputValue(),'M');assert.equal(await page.locator('#dialog-submit').isEnabled(),true);
+  assert.equal(await page.locator('#drive-letter').inputValue(),'M:');assert.equal(await page.locator('#dialog-submit').isEnabled(),true);
   assert.equal(await page.locator('#password-input').inputValue(),'entry survives discovery');assert.equal(await page.locator('#password-input').evaluate(el => el===document.activeElement),true);
-  await page.selectOption('#drive-letter','N');await page.evaluate(() => window.pushState({availableDriveLetters:['L:','M:','N:']}));
-  assert.equal(await page.locator('#drive-letter').inputValue(),'N','ready status must preserve a chosen available letter');
-  await page.selectOption('#drive-letter','M');assert.equal(await page.locator('#cache-input').inputValue(),'C:\\EncryptedCache');
+  await page.fill('#drive-letter','N:');await page.evaluate(() => window.pushState({availableDriveLetters:['L:','M:','N:']}));
+  assert.equal(await page.locator('#drive-letter').inputValue(),'N:','ready status must preserve a chosen available letter');
+  await page.fill('#drive-letter','M:');assert.equal(await page.locator('#cache-input').inputValue(),'C:\\EncryptedCache');
 
   await page.click('[data-browse="storage-input"]'); await page.fill('#password-input','correct horse battery staple');await page.fill('#confirm-password','wrong');await page.click('#dialog-submit');assert.match(await page.locator('#dialog-error').textContent(),/do not match/);
   await page.locator('[name=credential-mode][value=password]').focus();await page.keyboard.press('ArrowRight');
@@ -63,9 +64,17 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   assert.equal(await page.locator('[name=credential-mode][value=keyFile]').evaluate(el => el.matches(':focus-visible')),true);
   await page.keyboard.press('ArrowLeft');assert.equal(await page.locator('[name=credential-mode][value=password]').isChecked(),true);
   await page.check('[name=credential-mode][value=keyFile]'); await page.click('#generate-key');assert.equal(await page.locator('#key-path').inputValue(),'C:\\Keys\\generated.key');
-  await page.fill('#create-split-value','0.5');await page.selectOption('#create-split-unit','KB');await page.click('#dialog-submit');assert.match(await page.locator('#dialog-error').textContent(),/between 1 KB and 1 GB/);
+  await page.fill('#create-split-value','0.5');await page.selectOption('#create-split-unit','KB');await page.click('#dialog-submit');assert.match(await page.locator('#dialog-error').textContent(),/between 1 KiB and 90,000,000/);
   await page.fill('#create-split-value','10');await page.selectOption('#create-split-unit','MB');await page.click('#dialog-submit');await page.waitForFunction(() => !document.querySelector('#vault-dialog').open);
   const create = await page.evaluate(() => window.calls.find(call => call.name === 'create').value); assert.equal(create.keyFilePath,'C:\\Keys\\generated.key');assert.equal(Object.hasOwn(create,'password'),false);assert.equal(create.partSizeBytes,10485760);
+  await page.click('[data-view=history]');await page.waitForSelector('#history-list tr');
+  assert.match(await page.locator('#history-list').textContent(),/notes.txt/);
+  await page.click('#save-version');await page.waitForFunction(()=>window.calls.some(call=>call.name==='saveVersion'));
+  await page.selectOption('#history-retention','30');await page.click('#history-retention-apply');await page.waitForFunction(()=>window.calls.some(call=>call.name==='setHistoryRetention'&&call.value===30));
+  await page.click('#history-list button');await page.click('#confirm-action');await page.waitForFunction(()=>window.calls.some(call=>call.name==='restoreVersion'&&call.value==='version-1'));
+  await page.click('[data-view=recycle]');await page.waitForSelector('#recycle-list input');await page.check('#recycle-list input');await page.click('#restore-recycled');await page.waitForFunction(()=>window.calls.some(call=>call.name==='restoreDeleted'&&call.value[0]==='deleted-1'));
+  await page.click('#empty-recycle');assert.match(await page.locator('#confirm-description').textContent(),/history is retained/);await page.click('#confirm-action');await page.waitForFunction(()=>window.calls.some(call=>call.name==='emptyRecycleBin'));
+  await page.click('[data-view=drive]');
   await page.click('#explorer-button');await page.click('#import-button');await page.waitForSelector('#file-list tr');await page.check('#file-list input');await page.keyboard.press('Enter');
   await page.click('#offline-button');await page.waitForFunction(() => document.querySelector('#offline-count').textContent === '1');
   await page.click('[data-view=offline]');assert.equal(await page.locator('#file-list tr').count(),1);

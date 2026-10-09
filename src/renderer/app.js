@@ -1,3 +1,4 @@
+import { createScopedSearch } from './scoped-search.js';
 import { parsePartSize, displayPartSize, parseVocabulary, loadSettings } from './preferences.js';
 import { icon, initializeIcons } from './icons.js';
 import { cantonese } from './i18n.js';
@@ -5,6 +6,10 @@ const $ = id => document.getElementById(id);
 const api = window.drive;
 let preferences = loadSettings(localStorage);
 let state = null, selected = null, view = 'drive', busy = false, dialogMode = 'create', snackbarTimer;
+let archiveRows = {history:[],recycle:[]}, archiveRequests={history:0,recycle:0};
+const archiveRenders={history:0,recycle:0};
+const recycledSelection=new Set(); let historySearch, recycleSearch;
+let driveLetterEdited = false, activeDriveLetter = '';
 const dictionary = new Map();
 document.querySelectorAll('[data-i18n]').forEach(el => dictionary.set(el, el.textContent));
 initializeIcons();
@@ -34,12 +39,13 @@ function applyPreferences() {
  document.documentElement.dataset.theme = preferences.theme === 'system' ? colorQuery.matches ? 'dark' : 'light' : preferences.theme;
  document.documentElement.lang = preferences.language === 'yue' ? 'yue-Hant' : 'en';
  for (const [el, source] of dictionary) el.textContent = t(source);
- for (const el of document.querySelectorAll('[data-view]')) { const label = t(({drive:'My drive',offline:'Available offline',settings:'Settings',help:'How it works'})[el.dataset.view]); el.setAttribute('aria-label',label); el.title = label; }
+ for (const el of document.querySelectorAll('[data-view]')) { const label = t(({drive:'My drive',offline:'Available offline',history:'History',recycle:'Recycle Bin',settings:'Settings',help:'How it works'})[el.dataset.view]); el.setAttribute('aria-label',label); el.title = label; }
  $('file-search').placeholder = t('Search files');
  $('file-search').setAttribute('aria-label',t('Search files'));
  $('theme-setting').value = preferences.theme; $('language-setting').value = preferences.language; $('emoji-setting').checked = preferences.emoji;
  for (const key of ['celebration','patience']) { $(`${key}-setting`).value = preferences[key]; $(`${key}-output`).textContent = preferences[key]; $(`${key}-setting`).style.setProperty('--range-progress', `${preferences[key]}%`); }
  $('vocabulary-summary').textContent = preferences.language === 'yue' ? `已儲存 ${preferences.vocabulary.replacements.length} 個替換詞。` : `${preferences.vocabulary.replacements.length} label replacements saved on this device.`;
+ historySearch?.refresh(); recycleSearch?.refresh();
  if (state) { render(); changeView(view); }
  if ($('vault-dialog').open) updateDialog();
 }
@@ -89,12 +95,19 @@ function renderAvailability() {
  $('startup-setting').disabled = busy || !state;
  $('auto-unlock-setting').disabled = busy || !unlocked;
  $('forget-credential').disabled = busy || !state;
+ for(const el of document.querySelectorAll('[data-archive-restore]')) el.disabled=busy||!unlocked||el.dataset.available!=='true';
  for (const el of $('vault-form').querySelectorAll('button,input,select')) el.disabled = busy;
- $('drive-letter').disabled = busy || state?.driver?.checking === true;
- $('dialog-submit').disabled = busy || state?.driver?.checking === true || !$('drive-letter').value;
+ const letter = normalizedDriveLetter($('drive-letter').value);
+ const available = (state?.availableDriveLetters || []).map(normalizedDriveLetter);
+ const validLetter = /^[D-Z]$/.test(letter) && !state?.driver?.checking && (!available.length || available.includes(letter));
+ $('drive-letter').setCustomValidity(validLetter ? '' : t('Choose an available drive letter'));
+ $('dialog-submit').disabled = busy || !validLetter;
+ for (const id of ['save-version','empty-recycle','restore-recycled','history-retention-apply']) if ($(id)) $(id).disabled = busy || !unlocked;
+ if ($('restore-recycled')) $('restore-recycled').disabled ||= !recycledSelection.size;
 }
 function render() {
  if (!state) return;
+ if(state.locked) {for(const kind of ['history','recycle']) {archiveRequests[kind]++;archiveRenders[kind]++;archiveRows[kind]=[];$(kind+'-list').replaceChildren();$(kind+'-message').textContent=t('Unlock a drive to view its history and recycle bin.');}recycledSelection.clear();}
  const status = mountState(); setText('vault-badge',status); $('vault-badge').dataset.state = state.mounted ? 'mounted' : 'locked';
  $('locked-state').hidden = !state.locked; $('drive-content').hidden = state.locked; $('lock-button').hidden = state.locked;
  $('driver-notice').hidden = state.driver?.checking || state.driver?.available !== false;
@@ -152,6 +165,7 @@ function changeView(next) {
  document.querySelectorAll('[data-view]').forEach(el => { const active = el.dataset.view === next; el.classList.toggle('active',active); active ? el.setAttribute('aria-current','page') : el.removeAttribute('aria-current'); });
  setText('drive-heading',next === 'offline' ? 'Available offline' : 'My drive'); setText('files-heading',next === 'offline' ? 'Available offline' : 'All files');
  if (state) { renderFiles(); renderAvailability(); }
+ if (['history','recycle'].includes(next)) loadArchive(next);
 }
 function updateDialog() {
  const creating = dialogMode === 'create';
@@ -164,31 +178,68 @@ function updateDialog() {
  $('password-input').required = !isKey; $('confirm-password').required = creating && !isKey; $('key-path').required = isKey;
  $('password-input').autocomplete = creating ? 'new-password' : 'current-password';
 }
-function updateDriveLetters(preserveSelection = true) {
- const normalize = value => String(value || '').replace(/[:\\]+$/, '').toUpperCase();
- const checking = state?.driver?.checking === true;
- const letters = checking ? [] : [...new Set((state?.availableDriveLetters || state?.defaults?.availableDriveLetters || []).map(normalize))];
- const select = $('drive-letter');
- const placeholderText = t(checking ? 'Checking available drive letters…' : letters.length ? 'Drive letter' : 'No available drive letters');
- const signature = JSON.stringify([placeholderText, letters]);
- if (preserveSelection && select.dataset.choices === signature) return;
- const current = preserveSelection ? select.value : '';
- const preferred = normalize(state?.driveLetter || state?.defaults?.driveLetter);
- const fragment = document.createDocumentFragment();
- const placeholder = document.createElement('option'); placeholder.value = ''; placeholder.textContent = placeholderText; fragment.append(placeholder);
- for (const letter of letters) { const option = document.createElement('option'); option.value = letter; option.textContent = `${letter}:`; fragment.append(option); }
- select.replaceChildren(fragment); select.dataset.choices = signature;
- select.value = letters.includes(current) ? current : letters.includes(preferred) ? preferred : letters[0] || '';
- select.setAttribute('aria-busy', String(checking));
+const normalizedDriveLetter = value => /^[A-Z]:?$/i.test(String(value || '')) ? String(value)[0].toUpperCase() : '';
+function closeDrivePicker() {
+ $('drive-letter-options').hidden = true;
+ for (const id of ['drive-letter','drive-letter-toggle']) $(id).setAttribute('aria-expanded','false');
+ $('drive-letter').removeAttribute('aria-activedescendant');
 }
+function markDriveOption() {
+ const selectedLetter = normalizedDriveLetter($('drive-letter').value);
+ for (const option of $('drive-letter-options').children) {
+  option.setAttribute('aria-selected',String(option.dataset.letter === selectedLetter));
+  option.classList.toggle('active-option',option.dataset.letter === activeDriveLetter);
+ }
+ const active = document.getElementById(`drive-option-${activeDriveLetter}`);
+ if (!$('drive-letter-options').hidden && active) $('drive-letter').setAttribute('aria-activedescendant',active.id);
+ else $('drive-letter').removeAttribute('aria-activedescendant');
+}
+function openDrivePicker() {
+ if (busy) return;
+ $('drive-letter-options').hidden = false;
+ for (const id of ['drive-letter','drive-letter-toggle']) $(id).setAttribute('aria-expanded','true');
+ const options = [...$('drive-letter-options').children];
+ activeDriveLetter = options.find(option => option.dataset.letter === normalizedDriveLetter($('drive-letter').value))?.dataset.letter || options[0]?.dataset.letter || '';
+ markDriveOption(); $('drive-letter').focus();
+}
+function chooseDriveLetter(letter) {
+ if (busy || !normalizedDriveLetter(letter)) return;
+ $('drive-letter').value = `${normalizedDriveLetter(letter)}:`; driveLetterEdited = true;
+ markDriveOption(); closeDrivePicker(); renderAvailability(); $('drive-letter').focus();
+}
+function updateDriveLetters(preserveSelection = true) {
+ const checking = state?.driver?.checking === true;
+ const letters = checking ? [] : [...new Set((state?.availableDriveLetters || state?.defaults?.availableDriveLetters || []).map(normalizedDriveLetter).filter(Boolean))].sort();
+ const input = $('drive-letter'), list = $('drive-letter-options');
+ const status = checking ? 'Checking available drive letters…' : letters.length ? 'Available drive letters' : 'No available letters reported. You can still enter one manually.';
+ setText('drive-letter-status',status); $('drive-letter-toggle').setAttribute('aria-label',t('Choose an available drive letter'));
+ if (!preserveSelection || !driveLetterEdited) {
+  const preferred = normalizedDriveLetter(state?.driveLetter || state?.defaults?.driveLetter) || 'M';
+  input.value = `${letters.includes(preferred) || !letters.length ? preferred : letters[0]}:`;
+ }
+ const signature = JSON.stringify(letters);
+ if (list.dataset.choices !== signature) {
+  const fragment = document.createDocumentFragment();
+  for (const letter of letters) {
+   const option = document.createElement('button'); option.type = 'button'; option.tabIndex = -1;
+   option.id = `drive-option-${letter}`; option.dataset.letter = letter; option.setAttribute('role','option'); option.textContent = `${letter}:`;
+   fragment.append(option);
+  }
+  list.replaceChildren(fragment); list.dataset.choices = signature;
+  if (!letters.includes(activeDriveLetter)) activeDriveLetter = letters[0] || '';
+ }
+ list.setAttribute('aria-busy',String(checking)); markDriveOption();
+}
+
 function openVaultDialog(mode) {
- dialogMode = mode; $('vault-form').reset(); $('dialog-error').hidden = true;
+ dialogMode = mode; driveLetterEdited = false; closeDrivePicker(); $('vault-form').reset(); $('dialog-error').hidden = true;
  $('storage-input').value = state?.storageDir || ''; $('cache-input').value = state?.cacheDir || state?.defaults?.cacheDir || '';
+ $('transport-mode').value=state?.transport?.mode || 'folder'; $('remote-repository').value=state?.transport?.remoteRepository || ''; $('private-git-fields').hidden=$('transport-mode').value!=='privateGit';
  $('password-input').type = 'password'; $('show-password').setAttribute('aria-pressed','false'); setText('show-password','Show');
  updateDriveLetters(false);
  updateDialog(); renderAvailability(); $('vault-dialog').showModal(); $('storage-input').focus();
 }
-function closeVaultDialog() { if (busy) return; $('vault-dialog').close(); $('password-input').value = ''; $('confirm-password').value = ''; $('key-path').value = ''; }
+function closeVaultDialog() { if (busy) return; closeDrivePicker(); $('vault-dialog').close(); $('password-input').value = ''; $('confirm-password').value = ''; $('key-path').value = ''; }
 async function confirmAction(title, description, action) {
  setText('confirm-title',title); setText('confirm-description',description); setText('confirm-action',action);
  const dialog = $('confirm-dialog'); dialog.returnValue = ''; dialog.showModal(); dialog.querySelector('button[value=cancel]').focus();
@@ -206,7 +257,26 @@ $('vault-dialog').addEventListener('cancel',event => { if (busy) event.preventDe
 $('vault-dialog').addEventListener('close',() => { $('password-input').value = ''; $('confirm-password').value = ''; $('key-path').value = ''; });
 for (const el of document.querySelectorAll('[data-browse]')) el.addEventListener('click',async () => { try { const path = await api.chooseFolder(el.dataset.browse === 'cache-input' ? 'cache' : 'storage'); if (path) $(el.dataset.browse).value = path; } catch (error) { showError(error,true); } });
 for (const el of document.querySelectorAll('[name=credential-mode]')) el.addEventListener('change',updateDialog);
-listen('drive-letter','change',renderAvailability);
+listen('drive-letter','input',() => {
+ driveLetterEdited = true; $('drive-letter').value = $('drive-letter').value.toUpperCase();
+ activeDriveLetter = normalizedDriveLetter($('drive-letter').value); markDriveOption(); renderAvailability();
+});
+listen('drive-letter-toggle','click',() => { if ($('drive-letter-options').hidden) openDrivePicker(); else { closeDrivePicker(); $('drive-letter').focus(); } });
+$('drive-letter-options').addEventListener('mousedown',event => event.preventDefault());
+listen('drive-letter-options','click',event => { const option = event.target.closest('[data-letter]'); if (option) chooseDriveLetter(option.dataset.letter); });
+$('drive-letter').addEventListener('keydown',event => {
+ const open = !$('drive-letter-options').hidden;
+ if (event.key === 'Escape' && open) { event.preventDefault(); event.stopPropagation(); closeDrivePicker(); return; }
+ if (event.key === 'Tab') { closeDrivePicker(); return; }
+ if (event.key === 'Enter' && open) { if (document.getElementById(`drive-option-${activeDriveLetter}`)) { event.preventDefault(); chooseDriveLetter(activeDriveLetter); } else closeDrivePicker(); return; }
+ if (!['ArrowDown','ArrowUp','Home','End'].includes(event.key) || (!open && ['Home','End'].includes(event.key))) return;
+ event.preventDefault(); if (!open) { openDrivePicker(); return; }
+ const letters = [...$('drive-letter-options').children].map(option => option.dataset.letter); if (!letters.length) return;
+ const current = letters.indexOf(activeDriveLetter);
+ activeDriveLetter = event.key === 'Home' ? letters[0] : event.key === 'End' ? letters.at(-1) : letters[(current + (event.key === 'ArrowDown' ? 1 : -1) + letters.length) % letters.length];
+ markDriveOption(); document.getElementById(`drive-option-${activeDriveLetter}`)?.scrollIntoView({block:'nearest'});
+});
+document.addEventListener('pointerdown',event => { if (!$('drive-picker').contains(event.target)) closeDrivePicker(); });
 listen('show-password','click',() => { const showing = $('password-input').type === 'password'; $('password-input').type = showing ? 'text' : 'password'; $('show-password').setAttribute('aria-pressed',String(showing)); setText('show-password',showing ? 'Hide' : 'Show'); });
 listen('choose-key','click',async () => { const path = await api.chooseKeyFile(); if (path) $('key-path').value = path; });
 listen('generate-key','click',async () => { const path = await api.generateKeyFile({storageDir:$('storage-input').value,cacheDir:$('cache-input').value}); if (path) $('key-path').value = path; });
@@ -214,9 +284,10 @@ listen('vault-form','submit',async event => {
  event.preventDefault(); if (busy) return;
  const isKey = document.querySelector('[name=credential-mode]:checked').value === 'keyFile';
  if (!isKey && dialogMode === 'create' && $('password-input').value !== $('confirm-password').value) return showError('The passwords do not match.',true);
- const options = {storageDir:$('storage-input').value,cacheDir:$('cache-input').value,driveLetter:$('drive-letter').value};
+ const options = {transport:$('transport-mode').value,storageDir:$('storage-input').value,cacheDir:$('cache-input').value,driveLetter:`${normalizedDriveLetter($('drive-letter').value)}:`};
+ if (options.transport === 'privateGit') { options.remoteRepository = $('remote-repository').value.trim(); if (!/^[A-Za-z0-9][A-Za-z0-9-]{0,38}\/[A-Za-z0-9_.-]{1,100}$/.test(options.remoteRepository)) return showError(t('Enter owner/repository.'),true); }
  if (isKey) options.keyFilePath = $('key-path').value; else options.password = $('password-input').value;
- if (dialogMode === 'create') options.partSizeBytes = parsePartSize($('create-split-value').value,$('create-split-unit').value);
+ if (dialogMode === 'create') { try { options.partSizeBytes = parsePartSize($('create-split-value').value,$('create-split-unit').value); } catch(error) { return showError(error,true); } }
  const result = await run('Mounting drive…',() => api[dialogMode](options),dialogMode === 'create' ? 'Drive created.' : 'Drive unlocked.',true);
  if (result?.ok) closeVaultDialog();
 });
@@ -250,7 +321,7 @@ listen('release-button','click',async () => {
  }
 });
 listen('sync-button','click',() => run('Syncing encrypted files…',() => api.sync(),'Encrypted parts updated.'));
-listen('split-form','submit',async event => { event.preventDefault(); const bytes = parsePartSize($('split-value').value,$('split-unit').value); await run('Applying part size…',() => api.setPartSize(bytes),'Part size saved for new and edited files.'); });
+listen('split-form','submit',async event => { event.preventDefault(); let bytes; try { bytes = parsePartSize($('split-value').value,$('split-unit').value); } catch(error) { return showError(error); } await run('Applying part size…',() => api.setPartSize(bytes),'Part size saved for new and edited files.'); });
 listen('resplit-button','click',async () => { if (await confirmAction('Re-split all existing files?','Create replacement encrypted parts using the current limit. This can take time. Existing committed data remains until replacement succeeds.','Re-split files')) await run('Re-splitting encrypted files…',() => api.resplit(),'Encrypted parts updated.'); });
 listen('startup-setting','change',event => run('Saving preference…',() => api.setStartup(event.target.checked),'Saved.'));
 listen('auto-unlock-setting','change',async event => { const enabled = event.target.checked; if (enabled && !await confirmAction('Automatically unlock this drive?','This Windows user will be able to unlock this drive without its password or key file. A protected drive key will be saved on this device.','Enable automatic unlock')) return render(); await run('Saving preference…',() => api.setAutoUnlock(enabled),'Saved.'); });
@@ -270,9 +341,41 @@ for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListene
  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
 });
+initializeArchive();
 applyPreferences(); renderAvailability();
 if (!api) { setText('vault-badge','Not mounted'); showError('The desktop bridge is unavailable. Open this interface through Material File Encryptor.'); }
 else {
  const unsubscribe = api.onStatus(next => { state = next; render(); }); window.addEventListener('beforeunload',() => unsubscribe?.(),{once:true});
  refresh().catch(error => showError(error));
+}
+
+
+function initializeArchive() {
+ const button=(id,text,handler)=>{const el=document.createElement('button');el.id=id;el.type='button';el.className='button outlined';el.textContent=t(text);dictionary.set(el,text);el.onclick=handler;return el;};
+ $('history-actions').append(button('save-version','Save version now',()=>archiveMutation('history',()=>api.saveVersion())),document.createTextNode(t('Show history')));
+ const retention=document.createElement('select');retention.id='history-retention';retention.setAttribute('aria-label',t('Show history'));
+ for(const [value,text] of [['forever','Forever'],['30','Last 30 days'],['90','Last 90 days'],['custom','Custom days']]) {const option=document.createElement('option');option.value=value;option.textContent=t(text);dictionary.set(option,text);retention.append(option);}
+ const days=document.createElement('input');days.id='history-days';days.type='number';days.min='1';days.max='36500';days.value='365';days.hidden=true;days.setAttribute('aria-label',t('Custom days'));
+ retention.onchange=()=>{days.hidden=retention.value!=='custom';};
+ $('history-actions').append(retention,days,button('history-retention-apply','Apply',()=>{const value=retention.value==='forever'?null:retention.value==='custom'?Number(days.value):Number(retention.value);if(value!==null&&(!Number.isInteger(value)||value<1||value>36500))return showError(t('Enter 1 to 36500 days.'));archiveMutation('history',()=>api.setHistoryRetention(value));}));
+ $('recycle-actions').append(button('select-recycled','Select all visible',()=>{for(const el of $('recycle-list').querySelectorAll('input:not(:disabled)')) {el.checked=true;recycledSelection.add(el.value);}renderAvailability();}),button('restore-recycled','Restore selected',()=>archiveMutation('recycle',()=>api.restoreDeleted([...recycledSelection]))),button('empty-recycle','Empty Recycle Bin',async()=>{if(await confirmAction('Empty Recycle Bin?','Deleted entries will disappear from the bin. Version history is retained. This does not promise to free storage space.','Empty Recycle Bin'))archiveMutation('recycle',()=>api.emptyRecycleBin());}));
+ historySearch=createScopedSearch($('history-search-host'),t,()=>renderArchive('history'));recycleSearch=createScopedSearch($('recycle-search-host'),t,()=>renderArchive('recycle'));
+ $('transport-mode').onchange=()=>{$('private-git-fields').hidden=$('transport-mode').value!=='privateGit';};
+}
+async function archiveMutation(kind,task) {const result=await run('Working…',task,'Saved.');if(result?.ok){recycledSelection.clear();await loadArchive(kind);}}
+async function loadArchive(kind) {
+ const request=++archiveRequests[kind]; archiveRows[kind]=[];$(kind+'-list').replaceChildren();
+ if(!state || state.locked) {$(kind+'-message').textContent=t('Unlock a drive to view its history and recycle bin.');return;}
+ $(kind+'-message').textContent=t('Loading…');
+ try {const rows=await (kind==='history'?api.history():api.recycled());if(request!==archiveRequests[kind])return;if(!Array.isArray(rows))throw new Error(t('History is unavailable.'));archiveRows[kind]=rows;await renderArchive(kind);
+ const value=state.preferences?.historyRetentionDays ?? state.history?.retentionDays ?? null; if(kind==='history') {$('history-retention').value=value===null?'forever':[30,90].includes(value)?String(value):'custom';$('history-days').hidden=$('history-retention').value!=='custom';if(value!==null)$('history-days').value=value;}}
+ catch(error){if(request===archiveRequests[kind]){$(kind+'-message').textContent=t('History is unavailable.');showError(error);}}
+}
+async function renderArchive(kind) {
+ const generation=++archiveRenders[kind];const rows=await (kind==='history'?historySearch:recycleSearch).filter(archiveRows[kind]);if(generation!==archiveRenders[kind])return;const fragment=document.createDocumentFragment();
+ for(const version of rows) {const row=document.createElement('tr');const cell=text=>{const el=document.createElement('td');el.textContent=text;row.append(el);return el;};
+ const selection=cell('');if(kind==='recycle'){const check=document.createElement('input');check.type='checkbox';check.value=version.id;check.checked=recycledSelection.has(version.id);check.disabled=!version.isAvailable;check.setAttribute('aria-label',t('Select')+' '+version.path);check.onchange=()=>{check.checked?recycledSelection.add(version.id):recycledSelection.delete(version.id);renderAvailability();};selection.append(check);}
+ cell(version.path);cell(formatDate(version.timestampUtc));cell(version.isDirectory?t('Folder'):formatBytes(version.length));cell(t(version.isAvailable?'Available':'Encrypted data unavailable'));const actions=cell('');
+ if(kind==='history'){const restore=document.createElement('button');restore.className='button small';restore.textContent=t('Restore as new version');restore.disabled=busy||!version.isAvailable;restore.dataset.archiveRestore='true';restore.dataset.available=String(version.isAvailable);restore.onclick=async()=>{if(await confirmAction('Restore this version?','Restoring creates a new current version. Existing history remains encrypted.','Restore as new version'))archiveMutation('history',()=>api.restoreVersion(version.id));};actions.append(restore);}fragment.append(row);}
+ $(kind+'-list').replaceChildren(fragment);$(kind+'-message').textContent=t(rows.length?'':'No matching entries.');renderAvailability();
 }
