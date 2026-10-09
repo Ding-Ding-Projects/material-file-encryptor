@@ -313,7 +313,7 @@ public sealed partial class VaultEngine : IDisposable
         }
         catch(Exception ex) when(ex is IOException or UnauthorizedAccessException) { sourceAvailable=Directory.Exists(source); lastError=ex.Message; }
     }
-    private bool VerifyComplete(Commit commit)
+    private bool VerifyComplete(Commit commit,bool authenticateContent=true)
     {
         foreach(var version in commit.Versions){ValidateId(version.Id);if(version.Path!=VaultPath.Normalize(version.Path))throw new InvalidDataException("Invalid version path.");}foreach(var id in commit.BinHiddenIds)ValidateId(id);
         ValidateEntries(commit.Directories);
@@ -321,7 +321,7 @@ public sealed partial class VaultEngine : IDisposable
         foreach(var item in commit.Changes.Where(c=>c.Value!=null).Select(c=>(c.Path,Value:c.Value!)).Concat(commit.Versions.Select(v=>(v.Path,v.Value))))
         {
             ValidateEntries(new Dictionary<string,Entry> { [item.Path]=item.Value });
-            foreach(var pair in item.Value.Records) { var plain=ReadChunk(item.Value,pair.Key); CryptographicOperations.ZeroMemory(plain); }
+            foreach(var pair in item.Value.Records) { if(authenticateContent){var plain=ReadChunk(item.Value,pair.Key); CryptographicOperations.ZeroMemory(plain);}else if(!PartAvailable(pair.Value.Part))throw new IOException("Referenced encrypted content is unavailable."); }
         }
         return true;
     }
@@ -358,7 +358,7 @@ public sealed partial class VaultEngine : IDisposable
                     var folder=Path.Combine(source,"commits"); VaultCrypto.ValidatePhysicalPath(folder); if(Directory.Exists(folder)) foreach(var path in Directory.EnumerateFiles(folder,"*.mfe").Order(StringComparer.Ordinal))
                     {
                         cancellationToken.ThrowIfCancellationRequested(); var id=Path.GetFileNameWithoutExtension(path); ValidateId(id); if(commits.ContainsKey(id))continue;
-                        try { var commit=ReadMetadata<Commit>(path,"commit",id); if(commit.Id!=id || commit.Parents.Contains(id))throw new InvalidDataException("Invalid commit identity."); foreach(var parent in commit.Parents)ValidateId(parent); VerifyComplete(commit); using(var input=File.OpenRead(path))CopyAtomic(input,ObjectPath(cache,"commits",id)); commits[id]=commit; }
+                        try { var commit=ReadMetadata<Commit>(path,"commit",id); if(commit.Id!=id || commit.Parents.Contains(id))throw new InvalidDataException("Invalid commit identity."); foreach(var parent in commit.Parents)ValidateId(parent); VerifyComplete(commit,false); using(var input=File.OpenRead(path))CopyAtomic(input,ObjectPath(cache,"commits",id)); commits[id]=commit; }
                         catch(Exception ex) when(ex is IOException or CryptographicException or InvalidDataException) { incoming++; lastError="An incoming version is incomplete or failed authentication: "+ex.Message; }
                     }
                 }

@@ -3,6 +3,7 @@ using System.Text;
 using MaterialFileEncryptor.Core;
 
 var cases = new (string,Action)[] {
+    ("metadata discovery never hydrates advertised encrypted chunks",LazyDiscovery),
     ("history restore replaces same logical file and idle timer is inert",HistoryCurrentRestore),
     ("history missing content is unavailable and restore fails closed",MissingHistory),
     ("recycled subtree conflict restores under one new root",SubtreeRestore),
@@ -144,4 +145,8 @@ static void SubtreeRestore() {
 
 static void HistoryCurrentRestore() {
     var root=Temp();try{using var v=Create(root);v.CreateFile("file");var id=v.GetInfo("file")!.EntryId;v.WriteRange("file",0,"old bytes"u8);v.SaveVersionAsync("file").GetAwaiter().GetResult();var old=v.ListVersions(id).Single();v.WriteRange("file",0,"new bytes"u8);v.RestoreVersionAsync(old.Id).GetAwaiter().GetResult();Equal("old bytes"u8.ToArray(),Read(v,"file"));Assert(v.GetInfo("file")!.EntryId==id);Assert(v.Enumerate("").Count==1);var preserved=v.ListVersions(id).First(x=>x.Id!=old.Id&&x.Id!=v.ListVersions(id).First().Id);v.RestoreVersionAsync(preserved.Id).GetAwaiter().GetResult();Equal("new bytes"u8.ToArray(),Read(v,"file"));var files=Directory.GetFiles(root,"*",SearchOption.AllDirectories).ToDictionary(p=>p,p=>(File.GetLastWriteTimeUtc(p),File.ReadAllBytes(p)));var events=0;v.HistoryChanged+=()=>events++;v.SaveDueVersionsAsync(DateTimeOffset.UtcNow.AddDays(1)).GetAwaiter().GetResult();Assert(events==0);Assert(Directory.GetFiles(root,"*",SearchOption.AllDirectories).Length==files.Count);foreach(var pair in files){Assert(File.GetLastWriteTimeUtc(pair.Key)==pair.Value.Item1);Equal(pair.Value.Item2,File.ReadAllBytes(pair.Key));}}finally{Directory.Delete(root,true);}
+}
+
+static void LazyDiscovery() {
+    var root=Temp();try{using(var writer=Create(root)){writer.CreateFile("a");writer.WriteRange("a",0,RandomNumberGenerator.GetBytes(2000));writer.SaveVersionAsync().GetAwaiter().GetResult();writer.CreateFile("b");writer.WriteRange("b",0,RandomNumberGenerator.GetBytes(2000));writer.SaveVersionAsync().GetAwaiter().GetResult();}var held=Path.Combine(root,"held");Directory.CreateDirectory(held);foreach(var path in Directory.GetFiles(Path.Combine(root,"source","parts")))File.Move(path,Path.Combine(held,Path.GetFileName(path)));using var reader=Open(root,"lazy");Assert(reader.Enumerate("").Count==0);var calls=0;reader.IsEncryptedFileAvailable=path=>File.Exists(Path.Combine(held,Path.GetFileName(path)));reader.HydrateEncryptedFileAsync=(path,token)=>{calls++;File.Copy(Path.Combine(held,Path.GetFileName(path)),Path.Combine(root,"source",path),true);return Task.CompletedTask;};reader.SyncAsync().GetAwaiter().GetResult();Assert(calls==0,"Discovery hydrated content.");Assert(reader.Enumerate("").Count==2);Assert(reader.ListVersions().Count==3);Assert(calls==0,"History listing hydrated content.");var one=new byte[1];Assert(reader.ReadRange("a",0,one)==1);Assert(calls==1,"A selected chunk read must hydrate one chunk.");reader.HydrateEncryptedFileAsync=(path,token)=>Task.CompletedTask;Throws<IOException>(()=>reader.ReadRange("b",0,one));}finally{Directory.Delete(root,true);}
 }

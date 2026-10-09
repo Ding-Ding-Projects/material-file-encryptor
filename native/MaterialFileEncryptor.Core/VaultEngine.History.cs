@@ -10,6 +10,8 @@ public sealed partial class VaultEngine
     public event Action? HistoryChanged;
     public int PendingVersionCount { get { lock(gate)return versionDue.Count; } }
     public int StorageFormat => config.Format;
+    public Func<string,bool>? IsEncryptedFileAvailable { get; set; }
+    private bool PartAvailable(string id) => File.Exists(ObjectPath(cache,"parts",id))||File.Exists(ObjectPath(source,"parts",id))||IsEncryptedFileAvailable?.Invoke("parts/"+id+".mfe")==true;
     public Func<string,CancellationToken,Task>? HydrateEncryptedFileAsync { get; set; }
     public IReadOnlyList<string> GetEncryptedSnapshotPaths()
     {
@@ -30,7 +32,7 @@ public sealed partial class VaultEngine
         }
         result.AddRange(pendingVersions);return result;
     }
-    private VaultVersionInfo VersionInfo(StoredVersion v) => new(v.Id,v.Value.Id,v.Path,v.Timestamp,v.Value.Length,v.Value.Directory,v.Deleted,v.Value.Records.Values.All(r=>File.Exists(ObjectPath(cache,"parts",r.Part))||File.Exists(ObjectPath(source,"parts",r.Part))));
+    private VaultVersionInfo VersionInfo(StoredVersion v) => new(v.Id,v.Value.Id,v.Path,v.Timestamp,v.Value.Length,v.Value.Directory,v.Deleted,v.Value.Records.Values.All(r=>PartAvailable(r.Part)));
     public IReadOnlyList<VaultVersionInfo> ListVersions(string? entryId=null,int? retentionDays=null)
     {
         lock(gate) { Check(); if(retentionDays<0)throw new ArgumentOutOfRangeException(nameof(retentionDays));var cutoff=retentionDays.HasValue?DateTimeOffset.UtcNow.AddDays(-retentionDays.Value):DateTimeOffset.MinValue;return AllVersions().Where(v=>(entryId==null||v.Value.Id==entryId)&&v.Timestamp>=cutoff).OrderByDescending(v=>v.Timestamp).Select(VersionInfo).ToArray(); }
@@ -91,7 +93,7 @@ public sealed partial class VaultEngine
                 foreach(var version in AllVersions()){var copy=new StoredVersion {Id=version.Id,Path=version.Path,Value=ConvertEntry(version.Value),Timestamp=version.Timestamp,Deleted=version.Deleted};target.pendingVersions.Add(copy);}
                 target.hiddenBin.UnionWith(hiddenBin);target.pendingBinHidden.UnionWith(hiddenBin);target.FlushLocal();target.Publish(cancellationToken);
                 if(target.pending.Count!=0)throw new IOException("Upgrade destination could not be published.");
-                foreach(var id in target.known)target.VerifyComplete(target.ReadMetadata<Commit>(target.ObjectPath(target.source,"commits",id),"commit",id));
+                foreach(var id in target.known){var commit=target.ReadMetadata<Commit>(target.ObjectPath(target.source,"commits",id),"commit",id);target.VerifyComplete(commit);foreach(var part in target.Parts(commit))target.VerifyPart(target.ObjectPath(target.source,"parts",part),part);}
                 target.SaveJournal();return Task.FromResult(target);
             }
             catch{target.Dispose();throw;}
