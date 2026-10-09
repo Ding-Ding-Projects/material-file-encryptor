@@ -36,7 +36,7 @@ internal sealed class Entry
 internal sealed record RecordRef(string Part, long Offset, int PlainLength, int RecordLength);
 internal sealed class Config
 {
-    public int Format { get; set; } = 1;
+    public int Format { get; set; } = 2;
     public string VaultId { get; set; } = Guid.NewGuid().ToString("N");
     public string Kind { get; set; } = "";
     public int Iterations { get; set; } = 600000;
@@ -50,9 +50,20 @@ internal sealed class Change
     public string? ExpectedVersion { get; set; }
     public Entry? Value { get; set; }
 }
+internal sealed class StoredVersion
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    public string Path { get; set; } = "";
+    public Entry Value { get; set; } = new();
+    public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
+    public bool Deleted { get; set; }
+}
+public sealed record VaultVersionInfo(string Id, string EntryId, string Path, DateTimeOffset TimestampUtc, long Length, bool IsDirectory, bool Deleted, bool IsAvailable);
 internal sealed class Commit
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    public List<StoredVersion> Versions { get; set; } = [];
+    public List<string> BinHiddenIds { get; set; } = [];
     public string Device { get; set; } = "";
     public List<string> Parents { get; set; } = [];
     public List<Change> Changes { get; set; } = [];
@@ -61,6 +72,9 @@ internal sealed class Commit
 internal sealed class Journal
 {
     public long PartSize { get; set; }
+    public Dictionary<string, DateTimeOffset> VersionDue { get; set; } = [];
+    public List<StoredVersion> PendingVersions { get; set; } = [];
+    public HashSet<string> HiddenBin { get; set; } = [];
     public Dictionary<string, Entry> Entries { get; set; } = [];
     public Dictionary<string, Entry> Baseline { get; set; } = [];
     public HashSet<string> Pending { get; set; } = [];

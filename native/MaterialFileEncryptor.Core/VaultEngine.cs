@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 namespace MaterialFileEncryptor.Core;
 
 /// <summary>A ciphertext-only local cache and immutable, multi-writer folder-backed vault.</summary>
-public sealed class VaultEngine : IDisposable
+public sealed partial class VaultEngine : IDisposable
 {
     private readonly object gate = new();
     private readonly string source, cache, device;
@@ -24,8 +24,8 @@ public sealed class VaultEngine : IDisposable
     public string StorageRoot => source;
     private string Domain(string kind, string id = "") => $"mfe-v1/{config.VaultId}/{kind}/{id}";
     private string ObjectPath(string root, string kind, string id) { var path=Path.Combine(root, kind, ValidateId(id) + ".mfe"); VaultCrypto.ValidatePhysicalPath(path); return path; }
-    private static string ValidateId(string id) => id.Length == 32 && id.All(Uri.IsHexDigit) ? id : throw new InvalidDataException("Invalid object identifier.");
-    public static void ValidatePartSize(long bytes) { if (bytes < 1024 || bytes > 1073741824) throw new ArgumentOutOfRangeException(nameof(bytes), "Part size must be between 1 KiB and 1 GiB."); }
+    private static string ValidateId(string id) => id.Length is 32 or 64 && id.All(Uri.IsHexDigit) ? id : throw new InvalidDataException("Invalid object identifier.");
+    public static void ValidatePartSize(long bytes) { if (bytes < 1024 || bytes > 90000000) throw new ArgumentOutOfRangeException(nameof(bytes), "Part size must be between 1 KiB and 90,000,000 bytes."); }
     private VaultEngine(VaultOptions options, Config config, byte[] key)
     {
         source = Path.GetFullPath(options.StorageRoot); cache = Path.GetFullPath(options.CacheRoot);
@@ -44,9 +44,9 @@ public sealed class VaultEngine : IDisposable
         if (File.Exists(journalPath))
         {
             var journal = ReadMetadata<Journal>(journalPath, "journal", "");
-            ValidateEntries(journal.Entries); ValidateEntries(journal.Baseline); ValidatePartSize(journal.PartSize);
+            ValidateEntries(journal.Entries); ValidateEntries(journal.Baseline); ValidateStoredPartSize(journal.PartSize);
             entries = new(journal.Entries, StringComparer.OrdinalIgnoreCase); baseline = new(journal.Baseline,StringComparer.OrdinalIgnoreCase);
-            pending = journal.Pending; known = journal.Known; heads = journal.Heads; pinned = journal.Pinned; partSize = journal.PartSize;
+            pending = journal.Pending; known = journal.Known; heads = journal.Heads; pinned = journal.Pinned; partSize = journal.PartSize; versionDue=journal.VersionDue; pendingVersions=journal.PendingVersions; hiddenBin=journal.HiddenBin;
         }
         sourceAvailable = Directory.Exists(source);
     }
@@ -78,7 +78,7 @@ public sealed class VaultEngine : IDisposable
     {
         var sourceConfig = Path.Combine(options.StorageRoot,"vault.json"); var cacheConfig = Path.Combine(options.CacheRoot,"vault.json");
         var config = VaultCrypto.Deserialize<Config>(VaultCrypto.ReadBounded(File.Exists(sourceConfig) ? sourceConfig : cacheConfig,65536));
-        if (config.Format != 1 || config.WrappedKey.Length != 68) throw new InvalidDataException("Unsupported vault configuration."); ValidateId(config.VaultId); return config;
+        if (config.Format is not (1 or 2) || config.WrappedKey.Length != 68) throw new InvalidDataException("Unsupported vault configuration."); ValidateId(config.VaultId); return config;
     }
     public static VaultEngine Open(VaultOptions options, VaultCredentials credentials)
     {
@@ -107,10 +107,12 @@ public sealed class VaultEngine : IDisposable
         try { if (plain.Length > VaultCrypto.MaxMetadata) throw new IOException("Vault metadata exceeds supported size."); VaultCrypto.AtomicWrite(path,VaultCrypto.Seal(plain,key,Domain(kind,id))); }
         finally { CryptographicOperations.ZeroMemory(plain); }
     }
+    private int ChunkBytes(long cap) => (int)(config.Format == 2 ? cap-VaultCrypto.Overhead : Math.Min(65536,cap-VaultCrypto.Overhead));
     private static Entry Clone(Entry entry) => new() { Id=entry.Id,Version=entry.Version,Directory=entry.Directory,Length=entry.Length,ChunkSize=entry.ChunkSize,PartSize=entry.PartSize,Created=entry.Created,Modified=entry.Modified,Attributes=entry.Attributes,Records=new(entry.Records) };
     private static Dictionary<string,Entry> CloneEntries(Dictionary<string,Entry> source) => source.ToDictionary(p=>p.Key,p=>Clone(p.Value),StringComparer.OrdinalIgnoreCase);
-    private void SaveJournal() => WriteMetadata(Path.Combine(cache,"journal.mfe"),new Journal { PartSize=partSize,Entries=entries,Baseline=baseline,Pending=pending,Known=known,Heads=heads,Pinned=pinned },"journal","");
-    private static void ValidateEntries(Dictionary<string,Entry> collection)
+    private void SaveJournal() => WriteMetadata(Path.Combine(cache,"journal.mfe"),new Journal { PartSize=partSize,Entries=entries,Baseline=baseline,Pending=pending,Known=known,Heads=heads,Pinned=pinned,VersionDue=versionDue,PendingVersions=pendingVersions,HiddenBin=hiddenBin },"journal","");
+    private void ValidateStoredPartSize(long bytes) { if(config.Format==1) { if(bytes<1024||bytes>1073741824)throw new InvalidDataException("Invalid legacy part cap."); } else ValidatePartSize(bytes); }
+    private void ValidateEntries(Dictionary<string,Entry> collection)
     {
         if (collection.Count > 1000000) throw new InvalidDataException("Too many entries.");
         var normalized = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -118,8 +120,8 @@ public sealed class VaultEngine : IDisposable
         {
             if (pair.Key != VaultPath.Normalize(pair.Key) || !normalized.Add(pair.Key)) throw new InvalidDataException("Invalid namespace.");
             var e = pair.Value; ValidateId(e.Id); ValidateId(e.Version);
-            if (e.Length < 0 || !e.Directory && e.ChunkSize is < 1 or > 65536 || e.Directory && (e.Length != 0 || e.Records.Count != 0)) throw new InvalidDataException("Invalid entry.");
-            if(!e.Directory) { ValidatePartSize(e.PartSize); if(e.ChunkSize>e.PartSize-VaultCrypto.Overhead)throw new InvalidDataException("Record exceeds part cap."); }
+            if (e.Length < 0 || !e.Directory && e.ChunkSize is < 1 or > 89999964 || e.Directory && (e.Length != 0 || e.Records.Count != 0)) throw new InvalidDataException("Invalid entry.");
+            if(!e.Directory) { ValidateStoredPartSize(e.PartSize); if(e.ChunkSize>e.PartSize-VaultCrypto.Overhead)throw new InvalidDataException("Record exceeds part cap."); }
             foreach (var r in e.Records) { ValidateId(r.Value.Part); if (r.Key < 0 || r.Value.Offset < 0 || r.Value.PlainLength < 0 || r.Value.PlainLength > e.ChunkSize || r.Value.RecordLength != r.Value.PlainLength+VaultCrypto.Overhead || r.Key > long.MaxValue / Math.Max(e.ChunkSize,1)) throw new InvalidDataException("Invalid record map."); }
         }
     }
@@ -145,7 +147,7 @@ public sealed class VaultEngine : IDisposable
     private void EnsureParent(string path) { var parent=VaultPath.Parent(path); if(parent!="" && !Find(parent).Directory) throw new DirectoryNotFoundException("Parent is not a directory."); }
     private void CreateEntry(string path,bool directory)
     {
-        lock(gate) { Check(); path=VaultPath.Normalize(path); if(path=="" || entries.ContainsKey(path)) throw new IOException("Entry already exists."); EnsureParent(path); entries.Add(path,new Entry { Directory=directory,ChunkSize=(int)Math.Min(65536,partSize-VaultCrypto.Overhead),PartSize=partSize,Attributes=directory?16u:32u }); }
+        lock(gate) { Check(); path=VaultPath.Normalize(path); if(path=="" || entries.ContainsKey(path)) throw new IOException("Entry already exists."); EnsureParent(path); entries.Add(path,new Entry { Directory=directory,ChunkSize=ChunkBytes(partSize),PartSize=partSize,Attributes=directory?16u:32u }); }
     }
     public void CreateFile(string path) => CreateEntry(path,false);
     public void CreateDirectory(string path) => CreateEntry(path,true);
@@ -166,13 +168,14 @@ public sealed class VaultEngine : IDisposable
     }
     private byte[] ReadRecord(string path,RecordRef record,int maximum)
     {
+        if(config.Format==2)VerifyPart(path,record.Part);
         var encrypted=new byte[record.RecordLength];
         using(var stream=File.OpenRead(path)) { if(stream.Length>1073741824 || record.Offset>stream.Length-record.RecordLength)throw new InvalidDataException("Incomplete or oversized encrypted part."); stream.Position=record.Offset; stream.ReadExactly(encrypted); }
-        return VaultCrypto.Unseal(encrypted,key,Domain("record",record.Part+":"+record.Offset),maximum);
+        return VaultCrypto.Unseal(encrypted,key,config.Format==2?Domain("chunk"):Domain("record",record.Part+":"+record.Offset),maximum);
     }
     private void VerifyPart(string path,string id)
     {
-        VaultCrypto.ValidatePhysicalPath(path); using var stream=File.OpenRead(path); if(stream.Length<VaultCrypto.Overhead || stream.Length>1073741824)throw new InvalidDataException("Invalid part size.");
+        VaultCrypto.ValidatePhysicalPath(path); using var stream=File.OpenRead(path); if(config.Format==2) { if(stream.Length>90000000 || stream.Length<VaultCrypto.Overhead)throw new InvalidDataException("Invalid chunk size."); if(!Convert.ToHexString(SHA256.HashData(stream)).Equals(id,StringComparison.OrdinalIgnoreCase))throw new CryptographicException("Chunk hash mismatch."); stream.Position=0; var blob=new byte[(int)stream.Length];stream.ReadExactly(blob);var content=VaultCrypto.Unseal(blob,key,Domain("chunk"),89999964);CryptographicOperations.ZeroMemory(content);return; } if(stream.Length<VaultCrypto.Overhead || stream.Length>1073741824)throw new InvalidDataException("Invalid part size.");
         var header=new byte[VaultCrypto.Overhead];
         while(stream.Position<stream.Length)
         {
@@ -184,7 +187,7 @@ public sealed class VaultEngine : IDisposable
     private string EnsurePart(string id)
     {
         var local=ObjectPath(cache,"parts",id); if(File.Exists(local)) return local;
-        var remote=ObjectPath(source,"parts",id); if(!sourceAvailable || !File.Exists(remote)) throw new IOException("Encrypted content is unavailable offline.");
+        var remote=ObjectPath(source,"parts",id); if(!File.Exists(remote)&&HydrateEncryptedFileAsync!=null)HydrateEncryptedFileAsync("parts/"+id+".mfe",CancellationToken.None).GetAwaiter().GetResult(); if(!sourceAvailable || !File.Exists(remote)) throw new IOException("Encrypted content is unavailable offline.");
         using var input=File.OpenRead(remote); if(input.Length>1073741824 || input.Length<VaultCrypto.Overhead) throw new InvalidDataException("Invalid part size.");
         CopyAtomic(input,local); return local;
     }
@@ -208,6 +211,7 @@ public sealed class VaultEngine : IDisposable
         internal PartWriter(VaultEngine engine) => this.engine=engine;
         internal RecordRef Add(ReadOnlySpan<byte> plain)
         {
+            if(engine.config.Format==2) { var blob=VaultCrypto.Seal(plain,engine.key,engine.Domain("chunk")); if(blob.Length>engine.partSize || blob.Length>90000000)throw new IOException("Chunk exceeds physical cap."); var hash=Convert.ToHexString(SHA256.HashData(blob)).ToLowerInvariant(); VaultCrypto.AtomicWrite(engine.ObjectPath(engine.cache,"parts",hash),blob);return new(hash,0,plain.Length,blob.Length); }
             if(stream==null || stream.Position+plain.Length+VaultCrypto.Overhead>engine.partSize) { Finish(); id=Guid.NewGuid().ToString("N"); final=engine.ObjectPath(engine.cache,"parts",id); temp=final+".tmp"; stream=new(temp,FileMode.CreateNew,FileAccess.Write,FileShare.None,65536,FileOptions.WriteThrough); }
             var position=stream.Position; var sealedBytes=VaultCrypto.Seal(plain,engine.key,engine.Domain("record",id+":"+position)); stream.Write(sealedBytes); return new(id,position,plain.Length,sealedBytes.Length);
         }
@@ -219,8 +223,8 @@ public sealed class VaultEngine : IDisposable
         if(e.Directory) throw new IOException("Cannot write a directory."); if(offset<0 || offset>long.MaxValue-data.Length)throw new ArgumentOutOfRangeException(nameof(offset)); if(data.Length==0)return;
         if(e.PartSize!=partSize)Repack(e,partSize,CancellationToken.None);
         var replacements=new Dictionary<long,RecordRef>(); using var writer=new PartWriter(this); var consumed=0;
-        while(consumed<data.Length) { var index=offset/e.ChunkSize; var within=(int)(offset%e.ChunkSize); var take=Math.Min(data.Length-consumed,e.ChunkSize-within); var chunk=ReadChunk(e,index); try { data.Slice(consumed,take).CopyTo(chunk.AsSpan(within)); replacements[index]=writer.Add(chunk); } finally { CryptographicOperations.ZeroMemory(chunk); } offset+=take; consumed+=take; }
-        writer.Finish(); foreach(var pair in replacements)e.Records[pair.Key]=pair.Value; e.Length=Math.Max(e.Length,offset); Touch(e);
+        while(consumed<data.Length) { var index=offset/e.ChunkSize; var within=(int)(offset%e.ChunkSize); var take=Math.Min(data.Length-consumed,e.ChunkSize-within); var chunk=ReadChunk(e,index); try { var incomingBytes=data.Slice(consumed,take); if(!incomingBytes.SequenceEqual(chunk.AsSpan(within,take))) { incomingBytes.CopyTo(chunk.AsSpan(within)); replacements[index]=writer.Add(chunk); } } finally { CryptographicOperations.ZeroMemory(chunk); } offset+=take; consumed+=take; }
+        writer.Finish(); foreach(var pair in replacements)e.Records[pair.Key]=pair.Value; e.Length=Math.Max(e.Length,offset); Touch(e); MarkDue(e);
     }
     private static void Touch(Entry e) { e.Version=Guid.NewGuid().ToString("N"); e.Modified=DateTimeOffset.UtcNow; }
     public void WriteRange(string path,long offset,ReadOnlySpan<byte> data) { lock(gate) { Check(); Write(Find(VaultPath.Normalize(path)),offset,data); } }
@@ -234,7 +238,7 @@ public sealed class VaultEngine : IDisposable
             var records=new Dictionary<long,RecordRef>(e.Records); var last=length/e.ChunkSize; foreach(var index in records.Keys.Where(i=>i>=last+(length%e.ChunkSize==0?0:1)).ToArray())records.Remove(index);
             if(length%e.ChunkSize!=0 && records.ContainsKey(last)) { var chunk=ReadChunk(e,last); try { chunk.AsSpan((int)(length%e.ChunkSize)).Clear(); using var writer=new PartWriter(this); records[last]=writer.Add(chunk); writer.Finish(); } finally { CryptographicOperations.ZeroMemory(chunk); } } e.Records=records;
         }
-        e.Length=length; Touch(e);
+        e.Length=length; Touch(e); MarkDue(e);
     }
     public void SetLength(string path,long length) { lock(gate) { Check(); Resize(Find(VaultPath.Normalize(path)),length); } }
     public void SetLengthById(string id,long length) { lock(gate) { Check(); Resize(FindId(id),length); } }
@@ -250,7 +254,7 @@ public sealed class VaultEngine : IDisposable
     {
         lock(gate) { Check(); if(id==config.VaultId)throw new IOException("Cannot delete root."); var path=entries.FirstOrDefault(p=>p.Value.Id==id).Key; if(path!=null)Delete(path,recursive);else FindId(id); }
     }
-    private void Remove(string path) { var e=Find(path); if(open.ContainsKey(e.Id))orphans[e.Id]=e; entries.Remove(path); }
+    private void Remove(string path) { var e=Find(path); CaptureVersion(path,e,true); versionDue.Remove(e.Id); if(open.ContainsKey(e.Id))orphans[e.Id]=e; entries.Remove(path); }
     public void Delete(string path,bool recursive=false)
     {
         lock(gate) { Check(); path=VaultPath.Normalize(path); if(path=="")throw new IOException("Cannot delete root."); var e=Find(path); var children=entries.Keys.Where(p=>p.StartsWith(path+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); if(e.Directory && children.Length>0 && !recursive)throw new IOException("Directory is not empty."); foreach(var child in children)Remove(child); Remove(path); }
@@ -280,12 +284,12 @@ public sealed class VaultEngine : IDisposable
             var newPath=entries.Keys.FirstOrDefault(p=>p.Equals(path,StringComparison.OrdinalIgnoreCase));
             if(old?.Version!=current?.Version || oldPath!=newPath) changes.Add(new Change { Path=newPath??oldPath!,ExpectedVersion=old?.Version,Value=current==null?null:Clone(current) });
         }
-        if(changes.Count>0)
+        if(changes.Count>0 || pendingVersions.Count>0 || pendingBinHidden.Count>0)
         {
-            var commit=new Commit { Device=device,Parents=heads.Order(StringComparer.Ordinal).ToList(),Changes=changes };
+            var commit=new Commit { Versions=[..pendingVersions],BinHiddenIds=[..pendingBinHidden],Device=device,Parents=heads.Order(StringComparer.Ordinal).ToList(),Changes=changes };
             foreach(var change in changes.Where(c=>c.Value!=null))for(var parent=VaultPath.Parent(change.Path);parent!="";parent=VaultPath.Parent(parent))if(entries.TryGetValue(parent,out var directory))commit.Directories[parent]=Clone(directory);
             WriteMetadata(ObjectPath(cache,"commits",commit.Id),commit,"commit",commit.Id);
-            pending.Add(commit.Id); known.Add(commit.Id); heads=[commit.Id]; baseline=CloneEntries(entries);
+            pendingVersions.Clear(); pendingBinHidden.Clear(); pending.Add(commit.Id); known.Add(commit.Id); heads=[commit.Id]; baseline=CloneEntries(entries); HistoryChanged?.Invoke();
         }
         SaveJournal();
     }
@@ -293,7 +297,7 @@ public sealed class VaultEngine : IDisposable
     {
         lock(gate) { Check(); cancellationToken.ThrowIfCancellationRequested(); FlushLocal(); Publish(cancellationToken); SaveJournal(); return Task.CompletedTask; }
     }
-    private IEnumerable<string> Parts(Commit commit) => commit.Changes.Where(c=>c.Value!=null).SelectMany(c=>c.Value!.Records.Values).Select(r=>r.Part).Distinct(StringComparer.Ordinal);
+    private IEnumerable<string> Parts(Commit commit) => commit.Changes.Where(c=>c.Value!=null).Select(c=>c.Value!).Concat(commit.Versions.Select(v=>v.Value)).SelectMany(e=>e.Records.Values).Select(r=>r.Part).Distinct(StringComparer.Ordinal);
     private void Publish(CancellationToken token)
     {
         sourceAvailable=Directory.Exists(source); lastError=null; if(!sourceAvailable) { lastError="Storage folder is offline; encrypted changes are queued locally."; return; }
@@ -309,14 +313,15 @@ public sealed class VaultEngine : IDisposable
         }
         catch(Exception ex) when(ex is IOException or UnauthorizedAccessException) { sourceAvailable=Directory.Exists(source); lastError=ex.Message; }
     }
-    private bool VerifyComplete(Commit commit)
+    private bool VerifyComplete(Commit commit,bool authenticateContent=true)
     {
+        foreach(var version in commit.Versions){ValidateId(version.Id);if(version.Path!=VaultPath.Normalize(version.Path))throw new InvalidDataException("Invalid version path.");}foreach(var id in commit.BinHiddenIds)ValidateId(id);
         ValidateEntries(commit.Directories);
         if(commit.Directories.Values.Any(e=>!e.Directory))throw new InvalidDataException("Invalid ancestor directory metadata.");
-        foreach(var change in commit.Changes.Where(c=>c.Value!=null))
+        foreach(var item in commit.Changes.Where(c=>c.Value!=null).Select(c=>(c.Path,Value:c.Value!)).Concat(commit.Versions.Select(v=>(v.Path,v.Value))))
         {
-            ValidateEntries(new Dictionary<string,Entry> { [change.Path]=change.Value! });
-            foreach(var pair in change.Value!.Records) { var plain=ReadChunk(change.Value,pair.Key); CryptographicOperations.ZeroMemory(plain); }
+            ValidateEntries(new Dictionary<string,Entry> { [item.Path]=item.Value });
+            foreach(var pair in item.Value.Records) { if(authenticateContent){var plain=ReadChunk(item.Value,pair.Key); CryptographicOperations.ZeroMemory(plain);}else if(!PartAvailable(pair.Value.Part))throw new IOException("Referenced encrypted content is unavailable."); }
         }
         return true;
     }
@@ -353,7 +358,7 @@ public sealed class VaultEngine : IDisposable
                     var folder=Path.Combine(source,"commits"); VaultCrypto.ValidatePhysicalPath(folder); if(Directory.Exists(folder)) foreach(var path in Directory.EnumerateFiles(folder,"*.mfe").Order(StringComparer.Ordinal))
                     {
                         cancellationToken.ThrowIfCancellationRequested(); var id=Path.GetFileNameWithoutExtension(path); ValidateId(id); if(commits.ContainsKey(id))continue;
-                        try { var commit=ReadMetadata<Commit>(path,"commit",id); if(commit.Id!=id || commit.Parents.Contains(id))throw new InvalidDataException("Invalid commit identity."); foreach(var parent in commit.Parents)ValidateId(parent); VerifyComplete(commit); using(var input=File.OpenRead(path))CopyAtomic(input,ObjectPath(cache,"commits",id)); commits[id]=commit; }
+                        try { var commit=ReadMetadata<Commit>(path,"commit",id); if(commit.Id!=id || commit.Parents.Contains(id))throw new InvalidDataException("Invalid commit identity."); foreach(var parent in commit.Parents)ValidateId(parent); VerifyComplete(commit,false); using(var input=File.OpenRead(path))CopyAtomic(input,ObjectPath(cache,"commits",id)); commits[id]=commit; }
                         catch(Exception ex) when(ex is IOException or CryptographicException or InvalidDataException) { incoming++; lastError="An incoming version is incomplete or failed authentication: "+ex.Message; }
                     }
                 }
@@ -390,13 +395,13 @@ public sealed class VaultEngine : IDisposable
     {
         lock(gate)
         {
-            Check(); ValidatePartSize(newPartSize); path=VaultPath.Normalize(path); var e=Find(path); if(e.Directory)throw new IOException("Resplit requires a file."); var replacement=Clone(e); Repack(replacement,newPartSize,cancellationToken); Touch(replacement); entries[path]=replacement;
-            FlushLocal(); Publish(cancellationToken); SaveJournal(); return Task.CompletedTask;
+            Check(); ValidatePartSize(newPartSize); path=VaultPath.Normalize(path); var e=Find(path); if(e.Directory)throw new IOException("Resplit requires a file."); CaptureVersion(path,e,false); var replacement=Clone(e); Repack(replacement,newPartSize,cancellationToken); Touch(replacement); entries[path]=replacement;
+            CaptureVersion(path,replacement,false); FlushLocal(); Publish(cancellationToken); SaveJournal(); return Task.CompletedTask;
         }
     }
     private void Repack(Entry e,long newPartSize,CancellationToken token)
     {
-        var chunkSize=(int)Math.Min(65536,newPartSize-VaultCrypto.Overhead); var targetChunks=new SortedSet<long>();
+        var chunkSize=ChunkBytes(newPartSize); var targetChunks=new SortedSet<long>();
         foreach(var index in e.Records.Keys)
         {
             var start=checked(index*e.ChunkSize); var end=Math.Min(e.Length,start+e.ChunkSize); if(start>=end)continue;
