@@ -272,7 +272,7 @@ public sealed partial class VaultEngine : IDisposable
             var moved=entries.Where(p=>p.Key.Equals(oldPath,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); foreach(var item in moved)entries.Remove(item.Key); foreach(var item in moved)entries[newPath+item.Key[oldPath.Length..]]=item.Value;
         }
     }
-    private sealed class OpenLease(VaultEngine engine,string id) : IDisposable { private bool closed; public void Dispose() { lock(engine.gate) { if(closed)return; closed=true; if(engine.open.TryGetValue(id,out var count)) { if(count==1) {engine.open.Remove(id);engine.orphans.Remove(id);}else engine.open[id]=count-1; } } } }
+    private sealed class OpenLease(VaultEngine engine,string id) : IDisposable { private bool closed; public void Dispose() { lock(engine.gate) { if(closed)return; closed=true; if(engine.open.TryGetValue(id,out var count)) { if(count==1) {engine.open.Remove(id);if(engine.orphans.Remove(id))engine.versionDue.Remove(id);}else engine.open[id]=count-1; } } } }
     public IDisposable AcquireOpen(string path) { lock(gate) { Check(); return AcquireOpenById(Find(VaultPath.Normalize(path)).Id); } }
     public IDisposable AcquireOpenById(string id) { lock(gate) { Check(); FindId(id); open[id]=open.GetValueOrDefault(id)+1; return new OpenLease(this,id); } }
     public void SetPartSize(long bytes) { lock(gate) { Check(); ValidatePartSize(bytes); partSize=bytes; SaveJournal(); } }

@@ -11,6 +11,8 @@ var cases = new (string,Action)[] {
     ("copy upgrade rejects every original folder overlap before writing",UpgradeIsolation),
     ("metadata discovery never hydrates advertised encrypted chunks",LazyDiscovery),
     ("history restore replaces same logical file and idle timer is inert",HistoryCurrentRestore),
+    ("historical restore isolates deleted open-handle identity",()=>RestoreOpenIdentity(false)),
+    ("recycle restore isolates deleted open-handle identity",()=>RestoreOpenIdentity(true)),
     ("history missing content is unavailable and restore fails closed",MissingHistory),
     ("recycled subtree conflict restores under one new root",SubtreeRestore),
     ("legacy format remains readable and copy upgrades safely",Legacy),
@@ -129,6 +131,42 @@ static void TargetedAuthentication() {
 
 static void FixedChunks() {
     var root=Temp();try {using var v=Create(root,4096);v.CreateFile("a");v.CreateFile("b");var bytes=RandomNumberGenerator.GetBytes(9000);v.WriteRange("a",0,bytes);v.WriteRange("b",0,bytes);v.FlushAsync().GetAwaiter().GetResult();Assert(v.GetInfo("a")!.PartCount==3);var before=Directory.GetFiles(Path.Combine(root,"source","parts")).Select(Path.GetFileName).ToHashSet();Assert(before.Count==6);Assert(before.All(p=>p!.Length==68));v.WriteRange("a",4500,new byte[]{42});v.FlushAsync().GetAwaiter().GetResult();var after=Directory.GetFiles(Path.Combine(root,"source","parts"));Assert(after.Length==7,"Unchanged chunks were rewritten.");Assert(after.All(p=>new FileInfo(p).Length<=4096));Throws<ArgumentOutOfRangeException>(()=>v.SetPartSize(90000001));bytes[4500]=42;Equal(bytes,Read(v,"a"));}finally{Directory.Delete(root,true);}
+}
+static void RestoreOpenIdentity(bool recycled)
+{
+    var root=Temp();
+    try
+    {
+        using(var v=Create(root))
+        {
+            v.CreateFile("held");v.WriteRange("held",0,"old"u8);v.SaveVersionAsync("held").GetAwaiter().GetResult();
+            var version=v.ListVersions().Single().Id;var original=v.GetInfo("held")!.EntryId;
+            var first=v.AcquireOpenById(original);var second=v.AcquireOpenById(original);
+            try
+            {
+                v.Delete("held");v.FlushAsync().GetAwaiter().GetResult();
+                if(recycled)v.RestoreDeletedAsync(new[]{v.ListDeleted().Single().Id}).GetAwaiter().GetResult();
+                else v.RestoreVersionAsync(version).GetAwaiter().GetResult();
+                v.WriteRangeById(original,0,"new"u8);
+                Equal("old"u8.ToArray(),Read(v,"held"));
+                Assert(v.GetInfo("held")!.EntryId!=original,"Restored live entry reused an orphaned handle identity.");
+                var held=new byte[3];Assert(v.ReadRangeById(original,0,held)==3);Equal("new"u8.ToArray(),held);
+                first.Dispose();v.SetLengthById(original,2);Assert(v.GetInfoById(original).Length==2);Assert(v.GetInfo("held")!.Length==3);
+                v.DeleteById(original);Assert(v.GetInfo("held")!=null,"Deleted orphan handle removed the restored live entry.");
+                var versionCount=v.ListVersions().Count;
+                v.SaveDueVersionsAsync(DateTimeOffset.MaxValue).GetAwaiter().GetResult();
+                Assert(v.PendingVersionCount==0,"Orphan write left an impossible quiet-save version pending.");
+                Assert(v.ListVersions().Count==versionCount,"Orphan write produced a version without a live path.");
+                v.FlushAsync().GetAwaiter().GetResult();
+                second.Dispose();Throws<FileNotFoundException>(()=>v.GetInfoById(original));
+                v.SaveDueVersionsAsync(DateTimeOffset.MaxValue).GetAwaiter().GetResult();
+                Assert(v.PendingVersionCount==0,"Closed orphan left an impossible quiet-save version pending.");
+            }
+            finally {first.Dispose();second.Dispose();}
+        }
+        using var reopened=Open(root,"replica");Equal("old"u8.ToArray(),Read(reopened,"held"));
+    }
+    finally {Directory.Delete(root,true);}
 }
 static void History() {
     var root=Temp();try {using(var v=Create(root)){v.CreateDirectory("folder");v.CreateFile("folder/a");v.WriteRange("folder/a",0,"first"u8);v.SaveDueVersionsAsync(DateTimeOffset.UtcNow.AddSeconds(29)).GetAwaiter().GetResult();Assert(v.ListVersions().Count==0);v.SaveDueVersionsAsync(DateTimeOffset.UtcNow.AddSeconds(31)).GetAwaiter().GetResult();Assert(v.ListVersions().Count==1);var first=v.ListVersions().Single();v.WriteRange("folder/a",0,"later"u8);v.SaveVersionAsync("folder/a").GetAwaiter().GetResult();v.RestoreVersionAsync(first.Id).GetAwaiter().GetResult();Assert(v.Enumerate("folder").Count==1,"History restore must replace the same logical file.");Equal("first"u8.ToArray(),Read(v,"folder/a"));v.Delete("folder",true);v.FlushAsync().GetAwaiter().GetResult();Assert(v.ListDeleted().Count==2);var dir=v.ListDeleted().Single(x=>x.IsDirectory);v.RestoreDeletedAsync(new[]{dir.Id}).GetAwaiter().GetResult();Assert(v.GetInfo("folder/a")!=null);v.Delete("folder",true);v.FlushAsync().GetAwaiter().GetResult();v.EmptyRecycleBinAsync().GetAwaiter().GetResult();Assert(v.ListDeleted().Count==0);Assert(v.ListVersions().Any(x=>x.Deleted));}using var replica=Open(root,"replica");Assert(replica.ListDeleted().Count==0);Assert(replica.ListVersions().Any(x=>x.Deleted));}finally{Directory.Delete(root,true);}
