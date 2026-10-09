@@ -45,21 +45,25 @@ public sealed partial class VaultEngine
     }
     public Task SaveDueVersionsAsync(DateTimeOffset now,CancellationToken cancellationToken=default)
     {
-        lock(gate) { Check();foreach(var pair in entries.Where(p=>versionDue.TryGetValue(p.Value.Id,out var due)&&due<=now).ToArray()){cancellationToken.ThrowIfCancellationRequested();CaptureVersion(pair.Key,pair.Value,false);versionDue.Remove(pair.Value.Id);}FlushLocal();Publish(cancellationToken);SaveJournal();return Task.CompletedTask; }
+        lock(gate) { Check();cancellationToken.ThrowIfCancellationRequested();var dueEntries=entries.Where(p=>versionDue.TryGetValue(p.Value.Id,out var due)&&due<=now).ToArray();if(dueEntries.Length==0)return Task.CompletedTask;foreach(var pair in dueEntries){cancellationToken.ThrowIfCancellationRequested();CaptureVersion(pair.Key,pair.Value,false);versionDue.Remove(pair.Value.Id);}FlushLocal();Publish(cancellationToken);SaveJournal();return Task.CompletedTask; }
     }
-    private string Restore(StoredVersion version)
+    private string Restore(StoredVersion version,bool restoreCurrent=false)
     {
         foreach(var record in version.Value.Records){var plain=ReadChunk(version.Value,record.Key);CryptographicOperations.ZeroMemory(plain);}
         var path=version.Path;
         for(var parent=VaultPath.Parent(path);parent!="";parent=VaultPath.Parent(parent)) if(entries.TryGetValue(parent,out var existing)&&!existing.Directory)throw new IOException("Restore parent is occupied by a file.");
         var parents=new Stack<string>();for(var parent=VaultPath.Parent(path);parent!="";parent=VaultPath.Parent(parent))parents.Push(parent);
         while(parents.Count>0){var parent=parents.Pop();if(!entries.ContainsKey(parent))CreateDirectory(parent);}
-        if(entries.ContainsKey(path))path=ConflictPath(path,version.Id,entries);
-        var restored=Clone(version.Value);if(entries.Values.Any(e=>e.Id==restored.Id))restored.Id=Guid.NewGuid().ToString("N");Touch(restored);entries[path]=restored;CaptureVersion(path,restored,false);return path;
+        if(entries.TryGetValue(path,out var current))
+        {
+            if(restoreCurrent&&current.Id==version.Value.Id&&current.Directory==version.Value.Directory)CaptureVersion(path,current,false);
+            else path=ConflictPath(path,version.Id,entries);
+        }
+        var restored=Clone(version.Value);if(entries.Any(p=>!p.Key.Equals(path,StringComparison.OrdinalIgnoreCase)&&p.Value.Id==restored.Id))restored.Id=Guid.NewGuid().ToString("N");Touch(restored);entries[path]=restored;versionDue.Remove(restored.Id);CaptureVersion(path,restored,false);return path;
     }
     public Task RestoreVersionAsync(string versionId,CancellationToken cancellationToken=default)
     {
-        lock(gate){Check();cancellationToken.ThrowIfCancellationRequested();var version=AllVersions().SingleOrDefault(v=>v.Id==versionId)??throw new FileNotFoundException("Version not found.");Restore(version);FlushLocal();Publish(cancellationToken);SaveJournal();return Task.CompletedTask;}
+        lock(gate){Check();cancellationToken.ThrowIfCancellationRequested();var version=AllVersions().SingleOrDefault(v=>v.Id==versionId)??throw new FileNotFoundException("Version not found.");Restore(version,true);FlushLocal();Publish(cancellationToken);SaveJournal();return Task.CompletedTask;}
     }
     public Task RestoreDeletedAsync(IReadOnlyList<string> ids,CancellationToken cancellationToken=default)
     {
