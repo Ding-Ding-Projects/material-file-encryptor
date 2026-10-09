@@ -1,3 +1,4 @@
+import {prepareRuntimeFixture,checkMountedRuntime,forgetRuntimeFixture} from './preview-runtime-fixture.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
@@ -58,19 +59,20 @@ export async function runLocalHeadlessCheck(env=process.env) {
  const receipt={version:1,transport:cli?'direct-cli-adapter':'streamable-http',resourceHashes,route:'cheap-lowlevel-headless',sourceCommit:source,executableSha256:createHash('sha256').update(await fs.readFile(executable)).digest('hex'),launch,preparedAt:new Date().toISOString(),launched:false,pixelsInspected:false,interactionsVerified:false};
  await fs.writeFile(path.join(runRoot,'prepared.json'),JSON.stringify(receipt,null,2));
  if(env.MFE_HEADLESS_EXECUTE!=='1') {console.log(JSON.stringify({prepared:true,launched:false,runRoot,requires:'Set MFE_HEADLESS_EXECUTE=1 only after reviewing the packaged executable and isolated profile arguments.'}));return receipt;}
- const python=env.MFE_PYTHON||'python';let cleanup;let failure;
+ const python=env.MFE_PYTHON||'python';let cleanup;let failure;let fixture;let runtime;
  try {
   await command(python,[installedLowlevel,'self-test']);await command(process.execPath,[cdp,'self-test']);
   await command(python,[lowlevel,'preflight',...transportArgs,'--require','launch_on_headless_desktop','--require','list_headless_windows','--require','screenshot','--require','close_headless_desktop','--require','kill_process']);
+  if(env.MFE_RUNTIME_FIXTURE==='1') {if(!cli)throw new Error('Runtime graceful-exit proof requires the direct CLI adapter.');fixture=await prepareRuntimeFixture({executable,profile:path.join(runRoot,'profile')});receipt.fixture={root:fixture.root,prepared:fixture.prepared,driveLetter:fixture.driveLetter};}
   await command(python,[lowlevel,'launch',...transportArgs,'--state',statePath],launch);receipt.launched=true;
   await command(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30']);
   const lifecycle=JSON.parse(await fs.readFile(statePath,'utf8'));
   const initial=await command(python,[lowlevel,'call','screenshot',...transportArgs],{hwnd:lifecycle.hwnd,output_path:path.join(launch.outputRoot,'native-baseline.png')});
   await fs.writeFile(path.join(runRoot,'initial-capture-result.json'),JSON.stringify(initial,null,2));
   receipt.cdp=await command(process.execPath,[cdp,'run'],plan);
-  if(env.MFE_HEADLESS_INTERACTIONS==='1') {receipt.baselineReview=await requirePixelReview(runRoot,path.join(launch.outputRoot,'native-baseline.png'));receipt.interfaceWorkflow=await command(process.execPath,[cdp,'run'],makeInterfacePlan(launch,statePath));receipt.rendererAssertionsVerified=true;}
+  if(env.MFE_HEADLESS_INTERACTIONS==='1'||fixture) {receipt.baselineReview=await requirePixelReview(runRoot,path.join(launch.outputRoot,'native-baseline.png'));if(fixture){runtime=await checkMountedRuntime({fixture,launch,receipt:statePath,executePlan:plan=>command(process.execPath,[cdp,'run'],plan),prepareExit:()=>command(python,[lowlevel,'prepare-exit',statePath])});receipt.runtime=runtime;}else receipt.interfaceWorkflow=await command(process.execPath,[cdp,'run'],makeInterfacePlan(launch,statePath));receipt.rendererAssertionsVerified=true;}
  } catch(error) {failure=String(error.message).slice(0,200);}
- finally {try {await fs.access(statePath);cleanup=await command(python,[lowlevel,'cleanup','--state',statePath,'--allow-saved-pid-kill','--timeout','20']);}catch(error){cleanup={ok:false,reason:String(error.message).slice(0,200)};}
+ finally {try {await fs.access(statePath);cleanup=runtime?.quitRequested?await command(python,[lowlevel,'confirm-exit',statePath]):await command(python,[lowlevel,'cleanup','--state',statePath,'--allow-saved-pid-kill','--timeout','20']);if(fixture&&runtime?.quitRequested&&cleanup.client_ok)receipt.fixtureCleanup=await forgetRuntimeFixture(fixture);}catch(error){cleanup={ok:false,reason:String(error.message).slice(0,200)};}
   Object.assign(receipt,{finishedAt:new Date().toISOString(),failure,cleanup,passed:false,pending:['Inspect all retained captures','Verify mounted filesystem and history mutations with real fixture credentials','Verify native input separately'],profileRetained:true});
   await fs.writeFile(path.join(runRoot,'verification.json'),JSON.stringify(receipt,null,2));}
  console.log(JSON.stringify({runRoot,launched:receipt.launched,passed:false,pixelsInspected:false}));

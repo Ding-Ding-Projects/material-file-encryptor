@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 const invoke = (method, params = {}) => ipcRenderer.invoke('vault:request', method, params);
 const api = {
+  verificationQuit: () => ipcRenderer.invoke('vault:verification-quit'),
   status: () => invoke('getState'), mount: (options = {}) => invoke('mount', options), unmount: () => invoke('unmount'),
   upgrade: options => invoke('upgradeVault', options),
   create: options => invoke('createVault', options), unlock: options => invoke('unlockVault', options), lock: () => invoke('lockVault'),
