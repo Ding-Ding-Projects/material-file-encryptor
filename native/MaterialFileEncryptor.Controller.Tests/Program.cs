@@ -87,7 +87,53 @@ static class Regression
         }
         finally { ((IDisposable)controller).Dispose(); foreach(var file in Directory.EnumerateFiles(root,"*",SearchOption.AllDirectories)) File.SetAttributes(file,FileAttributes.Normal); Directory.Delete(root,true); }
     }
-    public static async Task Main() { Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); await PartialHistoryRetry(); }
+    static async Task OfflineUnlock()
+    {
+        var root=Path.Combine(Path.GetTempPath(),"mfe-controller-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
+        var controller=Activator.CreateInstance(ControllerType)!; var backend=new OfflineTransport();
+        try
+        {
+            string historicalId; string[] historicalParts;
+            using(var engine=Create(root,1024))
+            {
+                engine.CreateFile("pinned.bin"); engine.WriteRange("pinned.bin",0,new byte[]{4,5,6}); await engine.SaveVersionAsync("pinned.bin");
+                historicalId=engine.ListVersions().First().Id;
+                historicalParts=Directory.GetFiles(Path.Combine(root,"cache","parts"),"*.mfe").Select(Path.GetFileName).Cast<string>().ToArray();
+                engine.WriteRange("pinned.bin",0,new byte[]{7,8,9}); await engine.SetPinnedAsync("pinned.bin",true); await engine.FlushAsync();
+            }
+            Func<VaultOptions,string,string,(IVaultTransport,GitVaultHistory)> factory=(options,history,repository)=>(backend,new GitVaultHistory(options.StorageRoot,Path.Combine(root,"history")));
+            Set(controller,"privateTransportFactory",factory);
+            var args=new {storageDir=Path.Combine(root,"source"),cacheDir=Path.Combine(root,"cache"),transport="privateGit",remoteRepository="fixture/private",password="controller regression fixture only"};
+            var opened=JsonSerializer.SerializeToElement(Call(controller,"Execute","unlock",JsonSerializer.SerializeToElement(args)));
+            Assert(!opened.GetProperty("locked").GetBoolean()&&!opened.GetProperty("transport").GetProperty("available").GetBoolean(),"Offline cached unlock reported remote availability");
+            Assert(opened.GetProperty("sync").GetProperty("error").GetString()!.Contains("offline"),"Offline warning absent");
+            var engineField=ControllerType.GetField("vault",BindingFlags.Instance|BindingFlags.NonPublic)!;
+            var current=(VaultEngine)engineField.GetValue(controller)!; var bytes=new byte[3]; Assert(current.ReadRange("pinned.bin",0,bytes)==3&&bytes.SequenceEqual(new byte[]{7,8,9}),"Pinned cached read failed offline");
+            foreach(var part in historicalParts) foreach(var folder in new[]{"source","cache"}) { var absent=Path.Combine(root,folder,"parts",part); if(File.Exists(absent)) File.Delete(absent); }
+            Assert(!current.ListVersions().Single(v=>v.Id==historicalId).IsAvailable,"Missing historical row reported available offline");
+            try { Call(controller,"Execute","restoreVersion",JsonSerializer.SerializeToElement(new {versionId=historicalId})); throw new Exception("Unavailable historical restore succeeded"); }
+            catch(TargetInvocationException error) when(error.InnerException is InvalidOperationException needed&&needed.Message.Contains("Connect to private storage")) { }
+            Assert(current.ReadRange("pinned.bin",0,bytes)==3&&bytes.SequenceEqual(new byte[]{7,8,9}),"Failed offline historical restore changed current pinned bytes");
+            Assert(backend.Hydrations==0,"Pinned offline read requested network hydration");
+            backend.Offline=false; Call(controller,"SyncIfUnlocked");
+            var online=JsonSerializer.SerializeToElement(Call(controller,"Status")); Assert(online.GetProperty("transport").GetProperty("available").GetBoolean()&&online.GetProperty("sync").GetProperty("error").ValueKind==JsonValueKind.Null,"Successful synchronization did not clear offline warning");
+            Call(controller,"Execute","lock",JsonSerializer.SerializeToElement(new{})); backend.Offline=true;
+            var fresh=new {storageDir=Path.Combine(root,"fresh-source"),cacheDir=Path.Combine(root,"fresh-cache"),transport="privateGit",remoteRepository="fixture/private",password="controller regression fixture only"};
+            try { Call(controller,"Execute","unlock",JsonSerializer.SerializeToElement(fresh)); throw new Exception("Uncached offline vault opened"); }
+            catch(TargetInvocationException error) when(error.InnerException is InvalidOperationException needed&&needed.Message.Contains("Connect to private storage")) { }
+            Assert(!Directory.Exists(fresh.storageDir),"Offline fresh unlock created a staging vault");
+            Console.WriteLine("PASS authenticated cached private unlock, pinned offline read, remote availability warning/recovery, fresh connection requirement");
+        }
+        finally { ((IDisposable)controller).Dispose(); foreach(var file in Directory.EnumerateFiles(root,"*",SearchOption.AllDirectories)) File.SetAttributes(file,FileAttributes.Normal); Directory.Delete(root,true); }
+    }
+    sealed class OfflineTransport : IVaultTransport
+    {
+        public bool Offline=true; public int Hydrations;
+        public Task InitializeAsync(CancellationToken ct=default)=>Task.CompletedTask;
+        public Task SyncAsync(CancellationToken ct=default)=>Offline?Task.FromException(new IOException("fixture network offline")):Task.CompletedTask;
+        public Task EnsureFileAsync(string path,CancellationToken ct=default) { Hydrations++; return Task.FromException(new IOException("fixture network offline")); }
+    }
+    public static async Task Main() { Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); await PartialHistoryRetry(); await OfflineUnlock(); }
     sealed class ImmediateTransport : IVaultTransport
     {
         public Task InitializeAsync(CancellationToken ct=default)=>Task.CompletedTask;
