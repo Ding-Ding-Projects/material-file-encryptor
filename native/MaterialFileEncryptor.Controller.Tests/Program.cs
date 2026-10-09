@@ -1,0 +1,78 @@
+using System.Reflection;
+using System.Security.Cryptography;
+using System.Text.Json;
+using MaterialFileEncryptor.Core;
+
+static class Regression
+{
+    static readonly Type ControllerType = Assembly.Load("MaterialFileEncryptor.Host").GetType("MaterialFileEncryptor.Host.VaultController", true)!;
+    static void Assert(bool value, string message) { if (!value) throw new Exception(message); }
+    static void Set(object controller, string name, object? value) => ControllerType.GetField(name, BindingFlags.Instance|BindingFlags.NonPublic)!.SetValue(controller, value);
+    static object? Call(object controller, string method, params object[] values) => ControllerType.GetMethod(method)!.Invoke(controller, values);
+    static object Make(VaultEngine engine, string root, IVaultTransport transport)
+    {
+        var controller = Activator.CreateInstance(ControllerType)!;
+        Set(controller,"vault",engine); Set(controller,"storageDir",Path.Combine(root,"source")); Set(controller,"cacheDir",Path.Combine(root,"cache")); Set(controller,"transport",transport);
+        return controller;
+    }
+    static VaultEngine Create(string root,long cap)
+    {
+        using var credentials=VaultCredentials.Password("controller regression fixture only");
+        return VaultEngine.Create(new VaultOptions { StorageRoot=Path.Combine(root,"source"), CacheRoot=Path.Combine(root,"cache"), PartSizeBytes=cap }, credentials);
+    }
+    static void Import(long cap,int bytes)
+    {
+        var root=Path.Combine(Path.GetTempPath(),"mfe-controller-"+Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        object? controller=null;
+        try
+        {
+            var engine=Create(root,cap); controller=Make(engine,root,new ImmediateTransport());
+            var data=RandomNumberGenerator.GetBytes(bytes); var original=Path.Combine(root,"input.bin"); File.WriteAllBytes(original,data);
+            Call(controller,"Execute","importFiles",JsonSerializer.SerializeToElement(new { paths=new[]{original} }));
+            var actual=new byte[bytes]; Assert(engine.ReadRange("input.bin",0,actual)==bytes && data.SequenceEqual(actual),"Imported bytes changed");
+            var expected=(bytes+(cap-36)-1)/(cap-36);
+            Assert(Directory.GetFiles(Path.Combine(root,"cache","parts"),"*.mfe").LongLength==expected,"Import rewrote encryption records repeatedly");
+            Console.WriteLine($"PASS import exact bytes and record count at {cap} byte cap");
+        }
+        finally { if(controller is IDisposable disposable) disposable.Dispose(); if(Directory.Exists(root)) Directory.Delete(root,true); }
+    }
+    static async Task NetworkLifetime()
+    {
+        var root=Path.Combine(Path.GetTempPath(),"mfe-controller-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
+        var engine=Create(root,1024); var network=new BlockingTransport(); var controller=Make(engine,root,network);
+        try
+        {
+            engine.CreateFile("cached.bin"); engine.WriteRange("cached.bin",0,new byte[]{1,2,3}); engine.FlushAsync().GetAwaiter().GetResult();
+            var sync=Task.Run(()=>Call(controller,"SyncIfUnlocked"));
+            await network.Started.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            var another=Task.Run(()=>Call(controller,"SyncIfUnlocked")); await another.WaitAsync(TimeSpan.FromSeconds(2));
+            Assert(network.Calls==1,"Concurrent sync started duplicate network work");
+            var read=Task.Run(()=> { var status=Call(controller,"Status"); byte[] bytes=new byte[3]; Assert(engine.ReadRange("cached.bin",0,bytes)==3 && bytes.SequenceEqual(new byte[]{1,2,3}),"Cached read changed"); return status; });
+            await read.WaitAsync(TimeSpan.FromSeconds(2));
+            var locked=Task.Run(()=>Call(controller,"Execute","lock",JsonSerializer.SerializeToElement(new{})));
+            await locked.WaitAsync(TimeSpan.FromSeconds(2));
+            Assert(!sync.IsCompleted,"Fixture network unexpectedly ended before lock proof");
+            try { Call(controller,"Execute","unlock",JsonSerializer.SerializeToElement(new{})); throw new Exception("Reopen raced old network ownership"); }
+            catch(TargetInvocationException error) when(error.InnerException is InvalidOperationException stopped && stopped.Message.Contains("synchronization is stopping",StringComparison.OrdinalIgnoreCase)) { }
+            network.Release.TrySetResult(); await sync.WaitAsync(TimeSpan.FromSeconds(2));
+            var status=JsonSerializer.SerializeToElement(Call(controller,"Status")); Assert(status.GetProperty("locked").GetBoolean(),"Late network completion changed engine state");
+            Console.WriteLine("PASS single-flight network, cached read/status, lock without waiting, stale completion isolation");
+        }
+        finally { network.Release.TrySetResult(); ((IDisposable)controller).Dispose(); Directory.Delete(root,true); }
+    }
+    public static async Task Main() { Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); }
+    sealed class ImmediateTransport : IVaultTransport
+    {
+        public Task InitializeAsync(CancellationToken ct=default)=>Task.CompletedTask;
+        public Task SyncAsync(CancellationToken ct=default)=>Task.CompletedTask;
+        public Task EnsureFileAsync(string path,CancellationToken ct=default)=>Task.CompletedTask;
+    }
+    sealed class BlockingTransport : IVaultTransport
+    {
+        public int Calls; public TaskCompletionSource Started=new(TaskCreationOptions.RunContinuationsAsynchronously), Release=new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Task InitializeAsync(CancellationToken ct=default)=>Task.CompletedTask;
+        public async Task SyncAsync(CancellationToken ct=default) { Interlocked.Increment(ref Calls); Started.TrySetResult(); await Release.Task; }
+        public Task EnsureFileAsync(string path,CancellationToken ct=default)=>Task.CompletedTask;
+    }
+}
