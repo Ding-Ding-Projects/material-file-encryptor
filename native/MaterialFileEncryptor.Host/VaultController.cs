@@ -33,6 +33,14 @@ internal sealed class VaultController : IDisposable
     private DateTimeOffset? lastSync;
     private object? lastOfflineRelease;
     private bool syncing, unmountBusy;
+    private int? historyRetentionDays;
+    private string transportMode = "folder";
+    private string? remoteRepository;
+    private IVaultTransport? transport;
+    private GitVaultHistory? historyStore;
+    private bool historyPending;
+    private string? historySourceRoot;
+    private DateTimeOffset nextSyncAttempt;
     private readonly bool driverAvailable;
     private readonly string? driverError;
     private readonly string? driverReason;
@@ -92,6 +100,9 @@ internal sealed class VaultController : IDisposable
                     }
                 },
                 autoUnlock = identity is not null && SavedCredentialStore.Exists(identity),
+                history = new { versionCount = vault?.ListVersions().Count ?? 0, recycledCount = vault?.ListDeleted().Count ?? 0, pendingVersionCount = vault?.PendingVersionCount ?? 0, retentionDays = historyRetentionDays, gitAvailable = historyStore is not null },
+                storageFormat = vault?.StorageFormat,
+                transport = new { mode = transportMode, remoteRepository, available = vault?.Status.IsSourceAvailable ?? false, lastError = syncError },
                 availableDriveLetters = FreeDriveLetters()
             };
         }
@@ -114,6 +125,7 @@ internal sealed class VaultController : IDisposable
     {
         // Dispatcher stop waits for callbacks. It must run outside the callback gate.
         if (method is "lock" or "unmount") { Unmount(); if (method == "lock") LockEngine(); return Status(); }
+        if (method == "copyUpgrade") { Unmount(); lock (gate) Upgrade(args); return Status(); }
         lock (gate)
         {
             switch (method)
@@ -124,6 +136,22 @@ internal sealed class VaultController : IDisposable
                 case "autoUnlock": Open(args, false, true); break;
                 case "mount": Mount(args); break;
                 case "importFiles": Import(args); break;
+                case "listVersions":
+                    int? retention = args.ValueKind == JsonValueKind.Object && args.TryGetProperty("retentionDays", out var days) && days.ValueKind != JsonValueKind.Null ? days.GetInt32() : historyRetentionDays;
+                    return Engine.ListVersions(OptionalString(args, "entryId"), retention).Select(VersionInfo).ToArray();
+                case "listDeleted": return Engine.ListDeleted().Select(VersionInfo).ToArray();
+                case "saveVersion": Engine.SaveVersionAsync(OptionalString(args, "path")).GetAwaiter().GetResult(); break;
+                case "restoreVersion": Engine.RestoreVersionAsync(RequiredString(args, "versionId")).GetAwaiter().GetResult(); break;
+                case "restoreDeleted":
+                    if (!args.TryGetProperty("ids", out var ids) || ids.ValueKind != JsonValueKind.Array || ids.GetArrayLength() is < 1 or > 1000) throw new ArgumentException("Select between one and 1000 deleted entries.");
+                    Engine.RestoreDeletedAsync(ids.EnumerateArray().Select(value => value.GetString() ?? throw new ArgumentException("Invalid deleted entry.")).ToArray()).GetAwaiter().GetResult();
+                    break;
+                case "emptyRecycleBin": Engine.EmptyRecycleBinAsync().GetAwaiter().GetResult(); break;
+                case "setHistoryRetention":
+                    int? selectedRetention = args.TryGetProperty("days", out var period) && period.ValueKind != JsonValueKind.Null ? period.GetInt32() : null;
+                    if (selectedRetention is < 1 or > 36500) throw new ArgumentException("Choose a history period between one and 36500 days, or forever.");
+                    historyRetentionDays = selectedRetention;
+                    break;
                 case "keepOffline": Engine.SetPinnedAsync(RequiredString(args, "path"), true).GetAwaiter().GetResult(); break;
                 case "releaseOffline":
                     string releasedPath = VaultPath.Normalize(RequiredString(args, "path"));
@@ -145,8 +173,27 @@ internal sealed class VaultController : IDisposable
     private void Open(JsonElement args, bool create, bool automatic)
     {
         if (vault is not null) throw new InvalidOperationException("Lock the current vault before opening another.");
+        string selectedTransport = OptionalString(args, "transport") ?? "folder";
+        if (selectedTransport is not ("folder" or "privateGit")) throw new ArgumentException("Choose a supported transfer method.");
         var options = new VaultOptions { StorageRoot = System.IO.Path.GetFullPath(RequiredString(args, "storageDir")), CacheRoot = System.IO.Path.GetFullPath(RequiredString(args, "cacheDir")), PartSizeBytes = OptionalLong(args, "partSizeBytes") ?? 10L * 1024 * 1024 };
         string chosenDrive = ValidateDrive(OptionalString(args, "driveLetter") ?? driveLetter);
+        string? selectedRepository = OptionalString(args, "remoteRepository");
+        string historyIdentity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(options.StorageRoot.ToUpperInvariant() + "|" + selectedTransport + "|" + selectedRepository))).ToLowerInvariant();
+        string historyRoot = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MaterialFileEncryptor-Data", "History", historyIdentity);
+        IVaultTransport selectedBackend;
+        GitVaultHistory selectedHistory;
+        if (selectedTransport == "privateGit")
+        {
+            var remote = new PrivateGitHubVaultTransport(options.StorageRoot, historyRoot, selectedRepository ?? throw new ArgumentException("Choose a private repository."));
+            selectedBackend = remote; selectedHistory = remote.History;
+        }
+        else
+        {
+            selectedBackend = new FolderVaultTransport(options.StorageRoot);
+            selectedHistory = new GitVaultHistory(options.CacheRoot, historyRoot);
+        }
+        selectedBackend.InitializeAsync().GetAwaiter().GetResult();
+        if (selectedTransport == "privateGit") selectedBackend.SyncAsync().GetAwaiter().GetResult();
         VaultEngine opened;
         if (automatic)
         {
@@ -174,10 +221,56 @@ internal sealed class VaultController : IDisposable
             using (credential) opened = create ? VaultEngine.Create(options, credential) : VaultEngine.Open(options, credential);
         }
         vault = opened; storageDir = options.StorageRoot; cacheDir = options.CacheRoot; identity = opened.VaultId; driveLetter = chosenDrive;
+        transportMode = selectedTransport; remoteRepository = OptionalString(args, "remoteRepository");
+        transport = selectedBackend; historyStore = selectedHistory; historyPending = true;
+        historySourceRoot = selectedTransport == "folder" ? options.CacheRoot : options.StorageRoot;
+        nextSyncAttempt = DateTimeOffset.UtcNow;
+        opened.HydrateEncryptedFileAsync = selectedBackend.EnsureFileAsync;
+        if (selectedBackend is PrivateGitHubVaultTransport privateBackend) opened.IsEncryptedFileAvailable = privateBackend.ContainsFile;
+        opened.HistoryChanged += () => historyPending = true;
+        opened.SyncAsync().GetAwaiter().GetResult();
         syncError = null; unmountBusy = false; lastOfflineRelease = null;
         if (OptionalBool(args, "autoUnlock")) SaveCredential();
         // Unlock and mount are separate operations; a missing driver never prevents
         // inspection/import/sync of an authenticated vault.
+    }
+    private void Upgrade(JsonElement args)
+    {
+        var original = Engine;
+        var destination = new VaultOptions
+        {
+            StorageRoot = System.IO.Path.GetFullPath(RequiredString(args, "storageDir")),
+            CacheRoot = System.IO.Path.GetFullPath(RequiredString(args, "cacheDir")),
+            PartSizeBytes = OptionalLong(args, "partSizeBytes") ?? 10L * 1024 * 1024
+        };
+        foreach (string target in new[] { destination.StorageRoot, destination.CacheRoot })
+            foreach (string existing in new[] { storageDir!, cacheDir! })
+                if (IsWithin(target, existing) || IsWithin(existing, target)) throw new ArgumentException("Upgrade folders must be separate from both original folders.");
+        _ = ValidateDrive(OptionalString(args, "driveLetter") ?? driveLetter);
+        string selectedTransport = OptionalString(args, "transport") ?? "folder";
+        if (selectedTransport is not ("folder" or "privateGit")) throw new ArgumentException("Choose a supported transfer method.");
+        string? password = OptionalString(args, "password"), keyPath = OptionalString(args, "keyFilePath");
+        if ((password is null) == (keyPath is null)) throw new ArgumentException("Choose either a password or a key file.");
+        VaultCredentials credential;
+        if (keyPath is not null)
+        {
+            string resolved = System.IO.Path.GetFullPath(keyPath);
+            if (new[] { destination.StorageRoot, destination.CacheRoot, storageDir!, cacheDir! }.Any(root => IsWithin(resolved, root))) throw new ArgumentException("The key file must be outside all vault folders.");
+            using var input = File.OpenRead(resolved);
+            if (input.Length is < 32 or > 1048576) throw new ArgumentException("A key file must contain 32 bytes to 1 MiB.");
+            var key = new byte[(int)input.Length]; input.ReadExactly(key);
+            try { credential = VaultCredentials.KeyFile(key); }
+            finally { CryptographicOperations.ZeroMemory(key); }
+        }
+        else credential = VaultCredentials.Password(password!);
+        original.SaveDueVersionsAsync(DateTimeOffset.MaxValue).GetAwaiter().GetResult();
+        original.FlushAsync().GetAwaiter().GetResult();
+        using (credential)
+        using (var upgraded = original.CopyUpgradeAsync(destination, credential).GetAwaiter().GetResult()) { }
+        // The verified copy exists before the original is closed. A later transport
+        // or mount failure leaves both vaults intact and independently unlockable.
+        LockEngine();
+        Open(args, false, false);
     }
     private void Mount(JsonElement args)
     {
@@ -219,8 +312,10 @@ internal sealed class VaultController : IDisposable
         {
             if (host is not null) throw new InvalidOperationException("Unmount the drive before locking.");
             if (vault is null) return;
+            vault.SaveDueVersionsAsync(DateTimeOffset.MaxValue).GetAwaiter().GetResult();
             vault.FlushAsync().GetAwaiter().GetResult();
-            vault.Dispose(); vault = null; syncError = null;
+            RecordHistoryLocked();
+            vault.Dispose(); vault = null; syncError = null; historyStore = null; transport = null;
         }
     }
     private void SaveCredential()
@@ -263,12 +358,44 @@ internal sealed class VaultController : IDisposable
     {
         lock (gate) { if (vault is not null) SyncLocked(); }
     }
+    public void TickIfUnlocked()
+    {
+        lock (gate)
+        {
+            if (vault is null) return;
+            Engine.SaveDueVersionsAsync(DateTimeOffset.UtcNow).GetAwaiter().GetResult();
+            if (DateTimeOffset.UtcNow >= nextSyncAttempt) SyncLocked();
+        }
+    }
+    private static object VersionInfo(VaultVersionInfo version) => new
+    {
+        id = version.Id, entryId = version.EntryId, path = version.Path, timestampUtc = version.TimestampUtc,
+        length = version.Length, isDirectory = version.IsDirectory, deleted = version.Deleted, isAvailable = version.IsAvailable
+    };
     private void SyncLocked()
     {
         syncing = true;
-        try { fileSystem?.RecoverPending(); Engine.SyncAsync().GetAwaiter().GetResult(); lastSync = DateTimeOffset.UtcNow; syncError = Engine.Status.LastError is null ? null : "Encrypted storage synchronization needs attention."; }
+        nextSyncAttempt = DateTimeOffset.UtcNow.AddSeconds(15);
+        try
+        {
+            fileSystem?.RecoverPending();
+            transport?.SyncAsync().GetAwaiter().GetResult();
+            Engine.SyncAsync().GetAwaiter().GetResult();
+            RecordHistoryLocked();
+            if (transportMode == "privateGit") transport?.SyncAsync().GetAwaiter().GetResult();
+            lastSync = DateTimeOffset.UtcNow;
+            syncError = Engine.Status.LastError is null ? null : "Encrypted storage synchronization needs attention.";
+        }
         catch { syncError = "Encrypted storage could not synchronize. Changes remain in the encrypted local cache."; throw; }
         finally { syncing = false; }
+    }
+    private void RecordHistoryLocked()
+    {
+        if (!historyPending || historyStore is null || vault is null) return;
+        if (!Directory.Exists(historySourceRoot)) return;
+        var paths = Engine.GetEncryptedSnapshotPaths().Where(relative => File.Exists(System.IO.Path.Combine(historySourceRoot!, relative))).ToArray();
+        historyStore.RecordSnapshotAsync(paths).GetAwaiter().GetResult();
+        historyPending = false;
     }
     private static bool IsWithin(string child, string parent) => child.Equals(parent, StringComparison.OrdinalIgnoreCase) || child.StartsWith(parent.TrimEnd(System.IO.Path.DirectorySeparatorChar) + System.IO.Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
     private static string ValidateDrive(string value)

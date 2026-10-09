@@ -11,12 +11,16 @@ const directory = path.dirname(fileURLToPath(import.meta.url));
 const rendererPath = path.resolve(directory, '../renderer/index.html');
 const rendererURL = pathToFileURL(rendererPath).href;
 const testMode = !app.isPackaged && process.argv.includes('--desktop-check');
-if (testMode) app.setPath('userData', path.resolve('out/desktop-profile'));
+const verificationProfile = process.argv.find(argument => argument.startsWith('--verification-profile='))?.slice('--verification-profile='.length);
+if (verificationProfile) {
+  if (!process.argv.includes('--desktop-check') || !path.isAbsolute(verificationProfile)) throw new Error('Verification requires an explicit absolute profile directory and desktop-check mode.');
+  app.setPath('userData', verificationProfile);
+} else if (testMode) app.setPath('userData', path.resolve('out/desktop-profile'));
 const configPath = () => path.join(app.getPath('userData'), 'preferences.json');
 const selectedImports = new Set();
 const selectedExports = new Set();
 let window, tray, helper, shuttingDown = false, operation = null;
-let preferences = { startup: true, autoUnlock: false, driveLetter: 'M:' };
+let preferences = { startup: true, autoUnlock: false, driveLetter: 'M:', transport: 'folder', historyRetentionDays: null };
 let state = { locked: true, mounted: false, files: [], availableDriveLetters: [], sync: { running: false, lastSync: null, error: null }, driver: { available: false, checking: true, error: 'Checking WinFsp availability.' } };
 const inside = (parent, child) => { const rel = path.relative(parent, child); return rel === '' || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel)); };
 const nativeState = value => ({ ...value, driver: { ...value.driver, checking: false } });
@@ -53,6 +57,11 @@ async function openPath(filename) { const error = await shell.openPath(filename)
 async function request(method, params) {
   params = validateRequest(method, params);
   if (method === 'getState') return snapshot();
+  if (method === 'listVersions' || method === 'listDeleted') {
+    if (!helper) throw new Error('Unlock a Windows vault to browse its history.');
+    return helper.request(method, params);
+  }
+  if (['saveVersion', 'restoreVersion', 'restoreDeleted', 'emptyRecycleBin'].includes(method)) return perform(method, () => backend(method, params));
   if (method === 'chooseFiles') { const picked = await dialog.showOpenDialog(window, { title: 'Import files into encrypted storage', properties: ['openFile', 'multiSelections'] }); if (picked.canceled) return []; for (const filename of picked.filePaths) selectedImports.add(filename); return picked.filePaths; }
   if (method === 'chooseExport') { const picked = await dialog.showSaveDialog(window, { title: 'Export a readable copy', defaultPath: path.win32.basename(params.name) }); if (picked.canceled) return null; selectedExports.add(picked.filePath); return picked.filePath; }
   if (method === 'importSelected') { if (params.paths.some(filename => !selectedImports.has(filename))) throw new Error('Choose files using the file picker.'); for (const filename of params.paths) selectedImports.delete(filename); return perform('importing', () => backend('importFiles', { paths: params.paths })); }
@@ -81,6 +90,7 @@ async function request(method, params) {
       if (params.autoUnlock && state.locked) throw new Error('Unlock the drive before enabling automatic unlock.');
       await backend(params.autoUnlock ? 'setAutoUnlock' : 'forgetSavedCredential', params.autoUnlock ? { enabled: true } : { storageDir: preferences.storageDir, cacheDir: preferences.cacheDir });
     }
+    if (params.historyRetentionDays !== undefined && !state.locked) await backend('setHistoryRetention', { days: params.historyRetentionDays });
     Object.assign(preferences, params); await savePreferences();
     if (app.isPackaged && process.platform === 'win32') app.setLoginItemSettings({ openAtLogin: preferences.startup, path: process.execPath, args: ['--startup'] });
     publish(); return snapshot();
@@ -93,12 +103,13 @@ async function request(method, params) {
     const target = await safeDestination(picked.filePath, [state.storageDir, state.cacheDir, mountedPath()]); await fs.copyFile(source, target); return target;
   }
   if (method === 'importFiles') { const picked = await dialog.showOpenDialog(window, { title: 'Import files into encrypted storage', properties: ['openFile', 'multiSelections'] }); if (picked.canceled) return snapshot(); return perform('importing', () => backend('importFiles', { paths: picked.filePaths })); }
-  if (method === 'createVault' || method === 'unlockVault') {
-    return perform('mounting', async () => {
+  if (method === 'createVault' || method === 'unlockVault' || method === 'upgradeVault') {
+    return perform(method === 'upgradeVault' ? 'upgrading' : 'mounting', async () => {
       if (params.keyFilePath) await safeDestination(params.keyFilePath, [params.storageDir, params.cacheDir]);
-      await backend(method === 'createVault' ? 'create' : 'unlock', params);
-      preferences = { ...preferences, storageDir: params.storageDir, cacheDir: params.cacheDir, driveLetter: params.driveLetter, autoUnlock: Boolean(params.autoUnlock) };
+      await backend(method === 'upgradeVault' ? 'copyUpgrade' : method === 'createVault' ? 'create' : 'unlock', params);
+      preferences = { ...preferences, storageDir: params.storageDir, cacheDir: params.cacheDir, driveLetter: params.driveLetter, autoUnlock: Boolean(params.autoUnlock), transport: params.transport || 'folder', remoteRepository: params.remoteRepository };
       await savePreferences();
+      await backend('setHistoryRetention', { days: preferences.historyRetentionDays });
       const response = await backend('mount', { driveLetter: params.driveLetter });
       return { ...response, preferences: { ...preferences } };
     });
@@ -118,7 +129,13 @@ if (squirrelStartup || !app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => window && showWindow());
   app.whenReady().then(async () => {
-    try { const saved = JSON.parse(await fs.readFile(configPath(), 'utf8')); for (const key of ['startup', 'autoUnlock']) if (typeof saved[key] === 'boolean') preferences[key] = saved[key]; for (const key of ['storageDir', 'cacheDir', 'driveLetter']) if (typeof saved[key] === 'string') preferences[key] = saved[key]; } catch { /* First launch or invalid settings uses defaults. */ }
+    try {
+      const saved = JSON.parse(await fs.readFile(configPath(), 'utf8'));
+      for (const key of ['startup', 'autoUnlock']) if (typeof saved[key] === 'boolean') preferences[key] = saved[key];
+      for (const key of ['storageDir', 'cacheDir', 'driveLetter', 'remoteRepository']) if (typeof saved[key] === 'string') preferences[key] = saved[key];
+      if (['folder', 'privateGit'].includes(saved.transport)) preferences.transport = saved.transport;
+      if (saved.historyRetentionDays === null || (Number.isInteger(saved.historyRetentionDays) && saved.historyRetentionDays >= 1 && saved.historyRetentionDays <= 36500)) preferences.historyRetentionDays = saved.historyRetentionDays;
+    } catch { /* First launch or invalid settings uses defaults. */ }
     if (app.isPackaged && process.platform === 'win32') app.setLoginItemSettings({ openAtLogin: preferences.startup, path: process.execPath, args: ['--startup'] });
     window = new BrowserWindow({ width: 1180, height: 850, minWidth: 880, minHeight: 650, frame: false, show: false, backgroundColor: '#f7f9f8', webPreferences: { preload: path.join(directory, 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false, webSecurity: true } });
     window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
@@ -134,7 +151,7 @@ else {
     if (process.platform === 'win32') {
       const executable = app.isPackaged ? path.join(process.resourcesPath, 'native/MaterialFileEncryptor.Host.exe') : path.resolve('out/native/MaterialFileEncryptor.Host.exe');
       helper = new NativeClient(executable); helper.on('status', result => { if (result && typeof result.locked === 'boolean') { state = nativeState(result); publish(); } }); helper.on('exit', () => { state = { ...state, mounted: false, locked: true, files: [], sync: { ...state.sync, error: 'The native helper stopped. Reopen the application.' } }; publish(); });
-      try { await backend('status'); if (preferences.autoUnlock && preferences.storageDir) { await backend('autoUnlock', { storageDir: preferences.storageDir, cacheDir: preferences.cacheDir, driveLetter: preferences.driveLetter }); await backend('mount', { driveLetter: preferences.driveLetter }); } } catch (error) { state.driver.checking = false; state.sync.error = error.message; publish(); }
+      try { await backend('status'); if (preferences.autoUnlock && preferences.storageDir) { await backend('autoUnlock', { storageDir: preferences.storageDir, cacheDir: preferences.cacheDir, driveLetter: preferences.driveLetter, transport: preferences.transport, remoteRepository: preferences.remoteRepository }); await backend('setHistoryRetention', { days: preferences.historyRetentionDays }); await backend('mount', { driveLetter: preferences.driveLetter }); } } catch (error) { state.driver.checking = false; state.sync.error = error.message; publish(); }
     } else { state.driver.checking = false; state.driver.error = 'Windows and WinFsp are required to mount a drive.'; publish(); }
   }).catch(() => { app.exit(1); });
   app.on('before-quit', event => { if (!shuttingDown && !testMode) { event.preventDefault(); void quit(); } });

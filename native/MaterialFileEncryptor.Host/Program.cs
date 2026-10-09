@@ -36,12 +36,12 @@ internal static class Program
         using var cancellation = new CancellationTokenSource();
         Task background = Task.Run(async () =>
         {
-            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(15));
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
             try
             {
                 while (await timer.WaitForNextTickAsync(cancellation.Token))
                 {
-                    try { controller.SyncIfUnlocked(); Send(new { @event = "status", status = controller.Status() }); }
+                    try { controller.TickIfUnlocked(); Send(new { @event = "status", status = controller.Status() }); }
                     catch { try { Send(new { @event = "status", status = controller.Status() }); } catch { } }
                 }
             }
