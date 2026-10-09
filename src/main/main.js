@@ -17,9 +17,15 @@ if (verificationProfile) {
   app.setPath('userData', verificationProfile);
 } else if (testMode) app.setPath('userData', path.resolve('out/desktop-profile'));
 const verificationMode = Boolean(verificationProfile && process.argv.includes('--desktop-check'));
+function startupReadbackOptions(executable) {
+  // The pinned Windows runtime parses the lookup path as a command line.
+  // Quote only the getter input so spaces remain part of the executable path.
+  const bare = executable.startsWith('"') && executable.endsWith('"') ? executable.slice(1, -1) : executable;
+  return { path: '"' + bare + '"', args: ['--startup'] };
+}
 function createVerificationStartup(loginApp, executable, name) {
   const options = { path: executable, args: ['--startup'] };
-  const find = () => (loginApp.getLoginItemSettings(options).launchItems || []).find(item => item.name === name);
+  const find = () => (loginApp.getLoginItemSettings(startupReadbackOptions(executable)).launchItems || []).find(item => item.name === name);
   if (find()) throw new Error('Verification startup registration already exists.');
   let restored = false;
   return {
@@ -41,7 +47,7 @@ function applyStartup(enabled) {
 function startupRegistration() {
   if (verificationStartup) return verificationStartup.read();
   if (process.platform !== 'win32') return { enabled: false, verificationOnly: false, restored: false };
-  const settings = app.getLoginItemSettings({ path: process.execPath, args: ['--startup'] });
+  const settings = app.getLoginItemSettings(startupReadbackOptions(process.execPath));
   return { enabled: settings.openAtLogin, verificationOnly: false, restored: false };
 }
 const configPath = () => path.join(app.getPath('userData'), 'preferences.json');
