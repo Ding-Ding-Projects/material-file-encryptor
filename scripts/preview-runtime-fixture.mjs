@@ -5,6 +5,7 @@ import {randomBytes} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {NativeClient} from '../src/main/native-client.js';
+import {runModernPhase} from './modern-ui-check.mjs';
 
 export function fixturePreferences(fixture) {return {startup:false,autoUnlock:true,storageDir:fixture.storageDir,cacheDir:fixture.cacheDir,driveLetter:fixture.driveLetter,transport:'folder',historyRetentionDays:null};}
 async function disposeNative(client) {
@@ -63,7 +64,8 @@ export function makeGuiVaultFormSteps(gui,mode,outputRoot) {
  steps.push({id:prefix+'-submit-ready',op:'poll',expression:"!document.querySelector('#dialog-submit').disabled && document.querySelector('#dialog-error').hidden",equals:true,intervalMs:200});
  return steps;
 }
-export async function checkMountedRuntime({fixture,launch,receipt,executePlan,prepareExit}) {
+export async function checkMountedRuntime({fixture,launch,receipt,executePlan,prepareExit,modernUiCheck=process.env.MFE_MODERN_UI_CHECK==='1'}) {
+ const modernUi={enabled:modernUiCheck};
  const checks=[];let sequence=0;
  const execute=async steps=>executePlan({version:1,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:60000,steps});
  const query=async expression=>{const result=await execute([{id:'query-'+(++sequence),op:'evaluate',expression}]);return result.results.at(-1).value;};
@@ -144,13 +146,15 @@ export async function checkMountedRuntime({fixture,launch,receipt,executePlan,pr
  await click('gui-unlock-dialog','#unlock-button',"document.querySelector('#vault-dialog').open");
  await execute(makeGuiVaultFormSteps(gui,'unlock',launch.outputRoot));await click('gui-unlock-submit','#dialog-submit',guiMounted);await waitBackend(false);
  const guiReopened=await asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted,driveLetter:s.driveLetter}))');assert.equal(guiReopened.locked,false);assert.equal(guiReopened.mounted,true);assert.equal(guiReopened.driveLetter,gui.driveLetter);assert.equal(await fs.readFile(guiFile,'utf8'),guiContent);checks.push('gui-unlock-manual-letter-persisted-read');
+ if(modernUiCheck)modernUi.workspace=await runModernPhase({launch,receipt,phase:'workspace',executePlan});
  await click('gui-final-lock','#lock-button',"document.querySelector('#vault-badge').dataset.state === 'locked'");
  const guiFinal=await asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted}))');assert.equal(guiFinal.locked,true);assert.equal(guiFinal.mounted,false);checks.push('gui-final-locked');
+ if(modernUiCheck)modernUi.dialog=await runModernPhase({launch,receipt,phase:'dialog',executePlan});
  await click('gui-final-settings','[data-view="settings"]',"!document.querySelector('#view-settings').hidden");
  for(const theme of ['dark','light'])await execute([{id:'gui-theme-'+theme,op:'type',selector:'#theme-setting',text:theme,clear:true},{id:'gui-theme-'+theme+'-state',op:'poll',expression:`document.documentElement.dataset.theme === ${JSON.stringify(theme)}`,equals:true,intervalMs:200},capture('gui-theme-'+theme)]);
  for(const language of ['yue','bilingual','en'])await execute([{id:'gui-language-'+language,op:'type',selector:'#language-setting',text:language,clear:true},{id:'gui-language-'+language+'-state',op:'poll',expression:`document.querySelector('#language-setting').value === ${JSON.stringify(language)}`,equals:true,intervalMs:200},capture('gui-language-'+language)]);
  checks.push('gui-built-theme-and-language-controls');
  const guiCleanup=await retireGuiVaultKey(gui);
  await prepareExit();const quit=await execute([{id:'graceful-quit',op:'evaluate',expression:"window.__mfeQuit={done:false};window.drive.verificationQuit().then(value=>{window.__mfeQuit={done:true,value}},()=>{window.__mfeQuit={done:true,failed:true}});true"},{id:'quit-restoration',op:'poll',expression:"window.__mfeQuit.done",equals:true,intervalMs:50},{id:'quit-proof',op:'evaluate',expression:"window.__mfeQuit"}]);const quitResult=quit.results.at(-1).value;assert.equal(quitResult.failed,undefined);assert.equal(quitResult.value.restored,true);checks.push('verification-quit-startup-restored');
- return {quitRequested:true,guiVault:{createdThroughControls:true,unlockedThroughControls:true,pickerVerified:true,manualLetterNormalized:true,mountedBytesVerified:true,locked:true,...guiCleanup},startupRegistration:{initial:false,enabledReadback:enabled.enabled,disabledReadback:disabled.enabled,restored:quitResult.value.restored,verificationOnly:true},checks,rendererAssertionsVerified:true,mountedFilesystemVerified:true,nativeKeyboardVerified:false,pixelsInspected:false};
+ return {quitRequested:true,modernUi,guiVault:{createdThroughControls:true,unlockedThroughControls:true,pickerVerified:true,manualLetterNormalized:true,mountedBytesVerified:true,locked:true,...guiCleanup},startupRegistration:{initial:false,enabledReadback:enabled.enabled,disabledReadback:disabled.enabled,restored:quitResult.value.restored,verificationOnly:true},checks,rendererAssertionsVerified:true,mountedFilesystemVerified:true,nativeKeyboardVerified:false,pixelsInspected:false};
 }

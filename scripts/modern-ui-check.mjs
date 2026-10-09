@@ -86,6 +86,47 @@ export function makeClearPlan({launch,receipt,phase}) {
  return plan(launch,receipt,steps);
 }
 
+export function makeRestorePlan({launch,receipt,phase}) {
+ const steps=[];prepareTuple(steps,matrix[0],'modern-restore-'+phase);
+ selectView(steps,'drive','modern-restore-drive-'+phase);
+ return plan(launch,receipt,steps);
+}
+
+export async function runModernPhase({launch,receipt,phase,executePlan,report=event=>console.log(JSON.stringify(event)),record=async event=>fs.appendFile(path.join(launch.runRoot,'modern-ui-measurements.jsonl'),JSON.stringify(event)+'\n')}) {
+ assert.ok(['workspace','dialog'].includes(phase));
+ const summary={phase,tuplesVerified:0,clearControlsVerified:false,physicalWindowsDisplayScaleVerified:false,probeReceiptsVerified:false,probeReceiptUnavailableReason:'Independent live HWND/process ownership, runtime error counts and build receipt observations must be supplied separately; no values are inferred.'};
+ let failure;
+ const run=async(plan,tuple,kind)=>{
+  report({state:'modern-ui-started',phase,kind,tuple});
+  try {
+   const result=await executePlan(plan);
+   // Save returned measurements before any assertion can stop the matrix.
+   const measurements=(result.results||[]).filter(step=>step.id?.endsWith('-measure'));
+   await record({version:1,phase,kind,tuple,measurements,captures:(result.results||[]).filter(step=>step.op==='capture'),observedAt:new Date().toISOString()});
+   assert.equal(measurements.length,plan.steps.filter(step=>step.id?.endsWith('-measure')).length,'Missing layout measurement result');
+   for(const step of measurements)assertMeasurement(step.value,tuple);
+   report({state:'modern-ui-verified',phase,kind,tuple,measurements:measurements.length});
+  } catch(error) {
+   await record({version:1,phase,kind,tuple,status:'failed',reason:error instanceof assert.AssertionError?'LAYOUT_ASSERTION_FAILED':'PLAN_EXECUTION_FAILED',observedAt:new Date().toISOString()});
+   report({state:'modern-ui-failed',phase,kind,tuple});throw error;
+  }
+ };
+ try {
+  await executePlan(makeRestorePlan({launch,receipt,phase:phase+'-start'}));
+  await run(makeClearPlan({launch,receipt,phase}),matrix[0],'clear-controls');summary.clearControlsVerified=true;
+  for(const tuple of matrix){await run(phase==='workspace'?makeWorkspacePlan({launch,receipt,tuple}):makeDialogPlan({launch,receipt,tuple}),tuple,'matrix');summary.tuplesVerified++;}
+  return summary;
+ } catch(error){failure=error;throw error;}
+ finally {
+  // A failed dialog can remain open. Closing it is an ordinary cancel operation,
+  // not replacement of product state. The caller still owns graceful recovery.
+  try {
+   if(phase==='dialog')await executePlan(plan(launch,receipt,[{id:'modern-recovery-dialog',op:'evaluate',expression:"(()=>{const dialog=document.querySelector('#vault-dialog');if(dialog.open)document.querySelector('#dialog-cancel').click();return !dialog.open;})()"}]));
+   await executePlan(makeRestorePlan({launch,receipt,phase:phase+'-end'}));
+  }catch(error){await record({version:1,phase,status:'restoration-failed',observedAt:new Date().toISOString()});if(!failure)throw error;}
+ }
+}
+
 export function assertMeasurement(value,tuple) {
  assert.equal(value.matchedCount,1);assert.equal(value.chosenIndex,0);
  assert.equal(value.viewport.width,tuple.width);assert.equal(value.viewport.height,tuple.height);assert.ok(Math.abs(value.viewport.scale-tuple.scale)<.01);

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import {matrix,workspaceStates,makeWorkspacePlan,makeDialogPlan,makeClearPlan,assertMeasurement,makeProbeReceipt} from '../scripts/modern-ui-check.mjs';
+import {matrix,workspaceStates,makeWorkspacePlan,makeDialogPlan,makeClearPlan,assertMeasurement,makeProbeReceipt,runModernPhase} from '../scripts/modern-ui-check.mjs';
 
 const launch={outputRoot:path.resolve('evidence-owned/output'),cdp:{port:9333,expectedUrl:'file:///C:/owned/resources/app.asar/src/renderer/index.html'}};
 const receipt=path.resolve('evidence-owned/lifecycle.json');
@@ -25,4 +25,25 @@ test('layout checks reject undersized clear targets, overflow and mismatched sca
 });
 test('probe receipt refuses missing independently observed ownership before file access',async()=>{
  await assert.rejects(makeProbeReceipt({binding:{sourceCommit:'a'.repeat(40)},observation:{sourceStartCommit:'a'.repeat(40),sourceEndCommit:'a'.repeat(40)},measurement:measurement(),tuple:matrix[0]}));
+});
+
+test('opt-in runner records every tuple, restores defaults and retains exact evidence limits',async()=>{
+ const records=[],events=[],plans=[];let viewport={width:1180,height:850,scale:1};
+ const executePlan=async plan=>{plans.push(plan);const metrics=plan.steps.find(step=>step.op==='emulate');if(metrics)viewport={width:metrics.width,height:metrics.height,scale:metrics.scale};return {results:plan.steps.map(step=>({...step,value:step.id?.endsWith('-measure')?{...measurement(),viewport}:null}))};};
+ for(const phase of ['workspace','dialog']){
+  const result=await runModernPhase({launch,receipt,phase,executePlan,report:event=>events.push(event),record:async event=>records.push(event)});
+  assert.equal(result.tuplesVerified,48);assert.equal(result.clearControlsVerified,true);assert.equal(result.physicalWindowsDisplayScaleVerified,false);assert.equal(result.probeReceiptsVerified,false);
+  assert.deepEqual(viewport,{width:1180,height:850,scale:1});
+ }
+ assert.equal(events.filter(event=>event.state==='modern-ui-verified'&&event.kind==='matrix').length,96);
+ assert.equal(records.filter(event=>event.kind==='matrix').length,96);
+ assert.ok(plans.at(-1).steps.some(step=>step.selector==='#language-setting'&&step.text==='en'));
+});
+
+test('first geometry failure preserves measurements and stops before later tuples while restoring',async()=>{
+ const records=[],plans=[];let viewport={width:1180,height:850,scale:1};
+ const executePlan=async plan=>{plans.push(plan);const metrics=plan.steps.find(step=>step.op==='emulate');if(metrics)viewport={width:metrics.width,height:metrics.height,scale:metrics.scale};return {results:plan.steps.map(step=>({...step,value:step.id?.endsWith('-measure')?{...measurement(),viewport,pageOverflow:true}:null}))};};
+ await assert.rejects(runModernPhase({launch,receipt,phase:'workspace',executePlan,report:()=>{},record:async event=>records.push(event)}));
+ assert.equal(records[0].kind,'clear-controls');assert.ok(records[0].measurements.length>0);assert.equal(records[1].status,'failed');
+ assert.equal(plans.length,3);assert.deepEqual(viewport,{width:1180,height:850,scale:1});
 });
