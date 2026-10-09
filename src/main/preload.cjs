@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 const invoke = (method, params = {}) => ipcRenderer.invoke('vault:request', method, params);
 const api = {
   status: () => invoke('getState'), mount: (options = {}) => invoke('mount', options), unmount: () => invoke('unmount'),
+  upgrade: options => invoke('upgradeVault', options),
   create: options => invoke('createVault', options), unlock: options => invoke('unlockVault', options), lock: () => invoke('lockVault'),
   chooseFolder: (kind = 'storage') => invoke('selectFolder', { kind }), chooseFiles: () => invoke('chooseFiles'),
   chooseExport: name => invoke('chooseExport', { name }), chooseKeyFile: () => invoke('selectKeyFile'),

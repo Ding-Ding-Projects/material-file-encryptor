@@ -1,4 +1,10 @@
 export const cantonese = {
+"Upgrade by creating a copy":"建立副本升級",
+"Create upgraded copy":"建立升級副本",
+"Choose separate destination storage and cache folders. The original vault is preserved. Choose credentials for the upgraded copy. No conversion happens when opening a vault.":"請揀獨立嘅目的地儲存同快取資料夾，原有保險庫會保留。為升級副本設定解鎖方式，開啟保險庫唔會自動轉換。",
+"Choose separate destination folders outside the original vault.":"請揀原有保險庫以外嘅獨立目的地資料夾。",
+"Upgraded copy created. Original vault preserved.":"升級副本已建立，原有保險庫已保留。",
+
 "History":"版本記錄",
 "Recycle Bin":"回收筒",
 "Save version now":"即刻儲存版本",

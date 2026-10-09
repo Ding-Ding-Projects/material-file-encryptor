@@ -41,3 +41,10 @@ test('guided regex searches escape punctuation while custom expressions retain e
  assert.equal(exact.test(sample),true);assert.equal(exact.test('notes1Xtxt'),false);assert.equal(exact.test('prefix'+sample),false);
  assert.equal(buildSearchPattern('^report.*','Custom expression'),'^report.*');
 });
+
+test('copy upgrade uses create-level validation and rejects omitted credentials or unknown keys',()=>{
+ const options={storageDir:'new-storage',cacheDir:'new-cache',driveLetter:'M',password:'example',partSizeBytes:10485760,transport:'folder'};
+ assert.equal(validateRequest('upgradeVault',options).driveLetter,'M:');
+ assert.throws(()=>validateRequest('upgradeVault',{...options,password:undefined}));
+ assert.throws(()=>validateRequest('upgradeVault',{...options,overwrite:true}));
+});
