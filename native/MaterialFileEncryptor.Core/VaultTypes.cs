@@ -58,6 +58,7 @@ internal sealed class StoredVersion
     public DateTimeOffset Timestamp { get; set; } = DateTimeOffset.UtcNow;
     public bool Deleted { get; set; }
     public string DeletionBatch { get; set; } = "";
+    public Dictionary<string,string> Ancestors { get; set; } = [];
 }
 public sealed record VaultVersionInfo(string Id, string EntryId, string Path, DateTimeOffset TimestampUtc, long Length, bool IsDirectory, bool Deleted, bool IsAvailable);
 internal sealed class Commit

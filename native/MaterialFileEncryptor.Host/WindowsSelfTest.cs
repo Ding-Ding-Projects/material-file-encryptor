@@ -192,12 +192,17 @@ internal static class WindowsSelfTest
             check = "physical-part-cap-future-and-edited-files";
             Require(PartFiles(storage, cache).All(path => new FileInfo(path).Length <= 131072), "initial encrypted parts obey physical cap");
             Require(FileStatus(controller, relativeTarget).GetProperty("partCount").GetInt32() > 1, "initial fixture is physically split");
-            foreach (long cap in new[] { 1024L, 1024L * 1024, 1024L * 1024 * 1024 })
+            foreach (long cap in new[] { 1024L, 1024L * 1024, 90000000L })
             {
                 controller.Execute("setPartSize", Args(new { partSizeBytes = cap }));
-                Require(Status(controller).GetProperty("partSizeBytes").GetInt64() == cap, "KiB MiB and GiB cap values are accepted");
+                Require(Status(controller).GetProperty("partSizeBytes").GetInt64() == cap, "KiB, MiB, and the 90,000,000-byte physical maximum are accepted");
                 Require(FileStatus(controller, relativeTarget).GetProperty("partSizeBytes").GetInt64() == 131072, "changing default does not resplit an untouched file");
             }
+            bool oversizedCapRejected = false;
+            try { controller.Execute("setPartSize", Args(new { partSizeBytes = 90000001L })); }
+            catch (ArgumentOutOfRangeException) { oversizedCapRejected = true; }
+            Require(oversizedCapRejected, "physical cap rejects 90,000,001 bytes");
+            Require(Status(controller).GetProperty("partSizeBytes").GetInt64() == 90000000L, "rejected physical cap preserves the accepted default");
             controller.Execute("setPartSize", Args(new { partSizeBytes = 8192 }));
             string future = System.IO.Path.Combine(mounted, "future-cap.bin");
             byte[] futureContent = RandomNumberGenerator.GetBytes(24017);
@@ -228,6 +233,35 @@ internal static class WindowsSelfTest
             Require(File.ReadAllBytes(future).SequenceEqual(futureContent), "resplit bytes survive fresh mounted reopen");
             File.Delete(future);
             controller.Execute("sync", Args(new { }));
+            check = "mounted-history-restore-current-version";
+            string historyRelative = "history-fixture/a.txt", historyFolder = System.IO.Path.Combine(mounted, "history-fixture");
+            Directory.CreateDirectory(historyFolder);
+            string historyFile = System.IO.Path.Combine(historyFolder, "a.txt");
+            File.WriteAllText(historyFile, "first mounted version");
+            controller.Execute("saveVersion", Args(new { path = historyRelative }));
+            var firstVersion = Args(controller.Execute("listVersions", Args(new { }))).EnumerateArray().First(x => x.GetProperty("path").GetString() == historyRelative);
+            File.WriteAllText(historyFile, "later mounted version");
+            controller.Execute("restoreVersion", Args(new { versionId = firstVersion.GetProperty("id").GetString() }));
+            LockWhenIdle(controller);
+            controller.Execute("unlock", Args(new { storageDir = storage, cacheDir = cache, driveLetter = drive, password }));
+            controller.Execute("mount", Args(new { driveLetter = drive }));
+            Require(File.ReadAllText(historyFile) == "first mounted version", "historical restore updates current mounted file after reopen");
+            check = "mounted-recursive-delete-recycle-restore";
+            File.WriteAllText(System.IO.Path.Combine(historyFolder, "b.txt"), "second mounted child");
+            Directory.Delete(historyFolder, true);
+            controller.Execute("sync", Args(new { }));
+            var deletedFolder = Args(controller.Execute("listDeleted", Args(new { }))).EnumerateArray().First(x => x.GetProperty("path").GetString() == "history-fixture" && x.GetProperty("isDirectory").GetBoolean());
+            controller.Execute("restoreDeleted", Args(new { ids = new[] { deletedFolder.GetProperty("id").GetString() } }));
+            LockWhenIdle(controller);
+            controller.Execute("unlock", Args(new { storageDir = storage, cacheDir = cache, driveLetter = drive, password }));
+            controller.Execute("mount", Args(new { driveLetter = drive }));
+            Require(File.ReadAllText(historyFile) == "first mounted version" && File.ReadAllText(System.IO.Path.Combine(historyFolder, "b.txt")) == "second mounted child", "selected recycled folder restores separately deleted mounted children");
+            Directory.Delete(historyFolder, true);
+            controller.Execute("sync", Args(new { }));
+            int historyBeforeEmpty = Args(controller.Execute("listVersions", Args(new { }))).GetArrayLength();
+            controller.Execute("emptyRecycleBin", Args(new { }));
+            Require(Args(controller.Execute("listDeleted", Args(new { }))).GetArrayLength() == 0, "empty recycle bin hides deleted records");
+            Require(Args(controller.Execute("listVersions", Args(new { }))).GetArrayLength() == historyBeforeEmpty, "empty recycle bin retains recoverable versions");
             check = "pinned-ciphertext-cache-offline-mounted-read";
             controller.Execute("keepOffline", Args(new { path = relativeTarget }));
             Require(FileStatus(controller, relativeTarget).GetProperty("offline").GetBoolean(), "pin is recorded");
@@ -337,7 +371,7 @@ internal static class WindowsSelfTest
             catch (FileNotFoundException) { forgottenRejected = true; }
             Require(forgottenRejected && Status(controller).GetProperty("locked").GetBoolean(), "forgotten auto-unlock cannot reopen vault");
             passed = true;
-            Console.Out.WriteLine("{\"selfTest\":true,\"filesystem\":\"WinFsp\",\"checks\":[\"create\",\"cross-process-filesystem\",\"read\",\"range-write\",\"flush\",\"truncate\",\"share-modes\",\"busy-unmount\",\"mapped-view-unmount\",\"replace-open\",\"rename-directory\",\"enumerate\",\"reopen\",\"delete-open\",\"delete-directory\",\"dpapi-unlock\",\"saved-credential-data-root\",\"physical-part-cap\",\"future-and-edited-cap\",\"explicit-resplit\",\"pinned-offline-mounted-read\",\"ciphertext-cache\",\"copy-outside-plaintext\",\"offline-unpin-dirty-reopen\",\"offline-reconnect-fresh-cache\",\"keyfile-create-reopen\",\"wrong-keyfile\",\"keyfile-optional-dpapi\",\"forget-auto-unlock\",\"legacy-local-baseline\",\"closed-target-replace\",\"legacy-busy-replace-denied\",\"posix-open-replace\",\"posix-directory-open-child\"]}");
+            Console.Out.WriteLine("{\"selfTest\":true,\"filesystem\":\"WinFsp\",\"checks\":[\"create\",\"cross-process-filesystem\",\"read\",\"range-write\",\"flush\",\"truncate\",\"share-modes\",\"busy-unmount\",\"mapped-view-unmount\",\"replace-open\",\"rename-directory\",\"enumerate\",\"reopen\",\"delete-open\",\"delete-directory\",\"dpapi-unlock\",\"saved-credential-data-root\",\"mounted-history-restore\",\"mounted-recursive-recycle-restore\",\"empty-bin-keeps-history\",\"physical-part-cap\",\"future-and-edited-cap\",\"explicit-resplit\",\"pinned-offline-mounted-read\",\"ciphertext-cache\",\"copy-outside-plaintext\",\"offline-unpin-dirty-reopen\",\"offline-reconnect-fresh-cache\",\"keyfile-create-reopen\",\"wrong-keyfile\",\"keyfile-optional-dpapi\",\"forget-auto-unlock\",\"legacy-local-baseline\",\"closed-target-replace\",\"legacy-busy-replace-denied\",\"posix-open-replace\",\"posix-directory-open-child\"]}");
         }
         catch (Exception error) { Console.Out.WriteLine(JsonSerializer.Serialize(new { selfTest = false, check, errorType = error.GetType().Name, driver = JsonSerializer.SerializeToElement(controller.Status()).GetProperty("driver"), mountDiagnostic = Status(controller).GetProperty("mountDiagnostic"), error = "A real Windows filesystem operation failed. See the driver and encrypted-storage test documentation." })); }
         finally
