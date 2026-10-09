@@ -254,10 +254,10 @@ public sealed partial class VaultEngine : IDisposable
     {
         lock(gate) { Check(); if(id==config.VaultId)throw new IOException("Cannot delete root."); var path=entries.FirstOrDefault(p=>p.Value.Id==id).Key; if(path!=null)Delete(path,recursive);else FindId(id); }
     }
-    private void Remove(string path) { var e=Find(path); CaptureVersion(path,e,true); versionDue.Remove(e.Id); if(open.ContainsKey(e.Id))orphans[e.Id]=e; entries.Remove(path); }
+    private void Remove(string path,string? deletionBatch=null) { var e=Find(path); CaptureVersion(path,e,true,deletionBatch); versionDue.Remove(e.Id); if(open.ContainsKey(e.Id))orphans[e.Id]=e; entries.Remove(path); }
     public void Delete(string path,bool recursive=false)
     {
-        lock(gate) { Check(); path=VaultPath.Normalize(path); if(path=="")throw new IOException("Cannot delete root."); var e=Find(path); var children=entries.Keys.Where(p=>p.StartsWith(path+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); if(e.Directory && children.Length>0 && !recursive)throw new IOException("Directory is not empty."); foreach(var child in children)Remove(child); Remove(path); }
+        lock(gate) { Check(); path=VaultPath.Normalize(path); if(path=="")throw new IOException("Cannot delete root."); var e=Find(path); var children=entries.Keys.Where(p=>p.StartsWith(path+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); if(e.Directory && children.Length>0 && !recursive)throw new IOException("Directory is not empty."); var deletionBatch=Guid.NewGuid().ToString("N"); foreach(var child in children)Remove(child,deletionBatch); Remove(path,deletionBatch); }
     }
     public void Rename(string oldPath,string newPath,bool replace=false)
     {
