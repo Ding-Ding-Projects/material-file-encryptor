@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import os from 'node:os';
-import {makeLaunch,makeBaselinePlan,makeInterfacePlan,validateCaptureReview,finalVerdict} from '../scripts/local-headless-desktop-check.mjs';
+import {makeLaunch,makeBaselinePlan,makeInterfacePlan,validateCaptureReview,finalVerdict,canRetireFixtureCredential} from '../scripts/local-headless-desktop-check.mjs';
 test('local launch binds exact executable, isolated profile and loopback debugging to one run',()=>{
  const root=path.join(os.tmpdir(),'owned-run');const executable=path.join(root,'package','MaterialFileEncryptor.exe');
  const launch=makeLaunch({executable,runRoot:root,port:9333});
@@ -51,4 +51,12 @@ test('passing receipt requires runtime, real keyboard, pixels, cleanup, startup 
  const receipt={sourceCommit:'a'.repeat(40),executableSha256:'b'.repeat(64),resourceHashes:{asar:'c'.repeat(64),nativeHost:'d'.repeat(64)},launched:true,runtime:{mountedFilesystemVerified:true,rendererAssertionsVerified:true,startupRegistration:{restored:true,verificationOnly:true,enabledReadback:true,disabledReadback:false}},keyboard:{verified:true},captureReview:{verified:true},cleanup:{client_ok:true,recordedProcessesAbsent:true,desktopClosed:true},fixtureCleanup:{ownedCredentialForgotten:true}};
  assert.equal(finalVerdict(receipt).passed,true);for(const key of ['runtime','keyboard','captureReview','cleanup','fixtureCleanup']) {const value=structuredClone(receipt);delete value[key];assert.equal(finalVerdict(value).passed,false);}
  assert.equal(finalVerdict({...receipt,failure:'runtime failure'}).passed,false);assert.equal(finalVerdict({...receipt,sourceCommit:undefined}).passed,false);
+});
+
+test('owned credential retirement follows proven process absence even after failed workflow',()=>{
+ const fixture={root:'/owned/fixture'};const absent={client_ok:true,recordedProcessesAbsent:true};
+ assert.equal(canRetireFixtureCredential(fixture,absent),true);
+ for(const cleanup of [{client_ok:true},{client_ok:true,recordedProcessesAbsent:false},{client_ok:false,recordedProcessesAbsent:true},undefined])assert.equal(canRetireFixtureCredential(fixture,cleanup),false);
+ assert.equal(canRetireFixtureCredential(undefined,absent),false);
+ const failed={failure:'workflow failed',fixtureCleanup:{ownedCredentialForgotten:true},cleanup:absent};assert.equal(finalVerdict(failed).passed,false);assert.ok(finalVerdict(failed).pending.includes('Resolve recorded runtime failure'));
 });

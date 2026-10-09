@@ -43,6 +43,7 @@ export function validateCaptureReview(review,inventory,binding) {
  const reviewed=new Map(review.captures.map(item=>[item.path,item]));if(reviewed.size!==inventory.length)return false;
  return inventory.every(item=>{const value=reviewed.get(item.path);return value?.sha256===item.sha256&&value.inspected===true&&value.privacyPassed===true;});
 }
+export function canRetireFixtureCredential(fixture,cleanup) {return Boolean(fixture&&cleanup?.client_ok===true&&cleanup?.recordedProcessesAbsent===true);}
 export function finalVerdict(receipt) {
  const pending=[];
  if(!/^[a-f0-9]{40}$/.test(receipt.sourceCommit||'')||!/^[a-f0-9]{64}$/.test(receipt.executableSha256||'')||!/^[a-f0-9]{64}$/.test(receipt.resourceHashes?.asar||'')||!/^[a-f0-9]{64}$/.test(receipt.resourceHashes?.nativeHost||''))pending.push('Exact packaged source and resource hash binding');
@@ -112,7 +113,7 @@ export async function runLocalHeadlessCheck(env=process.env) {
   receipt.cdp=await command(process.execPath,[cdp,'run'],plan);
   if(env.MFE_HEADLESS_INTERACTIONS==='1'||fixture) {receipt.baselineReview=await requirePixelReview(runRoot,path.join(launch.outputRoot,'native-baseline.png'));if(fixture){receipt.keyboard=await verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,launch,cdp});runtime=await checkMountedRuntime({fixture,launch,receipt:statePath,executePlan:plan=>command(process.execPath,[cdp,'run'],plan),prepareExit:()=>command(python,[lowlevel,'prepare-exit',statePath])});receipt.runtime=runtime;}else receipt.interfaceWorkflow=await command(process.execPath,[cdp,'run'],makeInterfacePlan(launch,statePath));receipt.rendererAssertionsVerified=true;}
  } catch(error) {failure=String(error.message).slice(0,200);}
- finally {try {await fs.access(statePath);cleanup=runtime?.quitRequested?await command(python,[lowlevel,'confirm-exit',statePath]):await command(python,[lowlevel,'cleanup','--state',statePath,'--allow-saved-pid-kill','--timeout','20']);if(fixture&&runtime?.quitRequested&&cleanup.client_ok)receipt.fixtureCleanup=await forgetRuntimeFixture(fixture);}catch(error){cleanup={ok:false,reason:String(error.message).slice(0,200)};}
+ finally {try {await fs.access(statePath);cleanup=runtime?.quitRequested?await command(python,[lowlevel,'confirm-exit',statePath]):await command(python,[lowlevel,'cleanup','--state',statePath,'--allow-saved-pid-kill','--timeout','20']);if(canRetireFixtureCredential(fixture,cleanup))receipt.fixtureCleanup=await forgetRuntimeFixture(fixture);}catch(error){cleanup={ok:false,reason:String(error.message).slice(0,200)};}
   Object.assign(receipt,{finishedAt:new Date().toISOString(),failure,cleanup,profileRetained:true});
   if(!failure&&runtime&&cleanup?.client_ok){try{receipt.captureReview=await reviewAllCaptures(receipt,runRoot,launch.outputRoot);}catch(error){receipt.reviewPending=String(error.message).slice(0,200);}}
   Object.assign(receipt,finalVerdict(receipt));receipt.pixelsInspected=receipt.captureReview?.verified===true;receipt.interactionsVerified=runtime?.rendererAssertionsVerified===true;
