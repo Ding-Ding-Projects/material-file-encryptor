@@ -18,9 +18,9 @@ public sealed partial class VaultEngine
         lock(gate) { Check(); return known.Select(id=>"commits/"+id+".mfe").Concat(known.SelectMany(id=>Parts(ReadMetadata<Commit>(ObjectPath(cache,"commits",id),"commit",id))).Distinct().Select(id=>"parts/"+id+".mfe")).Prepend("vault.json").ToArray(); }
     }
     private void MarkDue(Entry e) => versionDue[e.Id]=DateTimeOffset.UtcNow.AddSeconds(30);
-    private void CaptureVersion(string path,Entry entry,bool deleted)
+    private void CaptureVersion(string path,Entry entry,bool deleted,string? deletionBatch=null)
     {
-        pendingVersions.Add(new StoredVersion { Path=path,Value=Clone(entry),Deleted=deleted });
+        pendingVersions.Add(new StoredVersion { Path=path,Value=Clone(entry),Deleted=deleted,DeletionBatch=deleted?deletionBatch??Guid.NewGuid().ToString("N"):"" });
     }
     private List<StoredVersion> AllVersions()
     {
@@ -69,7 +69,9 @@ public sealed partial class VaultEngine
     }
     public Task RestoreDeletedAsync(IReadOnlyList<string> ids,CancellationToken cancellationToken=default)
     {
-        lock(gate){Check();var all=AllVersions();var selected=all.Where(v=>v.Deleted&&!hiddenBin.Contains(v.Id)&&(ids.Contains(v.Id)||all.Any(root=>ids.Contains(root.Id)&&root.Deleted&&root.Value.Directory&&v.Path.StartsWith(root.Path+"/",StringComparison.OrdinalIgnoreCase)))).OrderBy(v=>v.Path.Count(c=>c=='/')).ToArray();var remapped=new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);foreach(var v in selected){cancellationToken.ThrowIfCancellationRequested();var originalPath=v.Path;var copy=new StoredVersion {Id=v.Id,Path=v.Path,Value=v.Value,Timestamp=v.Timestamp,Deleted=v.Deleted};var parentMapping=remapped.Where(p=>originalPath.StartsWith(p.Key+"/",StringComparison.OrdinalIgnoreCase)).OrderByDescending(p=>p.Key.Length).FirstOrDefault();if(parentMapping.Key!=null)copy.Path=parentMapping.Value+originalPath[parentMapping.Key.Length..];var restoredPath=Restore(copy);if(v.Value.Directory)remapped[originalPath]=restoredPath;hiddenBin.Add(v.Id);pendingBinHidden.Add(v.Id);}FlushLocal();Publish(cancellationToken);SaveJournal();return Task.CompletedTask;}
+        lock(gate){Check();var all=AllVersions();var selected=all.Where(v=>v.Deleted&&!hiddenBin.Contains(v.Id)&&(ids.Contains(v.Id)||all.Any(root=>ids.Contains(root.Id)&&root.Deleted&&root.Value.Directory&&root.DeletionBatch!=""&&v.DeletionBatch==root.DeletionBatch&&v.Path.StartsWith(root.Path+"/",StringComparison.OrdinalIgnoreCase)))).OrderBy(v=>v.Path.Count(c=>c=='/')).ToArray();foreach(var selectedVersion in selected)foreach(var record in selectedVersion.Value.Records){cancellationToken.ThrowIfCancellationRequested();var content=ReadChunk(selectedVersion.Value,record.Key);CryptographicOperations.ZeroMemory(content);}
+            var oldEntries=CloneEntries(entries);var oldVersions=pendingVersions.ToList();var oldHidden=new HashSet<string>(hiddenBin);var oldPendingHidden=new HashSet<string>(pendingBinHidden);var oldDue=new Dictionary<string,DateTimeOffset>(versionDue);
+            try{var remapped=new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);foreach(var v in selected){cancellationToken.ThrowIfCancellationRequested();var originalPath=v.Path;var copy=new StoredVersion {Id=v.Id,Path=v.Path,Value=v.Value,Timestamp=v.Timestamp,Deleted=v.Deleted};var parentMapping=remapped.Where(p=>originalPath.StartsWith(p.Key+"/",StringComparison.OrdinalIgnoreCase)).OrderByDescending(p=>p.Key.Length).FirstOrDefault();if(parentMapping.Key!=null)copy.Path=parentMapping.Value+originalPath[parentMapping.Key.Length..];var restoredPath=Restore(copy);if(v.Value.Directory)remapped[originalPath]=restoredPath;hiddenBin.Add(v.Id);pendingBinHidden.Add(v.Id);}}catch{entries=oldEntries;pendingVersions=oldVersions;hiddenBin=oldHidden;pendingBinHidden=oldPendingHidden;versionDue=oldDue;throw;}FlushLocal();Publish(cancellationToken);SaveJournal();return Task.CompletedTask;}
     }
     public Task EmptyRecycleBinAsync(CancellationToken cancellationToken=default)
     {
@@ -79,7 +81,7 @@ public sealed partial class VaultEngine
     {
         lock(gate)
         {
-            Check();if(IsWithin(Path.GetFullPath(destination.StorageRoot),source)||IsWithin(source,Path.GetFullPath(destination.StorageRoot)))throw new ArgumentException("Upgrade destination must be separate from original storage.");
+            Check();var destinationRoots=new[]{Path.GetFullPath(destination.StorageRoot),Path.GetFullPath(destination.CacheRoot)};foreach(var root in destinationRoots)RejectReparseAncestors(root);foreach(var original in new[]{source,cache})foreach(var candidate in destinationRoots)if(IsWithin(candidate,original)||IsWithin(original,candidate))throw new ArgumentException("Upgrade storage and cache must be separate from both original folders.");
             var target=Create(destination,credentials);
             try
             {
@@ -90,7 +92,7 @@ public sealed partial class VaultEngine
                     return converted;
                 }
                 foreach(var pair in entries)target.entries[pair.Key]=ConvertEntry(pair.Value);
-                foreach(var version in AllVersions()){var copy=new StoredVersion {Id=version.Id,Path=version.Path,Value=ConvertEntry(version.Value),Timestamp=version.Timestamp,Deleted=version.Deleted};target.pendingVersions.Add(copy);}
+                foreach(var version in AllVersions()){var copy=new StoredVersion {Id=version.Id,Path=version.Path,Value=ConvertEntry(version.Value),Timestamp=version.Timestamp,Deleted=version.Deleted,DeletionBatch=version.DeletionBatch};target.pendingVersions.Add(copy);}
                 target.hiddenBin.UnionWith(hiddenBin);target.pendingBinHidden.UnionWith(hiddenBin);target.FlushLocal();target.Publish(cancellationToken);
                 if(target.pending.Count!=0)throw new IOException("Upgrade destination could not be published.");
                 foreach(var id in target.known){var commit=target.ReadMetadata<Commit>(target.ObjectPath(target.source,"commits",id),"commit",id);target.VerifyComplete(commit);foreach(var part in target.Parts(commit))target.VerifyPart(target.ObjectPath(target.source,"parts",part),part);}
