@@ -1,64 +1,8 @@
-name: Release an already verified Windows installer
+name: Retired duplicate publisher
 on:
   workflow_dispatch:
-    inputs:
-      source_run_id:
-        description: Successful main Windows verification run ID
-        required: true
-        type: string
-      dry_run:
-        description: Validate and produce a release plan without publishing
-        required: true
-        default: true
-        type: boolean
-permissions: {}
-concurrency:
-  group: material-file-encryptor-v0.1.0-release
-  cancel-in-progress: false
 jobs:
-  release:
-    if: github.ref == 'refs/heads/main'
+  explain:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    permissions:
-      actions: read
-      contents: write
-    env:
-      GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
-      SOURCE_RUN_ID: ${{ inputs.source_run_id }}
-      RELEASE_DRY_RUN: ${{ inputs.dry_run }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          persist-credentials: false
-      - name: Verify the available Python runtime
-        run: python3 -c 'import sys; print("Python " + sys.version.split()[0]); sys.exit(0 if sys.version_info >= (3, 11) else "Python 3.11 or newer is required.")'
-      - name: Check source run and refuse existing release or tag
-        run: python3 .github/scripts/release-verified-windows.py preflight
-      - name: Download the exact installer artifact from that run
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: windows-installer-and-evidence
-          path: release-input/combined
-          run-id: ${{ inputs.source_run_id }}
-          github-token: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
-      - name: Download the installed-application evidence from that run
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: windows-verification-evidence
-          path: release-input/evidence
-          run-id: ${{ inputs.source_run_id }}
-          github-token: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
-      - name: Verify exact bytes and prepare or publish the prerelease
-        run: python3 .github/scripts/release-verified-windows.py release
-      - name: Preserve the concrete release plan and verification receipt
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: verified-windows-release-plan
-          path: |
-            release-output/release-plan.json
-            release-output/verification-receipt.json
-            release-output/release-notes.md
-          if-no-files-found: ignore
-          retention-days: 14
+      - run: echo 'Preview publication runs once in windows.yml. This retired route never publishes.'

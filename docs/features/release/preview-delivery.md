@@ -1,0 +1,24 @@
+# Preview delivery
+
+Every push and manual Windows workflow run builds through `build.bat /s`, then packages through `build-installer.bat /s`. These production commands run no tests or lint. The genuine unsigned Squirrel.Windows output contains Setup.exe, RELEASES, one full package, and any generated delta packages.
+
+The same job publishes one non-draft prerelease named `v0.1.0-preview.<run_number>.<run_attempt>`. It checks package names, RELEASES SHA-1 and byte counts, unsigned Setup status, and the tracked dim sum image before publication. Publication uses the GitHub CLI, refuses an existing tag or release, binds the tag to the source commit, and downloads every attached asset to compare SHA-256. An upload or verification failure leaves a failed job and preserves safe evidence; existing releases are never overwritten.
+
+`release-output/build-provenance.json` records source, package version, run identity, UTC start/completion times, asset hashes and sizes. Runtime validation is explicitly pending an independent local receipt. Production success is not a claim about tests, GUI behavior, installer execution, driver mounting, or updater behavior. The retired manual promotion workflow never publishes.
+
+## Independent local verification
+
+After building, run `powershell -NoProfile -File scripts/verify-local.ps1` for native, mounted-filesystem, unit and packaged desktop checks. Driver installation is opt-in with `-InstallDriver` and requires native administrator consent.
+
+Installer verification is separate. On the required hidden desktop, with an exact clean commit and fresh current-user destination, invoke:
+
+```powershell
+powershell -NoProfile -File scripts/windows-installer-check.ps1 -Mode Snapshot -Local -ExpectedCommit <40-character-source-commit>
+powershell -NoProfile -File scripts/windows-installer-check.ps1 -Local -ExpectedCommit <40-character-source-commit>
+```
+
+The verifier does not change LOCALAPPDATA or pretend to run in CI. It requires the matching packaged desktop receipt, compares selected package/installed bytes, refuses preexisting install roots, application processes and registration, and inspects both current-user registry views. It waits up to 30 seconds for Squirrel registration. Safe diagnostics identify the view, key and matching fields without copying unrelated registration data. Only the exact hash-verified updater can uninstall the owned fresh installation after graceful application cleanup. Existing credential data remains independent. The actual install and UI drive must occur through the supported hidden-desktop route.
+
+## Dependency and scope notes
+
+Bootstrap supplies pinned Node, .NET, WinFsp and, when absent, a verified portable GitHub CLI. The CLI is used only for release operations. No signing credential or paid certificate is required. Git transport runtime dependencies are owned by the transport implementation and must be bundled there before their behavior can be claimed.
