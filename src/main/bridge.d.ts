@@ -1,4 +1,4 @@
-export interface VaultVersionInfo { id: string; entryId: string; path: string; timestampUtc: string; length: number; isDirectory: boolean; deleted: boolean; isAvailable: boolean }
+export interface VaultVersionInfo { descendantIds?: string[]; id: string; entryId: string; path: string; timestampUtc: string; length: number; isDirectory: boolean; deleted: boolean; isAvailable: boolean }
 export interface DriveFile { id: string; path: string; size: number; modified: string; partCount: number; partSizeBytes: number; offline: boolean }
 export interface DriveState {
   storageFormat?: 1 | 2;

@@ -48,3 +48,11 @@ test('copy upgrade uses create-level validation and rejects omitted credentials 
  assert.throws(()=>validateRequest('upgradeVault',{...options,password:undefined}));
  assert.throws(()=>validateRequest('upgradeVault',{...options,overwrite:true}));
 });
+
+import {deletedDescendantCandidates} from '../src/renderer/recycle-selection.js';
+test('folder restoration offers only identity-linked descendants and preserves explicit original selections',()=>{
+ const rows=[{id:'folder',path:'folder',isDirectory:true,descendantIds:['child','older','unknown']},{id:'child',path:'renamed.txt'},{id:'older',path:'folder/older.txt'},{id:'unrelated',path:'folder/path-is-not-proof.txt'}];
+ assert.deepEqual(deletedDescendantCandidates(rows,['folder']).map(row=>row.id),['child','older']);
+ assert.deepEqual(deletedDescendantCandidates(rows,['folder','child']).map(row=>row.id),['older']);
+ assert.deepEqual(deletedDescendantCandidates(rows,['unrelated']),[]);
+});
