@@ -2,13 +2,25 @@
 
 A Windows Explorer drive with encrypted fixed-size content blobs, recoverable history, and a Recycle Bin. Choose a synchronized folder or a private GitHub repository for transfer. Keep selected files available offline in an encrypted local cache.
 
-**Development status:** the first-preview integration is undergoing final local runtime verification. The repaired storage engine passed 34 core checks, eight controller groups and 39 actual mounted-drive checks. The integrated candidate passed 35 JavaScript checks (one platform-specific skip), ten live private transport checks and full 739-entry Squirrel package integrity verification. Installed application execution, independent release download verification and final delivery remain pending. [Exact source revisions and evidence boundaries](docs/features/release/preview-verification.md). Historical captures below belong to their stated earlier commits and do not prove the new History or Recycle Bin surfaces.
+**Development status:** packaged source `1e16dea8` passed 70 actual Windows GUI checks with all 73 captures inspected, including create/unlock dialogs, drive-letter selection, mounted-byte persistence, History and Recycle Bin recovery. The same source passed 39 JavaScript checks (one platform-specific skip), 34 core checks, eight controller groups and full 739-entry Squirrel package integrity verification. Earlier source-bound evidence includes 39 actual mounted-drive checks and ten live private transport checks. A test-only transport fixture repair passed 42 checks and awaits integration. Setup, 573-entry installed-payload comparison and registration checks passed; installed application execution is still running. Uninstall, release publication, independent release download verification and final delivery remain pending. [Exact source revisions and evidence boundaries](docs/features/release/preview-verification.md) · [Sanitized verification summary](docs/images/captures/preview/verification-summary.json). Historical captures below retain their earlier source boundaries.
 
 [Project goal](GOAL.md) · [Interface design](DESIGN.md) · [Source](https://github.com/Ding-Ding-Projects/material-file-encryptor) · [Documentation site](https://ding-ding-projects.github.io/material-file-encryptor/) · [Windows verification](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/workflows/windows.yml)
 
 ## History and recovery
 
 Format 2 keeps separate ciphertext-addressed chunks and encrypted snapshot metadata in real Git history. Versions are saved after 30 seconds without writes to a file, or with **Save version now**. Retention defaults to forever; the restore-list period does not erase history. Deleted files remain recoverable from the Recycle Bin, and emptying it preserves historical recovery without promising reclaimed space. Existing vaults require an explicit verified copy upgrade. [Storage and recovery guide](docs/features/storage/history-and-recycle-bin.md) · [Transport details](docs/features/storage/git-transport.md).
+
+## Verified preview captures
+
+These four original captures come from packaged source `1e16dea8edb66ea5e6cf31009b0dbcc953f18d74`, at 1180 × 752 and 150% scale on 2026-10-09 UTC. The actual drive workflow passed 70 recorded checks and all 73 captures were inspected. Create/unlock controls, mounted bytes, history recovery, explicit descendants, offline pinning and startup restoration were exercised. Path-bearing captures remain private. Installation and release download checks are reported separately. [Capture inventory and hashes](docs/images/captures/preview/inventory.json).
+
+![Actual packaged History view with a retained synthetic file version and restore action.](docs/images/captures/preview/history-preview.png)
+
+![Actual packaged Recycle Bin with a recoverable synthetic file and an unbroken selection heading.](docs/images/captures/preview/recycle-preview.png)
+
+![Actual packaged descendant chooser keeps independently deleted children unchecked.](docs/images/captures/preview/descendant-preview.png)
+
+![Actual packaged dark settings after selecting the appearance control.](docs/images/captures/preview/dark-settings-preview.png)
 
 ## How it works
 

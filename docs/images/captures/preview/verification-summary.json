@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "1e16dea8edb66ea5e6cf31009b0dbcc953f18d74",
+  "packagedRuntime": {
+    "passed": true,
+    "checksPassed": 70,
+    "capturesReviewed": 73,
+    "publicCaptures": 4,
+    "captureProvenanceVerified": true,
+    "completedAt": "2026-10-09T18:06:32.373Z",
+    "reviewedAt": "2026-10-09T18:06:49.322Z",
+    "timeZone": "UTC",
+    "viewport": {
+      "width": 1180,
+      "height": 752,
+      "scale": 1.5
+    },
+    "executableSha256": "080cff7a677fb8fcf5b1f8356c26d555231a0028e6a66af6ca461239c2768aec",
+    "asarSha256": "7ad75d394dd6711947dbc63e9320913df37b50e55aac3c284bf6098efbadbfdb",
+    "nativeHostSha256": "857473992e4c0336fec4a7b11edfd9145d77248e08fdad58e01e0f482c83052b",
+    "ownedProcessesAbsent": true,
+    "hiddenDesktopClosed": true,
+    "startupRegistrationRestored": true,
+    "nativeHostDllSha256": "53452f7eeb66b9da3c7d5732c265370705a2433ff4d6765d4868a1b4903c01df",
+    "nativeCoreDllSha256": "27cc7f1dcfea14f696752b717d0a59e44ecdc322625fd5b4022aeedc6d97ef40"
+  },
+  "sourceTests": {
+    "total": 40,
+    "passed": 39,
+    "failed": 0,
+    "skipped": 1,
+    "corePassed": 34,
+    "controllerGroupsPassed": 8
+  },
+  "packageIntegrity": {
+    "passed": true,
+    "entriesTested": 739,
+    "packageSha256": "2253e3f224b772731cd35b5e9e68b2b5946b5735cdbce91241897f9aaa36c17f",
+    "readerVersion": "26.04"
+  },
+  "installedLifecycle": {
+    "setupPassed": true,
+    "payloadComparisonEntries": 573,
+    "registrationPassed": true,
+    "runtimeStatus": "running",
+    "uninstallStatus": "pending"
+  },
+  "transportRepair": {
+    "sourceCommit": "d0c5e036b0762e41d6ba523bf0d2424e24e83024",
+    "checksPassed": 42,
+    "integrationStatus": "pending",
+    "scope": "test fixture only"
+  },
+  "releaseStatus": "pending",
+  "independentDownloadVerificationStatus": "pending",
+  "limitations": [
+    "Four original reviewed captures are public; path-bearing captures and raw receipts remain private.",
+    "Transport-setup and copy-upgrade visual states remain unverified.",
+    "Continuous console monitoring was not performed.",
+    "Setup and payload comparison do not establish complete installed or uninstall behavior."
+  ]
+}
