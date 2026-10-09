@@ -65,6 +65,7 @@ function toast(source, values = {}) {
  snackbarTimer = setTimeout(() => { $('snackbar').hidden = true; }, 5500);
 }
 function operation(label) {
+ label = ({ saveVersion:'Saving a version…', restoreVersion:'Restoring a version…', restoreDeleted:'Restoring deleted entries…', emptyRecycleBin:'Emptying the Recycle Bin…', upgrading:'Creating and verifying an upgraded copy…' })[label] || label;
  label = ({ importing:'Importing files…', resplit:'Re-splitting encrypted files…', syncing:'Syncing encrypted files…', sync:'Syncing encrypted files…', setPartSize:'Applying part size…', unmounting:'Locking drive…', mounting:'Mounting drive…', locking:'Locking drive…', keepOffline:'Keeping encrypted parts offline…', releaseOffline:'Removing offline copy…', creating:'Mounting drive…', unlocking:'Mounting drive…' })[label] || label;
  $('operation').hidden = !label;
  if (label) $('operation-text').textContent = `${t(label)}${preferences.patience >= 70 ? ` ${t('Please keep the app open.')}` : ''}`;
@@ -117,6 +118,10 @@ function render() {
  $('mount-button').hidden = state.locked || state.mounted;
  $('driver-error').textContent = state.driver?.error || 'Install WinFsp on Windows to mount this drive. Encrypted storage can still be configured.';
  $('storage-path').textContent = state.storageDir || ''; $('storage-path').title = state.storageDir || '';
+ $('vault-storage-status').hidden = state.locked;
+ const transfer = t(state.transport?.mode === 'privateGit' ? 'Private repository' : 'Synchronized folder');
+ const pending = Boolean(state.transport?.pendingSynchronization || state.sync?.pendingCommits || state.history?.pendingVersionCount);
+ $('vault-storage-status').textContent = `${transfer} · ${t('Versions')}: ${state.history?.versionCount ?? 0} · ${t('Pending versions')}: ${state.history?.pendingVersionCount ?? 0} · ${t(pending ? 'Synchronization pending' : state.transport?.available === false ? 'Source connection unavailable' : 'No pending synchronization')}`;
  $('cache-path').textContent = state.cacheDir || ''; $('cache-path').title = state.cacheDir || '';
  const letter = state.driveLetter?.replace(/[:\\]+$/,'');
  $('mounted-path').textContent = state.mounted && letter ? `${letter}:\\` : t('Not mounted');

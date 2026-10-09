@@ -5,11 +5,11 @@ export interface DriveState {
   locked: boolean; mounted: boolean; driveLetter?: string; storageDir?: string; cacheDir: string;
   files: DriveFile[]; availableDriveLetters: string[]; partSizeBytes?: number; autoUnlock?: boolean;
   history?: { versionCount: number; recycledCount: number; pendingVersionCount: number; retentionDays: number | null; gitAvailable: boolean };
-  transport?: { mode: 'folder' | 'privateGit'; remoteRepository?: string; available: boolean; lastError?: string };
+  transport?: { mode: 'folder' | 'privateGit'; remoteRepository?: string; available: boolean; pendingSynchronization?: boolean; lastError?: string };
   operation: string | null; driver: { available: boolean; checking?: boolean; error?: string | null };
   defaults: { cacheDir: string; driveLetter: string };
   preferences: { historyRetentionDays?: number | null; transport?: string; remoteRepository?: string; startup: boolean; autoUnlock: boolean; driveLetter: string; storageDir?: string; cacheDir?: string };
-  sync: { running: boolean; lastSync: string | null; error: string | null };
+  sync: { running: boolean; lastSync: string | null; error: string | null; pendingCommits?: number };
 }
 export type VaultOptions = { storageDir: string; cacheDir: string; driveLetter: string; transport?: 'folder' | 'privateGit'; remoteRepository?: string; autoUnlock?: boolean } & ({ password: string; keyFilePath?: never } | { password?: never; keyFilePath: string });
 export interface DriveBridge {
