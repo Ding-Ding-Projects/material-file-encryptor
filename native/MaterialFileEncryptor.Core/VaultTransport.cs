@@ -28,6 +28,7 @@ public sealed class PrivateGitHubVaultTransport : IVaultTransport
     private readonly string repository;
     private bool ready;
     private HashSet<string> available = new(StringComparer.Ordinal);
+    public bool IsCachedInitialization { get; private set; }
     public bool ContainsFile(string relativePath) => available.Contains(GitVaultHistory.ValidateRelativePath(relativePath));
     public PrivateGitHubVaultTransport(string sourceRoot, string historyRoot, string repository, IVaultProcessRunner? runner = null, long publicationBudgetBytes = 1024L * 1024 * 1024)
     {
@@ -47,7 +48,11 @@ public sealed class PrivateGitHubVaultTransport : IVaultTransport
     {
         if (ready) return;
         var cloned = false;
-        await ValidatePrivate(ct);
+        GitVaultHistory.CheckPath(Path.Combine(history.HistoryRoot, ".git"));
+        var receipt = Path.Combine(history.HistoryRoot, ".git", "mfe-private-validation");
+        GitVaultHistory.CheckPath(receipt);
+        IsCachedInitialization = File.Exists(receipt) && File.ReadAllText(receipt) == repository;
+        if (!IsCachedInitialization) await ValidatePrivate(ct);
         if (!Directory.Exists(Path.Combine(history.HistoryRoot, ".git")))
         {
             cloned = true;
@@ -62,6 +67,7 @@ public sealed class PrivateGitHubVaultTransport : IVaultTransport
         await history.InitializeAsync(ct);
         available = new((await history.TreeAsync("HEAD", ct)).Keys, StringComparer.Ordinal);
         if (cloned && await history.HeadAsync(ct) != null) await history.Git(ct, "read-tree", "HEAD");
+        if (!IsCachedInitialization) await File.WriteAllTextAsync(receipt, repository, ct);
         ready = true;
     }
     private async Task ValidateDestinations(CancellationToken ct)

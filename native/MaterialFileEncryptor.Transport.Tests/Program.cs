@@ -56,6 +56,11 @@ try
     Check(missing.Text.Split('\n').Any(x => x.StartsWith('?')), "partial clone actually retains missing payload objects");
     await transportA.EnsureFileAsync(part);
     Check(File.ReadAllBytes(Path.Combine(sourceA, part)).SequenceEqual(new byte[] { 0, 255, 32, 10 }), "on-demand blob hydration from real promisor server");
+    var offlineRunner = new OfflineRunner(mapped);
+    var offlineTransport = new PrivateGitHubVaultTransport(sourceA, transportA.History.HistoryRoot, "owner/repo", offlineRunner);
+    await offlineTransport.InitializeAsync();
+    Check(offlineTransport.IsCachedInitialization && offlineRunner.NetworkCalls == 0 && offlineTransport.ContainsFile(part), "verified existing history initializes offline without fetching payloads");
+    try { await offlineTransport.SyncAsync(); throw new Exception("offline sync succeeded"); } catch (IOException) { Check(offlineRunner.NetworkCalls == 1, "offline synchronization reports connection failure distinctly"); }
     var pathA = "commits/" + new string('d', 64) + ".mfe"; var pathB = "commits/" + new string('e', 64) + ".mfe";
     File.WriteAllBytes(Path.Combine(sourceA, pathA), [10]); File.WriteAllBytes(Path.Combine(sourceB, pathB), [11]);
     await transportA.History.RecordSnapshotAsync([pathA]); await transportB.History.RecordSnapshotAsync([pathB]);
@@ -108,6 +113,11 @@ try
     await new GitVaultHistory(batchSource, batchHistory, batchRunner).RecordSnapshotAsync([oversized]);
     var beforeOversized = batchRunner.PushCandidates.Count;
     try { await batchTransport.SyncAsync(); throw new Exception("accepted oversized existing commit"); } catch (NotSupportedException) { Check(batchRunner.PushCandidates.Count == beforeOversized && File.Exists(Path.Combine(batchSource, oversized)), "oversized existing commit fails before push and preserves recovery bytes"); }
+    var packagedBase = Path.Combine(root, "packaged", "resources", "native"); Directory.CreateDirectory(packagedBase);
+    var packagedGit = Path.Combine(root, "packaged", "resources", "tools", "git", "cmd", "git.exe"); Directory.CreateDirectory(Path.GetDirectoryName(packagedGit)!); File.WriteAllBytes(packagedGit, []);
+    var packagedGh = Path.Combine(root, "packaged", "resources", "tools", "gh", "bin", "gh.exe"); Directory.CreateDirectory(Path.GetDirectoryName(packagedGh)!); File.WriteAllBytes(packagedGh, []);
+    var packagedRunner = new VaultProcessRunner(baseDirectory: packagedBase);
+    Check(packagedRunner.ResolveExecutable("git") == packagedGit && packagedRunner.ResolveExecutable("gh") == packagedGh, "packaged native host resolves sibling bundled tools independently of PATH");
     try { await new VaultProcessRunner(Path.Combine(root, "missing-git.exe")).RunAsync("git", ["--version"], root); throw new Exception("accepted missing tool"); } catch (IOException) { Check(true, "missing configured executable produces explicit tool error"); }
     using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
     var watch = System.Diagnostics.Stopwatch.StartNew();
@@ -144,5 +154,15 @@ sealed class MappedRunner(string uri) : IVaultProcessRunner
         if (executable == "gh") return Task.FromResult(new VaultProcessResult(0, System.Text.Encoding.UTF8.GetBytes("{\"isPrivate\":true}"), ""));
         if (arguments.Count > 1 && arguments[0] == "remote" && arguments[1] == "get-url") return MappedUrl(arguments, workingDirectory, cancellationToken);
         return real.RunAsync(executable, arguments.Select(x => x == "https://github.com/owner/repo.git" ? uri : x).ToArray(), workingDirectory, cancellationToken);
+    }
+}
+
+sealed class OfflineRunner(IVaultProcessRunner local) : IVaultProcessRunner
+{
+    public int NetworkCalls { get; private set; }
+    public Task<VaultProcessResult> RunAsync(string executable, IReadOnlyList<string> arguments, string workingDirectory, CancellationToken cancellationToken = default)
+    {
+        if (executable == "gh" || arguments.Any(a => a is "clone" or "fetch" or "push")) { NetworkCalls++; return Task.FromResult(new VaultProcessResult(1, [], "offline")); }
+        return local.RunAsync(executable, arguments, workingDirectory, cancellationToken);
     }
 }

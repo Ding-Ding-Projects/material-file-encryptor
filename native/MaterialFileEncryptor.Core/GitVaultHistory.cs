@@ -14,23 +14,28 @@ public interface IVaultProcessRunner
 public sealed class VaultProcessRunner : IVaultProcessRunner
 {
     private readonly string? gitExecutable, ghExecutable;
-    public VaultProcessRunner(string? gitExecutable = null, string? ghExecutable = null) { this.gitExecutable = gitExecutable; this.ghExecutable = ghExecutable; }
-    private string Resolve(string name)
+    private readonly string baseDirectory;
+    public VaultProcessRunner(string? gitExecutable = null, string? ghExecutable = null, string? baseDirectory = null) { this.gitExecutable = gitExecutable; this.ghExecutable = ghExecutable; this.baseDirectory = Path.GetFullPath(baseDirectory ?? AppContext.BaseDirectory); }
+    public string ResolveExecutable(string name)
     {
         var explicitPath = name == "git" ? gitExecutable : name == "gh" ? ghExecutable : null;
         if (explicitPath != null) return File.Exists(explicitPath) ? Path.GetFullPath(explicitPath) : throw new IOException("Configured storage tool is unavailable.");
-        var bundled = Path.Combine(AppContext.BaseDirectory, "resources", "tools", name, name == "git" ? "cmd" : "bin", name + ".exe");
-        return File.Exists(bundled) ? bundled : name;
+        foreach (var toolsRoot in new[] { Path.GetFullPath(Path.Combine(baseDirectory, "..", "tools")), Path.Combine(baseDirectory, "resources", "tools"), Path.Combine(baseDirectory, "tools") })
+        {
+            var bundled = Path.Combine(toolsRoot, name, name == "git" ? "cmd" : "bin", name + ".exe");
+            if (File.Exists(bundled)) return bundled;
+        }
+        return name;
     }
     public async Task<VaultProcessResult> RunAsync(string executable, IReadOnlyList<string> arguments, string workingDirectory, CancellationToken cancellationToken = default)
     {
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(TimeSpan.FromSeconds(60));
         var ct = deadline.Token;
-        var start = new ProcessStartInfo(Resolve(executable)) { WorkingDirectory = workingDirectory, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
+        var start = new ProcessStartInfo(ResolveExecutable(executable)) { WorkingDirectory = workingDirectory, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
         if (executable == "git")
         {
-            foreach (var setting in new[] { "core.fsmonitor=false", "core.hooksPath=/dev/null", "core.attributesFile=" + ("/dev/null"), "credential.helper=", "credential.helper=!'" + Resolve("gh").Replace("\\", "/").Replace("'", "'\"'\"'") + "' auth git-credential", "commit.gpgsign=false" }) { start.ArgumentList.Add("-c"); start.ArgumentList.Add(setting); }
+            foreach (var setting in new[] { "core.fsmonitor=false", "core.hooksPath=/dev/null", "core.attributesFile=" + ("/dev/null"), "credential.helper=", "credential.helper=!'" + ResolveExecutable("gh").Replace("\\", "/").Replace("'", "'\"'\"'") + "' auth git-credential", "commit.gpgsign=false" }) { start.ArgumentList.Add("-c"); start.ArgumentList.Add(setting); }
         }
         foreach (var argument in arguments) start.ArgumentList.Add(argument);
         start.Environment["GIT_TERMINAL_PROMPT"] = "0";
