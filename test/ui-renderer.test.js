@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import { createServer } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { chromium } from 'playwright';
+import { openRendererBrowser } from '../scripts/test-renderer-browser.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../src/renderer');
 const executable = process.env.CHROMIUM_PATH || (process.platform === 'linux' ? '/usr/bin/chromium' : undefined);
 // This isolated bridge tests renderer behavior only. Real native-drive evidence is separate.
@@ -33,7 +33,8 @@ async function fixture(page) {
   };
  });
 }
-test('real renderer interactions, error states, keyboard dialogs and responsive layouts', {timeout:60000}, async t => {
+// Include bounded hidden-desktop launch and independent process-exit proof.
+test('real renderer interactions, error states, keyboard dialogs and responsive layouts', {timeout:120000}, async t => {
  if (executable) { try { await fs.access(executable); } catch { return t.skip('Set CHROMIUM_PATH to an installed Chromium executable.'); } }
  const server = createServer(async (request,response) => {
   const name = new URL(request.url,'http://localhost').pathname.slice(1) || 'index.html';
@@ -41,9 +42,10 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   try { response.setHeader('Content-Type',name.endsWith('.js') ? 'text/javascript' : name.endsWith('.css') ? 'text/css' : 'text/html'); response.end(await fs.readFile(path.join(root,name))); } catch { response.writeHead(404).end(); }
  });
  await new Promise(resolve => server.listen(0,'127.0.0.1',resolve));
- const browser = await chromium.launch({executablePath:executable,headless:true,args:['--no-sandbox']});
+ let browser;
  try {
-  const page = await browser.newPage({viewport:{width:1440,height:900}}); await fixture(page);
+  browser = await openRendererBrowser(`http://127.0.0.1:${server.address().port}/`);
+  const page = browser.page; await page.setViewportSize({width:1440,height:900}); await fixture(page);
   const errors = []; page.on('pageerror',error => {errors.push(error.message);console.error(error.message);});
   await page.goto(`http://127.0.0.1:${server.address().port}`); await page.waitForFunction(() => document.querySelector('#vault-badge').textContent !== 'Checking drive…');
   assert.equal(await page.locator('#vault-badge').textContent(),'Locked'); assert.equal(await page.locator('#file-list tr').count(),0);
@@ -70,6 +72,23 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   const create = await page.evaluate(() => window.calls.find(call => call.name === 'create').value); assert.equal(create.keyFilePath,'C:\\Keys\\generated.key');assert.equal(Object.hasOwn(create,'password'),false);assert.equal(create.partSizeBytes,10485760);
   await page.click('[data-view=history]');await page.waitForSelector('#history-list tr');
   assert.match(await page.locator('#history-list').textContent(),/notes.txt/);
+  for(const width of [1440,390]) {
+   await page.setViewportSize({width,height:900});
+   for(const language of ['en','yue','bilingual']) {
+    await page.click('[data-view=settings]');await page.selectOption('#language-setting',language);
+    for(const destination of ['history','recycle']) {
+     await page.click(`[data-view=${destination}]`);
+     const geometry=await page.locator(`#view-${destination} th:first-child`).evaluate(el=>{
+      const range=document.createRange();range.selectNodeContents(el);const rects=[...range.getClientRects()];
+      const style=getComputedStyle(el);return {lines:new Set(rects.map(rect=>rect.top)).size,width:el.getBoundingClientRect().width,textWidth:range.getBoundingClientRect().width,padding:parseFloat(style.paddingLeft)+parseFloat(style.paddingRight),whiteSpace:style.whiteSpace,overflowWrap:style.overflowWrap};
+     });
+     assert.equal(geometry.lines,1,`${destination} ${language} ${width} selection heading stays on one line`);
+     assert.ok(geometry.width>=geometry.textWidth+geometry.padding-1,`${destination} ${language} ${width} has room for heading and padding`);
+     assert.equal(geometry.whiteSpace,'nowrap');assert.equal(geometry.overflowWrap,'normal');
+    }
+   }
+  }
+  await page.setViewportSize({width:1440,height:900});await page.click('[data-view=settings]');await page.selectOption('#language-setting','en');await page.click('[data-view=history]');
   await page.click('#save-version');await page.waitForFunction(()=>window.calls.some(call=>call.name==='saveVersion'));
   await page.selectOption('#history-retention','30');await page.click('#history-retention-apply');await page.waitForFunction(()=>window.calls.some(call=>call.name==='setHistoryRetention'&&call.value===30));
   await page.click('#history-list button');await page.click('#confirm-action');await page.waitForFunction(()=>window.calls.some(call=>call.name==='restoreVersion'&&call.value==='version-1'));
@@ -123,5 +142,6 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   await page.keyboard.press('Escape');await page.setViewportSize({width:720,height:450});await page.evaluate(() => {document.documentElement.style.zoom='2';});assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),true,'200% zoom has no page overflow');
   await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.locator('.view:not([hidden])').evaluate(el => getComputedStyle(el).animationName),'none');
   assert.deepEqual(errors,[]);
- } finally { await browser.close(); await new Promise(resolve => server.close(resolve)); }
+ } catch(error) { console.error('Renderer assertion failed:',error.message); throw error;
+ } finally { try { await browser?.close(); } finally { await new Promise(resolve => server.close(resolve)); } }
 });
