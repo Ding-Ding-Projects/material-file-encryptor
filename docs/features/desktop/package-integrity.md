@@ -27,12 +27,16 @@ Run `scripts/test-squirrel-uninstall-residue.ps1` for valid and deliberately inv
 
 Preview notes link the verified public dim-sum catalog release image. The product release does not attach a copied catalog image. Publication rechecks package integrity before writing its release plan. Existing source-owned image files are retained until separately authorized migration.
 
-## Explicit preview publication
+## Automatic release publication
 
-Every push to `main` still builds and packages, but it does not publish a release. After independent local verdicts accept the final integrated `main` candidate, the release owner dispatches `windows.yml` exactly once with its full source SHA:
+Every authorized branch push and manual dispatch builds, packages and publishes one unique normal non-draft release. There is no pull-request trigger, main-only job restriction or dispatch-only publication condition. CI runs no tests, lint or runtime checks; an installer can therefore ship before local quality verification finishes. Notes describe runtime verification as pending.
+
+Manual dispatch may optionally constrain the checkout to an exact source SHA:
 
 ```powershell
-gh workflow run windows.yml --repo Ding-Ding-Projects/material-file-encryptor --ref main -f source_commit=<accepted-full-sha>
+gh workflow run windows.yml --repo Ding-Ding-Projects/material-file-encryptor --ref main -f source_commit=<expected-full-sha>
 ```
 
-The workflow checks the supplied SHA against its checkout and event SHA before building. A moved baseline fails with `PUBLICATION_SOURCE_CHANGED`; verify the new candidate before another dispatch. The main-only job condition, pinned hosted builder and unsigned Squirrel path remain in force. CI performs build and packaging without tests or lint. The existing publisher creates a unique tag and reads published assets back; it never overwrites a release. Documentation and evidence pushes therefore cannot accidentally publish another preview.
+Omit `source_commit` to publish the selected ref without an additional constraint. Checkout and event SHA must still agree. A mismatched supplied SHA fails with `PUBLICATION_SOURCE_CHANGED`.
+
+The pinned Windows runner invokes `build.bat /s` and `build-installer.bat /s`, bootstraps missing tools, and publishes the unsigned Squirrel setup, full package, RELEASES and build provenance. Delivery tags use `v1.<run_number>.<run_attempt>`, a monotonically increasing numeric sequence distinct from the recorded application/package version; existing tags and releases are never overwritten. Published assets are downloaded and hash-compared. Notes link the workflow run and record UTC first-job start, publication completion and duration. Safe outputs are retained even after a failed build or publication.

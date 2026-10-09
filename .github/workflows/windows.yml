@@ -1,35 +1,33 @@
-name: Windows preview delivery
+name: Windows release delivery
 on:
   workflow_dispatch:
     inputs:
       source_commit:
-        description: Exact main commit accepted by independent local verification
-        required: true
+        description: Optional exact checkout SHA constraint
+        required: false
         type: string
   push:
-    branches: [main]
+    branches: ['**']
 permissions:
   contents: write
+  actions: read
 concurrency:
-  group: windows-preview-${{ github.run_id }}
+  group: windows-release-${{ github.run_id }}
   cancel-in-progress: false
 jobs:
   windows:
-    if: github.ref == 'refs/heads/main'
     runs-on: windows-2022
     timeout-minutes: 45
     env:
       GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - name: Verify explicitly accepted publication source
-        if: github.event_name == 'workflow_dispatch'
+      - name: Verify publication source
         shell: powershell
         env:
           EXPECTED_SOURCE_COMMIT: ${{ inputs.source_commit }}
         run: |
-          $actual = (& git rev-parse HEAD).Trim()
-          if ($env:EXPECTED_SOURCE_COMMIT -notmatch '^[0-9a-f]{40}$' -or $actual -ne $env:EXPECTED_SOURCE_COMMIT -or $env:GITHUB_SHA -ne $actual) { throw 'PUBLICATION_SOURCE_CHANGED' }
+          ./scripts/check-publication-source.ps1 -ExpectedSourceCommit $env:EXPECTED_SOURCE_COMMIT
       - name: Record build start
         shell: powershell
         run: '"BUILD_STARTED_AT=$([DateTime]::UtcNow.ToString(''o''))" | Out-File $env:GITHUB_ENV -Append -Encoding utf8'
@@ -39,8 +37,7 @@ jobs:
       - name: Package genuine unsigned Squirrel installer
         shell: cmd
         run: build-installer.bat /s
-      - name: Prepare and publish unique preview
-        if: github.event_name == 'workflow_dispatch'
+      - name: Prepare and publish unique release
         shell: powershell
         run: |
           . ./scripts/bootstrap.ps1

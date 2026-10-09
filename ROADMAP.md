@@ -42,3 +42,5 @@
 - [ ] Fresh sign-in and broad Windows version certification (outside this preview).
 - [ ] Real cloud-provider certification (outside this preview).
 - [ ] Permanent history purge (outside this preview; emptying the bin retains historical recovery).
+
+- [ ] Confirm the restored automatic per-push normal release publisher on a real workflow run, including downloadable installer assets and timing notes. Local workflow/source checks pass; live publication is pending.
