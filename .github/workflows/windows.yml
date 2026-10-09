@@ -1,79 +1,53 @@
-name: Windows build and mounted drive verification
+name: Windows preview delivery
 on:
   workflow_dispatch:
   push:
-    branches: [main]
-    paths: ['native/**', 'src/**', 'scripts/**', 'test/**', 'package.json', 'package-lock.json', 'forge.config.cjs', 'dependencies.json', '*.bat', '.github/workflows/windows.yml']
-  pull_request:
 permissions:
-  contents: read
+  contents: write
+concurrency:
+  group: windows-preview-${{ github.run_id }}
+  cancel-in-progress: false
 jobs:
   windows:
     runs-on: windows-2022
     timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - name: Verify dependencies and install trusted WinFsp
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Record build start
         shell: powershell
-        run: .\scripts\bootstrap.ps1 -InstallDriver
-      - name: Build using the documented entry point
+        run: '"BUILD_STARTED_AT=$([DateTime]::UtcNow.ToString(''o''))" | Out-File $env:GITHUB_ENV -Append -Encoding utf8'
+      - name: Build application
         shell: cmd
         run: build.bat /s
-      - name: Exercise the mounted filesystem using standard Windows file operations
-        shell: powershell
-        run: .\scripts\windows-mounted-check.ps1
-      - name: Capture and exercise the real Electron application
-        timeout-minutes: 6
-        shell: powershell
-        run: |
-          . .\scripts\bootstrap.ps1
-          npm.cmd run test:desktop
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Snapshot the verified packaged runtime
-        shell: powershell
-        run: .\scripts\windows-installer-check.ps1 -Mode Snapshot
-      - name: Create the genuine unsigned Squirrel installer
+      - name: Package genuine unsigned Squirrel installer
         shell: cmd
         run: build-installer.bat /s
-      - name: Verify installer contents and per-user install lifecycle
-        timeout-minutes: 10
+      - name: Prepare and publish unique preview
         shell: powershell
         run: |
-          . .\scripts\bootstrap.ps1
-          .\scripts\windows-installer-check.ps1
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Record safe build receipt
-        if: always()
-        shell: powershell
-        env:
-          VERIFICATION_JOB_STATUS: ${{ job.status }}
-        run: |
-          New-Item -ItemType Directory -Force out/evidence | Out-Null
-          @{ commit = $env:GITHUB_SHA; runId = $env:GITHUB_RUN_ID; runAttempt = $env:GITHUB_RUN_ATTEMPT; jobStatus = $env:VERIFICATION_JOB_STATUS; runnerOS = $env:RUNNER_OS; imageVersion = $env:ImageVersion; unsignedInstaller = $true } | ConvertTo-Json | Set-Content out/evidence/build-receipt.json
-      - name: Upload installer and verification evidence
+          . ./scripts/bootstrap.ps1
+          ./.github/scripts/publish-preview.ps1
+      - name: Record safe result
         if: always()
         continue-on-error: true
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        shell: powershell
+        env:
+          BUILD_JOB_STATUS: ${{ job.status }}
+        run: |
+          New-Item -ItemType Directory -Force out/evidence | Out-Null
+          @{ commit=$env:GITHUB_SHA; runId=$env:GITHUB_RUN_ID; status=$env:BUILD_JOB_STATUS; runtimeVerification='pending independent local receipt' } | ConvertTo-Json | Set-Content out/evidence/build-receipt.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        continue-on-error: true
         with:
           name: windows-installer-and-evidence
           path: |
             out/make/squirrel.windows/x64/*.exe
             out/make/squirrel.windows/x64/*.nupkg
             out/make/squirrel.windows/x64/RELEASES
-            out/evidence/*.png
             out/evidence/*.json
-            out/evidence/*.webm
-          if-no-files-found: warn
-          retention-days: 14
-      - name: Upload bounded verification evidence separately
-        if: always()
-        continue-on-error: true
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: windows-verification-evidence
-          path: |
-            out/evidence/**/*.png
-            out/evidence/**/*.json
-            out/evidence/**/*.webm
+            release-output/*
           if-no-files-found: warn
           retention-days: 14

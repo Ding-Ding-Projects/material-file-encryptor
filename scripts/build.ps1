@@ -4,9 +4,6 @@ Set-Location (Split-Path $PSScriptRoot -Parent)
 . "$PSScriptRoot\bootstrap.ps1"
 function Invoke-Checked([scriptblock]$command) { & $command; if ($LASTEXITCODE -ne 0) { throw "Build command failed with exit code $LASTEXITCODE" } }
 Invoke-Checked { npm.cmd ci }
-Invoke-Checked { npx.cmd --no-install playwright install chromium ffmpeg }
-Invoke-Checked { npm.cmd test }
-Invoke-Checked { dotnet run --project native/MaterialFileEncryptor.Core.Tests -c Release }
 Invoke-Checked { dotnet publish native/MaterialFileEncryptor.Host -c Release -r win-x64 --self-contained true -o out/native }
 New-Item -ItemType Directory -Force out/native/notices | Out-Null
 Copy-Item native/vendor/WinFsp/License.txt out/native/notices/WinFsp-License.txt

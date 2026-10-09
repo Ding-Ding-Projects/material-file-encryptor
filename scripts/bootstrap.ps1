@@ -1,4 +1,4 @@
-param([switch]$InstallDriver)
+﻿param([switch]$InstallDriver)
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue' # Avoid per-byte/per-file progress overhead in Windows PowerShell.
 $root = Split-Path $PSScriptRoot -Parent
@@ -62,3 +62,14 @@ $env:DOTNET_ROOT = $dotnet
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 $env:DOTNET_NOLOGO = '1'
 Write-Host "Verified Node $($manifest.node.version), .NET $($manifest.dotnet.version), WinFsp $($manifest.winfsp.version)."
+
+# Publishing tools use a pinned portable distribution without administrator rights.
+if (!(Get-Command gh.exe -ErrorAction SilentlyContinue)) {
+  $ghArchive = Join-Path $tools "gh-$($manifest.gh.version).zip"
+  Get-Verified $manifest.gh $ghArchive
+  $ghRoot = Join-Path $tools "gh-$($manifest.gh.version)"
+  if (!(Test-Path (Join-Path $ghRoot 'bin\gh.exe'))) { Expand-Archive $ghArchive $ghRoot -Force }
+  $env:PATH = "$(Join-Path $ghRoot 'bin');$env:PATH"
+}
+& gh.exe --version | Select-Object -First 1
+if ($LASTEXITCODE -ne 0) { throw 'GitHub CLI activation failed.' }

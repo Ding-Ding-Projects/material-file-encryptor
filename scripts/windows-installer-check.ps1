@@ -1,5 +1,5 @@
-param([ValidateSet('Snapshot', 'Verify')][string]$Mode = 'Verify')
-# Run only on the disposable Windows CI user. Squirrel owns its entire install root.
+﻿param([ValidateSet('Snapshot', 'Verify')][string]$Mode = 'Verify', [switch]$Local, [string]$ExpectedCommit)
+# Explicit local mode uses the current user's real destination with strict fresh-install preflight.
 # Setup --silent suppresses first-run launch; Update --uninstall is the real Squirrel
 # lifecycle operation (electron-winstaller / Squirrel.Windows StartupOption).
 $ErrorActionPreference = 'Stop'
@@ -11,7 +11,12 @@ New-Item -ItemType Directory -Force $evidence | Out-Null
 $snapshotFile = Join-Path $evidence 'tested-package-manifest.json'
 $receiptFile = Join-Path $evidence 'installer-check.json'
 $phase = 'preflight'
-$receipt = [ordered]@{ schemaVersion = 1; sourceCommit = $env:GITHUB_SHA; runId = $env:GITHUB_RUN_ID; runAttempt = $env:GITHUB_RUN_ATTEMPT; route = 'disposable-windows-ci-playwright-electron'; passed = $false; phase = $phase; unsignedInstaller = $true; updaterBehaviorVerified = $false; artifactHashes = @{}; payload = @{}; install = @{}; installedApplication = @{}; uninstall = @{}; failure = $null }
+$sourceCommit = if ($Local) { (& git rev-parse HEAD).Trim() } else { $env:GITHUB_SHA }
+$runId = if ($Local) { 'local-' + [Guid]::NewGuid().ToString('N') } else { $env:GITHUB_RUN_ID }
+$runAttempt = if ($Local) { '1' } else { $env:GITHUB_RUN_ATTEMPT }
+$fixtureRoot = Join-Path ([IO.Path]::GetTempPath()) ('mfe-installer-' + [Guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $fixtureRoot | Out-Null
+$receipt = [ordered]@{ schemaVersion = 1; sourceCommit = $sourceCommit; runId = $runId; runAttempt = $runAttempt; route = 'disposable-windows-ci-playwright-electron'; passed = $false; phase = $phase; unsignedInstaller = $true; updaterBehaviorVerified = $false; artifactHashes = @{}; payload = @{}; install = @{}; installedApplication = @{}; uninstall = @{}; failure = $null }
 $zip = $null
 $temporaryDriver = $null
 $ownedInstall = $false
@@ -37,7 +42,7 @@ function Wait-Check([scriptblock]$condition, [int]$seconds, [string]$code) {
     throw [InvalidOperationException]::new($code)
 }
 function Run-Bounded([string]$executable, [string[]]$arguments, [int]$seconds) {
-    $process = Start-Process -FilePath $executable -ArgumentList $arguments -PassThru
+    $process = Start-Process -FilePath $executable -ArgumentList $arguments -WindowStyle Hidden -PassThru
     $null = $process.Handle # Retain the handle so Windows PowerShell can read ExitCode after exit.
     # A timeout fails without terminating the installer, application, or a mounted drive.
     if (!$process.WaitForExit($seconds * 1000)) { throw [TimeoutException]::new('PROCESS_TIMEOUT') }
@@ -52,11 +57,29 @@ function Owned-StartupEntries {
     if (!$key) { return @() }
     return @($key.PSObject.Properties | Where-Object { $_.Value -is [string] -and $_.Value.IndexOf($installRoot + '\', [StringComparison]::OrdinalIgnoreCase) -ge 0 })
 }
-function Owned-UninstallEntries {
-    return @(Get-ChildItem 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall' -ErrorAction SilentlyContinue | ForEach-Object { Get-ItemProperty $_.PSPath } | Where-Object {
-        ($_.UninstallString -is [string] -and $_.UninstallString.IndexOf($installRoot + '\', [StringComparison]::OrdinalIgnoreCase) -ge 0) -or
-        ($_.InstallLocation -is [string] -and $_.InstallLocation.TrimEnd('\') -eq $installRoot)
-    })
+function Owned-UninstallEntries([switch]$Diagnostic) {
+    $rows = @()
+    foreach ($view in @([Microsoft.Win32.RegistryView]::Registry32, [Microsoft.Win32.RegistryView]::Registry64)) {
+        $hive = [Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::CurrentUser, $view)
+        try {
+            $parent = $hive.OpenSubKey('Software\Microsoft\Windows\CurrentVersion\Uninstall')
+            if (!$parent) { continue }
+            try {
+                foreach ($name in $parent.GetSubKeyNames()) {
+                    $key = $parent.OpenSubKey($name)
+                    if (!$key) { continue }
+                    try {
+                        $location = [string]$key.GetValue('InstallLocation', '')
+                        $command = [string]$key.GetValue('UninstallString', '')
+                        if (($Diagnostic -and $name -eq 'MaterialFileEncryptor') -or ($location.TrimEnd('\') -eq $installRoot) -or ($command.IndexOf($installRoot + '\', [StringComparison]::OrdinalIgnoreCase) -ge 0)) {
+                            $rows += @{ registryView=$view.ToString(); keyName=$name; installLocationMatches=($location.TrimEnd('\') -eq $installRoot); updaterCommandMatches=($command.IndexOf($installRoot + '\', [StringComparison]::OrdinalIgnoreCase) -ge 0); displayVersion=[string]$key.GetValue('DisplayVersion', '') }
+                        }
+                    } finally { $key.Dispose() }
+                }
+            } finally { $parent.Dispose() }
+        } finally { $hive.Dispose() }
+    }
+    return $rows
 }
 function Uninstall-Owned {
     Assert-Check ($ownedInstall -and $safeToUninstall) 'UNINSTALL_NOT_SAFE'
@@ -78,7 +101,13 @@ function Uninstall-Owned {
 }
 
 try {
-    Assert-Check ($env:OS -eq 'Windows_NT' -and $env:GITHUB_ACTIONS -eq 'true' -and $env:RUNNER_OS -eq 'Windows') 'DISPOSABLE_WINDOWS_CI_REQUIRED'
+    Assert-Check ($env:OS -eq 'Windows_NT') 'WINDOWS_REQUIRED'
+    Assert-Check ($Local -or ($env:GITHUB_ACTIONS -eq 'true' -and $env:RUNNER_OS -eq 'Windows')) 'EXPLICIT_LOCAL_OR_DISPOSABLE_CI_REQUIRED'
+    if ($Local) {
+        Assert-Check ($ExpectedCommit -match '^[0-9a-f]{40}$' -and $ExpectedCommit -eq $sourceCommit) 'LOCAL_SOURCE_COMMIT_REQUIRED'
+        Assert-Check (@(& git status --porcelain).Count -eq 0) 'LOCAL_SOURCE_NOT_CLEAN'
+        $receipt.route = 'explicit-current-user-local-hidden-desktop'
+    }
     $desktop = Get-Content -LiteralPath (Join-Path $evidence 'desktop-check.json') -Raw | ConvertFrom-Json
     Assert-Check ($desktop.passed -eq $true -and $desktop.packagedArtifact.launchedBuiltArtifact -eq $true -and $desktop.platform -eq 'win32') 'PACKAGED_DESKTOP_PASS_REQUIRED'
     $packageRoot = Join-Path $root 'out\material-file-encryptor-win32-x64'
@@ -88,14 +117,14 @@ try {
             if (Payload-Selected $relative) { [ordered]@{ entry = $relative; bytes = $_.Length; sha256 = File-Digest $_.FullName } }
         } | Sort-Object { $_.entry })
         Assert-Check ($files.Count -gt 5) 'PACKAGE_PAYLOAD_MISSING'
-        [ordered]@{ schemaVersion = 1; commit = $env:GITHUB_SHA; runId = $env:GITHUB_RUN_ID; runAttempt = $env:GITHUB_RUN_ATTEMPT; comparisonScope = @('application executable', 'ASAR', 'all native helper files and notices', 'all bundled driver files', 'dependency manifest'); packagedDesktopPassed = $true; desktopReceiptSha256 = File-Digest (Join-Path $evidence 'desktop-check.json'); files = $files } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $snapshotFile -Encoding UTF8
+        [ordered]@{ schemaVersion = 1; commit = $sourceCommit; runId = $runId; runAttempt = $runAttempt; comparisonScope = @('application executable', 'ASAR', 'all native helper files and notices', 'all bundled driver files', 'dependency manifest'); packagedDesktopPassed = $true; desktopReceiptSha256 = File-Digest (Join-Path $evidence 'desktop-check.json'); files = $files } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $snapshotFile -Encoding UTF8
         Write-Host "Snapshotted $($files.Count) tested package payload entries."
         exit 0
     }
 
     $phase = 'artifact-integrity'
     $manifest = Get-Content -LiteralPath $snapshotFile -Raw | ConvertFrom-Json
-    Assert-Check ($manifest.commit -eq $env:GITHUB_SHA -and $manifest.runId -eq $env:GITHUB_RUN_ID -and $manifest.runAttempt -eq $env:GITHUB_RUN_ATTEMPT) 'SNAPSHOT_RUN_MISMATCH'
+    Assert-Check ($manifest.commit -eq $sourceCommit -and ($Local -or ($manifest.runId -eq $runId -and $manifest.runAttempt -eq $runAttempt))) 'SNAPSHOT_RUN_MISMATCH'
     Assert-Check ($manifest.packagedDesktopPassed -eq $true -and $manifest.desktopReceiptSha256 -eq (File-Digest (Join-Path $evidence 'desktop-check.json'))) 'DESKTOP_RECEIPT_CHANGED'
     $artifacts = Join-Path $root 'out\make\squirrel.windows\x64'
     $setup = Join-Path $artifacts 'MaterialFileEncryptor-Setup.exe'
@@ -164,7 +193,7 @@ try {
     } finally { $exeReader.Dispose() }
     $driverEntry = $entries["resources/driver/winfsp-$($dependencies.winfsp.version).msi"]
     Assert-Check ((Stream-Digest $driverEntry) -eq $dependencies.winfsp.sha256) 'DRIVER_PIN_MISMATCH'
-    $temporaryDriver = Join-Path $env:RUNNER_TEMP ('mfe-driver-proof-' + [Guid]::NewGuid().ToString('N') + '.msi')
+    $temporaryDriver = Join-Path $fixtureRoot ('mfe-driver-proof-' + [Guid]::NewGuid().ToString('N') + '.msi')
     [IO.Compression.ZipFileExtensions]::ExtractToFile($driverEntry, $temporaryDriver, $false)
     $driverSignature = Get-AuthenticodeSignature -LiteralPath $temporaryDriver
     Assert-Check ($driverSignature.Status -eq 'Valid' -and $driverSignature.SignerCertificate.Subject -match [regex]::Escape($dependencies.winfsp.publisher)) 'DRIVER_SIGNATURE_NOT_TRUSTED'
@@ -176,7 +205,7 @@ try {
     $phase = 'install-preflight'
     $installRoot = Join-Path $env:LOCALAPPDATA 'MaterialFileEncryptor'
     Assert-Check (!(Test-Path -LiteralPath $installRoot)) 'PREEXISTING_INSTALL_ROOT_REFUSED'
-    Assert-Check ((Owned-UninstallEntries).Count -eq 0 -and (Owned-StartupEntries).Count -eq 0) 'PREEXISTING_REGISTRATION_REFUSED'
+    Assert-Check ((Owned-UninstallEntries -Diagnostic).Count -eq 0 -and (Owned-StartupEntries).Count -eq 0) 'PREEXISTING_REGISTRATION_REFUSED'
     Assert-Check (@(Get-Process -Name MaterialFileEncryptor -ErrorAction SilentlyContinue).Count -eq 0) 'PREEXISTING_APPLICATION_REFUSED'
     $receipt.install.freshPerUserRoot = $true
     $ownedInstall = $true
@@ -199,6 +228,9 @@ try {
     $receipt.install.installedExecutableSha256 = File-Digest (Join-Path $installedRoot 'MaterialFileEncryptor.exe')
     $receipt.install.installedExecutableSignature = (Get-AuthenticodeSignature -LiteralPath (Join-Path $installedRoot 'MaterialFileEncryptor.exe')).Status.ToString()
     Assert-Check ($receipt.install.installedExecutableSignature -eq 'NotSigned') 'EXPECTED_UNSIGNED_APPLICATION'
+    $phase = 'install-registration'
+    try { Wait-Check { (Owned-UninstallEntries).Count -gt 0 } 30 'INSTALL_REGISTRATION_MISSING' }
+    finally { $receipt.install.registryDiagnostics = @{ process64Bit=[Environment]::Is64BitProcess; os64Bit=[Environment]::Is64BitOperatingSystem; entries=@(Owned-UninstallEntries -Diagnostic) } }
     $receipt.install.uninstallRegistrationPresent = (Owned-UninstallEntries).Count -gt 0
     Assert-Check $receipt.install.uninstallRegistrationPresent 'INSTALL_REGISTRATION_MISSING'
     Wait-Check { (Owned-Processes).Count -eq 0 } 30 'SILENT_INSTALL_LEFT_RUNNING_APP'
@@ -239,6 +271,7 @@ try {
 } finally {
     if ($zip) { $zip.Dispose() }
     if ($temporaryDriver -and (Test-Path -LiteralPath $temporaryDriver)) { Remove-Item -LiteralPath $temporaryDriver }
+    if ((Test-Path -LiteralPath $fixtureRoot) -and @(Get-ChildItem -LiteralPath $fixtureRoot -Force).Count -eq 0) { Remove-Item -LiteralPath $fixtureRoot }
     if ($Mode -eq 'Verify') {
         $receipt.phase = $phase
         $receipt.installRetained = $ownedInstall -and !$receipt.uninstall.applicationDirectoriesRemoved
