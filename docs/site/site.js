@@ -1,5 +1,8 @@
 import { parseVocabulary, replaceVocabulary, filterGuides } from './preferences.js';
 import { cantonese, localized, loadMessagePreferences, messagePair } from './locales.js';
+import { previewRelease, renderReleaseDownload } from './release.js';
+
+renderReleaseDownload(document, previewRelease);
 
 let preferences;
 try { preferences = loadMessagePreferences(localStorage); } catch { preferences = loadMessagePreferences({ getItem: () => null }); }
