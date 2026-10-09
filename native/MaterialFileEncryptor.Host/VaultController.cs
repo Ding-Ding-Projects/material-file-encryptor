@@ -40,6 +40,8 @@ internal sealed class VaultController : IDisposable
     private string transportMode = "folder";
     private string? remoteRepository;
     private IVaultTransport? transport;
+    private bool transportAvailable, pendingPrivatePublication;
+    private Func<VaultOptions, string, string, (IVaultTransport Transport, GitVaultHistory History)>? privateTransportFactory = null;
     private GitVaultHistory? historyStore;
     private bool historyPending;
     private string? historySourceRoot;
@@ -105,7 +107,7 @@ internal sealed class VaultController : IDisposable
                 autoUnlock = identity is not null && SavedCredentialStore.Exists(identity),
                 history = new { versionCount = vault?.ListVersions().Count ?? 0, recycledCount = vault?.ListDeleted().Count ?? 0, pendingVersionCount = vault?.PendingVersionCount ?? 0, retentionDays = historyRetentionDays, gitAvailable = historyStore is not null },
                 storageFormat = vault?.StorageFormat,
-                transport = new { mode = transportMode, remoteRepository, available = vault?.Status.IsSourceAvailable ?? false, lastError = syncError },
+                transport = new { mode = transportMode, remoteRepository, available = vault is not null && (transportMode == "privateGit" ? transportAvailable : vault.Status.IsSourceAvailable), pendingSynchronization = vault is not null && transportMode == "privateGit" && (pendingPrivatePublication || historyPending || vault.Status.PendingCommits > 0 || vault.PendingVersionCount > 0), lastError = syncError },
                 availableDriveLetters = FreeDriveLetters()
             };
         }
@@ -155,10 +157,14 @@ internal sealed class VaultController : IDisposable
                     return Engine.ListVersions(OptionalString(args, "entryId"), retention).Select(VersionInfo).ToArray();
                 case "listDeleted": return Engine.ListDeleted().Select(VersionInfo).ToArray();
                 case "saveVersion": Engine.SaveVersionAsync(OptionalString(args, "path")).GetAwaiter().GetResult(); break;
-                case "restoreVersion": Engine.RestoreVersionAsync(RequiredString(args, "versionId")).GetAwaiter().GetResult(); break;
+                case "restoreVersion":
+                    try { Engine.RestoreVersionAsync(RequiredString(args, "versionId")).GetAwaiter().GetResult(); }
+                    catch (IOException) when (transportMode == "privateGit" && !transportAvailable) { throw new InvalidOperationException("Connect to private storage to retrieve unavailable historical content."); }
+                    break;
                 case "restoreDeleted":
                     if (!args.TryGetProperty("ids", out var ids) || ids.ValueKind != JsonValueKind.Array || ids.GetArrayLength() is < 1 or > 1000) throw new ArgumentException("Select between one and 1000 deleted entries.");
-                    Engine.RestoreDeletedAsync(ids.EnumerateArray().Select(value => value.GetString() ?? throw new ArgumentException("Invalid deleted entry.")).ToArray()).GetAwaiter().GetResult();
+                    try { Engine.RestoreDeletedAsync(ids.EnumerateArray().Select(value => value.GetString() ?? throw new ArgumentException("Invalid deleted entry.")).ToArray()).GetAwaiter().GetResult(); }
+                    catch (IOException) when (transportMode == "privateGit" && !transportAvailable) { throw new InvalidOperationException("Connect to private storage to retrieve unavailable historical content."); }
                     break;
                 case "emptyRecycleBin": Engine.EmptyRecycleBinAsync().GetAwaiter().GetResult(); break;
                 case "setHistoryRetention":
@@ -199,16 +205,35 @@ internal sealed class VaultController : IDisposable
         GitVaultHistory selectedHistory;
         if (selectedTransport == "privateGit")
         {
-            var remote = new PrivateGitHubVaultTransport(options.StorageRoot, historyRoot, selectedRepository ?? throw new ArgumentException("Choose a private repository."));
-            selectedBackend = remote; selectedHistory = remote.History;
+            string repository = selectedRepository ?? throw new ArgumentException("Choose a private repository.");
+            if (privateTransportFactory is not null) (selectedBackend, selectedHistory) = privateTransportFactory(options, historyRoot, repository);
+            else
+            {
+                var remote = new PrivateGitHubVaultTransport(options.StorageRoot, historyRoot, repository);
+                selectedBackend = remote; selectedHistory = remote.History;
+            }
         }
         else
         {
             selectedBackend = new FolderVaultTransport(options.StorageRoot);
             selectedHistory = new GitVaultHistory(options.CacheRoot, historyRoot);
         }
-        selectedBackend.InitializeAsync().GetAwaiter().GetResult();
-        if (selectedTransport == "privateGit") selectedBackend.SyncAsync().GetAwaiter().GetResult();
+        bool establishedLocalVault = File.Exists(System.IO.Path.Combine(options.StorageRoot, "vault.json")) || File.Exists(System.IO.Path.Combine(options.CacheRoot, "vault.json"));
+        bool connected = true;
+        try { selectedBackend.InitializeAsync().GetAwaiter().GetResult(); }
+        catch (IOException) when (selectedTransport == "privateGit" && !establishedLocalVault)
+        { throw new InvalidOperationException("Connect to private storage before opening a vault that has not been cached locally."); }
+        if (selectedTransport == "privateGit")
+        {
+            try { selectedBackend.SyncAsync().GetAwaiter().GetResult(); }
+            catch (Exception error) when (error is IOException or OperationCanceledException or TimeoutException)
+            {
+                if (create || !establishedLocalVault) throw new InvalidOperationException("Connect to private storage before creating or opening a vault that has not been cached locally.");
+                // This is local authentication only. A folder's existence does not
+                // establish current remote reachability or permission to publish.
+                connected = false;
+            }
+        }
         VaultEngine opened;
         if (automatic)
         {
@@ -238,14 +263,17 @@ internal sealed class VaultController : IDisposable
         engineGeneration++;
         vault = opened; storageDir = options.StorageRoot; cacheDir = options.CacheRoot; identity = opened.VaultId; driveLetter = chosenDrive;
         transportMode = selectedTransport; remoteRepository = OptionalString(args, "remoteRepository");
+        transportAvailable = connected; pendingPrivatePublication = selectedTransport == "privateGit";
         transport = selectedBackend; historyStore = selectedHistory; historyPending = true;
         historySourceRoot = selectedTransport == "folder" ? options.CacheRoot : options.StorageRoot;
         nextSyncAttempt = DateTimeOffset.UtcNow;
-        opened.HydrateEncryptedFileAsync = selectedBackend.EnsureFileAsync;
-        if (selectedBackend is PrivateGitHubVaultTransport privateBackend) opened.IsEncryptedFileAvailable = privateBackend.ContainsFile;
+        opened.HydrateEncryptedFileAsync = (relative, cancellation) => selectedTransport == "privateGit" && !transportAvailable
+            ? Task.FromException(new IOException("Connect to private storage to retrieve uncached encrypted content."))
+            : selectedBackend.EnsureFileAsync(relative, cancellation);
+        if (selectedBackend is PrivateGitHubVaultTransport privateBackend) opened.IsEncryptedFileAvailable = relative => transportAvailable && privateBackend.ContainsFile(relative);
         opened.HistoryChanged += () => historyPending = true;
         opened.SyncAsync().GetAwaiter().GetResult();
-        syncError = null; unmountBusy = false; lastOfflineRelease = null;
+        syncError = connected ? null : "Private storage is offline. Cached encrypted content remains available; synchronization will retry."; unmountBusy = false; lastOfflineRelease = null;
         if (OptionalBool(args, "autoUnlock")) SaveCredential();
         // Unlock and mount are separate operations; a missing driver never prevents
         // inspection/import/sync of an authenticated vault.
@@ -411,7 +439,8 @@ internal sealed class VaultController : IDisposable
             lock (gate)
             {
                 if (generation != engineGeneration || !ReferenceEquals(vault, capturedEngine)) return;
-                lastSync = DateTimeOffset.UtcNow;
+                lastSync = DateTimeOffset.UtcNow; transportAvailable = true;
+                if (publishAgain) pendingPrivatePublication = false;
                 syncError = capturedEngine.Status.LastError is null ? null : "Encrypted storage synchronization needs attention.";
             }
         }
@@ -420,7 +449,10 @@ internal sealed class VaultController : IDisposable
         {
             lock (gate)
                 if (generation == engineGeneration && ReferenceEquals(vault, capturedEngine))
+                {
+                    transportAvailable = false;
                     syncError = "Encrypted storage could not synchronize. Changes remain in the encrypted local cache.";
+                }
             throw;
         }
         finally
@@ -453,7 +485,8 @@ internal sealed class VaultController : IDisposable
         // can publish the existing journal without raising HistoryChanged again.
         if (Engine.Status.PendingCommits > 0) return;
         var paths = Engine.GetEncryptedSnapshotPaths().Where(relative => File.Exists(System.IO.Path.Combine(historySourceRoot!, relative))).ToArray();
-        historyStore.RecordSnapshotAsync(paths).GetAwaiter().GetResult();
+        var recorded = historyStore.RecordSnapshotAsync(paths).GetAwaiter().GetResult();
+        if (transportMode == "privateGit" && recorded is not null) pendingPrivatePublication = true;
         historyPending = false;
     }
     private static bool IsWithin(string child, string parent) => child.Equals(parent, StringComparison.OrdinalIgnoreCase) || child.StartsWith(parent.TrimEnd(System.IO.Path.DirectorySeparatorChar) + System.IO.Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
