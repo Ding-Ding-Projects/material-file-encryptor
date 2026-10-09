@@ -442,7 +442,8 @@ internal sealed class VaultController : IDisposable
     private static object VersionInfo(VaultVersionInfo version) => new
     {
         id = version.Id, entryId = version.EntryId, path = version.Path, timestampUtc = version.TimestampUtc,
-        length = version.Length, isDirectory = version.IsDirectory, deleted = version.Deleted, isAvailable = version.IsAvailable
+        length = version.Length, isDirectory = version.IsDirectory, deleted = version.Deleted, isAvailable = version.IsAvailable,
+        descendantIds = version.DescendantIds ?? Array.Empty<string>()
     };
     private void RecordHistoryLocked()
     {

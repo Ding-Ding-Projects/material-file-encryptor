@@ -8,13 +8,13 @@ A new vault generates a random 32-byte master key. Password UTF-8 bytes or the e
 
 The configuration's vault identifier, credential type, KDF parameters and wrapped key are public. Paths, lengths, timestamps, entry identifiers, record maps, pins and commit contents are encrypted. A separate authenticated key-check record rejects an incorrect restored master key even for an empty vault.
 
-Every encrypted record uses a new random 12-byte nonce and a 16-byte authentication tag. AAD includes a format/domain marker and vault identifier; file records additionally bind their physical part identifier and byte offset. Metadata, journals, commit events and key wrapping use separate domains. Reads authenticate each record before returning its plaintext. Corrupt clean cache content can be replaced only after authenticating the entire source object. Corrupt content without an authentic source copy fails the operation.
+Every encrypted record uses a new random 12-byte nonce and a 16-byte authentication tag. AAD includes a format/domain marker and vault identifier; legacy packed records additionally bind their physical part identifier and byte offset. Format 2 ciphertext hashes are authenticated through encrypted record maps, while each chunk uses its vault-specific authenticated domain. Metadata, journals, commit events and key wrapping use separate domains. Reads authenticate each record before returning its plaintext. Corrupt clean cache content can be replaced only after authenticating the entire source object. Corrupt content without an authentic source copy fails the operation.
 
 ## Layout and splitting
 
-The selected storage folder contains `vault.json`, immutable `parts/<random-id>.mfe` ciphertext objects and encrypted `commits/<random-id>.mfe` events. The separate local cache contains those encrypted objects, its encrypted `journal.mfe`, and a public copy of the vault configuration. Storage and cache must be separate non-overlapping roots. Symbolic links and Windows junctions/reparse paths are rejected at these roots and managed object paths to prevent the cache from aliasing cloud objects.
+The selected storage folder contains `vault.json`, immutable `parts/<ciphertext-sha256>.mfe` ciphertext objects in format 2 (legacy format 1 retains random part identifiers) and encrypted `commits/<random-id>.mfe` events. The separate local cache contains those encrypted objects, its encrypted `journal.mfe`, and a public copy of the vault configuration. Storage and cache must be separate non-overlapping roots. Symbolic links and Windows junctions/reparse paths are rejected at these roots and managed object paths to prevent the cache from aliasing cloud objects.
 
-A physical part packs independently authenticated records of up to 64 KiB plaintext. Its byte cap includes each record's 36-byte framing, nonce and tag. Small caps reduce the record payload to fit. Caps range from 1 KiB through 1 GiB; the default is 10 MiB. The host converts user-selected units to an exact byte count. `SetPartSize` changes the policy for new and subsequently changed files. Existing files retain their recorded cap until a data or length change or an explicit `ResplitAsync`; all resulting physical parts fit the new cap. Resplitting publishes a replacement version while retaining old objects. The engine performs no cloud garbage collection.
+A format 2 physical part contains one fixed-size authenticated chunk, except for a shorter final chunk. The physical cap includes framing, nonce and tag. Caps range from 1 KiB through 90,000,000 bytes; the default is 10 MiB. Legacy format 1 retains its packed records of up to 64 KiB. Unchanged encrypted chunks are reused during incremental edits. The host converts user-selected units to an exact byte count. `SetPartSize` changes the policy for new and subsequently changed files. Existing files retain their recorded cap until a data or length change or an explicit `ResplitAsync`; all resulting physical parts fit the new cap. Resplitting publishes a replacement version while retaining old objects. The engine performs no cloud garbage collection.
 
 Sparse growth records a length without materializing all zero chunks. Reads of absent chunks return zeros. Shrinking a file removes later record references and clears a surviving boundary chunk so discarded bytes cannot reappear after extension.
 
@@ -24,7 +24,7 @@ Paths follow case-insensitive Windows lookup rules, retain display spelling and 
 
 Each local flush produces an immutable encrypted commit with a unique identifier and its observed parent heads. The encrypted event carries namespace changes, expected previous versions and ancestor-directory snapshots. Devices publish their own events rather than overwriting one manifest or relying on a cross-device file lock. Replay follows the commit DAG in a deterministic order. Concurrent edits keep both versions in the namespace with distinct stable identities; conflicting copies receive a visible ` (conflict ...)` suffix. Concurrent deletion cannot silently hide a surviving descendant edit: replay restores its required directory ancestors. Existing open handles remain usable after a synchronized remote deletion.
 
-A receiving device authenticates metadata and all referenced content before admitting an incoming version. Incomplete, missing-parent or unauthenticated commits remain pending, and the last usable namespace stays available. Parts upload before their commit is published. Publication uses temporary files followed by replacement, with file data flushed before reporting local durability.
+A receiving device authenticates snapshot metadata and checks referenced-object availability before admitting an incoming version. Payload authentication occurs when content is hydrated or restored; listing history does not eagerly retrieve historical payloads. Incomplete, missing-parent or unauthenticated commits remain pending, and the last usable namespace stays available. Parts upload before their commit is published. Publication uses temporary files followed by replacement, with file data flushed before reporting local durability.
 
 ## Offline behavior and durability
 
@@ -37,7 +37,9 @@ The status describes access and publication to the selected local folder. OneDri
 ## Reproduce the checks
 
 ```sh
+
 dotnet run --project native/MaterialFileEncryptor.Core.Tests -c Release
+
 ```
 
 The standalone runner uses only the .NET SDK and covers random access, sparse/truncated data, rename replacement and stable handles, case-only renames, credentials and key restoration, plaintext-leak scanning, Windows path validation, packed physical caps and resplitting, tamper rejection and verified source fallback, process-exit journal recovery, source outage and queued publication, deterministic concurrent edit copies, incomplete incoming versions, remote deletion with an open handle, descendant edits against recursive directory deletion, pin/eviction rules, and root/managed-child symbolic-link rejection. Windows Explorer/WinFsp behavior requires the separate Windows host checks.

@@ -4,17 +4,10 @@ export function exampleParts(value, unit) {
   const units = { KB: 1024, MB: 1024 ** 2, GB: 1024 ** 3 };
   if (!/^\d+(?:\.\d+)?$/u.test(String(value).trim()) || !Object.hasOwn(units, unit)) return null;
   const limit = Number(value) * units[unit];
-  if (!Number.isSafeInteger(limit) || limit < units.KB || limit > units.GB) return null;
-  const chunkSize = Math.min(65536, limit - EXAMPLE_OVERHEAD);
-  const fullRecords = Math.floor(EXAMPLE_FILE_BYTES / chunkSize);
-  const remainder = EXAMPLE_FILE_BYTES % chunkSize;
-  const recordSize = chunkSize + EXAMPLE_OVERHEAD;
-  const perPart = Math.floor(limit / recordSize);
-  let parts = Math.ceil(fullRecords / perPart);
-  const usedInLastPart = fullRecords % perPart || (fullRecords ? perPart : 0);
-  if (remainder && (!fullRecords || usedInLastPart * recordSize + remainder + EXAMPLE_OVERHEAD > limit)) parts++;
-  const records = fullRecords + (remainder ? 1 : 0);
-  return { limit, parts, records, total: EXAMPLE_FILE_BYTES + records * EXAMPLE_OVERHEAD };
+  if (!Number.isSafeInteger(limit) || limit < units.KB || limit > 90000000) return null;
+  const chunkSize = limit - EXAMPLE_OVERHEAD;
+  const parts = Math.ceil(EXAMPLE_FILE_BYTES / chunkSize);
+  return { limit, parts, records: parts, total: EXAMPLE_FILE_BYTES + parts * EXAMPLE_OVERHEAD };
 }
 const copy = {
 'Interactive architecture':'互動架構圖',
@@ -29,8 +22,8 @@ const copy = {
 'Example availability':'示例可用狀態','Maximum encrypted part size':'加密分割檔最大大小',
 'Storage reachable':'可以連到儲存位置','Offline, complete cache':'離線，快取完整','Offline, cache incomplete':'離線，快取唔完整',
 'Next step':'下一步','Part size unit':'分割大小單位','Play walkthrough':'播放流程','Pause walkthrough':'暫停流程','Replay':'重新播放',
-'Size illustration: a 16 MB file, 36 bytes of framing per encrypted record, and up to 64 KB of file data per record. 1 KB = 1,024 bytes. Counts describe this example, not your files.':'大小示例：一個 16 MB 檔案，每個加密記錄有 36 位元組框架資料，每個記錄最多包含 64 KB 檔案資料。1 KB = 1,024 位元組。計算只描述呢個示例，唔係你嘅檔案。',
-'Enter a whole-byte limit from 1 KB to 1 GB, inclusive.':'請輸入以完整位元組計算、由 1 KB 至 1 GB 嘅上限，包括兩個端點。',
+'Size illustration: a 16 MiB file split into fixed ciphertext chunks with 36 bytes of framing each. The final chunk may be shorter. Maximum physical chunk: 90,000,000 bytes. Counts describe this example, not your files.':'大小示例：一個 16 MiB 檔案分成固定密文分塊，每塊包含 36 位元組框架資料，最後一塊可以較短。每塊實體上限為 90,000,000 位元組。計算只描述示例，唔係你嘅檔案。',
+'Enter a whole-byte limit from 1 KiB to 90,000,000 bytes, inclusive.':'請輸入以完整位元組計算、由 1 KiB 至 90,000,000 位元組嘅上限，包括兩個端點。',
 'Write: encrypt changed file bytes':'寫入：加密改動過嘅檔案資料',
 'An edit through the unlocked drive is encrypted into parts in the chosen storage folder. Uploading those parts, if needed, is the sync provider’s separate job.':'透過已解鎖磁碟編輯檔案後，資料會加密成分割檔，存喺指定資料夾。需要上載嘅話，由同步服務另外處理。',
 'The example storage folder is unreachable. A cached copy permits reads; it does not establish that a write has reached its storage destination.':'示例儲存資料夾無法連接。快取副本可以供讀取，但唔代表寫入已經到達儲存目的地。',
@@ -86,7 +79,7 @@ if (typeof document !== 'undefined') {
       root.querySelector('#operation-description').textContent = translated(messages[operation][1]);
       const parts = exampleParts(limit.value, unit.value);
       root.querySelector('#part-error').hidden = Boolean(parts);
-      root.querySelector('#part-error').textContent = parts ? '' : translated('Enter a whole-byte limit from 1 KB to 1 GB, inclusive.');
+      root.querySelector('#part-error').textContent = parts ? '' : translated('Enter a whole-byte limit from 1 KiB to 90,000,000 bytes, inclusive.');
       limit.setAttribute('aria-invalid', String(!parts));
       root.querySelector('#part-result').textContent = parts ? pair(`Illustrative result: ${parts.parts.toLocaleString('en')} encrypted parts for the 16 MB example; each physical part stays within ${limit.value} ${unit.value}, including encryption framing.`, `示例結果：16 MB 檔案會分成 ${parts.parts.toLocaleString('en')} 個加密部分；計埋加密框架資料，每個實際分割檔都唔會超過 ${limit.value} ${unit.value}。`) : '';
     }

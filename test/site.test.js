@@ -70,14 +70,16 @@ test('interactive part illustration counts overhead and rejects unusable limits'
   const { exampleParts, EXAMPLE_FILE_BYTES, EXAMPLE_OVERHEAD } = await import('../docs/site/explainer.js');
   assert.equal(exampleParts('4', 'MB').parts, 5);
   assert.equal(exampleParts('8', 'MB').parts, 3);
-  assert.equal(exampleParts('1', 'GB').parts, 1);
+  assert.equal(exampleParts('1', 'GB'), null);
+  assert.equal(exampleParts('87890.625', 'KB').limit, 90000000);
+  assert.equal(exampleParts('87890.6259765625', 'KB'), null);
   assert.equal(exampleParts('1', 'KB').limit, 1024);
   assert.deepEqual(exampleParts('0.0009765625', 'MB'), exampleParts('1', 'KB'));
   assert.equal(exampleParts('0.9990234375', 'KB'), null);
   assert.equal(exampleParts('1.0000000009313226', 'GB'), null);
-  assert.equal(exampleParts('128', 'KB').parts, 256);
+  assert.equal(exampleParts('128', 'KB').parts, 129);
   assert.equal(exampleParts('64', 'KB').parts, 257);
-  assert.equal(exampleParts('4', 'MB').total, EXAMPLE_FILE_BYTES + 256 * EXAMPLE_OVERHEAD);
+  assert.equal(exampleParts('4', 'MB').total, EXAMPLE_FILE_BYTES + 5 * EXAMPLE_OVERHEAD);
   for (const [value, unit] of [['0', 'MB'], ['-1', 'MB'], ['abc', 'GB'], ['2', 'GB'], ['1', 'TB'], ['0.00001', 'KB'], ['1e3', 'KB']]) assert.equal(exampleParts(value, unit), null);
 });
 

@@ -1,4 +1,8 @@
 export const cantonese = {
+"NO DRIVE OPEN":"未開啟磁碟",
+"Choose a drive to work with":"揀一個磁碟開始工作",
+"Unlock existing encrypted storage, or create a drive with a folder or private repository as its transfer method.":"解鎖現有加密儲存，或者建立磁碟，並選擇資料夾或私人儲存庫作為傳輸方式。",
+"After unlocking, browse files, History and the Recycle Bin from this workspace.":"解鎖後可以喺呢個工作區瀏覽檔案、版本記錄同資源回收筒。",
 "Upgrade by creating a copy":"建立副本升級",
 "Create upgraded copy":"建立升級副本",
 "Choose separate destination storage and cache folders. The original vault is preserved. Choose credentials for the upgraded copy. No conversion happens when opening a vault.":"請揀獨立嘅目的地儲存同快取資料夾，原有保險庫會保留。為升級副本設定解鎖方式，開啟保險庫唔會自動轉換。",

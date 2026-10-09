@@ -1,10 +1,14 @@
 # Material File Encryptor
 
-A Windows Explorer drive that encrypts files into a folder managed by OneDrive, Google Drive, or any other folder-sync client. Open and edit files normally; keep selected files available offline in an encrypted local cache.
+A Windows Explorer drive with encrypted fixed-size content blobs, recoverable history, and a Recycle Bin. Choose a synchronized folder or a private GitHub repository for transfer. Keep selected files available offline in an encrypted local cache.
 
-**Development status:** seventeen native storage checks and seventeen desktop/site checks pass locally. All 34 real Windows mounted-workflow checks and the complete packaged GUI workflow pass at source `c74b3a6`. Setup installed and all 198 selected runtime entries matched, but verification stopped at `INSTALL_REGISTRATION_MISSING` before installed-app and uninstall checks. The diagrams explain the architecture and are separate from real application captures. No installer is published yet.
+**Development status:** the first-preview integration is undergoing local runtime verification. Core recovery and transport regressions pass, including ten controlled checks against a private synthetic GitHub repository. Local production builds and genuine unsigned Squirrel packaging have succeeded. Installed application execution, independent release download verification and final delivery remain pending. Historical captures below belong to their stated earlier commits and do not prove the new History or Recycle Bin surfaces.
 
 [Project goal](GOAL.md) · [Interface design](DESIGN.md) · [Source](https://github.com/Ding-Ding-Projects/material-file-encryptor) · [Documentation site](https://ding-ding-projects.github.io/material-file-encryptor/) · [Windows verification](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/workflows/windows.yml)
+
+## History and recovery
+
+Format 2 keeps separate ciphertext-addressed chunks and encrypted snapshot metadata in real Git history. Versions are saved after 30 seconds without writes to a file, or with **Save version now**. Retention defaults to forever; the restore-list period does not erase history. Deleted files remain recoverable from the Recycle Bin, and emptying it preserves historical recovery without promising reclaimed space. Existing vaults require an explicit verified copy upgrade. [Storage and recovery guide](docs/features/storage/history-and-recycle-bin.md) · [Transport details](docs/features/storage/git-transport.md).
 
 ## How it works
 
@@ -64,7 +68,7 @@ The Windows recording is withheld because it briefly displays a machine-profile 
 - Unlock with a password or key file. Optional automatic unlock protects the remembered vault key for the current Windows user.
 - Start the app with Windows; choose whether to unlock automatically.
 - Keep offline downloads and pins encrypted data. Files still decrypt through the mounted drive when accessed.
-- Choose a maximum encrypted part size using a value textbox and KB, MB, or GB. Cryptographic framing counts toward the limit. New and edited files use the selected limit; **Re-split existing files** is a separate operation.
+- The default physical encrypted chunk size is 10 MiB. The hard maximum is 90,000,000 bytes including cryptographic framing; the final chunk can be shorter. New and edited files use the selected limit; **Re-split existing files** is a separate operation.
 - Keep credentials and their backups outside encrypted storage and the cache. Losing all unlock credentials loses access.
 - Copying a file outside the mounted drive intentionally creates a plaintext copy. Applications and Windows may create their own temporary files, thumbnails, or paging data.
 
@@ -79,8 +83,8 @@ Windows 10/11 x64 is the delivery target. Explorer integration requires the genu
 cmd /c "build.bat /s && out\material-file-encryptor-win32-x64\MaterialFileEncryptor.exe"
 ```
 
-The build obtains verified user-scoped Node and .NET tools, the pinned browser used by UI tests, and the signed WinFsp installer. If the driver is missing, **Install WinFsp** opens the bundled installer with its normal Windows elevation flow. Reopen the app after driver installation. `build-installer.bat /s` produces a genuine unsigned Squirrel.Windows installer; Windows publisher warnings are expected for the app installer.
+The build obtains verified user-scoped Node and .NET tools, portable Git and GitHub CLI distributions, and the signed WinFsp installer. Explicit local verification installs its own browser tools when required; production builds do not run tests or lint. If the driver is missing, **Install WinFsp** opens the bundled installer with its normal Windows elevation flow. Reopen the app after driver installation. `build-installer.bat /s` produces a genuine unsigned Squirrel.Windows installer; Windows publisher warnings are expected for the app installer.
 
-Local verification covers the encrypted engine, range I/O, recovery, conflicts, offline pins, part limits, desktop bridge and renderer interactions. Real Electron captures on Linux verify interface behavior and isolation; they do not prove Windows Explorer mounting. Windows CI exercises a real drive through ordinary file operations and produces separate evidence.
+Local verification covers the encrypted engine, range I/O, recovery, conflicts, offline pins, part limits, desktop bridge and renderer interactions. Real Electron captures on Linux verify interface behavior and isolation; they do not prove Windows Explorer mounting. Current Windows CI builds, packages and publishes previews without tests or lint. Mounted-drive and installed-lifecycle verification run explicitly on a local Windows account with isolated fixtures.
 
 </details>
