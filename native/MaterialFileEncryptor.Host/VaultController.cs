@@ -33,6 +33,9 @@ internal sealed class VaultController : IDisposable
     private DateTimeOffset? lastSync;
     private object? lastOfflineRelease;
     private bool syncing, unmountBusy;
+    private int syncFlight;
+    private long engineGeneration;
+    private CancellationTokenSource? syncCancellation;
     private int? historyRetentionDays;
     private string transportMode = "folder";
     private string? remoteRepository;
@@ -125,7 +128,18 @@ internal sealed class VaultController : IDisposable
     {
         // Dispatcher stop waits for callbacks. It must run outside the callback gate.
         if (method is "lock" or "unmount") { Unmount(); if (method == "lock") LockEngine(); return Status(); }
-        if (method == "copyUpgrade") { Unmount(); lock (gate) Upgrade(args); return Status(); }
+        if (method == "sync") { SyncIfUnlocked(); return Status(); }
+        if (method == "importFiles") { lock (gate) Import(args); SyncIfUnlocked(); return Status(); }
+        if (method == "copyUpgrade")
+        {
+            Unmount();
+            lock (gate)
+            {
+                if (Volatile.Read(ref syncFlight) != 0) { syncCancellation?.Cancel(); throw new InvalidOperationException("Synchronization is stopping. Wait before copying the vault."); }
+                Upgrade(args);
+            }
+            return Status();
+        }
         lock (gate)
         {
             switch (method)
@@ -135,7 +149,7 @@ internal sealed class VaultController : IDisposable
                 case "unlock": Open(args, false, false); break;
                 case "autoUnlock": Open(args, false, true); break;
                 case "mount": Mount(args); break;
-                case "importFiles": Import(args); break;
+
                 case "listVersions":
                     int? retention = args.ValueKind == JsonValueKind.Object && args.TryGetProperty("retentionDays", out var days) && days.ValueKind != JsonValueKind.Null ? days.GetInt32() : historyRetentionDays;
                     return Engine.ListVersions(OptionalString(args, "entryId"), retention).Select(VersionInfo).ToArray();
@@ -160,7 +174,7 @@ internal sealed class VaultController : IDisposable
                     break;
                 case "setPartSize": Engine.SetPartSize(RequiredLong(args, "partSizeBytes")); Engine.FlushAsync().GetAwaiter().GetResult(); break;
                 case "resplit": Engine.ResplitAsync(RequiredString(args, "path"), RequiredLong(args, "partSizeBytes")).GetAwaiter().GetResult(); break;
-                case "sync": SyncLocked(); break;
+
                 case "forgetSavedCredential": Forget(args); break;
                 case "setAutoUnlock":
                     if (OptionalBool(args, "enabled")) SaveCredential(); else Forget(args);
@@ -173,6 +187,7 @@ internal sealed class VaultController : IDisposable
     private void Open(JsonElement args, bool create, bool automatic)
     {
         if (vault is not null) throw new InvalidOperationException("Lock the current vault before opening another.");
+        if (Volatile.Read(ref syncFlight) != 0) throw new InvalidOperationException("Previous synchronization is stopping. Wait before opening another vault.");
         string selectedTransport = OptionalString(args, "transport") ?? "folder";
         if (selectedTransport is not ("folder" or "privateGit")) throw new ArgumentException("Choose a supported transfer method.");
         var options = new VaultOptions { StorageRoot = System.IO.Path.GetFullPath(RequiredString(args, "storageDir")), CacheRoot = System.IO.Path.GetFullPath(RequiredString(args, "cacheDir")), PartSizeBytes = OptionalLong(args, "partSizeBytes") ?? 10L * 1024 * 1024 };
@@ -220,6 +235,7 @@ internal sealed class VaultController : IDisposable
             else credential = VaultCredentials.Password(password!);
             using (credential) opened = create ? VaultEngine.Create(options, credential) : VaultEngine.Open(options, credential);
         }
+        engineGeneration++;
         vault = opened; storageDir = options.StorageRoot; cacheDir = options.CacheRoot; identity = opened.VaultId; driveLetter = chosenDrive;
         transportMode = selectedTransport; remoteRepository = OptionalString(args, "remoteRepository");
         transport = selectedBackend; historyStore = selectedHistory; historyPending = true;
@@ -314,7 +330,10 @@ internal sealed class VaultController : IDisposable
             if (vault is null) return;
             vault.SaveDueVersionsAsync(DateTimeOffset.MaxValue).GetAwaiter().GetResult();
             vault.FlushAsync().GetAwaiter().GetResult();
-            RecordHistoryLocked();
+            // Network work never owns the engine. Invalidate its captured identity
+            // before disposal and retain durable local changes for the next sync.
+            engineGeneration++; syncCancellation?.Cancel();
+            if (!syncing) RecordHistoryLocked();
             vault.Dispose(); vault = null; syncError = null; historyStore = null; transport = null;
         }
     }
@@ -340,23 +359,75 @@ internal sealed class VaultController : IDisposable
             string candidate = name;
             for (int suffix = 2; Engine.GetInfo(candidate) is not null; suffix++) candidate = System.IO.Path.GetFileNameWithoutExtension(name) + " (" + suffix + ")" + System.IO.Path.GetExtension(name);
             using var input = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, FileOptions.SequentialScan);
-            byte[] buffer = new byte[65536];
+            // Fill one complete encryption record before writing it. A short stream
+            // read must not turn a large record into repeated full-record rewrites.
+            int payloadBytes = checked((int)(Engine.PartSizeBytes - 36));
+            if (Engine.StorageFormat == 1) payloadBytes = Math.Min(65536, payloadBytes);
+            byte[] buffer = new byte[payloadBytes];
             Engine.CreateFile(candidate);
             try
             {
                 long offset = 0; int count;
-                while ((count = input.Read(buffer)) != 0) { Engine.WriteRange(candidate, offset, buffer.AsSpan(0, count)); offset += count; }
+                while ((count = input.ReadAtLeast(buffer, buffer.Length, throwOnEndOfStream: false)) != 0) { Engine.WriteRange(candidate, offset, buffer.AsSpan(0, count)); offset += count; }
                 Engine.SetBasicInfo(candidate, null, File.GetCreationTimeUtc(sourcePath), File.GetLastWriteTimeUtc(sourcePath));
                 Engine.FlushAsync().GetAwaiter().GetResult();
             }
             catch { Engine.Delete(candidate); Engine.FlushAsync().GetAwaiter().GetResult(); throw; }
             finally { CryptographicOperations.ZeroMemory(buffer); }
         }
-        SyncLocked();
     }
     public void SyncIfUnlocked()
     {
-        lock (gate) { if (vault is not null) SyncLocked(); }
+        if (Interlocked.CompareExchange(ref syncFlight, 1, 0) != 0) return;
+        VaultEngine? capturedEngine = null;
+        IVaultTransport? capturedTransport = null;
+        long generation = 0;
+        using var cancellation = new CancellationTokenSource();
+        try
+        {
+            lock (gate)
+            {
+                if (vault is null) return;
+                capturedEngine = vault; capturedTransport = transport; generation = engineGeneration;
+                syncing = true; syncCancellation = cancellation;
+                nextSyncAttempt = DateTimeOffset.UtcNow.AddSeconds(15);
+                fileSystem?.RecoverPending();
+                // Local journal/object publication and history remain serialized.
+                capturedEngine.FlushAsync().GetAwaiter().GetResult();
+                RecordHistoryLocked();
+            }
+            // Only the captured transport is used during network waits. No WinFsp
+            // callback gate or engine lifetime is held across either network pass.
+            capturedTransport?.SyncAsync(cancellation.Token).GetAwaiter().GetResult();
+            bool publishAgain;
+            lock (gate)
+            {
+                if (generation != engineGeneration || !ReferenceEquals(vault, capturedEngine)) return;
+                capturedEngine.SyncAsync().GetAwaiter().GetResult();
+                RecordHistoryLocked();
+                publishAgain = transportMode == "privateGit";
+            }
+            if (publishAgain) capturedTransport?.SyncAsync(cancellation.Token).GetAwaiter().GetResult();
+            lock (gate)
+            {
+                if (generation != engineGeneration || !ReferenceEquals(vault, capturedEngine)) return;
+                lastSync = DateTimeOffset.UtcNow;
+                syncError = capturedEngine.Status.LastError is null ? null : "Encrypted storage synchronization needs attention.";
+            }
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
+        catch
+        {
+            lock (gate)
+                if (generation == engineGeneration && ReferenceEquals(vault, capturedEngine))
+                    syncError = "Encrypted storage could not synchronize. Changes remain in the encrypted local cache.";
+            throw;
+        }
+        finally
+        {
+            lock (gate) { if (ReferenceEquals(syncCancellation, cancellation)) { syncCancellation = null; syncing = false; } }
+            Interlocked.Exchange(ref syncFlight, 0);
+        }
     }
     public void TickIfUnlocked()
     {
@@ -364,31 +435,15 @@ internal sealed class VaultController : IDisposable
         {
             if (vault is null) return;
             Engine.SaveDueVersionsAsync(DateTimeOffset.UtcNow).GetAwaiter().GetResult();
-            if (DateTimeOffset.UtcNow >= nextSyncAttempt) SyncLocked();
+            if (DateTimeOffset.UtcNow < nextSyncAttempt || Volatile.Read(ref syncFlight) != 0) return;
         }
+        _ = Task.Run(() => { try { SyncIfUnlocked(); } catch { /* Status retains the safe synchronization error. */ } });
     }
     private static object VersionInfo(VaultVersionInfo version) => new
     {
         id = version.Id, entryId = version.EntryId, path = version.Path, timestampUtc = version.TimestampUtc,
         length = version.Length, isDirectory = version.IsDirectory, deleted = version.Deleted, isAvailable = version.IsAvailable
     };
-    private void SyncLocked()
-    {
-        syncing = true;
-        nextSyncAttempt = DateTimeOffset.UtcNow.AddSeconds(15);
-        try
-        {
-            fileSystem?.RecoverPending();
-            transport?.SyncAsync().GetAwaiter().GetResult();
-            Engine.SyncAsync().GetAwaiter().GetResult();
-            RecordHistoryLocked();
-            if (transportMode == "privateGit") transport?.SyncAsync().GetAwaiter().GetResult();
-            lastSync = DateTimeOffset.UtcNow;
-            syncError = Engine.Status.LastError is null ? null : "Encrypted storage synchronization needs attention.";
-        }
-        catch { syncError = "Encrypted storage could not synchronize. Changes remain in the encrypted local cache."; throw; }
-        finally { syncing = false; }
-    }
     private void RecordHistoryLocked()
     {
         if (!historyPending || historyStore is null || vault is null) return;

@@ -4,10 +4,10 @@ import { createInterface } from 'node:readline';
 
 /** Private child-process pipe. Credentials are never put in arguments, environment or logs. */
 export class NativeClient extends EventEmitter {
-  constructor(executable) { super(); this.executable = executable; this.pending = new Map(); this.nextId = 1; }
+  constructor(executable, { spawnProcess = spawn, slowAfterMs = 120000 } = {}) { super(); this.executable = executable; this.spawnProcess = spawnProcess; this.slowAfterMs = slowAfterMs; this.pending = new Map(); this.nextId = 1; }
   start() {
     if (this.child) return;
-    this.child = spawn(this.executable, [], { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'], shell: false });
+    this.child = this.spawnProcess(this.executable, [], { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'], shell: false });
     // Backend diagnostics must never cross into a log containing sensitive paths or credentials.
     this.child.stderr.resume();
     this.reader = createInterface({ input: this.child.stdout, crlfDelay: Infinity });
@@ -30,7 +30,10 @@ export class NativeClient extends EventEmitter {
     this.start();
     return new Promise((resolve, reject) => {
       const id = this.nextId++;
-      const timer = setTimeout(() => { this.pending.delete(id); reject(new Error('The drive operation timed out. Check storage availability.')); }, 120000);
+      // A warning is not cancellation. Keep the identity and promise until the helper
+      // reports a terminal result or its pipe exits, so mutations cannot overlap.
+      const timer = setTimeout(() => this.emit('slow', { id, method, message: 'The drive operation is still running. Keep the application open and wait for completion.' }), this.slowAfterMs);
+      timer.unref?.();
       this.pending.set(id, { resolve, reject, timer });
       this.child.stdin.write(JSON.stringify({ id, method, params }) + '\n', error => {
         if (error) { clearTimeout(timer); this.pending.delete(id); reject(new Error('Native helper connection closed.')); }
