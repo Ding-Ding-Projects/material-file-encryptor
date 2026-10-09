@@ -13,6 +13,7 @@ var cases = new (string,Action)[] {
     ("history restore replaces same logical file and idle timer is inert",HistoryCurrentRestore),
     ("historical restore isolates deleted open-handle identity",()=>RestoreOpenIdentity(false)),
     ("recycle restore isolates deleted open-handle identity",()=>RestoreOpenIdentity(true)),
+    ("surviving concurrent edit retains quiet-save scheduling beside an orphan",ConcurrentOrphanDue),
     ("history missing content is unavailable and restore fails closed",MissingHistory),
     ("recycled subtree conflict restores under one new root",SubtreeRestore),
     ("legacy format remains readable and copy upgrades safely",Legacy),
@@ -167,6 +168,43 @@ static void RestoreOpenIdentity(bool recycled)
         using var reopened=Open(root,"replica");Equal("old"u8.ToArray(),Read(reopened,"held"));
     }
     finally {Directory.Delete(root,true);}
+}
+static void ConcurrentOrphanDue()
+{
+    var root=Temp();
+    try
+    {
+        using(var initial=Create(root)){initial.CreateFile("shared");initial.WriteRange("shared",0,"base"u8);initial.SaveVersionAsync().GetAwaiter().GetResult();}
+        using var a=Open(root,"a");using var b=Open(root,"b");
+        var original=a.GetInfo("shared")!.EntryId;var lease=a.AcquireOpenById(original);
+        try
+        {
+            a.Delete("shared");a.FlushAsync().GetAwaiter().GetResult();
+            b.WriteRange("shared",0,"edit"u8);b.FlushAsync().GetAwaiter().GetResult();
+            a.SyncAsync().GetAwaiter().GetResult();
+            Equal("edit"u8.ToArray(),Read(a,"shared"));
+            var liveId=a.GetInfo("shared")!.EntryId;
+            Assert(liveId!=original,"Surviving concurrent live entry reused held orphan identity.");
+            using var liveLease=a.AcquireOpenById(liveId);
+            a.WriteRangeById(original,0,"held"u8);Equal("edit"u8.ToArray(),Read(a,"shared"));
+            a.SyncAsync().GetAwaiter().GetResult();b.SyncAsync().GetAwaiter().GetResult();a.SyncAsync().GetAwaiter().GetResult();
+            Assert(a.GetInfo("shared")!.EntryId==liveId&&b.GetInfo("shared")!.EntryId==liveId,"Persisted live identity changed during repeated device replay.");
+            var heldBytes=new byte[4];Assert(a.ReadRangeById(original,0,heldBytes)==4);Equal("held"u8.ToArray(),heldBytes);
+            var liveBytes=new byte[4];Assert(a.ReadRangeById(liveId,0,liveBytes)==4);Equal("edit"u8.ToArray(),liveBytes);
+            a.WriteRange("shared",0,"live"u8);
+            Assert(a.PendingVersionCount>0,"Live concurrent edit was mistaken for an orphan and lost its quiet-save schedule.");
+            lease.Dispose();
+            Assert(a.PendingVersionCount>0,"Closing the old orphan removed the live quiet-save schedule.");
+            a.SaveDueVersionsAsync(DateTimeOffset.MaxValue).GetAwaiter().GetResult();
+            Assert(a.PendingVersionCount==0);Assert(a.ListVersions().Any(v=>!v.Deleted&&v.Path=="shared"),"Live concurrent edit has no saved version.");
+            Equal("live"u8.ToArray(),Read(a,"shared"));
+            a.SyncAsync().GetAwaiter().GetResult();b.SyncAsync().GetAwaiter().GetResult();
+            Assert(a.GetInfo("shared")!.EntryId==liveId&&b.GetInfo("shared")!.EntryId==liveId);
+            using var reopened=Open(root,"reopened");Assert(reopened.GetInfo("shared")!.EntryId==liveId);Equal("live"u8.ToArray(),Read(reopened,"shared"));
+        }
+        finally{lease.Dispose();}
+    }
+    finally{Directory.Delete(root,true);}
 }
 static void History() {
     var root=Temp();try {using(var v=Create(root)){v.CreateDirectory("folder");v.CreateFile("folder/a");v.WriteRange("folder/a",0,"first"u8);v.SaveDueVersionsAsync(DateTimeOffset.UtcNow.AddSeconds(29)).GetAwaiter().GetResult();Assert(v.ListVersions().Count==0);v.SaveDueVersionsAsync(DateTimeOffset.UtcNow.AddSeconds(31)).GetAwaiter().GetResult();Assert(v.ListVersions().Count==1);var first=v.ListVersions().Single();v.WriteRange("folder/a",0,"later"u8);v.SaveVersionAsync("folder/a").GetAwaiter().GetResult();v.RestoreVersionAsync(first.Id).GetAwaiter().GetResult();Assert(v.Enumerate("folder").Count==1,"History restore must replace the same logical file.");Equal("first"u8.ToArray(),Read(v,"folder/a"));v.Delete("folder",true);v.FlushAsync().GetAwaiter().GetResult();Assert(v.ListDeleted().Count==2);var dir=v.ListDeleted().Single(x=>x.IsDirectory);v.RestoreDeletedAsync(new[]{dir.Id}).GetAwaiter().GetResult();Assert(v.GetInfo("folder/a")!=null);v.Delete("folder",true);v.FlushAsync().GetAwaiter().GetResult();v.EmptyRecycleBinAsync().GetAwaiter().GetResult();Assert(v.ListDeleted().Count==0);Assert(v.ListVersions().Any(x=>x.Deleted));}using var replica=Open(root,"replica");Assert(replica.ListDeleted().Count==0);Assert(replica.ListVersions().Any(x=>x.Deleted));}finally{Directory.Delete(root,true);}

@@ -21,7 +21,7 @@ public sealed partial class VaultEngine
     {
         // Orphan writes belong only to the held deleted file, which has no live
         // path to snapshot. Scheduling it would leave synchronization pending forever.
-        if(!orphans.ContainsKey(e.Id))versionDue[e.Id]=DateTimeOffset.UtcNow.AddSeconds(30);
+        if(!orphans.TryGetValue(e.Id,out var orphan)||!ReferenceEquals(orphan,e))versionDue[e.Id]=DateTimeOffset.UtcNow.AddSeconds(30);
     }
     private void CaptureVersion(string path,Entry entry,bool deleted,string? deletionBatch=null)
     {
