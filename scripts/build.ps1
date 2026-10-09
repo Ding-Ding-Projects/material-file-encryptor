@@ -13,6 +13,7 @@ $toolOutput = Join-Path $root 'out\tools'
 if (Test-Path -LiteralPath $toolOutput) { Move-Item -LiteralPath $toolOutput -Destination (Join-Path $tools ('bundle.previous-' + [Guid]::NewGuid().ToString('N'))) }
 Move-Item -LiteralPath $toolStage -Destination $toolOutput
 Invoke-Checked { npm.cmd ci }
+Invoke-Checked { node scripts/build-site.mjs }
 Invoke-Checked { dotnet publish native/MaterialFileEncryptor.Host -c Release -r win-x64 --self-contained true -o out/native }
 New-Item -ItemType Directory -Force out/native/notices | Out-Null
 Copy-Item native/vendor/WinFsp/License.txt out/native/notices/WinFsp-License.txt

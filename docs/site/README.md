@@ -1,9 +1,9 @@
 # Public website
 
-This self-contained static site is intended to be published at the repository’s GitHub Pages URL. It needs no build step, external fonts, CDN, analytics, or server API. Stage the site and its diagrams together, matching the Pages workflow:
+This self-contained static site is intended to be published at the repository’s GitHub Pages URL. It needs no compilation, external fonts, CDN, analytics, or server API. The root build stages the site and its diagrams together in `out/site`, matching the Pages workflow:
 
 ```sh
-node scripts/build-site.mjs
+build.bat /s
 python3 -m http.server 8080 --directory out/site
 ```
 
