@@ -18,7 +18,9 @@ internal static class SavedCredentialStore
     private static extern bool CryptUnprotectData(ref Blob input, IntPtr description, ref Blob entropy, IntPtr reserved, IntPtr prompt, uint flags, out Blob output);
     [DllImport("kernel32.dll")] private static extern IntPtr LocalFree(IntPtr memory);
 
-    private static string Folder => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MaterialFileEncryptor", "Credentials");
+    // Squirrel owns LocalApplicationData/MaterialFileEncryptor. Credential data
+    // must remain independent of install/uninstall and never fall back there.
+    private static string Folder => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MaterialFileEncryptor-Data", "Credentials");
     private static string FileFor(string identity)
     {
         if (identity.Length != 32 || !identity.All(Uri.IsHexDigit)) throw new InvalidDataException("Invalid vault identity.");

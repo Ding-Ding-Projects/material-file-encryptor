@@ -197,6 +197,8 @@ try {
     }
     $receipt.install.installedPayloadEntriesMatched = @($manifest.files).Count
     $receipt.install.installedExecutableSha256 = File-Digest (Join-Path $installedRoot 'MaterialFileEncryptor.exe')
+    $receipt.install.installedExecutableSignature = (Get-AuthenticodeSignature -LiteralPath (Join-Path $installedRoot 'MaterialFileEncryptor.exe')).Status.ToString()
+    Assert-Check ($receipt.install.installedExecutableSignature -eq 'NotSigned') 'EXPECTED_UNSIGNED_APPLICATION'
     $receipt.install.uninstallRegistrationPresent = (Owned-UninstallEntries).Count -gt 0
     Assert-Check $receipt.install.uninstallRegistrationPresent 'INSTALL_REGISTRATION_MISSING'
     Wait-Check { (Owned-Processes).Count -eq 0 } 30 'SILENT_INSTALL_LEFT_RUNNING_APP'

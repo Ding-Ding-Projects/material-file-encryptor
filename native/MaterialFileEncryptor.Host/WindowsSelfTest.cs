@@ -284,10 +284,21 @@ internal static class WindowsSelfTest
             Directory.Delete(renamedFolder);
             Require(!Directory.Exists(renamedFolder), "empty directory deletion");
             check = "dpapi-unlock";
+            string localData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string installRoot = System.IO.Path.Combine(localData, "MaterialFileEncryptor");
+            bool installRootExisted = Directory.Exists(installRoot);
             controller.Execute("setAutoUnlock", Args(new { enabled = true }));
+            check = "saved-credential-data-root";
+            string savedIdentity = SavedCredentialStore.ReadVaultIdentity(storage, cache);
+            string savedFile = System.IO.Path.Combine(localData, "MaterialFileEncryptor-Data", "Credentials", savedIdentity + ".dpapi");
+            Require(File.Exists(savedFile), "saved credential is outside the Squirrel installation root");
+            Require(Directory.Exists(installRoot) == installRootExisted, "saving credentials does not create the Squirrel installation root");
+            Require(!File.Exists(System.IO.Path.Combine(installRoot, "Credentials", savedIdentity + ".dpapi")), "new credential is not written to the legacy installation-root location");
+            check = "dpapi-unlock";
             LockWhenIdle(controller);
             controller.Execute("autoUnlock", Args(new { storageDir = storage, cacheDir = cache, driveLetter = drive }));
             controller.Execute("forgetSavedCredential", Args(new { }));
+            Require(!File.Exists(savedFile), "forget removes the credential from the independent data root");
             LockWhenIdle(controller);
             check = "keyfile-create-mounted-write";
             string keyStorage = System.IO.Path.Combine(root, "key-storage"), keyCache = System.IO.Path.Combine(root, "key-cache");
@@ -326,7 +337,7 @@ internal static class WindowsSelfTest
             catch (FileNotFoundException) { forgottenRejected = true; }
             Require(forgottenRejected && Status(controller).GetProperty("locked").GetBoolean(), "forgotten auto-unlock cannot reopen vault");
             passed = true;
-            Console.Out.WriteLine("{\"selfTest\":true,\"filesystem\":\"WinFsp\",\"checks\":[\"create\",\"cross-process-filesystem\",\"read\",\"range-write\",\"flush\",\"truncate\",\"share-modes\",\"busy-unmount\",\"mapped-view-unmount\",\"replace-open\",\"rename-directory\",\"enumerate\",\"reopen\",\"delete-open\",\"delete-directory\",\"dpapi-unlock\",\"physical-part-cap\",\"future-and-edited-cap\",\"explicit-resplit\",\"pinned-offline-mounted-read\",\"ciphertext-cache\",\"copy-outside-plaintext\",\"offline-unpin-dirty-reopen\",\"offline-reconnect-fresh-cache\",\"keyfile-create-reopen\",\"wrong-keyfile\",\"keyfile-optional-dpapi\",\"forget-auto-unlock\",\"legacy-local-baseline\",\"closed-target-replace\",\"legacy-busy-replace-denied\",\"posix-open-replace\",\"posix-directory-open-child\"]}");
+            Console.Out.WriteLine("{\"selfTest\":true,\"filesystem\":\"WinFsp\",\"checks\":[\"create\",\"cross-process-filesystem\",\"read\",\"range-write\",\"flush\",\"truncate\",\"share-modes\",\"busy-unmount\",\"mapped-view-unmount\",\"replace-open\",\"rename-directory\",\"enumerate\",\"reopen\",\"delete-open\",\"delete-directory\",\"dpapi-unlock\",\"saved-credential-data-root\",\"physical-part-cap\",\"future-and-edited-cap\",\"explicit-resplit\",\"pinned-offline-mounted-read\",\"ciphertext-cache\",\"copy-outside-plaintext\",\"offline-unpin-dirty-reopen\",\"offline-reconnect-fresh-cache\",\"keyfile-create-reopen\",\"wrong-keyfile\",\"keyfile-optional-dpapi\",\"forget-auto-unlock\",\"legacy-local-baseline\",\"closed-target-replace\",\"legacy-busy-replace-denied\",\"posix-open-replace\",\"posix-directory-open-child\"]}");
         }
         catch (Exception error) { Console.Out.WriteLine(JsonSerializer.Serialize(new { selfTest = false, check, errorType = error.GetType().Name, driver = JsonSerializer.SerializeToElement(controller.Status()).GetProperty("driver"), mountDiagnostic = Status(controller).GetProperty("mountDiagnostic"), error = "A real Windows filesystem operation failed. See the driver and encrypted-storage test documentation." })); }
         finally

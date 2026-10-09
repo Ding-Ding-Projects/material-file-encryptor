@@ -40,6 +40,11 @@ try {
   await checkpoint('window-ready');
   video = page.video();
   const settle = () => evaluatePage(() => Promise.all(document.getAnimations().filter(animation => animation.effect?.getTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {}))));
+  const capture = async name => {
+    await evaluatePage(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
+    await settle();
+    await page.screenshot({ path: evidencePath(name), fullPage: false });
+  };
   page.on('pageerror', error => errors.push(errorType(error)));
   await page.waitForSelector('#create-button');
   assert.equal(await evaluatePage(() => typeof window.require), 'undefined');
@@ -74,25 +79,25 @@ try {
   }
   await checkpoint('locked-and-settings-captures');
   await settle();
-  await page.screenshot({ path: evidencePath('desktop-locked.png'), fullPage: true });
+  await capture('desktop-locked.png');
   await page.click('#create-button');
   await page.waitForSelector('#vault-dialog[open]');
   await page.fill('#storage-input', '');
   await page.fill('#cache-input', ''); // Clear previous fixture/default paths through the actual form before capture.
   await settle();
-  await page.screenshot({ path: evidencePath('desktop-create.png'), fullPage: true });
+  await capture('desktop-create.png');
   await page.locator('.credential-selector label').filter({ has: page.locator('input[value="keyFile"]') }).click();
   await settle();
-  await page.screenshot({ path: evidencePath('desktop-keyfile-choice.png'), fullPage: true });
+  await capture('desktop-keyfile-choice.png');
   await page.click('#dialog-cancel');
   await page.click('[data-view="settings"]');
   await page.selectOption('#theme-setting', 'dark');
   await settle();
-  await page.screenshot({ path: evidencePath('desktop-settings-dark.png'), fullPage: true });
+  await capture('desktop-settings-dark.png');
   await page.selectOption('#theme-setting', 'light');
   await page.click('[data-view="help"]');
   await settle();
-  await page.screenshot({ path: evidencePath('desktop-help.png'), fullPage: true });
+  await capture('desktop-help.png');
   const status = await evaluatePage(() => window.drive.status());
   if (process.platform === 'win32') assert.equal(status.driver.available, true, status.driver.error || 'WinFsp must be installed for the Windows desktop check.');
   if (process.platform === 'win32') {
@@ -133,21 +138,21 @@ try {
     assert.equal(await fs.readFile(path.join(mountedRoot, 'Welcome.txt'), 'utf8'), 'A real Windows mounted drive.\n');
     await page.waitForFunction(() => document.querySelector('#file-list').textContent.includes('Welcome.txt'));
     await settle();
-    await page.screenshot({ path: evidencePath('desktop-mounted.png'), fullPage: true });
+    await capture('desktop-mounted.png');
     await checkpoint('encrypted-offline-pin');
     await page.getByRole('radio', { name: 'Select Welcome.txt', exact: true }).check();
     await page.click('#offline-button');
     await waitForDesktopState(page, state => !state.operation && state.files.some(file => file.path === 'Welcome.txt' && file.offline));
     await page.click('[data-view="offline"]');
     await settle();
-    await page.screenshot({ path: evidencePath('desktop-offline.png'), fullPage: true });
+    await capture('desktop-offline.png');
     await checkpoint('lock');
     await page.click('#lock-button');
     await waitForDesktopState(page, state => state.locked && !state.mounted && !state.operation);
     assert.equal((await evaluatePage(() => window.drive.status())).locked, true);
   }
   assert.deepEqual(errors, []);
-  checkReceipt = { platform: process.platform, packagedArtifact: packagedEvidence, startupRegistration, security, driverAvailable: status.driver.available, pageErrors: errors, recording: `desktop-${process.platform}.webm`, mountedFilesystemChecked: process.platform === 'win32', checked: ['locked screen', 'create dialog', 'key-file choice', 'settings theme', 'help', 'preload isolation', ...(process.platform === 'win32' ? ['packaged ASAR and resources', 'startup registration toggle and restore', 'create and mount', 'mounted file write/read', 'encrypted offline pin and pane', 'lock'] : [])] };
+  checkReceipt = { platform: process.platform, packagedArtifact: packagedEvidence, startupRegistration, security, driverAvailable: status.driver.available, pageErrors: errors, recording: `desktop-${process.platform}.webm`, screenshots: { viewportOnly: true, scrollPosition: 'top' }, mountedFilesystemChecked: process.platform === 'win32', checked: ['locked screen', 'create dialog', 'key-file choice', 'settings theme', 'help', 'preload isolation', ...(process.platform === 'win32' ? ['packaged ASAR and resources', 'startup registration toggle and restore', 'create and mount', 'mounted file write/read', 'encrypted offline pin and pane', 'lock'] : [])] };
   await checkpoint('checks-passed');
 } catch (error) {
   failure = { phase, errorType: errorType(error), code: typeof error.code === 'string' && /^[A-Z_0-9]+$/.test(error.code) ? error.code : null, syscall: ['open', 'write', 'read', 'stat', 'mkdir', 'unlink', 'rename'].includes(error.syscall) ? error.syscall : null };
