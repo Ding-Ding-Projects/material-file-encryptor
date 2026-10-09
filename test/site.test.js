@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { parseVocabulary, replaceVocabulary, filterGuides } from '../docs/site/preferences.js';
+import {previewRelease,verifiedDownload,renderReleaseDownload} from '../docs/site/release.js';
 
 const valid = replacements => JSON.stringify({ version: 1, replacements });
 test('site vocabulary accepts the desktop contract and treats replacement markup as plain text', () => {
@@ -46,6 +47,50 @@ test('all same-page links resolve, asset links fit repository Pages, and release
   assert.doesNotMatch(html, /—/);
   assert.doesNotMatch(html, /github\.com\/DingDingProjects\//);
   for (const match of html.matchAll(/href="(https:\/\/github\.com[^"]+)"/g)) assert.ok(match[1].startsWith('https://github.com/Ding-Ding-Projects/material-file-encryptor'), 'GitHub links must use the real repository owner');
+});
+
+// Complete proof below is a unit fixture, never a claim about the real release.
+function completeReleaseFixture() {
+  const record=structuredClone(previewRelease);
+  for(const kind of ['download','packaged','installed','uninstall'])record.verification[kind]={status:'verified',sourceCommit:record.sourceCommit,installerSha256:record.installer.sha256,receiptSha256:'d'.repeat(64),verifiedAt:'2026-10-09T20:00:00Z'};
+  record.verification.download.bytes=record.installer.bytes;return record;
+}
+function downloadDocumentFixture() {
+  const nodes=new Map();const createElement=tag=>({tagName:tag.toUpperCase(),attributes:{},setAttribute(name,value){this.attributes[name]=value;},removeAttribute(name){delete this.attributes[name];if(name==='href')delete this.href;},replaceWith(next){nodes.set('#preview-download',next);}});
+  const button=createElement('button');button.disabled=true;button.id='preview-download';nodes.set('#preview-download',button);nodes.set('#download-help',{});nodes.set('#download-state',{});
+  return {querySelector:selector=>nodes.get(selector),createElement};
+}
+test('download remains inert for missing, draft, mismatched or incomplete release proof',()=>{
+  const complete=completeReleaseFixture();assert.equal(verifiedDownload(complete).url,complete.installer.url);
+  const pending=structuredClone(complete);pending.verification.installed.status='pending';
+  const invalid=[null,{},pending];
+  for(const kind of ['download','packaged','installed','uninstall']) {
+    const record=structuredClone(complete);record.verification[kind].status='pending';invalid.push(record);
+    const wrongSource=structuredClone(complete);wrongSource.verification[kind].sourceCommit='a'.repeat(40);invalid.push(wrongSource);
+    const wrongHash=structuredClone(complete);wrongHash.verification[kind].installerSha256='b'.repeat(64);invalid.push(wrongHash);
+    const noReceipt=structuredClone(complete);delete noReceipt.verification[kind].receiptSha256;invalid.push(noReceipt);
+  }
+  for(const patch of [{draft:true},{targetCommit:'c'.repeat(40)},{publishedAt:'invalid'},{releaseUrl:'https://example.com/release'}])invalid.push({...complete,...patch});
+  invalid.push({...complete,installer:{...complete.installer,url:'https://example.com/installer.exe'}});
+  invalid.push({...complete,installer:{...complete.installer,sha256:'bad'}});
+  const wrongBytes=structuredClone(complete);wrongBytes.verification.download.bytes++;invalid.push(wrongBytes);
+  const stale=structuredClone(complete);stale.verification.installed.verifiedAt='2026-10-08T00:00:00Z';invalid.push(stale);
+  for(const record of invalid) {
+    assert.equal(verifiedDownload(record),null);
+    const document=downloadDocumentFixture();assert.equal(renderReleaseDownload(document,record),false);
+    assert.equal(document.querySelector('#preview-download').tagName,'BUTTON');assert.equal(document.querySelector('#preview-download').disabled,true);assert.equal(document.querySelector('#preview-download').href,undefined);
+  }
+  const document=downloadDocumentFixture();assert.equal(renderReleaseDownload(document,complete),true);assert.equal(document.querySelector('#preview-download').href,complete.installer.url);
+  assert.equal(renderReleaseDownload(document,pending),false);assert.equal(document.querySelector('#preview-download').disabled,true);assert.equal(document.querySelector('#preview-download').href,undefined);
+});
+test('preview download copy and current capture labels have complete language mappings',async()=>{
+  const {cantonese,localized}=await import('../docs/site/locales.js');
+  for(const text of ['Published preview · verification pending','Verified Windows preview','Download verified preview for Windows','Direct download stays disabled until the downloaded installer, installed application and uninstall checks pass.','The downloaded installer, packaged application, installation and removal passed source-bound local checks.','View published preview','Read source-bound verification','Current Windows evidence','History','Recycle Bin','Explicit descendant selection','Dark appearance','Packaged Windows interface · source']) {
+    assert.ok(cantonese[text],text);assert.equal(localized(text,'en'),text);assert.equal(localized(text,'yue'),cantonese[text]);assert.equal(localized(text,'bilingual'),`${text} / ${cantonese[text]}`);
+  }
+  const html=await readFile(new URL('../docs/site/index.html',import.meta.url),'utf8');
+  for(const name of ['history','recycle','descendant','dark-settings'])assert.ok(html.includes(`images/captures/preview/${name}-preview.png`));
+  assert.ok(html.includes(previewRelease.releaseUrl));assert.ok(html.includes(previewRelease.sourceCommit));
 });
 
 test('message preferences accept only supported locales, booleans, and 1–5 integer levels', async () => {
@@ -96,4 +141,29 @@ test('capture gallery identifies actual Linux evidence and conceptual animation 
   assert.match(html, /id="workflow-play"/);
   assert.match(html, /id="workflow-replay"/);
   assert.match(html, /id="success-tone" min="1" max="5"/);
+});
+
+
+test('both editable textboxes expose dedicated non-submitting clear controls with 44 px targets',async()=>{
+  const html=await readFile(new URL('../docs/site/index.html',import.meta.url),'utf8');
+  const css=await readFile(new URL('../docs/site/site.css',import.meta.url),'utf8');
+  const script=await readFile(new URL('../docs/site/explainer.js',import.meta.url),'utf8');
+  const fields=[...html.matchAll(/<input[^>]*type="(?:text|search)"[^>]*>/g)];assert.equal(fields.length,2);
+  for(const id of ['search-clear','part-limit-clear']) {
+    assert.match(html,new RegExp(`<button id="${id}" type="button" aria-label="[^"]+"`));
+    const rules=css.slice(css.lastIndexOf('/* Both editable text controls'));
+    assert.match(rules,new RegExp(`#${id}\\{[^}]*min-width:44px[^}]*min-height:44px`));
+  }
+  assert.match(script,/clearLimit[.]addEventListener\('click', \(\) => clearExampleLimit\(limit\)\)/);
+  assert.match(script,/'Clear maximum encrypted part size':'清除加密分割檔最大大小'/);
+  assert.match(script,/limit[.]setAttribute\('aria-invalid', String\(!parts\)\)/);
+});
+
+test('clearing the example limit emits validation events, keeps focus and rejects disabled fields',async()=>{
+  const {clearExampleLimit,exampleParts}=await import('../docs/site/explainer.js');
+  const events=[];let focused=false,validity='previous';
+  const input={value:'10',disabled:false,readOnly:false,setCustomValidity:value=>{validity=value;},dispatchEvent:event=>events.push(event.type),focus:()=>{focused=true;}};
+  assert.equal(clearExampleLimit(input),true);assert.equal(input.value,'');assert.equal(validity,'');assert.deepEqual(events,['input','change']);assert.equal(focused,true);
+  for(const unit of ['KB','MB','GB'])assert.equal(exampleParts(input.value,unit),null);
+  for(const state of ['disabled','readOnly']){input.value='10';input[state]=true;events.length=0;assert.equal(clearExampleLimit(input),false);assert.equal(input.value,'10');assert.deepEqual(events,[]);input[state]=false;}
 });
