@@ -60,7 +60,7 @@ internal sealed class StoredVersion
     public string DeletionBatch { get; set; } = "";
     public Dictionary<string,string> Ancestors { get; set; } = [];
 }
-public sealed record VaultVersionInfo(string Id, string EntryId, string Path, DateTimeOffset TimestampUtc, long Length, bool IsDirectory, bool Deleted, bool IsAvailable);
+public sealed record VaultVersionInfo(string Id, string EntryId, string Path, DateTimeOffset TimestampUtc, long Length, bool IsDirectory, bool Deleted, bool IsAvailable, IReadOnlyList<string>? DescendantIds = null);
 internal sealed class Commit
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
