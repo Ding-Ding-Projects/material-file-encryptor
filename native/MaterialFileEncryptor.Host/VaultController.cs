@@ -448,6 +448,9 @@ internal sealed class VaultController : IDisposable
     {
         if (!historyPending || historyStore is null || vault is null) return;
         if (!Directory.Exists(historySourceRoot)) return;
+        // A partial source publication must retain the retry flag. A later flush
+        // can publish the existing journal without raising HistoryChanged again.
+        if (Engine.Status.PendingCommits > 0) return;
         var paths = Engine.GetEncryptedSnapshotPaths().Where(relative => File.Exists(System.IO.Path.Combine(historySourceRoot!, relative))).ToArray();
         historyStore.RecordSnapshotAsync(paths).GetAwaiter().GetResult();
         historyPending = false;
