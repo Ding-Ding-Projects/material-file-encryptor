@@ -5,7 +5,7 @@ export interface DriveState {
   locked: boolean; mounted: boolean; driveLetter?: string; storageDir?: string; cacheDir: string;
   files: DriveFile[]; availableDriveLetters: string[]; partSizeBytes?: number; autoUnlock?: boolean;
   history?: { versionCount: number; recycledCount: number; pendingVersionCount: number; retentionDays: number | null; gitAvailable: boolean };
-  transport?: { mode: 'folder' | 'privateGit'; remoteRepository?: string; available: boolean; pendingSynchronization?: boolean; lastError?: string };
+  transport?: { mode: 'folder' | 'privateGit'; remoteRepository?: string; available: boolean; pendingPublication?: boolean; pendingSynchronization?: boolean; lastError?: string };
   operation: string | null; driver: { available: boolean; checking?: boolean; error?: string | null };
   defaults: { cacheDir: string; driveLetter: string };
   preferences: { historyRetentionDays?: number | null; transport?: string; remoteRepository?: string; startup: boolean; autoUnlock: boolean; driveLetter: string; storageDir?: string; cacheDir?: string };

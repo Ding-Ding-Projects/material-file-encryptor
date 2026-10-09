@@ -32,7 +32,8 @@ export async function forgetRuntimeFixture(fixture,{createClient=exe=>new Native
 export function runtimeCompletion(state,{synchronized=false,applicationError=false}={}) {
  if(applicationError||(synchronized&&(state.sync?.error||state.transport?.lastError)))return {failed:true,ready:false};
  const operationFinished=state.operation==null;
- return {failed:false,ready:operationFinished&&(!synchronized||(state.sync?.running===false&&(state.transport?.available===true||state.sync?.sourceAvailable===true)&&(state.sync?.pendingCommits??0)===0&&(state.transport?.mode!=='privateGit'||state.transport?.pendingPublication===false)))};
+ const sourceAvailable=state.transport?.mode==='privateGit'?state.transport.available===true:(state.transport?.available===true||state.sync?.sourceAvailable===true);
+ return {failed:false,ready:operationFinished&&(!synchronized||(state.sync?.running===false&&sourceAvailable&&(state.sync?.pendingCommits??0)===0&&(state.transport?.mode!=='privateGit'||state.transport?.pendingPublication===false)))};
 }
 export async function checkMountedRuntime({fixture,launch,receipt,executePlan,prepareExit}) {
  const checks=[];let sequence=0;

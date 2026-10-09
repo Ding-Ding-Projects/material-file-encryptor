@@ -25,4 +25,5 @@ test('physical synchronization does not wait for quiet version snapshots and sti
  assert.equal(runtimeCompletion({...state,sync:{running:false,pendingCommits:1}},{synchronized:true}).ready,false);
  for(const pendingPublication of [true,undefined])assert.equal(runtimeCompletion({...state,transport:{mode:'privateGit',available:true,pendingPublication}},{synchronized:true}).ready,false);
  assert.equal(runtimeCompletion({...state,transport:{mode:'privateGit',available:true,pendingPublication:false}},{synchronized:true}).ready,true);
+ assert.equal(runtimeCompletion({...state,sync:{running:false,sourceAvailable:true,pendingCommits:0},transport:{mode:'privateGit',available:false,pendingPublication:false}},{synchronized:true}).ready,false);
 });
