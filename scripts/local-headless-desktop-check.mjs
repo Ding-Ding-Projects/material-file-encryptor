@@ -43,6 +43,46 @@ export function validateCaptureReview(review,inventory,binding) {
  const reviewed=new Map(review.captures.map(item=>[item.path,item]));if(reviewed.size!==inventory.length)return false;
  return inventory.every(item=>{const value=reviewed.get(item.path);return value?.sha256===item.sha256&&value.inspected===true&&value.privacyPassed===true;});
 }
+export function helperFailure(result,plan) {
+ const code=typeof result?.code==='string'?result.code.slice(0,100):'VERIFICATION_HELPER_FAILED';
+ const description=typeof result?.error==='string'?result.error:'';
+ const step=plan?.steps?.find(item=>typeof item.id==='string'&&(description.startsWith(item.id+' ')||description.startsWith(item.id+':')));
+ const error=new Error(code+(step?`: ${step.id.slice(0,120)} (${String(step.op).slice(0,30)})`:''));
+ error.helperResult=result;error.helperCode=code;error.helperStep=step?{id:step.id,op:step.op}:null;return error;
+}
+async function appendStepReceipt(runRoot,value) {
+ // Raw helper values remain in the task-owned private run root, never reports.
+ await fs.appendFile(path.join(runRoot,'step-receipts.jsonl'),JSON.stringify(value)+'\n',{mode:0o600});
+}
+export function createPlanRecorder(runRoot,execute) {
+ let sequence=0;
+ return async plan=>{
+  const record={version:1,kind:'cdp-plan',sequence:++sequence,startedAt:new Date().toISOString(),steps:plan.steps.map(({id,op})=>({id,op}))};
+  try {const result=await execute(plan);record.result=result;return result;}
+  catch(error){record.result=error.helperResult||{ok:false,code:error.helperCode||'VERIFICATION_HELPER_FAILED'};record.failure={code:error.helperCode||'VERIFICATION_HELPER_FAILED',step:error.helperStep||null};throw error;}
+  finally {record.finishedAt=new Date().toISOString();await appendStepReceipt(runRoot,record);}
+ };
+}
+export async function recordNativeCapture(runRoot,image,id,execute) {
+ try {await fs.lstat(image);throw new Error('Native capture output already exists.');}catch(error){if(error.code!=='ENOENT')throw error;}
+ const startedAt=new Date().toISOString();const result=await execute();const capturedAt=new Date().toISOString();
+ const bytes=await fs.readFile(image);const sha256=createHash('sha256').update(bytes).digest('hex');
+ const record={version:1,kind:'native-capture',id,value:{path:image,sha256,bytes:bytes.length,startedAt,capturedAt},result};
+ await appendStepReceipt(runRoot,record);return result;
+}
+export function captureProvenance(records,image,sha256) {
+ let provenance=null;
+ for(const record of records) {
+  const results=record.kind==='native-capture'?[{id:record.id,op:'capture',value:record.value}]:record.result?.results||[];
+  for(const step of results) {
+   const value=step.value;
+   if(step.op!=='capture'||!value||path.resolve(value.path||'')!==path.resolve(image)||value.sha256!==sha256)continue;
+   if(!Number.isFinite(Date.parse(value.startedAt))||!Number.isFinite(Date.parse(value.capturedAt))||Date.parse(value.startedAt)>Date.parse(value.capturedAt))continue;
+   provenance={startedAt:value.startedAt,capturedAt:value.capturedAt,timeZone:'UTC',captureMethod:record.kind==='native-capture'?'cheap-lowlevel-native':'cheap-lowlevel-cdp',stepId:step.id,receiptSequence:record.sequence??null};
+  }
+ }
+ return provenance;
+}
 export function finalVerdict(receipt) {
  const pending=[];
  if(!/^[a-f0-9]{40}$/.test(receipt.sourceCommit||'')||!/^[a-f0-9]{64}$/.test(receipt.executableSha256||'')||!/^[a-f0-9]{64}$/.test(receipt.resourceHashes?.asar||'')||!/^[a-f0-9]{64}$/.test(receipt.resourceHashes?.nativeHost||''))pending.push('Exact packaged source and resource hash binding');
@@ -50,6 +90,7 @@ export function finalVerdict(receipt) {
  if(receipt.runtime?.mountedFilesystemVerified!==true||receipt.runtime?.rendererAssertionsVerified!==true)pending.push('Mounted filesystem and history/recycling workflow');
  if(receipt.keyboard?.verified!==true)pending.push('Background native keyboard and observed focus transition');
  if(receipt.captureReview?.verified!==true)pending.push('Every capture inspected with matching hash and privacy verdict');
+ if(receipt.captureReview?.provenanceVerified!==true)pending.push('Every capture has recorded timing and matching provenance hash');
  if(receipt.cleanup?.client_ok!==true||receipt.cleanup?.recordedProcessesAbsent!==true||receipt.cleanup?.desktopClosed!==true)pending.push('Owned processes absent and hidden desktop closed');
  if(receipt.runtime?.startupRegistration?.restored!==true||receipt.runtime?.startupRegistration?.verificationOnly!==true||receipt.runtime?.startupRegistration?.enabledReadback!==true||receipt.runtime?.startupRegistration?.disabledReadback!==false)pending.push('Verification startup registration restored');
  if(receipt.fixtureCleanup?.ownedCredentialForgotten!==true)pending.push('Owned fixture credential forgotten');
@@ -57,25 +98,27 @@ export function finalVerdict(receipt) {
  return {passed:pending.length===0,pending};
 }
 async function reviewAllCaptures(receipt,runRoot,outputRoot) {
- const captures=[];for(const name of (await fs.readdir(outputRoot)).filter(name=>name.endsWith('.png')).sort()){const file=path.join(outputRoot,name);const stat=await fs.lstat(file);if(!stat.isFile()||stat.isSymbolicLink())throw new Error('Capture inventory contains a non-file or link.');const bytes=await fs.readFile(file);captures.push({path:file,sha256:createHash('sha256').update(bytes).digest('hex'),bytes:bytes.length});}
+ const records=(await fs.readFile(path.join(runRoot,'step-receipts.jsonl'),'utf8')).trim().split('\n').filter(Boolean).map(line=>JSON.parse(line));
+ const captures=[];for(const name of (await fs.readdir(outputRoot)).filter(name=>name.endsWith('.png')).sort()){const file=path.join(outputRoot,name);const stat=await fs.lstat(file);if(!stat.isFile()||stat.isSymbolicLink())throw new Error('Capture inventory contains a non-file or link.');const bytes=await fs.readFile(file);const sha256=createHash('sha256').update(bytes).digest('hex');captures.push({path:file,sha256,bytes:bytes.length,provenance:captureProvenance(records,file,sha256)});}
  const inventory={version:1,sourceCommit:receipt.sourceCommit,executableSha256:receipt.executableSha256,captures};await fs.writeFile(path.join(runRoot,'capture-inventory.json'),JSON.stringify(inventory,null,2));
+ const unavailable=captures.filter(item=>!item.provenance).length;if(unavailable)throw new Error(`Capture provenance unavailable for ${unavailable} image(s).`);
  if(!captures.some(item=>path.basename(item.path)==='native-baseline.png')||!captures.some(item=>path.basename(item.path)==='native-keyboard-tab.png'))throw new Error('Required native baseline or keyboard capture is missing.');
  const markerPath=path.join(runRoot,'captures-reviewed.json');console.log(JSON.stringify({state:'all-captures-review-required',inventory:path.join(runRoot,'capture-inventory.json'),marker:markerPath,captures}));
- const deadline=Date.now()+180000;while(Date.now()<deadline){try{const review=JSON.parse(await fs.readFile(markerPath,'utf8'));if(!validateCaptureReview(review,captures,receipt))throw new Error('Final review does not bind every capture and source hash.');return {verified:true,inventory,reviewedAt:new Date().toISOString()};}catch(error){if(error.code!=='ENOENT')throw error;}await new Promise(resolve=>setTimeout(resolve,250));}
+ const deadline=Date.now()+180000;while(Date.now()<deadline){try{const review=JSON.parse(await fs.readFile(markerPath,'utf8'));if(!validateCaptureReview(review,captures,receipt))throw new Error('Final review does not bind every capture and source hash.');return {verified:true,provenanceVerified:true,inventory,reviewedAt:new Date().toISOString()};}catch(error){if(error.code!=='ENOENT')throw error;}await new Promise(resolve=>setTimeout(resolve,250));}
  throw new Error('Final capture review remains pending after 180 seconds.');
 }
-async function verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,launch,cdp}) {
+async function verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,launch,executePlan}) {
  await command(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30']);const lifecycle=JSON.parse(await fs.readFile(statePath,'utf8'));
  const make=steps=>({version:1,receipt:statePath,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:15000,steps});
- await command(process.execPath,[cdp,'run'],make([{id:'keyboard-target-ready',op:'poll',expression:"document.querySelector('#file-search').getClientRects().length > 0 && !document.querySelector('#import-button').disabled",equals:true,intervalMs:200},{id:'keyboard-focus-setup',op:'evaluate',expression:"document.querySelector('#file-search').focus();document.activeElement.id === 'file-search'"},{id:'keyboard-before',op:'poll',expression:"document.activeElement.id",equals:'file-search',intervalMs:100}]));
+ await executePlan(make([{id:'keyboard-target-ready',op:'poll',expression:"document.querySelector('#file-search').getClientRects().length > 0 && !document.querySelector('#import-button').disabled",equals:true,intervalMs:200},{id:'keyboard-focus-setup',op:'evaluate',expression:"document.querySelector('#file-search').focus();document.activeElement.id === 'file-search'"},{id:'keyboard-before',op:'poll',expression:"document.activeElement.id",equals:'file-search',intervalMs:100}]));
  const input=await command(python,[lowlevel,'call','win_send_keys',...transportArgs],{hwnd:lifecycle.hwnd,keys:['tab']});
  if(input.window_hwnd!==lifecycle.hwnd)throw new Error('Native key result does not bind the owned window.');
- await command(process.execPath,[cdp,'run'],make([{id:'native-tab-transition',op:'poll',expression:"document.activeElement.id",equals:'import-button',intervalMs:100}]));
- const capture=await command(python,[lowlevel,'call','screenshot',...transportArgs],{hwnd:lifecycle.hwnd,output_path:path.join(launch.outputRoot,'native-keyboard-tab.png')});
+ await executePlan(make([{id:'native-tab-transition',op:'poll',expression:"document.activeElement.id",equals:'import-button',intervalMs:100}]));
+ const capture=await recordNativeCapture(launch.runRoot,path.join(launch.outputRoot,'native-keyboard-tab.png'),'native-keyboard-tab',()=>command(python,[lowlevel,'call','screenshot',...transportArgs],{hwnd:lifecycle.hwnd,output_path:path.join(launch.outputRoot,'native-keyboard-tab.png')}));
  await fs.access(path.join(launch.outputRoot,'native-keyboard-tab.png'));
  return {verified:true,hwnd:lifecycle.hwnd,input,before:'file-search',after:'import-button',capture,pixelsInspected:false};
 }
-function command(executable,args,input) {return new Promise((resolve,reject)=>{const child=spawn(executable,args,{windowsHide:true,stdio:['pipe','pipe','pipe']});let output='',bytes=0;const timer=setTimeout(()=>{child.kill();reject(new Error('Verification helper timed out.'));},90000);child.stdout.on('data',data=>{bytes+=data.length;if(bytes>1048576){child.kill();reject(new Error('Verification helper output exceeded limit.'));}else output+=data;});child.stderr.resume();child.on('error',error=>{clearTimeout(timer);reject(error);});child.on('close',code=>{clearTimeout(timer);try{const result=JSON.parse(output);if(code!==0||result.client_ok===false||result.ok===false)throw new Error(result.code||'Verification helper failed.');resolve(result);}catch(error){reject(error);}});child.stdin.end(input===undefined?'':JSON.stringify(input));});}
+function command(executable,args,input) {return new Promise((resolve,reject)=>{const child=spawn(executable,args,{windowsHide:true,stdio:['pipe','pipe','pipe']});let output='',bytes=0;const timer=setTimeout(()=>{child.kill();reject(new Error('Verification helper timed out.'));},90000);child.stdout.on('data',data=>{bytes+=data.length;if(bytes>1048576){child.kill();reject(new Error('Verification helper output exceeded limit.'));}else output+=data;});child.stderr.resume();child.on('error',error=>{clearTimeout(timer);reject(error);});child.on('close',code=>{clearTimeout(timer);try{const result=JSON.parse(output);if(code!==0||result.client_ok===false||result.ok===false)throw helperFailure(result,input);resolve(result);}catch(error){reject(error);}});child.stdin.end(input===undefined?'':JSON.stringify(input));});}
 async function freePort(){const server=net.createServer();await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});const port=server.address().port;await new Promise(resolve=>server.close(resolve));return port;}
 export async function runLocalHeadlessCheck(env=process.env) {
  if(process.platform!=='win32')throw new Error('The local isolated desktop route requires Windows.');
@@ -100,6 +143,7 @@ export async function runLocalHeadlessCheck(env=process.env) {
  if(env.MFE_HEADLESS_EXECUTE!=='1') {console.log(JSON.stringify({prepared:true,launched:false,runRoot,requires:'Set MFE_HEADLESS_EXECUTE=1 only after reviewing the packaged executable and isolated profile arguments.'}));return receipt;}
  console.log(JSON.stringify({state:'source-bound-launch-prepared',runRoot,sourceCommit:receipt.sourceCommit,executableSha256:receipt.executableSha256,resourceHashes}));
  const python=env.MFE_PYTHON||'python';let cleanup;let failure;let fixture;let runtime;
+ const executePlan=createPlanRecorder(runRoot,plan=>command(process.execPath,[cdp,'run'],plan));
  try {
   await command(python,[installedLowlevel,'self-test']);await command(process.execPath,[cdp,'self-test']);
   await command(python,[lowlevel,'preflight',...transportArgs,'--require','launch_on_headless_desktop','--require','list_headless_windows','--require','screenshot','--require','close_headless_desktop','--require','kill_process']);
@@ -107,10 +151,10 @@ export async function runLocalHeadlessCheck(env=process.env) {
   await command(python,[lowlevel,'launch',...transportArgs,'--state',statePath],launch);receipt.launched=true;
   await command(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30']);
   const lifecycle=JSON.parse(await fs.readFile(statePath,'utf8'));
-  const initial=await command(python,[lowlevel,'call','screenshot',...transportArgs],{hwnd:lifecycle.hwnd,output_path:path.join(launch.outputRoot,'native-baseline.png')});
+  const initial=await recordNativeCapture(runRoot,path.join(launch.outputRoot,'native-baseline.png'),'native-baseline',()=>command(python,[lowlevel,'call','screenshot',...transportArgs],{hwnd:lifecycle.hwnd,output_path:path.join(launch.outputRoot,'native-baseline.png')}));
   await fs.writeFile(path.join(runRoot,'initial-capture-result.json'),JSON.stringify(initial,null,2));
-  receipt.cdp=await command(process.execPath,[cdp,'run'],plan);
-  if(env.MFE_HEADLESS_INTERACTIONS==='1'||fixture) {receipt.baselineReview=await requirePixelReview(runRoot,path.join(launch.outputRoot,'native-baseline.png'));if(fixture){receipt.keyboard=await verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,launch,cdp});runtime=await checkMountedRuntime({fixture,launch,receipt:statePath,executePlan:plan=>command(process.execPath,[cdp,'run'],plan),prepareExit:()=>command(python,[lowlevel,'prepare-exit',statePath])});receipt.runtime=runtime;}else receipt.interfaceWorkflow=await command(process.execPath,[cdp,'run'],makeInterfacePlan(launch,statePath));receipt.rendererAssertionsVerified=true;}
+  receipt.cdp=await executePlan(plan);
+  if(env.MFE_HEADLESS_INTERACTIONS==='1'||fixture) {receipt.baselineReview=await requirePixelReview(runRoot,path.join(launch.outputRoot,'native-baseline.png'));if(fixture){receipt.keyboard=await verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,launch,executePlan});runtime=await checkMountedRuntime({fixture,launch,receipt:statePath,executePlan,prepareExit:()=>command(python,[lowlevel,'prepare-exit',statePath])});receipt.runtime=runtime;}else receipt.interfaceWorkflow=await executePlan(makeInterfacePlan(launch,statePath));receipt.rendererAssertionsVerified=true;}
  } catch(error) {failure=String(error.message).slice(0,200);}
  finally {try {await fs.access(statePath);cleanup=runtime?.quitRequested?await command(python,[lowlevel,'confirm-exit',statePath]):await command(python,[lowlevel,'cleanup','--state',statePath,'--allow-saved-pid-kill','--timeout','20']);if(fixture&&runtime?.quitRequested&&cleanup.client_ok)receipt.fixtureCleanup=await forgetRuntimeFixture(fixture);}catch(error){cleanup={ok:false,reason:String(error.message).slice(0,200)};}
   Object.assign(receipt,{finishedAt:new Date().toISOString(),failure,cleanup,profileRetained:true});

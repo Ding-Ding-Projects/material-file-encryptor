@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import os from 'node:os';
-import {makeLaunch,makeBaselinePlan,makeInterfacePlan,validateCaptureReview,finalVerdict} from '../scripts/local-headless-desktop-check.mjs';
+import fs from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {makeLaunch,makeBaselinePlan,makeInterfacePlan,validateCaptureReview,finalVerdict,helperFailure,createPlanRecorder,recordNativeCapture,captureProvenance} from '../scripts/local-headless-desktop-check.mjs';
 test('local launch binds exact executable, isolated profile and loopback debugging to one run',()=>{
  const root=path.join(os.tmpdir(),'owned-run');const executable=path.join(root,'package','MaterialFileEncryptor.exe');
  const launch=makeLaunch({executable,runRoot:root,port:9333});
@@ -48,7 +50,40 @@ test('final review binds every exact image, source and executable, with explicit
  const stale=structuredClone(review);stale.captures[0].sha256='e'.repeat(64);assert.equal(validateCaptureReview(stale,inventory,binding),false);assert.equal(validateCaptureReview({...review,sourceCommit:'f'.repeat(40)},inventory,binding),false);
 });
 test('passing receipt requires runtime, real keyboard, pixels, cleanup, startup and owned credential proof',()=>{
- const receipt={sourceCommit:'a'.repeat(40),executableSha256:'b'.repeat(64),resourceHashes:{asar:'c'.repeat(64),nativeHost:'d'.repeat(64)},launched:true,runtime:{mountedFilesystemVerified:true,rendererAssertionsVerified:true,startupRegistration:{restored:true,verificationOnly:true,enabledReadback:true,disabledReadback:false}},keyboard:{verified:true},captureReview:{verified:true},cleanup:{client_ok:true,recordedProcessesAbsent:true,desktopClosed:true},fixtureCleanup:{ownedCredentialForgotten:true}};
+ const receipt={sourceCommit:'a'.repeat(40),executableSha256:'b'.repeat(64),resourceHashes:{asar:'c'.repeat(64),nativeHost:'d'.repeat(64)},launched:true,runtime:{mountedFilesystemVerified:true,rendererAssertionsVerified:true,startupRegistration:{restored:true,verificationOnly:true,enabledReadback:true,disabledReadback:false}},keyboard:{verified:true},captureReview:{verified:true,provenanceVerified:true},cleanup:{client_ok:true,recordedProcessesAbsent:true,desktopClosed:true},fixtureCleanup:{ownedCredentialForgotten:true}};
  assert.equal(finalVerdict(receipt).passed,true);for(const key of ['runtime','keyboard','captureReview','cleanup','fixtureCleanup']) {const value=structuredClone(receipt);delete value[key];assert.equal(finalVerdict(value).passed,false);}
  assert.equal(finalVerdict({...receipt,failure:'runtime failure'}).passed,false);assert.equal(finalVerdict({...receipt,sourceCommit:undefined}).passed,false);
+ assert.equal(finalVerdict({...receipt,captureReview:{verified:true}}).passed,false);
+});
+
+test('private plan ledger retains exact capture timing and bounded failure steps without input text',async()=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-receipt-test-'));
+ try {
+  const image=path.join(root,'capture.png');const hash='a'.repeat(64);
+  const capture={path:image,bytes:4,sha256:hash,startedAt:'2026-01-01T01:02:03.000Z',capturedAt:'2026-01-01T01:02:03.100Z'};
+  let calls=0;const plan={steps:[{id:'capture-one',op:'capture',path:image},{id:'selection-action',op:'type',text:'input-not-for-the-ledger'}]};
+  const execute=createPlanRecorder(root,async value=>{
+   if(++calls===1)return {ok:true,results:[{id:'capture-one',op:'capture',value:capture}]};
+   throw helperFailure({ok:false,code:'SELECTOR_ACTION_FAILED',error:'selection-action did not resolve exactly one visible, enabled target.'},value);
+  });
+  const first=await execute(plan);assert.equal(first.results[0].value,capture);
+  await assert.rejects(execute(plan),error=>error.message==='SELECTOR_ACTION_FAILED: selection-action (type)');
+  const text=await fs.readFile(path.join(root,'step-receipts.jsonl'),'utf8');const records=text.trim().split('\n').map(line=>JSON.parse(line));
+  assert.equal(records.length,2);assert.equal(records[0].sequence,1);assert.equal(records[1].sequence,2);
+  assert.deepEqual(records[0].result.results[0].value,capture);assert.equal(records[1].result.code,'SELECTOR_ACTION_FAILED');assert.deepEqual(records[1].failure.step,{id:'selection-action',op:'type'});
+  assert.equal(text.includes('input-not-for-the-ledger'),false);
+  const provenance=captureProvenance(records,image,hash);assert.equal(provenance.startedAt,capture.startedAt);assert.equal(provenance.capturedAt,capture.capturedAt);assert.equal(provenance.timeZone,'UTC');
+  assert.equal(captureProvenance(records,image,'b'.repeat(64)),null);assert.equal(captureProvenance(records,path.join(root,'unrecorded.png'),hash),null);
+  const invalid=structuredClone(records);invalid[0].result.results[0].value.capturedAt='2025-01-01T00:00:00.000Z';assert.equal(captureProvenance(invalid,image,hash),null);
+ }finally{await fs.rm(root,{recursive:true});}
+});
+test('native capture interval surrounds the tool call and refuses an existing image',async()=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-native-receipt-test-'));const image=path.join(root,'capture.png');
+ try {
+  let within;await recordNativeCapture(root,image,'native-test',async()=>{within=Date.now();await fs.writeFile(image,'synthetic fixture bytes');return {ok:true};});
+  const records=(await fs.readFile(path.join(root,'step-receipts.jsonl'),'utf8')).trim().split('\n').map(line=>JSON.parse(line));
+  const hash=createHash('sha256').update(await fs.readFile(image)).digest('hex');const provenance=captureProvenance(records,image,hash);
+  assert.equal(provenance.captureMethod,'cheap-lowlevel-native');assert.ok(Date.parse(provenance.startedAt)<=within);assert.ok(Date.parse(provenance.capturedAt)>=within);
+  await assert.rejects(recordNativeCapture(root,image,'reused',async()=>{throw new Error('must not execute');}),/already exists/);
+ }finally{await fs.rm(root,{recursive:true});}
 });
