@@ -4,8 +4,12 @@ function Assert([bool]$condition, [string]$message) { if (!$condition) { throw $
 function Digest([string]$path, [string]$algorithm='SHA256') { (Get-FileHash -LiteralPath $path -Algorithm $algorithm).Hash.ToLowerInvariant() }
 function Gh([string[]]$Arguments) { [Management.Automation.ApplicationInfo]$nativeGh = Get-Command gh.exe -CommandType Application -ErrorAction Stop | Select-Object -First 1; $result = & $nativeGh.Source @Arguments; if ($LASTEXITCODE -ne 0) { throw 'GITHUB_CLI_OPERATION_FAILED' }; return $result }
 $repo=$env:GITHUB_REPOSITORY; $source=$env:GITHUB_SHA
+$workflowUrl="https://github.com/$repo/actions/runs/$($env:GITHUB_RUN_ID)"
+$workflowStarted=(Gh @('api',"repos/$repo/actions/runs/$($env:GITHUB_RUN_ID)/jobs",'--jq','.jobs | map(.started_at) | min'))
+Assert (![string]::IsNullOrWhiteSpace($workflowStarted)) 'WORKFLOW_START_UNAVAILABLE'
+$workflowStartedUtc=[DateTimeOffset]::Parse($workflowStarted).ToUniversalTime()
 Assert ($env:GITHUB_RUN_NUMBER -match '^[1-9][0-9]*$' -and $env:GITHUB_RUN_ATTEMPT -match '^[1-9][0-9]*$') 'INVALID_RUN_IDENTITY'
-$tag="v0.1.0-preview.$($env:GITHUB_RUN_NUMBER).$($env:GITHUB_RUN_ATTEMPT)"
+$tag="v1.$($env:GITHUB_RUN_NUMBER).$($env:GITHUB_RUN_ATTEMPT)"
 $output='release-output'; New-Item -ItemType Directory -Force $output | Out-Null
 $directory='out/make/squirrel.windows/x64'
 $setup=Join-Path $directory 'MaterialFileEncryptor-Setup.exe'; $releases=Join-Path $directory 'RELEASES'
@@ -33,14 +37,16 @@ $catalogAsset=@($catalogRelease.assets | Where-Object name -eq $imageEntry.file)
 Assert (!$catalogRelease.isDraft -and $catalogAsset.Count -eq 1 -and $catalogAsset[0].size -eq $imageEntry.bytes -and $catalogAsset[0].url -match '^https://github.com/') 'PUBLIC_CATALOG_IMAGE_REQUIRED'
 $imageUrl=$catalogAsset[0].url
 $assets=@($setup,$releases)+@($packages.FullName)
-$receipt=[ordered]@{schemaVersion=1; sourceCommit=$source; tag=$tag; packageVersion=(Get-Content package.json -Raw | ConvertFrom-Json).version; runId=$env:GITHUB_RUN_ID; runAttempt=$env:GITHUB_RUN_ATTEMPT; buildStartedAtUtc=$env:BUILD_STARTED_AT; packagingCompletedAtUtc=[DateTime]::UtcNow.ToString('o'); testsRunInCI=$false; runtimeVerification='pending independent local receipt'; unsignedInstaller=$true; assets=@($assets | ForEach-Object { @{name=(Split-Path $_ -Leaf); bytes=(Get-Item $_).Length; sha256=Digest $_} })}
+$receipt=[ordered]@{schemaVersion=1; sourceCommit=$source; tag=$tag; packageVersion=(Get-Content package.json -Raw | ConvertFrom-Json).version; runId=$env:GITHUB_RUN_ID; runAttempt=$env:GITHUB_RUN_ATTEMPT; workflowUrl=$workflowUrl; workflowStartedAtUtc=$workflowStartedUtc.ToString('o'); buildStartedAtUtc=$env:BUILD_STARTED_AT; packagingCompletedAtUtc=[DateTime]::UtcNow.ToString('o'); testsRunInCI=$false; runtimeVerification='pending independent local receipt'; unsignedInstaller=$true; assets=@($assets | ForEach-Object { @{name=(Split-Path $_ -Leaf); bytes=(Get-Item $_).Length; sha256=Digest $_} })}
 $receipt | ConvertTo-Json -Depth 8 | Set-Content "$output/build-provenance.json" -Encoding utf8
 $notes=@"
-Unsigned Squirrel.Windows x64 preview from ``$source``. Package version $($receipt.packageVersion).
+Unsigned Squirrel.Windows x64 release from ``$source``. Package version $($receipt.packageVersion).
 
 Build and packaging only. CI runs no tests, lint, GUI checks, installation, or updater checks. Runtime verification is pending an independent local receipt. Setup and application are unsigned and may show unknown-publisher warnings.
 
-呢個係未簽署嘅 Windows 預覽版。CI 只負責建置同封裝，冇執行測試、lint、介面、安裝或更新驗證。執行時驗證仍待獨立本機紀錄。
+呢個係未簽署嘅 Windows 發行版。CI 只負責建置同封裝，冇執行測試、lint、介面、安裝或更新驗證。執行時驗證仍待獨立本機紀錄。
+
+Workflow run: $workflowUrl
 
 Build started UTC: $($receipt.buildStartedAtUtc). Packaging completed UTC: $($receipt.packagingCompletedAtUtc).
 
@@ -48,15 +54,15 @@ Build started UTC: $($receipt.buildStartedAtUtc). Packaging completed UTC: $($re
 "@
 $notes | Set-Content "$output/release-notes.md" -Encoding utf8
 $assets+=@("$output/build-provenance.json")
-@{tag=$tag;sourceCommit=$source;prerelease=$true;overwriteAllowed=$false;assets=@($assets | ForEach-Object {Split-Path $_ -Leaf})} | ConvertTo-Json -Depth 5 | Set-Content "$output/release-plan.json" -Encoding utf8
+@{tag=$tag;sourceCommit=$source;isDraft=$false;isPrerelease=$false;latest=$true;overwriteAllowed=$false;assets=@($assets | ForEach-Object {Split-Path $_ -Leaf})} | ConvertTo-Json -Depth 5 | Set-Content "$output/release-plan.json" -Encoding utf8
 if ($PrepareOnly) { return }
 $refs=(Gh @('api',"repos/$repo/git/matching-refs/tags/$tag")) | ConvertFrom-Json
 Assert (@($refs | Where-Object ref -eq "refs/tags/$tag").Count -eq 0) 'TAG_ALREADY_EXISTS'
 $existing=@(Gh @('api','--paginate',"repos/$repo/releases?per_page=100",'--jq','.[].tag_name'))
 Assert ($existing -notcontains $tag) 'RELEASE_ALREADY_EXISTS'
-$null=Gh (@('release','create',$tag,'--repo',$repo,'--target',$source,'--prerelease','--latest=false','--title',"Material File Encryptor $tag",'--notes-file',"$output/release-notes.md")+$assets)
+$null=Gh (@('release','create',$tag,'--repo',$repo,'--target',$source,'--latest=true','--title',"Material File Encryptor $tag",'--notes-file',"$output/release-notes.md")+$assets)
 $published=(Gh @('release','view',$tag,'--repo',$repo,'--json','isDraft,isPrerelease,assets,url')) | ConvertFrom-Json
-Assert (!$published.isDraft -and $published.isPrerelease) 'PUBLICATION_INCOMPLETE'
+Assert (!$published.isDraft -and !$published.isPrerelease) 'PUBLICATION_INCOMPLETE'
 Assert (@($published.assets).Count -eq $assets.Count) 'PUBLISHED_ASSET_SET_MISMATCH'
 foreach ($asset in $assets) { Assert (@($published.assets | Where-Object name -eq (Split-Path $asset -Leaf)).Count -eq 1) 'PUBLISHED_ASSET_NAME_MISMATCH' }
 $target=(Gh @('api',"repos/$repo/git/ref/tags/$tag")) | ConvertFrom-Json
@@ -66,3 +72,13 @@ New-Item -ItemType Directory $download | Out-Null
 $null=Gh @('release','download',$tag,'--repo',$repo,'--dir',$download)
 foreach ($asset in $assets) { Assert ((Digest (Join-Path $download (Split-Path $asset -Leaf))) -eq (Digest $asset)) 'DOWNLOADED_ASSET_MISMATCH' }
 @{tag=$tag;sourceCommit=$source;url=$published.url;downloadHashesVerified=$true;verifiedAtUtc=[DateTime]::UtcNow.ToString('o')} | ConvertTo-Json | Set-Content "$output/publication-receipt.json" -Encoding utf8
+
+$workflowCompletedUtc=[DateTimeOffset]::UtcNow
+$workflowDuration=$workflowCompletedUtc-$workflowStartedUtc
+$durationText='{0:00}:{1:00}:{2:00}' -f [Math]::Floor($workflowDuration.TotalHours),$workflowDuration.Minutes,$workflowDuration.Seconds
+$notes += "`nWorkflow started: $($workflowStartedUtc.ToString('o'))`nWorkflow completed: $($workflowCompletedUtc.ToString('o'))`nWorkflow duration: $durationText`n"
+$notes | Set-Content "$output/release-notes.md" -Encoding utf8
+$null=Gh @('release','edit',$tag,'--repo',$repo,'--notes-file',"$output/release-notes.md")
+$publishedNotes=Gh @('release','view',$tag,'--repo',$repo,'--json','body','--jq','.body')
+Assert (($publishedNotes -join "`n").Replace("`r`n","`n").Trim() -eq $notes.Replace("`r`n","`n").Trim()) 'RELEASE_TIMING_NOTES_MISMATCH'
+@{runId=$env:GITHUB_RUN_ID;sourceCommit=$source;workflowStartedAtUtc=$workflowStartedUtc.ToString('o');workflowCompletedAtUtc=$workflowCompletedUtc.ToString('o');workflowDuration=$durationText} | ConvertTo-Json | Set-Content "$output/workflow-timing.json" -Encoding utf8
