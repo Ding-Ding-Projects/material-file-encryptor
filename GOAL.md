@@ -14,7 +14,7 @@ Deliver the first Material File Encryptor preview as a real Windows Explorer vir
 - [x] Deliver a tailored Material Design 3 desktop interface with accessible motion and reduced-motion support.
 - [x] Publish a separate GitHub Pages documentation site with truthful downloads, diagrams, and real application captures.
 - [x] Verify native behavior on Windows and record unsupported or unverified paths honestly.
-- [ ] Complete installed-application and uninstall verification; setup, payload comparison, registration and installed execution pass; updater-only uninstall residue requires explicit classification.
+- [ ] Complete installed-application and uninstall verification; setup, payload comparison, registration and installed execution pass; the original uninstall check failed on updater residue, which a separate strict hash-based diagnostic has now verified.
 - [x] Complete packaged-application verification of the editable drive-letter picker and manual-entry fallback, including real create/unlock controls and persisted mounted bytes at `1e16dea8`.
 - [x] Preserve frequent source checkpoints and integrate verified work into the default branch.
 

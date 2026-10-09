@@ -55,7 +55,7 @@
       "Update.exe",
       "app-0.1.0/squirrel.exe"
     ],
-    "residueClassificationStatus": "pending"
+    "residueClassificationStatus": "verified-in-separate-read-only-diagnostic"
   },
   "transportRepair": {
     "sourceCommit": "d0c5e036b0762e41d6ba523bf0d2424e24e83024",
@@ -70,5 +70,19 @@
     "Transport-setup and copy-upgrade visual states remain unverified.",
     "Continuous console monitoring was not performed.",
     "Setup and payload comparison do not establish complete installed or uninstall behavior."
-  ]
+  ],
+  "uninstallResidueDiagnostic": {
+    "checkerCommit": "995dbcf3f3c90b4bb0a973656161243901bd97d7",
+    "focusedChecksPassed": 17,
+    "observedAtUtc": "2026-10-09T18:25:40.0270681Z",
+    "originalFailedReceiptSha256": "6f4433348aa3e09779f9545d6146903b434ce800ad63d7f31350e17f25e48adb",
+    "lifecycleReexecuted": false,
+    "applicationPayloadRemoved": true,
+    "applicationDirectoriesRemoved": false,
+    "registrationRemoved": true,
+    "startupRemoved": true,
+    "noInstalledProcesses": true,
+    "classification": "verified-updater-only",
+    "trustedUpdaterSha256": "76359cd4b0349a83337b941332ad042c90351c2bb0a4628307740324c97984cc"
+  }
 }

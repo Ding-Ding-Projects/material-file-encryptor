@@ -21,7 +21,8 @@
 - [ ] Verify transport-setup visual states in the built Windows application.
 - [ ] Verify copy-upgrade visual states in the built Windows application; core behavior is verified separately.
 - [x] Resolve installation registration detection and verify 573 installed payload entries plus the real installed 70-check desktop flow.
-- [ ] Complete uninstall acceptance with exact updater-only residue classification; the original directory-presence failure remains recorded.
+- [x] Verify exact updater-only residue with 17 focused cases and a read-only diagnostic; preserve the original directory-presence failure.
+- [ ] Run the revised full installer lifecycle against independently downloaded release bytes.
 - [ ] Build and publish an unsigned Squirrel preview with exact source and package evidence.
 - [ ] Independently download, hash and verify the released installer.
 - [ ] Refresh documentation and real captures from the final verified candidate.
