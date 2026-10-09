@@ -40,7 +40,7 @@ internal sealed class VaultController : IDisposable
     private string transportMode = "folder";
     private string? remoteRepository;
     private IVaultTransport? transport;
-    private bool transportAvailable;
+    private bool transportAvailable, pendingPrivatePublication;
     private Func<VaultOptions, string, string, (IVaultTransport Transport, GitVaultHistory History)>? privateTransportFactory = null;
     private GitVaultHistory? historyStore;
     private bool historyPending;
@@ -107,7 +107,7 @@ internal sealed class VaultController : IDisposable
                 autoUnlock = identity is not null && SavedCredentialStore.Exists(identity),
                 history = new { versionCount = vault?.ListVersions().Count ?? 0, recycledCount = vault?.ListDeleted().Count ?? 0, pendingVersionCount = vault?.PendingVersionCount ?? 0, retentionDays = historyRetentionDays, gitAvailable = historyStore is not null },
                 storageFormat = vault?.StorageFormat,
-                transport = new { mode = transportMode, remoteRepository, available = vault is not null && (transportMode == "privateGit" ? transportAvailable : vault.Status.IsSourceAvailable), lastError = syncError },
+                transport = new { mode = transportMode, remoteRepository, available = vault is not null && (transportMode == "privateGit" ? transportAvailable : vault.Status.IsSourceAvailable), pendingSynchronization = vault is not null && transportMode == "privateGit" && (pendingPrivatePublication || historyPending || vault.Status.PendingCommits > 0 || vault.PendingVersionCount > 0), lastError = syncError },
                 availableDriveLetters = FreeDriveLetters()
             };
         }
@@ -263,7 +263,7 @@ internal sealed class VaultController : IDisposable
         engineGeneration++;
         vault = opened; storageDir = options.StorageRoot; cacheDir = options.CacheRoot; identity = opened.VaultId; driveLetter = chosenDrive;
         transportMode = selectedTransport; remoteRepository = OptionalString(args, "remoteRepository");
-        transportAvailable = connected;
+        transportAvailable = connected; pendingPrivatePublication = selectedTransport == "privateGit";
         transport = selectedBackend; historyStore = selectedHistory; historyPending = true;
         historySourceRoot = selectedTransport == "folder" ? options.CacheRoot : options.StorageRoot;
         nextSyncAttempt = DateTimeOffset.UtcNow;
@@ -440,6 +440,7 @@ internal sealed class VaultController : IDisposable
             {
                 if (generation != engineGeneration || !ReferenceEquals(vault, capturedEngine)) return;
                 lastSync = DateTimeOffset.UtcNow; transportAvailable = true;
+                if (publishAgain) pendingPrivatePublication = false;
                 syncError = capturedEngine.Status.LastError is null ? null : "Encrypted storage synchronization needs attention.";
             }
         }
@@ -483,7 +484,8 @@ internal sealed class VaultController : IDisposable
         // can publish the existing journal without raising HistoryChanged again.
         if (Engine.Status.PendingCommits > 0) return;
         var paths = Engine.GetEncryptedSnapshotPaths().Where(relative => File.Exists(System.IO.Path.Combine(historySourceRoot!, relative))).ToArray();
-        historyStore.RecordSnapshotAsync(paths).GetAwaiter().GetResult();
+        var recorded = historyStore.RecordSnapshotAsync(paths).GetAwaiter().GetResult();
+        if (transportMode == "privateGit" && recorded is not null) pendingPrivatePublication = true;
         historyPending = false;
     }
     private static bool IsWithin(string child, string parent) => child.Equals(parent, StringComparison.OrdinalIgnoreCase) || child.StartsWith(parent.TrimEnd(System.IO.Path.DirectorySeparatorChar) + System.IO.Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);

@@ -107,6 +107,7 @@ static class Regression
             var opened=JsonSerializer.SerializeToElement(Call(controller,"Execute","unlock",JsonSerializer.SerializeToElement(args)));
             Assert(!opened.GetProperty("locked").GetBoolean()&&!opened.GetProperty("transport").GetProperty("available").GetBoolean(),"Offline cached unlock reported remote availability");
             Assert(opened.GetProperty("sync").GetProperty("error").GetString()!.Contains("offline"),"Offline warning absent");
+            Assert(opened.GetProperty("transport").GetProperty("pendingSynchronization").GetBoolean(),"Unconfirmed private synchronization reported complete");
             var engineField=ControllerType.GetField("vault",BindingFlags.Instance|BindingFlags.NonPublic)!;
             var current=(VaultEngine)engineField.GetValue(controller)!; var bytes=new byte[3]; Assert(current.ReadRange("pinned.bin",0,bytes)==3&&bytes.SequenceEqual(new byte[]{7,8,9}),"Pinned cached read failed offline");
             foreach(var part in historicalParts) foreach(var folder in new[]{"source","cache"}) { var absent=Path.Combine(root,folder,"parts",part); if(File.Exists(absent)) File.Delete(absent); }
@@ -115,8 +116,9 @@ static class Regression
             catch(TargetInvocationException error) when(error.InnerException is InvalidOperationException needed&&needed.Message.Contains("Connect to private storage")) { }
             Assert(current.ReadRange("pinned.bin",0,bytes)==3&&bytes.SequenceEqual(new byte[]{7,8,9}),"Failed offline historical restore changed current pinned bytes");
             Assert(backend.Hydrations==0,"Pinned offline read requested network hydration");
-            backend.Offline=false; Call(controller,"SyncIfUnlocked");
+            await current.SaveDueVersionsAsync(DateTimeOffset.MaxValue); backend.Offline=false; Call(controller,"SyncIfUnlocked");
             var online=JsonSerializer.SerializeToElement(Call(controller,"Status")); Assert(online.GetProperty("transport").GetProperty("available").GetBoolean()&&online.GetProperty("sync").GetProperty("error").ValueKind==JsonValueKind.Null,"Successful synchronization did not clear offline warning");
+            Assert(!online.GetProperty("transport").GetProperty("pendingSynchronization").GetBoolean(),"Successful second network pass left publication pending");
             Call(controller,"Execute","lock",JsonSerializer.SerializeToElement(new{})); backend.Offline=true;
             var fresh=new {storageDir=Path.Combine(root,"fresh-source"),cacheDir=Path.Combine(root,"fresh-cache"),transport="privateGit",remoteRepository="fixture/private",password="controller regression fixture only"};
             try { Call(controller,"Execute","unlock",JsonSerializer.SerializeToElement(fresh)); throw new Exception("Uncached offline vault opened"); }
