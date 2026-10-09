@@ -1,4 +1,19 @@
 using MaterialFileEncryptor.Core;
+if (args.Length == 1 && args[0] == "--wait-fixture") { await Task.Delay(TimeSpan.FromSeconds(30)); return; }
+if (args.Length == 2 && args[0] == "--child-fixture")
+{
+    var start = new System.Diagnostics.ProcessStartInfo("dotnet") { UseShellExecute = false, CreateNoWindow = true };
+    start.ArgumentList.Add(typeof(LiveTransportChecks).Assembly.Location); start.ArgumentList.Add("--wait-fixture");
+    using var child = System.Diagnostics.Process.Start(start)!;
+    try
+    {
+        File.WriteAllText(args[1] + ".tmp", child.Id.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        File.Move(args[1] + ".tmp", args[1]);
+        await child.WaitForExitAsync();
+    }
+    finally { if (!child.HasExited) child.Kill(entireProcessTree: true); }
+    return;
+}
 if (args.Length == 1 && args[0] == "--stdin-fixture") { Console.Write(Console.IsInputRedirected && Console.In.ReadToEnd().Length == 0 ? "closed-input" : "inherited-input"); return; }
 if (args.Length == 1 && args[0] == "--stdin-parent-fixture") { var result = await new VaultProcessRunner().RunAsync("dotnet", [typeof(LiveTransportChecks).Assembly.Location, "--stdin-fixture"], Environment.CurrentDirectory); Console.Write(result.Text); return; }
 if (args.Length == 1 && args[0] == "--pipe-fixture") { while (true) { Console.Error.Write(new string('e', 8192)); Console.Out.Write(new string('o', 8192)); await Task.Delay(10); } }
@@ -122,10 +137,26 @@ try
     var packagedRunner = new VaultProcessRunner(baseDirectory: packagedBase);
     Check(packagedRunner.ResolveExecutable("git") == packagedGit && packagedRunner.ResolveExecutable("gh") == packagedGh, "packaged native host resolves sibling bundled tools independently of PATH");
     try { await new VaultProcessRunner(Path.Combine(root, "missing-git.exe")).RunAsync("git", ["--version"], root); throw new Exception("accepted missing tool"); } catch (IOException) { Check(true, "missing configured executable produces explicit tool error"); }
-    using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
-    var watch = System.Diagnostics.Stopwatch.StartNew();
-    try { await runner.RunAsync("git", ["-c", "alias.pause=!sleep 30", "pause"], root, cancellation.Token); throw new Exception("ignored cancellation"); } catch (OperationCanceledException) { Check(watch.Elapsed < TimeSpan.FromSeconds(5), "process cancellation terminates child tree promptly"); }
     var fixtureAssembly = typeof(LiveTransportChecks).Assembly.Location;
+    using var cancellation = new CancellationTokenSource();
+    var childPidPath = Path.Combine(root, "cancellation-child.pid");
+    var paused = runner.RunAsync("dotnet", [fixtureAssembly, "--child-fixture", childPidPath], root, cancellation.Token);
+    var watch = System.Diagnostics.Stopwatch.StartNew();
+    try
+    {
+        while (!File.Exists(childPidPath) && !paused.IsCompleted && watch.Elapsed < TimeSpan.FromSeconds(10)) await Task.Delay(25);
+        if (!File.Exists(childPidPath)) throw new Exception("Cancellation fixture did not start its managed child.");
+        using var child = System.Diagnostics.Process.GetProcessById(int.Parse(File.ReadAllText(childPidPath), System.Globalization.CultureInfo.InvariantCulture));
+        if (child.HasExited) throw new Exception("Cancellation fixture child exited before cancellation.");
+        watch.Restart(); cancellation.Cancel();
+        try { await paused; throw new Exception("ignored cancellation"); }
+        catch (OperationCanceledException) { Check(child.WaitForExit(3000) && watch.Elapsed < TimeSpan.FromSeconds(5), "process cancellation terminates the confirmed managed child tree promptly"); }
+    }
+    finally
+    {
+        cancellation.Cancel();
+        try { await paused; } catch (OperationCanceledException) { }
+    }
     var inputStart = new System.Diagnostics.ProcessStartInfo("dotnet") { WorkingDirectory = root, RedirectStandardInput = true, RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
     inputStart.ArgumentList.Add(fixtureAssembly); inputStart.ArgumentList.Add("--stdin-parent-fixture");
     using (var inputParent = System.Diagnostics.Process.Start(inputStart)!)
