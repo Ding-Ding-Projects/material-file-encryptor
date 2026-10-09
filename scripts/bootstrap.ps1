@@ -1,17 +1,22 @@
 ﻿param([switch]$InstallDriver, [switch]$RuntimeToolsOnly)
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue' # Avoid per-byte/per-file progress overhead in Windows PowerShell.
-Import-Module Microsoft.PowerShell.Utility -Force -ErrorAction Stop
 $root = Split-Path $PSScriptRoot -Parent
 $manifest = Get-Content (Join-Path $root 'dependencies.json') -Raw | ConvertFrom-Json
 $tools = Join-Path $env:LOCALAPPDATA 'MaterialFileEncryptor-BuildTools'
 New-Item -ItemType Directory -Force $tools | Out-Null
+function Get-BootstrapDigest([string]$filename, [string]$algorithm = 'SHA256') {
+  $stream = [IO.File]::OpenRead($filename)
+  $hasher = if ($algorithm -eq 'SHA512') { [Security.Cryptography.SHA512]::Create() } else { [Security.Cryptography.SHA256]::Create() }
+  try { return ([BitConverter]::ToString($hasher.ComputeHash($stream))).Replace('-', '').ToLowerInvariant() }
+  finally { $hasher.Dispose(); $stream.Dispose() }
+}
 function Get-Verified($entry, $file) {
   if (!(Test-Path $file)) { Write-Host "Downloading pinned dependency $($entry.version)."; Invoke-WebRequest -Uri $entry.url -OutFile $file -UseBasicParsing }
   Write-Host "Verifying pinned dependency $($entry.version)."
   $algorithm = if ($entry.sha512) { 'SHA512' } else { 'SHA256' }
   $expected = if ($entry.sha512) { $entry.sha512 } else { $entry.sha256 }
-  if ((Get-FileHash $file -Algorithm $algorithm).Hash.ToLowerInvariant() -ne $expected) {
+  if ((Get-BootstrapDigest $file $algorithm) -ne $expected) {
     Remove-Item $file -Force
     throw "Dependency digest mismatch. Download removed: $file"
   }
@@ -32,7 +37,7 @@ function Test-PortableTree([string]$archive, [string]$directory) {
       $stream = $entry.Open(); $hasher = [Security.Cryptography.SHA256]::Create()
       try { $hash = ([BitConverter]::ToString($hasher.ComputeHash($stream))).Replace('-', '').ToLowerInvariant() }
       finally { $stream.Dispose(); $hasher.Dispose() }
-      if ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $hash) { return $false }
+      if ((Get-BootstrapDigest $path) -ne $hash) { return $false }
       $expected[$relative.ToLowerInvariant()] = $true
     }
     $actual = @(Get-ChildItem -LiteralPath $directory -File -Recurse)
