@@ -3,6 +3,7 @@ import path from 'node:path';
 import os from 'node:os';
 import {randomBytes} from 'node:crypto';
 import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
 import {NativeClient} from '../src/main/native-client.js';
 
 export function fixturePreferences(fixture) {return {startup:false,autoUnlock:true,storageDir:fixture.storageDir,cacheDir:fixture.cacheDir,driveLetter:fixture.driveLetter,transport:'folder',historyRetentionDays:null};}
@@ -11,7 +12,8 @@ async function disposeNative(client) {
  const stopped=new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Owned native fixture helper did not exit.')),15000);child.once('exit',()=>{clearTimeout(timer);resolve();});});client.dispose();await stopped;
 }
 export async function prepareRuntimeFixture({executable,profile,createClient=exe=>new NativeClient(exe)}) {
- const root=await fs.mkdtemp(path.join(path.parse(os.tmpdir()).root,'MaterialFileEncryptor-Verification-'));
+ const documents=process.env.MFE_VERIFICATION_DOCUMENTS||execFileSync('powershell.exe',['-NoProfile','-Command',"[Environment]::GetFolderPath('MyDocuments')"],{encoding:'utf8',windowsHide:true}).trim();assert.ok(documents&&path.isAbsolute(documents),'Resolve the current known Documents folder and provide MFE_VERIFICATION_DOCUMENTS.');
+ const root=await fs.mkdtemp(path.join(documents,'MaterialFileEncryptor-Verification-'));
  const fixture={version:1,root,storageDir:path.join(root,'storage'),cacheDir:path.join(root,'cache'),nativeExecutable:path.join(path.dirname(executable),'resources','native','MaterialFileEncryptor.Host.exe'),prepared:false};
  await fs.mkdir(fixture.storageDir);await fs.mkdir(fixture.cacheDir);const client=createClient(fixture.nativeExecutable);let password=randomBytes(32).toString('base64url');
  try {const state=await client.request('status');assert.equal(state.driver.available,true,'WinFsp is required for a mounted fixture.');fixture.driveLetter=state.availableDriveLetters.includes('M:')?'M:':state.availableDriveLetters[0];assert.match(fixture.driveLetter||'',/^[D-Z]:$/);
