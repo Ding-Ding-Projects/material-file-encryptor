@@ -2,7 +2,7 @@
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
-. "$PSScriptRoot\bootstrap.ps1"
+. "$PSScriptRoot\bootstrap.ps1" -InstallerTools:$Installer
 function Invoke-Checked([scriptblock]$command) { & $command; if ($LASTEXITCODE -ne 0) { throw "Build command failed with exit code $LASTEXITCODE" } }
 $toolStage = Join-Path $root ('out\tools.stage-' + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force $toolStage | Out-Null
@@ -19,4 +19,14 @@ Copy-Item native/vendor/WinFsp/License.txt out/native/notices/WinFsp-License.txt
 Copy-Item native/vendor/WinFsp/ORIGIN.md out/native/notices/WinFsp-Origin.md
 Copy-Item LICENSE out/native/notices/MaterialFileEncryptor-License.txt
 Invoke-Checked { npm.cmd run package -- --platform=win32 --arch=x64 }
-if ($Installer) { Invoke-Checked { npm.cmd run make -- --platform=win32 --arch=x64 --from-package } }
+if ($Installer) {
+  # Preserve the lockfile-installed vendor helpers, replacing only the archive
+  # engine with the pinned standalone distribution before Squirrel generates bytes.
+  $vendor = Join-Path $tools ('squirrel-vendor-' + [Guid]::NewGuid().ToString('N'))
+  Copy-Item -LiteralPath (Join-Path $root 'node_modules\electron-winstaller\vendor') -Destination $vendor -Recurse
+  Copy-Item -LiteralPath $env:MFE_SEVENZIP_EXECUTABLE -Destination (Join-Path $vendor '7z-x64.exe') -Force
+  Copy-Item -LiteralPath $env:MFE_SEVENZIP_LICENSE -Destination (Join-Path $vendor '7zip-License.txt')
+  $env:MFE_SQUIRREL_VENDOR_DIRECTORY = $vendor
+  Invoke-Checked { npm.cmd run make -- --platform=win32 --arch=x64 --from-package }
+  Invoke-Checked { powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/verify-package-crc.ps1 -PackageDirectory out/make/squirrel.windows/x64 }
+}

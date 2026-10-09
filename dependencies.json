@@ -25,5 +25,17 @@
     "version": "2.56.0.windows.2",
     "url": "https://github.com/git-for-windows/git/releases/download/v2.56.0.windows.2/MinGit-2.56.0.2-64-bit.zip",
     "sha256": "da35e72aa21c005a5a0d298cfbae110bc1609a815730ea0dde84b01a1b3cd3be"
+  },
+  "sevenZip": {
+    "version": "26.03",
+    "url": "https://github.com/ip7z/7zip/releases/download/26.03/7z2603-extra.7z",
+    "sha256": "191894e6acb3647ffb69ce630479ff318523b2e2b9890aa7f05c1127c2e59b8f",
+    "standaloneSha256": "edbee35370e14030e4c785cf88200f42dc651c1eb4217c1e3963c38a12f099b0",
+    "licenseSha256": "39d2187b942cc88818dd959e53c6b7dddd152097a42061467c4d56050168d646"
+  },
+  "sevenZipExtractor": {
+    "version": "26.03",
+    "url": "https://github.com/ip7z/7zip/releases/download/26.03/7zr.exe",
+    "sha256": "ad4c82fadcbdf93c03b4fc440f300509c7d60c5c2f4d183e35d9d70d6957037d"
   }
 }

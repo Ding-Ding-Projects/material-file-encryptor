@@ -1,4 +1,4 @@
-﻿param([switch]$InstallDriver, [switch]$RuntimeToolsOnly)
+﻿param([switch]$InstallDriver, [switch]$RuntimeToolsOnly, [switch]$InstallerTools)
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue' # Avoid per-byte/per-file progress overhead in Windows PowerShell.
 $root = Split-Path $PSScriptRoot -Parent
@@ -65,6 +65,33 @@ $env:MFE_GIT_TOOL_ROOT = $gitPortable
 $env:MFE_GH_TOOL_ROOT = $ghPortable
 $env:PATH = "$(Split-Path $env:MFE_GIT_EXECUTABLE);$(Split-Path $env:MFE_GH_EXECUTABLE);$env:PATH"
 Write-Host "Verified portable $gitVersion and $ghVersion. No administrator rights required."
+if ($InstallerTools) {
+  $extractor = Join-Path $tools "7zr-$($manifest.sevenZipExtractor.version).exe"
+  $sevenArchive = Join-Path $tools "7zip-$($manifest.sevenZip.version).7z"
+  Get-Verified $manifest.sevenZipExtractor $extractor
+  Get-Verified $manifest.sevenZip $sevenArchive
+  $sevenRoot = Join-Path $tools "7zip-$($manifest.sevenZip.version)"
+  function InstallerToolDigest([string]$path) {
+    $stream=[IO.File]::OpenRead($path); $sha=[Security.Cryptography.SHA256]::Create()
+    try { return ([BitConverter]::ToString($sha.ComputeHash($stream))).Replace('-', '').ToLowerInvariant() }
+    finally { $stream.Dispose(); $sha.Dispose() }
+  }
+  function Test-SevenZip([string]$directory) {
+    $exe = Join-Path $directory 'x64\7za.exe'; $license = Join-Path $directory 'License.txt'
+    return (Test-Path -LiteralPath $exe) -and (Test-Path -LiteralPath $license) -and (InstallerToolDigest $exe) -eq $manifest.sevenZip.standaloneSha256 -and (InstallerToolDigest $license) -eq $manifest.sevenZip.licenseSha256
+  }
+  if (!(Test-SevenZip $sevenRoot)) {
+    $stage = $sevenRoot + '.stage-' + [Guid]::NewGuid().ToString('N')
+    & $extractor x $sevenArchive "-o$stage" -y
+    if ($LASTEXITCODE -ne 0 -or !(Test-SevenZip $stage)) { throw 'Pinned portable 7-Zip extraction failed; previous cache retained.' }
+    if (Test-Path -LiteralPath $sevenRoot) { Move-Item -LiteralPath $sevenRoot -Destination ($sevenRoot + '.previous-' + [Guid]::NewGuid().ToString('N')) }
+    Move-Item -LiteralPath $stage -Destination $sevenRoot
+  }
+  $env:MFE_SEVENZIP_EXECUTABLE = Join-Path $sevenRoot 'x64\7za.exe'
+  $env:MFE_SEVENZIP_LICENSE = Join-Path $sevenRoot 'License.txt'
+  & $env:MFE_SEVENZIP_EXECUTABLE i | Select-Object -First 4
+  if ($LASTEXITCODE -ne 0) { throw 'Pinned portable 7-Zip activation failed.' }
+}
 if ($RuntimeToolsOnly) { return }
 $nodeArchive = Join-Path $tools "node-$($manifest.node.version).zip"
 Get-Verified $manifest.node $nodeArchive
