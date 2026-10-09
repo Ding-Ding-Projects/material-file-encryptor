@@ -93,19 +93,25 @@ export function makeRestorePlan({launch,receipt,phase}) {
  return plan(launch,receipt,steps);
 }
 
-export async function runModernPhase({launch,receipt,phase,executePlan,report=event=>console.log(JSON.stringify(event)),record=async event=>fs.appendFile(path.join(launch.runRoot,'modern-ui-measurements.jsonl'),JSON.stringify(event)+'\n')}) {
+export async function runModernPhase({launch,receipt,phase,executePlan,probeEvidence,report=event=>console.log(JSON.stringify(event)),record=async event=>fs.appendFile(path.join(launch.runRoot,'modern-ui-measurements.jsonl'),JSON.stringify(event)+'\n')}) {
  assert.ok(['workspace','dialog'].includes(phase));
+ assert.equal(typeof probeEvidence?.observe,'function','Independent probe observations are required');
+ assert.equal(typeof probeEvidence?.persist,'function','Validated probe persistence is required');
  const summary={phase,tuplesVerified:0,clearControlsVerified:false,physicalWindowsDisplayScaleVerified:false,probeReceiptsVerified:false,probeReceiptUnavailableReason:'Independent live HWND/process ownership, runtime error counts and build receipt observations must be supplied separately; no values are inferred.'};
  let failure;
  const run=async(plan,tuple,kind)=>{
   report({state:'modern-ui-started',phase,kind,tuple});
   try {
-   const result=await executePlan(plan);
+   const before=await probeEvidence.observe();
+   const result=await executePlan({...plan,observeRuntime:true});
    // Save returned measurements before any assertion can stop the matrix.
    const measurements=(result.results||[]).filter(step=>step.id?.endsWith('-measure'));
    await record({version:1,phase,kind,tuple,measurements,captures:(result.results||[]).filter(step=>step.op==='capture'),observedAt:new Date().toISOString()});
    assert.equal(measurements.length,plan.steps.filter(step=>step.id?.endsWith('-measure')).length,'Missing layout measurement result');
    for(const step of measurements)assertMeasurement(step.value,tuple);
+   const after=await probeEvidence.observe();
+   const verified=await probeEvidence.persist({before,after,plan,result,measurements,tuple});
+   assert.equal(verified,measurements.length,'Every measured capture requires a validated probe');
    report({state:'modern-ui-verified',phase,kind,tuple,measurements:measurements.length});
   } catch(error) {
    await record({version:1,phase,kind,tuple,status:'failed',reason:error instanceof assert.AssertionError?'LAYOUT_ASSERTION_FAILED':'PLAN_EXECUTION_FAILED',observedAt:new Date().toISOString()});
@@ -116,7 +122,7 @@ export async function runModernPhase({launch,receipt,phase,executePlan,report=ev
   await executePlan(makeRestorePlan({launch,receipt,phase:phase+'-start'}));
   await run(makeClearPlan({launch,receipt,phase}),matrix[0],'clear-controls');summary.clearControlsVerified=true;
   for(const tuple of matrix){await run(phase==='workspace'?makeWorkspacePlan({launch,receipt,tuple}):makeDialogPlan({launch,receipt,tuple}),tuple,'matrix');summary.tuplesVerified++;}
-  return summary;
+  summary.probeReceiptsVerified=true;delete summary.probeReceiptUnavailableReason;return summary;
  } catch(error){failure=error;throw error;}
  finally {
   // A failed dialog can remain open. Closing it is an ordinary cancel operation,
@@ -126,6 +132,49 @@ export async function runModernPhase({launch,receipt,phase,executePlan,report=ev
    await executePlan(makeRestorePlan({launch,receipt,phase:phase+'-end'}));
   }catch(error){await record({version:1,phase,status:'restoration-failed',observedAt:new Date().toISOString()});if(!failure)throw error;}
  }
+}
+
+export function observedRuntime(result,captures,expected) {
+ const value=result?.runtimeObservation;
+ assert.equal(result?.ok,true);assert.equal(result.targetCount,1);assert.equal(result.exactUrl,expected.exactUrl);
+ assert.equal(value?.version,1);assert.equal(value.requested,true);assert.equal(value.enabled,true);assert.equal(value.complete,true);
+ assert.equal(value.coverage,'cdp-plan-interval');assert.equal(value.startupHistoryObserved,false);assert.equal(value.mappingVersion,1);
+ assert.equal(value.invalidEventCount,0);assert.equal(value.interruptionCode,null);
+ assert.equal(value.binding?.helperSha256,expected.helperSha256);assert.equal(value.binding?.launchReceiptSha256,expected.launchReceiptSha256);
+ const start=Date.parse(value.startedAt),end=Date.parse(value.endedAt);assert.ok(Number.isFinite(start)&&Number.isFinite(end)&&end>=start);
+ const counts={};for(const key of ['consoleErrorCount','unhandledExceptionCount','pageErrorCount']){assert.equal(value[key],0,`Observed ${key} must be exactly zero`);counts[key]=value[key];}
+ for(const capture of captures){const first=Date.parse(capture.startedAt),last=Date.parse(capture.capturedAt);assert.ok(first>=start&&last>=first&&last<=end,'Capture falls outside prospective runtime interval');}
+ return {...counts,observation:value};
+}
+
+export function createModernProbeEvidence({binding,observe,validate,outputRoot,helperPath}) {
+ return {observe,async persist({before,after,plan,result,measurements,tuple}) {
+  assert.equal(before.sourceCommit,binding.sourceCommit);assert.equal(after.sourceCommit,binding.sourceCommit);
+  for(const key of ['desktop','pid','hwnd','processPath','processSha256','creationDate']){assert.ok(before.target?.[key]);assert.equal(after.target?.[key],before.target[key]);}
+  assert.equal(before.launchReceiptSha256,after.launchReceiptSha256);
+  const captures=(result.results||[]).filter(step=>step.op==='capture');
+  assert.equal(captures.length,measurements.length);assert.equal(new Set(captures.map(step=>step.id)).size,captures.length);
+  const helperSha256=digest(await fs.readFile(helperPath));
+  const runtime=observedRuntime(result,captures.map(step=>step.value),{exactUrl:plan.expectedUrl,helperSha256,launchReceiptSha256:before.launchReceiptSha256});
+  assert.ok(Date.parse(before.observedAt)<=Date.parse(runtime.observation.startedAt),'Native start observation does not precede the measured interval');
+  assert.ok(Date.parse(after.observedAt)>=Date.parse(runtime.observation.endedAt),'Native end observation does not follow the measured interval');
+  for(const measurement of measurements) {
+   const capture=captures.find(step=>step.id===measurement.id.replace(/-measure$/,'-capture'));assert.ok(capture,'Missing matching capture');
+   const observation={sourceStartCommit:before.sourceCommit,sourceEndCommit:after.sourceCommit,target:after.target,privacy:after.privacy,ownership:{...after.ownership,cdpTargetVerified:result.targetCount===1&&result.exactUrl===plan.expectedUrl},runtime};
+   // Both bookends must independently establish their native and privacy facts.
+   for(const key of ['pidResolvedLive','hwndResolvedLive','exactProcessOwned'])assert.equal(before.ownership?.[key],true);
+   for(const key of ['visibleDesktopUntouched','taskOwnedProfile'])assert.equal(before.privacy?.[key],true);
+   assert.equal(before.privacy?.unrelatedTargetsObserved,false);
+   const receipt=await makeProbeReceipt({binding,observation,capture:capture.value,measurement:measurement.value,tuple});
+   receipt.runtimeObservation=runtime.observation;
+   const destination=path.join(outputRoot,path.basename(capture.value.path,'.png')+'.probe.json');
+   await fs.writeFile(destination,JSON.stringify(receipt,null,2),{flag:'wx'});
+   const validation=await validate(destination);assert.equal(validation?.valid,true,'Layout validator did not confirm the receipt');
+   assert.equal(validation.sourceCommit,binding.sourceCommit);assert.equal(validation.artifactSha256,binding.artifactSha256);assert.equal(validation.screenshotSha256,capture.value.sha256);
+   await fs.writeFile(destination.replace(/\.json$/,'.validation.json'),JSON.stringify(validation,null,2),{flag:'wx'});
+  }
+  return measurements.length;
+ }};
 }
 
 export function assertMeasurement(value,tuple) {

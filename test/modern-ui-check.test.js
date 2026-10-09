@@ -3,9 +3,13 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
-import {matrix,workspaceStates,makeWorkspacePlan,makeDialogPlan,makeClearPlan,assertMeasurement,makeProbeReceipt,runModernPhase,layoutExpression} from '../scripts/modern-ui-check.mjs';
+import os from 'node:os';
+import {createHash} from 'node:crypto';
+import {modernNativeObservation,modernBuildBinding} from '../scripts/local-headless-desktop-check.mjs';
+import {matrix,workspaceStates,makeWorkspacePlan,makeDialogPlan,makeClearPlan,assertMeasurement,makeProbeReceipt,runModernPhase,layoutExpression,observedRuntime} from '../scripts/modern-ui-check.mjs';
 
 const launch={outputRoot:path.resolve('evidence-owned/output'),cdp:{port:9333,expectedUrl:'file:///C:/owned/resources/app.asar/src/renderer/index.html'}};
+const probeEvidence={observe:async()=>({}),persist:async({measurements})=>measurements.length};
 const receipt=path.resolve('evidence-owned/lifecycle.json');
 test('matrix explicitly covers all 48 renderer tuples and each workspace state',()=>{
  assert.equal(matrix.length,48);assert.equal(new Set(matrix.map(JSON.stringify)).size,48);
@@ -33,8 +37,8 @@ test('opt-in runner records every tuple, restores defaults and retains exact evi
  const records=[],events=[],plans=[];let viewport={width:1180,height:850,scale:1};
  const executePlan=async plan=>{plans.push(plan);const metrics=plan.steps.find(step=>step.op==='emulate');if(metrics)viewport={width:metrics.width,height:metrics.height,scale:metrics.scale};return {results:plan.steps.map(step=>({...step,value:step.id?.endsWith('-measure')?{...measurement(),viewport}:null}))};};
  for(const phase of ['workspace','dialog']){
-  const result=await runModernPhase({launch,receipt,phase,executePlan,report:event=>events.push(event),record:async event=>records.push(event)});
-  assert.equal(result.tuplesVerified,48);assert.equal(result.clearControlsVerified,true);assert.equal(result.physicalWindowsDisplayScaleVerified,false);assert.equal(result.probeReceiptsVerified,false);
+  const result=await runModernPhase({launch,receipt,phase,executePlan,probeEvidence,report:event=>events.push(event),record:async event=>records.push(event)});
+  assert.equal(result.tuplesVerified,48);assert.equal(result.clearControlsVerified,true);assert.equal(result.physicalWindowsDisplayScaleVerified,false);assert.equal(result.probeReceiptsVerified,true);
   assert.deepEqual(viewport,{width:1180,height:850,scale:1});
  }
  assert.equal(events.filter(event=>event.state==='modern-ui-verified'&&event.kind==='matrix').length,96);
@@ -45,7 +49,7 @@ test('opt-in runner records every tuple, restores defaults and retains exact evi
 test('first geometry failure preserves measurements and stops before later tuples while restoring',async()=>{
  const records=[],plans=[];let viewport={width:1180,height:850,scale:1};
  const executePlan=async plan=>{plans.push(plan);const metrics=plan.steps.find(step=>step.op==='emulate');if(metrics)viewport={width:metrics.width,height:metrics.height,scale:metrics.scale};return {results:plan.steps.map(step=>({...step,value:step.id?.endsWith('-measure')?{...measurement(),viewport,pageOverflow:true}:null}))};};
- await assert.rejects(runModernPhase({launch,receipt,phase:'workspace',executePlan,report:()=>{},record:async event=>records.push(event)}));
+ await assert.rejects(runModernPhase({launch,receipt,phase:'workspace',executePlan,probeEvidence,report:()=>{},record:async event=>records.push(event)}));
  assert.equal(records[0].kind,'clear-controls');assert.ok(records[0].measurements.length>0);assert.equal(records[1].status,'failed');
  assert.equal(plans.length,3);assert.deepEqual(viewport,{width:1180,height:850,scale:1});
 });
@@ -74,4 +78,30 @@ test('archive readiness stays loading until current rows and retention controls 
  assert.equal(get('view-history').dataset.archiveCompletedRequest,get('view-history').dataset.archiveRequest);
  const plan=makeWorkspacePlan({launch,receipt,tuple:matrix[0]});
  for(const view of ['history','recycle'])assert.ok(plan.steps.some(step=>step.op==='poll'&&step.id.endsWith(view+'-ready')&&step.expression.includes('archiveCompletedRequest')&&step.expression.includes('archiveRendered')));
+});
+
+function runtimeFixture(){return {ok:true,targetCount:1,exactUrl:launch.cdp.expectedUrl,runtimeObservation:{version:1,requested:true,enabled:true,complete:true,startedAt:'2026-10-09T20:00:00Z',endedAt:'2026-10-09T20:00:03Z',coverage:'cdp-plan-interval',startupHistoryObserved:false,mappingVersion:1,consoleErrorCount:0,unhandledExceptionCount:0,pageErrorCount:0,invalidEventCount:0,interruptionCode:null,binding:{helperSha256:'a'.repeat(64),launchReceiptSha256:'b'.repeat(64)}}};}
+test('runtime acceptance rejects absent, partial, positive, wrong-bound and out-of-interval observations',()=>{
+ const captures=[{startedAt:'2026-10-09T20:00:01Z',capturedAt:'2026-10-09T20:00:02Z'}],expected={exactUrl:launch.cdp.expectedUrl,helperSha256:'a'.repeat(64),launchReceiptSha256:'b'.repeat(64)};
+ assert.equal(observedRuntime(runtimeFixture(),captures,expected).consoleErrorCount,0);
+ for(const change of [value=>delete value.runtimeObservation,value=>value.runtimeObservation.enabled=false,value=>value.runtimeObservation.complete=false,value=>value.runtimeObservation.consoleErrorCount=null,value=>value.runtimeObservation.pageErrorCount=1,value=>value.runtimeObservation.unhandledExceptionCount=1,value=>value.runtimeObservation.invalidEventCount=1,value=>value.runtimeObservation.startupHistoryObserved=true,value=>value.runtimeObservation.binding.helperSha256='c'.repeat(64),value=>value.runtimeObservation.binding.launchReceiptSha256='c'.repeat(64),value=>value.runtimeObservation.startedAt='2026-10-09T20:00:02Z',value=>value.runtimeObservation.endedAt='2026-10-09T20:00:01Z',value=>value.targetCount=2]){const value=runtimeFixture();change(value);assert.throws(()=>observedRuntime(value,captures,expected));}
+});
+test('native observation rejects absent or different HWND owner and profile/target contamination',()=>{
+ const runRoot=path.resolve('evidence-owned'),executable=path.resolve('owned/App.exe'),profile=path.join(runRoot,'profile');
+ const args={launch:{executable,runRoot,arguments:[`--verification-profile=${profile}`],cdp:launch.cdp},sourceCommit:'a'.repeat(40),launchReceiptSha256:'b'.repeat(64),processSha256:'c'.repeat(64),profileResolved:profile,inspection:{ok:true,targetCount:1,exactUrl:launch.cdp.expectedUrl},state:{created:true,cleaned:false,desktop:'owned-hidden',hwnd:100,runRoot,cdp:launch.cdp},window:{client_ok:true,desktop:'owned-hidden',hwnd:100,width:1180,height:850,title:'Material File Encryptor',class:'Chrome_WidgetWin_1',observedAt:'2026-10-09T20:00:00Z',windowProcess:{pid:123,creationDate:'2026-10-09T19:00:00Z',executablePath:executable}}};
+ assert.equal(modernNativeObservation(args).target.pid,123);
+ for(const change of [value=>delete value.window.windowProcess,value=>value.window.hwnd=200,value=>value.window.windowProcess.executablePath=path.resolve('other.exe'),value=>value.profileResolved=path.resolve('unowned'),value=>value.inspection.targetCount=2,value=>value.state.cleaned=true,value=>value.window.observedAt=null]){const value=structuredClone(args);change(value);assert.throws(()=>modernNativeObservation(value));}
+});
+
+test('build binding rejects stale source, dirty or failed builds and wrong executable/archive hashes',async()=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'modern-binding-test-'));
+ try {
+  const executable=path.join(root,'fixture.exe'),buildReceiptPath=path.join(root,'build.json');await fs.writeFile(executable,'test fixture, not an executable');
+  const sha=createHash('sha256').update(await fs.readFile(executable)).digest('hex'),sourceCommit='a'.repeat(40),asar='b'.repeat(64);
+  const build={sourceCommit,sourceEndCommit:sourceCommit,sourceClean:true,buildExitCode:0,installerExitCode:0,artifactPath:executable,artifactSha256:sha,asarSha256:asar};
+  const bind=()=>modernBuildBinding({buildReceiptPath,sourceCommit,executable,resourceHashes:{asar}});
+  await fs.writeFile(buildReceiptPath,JSON.stringify(build));assert.equal((await bind()).artifactSha256,sha);
+  for(const patch of [{sourceCommit:'c'.repeat(40)},{sourceEndCommit:'c'.repeat(40)},{sourceClean:false},{buildExitCode:1},{installerExitCode:1},{artifactSha256:'d'.repeat(64)},{asarSha256:'d'.repeat(64)}]){await fs.writeFile(buildReceiptPath,JSON.stringify({...build,...patch}));await assert.rejects(bind());}
+  await assert.rejects(modernBuildBinding({sourceCommit,executable,resourceHashes:{asar}}));
+ } finally {await fs.rm(root,{recursive:true,force:true});}
 });

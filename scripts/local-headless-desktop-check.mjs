@@ -5,6 +5,8 @@ import os from 'node:os';
 import net from 'node:net';
 import {createHash} from 'node:crypto';
 import {spawn} from 'node:child_process';
+import assert from 'node:assert/strict';
+import {createModernProbeEvidence} from './modern-ui-check.mjs';
 import {pathToFileURL,fileURLToPath} from 'node:url';
 
 export function makeLaunch({executable,runRoot,port}) {
@@ -120,6 +122,35 @@ async function verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,lau
 }
 function command(executable,args,input) {return new Promise((resolve,reject)=>{const child=spawn(executable,args,{windowsHide:true,stdio:['pipe','pipe','pipe']});let output='',bytes=0;const timer=setTimeout(()=>{child.kill();reject(new Error('Verification helper timed out.'));},90000);child.stdout.on('data',data=>{bytes+=data.length;if(bytes>1048576){child.kill();reject(new Error('Verification helper output exceeded limit.'));}else output+=data;});child.stderr.resume();child.on('error',error=>{clearTimeout(timer);reject(error);});child.on('close',code=>{clearTimeout(timer);try{const result=JSON.parse(output);if(code!==0||result.client_ok===false||result.ok===false)throw helperFailure(result,input);resolve(result);}catch(error){reject(error);}});child.stdin.end(input===undefined?'':JSON.stringify(input));});}
 async function freePort(){const server=net.createServer();await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});const port=server.address().port;await new Promise(resolve=>server.close(resolve));return port;}
+
+export async function modernBuildBinding({buildReceiptPath,sourceCommit,executable,resourceHashes}) {
+ assert.ok(buildReceiptPath,'MFE_BUILD_RECEIPT is required for modern layout verification');
+ const bytes=await fs.readFile(buildReceiptPath),build=JSON.parse(bytes);
+ assert.equal(build.sourceCommit,sourceCommit);assert.equal(build.sourceEndCommit,sourceCommit);assert.equal(build.sourceClean,true);
+ assert.equal(build.buildExitCode,0);assert.equal(build.installerExitCode,0);
+ assert.equal(await fs.realpath(build.artifactPath),executable);
+ const artifactSha256=createHash('sha256').update(await fs.readFile(executable)).digest('hex');
+ assert.equal(build.artifactSha256,artifactSha256);assert.equal(build.asarSha256,resourceHashes.asar);
+ return {sourceCommit,artifactPath:executable,artifactSha256,buildReceiptPath:path.resolve(buildReceiptPath),buildReceiptSha256:createHash('sha256').update(bytes).digest('hex'),rendererAsarPath:path.join(path.dirname(executable),'resources','app.asar'),rendererAsarSha256:resourceHashes.asar};
+}
+
+async function readModernSource() {
+ const git=async args=>new Promise((resolve,reject)=>{const child=spawn('git',args,{windowsHide:true});let output='';child.stdout.on('data',data=>output+=data);child.on('error',reject);child.on('close',code=>code===0?resolve(output.trim()):reject(new Error('Source observation failed')));});
+ assert.equal(await git(['status','--porcelain','--untracked-files=no']),'','Tracked verification inputs changed during measurement');
+ return git(['rev-parse','HEAD']);
+}
+
+export function modernNativeObservation({window,state,launch,sourceCommit,launchReceiptSha256,processSha256,inspection,profileResolved}) {
+ assert.equal(window.client_ok,true);assert.ok(window.windowProcess,'Live HWND owner identity is unavailable');
+ assert.equal(window.desktop,state.desktop);assert.equal(window.hwnd,state.hwnd);assert.ok(window.width>0&&window.height>0);
+ assert.ok(Number.isFinite(Date.parse(window.observedAt)));assert.ok(Number.isInteger(window.windowProcess.pid)&&window.windowProcess.pid>0);
+ assert.ok(Number.isFinite(Date.parse(window.windowProcess.creationDate)));assert.equal(path.resolve(window.windowProcess.executablePath),path.resolve(launch.executable));
+ assert.equal(state.created,true);assert.equal(state.cleaned,false);assert.equal(path.resolve(state.runRoot),path.resolve(launch.runRoot));
+ assert.equal(state.cdp.port,launch.cdp.port);assert.equal(state.cdp.expectedUrl,launch.cdp.expectedUrl);
+ assert.equal(inspection.ok,true);assert.equal(inspection.targetCount,1);assert.equal(inspection.exactUrl,launch.cdp.expectedUrl);
+ assert.equal(profileResolved,path.join(launch.runRoot,'profile'));assert.ok(launch.arguments.includes(`--verification-profile=${profileResolved}`));
+ return {sourceCommit,launchReceiptSha256,observedAt:window.observedAt,target:{desktop:window.desktop,title:window.title,className:window.class,pid:window.windowProcess.pid,hwnd:String(window.hwnd),creationDate:window.windowProcess.creationDate,processPath:launch.executable,processSha256},ownership:{pidResolvedLive:window.windowProcess.pid>0,hwndResolvedLive:window.hwnd===state.hwnd,exactProcessOwned:window.client_ok===true,cdpTargetVerified:inspection.targetCount===1&&inspection.exactUrl===launch.cdp.expectedUrl},privacy:{visibleDesktopUntouched:state.created===true&&window.desktop===state.desktop,taskOwnedProfile:profileResolved===path.join(launch.runRoot,'profile'),unrelatedTargetsObserved:inspection.targetCount!==1}};
+}
 export async function runLocalHeadlessCheck(env=process.env) {
  if(process.platform!=='win32')throw new Error('The local isolated desktop route requires Windows.');
  const executable=await fs.realpath(path.resolve(env.MFE_DESKTOP_EXECUTABLE||'out/material-file-encryptor-win32-x64/MaterialFileEncryptor.exe'));
@@ -139,11 +170,20 @@ export async function runLocalHeadlessCheck(env=process.env) {
  const sourceBinding=env.MFE_SOURCE_COMMIT||source;
  const resourceHashes={};for(const [name,file] of Object.entries({asar:path.join(path.dirname(executable),'resources','app.asar'),nativeHost:path.join(path.dirname(executable),'resources','native','MaterialFileEncryptor.Host.exe')}))resourceHashes[name]=createHash('sha256').update(await fs.readFile(file)).digest('hex');
  const receipt={version:1,transport:cli?'direct-cli-adapter':'streamable-http',resourceHashes,route:'cheap-lowlevel-headless',sourceCommit:sourceBinding,executableSha256:createHash('sha256').update(await fs.readFile(executable)).digest('hex'),launch,preparedAt:new Date().toISOString(),launched:false,pixelsInspected:false,interactionsVerified:false};
+ const modernBinding=env.MFE_MODERN_UI_CHECK==='1'?await modernBuildBinding({buildReceiptPath:env.MFE_BUILD_RECEIPT,sourceCommit:sourceBinding,executable,resourceHashes}):null;
  await fs.writeFile(path.join(runRoot,'prepared.json'),JSON.stringify(receipt,null,2));
  if(env.MFE_HEADLESS_EXECUTE!=='1') {console.log(JSON.stringify({prepared:true,launched:false,runRoot,requires:'Set MFE_HEADLESS_EXECUTE=1 only after reviewing the packaged executable and isolated profile arguments.'}));return receipt;}
  console.log(JSON.stringify({state:'source-bound-launch-prepared',runRoot,sourceCommit:receipt.sourceCommit,executableSha256:receipt.executableSha256,resourceHashes}));
  const python=env.MFE_PYTHON||'python';let cleanup;let failure;let fixture;let runtime;
  const executePlan=createPlanRecorder(runRoot,plan=>command(process.execPath,[cdp,'run'],plan));
+ const modernProbeEvidence=modernBinding?createModernProbeEvidence({binding:modernBinding,outputRoot:launch.outputRoot,helperPath:cdp,validate:input=>command(process.execPath,[path.join(skillRoot,'diagnose-built-ui-layout','scripts','validate-layout-probe.mjs'),'--input',input]),observe:async()=>{
+  const sourceCommit=await readModernSource();assert.equal(sourceCommit,modernBinding.sourceCommit);
+  const window=await command(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30']);
+  const bytes=await fs.readFile(statePath),state=JSON.parse(bytes),inspection=await command(process.execPath,[cdp,'inspect'],plan);
+  const processSha256=createHash('sha256').update(await fs.readFile(executable)).digest('hex');assert.equal(processSha256,modernBinding.artifactSha256);
+  const observation=modernNativeObservation({window,state,launch,sourceCommit,launchReceiptSha256:createHash('sha256').update(bytes).digest('hex'),processSha256,inspection,profileResolved:await fs.realpath(path.join(runRoot,'profile'))});
+  await appendStepReceipt(runRoot,{version:1,kind:'modern-native-observation',observation,window,inspection});return observation;
+ }}):undefined;
  try {
   await command(python,[installedLowlevel,'self-test']);await command(process.execPath,[cdp,'self-test']);
   await command(python,[lowlevel,'preflight',...transportArgs,'--require','launch_on_headless_desktop','--require','list_headless_windows','--require','screenshot','--require','close_headless_desktop','--require','kill_process']);
@@ -154,7 +194,7 @@ export async function runLocalHeadlessCheck(env=process.env) {
   const initial=await recordNativeCapture(runRoot,path.join(launch.outputRoot,'native-baseline.png'),'native-baseline',()=>command(python,[lowlevel,'call','screenshot',...transportArgs],{hwnd:lifecycle.hwnd,output_path:path.join(launch.outputRoot,'native-baseline.png')}));
   await fs.writeFile(path.join(runRoot,'initial-capture-result.json'),JSON.stringify(initial,null,2));
   receipt.cdp=await executePlan(plan);
-  if(env.MFE_HEADLESS_INTERACTIONS==='1'||fixture) {receipt.baselineReview=await requirePixelReview(runRoot,path.join(launch.outputRoot,'native-baseline.png'));if(fixture){receipt.keyboard=await verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,launch,executePlan});runtime=await checkMountedRuntime({fixture,launch,receipt:statePath,executePlan,prepareExit:()=>command(python,[lowlevel,'prepare-exit',statePath])});receipt.runtime=runtime;}else receipt.interfaceWorkflow=await executePlan(makeInterfacePlan(launch,statePath));receipt.rendererAssertionsVerified=true;}
+  if(env.MFE_HEADLESS_INTERACTIONS==='1'||fixture) {receipt.baselineReview=await requirePixelReview(runRoot,path.join(launch.outputRoot,'native-baseline.png'));if(fixture){receipt.keyboard=await verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,launch,executePlan});runtime=await checkMountedRuntime({fixture,launch,receipt:statePath,executePlan,modernProbeEvidence,modernUiCheck:env.MFE_MODERN_UI_CHECK==='1',prepareExit:()=>command(python,[lowlevel,'prepare-exit',statePath])});receipt.runtime=runtime;}else receipt.interfaceWorkflow=await executePlan(makeInterfacePlan(launch,statePath));receipt.rendererAssertionsVerified=true;}
  } catch(error) {failure=String(error.message).slice(0,200);}
  finally {try {await fs.access(statePath);cleanup=runtime?.quitRequested?await command(python,[lowlevel,'confirm-exit',statePath]):await command(python,[lowlevel,'cleanup','--state',statePath,'--allow-saved-pid-kill','--timeout','20']);if(fixture&&runtime?.quitRequested&&cleanup.client_ok)receipt.fixtureCleanup=await forgetRuntimeFixture(fixture);}catch(error){cleanup={ok:false,reason:String(error.message).slice(0,200)};}
   Object.assign(receipt,{finishedAt:new Date().toISOString(),failure,cleanup,profileRetained:true});
