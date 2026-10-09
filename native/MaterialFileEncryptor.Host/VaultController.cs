@@ -44,6 +44,8 @@ internal sealed class VaultController : IDisposable
     private Func<VaultOptions, string, string, (IVaultTransport Transport, GitVaultHistory History)>? privateTransportFactory = null;
     private GitVaultHistory? historyStore;
     private bool historyPending;
+    private long historyRevision;
+    private readonly SemaphoreSlim historyOperations = new(1, 1);
     private string? historySourceRoot;
     private DateTimeOffset nextSyncAttempt;
     private readonly bool driverAvailable;
@@ -271,7 +273,7 @@ internal sealed class VaultController : IDisposable
             ? Task.FromException(new IOException("Connect to private storage to retrieve uncached encrypted content."))
             : selectedBackend.EnsureFileAsync(relative, cancellation);
         if (selectedBackend is PrivateGitHubVaultTransport privateBackend) opened.IsEncryptedFileAvailable = relative => transportAvailable && privateBackend.ContainsFile(relative);
-        opened.HistoryChanged += () => historyPending = true;
+        opened.HistoryChanged += () => { Interlocked.Increment(ref historyRevision); historyPending = true; };
         opened.SyncAsync().GetAwaiter().GetResult();
         syncError = connected ? null : "Private storage is offline. Cached encrypted content remains available; synchronization will retry."; unmountBusy = false; lastOfflineRelease = null;
         if (OptionalBool(args, "autoUnlock")) SaveCredential();
@@ -361,7 +363,8 @@ internal sealed class VaultController : IDisposable
             // Network work never owns the engine. Invalidate its captured identity
             // before disposal and retain durable local changes for the next sync.
             engineGeneration++; syncCancellation?.Cancel();
-            if (!syncing) RecordHistoryLocked();
+            // The durable journal is sufficient for reopen/retry. Never start a
+            // subprocess from the callback gate, including during lock/disposal.
             vault.Dispose(); vault = null; syncError = null; historyStore = null; transport = null;
         }
     }
@@ -422,20 +425,20 @@ internal sealed class VaultController : IDisposable
                 fileSystem?.RecoverPending();
                 // Local journal/object publication and history remain serialized.
                 capturedEngine.FlushAsync().GetAwaiter().GetResult();
-                RecordHistoryLocked();
             }
+            RecordHistory(cancellation.Token);
             // Only the captured transport is used during network waits. No WinFsp
             // callback gate or engine lifetime is held across either network pass.
-            capturedTransport?.SyncAsync(cancellation.Token).GetAwaiter().GetResult();
+            SynchronizeTransport(capturedTransport, cancellation.Token);
             bool publishAgain;
             lock (gate)
             {
                 if (generation != engineGeneration || !ReferenceEquals(vault, capturedEngine)) return;
                 capturedEngine.SyncAsync().GetAwaiter().GetResult();
-                RecordHistoryLocked();
                 publishAgain = transportMode == "privateGit";
             }
-            if (publishAgain) capturedTransport?.SyncAsync(cancellation.Token).GetAwaiter().GetResult();
+            RecordHistory(cancellation.Token);
+            if (publishAgain) SynchronizeTransport(capturedTransport, cancellation.Token);
             lock (gate)
             {
                 if (generation != engineGeneration || !ReferenceEquals(vault, capturedEngine)) return;
@@ -476,17 +479,41 @@ internal sealed class VaultController : IDisposable
         id = version.Id, entryId = version.EntryId, path = version.Path, timestampUtc = version.TimestampUtc,
         length = version.Length, isDirectory = version.IsDirectory, deleted = version.Deleted, isAvailable = version.IsAvailable
     };
-    private void RecordHistoryLocked()
+    private void SynchronizeTransport(IVaultTransport? capturedTransport, CancellationToken cancellation)
     {
-        if (!historyPending || historyStore is null || vault is null) return;
-        if (!Directory.Exists(historySourceRoot)) return;
-        // A partial source publication must retain the retry flag. A later flush
-        // can publish the existing journal without raising HistoryChanged again.
-        if (Engine.Status.PendingCommits > 0) return;
-        var paths = Engine.GetEncryptedSnapshotPaths().Where(relative => File.Exists(System.IO.Path.Combine(historySourceRoot!, relative))).ToArray();
-        var recorded = historyStore.RecordSnapshotAsync(paths).GetAwaiter().GetResult();
-        if (transportMode == "privateGit" && recorded is not null) pendingPrivatePublication = true;
-        historyPending = false;
+        historyOperations.Wait(cancellation);
+        try { capturedTransport?.SyncAsync(cancellation).GetAwaiter().GetResult(); }
+        finally { historyOperations.Release(); }
+    }
+    private void RecordHistory(CancellationToken cancellation = default)
+    {
+        if (Monitor.IsEntered(gate)) throw new InvalidOperationException("History subprocesses cannot run inside the filesystem callback lock.");
+        historyOperations.Wait(cancellation);
+        try
+        {
+            GitVaultHistory capturedHistory;
+            VaultEngine capturedEngine;
+            string[] paths;
+            long generation, revision;
+            lock (gate)
+            {
+                if (!historyPending || historyStore is null || vault is null || !Directory.Exists(historySourceRoot)) return;
+                // Partial publication retains the retry flag even if no later
+                // engine event fires. Object paths are immutable once published.
+                if (Engine.Status.PendingCommits > 0) return;
+                capturedHistory = historyStore; capturedEngine = vault;
+                generation = engineGeneration; revision = Volatile.Read(ref historyRevision);
+                paths = Engine.GetEncryptedSnapshotPaths().Where(relative => File.Exists(System.IO.Path.Combine(historySourceRoot!, relative))).ToArray();
+            }
+            var recorded = capturedHistory.RecordSnapshotAsync(paths, cancellation).GetAwaiter().GetResult();
+            lock (gate)
+            {
+                if (generation != engineGeneration || !ReferenceEquals(vault, capturedEngine) || !ReferenceEquals(historyStore, capturedHistory)) return;
+                if (transportMode == "privateGit" && recorded is not null) pendingPrivatePublication = true;
+                if (revision == Volatile.Read(ref historyRevision)) historyPending = false;
+            }
+        }
+        finally { historyOperations.Release(); }
     }
     private static bool IsWithin(string child, string parent) => child.Equals(parent, StringComparison.OrdinalIgnoreCase) || child.StartsWith(parent.TrimEnd(System.IO.Path.DirectorySeparatorChar) + System.IO.Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
     private static string ValidateDrive(string value)

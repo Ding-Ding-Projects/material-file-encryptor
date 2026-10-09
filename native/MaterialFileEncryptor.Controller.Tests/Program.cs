@@ -74,11 +74,11 @@ static class Regression
             Assert(engine.Status.PendingCommits>0,"Fixture did not preserve a failed publication");
             var history=new GitVaultHistory(source,Path.Combine(root,"history")); await history.InitializeAsync();
             Set(controller,"historyStore",history); Set(controller,"historySourceRoot",source); Set(controller,"historyPending",true);
-            Call(controller,"RecordHistoryLocked");
+            Call(controller,"RecordHistory",CancellationToken.None);
             Assert((bool)ControllerType.GetField("historyPending",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(controller)!,"Partial publication cleared retry flag");
             File.Delete(commits); if(Directory.Exists(held)) Directory.Move(held,commits);
             await engine.FlushAsync(); Assert(engine.Status.PendingCommits==0,"Recovered publication remains pending");
-            Call(controller,"RecordHistoryLocked");
+            Call(controller,"RecordHistory",CancellationToken.None);
             var tree=await new VaultProcessRunner().RunAsync("git",new[]{"ls-tree","-r","--name-only","HEAD"},Path.Combine(root,"history"));
             Assert(tree.ExitCode==0,"Recovered history tree unavailable");
             var names=tree.Text.Split('\n',StringSplitOptions.RemoveEmptyEntries).ToHashSet();
@@ -135,7 +135,44 @@ static class Regression
         public Task SyncAsync(CancellationToken ct=default)=>Offline?Task.FromException(new IOException("fixture network offline")):Task.CompletedTask;
         public Task EnsureFileAsync(string path,CancellationToken ct=default) { Hydrations++; return Task.FromException(new IOException("fixture network offline")); }
     }
-    public static async Task Main() { Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); await PartialHistoryRetry(); await OfflineUnlock(); }
+    static async Task HistorySubprocessCallback()
+    {
+        var root=Path.Combine(Path.GetTempPath(),"mfe-controller-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
+        var engine=Create(root,1024); var controller=Make(engine,root,new ImmediateTransport());
+        var runner=new CallbackRunner(controller);
+        try
+        {
+            engine.CreateFile("cached.bin"); engine.WriteRange("cached.bin",0,new byte[]{2,3,4}); await engine.FlushAsync();
+            Set(controller,"historyStore",new GitVaultHistory(Path.Combine(root,"source"),Path.Combine(root,"history"),runner));
+            Set(controller,"historySourceRoot",Path.Combine(root,"source")); Set(controller,"historyPending",true);
+            var sync=Task.Run(()=>Call(controller,"SyncIfUnlocked"));
+            await runner.Started.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            var callbacks=Task.Run(()=> { Call(controller,"Status"); var bytes=new byte[3]; Assert(engine.ReadRange("cached.bin",0,bytes)==3,"Cached read blocked by local subprocess"); Call(controller,"Unmount"); });
+            await callbacks.WaitAsync(TimeSpan.FromSeconds(2));
+            var locked=Task.Run(()=>Call(controller,"Execute","lock",JsonSerializer.SerializeToElement(new{}))); await locked.WaitAsync(TimeSpan.FromSeconds(2));
+            Assert(!sync.IsCompleted,"History fixture ended before prompt lock proof");
+            runner.Release.TrySetResult(); await sync.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert(runner.CallbackAcquired,"History process could not acquire callback gate");
+            Console.WriteLine("PASS local history subprocess callback, cached read/status/unmount/lock without waiting, stale history completion");
+        }
+        finally { runner.Release.TrySetResult(); ((IDisposable)controller).Dispose(); foreach(var file in Directory.EnumerateFiles(root,"*",SearchOption.AllDirectories)) File.SetAttributes(file,FileAttributes.Normal); Directory.Delete(root,true); }
+    }
+    sealed class CallbackRunner(object controller) : IVaultProcessRunner
+    {
+        public TaskCompletionSource Started=new(TaskCreationOptions.RunContinuationsAsynchronously), Release=new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public bool CallbackAcquired;
+        public async Task<VaultProcessResult> RunAsync(string executable,IReadOnlyList<string> arguments,string directory,CancellationToken ct=default)
+        {
+            // Simulate Windows process startup querying a mounted volume. This
+            // requires the real controller callback lock, not a transport fake.
+            await Task.Run(()=>Call(controller,"Status")).WaitAsync(TimeSpan.FromSeconds(2));
+            CallbackAcquired=true; Started.TrySetResult();
+            await Release.Task;
+            ct.ThrowIfCancellationRequested();
+            return await new VaultProcessRunner().RunAsync(executable,arguments,directory,ct);
+        }
+    }
+    public static async Task Main() { Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); await PartialHistoryRetry(); await OfflineUnlock(); await HistorySubprocessCallback(); }
     sealed class ImmediateTransport : IVaultTransport
     {
         public Task InitializeAsync(CancellationToken ct=default)=>Task.CompletedTask;
