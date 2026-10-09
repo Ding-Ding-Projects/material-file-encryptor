@@ -84,6 +84,7 @@ $driverFolder = Join-Path $root '.cache\driver'
 New-Item -ItemType Directory -Force $driverFolder | Out-Null
 $driver = Join-Path $driverFolder "winfsp-$($manifest.winfsp.version).msi"
 Get-Verified $manifest.winfsp $driver
+Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.psd1') -ErrorAction Stop
 $signature = Get-AuthenticodeSignature $driver
 if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'Navimatics') {
   throw 'WinFsp installer does not have a valid trusted Navimatics signature.'
