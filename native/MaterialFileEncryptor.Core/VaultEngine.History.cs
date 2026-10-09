@@ -17,7 +17,12 @@ public sealed partial class VaultEngine
     {
         lock(gate) { Check(); return known.Select(id=>"commits/"+id+".mfe").Concat(known.SelectMany(id=>Parts(ReadMetadata<Commit>(ObjectPath(cache,"commits",id),"commit",id))).Distinct().Select(id=>"parts/"+id+".mfe")).Prepend("vault.json").ToArray(); }
     }
-    private void MarkDue(Entry e) => versionDue[e.Id]=DateTimeOffset.UtcNow.AddSeconds(30);
+    private void MarkDue(Entry e)
+    {
+        // Orphan writes belong only to the held deleted file, which has no live
+        // path to snapshot. Scheduling it would leave synchronization pending forever.
+        if(!orphans.TryGetValue(e.Id,out var orphan)||!ReferenceEquals(orphan,e))versionDue[e.Id]=DateTimeOffset.UtcNow.AddSeconds(30);
+    }
     private void CaptureVersion(string path,Entry entry,bool deleted,string? deletionBatch=null)
     {
         var ancestors=new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);if(deleted)for(var parent=VaultPath.Parent(path);parent!="";parent=VaultPath.Parent(parent))if(entries.TryGetValue(parent,out var directory))ancestors[parent]=directory.Id;
@@ -62,7 +67,11 @@ public sealed partial class VaultEngine
             if(restoreCurrent&&current.Id==version.Value.Id&&current.Directory==version.Value.Directory)CaptureVersion(path,current,false);
             else path=ConflictPath(path,version.Id,entries);
         }
-        var restored=Clone(version.Value);if(entries.Any(p=>!p.Key.Equals(path,StringComparison.OrdinalIgnoreCase)&&p.Value.Id==restored.Id))restored.Id=Guid.NewGuid().ToString("N");Touch(restored);entries[path]=restored;versionDue.Remove(restored.Id);CaptureVersion(path,restored,false);return path;
+        var restored=Clone(version.Value);
+        // A deleted entry's identity remains owned by its open handles until the
+        // last lease closes. Reusing it would redirect those handles to this restore.
+        if(orphans.ContainsKey(restored.Id)||entries.Any(p=>!p.Key.Equals(path,StringComparison.OrdinalIgnoreCase)&&p.Value.Id==restored.Id))restored.Id=Guid.NewGuid().ToString("N");
+        Touch(restored);entries[path]=restored;versionDue.Remove(restored.Id);CaptureVersion(path,restored,false);return path;
     }
     public Task RestoreVersionAsync(string versionId,CancellationToken cancellationToken=default)
     {

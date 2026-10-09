@@ -272,7 +272,7 @@ public sealed partial class VaultEngine : IDisposable
             var moved=entries.Where(p=>p.Key.Equals(oldPath,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); foreach(var item in moved)entries.Remove(item.Key); foreach(var item in moved)entries[newPath+item.Key[oldPath.Length..]]=item.Value;
         }
     }
-    private sealed class OpenLease(VaultEngine engine,string id) : IDisposable { private bool closed; public void Dispose() { lock(engine.gate) { if(closed)return; closed=true; if(engine.open.TryGetValue(id,out var count)) { if(count==1) {engine.open.Remove(id);engine.orphans.Remove(id);}else engine.open[id]=count-1; } } } }
+    private sealed class OpenLease(VaultEngine engine,string id) : IDisposable { private bool closed; public void Dispose() { lock(engine.gate) { if(closed)return; closed=true; if(engine.open.TryGetValue(id,out var count)) { if(count==1) {engine.open.Remove(id);if(engine.orphans.Remove(id)&&!engine.entries.Values.Any(entry=>entry.Id==id))engine.versionDue.Remove(id);}else engine.open[id]=count-1; } } } }
     public IDisposable AcquireOpen(string path) { lock(gate) { Check(); return AcquireOpenById(Find(VaultPath.Normalize(path)).Id); } }
     public IDisposable AcquireOpenById(string id) { lock(gate) { Check(); FindId(id); open[id]=open.GetValueOrDefault(id)+1; return new OpenLease(this,id); } }
     public void SetPartSize(long bytes) { lock(gate) { Check(); ValidatePartSize(bytes); partSize=bytes; SaveJournal(); } }
@@ -379,7 +379,19 @@ public sealed partial class VaultEngine : IDisposable
                 var restored=Clone(historical); if(rebuilt.Values.Any(e=>e.Id==restored.Id))restored.Id=ConflictId(restored.Id,"ancestor",parent); rebuilt[parent]=restored;
             }
             // A missing parent must never roll the last usable namespace backwards.
-            if(remaining.Count==0 || applied.IsSupersetOf(known)) { foreach(var old in entries.Values)if(open.ContainsKey(old.Id)&&!rebuilt.Values.Any(e=>e.Id==old.Id))orphans[old.Id]=old; entries=rebuilt; baseline=CloneEntries(entries); known=applied; heads=new(applied); foreach(var c in commits.Values.Where(c=>applied.Contains(c.Id)))heads.ExceptWith(c.Parents); }
+            if(remaining.Count==0 || applied.IsSupersetOf(known))
+            {
+                foreach(var old in entries.Values)if(open.ContainsKey(old.Id)&&!rebuilt.Values.Any(e=>e.Id==old.Id))orphans[old.Id]=old;
+                // Keep the replayed namespace as the baseline so identity repairs
+                // become ordinary immutable changes, rather than ephemeral aliases
+                // that would change again on the next replay or reopen.
+                baseline=CloneEntries(rebuilt);
+                bool repairedIdentity=false;
+                foreach(var entry in rebuilt.Values)
+                    if(orphans.ContainsKey(entry.Id)) { entry.Id=Guid.NewGuid().ToString("N");Touch(entry);repairedIdentity=true; }
+                entries=rebuilt; known=applied; heads=new(applied); foreach(var c in commits.Values.Where(c=>applied.Contains(c.Id)))heads.ExceptWith(c.Parents);
+                if(repairedIdentity) { FlushLocal();Publish(cancellationToken); }
+            }
             SaveJournal(); return Task.CompletedTask;
         }
     }
