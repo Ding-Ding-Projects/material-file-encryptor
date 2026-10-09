@@ -1,4 +1,8 @@
 export const cantonese = {
+ 'Available drive letters':'可用磁碟代號',
+ 'Choose an available drive letter':'揀選可用磁碟代號',
+ 'No available letters reported. You can still enter one manually.':'未有可用磁碟代號資料，你仍然可以手動輸入。',
+ 'Choose an available letter, or type one manually, such as M or M:.':'揀選可用代號，或者手動輸入，例如 M 或 M:。',
  'Checking available drive letters…':'檢查緊可用磁碟代號…', 'No available drive letters':'暫時冇可用磁碟代號',
  'Offline pin removed. Cache release details are unavailable.':'已取消保留離線副本，暫時無法取得快取釋放詳情。',
  'Offline pin removed. Released {size} of encrypted cache. Protected data is retained.':'已取消保留離線副本，釋放咗 {size} 加密快取。受保護資料仍然保留。',

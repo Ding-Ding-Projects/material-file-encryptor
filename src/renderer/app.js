@@ -5,6 +5,7 @@ const $ = id => document.getElementById(id);
 const api = window.drive;
 let preferences = loadSettings(localStorage);
 let state = null, selected = null, view = 'drive', busy = false, dialogMode = 'create', snackbarTimer;
+let driveLetterEdited = false, activeDriveLetter = '';
 const dictionary = new Map();
 document.querySelectorAll('[data-i18n]').forEach(el => dictionary.set(el, el.textContent));
 initializeIcons();
@@ -90,8 +91,7 @@ function renderAvailability() {
  $('auto-unlock-setting').disabled = busy || !unlocked;
  $('forget-credential').disabled = busy || !state;
  for (const el of $('vault-form').querySelectorAll('button,input,select')) el.disabled = busy;
- $('drive-letter').disabled = busy || state?.driver?.checking === true;
- $('dialog-submit').disabled = busy || state?.driver?.checking === true || !$('drive-letter').value;
+ $('dialog-submit').disabled = busy || !/^[A-Z]:?$/i.test($('drive-letter').value);
 }
 function render() {
  if (!state) return;
@@ -164,31 +164,67 @@ function updateDialog() {
  $('password-input').required = !isKey; $('confirm-password').required = creating && !isKey; $('key-path').required = isKey;
  $('password-input').autocomplete = creating ? 'new-password' : 'current-password';
 }
-function updateDriveLetters(preserveSelection = true) {
- const normalize = value => String(value || '').replace(/[:\\]+$/, '').toUpperCase();
- const checking = state?.driver?.checking === true;
- const letters = checking ? [] : [...new Set((state?.availableDriveLetters || state?.defaults?.availableDriveLetters || []).map(normalize))];
- const select = $('drive-letter');
- const placeholderText = t(checking ? 'Checking available drive letters…' : letters.length ? 'Drive letter' : 'No available drive letters');
- const signature = JSON.stringify([placeholderText, letters]);
- if (preserveSelection && select.dataset.choices === signature) return;
- const current = preserveSelection ? select.value : '';
- const preferred = normalize(state?.driveLetter || state?.defaults?.driveLetter);
- const fragment = document.createDocumentFragment();
- const placeholder = document.createElement('option'); placeholder.value = ''; placeholder.textContent = placeholderText; fragment.append(placeholder);
- for (const letter of letters) { const option = document.createElement('option'); option.value = letter; option.textContent = `${letter}:`; fragment.append(option); }
- select.replaceChildren(fragment); select.dataset.choices = signature;
- select.value = letters.includes(current) ? current : letters.includes(preferred) ? preferred : letters[0] || '';
- select.setAttribute('aria-busy', String(checking));
+const normalizedDriveLetter = value => /^[A-Z]:?$/i.test(String(value || '')) ? String(value)[0].toUpperCase() : '';
+function closeDrivePicker() {
+ $('drive-letter-options').hidden = true;
+ for (const id of ['drive-letter','drive-letter-toggle']) $(id).setAttribute('aria-expanded','false');
+ $('drive-letter').removeAttribute('aria-activedescendant');
 }
+function markDriveOption() {
+ const selectedLetter = normalizedDriveLetter($('drive-letter').value);
+ for (const option of $('drive-letter-options').children) {
+  option.setAttribute('aria-selected',String(option.dataset.letter === selectedLetter));
+  option.classList.toggle('active-option',option.dataset.letter === activeDriveLetter);
+ }
+ const active = document.getElementById(`drive-option-${activeDriveLetter}`);
+ if (!$('drive-letter-options').hidden && active) $('drive-letter').setAttribute('aria-activedescendant',active.id);
+ else $('drive-letter').removeAttribute('aria-activedescendant');
+}
+function openDrivePicker() {
+ if (busy) return;
+ $('drive-letter-options').hidden = false;
+ for (const id of ['drive-letter','drive-letter-toggle']) $(id).setAttribute('aria-expanded','true');
+ const options = [...$('drive-letter-options').children];
+ activeDriveLetter = options.find(option => option.dataset.letter === normalizedDriveLetter($('drive-letter').value))?.dataset.letter || options[0]?.dataset.letter || '';
+ markDriveOption(); $('drive-letter').focus();
+}
+function chooseDriveLetter(letter) {
+ if (busy || !normalizedDriveLetter(letter)) return;
+ $('drive-letter').value = `${normalizedDriveLetter(letter)}:`; driveLetterEdited = true;
+ markDriveOption(); closeDrivePicker(); renderAvailability(); $('drive-letter').focus();
+}
+function updateDriveLetters(preserveSelection = true) {
+ const checking = state?.driver?.checking === true;
+ const letters = checking ? [] : [...new Set((state?.availableDriveLetters || state?.defaults?.availableDriveLetters || []).map(normalizedDriveLetter).filter(Boolean))].sort();
+ const input = $('drive-letter'), list = $('drive-letter-options');
+ const status = checking ? 'Checking available drive letters…' : letters.length ? 'Available drive letters' : 'No available letters reported. You can still enter one manually.';
+ setText('drive-letter-status',status); $('drive-letter-toggle').setAttribute('aria-label',t('Choose an available drive letter'));
+ if (!preserveSelection || !driveLetterEdited) {
+  const preferred = normalizedDriveLetter(state?.driveLetter || state?.defaults?.driveLetter) || 'M';
+  input.value = `${letters.includes(preferred) || !letters.length ? preferred : letters[0]}:`;
+ }
+ const signature = JSON.stringify(letters);
+ if (list.dataset.choices !== signature) {
+  const fragment = document.createDocumentFragment();
+  for (const letter of letters) {
+   const option = document.createElement('button'); option.type = 'button'; option.tabIndex = -1;
+   option.id = `drive-option-${letter}`; option.dataset.letter = letter; option.setAttribute('role','option'); option.textContent = `${letter}:`;
+   fragment.append(option);
+  }
+  list.replaceChildren(fragment); list.dataset.choices = signature;
+  if (!letters.includes(activeDriveLetter)) activeDriveLetter = letters[0] || '';
+ }
+ list.setAttribute('aria-busy',String(checking)); markDriveOption();
+}
+
 function openVaultDialog(mode) {
- dialogMode = mode; $('vault-form').reset(); $('dialog-error').hidden = true;
+ dialogMode = mode; driveLetterEdited = false; closeDrivePicker(); $('vault-form').reset(); $('dialog-error').hidden = true;
  $('storage-input').value = state?.storageDir || ''; $('cache-input').value = state?.cacheDir || state?.defaults?.cacheDir || '';
  $('password-input').type = 'password'; $('show-password').setAttribute('aria-pressed','false'); setText('show-password','Show');
  updateDriveLetters(false);
  updateDialog(); renderAvailability(); $('vault-dialog').showModal(); $('storage-input').focus();
 }
-function closeVaultDialog() { if (busy) return; $('vault-dialog').close(); $('password-input').value = ''; $('confirm-password').value = ''; $('key-path').value = ''; }
+function closeVaultDialog() { if (busy) return; closeDrivePicker(); $('vault-dialog').close(); $('password-input').value = ''; $('confirm-password').value = ''; $('key-path').value = ''; }
 async function confirmAction(title, description, action) {
  setText('confirm-title',title); setText('confirm-description',description); setText('confirm-action',action);
  const dialog = $('confirm-dialog'); dialog.returnValue = ''; dialog.showModal(); dialog.querySelector('button[value=cancel]').focus();
@@ -206,7 +242,26 @@ $('vault-dialog').addEventListener('cancel',event => { if (busy) event.preventDe
 $('vault-dialog').addEventListener('close',() => { $('password-input').value = ''; $('confirm-password').value = ''; $('key-path').value = ''; });
 for (const el of document.querySelectorAll('[data-browse]')) el.addEventListener('click',async () => { try { const path = await api.chooseFolder(el.dataset.browse === 'cache-input' ? 'cache' : 'storage'); if (path) $(el.dataset.browse).value = path; } catch (error) { showError(error,true); } });
 for (const el of document.querySelectorAll('[name=credential-mode]')) el.addEventListener('change',updateDialog);
-listen('drive-letter','change',renderAvailability);
+listen('drive-letter','input',() => {
+ driveLetterEdited = true; $('drive-letter').value = $('drive-letter').value.toUpperCase();
+ activeDriveLetter = normalizedDriveLetter($('drive-letter').value); markDriveOption(); renderAvailability();
+});
+listen('drive-letter-toggle','click',() => { if ($('drive-letter-options').hidden) openDrivePicker(); else { closeDrivePicker(); $('drive-letter').focus(); } });
+$('drive-letter-options').addEventListener('mousedown',event => event.preventDefault());
+listen('drive-letter-options','click',event => { const option = event.target.closest('[data-letter]'); if (option) chooseDriveLetter(option.dataset.letter); });
+$('drive-letter').addEventListener('keydown',event => {
+ const open = !$('drive-letter-options').hidden;
+ if (event.key === 'Escape' && open) { event.preventDefault(); event.stopPropagation(); closeDrivePicker(); return; }
+ if (event.key === 'Tab') { closeDrivePicker(); return; }
+ if (event.key === 'Enter' && open) { if (document.getElementById(`drive-option-${activeDriveLetter}`)) { event.preventDefault(); chooseDriveLetter(activeDriveLetter); } else closeDrivePicker(); return; }
+ if (!['ArrowDown','ArrowUp','Home','End'].includes(event.key) || (!open && ['Home','End'].includes(event.key))) return;
+ event.preventDefault(); if (!open) { openDrivePicker(); return; }
+ const letters = [...$('drive-letter-options').children].map(option => option.dataset.letter); if (!letters.length) return;
+ const current = letters.indexOf(activeDriveLetter);
+ activeDriveLetter = event.key === 'Home' ? letters[0] : event.key === 'End' ? letters.at(-1) : letters[(current + (event.key === 'ArrowDown' ? 1 : -1) + letters.length) % letters.length];
+ markDriveOption(); document.getElementById(`drive-option-${activeDriveLetter}`)?.scrollIntoView({block:'nearest'});
+});
+document.addEventListener('pointerdown',event => { if (!$('drive-picker').contains(event.target)) closeDrivePicker(); });
 listen('show-password','click',() => { const showing = $('password-input').type === 'password'; $('password-input').type = showing ? 'text' : 'password'; $('show-password').setAttribute('aria-pressed',String(showing)); setText('show-password',showing ? 'Hide' : 'Show'); });
 listen('choose-key','click',async () => { const path = await api.chooseKeyFile(); if (path) $('key-path').value = path; });
 listen('generate-key','click',async () => { const path = await api.generateKeyFile({storageDir:$('storage-input').value,cacheDir:$('cache-input').value}); if (path) $('key-path').value = path; });
@@ -214,7 +269,7 @@ listen('vault-form','submit',async event => {
  event.preventDefault(); if (busy) return;
  const isKey = document.querySelector('[name=credential-mode]:checked').value === 'keyFile';
  if (!isKey && dialogMode === 'create' && $('password-input').value !== $('confirm-password').value) return showError('The passwords do not match.',true);
- const options = {storageDir:$('storage-input').value,cacheDir:$('cache-input').value,driveLetter:$('drive-letter').value};
+ const options = {storageDir:$('storage-input').value,cacheDir:$('cache-input').value,driveLetter:`${normalizedDriveLetter($('drive-letter').value)}:`};
  if (isKey) options.keyFilePath = $('key-path').value; else options.password = $('password-input').value;
  if (dialogMode === 'create') options.partSizeBytes = parsePartSize($('create-split-value').value,$('create-split-unit').value);
  const result = await run('Mounting drive…',() => api[dialogMode](options),dialogMode === 'create' ? 'Drive created.' : 'Drive unlocked.',true);
