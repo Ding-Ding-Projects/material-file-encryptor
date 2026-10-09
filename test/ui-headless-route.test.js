@@ -23,3 +23,20 @@ test('interface workflow asserts states after actions and keeps native proof sep
  for(const [index,step] of plan.steps.entries())if(['click','type'].includes(step.op)){assert.equal(plan.steps[index+1].op,'poll');assert.equal(plan.steps[index+2].op,'capture');}
  assert.equal(JSON.stringify(plan).includes('password-input'),false);assert.equal(JSON.stringify(plan).includes('awaitPromise'),false);
 });
+
+import {spawnSync} from 'node:child_process';
+test('automatic desktop disappearance requires exact not-found code and every recorded process absent',()=>{
+ const result=spawnSync('python',['-B','-c',`import importlib.util
+spec=importlib.util.spec_from_file_location('policy','scripts/local-headless-desktop-check-policy.py')
+p=importlib.util.module_from_spec(spec);spec.loader.exec_module(p)
+owned=[{'pid':77,'creationDate':'recorded'}]
+missing={'ok':False,'client_ok':False,'error':"OpenDesktopW('owned') failed (GetLastError=2: The system cannot find the file specified.)"}
+assert p.automatically_closed(missing,'owned',owned,lambda _:True)
+assert not p.automatically_closed(missing,'owned',owned,lambda _:False)
+assert not p.automatically_closed(missing,'other',owned,lambda _:True)
+assert not p.automatically_closed(missing,'owned',[],lambda _:True)
+for code in [5,6,87]:
+ value=dict(missing);value['error']=value['error'].replace('GetLastError=2:','GetLastError='+str(code)+':');assert not p.automatically_closed(value,'owned',owned,lambda _:True)
+value=dict(missing);value['windows']=[{'pid':88}];assert not p.automatically_closed(value,'owned',owned,lambda _:True)
+`],{encoding:'utf8'});assert.equal(result.status,0,result.stderr);
+});
