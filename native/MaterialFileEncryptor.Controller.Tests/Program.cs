@@ -243,7 +243,45 @@ static class Regression
             ((IDisposable)controller).Dispose(); foreach(var file in Directory.EnumerateFiles(root,"*",SearchOption.AllDirectories)) File.SetAttributes(file,FileAttributes.Normal); Directory.Delete(root,true);
         }
     }
-    public static async Task Main() { Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); await PartialHistoryRetry(); await OfflineUnlock(); await HistorySubprocessCallback(); await FilesystemHydrationCallback(); }
+    static async Task RestoreBackgroundHistory()
+    {
+        var root=Path.Combine(Path.GetTempPath(),"mfe-controller-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
+        var engine=Create(root,10*1024*1024); var controller=Make(engine,root,new FolderVaultTransport(Path.Combine(root,"source")));
+        var history=new GitVaultHistory(Path.Combine(root,"cache"),Path.Combine(root,"history"));
+        Set(controller,"historyStore",history); Set(controller,"historySourceRoot",Path.Combine(root,"cache")); Set(controller,"historyPending",true);
+        engine.HistoryChanged+=()=>Set(controller,"historyPending",true);
+        try
+        {
+            engine.CreateFile("restored.bin"); engine.WriteRange("restored.bin",0,new byte[]{1,2,3}); await engine.SaveVersionAsync("restored.bin");
+            var version=engine.ListVersions().First().Id;
+            engine.WriteRange("restored.bin",0,new byte[]{4,5,6}); await engine.FlushAsync();
+            Call(controller,"Execute","restoreVersion",JsonSerializer.SerializeToElement(new{versionId=version}));
+            async Task Confirm()
+            {
+                Set(controller,"nextSyncAttempt",DateTimeOffset.MinValue); Call(controller,"TickIfUnlocked");
+                var until=DateTimeOffset.UtcNow.AddSeconds(45);
+                while(DateTimeOffset.UtcNow<until)
+                {
+                    var status=JsonSerializer.SerializeToElement(Call(controller,"Status"));
+                    if(!status.GetProperty("sync").GetProperty("running").GetBoolean() && !(bool)ControllerType.GetField("historyPending",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(controller)!)
+                    {
+                        Assert(status.GetProperty("sync").GetProperty("error").ValueKind==JsonValueKind.Null,"Background restore synchronization reported an error");
+                        return;
+                    }
+                    await Task.Delay(25);
+                }
+                throw new TimeoutException("Background restored history did not complete");
+            }
+            await Confirm(); var afterVersion=(await history.ListSnapshotsAsync()).First();
+            engine.Delete("restored.bin"); await engine.FlushAsync(); var deleted=engine.ListDeleted().First().Id;
+            Call(controller,"Execute","restoreDeleted",JsonSerializer.SerializeToElement(new{ids=new[]{deleted}}));
+            await Confirm(); Assert((await history.ListSnapshotsAsync()).First()!=afterVersion,"Recycle restore did not publish new local history");
+            var bytes=new byte[3]; Assert(engine.ReadRange("restored.bin",0,bytes)==3&&bytes.SequenceEqual(new byte[]{1,2,3}),"Restored historical bytes changed");
+            Console.WriteLine("PASS historical and recycled restores complete background folder synchronization and record real history");
+        }
+        finally { ((IDisposable)controller).Dispose(); foreach(var file in Directory.EnumerateFiles(root,"*",SearchOption.AllDirectories))File.SetAttributes(file,FileAttributes.Normal); Directory.Delete(root,true); }
+    }
+    public static async Task Main() { Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); await PartialHistoryRetry(); await OfflineUnlock(); await HistorySubprocessCallback(); await FilesystemHydrationCallback(); await RestoreBackgroundHistory(); }
     sealed class ImmediateTransport : IVaultTransport
     {
         public Task InitializeAsync(CancellationToken ct=default)=>Task.CompletedTask;

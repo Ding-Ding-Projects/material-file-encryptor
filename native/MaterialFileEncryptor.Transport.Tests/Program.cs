@@ -1,4 +1,7 @@
 using MaterialFileEncryptor.Core;
+if (args.Length == 1 && args[0] == "--stdin-fixture") { Console.Write(Console.IsInputRedirected && Console.In.ReadToEnd().Length == 0 ? "closed-input" : "inherited-input"); return; }
+if (args.Length == 1 && args[0] == "--stdin-parent-fixture") { var result = await new VaultProcessRunner().RunAsync("dotnet", [typeof(LiveTransportChecks).Assembly.Location, "--stdin-fixture"], Environment.CurrentDirectory); Console.Write(result.Text); return; }
+if (args.Length == 1 && args[0] == "--pipe-fixture") { while (true) { Console.Error.Write(new string('e', 8192)); Console.Out.Write(new string('o', 8192)); await Task.Delay(10); } }
 if (args.Length == 2 && args[0] == "--live-private") { await LiveTransportChecks.RunAsync(args[1]); return; }
 var root = Path.Combine(Path.GetTempPath(), "mfe-transport-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(root);
@@ -122,6 +125,22 @@ try
     using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
     var watch = System.Diagnostics.Stopwatch.StartNew();
     try { await runner.RunAsync("git", ["-c", "alias.pause=!sleep 30", "pause"], root, cancellation.Token); throw new Exception("ignored cancellation"); } catch (OperationCanceledException) { Check(watch.Elapsed < TimeSpan.FromSeconds(5), "process cancellation terminates child tree promptly"); }
+    var fixtureAssembly = typeof(LiveTransportChecks).Assembly.Location;
+    var inputStart = new System.Diagnostics.ProcessStartInfo("dotnet") { WorkingDirectory = root, RedirectStandardInput = true, RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
+    inputStart.ArgumentList.Add(fixtureAssembly); inputStart.ArgumentList.Add("--stdin-parent-fixture");
+    using (var inputParent = System.Diagnostics.Process.Start(inputStart)!)
+    {
+        await inputParent.StandardInput.WriteAsync("host input must not reach storage tools"); inputParent.StandardInput.Close();
+        var inputOutput = await inputParent.StandardOutput.ReadToEndAsync(); await inputParent.WaitForExitAsync();
+        Check(inputParent.ExitCode == 0 && inputOutput == "closed-input", "storage subprocess input is isolated and closed");
+    }
+    using var pipeCancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(400));
+    watch.Restart();
+    try { await runner.RunAsync("dotnet", [fixtureAssembly, "--pipe-fixture"], root, pipeCancellation.Token); throw new Exception("ignored pipe cancellation"); }
+    catch (OperationCanceledException) { Check(watch.Elapsed < TimeSpan.FromSeconds(5), "concurrent stdout and stderr cancellation completes promptly"); }
+    using var alreadyCancelled = new CancellationTokenSource(); alreadyCancelled.Cancel();
+    try { await new VaultProcessRunner(Path.Combine(root, "missing-git.exe")).RunAsync("git", [], root, alreadyCancelled.Token); throw new Exception("started cancelled process"); }
+    catch (OperationCanceledException) { Check(true, "pre-cancelled operation never resolves or starts a subprocess"); }
     Console.WriteLine($"Passed {count} transport checks.");
 }
 finally

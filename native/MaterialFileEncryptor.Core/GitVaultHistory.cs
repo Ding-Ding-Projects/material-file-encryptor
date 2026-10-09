@@ -29,10 +29,11 @@ public sealed class VaultProcessRunner : IVaultProcessRunner
     }
     public async Task<VaultProcessResult> RunAsync(string executable, IReadOnlyList<string> arguments, string workingDirectory, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(TimeSpan.FromSeconds(60));
         var ct = deadline.Token;
-        var start = new ProcessStartInfo(ResolveExecutable(executable)) { WorkingDirectory = workingDirectory, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
+        var start = new ProcessStartInfo(ResolveExecutable(executable)) { WorkingDirectory = workingDirectory, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
         if (executable == "git")
         {
             foreach (var setting in new[] { "core.fsmonitor=false", "core.hooksPath=/dev/null", "core.attributesFile=" + ("/dev/null"), "credential.helper=", "credential.helper=!'" + ResolveExecutable("gh").Replace("\\", "/").Replace("'", "'\"'\"'") + "' auth git-credential", "commit.gpgsign=false" }) { start.ArgumentList.Add("-c"); start.ArgumentList.Add(setting); }
@@ -52,11 +53,28 @@ public sealed class VaultProcessRunner : IVaultProcessRunner
         try { process = Process.Start(start) ?? throw new IOException("Unable to start storage tool."); }
         catch (System.ComponentModel.Win32Exception) { throw new IOException("Required storage tool is unavailable. Install the bundled Git and GitHub CLI tools."); }
         using var ownedProcess = process;
+        // Storage commands receive no input. Inheriting the desktop host's input
+        // lets an unexpected prompt wait indefinitely for a user who cannot see it.
+        process.StandardInput.Close();
         using var output = new MemoryStream();
         var copy = process.StandardOutput.BaseStream.CopyToAsync(output, ct);
         var error = process.StandardError.ReadToEndAsync(ct);
-        try { await Task.WhenAll(copy, process.WaitForExitAsync(ct)); }
-        catch { if (!process.HasExited) process.Kill(true); using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(5)); await process.WaitForExitAsync(stop.Token); throw; }
+        var completion = Task.WhenAll(copy, error, process.WaitForExitAsync(ct));
+        try { await completion.WaitAsync(ct); }
+        catch
+        {
+            // Cancellation must cover both pipes, including stderr after the
+            // parent exits. Preserve the original exception if teardown races exit.
+            try
+            {
+                if (!process.HasExited) process.Kill(true);
+                using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                await process.WaitForExitAsync(stop.Token);
+                await completion.WaitAsync(stop.Token);
+            }
+            catch (Exception cleanup) when (cleanup is OperationCanceledException or IOException or InvalidOperationException or System.ComponentModel.Win32Exception) { }
+            throw;
+        }
         return new(process.ExitCode, output.ToArray(), await error);
     }
 }

@@ -34,6 +34,8 @@ A receiving device authenticates snapshot metadata and checks referenced-object 
 
 The status describes access and publication to the selected local folder. OneDrive or Google Drive performs its own remote transport; the engine cannot assert that their servers have received a local folder change. This format exposes ciphertext sizes, object counts and activity timing; padding and provider-level traffic hiding are not implemented. Successful file flushes are covered by process-crash tests; this suite does not simulate sudden power loss or all filesystem/provider durability behavior. File ACLs, NTFS alternate data streams, hard links, byte-range locks and cloud garbage collection are outside the core's current interface.
 
+History and transport subprocesses receive closed, isolated standard input. Their standard output, standard error and process exit share the existing 60-second cancellation deadline. Cancellation terminates the owned child tree and performs bounded teardown without replacing the original operation failure. A restore's local mutation remains distinct from subsequent background history and transport completion; a successful restore alone does not prove synchronization.
+
 ## Reproduce the checks
 
 ```sh
