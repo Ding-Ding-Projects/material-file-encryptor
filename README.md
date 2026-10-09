@@ -2,7 +2,7 @@
 
 A Windows Explorer drive that encrypts files into a folder managed by OneDrive, Google Drive, or any other folder-sync client. Open and edit files normally; keep selected files available offline in an encrypted local cache.
 
-**Development status:** seventeen native storage checks and seventeen desktop/site checks pass locally. All 33 real Windows mounted-workflow checks pass, including access from a separate process; packaged desktop and installer verification are pending. The diagrams explain the architecture and are separate from real application captures. No installer is published yet.
+**Development status:** seventeen native storage checks and seventeen desktop/site checks pass locally. All 34 real Windows mounted-workflow checks and the complete packaged GUI workflow pass at source `c74b3a6`. Setup installed and all 198 selected runtime entries matched, but verification stopped at `INSTALL_REGISTRATION_MISSING` before installed-app and uninstall checks. The diagrams explain the architecture and are separate from real application captures. No installer is published yet.
 
 [Project goal](GOAL.md) · [Interface design](DESIGN.md) · [Source](https://github.com/Ding-Ding-Projects/material-file-encryptor) · [Documentation site](https://ding-ding-projects.github.io/material-file-encryptor/) · [Windows verification](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/workflows/windows.yml)
 
@@ -15,7 +15,7 @@ The mounted drive returns authenticated, decrypted bytes when applications read 
 The documentation site includes an [interactive workflow explanation](https://ding-ding-projects.github.io/material-file-encryptor/#interactive-workflow) with selectable steps, access modes, and encrypted part sizes. Its illustrations explain the design; they are separate from native verification.
 
 <details>
-<summary>Real application captures</summary>
+<summary>Real Linux application captures</summary>
 
 These captures show the actual Electron application at source commit `2a9887009f3bb2b64a3e5be37754d1d6612b6fd1`, driven through its sandboxed renderer on an isolated Linux display at 1180 × 850. They verify interface states; native Windows evidence is recorded separately in the linked workflow. [Capture provenance and image hashes](docs/images/captures/provenance.json).
 
@@ -30,6 +30,29 @@ These captures show the actual Electron application at source commit `2a9887009f
 ![Real application: dark settings screen with appearance, language, message preferences, startup, automatic unlock, and part-size controls.](docs/images/captures/desktop-settings-dark.png)
 
 ![Real application: help screen explaining encryption, offline access, and copying plaintext outside the drive.](docs/images/captures/desktop-help.png)
+
+</details>
+
+<details>
+<summary>Real Windows application captures</summary>
+
+These seven original viewport captures show the actual packaged Electron application at source `c74b3a6828e3d1893015598f2df1c9bd4ce84c32` on a disposable Windows Server 2022 runner. Ordinary mounted file access, encrypted offline pinning, startup registration toggles and graceful locking passed. They do not prove the later installed-app or uninstall checks. Per-image capture timestamps were not recorded. [Provenance and original receipts](docs/images/captures/windows/provenance.json) · [Windows run](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/37863451177).
+
+The Windows recording is withheld because it briefly displays a machine-profile path. The original CI recording is retained without masking or editing.
+
+![Actual Windows application: locked drive and custom navigation.](docs/images/captures/windows/desktop-locked.png)
+
+![Actual Windows application: create-drive dialog, manual folder fields and password credential segment.](docs/images/captures/windows/desktop-create.png)
+
+![Actual Windows application: custom key-file credential segment and themed scrollbar.](docs/images/captures/windows/desktop-keyfile-choice.png)
+
+![Actual Windows application: real mounted M drive with a file written and read through ordinary Windows operations.](docs/images/captures/windows/desktop-mounted.png)
+
+![Actual Windows application: the same file pinned in the encrypted offline cache.](docs/images/captures/windows/desktop-offline.png)
+
+![Actual Windows application: dark settings with separate startup and optional automatic-unlock controls.](docs/images/captures/windows/desktop-settings-dark.png)
+
+![Actual Windows application: help explaining the drive, encrypted cache and plaintext export.](docs/images/captures/windows/desktop-help.png)
 
 </details>
 

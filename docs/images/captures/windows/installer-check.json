@@ -1,0 +1,59 @@
+﻿{
+    "schemaVersion":  1,
+    "sourceCommit":  "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
+    "runId":  "37863451177",
+    "runAttempt":  "1",
+    "route":  "disposable-windows-ci-playwright-electron",
+    "passed":  false,
+    "phase":  "installed-payload-comparison",
+    "unsignedInstaller":  true,
+    "updaterBehaviorVerified":  false,
+    "artifactHashes":  {
+                           "fullPackages":  1,
+                           "setupSha256":  "d649fa3cd714bdb94695aa5a9be085a9f7e951cb6769fae0a32827a42966ee50",
+                           "releasesSha256":  "804c53a820fac5c64077693526baedbd680c0ae9e0fcc4aed30fdbe6bd77e0f3",
+                           "nupkgSha256":  "9055c799455463681bfdefb6e7a0d335b7aed240ae053d71be6fc460659a9aaa",
+                           "deltaPackages":  0,
+                           "testedManifestSha256":  "0e473123ece6a39190412cf943de9d01f58cf7b2740cd72efdbbbdf04bc0f7cb",
+                           "releasesDigestAndSizeVerified":  true
+                       },
+    "payload":  {
+                    "nupkgEntriesMatched":  198,
+                    "comparisonScope":  [
+                                            "application executable",
+                                            "ASAR",
+                                            "all native helper files and notices",
+                                            "all bundled driver files",
+                                            "dependency manifest"
+                                        ],
+                    "testedEntries":  198,
+                    "requiredResourcesPresent":  true,
+                    "trustedDriverDigestAndSignature":  true,
+                    "nativeEntries":  194
+                },
+    "install":  {
+                    "installedExecutableSignature":  "NotSigned",
+                    "uninstallRegistrationPresent":  false,
+                    "installedPayloadEntriesMatched":  198,
+                    "freshPerUserRoot":  true,
+                    "installedExecutableSha256":  "502e6da911a0d29378de0af1f39918cd5c1a343e2eac4d59cb453ac40c616748",
+                    "exitCode":  0
+                },
+    "installedApplication":  {
+
+                             },
+    "uninstall":  {
+
+                  },
+    "failure":  {
+                    "phase":  "installed-payload-comparison",
+                    "code":  "INSTALL_REGISTRATION_MISSING",
+                    "hresult":  -2146233079
+                },
+    "package":  {
+                    "architecture":  "x64",
+                    "id":  "MaterialFileEncryptor",
+                    "version":  "0.1.0"
+                },
+    "installRetained":  true
+}

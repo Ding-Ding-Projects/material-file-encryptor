@@ -1,0 +1,71 @@
+{
+  "platform": "win32",
+  "packagedArtifact": {
+    "launchedBuiltArtifact": true,
+    "asar": true,
+    "nativeHelperPresent": true,
+    "driverInstallerPresent": true
+  },
+  "startupRegistration": {
+    "initial": true,
+    "disabledReadback": false,
+    "enabledReadback": true,
+    "restored": true,
+    "signInTested": false
+  },
+  "security": {
+    "sandbox": true,
+    "contextIsolation": true,
+    "nodeIntegration": false
+  },
+  "driverAvailable": true,
+  "pageErrors": [],
+  "recording": "desktop-win32.webm",
+  "screenshots": {
+    "viewportOnly": true,
+    "scrollPosition": "top"
+  },
+  "mountedFilesystemChecked": true,
+  "checked": [
+    "locked screen",
+    "create dialog",
+    "key-file choice",
+    "settings theme",
+    "help",
+    "preload isolation",
+    "packaged ASAR and resources",
+    "startup registration toggle and restore",
+    "create and mount",
+    "mounted file write/read",
+    "encrypted offline pin and pane",
+    "lock"
+  ],
+  "mountEvidence": {
+    "requestedDriveMatchesActual": true,
+    "actualDriveLetter": "M:",
+    "helperNamespace": {
+      "requestedDriveLetter": "M:",
+      "registeredDriveLetter": "M:",
+      "dosDeviceFound": true,
+      "win32Error": null
+    }
+  },
+  "passed": true,
+  "cleanupErrors": [],
+  "milestones": [
+    "launch",
+    "window-ready",
+    "packaged-resources-and-startup",
+    "drive-discovery",
+    "locked-and-settings-captures",
+    "create-and-mount",
+    "mounted-file-write",
+    "mounted-file-sync",
+    "mounted-file-read",
+    "encrypted-offline-pin",
+    "lock",
+    "checks-passed",
+    "graceful-cleanup"
+  ],
+  "fixtureRetained": false
+}

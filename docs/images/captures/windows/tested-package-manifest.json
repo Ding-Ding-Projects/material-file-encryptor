@@ -1,0 +1,1007 @@
+﻿{
+    "schemaVersion":  1,
+    "commit":  "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
+    "runId":  "37863451177",
+    "runAttempt":  "1",
+    "comparisonScope":  [
+                            "application executable",
+                            "ASAR",
+                            "all native helper files and notices",
+                            "all bundled driver files",
+                            "dependency manifest"
+                        ],
+    "packagedDesktopPassed":  true,
+    "desktopReceiptSha256":  "92b1137114b6c00b5375962198fd7d2b001d6e2a40f7c497bb12e9895c45daa2",
+    "files":  [
+                  {
+                      "entry":  "MaterialFileEncryptor.exe",
+                      "bytes":  246302720,
+                      "sha256":  "502e6da911a0d29378de0af1f39918cd5c1a343e2eac4d59cb453ac40c616748"
+                  },
+                  {
+                      "entry":  "resources/app.asar",
+                      "bytes":  348431,
+                      "sha256":  "0a52e1c36d2f0b54f36ca6bea43da9bc00ab15099d030459ea79a7fd49c3fa81"
+                  },
+                  {
+                      "entry":  "resources/dependencies.json",
+                      "bytes":  781,
+                      "sha256":  "ad0b4558d74f93ab46be52eda5c33e0e2b010c024075984118f09d45580bb4a3"
+                  },
+                  {
+                      "entry":  "resources/driver/winfsp-2.1.25156.msi",
+                      "bytes":  2191360,
+                      "sha256":  "073a70e00f77423e34bed98b86e600def93393ba5822204fac57a29324db9f7a"
+                  },
+                  {
+                      "entry":  "resources/native/clretwrc.dll",
+                      "bytes":  310568,
+                      "sha256":  "bc233572d7702ec8d8763c143ec62687c38abc3aad26336fb45c26657bf3a5e7"
+                  },
+                  {
+                      "entry":  "resources/native/clrgc.dll",
+                      "bytes":  667944,
+                      "sha256":  "b09898e142791ea3b96fd1b432d0e5c8ad51c81cd99b608accd2981e78a93cdf"
+                  },
+                  {
+                      "entry":  "resources/native/clrjit.dll",
+                      "bytes":  1777960,
+                      "sha256":  "697c09ac310b8fb8118863971955da135aee348116816e3b511bf5957dc6253a"
+                  },
+                  {
+                      "entry":  "resources/native/coreclr.dll",
+                      "bytes":  4995880,
+                      "sha256":  "bbbcaedb369617695280caaa60cda1aba4fa3c5b557532a89d9f4a9174a5b692"
+                  },
+                  {
+                      "entry":  "resources/native/createdump.exe",
+                      "bytes":  71512,
+                      "sha256":  "beba75ffcd188a0ce594c304c737caf16681e1af19bdd7bb47b3f0eb8636c320"
+                  },
+                  {
+                      "entry":  "resources/native/hostfxr.dll",
+                      "bytes":  366376,
+                      "sha256":  "4f5a0500cd2a2439b0d5edbf242950233aec4539ec9a5e7ba9b8a9b0079f63af"
+                  },
+                  {
+                      "entry":  "resources/native/hostpolicy.dll",
+                      "bytes":  406824,
+                      "sha256":  "24f18ccb306d5e614932478471ad276e2b041a723a45e571073db383b37c5120"
+                  },
+                  {
+                      "entry":  "resources/native/MaterialFileEncryptor.Core.dll",
+                      "bytes":  62464,
+                      "sha256":  "654a329d787a69438b0461b117f69333d41bd2609698a1ed19696402b779c21c"
+                  },
+                  {
+                      "entry":  "resources/native/MaterialFileEncryptor.Core.pdb",
+                      "bytes":  28640,
+                      "sha256":  "26bffc055ab7cffb695fbfe25c099db2c5ad94715b2fa215169e43c3ef671e02"
+                  },
+                  {
+                      "entry":  "resources/native/MaterialFileEncryptor.Host.deps.json",
+                      "bytes":  27905,
+                      "sha256":  "032f7c35c47f0896af32fa81ecf0428b50b3fea46ae843a75a7a62e9577a4160"
+                  },
+                  {
+                      "entry":  "resources/native/MaterialFileEncryptor.Host.dll",
+                      "bytes":  91136,
+                      "sha256":  "2e8bfac901dc1a4c0de5ac1014c3fcf8b7192ea458af007e9aa58b80054a7b59"
+                  },
+                  {
+                      "entry":  "resources/native/MaterialFileEncryptor.Host.exe",
+                      "bytes":  152064,
+                      "sha256":  "9e56e60041db299f7f8e126363ebc8fb5cd9e79751a153322368e3f37bac5afd"
+                  },
+                  {
+                      "entry":  "resources/native/MaterialFileEncryptor.Host.pdb",
+                      "bytes":  26104,
+                      "sha256":  "ee73cea8d50f4c3dec2165f6e5e0a6cd26657bee44a72b02c9884b052826df01"
+                  },
+                  {
+                      "entry":  "resources/native/MaterialFileEncryptor.Host.runtimeconfig.json",
+                      "bytes":  372,
+                      "sha256":  "d7a0beca53834e0a387b9e5083bd1dadf5bee565b48595a9d4cb457d15726c78"
+                  },
+                  {
+                      "entry":  "resources/native/Microsoft.CSharp.dll",
+                      "bytes":  1005392,
+                      "sha256":  "30704c86c4c052ac630e5b5bf9e04aeb1eb0677fe3c5cf8a7df36c8ab78d0b56"
+                  },
+                  {
+                      "entry":  "resources/native/Microsoft.DiaSymReader.Native.amd64.dll",
+                      "bytes":  2377016,
+                      "sha256":  "70e4b89978ce57ef87b28f4921f3140c383b04aa96e7f3bdb3c4ebb898fd8a72"
+                  },
+                  {
+                      "entry":  "resources/native/Microsoft.VisualBasic.Core.dll",
+                      "bytes":  1247056,
+                      "sha256":  "bdcdd4bd2b6e2c0eec9a93187cd57ce9437c9a2324a6c6c20c55a2d1a27823be"
+                  },
+                  {
+                      "entry":  "resources/native/Microsoft.VisualBasic.dll",
+                      "bytes":  17192,
+                      "sha256":  "a172fad5b53a27d32b21ba3b18e27046c1daf7451c46bea4f57f515d0eef756a"
+                  },
+                  {
+                      "entry":  "resources/native/Microsoft.Win32.Primitives.dll",
+                      "bytes":  15184,
+                      "sha256":  "596160c8491d2110a36ce4cb93c736905b2c83b9b50496369f32e32ad28d2a20"
+                  },
+                  {
+                      "entry":  "resources/native/Microsoft.Win32.Registry.dll",
+                      "bytes":  120656,
+                      "sha256":  "a8cc5503bbba36472d1dd3a8eebc3a8b26f0b2882e770851aab486690b23ead9"
+                  },
+                  {
+                      "entry":  "resources/native/mscordaccore.dll",
+                      "bytes":  1348960,
+                      "sha256":  "a277f63f5722e1ed59a791fc5d30c53ed263abef4adf12d0bf494897d796c3e0"
+                  },
+                  {
+                      "entry":  "resources/native/mscordaccore_amd64_amd64_8.0.3126.42015.dll",
+                      "bytes":  1348960,
+                      "sha256":  "a277f63f5722e1ed59a791fc5d30c53ed263abef4adf12d0bf494897d796c3e0"
+                  },
+                  {
+                      "entry":  "resources/native/mscordbi.dll",
+                      "bytes":  1233800,
+                      "sha256":  "20140e71ed6dd59e6736e455b7be2784d7ac0b3f43839148a134aec3e7622de0"
+                  },
+                  {
+                      "entry":  "resources/native/mscorlib.dll",
+                      "bytes":  59216,
+                      "sha256":  "ee4983e136ab524f29d2f43d01d1deb978f4948eb5ca05b5d6e40be37ec43023"
+                  },
+                  {
+                      "entry":  "resources/native/mscorrc.dll",
+                      "bytes":  136488,
+                      "sha256":  "c0fc4c625ce2c62887a86a5e1d93895836e7c998a3c95169505f8515266160fc"
+                  },
+                  {
+                      "entry":  "resources/native/msquic.dll",
+                      "bytes":  536344,
+                      "sha256":  "b7158d427b01c70483bb3d80c5211e387dd98e9471c8a70e4484d449de9157e8"
+                  },
+                  {
+                      "entry":  "resources/native/netstandard.dll",
+                      "bytes":  100648,
+                      "sha256":  "53d854d33c3f0e1bbccff4b5c4b89420daa66fa5f6603f6e5df20d6bbb7e00f4"
+                  },
+                  {
+                      "entry":  "resources/native/notices/MaterialFileEncryptor-License.txt",
+                      "bytes":  35823,
+                      "sha256":  "230184f60bae2feaf244f10a8bac053c8ff33a183bcc365b4d8b876d2b7f4809"
+                  },
+                  {
+                      "entry":  "resources/native/notices/WinFsp-License.txt",
+                      "bytes":  37366,
+                      "sha256":  "fc328e527515676f3de8bfe1d512a2cc2c6cee50e1b35700f1b29b73248d3656"
+                  },
+                  {
+                      "entry":  "resources/native/notices/WinFsp-Origin.md",
+                      "bytes":  1303,
+                      "sha256":  "55a2eabf78a4704fa1365513ba9d7afe7368b23615300fa1b9617b4e9b681b0b"
+                  },
+                  {
+                      "entry":  "resources/native/System.AppContext.dll",
+                      "bytes":  15144,
+                      "sha256":  "c3d2cb89ec473b55fcbf6f0ed601139e46159e0d2834d9d92ed74ed89e2a2879"
+                  },
+                  {
+                      "entry":  "resources/native/System.Buffers.dll",
+                      "bytes":  15184,
+                      "sha256":  "8cadbc77368593547381f18eafa12dd58216d7b35a60b487b66ca51a2ee3c406"
+                  },
+                  {
+                      "entry":  "resources/native/System.Collections.Concurrent.dll",
+                      "bytes":  276264,
+                      "sha256":  "ed653ccb5dc40d0bb4ea3429165a0825705f2935a65c584ca67cba45671884c1"
+                  },
+                  {
+                      "entry":  "resources/native/System.Collections.dll",
+                      "bytes":  259880,
+                      "sha256":  "c6bb79b8fb32504b6327b516e6ff32017a073669ab749d3c86ed49cd5f2f0c45"
+                  },
+                  {
+                      "entry":  "resources/native/System.Collections.Immutable.dll",
+                      "bytes":  837456,
+                      "sha256":  "6e41c8ba23968f6a9b910e3c33f66761a588f24084c4e3599214805716d6d259"
+                  },
+                  {
+                      "entry":  "resources/native/System.Collections.NonGeneric.dll",
+                      "bytes":  104232,
+                      "sha256":  "b40cdf234652b31b443164350f73e25f98c5edecfd30698789d6dbf9ca456e44"
+                  },
+                  {
+                      "entry":  "resources/native/System.Collections.Specialized.dll",
+                      "bytes":  104272,
+                      "sha256":  "24022887037bfaad8c89c26642712c920dcc0ababd3396d80d8b2be16637673b"
+                  },
+                  {
+                      "entry":  "resources/native/System.ComponentModel.Annotations.dll",
+                      "bytes":  198480,
+                      "sha256":  "97060d253527bdde94022ac6d22ae4c0474cf67f40bfe8342e9420b7888b3aff"
+                  },
+                  {
+                      "entry":  "resources/native/System.ComponentModel.DataAnnotations.dll",
+                      "bytes":  16720,
+                      "sha256":  "e5b872cf98bf9f3f565877b21fdee61b569ecc586e6dc48c9199ae5e0cd100b3"
+                  },
+                  {
+                      "entry":  "resources/native/System.ComponentModel.dll",
+                      "bytes":  30504,
+                      "sha256":  "4d9e2e21ed5c16c100221433d1aab01409ec199c9f617e48b9fe1617989bbaa6"
+                  },
+                  {
+                      "entry":  "resources/native/System.ComponentModel.EventBasedAsync.dll",
+                      "bytes":  46928,
+                      "sha256":  "ce813a7cde09eba1bdd7d6661fa39c09057beddc78f554c5476c43766d763ed0"
+                  },
+                  {
+                      "entry":  "resources/native/System.ComponentModel.Primitives.dll",
+                      "bytes":  79696,
+                      "sha256":  "d981af410d4ed7939fdee47a1ee58e3db472c05f17c2b0d48e4b1ebfb2fea0e5"
+                  },
+                  {
+                      "entry":  "resources/native/System.ComponentModel.TypeConverter.dll",
+                      "bytes":  747304,
+                      "sha256":  "db04940603c749719e133bb567d142d46af3a6f2f37597db398955a3896b84c2"
+                  },
+                  {
+                      "entry":  "resources/native/System.Configuration.dll",
+                      "bytes":  19240,
+                      "sha256":  "39eca0e98d4b206cbff6243a04494f79ec8b19903d3427b44d64d88097d77f65"
+                  },
+                  {
+                      "entry":  "resources/native/System.Console.dll",
+                      "bytes":  173864,
+                      "sha256":  "d38105c5c790fc76ac6e4d99fe9b6c2672e4e250e191bd43593e55ae7d3b2afe"
+                  },
+                  {
+                      "entry":  "resources/native/System.Core.dll",
+                      "bytes":  23336,
+                      "sha256":  "f7414ecfd958fdfb2b4bcdd2f7778a7b26968eb453ca2c03fdf53ba4bb21674f"
+                  },
+                  {
+                      "entry":  "resources/native/System.Data.Common.dll",
+                      "bytes":  2860840,
+                      "sha256":  "089a74a39dceb113bea92522b227e24c881a618c5eb1e2abb166a6e8c12be0cb"
+                  },
+                  {
+                      "entry":  "resources/native/System.Data.DataSetExtensions.dll",
+                      "bytes":  15696,
+                      "sha256":  "d425011a475bb44e6b9acd4c48e8f3b428312a05ca3a649abbcd871f7102decf"
+                  },
+                  {
+                      "entry":  "resources/native/System.Data.dll",
+                      "bytes":  24912,
+                      "sha256":  "1efe79c9f164ce5da6542de89dc7f10d1feb1f38216b68f9a6b6a8ca5e3d2ac3"
+                  },
+                  {
+                      "entry":  "resources/native/System.Diagnostics.Contracts.dll",
+                      "bytes":  16168,
+                      "sha256":  "a670f39c589bd9d4a994e75abc2385839649ed91a831a4ca7d9fe4f87834b492"
+                  },
+                  {
+                      "entry":  "resources/native/System.Diagnostics.Debug.dll",
+                      "bytes":  15656,
+                      "sha256":  "e122bd1046864476252765e356c54d2454e72a6e11bf546907de1468ca0b0cb5"
+                  },
+                  {
+                      "entry":  "resources/native/System.Diagnostics.DiagnosticSource.dll",
+                      "bytes":  415568,
+                      "sha256":  "25c3bf229337a485ceacb82c00f47f2e98de68a279eb5a450550526f9cbf0448"
+                  },
+                  {
+                      "entry":  "resources/native/System.Diagnostics.FileVersionInfo.dll",
+                      "bytes":  46888,
+                      "sha256":  "24b0e8ed2ea93b84ff2a26cb1f69f7d6e331f6162eae4fae4446a5556b8a8eee"
+                  },
+                  {
+                      "entry":  "resources/native/System.Diagnostics.Process.dll",
+                      "bytes":  337744,
+                      "sha256":  "7083c7046ac4cbed1068b6ae7a777d421eeaf180e5697283fc1c6af731c32a3d"
+                  },
+                  {
+                      "entry":  "resources/native/System.Diagnostics.StackTrace.dll",
+                      "bytes":  46888,
+                      "sha256":  "7b26b1c48d500576994b3153b88fefd1e516680ae4b52cde608b8e869544b37d"
+                  },
+                  {
+                      "entry":  "resources/native/System.Diagnostics.TextWriterTraceListener.dll",
+                      "bytes":  67368,
+                      "sha256":  "0279bba2ab8c1e023d043d802b0b3bbbf8483dd082e305391c6229382452b1c2"
+                  },
+                  {
+                      "entry":  "resources/native/System.Diagnostics.Tools.dll",
+                      "bytes":  15184,
+                      "sha256":  "ca4cc511a2204af2a5652c7cf870a6a5eff109f98acc72a8e2a0498f72665507"
+                  },
+                  {
+                      "entry":  "resources/native/System.Diagnostics.TraceSource.dll",
+                      "bytes":  145232,
+                      "sha256":  "2b5489bc5a6d65e109dbed6557dc2af3ba9dfb549efd18a64f37fd64255cb756"
+                  },
+                  {
+                      "entry":  "resources/native/System.Diagnostics.Tracing.dll",
+                      "bytes":  16168,
+                      "sha256":  "6857ed7ca2c17d38f74639bacc59942599935593f9a0b33b246161c57db27eb3"
+                  },
+                  {
+                      "entry":  "resources/native/System.dll",
+                      "bytes":  49960,
+                      "sha256":  "173dd55a6d19794fb6eb8c4e4e73510ebf3a7928affe43c21e721861a4250e51"
+                  },
+                  {
+                      "entry":  "resources/native/System.Drawing.dll",
+                      "bytes":  20304,
+                      "sha256":  "97562444d2daf928cd78404156665dde55aa5ec71c6fcad705284338e4a36ebe"
+                  },
+                  {
+                      "entry":  "resources/native/System.Drawing.Primitives.dll",
+                      "bytes":  132944,
+                      "sha256":  "02bd1f5644dd73789b82c3a52c8f86ef726baa1d4cce2a0c64d9dc1c29b9cb02"
+                  },
+                  {
+                      "entry":  "resources/native/System.Dynamic.Runtime.dll",
+                      "bytes":  16208,
+                      "sha256":  "f6a93ad11464c19f720d34b92043dcc289885bf959b32549ee3ca24537e8b65a"
+                  },
+                  {
+                      "entry":  "resources/native/System.Formats.Asn1.dll",
+                      "bytes":  243496,
+                      "sha256":  "61f505f140e2c6417640a5aa47a86d148d4f6dc5317a66a7bfa2266a3ac975bf"
+                  },
+                  {
+                      "entry":  "resources/native/System.Formats.Tar.dll",
+                      "bytes":  276304,
+                      "sha256":  "ee3132a84cf9fd170f3ae0899a996adc120a899c51dbc5534b22e8870b5aa137"
+                  },
+                  {
+                      "entry":  "resources/native/System.Globalization.Calendars.dll",
+                      "bytes":  15696,
+                      "sha256":  "e0974066e338d22097f5c77e47d086bd9c5826c256034a31f21b34c4392fbb7b"
+                  },
+                  {
+                      "entry":  "resources/native/System.Globalization.dll",
+                      "bytes":  15656,
+                      "sha256":  "88a4c4517972878aebd264ac5150a3822d14ab3f5b9577c8372e1724b0ca8d88"
+                  },
+                  {
+                      "entry":  "resources/native/System.Globalization.Extensions.dll",
+                      "bytes":  15144,
+                      "sha256":  "9d57e781afd06f3c6d0a54842467b29079ba2932827a76d9047a327490f1f836"
+                  },
+                  {
+                      "entry":  "resources/native/System.IO.Compression.Brotli.dll",
+                      "bytes":  83752,
+                      "sha256":  "46d228e5ea0e3d25b15e95d6a97a3b80e86dde2660589462f30853eb5a0c40b5"
+                  },
+                  {
+                      "entry":  "resources/native/System.IO.Compression.dll",
+                      "bytes":  263976,
+                      "sha256":  "1f7e0ce87b7859c81d793750ea8fc58db6d1fa1b81d3cea1e73c614f66439c3c"
+                  },
+                  {
+                      "entry":  "resources/native/System.IO.Compression.FileSystem.dll",
+                      "bytes":  15144,
+                      "sha256":  "75972527f5c874893f0515fbe6f8d1d484354ac421ccf31af346738aa74cbc07"
+                  },
+                  {
+                      "entry":  "resources/native/System.IO.Compression.Native.dll",
+                      "bytes":  828240,
+                      "sha256":  "4f892a1f3bdf970e662435bb044b5c5e4d8f7241bce981237f57165ae12cb171"
+                  },
+                  {
+                      "entry":  "resources/native/System.IO.Compression.ZipFile.dll",
+                      "bytes":  55080,
+                      "sha256":  "a8624a7c7359c1eb6767c50513a33eb9f09125089044ef0caf9d4d225b33a230"
+                  },
+                  {
+                      "entry":  "resources/native/System.IO.dll",
+                      "bytes":  15656,
+                      "sha256":  "1ee3349f15c3a20a7394341d8d4ede2ac3d7ddbe4462f43dae828f407f84ff1d"
+                  },
+                  {
+                      "entry":  "resources/native/System.IO.FileSystem.AccessControl.dll",
+                      "bytes":  104232,
+                      "sha256":  "6c384ee8c0613a469f9894209f39f154d2e6e8796f9b9c02e3686a42e15d94a6"
+                  },
+                  {
+                      "entry":  "resources/native/System.IO.FileSystem.dll",
+                      "bytes":  15656,
+                      "sha256":  "6005e3ac5cbee19d172cc29e48ca84db8e62dff34cff95e56c3600a0a95cb170"
+                  },
+                  {
+                      "entry":  "resources/native/System.IO.FileSystem.DriveInfo.dll",
+                      "bytes":  55080,
+                      "sha256":  "3eea221aaa9e6066bffb63218ee292fe499bbb5db434a57225aac1b8531c0b90"
+                  },
+                  {
+                      "entry":  "resources/native/System.IO.FileSystem.Primitives.dll",
+                      "bytes":  15184,
+                      "sha256":  "fb2f15cf3356987e0120d265b7b4fbccc11dccfbae08b334a17b4e830eddc54e"
+                  },
+                  {
+                      "entry":  "resources/native/System.IO.FileSystem.Watcher.dll",
+                      "bytes":  87888,
+                      "sha256":  "21c97f58651ea238a7018ecfa4bb4b3b6b4e682f97163ae14f8d4d145547f3f0"
+                  },
+                  {
+                      "entry":  "resources/native/System.IO.IsolatedStorage.dll",
+                      "bytes":  91984,
+                      "sha256":  "af7c75423c9efdf88850a7197c57e19d588a326678bbe07aa7f0b5ddb3049f59"
+                  },
+                  {
+                      "entry":  "resources/native/System.IO.MemoryMappedFiles.dll",
+                      "bytes":  83752,
+                      "sha256":  "e3136d19090f173d2ab75c392486a1427060bd149d966cfd58f3df3308546dfd"
+                  },
+                  {
+                      "entry":  "resources/native/System.IO.Pipes.AccessControl.dll",
+                      "bytes":  16168,
+                      "sha256":  "fb206a579c16f5750ce10026913a7f16ad686fb37af1fc9bc997f611362b2f2e"
+                  },
+                  {
+                      "entry":  "resources/native/System.IO.Pipes.dll",
+                      "bytes":  165672,
+                      "sha256":  "35030c28374b6ffa6393c2ab8ae80cf712a2f88e92a16dbbdbf6ae03f0e0d452"
+                  },
+                  {
+                      "entry":  "resources/native/System.IO.UnmanagedMemoryStream.dll",
+                      "bytes":  15144,
+                      "sha256":  "9442d9391ff037cf388a9e15c171845e5436b093e3c928c60350957555393fd0"
+                  },
+                  {
+                      "entry":  "resources/native/System.Linq.dll",
+                      "bytes":  542504,
+                      "sha256":  "2b375e90fc687967bd95a0f47dbcba44d396923f3c98b7fe5754e34c8e4befaa"
+                  },
+                  {
+                      "entry":  "resources/native/System.Linq.Expressions.dll",
+                      "bytes":  3675984,
+                      "sha256":  "0f99977beddc9272d56a2e16b2581cde37f2afd43e77c8209827197c098dedeb"
+                  },
+                  {
+                      "entry":  "resources/native/System.Linq.Parallel.dll",
+                      "bytes":  804648,
+                      "sha256":  "4ba87321ea950874380628879c3c25332281f7f9a920a090de930570ae8af0ea"
+                  },
+                  {
+                      "entry":  "resources/native/System.Linq.Queryable.dll",
+                      "bytes":  173864,
+                      "sha256":  "5e14d4ab3bb2711b0cc4b197f973e9c74955a1e4c77041d5cad65e759c304232"
+                  },
+                  {
+                      "entry":  "resources/native/System.Memory.dll",
+                      "bytes":  157480,
+                      "sha256":  "84242cce5eacc6963a77163986066bd0a1c2eb698b5f26dbdd5e6706e002fbc7"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.dll",
+                      "bytes":  17232,
+                      "sha256":  "c2ddcdff66bbb2595e5bcaca342d600a81c9a2e618ac9b9b1c6977fc4e1d17fc"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.Http.dll",
+                      "bytes":  1734440,
+                      "sha256":  "5102639c2037d77949340d94761c9a4c5053b940b8ae4ba2fbbe3507b8a5ec43"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.Http.Json.dll",
+                      "bytes":  128808,
+                      "sha256":  "7c4b39865655dd3b695a305527b8d11092c5dcf1b786d747cd45e6c00cce5249"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.HttpListener.dll",
+                      "bytes":  550696,
+                      "sha256":  "ad612ae83e313eb7fc2afa59b829533c8e8f36fb76d1d398262a610e85af1ccc"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.Mail.dll",
+                      "bytes":  431952,
+                      "sha256":  "8830477bb6b18b181a2495c77038ab8a7c941897c9e46feb06f61b2013ed1c8e"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.NameResolution.dll",
+                      "bytes":  112424,
+                      "sha256":  "e8cc6c2f0d59fb018fdc4a66057e3a56a3aa5ed82fede17b2398cda88da407cd"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.NetworkInformation.dll",
+                      "bytes":  157480,
+                      "sha256":  "db21f0c5659d925741f7a08b0b50fc297248b0155f375f0fd7f970dd2e4cd3f0"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.Ping.dll",
+                      "bytes":  96040,
+                      "sha256":  "3a9aab851fff6116dee3524177859e051512fadf7e209372e2d2342b51845474"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.Primitives.dll",
+                      "bytes":  231248,
+                      "sha256":  "0f929e8581f09fe85275df7b38549bc51415cd110aadfd89eade53943174511a"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.Quic.dll",
+                      "bytes":  284456,
+                      "sha256":  "58f5e4c6f2bbd5320c9797fbead001a99e4d334fa936d5469df82262ac8069da"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.Requests.dll",
+                      "bytes":  345896,
+                      "sha256":  "60b7c1595cecc53767c3efcdae74ddd37350ac51f377cac8d7e95428b1f231af"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.Security.dll",
+                      "bytes":  669520,
+                      "sha256":  "c957641be9192e7812f209e2120e56a71da0d99b1a8443ca5f7947f38ea4376d"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.ServicePoint.dll",
+                      "bytes":  46888,
+                      "sha256":  "8969d0ea32b01b7198030afe6258d85a3021655b4f7e2291cb5521bba1f7e29f"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.Sockets.dll",
+                      "bytes":  546600,
+                      "sha256":  "49e95c5a59172d80941992016eb35c965d8fb4bc05b745f85e793b6c010bdc6b"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.WebClient.dll",
+                      "bytes":  169768,
+                      "sha256":  "2c8ad06a15aee44e700cbff2bdf1da0000fcaa4e8ba5524e9db1b07c3add099e"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.WebHeaderCollection.dll",
+                      "bytes":  67368,
+                      "sha256":  "8db64dd40a80422673f81ec67ee9df921795b0579e5ba6cef09bffce7fef1294"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.WebProxy.dll",
+                      "bytes":  42792,
+                      "sha256":  "cfd65e84a782db8180c9bb3bf6eb739f250901e1006d941d66f08d6b6edb0b0e"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.WebSockets.Client.dll",
+                      "bytes":  100136,
+                      "sha256":  "41836162542928ad88ac7a0176cbdc753f63da986d668688f7fb049b2ef0aee9"
+                  },
+                  {
+                      "entry":  "resources/native/System.Net.WebSockets.dll",
+                      "bytes":  190288,
+                      "sha256":  "1250d5f182a8c3655a81b1e11955d904fd147d7f770191de4004619247178629"
+                  },
+                  {
+                      "entry":  "resources/native/System.Numerics.dll",
+                      "bytes":  15184,
+                      "sha256":  "adb2dda9bbfc24d694b77e1700f2df0706ff077de8f40dd09ababc92459f2e2b"
+                  },
+                  {
+                      "entry":  "resources/native/System.Numerics.Vectors.dll",
+                      "bytes":  15656,
+                      "sha256":  "6e45388834e11d4a8e460f97da371d6889cdf98d7b65b300079c2f2b69ea3faf"
+                  },
+                  {
+                      "entry":  "resources/native/System.ObjectModel.dll",
+                      "bytes":  79656,
+                      "sha256":  "35187a8d7f9dc8896894d1a0a496fbabcd567f2ac0f047632f7178c308ff72f5"
+                  },
+                  {
+                      "entry":  "resources/native/System.Private.CoreLib.dll",
+                      "bytes":  13174608,
+                      "sha256":  "99b168b84597a4f31fda8281efce7d42a14e2df0f4694194735e049dbc0f6418"
+                  },
+                  {
+                      "entry":  "resources/native/System.Private.DataContractSerialization.dll",
+                      "bytes":  2082600,
+                      "sha256":  "f3d2acd4d5adeabb40991cd1c757d05640b64cdd89f59874cffe7bbd6ed38b97"
+                  },
+                  {
+                      "entry":  "resources/native/System.Private.Uri.dll",
+                      "bytes":  259920,
+                      "sha256":  "f2a695dcd4073eaba43b4ee26f006c0174bff42673e17b38914450ca7d2547f5"
+                  },
+                  {
+                      "entry":  "resources/native/System.Private.Xml.dll",
+                      "bytes":  7997264,
+                      "sha256":  "f7285c6a22e221784f1d81f884283e9dcd02aa7bfd17c428943d29e00170d749"
+                  },
+                  {
+                      "entry":  "resources/native/System.Private.Xml.Linq.dll",
+                      "bytes":  403240,
+                      "sha256":  "5de081135173dd027bdc3f6285beaa31d184cff8d217d681d405e038d1819721"
+                  },
+                  {
+                      "entry":  "resources/native/System.Reflection.DispatchProxy.dll",
+                      "bytes":  75560,
+                      "sha256":  "2f926a9f911d11b98c71e67b7e91f883c58b3b095794a8ac69a5cdbfd37c60c4"
+                  },
+                  {
+                      "entry":  "resources/native/System.Reflection.dll",
+                      "bytes":  16168,
+                      "sha256":  "558837b6bcaf55fdbb3e7d8f565f0c04d9b415823d0abe382ac31643db3639de"
+                  },
+                  {
+                      "entry":  "resources/native/System.Reflection.Emit.dll",
+                      "bytes":  128808,
+                      "sha256":  "51742f48054d452de444da58d4ac69b879a23bbc8841b4b08fc337745d50cb07"
+                  },
+                  {
+                      "entry":  "resources/native/System.Reflection.Emit.ILGeneration.dll",
+                      "bytes":  15656,
+                      "sha256":  "ed892838c6ed6649ab57a436128845ec195329cdf568c99d9cb8e6f4b92c7a01"
+                  },
+                  {
+                      "entry":  "resources/native/System.Reflection.Emit.Lightweight.dll",
+                      "bytes":  15656,
+                      "sha256":  "39cf409e3b41b813c9e715ec4f38bc02748499d62e89f71fd8f4dad6ebba80bb"
+                  },
+                  {
+                      "entry":  "resources/native/System.Reflection.Extensions.dll",
+                      "bytes":  15144,
+                      "sha256":  "3adaaf6f0dcd0208ab0282a774801486444af53118015ac12e0c6f8623d3f3ce"
+                  },
+                  {
+                      "entry":  "resources/native/System.Reflection.Metadata.dll",
+                      "bytes":  1115944,
+                      "sha256":  "1795022b24ddf1e4db47f63035b685f2a9f3e4468fb277158bb909d3b6ec00a0"
+                  },
+                  {
+                      "entry":  "resources/native/System.Reflection.Primitives.dll",
+                      "bytes":  15656,
+                      "sha256":  "b15b177125f391d1caee193167caffbec4ac2586447f822ac655ace9a6bdff41"
+                  },
+                  {
+                      "entry":  "resources/native/System.Reflection.TypeExtensions.dll",
+                      "bytes":  42792,
+                      "sha256":  "191c401d245fbbe8d6e0105a53db610122871168e21ac849be6fbc86bb786048"
+                  },
+                  {
+                      "entry":  "resources/native/System.Resources.Reader.dll",
+                      "bytes":  15184,
+                      "sha256":  "34b31e5093ff2564fccde4b43c31330bc4cbc6cf24c38cb929d34f1ffb46d0fb"
+                  },
+                  {
+                      "entry":  "resources/native/System.Resources.ResourceManager.dll",
+                      "bytes":  15656,
+                      "sha256":  "d0db07a7e954edbef7d586907574068ea2764e28acb7f5a64fd6006ee8889d93"
+                  },
+                  {
+                      "entry":  "resources/native/System.Resources.Writer.dll",
+                      "bytes":  50984,
+                      "sha256":  "a09c234e643b0391367f975241592002270eb9bd5516f0d75b31f82be6426dd6"
+                  },
+                  {
+                      "entry":  "resources/native/System.Runtime.CompilerServices.Unsafe.dll",
+                      "bytes":  15144,
+                      "sha256":  "69edf8cb4bfe291ff998f2ab0cea2f3b7f32664c53e9b9171a35f0664fc047cf"
+                  },
+                  {
+                      "entry":  "resources/native/System.Runtime.CompilerServices.VisualC.dll",
+                      "bytes":  30544,
+                      "sha256":  "b0216c72f28e06bf4ee3c7561b5c483224847e5f40df6d939d2afbe731e2cfd2"
+                  },
+                  {
+                      "entry":  "resources/native/System.Runtime.dll",
+                      "bytes":  43304,
+                      "sha256":  "e8fb5b78dc75b0650520042936fca2165a060cb4afa4b8cce90524c9c9fc3563"
+                  },
+                  {
+                      "entry":  "resources/native/System.Runtime.Extensions.dll",
+                      "bytes":  17704,
+                      "sha256":  "7e7a6460090cf9170b336ca12511ea8d793c281a79ccff9f96db88db74b97ff6"
+                  },
+                  {
+                      "entry":  "resources/native/System.Runtime.Handles.dll",
+                      "bytes":  15144,
+                      "sha256":  "9b193371a3e739f81e601e343c60d6214e0b3966833f4eaebdcfb49f8217e97f"
+                  },
+                  {
+                      "entry":  "resources/native/System.Runtime.InteropServices.dll",
+                      "bytes":  96080,
+                      "sha256":  "1930aea4d91654a4daf13bf95b2daff023d3104a9b3794059ea139e550bcfb5f"
+                  },
+                  {
+                      "entry":  "resources/native/System.Runtime.InteropServices.JavaScript.dll",
+                      "bytes":  50984,
+                      "sha256":  "7cefe89e6502602a7e0256960f5f587046016cdb9b822a104e0bf961178dcf2a"
+                  },
+                  {
+                      "entry":  "resources/native/System.Runtime.InteropServices.RuntimeInformation.dll",
+                      "bytes":  15144,
+                      "sha256":  "c7fdcd989c4732af5d8c5c00a5ce68d48fa6f500dee37aa3fd716fb260b01338"
+                  },
+                  {
+                      "entry":  "resources/native/System.Runtime.Intrinsics.dll",
+                      "bytes":  16720,
+                      "sha256":  "8679a62575619caa282d3fb1a1ead4680417b0384ffed8b73a2c4f7dc102c32b"
+                  },
+                  {
+                      "entry":  "resources/native/System.Runtime.Loader.dll",
+                      "bytes":  15696,
+                      "sha256":  "64ac3644e7fd9279b5410e9c8d31df01f763b4a362e626e6dd96416a9f6755b3"
+                  },
+                  {
+                      "entry":  "resources/native/System.Runtime.Numerics.dll",
+                      "bytes":  329552,
+                      "sha256":  "d845c2a3d8edc282d5c32fd8020c2233fbeed3eb02b5064ab8637506049cfb70"
+                  },
+                  {
+                      "entry":  "resources/native/System.Runtime.Serialization.dll",
+                      "bytes":  16680,
+                      "sha256":  "a4a2cd5a396a851e444c5e6ab82c6353a1d83906b65968a15cd8d57540b4f9c3"
+                  },
+                  {
+                      "entry":  "resources/native/System.Runtime.Serialization.Formatters.dll",
+                      "bytes":  309032,
+                      "sha256":  "10c352dba07e5de49fe362edd9d8a44cfc60cd0136a48eb1a5104da30d2333e5"
+                  },
+                  {
+                      "entry":  "resources/native/System.Runtime.Serialization.Json.dll",
+                      "bytes":  15656,
+                      "sha256":  "70d7013dcd8aa116954f6efb1643c4db01927f75e362c5807f795e443d1eaa9a"
+                  },
+                  {
+                      "entry":  "resources/native/System.Runtime.Serialization.Primitives.dll",
+                      "bytes":  38736,
+                      "sha256":  "65b4fdca2b36d551fa88c1cb8d7646ef9f29097b96487ab08fcf31f5dc9afe86"
+                  },
+                  {
+                      "entry":  "resources/native/System.Runtime.Serialization.Xml.dll",
+                      "bytes":  16680,
+                      "sha256":  "875ef1fe60647f5bb00a756ad9e7bb0c4a579d35acead8386f27f8c7479ae5e0"
+                  },
+                  {
+                      "entry":  "resources/native/System.Security.AccessControl.dll",
+                      "bytes":  231248,
+                      "sha256":  "149888fd2b8f15b37ba115e2bb3c0577c8db9aed6f91221902ad6c9a61a69a49"
+                  },
+                  {
+                      "entry":  "resources/native/System.Security.Claims.dll",
+                      "bytes":  100176,
+                      "sha256":  "45171f0ad174047cbf511e7761d7abb2d44988e899f690c36ff3c5bcfbcb2467"
+                  },
+                  {
+                      "entry":  "resources/native/System.Security.Cryptography.Algorithms.dll",
+                      "bytes":  17192,
+                      "sha256":  "e1bdf2d837d0c8c582b1f98992511421c3e5130b42603f868ef0b5c8c2609f92"
+                  },
+                  {
+                      "entry":  "resources/native/System.Security.Cryptography.Cng.dll",
+                      "bytes":  16168,
+                      "sha256":  "7b6deb57bd6a2f0123527f04be5ccca9a8b30f4f09a97e6f32519b651496a7f6"
+                  },
+                  {
+                      "entry":  "resources/native/System.Security.Cryptography.Csp.dll",
+                      "bytes":  15656,
+                      "sha256":  "8689e9d5ea215c4e92d8229da7dbc3fabee8997083876fed1927c4d643aef3f9"
+                  },
+                  {
+                      "entry":  "resources/native/System.Security.Cryptography.dll",
+                      "bytes":  2049872,
+                      "sha256":  "1e4c4ce04a46e2a2da8221bf583ebd4f6b5149d4b32792cacc5c33978d0bb121"
+                  },
+                  {
+                      "entry":  "resources/native/System.Security.Cryptography.Encoding.dll",
+                      "bytes":  15696,
+                      "sha256":  "bad69fae75cc6ea5c8cf0a953489b323857a3c8cba80418f09e98535380a6b8d"
+                  },
+                  {
+                      "entry":  "resources/native/System.Security.Cryptography.OpenSsl.dll",
+                      "bytes":  15144,
+                      "sha256":  "5d580c0cafc4492dac0c4fa11ae46dd1309835ab12671b326f0b74428539d4b5"
+                  },
+                  {
+                      "entry":  "resources/native/System.Security.Cryptography.Primitives.dll",
+                      "bytes":  15696,
+                      "sha256":  "a214418a0b70a48772e274ccda284d3cfc2392abf4aba55718c70324fb78a239"
+                  },
+                  {
+                      "entry":  "resources/native/System.Security.Cryptography.X509Certificates.dll",
+                      "bytes":  16680,
+                      "sha256":  "07643c4b239dd2a9326c0a62491995be666a47d2c85d0455ca7379a1692fa284"
+                  },
+                  {
+                      "entry":  "resources/native/System.Security.dll",
+                      "bytes":  18256,
+                      "sha256":  "ede7d28de4bfec4192915fb98b35f8979ed1e4a20a7333a7d2aea45e733a9495"
+                  },
+                  {
+                      "entry":  "resources/native/System.Security.Principal.dll",
+                      "bytes":  15144,
+                      "sha256":  "aee0a10edcf634876126b0de882d01f432de3eb7cbfca0565e330efe336d6dc0"
+                  },
+                  {
+                      "entry":  "resources/native/System.Security.Principal.Windows.dll",
+                      "bytes":  186152,
+                      "sha256":  "aace487981f8c9077620abf9c9d236ce5ef98241cf4222fbb49c717286f2cd0f"
+                  },
+                  {
+                      "entry":  "resources/native/System.Security.SecureString.dll",
+                      "bytes":  15184,
+                      "sha256":  "a8c666cce29278836fee40d1058ebb55b56631056a26117176fce6adb793187f"
+                  },
+                  {
+                      "entry":  "resources/native/System.ServiceModel.Web.dll",
+                      "bytes":  16720,
+                      "sha256":  "059d12d427d2cf95f90f5ca817c30d12d504db13a031cf5dce53bafceacd3800"
+                  },
+                  {
+                      "entry":  "resources/native/System.ServiceProcess.dll",
+                      "bytes":  15656,
+                      "sha256":  "41a80e894c84cc938193a95a0c37fc0d3351d3b090e4fc2fe903cc384d55af2a"
+                  },
+                  {
+                      "entry":  "resources/native/System.Text.Encoding.CodePages.dll",
+                      "bytes":  861992,
+                      "sha256":  "a597e456ac579a3814d4c11cd649cb188df0d4dc27ff9ae59e36664cca0927a9"
+                  },
+                  {
+                      "entry":  "resources/native/System.Text.Encoding.dll",
+                      "bytes":  15656,
+                      "sha256":  "c0dda0da1aeadba8a3baa8d4704c5e4d9dadc715f72fa11c6a25899a5fa6a35b"
+                  },
+                  {
+                      "entry":  "resources/native/System.Text.Encoding.Extensions.dll",
+                      "bytes":  15656,
+                      "sha256":  "9ad4679a4005eadc13af6ae025534f22648ded33ab7c1a796c70c8813ee51977"
+                  },
+                  {
+                      "entry":  "resources/native/System.Text.Encodings.Web.dll",
+                      "bytes":  132904,
+                      "sha256":  "94afad93dfdd00e132467753615bfb4bc3fa6633701082a9553d6cb4eaccf2ac"
+                  },
+                  {
+                      "entry":  "resources/native/System.Text.Json.dll",
+                      "bytes":  1501008,
+                      "sha256":  "9cf2e2ae44376dbea191925e571af703c6d7b53a5c138a0f0f13cd6b8af2c904"
+                  },
+                  {
+                      "entry":  "resources/native/System.Text.RegularExpressions.dll",
+                      "bytes":  1021736,
+                      "sha256":  "8b3af9e3e0215b46c2dcef1f11c4cdc7ad477140883bcb5c778d04cc051bb0dc"
+                  },
+                  {
+                      "entry":  "resources/native/System.Threading.Channels.dll",
+                      "bytes":  132944,
+                      "sha256":  "ab05f710069580165c588789e0623e84d213c35594e3e12ae762a6c8265740b6"
+                  },
+                  {
+                      "entry":  "resources/native/System.Threading.dll",
+                      "bytes":  83752,
+                      "sha256":  "435c110b598d30f118d0e673068b535b693c5a77fae17398ad46821ce1261aba"
+                  },
+                  {
+                      "entry":  "resources/native/System.Threading.Overlapped.dll",
+                      "bytes":  15656,
+                      "sha256":  "739bfb326810706f497df3b66901e5657b9835ad945fdc6728a27bf932cbafaa"
+                  },
+                  {
+                      "entry":  "resources/native/System.Threading.Tasks.Dataflow.dll",
+                      "bytes":  489256,
+                      "sha256":  "39def3e572cf7e4bbf11f6565b0a25db2540d8041c2950e48029e24c14e06342"
+                  },
+                  {
+                      "entry":  "resources/native/System.Threading.Tasks.dll",
+                      "bytes":  16680,
+                      "sha256":  "d965e3057dca46b1e8d56012e623a4772ab5ab009231450fdb0f4d2f3875c374"
+                  },
+                  {
+                      "entry":  "resources/native/System.Threading.Tasks.Extensions.dll",
+                      "bytes":  15656,
+                      "sha256":  "336e8d8f0e79bfff0c6c38d4a7677384b7951ff66394664bf4fb866ed0bba982"
+                  },
+                  {
+                      "entry":  "resources/native/System.Threading.Tasks.Parallel.dll",
+                      "bytes":  132904,
+                      "sha256":  "08ffb9101534e1644c203427bd22b3beecaab021f4ce40f4b162b898e2fa66f7"
+                  },
+                  {
+                      "entry":  "resources/native/System.Threading.Thread.dll",
+                      "bytes":  15656,
+                      "sha256":  "34ed4d7d03bf9a5a5df7addc37a5b75759956fc0d949e25df61d878238bc560a"
+                  },
+                  {
+                      "entry":  "resources/native/System.Threading.ThreadPool.dll",
+                      "bytes":  15656,
+                      "sha256":  "5758d73199750af708edca8456eed908b0bfdaaccd7cb2083a6c95dad4006fdb"
+                  },
+                  {
+                      "entry":  "resources/native/System.Threading.Timer.dll",
+                      "bytes":  15144,
+                      "sha256":  "39e1b46a16ba5d4a4d7687dcda0b8838e45198544417d227c7f174c8e15df56d"
+                  },
+                  {
+                      "entry":  "resources/native/System.Transactions.dll",
+                      "bytes":  16168,
+                      "sha256":  "2203532bf5483e00686b4f26610a6b9070e59da55f5218d4294c2c069c6fdfb9"
+                  },
+                  {
+                      "entry":  "resources/native/System.Transactions.Local.dll",
+                      "bytes":  661328,
+                      "sha256":  "5428f4bcae83612694e1bec71849ffffe7ef34f62aa46daf3f01250adb019bd8"
+                  },
+                  {
+                      "entry":  "resources/native/System.ValueTuple.dll",
+                      "bytes":  15144,
+                      "sha256":  "2079ad867339bd4e2dc4d0e1c9250d9f78e4016da472c25fef3c78756244ac5b"
+                  },
+                  {
+                      "entry":  "resources/native/System.Web.dll",
+                      "bytes":  15144,
+                      "sha256":  "fc90f7d949615646b8d5af798cfb2bd37fbfe21b1c790b6a2e049bea36758e2d"
+                  },
+                  {
+                      "entry":  "resources/native/System.Web.HttpUtility.dll",
+                      "bytes":  59216,
+                      "sha256":  "351125823b848b8cd9e2541b1e0f13add351b6dd3c34a6acb8c243565e5c6251"
+                  },
+                  {
+                      "entry":  "resources/native/System.Windows.dll",
+                      "bytes":  15656,
+                      "sha256":  "113a298c5e1887f9cc2371376e6aeadf631958c1c255ebac18282da7829d3c49"
+                  },
+                  {
+                      "entry":  "resources/native/System.Xml.dll",
+                      "bytes":  23376,
+                      "sha256":  "0d13174940cbd34ccdb350b2f33037cff214420850cbf5755d9c407ba8a42407"
+                  },
+                  {
+                      "entry":  "resources/native/System.Xml.Linq.dll",
+                      "bytes":  15656,
+                      "sha256":  "64cab6d274de20fb8ec0d080b96091e85af0ddfc9619869169e8c41d5c1b02c0"
+                  },
+                  {
+                      "entry":  "resources/native/System.Xml.ReaderWriter.dll",
+                      "bytes":  21800,
+                      "sha256":  "7cbf62bea50b44b1350fc241281b8c5bf1373cb9ad03304b10f5b0d4805edb47"
+                  },
+                  {
+                      "entry":  "resources/native/System.Xml.Serialization.dll",
+                      "bytes":  16168,
+                      "sha256":  "7823bbfdcb819bd585488adeb6612cab2357dc2df5e4a85e0f2a02079c2ec736"
+                  },
+                  {
+                      "entry":  "resources/native/System.Xml.XDocument.dll",
+                      "bytes":  15656,
+                      "sha256":  "e5a4ef2a7f8c927dc5c587eeb4b5bf1a7264a89825c3d7313082447d3446a11b"
+                  },
+                  {
+                      "entry":  "resources/native/System.Xml.XmlDocument.dll",
+                      "bytes":  15656,
+                      "sha256":  "48781bea76ddce3732f316bcc01bb375910b18b4d83de62b6570835e09dab363"
+                  },
+                  {
+                      "entry":  "resources/native/System.Xml.XmlSerializer.dll",
+                      "bytes":  17744,
+                      "sha256":  "ea1eb8da8a46bafe8ee7a8628900e5c4a3fe23cabc7d63d5be5eb5edd3fb76fb"
+                  },
+                  {
+                      "entry":  "resources/native/System.Xml.XPath.dll",
+                      "bytes":  15696,
+                      "sha256":  "cd0b232b8b161a4167b77387885b13e6bf938dfce4addfd68a646fa2e5471fcf"
+                  },
+                  {
+                      "entry":  "resources/native/System.Xml.XPath.XDocument.dll",
+                      "bytes":  30544,
+                      "sha256":  "01f4f51c85b1533eef9ef35fcec4c281565e661a415f7cb10422c3840c5973f7"
+                  },
+                  {
+                      "entry":  "resources/native/WindowsBase.dll",
+                      "bytes":  16208,
+                      "sha256":  "d2b82fd6347b45b6bc3ff23c60d215a8431906d25b68bf84a2ff6a0b2c46ae9e"
+                  },
+                  {
+                      "entry":  "resources/native/WinFsp.Binding.dll",
+                      "bytes":  180224,
+                      "sha256":  "9505ff5819d9830137b7ca34d9504743624307caff3d595cd8451f270b26ca4a"
+                  },
+                  {
+                      "entry":  "resources/native/WinFsp.Binding.pdb",
+                      "bytes":  27600,
+                      "sha256":  "f5446b28b50ad60590f7b0ec015b66df91618db81e435d7ad38303e3d0c127d4"
+                  }
+              ]
+}

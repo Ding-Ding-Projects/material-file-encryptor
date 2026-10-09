@@ -1,0 +1,111 @@
+{
+  "sourceCommit": "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
+  "platform": "win32",
+  "observedOS": "GitHub-hosted Windows Server 2022",
+  "runId": "37863451177",
+  "runUrl": "https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/37863451177",
+  "method": "Actual packaged Electron application on a disposable Windows runner; Playwright drove its sandboxed renderer and native preload. Original viewport captures are retained without editing.",
+  "nativeMountVerified": true,
+  "nativeCheckCount": 34,
+  "packagedDesktopPassed": true,
+  "installerLifecyclePassed": false,
+  "installerBoundary": "Setup exited zero and all 198 selected installed payload entries matched; verification stopped at INSTALL_REGISTRATION_MISSING before installed-app and uninstall checks.",
+  "captureDateTime": "Unavailable: the evidence does not record a per-image capture timestamp.",
+  "images": [
+    {
+      "file": "desktop-locked.png",
+      "sha256": "13e57820eff14a3dffac727ccd879b9cfe46ecee58bcc33a2a515d7de05247e7",
+      "width": 1024,
+      "height": 728,
+      "scale": 1,
+      "theme": "light",
+      "state": "locked"
+    },
+    {
+      "file": "desktop-create.png",
+      "sha256": "14d16d03df62fa3e40c1baf961b960f360e26c2ac4cde1b58196d51a6725b225",
+      "width": 1024,
+      "height": 728,
+      "scale": 1,
+      "theme": "light",
+      "state": "create"
+    },
+    {
+      "file": "desktop-keyfile-choice.png",
+      "sha256": "1e7181b307bcd872f3cac709c54505ae8e3cf15837ad140db645ea4a04325480",
+      "width": 1024,
+      "height": 728,
+      "scale": 1,
+      "theme": "light",
+      "state": "keyfile-choice"
+    },
+    {
+      "file": "desktop-mounted.png",
+      "sha256": "a34cae779c5a7d3f4c21cbc54e60ce2f613931161259969c74e5665750582444",
+      "width": 1024,
+      "height": 728,
+      "scale": 1,
+      "theme": "light",
+      "state": "mounted"
+    },
+    {
+      "file": "desktop-offline.png",
+      "sha256": "32c543bc8337cbcff0d01a7bc6242cf194f93bb063ea28337c3fe07440524c09",
+      "width": 1024,
+      "height": 728,
+      "scale": 1,
+      "theme": "light",
+      "state": "offline"
+    },
+    {
+      "file": "desktop-settings-dark.png",
+      "sha256": "1a265c9736bf38f908e0b549f5db5b2d2867d725049642e36f9eeeda5406d8ee",
+      "width": 1024,
+      "height": 728,
+      "scale": 1,
+      "theme": "dark",
+      "state": "settings-dark"
+    },
+    {
+      "file": "desktop-help.png",
+      "sha256": "79d2b260758f82ec73d6b100dfeed4a62242d4018e55cf2947ed5b37fe0e171c",
+      "width": 1024,
+      "height": 728,
+      "scale": 1,
+      "theme": "light",
+      "state": "help"
+    }
+  ],
+  "receipts": [
+    {
+      "file": "desktop-check.json",
+      "sha256": "92b1137114b6c00b5375962198fd7d2b001d6e2a40f7c497bb12e9895c45daa2"
+    },
+    {
+      "file": "installer-check.json",
+      "sha256": "8bd5d8654f3e009a41fe331641cf6bf1227879b9a4ca5e1eb2b58df2a249c1aa"
+    },
+    {
+      "file": "build-receipt.json",
+      "sha256": "9402912e321524d0cd1259ef2cce48b5d07621b687195339b33efc50a4dbc1a1"
+    },
+    {
+      "file": "mounted-filesystem.json",
+      "sha256": "4fe8fa25bfa550576b4656e9c17c2f03490a946121c249afe0d59985bb49e7e3"
+    },
+    {
+      "file": "tested-package-manifest.json",
+      "sha256": "0e473123ece6a39190412cf943de9d01f58cf7b2740cd72efdbbbdf04bc0f7cb"
+    }
+  ],
+  "recording": {
+    "published": false,
+    "file": "desktop-win32.webm",
+    "reason": "The original recording briefly shows the runner machine-profile path before the form clears it. Original CI evidence is retained without masking or editing.",
+    "width": 1180,
+    "height": 850,
+    "framesPerSecond": 15,
+    "decodedFrames": 82,
+    "durationSeconds": 5.467
+  }
+}
