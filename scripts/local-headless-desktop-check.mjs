@@ -141,7 +141,7 @@ export async function finishOwnedLifecycle({runtime,launch,statePath,python,lowl
    recovery.restored=true;quitRequested=true;
   } catch(error) {
    recovery.code=error.helperCode||error.code||'VERIFICATION_QUIT_FAILED';
-   if(['PROCESS_IDENTITY_CHANGED','INVALID_PROCESS_IDENTITY','INVALID_PROCESS_TREE','PROCESS_PROOF_FAILED','IDENTITY_BOUND_TERMINATION_UNAVAILABLE'].includes(recovery.code))return {quitRequested:false,recovery,cleanup:{ok:false,client_ok:false,code:recovery.code}};
+   if(['UNPROVEN_PROCESS_ANCESTRY','PROCESS_IDENTITY_CHANGED','INVALID_PROCESS_IDENTITY','INVALID_PROCESS_TREE','PROCESS_PROOF_FAILED','IDENTITY_BOUND_TERMINATION_UNAVAILABLE'].includes(recovery.code))return {quitRequested:false,recovery,cleanup:{ok:false,client_ok:false,code:recovery.code}};
   }
  }
  const cleanup=quitRequested?await runCommand(python,[lowlevel,'confirm-exit',statePath]):await runCommand(python,[lowlevel,'cleanup','--state',statePath,'--timeout','20']);
