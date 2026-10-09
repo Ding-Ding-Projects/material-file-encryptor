@@ -3,6 +3,7 @@ using System.Text;
 using MaterialFileEncryptor.Core;
 
 var cases = new (string,Action)[] {
+    ("separate filesystem child deletions restore with original directory identity",SeparateDeletes),
     ("bulk recycle restore keeps same-path generations independent",BulkGenerations),
     ("recycle restore binds deletion generation and fails atomically",RecycleAtomic),
     ("copy upgrade rejects every original folder overlap before writing",UpgradeIsolation),
@@ -172,4 +173,8 @@ static void RecycleAtomic() {
 
 static void BulkGenerations() {
     var root=Temp();try{using var v=Create(root);v.CreateDirectory("d");v.CreateFile("d/same");v.WriteRange("d/same",0,"first generation"u8);v.Delete("d",true);v.CreateDirectory("d");v.CreateFile("d/same");v.WriteRange("d/same",0,"other generation"u8);v.Delete("d",true);v.FlushAsync().GetAwaiter().GetResult();var roots=v.ListDeleted().Where(x=>x.IsDirectory).Select(x=>x.Id).ToArray();v.RestoreDeletedAsync(roots).GetAwaiter().GetResult();var restored=v.Enumerate("");Assert(restored.Count==2&&restored.All(x=>x.IsDirectory));var content=restored.Select(x=>{Assert(v.Enumerate(x.Path).Count==1);return Encoding.UTF8.GetString(Read(v,x.Path+"/same"));}).ToHashSet();Assert(content.SetEquals(new[]{"first generation","other generation"}));Assert(v.ListDeleted().Count==0);using var reopened=Open(root,"second");Assert(reopened.Enumerate("").Count==2);}finally{Directory.Delete(root,true);}
+}
+
+static void SeparateDeletes() {
+    var root=Temp();try{using var v=Create(root);v.CreateDirectory("d");v.CreateDirectory("d/nested");v.CreateFile("d/nested/a");v.WriteRange("d/nested/a",0,"saved"u8);v.CreateFile("d/nested/b");v.WriteRange("d/nested/b",0,"second"u8);v.Delete("d/nested/a");v.Delete("d/nested/b");v.Delete("d/nested");v.Delete("d");v.FlushAsync().GetAwaiter().GetResult();var dir=v.ListDeleted().Single(x=>x.Path=="d");v.RestoreDeletedAsync(new[]{dir.Id}).GetAwaiter().GetResult();Equal("saved"u8.ToArray(),Read(v,"d/nested/a"));Equal("second"u8.ToArray(),Read(v,"d/nested/b"));Assert(v.ListDeleted().Count==0);}finally{Directory.Delete(root,true);}
 }

@@ -20,7 +20,8 @@ public sealed partial class VaultEngine
     private void MarkDue(Entry e) => versionDue[e.Id]=DateTimeOffset.UtcNow.AddSeconds(30);
     private void CaptureVersion(string path,Entry entry,bool deleted,string? deletionBatch=null)
     {
-        pendingVersions.Add(new StoredVersion { Path=path,Value=Clone(entry),Deleted=deleted,DeletionBatch=deleted?deletionBatch??Guid.NewGuid().ToString("N"):"" });
+        var ancestors=new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);if(deleted)for(var parent=VaultPath.Parent(path);parent!="";parent=VaultPath.Parent(parent))if(entries.TryGetValue(parent,out var directory))ancestors[parent]=directory.Id;
+        pendingVersions.Add(new StoredVersion {Ancestors=ancestors, Path=path,Value=Clone(entry),Deleted=deleted,DeletionBatch=deleted?deletionBatch??Guid.NewGuid().ToString("N"):"" });
     }
     private List<StoredVersion> AllVersions()
     {
@@ -69,9 +70,9 @@ public sealed partial class VaultEngine
     }
     public Task RestoreDeletedAsync(IReadOnlyList<string> ids,CancellationToken cancellationToken=default)
     {
-        lock(gate){Check();var all=AllVersions();var selected=all.Where(v=>v.Deleted&&!hiddenBin.Contains(v.Id)&&(ids.Contains(v.Id)||all.Any(root=>ids.Contains(root.Id)&&root.Deleted&&root.Value.Directory&&root.DeletionBatch!=""&&v.DeletionBatch==root.DeletionBatch&&v.Path.StartsWith(root.Path+"/",StringComparison.OrdinalIgnoreCase)))).OrderBy(v=>v.Path.Count(c=>c=='/')).ToArray();foreach(var selectedVersion in selected)foreach(var record in selectedVersion.Value.Records){cancellationToken.ThrowIfCancellationRequested();var content=ReadChunk(selectedVersion.Value,record.Key);CryptographicOperations.ZeroMemory(content);}
+        lock(gate){Check();var all=AllVersions();var selected=all.Where(v=>v.Deleted&&!hiddenBin.Contains(v.Id)&&(ids.Contains(v.Id)||all.Any(root=>ids.Contains(root.Id)&&root.Deleted&&root.Value.Directory&&((root.DeletionBatch!=""&&v.DeletionBatch==root.DeletionBatch)||(v.Ancestors.TryGetValue(root.Path,out var ancestorId)&&ancestorId==root.Value.Id))&&v.Path.StartsWith(root.Path+"/",StringComparison.OrdinalIgnoreCase)))).OrderBy(v=>v.Path.Count(c=>c=='/')).ToArray();foreach(var selectedVersion in selected)foreach(var record in selectedVersion.Value.Records){cancellationToken.ThrowIfCancellationRequested();var content=ReadChunk(selectedVersion.Value,record.Key);CryptographicOperations.ZeroMemory(content);}
             var oldEntries=CloneEntries(entries);var oldVersions=pendingVersions.ToList();var oldHidden=new HashSet<string>(hiddenBin);var oldPendingHidden=new HashSet<string>(pendingBinHidden);var oldDue=new Dictionary<string,DateTimeOffset>(versionDue);
-            try{var remapped=new List<(string Batch,string Path,string Restored)>();foreach(var v in selected){cancellationToken.ThrowIfCancellationRequested();var originalPath=v.Path;var copy=new StoredVersion {Id=v.Id,Path=v.Path,Value=v.Value,Timestamp=v.Timestamp,Deleted=v.Deleted};var parentMapping=remapped.Where(p=>p.Batch==v.DeletionBatch&&originalPath.StartsWith(p.Path+"/",StringComparison.OrdinalIgnoreCase)).OrderByDescending(p=>p.Path.Length).FirstOrDefault();if(parentMapping.Path!=null)copy.Path=parentMapping.Restored+originalPath[parentMapping.Path.Length..];var restoredPath=Restore(copy);if(v.Value.Directory)remapped.Add((v.DeletionBatch,originalPath,restoredPath));hiddenBin.Add(v.Id);pendingBinHidden.Add(v.Id);}}catch{entries=oldEntries;pendingVersions=oldVersions;hiddenBin=oldHidden;pendingBinHidden=oldPendingHidden;versionDue=oldDue;throw;}FlushLocal();Publish(cancellationToken);SaveJournal();return Task.CompletedTask;}
+            try{var remapped=new List<(string Batch,string EntryId,string Path,string Restored)>();foreach(var v in selected){cancellationToken.ThrowIfCancellationRequested();var originalPath=v.Path;var copy=new StoredVersion {Id=v.Id,Path=v.Path,Value=v.Value,Timestamp=v.Timestamp,Deleted=v.Deleted};var parentMapping=remapped.Where(p=>(p.Batch==v.DeletionBatch||(v.Ancestors.TryGetValue(p.Path,out var parentId)&&parentId==p.EntryId))&&originalPath.StartsWith(p.Path+"/",StringComparison.OrdinalIgnoreCase)).OrderByDescending(p=>p.Path.Length).FirstOrDefault();if(parentMapping.Path!=null)copy.Path=parentMapping.Restored+originalPath[parentMapping.Path.Length..];var restoredPath=Restore(copy);if(v.Value.Directory)remapped.Add((v.DeletionBatch,v.Value.Id,originalPath,restoredPath));hiddenBin.Add(v.Id);pendingBinHidden.Add(v.Id);}}catch{entries=oldEntries;pendingVersions=oldVersions;hiddenBin=oldHidden;pendingBinHidden=oldPendingHidden;versionDue=oldDue;throw;}FlushLocal();Publish(cancellationToken);SaveJournal();return Task.CompletedTask;}
     }
     public Task EmptyRecycleBinAsync(CancellationToken cancellationToken=default)
     {
@@ -92,7 +93,7 @@ public sealed partial class VaultEngine
                     return converted;
                 }
                 foreach(var pair in entries)target.entries[pair.Key]=ConvertEntry(pair.Value);
-                foreach(var version in AllVersions()){var copy=new StoredVersion {Id=version.Id,Path=version.Path,Value=ConvertEntry(version.Value),Timestamp=version.Timestamp,Deleted=version.Deleted,DeletionBatch=version.DeletionBatch};target.pendingVersions.Add(copy);}
+                foreach(var version in AllVersions()){var copy=new StoredVersion {Id=version.Id,Path=version.Path,Value=ConvertEntry(version.Value),Timestamp=version.Timestamp,Deleted=version.Deleted,DeletionBatch=version.DeletionBatch,Ancestors=new(version.Ancestors)};target.pendingVersions.Add(copy);}
                 target.hiddenBin.UnionWith(hiddenBin);target.pendingBinHidden.UnionWith(hiddenBin);target.FlushLocal();target.Publish(cancellationToken);
                 if(target.pending.Count!=0)throw new IOException("Upgrade destination could not be published.");
                 foreach(var id in target.known){var commit=target.ReadMetadata<Commit>(target.ObjectPath(target.source,"commits",id),"commit",id);target.VerifyComplete(commit);foreach(var part in target.Parts(commit))target.VerifyPart(target.ObjectPath(target.source,"parts",part),part);}
