@@ -12,10 +12,11 @@ try
     var history = new GitVaultHistory(source, Path.Combine(root, "history"));
     var sha = await history.RecordSnapshotAsync(["vault.json", part, first]);
     Check(sha?.Length == 40, "real Git commit");
+    var initialHistoryCount = (await history.ListSnapshotsAsync()).Count;
     Check(!Directory.Exists(Path.Combine(source, ".git")), "mutable Git state excluded from source");
     Check((await history.ReadEncryptedFileAsync(sha!, part)).SequenceEqual(new byte[] { 0, 255, 32, 10 }), "real binary blob roundtrip");
     File.WriteAllBytes(Path.Combine(source, second), [5, 6]); await history.RecordSnapshotAsync([second]);
-    Check((await history.ListSnapshotsAsync()).Count == 2, "real history graph");
+    Check((await history.ListSnapshotsAsync()).Count == initialHistoryCount + 1, "real history graph");
     Check((await history.ReadEncryptedFileAsync(sha!, first)).SequenceEqual(new byte[] { 3, 4 }), "old snapshot remains readable");
     Check(await history.RecordSnapshotAsync([second]) == null, "unchanged snapshot produces no commit");
     try { GitVaultHistory.ValidateRelativePath("../plain.txt"); throw new Exception("accepted traversal"); } catch (ArgumentException) { Check(true, "reject traversal and plaintext names"); }
@@ -24,7 +25,7 @@ try
     try { await history.RecordSnapshotAsync([first]); throw new Exception("accepted mutation"); } catch (InvalidDataException) { Check(true, "reject immutable collision"); }
     var publicRunner = new FakeRunner(false);
     try { await new PrivateGitHubVaultTransport(source, Path.Combine(root, "public"), "owner/repo", publicRunner).InitializeAsync(); throw new Exception("accepted public"); } catch (InvalidOperationException) { Check(publicRunner.Calls == 1, "reject public repository before Git access"); }
-    Check((await new VaultProcessRunner().RunAsync("git", ["log", "--format=%s"], history.HistoryRoot)).Text.Split('\n', StringSplitOptions.RemoveEmptyEntries).All(x => x == "Store encrypted snapshot"), "generic history messages");
+    Check((await new VaultProcessRunner().RunAsync("git", ["log", "--format=%s"], history.HistoryRoot)).Text.Split('\n', StringSplitOptions.RemoveEmptyEntries).All(x => x is "Store encrypted snapshot" or "Store encrypted objects"), "generic history messages");
     var runner = new VaultProcessRunner(); var bare = Path.Combine(root, "remote.git");
     async Task Run(string cwd, params string[] arguments) { var r = await runner.RunAsync("git", arguments, cwd); if (r.ExitCode != 0) throw new Exception("Fixture Git operation failed: " + r.Error); }
     await Run(root, "init", "--bare", bare); await Run(bare, "config", "uploadpack.allowFilter", "true");
@@ -79,6 +80,34 @@ try
     try { await transportA.SyncAsync(); throw new Exception("accepted foreign header"); } catch (InvalidDataException) { Check(true, "reject different vault header before publication"); }
     await Run(bare, "config", "uploadpack.allowFilter", "false");
     try { await new PrivateGitHubVaultTransport(Path.Combine(root, "unsupported-source"), Path.Combine(root, "unsupported-history"), "owner/repo", mapped).InitializeAsync(); throw new Exception("accepted unsupported filtering"); } catch (NotSupportedException) { Check(true, "explicitly reject server without lazy-fetch capability"); }
+    var batchBare = Path.Combine(root, "batch.git"); await Run(root, "init", "--bare", batchBare); await Run(batchBare, "config", "uploadpack.allowFilter", "true");
+    var batchRunner = new MappedRunner(new Uri(batchBare + Path.DirectorySeparatorChar).AbsoluteUri);
+    var batchSource = Path.Combine(root, "batch-source"); var batchHistory = Path.Combine(root, "batch-history");
+    var batchTransport = new PrivateGitHubVaultTransport(batchSource, batchHistory, "owner/repo", batchRunner, 16384);
+    await batchTransport.InitializeAsync(); Directory.CreateDirectory(Path.Combine(batchSource, "parts")); Directory.CreateDirectory(Path.Combine(batchSource, "commits"));
+    var batchPaths = new List<string>();
+    foreach (var digit in new[] { '1', '2', '3' })
+    {
+        var path = "parts/" + new string(digit, 64) + ".mfe"; File.WriteAllBytes(Path.Combine(batchSource, path), System.Security.Cryptography.RandomNumberGenerator.GetBytes(6000)); batchPaths.Add(path);
+    }
+    var batchMetadata = "commits/" + new string('4', 64) + ".mfe"; File.WriteAllBytes(Path.Combine(batchSource, batchMetadata), [1, 2, 3]); batchPaths.Add(batchMetadata);
+    await batchTransport.History.RecordSnapshotAsync(batchPaths); await batchTransport.SyncAsync();
+    Check(batchRunner.PushCandidates.Count >= 3, "small publication budget produces incremental bounded pushes");
+    string? previousBatch = null;
+    foreach (var candidate in batchRunner.PushCandidates)
+    {
+        var objectArgs = new List<string> { "rev-list", "--objects", candidate }; if (previousBatch != null) objectArgs.Add("^" + previousBatch);
+        var objects = await runner.RunAsync("git", objectArgs, batchHistory); long objectBytes = 0;
+        foreach (var line in objects.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries)) objectBytes += long.Parse((await runner.RunAsync("git", ["cat-file", "-s", line.Split(' ')[0]], batchHistory)).Text.Trim());
+        Check(objectBytes <= 16384, "every published batch stays within injectable byte budget"); previousBatch = candidate;
+    }
+    var firstTree = await runner.RunAsync("git", ["ls-tree", "-r", "--name-only", batchRunner.PushCandidates[0]], batchHistory);
+    var finalTree = await runner.RunAsync("git", ["ls-tree", "-r", "--name-only", batchRunner.PushCandidates[^1]], batchHistory);
+    Check(firstTree.Text.Contains("parts/") && !firstTree.Text.Contains("commits/") && finalTree.Text.Contains(batchMetadata), "ciphertext objects publish before snapshot metadata");
+    var oversized = "parts/" + new string('5', 64) + ".mfe"; File.WriteAllBytes(Path.Combine(batchSource, oversized), new byte[24000]);
+    await new GitVaultHistory(batchSource, batchHistory, batchRunner).RecordSnapshotAsync([oversized]);
+    var beforeOversized = batchRunner.PushCandidates.Count;
+    try { await batchTransport.SyncAsync(); throw new Exception("accepted oversized existing commit"); } catch (NotSupportedException) { Check(batchRunner.PushCandidates.Count == beforeOversized && File.Exists(Path.Combine(batchSource, oversized)), "oversized existing commit fails before push and preserves recovery bytes"); }
     try { await new VaultProcessRunner(Path.Combine(root, "missing-git.exe")).RunAsync("git", ["--version"], root); throw new Exception("accepted missing tool"); } catch (IOException) { Check(true, "missing configured executable produces explicit tool error"); }
     using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
     var watch = System.Diagnostics.Stopwatch.StartNew();
@@ -103,6 +132,7 @@ sealed class FakeRunner(bool isPrivate) : IVaultProcessRunner
 sealed class MappedRunner(string uri) : IVaultProcessRunner
 {
     private readonly VaultProcessRunner real = new();
+    public List<string> PushCandidates { get; } = [];
     private async Task<VaultProcessResult> MappedUrl(IReadOnlyList<string> args, string cwd, CancellationToken ct)
     {
         var result = await real.RunAsync("git", args, cwd, ct);
@@ -110,6 +140,7 @@ sealed class MappedRunner(string uri) : IVaultProcessRunner
     }
     public Task<VaultProcessResult> RunAsync(string executable, IReadOnlyList<string> arguments, string workingDirectory, CancellationToken cancellationToken = default)
     {
+        if (executable == "git" && arguments.Count > 2 && arguments[0] == "push") PushCandidates.Add(arguments[2].Split(':')[0]);
         if (executable == "gh") return Task.FromResult(new VaultProcessResult(0, System.Text.Encoding.UTF8.GetBytes("{\"isPrivate\":true}"), ""));
         if (arguments.Count > 1 && arguments[0] == "remote" && arguments[1] == "get-url") return MappedUrl(arguments, workingDirectory, cancellationToken);
         return real.RunAsync(executable, arguments.Select(x => x == "https://github.com/owner/repo.git" ? uri : x).ToArray(), workingDirectory, cancellationToken);

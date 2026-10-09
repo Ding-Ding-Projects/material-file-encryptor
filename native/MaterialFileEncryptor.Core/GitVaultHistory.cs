@@ -62,8 +62,11 @@ public sealed class GitVaultHistory
     internal readonly string SourceRoot;
     public string HistoryRoot { get; }
     internal readonly IVaultProcessRunner Runner;
-    public GitVaultHistory(string sourceRoot, string historyRoot, IVaultProcessRunner? runner = null)
+    public long PublicationBudgetBytes { get; }
+    public GitVaultHistory(string sourceRoot, string historyRoot, IVaultProcessRunner? runner = null, long publicationBudgetBytes = 1024L * 1024 * 1024)
     {
+        if (publicationBudgetBytes < 8192 || publicationBudgetBytes > 1024L * 1024 * 1024) throw new ArgumentOutOfRangeException(nameof(publicationBudgetBytes));
+        PublicationBudgetBytes = publicationBudgetBytes;
         SourceRoot = Path.GetFullPath(sourceRoot); HistoryRoot = Path.GetFullPath(historyRoot);
         if (Contains(SourceRoot, HistoryRoot) || Contains(HistoryRoot, SourceRoot)) throw new ArgumentException("History and storage folders must not overlap.");
         CheckPath(SourceRoot); CheckPath(HistoryRoot); Runner = runner ?? new VaultProcessRunner();
@@ -137,15 +140,24 @@ public sealed class GitVaultHistory
         await InitializeAsync(ct);
         var paths = encryptedRelativePaths.Select(ValidateRelativePath).Distinct(StringComparer.Ordinal).ToArray();
         await CheckIndexAsync(paths, ct);
-        var parent = await HeadAsync(ct); var tree = await TreeAsync("HEAD", ct); var changed = false;
-        foreach (var relative in paths)
+        var parent = await HeadAsync(ct); var originalParent = parent; var tree = await TreeAsync("HEAD", ct); var changed = false;
+        long batchBytes = 4096; var partsBatch = true;
+        foreach (var relative in paths.OrderBy(p => p.StartsWith("parts/", StringComparison.Ordinal) ? 0 : 1))
         {
             var source = Path.Combine(SourceRoot, relative); CheckPath(source);
+            var length = new FileInfo(source).Length;
+            if (length + 4096 > PublicationBudgetBytes) throw new NotSupportedException("Encrypted object exceeds the bounded publication budget. Preserve local history and use smaller encrypted parts.");
+            if (changed && (batchBytes + length + 160 > PublicationBudgetBytes || (partsBatch && !relative.StartsWith("parts/", StringComparison.Ordinal))))
+            {
+                parent = await PublishTreeAsync(tree, "Store encrypted objects", parent == null ? [] : [parent], ct);
+                changed = false; batchBytes = 4096;
+            }
+            partsBatch = relative.StartsWith("parts/", StringComparison.Ordinal);
             var blob = (await Git(ct, "hash-object", "-w", "--no-filters", "--", source)).Text.Trim();
             if (tree.TryGetValue(relative, out var old)) { if (old != blob) throw new InvalidDataException("Immutable ciphertext collision."); }
-            else { tree.Add(relative, blob); changed = true; }
+            else { tree.Add(relative, blob); changed = true; batchBytes += length + 160; }
         }
-        return changed ? await PublishTreeAsync(tree, "Store encrypted snapshot", parent == null ? [] : [parent], ct) : null;
+        return changed ? await PublishTreeAsync(tree, "Store encrypted snapshot", parent == null ? [] : [parent], ct) : parent != originalParent ? parent : null;
     }
     public async Task<IReadOnlyList<string>> ListSnapshotsAsync(CancellationToken ct = default)
     {
