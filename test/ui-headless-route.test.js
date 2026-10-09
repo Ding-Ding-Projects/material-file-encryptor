@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import os from 'node:os';
-import {makeLaunch,makeBaselinePlan} from '../scripts/local-headless-desktop-check.mjs';
+import {makeLaunch,makeBaselinePlan,makeInterfacePlan} from '../scripts/local-headless-desktop-check.mjs';
 test('local launch binds exact executable, isolated profile and loopback debugging to one run',()=>{
  const root=path.join(os.tmpdir(),'owned-run');const executable=path.join(root,'package','MaterialFileEncryptor.exe');
  const launch=makeLaunch({executable,runRoot:root,port:9333});
@@ -15,4 +15,11 @@ test('invalid local launch roots and ports cannot produce a launch request',()=>
  const root=path.join(os.tmpdir(),'owned-run');const executable=path.join(root,'package','app.exe');
  for(const port of [0,1023,65536,1.5])assert.throws(()=>makeLaunch({executable,runRoot:root,port}));
  assert.throws(()=>makeLaunch({executable:'relative.exe',runRoot:root,port:9333}));assert.throws(()=>makeLaunch({executable,runRoot:'relative',port:9333}));
+});
+
+test('interface workflow asserts states after actions and keeps native proof separate',()=>{
+ const root=path.join(os.tmpdir(),'owned-run');const launch=makeLaunch({executable:path.join(root,'package','app.exe'),runRoot:root,port:9333});const plan=makeInterfacePlan(launch,path.join(root,'lifecycle.json'));
+ assert.ok(plan.steps.length<=100);assert.ok(plan.steps.some(step=>step.id==='locked-history-state'));assert.ok(plan.steps.some(step=>step.id==='locked-recycle-state'));
+ for(const [index,step] of plan.steps.entries())if(['click','type'].includes(step.op)){assert.equal(plan.steps[index+1].op,'poll');assert.equal(plan.steps[index+2].op,'capture');}
+ assert.equal(JSON.stringify(plan).includes('password-input'),false);assert.equal(JSON.stringify(plan).includes('awaitPromise'),false);
 });
