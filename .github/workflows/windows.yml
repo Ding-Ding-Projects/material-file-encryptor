@@ -1,6 +1,11 @@
 name: Windows preview delivery
 on:
   workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Exact main commit accepted by independent local verification
+        required: true
+        type: string
   push:
     branches: [main]
 permissions:
@@ -17,6 +22,14 @@ jobs:
       GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Verify explicitly accepted publication source
+        if: github.event_name == 'workflow_dispatch'
+        shell: powershell
+        env:
+          EXPECTED_SOURCE_COMMIT: ${{ inputs.source_commit }}
+        run: |
+          $actual = (& git rev-parse HEAD).Trim()
+          if ($env:EXPECTED_SOURCE_COMMIT -notmatch '^[0-9a-f]{40}$' -or $actual -ne $env:EXPECTED_SOURCE_COMMIT -or $env:GITHUB_SHA -ne $actual) { throw 'PUBLICATION_SOURCE_CHANGED' }
       - name: Record build start
         shell: powershell
         run: '"BUILD_STARTED_AT=$([DateTime]::UtcNow.ToString(''o''))" | Out-File $env:GITHUB_ENV -Append -Encoding utf8'
@@ -27,6 +40,7 @@ jobs:
         shell: cmd
         run: build-installer.bat /s
       - name: Prepare and publish unique preview
+        if: github.event_name == 'workflow_dispatch'
         shell: powershell
         run: |
           . ./scripts/bootstrap.ps1

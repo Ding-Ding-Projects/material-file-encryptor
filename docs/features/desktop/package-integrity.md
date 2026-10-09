@@ -11,3 +11,13 @@ Local installer verification requires `MFE_LOWLEVEL_CLI` pointing to the install
 The installed desktop check uses `local-headless-desktop-check.mjs` and the same independently reviewed capture and mounted-runtime flow as local packaged verification. Interactive pixel review remains required. Installation, startup registration, mounted operation, normal exit and uninstall require their own successful receipt; packaging success proves none of those outcomes. Uninstall records every remaining installation-root entry, including any Squirrel marker or log, instead of claiming the directory disappeared.
 
 Preview notes link the verified public dim-sum catalog release image. The product release does not attach a copied catalog image. Publication rechecks package integrity before writing its release plan. Existing source-owned image files are retained until separately authorized migration.
+
+## Explicit preview publication
+
+Every push to `main` still builds and packages, but it does not publish a release. After independent local verdicts accept the final integrated `main` candidate, the release owner dispatches `windows.yml` exactly once with its full source SHA:
+
+```powershell
+gh workflow run windows.yml --repo Ding-Ding-Projects/material-file-encryptor --ref main -f source_commit=<accepted-full-sha>
+```
+
+The workflow checks the supplied SHA against its checkout and event SHA before building. A moved baseline fails with `PUBLICATION_SOURCE_CHANGED`; verify the new candidate before another dispatch. The main-only job condition, pinned hosted builder and unsigned Squirrel path remain in force. CI performs build and packaging without tests or lint. The existing publisher creates a unique tag and reads published assets back; it never overwrites a release. Documentation and evidence pushes therefore cannot accidentally publish another preview.
