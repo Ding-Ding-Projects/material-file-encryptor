@@ -39,3 +39,13 @@ No built screenshots, parity comparisons, installer execution or matrix receipts
 ## Asset provenance
 
 No generated bitmap, remote font or external asset was introduced. The welcome emblem reuses the repository's existing encrypted icon. Clear controls use a text glyph marked decorative; their localized accessible names carry meaning.
+
+## Prepared built verification
+
+`scripts/modern-ui-check.mjs` exports bounded plans for the installed receipt-bound CDP driver. It launches and terminates nothing. The release coordinator supplies an exact freshly launched Lowlevel receipt and the pinned packaged executable. `makeWorkspacePlan` requires a genuinely mounted test-owned drive and covers Drive, Offline, History, Recycle Bin, Settings and Help across all 48 tuples. `makeDialogPlan` requires the caller to lock that drive normally first, then checks password, key-file and private-storage create states and cancels without submitting. `makeClearPlan` covers all 13 current fields with real renderer input/click events, empty-value/focus observations and captures. No fake bridge or DOM fixture is installed.
+
+Each plan is executed through `drive-electron-cdp-headless/scripts/cdp_driver.mjs run`; its strict one-target URL/process/port proof remains authoritative. The adapter owner resolves the live window, records a native baseline, observes console/runtime errors and supplies the independently measured source/process/privacy assertions. `makeProbeReceipt` binds actual executable, build-receipt and PNG hashes, carries computed element/ancestor geometry, and refuses missing ownership or runtime observations. Validate each emitted receipt with the installed `diagnose-built-ui-layout/scripts/validate-layout-probe.mjs` before accepting it. Inspect every promoted capture separately.
+
+The supported `emulate` operation uses `Emulation.setDeviceMetricsOverride`. Requested viewport and device-pixel-ratio are read back from the actual renderer. These results prove renderer viewport/DPR emulation only. They do **not** prove physical Windows monitor DPI or native window resizing. Receipts explicitly set `physicalWindowsDisplayScaleVerified: false`; physical-scale acceptance remains pending until a supported, independently observed native route supplies it. DOM click/type behavior likewise does not prove native pointer or keyboard delivery.
+
+The existing native keyboard check must account for the new clear control: Tab from `file-search` focuses its adjacent `.field-clear`; the following Tab reaches `import-button`. The lifecycle/keyboard adapter is owned by a separate verification lane. No launch is authorized by generating these plans, and no built interaction or capture result is claimed here.
