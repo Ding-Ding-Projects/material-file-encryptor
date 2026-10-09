@@ -6,7 +6,7 @@
 - [x] Verify changed-chunk reuse, authenticated reads and explicit re-split in the core checks at `1e16dea8`.
 - [x] Verify actual Git history and folder synchronization with mounted runtime recovery at `1e16dea8`.
 - [x] Verify lazy private GitHub transport with ten real source-bound checks at `4f0a4b48`.
-- [ ] Integrate the test-only cancellation fixture repair from `d0c5e036` and finish the combined 42-check transport suite.
+- [x] Integrate the test-only cancellation fixture repair from `d0c5e036`, which passed 42 transport checks, and confirm identical native source in the integration tree.
 - [x] Verify quiet-save version timing in core checks and manual versions/restore through the packaged GUI at `1e16dea8`.
 - [x] Verify file/subtree recycling, bulk restore, collision preservation and history after emptying the bin in core checks and packaged recovery flows.
 - [x] Verify non-destructive copy upgrade and rejection of original-folder overlap in core checks at `1e16dea8`.
@@ -20,7 +20,8 @@
 - [x] Verify dark/light themes, English/Cantonese/bilingual controls and startup registration restoration in the packaged flow at `1e16dea8`.
 - [ ] Verify transport-setup visual states in the built Windows application.
 - [ ] Verify copy-upgrade visual states in the built Windows application; core behavior is verified separately.
-- [ ] Resolve installation registration detection and verify genuine installed lifecycle on the current host.
+- [x] Resolve installation registration detection and verify 573 installed payload entries plus the real installed 70-check desktop flow.
+- [ ] Complete uninstall acceptance with exact updater-only residue classification; the original directory-presence failure remains recorded.
 - [ ] Build and publish an unsigned Squirrel preview with exact source and package evidence.
 - [ ] Independently download, hash and verify the released installer.
 - [ ] Refresh documentation and real captures from the final verified candidate.

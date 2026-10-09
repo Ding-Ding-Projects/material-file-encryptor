@@ -42,13 +42,25 @@
     "setupPassed": true,
     "payloadComparisonEntries": 573,
     "registrationPassed": true,
-    "runtimeStatus": "running",
-    "uninstallStatus": "pending"
+    "runtimeStatus": "verified",
+    "uninstallStatus": "failed-directory-presence-check",
+    "runtimeChecksPassed": 70,
+    "capturesReviewed": 72,
+    "completedAt": "2026-10-09T18:16:06.750Z",
+    "reviewedAt": "2026-10-09T18:16:38.931Z",
+    "updaterExitCode": 0,
+    "originalFailure": "UNINSTALL_PAYLOAD_REMAINS",
+    "remainingFiles": [
+      ".dead",
+      "Update.exe",
+      "app-0.1.0/squirrel.exe"
+    ],
+    "residueClassificationStatus": "pending"
   },
   "transportRepair": {
     "sourceCommit": "d0c5e036b0762e41d6ba523bf0d2424e24e83024",
     "checksPassed": 42,
-    "integrationStatus": "pending",
+    "integrationStatus": "integrated-native-source-identical",
     "scope": "test fixture only"
   },
   "releaseStatus": "pending",
