@@ -1,3 +1,16 @@
+# Current automatic release and runtime status
+
+Latest direction, 2026-10-09: every delivery must be a normal release, never draft or prerelease. The existing v0.1.0-preview.16.1 entry was promoted without changing its tag or four asset bytes; GitHub readback confirms both classification flags false. Its original startup-readback warning remains.
+
+Current integration includes the automatic publisher and tag-loop correction at bf432f19. Every branch push and manual dispatch builds through both root entrypoints and publishes a unique v1.<run_number>.<run_attempt> normal release with exact source, package version, downloadable assets and measured workflow timing. Twenty focused release checks pass. Live delivery of this integration remains pending until observed after the next push. Tests and lint are not run in CI, and local runtime verification is separate from publication.
+
+Both exact builds and 739-entry package integrity passed at 5f0f54df. Its genuine packaged run inspected four captures and verified native keyboard focus, then stopped before History at UNPROVEN_PROCESS_ANCESTRY. A later separate identity-checked recovery used normal quit, proved six processes absent and forgot only the synthetic credential. Original failed receipts remain unchanged; the exact rejected edge is unknown. Adapter 458db5d4 now preserves structured rejection codes. Layout c0170b4 adds independently bound prospective observations and actual HWND-owner proof; its complete 48-tuple runtime matrix is still pending. Website 872744b now builds through the root entrypoint and its responsive verification remains in progress.
+
+Next: push this coherent source to main and verify automatic normal release delivery. Independently build the final frozen source, run genuine layout/clear-control/packaged/installed verification, download and verify current released bytes, and update public evidence only from observed results. Do not wait on local quality checks to publish and do not claim runtime acceptance from publication. CLOSEOUT_PROMPT.md contains the current continuation boundaries.
+
+## Historical first-preview record
+
+The following preserves earlier source-bound evidence. Earlier dispatch-only and release-after-runtime instructions are superseded by the current automatic normal-release direction above.
 # First-preview continuation
 
 The current integration candidate combines encrypted format 2 chunks, real Git history, folder/private GitHub transport, History, Recycle Bin and the editable drive-letter picker. Preview `v0.1.0-preview.16.1` was published from `56020da6982fa03d2bbc78d15b7d1aae1ee8f846`. All four downloaded assets matched their published sizes and hashes, and all package entries passed integrity verification. Its downloaded runtime then failed startup-registration readback for an executable path containing spaces. The release has an explicit known-issue warning and the website download remains disabled pending a verified replacement.

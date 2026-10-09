@@ -19,7 +19,7 @@
 - [ ] Verify the startup-readback correction for paths containing spaces in the packaged and installed application; native-parser checks at `100182f` pass.
 - [ ] Verify the website's two clear controls and source-bound download eligibility in its built/live surface; 12 source checks pass at `96125c4`.
 - [x] Publish `v0.1.0-preview.16.1` from `56020da`, independently download all four assets, verify their sizes/hashes, and retain its failed runtime verdict with a known-issue warning.
-- [ ] Publish and independently verify a corrective preview after the actual downloaded-runtime regression is fixed.
+- [ ] Publish a corrective normal release and independently verify its downloaded runtime; publication and runtime acceptance have separate verdicts.
 
 - [x] Verify History, Recycle Bin, explicit descendant selection, offline pinning and readable selection headings in the packaged Windows application at `1e16dea8`.
 - [x] Verify real create/unlock dialogs, picker selection, manual lowercase drive input and mounted-byte persistence at `1e16dea8`.
@@ -34,7 +34,7 @@
 - [ ] Refresh documentation and real captures from the final verified candidate.
 - [x] Promote four original public-safe captures from the reviewed 73-capture packaged run at `1e16dea8`; retain path-bearing captures privately.
 - [x] Replace the old archive writer and verify every Squirrel package entry through decompression and CRC checks.
-- [x] Make preview publication an explicit source-pinned dispatch rather than a side effect of documentation pushes.
+- [x] ~~Make preview publication an explicit source-pinned dispatch rather than a side effect of documentation pushes.~~ Superseded on 2026-10-09 by automatic normal releases for every branch push and manual dispatch.
 
 ## Explicit follow-up work
 
@@ -44,3 +44,5 @@
 - [ ] Permanent history purge (outside this preview; emptying the bin retains historical recovery).
 
 - [ ] Confirm the restored automatic per-push normal release publisher on a real workflow run, including downloadable installer assets and timing notes. Local workflow/source checks pass; live publication is pending.
+
+- [x] Promote the existing release in place to non-draft and non-prerelease, retain its tag and bytes, and verify GitHub classification readback.
