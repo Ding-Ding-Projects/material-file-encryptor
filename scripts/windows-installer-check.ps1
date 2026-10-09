@@ -108,6 +108,7 @@ function Uninstall-Owned {
     $receipt.uninstall.registrationRemoved = (Owned-UninstallEntries).Count -eq 0
     $receipt.uninstall.startupRemoved = (Owned-StartupEntries).Count -eq 0
     $receipt.uninstall.noInstalledProcesses = (Owned-Processes).Count -eq 0
+    Assert-Check $receipt.uninstall.noInstalledProcesses 'UNINSTALL_PROCESS_REMAINS'
     Assert-Check $receipt.uninstall.applicationPayloadRemoved $(if ($residue.failureCode) { $residue.failureCode } else { 'UNINSTALL_APPLICATION_REMAINS' })
     Assert-Check $receipt.uninstall.registrationRemoved 'UNINSTALL_REGISTRATION_REMAINS'
     Assert-Check $receipt.uninstall.startupRemoved 'UNINSTALL_STARTUP_REMAINS'
