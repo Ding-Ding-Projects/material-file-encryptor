@@ -1,6 +1,16 @@
 # First-preview continuation
 
-The current integration candidate combines encrypted format 2 chunks, real Git history, folder/private GitHub transport, History, Recycle Bin and the editable drive-letter picker. Completed source and evidence are ready for default-branch integration; installer-residue acceptance and release remain in progress.
+The current integration candidate combines encrypted format 2 chunks, real Git history, folder/private GitHub transport, History, Recycle Bin and the editable drive-letter picker. Preview `v0.1.0-preview.16.1` was published from `56020da6982fa03d2bbc78d15b7d1aae1ee8f846`. All four downloaded assets matched their published sizes and hashes, and all package entries passed integrity verification. Its downloaded runtime then failed startup-registration readback for an executable path containing spaces. The release has an explicit known-issue warning and the website download remains disabled pending a verified replacement.
+
+## Corrective preview in progress
+
+- Startup correction `100182f9321a14d9b5bc4ed96feef72ba704329c`, including `81b17d56`, quotes the getter path without changing the setter. Three native-parser startup checks passed, including the direct desktop-check callback.
+- Desktop candidate `3733857d934fa6108875a521fbc0c1b60ce8afc4` modernizes the working interface and adds localized, accessible clear controls for editable fields. Source review and focused renderer checks passed; built visual acceptance remains pending.
+- Website candidate `96125c436a9ea11fa807916b50571697ba2997c9`, including `d1fac684`, adds source-bound release-proof checks and clear controls for both editable text fields. Twelve source checks passed. Missing receipt hashes deliberately fail eligibility.
+- A verification-helper ownership defect could attach older unrelated processes to a reused parent PID. The separately maintained helper now rejects invalid identity ancestry and performs no PID-only termination. Installed bytes and offline regressions were verified. The product adapter is being updated before another real launch. This helper repair is not runtime acceptance of the product.
+- Original failed run and uninstall receipts remain unchanged. A separate targeted recovery forgot only the failed run's synthetic saved credential and removed its exact verification-only startup entry after comparing its command. Other startup entries were preserved.
+
+Next: finish the adapter repair, build the integrated source through both root entrypoints, verify real clear-control interactions and source-bound layout captures, repeat packaged and installed lifecycle checks, publish a unique corrective preview, independently download and verify its exact bytes, and refresh current public captures. Do not relabel the earlier passing local baseline as acceptance of the replacement.
 
 ## Verified work
 
