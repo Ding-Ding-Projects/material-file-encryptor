@@ -3,6 +3,12 @@ using System.Text;
 using MaterialFileEncryptor.Core;
 
 var cases = new (string,Action)[] {
+    ("history missing content is unavailable and restore fails closed",MissingHistory),
+    ("recycled subtree conflict restores under one new root",SubtreeRestore),
+    ("legacy format remains readable and copy upgrades safely",Legacy),
+    ("copy upgrade preserves original and recoverable history",CopyUpgrade),
+    ("version history, quiet saves and recycle persistence",History),
+    ("format 2 independent hash blobs and unchanged chunk reuse",FixedChunks),
     ("random access, sparse growth, truncate, atomic rename and stable handles",RandomAccess),
     ("credential wrapping, key file and raw master restore",Credentials),
     ("case folding, traversal and Windows reserved names",Paths),
@@ -27,6 +33,7 @@ if(args.Length==2 && args[0]=="crash-write") {
     Environment.Exit(0);
 }
 var failed=0;
+if(args.Length==2 && args[0]=="filter") cases=cases.Where(c=>c.Item1.Contains(args[1],StringComparison.OrdinalIgnoreCase)).ToArray();
 foreach(var (name,test) in cases) {try {test();Console.WriteLine("PASS "+name);}catch(Exception e){failed++;Console.Error.WriteLine("FAIL "+name+": "+e);}}
 Console.WriteLine($"{cases.Length-failed}/{cases.Length} checks passed");
 return failed==0?0:1;
@@ -110,4 +117,26 @@ static void TargetedAuthentication() {
         using var v=Create(root);v.CreateFile("verified");v.WriteRange("verified",0,RandomNumberGenerator.GetBytes(2000));v.FlushAsync().GetAwaiter().GetResult();var before=CachedParts(root);var sourcePart=Directory.GetFiles(Path.Combine(root,"source","parts")).Last();var bytes=File.ReadAllBytes(sourcePart);bytes[^1]^=1;File.WriteAllBytes(sourcePart,bytes);
         Throws<CryptographicException>(()=>v.EvictEntryCache("verified"));Assert(CachedParts(root).SetEquals(before),"Cache changed before all source copies authenticated.");Assert(Read(v,"verified").Length==2000);
     }finally{Directory.Delete(root,true);}
+}
+
+static void FixedChunks() {
+    var root=Temp();try {using var v=Create(root,4096);v.CreateFile("a");v.CreateFile("b");var bytes=RandomNumberGenerator.GetBytes(9000);v.WriteRange("a",0,bytes);v.WriteRange("b",0,bytes);v.FlushAsync().GetAwaiter().GetResult();Assert(v.GetInfo("a")!.PartCount==3);var before=Directory.GetFiles(Path.Combine(root,"source","parts")).Select(Path.GetFileName).ToHashSet();Assert(before.Count==6);Assert(before.All(p=>p!.Length==68));v.WriteRange("a",4500,new byte[]{42});v.FlushAsync().GetAwaiter().GetResult();var after=Directory.GetFiles(Path.Combine(root,"source","parts"));Assert(after.Length==7,"Unchanged chunks were rewritten.");Assert(after.All(p=>new FileInfo(p).Length<=4096));Throws<ArgumentOutOfRangeException>(()=>v.SetPartSize(90000001));bytes[4500]=42;Equal(bytes,Read(v,"a"));}finally{Directory.Delete(root,true);}
+}
+static void History() {
+    var root=Temp();try {using(var v=Create(root)){v.CreateDirectory("folder");v.CreateFile("folder/a");v.WriteRange("folder/a",0,"first"u8);v.SaveDueVersionsAsync(DateTimeOffset.UtcNow.AddSeconds(29)).GetAwaiter().GetResult();Assert(v.ListVersions().Count==0);v.SaveDueVersionsAsync(DateTimeOffset.UtcNow.AddSeconds(31)).GetAwaiter().GetResult();Assert(v.ListVersions().Count==1);var first=v.ListVersions().Single();v.WriteRange("folder/a",0,"later"u8);v.SaveVersionAsync("folder/a").GetAwaiter().GetResult();v.RestoreVersionAsync(first.Id).GetAwaiter().GetResult();Assert(v.Enumerate("folder").Count==2,"Occupied restore must preserve current content.");v.Delete("folder",true);v.FlushAsync().GetAwaiter().GetResult();Assert(v.ListDeleted().Count==3);var dir=v.ListDeleted().Single(x=>x.IsDirectory);v.RestoreDeletedAsync(new[]{dir.Id}).GetAwaiter().GetResult();Assert(v.GetInfo("folder/a")!=null);v.Delete("folder",true);v.FlushAsync().GetAwaiter().GetResult();v.EmptyRecycleBinAsync().GetAwaiter().GetResult();Assert(v.ListDeleted().Count==0);Assert(v.ListVersions().Any(x=>x.Deleted));}using var replica=Open(root,"replica");Assert(replica.ListDeleted().Count==0);Assert(replica.ListVersions().Any(x=>x.Deleted));}finally{Directory.Delete(root,true);}
+}
+
+static void CopyUpgrade() {
+    var root=Temp();var dest=Temp();try{using var v=Create(root);v.CreateFile("original");v.WriteRange("original",0,"old bytes"u8);v.SaveVersionAsync().GetAwaiter().GetResult();var old=v.ListVersions().Single();v.WriteRange("original",0,"new bytes"u8);v.SaveVersionAsync().GetAwaiter().GetResult();using var credentials=VaultCredentials.Password("different upgrade credential");using(var upgraded=v.CopyUpgradeAsync(Options(dest),credentials).GetAwaiter().GetResult()){Equal("new bytes"u8.ToArray(),Read(upgraded,"original"));Assert(upgraded.ListVersions().Count==2);upgraded.RestoreVersionAsync(old.Id).GetAwaiter().GetResult();Assert(upgraded.Enumerate("").Count==2);}Equal("new bytes"u8.ToArray(),Read(v,"original"));using var second=VaultEngine.Open(Options(dest,"second"),credentials);Assert(second.ListVersions().Count==3);}finally{Directory.Delete(root,true);Directory.Delete(dest,true);}
+}
+
+static void Legacy() {
+    var root=Temp();var dest=Temp();try{using(var v=Create(root)){}foreach(var folder in new[]{"source","cache"}){var config=Path.Combine(root,folder,"vault.json");var json=System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(config))!;json["Format"]=1;File.WriteAllText(config,json.ToJsonString());}using var legacy=Open(root);Assert(legacy.StorageFormat==1);legacy.CreateFile("v1");var bytes=RandomNumberGenerator.GetBytes(4000);legacy.WriteRange("v1",0,bytes);legacy.SaveVersionAsync().GetAwaiter().GetResult();using var cred=VaultCredentials.Password("upgrade credential");using var converted=legacy.CopyUpgradeAsync(Options(dest),cred).GetAwaiter().GetResult();Assert(converted.StorageFormat==2);Equal(bytes,Read(converted,"v1"));Equal(bytes,Read(legacy,"v1"));using var replica=Open(root,"legacyreplica");Equal(bytes,Read(replica,"v1"));}finally{Directory.Delete(root,true);Directory.Delete(dest,true);}
+}
+
+static void MissingHistory() {
+    var root=Temp();try{using var v=Create(root);v.CreateFile("file");v.WriteRange("file",0,"bytes"u8);v.SaveVersionAsync().GetAwaiter().GetResult();var version=v.ListVersions().Single();foreach(var folder in new[]{"source","cache"})foreach(var path in Directory.GetFiles(Path.Combine(root,folder,"parts")))File.Delete(path);Assert(!v.ListVersions().Single().IsAvailable);Throws<IOException>(()=>v.RestoreVersionAsync(version.Id).GetAwaiter().GetResult());Assert(v.Enumerate("").Count==1);}finally{Directory.Delete(root,true);}
+}
+static void SubtreeRestore() {
+    var root=Temp();try{using var v=Create(root);v.CreateDirectory("folder");v.CreateFile("folder/a");v.WriteRange("folder/a",0,"saved"u8);v.Delete("folder",true);var dir=v.ListDeleted().Single(x=>x.IsDirectory);v.CreateDirectory("folder");v.CreateFile("folder/occupied");v.RestoreDeletedAsync(new[]{dir.Id}).GetAwaiter().GetResult();var restored=v.Enumerate("").Single(x=>x.Name!="folder");Equal("saved"u8.ToArray(),Read(v,restored.Path+"/a"));Assert(v.GetInfo("folder/occupied")!=null);}finally{Directory.Delete(root,true);}
 }
