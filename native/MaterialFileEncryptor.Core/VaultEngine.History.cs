@@ -83,6 +83,8 @@ public sealed partial class VaultEngine
         lock(gate)
         {
             Check();var destinationRoots=new[]{Path.GetFullPath(destination.StorageRoot),Path.GetFullPath(destination.CacheRoot)};foreach(var root in destinationRoots)RejectReparseAncestors(root);foreach(var original in new[]{source,cache})foreach(var candidate in destinationRoots)if(IsWithin(candidate,original)||IsWithin(original,candidate))throw new ArgumentException("Upgrade storage and cache must be separate from both original folders.");
+            var originalVersions=AllVersions();RequireAvailable(entries.Values.Concat(originalVersions.Select(v=>v.Value)).SelectMany(e=>e.Records.Values));
+            foreach(var original in entries.Values.Concat(originalVersions.Select(v=>v.Value)))foreach(var record in original.Records){cancellationToken.ThrowIfCancellationRequested();var content=ReadChunk(original,record.Key);CryptographicOperations.ZeroMemory(content);}
             var target=Create(destination,credentials);
             try
             {
