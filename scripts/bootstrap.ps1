@@ -1,6 +1,7 @@
 ﻿param([switch]$InstallDriver, [switch]$RuntimeToolsOnly)
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue' # Avoid per-byte/per-file progress overhead in Windows PowerShell.
+Import-Module Microsoft.PowerShell.Utility -Force -ErrorAction Stop
 $root = Split-Path $PSScriptRoot -Parent
 $manifest = Get-Content (Join-Path $root 'dependencies.json') -Raw | ConvertFrom-Json
 $tools = Join-Path $env:LOCALAPPDATA 'MaterialFileEncryptor-BuildTools'
