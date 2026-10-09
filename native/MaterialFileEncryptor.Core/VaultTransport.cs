@@ -28,11 +28,12 @@ public sealed class PrivateGitHubVaultTransport : IVaultTransport
     private readonly string repository;
     private bool ready;
     private HashSet<string> available = new(StringComparer.Ordinal);
+    public bool IsCachedInitialization { get; private set; }
     public bool ContainsFile(string relativePath) => available.Contains(GitVaultHistory.ValidateRelativePath(relativePath));
-    public PrivateGitHubVaultTransport(string sourceRoot, string historyRoot, string repository, IVaultProcessRunner? runner = null)
+    public PrivateGitHubVaultTransport(string sourceRoot, string historyRoot, string repository, IVaultProcessRunner? runner = null, long publicationBudgetBytes = 1024L * 1024 * 1024)
     {
         if (!System.Text.RegularExpressions.Regex.IsMatch(repository, @"\A[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*\z")) throw new ArgumentException("Use an owner/repository identifier.");
-        this.repository = repository; history = new(sourceRoot, historyRoot, runner);
+        this.repository = repository; history = new(sourceRoot, historyRoot, runner, publicationBudgetBytes);
     }
     public GitVaultHistory History => history;
     private async Task ValidatePrivate(CancellationToken ct)
@@ -47,7 +48,11 @@ public sealed class PrivateGitHubVaultTransport : IVaultTransport
     {
         if (ready) return;
         var cloned = false;
-        await ValidatePrivate(ct);
+        GitVaultHistory.CheckPath(Path.Combine(history.HistoryRoot, ".git"));
+        var receipt = Path.Combine(history.HistoryRoot, ".git", "mfe-private-validation");
+        GitVaultHistory.CheckPath(receipt);
+        IsCachedInitialization = File.Exists(receipt) && File.ReadAllText(receipt) == repository;
+        if (!IsCachedInitialization) await ValidatePrivate(ct);
         if (!Directory.Exists(Path.Combine(history.HistoryRoot, ".git")))
         {
             cloned = true;
@@ -62,6 +67,7 @@ public sealed class PrivateGitHubVaultTransport : IVaultTransport
         await history.InitializeAsync(ct);
         available = new((await history.TreeAsync("HEAD", ct)).Keys, StringComparer.Ordinal);
         if (cloned && await history.HeadAsync(ct) != null) await history.Git(ct, "read-tree", "HEAD");
+        if (!IsCachedInitialization) await File.WriteAllTextAsync(receipt, repository, ct);
         ready = true;
     }
     private async Task ValidateDestinations(CancellationToken ct)
@@ -115,7 +121,44 @@ public sealed class PrivateGitHubVaultTransport : IVaultTransport
         available = new(tree.Keys, StringComparer.Ordinal);
         foreach (var path in tree.Keys.Where(p => p == "vault.json" || p.StartsWith("commits/", StringComparison.Ordinal))) await EnsureFileAsync(path, ct);
         await ValidatePrivate(ct); await ValidateDestinations(ct);
-        await history.Git(ct, "push", "origin", "HEAD:refs/heads/main");
+        await PublishBoundedAsync(ct);
+    }
+    private async Task PublishBoundedAsync(CancellationToken ct)
+    {
+        var head = (await history.HeadAsync(ct))!;
+        var remote = await history.Runner.RunAsync("git", ["rev-parse", "--verify", "refs/remotes/origin/main"], history.HistoryRoot, ct);
+        string? published = remote.ExitCode == 0 ? remote.Text.Trim() : null;
+        if (published == head) return;
+        var args = new List<string> { "rev-list", "--reverse", "--first-parent", head };
+        if (published != null) args.Add("^" + published);
+        var candidates = (await history.Git(ct, args.ToArray())).Text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        var plan = new List<string>();
+        foreach (var candidate in candidates)
+        {
+            if (published != null)
+            {
+                var ancestor = await history.Runner.RunAsync("git", ["merge-base", "--is-ancestor", published, candidate], history.HistoryRoot, ct);
+                if (ancestor.ExitCode != 0) continue;
+            }
+            var objectsArgs = new List<string> { "rev-list", "--objects", candidate };
+            if (published != null) objectsArgs.Add("^" + published);
+            var objects = (await history.Git(ct, objectsArgs.ToArray())).Text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            long bytes = 0;
+            foreach (var item in objects)
+            {
+                var id = item.Split(' ')[0];
+                var size = (await history.Git(ct, "cat-file", "-s", id)).Text.Trim();
+                bytes = checked(bytes + long.Parse(size, System.Globalization.CultureInfo.InvariantCulture));
+                if (bytes > history.PublicationBudgetBytes) throw new NotSupportedException("Existing history exceeds the bounded publication budget. Local history is preserved; split new encrypted payload commits before retrying. No oversized publication was attempted.");
+            }
+            plan.Add(candidate); published = candidate;
+        }
+        if (plan.Count == 0 || plan[^1] != head) throw new NotSupportedException("History cannot be published in safe bounded fast-forward batches. Local history is preserved.");
+        foreach (var candidate in plan)
+        {
+            await ValidatePrivate(ct); await ValidateDestinations(ct);
+            await history.Git(ct, "push", "origin", candidate + ":refs/heads/main");
+        }
     }
     public async Task EnsureFileAsync(string relativePath, CancellationToken ct = default)
     {

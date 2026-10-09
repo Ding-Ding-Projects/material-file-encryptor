@@ -14,23 +14,28 @@ public interface IVaultProcessRunner
 public sealed class VaultProcessRunner : IVaultProcessRunner
 {
     private readonly string? gitExecutable, ghExecutable;
-    public VaultProcessRunner(string? gitExecutable = null, string? ghExecutable = null) { this.gitExecutable = gitExecutable; this.ghExecutable = ghExecutable; }
-    private string Resolve(string name)
+    private readonly string baseDirectory;
+    public VaultProcessRunner(string? gitExecutable = null, string? ghExecutable = null, string? baseDirectory = null) { this.gitExecutable = gitExecutable; this.ghExecutable = ghExecutable; this.baseDirectory = Path.GetFullPath(baseDirectory ?? AppContext.BaseDirectory); }
+    public string ResolveExecutable(string name)
     {
         var explicitPath = name == "git" ? gitExecutable : name == "gh" ? ghExecutable : null;
         if (explicitPath != null) return File.Exists(explicitPath) ? Path.GetFullPath(explicitPath) : throw new IOException("Configured storage tool is unavailable.");
-        var bundled = Path.Combine(AppContext.BaseDirectory, "resources", "tools", name, name == "git" ? "cmd" : "bin", name + ".exe");
-        return File.Exists(bundled) ? bundled : name;
+        foreach (var toolsRoot in new[] { Path.GetFullPath(Path.Combine(baseDirectory, "..", "tools")), Path.Combine(baseDirectory, "resources", "tools"), Path.Combine(baseDirectory, "tools") })
+        {
+            var bundled = Path.Combine(toolsRoot, name, name == "git" ? "cmd" : "bin", name + ".exe");
+            if (File.Exists(bundled)) return bundled;
+        }
+        return name;
     }
     public async Task<VaultProcessResult> RunAsync(string executable, IReadOnlyList<string> arguments, string workingDirectory, CancellationToken cancellationToken = default)
     {
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(TimeSpan.FromSeconds(60));
         var ct = deadline.Token;
-        var start = new ProcessStartInfo(Resolve(executable)) { WorkingDirectory = workingDirectory, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
+        var start = new ProcessStartInfo(ResolveExecutable(executable)) { WorkingDirectory = workingDirectory, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
         if (executable == "git")
         {
-            foreach (var setting in new[] { "core.fsmonitor=false", "core.hooksPath=/dev/null", "core.attributesFile=" + ("/dev/null"), "credential.helper=", "credential.helper=!'" + Resolve("gh").Replace("\\", "/").Replace("'", "'\"'\"'") + "' auth git-credential", "commit.gpgsign=false" }) { start.ArgumentList.Add("-c"); start.ArgumentList.Add(setting); }
+            foreach (var setting in new[] { "core.fsmonitor=false", "core.hooksPath=/dev/null", "core.attributesFile=" + ("/dev/null"), "credential.helper=", "credential.helper=!'" + ResolveExecutable("gh").Replace("\\", "/").Replace("'", "'\"'\"'") + "' auth git-credential", "commit.gpgsign=false" }) { start.ArgumentList.Add("-c"); start.ArgumentList.Add(setting); }
         }
         foreach (var argument in arguments) start.ArgumentList.Add(argument);
         start.Environment["GIT_TERMINAL_PROMPT"] = "0";
@@ -62,8 +67,11 @@ public sealed class GitVaultHistory
     internal readonly string SourceRoot;
     public string HistoryRoot { get; }
     internal readonly IVaultProcessRunner Runner;
-    public GitVaultHistory(string sourceRoot, string historyRoot, IVaultProcessRunner? runner = null)
+    public long PublicationBudgetBytes { get; }
+    public GitVaultHistory(string sourceRoot, string historyRoot, IVaultProcessRunner? runner = null, long publicationBudgetBytes = 1024L * 1024 * 1024)
     {
+        if (publicationBudgetBytes < 8192 || publicationBudgetBytes > 1024L * 1024 * 1024) throw new ArgumentOutOfRangeException(nameof(publicationBudgetBytes));
+        PublicationBudgetBytes = publicationBudgetBytes;
         SourceRoot = Path.GetFullPath(sourceRoot); HistoryRoot = Path.GetFullPath(historyRoot);
         if (Contains(SourceRoot, HistoryRoot) || Contains(HistoryRoot, SourceRoot)) throw new ArgumentException("History and storage folders must not overlap.");
         CheckPath(SourceRoot); CheckPath(HistoryRoot); Runner = runner ?? new VaultProcessRunner();
@@ -137,15 +145,24 @@ public sealed class GitVaultHistory
         await InitializeAsync(ct);
         var paths = encryptedRelativePaths.Select(ValidateRelativePath).Distinct(StringComparer.Ordinal).ToArray();
         await CheckIndexAsync(paths, ct);
-        var parent = await HeadAsync(ct); var tree = await TreeAsync("HEAD", ct); var changed = false;
-        foreach (var relative in paths)
+        var parent = await HeadAsync(ct); var originalParent = parent; var tree = await TreeAsync("HEAD", ct); var changed = false;
+        long batchBytes = 4096; var partsBatch = true;
+        foreach (var relative in paths.OrderBy(p => p.StartsWith("parts/", StringComparison.Ordinal) ? 0 : 1))
         {
             var source = Path.Combine(SourceRoot, relative); CheckPath(source);
+            var length = new FileInfo(source).Length;
+            if (length + 4096 > PublicationBudgetBytes) throw new NotSupportedException("Encrypted object exceeds the bounded publication budget. Preserve local history and use smaller encrypted parts.");
+            if (changed && (batchBytes + length + 160 > PublicationBudgetBytes || (partsBatch && !relative.StartsWith("parts/", StringComparison.Ordinal))))
+            {
+                parent = await PublishTreeAsync(tree, "Store encrypted objects", parent == null ? [] : [parent], ct);
+                changed = false; batchBytes = 4096;
+            }
+            partsBatch = relative.StartsWith("parts/", StringComparison.Ordinal);
             var blob = (await Git(ct, "hash-object", "-w", "--no-filters", "--", source)).Text.Trim();
             if (tree.TryGetValue(relative, out var old)) { if (old != blob) throw new InvalidDataException("Immutable ciphertext collision."); }
-            else { tree.Add(relative, blob); changed = true; }
+            else { tree.Add(relative, blob); changed = true; batchBytes += length + 160; }
         }
-        return changed ? await PublishTreeAsync(tree, "Store encrypted snapshot", parent == null ? [] : [parent], ct) : null;
+        return changed ? await PublishTreeAsync(tree, "Store encrypted snapshot", parent == null ? [] : [parent], ct) : parent != originalParent ? parent : null;
     }
     public async Task<IReadOnlyList<string>> ListSnapshotsAsync(CancellationToken ct = default)
     {
