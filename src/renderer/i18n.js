@@ -1,4 +1,6 @@
 export const cantonese = {
+"Clear field":"清除欄位",
+"Text field":"文字欄位",
 "Saving a version…":"儲存緊版本…",
 "Restoring a version…":"還原緊版本…",
 "Restoring deleted entries…":"還原緊已刪除項目…",

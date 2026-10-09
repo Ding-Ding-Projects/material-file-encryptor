@@ -61,6 +61,19 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   assert.equal(await page.locator('#drive-letter').inputValue(),'N:','ready status must preserve a chosen available letter');
   await page.fill('#drive-letter','M:');assert.equal(await page.locator('#cache-input').inputValue(),'C:\\EncryptedCache');
 
+  // Clear every editable field without submitting, exposing credentials, or losing focus.
+  for (const id of ['storage-input','cache-input','drive-letter','password-input','confirm-password','create-split-value']) {
+   const input = page.locator('#'+id), clear = input.locator('..').locator('.field-clear');
+   await input.fill(id==='drive-letter'?'N:':'sample value');
+   const bounds = await clear.boundingBox(); assert.ok(bounds.width>=44 && bounds.height>=44);
+   assert.equal(await clear.getAttribute('type'),'button');
+   await clear.focus(); await page.keyboard.press('Enter');
+   assert.equal(await input.inputValue(),'');
+   assert.equal(await input.evaluate(el=>document.activeElement===el),true);
+  }
+  assert.equal(await page.evaluate(()=>window.calls.some(call=>call.name==='create')),false);
+  assert.equal(await page.locator('#password-input').getAttribute('type'),'password');
+  await page.fill('#cache-input','C:\\EncryptedCache'); await page.fill('#drive-letter','M:');
   await page.click('[data-browse="storage-input"]'); await page.fill('#password-input','correct horse battery staple');await page.fill('#confirm-password','wrong');await page.click('#dialog-submit');assert.match(await page.locator('#dialog-error').textContent(),/do not match/);
   await page.locator('[name=credential-mode][value=password]').focus();await page.keyboard.press('ArrowRight');
   assert.equal(await page.locator('[name=credential-mode][value=keyFile]').isChecked(),true);
@@ -89,6 +102,18 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
    }
   }
   await page.setViewportSize({width:1440,height:900});await page.click('[data-view=settings]');await page.selectOption('#language-setting','en');await page.click('[data-view=history]');
+  await page.selectOption('#history-retention','custom');
+  await page.locator('#history-days').locator('..').locator('.field-clear').click();
+  assert.equal(await page.locator('#history-days').inputValue(),'');
+  await page.click('#history-retention-apply');
+  assert.match(await page.locator('#main-error-text').textContent(),/1 to 36500/);
+  await page.click('#dismiss-error');
+  const historyQuery=page.locator('#history-search-host input[type=search]');
+  await historyQuery.fill('missing-entry');await page.waitForFunction(()=>document.querySelectorAll('#history-list tr').length===0);
+  await historyQuery.locator('..').locator('.field-clear').click();await page.waitForSelector('#history-list tr');
+  await page.evaluate(()=>{const field=document.querySelector('#history-days');field.readOnly=true;});
+  await page.waitForFunction(()=>document.querySelector('#history-days').parentElement.querySelector('.field-clear').disabled);
+  await page.evaluate(()=>{const field=document.querySelector('#history-days');field.readOnly=false;});
   await page.click('#save-version');await page.waitForFunction(()=>window.calls.some(call=>call.name==='saveVersion'));
   await page.selectOption('#history-retention','30');await page.click('#history-retention-apply');await page.waitForFunction(()=>window.calls.some(call=>call.name==='setHistoryRetention'&&call.value===30));
   await page.click('#history-list button');await page.click('#confirm-action');await page.waitForFunction(()=>window.calls.some(call=>call.name==='restoreVersion'&&call.value==='version-1'));
@@ -120,6 +145,16 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   await page.click('[data-view=settings]');await page.uncheck('#startup-setting');await page.waitForFunction(() => window.calls.some(call => call.name === 'setStartup' && call.value === false));
   await page.check('#auto-unlock-setting');await page.click('#confirm-action');await page.waitForFunction(() => window.calls.some(call => call.name === 'setAutoUnlock' && call.value === true));await page.click('#forget-credential');
   await page.selectOption('#theme-setting','dark');await page.selectOption('#language-setting','bilingual');await page.reload();await page.waitForFunction(() => document.querySelector('#vault-badge').textContent !== 'Checking drive…');assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');assert.match(await page.locator('#project-website-link').textContent(),/Project website · 項目網站/);
+  assert.match(await page.locator('#password-input').locator('..').locator('.field-clear').getAttribute('aria-label'),/Clear field · 清除欄位/);
+  assert.match(await page.locator('#history-days').locator('..').locator('.field-clear').getAttribute('aria-label'),/Custom days · 自訂日數/);
+  const coverage=await page.evaluate(()=>[...document.querySelectorAll('input')].filter(el=>['text','search','password','number'].includes(el.type)).map(el=>({id:el.id,type:el.type,count:el.parentElement.querySelectorAll('.field-clear').length})));
+  assert.equal(coverage.length,13);assert.ok(coverage.every(field=>field.count===1));
+  // Future dynamic multiline fields use the same event and disabled/read-only contract.
+  await page.evaluate(()=>{const field=document.createElement('textarea');field.id='test-multiline';field.setAttribute('aria-label','Notes');field.value='first\nsecond';window.clearEvents=[];for(const type of ['input','change'])field.addEventListener(type,event=>window.clearEvents.push(event.type));document.body.append(field);});
+  const multiline=page.locator('#test-multiline'), multilineClear=multiline.locator('..').locator('.field-clear');
+  await multilineClear.click();assert.equal(await multiline.inputValue(),'');assert.deepEqual(await page.evaluate(()=>window.clearEvents),['input','change']);
+  await multiline.evaluate(el=>{el.disabled=true;});await page.waitForFunction(()=>document.querySelector('#test-multiline').parentElement.querySelector('.field-clear').disabled);
+  await multiline.evaluate(el=>el.parentElement.remove());
   for (const width of [1440,768,390]) {
    await page.setViewportSize({width,height:720});
    for (const theme of ['light','dark']) {
