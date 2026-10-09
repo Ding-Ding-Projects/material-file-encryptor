@@ -99,7 +99,16 @@ public sealed class PrivateGitHubVaultTransport : IVaultTransport
             else if (local != remoteId)
             {
                 var ancestor = await history.Runner.RunAsync("git", ["merge-base", "--is-ancestor", remoteId, local], history.HistoryRoot, ct);
-                if (ancestor.ExitCode != 0) await history.PublishTreeAsync(tree, "Merge encrypted snapshots", [local, remoteId], ct);
+                if (ancestor.ExitCode != 0)
+                {
+                    var forward = await history.Runner.RunAsync("git", ["merge-base", "--is-ancestor", local, remoteId], history.HistoryRoot, ct);
+                    if (forward.ExitCode == 0)
+                    {
+                        await history.Git(ct, "update-ref", "refs/heads/main", remoteId, local);
+                        await history.Git(ct, "read-tree", "HEAD");
+                    }
+                    else await history.PublishTreeAsync(tree, "Merge encrypted snapshots", [local, remoteId], ct);
+                }
             }
         }
         if (await history.HeadAsync(ct) == null) return;

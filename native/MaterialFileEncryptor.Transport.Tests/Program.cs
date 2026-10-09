@@ -1,4 +1,5 @@
 using MaterialFileEncryptor.Core;
+if (args.Length == 2 && args[0] == "--live-private") { await LiveTransportChecks.RunAsync(args[1]); return; }
 var root = Path.Combine(Path.GetTempPath(), "mfe-transport-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(root);
 var count = 0;
@@ -61,6 +62,9 @@ try
     Check(File.Exists(Path.Combine(sourceA, pathB)) && File.Exists(Path.Combine(sourceB, pathA)), "concurrent immutable snapshots reconcile without force push");
     var parents = await runner.RunAsync("git", ["rev-list", "--parents", "-1", "HEAD"], transportB.History.HistoryRoot);
     Check(parents.Text.Trim().Split(' ').Length == 3, "concurrent histories produce a real two-parent merge");
+    var convergedA = await runner.RunAsync("git", ["rev-parse", "HEAD"], transportA.History.HistoryRoot);
+    var convergedB = await runner.RunAsync("git", ["rev-parse", "HEAD"], transportB.History.HistoryRoot);
+    Check(convergedA.Text == convergedB.Text, "behind client fast-forwards without redundant merge");
     Check(transportA.ContainsFile(part) && !transportA.ContainsFile("parts/" + new string('0', 64) + ".mfe"), "availability uses validated tree names without blob reads");
     await Run(transportA.History.HistoryRoot, "config", "remote.origin.pushurl", "https://example.invalid/exfil.git");
     try { await transportA.SyncAsync(); throw new Exception("accepted redirected pushurl"); } catch (InvalidOperationException) { Check(true, "reject redirected pushurl before publication"); }
@@ -111,5 +115,3 @@ sealed class MappedRunner(string uri) : IVaultProcessRunner
         return real.RunAsync(executable, arguments.Select(x => x == "https://github.com/owner/repo.git" ? uri : x).ToArray(), workingDirectory, cancellationToken);
     }
 }
-
-
