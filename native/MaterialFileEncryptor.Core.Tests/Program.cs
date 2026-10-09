@@ -3,6 +3,7 @@ using System.Text;
 using MaterialFileEncryptor.Core;
 
 var cases = new (string,Action)[] {
+    ("bulk recycle restore keeps same-path generations independent",BulkGenerations),
     ("recycle restore binds deletion generation and fails atomically",RecycleAtomic),
     ("copy upgrade rejects every original folder overlap before writing",UpgradeIsolation),
     ("metadata discovery never hydrates advertised encrypted chunks",LazyDiscovery),
@@ -167,4 +168,8 @@ static void UpgradeIsolation() {
 static void RecycleAtomic() {
     var root=Temp();try{using var v=Create(root);v.CreateDirectory("d");v.CreateFile("d/old");v.WriteRange("d/old",0,"old"u8);v.Delete("d",true);v.FlushAsync().GetAwaiter().GetResult();var oldRoot=v.ListDeleted().Single(x=>x.IsDirectory);v.CreateDirectory("d");v.CreateFile("d/new");v.WriteRange("d/new",0,"new"u8);v.Delete("d",true);v.FlushAsync().GetAwaiter().GetResult();var newRoot=v.ListDeleted().First(x=>x.IsDirectory&&x.Id!=oldRoot.Id);v.RestoreDeletedAsync(new[]{newRoot.Id}).GetAwaiter().GetResult();Assert(v.GetInfo("d/new")!=null&&v.GetInfo("d/old")==null);Assert(v.ListDeleted().Count==2,"Restoring one generation hid another generation.");}finally{Directory.Delete(root,true);}
     root=Temp();try{int binCount,historyCount;using(var v=Create(root)){v.CreateDirectory("d");v.CreateFile("d/a");v.WriteRange("d/a",0,"a"u8);var before=Directory.GetFiles(Path.Combine(root,"cache","parts")).ToHashSet();v.CreateFile("d/b");v.WriteRange("d/b",0,"b"u8);var missing=Directory.GetFiles(Path.Combine(root,"cache","parts")).Single(p=>!before.Contains(p));v.Delete("d",true);v.FlushAsync().GetAwaiter().GetResult();var name=Path.GetFileName(missing);File.Delete(missing);File.Delete(Path.Combine(root,"source","parts",name));var dir=v.ListDeleted().Single(x=>x.IsDirectory);binCount=v.ListDeleted().Count;historyCount=v.ListVersions().Count;var pending=v.Status.PendingCommits;Throws<IOException>(()=>v.RestoreDeletedAsync(new[]{dir.Id}).GetAwaiter().GetResult());Assert(v.Enumerate("").Count==0);Assert(v.ListDeleted().Count==binCount&&v.ListVersions().Count==historyCount&&v.Status.PendingCommits==pending);}using var reopened=Open(root);Assert(reopened.Enumerate("").Count==0&&reopened.ListDeleted().Count==binCount&&reopened.ListVersions().Count==historyCount);}finally{Directory.Delete(root,true);}
+}
+
+static void BulkGenerations() {
+    var root=Temp();try{using var v=Create(root);v.CreateDirectory("d");v.CreateFile("d/same");v.WriteRange("d/same",0,"first generation"u8);v.Delete("d",true);v.CreateDirectory("d");v.CreateFile("d/same");v.WriteRange("d/same",0,"other generation"u8);v.Delete("d",true);v.FlushAsync().GetAwaiter().GetResult();var roots=v.ListDeleted().Where(x=>x.IsDirectory).Select(x=>x.Id).ToArray();v.RestoreDeletedAsync(roots).GetAwaiter().GetResult();var restored=v.Enumerate("");Assert(restored.Count==2&&restored.All(x=>x.IsDirectory));var content=restored.Select(x=>{Assert(v.Enumerate(x.Path).Count==1);return Encoding.UTF8.GetString(Read(v,x.Path+"/same"));}).ToHashSet();Assert(content.SetEquals(new[]{"first generation","other generation"}));Assert(v.ListDeleted().Count==0);using var reopened=Open(root,"second");Assert(reopened.Enumerate("").Count==2);}finally{Directory.Delete(root,true);}
 }
