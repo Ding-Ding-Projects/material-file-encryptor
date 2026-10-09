@@ -1,4 +1,4 @@
-﻿param([switch]$InstallDriver)
+﻿param([switch]$InstallDriver, [switch]$RuntimeToolsOnly)
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue' # Avoid per-byte/per-file progress overhead in Windows PowerShell.
 $root = Split-Path $PSScriptRoot -Parent
@@ -15,6 +15,57 @@ function Get-Verified($entry, $file) {
     throw "Dependency digest mismatch. Download removed: $file"
   }
 }
+# Runtime tools always resolve to complete pinned portable distributions.
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+function Test-PortableTree([string]$archive, [string]$directory) {
+  if (!(Test-Path -LiteralPath $directory -PathType Container)) { return $false }
+  $zip = [IO.Compression.ZipFile]::OpenRead($archive)
+  try {
+    $expected = @{}
+    foreach ($entry in $zip.Entries) {
+      $relative = $entry.FullName.Replace('/', '\')
+      if ($relative.EndsWith('\')) { continue }
+      if ($relative.StartsWith('\') -or $relative.Contains(':') -or $relative -match '(^|\\)\.\.(\\|$)') { throw 'Unsafe portable tool archive entry.' }
+      $path = Join-Path $directory $relative
+      if (!(Test-Path -LiteralPath $path -PathType Leaf) -or (Get-Item -LiteralPath $path).Length -ne $entry.Length) { return $false }
+      $stream = $entry.Open(); $hasher = [Security.Cryptography.SHA256]::Create()
+      try { $hash = ([BitConverter]::ToString($hasher.ComputeHash($stream))).Replace('-', '').ToLowerInvariant() }
+      finally { $stream.Dispose(); $hasher.Dispose() }
+      if ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $hash) { return $false }
+      $expected[$relative.ToLowerInvariant()] = $true
+    }
+    $actual = @(Get-ChildItem -LiteralPath $directory -File -Recurse)
+    if ($actual.Count -ne $expected.Count) { return $false }
+    foreach ($file in $actual) { if (!$expected.ContainsKey($file.FullName.Substring($directory.Length + 1).ToLowerInvariant())) { return $false } }
+    return $expected.Count -gt 0
+  } finally { $zip.Dispose() }
+}
+function Activate-PortableTool([string]$name, $entry) {
+  $archive = Join-Path $tools "$name-$($entry.version).zip"
+  Get-Verified $entry $archive
+  $directory = Join-Path $tools "$name-$($entry.version)"
+  if (!(Test-PortableTree $archive $directory)) {
+    $stage = $directory + '.stage-' + [Guid]::NewGuid().ToString('N')
+    Expand-Archive -LiteralPath $archive -DestinationPath $stage
+    if (!(Test-PortableTree $archive $stage)) { throw "Portable $name extraction validation failed; previous cache retained." }
+    if (Test-Path -LiteralPath $directory) { Move-Item -LiteralPath $directory -Destination ($directory + '.previous-' + [Guid]::NewGuid().ToString('N')) }
+    Move-Item -LiteralPath $stage -Destination $directory
+  }
+  return $directory
+}
+$gitPortable = Activate-PortableTool 'git' $manifest.git
+$ghPortable = Activate-PortableTool 'gh' $manifest.gh
+$env:MFE_GIT_EXECUTABLE = Join-Path $gitPortable 'cmd\git.exe'
+$env:MFE_GH_EXECUTABLE = Join-Path $ghPortable 'bin\gh.exe'
+$gitVersion = & $env:MFE_GIT_EXECUTABLE --version
+if ($LASTEXITCODE -ne 0 -or $gitVersion -ne "git version $($manifest.git.version)") { throw 'Pinned portable Git version mismatch.' }
+$ghVersion = @(& $env:MFE_GH_EXECUTABLE --version)[0]
+if ($LASTEXITCODE -ne 0 -or $ghVersion -notmatch ('^gh version ' + [regex]::Escape($manifest.gh.version) + '( |$)')) { throw 'Pinned portable GitHub CLI version mismatch.' }
+$env:MFE_GIT_TOOL_ROOT = $gitPortable
+$env:MFE_GH_TOOL_ROOT = $ghPortable
+$env:PATH = "$(Split-Path $env:MFE_GIT_EXECUTABLE);$(Split-Path $env:MFE_GH_EXECUTABLE);$env:PATH"
+Write-Host "Verified portable $gitVersion and $ghVersion. No administrator rights required."
+if ($RuntimeToolsOnly) { return }
 $nodeArchive = Join-Path $tools "node-$($manifest.node.version).zip"
 Get-Verified $manifest.node $nodeArchive
 $node = Join-Path $tools "node-v$($manifest.node.version)-win-x64"
@@ -62,14 +113,3 @@ $env:DOTNET_ROOT = $dotnet
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 $env:DOTNET_NOLOGO = '1'
 Write-Host "Verified Node $($manifest.node.version), .NET $($manifest.dotnet.version), WinFsp $($manifest.winfsp.version)."
-
-# Publishing tools use a pinned portable distribution without administrator rights.
-if (!(Get-Command gh.exe -ErrorAction SilentlyContinue)) {
-  $ghArchive = Join-Path $tools "gh-$($manifest.gh.version).zip"
-  Get-Verified $manifest.gh $ghArchive
-  $ghRoot = Join-Path $tools "gh-$($manifest.gh.version)"
-  if (!(Test-Path (Join-Path $ghRoot 'bin\gh.exe'))) { Expand-Archive $ghArchive $ghRoot -Force }
-  $env:PATH = "$(Join-Path $ghRoot 'bin');$env:PATH"
-}
-& gh.exe --version | Select-Object -First 1
-if ($LASTEXITCODE -ne 0) { throw 'GitHub CLI activation failed.' }
