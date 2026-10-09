@@ -16,6 +16,34 @@ if (verificationProfile) {
   if (!process.argv.includes('--desktop-check') || !path.isAbsolute(verificationProfile)) throw new Error('Verification requires an explicit absolute profile directory and desktop-check mode.');
   app.setPath('userData', verificationProfile);
 } else if (testMode) app.setPath('userData', path.resolve('out/desktop-profile'));
+const verificationMode = Boolean(verificationProfile && process.argv.includes('--desktop-check'));
+function createVerificationStartup(loginApp, executable, name) {
+  const options = { path: executable, args: ['--startup'] };
+  const find = () => (loginApp.getLoginItemSettings(options).launchItems || []).find(item => item.name === name);
+  if (find()) throw new Error('Verification startup registration already exists.');
+  let restored = false;
+  return {
+    read: () => ({ name, verificationOnly: true, enabled: Boolean(find()?.enabled), originalEnabled: false, restored }),
+    set: enabled => { loginApp.setLoginItemSettings({ ...options, name, openAtLogin: enabled, enabled }); restored = false; },
+    restore: () => {
+      loginApp.setLoginItemSettings({ ...options, name, openAtLogin: false });
+      if (find()) throw new Error('Verification startup registration could not be restored.');
+      restored = true;
+      return { name, verificationOnly: true, enabled: false, originalEnabled: false, restored };
+    },
+  };
+}
+let verificationStartup;
+function applyStartup(enabled) {
+  if (verificationStartup) verificationStartup.set(enabled);
+  else if (app.isPackaged && process.platform === 'win32') app.setLoginItemSettings({ openAtLogin: enabled, path: process.execPath, args: ['--startup'] });
+}
+function startupRegistration() {
+  if (verificationStartup) return verificationStartup.read();
+  if (process.platform !== 'win32') return { enabled: false, verificationOnly: false, restored: false };
+  const settings = app.getLoginItemSettings({ path: process.execPath, args: ['--startup'] });
+  return { enabled: settings.openAtLogin, verificationOnly: false, restored: false };
+}
 const configPath = () => path.join(app.getPath('userData'), 'preferences.json');
 const selectedImports = new Set();
 const selectedExports = new Set();
@@ -24,7 +52,7 @@ let preferences = { startup: true, autoUnlock: false, driveLetter: 'M:', transpo
 let state = { locked: true, mounted: false, files: [], availableDriveLetters: [], sync: { running: false, lastSync: null, error: null }, driver: { available: false, checking: true, error: 'Checking WinFsp availability.' } };
 const inside = (parent, child) => { const rel = path.relative(parent, child); return rel === '' || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel)); };
 const nativeState = value => ({ ...value, driver: { ...value.driver, checking: false } });
-const snapshot = () => ({ ...state, operation, defaults: { cacheDir: preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache'), driveLetter: preferences.driveLetter }, preferences: { ...preferences }, cacheDir: state.cacheDir || preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache') });
+const snapshot = () => ({ ...state, operation, startupRegistration: startupRegistration(), defaults: { cacheDir: preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache'), driveLetter: preferences.driveLetter }, preferences: { ...preferences }, cacheDir: state.cacheDir || preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache') });
 function publish() { if (window && !window.isDestroyed()) window.webContents.send('vault:state', snapshot()); }
 async function savePreferences() { await fs.mkdir(app.getPath('userData'), { recursive: true }); await fs.writeFile(configPath(), JSON.stringify(preferences), { mode: 0o600 }); }
 async function backend(method, params = {}) {
@@ -92,7 +120,7 @@ async function request(method, params) {
     }
     if (params.historyRetentionDays !== undefined && !state.locked) await backend('setHistoryRetention', { days: params.historyRetentionDays });
     Object.assign(preferences, params); await savePreferences();
-    if (app.isPackaged && process.platform === 'win32') app.setLoginItemSettings({ openAtLogin: preferences.startup, path: process.execPath, args: ['--startup'] });
+    applyStartup(preferences.startup);
     publish(); return snapshot();
   }
   if (method === 'openExplorer') return openPath(mountedPath());
@@ -119,7 +147,7 @@ async function request(method, params) {
 }
 function showWindow() { window.show(); window.focus(); }
 async function quit() {
-  try { if (helper && !state.locked) await perform('unmounting', () => backend('lock')); shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit()); }
+  try { if (helper && !state.locked) await perform('unmounting', () => backend('lock')); verificationStartup?.restore(); shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit()); }
   catch (error) { showWindow(); await dialog.showMessageBox(window, { type: 'error', title: 'Close open drive files first', message: error.message }); }
 }
 if (process.platform === 'win32' && process.argv.includes('--squirrel-uninstall')) {
@@ -129,6 +157,7 @@ if (squirrelStartup || !app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', () => window && showWindow());
   app.whenReady().then(async () => {
+    if (verificationMode && process.platform === 'win32') verificationStartup = createVerificationStartup(app, process.execPath, 'MaterialFileEncryptorVerification-' + randomBytes(16).toString('hex'));
     try {
       const saved = JSON.parse(await fs.readFile(configPath(), 'utf8'));
       for (const key of ['startup', 'autoUnlock']) if (typeof saved[key] === 'boolean') preferences[key] = saved[key];
@@ -136,13 +165,22 @@ else {
       if (['folder', 'privateGit'].includes(saved.transport)) preferences.transport = saved.transport;
       if (saved.historyRetentionDays === null || (Number.isInteger(saved.historyRetentionDays) && saved.historyRetentionDays >= 1 && saved.historyRetentionDays <= 36500)) preferences.historyRetentionDays = saved.historyRetentionDays;
     } catch { /* First launch or invalid settings uses defaults. */ }
-    if (app.isPackaged && process.platform === 'win32') app.setLoginItemSettings({ openAtLogin: preferences.startup, path: process.execPath, args: ['--startup'] });
+    applyStartup(preferences.startup);
     window = new BrowserWindow({ width: 1180, height: 850, minWidth: 880, minHeight: 650, frame: false, show: false, backgroundColor: '#f7f9f8', webPreferences: { preload: path.join(directory, 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false, webSecurity: true } });
     window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
     window.webContents.on('will-navigate', event => event.preventDefault());
     window.webContents.on('will-attach-webview', event => event.preventDefault());
     window.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
     ipcMain.handle('vault:request', async (event, method, params) => { if (!trustedFrame(event, window, rendererURL)) throw new Error('Untrusted request source.'); return request(method, params); });
+    ipcMain.handle('vault:verification-quit', async event => {
+      if (!verificationMode || !verificationStartup || !trustedFrame(event, window, rendererURL)) throw new Error('Verification quit is unavailable.');
+      if (operation) throw new Error('Wait for the current drive operation to finish.');
+      if (helper && !state.locked) await perform('unmounting', () => backend('lock'));
+      const proof = verificationStartup.restore();
+      shuttingDown = true; helper?.dispose();
+      setTimeout(() => app.quit(), 250);
+      return proof;
+    });
     window.on('close', event => { if (!shuttingDown && !testMode) { event.preventDefault(); window.hide(); } });
     const icon = nativeImage.createFromDataURL('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAIElEQVQ4T2NkqLj/n4ECwESJ5lEDRg0YNWDUgFEDBg0AAEZ7JPE/MhwBAAAAAElFTkSuQmCC');
     tray = new Tray(icon); tray.setToolTip('Material File Encryptor'); tray.setContextMenu(Menu.buildFromTemplate([{ label: 'Open Material File Encryptor', click: showWindow }, { label: 'Lock drive', click: () => request('lockVault', {}).catch(() => showWindow()) }, { type: 'separator' }, { label: 'Quit', click: quit }])); tray.on('double-click', showWindow);
@@ -155,5 +193,5 @@ else {
     } else { state.driver.checking = false; state.driver.error = 'Windows and WinFsp are required to mount a drive.'; publish(); }
   }).catch(() => { app.exit(1); });
   app.on('before-quit', event => { if (!shuttingDown && !testMode) { event.preventDefault(); void quit(); } });
-  app.on('window-all-closed', () => { if (testMode) { shuttingDown = true; helper?.dispose(); app.quit(); } });
+  app.on('window-all-closed', () => { if (testMode) { verificationStartup?.restore(); shuttingDown = true; helper?.dispose(); app.quit(); } });
 }

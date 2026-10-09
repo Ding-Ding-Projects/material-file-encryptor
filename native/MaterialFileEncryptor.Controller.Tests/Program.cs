@@ -8,7 +8,7 @@ static class Regression
     static readonly Type ControllerType = Assembly.Load("MaterialFileEncryptor.Host").GetType("MaterialFileEncryptor.Host.VaultController", true)!;
     static void Assert(bool value, string message) { if (!value) throw new Exception(message); }
     static void Set(object controller, string name, object? value) => ControllerType.GetField(name, BindingFlags.Instance|BindingFlags.NonPublic)!.SetValue(controller, value);
-    static object? Call(object controller, string method, params object[] values) => ControllerType.GetMethod(method)!.Invoke(controller, values);
+    static object? Call(object controller, string method, params object[] values) => ControllerType.GetMethod(method,BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic)!.Invoke(controller, values);
     static object Make(VaultEngine engine, string root, IVaultTransport transport)
     {
         var controller = Activator.CreateInstance(ControllerType)!;
@@ -61,7 +61,33 @@ static class Regression
         }
         finally { network.Release.TrySetResult(); ((IDisposable)controller).Dispose(); Directory.Delete(root,true); }
     }
-    public static async Task Main() { Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); }
+    static async Task PartialHistoryRetry()
+    {
+        var root=Path.Combine(Path.GetTempPath(),"mfe-controller-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
+        var engine=Create(root,1024); var controller=Make(engine,root,new ImmediateTransport());
+        try
+        {
+            var source=Path.Combine(root,"source"); var commits=Path.Combine(source,"commits"); var held=commits+".held";
+            if(Directory.Exists(commits)) Directory.Move(commits,held);
+            File.WriteAllText(commits,"intentional publication obstruction");
+            engine.CreateFile("retry.bin"); engine.WriteRange("retry.bin",0,new byte[]{7,8,9}); await engine.FlushAsync();
+            Assert(engine.Status.PendingCommits>0,"Fixture did not preserve a failed publication");
+            var history=new GitVaultHistory(source,Path.Combine(root,"history")); await history.InitializeAsync();
+            Set(controller,"historyStore",history); Set(controller,"historySourceRoot",source); Set(controller,"historyPending",true);
+            Call(controller,"RecordHistoryLocked");
+            Assert((bool)ControllerType.GetField("historyPending",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(controller)!,"Partial publication cleared retry flag");
+            File.Delete(commits); if(Directory.Exists(held)) Directory.Move(held,commits);
+            await engine.FlushAsync(); Assert(engine.Status.PendingCommits==0,"Recovered publication remains pending");
+            Call(controller,"RecordHistoryLocked");
+            var tree=await new VaultProcessRunner().RunAsync("git",new[]{"ls-tree","-r","--name-only","HEAD"},Path.Combine(root,"history"));
+            Assert(tree.ExitCode==0,"Recovered history tree unavailable");
+            var names=tree.Text.Split('\n',StringSplitOptions.RemoveEmptyEntries).ToHashSet();
+            Assert(engine.GetEncryptedSnapshotPaths().All(names.Contains),"Recovered encrypted metadata or parts absent from history");
+            Console.WriteLine("PASS partial publication retains history retry and recovered metadata/parts enter history");
+        }
+        finally { ((IDisposable)controller).Dispose(); foreach(var file in Directory.EnumerateFiles(root,"*",SearchOption.AllDirectories)) File.SetAttributes(file,FileAttributes.Normal); Directory.Delete(root,true); }
+    }
+    public static async Task Main() { Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); await PartialHistoryRetry(); }
     sealed class ImmediateTransport : IVaultTransport
     {
         public Task InitializeAsync(CancellationToken ct=default)=>Task.CompletedTask;
