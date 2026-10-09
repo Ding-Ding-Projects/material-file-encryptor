@@ -34,7 +34,7 @@ function Stream-Digest($entry) {
     finally { $hash.Dispose(); $stream.Dispose() }
 }
 function Payload-Selected([string]$name) {
-    return $name -eq 'MaterialFileEncryptor.exe' -or $name -eq 'resources/app.asar' -or $name -eq 'resources/dependencies.json' -or $name.StartsWith('resources/native/') -or $name.StartsWith('resources/driver/')
+    return $name -eq 'MaterialFileEncryptor.exe' -or $name -eq 'resources/app.asar' -or $name -eq 'resources/dependencies.json' -or $name.StartsWith('resources/native/') -or $name.StartsWith('resources/driver/') -or $name.StartsWith('resources/tools/')
 }
 function Wait-Check([scriptblock]$condition, [int]$seconds, [string]$code) {
     $deadline = [DateTime]::UtcNow.AddSeconds($seconds)
@@ -117,7 +117,7 @@ try {
             if (Payload-Selected $relative) { [ordered]@{ entry = $relative; bytes = $_.Length; sha256 = File-Digest $_.FullName } }
         } | Sort-Object { $_.entry })
         Assert-Check ($files.Count -gt 5) 'PACKAGE_PAYLOAD_MISSING'
-        [ordered]@{ schemaVersion = 1; commit = $sourceCommit; runId = $runId; runAttempt = $runAttempt; comparisonScope = @('application executable', 'ASAR', 'all native helper files and notices', 'all bundled driver files', 'dependency manifest'); packagedDesktopPassed = $true; desktopReceiptSha256 = File-Digest (Join-Path $evidence 'desktop-check.json'); files = $files } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $snapshotFile -Encoding UTF8
+        [ordered]@{ schemaVersion = 1; commit = $sourceCommit; runId = $runId; runAttempt = $runAttempt; comparisonScope = @('application executable', 'ASAR', 'all native helper files and notices', 'all bundled driver files', 'all bundled portable transport tools and notices', 'dependency manifest'); packagedDesktopPassed = $true; desktopReceiptSha256 = File-Digest (Join-Path $evidence 'desktop-check.json'); files = $files } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $snapshotFile -Encoding UTF8
         Write-Host "Snapshotted $($files.Count) tested package payload entries."
         exit 0
     }
@@ -178,7 +178,7 @@ try {
         Assert-Check ($entry.Length -eq $file.bytes -and (Stream-Digest $entry) -eq $file.sha256) 'TESTED_PAYLOAD_DIGEST_MISMATCH'
     }
     $dependencies = Get-Content -LiteralPath (Join-Path $root 'dependencies.json') -Raw | ConvertFrom-Json
-    $required = @('MaterialFileEncryptor.exe', 'resources/app.asar', 'resources/dependencies.json', 'resources/native/MaterialFileEncryptor.Host.exe', 'resources/native/notices/WinFsp-License.txt', 'resources/native/notices/WinFsp-Origin.md', 'resources/native/notices/MaterialFileEncryptor-License.txt', "resources/driver/winfsp-$($dependencies.winfsp.version).msi")
+    $required = @('resources/tools/git/cmd/git.exe', 'resources/tools/gh/bin/gh.exe', 'MaterialFileEncryptor.exe', 'resources/app.asar', 'resources/dependencies.json', 'resources/native/MaterialFileEncryptor.Host.exe', 'resources/native/notices/WinFsp-License.txt', 'resources/native/notices/WinFsp-Origin.md', 'resources/native/notices/MaterialFileEncryptor-License.txt', "resources/driver/winfsp-$($dependencies.winfsp.version).msi")
     foreach ($name in $required) { Assert-Check ($entries.ContainsKey($name) -and $entries[$name].Length -gt 0) 'REQUIRED_RESOURCE_MISSING' }
     Assert-Check ((Stream-Digest $entries['resources/dependencies.json']) -eq (File-Digest (Join-Path $root 'dependencies.json'))) 'DEPENDENCY_MANIFEST_MISMATCH'
     $exeReader = [IO.BinaryReader]::new($entries['MaterialFileEncryptor.exe'].Open())
