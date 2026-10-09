@@ -142,3 +142,28 @@ test('capture gallery identifies actual Linux evidence and conceptual animation 
   assert.match(html, /id="workflow-replay"/);
   assert.match(html, /id="success-tone" min="1" max="5"/);
 });
+
+
+test('both editable textboxes expose dedicated non-submitting clear controls with 44 px targets',async()=>{
+  const html=await readFile(new URL('../docs/site/index.html',import.meta.url),'utf8');
+  const css=await readFile(new URL('../docs/site/site.css',import.meta.url),'utf8');
+  const script=await readFile(new URL('../docs/site/explainer.js',import.meta.url),'utf8');
+  const fields=[...html.matchAll(/<input[^>]*type="(?:text|search)"[^>]*>/g)];assert.equal(fields.length,2);
+  for(const id of ['search-clear','part-limit-clear']) {
+    assert.match(html,new RegExp(`<button id="${id}" type="button" aria-label="[^"]+"`));
+    const rules=css.slice(css.lastIndexOf('/* Both editable text controls'));
+    assert.match(rules,new RegExp(`#${id}\\{[^}]*min-width:44px[^}]*min-height:44px`));
+  }
+  assert.match(script,/clearLimit[.]addEventListener\('click', \(\) => clearExampleLimit\(limit\)\)/);
+  assert.match(script,/'Clear maximum encrypted part size':'清除加密分割檔最大大小'/);
+  assert.match(script,/limit[.]setAttribute\('aria-invalid', String\(!parts\)\)/);
+});
+
+test('clearing the example limit emits validation events, keeps focus and rejects disabled fields',async()=>{
+  const {clearExampleLimit,exampleParts}=await import('../docs/site/explainer.js');
+  const events=[];let focused=false,validity='previous';
+  const input={value:'10',disabled:false,readOnly:false,setCustomValidity:value=>{validity=value;},dispatchEvent:event=>events.push(event.type),focus:()=>{focused=true;}};
+  assert.equal(clearExampleLimit(input),true);assert.equal(input.value,'');assert.equal(validity,'');assert.deepEqual(events,['input','change']);assert.equal(focused,true);
+  for(const unit of ['KB','MB','GB'])assert.equal(exampleParts(input.value,unit),null);
+  for(const state of ['disabled','readOnly']){input.value='10';input[state]=true;events.length=0;assert.equal(clearExampleLimit(input),false);assert.equal(input.value,'10');assert.deepEqual(events,[]);input[state]=false;}
+});

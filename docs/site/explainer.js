@@ -1,3 +1,12 @@
+export function clearExampleLimit(input) {
+  if (input.disabled || input.readOnly) return false;
+  input.value = '';
+  input.setCustomValidity('');
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  input.focus({ preventScroll: true });
+  return true;
+}
 export const EXAMPLE_FILE_BYTES = 16 * 1024 ** 2;
 export const EXAMPLE_OVERHEAD = 36;
 export function exampleParts(value, unit) {
@@ -11,6 +20,7 @@ export function exampleParts(value, unit) {
 }
 const copy = {
 'Interactive architecture':'互動架構圖',
+'Clear maximum encrypted part size':'清除加密分割檔最大大小',
 'Follow the files, step by step.':'一步一步睇檔案點樣流動。',
 'Conceptual demonstration only. This website does not mount a drive or process your files.':'只係概念示範。呢個網站唔會掛載磁碟或者處理你嘅檔案。',
 'Choose a workflow operation':'選擇流程操作',
@@ -52,6 +62,8 @@ if (typeof document !== 'undefined') {
     const availability = root.querySelector('#access-mode');
     const limit = root.querySelector('#part-limit');
     const unit = root.querySelector('#part-unit');
+    const clearLimit = root.querySelector('#part-limit-clear');
+    clearLimit.addEventListener('click', () => clearExampleLimit(limit));
     const play = root.querySelector('#workflow-play');
     const replay = root.querySelector('#workflow-replay');
     const translated = text => language === 'yue' ? copy[text] || text : language === 'bilingual' && copy[text] ? `${text} / ${copy[text]}` : text;
