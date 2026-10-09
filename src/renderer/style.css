@@ -76,3 +76,15 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;width:1
 
 .drive-picker{position:relative;min-width:0}.drive-picker-input{display:flex;border:1px solid var(--outline);border-radius:12px;overflow:hidden}.drive-picker-input input{border:0;min-width:0;flex:1}.drive-picker-input button{border:0;background:var(--container-high);color:var(--text);min-width:48px;cursor:pointer}.drive-picker-chevron{display:inline-block;width:8px;height:8px;border:solid currentColor;border-width:0 2px 2px 0;transform:rotate(45deg)}.drive-letter-options{position:absolute;z-index:20;top:48px;left:0;right:0;max-height:220px;overflow:auto;padding:6px;background:var(--surface);border:1px solid var(--outline);border-radius:12px;box-shadow:0 8px 24px #0003}.drive-letter-options button{display:block;width:100%;text-align:left;padding:12px;border:0;border-radius:8px;background:transparent;color:inherit;cursor:pointer}.drive-letter-options .active-option,.drive-letter-options button:hover{background:var(--primary-container)}
 .history-options{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:16px 0}.history-options input{width:110px}.scoped-search{display:flex;position:relative;align-items:start;flex-wrap:wrap;gap:10px;margin:20px 0}.scoped-search>input{flex:1;min-width:160px}.scoped-search>.field-error{flex-basis:100%;margin:0}.regex-builder{position:relative;max-width:100%}.regex-builder summary{cursor:pointer;padding:12px;border:1px solid var(--outline);border-radius:12px}.regex-builder[open]{z-index:5;background:var(--surface);border:1px solid var(--outline);border-radius:12px;padding:8px;box-shadow:0 8px 24px #0002}.regex-builder label{display:flex;gap:8px;align-items:center;padding:8px}.regex-builder input{width:20px;height:20px}.regex-builder select{max-width:100%}#view-history td,#view-recycle td{overflow-wrap:anywhere;max-width:320px}#view-history td button{white-space:normal}#view-history .table-scroll,#view-recycle .table-scroll{max-width:100%;overflow:auto}
+
+/* Archive tables have different columns from the drive table. */
+.scoped-search>.field-error:empty,#history-message:empty,#recycle-message:empty{display:none}
+#view-history table,#view-recycle table{table-layout:auto;min-width:650px}
+#view-history th:nth-child(n),#view-recycle th:nth-child(n){width:auto}
+#view-history th:first-child,#view-recycle th:first-child{width:48px}
+#view-history th:nth-child(2),#view-recycle th:nth-child(2){width:30%}
+#view-history th:nth-child(3),#view-recycle th:nth-child(3){min-width:140px}
+#view-history th:nth-child(5),#view-recycle th:nth-child(5){min-width:150px}
+#view-history th,#view-history td,#view-recycle th,#view-recycle td{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+#view-history td:last-child{min-width:150px}
+#view-recycle th:last-child,#view-recycle td:last-child{display:none}
