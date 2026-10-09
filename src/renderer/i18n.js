@@ -1,4 +1,10 @@
 export const cantonese = {
+"Choose deleted descendants to restore":"揀選要還原嘅已刪子項目",
+"Originally selected entries are required. Additional deleted descendants start unchecked. Older independent deletions stay in the bin unless you select them. Entries deleted together may be restored together automatically.":"原先所選項目一定會還原，其他已刪子項目預設唔勾選。較早獨立刪除嘅項目會留喺回收筒，除非你明確揀選。同一批刪除嘅項目可能會一齊自動還原。",
+"Select all descendants":"選取全部子項目",
+"Restore original selection only":"只還原原先所選項目",
+"Restore explicitly selected descendants":"還原明確所選子項目",
+
 "Upgrade by creating a copy":"建立副本升級",
 "Create upgraded copy":"建立升級副本",
 "Choose separate destination storage and cache folders. The original vault is preserved. Choose credentials for the upgraded copy. No conversion happens when opening a vault.":"請揀獨立嘅目的地儲存同快取資料夾，原有保險庫會保留。為升級副本設定解鎖方式，開啟保險庫唔會自動轉換。",

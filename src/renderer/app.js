@@ -1,3 +1,4 @@
+import { deletedDescendantCandidates } from './recycle-selection.js';
 import { createScopedSearch } from './scoped-search.js';
 import { parsePartSize, displayPartSize, parseVocabulary, loadSettings } from './preferences.js';
 import { icon, initializeIcons } from './icons.js';
@@ -362,7 +363,7 @@ function initializeArchive() {
  const days=document.createElement('input');days.id='history-days';days.type='number';days.min='1';days.max='36500';days.value='365';days.hidden=true;days.setAttribute('aria-label',t('Custom days'));
  retention.onchange=()=>{days.hidden=retention.value!=='custom';};
  $('history-actions').append(retention,days,button('history-retention-apply','Apply',()=>{const value=retention.value==='forever'?null:retention.value==='custom'?Number(days.value):Number(retention.value);if(value!==null&&(!Number.isInteger(value)||value<1||value>36500))return showError(t('Enter 1 to 36500 days.'));archiveMutation('history',()=>api.setHistoryRetention(value));}));
- $('recycle-actions').append(button('select-recycled','Select all visible',()=>{for(const el of $('recycle-list').querySelectorAll('input:not(:disabled)')) {el.checked=true;recycledSelection.add(el.value);}renderAvailability();}),button('restore-recycled','Restore selected',()=>archiveMutation('recycle',()=>api.restoreDeleted([...recycledSelection]))),button('empty-recycle','Empty Recycle Bin',async()=>{if(await confirmAction('Empty Recycle Bin?','Deleted entries will disappear from the bin. Version history is retained. This does not promise to free storage space.','Empty Recycle Bin'))archiveMutation('recycle',()=>api.emptyRecycleBin());}));
+ $('recycle-actions').append(button('select-recycled','Select all visible',()=>{for(const el of $('recycle-list').querySelectorAll('input:not(:disabled)')) {el.checked=true;recycledSelection.add(el.value);}renderAvailability();}),button('restore-recycled','Restore selected',()=>restoreRecycledSelection()),button('empty-recycle','Empty Recycle Bin',async()=>{if(await confirmAction('Empty Recycle Bin?','Deleted entries will disappear from the bin. Version history is retained. This does not promise to free storage space.','Empty Recycle Bin'))archiveMutation('recycle',()=>api.emptyRecycleBin());}));
  historySearch=createScopedSearch($('history-search-host'),t,()=>renderArchive('history'));recycleSearch=createScopedSearch($('recycle-search-host'),t,()=>renderArchive('recycle'));
  $('transport-mode').onchange=()=>{$('private-git-fields').hidden=$('transport-mode').value!=='privateGit';};
 }
@@ -382,4 +383,23 @@ async function renderArchive(kind) {
  cell(version.path);cell(formatDate(version.timestampUtc));cell(version.isDirectory?t('Folder'):formatBytes(version.length));cell(t(version.isAvailable?'Available':'Encrypted data unavailable'));const actions=cell('');
  if(kind==='history'){const restore=document.createElement('button');restore.className='button small';restore.textContent=t('Restore as new version');restore.disabled=busy||!version.isAvailable;restore.dataset.archiveRestore='true';restore.dataset.available=String(version.isAvailable);restore.onclick=async()=>{if(await confirmAction('Restore this version?','Restoring creates a new current version. Existing history remains encrypted.','Restore as new version'))archiveMutation('history',()=>api.restoreVersion(version.id));};actions.append(restore);}fragment.append(row);}
  $(kind+'-list').replaceChildren(fragment);$(kind+'-message').textContent=t(rows.length?'':'No matching entries.');renderAvailability();
+}
+
+async function restoreRecycledSelection() {
+ const original=[...recycledSelection];if(!original.length||busy)return;
+ const rows=archiveRows.recycle;const byId=new Map(rows.map(row=>[row.id,row]));
+ const candidates=deletedDescendantCandidates(rows,original);
+ if(!candidates.length)return archiveMutation('recycle',()=>api.restoreDeleted(original));
+ const dialog=document.createElement('dialog');dialog.setAttribute('aria-labelledby','descendant-dialog-title');
+ const form=document.createElement('form');form.method='dialog';
+ const heading=document.createElement('header');heading.className='dialog-heading';const title=document.createElement('h2');title.id='descendant-dialog-title';title.textContent=t('Choose deleted descendants to restore');heading.append(title);
+ const body=document.createElement('div');body.className='dialog-body';const explanation=document.createElement('p');explanation.textContent=t('Originally selected entries are required. Additional deleted descendants start unchecked. Older independent deletions stay in the bin unless you select them. Entries deleted together may be restored together automatically.');body.append(explanation);
+ const checks=[];
+ for(const row of [...original.map(id=>byId.get(id)).filter(Boolean),...candidates]) {const label=document.createElement('label');const input=document.createElement('input');input.type='checkbox';input.value=row.id;input.checked=original.includes(row.id);input.disabled=input.checked||!row.isAvailable;const name=document.createElement('span');name.textContent=row.path+' · '+String(row.timestampUtc||'');label.append(input,name);body.append(label);checks.push(input);}
+ const selectAll=document.createElement('button');selectAll.type='button';selectAll.className='button';selectAll.textContent=t('Select all descendants');selectAll.onclick=()=>{for(const input of checks)if(!input.disabled)input.checked=true;};body.append(selectAll);
+ const footer=document.createElement('footer');footer.className='dialog-actions';for(const [value,text] of [['cancel','Cancel'],['folder','Restore original selection only'],['subtree','Restore explicitly selected descendants']]){const button=document.createElement('button');button.value=value;button.className='button'+(value==='subtree'?' primary':'');button.textContent=t(text);footer.append(button);}
+ form.append(heading,body,footer);dialog.append(form);document.body.append(dialog);dialog.showModal();footer.querySelector('button').focus();
+ const action=await new Promise(resolve=>dialog.addEventListener('close',()=>resolve(dialog.returnValue),{once:true}));
+ const ids=action==='folder'?original:[...new Set([...original,...checks.filter(input=>input.checked&&!input.disabled).map(input=>input.value)])];dialog.remove();
+ if(['folder','subtree'].includes(action))await archiveMutation('recycle',()=>api.restoreDeleted(ids));
 }
