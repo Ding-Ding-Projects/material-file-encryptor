@@ -8,7 +8,7 @@ if ($functions.Count -ne 1) { throw 'EXPECTED_ONE_GH_WRAPPER' }
 $current = $functions[0].Extent.Text
 $nativeCall = '[Management.Automation.ApplicationInfo]$nativeGh = Get-Command gh.exe -CommandType Application -ErrorAction Stop | Select-Object -First 1; $result = & $nativeGh.Source @Arguments'
 if (!$current.Contains($nativeCall)) { throw 'EXPLICIT_FIRST_NATIVE_GH_REQUIRED' }
-$old = $current.Replace($nativeCall, '$result = & gh @Arguments')
+$old = $current.Replace($nativeCall, '$result = & gh @Arguments').Replace('[string[]]$Arguments', '[Parameter(ValueFromRemainingArguments=$true)][string[]]$Arguments')
 # Execute only the extracted function in a child scope. Publisher main never runs.
 $oldRecursed = $false
 try { & ([scriptblock]::Create($old + "`nGh --version")) | Out-Null }
@@ -44,5 +44,21 @@ try {
     $actualVersion = & ([scriptblock]::Create($current + "`nGh --version"))
     if (($actualVersion -join "`n") -cne ($expectedVersion -join "`n")) { throw 'FIRST_NATIVE_GH_NOT_SELECTED' }
     Write-Host 'PASS current wrapper selects first real native executable with two visible paths'
+    $flattened = $current.Replace('[string[]]$Arguments', '[Parameter(ValueFromRemainingArguments=$true)][string[]]$Arguments')
+    $arrayFailed = $false
+    try { & ([scriptblock]::Create($flattened + "`nGh @('help','release','view')")) | Out-Null }
+    catch { if ($_.Exception.Message -ne 'GITHUB_CLI_OPERATION_FAILED') { throw }; $arrayFailed = $true }
+    if (!$arrayFailed) { throw 'FLATTENED_ARGUMENT_ARRAY_DID_NOT_FAIL' }
+    Write-Host 'PASS previous parameter binding fails a real multi-argument array'
+    $expectedHelp = & $pinned help release view
+    if ($LASTEXITCODE -ne 0) { throw 'PINNED_GH_HELP_FAILED' }
+    $actualHelp = & ([scriptblock]::Create($current + "`nGh @('help','release','view')"))
+    if (($actualHelp -join "`n") -cne ($expectedHelp -join "`n")) { throw 'NATIVE_GH_ARGUMENT_ARRAY_CHANGED' }
+    Write-Host 'PASS current wrapper preserves real native argument-array boundaries'
+    $expectedCreateHelp = & $pinned help release create
+    if ($LASTEXITCODE -ne 0) { throw 'PINNED_GH_CREATE_HELP_FAILED' }
+    $actualCreateHelp = & ([scriptblock]::Create($current + "`nGh (@('help','release') + @('create'))"))
+    if (($actualCreateHelp -join "`n") -cne ($expectedCreateHelp -join "`n")) { throw 'NATIVE_GH_CONCATENATED_ARRAY_CHANGED' }
+    Write-Host 'PASS current wrapper preserves a dynamically concatenated native help array'
 } finally { $env:PATH = $savedPath }
-Write-Host 'Preview publisher regression: 5 checks passed; no publication code executed.'
+Write-Host 'Preview publisher regression: 8 checks passed; no publication code executed.'
