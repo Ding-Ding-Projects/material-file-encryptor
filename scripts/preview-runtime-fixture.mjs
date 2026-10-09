@@ -34,6 +34,35 @@ export function runtimeCompletion(state,{synchronized=false,applicationError=fal
  const operationFinished=state.operation==null;
  return {failed:false,ready:operationFinished&&(!synchronized||(state.sync?.running===false&&(state.transport?.available===true||state.sync?.sourceAvailable===true)&&(state.sync?.pendingCommits??0)===0&&!state.transport?.pendingSynchronization))};
 }
+export async function prepareGuiVaultFixture(fixture) {
+ const root=await fs.realpath(fixture.root);assert.equal(root,path.resolve(fixture.root),'GUI fixture root must resolve to its recorded owned directory.');
+ const saved=JSON.parse(await fs.readFile(path.join(root,'fixture.json'),'utf8'));assert.equal(saved.root,fixture.root);assert.equal(saved.driveLetter,fixture.driveLetter);
+ const gui={root,storageDir:path.join(root,'gui-storage'),cacheDir:path.join(root,'gui-cache'),keyFilePath:path.join(root,'gui-verification.key'),driveLetter:fixture.driveLetter};
+ await fs.mkdir(gui.storageDir);await fs.mkdir(gui.cacheDir);
+ const key=randomBytes(32);try{await fs.writeFile(gui.keyFilePath,key,{flag:'wx',mode:0o600});}finally{key.fill(0);}
+ return gui;
+}
+export async function retireGuiVaultKey(gui) {
+ const root=await fs.realpath(gui.root);const expected=path.join(root,'gui-verification.key');
+ assert.equal(path.resolve(gui.keyFilePath),expected);assert.equal(path.dirname(gui.storageDir),root);assert.equal(path.dirname(gui.cacheDir),root);
+ const info=await fs.lstat(expected);assert.equal(info.isFile(),true);assert.equal(info.isSymbolicLink(),false);assert.equal(await fs.realpath(expected),expected);
+ await fs.unlink(expected);return {ownedKeyRetired:true};
+}
+export function makeGuiVaultFormSteps(gui,mode,outputRoot) {
+ assert.ok(['create','unlock'].includes(mode));assert.match(gui.driveLetter,/^[D-Z]:$/);
+ const steps=[];const prefix='gui-'+mode;
+ const action=(id,op,values,expression)=>{steps.push({id:prefix+'-'+id,op,...values},{id:prefix+'-'+id+'-state',op:'poll',expression,equals:true,intervalMs:200},{id:prefix+'-'+id+'-capture',op:'capture',path:path.join(outputRoot,'runtime-'+prefix+'-'+id+'.png'),overwrite:false});};
+ action('key-mode','click',{selector:'.credential-selector label:has(input[value="keyFile"])'},"!document.querySelector('#key-fields').hidden && document.querySelector('#password-fields').hidden");
+ for(const [id,selector,text] of [['storage','#storage-input',gui.storageDir],['cache','#cache-input',gui.cacheDir],['key-path','#key-path',gui.keyFilePath]])action(id,'type',{selector,text,clear:true},`document.querySelector(${JSON.stringify(selector)}).value === ${JSON.stringify(text)}`);
+ if(mode==='create') {
+  action('picker-open','click',{selector:'#drive-letter-toggle'},"!document.querySelector('#drive-letter-options').hidden");
+  const selector=`#drive-letter-options button[data-letter="${gui.driveLetter[0]}"]`;
+  steps.push({id:prefix+'-letter-available',op:'poll',expression:`document.querySelector(${JSON.stringify(selector)}) !== null`,equals:true,intervalMs:200});
+  action('picker-letter','click',{selector},`document.querySelector('#drive-letter-options').hidden && document.querySelector('#drive-letter').value === ${JSON.stringify(gui.driveLetter)}`);
+ } else action('manual-letter','type',{selector:'#drive-letter',text:gui.driveLetter.toLowerCase(),clear:true},`document.querySelector('#drive-letter').value === ${JSON.stringify(gui.driveLetter)}`);
+ steps.push({id:prefix+'-submit-ready',op:'poll',expression:"!document.querySelector('#dialog-submit').disabled && document.querySelector('#dialog-error').hidden",equals:true,intervalMs:200});
+ return steps;
+}
 export async function checkMountedRuntime({fixture,launch,receipt,executePlan,prepareExit}) {
  const checks=[];let sequence=0;
  const execute=async steps=>executePlan({version:1,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:60000,steps});
@@ -90,7 +119,10 @@ export async function checkMountedRuntime({fixture,launch,receipt,executePlan,pr
  await click('select-folder-again',`#recycle-list tr:nth-child(${secondFolder+1}) input`,"!document.querySelector('#restore-recycled').disabled");await click('open-explicit-descendants','#restore-recycled',"document.querySelector('dialog[open] #descendant-dialog-title') !== null");
  await click('explicit-earlier-child',`dialog:has(#descendant-dialog-title) input[value="${earlierEntry.id}"]`,`document.querySelector(${JSON.stringify('dialog:has(#descendant-dialog-title) input[value="'+earlierEntry.id+'"]')}).checked`);
  await click('restore-explicit-child','dialog:has(#descendant-dialog-title) button[value="subtree"]',"document.querySelector('dialog[open] #descendant-dialog-title') === null && document.querySelector('#main-error').hidden");assert.equal(await fs.readFile(earlierPath,'utf8'),'Earlier independent deletion.\n');await assert.rejects(fs.stat(laterPath),error=>error.code==='ENOENT');checks.push('explicit-descendant-restored-with-independent-sibling-retained');
- await fs.writeFile(filename,'Offline verification bytes.\n');await click('drive-for-offline','[data-view="drive"]',"!document.querySelector('#view-drive').hidden");await click('sync-offline-file','#sync-button',"!document.querySelector('#sync-button').disabled && document.querySelector('#file-list input') !== null");await click('select-offline-file','#file-list input',"!document.querySelector('#offline-button').disabled");await click('keep-offline','#offline-button',"document.querySelector('#offline-count').textContent === '1'");await click('offline-view','[data-view="offline"]',"document.querySelector('[data-view=offline]').getAttribute('aria-current') === 'page'");assert.equal(await fs.readFile(filename,'utf8'),'Offline verification bytes.\n');checks.push('offline-pin-mounted-read');
+ // Folder restoration leaves multiple selectable files. Pin the named fixture,
+ // never whichever row happens to sort first or an ambiguous group of inputs.
+ const offlineSelector='#file-list input[aria-label="Select Runtime.txt"]';
+ await fs.writeFile(filename,'Offline verification bytes.\n');await click('drive-for-offline','[data-view="drive"]',"!document.querySelector('#view-drive').hidden");await click('sync-offline-file','#sync-button',`!document.querySelector('#sync-button').disabled && document.querySelector(${JSON.stringify(offlineSelector)}) !== null`);await click('select-offline-file',offlineSelector,"!document.querySelector('#offline-button').disabled");await click('keep-offline','#offline-button',"document.querySelector('#offline-count').textContent === '1'");await click('offline-view','[data-view="offline"]',"document.querySelector('[data-view=offline]').getAttribute('aria-current') === 'page'");assert.equal(await fs.readFile(filename,'utf8'),'Offline verification bytes.\n');checks.push('offline-pin-mounted-read');
  await click('settings-startup','[data-view="settings"]',"!document.querySelector('#view-settings').hidden");
  const startup=await asyncQuery('window.drive.status().then(s=>s.startupRegistration)');assert.equal(typeof startup?.enabled,'boolean','Native startup readback is required.');
  assert.equal(startup.verificationOnly,true);assert.equal(startup.enabled,false);
@@ -98,6 +130,27 @@ export async function checkMountedRuntime({fixture,launch,receipt,executePlan,pr
  await click('startup-disable','#startup-setting',"!document.querySelector('#startup-setting').disabled");const disabled=await asyncQuery('window.drive.status().then(s=>s.startupRegistration)');assert.equal(disabled.enabled,false);checks.push('native-startup-toggle-readback');
  await click('forget-owned-credential','#forget-credential',"!document.querySelector('#forget-credential').disabled");
  await click('drive-for-lock','[data-view="drive"]',"!document.querySelector('#view-drive').hidden");await click('lock','#lock-button',"document.querySelector('#vault-badge').dataset.state === 'locked'");const locked=await asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted}))');assert.equal(locked.locked,true);assert.equal(locked.mounted,false);checks.push('graceful-lock');
+ const gui=await prepareGuiVaultFixture(fixture);
+ const guiMounted="!document.querySelector('#vault-dialog').open && document.querySelector('#vault-badge').dataset.state === 'mounted' && document.querySelector('#main-error').hidden";
+ await click('gui-create-dialog','#create-button',"document.querySelector('#vault-dialog').open");
+ await execute(makeGuiVaultFormSteps(gui,'create',launch.outputRoot));await click('gui-create-submit','#dialog-submit',guiMounted);await waitBackend(false);
+ const guiState=await asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted,storageDir:s.storageDir,cacheDir:s.cacheDir,driveLetter:s.driveLetter}))');
+ assert.equal(guiState.mounted,true);assert.equal(guiState.locked,false);assert.equal(guiState.storageDir,gui.storageDir);assert.equal(guiState.cacheDir,gui.cacheDir);assert.equal(guiState.driveLetter,gui.driveLetter);
+ const guiFile=path.join(gui.driveLetter+'\\','GuiControls.txt');const guiContent='Created and reopened through real dialog controls.\n';
+ await fs.writeFile(guiFile,guiContent);assert.equal(await fs.readFile(guiFile,'utf8'),guiContent);checks.push('gui-create-picker-mounted-write-read');
+ await click('gui-create-sync','#sync-button',"!document.querySelector('#sync-button').disabled && document.querySelector('#main-error').hidden");
+ await click('gui-create-lock','#lock-button',"document.querySelector('#vault-badge').dataset.state === 'locked'");
+ const guiLocked=await asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted}))');assert.equal(guiLocked.locked,true);assert.equal(guiLocked.mounted,false);
+ await click('gui-unlock-dialog','#unlock-button',"document.querySelector('#vault-dialog').open");
+ await execute(makeGuiVaultFormSteps(gui,'unlock',launch.outputRoot));await click('gui-unlock-submit','#dialog-submit',guiMounted);await waitBackend(false);
+ const guiReopened=await asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted,driveLetter:s.driveLetter}))');assert.equal(guiReopened.locked,false);assert.equal(guiReopened.mounted,true);assert.equal(guiReopened.driveLetter,gui.driveLetter);assert.equal(await fs.readFile(guiFile,'utf8'),guiContent);checks.push('gui-unlock-manual-letter-persisted-read');
+ await click('gui-final-lock','#lock-button',"document.querySelector('#vault-badge').dataset.state === 'locked'");
+ const guiFinal=await asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted}))');assert.equal(guiFinal.locked,true);assert.equal(guiFinal.mounted,false);checks.push('gui-final-locked');
+ await click('gui-final-settings','[data-view="settings"]',"!document.querySelector('#view-settings').hidden");
+ for(const theme of ['dark','light'])await execute([{id:'gui-theme-'+theme,op:'type',selector:'#theme-setting',text:theme,clear:true},{id:'gui-theme-'+theme+'-state',op:'poll',expression:`document.documentElement.dataset.theme === ${JSON.stringify(theme)}`,equals:true,intervalMs:200},capture('gui-theme-'+theme)]);
+ for(const language of ['yue','bilingual','en'])await execute([{id:'gui-language-'+language,op:'type',selector:'#language-setting',text:language,clear:true},{id:'gui-language-'+language+'-state',op:'poll',expression:`document.querySelector('#language-setting').value === ${JSON.stringify(language)}`,equals:true,intervalMs:200},capture('gui-language-'+language)]);
+ checks.push('gui-built-theme-and-language-controls');
+ const guiCleanup=await retireGuiVaultKey(gui);
  await prepareExit();const quit=await execute([{id:'graceful-quit',op:'evaluate',expression:"window.__mfeQuit={done:false};window.drive.verificationQuit().then(value=>{window.__mfeQuit={done:true,value}},()=>{window.__mfeQuit={done:true,failed:true}});true"},{id:'quit-restoration',op:'poll',expression:"window.__mfeQuit.done",equals:true,intervalMs:50},{id:'quit-proof',op:'evaluate',expression:"window.__mfeQuit"}]);const quitResult=quit.results.at(-1).value;assert.equal(quitResult.failed,undefined);assert.equal(quitResult.value.restored,true);checks.push('verification-quit-startup-restored');
- return {quitRequested:true,startupRegistration:{initial:false,enabledReadback:enabled.enabled,disabledReadback:disabled.enabled,restored:quitResult.value.restored,verificationOnly:true},checks,rendererAssertionsVerified:true,mountedFilesystemVerified:true,nativeKeyboardVerified:false,pixelsInspected:false};
+ return {quitRequested:true,guiVault:{createdThroughControls:true,unlockedThroughControls:true,pickerVerified:true,manualLetterNormalized:true,mountedBytesVerified:true,locked:true,...guiCleanup},startupRegistration:{initial:false,enabledReadback:enabled.enabled,disabledReadback:disabled.enabled,restored:quitResult.value.restored,verificationOnly:true},checks,rendererAssertionsVerified:true,mountedFilesystemVerified:true,nativeKeyboardVerified:false,pixelsInspected:false};
 }
