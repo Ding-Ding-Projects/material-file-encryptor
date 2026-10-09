@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "images": [
+    {
+      "id": "hk-dish-0001",
+      "name": {
+        "en": "Classic Har Gow",
+        "zhHant": "蝦餃"
+      },
+      "file": "hk-dish-0001-classic-har-gow.png",
+      "bytes": 2406444,
+      "sha256": "c6ff2d32938f1e4c4ea685442f69227b8cd387f302ab8f8a62e8dd96c62b5ac0",
+      "width": 1254,
+      "height": 1254,
+      "mediaType": "image/png",
+      "sourceRepository": "Ding-Ding-Projects/dim-sum-photos",
+      "sourceReleaseTag": "catalog-v1"
+    }
+  ]
+}
