@@ -72,6 +72,20 @@ $env:MFE_GH_TOOL_ROOT = $ghPortable
 $env:PATH = "$(Split-Path $env:MFE_GIT_EXECUTABLE);$(Split-Path $env:MFE_GH_EXECUTABLE);$env:PATH"
 Write-Host "Verified portable $gitVersion and $ghVersion. No administrator rights required."
 if ($RuntimeToolsOnly) { return }
+$sevenZipArchive = Join-Path $tools "7zip-$($manifest.sevenZip.version).7z"
+Get-Verified $manifest.sevenZip $sevenZipArchive
+$sevenZipExtractor = Join-Path $tools "7zr-$($manifest.sevenZip.version).exe"
+Get-Verified @{ version = $manifest.sevenZip.version; url = $manifest.sevenZip.extractorUrl; sha256 = $manifest.sevenZip.extractorSha256 } $sevenZipExtractor
+$sevenZipRoot = Join-Path $tools "7zip-$($manifest.sevenZip.version)"
+$sevenZipExecutable = Join-Path $sevenZipRoot $manifest.sevenZip.executable
+if (!(Test-Path -LiteralPath $sevenZipExecutable) -or (Get-BootstrapDigest $sevenZipExecutable) -ne $manifest.sevenZip.executableSha256) {
+  $sevenZipStage = $sevenZipRoot + '.stage-' + [Guid]::NewGuid().ToString('N')
+  & $sevenZipExtractor x $sevenZipArchive "-o$sevenZipStage" -y
+  if ($LASTEXITCODE -ne 0 -or (Get-BootstrapDigest (Join-Path $sevenZipStage $manifest.sevenZip.executable)) -ne $manifest.sevenZip.executableSha256) { throw 'Pinned 7-Zip extraction failed.' }
+  if (Test-Path -LiteralPath $sevenZipRoot) { Move-Item -LiteralPath $sevenZipRoot -Destination ($sevenZipRoot + '.previous-' + [Guid]::NewGuid().ToString('N')) }
+  Move-Item -LiteralPath $sevenZipStage -Destination $sevenZipRoot
+}
+$env:MFE_ARCHIVE_EXECUTABLE = $sevenZipExecutable
 $nodeArchive = Join-Path $tools "node-$($manifest.node.version).zip"
 Get-Verified $manifest.node $nodeArchive
 $node = Join-Path $tools "node-v$($manifest.node.version)-win-x64"

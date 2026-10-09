@@ -11,5 +11,6 @@ module.exports = {
     name: 'MaterialFileEncryptor', authors: 'Ding Ding Projects',
     description: 'Encrypted storage mounted as a Windows drive',
     setupExe: 'MaterialFileEncryptor-Setup.exe',
+    ...(process.env.MFE_SQUIRREL_VENDOR_DIRECTORY ? { vendorDirectory: process.env.MFE_SQUIRREL_VENDOR_DIRECTORY } : {}),
   } }],
 };

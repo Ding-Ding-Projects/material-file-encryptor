@@ -19,4 +19,14 @@ Copy-Item native/vendor/WinFsp/License.txt out/native/notices/WinFsp-License.txt
 Copy-Item native/vendor/WinFsp/ORIGIN.md out/native/notices/WinFsp-Origin.md
 Copy-Item LICENSE out/native/notices/MaterialFileEncryptor-License.txt
 Invoke-Checked { npm.cmd run package -- --platform=win32 --arch=x64 }
-if ($Installer) { Invoke-Checked { npm.cmd run make -- --platform=win32 --arch=x64 --from-package } }
+if ($Installer) {
+  # Keep Squirrel's supported vendor layout, replacing its legacy ZIP writer only.
+  $vendorStage = Join-Path $root ('out\squirrel-vendor-' + [Guid]::NewGuid().ToString('N'))
+  Copy-Item -LiteralPath (Join-Path $root 'node_modules\electron-winstaller\vendor') -Destination $vendorStage -Recurse
+  Copy-Item -LiteralPath $env:MFE_ARCHIVE_EXECUTABLE -Destination (Join-Path $vendorStage '7z.exe') -Force
+  if ((Get-BootstrapDigest (Join-Path $vendorStage '7z.exe')) -ne $manifest.sevenZip.executableSha256) { throw 'Staged archive writer mismatch.' }
+  $env:MFE_SQUIRREL_VENDOR_DIRECTORY = $vendorStage
+  try { Invoke-Checked { npm.cmd run make -- --platform=win32 --arch=x64 --from-package } }
+  finally { Remove-Item Env:MFE_SQUIRREL_VENDOR_DIRECTORY -ErrorAction SilentlyContinue }
+  & "$PSScriptRoot\package-integrity.ps1"
+}
