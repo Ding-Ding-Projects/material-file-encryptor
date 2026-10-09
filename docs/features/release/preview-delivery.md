@@ -1,4 +1,4 @@
-# Preview delivery
+﻿# Preview delivery
 
 Every push and manual Windows workflow run builds through `build.bat /s`, then packages through `build-installer.bat /s`. These production commands run no tests or lint. The genuine unsigned Squirrel.Windows output contains Setup.exe, RELEASES, one full package, and any generated delta packages.
 
@@ -21,4 +21,4 @@ The verifier does not change LOCALAPPDATA or pretend to run in CI. It requires t
 
 ## Dependency and scope notes
 
-Bootstrap supplies pinned Node, .NET, WinFsp and, when absent, a verified portable GitHub CLI. The CLI is used only for release operations. No signing credential or paid certificate is required. Git transport runtime dependencies are owned by the transport implementation and must be bundled there before their behavior can be claimed.
+Bootstrap supplies pinned Node, .NET and WinFsp plus complete verified portable MinGit and GitHub CLI distributions. The runtime tool ZIPs are checked against pinned SHA-256, every extracted file is compared with its archive, and executable versions are checked using absolute paths. Existing valid caches are reused; replacement preserves the previous cache. No administrator rights or installed system Git are required. No signing credential or paid certificate is required. `build.bat` stages complete tool trees and included notices under `out/tools/git` and `out/tools/gh` before application packaging. Bootstrap exports absolute `MFE_GIT_EXECUTABLE` and `MFE_GH_EXECUTABLE` paths for local native verification. Packaged resource resolution and transport behavior remain independently verified by their owning implementation. `scripts/bootstrap.ps1 -RuntimeToolsOnly` activates and validates only these two portable tools without building the application.
