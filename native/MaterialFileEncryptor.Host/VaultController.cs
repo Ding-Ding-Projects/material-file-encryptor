@@ -109,7 +109,7 @@ internal sealed class VaultController : IDisposable
                 autoUnlock = identity is not null && SavedCredentialStore.Exists(identity),
                 history = new { versionCount = vault?.ListVersions().Count ?? 0, recycledCount = vault?.ListDeleted().Count ?? 0, pendingVersionCount = vault?.PendingVersionCount ?? 0, retentionDays = historyRetentionDays, gitAvailable = historyStore is not null },
                 storageFormat = vault?.StorageFormat,
-                transport = new { mode = transportMode, remoteRepository, available = vault is not null && (transportMode == "privateGit" ? transportAvailable : vault.Status.IsSourceAvailable), pendingSynchronization = vault is not null && transportMode == "privateGit" && (pendingPrivatePublication || historyPending || vault.Status.PendingCommits > 0 || vault.PendingVersionCount > 0), lastError = syncError },
+                transport = new { mode = transportMode, remoteRepository, available = vault is not null && (transportMode == "privateGit" ? transportAvailable : vault.Status.IsSourceAvailable), pendingPublication = vault is not null && transportMode == "privateGit" && (pendingPrivatePublication || historyPending || vault.Status.PendingCommits > 0), pendingSynchronization = vault is not null && transportMode == "privateGit" && (pendingPrivatePublication || historyPending || vault.Status.PendingCommits > 0 || vault.PendingVersionCount > 0), lastError = syncError },
                 availableDriveLetters = FreeDriveLetters()
             };
         }
