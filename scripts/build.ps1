@@ -1,4 +1,4 @@
-﻿param([switch]$Installer)
+param([switch]$Installer)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
@@ -23,10 +23,9 @@ if ($Installer) {
   # Preserve the lockfile-installed vendor helpers, replacing only the archive
   # engine with the pinned standalone distribution before Squirrel generates bytes.
   $vendor = Join-Path $tools ('squirrel-vendor-' + [Guid]::NewGuid().ToString('N'))
-  Copy-Item -LiteralPath (Join-Path $root 'node_modules\electron-winstaller\vendor') -Destination $vendor -Recurse
-  Copy-Item -LiteralPath $env:MFE_SEVENZIP_EXECUTABLE -Destination (Join-Path $vendor '7z-x64.exe') -Force
-  Copy-Item -LiteralPath $env:MFE_SEVENZIP_LICENSE -Destination (Join-Path $vendor '7zip-License.txt')
+  & "$PSScriptRoot\prepare-squirrel-vendor.ps1" -VendorSource (Join-Path $root 'node_modules\electron-winstaller\vendor') -OutputDirectory $vendor -ModernExecutable $env:MFE_SEVENZIP_EXECUTABLE -License $env:MFE_SEVENZIP_LICENSE -ExpectedSha256 $manifest.sevenZip.standaloneSha256 -ExpectedVersion $manifest.sevenZip.version -ReceiptPath (Join-Path $root 'out\evidence\squirrel-archiver.json')
   $env:MFE_SQUIRREL_VENDOR_DIRECTORY = $vendor
   Invoke-Checked { npm.cmd run make -- --platform=win32 --arch=x64 --from-package }
   Invoke-Checked { powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/verify-package-crc.ps1 -PackageDirectory out/make/squirrel.windows/x64 }
 }
+

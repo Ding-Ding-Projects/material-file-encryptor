@@ -7,8 +7,17 @@ $input=Join-Path $fixture 'input'; $valid=Join-Path $fixture 'valid'; $invalid=J
 New-Item -ItemType Directory -Force $input,$valid,$invalid | Out-Null
 [IO.File]::WriteAllBytes((Join-Path $input 'payload.bin'),[byte[]](0..255))
 [IO.File]::WriteAllText((Join-Path $input 'manifest.txt'),'bounded package CRC regression')
+$vendorSource=Join-Path $fixture 'vendor-source'
+$vendorOutput=Join-Path $fixture 'vendor-output'
+New-Item -ItemType Directory $vendorSource | Out-Null
+foreach($name in @('Squirrel.exe','7z.exe','7z-x64.exe')){[IO.File]::WriteAllText((Join-Path $vendorSource $name),'old helper fixture')}
+$receiptPath=Join-Path $fixture 'archiver.json'
+& ./scripts/prepare-squirrel-vendor.ps1 -VendorSource $vendorSource -OutputDirectory $vendorOutput -ModernExecutable $env:MFE_SEVENZIP_EXECUTABLE -License $env:MFE_SEVENZIP_LICENSE -ExpectedSha256 $manifest.sevenZip.standaloneSha256 -ExpectedVersion $manifest.sevenZip.version -ReceiptPath $receiptPath
+$receipt=Get-Content $receiptPath -Raw | ConvertFrom-Json
+if(!$receipt.verifiedBeforePackaging -or $receipt.canonicalExecutable -ne '7z.exe' -or $receipt.executables.Count -ne 2){throw 'Canonical Squirrel tool receipt missing'}
+$canonicalTool=Join-Path $vendorOutput '7z.exe'
 Push-Location $input
-try { & $env:MFE_SEVENZIP_EXECUTABLE a (Join-Path $valid 'fixture-full.nupkg') -tzip -mmt=off payload.bin manifest.txt | Out-Null; if($LASTEXITCODE -ne 0){throw 'Pinned archive creation failed'} }
+try { & $canonicalTool a (Join-Path $valid 'fixture-full.nupkg') -tzip -mmt=off payload.bin manifest.txt | Out-Null; if($LASTEXITCODE -ne 0){throw 'Pinned archive creation failed'} }
 finally { Pop-Location }
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/verify-package-crc.ps1 -PackageDirectory $valid
 if($LASTEXITCODE -ne 0){throw 'Valid archive rejected'}
@@ -27,3 +36,4 @@ if($LASTEXITCODE -eq 0){throw 'Invalid CRC accepted'}
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/verify-package-crc.ps1 -PackageDirectory $valid
 if($LASTEXITCODE -ne 0){throw 'Restored archive rejected'}
 Write-Host 'PASS pinned modern archive round-trip bytes, all-entry CRC, deliberate CRC rejection, restored validation.'
+
