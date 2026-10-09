@@ -1,6 +1,6 @@
 # Active implementation goal
 
-Deliver Material File Encryptor as a real Windows Explorer virtual drive with encrypted backing storage and an encrypted offline cache.
+Deliver the first Material File Encryptor preview as a real Windows Explorer virtual drive with fixed encrypted chunks, Git history, folder/private GitHub transport, an encrypted offline cache, and recoverable deletion.
 
 ## Acceptance criteria
 
@@ -15,11 +15,11 @@ Deliver Material File Encryptor as a real Windows Explorer virtual drive with en
 - [x] Publish a separate GitHub Pages documentation site with truthful downloads, diagrams, and real application captures.
 - [x] Verify native behavior on Windows and record unsupported or unverified paths honestly.
 - [ ] Complete installed-application and uninstall verification after resolving the missing-registration result.
-- [ ] Finish the interactive drive-letter picker and manual-entry fallback, including styling and application checks.
+- [ ] Complete final built-application verification of the editable drive-letter picker and manual-entry fallback.
 - [x] Preserve frequent source checkpoints and integrate verified work into the default branch.
 
 Windows CI has verified startup registration and its enable/disable setting. A fresh Windows sign-in remains unverified.
 
-Source `c74b3a6`, Windows run `37863451177`, passed 34 real mounted-filesystem checks and the packaged GUI workflow. Setup installed and all 198 selected runtime entries matched, but verification stopped at `INSTALL_REGISTRATION_MISSING`; installed-app and removal checks did not run. The unfinished editable picker is preserved on the task branch at `6379eed` and is not on main.
+The editable picker is included in the current integration candidate. Source `216829e1` passed 39 real mounted-filesystem checks after repairing held-deleted-handle restoration and concurrent identity reconciliation. Source `4f0a4b48` passed the integrated JavaScript suite, ten live private transport checks and complete Squirrel package integrity. Final GUI, installed-app, removal and downloaded-release verification remain pending. [Exact verification boundaries](docs/features/release/preview-verification.md).
 
-The task plan is the active tracker. Native app-level goal tooling is unavailable in the current session; no tool-created goal or token budget is claimed.
+The roadmap tracks preview delivery. Earlier Windows run `37863451177` remains historical evidence of `INSTALL_REGISTRATION_MISSING`; it is not a verdict about the current candidate.

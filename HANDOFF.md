@@ -1,21 +1,29 @@
-# Preview implementation handoff
+# First-preview continuation
 
-The first preview integration implements fixed encrypted chunks, real Git history, selectable folder/private GitHub transport, History and Recycle Bin. Production delivery is restricted to main. Recovery branches are published separately and are not release acceptance.
+The current integration candidate combines encrypted format 2 chunks, real Git history, folder/private GitHub transport, History, Recycle Bin and the editable drive-letter picker. `main` remains at the earlier public baseline until final local acceptance.
 
-Verified milestones: 31 core checks, seven controller groups, 39 transport checks, ten live checks against a private synthetic GitHub fixture, and 32 non-browser JavaScript checks with one platform-specific skip. The controller regressions include callback-safe hydration and replacement saves after a chunk-cap change. The production package passed at f3c6eddcb69fafbd347948d57387b20702b2eaa8; newer source requires a rebuilt candidate. Squirrel setup from the earlier a265 candidate is diagnostic only.
+## Verified work
 
-A current-account hidden desktop exercised actual packaged navigation, themes, languages and locked History/Recycle Bin. Its assertions passed, but lifecycle cleanup reported failure after the desktop disappeared; the original receipt remains failed. The next runner records full process identities before teardown. No passing installed-runtime claim exists.
+- `24e2fd16`: isolated storage subprocess input and bounded output/error/exit cancellation. Core 31, controller eight groups and transport 42 checks passed at that repair.
+- `216829e1`: restoration and concurrent-replay identity repairs. Core 34 and controller eight groups passed. Real WinFsp verification passed 39 named checks in 191.873 seconds, with source and executable/DLL hashes unchanged. This includes an actual held deleted FileStream writing without altering the restored file.
+- `8105373`: source renderer lifecycle and readable selection headings. The old 48-pixel rule was deliberately red before the repair passed. The source fixture is separate from packaged runtime evidence.
+- `4f0a4b48`: integrated JavaScript suite 35 passed, zero failed, one Unix-only skip; ten real private synthetic transport checks; genuine unsigned Squirrel build and complete 739-entry decompression/CRC verification.
+- Explicit preview dispatch requires its accepted source SHA to match the actual checkout. Normal main pushes build without publishing duplicate releases.
 
-WinFsp was installed through native elevation with exit 0 and its registration read back. All 37 mounted self-tests passed at a265d860907013d3216b8768dfee64acac457112, including the exact 90,000,000/90,000,001 boundary and history-preserving recycling. Later hydration changes need final mounted verification.
+## Runtime evidence and next steps
 
-The f3c6 hidden-desktop run verified native Tab focus and historical content restoration, then timed out while waiting for the background synchronization banner during Bin restoration. Owned processes and the hidden desktop were confirmed absent, and its synthetic credential was retired. Local mutation completion and background transfer completion now have separate assertions. A bounded hidden-native replay verified version/Bin restored bytes; final background history completion remains under investigation.
+The `994ff9b` packaged baseline reproduced a synchronization failure. The `24e2fd1` run completed version restoration, recycling, folder-only restore and explicit descendant selection, then stopped at an ambiguous offline-file test selector. Its owned processes and desktop were removed, and the synthetic saved credential was forgotten. Failed receipts remain failed. The corrected selector chooses Runtime.txt by its accessible name.
 
-Current-account diagnostic setup created matching uninstall registration in both registry views, so the earlier CI registration failure has not reproduced here. Setup exit status and full package integrity remain unverified. The diagnostic installation remains task-owned and retained while a reported package-entry CRC mismatch is investigated. Do not overwrite it or claim installer acceptance.
+The final runtime pass must use the combined rebuilt candidate and preserve each capture's real timestamp/hash receipt. Complete actual create/unlock/picker interactions, history/recycling, offline pinning, language/theme transitions, startup toggles, graceful lock/exit and inspected captures. Then snapshot exact packaged payload hashes, install genuine Squirrel into the preflighted fresh current-user destination, verify installed execution and native registration, and run genuine removal. Do not overwrite any pre-existing installation. Capture remaining uninstall entries honestly.
 
-Folder recovery uses a conservative explicit-selection interface: candidate deleted descendants carry opaque identifiers, users choose which to restore, and older independent deletions remain untouched unless selected. Exact known recursive deletion batches remain recoverable together.
+After local acceptance, integrate into main and verify the remote ref. Dispatch one unique preview publication for that exact source, independently download/hash the released bytes, and repeat installed verification using the downloaded installer. Update public evidence, README, roadmap, categorized documentation and release notes only with observed results. Finish only task-owned ancestry-proven cleanup after the required verified external archive.
 
-Next: finish synchronization and package-integrity diagnostics; rebuild the exact candidate after all diagnostic processes release its runtime; run final mounted and hidden-desktop checks including explicit descendant selection; verify installer lifecycle using actual completion evidence; publish and independently download/hash/verify the release; refresh final captures and delivery receipts; integrate into main and verify remote refs. Preserve original vaults, existing installations and credentials. No host power or login action is authorized.
+## Boundaries and external state
+
+Use synthetic vaults and isolated profiles. Preserve original vaults, existing installations, protected credentials and unrelated work. No host power/login action, automatic updater, permanent history purge or broad operating-system/provider certification is in scope. The private transport fixture is retained, and its identity is kept out of public documentation.
+
+GitHub Projects is unavailable with the current authorization. The wiki is enabled in metadata, but its Git endpoint reports `Repository not found`; no wiki publication is claimed. Categorized documentation is checked in. No installed-runtime or public-release completion is claimed yet.
 
 Task: https://github.com/Ding-Ding-Projects/material-file-encryptor/issues/1
 Progress: https://github.com/Ding-Ding-Projects/material-file-encryptor/discussions/2
-GitHub Projects is unavailable with the current read:project scope. Historical Windows evidence remains bound to c74b3a6828e3d1893015598f2df1c9bd4ce84c32 and its INSTALL_REGISTRATION_MISSING result.
+Verification: [source-bound results](docs/features/release/preview-verification.md)

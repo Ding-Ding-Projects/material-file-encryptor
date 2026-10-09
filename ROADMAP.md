@@ -8,6 +8,8 @@
 - [ ] Verify 30-second version timing, manual versions and restore as a new version.
 - [ ] Verify file/subtree recycling, bulk restore, collision preservation and history after emptying the bin.
 - [ ] Verify non-destructive copy upgrade from existing vaults.
+- [x] Repair restoration identity reuse while deleted handles remain open; prove original-handle write isolation through actual WinFsp operations.
+- [x] Persist concurrent live-identity reconciliation and verify repeated replay, a new live lease and another device reopening.
 
 ## Desktop and delivery
 
@@ -16,6 +18,8 @@
 - [ ] Build and publish an unsigned Squirrel preview with exact source and package evidence.
 - [ ] Independently download, hash and verify the released installer.
 - [ ] Refresh documentation and real captures from the final verified candidate.
+- [x] Replace the old archive writer and verify every Squirrel package entry through decompression and CRC checks.
+- [x] Make preview publication an explicit source-pinned dispatch rather than a side effect of documentation pushes.
 
 ## Explicit follow-up work
 
