@@ -251,7 +251,9 @@ try {
         Assert-Check ($desktopExit -eq 0 -and $installedReceipt.passed -eq $true -and $installedReceipt.mountedFilesystemChecked -eq $true -and $safeToUninstall) 'INSTALLED_DESKTOP_CHECK_FAILED'
         Wait-Check { (Owned-Processes).Count -eq 0 } 30 'APPLICATION_DID_NOT_EXIT'
         $receipt.installedApplication.noProcessesAfterExit = $true
-        Assert-Check ((Owned-StartupEntries).Count -gt 0) 'INSTALLED_STARTUP_REGISTRATION_MISSING'
+        $startupProof = $installedReceipt.startupRegistration
+        Assert-Check ($startupProof.verificationOnly -eq $true -and $startupProof.initial -eq $false -and $startupProof.enabledReadback -eq $true -and $startupProof.disabledReadback -eq $false -and $startupProof.restored -eq $true) 'INSTALLED_STARTUP_TOGGLE_NOT_VERIFIED'
+        Assert-Check ((Owned-StartupEntries).Count -eq 0) 'VERIFICATION_STARTUP_NOT_RESTORED'
     } finally {
         $env:MFE_DESKTOP_EXECUTABLE = $oldExecutable
         $env:MFE_DESKTOP_EVIDENCE_DIR = $oldEvidence
