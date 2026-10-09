@@ -83,6 +83,7 @@ function mountState() {
  return state.locked ? 'Locked' : state.mounted ? 'Mounted' : 'Unlocked · not mounted';
 }
 function renderAvailability() {
+ $('upgrade-vault').hidden = state?.locked !== false || state?.storageFormat !== 1; $('upgrade-vault').disabled=busy;
  const unlocked = state && !state.locked, mounted = unlocked && state.mounted;
  const file = state?.files?.find(file => file.id === selected);
  for (const id of ['create-button','unlock-button']) $(id).disabled = busy || !api || !state;
@@ -168,10 +169,11 @@ function changeView(next) {
  if (['history','recycle'].includes(next)) loadArchive(next);
 }
 function updateDialog() {
- const creating = dialogMode === 'create';
- $('dialog-title').textContent = `${preferences.emoji ? '🔐 ' : ''}${t(creating ? 'Create a drive' : 'Unlock existing drive')}`;
- setText('dialog-description',creating ? 'Choose the encrypted storage and local encrypted cache, then set your unlock method.' : 'Choose your existing encrypted storage and enter its password or key file.');
- setText('dialog-submit',creating ? 'Create & mount' : 'Unlock & mount');
+ const upgrading = dialogMode === 'upgrade';
+ const creating = dialogMode !== 'unlock';
+ $('dialog-title').textContent = `${preferences.emoji ? '🔐 ' : ''}${t(upgrading ? 'Upgrade by creating a copy' : creating ? 'Create a drive' : 'Unlock existing drive')}`;
+ setText('dialog-description',upgrading ? 'Choose separate destination storage and cache folders. The original vault is preserved. Choose credentials for the upgraded copy. No conversion happens when opening a vault.' : creating ? 'Choose the encrypted storage and local encrypted cache, then set your unlock method.' : 'Choose your existing encrypted storage and enter its password or key file.');
+ setText('dialog-submit',upgrading ? 'Create upgraded copy' : creating ? 'Create & mount' : 'Unlock & mount');
  $('confirm-password-fields').hidden = !creating; $('generate-key').hidden = !creating; $('create-split').hidden = !creating;
  const isKey = document.querySelector('input[name="credential-mode"]:checked').value === 'keyFile';
  $('password-fields').hidden = isKey; $('key-fields').hidden = !isKey;
@@ -233,7 +235,7 @@ function updateDriveLetters(preserveSelection = true) {
 
 function openVaultDialog(mode) {
  dialogMode = mode; driveLetterEdited = false; closeDrivePicker(); $('vault-form').reset(); $('dialog-error').hidden = true;
- $('storage-input').value = state?.storageDir || ''; $('cache-input').value = state?.cacheDir || state?.defaults?.cacheDir || '';
+ $('storage-input').value = mode === 'upgrade' ? '' : state?.storageDir || ''; $('cache-input').value = mode === 'upgrade' ? '' : state?.cacheDir || state?.defaults?.cacheDir || '';
  $('transport-mode').value=state?.transport?.mode || 'folder'; $('remote-repository').value=state?.transport?.remoteRepository || ''; $('private-git-fields').hidden=$('transport-mode').value!=='privateGit';
  $('password-input').type = 'password'; $('show-password').setAttribute('aria-pressed','false'); setText('show-password','Show');
  updateDriveLetters(false);
@@ -283,12 +285,13 @@ listen('generate-key','click',async () => { const path = await api.generateKeyFi
 listen('vault-form','submit',async event => {
  event.preventDefault(); if (busy) return;
  const isKey = document.querySelector('[name=credential-mode]:checked').value === 'keyFile';
- if (!isKey && dialogMode === 'create' && $('password-input').value !== $('confirm-password').value) return showError('The passwords do not match.',true);
+ if (!isKey && dialogMode !== 'unlock' && $('password-input').value !== $('confirm-password').value) return showError('The passwords do not match.',true);
  const options = {transport:$('transport-mode').value,storageDir:$('storage-input').value,cacheDir:$('cache-input').value,driveLetter:`${normalizedDriveLetter($('drive-letter').value)}:`};
  if (options.transport === 'privateGit') { options.remoteRepository = $('remote-repository').value.trim(); if (!/^[A-Za-z0-9][A-Za-z0-9-]{0,38}\/[A-Za-z0-9_.-]{1,100}$/.test(options.remoteRepository)) return showError(t('Enter owner/repository.'),true); }
  if (isKey) options.keyFilePath = $('key-path').value; else options.password = $('password-input').value;
- if (dialogMode === 'create') { try { options.partSizeBytes = parsePartSize($('create-split-value').value,$('create-split-unit').value); } catch(error) { return showError(error,true); } }
- const result = await run('Mounting drive…',() => api[dialogMode](options),dialogMode === 'create' ? 'Drive created.' : 'Drive unlocked.',true);
+ if (dialogMode !== 'unlock') { try { options.partSizeBytes = parsePartSize($('create-split-value').value,$('create-split-unit').value); } catch(error) { return showError(error,true); } }
+ if(dialogMode === 'upgrade') {const normalize=value=>value.replace(/[\\/]+$/,'').toLowerCase();const destinations=[options.storageDir,options.cacheDir].map(normalize);const originals=[state?.storageDir,state?.cacheDir].filter(Boolean).map(normalize);if(destinations[0]===destinations[1]||destinations.some(path=>originals.some(original=>path===original||path.startsWith(original+'\\')||path.startsWith(original+'/')||original.startsWith(path+'\\')||original.startsWith(path+'/'))))return showError(t('Choose separate destination folders outside the original vault.'),true);}
+ const result = await run('Mounting drive…',() => api[dialogMode](options),dialogMode === 'upgrade' ? 'Upgraded copy created. Original vault preserved.' : dialogMode === 'create' ? 'Drive created.' : 'Drive unlocked.',true);
  if (result?.ok) closeVaultDialog();
 });
 listen('lock-button','click',() => run('Locking drive…',() => api.lock(),'Drive locked.'));
@@ -341,6 +344,7 @@ for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListene
  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
 });
+listen('upgrade-vault','click',()=>openVaultDialog('upgrade'));
 initializeArchive();
 applyPreferences(); renderAvailability();
 if (!api) { setText('vault-badge','Not mounted'); showError('The desktop bridge is unavailable. Open this interface through Material File Encryptor.'); }

@@ -10,6 +10,7 @@ export function validateRequest(method, value = {}) {
     resplit: { path: 'relative', partSizeBytes: 'size?' }, sync: {}, listVersions: { entryId: 'path?', retentionDays: 'days?' }, saveVersion: { path: 'relative?' }, restoreVersion: { versionId: 'path' }, listDeleted: {}, restoreDeleted: { ids: 'ids' }, emptyRecycleBin: {}, setPreferences: { historyRetentionDays: 'days?', startup: 'boolean?', autoUnlock: 'boolean?', driveLetter: 'drive?' },
     windowControl: { action: 'window' }, openExternal: { url: 'url' }, installDriver: {}, importVocabulary: {},
   };
+  schemas.upgradeVault = schemas.createVault;
   if (typeof method !== 'string' || !Object.hasOwn(schemas, method)) throw new Error('Unsupported request.');
   const schema = schemas[method];
   if (!schema || Object.keys(value).some(key => !Object.hasOwn(schema, key))) throw new Error('Unsupported request.');
@@ -36,8 +37,8 @@ export function validateRequest(method, value = {}) {
     }
     if (!valid) throw new Error(`Invalid ${key}.`);
   }
-  if (['createVault', 'unlockVault'].includes(method) && Boolean(value.password) === Boolean(value.keyFilePath)) throw new Error('Choose either a password or a key file.');
-  if (['createVault','unlockVault'].includes(method) && value.transport === 'privateGit' && !value.remoteRepository) throw new Error('Enter the private repository as owner/repository.');
+  if (['createVault', 'unlockVault', 'upgradeVault'].includes(method) && Boolean(value.password) === Boolean(value.keyFilePath)) throw new Error('Choose either a password or a key file.');
+  if (['createVault','unlockVault','upgradeVault'].includes(method) && value.transport === 'privateGit' && !value.remoteRepository) throw new Error('Enter the private repository as owner/repository.');
   return value.driveLetter === undefined ? value : { ...value, driveLetter: value.driveLetter[0].toUpperCase() + ':' };
 }
 export function trustedFrame(event, window, rendererURL) {

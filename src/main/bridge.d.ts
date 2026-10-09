@@ -1,6 +1,7 @@
 export interface VaultVersionInfo { id: string; entryId: string; path: string; timestampUtc: string; length: number; isDirectory: boolean; deleted: boolean; isAvailable: boolean }
 export interface DriveFile { id: string; path: string; size: number; modified: string; partCount: number; partSizeBytes: number; offline: boolean }
 export interface DriveState {
+  storageFormat?: 1 | 2;
   locked: boolean; mounted: boolean; driveLetter?: string; storageDir?: string; cacheDir: string;
   files: DriveFile[]; availableDriveLetters: string[]; partSizeBytes?: number; autoUnlock?: boolean;
   history?: { versionCount: number; recycledCount: number; pendingVersionCount: number; retentionDays: number | null; gitAvailable: boolean };
@@ -13,6 +14,7 @@ export interface DriveState {
 export type VaultOptions = { storageDir: string; cacheDir: string; driveLetter: string; transport?: 'folder' | 'privateGit'; remoteRepository?: string; autoUnlock?: boolean } & ({ password: string; keyFilePath?: never } | { password?: never; keyFilePath: string });
 export interface DriveBridge {
   status(): Promise<DriveState>; create(options: VaultOptions & { partSizeBytes: number }): Promise<DriveState>;
+  upgrade(options: VaultOptions & { partSizeBytes: number }): Promise<DriveState>;
   unlock(options: VaultOptions): Promise<DriveState>; lock(): Promise<DriveState>;
   mount(options?: { driveLetter?: string }): Promise<DriveState>; unmount(): Promise<DriveState>;
   chooseFolder(kind?: 'storage' | 'cache'): Promise<string | null>; chooseFiles(): Promise<string[]>;
