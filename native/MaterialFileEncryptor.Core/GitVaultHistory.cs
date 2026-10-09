@@ -13,22 +13,45 @@ public interface IVaultProcessRunner
 }
 public sealed class VaultProcessRunner : IVaultProcessRunner
 {
+    private readonly string? gitExecutable, ghExecutable;
+    public VaultProcessRunner(string? gitExecutable = null, string? ghExecutable = null) { this.gitExecutable = gitExecutable; this.ghExecutable = ghExecutable; }
+    private string Resolve(string name)
+    {
+        var explicitPath = name == "git" ? gitExecutable : name == "gh" ? ghExecutable : null;
+        if (explicitPath != null) return File.Exists(explicitPath) ? Path.GetFullPath(explicitPath) : throw new IOException("Configured storage tool is unavailable.");
+        var bundled = Path.Combine(AppContext.BaseDirectory, "resources", "tools", name, name == "git" ? "cmd" : "bin", name + ".exe");
+        return File.Exists(bundled) ? bundled : name;
+    }
     public async Task<VaultProcessResult> RunAsync(string executable, IReadOnlyList<string> arguments, string workingDirectory, CancellationToken cancellationToken = default)
     {
-        var start = new ProcessStartInfo(executable) { WorkingDirectory = workingDirectory, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        deadline.CancelAfter(TimeSpan.FromSeconds(60));
+        var ct = deadline.Token;
+        var start = new ProcessStartInfo(Resolve(executable)) { WorkingDirectory = workingDirectory, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
+        if (executable == "git")
+        {
+            foreach (var setting in new[] { "core.fsmonitor=false", "core.hooksPath=/dev/null", "core.attributesFile=" + ("/dev/null"), "credential.helper=", "credential.helper=!'" + Resolve("gh").Replace("\\", "/").Replace("'", "'\"'\"'") + "' auth git-credential", "commit.gpgsign=false" }) { start.ArgumentList.Add("-c"); start.ArgumentList.Add(setting); }
+        }
         foreach (var argument in arguments) start.ArgumentList.Add(argument);
         start.Environment["GIT_TERMINAL_PROMPT"] = "0";
         start.Environment["GIT_CONFIG_NOSYSTEM"] = "1";
+        start.Environment["GIT_CONFIG_GLOBAL"] = "/dev/null";
+        start.Environment["GIT_CONFIG_COUNT"] = "0";
+        start.Environment["GIT_ATTR_NOSYSTEM"] = "1";
+        foreach (var variable in new[] { "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_CONFIG", "GIT_CONFIG_PARAMETERS", "GIT_EXEC_PATH", "GIT_TEMPLATE_DIR", "GIT_ASKPASS", "SSH_ASKPASS", "GIT_SSH", "GIT_SSH_COMMAND", "GIT_PROXY_COMMAND" }) start.Environment.Remove(variable);
         start.Environment["GIT_AUTHOR_NAME"] = "Vault storage";
         start.Environment["GIT_AUTHOR_EMAIL"] = "vault@localhost";
         start.Environment["GIT_COMMITTER_NAME"] = "Vault storage";
         start.Environment["GIT_COMMITTER_EMAIL"] = "vault@localhost";
-        using var process = Process.Start(start) ?? throw new IOException("Unable to start storage tool.");
+        Process process;
+        try { process = Process.Start(start) ?? throw new IOException("Unable to start storage tool."); }
+        catch (System.ComponentModel.Win32Exception) { throw new IOException("Required storage tool is unavailable. Install the bundled Git and GitHub CLI tools."); }
+        using var ownedProcess = process;
         using var output = new MemoryStream();
-        var copy = process.StandardOutput.BaseStream.CopyToAsync(output, cancellationToken);
-        var error = process.StandardError.ReadToEndAsync(cancellationToken);
-        try { await Task.WhenAll(copy, process.WaitForExitAsync(cancellationToken)); }
-        catch { if (!process.HasExited) process.Kill(true); throw; }
+        var copy = process.StandardOutput.BaseStream.CopyToAsync(output, ct);
+        var error = process.StandardError.ReadToEndAsync(ct);
+        try { await Task.WhenAll(copy, process.WaitForExitAsync(ct)); }
+        catch { if (!process.HasExited) process.Kill(true); using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(5)); await process.WaitForExitAsync(stop.Token); throw; }
         return new(process.ExitCode, output.ToArray(), await error);
     }
 }
@@ -67,32 +90,62 @@ public sealed class GitVaultHistory
     public async Task InitializeAsync(CancellationToken ct = default)
     {
         Directory.CreateDirectory(HistoryRoot); CheckPath(HistoryRoot);
+        CheckPath(Path.Combine(HistoryRoot, ".git"));
+        if (File.Exists(Path.Combine(HistoryRoot, ".git"))) throw new IOException("Storage history requires its own Git directory.");
         if (!Directory.Exists(Path.Combine(HistoryRoot, ".git"))) await Git(ct, "init", "-b", "main");
-        await Git(ct, "config", "core.hooksPath", Path.Combine(HistoryRoot, ".disabled-hooks"));
+        await Git(ct, "config", "core.hooksPath", "/dev/null");
         await Git(ct, "config", "commit.gpgsign", "false");
+    }
+    internal async Task<Dictionary<string,string>> TreeAsync(string reference, CancellationToken ct)
+    {
+        var result = await Runner.RunAsync("git", ["ls-tree", "-r", reference], HistoryRoot, ct);
+        if (result.ExitCode != 0) return [];
+        var tree = new Dictionary<string,string>(StringComparer.Ordinal);
+        foreach (var line in result.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var fields = line.Split('\t', 2); var header = fields[0].Split(' ');
+            if (fields.Length != 2 || header.Length != 3 || header[0] != "100644" || header[1] != "blob") throw new InvalidDataException("Unsupported repository tree entry.");
+            tree.Add(ValidateRelativePath(fields[1]), header[2]);
+        }
+        return tree;
+    }
+    internal async Task<string?> HeadAsync(CancellationToken ct)
+    {
+        var head = await Runner.RunAsync("git", ["rev-parse", "--verify", "HEAD"], HistoryRoot, ct);
+        return head.ExitCode == 0 ? head.Text.Trim() : null;
+    }
+    internal async Task<string> PublishTreeAsync(Dictionary<string,string> tree, string message, IReadOnlyList<string> parents, CancellationToken ct)
+    {
+        await Git(ct, "read-tree", "--empty");
+        foreach (var item in tree) await Git(ct, "update-index", "--add", "--cacheinfo", "100644," + item.Value + "," + ValidateRelativePath(item.Key));
+        var treeId = (await Git(ct, "write-tree")).Text.Trim();
+        var args = new List<string> { "commit-tree", treeId, "-m", message };
+        foreach (var parent in parents) { args.Add("-p"); args.Add(parent); }
+        var commit = (await Git(ct, args.ToArray())).Text.Trim();
+        await Git(ct, "update-ref", "refs/heads/main", commit);
+        await Git(ct, "symbolic-ref", "HEAD", "refs/heads/main");
+        return commit;
+    }
+    internal async Task CheckIndexAsync(IReadOnlyCollection<string> allowed, CancellationToken ct)
+    {
+        var staged = await Git(ct, "diff", "--cached", "--name-only");
+        foreach (var path in staged.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            if (!allowed.Contains(ValidateRelativePath(path))) throw new InvalidDataException("Unrelated staged data must be preserved separately before recording.");
     }
     public async Task<string?> RecordSnapshotAsync(IEnumerable<string> encryptedRelativePaths, CancellationToken ct = default)
     {
         await InitializeAsync(ct);
         var paths = encryptedRelativePaths.Select(ValidateRelativePath).Distinct(StringComparer.Ordinal).ToArray();
+        await CheckIndexAsync(paths, ct);
+        var parent = await HeadAsync(ct); var tree = await TreeAsync("HEAD", ct); var changed = false;
         foreach (var relative in paths)
         {
-            var source = Path.Combine(SourceRoot, relative); var destination = Path.Combine(HistoryRoot, relative);
-            CheckPath(source); CheckPath(destination);
-            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-            if (File.Exists(destination))
-            {
-                using var sourceStream = File.OpenRead(source); using var destinationStream = File.OpenRead(destination);
-                if (!System.Security.Cryptography.SHA256.HashData(sourceStream).SequenceEqual(System.Security.Cryptography.SHA256.HashData(destinationStream))) throw new InvalidDataException("Immutable ciphertext collision.");
-            }
-            else File.Copy(source, destination, true);
+            var source = Path.Combine(SourceRoot, relative); CheckPath(source);
+            var blob = (await Git(ct, "hash-object", "-w", "--no-filters", "--", source)).Text.Trim();
+            if (tree.TryGetValue(relative, out var old)) { if (old != blob) throw new InvalidDataException("Immutable ciphertext collision."); }
+            else { tree.Add(relative, blob); changed = true; }
         }
-        if (paths.Length == 0) return null;
-        await Git(ct, new[] { "add", "--sparse", "--" }.Concat(paths).ToArray());
-        var changed = await Git(ct, "diff", "--cached", "--name-only");
-        if (string.IsNullOrWhiteSpace(changed.Text)) return null;
-        await Git(ct, "commit", "-m", "Store encrypted snapshot", "--no-verify");
-        return (await Git(ct, "rev-parse", "HEAD")).Text.Trim();
+        return changed ? await PublishTreeAsync(tree, "Store encrypted snapshot", parent == null ? [] : [parent], ct) : null;
     }
     public async Task<IReadOnlyList<string>> ListSnapshotsAsync(CancellationToken ct = default)
     {
@@ -107,4 +160,3 @@ public sealed class GitVaultHistory
         return (await Git(ct, "show", snapshot + ":" + ValidateRelativePath(relativePath))).Output;
     }
 }
-

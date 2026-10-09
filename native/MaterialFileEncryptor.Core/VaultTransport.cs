@@ -21,12 +21,14 @@ public sealed class FolderVaultTransport(string sourceRoot) : IVaultTransport
     }
 }
 
-/// <summary>Private GitHub transport using a partial clone and metadata-only sparse checkout.</summary>
+/// <summary>Private GitHub transport using a partial clone and explicit metadata-only hydration.</summary>
 public sealed class PrivateGitHubVaultTransport : IVaultTransport
 {
     private readonly GitVaultHistory history;
     private readonly string repository;
     private bool ready;
+    private HashSet<string> available = new(StringComparer.Ordinal);
+    public bool ContainsFile(string relativePath) => available.Contains(GitVaultHistory.ValidateRelativePath(relativePath));
     public PrivateGitHubVaultTransport(string sourceRoot, string historyRoot, string repository, IVaultProcessRunner? runner = null)
     {
         if (!System.Text.RegularExpressions.Regex.IsMatch(repository, @"\A[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*\z")) throw new ArgumentException("Use an owner/repository identifier.");
@@ -44,9 +46,11 @@ public sealed class PrivateGitHubVaultTransport : IVaultTransport
     public async Task InitializeAsync(CancellationToken ct = default)
     {
         if (ready) return;
+        var cloned = false;
         await ValidatePrivate(ct);
         if (!Directory.Exists(Path.Combine(history.HistoryRoot, ".git")))
         {
+            cloned = true;
             var clone = await history.Runner.RunAsync("git", ["clone", "--filter=blob:none", "--no-checkout", "https://github.com/" + repository + ".git", "."], history.HistoryRoot, ct);
             if (clone.ExitCode != 0) throw new IOException("Private repository clone failed.");
             if (clone.Error.Contains("filtering not recognized", StringComparison.OrdinalIgnoreCase) || clone.Error.Contains("does not support", StringComparison.OrdinalIgnoreCase)) throw new NotSupportedException("Server does not support lazy Git object fetching.");
@@ -54,36 +58,54 @@ public sealed class PrivateGitHubVaultTransport : IVaultTransport
         var promisor = await history.Runner.RunAsync("git", ["config", "--get", "remote.origin.promisor"], history.HistoryRoot, ct);
         var filter = await history.Runner.RunAsync("git", ["config", "--get", "remote.origin.partialclonefilter"], history.HistoryRoot, ct);
         if (promisor.Text.Trim() != "true" || filter.Text.Trim() != "blob:none") throw new NotSupportedException("Repository must be a blob:none partial clone to preserve lazy retrieval.");
-        var origin = await history.Runner.RunAsync("git", ["remote", "get-url", "origin"], history.HistoryRoot, ct);
-        if (origin.ExitCode != 0 || origin.Text.Trim() != "https://github.com/" + repository + ".git") throw new InvalidOperationException("Repository origin does not match the selected private repository.");
+        await ValidateDestinations(ct);
         await history.InitializeAsync(ct);
-        await history.Git(ct, "sparse-checkout", "init", "--cone");
-        await history.Git(ct, "sparse-checkout", "set", "commits");
-        var head = await history.Runner.RunAsync("git", ["rev-parse", "--verify", "HEAD"], history.HistoryRoot, ct);
-        if (head.ExitCode == 0) await history.Git(ct, "checkout", "main");
+        available = new((await history.TreeAsync("HEAD", ct)).Keys, StringComparer.Ordinal);
+        if (cloned && await history.HeadAsync(ct) != null) await history.Git(ct, "read-tree", "HEAD");
         ready = true;
+    }
+    private async Task ValidateDestinations(CancellationToken ct)
+    {
+        foreach (var args in new[] { new[] { "remote", "get-url", "--all", "origin" }, new[] { "remote", "get-url", "--push", "--all", "origin" } })
+        {
+            var urls = await history.Runner.RunAsync("git", args, history.HistoryRoot, ct);
+            var values = urls.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            if (urls.ExitCode != 0 || values.Length != 1 || values[0].Trim() != "https://github.com/" + repository + ".git") throw new InvalidOperationException("Repository fetch or push destination does not match the selected private repository.");
+        }
     }
     public async Task SyncAsync(CancellationToken ct = default)
     {
-        await InitializeAsync(ct);
-        await ValidatePrivate(ct);
+        await InitializeAsync(ct); await ValidatePrivate(ct); await ValidateDestinations(ct);
+        await history.CheckIndexAsync([], ct);
         var fetch = await history.Git(ct, "fetch", "--filter=blob:none", "origin");
         if (fetch.Error.Contains("filtering not recognized", StringComparison.OrdinalIgnoreCase) || fetch.Error.Contains("does not support", StringComparison.OrdinalIgnoreCase)) throw new NotSupportedException("Server does not support lazy Git object fetching.");
-        var remoteTree = await history.Runner.RunAsync("git", ["ls-tree", "-r", "--name-only", "origin/main"], history.HistoryRoot, ct);
-        if (remoteTree.ExitCode == 0) foreach (var path in remoteTree.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries)) GitVaultHistory.ValidateRelativePath(path);
         var remote = await history.Runner.RunAsync("git", ["rev-parse", "--verify", "refs/remotes/origin/main"], history.HistoryRoot, ct);
+        var local = await history.HeadAsync(ct);
+        var tree = await history.TreeAsync("HEAD", ct);
         if (remote.ExitCode == 0)
         {
-            var local = await history.Runner.RunAsync("git", ["rev-parse", "--verify", "HEAD"], history.HistoryRoot, ct);
-            if (local.ExitCode == 0) await history.Git(ct, "merge", "--no-edit", "--no-verify", "-m", "Merge encrypted snapshots", "origin/main");
-            else await history.Git(ct, "checkout", "-B", "main", "origin/main");
+            var remoteId = remote.Text.Trim(); var incoming = await history.TreeAsync("origin/main", ct);
+            foreach (var item in incoming)
+            {
+                if (tree.TryGetValue(item.Key, out var existing) && existing != item.Value) throw new InvalidDataException("Immutable remote object collision.");
+                tree[item.Key] = item.Value;
+            }
+            if (local == null)
+            {
+                await history.Git(ct, "update-ref", "refs/heads/main", remoteId);
+                await history.Git(ct, "symbolic-ref", "HEAD", "refs/heads/main");
+                await history.Git(ct, "read-tree", "HEAD");
+            }
+            else if (local != remoteId)
+            {
+                var ancestor = await history.Runner.RunAsync("git", ["merge-base", "--is-ancestor", remoteId, local], history.HistoryRoot, ct);
+                if (ancestor.ExitCode != 0) await history.PublishTreeAsync(tree, "Merge encrypted snapshots", [local, remoteId], ct);
+            }
         }
-        // Copy only metadata. Payload blobs remain in the promisor store until requested.
-        var head = await history.Runner.RunAsync("git", ["rev-parse", "--verify", "HEAD"], history.HistoryRoot, ct);
-        if (head.ExitCode != 0) return;
-        var paths = (await history.Git(ct, "ls-tree", "-r", "--name-only", "HEAD")).Text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-        foreach (var path in paths.Where(p => p == "vault.json" || p.StartsWith("commits/", StringComparison.Ordinal))) await EnsureFileAsync(path, ct);
-        await ValidatePrivate(ct);
+        if (await history.HeadAsync(ct) == null) return;
+        available = new(tree.Keys, StringComparer.Ordinal);
+        foreach (var path in tree.Keys.Where(p => p == "vault.json" || p.StartsWith("commits/", StringComparison.Ordinal))) await EnsureFileAsync(path, ct);
+        await ValidatePrivate(ct); await ValidateDestinations(ct);
         await history.Git(ct, "push", "origin", "HEAD:refs/heads/main");
     }
     public async Task EnsureFileAsync(string relativePath, CancellationToken ct = default)
@@ -106,5 +128,3 @@ public sealed class PrivateGitHubVaultTransport : IVaultTransport
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }
 }
-
-
