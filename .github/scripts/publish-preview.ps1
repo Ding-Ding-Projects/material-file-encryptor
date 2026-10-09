@@ -49,8 +49,8 @@ $assets+=@("$output/build-provenance.json")
 if ($PrepareOnly) { return }
 $refs=(Gh @('api',"repos/$repo/git/matching-refs/tags/$tag")) | ConvertFrom-Json
 Assert (@($refs | Where-Object ref -eq "refs/tags/$tag").Count -eq 0) 'TAG_ALREADY_EXISTS'
-$existing=(Gh @('api','--paginate',"repos/$repo/releases?per_page=100")) | ConvertFrom-Json
-Assert (@($existing | Where-Object tag_name -eq $tag).Count -eq 0) 'RELEASE_ALREADY_EXISTS'
+$existing=@(Gh @('api','--paginate',"repos/$repo/releases?per_page=100",'--jq','.[].tag_name'))
+Assert ($existing -notcontains $tag) 'RELEASE_ALREADY_EXISTS'
 $null=Gh (@('release','create',$tag,'--repo',$repo,'--target',$source,'--prerelease','--latest=false','--title',"Material File Encryptor $tag",'--notes-file',"$output/release-notes.md")+$assets)
 $published=(Gh @('release','view',$tag,'--repo',$repo,'--json','isDraft,isPrerelease,assets,url')) | ConvertFrom-Json
 Assert (!$published.isDraft -and $published.isPrerelease) 'PUBLICATION_INCOMPLETE'
