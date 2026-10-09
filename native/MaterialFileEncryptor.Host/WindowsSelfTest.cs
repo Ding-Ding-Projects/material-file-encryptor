@@ -251,7 +251,7 @@ internal static class WindowsSelfTest
             Directory.Delete(historyFolder, true);
             controller.Execute("sync", Args(new { }));
             var deletedFolder = Args(controller.Execute("listDeleted", Args(new { }))).EnumerateArray().First(x => x.GetProperty("path").GetString() == "history-fixture" && x.GetProperty("isDirectory").GetBoolean());
-            controller.Execute("restoreDeleted", Args(new { ids = new[] { deletedFolder.GetProperty("id").GetString() } }));
+            controller.Execute("restoreDeleted", Args(new { ids = new[] { deletedFolder.GetProperty("id").GetString() }.Concat(deletedFolder.GetProperty("descendantIds").EnumerateArray().Select(x => x.GetString())).ToArray() }));
             LockWhenIdle(controller);
             controller.Execute("unlock", Args(new { storageDir = storage, cacheDir = cache, driveLetter = drive, password }));
             controller.Execute("mount", Args(new { driveLetter = drive }));

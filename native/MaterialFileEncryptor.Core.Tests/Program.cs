@@ -3,6 +3,7 @@ using System.Text;
 using MaterialFileEncryptor.Core;
 
 var cases = new (string,Action)[] {
+    ("independent earlier deletion requires explicit selection",ExplicitDescendants),
     ("separate filesystem child deletions restore with original directory identity",SeparateDeletes),
     ("bulk recycle restore keeps same-path generations independent",BulkGenerations),
     ("recycle restore binds deletion generation and fails atomically",RecycleAtomic),
@@ -172,9 +173,14 @@ static void RecycleAtomic() {
 }
 
 static void BulkGenerations() {
-    var root=Temp();try{using var v=Create(root);v.CreateDirectory("d");v.CreateFile("d/same");v.WriteRange("d/same",0,"first generation"u8);v.Delete("d",true);v.CreateDirectory("d");v.CreateFile("d/same");v.WriteRange("d/same",0,"other generation"u8);v.Delete("d",true);v.FlushAsync().GetAwaiter().GetResult();var roots=v.ListDeleted().Where(x=>x.IsDirectory).Select(x=>x.Id).ToArray();v.RestoreDeletedAsync(roots).GetAwaiter().GetResult();var restored=v.Enumerate("");Assert(restored.Count==2&&restored.All(x=>x.IsDirectory));var content=restored.Select(x=>{Assert(v.Enumerate(x.Path).Count==1);return Encoding.UTF8.GetString(Read(v,x.Path+"/same"));}).ToHashSet();Assert(content.SetEquals(new[]{"first generation","other generation"}));Assert(v.ListDeleted().Count==0);using var reopened=Open(root,"second");Assert(reopened.Enumerate("").Count==2);}finally{Directory.Delete(root,true);}
+    var root=Temp();try{using var v=Create(root);v.CreateDirectory("d");v.CreateFile("d/same");v.WriteRange("d/same",0,"first generation"u8);v.Delete("d/same");v.Delete("d");v.CreateDirectory("d");v.CreateFile("d/same");v.WriteRange("d/same",0,"other generation"u8);v.Delete("d/same");v.Delete("d");v.FlushAsync().GetAwaiter().GetResult();var roots=v.ListDeleted().Where(x=>x.IsDirectory).SelectMany(x=>new[]{x.Id}.Concat(x.DescendantIds??[])).ToArray();v.RestoreDeletedAsync(roots).GetAwaiter().GetResult();var restored=v.Enumerate("");Assert(restored.Count==2&&restored.All(x=>x.IsDirectory));var content=restored.Select(x=>{Assert(v.Enumerate(x.Path).Count==1);return Encoding.UTF8.GetString(Read(v,x.Path+"/same"));}).ToHashSet();Assert(content.SetEquals(new[]{"first generation","other generation"}));Assert(v.ListDeleted().Count==0);using var reopened=Open(root,"second");Assert(reopened.Enumerate("").Count==2);}finally{Directory.Delete(root,true);}
 }
 
 static void SeparateDeletes() {
-    var root=Temp();try{using var v=Create(root);v.CreateDirectory("d");v.CreateDirectory("d/nested");v.CreateFile("d/nested/a");v.WriteRange("d/nested/a",0,"saved"u8);v.CreateFile("d/nested/b");v.WriteRange("d/nested/b",0,"second"u8);v.Delete("d/nested/a");v.Delete("d/nested/b");v.Delete("d/nested");v.Delete("d");v.FlushAsync().GetAwaiter().GetResult();var dir=v.ListDeleted().Single(x=>x.Path=="d");v.RestoreDeletedAsync(new[]{dir.Id}).GetAwaiter().GetResult();Equal("saved"u8.ToArray(),Read(v,"d/nested/a"));Equal("second"u8.ToArray(),Read(v,"d/nested/b"));Assert(v.ListDeleted().Count==0);}finally{Directory.Delete(root,true);}
+    var root=Temp();try{using var v=Create(root);v.CreateDirectory("d");v.CreateDirectory("d/nested");v.CreateFile("d/nested/a");v.WriteRange("d/nested/a",0,"saved"u8);v.CreateFile("d/nested/b");v.WriteRange("d/nested/b",0,"second"u8);v.Delete("d/nested/a");v.Delete("d/nested/b");v.Delete("d/nested");v.Delete("d");v.FlushAsync().GetAwaiter().GetResult();var dir=v.ListDeleted().Single(x=>x.Path=="d");Assert(dir.DescendantIds!.Count==3);v.RestoreDeletedAsync(new[]{dir.Id}.Concat(dir.DescendantIds!).ToArray()).GetAwaiter().GetResult();Equal("saved"u8.ToArray(),Read(v,"d/nested/a"));Equal("second"u8.ToArray(),Read(v,"d/nested/b"));Assert(v.ListDeleted().Count==0);}finally{Directory.Delete(root,true);}
+}
+
+static void ExplicitDescendants() {
+    var root=Temp();try{using var v=Create(root);v.CreateDirectory("d");v.CreateFile("d/old");v.WriteRange("d/old",0,"earlier"u8);v.Delete("d/old");v.CreateFile("d/chosen");v.WriteRange("d/chosen",0,"selected"u8);v.Delete("d/chosen");v.Delete("d");v.FlushAsync().GetAwaiter().GetResult();var rows=v.ListDeleted();var dir=rows.Single(x=>x.Path=="d");var old=rows.Single(x=>x.Path=="d/old");var chosen=rows.Single(x=>x.Path=="d/chosen");Assert(dir.DescendantIds!.ToHashSet().SetEquals(new[]{old.Id,chosen.Id}));v.RestoreDeletedAsync(new[]{dir.Id,chosen.Id}).GetAwaiter().GetResult();Assert(v.GetInfo("d/old")==null);Equal("selected"u8.ToArray(),Read(v,"d/chosen"));Assert(v.ListDeleted().Single().Id==old.Id);}finally{Directory.Delete(root,true);}
+    root=Temp();try{using var v=Create(root);v.CreateDirectory("d");v.CreateFile("d/old");v.WriteRange("d/old",0,"earlier"u8);v.Delete("d/old");v.Delete("d");var dir=v.ListDeleted().Single(x=>x.IsDirectory);v.RestoreDeletedAsync(new[]{dir.Id}).GetAwaiter().GetResult();Assert(v.Enumerate("d").Count==0);Assert(v.ListDeleted().Single().Path=="d/old");}finally{Directory.Delete(root,true);}
 }
