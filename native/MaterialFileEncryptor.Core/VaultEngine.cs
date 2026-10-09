@@ -187,7 +187,7 @@ public sealed partial class VaultEngine : IDisposable
     private string EnsurePart(string id)
     {
         var local=ObjectPath(cache,"parts",id); if(File.Exists(local)) return local;
-        var remote=ObjectPath(source,"parts",id); if(!File.Exists(remote)&&HydrateEncryptedFileAsync!=null)HydrateEncryptedFileAsync("parts/"+id+".mfe",CancellationToken.None).GetAwaiter().GetResult(); if(!sourceAvailable || !File.Exists(remote)) throw new IOException("Encrypted content is unavailable offline.");
+        var remote=ObjectPath(source,"parts",id); if(!File.Exists(remote)&&HydrateEncryptedFileAsync!=null)throw new VaultHydrationRequiredException(new[]{"parts/"+id+".mfe"}); if(!sourceAvailable || !File.Exists(remote)) throw new IOException("Encrypted content is unavailable offline.");
         using var input=File.OpenRead(remote); if(input.Length>1073741824 || input.Length<VaultCrypto.Overhead) throw new InvalidDataException("Invalid part size.");
         CopyAtomic(input,local); return local;
     }
@@ -200,7 +200,7 @@ public sealed partial class VaultEngine : IDisposable
     private int Read(Entry e,long offset,Span<byte> destination)
     {
         if(e.Directory) throw new IOException("Cannot read a directory."); if(offset<0) throw new ArgumentOutOfRangeException(nameof(offset)); if(offset>=e.Length) return 0;
-        var count=(int)Math.Min(destination.Length,e.Length-offset); var written=0;
+        var count=(int)Math.Min(destination.Length,e.Length-offset); RequireAvailable(RangeRecords(e,offset,count)); var written=0;
         while(written<count) { var index=offset/e.ChunkSize; var within=(int)(offset%e.ChunkSize); var chunk=ReadChunk(e,index); var take=Math.Min(count-written,e.ChunkSize-within); try { chunk.AsSpan(within,take).CopyTo(destination[written..]); } finally { CryptographicOperations.ZeroMemory(chunk); } written+=take; offset+=take; } return written;
     }
     public int ReadRange(string path,long offset,Span<byte> destination) { lock(gate) { Check(); return Read(Find(VaultPath.Normalize(path)),offset,destination); } }
@@ -221,6 +221,7 @@ public sealed partial class VaultEngine : IDisposable
     private void Write(Entry e,long offset,ReadOnlySpan<byte> data)
     {
         if(e.Directory) throw new IOException("Cannot write a directory."); if(offset<0 || offset>long.MaxValue-data.Length)throw new ArgumentOutOfRangeException(nameof(offset)); if(data.Length==0)return;
+        RequireAvailable(e.PartSize!=partSize?e.Records.Values:RangeRecords(e,offset,data.Length));
         if(e.PartSize!=partSize)Repack(e,partSize,CancellationToken.None);
         var replacements=new Dictionary<long,RecordRef>(); using var writer=new PartWriter(this); var consumed=0;
         while(consumed<data.Length) { var index=offset/e.ChunkSize; var within=(int)(offset%e.ChunkSize); var take=Math.Min(data.Length-consumed,e.ChunkSize-within); var chunk=ReadChunk(e,index); try { var incomingBytes=data.Slice(consumed,take); if(!incomingBytes.SequenceEqual(chunk.AsSpan(within,take))) { incomingBytes.CopyTo(chunk.AsSpan(within)); replacements[index]=writer.Add(chunk); } } finally { CryptographicOperations.ZeroMemory(chunk); } offset+=take; consumed+=take; }
@@ -232,6 +233,7 @@ public sealed partial class VaultEngine : IDisposable
     private void Resize(Entry e,long length)
     {
         if(e.Directory)throw new IOException("Cannot resize a directory."); if(length<0)throw new ArgumentOutOfRangeException(nameof(length)); if(length==e.Length)return;
+        RequireAvailable(e.PartSize!=partSize?e.Records.Values:RangeRecords(e,length,length<e.Length&&length%e.ChunkSize!=0?1:0));
         if(e.PartSize!=partSize)Repack(e,partSize,CancellationToken.None);
         if(length<e.Length)
         {
@@ -306,8 +308,8 @@ public sealed partial class VaultEngine : IDisposable
             foreach(var id in pending.ToArray())
             {
                 token.ThrowIfCancellationRequested(); var local=ObjectPath(cache,"commits",id); var commit=ReadMetadata<Commit>(local,"commit",id);
-                VerifyComplete(commit);
-                foreach(var part in Parts(commit)) { token.ThrowIfCancellationRequested(); var target=ObjectPath(source,"parts",part); if(!File.Exists(target)) { using var input=File.OpenRead(EnsurePart(part)); CopyAtomic(input,target); } }
+                VerifyComplete(commit,false);
+                foreach(var part in Parts(commit)) { token.ThrowIfCancellationRequested(); var target=ObjectPath(source,"parts",part); if(!File.Exists(target)&&IsEncryptedFileAvailable?.Invoke("parts/"+part+".mfe")!=true) { var localPart=EnsurePart(part);VerifyPart(localPart,part);using var input=File.OpenRead(localPart); CopyAtomic(input,target); } }
                 using(var input=File.OpenRead(local))CopyAtomic(input,ObjectPath(source,"commits",id)); pending.Remove(id);
             }
         }
@@ -395,13 +397,13 @@ public sealed partial class VaultEngine : IDisposable
     {
         lock(gate)
         {
-            Check(); ValidatePartSize(newPartSize); path=VaultPath.Normalize(path); var e=Find(path); if(e.Directory)throw new IOException("Resplit requires a file."); CaptureVersion(path,e,false); var replacement=Clone(e); Repack(replacement,newPartSize,cancellationToken); Touch(replacement); entries[path]=replacement;
+            Check(); ValidatePartSize(newPartSize); path=VaultPath.Normalize(path); var e=Find(path); if(e.Directory)throw new IOException("Resplit requires a file."); RequireAvailable(e.Records.Values); CaptureVersion(path,e,false); var replacement=Clone(e); Repack(replacement,newPartSize,cancellationToken); Touch(replacement); entries[path]=replacement;
             CaptureVersion(path,replacement,false); FlushLocal(); Publish(cancellationToken); SaveJournal(); return Task.CompletedTask;
         }
     }
     private void Repack(Entry e,long newPartSize,CancellationToken token)
     {
-        var chunkSize=ChunkBytes(newPartSize); var targetChunks=new SortedSet<long>();
+        RequireAvailable(e.Records.Values); var chunkSize=ChunkBytes(newPartSize); var targetChunks=new SortedSet<long>();
         foreach(var index in e.Records.Keys)
         {
             var start=checked(index*e.ChunkSize); var end=Math.Min(e.Length,start+e.ChunkSize); if(start>=end)continue;
