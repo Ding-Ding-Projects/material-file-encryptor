@@ -72,8 +72,7 @@ if len(sys.argv) == 3 and sys.argv[1] in ['prepare-exit', 'confirm-exit']:
         print(json.dumps({'ok': True, 'client_ok': True, 'recordedProcesses': len(tree)}))
     else:
         proof = json.loads(proof_path.read_text(encoding='utf-8'))
-        if proof['root'] != state['process']:
-            raise SystemExit('Exit process proof belongs to a different launch.')
+        policy.validate_exit_proof(module, state, proof)
         deadline = time.monotonic() + 20
         while not module._recorded_tree_absent(proof['processes']):
             if time.monotonic() >= deadline:
@@ -93,19 +92,18 @@ if len(sys.argv) > 1 and sys.argv[1] == 'cleanup':
             tree = module._process_tree(state['process'])
             proof_path.write_text(json.dumps({'root': state['process'], 'processes': tree}), encoding='utf-8')
         except module.ClientFailure as error:
-            if error.code not in ['PROCESS_PROOF_FAILED', 'PROCESS_IDENTITY_CHANGED']:
+            if not policy.missing_root_proof_allowed(error.code):
                 raise
             if not proof_path.is_file():
                 raise SystemExit('No recorded owned process tree exists for absent-root cleanup.')
         proof = json.loads(proof_path.read_text(encoding='utf-8'))
-        if proof['root'] != state['process']:
-            raise SystemExit('Cleanup process proof belongs to a different launch.')
+        policy.validate_exit_proof(module, state, proof)
     try:
         result = module._cmd_cleanup(args)
     except module.ClientFailure as error:
         result = {'ok': False, 'client_ok': False, 'code': error.code}
     if result.get('client_ok') is not True and not state['cleaned']:
-        allowed = policy.automatically_closed(result, state['desktop'], proof['processes'], module._recorded_tree_absent) or result.get('code') in ['UNKNOWN_PROCESS_TREE', 'DESKTOP_NOT_CLOSED', 'PROCESS_PROOF_FAILED', 'PROCESS_IDENTITY_CHANGED']
+        allowed = policy.automatically_closed(result, state['desktop'], proof['processes'], module._recorded_tree_absent) or policy.cleanup_absence_recovery_allowed(result)
         other_transport_failure = any(not policy.automatically_closed(item, state['desktop'], proof['processes'], module._recorded_tree_absent) for item in transport_failures)
         if not allowed or other_transport_failure:
             print(json.dumps(result))

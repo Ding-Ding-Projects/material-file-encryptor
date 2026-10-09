@@ -31,7 +31,7 @@ test('automatic desktop disappearance requires exact not-found code and every re
  const result=spawnSync('python',['-B','-c',`import importlib.util
 spec=importlib.util.spec_from_file_location('policy','scripts/local-headless-desktop-check-policy.py')
 p=importlib.util.module_from_spec(spec);spec.loader.exec_module(p)
-owned=[{'pid':77,'creationDate':'recorded'}]
+owned=[{'pid':77,'parentPid':1,'creationDate':'2026-10-09T12:00:00.0000000Z','executablePath':'C:/owned/app.exe'}]
 missing={'ok':False,'client_ok':False,'error':"OpenDesktopW('owned') failed (GetLastError=2: The system cannot find the file specified.)"}
 assert p.automatically_closed(missing,'owned',owned,lambda _:True)
 assert not p.automatically_closed(missing,'owned',owned,lambda _:False)

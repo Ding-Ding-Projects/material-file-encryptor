@@ -10,6 +10,13 @@ Local installer verification requires `MFE_LOWLEVEL_CLI` pointing to the install
 
 The installed desktop check uses `local-headless-desktop-check.mjs` and the same independently reviewed capture and mounted-runtime flow as local packaged verification. Interactive pixel review remains required. Installation, startup registration, mounted operation, normal exit and uninstall require their own successful receipt; packaging success proves none of those outcomes. Uninstall records every remaining installation-root entry, including any Squirrel marker or log, instead of claiming the directory disappeared.
 
+### Failed desktop-run recovery
+
+A failed local desktop run first revalidates its saved isolated window and full process ancestry, then attempts the existing `window.drive.verificationQuit()` route on the exact CDP target. Startup restoration and recorded-process absence must both be confirmed. The original run failure remains in its receipt even when recovery succeeds.
+
+Process proofs use complete UTC creation timestamps, executable paths and connected parent identities. Only `PROCESS_NOT_FOUND` establishes absence; query failures, changed identities, invalid ancestry and `IDENTITY_BOUND_TERMINATION_UNAVAILABLE` retain the owned processes and fail recovery. There is no PID-only termination fallback. Older failed receipts remain unchanged and cannot supply a new valid identity proof.
+
+Offline regression checks are `node --test test/ui-lifecycle-recovery.test.js test/ui-headless-route.test.js` and `python -B test/test_local_headless_lifecycle_policy.py`. They exercise recovery ordering, exact-target binding, stale ancestry, PID reuse and query failures without launching or terminating an application.
 ### Verified updater-only uninstall residue
 
 The pinned Squirrel updater `2.0.1+eef37460ae` can leave its running root `Update.exe` and the packaged managed `app-<version>/squirrel.exe` after removing the product. Its upstream [full-uninstall path](https://github.com/Squirrel/Squirrel.Windows/blob/eef37460ae/src/Squirrel/UpdateManager.ApplyReleases.cs) writes a one-space `.dead` marker; [best-effort deletion](https://github.com/Squirrel/Squirrel.Windows/blob/eef37460ae/src/Squirrel/Utility.cs) swallows removal exceptions. The [managed executable detector](https://github.com/Squirrel/Squirrel.Windows/blob/eef37460ae/src/Squirrel/SquirrelAwareExecutableDetector.cs) does not dispose its Cecil assembly object. A transient detector handle is a source-supported explanation, not a lock directly measured during the original run.
