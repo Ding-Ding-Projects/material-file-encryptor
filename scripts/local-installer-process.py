@@ -41,6 +41,23 @@ def worker(request_path):
         time.sleep(0.1)
 
 
+def select_transport(lifecycle, endpoint, cli):
+    if endpoint is not None:
+        lifecycle._validate_endpoint(endpoint)
+        client = lifecycle._connect(endpoint, 30)
+        return client.call_tool, 'persistent-loopback-mcp'
+    if cli is None or not cli.is_file():
+        raise RuntimeError('Installed cheap Lowlevel CLI required when no persistent endpoint is selected.')
+
+    def call(name, params):
+        result = subprocess.run([str(cli), name, '--json', json.dumps(params)], capture_output=True, text=True, timeout=30, creationflags=subprocess.CREATE_NO_WINDOW)
+        payload = json.loads(result.stdout)
+        payload['client_ok'] = result.returncode == 0 and payload.get('ok') is True and payload.get('timed_out') is not True
+        return payload
+
+    return call, 'direct-cli'
+
+
 def run(request):
     if os.name != 'nt':
         raise RuntimeError('Windows is required.')
@@ -54,10 +71,11 @@ def run(request):
         raise ValueError('Only reviewed Squirrel install and uninstall operations are allowed.')
     if executable.name.lower() not in ['materialfileencryptor-setup.exe', 'update.exe'] or not isinstance(seconds, int) or not 1 <= seconds <= 300:
         raise ValueError('Reviewed Squirrel executable and bounded timeout required.')
-    cli = Path(os.environ['MFE_LOWLEVEL_CLI'])
+    endpoint = os.environ.get('MFE_LOWLEVEL_URL')
+    cli = Path(os.environ.get('MFE_LOWLEVEL_CLI', '')) if endpoint is None else None
     helper = Path(os.environ.get('MFE_LOWLEVEL_CLIENT', str(Path.home() / '.agents/skills/run-lowlevel-headless-app/scripts/lowlevel_mcp_client.py')))
-    if not cli.is_file() or not helper.is_file():
-        raise RuntimeError('Installed cheap Lowlevel CLI and lifecycle helper required.')
+    if not helper.is_file():
+        raise RuntimeError('Installed lifecycle helper required.')
     spec = importlib.util.spec_from_file_location('installed_lifecycle', helper)
     lifecycle = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = lifecycle
@@ -66,11 +84,7 @@ def run(request):
     policy = importlib.util.module_from_spec(policy_spec)
     policy_spec.loader.exec_module(policy)
 
-    def call(name, params):
-        result = subprocess.run([str(cli), name, '--json', json.dumps(params)], capture_output=True, text=True, timeout=30, creationflags=subprocess.CREATE_NO_WINDOW)
-        payload = json.loads(result.stdout)
-        payload['client_ok'] = result.returncode == 0 and payload.get('ok') is True and payload.get('timed_out') is not True
-        return payload
+    call, transport = select_transport(lifecycle, endpoint, cli)
 
     run_root = receipt_path.parent / ('installer-run-' + uuid.uuid4().hex)
     run_root.mkdir(parents=True)
@@ -78,7 +92,7 @@ def run(request):
     request_path = run_root / 'request.json'
     write_json(request_path, request)
     desktop = 'mfe-installer-' + uuid.uuid4().hex
-    receipt = {'schemaVersion': 1, 'route': 'cheap-lowlevel-headless', 'desktop': desktop, 'passed': False, 'desktopClosed': False, 'recordedProcessesAbsent': False}
+    receipt = {'schemaVersion': 1, 'route': 'cheap-lowlevel-headless', 'transport': transport, 'desktop': desktop, 'passed': False, 'desktopClosed': False, 'recordedProcessesAbsent': False}
     recorded = []
     try:
         launch = call('launch_on_headless_desktop', {'name': desktop, 'command': subprocess.list2cmdline([sys.executable, str(Path(__file__).resolve()), '--worker', str(request_path)])})
