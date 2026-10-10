@@ -106,7 +106,9 @@ function renderAvailability() {
  for (const el of $('vault-form').querySelectorAll('button,input,select')) el.disabled = busy;
  const letter = normalizedDriveLetter($('drive-letter').value);
  const available = (state?.availableDriveLetters || []).map(normalizedDriveLetter);
- const validLetter = /^[D-Z]$/.test(letter) && !state?.driver?.checking && (!available.length || available.includes(letter));
+ // Copy upgrade closes the owned original before mounting its verified replacement.
+ const upgradingOwnedLetter = dialogMode === 'upgrade' && state?.storageFormat === 1 && state?.locked === false && state?.mounted === true && letter === normalizedDriveLetter(state.driveLetter);
+ const validLetter = /^[D-Z]$/.test(letter) && !state?.driver?.checking && (!available.length || available.includes(letter) || upgradingOwnedLetter);
  $('drive-letter').setCustomValidity(validLetter ? '' : t('Choose an available drive letter'));
  $('dialog-submit').disabled = busy || !validLetter;
  for (const id of ['save-version','empty-recycle','restore-recycled','history-retention-apply']) if ($(id)) $(id).disabled = busy || !unlocked;
