@@ -76,7 +76,10 @@
 - [x] Complete both exact local entrypoints at frozen `55ebe8bb`, with unchanged source/index/owning branch, 812-entry privacy and 739-entry package integrity.
 - [ ] Complete actual runtime acceptance at frozen `55ebe8bb`.
 - [x] Update the public wiki handoff at `761258a8` and verify its remote HEAD.
-- [ ] Deploy and reverify the complete refreshed two-page wiki snapshot.
+- [x] Deploy the complete refreshed two-page wiki snapshot from source8500ca1d and verify all 52 live files, 18 articles, 64 anchors and 773 local links/assets; browser acceptance remains separate.
 
 - [x] Independently download normal v1.50.1 at source55 and verify four hosted assets, 644 extracted payload files, all 739 archive entries and 812-entry privacy.
 - [x] Repair safe underscore wiki basenames with eight focused checks, deliberate old-rule red replay and independent review.
+- [x] Preserve all 120 files of the partial source55 runtime, inspect 38 original captures and prove owned recovery/closure without upgrading its failed verdict.
+- [ ] Diagnose the incomplete descendant executable-path observations without weakening exact process identity or ancestry.
+- [ ] Complete the 144-tuple current documentation-browser acceptance after the private collector passes interface and ownership review; the first attempt completed zero tuples and is safely closed.
