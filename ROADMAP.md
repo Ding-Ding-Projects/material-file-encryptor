@@ -1,11 +1,21 @@
 # First installable preview
 
+## Current source-bound acceptance, 2026-10-10
+
+- [x] Deploy the publication-input repair from 4f7497f8 and verify all 52 live files, 18 articles including two wiki pages, 65 anchors and 858 local links/assets; eight excluded paths return 404.
+- [x] Preserve and independently inspect all 42 current browser diagnostic captures and 6,040 tuple observations. Forty-one home tuples completed; partial tuple 41 and zero finalized audits remain explicit.
+- [ ] Repair current Document/request-lifecycle correlation in the private browser collector, review it independently and complete full browser acceptance without weakening exact-byte or ownership checks.
+- [x] Preserve all 105 downloaded native-run originals and inspect 23 captures; retain the sequence 77 ancestry rejection and original automatic-recovery failure separately from successful supplemental normal recovery.
+- [x] Verify root-entrypoint compilation and direct 36-check execution of the default-off native-child diagnostic unit at b43b4fd, with dry final independent reviews. Integration remains the next step.
+- [ ] Obtain decisive real-fixture process observations and complete mounted, copy-upgrade, transport, modern matrix and downloaded installed lifecycle acceptance.
+- [ ] Refresh the public wiki handoff and its deployed complete snapshot after the current evidence milestone.
+
 ## Exact restore selection verification, 2026-10-10
 
 - [x] Replace backend-index/DOM-position correspondence with exact rendered version identity, completed archive generations and bounded pre-action observations; twenty focused checks and independent source reviews passed.
 - [x] Preserve the original restore-action exception when diagnostic query or write fails, with combined behavioral regressions.
 - [x] Rebuild frozen `ccde68a8` through both exact root entrypoints; both exit zero, with unchanged source/index, 812-entry privacy and 739-entry archive integrity.
-- [ ] Verify restore in a fresh source-bound packaged workflow. The latest attempt stopped at its baseline-review deadline before workflow actions; owned recovery passed and the original timeout remains retained.
+- [x] Observe exact-ID history restore in fresh source-bound local and independently downloaded native workflows at ccde. Both later stop at strict ancestry; full workflow acceptance remains incomplete.
 - [x] Independently download normal `v1.54.1` at `ccde68a8`, verify all four hosted assets, safely extract 644 files and pass complete archive/privacy checks. Native DLL differences from the local build are recorded separately.
 - [ ] Complete the downloaded installed lifecycle, 48 renderer-emulation tuples, 13 clear controls and full browser acceptance; partial captures and normal release metadata do not satisfy these items.
 
