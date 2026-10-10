@@ -37,7 +37,7 @@ function captureAndMeasure(steps,launch,id,selector) {
 function prepareTuple(steps,tuple,id) {
  assert.ok(matrix.some(item=>JSON.stringify(item)===JSON.stringify(tuple)),'Unknown matrix tuple');
  steps.push({id:id+'-emulate',op:'emulate',width:tuple.width,height:tuple.height,scale:tuple.scale,mobile:false,touch:false});
- selectView(steps,'settings',id+'-settings');
+ selectView(steps,'settings',id+'-prepare-settings');
  steps.push(type(id+'-theme','#theme-setting',tuple.theme),type(id+'-language','#language-setting',tuple.language),poll(id+'-tuple',`innerWidth===${tuple.width} && innerHeight===${tuple.height} && Math.abs(devicePixelRatio-${tuple.scale})<0.01 && document.documentElement.dataset.theme===${quote(tuple.theme)} && document.querySelector('#language-setting').value===${quote(tuple.language)}`));
 }
 

@@ -15,6 +15,21 @@ test('matrix explicitly covers all 48 renderer tuples and each workspace state',
  assert.equal(matrix.length,48);assert.equal(new Set(matrix.map(JSON.stringify)).size,48);
  for(const tuple of matrix){const plan=makeWorkspacePlan({launch,receipt,tuple});assert.equal(plan.startupOwnershipAttempts,3);assert.ok(plan.steps.length<=100);assert.equal(plan.steps.filter(step=>step.op==='capture').length,workspaceStates.length);assert.equal(plan.steps[0].op,'poll');assert.ok(plan.steps.some(step=>step.op==='poll'&&step.expression.includes('devicePixelRatio')));assert.deepEqual(plan.steps.find(step=>step.op==='emulate'),{id:plan.steps.find(step=>step.op==='emulate').id,op:'emulate',width:tuple.width,height:tuple.height,scale:tuple.scale,mobile:false,touch:false});}
 });
+test('generated plans have unique preparation and measured-state step identifiers',()=>{
+ const unique=plan=>assert.equal(new Set(plan.steps.map(step=>step.id)).size,plan.steps.length,'Every step identifier must be unique');
+ for(const tuple of [matrix[0],matrix.at(-1)]) {
+  const plans=[makeWorkspacePlan({launch,receipt,tuple}),makeDialogPlan({launch,receipt,tuple}),...['workspace','dialog'].map(phase=>makeClearPlan({launch,receipt,phase,tuple}))];
+  for(const plan of plans)unique(plan);
+  const workspace=plans[0],original=structuredClone(workspace);
+  const preparation=workspace.steps.filter(step=>step.id.includes('-prepare-settings'));
+  assert.equal(preparation.length,2);
+  for(const step of preparation)step.id=step.id.replace('-prepare-settings','-settings');
+  assert.throws(()=>unique(workspace));
+  unique(original);
+  assert.deepEqual(original.steps.filter(step=>step.op==='capture'),workspace.steps.filter(step=>step.op==='capture'));
+ }
+});
+
 test('dialog plans require a real locked state and never submit or inject a bridge',()=>{
  for(const tuple of matrix){const plan=makeDialogPlan({launch,receipt,tuple});assert.ok(plan.steps[0].expression.includes('locked-state'));assert.equal(plan.steps.filter(step=>step.op==='capture').length,3);assert.equal(plan.steps.at(-2).selector,'#dialog-cancel');assert.ok(plan.steps.every(step=>step.selector!=='#dialog-submit'));assert.doesNotMatch(JSON.stringify(plan),/window[.]drive\s*=/);}
 });
