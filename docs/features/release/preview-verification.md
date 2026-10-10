@@ -1,5 +1,11 @@
 # Preview verification
 
+## Actual ad47307 production and modern stop, 2026-10-10
+
+Both exact local entrypoints passed at frozen `ad47307e5e79fd32199afa7959edc9ece7c3745e`, with 812 accepted privacy entries and all 739 package entries decompressed and CRC-verified. Normal v1.64.1 and v1.63.1 retain both classification flags false, direct source tags and four uploaded assets. These production and hosted-metadata verdicts do not establish independently downloaded or installed execution. Actual documentation deployment from the same source matches 52 files, complete articles and both wiki pages, 69 anchors and 869 links.
+
+The new fixed native diagnostic source passed three Python and thirteen JavaScript checks and two independent source reviews. A fresh actual modern run produced two independently inspected private baselines, then stopped at the first workspace clear-control tuple before measured acceptance. Its exact diagnostic is `before-owner` / `WINDOW_OWNER_UNAVAILABLE` inside the unchanged `NATIVE_OBSERVATION_FAILED` envelope. Normal owned recovery, startup restoration, recorded process absence, desktop closure, credential retirement and final 50-input/producer readback passed separately. Zero modern tuples passed; all 447 captures remain the plan. The original failed report is preserved, and the owner-query cause remains unverified pending a bounded synthetic comparison.
+
 ## Synthetic direct-child timing diagnostics
 
 The optional `NativeChildTrace` sink at `VaultProcessRunner.RunAsync()` is disabled by default. No production host or graphical workflow activates it. The native core test executable accepts `--native-child-trace <private-output-file>` for one synthetic operation, writing a new receipt without overwriting an existing file.

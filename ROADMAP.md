@@ -2,14 +2,18 @@
 
 ## Bounded native observer diagnostics
 
-- [ ] Complete independent review and pinned root-build verification of fixed native observer diagnostic categories. Three offline Python cases and 13 caller cases passed; installed runtime and historical cause remain unverified.
+- [x] Complete independent source review and both exact root entrypoints for fixed native observer diagnostic categories at ad47307. Three Python and thirteen JavaScript checks passed; actual modern run supplies before-owner/WINDOW_OWNER_UNAVAILABLE, with cause unverified.
 
 ## Current source-bound acceptance, 2026-10-10
 
+- [x] Verify normal v1.64.1 and v1.63.1 at ad47307, both classification flags false, exact direct tags and four uploaded assets; downloaded-byte and installed acceptance remain separate.
+- [x] Preserve the actual ad47307 modern stop and two independently inspected private baselines; normal owned recovery, credential retirement and final 50-input/producer readback passed separately.
+- [ ] Establish or refute the exact before-owner/WINDOW_OWNER_UNAVAILABLE cause, review any repair, rebuild and rebind before a new actual modern run.
+- [ ] Complete recursive browser-profile readiness evidence before fresh isolated browser acceptance; eight bounded synthetic cases do not finalize an audit.
 - [x] Verify the actual d683 documentation deployment, run 38044356274 and deployment 6979358841: 52 live files, 18 articles including two wiki pages, 66 anchors, 860 links and eight excluded 404 results; exact homepage read back.
 - [x] Verify normal v1.60.1 at d683 with both classification flags false and four expected assets. Downloaded runtime acceptance remains v1.54.1 at ccde.
 - [x] Import the complete published two-page wiki revision 74983adf byte for byte and record its exact catalogue inventory in this source unit.
-- [ ] Build, publish and independently verify deployment of the refreshed wiki snapshot; source import does not prove live delivery.
+- [x] Build, publish and independently verify deployment of the refreshed wiki snapshot at ad47307: 52 live files, 18 articles and two complete wiki pages, 69 anchors and 869 resolving links, with eight excluded 404 results.
 - [x] Preserve and independently inspect all 42 historical 4f browser diagnostic images and 6,040 tuple observations. Forty-one home tuples completed; zero audits are finalized.
 - [x] Independently review the bounded current Document/request-lifecycle correlation repair in the private collector; it remains unlaunched.
 - [ ] Complete full browser acceptance without weakening exact-byte or ownership checks.
