@@ -2,9 +2,9 @@
 
 ## Synthetic native child diagnostic unit
 
-- [ ] Verify the normal root build compiles the diagnostic executable without running tests, then run that exact executable directly with source/index and binary bindings.
+- [x] Verify the normal root build compiles the diagnostic executable without running tests, then run that exact executable directly with source/index and binary bindings at `b43b4fd`.
 
-- [ ] Build the opt-in direct-child timing diagnostic through the exact root entrypoint and verify short-lived/held/cancelled children, retained native times, privacy and bounds.
+- [x] Build the opt-in direct-child timing diagnostic through the exact root entrypoint and verify short-lived/held/cancelled children, retained native times, privacy and bounds: 36 focused checks passed at `b43b4fd`.
 - [ ] Independently review the diagnostic before integration or any graphical reproduction; historical failure cause remains unknown.
 
 ## Exact restore selection verification, 2026-10-10

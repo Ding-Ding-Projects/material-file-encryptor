@@ -2,6 +2,8 @@
 
 ## Isolated synthetic native child diagnostic
 
+Root-route candidate `b43b4fd4b52e80baf8aafd5d220c121af9ee0119` passed exact `build.bat /s` unchanged-source/index, including Core.Tests compilation with zero warnings/errors and 812 accepted package entries. Its resulting executable ran directly and passed 36 synthetic checks without compilation; source/index and executable/assembly hashes remained unchanged. Private evidence is retained under the ignored diagnostic evidence folder. Independent review is pending. No integration, remote publication, installer, graphical run or installed-helper mutation occurred. Historical failures below remain separate.
+
 The normal root build now compiles Core.Tests in Release without running it. The new pinned root build and direct diagnostic execution are pending. Earlier `dotnet run` evidence remains separately identified as implicit test compilation and is not substituted for this new route.
 
 The latest focused mode passed 36 checks with exact retained safe-handle closure and an active-handle negative. A fresh direct run at `5171897` exposed the previous PID-reopening assertion's ambiguity and failed before a trace was written; its evidence remains preserved. The latest closure refinement still requires a pinned root build and source-bound receipt before independent review. Earlier test counts below retain their earlier sources.
