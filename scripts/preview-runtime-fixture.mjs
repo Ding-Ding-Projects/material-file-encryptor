@@ -54,8 +54,8 @@ export function validateNativeEmptyRoot(proof,root) {
  assert.deepEqual(proof.before,proof.after);assert.deepEqual(proof.before,proof.reopened);
  const identity=proof.before;assert.equal(identity.directory,true);assert.equal(identity.filesystem,'MaterialVault');
  assert.ok(Number.isInteger(identity.attributes)&&(identity.attributes&16)!==0);
- assert.ok(Number.isInteger(identity.volumeSerial)&&identity.volumeSerial>=0&&identity.volumeSerial<=0xffffffff);
- assert.equal(identity.handleVolumeSerial,identity.volumeSerial);assert.match(identity.fileIndex,/^[0-9]{1,20}$/);
+ assert.equal(typeof identity.volumeSerial,'string');assert.match(identity.volumeSerial,/^(0|[1-9][0-9]{0,9})$/);assert.ok(BigInt(identity.volumeSerial)<=0xffffffffn);
+ assert.equal(identity.handleVolumeSerial,identity.volumeSerial);assert.equal(typeof identity.fileIndex,'string');assert.match(identity.fileIndex,/^(0|[1-9][0-9]{0,19})$/);assert.ok(BigInt(identity.fileIndex)<=0xffffffffffffffffn);
  return true;
 }
 

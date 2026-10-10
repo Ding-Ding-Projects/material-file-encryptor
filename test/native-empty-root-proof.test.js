@@ -6,11 +6,17 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {prepareGuiVaultFixture,proveFreshGuiRootEmpty,validateNativeEmptyRoot} from '../scripts/preview-runtime-fixture.mjs';
 
-const identity={directory:true,attributes:16,volumeSerial:17,handleVolumeSerial:17,fileIndex:'16925299219354966000',filesystem:'MaterialVault',label:'Material Files'};
+const identity={directory:true,attributes:16,volumeSerial:'17',handleVolumeSerial:'17',fileIndex:'16925299219354966000',filesystem:'MaterialVault',label:'Material Files'};
 const proof=()=>({version:1,root:'M:\\',before:{...identity},after:{...identity},reopened:{...identity},initialNtStatus:'0x00000103',completedNtStatus:'0xC000000F',returnedBytes:0,empty:true});
 test('native empty statuses require a stable open directory and expected volume',()=>{
  for(const status of ['0xC000000F','0x80000006']){const p=proof();p.completedNtStatus=status;assert.equal(validateNativeEmptyRoot(p,'M:\\'),true);}
  for(const mutate of [p=>p.root='N:\\',p=>p.empty=false,p=>p.returnedBytes=128,p=>p.completedNtStatus='0x00000000',p=>p.completedNtStatus='0xC000003A',p=>p.initialNtStatus='0x00000102',p=>p.after.fileIndex='99',p=>p.reopened.volumeSerial=42,p=>{for(const k of ['before','after','reopened'])p[k].filesystem='NTFS';},p=>{for(const k of ['before','after','reopened'])p[k].directory=false;},p=>{for(const k of ['before','after','reopened'])p[k].handleVolumeSerial=42;}]){const p=proof();mutate(p);assert.throws(()=>validateNativeEmptyRoot(p,'M:\\'));}
+});
+
+test('native identifiers remain canonical bounded decimal strings beyond the safe integer range',()=>{
+ for(const value of ['0','9007199254740993','18446744073709551615']){const p=proof();for(const k of ['before','after','reopened'])p[k].fileIndex=value;assert.equal(validateNativeEmptyRoot(p,'M:\\'),true);}
+ for(const value of [16925299219354966000,'01','-1','18446744073709551616']){const p=proof();for(const k of ['before','after','reopened'])p[k].fileIndex=value;assert.throws(()=>validateNativeEmptyRoot(p,'M:\\'));}
+ for(const value of [17,'01','4294967296']){const p=proof();for(const k of ['before','after','reopened']){p[k].volumeSerial=value;p[k].handleVolumeSerial=value;}assert.throws(()=>validateNativeEmptyRoot(p,'M:\\'));}
 });
 
 async function setup(t){

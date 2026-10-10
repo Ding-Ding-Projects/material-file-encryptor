@@ -65,7 +65,7 @@ def observe(root):
         if not k.GetVolumeInformationByHandleW(handle, label, 261, ctypes.byref(serial), ctypes.byref(maximum), ctypes.byref(flags), filesystem, 261):
             raise RuntimeError('VOLUME_IDENTITY_UNAVAILABLE')
         return {'directory': bool(info.attributes & 16), 'attributes': int(info.attributes),
-                'handleVolumeSerial': int(info.serial), 'volumeSerial': int(serial.value),
+                'handleVolumeSerial': str(info.serial), 'volumeSerial': str(serial.value),
                 'fileIndex': str((info.indexHigh << 32) | info.indexLow),
                 'filesystem': filesystem.value, 'label': label.value}
 
