@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { createServer } from 'node:http';
 import path from 'node:path';
+import os from 'node:os';
+import {createHash} from 'node:crypto';
+import {makeClearPlan,layoutExpression} from '../scripts/modern-ui-check.mjs';
 import { fileURLToPath } from 'node:url';
 import { openRendererBrowser } from '../scripts/test-renderer-browser.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../src/renderer');
@@ -179,4 +182,79 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   assert.deepEqual(errors,[]);
  } catch(error) { console.error('Renderer assertion failed:',error.message); throw error;
  } finally { try { await browser?.close(); } finally { await new Promise(resolve => server.close(resolve)); } }
+});
+
+// This isolated DOM regression does not claim native-drive or installed acceptance.
+test('scoped clear-control selectors use their actual owning wrappers', {timeout:90000}, async () => {
+ const evidenceRoot = await fs.mkdtemp(path.join(os.tmpdir(),'mfe-scoped-clear-proof-'));
+ const proof = {version:1,scope:'Actual renderer DOM selector regression',cases:[],passed:false};
+ for (const name of ['scoped-search.js','clear-fields.js']) proof[name] = createHash('sha256').update(await fs.readFile(path.join(root,name))).digest('hex');
+ const server = createServer(async (request,response) => {
+  const name = new URL(request.url,'http://localhost').pathname.slice(1) || 'index.html';
+  if (!/^[a-z0-9.-]+$/.test(name)) { response.writeHead(404).end(); return; }
+  try { response.setHeader('Content-Type',name.endsWith('.js') ? 'text/javascript' : name.endsWith('.css') ? 'text/css' : 'text/html'); response.end(await fs.readFile(path.join(root,name))); } catch { response.writeHead(404).end(); }
+ });
+ await new Promise(resolve => server.listen(0,'127.0.0.1',resolve));
+ let browser,primaryError;
+ try {
+  const url = `http://127.0.0.1:${server.address().port}/`;
+  browser = await openRendererBrowser(url,{evidenceRoot:path.join(evidenceRoot,'owned-closure')});
+  const page = browser.page; await page.setViewportSize({width:1180,height:850}); await fixture(page);
+  await page.goto(url);
+  await page.waitForFunction(() => document.querySelector('#vault-badge').textContent !== 'Checking drive…');
+  await page.evaluate(() => window.pushState({locked:false,mounted:true,storageFormat:2}));
+  const plan = makeClearPlan({launch:{outputRoot:path.join(evidenceRoot,'output'),cdp:{port:9333,expectedUrl:'file:///fixture/index.html'}},receipt:path.join(evidenceRoot,'lifecycle.json'),phase:'workspace'});
+  const eligible = async selector => {
+   const target = page.locator(selector);
+   assert.equal(await target.count(),1,'Exactly one target is required');
+   assert.equal(await target.isVisible(),true,'Target must be visible');
+   assert.equal(await target.isEnabled(),true,'Target must be enabled');
+   return target;
+  };
+  for (const id of ['clear-file-search','clear-part-size']) {
+   const step = plan.steps.find(item => item.id === id+'-clear');
+   await eligible(step.selector); proof.cases.push({id,simpleIdPreserved:true});
+  }
+  for (const view of ['history','recycle']) {
+   await page.click(`[data-view="${view}"]`);
+   await page.waitForFunction(kind => {const s=document.querySelector('#view-'+kind).dataset;return s.archiveState==='ready' && s.archiveCompletedRequest===s.archiveRequest && s.archiveRendered===s.archiveRender;},view);
+   const id = `clear-${view}-search`;
+   const input = plan.steps.find(item => item.id === id+'-enter');
+   const click = plan.steps.find(item => item.id === id+'-clear');
+   const empty = plan.steps.find(item => item.id === id+'-empty-focused');
+   const measure = plan.steps.find(item => item.id === id+'-measure');
+   const oldField = `.clearable-field:has(${input.selector})`;
+   assert.equal(await page.locator(oldField+' > .field-clear').count(),0,'Original query must reproduce zero matches');
+   await assert.rejects(page.evaluate(layoutExpression(oldField)));
+   const target = await eligible(click.selector);
+   await assert.rejects(eligible(click.selector.replace(`#${view}-search-host`,'#missing-search-host')));
+   await page.locator(input.selector).evaluate(el => {el.disabled=true;});
+   await page.waitForFunction(selector => document.querySelector(selector).disabled,click.selector);
+   await assert.rejects(eligible(click.selector));
+   await page.locator(input.selector).evaluate(el => {el.disabled=false;});
+   await page.waitForFunction(selector => !document.querySelector(selector).disabled,click.selector);
+   await target.evaluate(el => {el.hidden=true;}); await assert.rejects(eligible(click.selector)); await target.evaluate(el => {el.hidden=false;});
+   await target.evaluate(el => {const duplicate=el.cloneNode(true);duplicate.dataset.selectorDuplicate='true';el.parentElement.append(duplicate);});
+   assert.equal(await page.locator(click.selector).count(),2); await assert.rejects(eligible(click.selector));
+   await page.locator('[data-selector-duplicate]').evaluate(el => el.remove());
+   await page.locator(input.selector).fill(input.text);
+   assert.ok((await page.locator(input.selector).inputValue()).length>0);
+   await (await eligible(click.selector)).click();
+   await page.waitForFunction(empty.expression);
+   const measurement = await page.evaluate(measure.expression);
+   assert.equal(measurement.matchedCount,1);assert.equal(measurement.fields.length,1);assert.equal(measurement.fields[0].buttonCount,1);
+   const imagePath=path.join(evidenceRoot,view+'.png');await page.screenshot({path:imagePath});
+   proof.cases.push({id,oldMatchCount:0,newMatchCount:1,wrongHostRejected:true,duplicateRejected:true,hiddenRejected:true,disabledRejected:true,emptyAndFocused:true,measurementMatchCount:measurement.matchedCount,imageSha256:createHash('sha256').update(await fs.readFile(imagePath)).digest('hex')});
+   await fs.writeFile(path.join(evidenceRoot,'dom-proof.json'),JSON.stringify(proof,null,2));
+  }
+  proof.domPassed=true;
+ } catch(error) {primaryError=error;throw error;} finally {
+  let cleanupVerified=false;
+  try { proof.ownedClosure=await browser?.close(); cleanupVerified=Boolean(browser); } catch(closureError) {if(primaryError)throw new AggregateError([primaryError,closureError],'DOM assertion and owned closure both failed.');throw closureError;} finally {
+   proof.cleanupVerified=cleanupVerified;proof.passed=proof.domPassed===true && cleanupVerified;
+   await new Promise(resolve => server.close(resolve));
+   await fs.writeFile(path.join(evidenceRoot,'dom-proof.json'),JSON.stringify(proof,null,2));
+   console.log(JSON.stringify({scope:proof.scope,evidenceRoot,passed:proof.passed}));
+  }
+ }
 });

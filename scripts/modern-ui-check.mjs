@@ -62,10 +62,10 @@ export function makeDialogPlan({launch,receipt,tuple}) {
  return plan(launch,receipt,steps);
 }
 
-function clearSteps(steps,launch,selector,sample,id) {
- const clear=`.clearable-field:has(${selector}) > .field-clear`;
+function clearSteps(steps,launch,selector,sample,id,fieldSelector=`.clearable-field:has(${selector})`) {
+ const clear=`${fieldSelector} > .field-clear`;
  steps.push(type(id+'-enter',selector,sample),poll(id+'-value',`document.querySelector(${quote(selector)}).value.length>0`),click(id+'-clear',clear),poll(id+'-empty-focused',`document.querySelector(${quote(selector)}).value==='' && document.activeElement===document.querySelector(${quote(selector)})`));
- captureAndMeasure(steps,launch,id,'.clearable-field:has('+selector+')');
+ captureAndMeasure(steps,launch,id,fieldSelector);
 }
 export function makeClearPlan({launch,receipt,phase}) {
  const steps=[];
@@ -75,8 +75,8 @@ export function makeClearPlan({launch,receipt,phase}) {
   clearSteps(steps,launch,'#split-value','12','clear-part-size');steps.push(type('restore-part-size','#split-value','10'));
   selectView(steps,'history','clear-history');steps.push(type('custom-retention','#history-retention','custom'));
   clearSteps(steps,launch,'#history-days','365','clear-retention');steps.push(type('restore-retention','#history-days','365'));
-  clearSteps(steps,launch,'#history-search-host input[type="search"]','Runtime','clear-history-search');
-  selectView(steps,'recycle','clear-recycle');clearSteps(steps,launch,'#recycle-search-host input[type="search"]','Runtime','clear-recycle-search');
+  clearSteps(steps,launch,'#history-search-host input[type="search"]','Runtime','clear-history-search','#history-search-host > .clearable-field');
+  selectView(steps,'recycle','clear-recycle');clearSteps(steps,launch,'#recycle-search-host input[type="search"]','Runtime','clear-recycle-search','#recycle-search-host > .clearable-field');
  } else {
   assert.equal(phase,'dialog');selectView(steps,'drive','clear-dialog-drive');
   steps.push(poll('clear-dialog-ready',"!document.querySelector('#locked-state').hidden && !document.querySelector('#create-button').disabled"),click('clear-dialog-open','#create-button'),poll('clear-dialog-opened',"document.querySelector('#vault-dialog').open && document.querySelector('#password-input').type==='password'"));

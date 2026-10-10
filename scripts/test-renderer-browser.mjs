@@ -2,25 +2,26 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
+import {createHash} from 'node:crypto';
 import net from 'node:net';
 import {spawn,execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {fileURLToPath} from 'node:url';
 import {chromium} from 'playwright';
 
-function command(executable,args,input,env) {
+function command(executable,args,input,env,onOutcome) {
  return new Promise((resolve,reject)=>{
   const child=spawn(executable,args,{env,windowsHide:true,stdio:['pipe','pipe','pipe']});
   let output='';const timer=setTimeout(()=>{child.kill();reject(new Error('Renderer lifecycle helper timed out.'));},args[1]==='cleanup'?90000:30000);
   child.stdout.on('data',data=>{output+=data;if(output.length>1048576){child.kill();reject(new Error('Renderer lifecycle output exceeded limit.'));}});
   child.stderr.resume();child.on('error',error=>{clearTimeout(timer);reject(error);});
-  child.on('close',code=>{clearTimeout(timer);try{const result=JSON.parse(output);if(code!==0||result.client_ok!==true)throw new Error(`${args[1]}: ${result.code||result.error||'Renderer lifecycle helper failed.'}`);resolve(result);}catch(error){reject(error);}});
+  child.on('close',code=>{clearTimeout(timer);try{const result=JSON.parse(output);onOutcome?.({operation:args[1],exitCode:code,result});if(code!==0||result.client_ok!==true)throw new Error(`${args[1]}: ${result.code||result.error||'Renderer lifecycle helper failed.'}`);resolve(result);}catch(error){reject(error);}});
   child.stdin.end(input===undefined?'':JSON.stringify(input));
  });
 }
 async function freePort(){const server=net.createServer();await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});const port=server.address().port;await new Promise(resolve=>server.close(resolve));return port;}
 
-export async function openRendererBrowser(expectedUrl) {
+export async function openRendererBrowser(expectedUrl,{evidenceRoot}={}) {
  if(process.platform!=='win32') {
   const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
   try {return {page:await browser.newPage(),close:()=>browser.close()};}catch(error){await browser.close();throw error;}
@@ -42,22 +43,43 @@ export async function openRendererBrowser(expectedUrl) {
  const runRoot=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-renderer-test-'));
  const state=path.join(runRoot,'lifecycle.json');const port=await freePort();
  let browser,launched=false,closed=false;
+ const outcomes=[];
+ let retainedEvidence;
+ const lifecycleCommand=args=>command(python,args,undefined,env,evidenceRoot ? outcome=>outcomes.push(outcome) : undefined);
+ const retainEvidence=async()=>{
+  if(!evidenceRoot)return;
+  await fs.mkdir(evidenceRoot,{recursive:true});
+  const stateBytes=await fs.readFile(state);
+  const outcomeBytes=Buffer.from(JSON.stringify({version:1,serialization:'Normalized parsed helper outcomes, not original stdout',outcomes},null,2),'utf8');
+  const statePath=path.join(evidenceRoot,'lifecycle.original.json');
+  const outcomePath=path.join(evidenceRoot,'helper-outcomes.normalized.json');
+  await fs.writeFile(statePath,stateBytes,{flag:'wx'});
+  await fs.writeFile(outcomePath,outcomeBytes,{flag:'wx'});
+  retainedEvidence={statePath,stateSha256:createHash('sha256').update(stateBytes).digest('hex'),outcomePath,outcomeSha256:createHash('sha256').update(outcomeBytes).digest('hex')};
+ };
  const close=async()=>{
-  if(closed)return;
+  if(closed)return retainedEvidence;
+  let primaryError,closureError;
   try {
    if(launched) {
     if(browser) {
-     await command(python,[adapter,'prepare-exit',state],undefined,env);
+     await lifecycleCommand([adapter,'prepare-exit',state]);
      const session=await browser.newBrowserCDPSession();
      await Promise.race([session.send('Browser.close').catch(()=>{}),new Promise(resolve=>setTimeout(resolve,3000))]);
-     await command(python,[adapter,'confirm-exit',state],undefined,env);
-    } else await command(python,[adapter,'cleanup','--state',state,'--allow-saved-pid-kill','--timeout','20'],undefined,env);
+     await lifecycleCommand([adapter,'confirm-exit',state]);
+    } else await lifecycleCommand([adapter,'cleanup','--state',state,'--allow-saved-pid-kill','--timeout','20']);
    }
-   closed=true;await fs.rm(runRoot,{recursive:true});
   } catch(error) {
-   if(launched)await command(python,[adapter,'cleanup','--state',state,'--allow-saved-pid-kill','--timeout','20'],undefined,env);
-   throw error;
+   primaryError=error;
+   if(launched)try {await lifecycleCommand([adapter,'cleanup','--state',state,'--allow-saved-pid-kill','--timeout','20']);}catch(error){closureError=error;}
   }
+  // Retention must finish before deleting the owned lifecycle state.
+  if(evidenceRoot && launched)try {await retainEvidence();}catch(error){
+   throw new AggregateError([primaryError,closureError,error].filter(Boolean),'Renderer lifecycle evidence retention failed.');
+  }
+  if(primaryError||closureError)throw new AggregateError([primaryError,closureError].filter(Boolean),'Renderer lifecycle closure failed.');
+  closed=true;await fs.rm(runRoot,{recursive:true});
+  return retainedEvidence;
  };
  try {
   await command(python,[adapter,'preflight','--require','launch_on_headless_desktop','--require','list_headless_windows','--require','kill_process','--require','close_headless_desktop'],undefined,env);
@@ -74,5 +96,5 @@ export async function openRendererBrowser(expectedUrl) {
   const page=browser.contexts()[0].pages()[0];
   if(!page||browser.contexts()[0].pages().length!==1)throw new Error('Renderer fixture page inventory changed.');
   return {page,close};
- } catch(error){await close();throw error;}
+ } catch(error){try {await close();}catch(closureError){throw new AggregateError([error,closureError],'Renderer fixture failed and closure also failed.');}throw error;}
 }
