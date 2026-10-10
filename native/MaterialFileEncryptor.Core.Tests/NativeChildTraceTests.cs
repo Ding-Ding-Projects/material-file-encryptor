@@ -54,8 +54,10 @@ internal static class NativeChildTraceTests
         Check(receipt.Children[1].Started.WaitResult == 258, "Held child did not supply live observation.");
         var sinkFault = new NativeChildTrace(expected, _ => throw new InvalidOperationException("not-recorded"));
         var faultResult = await new VaultProcessRunner(diagnostic: sinkFault).RunAsync(executable, Arguments("short"), Environment.CurrentDirectory);
-        var faultReceipt = JsonSerializer.Deserialize<NativeChildTraceReceipt>(sinkFault.Finish())!;
+        var faultBytes = sinkFault.Finish();
+        var faultReceipt = JsonSerializer.Deserialize<NativeChildTraceReceipt>(faultBytes)!;
         Check(faultResult.ExitCode == 0 && !faultReceipt.Complete && faultReceipt.IncompleteReasons.Contains("sink-fault"), "Sink fault changed runner or escaped receipt.");
+        Check(!Encoding.UTF8.GetString(faultBytes).Contains("not-recorded", StringComparison.Ordinal), "Sink exception message leaked.");
         var overflow = new NativeChildTrace(expected);
         using (var self = Process.GetCurrentProcess())
         {
@@ -65,7 +67,11 @@ internal static class NativeChildTraceTests
         }
         var overflowBytes = overflow.Finish();
         var overflowReceipt = JsonSerializer.Deserialize<NativeChildTraceReceipt>(overflowBytes)!;
-        Check(!overflowReceipt.Complete && overflowBytes.Length <= NativeChildTrace.MaximumBytes && overflowReceipt.IncompleteReasons.Contains("child-limit"), "Overflow not explicit.");
+        Check(!overflowReceipt.Complete && overflowBytes.Length <= NativeChildTrace.MaximumBytes && overflowReceipt.IncompleteReasons.Contains("child-limit") && overflowReceipt.IncompleteReasons.Contains("byte-limit"), "Overflow not explicit.");
+        var expired = new NativeChildTrace(expected);
+        typeof(NativeChildTrace).GetField("began", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.SetValue(expired, Stopwatch.GetTimestamp() - Stopwatch.Frequency * 61);
+        var expiredReceipt = JsonSerializer.Deserialize<NativeChildTraceReceipt>(expired.Finish())!;
+        Check(!expiredReceipt.Complete && expiredReceipt.IncompleteReasons.Contains("deadline"), "Expired observation window accepted.");
         using var json = JsonDocument.Parse(bytes);
         void Fields(JsonElement value, params string[] allowed) => Check(value.EnumerateObject().Select(x => x.Name).Order().SequenceEqual(allowed.Order()), "Unexpected private schema field.");
         Fields(json.RootElement, "Version", "Host", "MonotonicFrequency", "Complete", "IncompleteReasons", "Children");

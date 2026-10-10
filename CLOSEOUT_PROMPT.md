@@ -2,7 +2,7 @@
 
 ## Isolated synthetic native child diagnostic
 
-The isolated unit starts from `4f7497f8e4484fd92c1063229cb2034498e87ee6`. It adds only an optional disabled-by-default runner diagnostic and dedicated native core-test mode, plus its verification documentation. Root build and synthetic checks are pending. No installed or graphical candidate changed; no historical failure cause is claimed. Keep direct-child evidence private and do not integrate until independent review. The existing continuation below remains separate.
+The isolated unit starts from `4f7497f8e4484fd92c1063229cb2034498e87ee6`. It adds only an optional disabled-by-default runner diagnostic and dedicated native core-test mode, plus its verification documentation. Root build `0e963f2` passed unchanged-source/index and package privacy; its test-dispatch compile issue was fixed at `f7c836b`. Expanded focused checks passed 38 and the core suite passed 34/34. The latest source-bound root build and final receipt are pending. No installed or graphical candidate changed; no historical failure cause is claimed. Keep direct-child evidence private and do not integrate until independent review. The existing continuation below remains separate.
 
 ## Current authoritative continuation, 2026-10-10 UTC
 
