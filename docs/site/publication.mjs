@@ -97,11 +97,17 @@ export async function galleryRecords(root) {
  const windows=JSON.parse(await fs.readFile(path.join(root,'docs/images/captures/windows/provenance.json'),'utf8'));
  const preview=JSON.parse(await fs.readFile(path.join(root,'docs/images/captures/preview/inventory.json'),'utf8'));
  const extra=JSON.parse(await fs.readFile(path.join(root,'docs/site/gallery-additions.json'),'utf8'));
+ const review=JSON.parse(await fs.readFile(path.join(root,'docs/site/gallery-review.json'),'utf8'));
+ if(review.version!==1||!Array.isArray(review.approvedOriginals)||new Set(review.approvedOriginals).size!==review.approvedOriginals.length)throw new Error('Invalid gallery review');
+ const approved=new Set(review.approvedOriginals);
  const records=[];
  for(const [inventory,folder,platform]of [[linux,'','Linux'],[windows,'windows/','Windows']])for(const image of inventory.images)records.push({id:platform.toLowerCase()+'-'+image.state,path:'images/captures/'+folder+image.file,sourceCommit:inventory.sourceCommit,sha256:image.sha256,width:image.width,height:image.height,state:image.state,theme:image.theme,scale:image.scale,capturedAt:null,timeZone:null,method:'Actual application renderer capture on '+platform,scope:platform==='Linux'?'Historical interface-only evidence; no Windows mount proof.':'Historical packaged renderer evidence; native drive and installer verdicts are separate.',historical:true});
  for(const image of preview.records)records.push({id:image.id,path:image.path.replace(/^docs\//,''),sourceCommit:image.sourceCommit,sha256:image.captureSha256,width:image.width,height:image.height,state:image.state,theme:image.theme,scale:image.scale,capturedAt:image.capturedAt,timeZone:image.timeZone,method:'Packaged Windows application, CDP renderer capture',scope:'Recorded renderer scale; physical Windows display scaling is not established by this image.',historical:true});
  for(const image of extra.records){if(image.approval!=='approved'||image.privacy!=='public-safe'||image.inspectionStatus!=='inspected')throw new Error('Unapproved gallery addition');records.push(image);}
- const ids=new Set();for(const record of records){
+ const selected=records.filter(record=>approved.has(record.path));
+ if(selected.length!==approved.size)throw new Error('Approved gallery entry missing provenance');
+ const ids=new Set();for(const record of selected){
+  const binding=review.reviewedBindings?.[record.path];if(!binding||binding.sha256!==record.sha256||binding.sourceCommit!==record.sourceCommit)throw new Error('Gallery differs from reviewed source/image binding');
   if(ids.has(record.id)||!/^[a-z0-9-]+$/.test(record.id))throw new Error('Invalid gallery identity');ids.add(record.id);
   if(!/^images\/captures\/[A-Za-z0-9_./-]+\.png$/.test(record.path)||record.path.split('/').includes('..'))throw new Error('Invalid gallery asset');
   if(!/^[a-f0-9]{40}$/.test(record.sourceCommit)||!/^[a-f0-9]{64}$/.test(record.sha256))throw new Error('Missing gallery source/hash');
@@ -110,12 +116,13 @@ export async function galleryRecords(root) {
   if(record.capturedAt!==null&&(!/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(record.capturedAt)||!Number.isFinite(Date.parse(record.capturedAt))||!record.timeZone))throw new Error('Invalid capture time provenance');
   const bytes=await fs.readFile(path.join(root,'docs',record.path));if(digest(bytes)!==record.sha256)throw new Error('Gallery image hash mismatch');
   if(bytes.length<24||bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a'||bytes.readUInt32BE(16)!==record.width||bytes.readUInt32BE(20)!==record.height)throw new Error('Gallery image dimensions mismatch');
- }return records;
+ }return selected;
 }
 
 export async function buildGallery(root,output,home) {
  const records=await galleryRecords(root);
+ const review=JSON.parse(await fs.readFile(path.join(root,'docs/site/gallery-review.json'),'utf8'));
  const figures=records.map(r=>`<figure class="guide" id="capture-${r.id}" data-search="${escapeHtml(r.state+' '+r.theme+' '+r.method)}"><a href="${r.path}"><img src="${r.path}" alt="${escapeHtml(r.state+' · '+r.method)}" width="${r.width}" height="${r.height}" loading="lazy"></a><figcaption><h2>${escapeHtml(r.state.replaceAll('-',' '))}</h2><p>${escapeHtml(r.method)}</p><p>${escapeHtml(r.scope)}</p><dl><dt>Source revision</dt><dd><a href="${repository}/commit/${r.sourceCommit}"><code>${r.sourceCommit}</code></a></dd><dt>Image dimensions</dt><dd>${r.width} × ${r.height} pixels</dd><dt>Theme / recorded scale</dt><dd>${escapeHtml(r.theme)} / ${r.scale}</dd><dt>Actual capture time</dt><dd>${r.capturedAt?`<time datetime="${r.capturedAt}">${escapeHtml(r.capturedAt)} (${escapeHtml(r.timeZone)})</time>`:'Unavailable in the original per-image provenance.'}</dd><dt>Original image SHA-256</dt><dd><code>${r.sha256}</code></dd></dl><p class="small">${r.historical?'Historical source-bound image; not proof of a later build.':'Reviewed source-bound image; verification scope is stated above.'}</p><a href="${r.path}">Open original image</a></figcaption></figure>`).join('');
- await fs.writeFile(path.join(output,'gallery.html'),pageShell(home,'Capture gallery',`<h1>Capture gallery</h1><p>Original application images with exact source, dimensions, method and recorded time provenance. Native operation, renderer emulation and physical display scaling are different claims. Missing timestamps stay unavailable.</p><p class="development-note">New candidate images remain pending review and approval. They are not silently added to this historical catalogue.</p><div class="capture-gallery publication-gallery">${figures}</div>`));
- await fs.writeFile(path.join(output,'gallery-inventory.json'),JSON.stringify({version:1,records},null,2));return records;
+ await fs.writeFile(path.join(output,'gallery.html'),pageShell(home,'Capture gallery',`<h1>Capture gallery</h1><p>Original application images with exact source, dimensions, method and recorded time provenance. Native operation, renderer emulation and physical display scaling are different claims. Missing timestamps stay unavailable.</p><p class="development-note">New candidate images remain pending review and approval. They are not silently added to this historical catalogue.</p><section class="guide" id="withheld"><h2>Withheld originals</h2><p>${escapeHtml(review.historicalBoundary)}</p><ul>${review.withheld.map(item=>`<li>${escapeHtml(item.reason)} SHA-256 <code>${item.sha256}</code></li>`).join('')}</ul></section><div class="capture-gallery publication-gallery">${figures}</div>`));
+ await fs.writeFile(path.join(output,'gallery-inventory.json'),JSON.stringify({version:1,records,withheld:review.withheld,historicalBoundary:review.historicalBoundary},null,2));return records;
 }

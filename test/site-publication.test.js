@@ -43,3 +43,19 @@ test('documentation catalogue rejects duplicate entries, traversal and unbound w
  try{await fs.mkdir(path.join(temp,'docs/site'),{recursive:true});const copy=structuredClone(catalog);mutate(copy);await fs.writeFile(path.join(temp,'docs/site/content-catalog.json'),JSON.stringify(copy));await assert.rejects(buildDocumentation(temp,temp,''),/Invalid/);}finally{await fs.rm(temp,{recursive:true,force:true});}
  }
 });
+
+test('fresh staging excludes withheld originals, stale files and raw receipts',async()=>{
+ const {stageSite}=await import('../scripts/build-site.mjs');
+ const temp=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-stage-'));const output=path.join(temp,'site');
+ try{
+ await fs.mkdir(path.join(output,'images/captures/windows'),{recursive:true});
+ await fs.writeFile(path.join(output,'images/captures/windows/desktop-mounted.png'),'stale private pixels');
+ await fs.writeFile(path.join(output,'raw-receipt.json'),'stale private receipt');
+ await fs.writeFile(path.join(output,'images/captures/windows/unapproved.png'),'unapproved original');
+ const result=await stageSite(root,output);assert.equal(result.images,14);assert.equal(result.articles,17);assert.ok(result.preservedPrevious);
+ for(const file of ['images/captures/windows/desktop-mounted.png','images/captures/windows/desktop-offline.png','raw-receipt.json','images/captures/desktop-linux.webm','images/captures/windows/unapproved.png','images/captures/windows/provenance.json','images/captures/preview/inventory.json','images/captures/preview/verification-summary.json','publication.mjs','wiki/Home.md'])await assert.rejects(fs.access(path.join(output,file)));
+ await fs.access(path.join(output,'images/captures/windows/desktop-locked.png'));await fs.access(path.join(output,'gallery-inventory.json'));
+ const html=await fs.readFile(path.join(output,'index.html'),'utf8');assert.ok(!html.includes('desktop-mounted.png'));assert.ok(!html.includes('desktop-offline.png'));
+ const inventory=JSON.parse(await fs.readFile(path.join(output,'gallery-inventory.json'),'utf8'));assert.equal(inventory.records.length,14);assert.equal(inventory.withheld.length,2);
+ }finally{await fs.rm(temp,{recursive:true,force:true});}
+});

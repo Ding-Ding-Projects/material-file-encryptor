@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "approvedOriginals": [
+    "images/captures/desktop-locked.png",
+    "images/captures/desktop-create.png",
+    "images/captures/desktop-keyfile-choice.png",
+    "images/captures/desktop-settings-dark.png",
+    "images/captures/desktop-help.png",
+    "images/captures/windows/desktop-locked.png",
+    "images/captures/windows/desktop-create.png",
+    "images/captures/windows/desktop-keyfile-choice.png",
+    "images/captures/windows/desktop-settings-dark.png",
+    "images/captures/windows/desktop-help.png",
+    "images/captures/preview/history-preview.png",
+    "images/captures/preview/recycle-preview.png",
+    "images/captures/preview/descendant-preview.png",
+    "images/captures/preview/dark-settings-preview.png"
+  ],
+  "withheld": [
+    {
+      "path": "images/captures/windows/desktop-mounted.png",
+      "sha256": "a34cae779c5a7d3f4c21cbc54e60ce2f613931161259969c74e5665750582444",
+      "reason": "The original image visibly contains an absolute local storage path. Original bytes are retained privately and excluded from current public output."
+    },
+    {
+      "path": "images/captures/windows/desktop-offline.png",
+      "sha256": "32c543bc8337cbcff0d01a7bc6242cf194f93bb063ea28337c3fe07440524c09",
+      "reason": "The original image visibly contains an absolute local cache path. Original bytes are retained privately and excluded from current public output."
+    }
+  ],
+  "historicalBoundary": "Removing an image from the current tree and deployment does not undo its historical publication. No history is rewritten.",
+  "reviewedBindings": {
+    "images/captures/desktop-locked.png": {
+      "sourceCommit": "2a9887009f3bb2b64a3e5be37754d1d6612b6fd1",
+      "sha256": "32e094af6b113302868ec7b72e9d04faabe835dec03e4212d739ef95316512b2"
+    },
+    "images/captures/desktop-create.png": {
+      "sourceCommit": "2a9887009f3bb2b64a3e5be37754d1d6612b6fd1",
+      "sha256": "d0b0a15f63ede89b44af929d0e0ef551c8d98c8e4c7544f6e34db1b871eeca04"
+    },
+    "images/captures/desktop-keyfile-choice.png": {
+      "sourceCommit": "2a9887009f3bb2b64a3e5be37754d1d6612b6fd1",
+      "sha256": "416d4812a2a4796f59121a2990cfebc7c39dc2ec6371f0c0a38595897f16414f"
+    },
+    "images/captures/desktop-settings-dark.png": {
+      "sourceCommit": "2a9887009f3bb2b64a3e5be37754d1d6612b6fd1",
+      "sha256": "32f9800e39c0df2c3e3095ba9b0ca97b2f193338ca661799e45519521973ff59"
+    },
+    "images/captures/desktop-help.png": {
+      "sourceCommit": "2a9887009f3bb2b64a3e5be37754d1d6612b6fd1",
+      "sha256": "a02fd3f5c74f2c8737949f6a4c3c276a9adde5c9482bb888b9d910b6d268e52e"
+    },
+    "images/captures/windows/desktop-locked.png": {
+      "sourceCommit": "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
+      "sha256": "13e57820eff14a3dffac727ccd879b9cfe46ecee58bcc33a2a515d7de05247e7"
+    },
+    "images/captures/windows/desktop-create.png": {
+      "sourceCommit": "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
+      "sha256": "14d16d03df62fa3e40c1baf961b960f360e26c2ac4cde1b58196d51a6725b225"
+    },
+    "images/captures/windows/desktop-keyfile-choice.png": {
+      "sourceCommit": "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
+      "sha256": "1e7181b307bcd872f3cac709c54505ae8e3cf15837ad140db645ea4a04325480"
+    },
+    "images/captures/windows/desktop-settings-dark.png": {
+      "sourceCommit": "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
+      "sha256": "1a265c9736bf38f908e0b549f5db5b2d2867d725049642e36f9eeeda5406d8ee"
+    },
+    "images/captures/windows/desktop-help.png": {
+      "sourceCommit": "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
+      "sha256": "79d2b260758f82ec73d6b100dfeed4a62242d4018e55cf2947ed5b37fe0e171c"
+    },
+    "images/captures/preview/history-preview.png": {
+      "sourceCommit": "1e16dea8edb66ea5e6cf31009b0dbcc953f18d74",
+      "sha256": "01bfaec0707df62eeaf2ab72dc123f9c1a7369fc27af37c60eebfeccd6d4a4f6"
+    },
+    "images/captures/preview/recycle-preview.png": {
+      "sourceCommit": "1e16dea8edb66ea5e6cf31009b0dbcc953f18d74",
+      "sha256": "cc8bb0501a386226f0e4750657ab96e1b069ec283d0c4b3785e5c7a7b878c852"
+    },
+    "images/captures/preview/descendant-preview.png": {
+      "sourceCommit": "1e16dea8edb66ea5e6cf31009b0dbcc953f18d74",
+      "sha256": "893bec80cc965b618fca80603aa5d9f0a003b7a3c8f444921bc65bfc1426043d"
+    },
+    "images/captures/preview/dark-settings-preview.png": {
+      "sourceCommit": "1e16dea8edb66ea5e6cf31009b0dbcc953f18d74",
+      "sha256": "7a28deb679398b6521156d179c8ce7a7fcc643840de34cf5bdd0afa0905904ab"
+    }
+  }
+}
