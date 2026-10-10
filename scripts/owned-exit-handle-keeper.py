@@ -63,7 +63,7 @@ def load(name, path):
 
 
 def original_confirm(python, adapter, state_path, timeout):
-    result = subprocess.run([str(python), str(adapter), 'confirm-exit', str(state_path)], capture_output=True, text=True, timeout=timeout, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+    result = subprocess.run([str(python), str(adapter), 'confirm-exit', str(state_path)], stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=timeout, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
     if result.returncode != 0 or len(result.stdout) > 65536:
         raise KeeperFailure('ORIGINAL_CONFIRM_FAILED')
     value = json.loads(result.stdout)
@@ -276,7 +276,7 @@ def main():
         if digest(helper) != args.helper_sha256 or digest(here) != args.script_sha256:
             raise KeeperFailure('INPUT_BINDING_CHANGED')
         bindings = {str(p): digest(p) for p in (helper, here, transport_path, policy_path, adapter)}
-        source = subprocess.run(['git', '-C', str(here.parent.parent), 'rev-parse', 'HEAD'], capture_output=True, text=True, timeout=10, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+        source = subprocess.run(['git', '-C', str(here.parent.parent), 'rev-parse', 'HEAD'], stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=10, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
         if source.returncode or not re.fullmatch('[a-f0-9]{40}', args.source_commit) or source.stdout.strip() != args.source_commit:
             raise KeeperFailure('SOURCE_BINDING_CHANGED')
         receipt['sourceCommit'] = args.source_commit
@@ -294,7 +294,7 @@ def main():
         bindings[str(python)] = provenance['python']['sha256']
         def verify_inputs():
             verify()
-            current = subprocess.run(['git', '-C', str(here.parent.parent), 'rev-parse', 'HEAD'], capture_output=True, text=True, timeout=10, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+            current = subprocess.run(['git', '-C', str(here.parent.parent), 'rev-parse', 'HEAD'], stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=10, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
             if current.returncode or current.stdout.strip() != args.source_commit:
                 raise KeeperFailure('SOURCE_BINDING_CHANGED')
             lifecycle._checked_private_path(Path(args.state))

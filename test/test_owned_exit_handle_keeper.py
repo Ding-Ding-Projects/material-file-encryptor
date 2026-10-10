@@ -235,6 +235,14 @@ class KeeperTests(unittest.TestCase):
         with self.assertRaisesRegex(tool.KeeperFailure, 'ORIGINAL_CONFIRM_FAILED'):
             tool.original_confirm(sys.executable, adapter, self.state, 2)
 
+    def test_original_confirm_child_has_empty_stdin_and_requested_limit(self):
+        result = SimpleNamespace(returncode=0, stdout=json.dumps(self.confirm_result))
+        with patch.object(tool.subprocess, 'run', return_value=result) as run:
+            tool.original_confirm(sys.executable, 'original-adapter.py', self.state, 7)
+        self.assertEqual(run.call_args.args[0], [sys.executable, 'original-adapter.py', 'confirm-exit', str(self.state)])
+        self.assertIs(run.call_args.kwargs['stdin'], tool.subprocess.DEVNULL)
+        self.assertEqual(run.call_args.kwargs['timeout'], 7)
+
     def test_live_query_failure_releases_partial_handles(self):
         with patch.object(lifecycle, '_process_identity', side_effect=[parent, parent, lifecycle.ClientFailure('PROCESS_PROOF_FAILED', 'private sentinel')]):
             with self.assertRaises(lifecycle.ClientFailure):
