@@ -160,7 +160,7 @@ export function createModernProbeEvidence({binding,observe,validate,outputRoot,h
   assert.ok(Date.parse(after.observedAt)>=Date.parse(runtime.observation.endedAt),'Native end observation does not follow the measured interval');
   for(const measurement of measurements) {
    const capture=captures.find(step=>step.id===measurement.id.replace(/-measure$/,'-capture'));assert.ok(capture,'Missing matching capture');
-   const observation={sourceStartCommit:before.sourceCommit,sourceEndCommit:after.sourceCommit,target:after.target,privacy:after.privacy,ownership:{...after.ownership,cdpTargetVerified:result.targetCount===1&&result.exactUrl===plan.expectedUrl},runtime};
+   const observation={sourceStartCommit:before.sourceCommit,sourceEndCommit:after.sourceCommit,target:after.target,privacy:after.privacy,ownership:{...after.ownership,cdpTargetVerified:result.targetCount===1&&result.exactUrl===plan.expectedUrl},runtime,nativeGeometry:{before:before.nativeGeometry,after:after.nativeGeometry}};
    // Both bookends must independently establish their native and privacy facts.
    for(const key of ['pidResolvedLive','hwndResolvedLive','exactProcessOwned'])assert.equal(before.ownership?.[key],true);
    for(const key of ['visibleDesktopUntouched','taskOwnedProfile'])assert.equal(before.privacy?.[key],true);
@@ -194,6 +194,11 @@ export async function makeProbeReceipt({binding,observation,capture,measurement,
  for(const key of ['pidResolvedLive','hwndResolvedLive','exactProcessOwned','cdpTargetVerified'])assert.equal(observation.ownership?.[key],true);
  for(const key of ['consoleErrorCount','unhandledExceptionCount','pageErrorCount'])assert.equal(observation.runtime?.[key],0);
  assert.equal(observation.privacy?.visibleDesktopUntouched,true);assert.equal(observation.privacy?.taskOwnedProfile,true);assert.equal(observation.privacy?.unrelatedTargetsObserved,false);
+ for(const side of ['before','after']) {
+  const native=observation.nativeGeometry?.[side];assert.equal(native?.client_ok,true,'Native geometry bookends are required');
+  assert.equal(native.process?.pid,observation.target.pid);assert.equal(String(native.hwnd),String(observation.target.hwnd));assert.equal(native.process.creationDate,observation.target.creationDate);assert.equal(native.process.executablePath,observation.target.processPath);assert.equal(native.processSha256,observation.target.processSha256);
+  assert.ok(native.clientRect?.width>0&&native.clientRect?.height>0);assert.ok(native.dpi>0);assert.equal(native.scaleKind,'current-window-effective-dpi');assert.equal(native.physicalScaleMatrixVerified,false);
+ }
  const artifactBytes=await fs.readFile(binding.artifactPath);assert.equal(digest(artifactBytes),binding.artifactSha256);
  const buildBytes=await fs.readFile(binding.buildReceiptPath);assert.equal(digest(buildBytes),binding.buildReceiptSha256);
  const build=JSON.parse(buildBytes);assert.equal(build.sourceCommit,binding.sourceCommit);assert.equal(build.artifactSha256,binding.artifactSha256);
@@ -201,5 +206,5 @@ export async function makeProbeReceipt({binding,observation,capture,measurement,
  const png=await fs.readFile(capture.path);assert.equal(digest(png),capture.sha256);assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
  assert.ok(Number.isFinite(Date.parse(capture.capturedAt)));assert.ok(observation.target?.pid>0);assert.ok(observation.target?.hwnd);
  assert.equal(observation.target.processPath,binding.artifactPath);assert.equal(observation.target.processSha256,binding.artifactSha256);
- return {version:1,capturedAt:capture.capturedAt,sourceCommit:binding.sourceCommit,sourceStartCommit:observation.sourceStartCommit,sourceEndCommit:observation.sourceEndCommit,route:'cheap-lowlevel-headless',artifact:{path:binding.artifactPath,sha256:binding.artifactSha256,buildReceiptPath:binding.buildReceiptPath,buildReceiptSha256:binding.buildReceiptSha256},renderer:{path:binding.rendererAsarPath,sha256:binding.rendererAsarSha256},screenshot:{path:capture.path,sha256:capture.sha256,width:png.readUInt32BE(16),height:png.readUInt32BE(20)},target:{...observation.target,selector:measurement.selector,matchedCount:1,chosenIndex:0,viewport:measurement.viewport},privacy:observation.privacy,ownership:observation.ownership,runtime:observation.runtime,elements:measurement.elements,scaleEvidence:{kind:'cdp-device-metrics-emulation',requested:tuple.scale,observedDevicePixelRatio:measurement.viewport.scale,physicalWindowsDisplayScaleVerified:false}};
+ return {version:1,capturedAt:capture.capturedAt,sourceCommit:binding.sourceCommit,sourceStartCommit:observation.sourceStartCommit,sourceEndCommit:observation.sourceEndCommit,route:'cheap-lowlevel-headless',artifact:{path:binding.artifactPath,sha256:binding.artifactSha256,buildReceiptPath:binding.buildReceiptPath,buildReceiptSha256:binding.buildReceiptSha256},renderer:{path:binding.rendererAsarPath,sha256:binding.rendererAsarSha256},screenshot:{path:capture.path,sha256:capture.sha256,width:png.readUInt32BE(16),height:png.readUInt32BE(20)},target:{...observation.target,selector:measurement.selector,matchedCount:1,chosenIndex:0,viewport:measurement.viewport},privacy:observation.privacy,ownership:observation.ownership,runtime:observation.runtime,elements:measurement.elements,nativeGeometry:observation.nativeGeometry,scaleEvidence:{kind:'cdp-device-metrics-emulation',requested:tuple.scale,observedDevicePixelRatio:measurement.viewport.scale,physicalWindowsDisplayScaleVerified:false}};
 }

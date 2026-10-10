@@ -49,10 +49,11 @@ export async function retireGuiVaultKey(gui) {
  const info=await fs.lstat(expected);assert.equal(info.isFile(),true);assert.equal(info.isSymbolicLink(),false);assert.equal(await fs.realpath(expected),expected);
  await fs.unlink(expected);return {ownedKeyRetired:true};
 }
-export function makeGuiVaultFormSteps(gui,mode,outputRoot) {
- assert.ok(['create','unlock'].includes(mode));assert.match(gui.driveLetter,/^[D-Z]:$/);
- const steps=[];const prefix='gui-'+mode;
+export function makeGuiVaultFormSteps(gui,mode,outputRoot,label=mode) {
+ assert.ok(['create','unlock','upgrade'].includes(mode));assert.match(label,/^[a-z-]+$/);assert.match(gui.driveLetter,/^[D-Z]:$/);
+ const steps=[];const prefix='gui-'+label;
  const action=(id,op,values,expression)=>{steps.push({id:prefix+'-'+id,op,...values},{id:prefix+'-'+id+'-state',op:'poll',expression,equals:true,intervalMs:200},{id:prefix+'-'+id+'-capture',op:'capture',path:path.join(outputRoot,'runtime-'+prefix+'-'+id+'.png'),overwrite:false});};
+ action('folder-transport','type',{selector:'#transport-mode',text:'folder',clear:true},"document.querySelector('#transport-mode').value === 'folder' && document.querySelector('#private-git-fields').hidden");
  action('key-mode','click',{selector:'.credential-selector label:has(input[value="keyFile"])'},"!document.querySelector('#key-fields').hidden && document.querySelector('#password-fields').hidden");
  for(const [id,selector,text] of [['storage','#storage-input',gui.storageDir],['cache','#cache-input',gui.cacheDir],['key-path','#key-path',gui.keyFilePath]])action(id,'type',{selector,text,clear:true},`document.querySelector(${JSON.stringify(selector)}).value === ${JSON.stringify(text)}`);
  if(mode==='create') {
@@ -64,6 +65,22 @@ export function makeGuiVaultFormSteps(gui,mode,outputRoot) {
  steps.push({id:prefix+'-submit-ready',op:'poll',expression:"!document.querySelector('#dialog-submit').disabled && document.querySelector('#dialog-error').hidden",equals:true,intervalMs:200});
  return steps;
 }
+// This fixture conversion is restricted to a newly created, locked, empty vault.
+// It mirrors the native Legacy test and never rewrites an existing user's vault.
+export async function prepareEmptyLegacyGuiVault(gui,observed) {
+ assert.equal(observed.locked,true);assert.equal(observed.mounted,false);assert.equal(observed.emptyBeforeLock,true);
+ const root=await fs.realpath(gui.root);assert.equal(root,path.resolve(gui.root));
+ const changes=[];
+ for(const name of ['storageDir','cacheDir']) {
+  const folder=gui[name];assert.equal(path.dirname(folder),root);assert.equal(await fs.realpath(folder),folder);
+  const file=path.join(folder,'vault.json');const stat=await fs.lstat(file);assert.equal(stat.isFile(),true);assert.equal(stat.isSymbolicLink(),false);
+  const value=JSON.parse(await fs.readFile(file,'utf8'));assert.equal(value.Format,2);changes.push({file,value});
+ }
+ for(const {file,value} of changes){value.Format=1;await fs.writeFile(file,JSON.stringify(value));}
+ for(const {file} of changes)assert.equal(JSON.parse(await fs.readFile(file,'utf8')).Format,1);
+ return {format:1,emptyFixtureConverted:true};
+}
+
 export async function checkMountedRuntime({fixture,launch,receipt,executePlan,prepareExit,modernProbeEvidence,modernUiCheck=process.env.MFE_MODERN_UI_CHECK==='1'}) {
  const modernUi={enabled:modernUiCheck};
  const checks=[];let sequence=0;
@@ -138,6 +155,13 @@ export async function checkMountedRuntime({fixture,launch,receipt,executePlan,pr
  await execute(makeGuiVaultFormSteps(gui,'create',launch.outputRoot));await click('gui-create-submit','#dialog-submit',guiMounted);await waitBackend(false);
  const guiState=await asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted,storageDir:s.storageDir,cacheDir:s.cacheDir,driveLetter:s.driveLetter}))');
  assert.equal(guiState.mounted,true);assert.equal(guiState.locked,false);assert.equal(guiState.storageDir,gui.storageDir);assert.equal(guiState.cacheDir,gui.cacheDir);assert.equal(guiState.driveLetter,gui.driveLetter);
+ const emptyBeforeLock=(await fs.readdir(gui.driveLetter+'\\')).length===0;
+ await click('gui-empty-lock','#lock-button',"document.querySelector('#vault-badge').dataset.state === 'locked'");
+ const emptyLocked=await asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted}))');
+ await prepareEmptyLegacyGuiVault(gui,{...emptyLocked,emptyBeforeLock});
+ await click('gui-legacy-dialog','#unlock-button',"document.querySelector('#vault-dialog').open");
+ await execute(makeGuiVaultFormSteps(gui,'unlock',launch.outputRoot,'legacy-unlock'));await click('gui-legacy-submit','#dialog-submit',guiMounted);await waitBackend(false);
+ const legacyState=await asyncQuery('window.drive.status().then(s=>({storageFormat:s.storageFormat,transport:s.transport?.mode}))');assert.equal(legacyState.storageFormat,1);assert.equal(legacyState.transport,'folder');checks.push('authentic-empty-legacy-fixture-mounted');
  const guiFile=path.join(gui.driveLetter+'\\','GuiControls.txt');const guiContent='Created and reopened through real dialog controls.\n';
  await fs.writeFile(guiFile,guiContent);assert.equal(await fs.readFile(guiFile,'utf8'),guiContent);checks.push('gui-create-picker-mounted-write-read');
  await click('gui-create-sync','#sync-button',"!document.querySelector('#sync-button').disabled && document.querySelector('#main-error').hidden");
@@ -146,6 +170,17 @@ export async function checkMountedRuntime({fixture,launch,receipt,executePlan,pr
  await click('gui-unlock-dialog','#unlock-button',"document.querySelector('#vault-dialog').open");
  await execute(makeGuiVaultFormSteps(gui,'unlock',launch.outputRoot));await click('gui-unlock-submit','#dialog-submit',guiMounted);await waitBackend(false);
  const guiReopened=await asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted,driveLetter:s.driveLetter}))');assert.equal(guiReopened.locked,false);assert.equal(guiReopened.mounted,true);assert.equal(guiReopened.driveLetter,gui.driveLetter);assert.equal(await fs.readFile(guiFile,'utf8'),guiContent);checks.push('gui-unlock-manual-letter-persisted-read');
+ const upgraded={...gui,storageDir:path.join(gui.root,'upgrade-storage'),cacheDir:path.join(gui.root,'upgrade-cache')};
+ await fs.mkdir(upgraded.storageDir);await fs.mkdir(upgraded.cacheDir);
+ await click('gui-upgrade-dialog','#upgrade-vault',"document.querySelector('#vault-dialog').open && document.querySelector('#storage-input').value === '' && document.querySelector('#cache-input').value === ''");
+ await execute(makeGuiVaultFormSteps(upgraded,'upgrade',launch.outputRoot));
+ // Exercise the actual private-transport validation surface without creating or contacting a repository.
+ await execute([{id:'transport-private-select',op:'type',selector:'#transport-mode',text:'privateGit',clear:true},{id:'transport-private-invalid',op:'type',selector:'#remote-repository',text:'invalid repository',clear:true},{id:'transport-private-visible',op:'poll',expression:"!document.querySelector('#private-git-fields').hidden",equals:true,intervalMs:100},capture('transport-private-setup'),{id:'transport-private-submit',op:'click',selector:'#dialog-submit'},{id:'transport-private-rejected',op:'poll',expression:"document.querySelector('#vault-dialog').open && !document.querySelector('#dialog-error').hidden",equals:true,intervalMs:100},capture('transport-private-validation'),{id:'transport-folder-select',op:'type',selector:'#transport-mode',text:'folder',clear:true}]);
+ await click('gui-upgrade-submit','#dialog-submit',guiMounted);await waitBackend(false);
+ const upgradeState=await asyncQuery('window.drive.status().then(s=>({storageFormat:s.storageFormat,storageDir:s.storageDir,cacheDir:s.cacheDir,transport:s.transport?.mode}))');assert.equal(upgradeState.storageFormat,2);assert.equal(upgradeState.storageDir,upgraded.storageDir);assert.equal(upgradeState.cacheDir,upgraded.cacheDir);assert.equal(upgradeState.transport,'folder');assert.equal(await fs.readFile(guiFile,'utf8'),guiContent);
+ await click('gui-upgraded-lock','#lock-button',"document.querySelector('#vault-badge').dataset.state === 'locked'");
+ await click('gui-original-reopen','#unlock-button',"document.querySelector('#vault-dialog').open");await execute(makeGuiVaultFormSteps(gui,'unlock',launch.outputRoot,'original-reopen'));await click('gui-original-submit','#dialog-submit',guiMounted);await waitBackend(false);
+ const preserved=await asyncQuery('window.drive.status().then(s=>({storageFormat:s.storageFormat,storageDir:s.storageDir}))');assert.equal(preserved.storageFormat,1);assert.equal(preserved.storageDir,gui.storageDir);assert.equal(await fs.readFile(guiFile,'utf8'),guiContent);checks.push('copy-upgrade-real-ui-copy-and-original-readable','folder-transport-backend-and-private-setup-validation');
  if(modernUiCheck)modernUi.workspace=await runModernPhase({launch,receipt,phase:'workspace',executePlan,probeEvidence:modernProbeEvidence});
  await click('gui-final-lock','#lock-button',"document.querySelector('#vault-badge').dataset.state === 'locked'");
  const guiFinal=await asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted}))');assert.equal(guiFinal.locked,true);assert.equal(guiFinal.mounted,false);checks.push('gui-final-locked');
@@ -156,5 +191,5 @@ export async function checkMountedRuntime({fixture,launch,receipt,executePlan,pr
  checks.push('gui-built-theme-and-language-controls');
  const guiCleanup=await retireGuiVaultKey(gui);
  await prepareExit();const quit=await execute([{id:'graceful-quit',op:'evaluate',expression:"window.__mfeQuit={done:false};window.drive.verificationQuit().then(value=>{window.__mfeQuit={done:true,value}},()=>{window.__mfeQuit={done:true,failed:true}});true"},{id:'quit-restoration',op:'poll',expression:"window.__mfeQuit.done",equals:true,intervalMs:50},{id:'quit-proof',op:'evaluate',expression:"window.__mfeQuit"}]);const quitResult=quit.results.at(-1).value;assert.equal(quitResult.failed,undefined);assert.equal(quitResult.value.restored,true);checks.push('verification-quit-startup-restored');
- return {quitRequested:true,modernUi,guiVault:{createdThroughControls:true,unlockedThroughControls:true,pickerVerified:true,manualLetterNormalized:true,mountedBytesVerified:true,locked:true,...guiCleanup},startupRegistration:{initial:false,enabledReadback:enabled.enabled,disabledReadback:disabled.enabled,restored:quitResult.value.restored,verificationOnly:true},checks,rendererAssertionsVerified:true,mountedFilesystemVerified:true,nativeKeyboardVerified:false,pixelsInspected:false};
+ return {quitRequested:true,modernUi,transportSetup:{folderBackendVerified:true,privateRepositoryValidationVerified:true,authenticatedPrivateTransportVerified:false},copyUpgrade:{realControls:true,upgradedFormat:2,originalFormat:1,bothMountedBytesVerified:true},guiVault:{createdThroughControls:true,unlockedThroughControls:true,pickerVerified:true,manualLetterNormalized:true,mountedBytesVerified:true,locked:true,...guiCleanup},startupRegistration:{initial:false,enabledReadback:enabled.enabled,disabledReadback:disabled.enabled,restored:quitResult.value.restored,verificationOnly:true},checks,rendererAssertionsVerified:true,mountedFilesystemVerified:true,nativeKeyboardVerified:false,pixelsInspected:false};
 }

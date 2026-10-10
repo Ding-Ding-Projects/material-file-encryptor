@@ -17,7 +17,7 @@ class AdapterErrors(unittest.TestCase):
                 helper.write_text("""from pathlib import Path
 import os
 class ClientFailure(Exception):
- def __init__(self, code, message): self.code=code; super().__init__(message)
+ def __init__(self, code, message): self.code=code; self.reasonCode='CHILD_PREDATES_PARENT'; self.stage='ancestry'; super().__init__(message)
 def _read_state(path): return Path(path), {'process':{}, 'cleaned':False, 'desktop':'owned'}
 def _process_tree(identity):
  if os.environ['ADAPTER_MOCK_PHASE']=='tree': raise ClientFailure('UNPROVEN_PROCESS_ANCESTRY', 'private-path raw diagnostic')
@@ -37,6 +37,8 @@ def _cmd_cleanup(args): raise ClientFailure('UNPROVEN_PROCESS_ANCESTRY', 'privat
                 payload = json.loads(result.stdout)
                 self.assertEqual(payload['code'], 'UNPROVEN_PROCESS_ANCESTRY')
                 self.assertFalse(payload['client_ok'])
+                self.assertEqual(payload['reasonCode'], 'CHILD_PREDATES_PARENT')
+                self.assertEqual(payload['stage'], 'ancestry')
                 self.assertEqual(result.stderr, '')
                 self.assertNotIn('private-path', result.stdout)
                 self.assertNotIn(scratch, result.stdout)

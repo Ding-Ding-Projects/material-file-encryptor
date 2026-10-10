@@ -107,7 +107,7 @@ def main():
         try:
             result = module._cmd_cleanup(args)
         except module.ClientFailure as error:
-            result = {'ok': False, 'client_ok': False, 'code': error.code}
+            result = sanitized_failure(error.code, vars(error))
         if result.get('client_ok') is not True and not state['cleaned']:
             allowed = policy.automatically_closed(result, state['desktop'], proof['processes'], module._recorded_tree_absent) or policy.cleanup_absence_recovery_allowed(result)
             other_transport_failure = any(not policy.automatically_closed(item, state['desktop'], proof['processes'], module._recorded_tree_absent) for item in transport_failures)
@@ -123,10 +123,18 @@ def main():
     raise SystemExit(module.main())
 
 
-def sanitized_failure(code):
+REASONS = {'ROOT_IDENTITY_CHANGED', 'DUPLICATE_PID', 'INVALID_NODE_IDENTITY', 'ROOT_CYCLE', 'CYCLE_OR_MISSING_PARENT', 'MISSING_PARENT', 'CHILD_PREDATES_PARENT', 'LIVE_IDENTITY_UNAVAILABLE', 'LIVE_IDENTITY_CHANGED', 'UNSPECIFIED_ANCESTRY_FAILURE'}
+STAGES = {'process-snapshot', 'ancestry', 'listener-query', 'owner-revalidation', 'native-observation'}
+
+def sanitized_failure(code, details=None):
     if not isinstance(code, str) or not re.fullmatch(r'[A-Z][A-Z0-9_]{0,79}', code):
         code = 'ADAPTER_FAILED'
-    return {'ok': False, 'client_ok': False, 'code': code, 'error': 'Owned lifecycle verification failed; processes and evidence are retained.'}
+    result = {'ok': False, 'client_ok': False, 'code': code, 'error': 'Owned lifecycle verification failed; processes and evidence are retained.'}
+    details = details or {}
+    for key, allowed in [('reasonCode', REASONS), ('stage', STAGES)]:
+        if details.get(key) in allowed:
+            result[key] = details[key]
+    return result
 
 
 def run():
@@ -143,7 +151,7 @@ def run():
     except Exception as error:
         lifecycle = globals().get('module')
         code = error.code if lifecycle and isinstance(error, lifecycle.ClientFailure) else 'ADAPTER_FAILED'
-        print(json.dumps(sanitized_failure(code)))
+        print(json.dumps(sanitized_failure(code, vars(error))))
         return 1
     try:
         result = json.loads(output.getvalue())
@@ -153,7 +161,7 @@ def run():
         print(json.dumps(sanitized_failure('ADAPTER_INVALID_RESULT')))
         return 1
     if result.get('client_ok') is False or result.get('ok') is False:
-        result = sanitized_failure(result.get('code', 'ADAPTER_FAILED'))
+        result = sanitized_failure(result.get('code', 'ADAPTER_FAILED'), result)
         exit_code = exit_code or 1
     print(json.dumps(result))
     return exit_code
