@@ -5,7 +5,7 @@ import { createServer } from 'node:http';
 import path from 'node:path';
 import os from 'node:os';
 import {createHash} from 'node:crypto';
-import {makeClearPlan,layoutExpression} from '../scripts/modern-ui-check.mjs';
+import {matrix,makeClearPlan,layoutExpression} from '../scripts/modern-ui-check.mjs';
 import { fileURLToPath } from 'node:url';
 import { openRendererBrowser } from '../scripts/test-renderer-browser.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../src/renderer');
@@ -203,7 +203,7 @@ test('scoped clear-control selectors use their actual owning wrappers', {timeout
   await page.goto(url);
   await page.waitForFunction(() => document.querySelector('#vault-badge').textContent !== 'Checking drive…');
   await page.evaluate(() => window.pushState({locked:false,mounted:true,storageFormat:2}));
-  const plan = makeClearPlan({launch:{outputRoot:path.join(evidenceRoot,'output'),cdp:{port:9333,expectedUrl:'file:///fixture/index.html'}},receipt:path.join(evidenceRoot,'lifecycle.json'),phase:'workspace'});
+  const plan = makeClearPlan({launch:{outputRoot:path.join(evidenceRoot,'output'),cdp:{port:9333,expectedUrl:'file:///fixture/index.html'}},receipt:path.join(evidenceRoot,'lifecycle.json'),phase:'workspace',tuple:matrix[0]});
   const eligible = async selector => {
    const target = page.locator(selector);
    assert.equal(await target.count(),1,'Exactly one target is required');

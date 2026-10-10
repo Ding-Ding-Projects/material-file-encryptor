@@ -67,8 +67,10 @@ function clearSteps(steps,launch,selector,sample,id,fieldSelector=`.clearable-fi
  steps.push(type(id+'-enter',selector,sample),poll(id+'-value',`document.querySelector(${quote(selector)}).value.length>0`),click(id+'-clear',clear),poll(id+'-empty-focused',`document.querySelector(${quote(selector)}).value==='' && document.activeElement===document.querySelector(${quote(selector)})`));
  captureAndMeasure(steps,launch,id,fieldSelector);
 }
-export function makeClearPlan({launch,receipt,phase}) {
+export function makeClearPlan({launch,receipt,phase,tuple}) {
  const steps=[];
+ assert.ok(['workspace','dialog'].includes(phase));
+ prepareTuple(steps,tuple,'clear-'+phase);
  if(phase==='workspace') {
   steps.push(poll('clear-mounted',"document.querySelector('#vault-badge').dataset.state === 'mounted'"));
   selectView(steps,'drive','clear-drive');clearSteps(steps,launch,'#file-search','Runtime','clear-file-search');
@@ -121,7 +123,7 @@ export async function runModernPhase({launch,receipt,phase,executePlan,probeEvid
  };
  try {
   await executePlan(makeRestorePlan({launch,receipt,phase:phase+'-start'}));
-  await run(makeClearPlan({launch,receipt,phase}),matrix[0],'clear-controls');summary.clearControlsVerified=true;
+  await run(makeClearPlan({launch,receipt,phase,tuple:matrix[0]}),matrix[0],'clear-controls');summary.clearControlsVerified=true;
   for(const tuple of matrix){await run(phase==='workspace'?makeWorkspacePlan({launch,receipt,tuple}):makeDialogPlan({launch,receipt,tuple}),tuple,'matrix');summary.tuplesVerified++;}
   summary.probeReceiptsVerified=true;delete summary.probeReceiptUnavailableReason;return summary;
  } catch(error){failure=error;throw error;}

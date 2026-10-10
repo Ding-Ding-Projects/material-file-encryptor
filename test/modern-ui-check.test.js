@@ -19,10 +19,32 @@ test('dialog plans require a real locked state and never submit or inject a brid
  for(const tuple of matrix){const plan=makeDialogPlan({launch,receipt,tuple});assert.ok(plan.steps[0].expression.includes('locked-state'));assert.equal(plan.steps.filter(step=>step.op==='capture').length,3);assert.equal(plan.steps.at(-2).selector,'#dialog-cancel');assert.ok(plan.steps.every(step=>step.selector!=='#dialog-submit'));assert.doesNotMatch(JSON.stringify(plan),/window[.]drive\s*=/);}
 });
 test('clear plans cover 13 current fields with real input and focus assertions',()=>{
- const plans=['workspace','dialog'].map(phase=>makeClearPlan({launch,receipt,phase}));
+ const plans=['workspace','dialog'].map(phase=>makeClearPlan({launch,receipt,phase,tuple:matrix[0]}));
  const clears=plans.flatMap(plan=>plan.steps.filter(step=>step.op==='click'&&step.selector.endsWith('> .field-clear')));
  assert.equal(clears.length,13);assert.equal(new Set(clears.map(step=>step.selector)).size,13);
  for(const plan of plans){assert.ok(plan.steps.length<=100);assert.ok(plan.steps.every(step=>step.selector!=='#dialog-submit'));assert.equal(plan.steps.filter(step=>step.id.endsWith('-empty-focused')).length,plan.steps.filter(step=>step.op==='click'&&step.selector.endsWith('> .field-clear')).length);}
+});
+test('each clear plan establishes its explicit tuple before field mutations and captures',()=>{
+ for(const phase of ['workspace','dialog']) {
+  for(const tuple of [undefined,null,{...matrix[0],height:752},{...matrix[0],scale:3}])assert.throws(()=>makeClearPlan({launch,receipt,phase,tuple}));
+  for(const tuple of [matrix[0],matrix.at(-1)]) {
+   const plan=makeClearPlan({launch,receipt,phase,tuple});
+   const emulate=plan.steps.findIndex(step=>step.op==='emulate');
+   const ready=plan.steps.findIndex(step=>step.id===`clear-${phase}-tuple`);
+   assert.equal(emulate,0);assert.ok(ready>emulate);
+   assert.deepEqual({...plan.steps[emulate],id:null},{id:null,op:'emulate',width:tuple.width,height:tuple.height,scale:tuple.scale,mobile:false,touch:false});
+   const expression=plan.steps[ready].expression;
+   assert.equal(vm.runInNewContext(expression,{innerWidth:tuple.width,innerHeight:tuple.height,devicePixelRatio:tuple.scale,document:{documentElement:{dataset:{theme:tuple.theme}},querySelector:()=>({value:tuple.language})}}),true);
+   assert.equal(vm.runInNewContext(expression,{innerWidth:tuple.width,innerHeight:752,devicePixelRatio:1.5,document:{documentElement:{dataset:{theme:tuple.theme}},querySelector:()=>({value:tuple.language})}}),false);
+   for(const [index,step] of plan.steps.entries())if(step.id.endsWith('-enter')||step.op==='capture')assert.ok(index>ready);
+   if(phase==='dialog') {
+    const locked=plan.steps.findIndex(step=>step.id==='clear-dialog-ready');
+    const opened=plan.steps.findIndex(step=>step.id==='clear-dialog-open');
+    const field=plan.steps.findIndex(step=>step.id==='clear-storage-enter');
+    assert.ok(ready<locked&&locked<opened&&opened<field);assert.match(plan.steps[locked].expression,/locked-state/);
+   } else assert.ok(plan.steps.findIndex(step=>step.id==='clear-mounted')<plan.steps.findIndex(step=>step.id==='clear-file-search-enter'));
+  }
+ }
 });
 function measurement(){return {matchedCount:1,chosenIndex:0,viewport:{width:1180,height:850,scale:1},pageOverflow:false,fields:[{buttonCount:1,buttonType:'button',hasLabel:true,width:44,height:44,insideField:true}],elements:[{rect:{width:500,height:400}}]};}
 test('layout checks reject undersized clear targets, overflow and mismatched scale',()=>{
@@ -110,6 +132,6 @@ test('build binding rejects stale source, dirty or failed builds and wrong execu
 });
 
 test('modern dialog and clear attachments retry proof, restoration removes opt-in',()=>{
- for(const p of [makeDialogPlan({launch,receipt,tuple:matrix[0]}),makeClearPlan({launch,receipt,phase:'workspace'}),makeClearPlan({launch,receipt,phase:'dialog'}),makeRestorePlan({launch,receipt,phase:'start'})])assert.equal(p.startupOwnershipAttempts,3);
+ for(const p of [makeDialogPlan({launch,receipt,tuple:matrix[0]}),makeClearPlan({launch,receipt,phase:'workspace',tuple:matrix[0]}),makeClearPlan({launch,receipt,phase:'dialog',tuple:matrix[0]}),makeRestorePlan({launch,receipt,phase:'start'})])assert.equal(p.startupOwnershipAttempts,3);
  assert.equal(Object.hasOwn(makeRestorePlan({launch,receipt,phase:'end',purpose:'recovery'}),'startupOwnershipAttempts'),false);
 });
