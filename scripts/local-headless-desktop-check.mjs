@@ -94,6 +94,14 @@ export function finalVerdict(receipt) {
  const pending=[];
  if(!/^[a-f0-9]{40}$/.test(receipt.sourceCommit||'')||!/^[a-f0-9]{64}$/.test(receipt.executableSha256||'')||!/^[a-f0-9]{64}$/.test(receipt.resourceHashes?.asar||'')||!/^[a-f0-9]{64}$/.test(receipt.resourceHashes?.nativeHost||''))pending.push('Exact packaged source and resource hash binding');
  if(!receipt.launched)pending.push('Exact packaged application launch');
+ if(receipt.transport==='direct-cheap-cli') {
+  try {
+   assert.equal(receipt.transportProvenance?.version,1);
+   assert.equal(receipt.launchTransportBinding?.transport,receipt.transport);
+   assert.deepEqual(receipt.launchTransportBinding?.transportProvenance,receipt.transportProvenance);
+   assert.match(receipt.launchTransportBinding?.lifecycleReceiptSha256||'',/^[a-f0-9]{64}$/);
+  }catch{pending.push('Prepared and launched direct transport provenance binding');}
+ }
  if(receipt.runtime?.mountedFilesystemVerified!==true||receipt.runtime?.rendererAssertionsVerified!==true)pending.push('Mounted filesystem and history/recycling workflow');
  if(receipt.runtime?.copyUpgrade?.realControls!==true||receipt.runtime?.copyUpgrade?.upgradedFormat!==2||receipt.runtime?.copyUpgrade?.originalFormat!==1||receipt.runtime?.copyUpgrade?.bothMountedBytesVerified!==true)pending.push('Real copy upgrade and independently reopened original');
  if(receipt.runtime?.transportSetup?.folderBackendVerified!==true||receipt.runtime?.transportSetup?.privateRepositoryValidationVerified!==true)pending.push('Folder backend and private transport setup validation');
@@ -209,6 +217,21 @@ export function lifecycleTransport({cli,endpoint,installedLowlevel}) {
  return {useAdapter,lowlevel:useAdapter?fileURLToPath(new URL('./local-headless-desktop-check-cli.py',import.meta.url)):installedLowlevel,transport:endpoint?'persistent-http-adapter':cli?'direct-cheap-cli':'streamable-http'};
 }
 
+export function directLaunchTransportBinding(prepared,lifecycle,receiptBytes) {
+ try {
+  assert.equal(prepared.transport,'direct-cheap-cli');assert.equal(lifecycle.transport,prepared.transport);
+  assert.equal(Object.hasOwn(lifecycle,'endpoint'),false);
+  assert.ok(prepared.transportProvenance&&typeof prepared.transportProvenance==='object'&&!Array.isArray(prepared.transportProvenance));
+  assert.equal(prepared.transportProvenance.version,1);
+  assert.deepEqual(lifecycle.transportProvenance,prepared.transportProvenance);
+  assert.ok(Buffer.isBuffer(receiptBytes));
+  assert.deepEqual(JSON.parse(receiptBytes.toString('utf8')),lifecycle);
+ } catch {
+  throw Object.assign(new Error('DIRECT_TRANSPORT_BINDING_MISMATCH: prepared and launched transport provenance differ.'),{code:'DIRECT_TRANSPORT_BINDING_MISMATCH'});
+ }
+ return {transport:lifecycle.transport,transportProvenance:lifecycle.transportProvenance,lifecycleReceiptSha256:createHash('sha256').update(receiptBytes).digest('hex')};
+}
+
 export async function createLiveRunRoot({temporaryRoot=os.tmpdir()}={}) {
  const parent=await fs.realpath(temporaryRoot);
  const root=await fs.realpath(await fs.mkdtemp(path.join(parent,'mfe-headless-')));
@@ -273,6 +296,10 @@ export async function runLocalHeadlessCheck(env=process.env) {
   if(env.MFE_RUNTIME_FIXTURE==='1') {if(!useAdapter)throw new Error('Runtime graceful-exit proof requires the project lifecycle adapter.');fixture=await prepareRuntimeFixture({executable,profile:path.join(runRoot,'profile')});receipt.fixture={root:fixture.root,prepared:fixture.prepared,driveLetter:fixture.driveLetter};}
   launchAttempted=true;receipt.launchAttempted=true;
   await command(python,[lowlevel,'launch',...transportArgs,'--state',statePath],launch);receipt.launched=true;
+  if(transport==='direct-cheap-cli') {
+   const launchBytes=await fs.readFile(statePath);
+   receipt.launchTransportBinding=directLaunchTransportBinding(receipt,JSON.parse(launchBytes.toString('utf8')),launchBytes);
+  }
   await command(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30']);
   const lifecycle=JSON.parse(await fs.readFile(statePath,'utf8'));
   const initial=await recordNativeCapture(runRoot,path.join(launch.outputRoot,'native-baseline.png'),'native-baseline',()=>command(python,[lowlevel,'call','screenshot',...transportArgs],{hwnd:lifecycle.hwnd,output_path:path.join(launch.outputRoot,'native-baseline.png')}));

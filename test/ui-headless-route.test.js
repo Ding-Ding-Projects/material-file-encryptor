@@ -4,7 +4,25 @@ import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-import {lifecycleTransport,safeFailureDetails,resumeCaptureReview,makeLaunch,makeBaselinePlan,makeInterfacePlan,validateCaptureReview,finalVerdict,helperFailure,createPlanRecorder,recordNativeCapture,captureProvenance} from '../scripts/local-headless-desktop-check.mjs';
+import {directLaunchTransportBinding,lifecycleTransport,safeFailureDetails,resumeCaptureReview,makeLaunch,makeBaselinePlan,makeInterfacePlan,validateCaptureReview,finalVerdict,helperFailure,createPlanRecorder,recordNativeCapture,captureProvenance} from '../scripts/local-headless-desktop-check.mjs';
+
+test('direct launch binds actual lifecycle provenance to prepared identity before acceptance',()=>{
+ const prepared={transport:'direct-cheap-cli',transportProvenance:{version:1,cli:{sha256:'a'.repeat(64)},sourceCommit:'a'.repeat(40)}};
+ const lifecycle={transport:prepared.transport,transportProvenance:structuredClone(prepared.transportProvenance),pid:7};
+ const bytes=Buffer.from(JSON.stringify(lifecycle));const result=directLaunchTransportBinding(prepared,lifecycle,bytes);
+ assert.deepEqual(result.transportProvenance,prepared.transportProvenance);
+ assert.equal(result.lifecycleReceiptSha256,createHash('sha256').update(bytes).digest('hex'));
+ assert.equal(Object.hasOwn(result,'endpoint'),false);
+ for(const changed of [
+  {...lifecycle,transportProvenance:{...lifecycle.transportProvenance,cli:{sha256:'b'.repeat(64)}}},
+  {...lifecycle,endpoint:'http://127.0.0.1:8765/mcp'},
+  {...lifecycle,transport:'persistent-http-adapter'},
+ ])assert.throws(()=>directLaunchTransportBinding(prepared,changed,Buffer.from(JSON.stringify(changed))),{code:'DIRECT_TRANSPORT_BINDING_MISMATCH'});
+ assert.throws(()=>directLaunchTransportBinding(prepared,lifecycle,Buffer.from(JSON.stringify({...lifecycle,pid:8}))),{code:'DIRECT_TRANSPORT_BINDING_MISMATCH'});
+ const unbound=finalVerdict({...prepared,launched:true});
+ assert.ok(unbound.pending.includes('Prepared and launched direct transport provenance binding'));
+ assert.equal(finalVerdict({...prepared,launched:true,launchTransportBinding:result}).pending.includes('Prepared and launched direct transport provenance binding'),false);
+});
 test('local launch binds exact executable, isolated profile and loopback debugging to one run',()=>{
  const root=path.join(os.tmpdir(),'owned-run');const executable=path.join(root,'package','MaterialFileEncryptor.exe');
  const launch=makeLaunch({executable,runRoot:root,port:9333});
