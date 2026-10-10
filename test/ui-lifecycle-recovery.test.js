@@ -52,3 +52,7 @@ test('unrestored quit does not claim graceful exit and retains unavailable ident
  const result=await finishOwnedLifecycle({...input,runCommand:async()=>retained,executePlan:async()=>({results:[{value:{done:true,value:{restored:false}}}]})});
  assert.equal(result.recovery.code,'VERIFICATION_QUIT_NOT_RESTORED');assert.equal(result.quitRequested,false);assert.equal(result.cleanup,retained);
 });
+test('retirement failure preserves independently successful lifecycle closure and blocks acceptance',async()=>{
+ const result=await retireNeverLaunchedFixture({fixture:{prepared:true},launchAttempted:false,statePath:path.resolve('missing-lifecycle.json'),inspect:async()=>{throw Object.assign(new Error('absent'),{code:'ENOENT'});},retire:async()=>{throw Object.assign(new Error('Missing vault'),{code:'ENOENT'});}});
+ assert.equal(result.cleanup.client_ok,true);assert.equal(result.cleanup.neverLaunched,true);assert.equal(result.fixtureCleanup.ownedCredentialForgotten,false);assert.equal(result.fixtureCleanup.code,'ENOENT');
+});

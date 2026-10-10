@@ -242,13 +242,16 @@ export async function createLiveRunRoot({temporaryRoot=os.tmpdir()}={}) {
  return root;
 }
 
+export async function retireFixtureIndependently(fixture,retire=forgetRuntimeFixture) {
+ try{return await retire(fixture);}catch(error){return {ownedCredentialForgotten:false,fixtureRetained:true,code:error.code||'FIXTURE_RETIREMENT_FAILED',reason:String(error.message).slice(0,200)};}
+}
 export async function retireNeverLaunchedFixture({fixture,launchAttempted,statePath,retire=forgetRuntimeFixture,inspect=fs.lstat}) {
  assert.equal(launchAttempted,false,'An attempted or uncertain launch requires lifecycle ownership proof.');
  assert.equal(fixture?.prepared,true,'Only a completed prepared fixture may use never-launched retirement.');
  assert.equal(path.isAbsolute(statePath),true);
  try {await inspect(statePath);} catch(error) {
   if(error.code!=='ENOENT')throw error;
-  return {fixtureCleanup:await retire(fixture),cleanup:{ok:true,client_ok:true,neverLaunched:true,desktopNeverCreated:true,reason:'Launch was never attempted; no lifecycle receipt exists.'}};
+  return {fixtureCleanup:await retireFixtureIndependently(fixture,retire),cleanup:{ok:true,client_ok:true,neverLaunched:true,desktopNeverCreated:true,reason:'Launch was never attempted; no lifecycle receipt exists.'}};
  }
  throw new Error('An existing lifecycle receipt requires ownership proof before fixture retirement.');
 }
@@ -312,10 +315,10 @@ export async function runLocalHeadlessCheck(env=process.env) {
  } catch(error) {failure=String(error.message).slice(0,200);receipt.failureDetails=safeFailureDetails(error.helperResult);}
  finally {try {
   if(fixture&&!launchAttempted){const retired=await retireNeverLaunchedFixture({fixture,launchAttempted,statePath});cleanup=retired.cleanup;receipt.fixtureCleanup=retired.fixtureCleanup;}
-  else {await fs.access(statePath);const finished=await finishOwnedLifecycle({runtime,launch,statePath,python,lowlevel,transportArgs,executePlan});cleanup=finished.cleanup;receipt.quitRecovery=finished.recovery;if(fixture&&finished.quitRequested&&cleanup.client_ok)receipt.fixtureCleanup=await forgetRuntimeFixture(fixture);}
+  else {await fs.access(statePath);const finished=await finishOwnedLifecycle({runtime,launch,statePath,python,lowlevel,transportArgs,executePlan});cleanup=finished.cleanup;receipt.quitRecovery=finished.recovery;if(fixture&&finished.quitRequested&&cleanup.client_ok)receipt.fixtureCleanup=await retireFixtureIndependently(fixture);}
  }catch(error){cleanup={ok:false,code:error.helperCode||error.code||'OWNED_LIFECYCLE_FAILED',reason:String(error.message).slice(0,200)};}
   receipt.launchAttempted=launchAttempted;
-  Object.assign(receipt,{finishedAt:new Date().toISOString(),failure,cleanup,profileRetained:true});
+  Object.assign(receipt,{finishedAt:new Date().toISOString(),failure,cleanup,lifecycleClosure:cleanup,fixtureRetirement:receipt.fixtureCleanup||null,profileRetained:true});
   if(!failure&&runtime&&cleanup?.client_ok){try{receipt.captureReview=await reviewAllCaptures(receipt,runRoot,launch.outputRoot);}catch(error){receipt.reviewPending=String(error.message).slice(0,200);}}
   Object.assign(receipt,finalVerdict(receipt));receipt.pixelsInspected=receipt.captureReview?.verified===true;receipt.interactionsVerified=runtime?.rendererAssertionsVerified===true;
   await fs.writeFile(path.join(runRoot,'verification.json'),JSON.stringify(receipt,null,2));
