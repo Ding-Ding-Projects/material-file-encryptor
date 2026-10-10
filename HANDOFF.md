@@ -1,3 +1,14 @@
+# Preservation handoff, 2026-10-10 UTC
+
+The user requested early preservation, including unfinished work. Full acceptance remains incomplete. See CLOSEOUT_PROMPT.md for the current continuation inventory.
+
+Verified package baseline: main 1c9e6e39 and normal release v1.37.1. Both local root entrypoints passed, all four independent downloads matched, package privacy accepted 812 entries and all 739 archive entries passed. The real run passed native empty-root identity, then stopped at a synthetic legacy fixture/history mismatch. All 66 images were inspected; all 143 run files were preserved. Graceful teardown and supplemental GUI credential retirement are recorded separately.
+
+Reviewed verifier repair fe84403 preserves the original format-2 pair/history and creates a fresh legacy identity. Twenty-six focused tests and a fresh mounted format-1 write/read/sync replay passed. Full copy-upgrade, modern tuples and downloaded installed lifecycle remain pending. The unlaunched private matrix driver has two documented prelaunch blockers.
+
+Incomplete documentation/gallery work is preserved separately on codex/package-privacy at dd4ab51, with syntax checks only. It must not be merged as complete. The wiki is now readable at 4b6ba31 and contains Home.md only. Complete live articles/wiki, internal navigation and a substantial reviewed screenshot gallery remain requested and unfinished.
+
+The previously blocked website-profile deletion must not be retried through another route. Preserve unrelated branches, original vaults and historical receipts. Earlier dated sections below retain their original source scope.
 # Verification resumed, 2026-10-09
 
 ## Current runtime attempt and responsive evidence

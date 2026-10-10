@@ -1,10 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {prepareEmptyLegacyGuiVault,fixturePreferences,runtimeCompletion,prepareGuiVaultFixture,retireGuiVaultKey,makeGuiVaultFormSteps} from '../scripts/preview-runtime-fixture.mjs';
+import {prepareEmptyLegacyGuiVault,fixturePreferences,runtimeCompletion,prepareGuiVaultFixture,retireGuiVaultKey,makeGuiVaultFormSteps,actionPollSteps,forgetRuntimeFixture} from '../scripts/preview-runtime-fixture.mjs';
+import {EventEmitter} from 'node:events';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import path from 'node:path';
 import os from 'node:os';
+test('UI rejection ends its wait and preserves a separate negative result',()=>{
+ const steps=actionPollSteps('sync','#sync-button','ready');
+ for(const [hidden,ready,expected]of [[true,false,false],[true,true,true],[false,false,true]]){
+  const document={querySelector:()=>({hidden,textContent:'Backend rejected the operation'})};
+  assert.equal(vm.runInNewContext(steps[1].expression,{document,ready}),expected);
+  assert.equal(vm.runInNewContext(steps[2].expression,{document}).applicationError,!hidden);
+ }
+});
+test('failed-run retirement covers registered GUI and legacy identities and owned key only',async t=>{
+ const root=await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(),'mfe-retirement-test-')));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const fixture={root,driveLetter:'M:',storageDir:path.join(root,'storage'),cacheDir:path.join(root,'cache'),nativeExecutable:'owned-helper'};
+ await fs.writeFile(path.join(root,'fixture.json'),JSON.stringify(fixture));const gui=await prepareGuiVaultFixture(fixture);
+ for(const folder of [gui.storageDir,gui.cacheDir])await fs.writeFile(path.join(folder,'vault.json'),JSON.stringify({Format:2}));
+ const legacy=(await prepareEmptyLegacyGuiVault(gui,{locked:true,mounted:false,emptyBeforeLock:true})).gui;
+ const calls=[];const createClient=()=>({child:new EventEmitter(),async request(method,args){calls.push({method,args});},dispose(){this.child.emit('exit',0);}});
+ const result=await forgetRuntimeFixture(fixture,{createClient});assert.deepEqual(result.ownedFixtureCredentialsForgotten,['gui','legacy']);assert.equal(result.ownedKeyRetired,true);
+ assert.deepEqual(calls.map(c=>c.args.storageDir),[fixture.storageDir,gui.storageDir,legacy.storageDir]);assert.ok(calls.every(c=>c.method==='forgetSavedCredential'));await assert.rejects(fs.access(gui.keyFilePath),{code:'ENOENT'});
+ const manifest=path.join(root,'owned-gui-fixture.json');const record=JSON.parse(await fs.readFile(manifest));record.storageDir=path.dirname(root);await fs.writeFile(manifest,JSON.stringify(record));calls.length=0;await assert.rejects(forgetRuntimeFixture(fixture,{createClient}));assert.equal(calls.length,0);
+});
 test('synchronization completion remains separate from the quiet version interval',()=>{
  const state={operation:null,sync:{running:false,pendingCommits:0},transport:{available:true,pendingSynchronization:false},history:{pendingVersionCount:1}};
  assert.equal(runtimeCompletion(state,{synchronized:true}).ready,true);
@@ -50,7 +70,11 @@ test('legacy conversion rejects mounted, nonempty, foreign and unexpected-format
   for(const observed of [{locked:false,mounted:false,emptyBeforeLock:true},{locked:true,mounted:true,emptyBeforeLock:true},{locked:true,mounted:false,emptyBeforeLock:false}])await assert.rejects(prepareEmptyLegacyGuiVault(gui,observed));
   const observed={locked:true,mounted:false,emptyBeforeLock:true};await assert.rejects(prepareEmptyLegacyGuiVault({...gui,storageDir:path.dirname(root)},observed));
   await fs.writeFile(path.join(gui.cacheDir,'vault.json'),JSON.stringify({Format:1}));await assert.rejects(prepareEmptyLegacyGuiVault(gui,observed));assert.equal(JSON.parse(await fs.readFile(path.join(gui.storageDir,'vault.json'),'utf8')).Format,2);
-  await fs.writeFile(path.join(gui.cacheDir,'vault.json'),JSON.stringify({Format:2,marker:'preserved'}));assert.equal((await prepareEmptyLegacyGuiVault(gui,observed)).format,1);
-  for(const folder of [gui.storageDir,gui.cacheDir])assert.deepEqual(JSON.parse(await fs.readFile(path.join(folder,'vault.json'),'utf8')),{Format:1,marker:'preserved'});
+  await fs.writeFile(path.join(root,'fixture.json'),JSON.stringify({root,nativeExecutable:'owned-helper'}));
+  await fs.writeFile(path.join(gui.cacheDir,'vault.json'),JSON.stringify({Format:2,marker:'preserved'}));
+  const converted=await prepareEmptyLegacyGuiVault(gui,observed);assert.equal(converted.format,1);
+  for(const folder of [gui.storageDir,gui.cacheDir])assert.deepEqual(JSON.parse(await fs.readFile(path.join(folder,'vault.json'),'utf8')),{Format:2,marker:'preserved'});
+  for(const folder of [converted.gui.storageDir,converted.gui.cacheDir]){assert.notEqual(folder,gui.storageDir);assert.notEqual(folder,gui.cacheDir);assert.deepEqual(JSON.parse(await fs.readFile(path.join(folder,'vault.json'),'utf8')),{Format:1,marker:'preserved'});assert.deepEqual(await fs.readdir(folder),['vault.json']);}
+  await assert.rejects(prepareEmptyLegacyGuiVault(gui,observed),{code:'EEXIST'});
  } finally {await fs.rm(root,{recursive:true});}
 });

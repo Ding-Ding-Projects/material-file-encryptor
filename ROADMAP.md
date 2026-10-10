@@ -54,5 +54,12 @@
 - [x] Retain exact incomplete process rows privately and verify bounded pre-attachment proof routing without partial-action replay; runtime acceptance remains a separate unchecked item.
 - [ ] Complete the final modern 48-tuple runtime matrix and source-bound installed verification.
 - [x] Verify production recovery using pinned NuGet 7.9.0 at `15e5c70c`: both exact root entrypoints, 812-entry privacy inspection and all 739 archive-entry checks passed with unchanged source.
-- [ ] Replace the empty-root verification assumption with strict native evidence and complete a fresh real replay; the exact native no-file status is reproduced with a valid mounted root.
+- [x] Verify the strict native empty-root proof in the real 1c9e6e39 run with stable retained/reopened identity and exact empty status.
+- [x] Repair synthetic legacy fixture/history mismatch with fresh storage identity; 26 focused checks and the bounded native sync replay passed.
+- [ ] Complete full copy-upgrade and modern matrix replay after the verifier repair.
 - [ ] Complete responsive website acceptance with actual captured dimensions and strict target isolation.
+
+## Preserved documentation expansion
+
+- [ ] Finish the incomplete article/wiki/gallery generator on codex/package-privacy at dd4ab51, including navigation, styling, localization, negative checks and real rendered verification.
+- [ ] Publish a substantial gallery of current reviewed, source-bound original captures and verify every live asset.
