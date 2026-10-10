@@ -182,6 +182,9 @@ def main():
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
+    identity_recorder = getattr(module, 'install_private_identity_recorder', None)
+    if callable(identity_recorder):
+        identity_recorder()
 
     receipt_spec = importlib.util.spec_from_file_location('direct_receipt', Path(__file__).with_name('direct-cli-receipt.py'))
     receipt_adapter = importlib.util.module_from_spec(receipt_spec)
@@ -309,9 +312,16 @@ def sanitized_failure(code, details=None):
         if details.get(key) in allowed:
             result[key] = details[key]
     counts = globals().get('private_evidence_counts', {})
-    if counts.get('saved', 0) or counts.get('unavailable', 0):
-        result['privateEvidenceCount'] = counts.get('saved', 0)
-        result['privateEvidenceUnavailableCount'] = counts.get('unavailable', 0)
+    # Already projected counts take precedence, so repeated sanitization does
+    # not add the adapter's ancestry recorder again. Never project identities.
+    for key, counter in [('privateEvidenceCount', 'saved'), ('privateEvidenceUnavailableCount', 'unavailable')]:
+        value = details.get(key)
+        if type(value) is int and 0 <= value <= 1_000_000:
+            result[key] = value
+        elif key not in details and (counts.get('saved', 0) or counts.get('unavailable', 0)):
+            value = counts.get(counter, 0)
+            if type(value) is int and 0 <= value <= 1_000_000:
+                result[key] = value
     return result
 
 
