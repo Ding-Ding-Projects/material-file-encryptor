@@ -202,6 +202,11 @@ export async function resumeCaptureReview(runRoot,{review=reviewAllCaptures}={})
  await fs.writeFile(receiptPath,JSON.stringify(receipt,null,2));return receipt;
 }
 
+export function lifecycleTransport({cli,endpoint,installedLowlevel}) {
+ const useAdapter=Boolean(cli||endpoint);
+ return {useAdapter,lowlevel:useAdapter?fileURLToPath(new URL('./local-headless-desktop-check-cli.py',import.meta.url)):installedLowlevel,transport:endpoint?'persistent-http-adapter':cli?'direct-cli-adapter':'streamable-http'};
+}
+
 export async function runLocalHeadlessCheck(env=process.env) {
  if(env.MFE_CAPTURE_REVIEW_ROOT){const receipt=await resumeCaptureReview(env.MFE_CAPTURE_REVIEW_ROOT);const evidenceDir=path.resolve(env.MFE_DESKTOP_EVIDENCE_DIR||'out/evidence');const existingPath=path.join(evidenceDir,'desktop-check.json');const existing=JSON.parse(await fs.readFile(existingPath,'utf8'));assert.equal(existing.sourceCommit,receipt.sourceCommit);assert.equal(existing.executableSha256,receipt.executableSha256);assert.equal(path.resolve(existing.launch.runRoot),path.resolve(receipt.launch.runRoot));await fs.writeFile(existingPath,JSON.stringify({...existing,...receipt},null,2));console.log(JSON.stringify({reviewResumed:true,passed:receipt.passed,pending:receipt.pending}));if(!receipt.passed)throw new Error('Preserved review remains incomplete.');return receipt;}
  if(process.platform!=='win32')throw new Error('The local isolated desktop route requires Windows.');
@@ -212,16 +217,15 @@ export async function runLocalHeadlessCheck(env=process.env) {
  const installedLowlevel=env.MFE_LOWLEVEL_CLIENT||path.join(skillRoot,'run-lowlevel-headless-app','scripts','lowlevel_mcp_client.py');
  const cdp=env.MFE_CDP_DRIVER||path.join(skillRoot,'drive-electron-cdp-headless','scripts','cdp_driver.mjs');
  await fs.access(installedLowlevel);await fs.access(cdp);
- const cli=env.MFE_LOWLEVEL_CLI;
- const lowlevel=cli?fileURLToPath(new URL('./local-headless-desktop-check-cli.py',import.meta.url)):installedLowlevel;
- if(cli) {await fs.access(cli);process.env.MFE_LOWLEVEL_CLIENT=installedLowlevel;process.env.MFE_LOWLEVEL_CLI=cli;}
+ const cli=env.MFE_LOWLEVEL_CLI;const endpoint=env.MFE_LOWLEVEL_URL;const {useAdapter,lowlevel,transport}=lifecycleTransport({cli,endpoint,installedLowlevel});
+ if(useAdapter){process.env.MFE_LOWLEVEL_CLIENT=installedLowlevel;if(endpoint)process.env.MFE_LOWLEVEL_URL=endpoint;else delete process.env.MFE_LOWLEVEL_URL;if(cli){if(!endpoint)await fs.access(cli);process.env.MFE_LOWLEVEL_CLI=cli;}else delete process.env.MFE_LOWLEVEL_CLI;}
  const transportArgs=env.MFE_LOWLEVEL_URL?['--url',env.MFE_LOWLEVEL_URL]:[];
  const statePath=path.join(runRoot,'lifecycle.json');const plan=makeBaselinePlan(launch,statePath);
  const source=await new Promise((resolve,reject)=>{const child=spawn('git',['rev-parse','HEAD'],{windowsHide:true});let value='';child.stdout.on('data',data=>value+=data);child.on('close',code=>code===0?resolve(value.trim()):reject(new Error('Source identity unavailable.')));});
  if(env.MFE_HEADLESS_EXECUTE==='1'&&!/^[a-f0-9]{40}$/.test(env.MFE_SOURCE_COMMIT||''))throw new Error('Provide the exact packaged build source commit through MFE_SOURCE_COMMIT.');
  const sourceBinding=env.MFE_SOURCE_COMMIT||source;
  const resourceHashes={};for(const [name,file] of Object.entries({asar:path.join(path.dirname(executable),'resources','app.asar'),nativeHost:path.join(path.dirname(executable),'resources','native','MaterialFileEncryptor.Host.exe')}))resourceHashes[name]=createHash('sha256').update(await fs.readFile(file)).digest('hex');
- const receipt={version:1,transport:cli?'direct-cli-adapter':'streamable-http',resourceHashes,route:'cheap-lowlevel-headless',sourceCommit:sourceBinding,executableSha256:createHash('sha256').update(await fs.readFile(executable)).digest('hex'),launch,preparedAt:new Date().toISOString(),launched:false,pixelsInspected:false,interactionsVerified:false};
+ const receipt={version:1,transport,resourceHashes,route:'cheap-lowlevel-headless',sourceCommit:sourceBinding,executableSha256:createHash('sha256').update(await fs.readFile(executable)).digest('hex'),launch,preparedAt:new Date().toISOString(),launched:false,pixelsInspected:false,interactionsVerified:false};
  const modernBinding=env.MFE_MODERN_UI_CHECK==='1'?await modernBuildBinding({buildReceiptPath:env.MFE_BUILD_RECEIPT,sourceCommit:sourceBinding,executable,resourceHashes}):null;
  await fs.writeFile(path.join(runRoot,'prepared.json'),JSON.stringify(receipt,null,2));
  if(env.MFE_HEADLESS_EXECUTE!=='1') {console.log(JSON.stringify({prepared:true,launched:false,runRoot,requires:'Set MFE_HEADLESS_EXECUTE=1 only after reviewing the packaged executable and isolated profile arguments.'}));return receipt;}
@@ -240,7 +244,7 @@ export async function runLocalHeadlessCheck(env=process.env) {
  try {
   await command(python,[installedLowlevel,'self-test']);await command(process.execPath,[cdp,'self-test']);
   await command(python,[lowlevel,'preflight',...transportArgs,'--require','launch_on_headless_desktop','--require','list_headless_windows','--require','screenshot','--require','close_headless_desktop']);
-  if(env.MFE_RUNTIME_FIXTURE==='1') {if(!cli)throw new Error('Runtime graceful-exit proof requires the direct CLI adapter.');fixture=await prepareRuntimeFixture({executable,profile:path.join(runRoot,'profile')});receipt.fixture={root:fixture.root,prepared:fixture.prepared,driveLetter:fixture.driveLetter};}
+  if(env.MFE_RUNTIME_FIXTURE==='1') {if(!useAdapter)throw new Error('Runtime graceful-exit proof requires the project lifecycle adapter.');fixture=await prepareRuntimeFixture({executable,profile:path.join(runRoot,'profile')});receipt.fixture={root:fixture.root,prepared:fixture.prepared,driveLetter:fixture.driveLetter};}
   await command(python,[lowlevel,'launch',...transportArgs,'--state',statePath],launch);receipt.launched=true;
   await command(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30']);
   const lifecycle=JSON.parse(await fs.readFile(statePath,'utf8'));

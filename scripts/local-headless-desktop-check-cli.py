@@ -1,4 +1,4 @@
-"""Use the installed lifecycle safety checks with the documented direct tool CLI."""
+"""Use installed lifecycle checks with persistent loopback MCP or direct CLI transport."""
 import importlib.util
 import json
 import os
@@ -12,12 +12,39 @@ import contextlib
 import io
 
 
+def configure_transport(lifecycle, endpoint, direct_factory, failures):
+    # Capture before overriding: native MCP retains its validation and response bounds.
+    original_connect = lifecycle._connect
+    if endpoint:
+        lifecycle._validate_endpoint(endpoint)
+
+    class ObservedClient:
+        def __init__(self, client): self.client = client
+        def list_tools(self): return self.client.list_tools()
+        def call_tool(self, name, params):
+            result = self.client.call_tool(name, params)
+            if result.get('client_ok') is not True:
+                failures.append(result)
+            return result
+
+    def connect(saved_endpoint, timeout):
+        if endpoint:
+            lifecycle._validate_endpoint(saved_endpoint)
+            if saved_endpoint != endpoint:
+                raise lifecycle.ClientFailure('ENDPOINT_MISMATCH', 'Saved lifecycle endpoint differs from configured transport.')
+            return ObservedClient(original_connect(saved_endpoint, timeout))
+        return direct_factory(timeout)
+    lifecycle._connect = connect
+    return connect
+
+
 def main():
     global module, policy, transport_failures
     helper = Path(os.environ['MFE_LOWLEVEL_CLIENT'])
-    cli = Path(os.environ['MFE_LOWLEVEL_CLI'])
-    if not helper.is_file() or not cli.is_file():
-        raise SystemExit('Installed lifecycle helper and direct CLI are required.')
+    endpoint = os.environ.get('MFE_LOWLEVEL_URL')
+    cli = Path(os.environ['MFE_LOWLEVEL_CLI']) if os.environ.get('MFE_LOWLEVEL_CLI') else None
+    if not helper.is_file() or (not endpoint and (cli is None or not cli.is_file())):
+        raise SystemExit('Installed lifecycle helper and selected transport are required.')
     spec = importlib.util.spec_from_file_location('installed_lifecycle', helper)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
@@ -67,11 +94,11 @@ def main():
             return {'automaticallyClosed': True}
         raise SystemExit('Owned desktop close was not confirmed.')
 
-    module._connect = lambda endpoint, timeout: DirectClient(timeout)
+    connect = configure_transport(module, endpoint, DirectClient, transport_failures)
     if len(sys.argv) == 3 and sys.argv[1] in ['prepare-exit', 'confirm-exit']:
         state_path, state = module._read_state(sys.argv[2])
         proof_path = state_path.with_name('exit-processes.json')
-        client = DirectClient(20)
+        client = connect(state['endpoint'], 20)
         if sys.argv[1] == 'prepare-exit':
             tree = module._process_tree(state['process'])
             proof_path.write_text(json.dumps({'root': state['process'], 'processes': tree}), encoding='utf-8')
@@ -114,7 +141,7 @@ def main():
             if not allowed or other_transport_failure:
                 print(json.dumps(result))
                 raise SystemExit(1)
-            closed_proof = close_after_absence(DirectClient(20), state, proof['processes'])
+            closed_proof = close_after_absence(connect(state['endpoint'], 20), state, proof['processes'])
             state['cleaned'] = True
             state_path.write_text(json.dumps(state), encoding='utf-8')
             result = {'ok': True, 'client_ok': True, 'recordedProcessesAbsent': True, 'desktopClosed': True, **closed_proof}

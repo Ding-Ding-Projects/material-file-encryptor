@@ -4,7 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-import {safeFailureDetails,resumeCaptureReview,makeLaunch,makeBaselinePlan,makeInterfacePlan,validateCaptureReview,finalVerdict,helperFailure,createPlanRecorder,recordNativeCapture,captureProvenance} from '../scripts/local-headless-desktop-check.mjs';
+import {lifecycleTransport,safeFailureDetails,resumeCaptureReview,makeLaunch,makeBaselinePlan,makeInterfacePlan,validateCaptureReview,finalVerdict,helperFailure,createPlanRecorder,recordNativeCapture,captureProvenance} from '../scripts/local-headless-desktop-check.mjs';
 test('local launch binds exact executable, isolated profile and loopback debugging to one run',()=>{
  const root=path.join(os.tmpdir(),'owned-run');const executable=path.join(root,'package','MaterialFileEncryptor.exe');
  const launch=makeLaunch({executable,runRoot:root,port:9333});
@@ -104,4 +104,12 @@ test('pixel review resume requires completed teardown and unchanged packaged byt
   receipt.cleanup.desktopClosed=true;await save();await fs.writeFile(executable,'changed');await assert.rejects(resumeCaptureReview(root,{review}));assert.equal(calls,0);
   await fs.writeFile(executable,'executable');await save();const result=await resumeCaptureReview(root,{review});assert.equal(calls,1);assert.equal(result.passed,false);assert.equal(result.pixelsInspected,false);
  }finally{await fs.rm(root,{recursive:true});}
+});
+
+test('persistent endpoint selects project lifecycle adapter even without a CLI',()=>{
+ const installedLowlevel=path.resolve('installed/lifecycle.py');
+ for(const options of [{endpoint:'http://127.0.0.1:8765/mcp'},{endpoint:'http://127.0.0.1:8765/mcp',cli:'unused.exe'},{cli:'direct.exe'}]){
+  const selected=lifecycleTransport({...options,installedLowlevel});assert.equal(selected.useAdapter,true);assert.equal(path.basename(selected.lowlevel),'local-headless-desktop-check-cli.py');assert.equal(selected.transport,options.endpoint?'persistent-http-adapter':'direct-cli-adapter');
+ }
+ assert.deepEqual(lifecycleTransport({installedLowlevel}),{useAdapter:false,lowlevel:installedLowlevel,transport:'streamable-http'});
 });

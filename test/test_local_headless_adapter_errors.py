@@ -18,7 +18,8 @@ class AdapterErrors(unittest.TestCase):
 import os
 class ClientFailure(Exception):
  def __init__(self, code, message): self.code=code; self.reasonCode='CHILD_PREDATES_PARENT'; self.stage='ancestry'; super().__init__(message)
-def _read_state(path): return Path(path), {'process':{}, 'cleaned':False, 'desktop':'owned'}
+def _connect(endpoint, timeout): raise RuntimeError('Unexpected connection')
+def _read_state(path): return Path(path), {'process':{}, 'cleaned':False, 'desktop':'owned', 'endpoint':'http://127.0.0.1:8765/mcp'}
 def _process_tree(identity):
  if os.environ['ADAPTER_MOCK_PHASE']=='tree': raise ClientFailure('UNPROVEN_PROCESS_ANCESTRY', 'private-path raw diagnostic')
  return [{}]
