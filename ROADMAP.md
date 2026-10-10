@@ -17,7 +17,8 @@
 
 - [ ] Verify the modern workspace and every editable-field clear control in the real built application; source candidate `3733857d` is reviewed and tested.
 - [ ] Verify the startup-readback correction for paths containing spaces in the packaged and installed application; native-parser checks at `100182f` pass.
-- [ ] Verify the website's two clear controls and source-bound download eligibility in its built/live surface; 12 source checks pass at `96125c4`.
+- [ ] Verify the website's two clear controls and source-bound download eligibility in its built/live surface; the 18-tuple live control matrix passed, while downloaded runtime eligibility remains pending.
+- [x] Verify both website clear controls across 18 actual responsive tuples with 36 action/focus checks and exact decoded capture dimensions; retain canceled-media and temporary-profile limitations separately from the positive control result.
 - [x] Publish `v0.1.0-preview.16.1` from `56020da`, independently download all four assets, verify their sizes/hashes, and retain its failed runtime verdict with a known-issue warning.
 - [ ] Publish a corrective normal release and independently verify its downloaded runtime; publication and runtime acceptance have separate verdicts.
 
@@ -49,6 +50,6 @@
 
 ## Preservation follow-up
 
-- [ ] Inspect a rebuilt package after private local task-data exclusion. Source repair `93dfedbb` has two passing focused regressions and independent review; actual production output acceptance remains pending. Local 57a04e16 outputs stay quarantined; downloaded v1.19.1 contains zero private announcement entries.
+- [x] Inspect rebuilt packages after private local task-data exclusion. Candidates `ca9d63c` and `81cba398` passed actual 812-entry privacy and 739-entry integrity checks. Independent v1.25.1 and v1.27.1 payload inspection also found zero private task-directory entries. Local 57a04e16 outputs stay quarantined.
 - [ ] Complete the final modern 48-tuple runtime matrix and source-bound installed verification.
 - [ ] Complete responsive website acceptance with actual captured dimensions and strict target isolation.

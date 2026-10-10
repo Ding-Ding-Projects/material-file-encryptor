@@ -1,5 +1,15 @@
 # Verification resumed, 2026-10-09
 
+## Current runtime attempt and responsive evidence
+
+The frozen `81cba398` candidate built and packaged successfully with the same accepted executable and ASAR hashes as `ca9d63c`. Its real hidden-desktop attempt reached the mounted synthetic workspace but stopped before workflow acceptance at CDP ownership rejection `UNPROVEN_PROCESS_ANCESTRY` / `INVALID_NODE_IDENTITY`. A fresh proof during recovery passed; normal quit restored verification startup state, all recorded processes became absent, the hidden desktop closed and the synthetic credential was forgotten. Preserve the unsuccessful receipt. A transient incomplete startup snapshot is a hypothesis, not an established cause. The next tooling candidate permits at most three complete startup proofs, only after retaining the rejected private snapshot; later plans keep one attempt.
+
+The live website passed 18 responsive layout/control tuples: 1180, 390 and 320 CSS-pixel widths at height 850, three languages and two themes. Both clear controls passed all 36 action/focus checks. All 41 retained images were inspected; 38 page captures had exact requested dimensions. No body overflow, unnamed controls, console exception, unexpected origin or bad HTTP status was observed. Live assets stayed unchanged and match successful deployment `6971296538` at `57a04e16`. The strict whole-audit result remains incomplete: one canceled HTTP 206 media request remains recorded as a resource failure, and automatic approval rejected profile deletion. All seven browser processes, its port and its hidden desktop are absent. The retained profile must not be deleted through an alternate route.
+
+The pre-existing installation root was independently traced to an older diagnostic run containing four files, including a runtime snapshot, rather than the later three-file updater-only classification below. Each file matched that diagnostic package. Fresh process/startup/uninstall-registration checks were clear in both registry views. A verified copy and reversible move preserved that exact residue privately before any new installation. Its unknown historical uninstall exit status remains unknown and no prior lifecycle verdict was upgraded.
+
+Normal releases `v1.25.1` (`ca9d63c`) and `v1.27.1` (`81cba398`) were independently downloaded. Each of four hosted assets matched its size and SHA-256, and each extracted payload contained 644 files with no private task-directory entry. Both ASAR archives passed the actual privacy inspector and matched the local archive. Full 739-entry CRC/decompression verification is additionally recorded for v1.25.1. Installation and removal acceptance remain pending.
+
 ## Integrated verification tooling and package evidence
 
 Both exact build entrypoints exited zero at source `e902a2c073accd781de65e38a3eda68d2fb0d0d2`. Privacy inspection accepted 812 actual package entries with zero rejected entries. All 739 installer-package entries passed decompression and CRC verification, and independent ZIP inspection matched the embedded ASAR hash to the inspected package. These results do not establish runtime, installation or visual acceptance.

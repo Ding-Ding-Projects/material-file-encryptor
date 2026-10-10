@@ -10,7 +10,7 @@ test('local launch binds exact executable, isolated profile and loopback debuggi
  const launch=makeLaunch({executable,runRoot:root,port:9333});
  assert.equal(launch.executable,executable);assert.ok(launch.arguments.includes('--verification-profile='+path.join(root,'profile')));assert.ok(launch.arguments.includes('--remote-debugging-address=127.0.0.1'));
  assert.match(launch.cdp.expectedUrl,/resources\/app.asar\/src\/renderer\/index.html$/);
- const plan=makeBaselinePlan(launch,path.join(root,'lifecycle.json'));assert.equal(plan.endpoint,'http://127.0.0.1:9333');assert.equal(plan.receipt,path.join(root,'lifecycle.json'));assert.equal(plan.expectedUrl,launch.cdp.expectedUrl);
+ const plan=makeBaselinePlan(launch,path.join(root,'lifecycle.json'));assert.equal(plan.startupOwnershipAttempts,3);assert.equal(plan.endpoint,'http://127.0.0.1:9333');assert.equal(plan.receipt,path.join(root,'lifecycle.json'));assert.equal(plan.expectedUrl,launch.cdp.expectedUrl);
  assert.equal(plan.steps.filter(step=>step.op==='click'||step.op==='type').length,0);assert.equal(plan.steps.at(-1).op,'capture');assert.equal(plan.steps.at(-1).overwrite,false);
 });
 test('invalid local launch roots and ports cannot produce a launch request',()=>{
@@ -21,7 +21,7 @@ test('invalid local launch roots and ports cannot produce a launch request',()=>
 
 test('interface workflow asserts states after actions and keeps native proof separate',()=>{
  const root=path.join(os.tmpdir(),'owned-run');const launch=makeLaunch({executable:path.join(root,'package','app.exe'),runRoot:root,port:9333});const plan=makeInterfacePlan(launch,path.join(root,'lifecycle.json'));
- assert.ok(plan.steps.length<=100);assert.ok(plan.steps.some(step=>step.id==='locked-history-state'));assert.ok(plan.steps.some(step=>step.id==='locked-recycle-state'));
+ assert.equal(Object.hasOwn(plan,'startupOwnershipAttempts'),false);assert.ok(plan.steps.length<=100);assert.ok(plan.steps.some(step=>step.id==='locked-history-state'));assert.ok(plan.steps.some(step=>step.id==='locked-recycle-state'));
  for(const [index,step] of plan.steps.entries())if(['click','type'].includes(step.op)){assert.equal(plan.steps[index+1].op,'poll');assert.equal(plan.steps[index+2].op,'capture');}
  assert.equal(JSON.stringify(plan).includes('password-input'),false);assert.equal(JSON.stringify(plan).includes('awaitPromise'),false);
 });
@@ -112,4 +112,11 @@ test('persistent endpoint selects project lifecycle adapter even without a CLI',
   const selected=lifecycleTransport({...options,installedLowlevel});assert.equal(selected.useAdapter,true);assert.equal(path.basename(selected.lowlevel),'local-headless-desktop-check-cli.py');assert.equal(selected.transport,options.endpoint?'persistent-http-adapter':'direct-cli-adapter');
  }
  assert.deepEqual(lifecycleTransport({installedLowlevel}),{useAdapter:false,lowlevel:installedLowlevel,transport:'streamable-http'});
+});
+
+test('modern native inspections explicitly omit the baseline startup retry opt-in',async()=>{
+ const source=await fs.readFile(new URL('../scripts/local-headless-desktop-check.mjs',import.meta.url),'utf8');
+ assert.match(source,/const \{startupOwnershipAttempts,\.\.\.inspectionPlan\}=plan;/);
+ assert.match(source,/\[cdp,'inspect'\],inspectionPlan/);
+ assert.doesNotMatch(source,/\[cdp,'inspect'\],plan\)/);
 });
