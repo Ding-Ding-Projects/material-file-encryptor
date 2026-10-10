@@ -1,6 +1,6 @@
 # Native child diagnostic unit, 2026-10-10 UTC
 
-An isolated diagnostic unit based on `4f7497f8e4484fd92c1063229cb2034498e87ee6` adds an optional disabled-by-default native runner sink and a dedicated core-test mode. It records only direct-child identity and native lifecycle timing, with exact FILETIME strings and explicit completeness bounds. No graphical or installed candidate has changed. Root build, focused synthetic verification and independent review are pending. This unit does not repair or explain the historical ancestry rejection. See [diagnostic contract](docs/features/release/native-child-diagnostics.md).
+An isolated diagnostic unit based on `4f7497f8e4484fd92c1063229cb2034498e87ee6` adds an optional disabled-by-default native runner sink and a dedicated core-test mode. It records only direct-child identity and native lifecycle timing, with exact FILETIME strings and explicit completeness bounds. No graphical or installed candidate has changed. The first exact root build at `5f822ce` stopped at the documentation inventory check before native compilation; the contract now stays in the existing verification article. Root build, focused synthetic verification and independent review are pending. This unit does not repair or explain the historical ancestry rejection. See [diagnostic contract](docs/features/release/preview-verification.md#synthetic-direct-child-timing-diagnostics).
 
 # Current continuation milestone, 2026-10-10 UTC
 
