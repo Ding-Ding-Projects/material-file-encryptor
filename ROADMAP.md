@@ -4,7 +4,9 @@
 
 - [x] Replace backend-index/DOM-position correspondence with exact rendered version identity, completed archive generations and bounded pre-action observations; twenty focused checks and independent source reviews passed.
 - [x] Preserve the original restore-action exception when diagnostic query or write fails, with combined behavioral regressions.
-- [ ] Rebuild through both exact root entrypoints and verify restore in a fresh source-bound packaged workflow; the source55 failed run remains unchanged.
+- [x] Rebuild frozen `ccde68a8` through both exact root entrypoints; both exit zero, with unchanged source/index, 812-entry privacy and 739-entry archive integrity.
+- [ ] Verify restore in a fresh source-bound packaged workflow. The latest attempt stopped at its baseline-review deadline before workflow actions; owned recovery passed and the original timeout remains retained.
+- [x] Independently download normal `v1.54.1` at `ccde68a8`, verify all four hosted assets, safely extract 644 files and pass complete archive/privacy checks. Native DLL differences from the local build are recorded separately.
 - [ ] Complete the downloaded installed lifecycle, 48 renderer-emulation tuples, 13 clear controls and full browser acceptance; partial captures and normal release metadata do not satisfy these items.
 
 ## Encrypted storage and recovery
@@ -81,7 +83,7 @@
 - [x] Independently download normal `v1.43.1`, verify all four assets, all archive entries, 644 extracted files and the 84-entry ASAR privacy inventory.
 - [x] Integrate actual direct-CLI launch binding at `55ebe8bb`, with dry correctness/privacy reviews and focused mismatch rejection checks.
 - [x] Complete both exact local entrypoints at frozen `55ebe8bb`, with unchanged source/index/owning branch, 812-entry privacy and 739-entry package integrity.
-- [ ] Complete actual runtime acceptance at frozen `55ebe8bb`.
+- [ ] ~~Complete actual runtime acceptance at frozen `55ebe8bb`.~~ Superseded by the reviewed restore-verifier candidate `ccde68a8`; original attempts and bytes remain preserved.
 - [x] Update the public wiki handoff at `761258a8` and verify its remote HEAD.
 - [x] Deploy the complete refreshed two-page wiki snapshot from source8500ca1d and verify all 52 live files, 18 articles, 64 anchors and 773 local links/assets; browser acceptance remains separate.
 
@@ -89,4 +91,6 @@
 - [x] Repair safe underscore wiki basenames with eight focused checks, deliberate old-rule red replay and independent review.
 - [x] Preserve all 120 files of the partial source55 runtime, inspect 38 original captures and prove owned recovery/closure without upgrading its failed verdict.
 - [ ] Diagnose the incomplete descendant executable-path observations without weakening exact process identity or ancestry.
-- [ ] Complete the 144-tuple current documentation-browser acceptance; nine tuples are retained but unfinalized, tuple9 focus diagnosis remains unknown, all owned processes are safely closed and an evidence-first collector journal is in progress.
+- [ ] Complete the 144-tuple current documentation-browser acceptance. The latest diagnostic retained 24 completed desktop tuples and one partial narrow tuple, then stopped on a resource-body protocol rejection. Its profile remains retained and zero audits are finalized.
+- [x] Hash-preserve all 4,068 nonprofile files from that closed diagnostic and independently inspect all 25 genuine PNGs with their available raw observations. The bounded protocol projection repair passed 110 focused checks and independent review.
+- [ ] Repair the documentation publication trigger's missing generated-content inputs and verify the actual new deployment, complete live inventory and exact About homepage.
