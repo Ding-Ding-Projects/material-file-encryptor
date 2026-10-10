@@ -174,12 +174,23 @@ def main():
     helper = Path(os.environ['MFE_LOWLEVEL_CLIENT'])
     endpoint = os.environ.get('MFE_LOWLEVEL_URL')
     cli = Path(os.environ['MFE_LOWLEVEL_CLI']) if os.environ.get('MFE_LOWLEVEL_CLI') else None
+    if endpoint and cli:
+        raise SystemExit('Select exactly one lifecycle transport.')
     if not helper.is_file() or (not endpoint and (cli is None or not cli.is_file())):
         raise SystemExit('Installed lifecycle helper and selected transport are required.')
     spec = importlib.util.spec_from_file_location('installed_lifecycle', helper)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
+
+    receipt_spec = importlib.util.spec_from_file_location('direct_receipt', Path(__file__).with_name('direct-cli-receipt.py'))
+    receipt_adapter = importlib.util.module_from_spec(receipt_spec)
+    receipt_spec.loader.exec_module(receipt_adapter)
+    verify_transport = receipt_adapter.install_receipt_transport(module, endpoint=endpoint, cli=cli if not endpoint else None)
+    if len(sys.argv) == 2 and sys.argv[1] == 'transport-provenance':
+        print(json.dumps({'ok': True, 'client_ok': True, 'transport': 'persistent-http-adapter' if endpoint else receipt_adapter.DIRECT_TRANSPORT,
+                          **({'endpoint': endpoint} if endpoint else {'transportProvenance': verify_transport()})}))
+        raise SystemExit(0)
 
     transport_failures = []
     private_evidence_counts = install_private_edge_recorder(module)
@@ -188,11 +199,13 @@ def main():
         def __init__(self, timeout):
             self.timeout = timeout
         def list_tools(self):
+            verify_transport()
             result = subprocess.run([str(cli), '--help'], capture_output=True, text=True, timeout=self.timeout, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
             if result.returncode != 0:
                 raise module.ClientFailure('CLI_CATALOG_FAILED', 'Direct tool catalog was unavailable.')
             return [{'name': name} for name in re.findall(r'^  ([a-z][a-z_]+)$', result.stdout, re.M)]
         def call_tool(self, name, params):
+            verify_transport()
             result = subprocess.run([str(cli), name, '--json', json.dumps(params)], capture_output=True, text=True, timeout=self.timeout, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
             try:
                 payload = json.loads(result.stdout)
@@ -245,7 +258,7 @@ def main():
                 time.sleep(0.25)
             closed_proof = close_after_absence(client, state, proof['processes'])
             state['cleaned'] = True
-            state_path.write_text(json.dumps(state), encoding='utf-8')
+            module._atomic_write_json(state_path, state)
             print(json.dumps({'ok': True, 'client_ok': True, 'gracefulExit': True, 'recordedProcessesAbsent': True, 'desktopClosed': True, **closed_proof}))
         raise SystemExit(0)
     if len(sys.argv) > 1 and sys.argv[1] == 'cleanup':
@@ -275,7 +288,7 @@ def main():
                 raise SystemExit(1)
             closed_proof = close_after_absence(connect(state['endpoint'], 20), state, proof['processes'])
             state['cleaned'] = True
-            state_path.write_text(json.dumps(state), encoding='utf-8')
+            module._atomic_write_json(state_path, state)
             result = {'ok': True, 'client_ok': True, 'recordedProcessesAbsent': True, 'desktopClosed': True, **closed_proof}
         print(json.dumps(result))
         raise SystemExit(0 if result.get('client_ok') else 1)

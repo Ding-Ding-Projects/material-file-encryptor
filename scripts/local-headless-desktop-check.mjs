@@ -204,8 +204,9 @@ export async function resumeCaptureReview(runRoot,{review=reviewAllCaptures}={})
 }
 
 export function lifecycleTransport({cli,endpoint,installedLowlevel}) {
+ if(cli&&endpoint)throw new Error('Select exactly one lifecycle transport.');
  const useAdapter=Boolean(cli||endpoint);
- return {useAdapter,lowlevel:useAdapter?fileURLToPath(new URL('./local-headless-desktop-check-cli.py',import.meta.url)):installedLowlevel,transport:endpoint?'persistent-http-adapter':cli?'direct-cli-adapter':'streamable-http'};
+ return {useAdapter,lowlevel:useAdapter?fileURLToPath(new URL('./local-headless-desktop-check-cli.py',import.meta.url)):installedLowlevel,transport:endpoint?'persistent-http-adapter':cli?'direct-cheap-cli':'streamable-http'};
 }
 
 export async function createLiveRunRoot({temporaryRoot=os.tmpdir()}={}) {
@@ -245,6 +246,11 @@ export async function runLocalHeadlessCheck(env=process.env) {
  const sourceBinding=env.MFE_SOURCE_COMMIT||source;
  const resourceHashes={};for(const [name,file] of Object.entries({asar:path.join(path.dirname(executable),'resources','app.asar'),nativeHost:path.join(path.dirname(executable),'resources','native','MaterialFileEncryptor.Host.exe')}))resourceHashes[name]=createHash('sha256').update(await fs.readFile(file)).digest('hex');
  const receipt={version:1,transport,resourceHashes,route:'cheap-lowlevel-headless',sourceCommit:sourceBinding,executableSha256:createHash('sha256').update(await fs.readFile(executable)).digest('hex'),launch,preparedAt:new Date().toISOString(),launched:false,pixelsInspected:false,interactionsVerified:false};
+ if(transport==='direct-cheap-cli') {
+  const provenance=await command(env.MFE_PYTHON||'python',[lowlevel,'transport-provenance']);
+  assert.equal(provenance.client_ok,true);assert.equal(provenance.transport,transport);assert.equal(Object.hasOwn(provenance,'endpoint'),false);
+  receipt.transportProvenance=provenance.transportProvenance;
+ }
  const modernBinding=env.MFE_MODERN_UI_CHECK==='1'?await modernBuildBinding({buildReceiptPath:env.MFE_BUILD_RECEIPT,sourceCommit:sourceBinding,executable,resourceHashes}):null;
  await fs.writeFile(path.join(runRoot,'prepared.json'),JSON.stringify(receipt,null,2));
  if(env.MFE_HEADLESS_EXECUTE!=='1') {console.log(JSON.stringify({prepared:true,launched:false,runRoot,requires:'Set MFE_HEADLESS_EXECUTE=1 only after reviewing the packaged executable and isolated profile arguments.'}));return receipt;}

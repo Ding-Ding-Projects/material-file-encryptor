@@ -108,9 +108,10 @@ test('pixel review resume requires completed teardown and unchanged packaged byt
 
 test('persistent endpoint selects project lifecycle adapter even without a CLI',()=>{
  const installedLowlevel=path.resolve('installed/lifecycle.py');
- for(const options of [{endpoint:'http://127.0.0.1:8765/mcp'},{endpoint:'http://127.0.0.1:8765/mcp',cli:'unused.exe'},{cli:'direct.exe'}]){
-  const selected=lifecycleTransport({...options,installedLowlevel});assert.equal(selected.useAdapter,true);assert.equal(path.basename(selected.lowlevel),'local-headless-desktop-check-cli.py');assert.equal(selected.transport,options.endpoint?'persistent-http-adapter':'direct-cli-adapter');
+ for(const options of [{endpoint:'http://127.0.0.1:8765/mcp'},{cli:'direct.exe'}]){
+  const selected=lifecycleTransport({...options,installedLowlevel});assert.equal(selected.useAdapter,true);assert.equal(path.basename(selected.lowlevel),'local-headless-desktop-check-cli.py');assert.equal(selected.transport,options.endpoint?'persistent-http-adapter':'direct-cheap-cli');
  }
+ assert.throws(()=>lifecycleTransport({endpoint:'http://127.0.0.1:8765/mcp',cli:'unused.exe',installedLowlevel}),/exactly one/);
  assert.deepEqual(lifecycleTransport({installedLowlevel}),{useAdapter:false,lowlevel:installedLowlevel,transport:'streamable-http'});
 });
 
