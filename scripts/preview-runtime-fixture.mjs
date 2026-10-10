@@ -2,7 +2,8 @@ import {withCdpConnectionProof} from './cdp-connection-plan.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import {randomBytes} from 'node:crypto';
+import {randomBytes,createHash} from 'node:crypto';
+import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {NativeClient} from '../src/main/native-client.js';
@@ -36,13 +37,63 @@ export function runtimeCompletion(state,{synchronized=false,applicationError=fal
  const operationFinished=state.operation==null;
  return {failed:false,ready:operationFinished&&(!synchronized||(state.sync?.running===false&&(state.transport?.available===true||state.sync?.sourceAvailable===true)&&(state.sync?.pendingCommits??0)===0&&!state.transport?.pendingSynchronization))};
 }
+const freshGuiFixtures=new WeakSet();
 export async function prepareGuiVaultFixture(fixture) {
  const root=await fs.realpath(fixture.root);assert.equal(root,path.resolve(fixture.root),'GUI fixture root must resolve to its recorded owned directory.');
  const saved=JSON.parse(await fs.readFile(path.join(root,'fixture.json'),'utf8'));assert.equal(saved.root,fixture.root);assert.equal(saved.driveLetter,fixture.driveLetter);
  const gui={root,storageDir:path.join(root,'gui-storage'),cacheDir:path.join(root,'gui-cache'),keyFilePath:path.join(root,'gui-verification.key'),driveLetter:fixture.driveLetter};
  await fs.mkdir(gui.storageDir);await fs.mkdir(gui.cacheDir);
  const key=randomBytes(32);try{await fs.writeFile(gui.keyFilePath,key,{flag:'wx',mode:0o600});}finally{key.fill(0);}
- return gui;
+ freshGuiFixtures.add(gui);return gui;
+}
+
+export function validateNativeEmptyRoot(proof,root) {
+ assert.equal(proof.version,1);assert.equal(proof.root,root);assert.equal(proof.empty,true);
+ assert.ok(['0xC000000F','0x80000006'].includes(proof.completedNtStatus));assert.equal(proof.returnedBytes,0);
+ assert.ok(['0x00000103',proof.completedNtStatus].includes(proof.initialNtStatus));
+ assert.deepEqual(proof.before,proof.after);assert.deepEqual(proof.before,proof.reopened);
+ const identity=proof.before;assert.equal(identity.directory,true);assert.equal(identity.filesystem,'MaterialVault');
+ assert.ok(Number.isInteger(identity.attributes)&&(identity.attributes&16)!==0);
+ assert.ok(Number.isInteger(identity.volumeSerial)&&identity.volumeSerial>=0&&identity.volumeSerial<=0xffffffff);
+ assert.equal(identity.handleVolumeSerial,identity.volumeSerial);assert.match(identity.fileIndex,/^[0-9]{1,20}$/);
+ return true;
+}
+
+export async function proveFreshGuiRootEmpty(gui,{launch,receipt,observeStatus,platform=process.platform,runProbe}={}) {
+ assert.equal(platform,'win32','Native empty-root proof requires Windows.');
+ assert.equal(freshGuiFixtures.has(gui),true,'Only a newly prepared owned GUI fixture may be inspected.');
+ const root=await fs.realpath(gui.root);assert.equal(root,gui.root);
+ const saved=JSON.parse(await fs.readFile(path.join(root,'fixture.json'),'utf8'));
+ assert.equal(saved.root,root);assert.equal(saved.driveLetter,gui.driveLetter);assert.equal(saved.prepared,true);
+ assert.match(gui.driveLetter,/^[D-Z]:$/);
+ for(const [key,name]of [['storageDir','gui-storage'],['cacheDir','gui-cache']]) {
+  assert.equal(gui[key],path.join(root,name));assert.equal(await fs.realpath(gui[key]),gui[key]);
+  const stat=await fs.lstat(gui[key]);assert.equal(stat.isDirectory(),true);assert.equal(stat.isSymbolicLink(),false);
+ }
+ const runRoot=await fs.realpath(launch.runRoot);assert.equal(runRoot,path.resolve(launch.runRoot));
+ const runInfo=await fs.lstat(runRoot);assert.equal(runInfo.isDirectory(),true);assert.equal(runInfo.isSymbolicLink(),false);
+ assert.equal(path.resolve(receipt),path.join(runRoot,'lifecycle.json'));
+ const lifecycleInfo=await fs.lstat(receipt);assert.equal(lifecycleInfo.isFile(),true);assert.equal(lifecycleInfo.isSymbolicLink(),false);assert.equal(await fs.realpath(receipt),path.resolve(receipt));
+ const lifecycleBytes=await fs.readFile(receipt),lifecycle=JSON.parse(lifecycleBytes);
+ assert.equal(lifecycle.runRoot,runRoot);assert.equal(lifecycle.created,true);assert.notEqual(lifecycle.cleaned,true);
+ assert.equal(lifecycle.process.executablePath,launch.executable);
+ const binding=JSON.parse(await fs.readFile(path.join(runRoot,'prepared.json'),'utf8'));
+ assert.match(binding.sourceCommit,/^[a-f0-9]{40}$/);assert.match(binding.executableSha256,/^[a-f0-9]{64}$/);
+ const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
+ assert.equal(hash(await fs.readFile(launch.executable)),binding.executableSha256);
+ const assertMounted=state=>{assert.equal(state.mounted,true);assert.equal(state.locked,false);assert.equal(state.operation,null);for(const key of ['storageDir','cacheDir','driveLetter'])assert.equal(state[key],gui[key]);};
+ const beforeStatus=await observeStatus();assertMounted(beforeStatus);
+ const helper=fileURLToPath(new URL('./native-empty-root-proof.py',import.meta.url));
+ const helperBytes=await fs.readFile(helper);const nativeRoot=gui.driveLetter+'\\';
+ const probe=runProbe||((request)=>JSON.parse(execFileSync(process.env.MFE_PYTHON||'python',[helper],{input:JSON.stringify(request),encoding:'utf8',windowsHide:true,timeout:12000,maxBuffer:65536})));
+ const native=await probe({root:nativeRoot});validateNativeEmptyRoot(native,nativeRoot);
+ const afterStatus=await observeStatus();assertMounted(afterStatus);assert.deepEqual(afterStatus,beforeStatus);
+ assert.equal(hash(await fs.readFile(receipt)),hash(lifecycleBytes),'Lifecycle identity changed during the native proof.');
+ assert.equal(hash(await fs.readFile(launch.executable)),binding.executableSha256);
+ assert.equal(hash(await fs.readFile(helper)),hash(helperBytes));
+ const result={version:1,sourceCommit:binding.sourceCommit,executableSha256:binding.executableSha256,helperSha256:hash(helperBytes),fixtureHelperSha256:hash(await fs.readFile(fileURLToPath(import.meta.url))),lifecycleSha256:hash(lifecycleBytes),observedAt:new Date().toISOString(),beforeStatus,afterStatus,native,empty:true};
+ await fs.writeFile(path.join(runRoot,'gui-empty-root-proof.json'),JSON.stringify(result,null,2),{flag:'wx',mode:0o600});
+ freshGuiFixtures.delete(gui);return result;
 }
 export async function retireGuiVaultKey(gui) {
  const root=await fs.realpath(gui.root);const expected=path.join(root,'gui-verification.key');
@@ -156,7 +207,8 @@ export async function checkMountedRuntime({fixture,launch,receipt,executePlan,pr
  await execute(makeGuiVaultFormSteps(gui,'create',launch.outputRoot));await click('gui-create-submit','#dialog-submit',guiMounted);await waitBackend(false);
  const guiState=await asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted,storageDir:s.storageDir,cacheDir:s.cacheDir,driveLetter:s.driveLetter}))');
  assert.equal(guiState.mounted,true);assert.equal(guiState.locked,false);assert.equal(guiState.storageDir,gui.storageDir);assert.equal(guiState.cacheDir,gui.cacheDir);assert.equal(guiState.driveLetter,gui.driveLetter);
- const emptyBeforeLock=(await fs.readdir(gui.driveLetter+'\\')).length===0;
+ const emptyProof=await proveFreshGuiRootEmpty(gui,{launch,receipt,observeStatus:()=>asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted,operation:s.operation,storageDir:s.storageDir,cacheDir:s.cacheDir,driveLetter:s.driveLetter}))')});
+ const emptyBeforeLock=emptyProof.empty;
  await click('gui-empty-lock','#lock-button',"document.querySelector('#vault-badge').dataset.state === 'locked'");
  const emptyLocked=await asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted}))');
  await prepareEmptyLegacyGuiVault(gui,{...emptyLocked,emptyBeforeLock});
