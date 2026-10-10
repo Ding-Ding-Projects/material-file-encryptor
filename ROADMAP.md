@@ -82,4 +82,4 @@
 - [x] Repair safe underscore wiki basenames with eight focused checks, deliberate old-rule red replay and independent review.
 - [x] Preserve all 120 files of the partial source55 runtime, inspect 38 original captures and prove owned recovery/closure without upgrading its failed verdict.
 - [ ] Diagnose the incomplete descendant executable-path observations without weakening exact process identity or ancestry.
-- [ ] Complete the 144-tuple current documentation-browser acceptance after the private collector passes interface and ownership review; the first attempt completed zero tuples and is safely closed.
+- [ ] Complete the 144-tuple current documentation-browser acceptance; nine tuples are retained but unfinalized, tuple9 focus diagnosis remains unknown, all owned processes are safely closed and an evidence-first collector journal is in progress.
