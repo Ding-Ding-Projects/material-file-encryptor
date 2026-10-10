@@ -2,13 +2,18 @@
 
 ## Current source-bound acceptance, 2026-10-10
 
-- [x] Deploy the publication-input repair from 4f7497f8 and verify all 52 live files, 18 articles including two wiki pages, 65 anchors and 858 local links/assets; eight excluded paths return 404.
-- [x] Preserve and independently inspect all 42 current browser diagnostic captures and 6,040 tuple observations. Forty-one home tuples completed; partial tuple 41 and zero finalized audits remain explicit.
-- [ ] Repair current Document/request-lifecycle correlation in the private browser collector, review it independently and complete full browser acceptance without weakening exact-byte or ownership checks.
-- [x] Preserve all 105 downloaded native-run originals and inspect 23 captures; retain the sequence 77 ancestry rejection and original automatic-recovery failure separately from successful supplemental normal recovery.
-- [x] Verify root-entrypoint compilation and direct 36-check execution of the default-off native-child diagnostic unit at b43b4fd, with dry final independent reviews. The reviewed c15fd3d unit is included by this integration; remote proof is recorded separately.
-- [ ] Obtain decisive real-fixture process observations and complete mounted, copy-upgrade, transport, modern matrix and downloaded installed lifecycle acceptance.
-- [ ] Refresh the public wiki handoff and its deployed complete snapshot after the current evidence milestone.
+- [x] Verify the actual d683 documentation deployment, run 38044356274 and deployment 6979358841: 52 live files, 18 articles including two wiki pages, 66 anchors, 860 links and eight excluded 404 results; exact homepage read back.
+- [x] Verify normal v1.60.1 at d683 with both classification flags false and four expected assets. Downloaded runtime acceptance remains v1.54.1 at ccde.
+- [x] Import the complete published two-page wiki revision 74983adf byte for byte and record its exact catalogue inventory in this source unit.
+- [ ] Build, publish and independently verify deployment of the refreshed wiki snapshot; source import does not prove live delivery.
+- [x] Preserve and independently inspect all 42 historical 4f browser diagnostic images and 6,040 tuple observations. Forty-one home tuples completed; zero audits are finalized.
+- [x] Independently review the bounded current Document/request-lifecycle correlation repair in the private collector; it remains unlaunched.
+- [ ] Complete full browser acceptance without weakening exact-byte or ownership checks.
+- [x] Preserve downloaded native-run originals and the strict ancestry stop separately from earlier successful supplemental recovery.
+- [x] Verify default-off native-child diagnostic root build and direct 36 checks at b43b4fd; synthetic diagnostics do not establish native workflows.
+- [x] Preserve original modern v2 NATIVE_OBSERVATION_FAILED and PROCESS_IDENTITY_CHANGED receipts unchanged; separate exact-identity normal recovery proved process/desktop absence and subsequent owned credential retirement.
+- [ ] Complete modern v2 acceptance: two baselines were reviewed, but zero measured captures completed; supplemental recovery does not satisfy the matrix.
+- [ ] Complete mounted, copy-upgrade, transport, modern matrix, downloaded installation, installed runtime and uninstall acceptance.
 
 ## Exact restore selection verification, 2026-10-10
 
