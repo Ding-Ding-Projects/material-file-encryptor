@@ -7,6 +7,10 @@ import re
 import subprocess
 import sys
 import time
+import stat
+import hashlib
+import uuid
+from datetime import datetime, timezone
 
 import contextlib
 import io
@@ -38,8 +42,135 @@ def configure_transport(lifecycle, endpoint, direct_factory, failures):
     return connect
 
 
+def validated_rejected_edge(lifecycle, error):
+    edge = getattr(error, 'rejected_edge', None)
+    keys = {'reasonCode', 'stage', 'childIdentity', 'claimedParentPid', 'parentIdentity', 'parentPresent', 'childCreationTicks', 'parentCreationTicks', 'ordering'}
+    if not isinstance(edge, dict) or set(edge) != keys:
+        raise ValueError('Unsupported rejected edge')
+    if error.code != 'UNPROVEN_PROCESS_ANCESTRY' or edge['reasonCode'] not in {'MISSING_PARENT', 'CHILD_PREDATES_PARENT'} or edge['stage'] != 'ancestry' or getattr(error, 'stage', None) != 'ancestry':
+        raise ValueError('Unsupported rejection')
+    if getattr(error, 'reason_code', getattr(error, 'reasonCode', None)) != edge['reasonCode']:
+        raise ValueError('Mismatched rejection reason')
+    child = edge['childIdentity']; lifecycle._validate_process_identity(child)
+    if type(edge['claimedParentPid']) is not int or edge['claimedParentPid'] != child['parentPid'] or type(edge['childCreationTicks']) is not int or edge['childCreationTicks'] != lifecycle._creation_ticks(child['creationDate']):
+        raise ValueError('Mismatched child identity')
+    if edge['reasonCode'] == 'MISSING_PARENT':
+        if edge['parentPresent'] is not False or edge['parentIdentity'] is not None or edge['parentCreationTicks'] is not None or edge['ordering'] != 'PARENT_ABSENT':
+            raise ValueError('Invalid parent absence')
+    else:
+        parent = edge['parentIdentity']; lifecycle._validate_process_identity(parent)
+        if edge['parentPresent'] is not True or parent['pid'] != child['parentPid'] or type(edge['parentCreationTicks']) is not int or edge['parentCreationTicks'] != lifecycle._creation_ticks(parent['creationDate']) or edge['childCreationTicks'] >= edge['parentCreationTicks'] or edge['ordering'] != 'CHILD_PREDATES_PARENT':
+            raise ValueError('Invalid parent ordering')
+    encoded = json.dumps(edge, separators=(',', ':'), allow_nan=False).encode('utf-8')
+    if len(encoded) > 65536:
+        raise ValueError('Rejected edge exceeds bound')
+    return json.loads(encoded)
+
+
+def checked_path(path, directory=False):
+    path = Path(path)
+    if not path.is_absolute() or path.resolve(strict=True) != path:
+        raise ValueError('Unresolved evidence path')
+    for item in [*reversed(path.parents), path]:
+        info = item.lstat()
+        if stat.S_ISLNK(info.st_mode) or getattr(info, 'st_file_attributes', 0) & 0x400:
+            raise ValueError('Linked evidence path')
+    info = path.lstat()
+    if not directory and getattr(info, 'st_nlink', 1) != 1:
+        raise ValueError('Hard-linked evidence path')
+    if not (stat.S_ISDIR(info.st_mode) if directory else stat.S_ISREG(info.st_mode)):
+        raise ValueError('Wrong evidence path kind')
+    return path
+
+
+@contextlib.contextmanager
+def pinned_directories(root, state_path):
+    # On Windows, deny delete sharing while writing so checked ancestors cannot
+    # be renamed or replaced by a junction between validation and exclusive create.
+    handles = []
+    if os.name != 'nt':
+        checked_path(root, directory=True)
+        yield
+        return
+    import ctypes
+    from ctypes import wintypes
+    kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+    kernel.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, ctypes.c_void_p, wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+    kernel.CreateFileW.restype = wintypes.HANDLE
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    try:
+        for directory in [*reversed(root.parents), root]:
+            handle = kernel.CreateFileW(str(directory), 0x80, 3, None, 3, 0x02200000, None)
+            if handle == ctypes.c_void_p(-1).value:
+                raise ValueError('Evidence directory cannot be pinned')
+            handles.append(handle)
+            checked_path(directory, directory=True)
+        handle = kernel.CreateFileW(str(state_path), 0x80, 1, None, 3, 0x00200000, None)
+        if handle == ctypes.c_void_p(-1).value:
+            raise ValueError('Lifecycle file cannot be pinned')
+        handles.append(handle)
+        checked_path(state_path)
+        yield
+    finally:
+        for handle in reversed(handles): kernel.CloseHandle(handle)
+
+
+def persist_rejected_edge(lifecycle, context, root_identity, error, original_read_state):
+    edge = validated_rejected_edge(lifecycle, error)
+    raw_path, saved = context
+    state_path = checked_path(raw_path)
+    root = checked_path(Path(saved['runRoot']), directory=True)
+    if state_path.parent != root or state_path.name != 'lifecycle.json' or saved.get('created') is not True or saved.get('cleaned') is not False or saved.get('process') != root_identity or Path(saved['outputRoot']) != root / 'output':
+        raise ValueError('Unowned lifecycle evidence destination')
+    with pinned_directories(root, state_path):
+        checked_path(state_path)
+        _, current = original_read_state(str(state_path))
+        if current != saved:
+            raise ValueError('Lifecycle changed before evidence write')
+        record = {'version': 1, 'recordedAt': datetime.now(timezone.utc).isoformat(), 'code': error.code,
+                  'lifecycleSha256': hashlib.sha256(state_path.read_bytes()).hexdigest(), 'rootIdentity': root_identity, 'rejectedEdge': edge}
+        encoded = json.dumps(record, separators=(',', ':'), allow_nan=False).encode('utf-8')
+        if len(encoded) > 131072:
+            raise ValueError('Evidence record exceeds bound')
+        destination = root / ('rejected-edge-' + uuid.uuid4().hex + '.json')
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_BINARY', 0)
+        descriptor = os.open(destination, flags, 0o600)
+        with os.fdopen(descriptor, 'wb') as output:
+            output.write(encoded); output.flush(); os.fsync(output.fileno())
+        checked_path(destination)
+        if destination.read_bytes() != encoded:
+            raise ValueError('Evidence readback mismatch')
+
+
+def install_private_edge_recorder(lifecycle):
+    original_read_state = lifecycle._read_state
+    original_validate = lifecycle._validate_process_tree
+    context = None
+    counts = {'saved': 0, 'unavailable': 0}
+    def read_state(value):
+        nonlocal context
+        result = original_read_state(value)
+        context = (Path(value), json.loads(json.dumps(result[1])))
+        return result
+    def validate(root, processes):
+        try:
+            return original_validate(root, processes)
+        except lifecycle.ClientFailure as error:
+            if error.code == 'UNPROVEN_PROCESS_ANCESTRY' and hasattr(error, 'rejected_edge'):
+                try:
+                    if context is None: raise ValueError('No saved lifecycle context')
+                    persist_rejected_edge(lifecycle, context, root, error, original_read_state)
+                    counts['saved'] += 1
+                except Exception:
+                    counts['unavailable'] += 1
+            raise
+    lifecycle._read_state = read_state
+    lifecycle._validate_process_tree = validate
+    return counts
+
+
 def main():
-    global module, policy, transport_failures
+    global module, policy, transport_failures, private_evidence_counts
     helper = Path(os.environ['MFE_LOWLEVEL_CLIENT'])
     endpoint = os.environ.get('MFE_LOWLEVEL_URL')
     cli = Path(os.environ['MFE_LOWLEVEL_CLI']) if os.environ.get('MFE_LOWLEVEL_CLI') else None
@@ -51,6 +182,7 @@ def main():
     spec.loader.exec_module(module)
 
     transport_failures = []
+    private_evidence_counts = install_private_edge_recorder(module)
 
     class DirectClient:
         def __init__(self, timeout):
@@ -157,10 +289,16 @@ def sanitized_failure(code, details=None):
     if not isinstance(code, str) or not re.fullmatch(r'[A-Z][A-Z0-9_]{0,79}', code):
         code = 'ADAPTER_FAILED'
     result = {'ok': False, 'client_ok': False, 'code': code, 'error': 'Owned lifecycle verification failed; processes and evidence are retained.'}
-    details = details or {}
+    details = dict(details or {})
+    if 'reasonCode' not in details and 'reason_code' in details:
+        details['reasonCode'] = details['reason_code']
     for key, allowed in [('reasonCode', REASONS), ('stage', STAGES)]:
         if details.get(key) in allowed:
             result[key] = details[key]
+    counts = globals().get('private_evidence_counts', {})
+    if counts.get('saved', 0) or counts.get('unavailable', 0):
+        result['privateEvidenceCount'] = counts.get('saved', 0)
+        result['privateEvidenceUnavailableCount'] = counts.get('unavailable', 0)
     return result
 
 
