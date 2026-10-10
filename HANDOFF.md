@@ -1,3 +1,21 @@
+# Current implementation handoff, 2026-10-10 UTC
+
+Implementation resumed after the allowance reset. Main `acc4e528b0dd67389d113f1101c3461859c166bf` is pushed and verified. It includes independently reviewed upgrade-letter repair `46146d90` and fixture-retirement repair `1c908607`. The former permits only the unlocked, mounted legacy original's current letter during copy upgrade. The latter validates registered empty destinations, retains per-target retirement outcomes and separates process closure from credential retirement. Three availability regressions and 32 retirement/lifecycle checks passed, including a deliberate negative retirement mutation. These source checks do not establish rebuilt runtime acceptance.
+
+The old documentation draft commits `dd4ab51` and `87f8b0d` are preserved in main ancestry through `3f48fd0`, without changing the current source tree. Independent reconciliation established that the later complete article/wiki/gallery implementation contains their valid contributions. Original draft history and external evidence remain separately preserved; no worktree or branch deletion occurred.
+
+Frozen source `289f1b7` passed exact `build.bat /s` and `build-installer.bat /s`. Actual local package inspection passed 812 privacy entries with zero rejected and all 739 archive CRC entries. Normal release v1.75.1 was independently downloaded, all four hosted hashes and sizes matched, and its extracted payload passed separate privacy, archive, release-feed and unsigned-status checks. Six native DLL/PDB hashes differ from the local build, so local runtime cannot substitute for downloaded runtime.
+
+That source's real packaged run retained 83 original images and stopped at copy-upgrade readiness before the modern matrix. Zero modern tuples were accepted. Original process and desktop closure succeeded; an empty, never-created upgrade destination then caused the old retirement path to fail. Supplemental retirement of the real synthetic vaults and the owned key completed separately. All original unsuccessful receipts remain unchanged. The integrated repairs require a fresh frozen build and runtime.
+
+Responsive candidate `a7504af` completed 72 measured browser tuples and 90 clear-control checks, producing 108 page originals. Independent review accepted 96 within their captured regions and withheld all 12 narrow gallery originals. The shared header fits the measured Home, category and article tuples. Gallery provenance hashes still overflowed; candidate `1028f4d` widens wrapping to all publication code and passes the exact build plus 20 focused checks, but its runtime remains unverified. This candidate remains on `task/responsive-home-repair-20261010`, pending integration.
+
+Browser lifecycle acceptance is separate: category, gallery and the owned static server have passing original closure receipts. Home/article confirmation returned `PROCESS_IDENTITY_CHANGED`; wiki was rejected before interaction with `CHILD_PREDATES_PARENT`. Exact retained evidence remains authoritative. All profiles and rejected launches are retained. No fresh absence observation replaces missing original closure proof, and no further unchanged browser launch is authorized by this record.
+
+Remaining: rebuild the integrated product repairs; complete real copy upgrade and transport; run all 48 configurations with 432 state captures and 13 baseline clear-control captures; inspect and publish every eligible unique current original; independently download the final source-bound normal release and verify installed workflows/removal; finish responsive gallery/wiki and original browser closure; verify deployed content and exact homepage. Native physical-scale acceptance remains incomplete when no safe supported route can prove it. Preserve automatic normal releases and separate privacy, integrity, runtime, installed, removal and visual verdicts.
+
+# Historical source-bound records
+
 # Preservation handoff, 2026-10-10 UTC
 
 Recorded at 2026-10-10T17:21:07.853617+00:00. Verified account allowance is 10% remaining, the inclusive preservation threshold. The wider goal remains unfinished. No new implementation, build or runtime launch is authorized by this preservation record.

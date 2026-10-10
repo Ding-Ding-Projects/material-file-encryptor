@@ -1,3 +1,22 @@
+# Current resumed verification
+
+- [x] Reconcile and preserve the older documentation draft in main ancestry without replacing the later complete implementation.
+- [x] Build and package source 289f1b7 through both exact root entrypoints; inspect 812 privacy entries and all 739 archive CRC entries.
+- [x] Independently download normal v1.75.1 and verify all four asset hashes/sizes, actual payload privacy and archive integrity.
+- [x] Preserve and inspect the unsuccessful 83-image runtime before modern-matrix entry, with separate supplemental fixture retirement.
+- [x] Integrate independently reviewed upgrade-letter and fixture-retirement source repairs; pass three and 32 focused checks respectively.
+- [ ] Rebuild and execute the integrated repairs; source checks alone do not satisfy runtime acceptance.
+- [ ] Complete 432 matrix state captures and 13 baseline clear-control captures, plus native and workflow evidence.
+- [ ] Verify responsive candidate 1028f4d, preserving the preceding 108 reviewed originals and 12 narrow-gallery exclusions.
+- [ ] Resolve browser identity-evidence gaps without weakening strict ownership checks or substituting later absence.
+- [ ] Publish every eligible unique current original with complete provenance through the existing product gallery.
+- [ ] Complete final-release downloaded execution, genuine installation, installed workflows and removal.
+- [ ] Verify complete deployed documentation/wiki, routes, assets, both clear controls and exact About homepage.
+- [ ] Establish native physical-scale evidence or retain its explicit unsupported-route limitation.
+- [ ] Finish preservation-backed, ownership-proven and ancestry-proven closeout; retained active and uncertain work remains untouched.
+
+# Historical source-bound checklists
+
 # Preservation checklist at source I
 
 - [x] Preserve and verify source I on task and main branches; complete focused 15/15 source checks and two dry reviews.
