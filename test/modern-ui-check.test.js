@@ -6,7 +6,7 @@ import vm from 'node:vm';
 import os from 'node:os';
 import {createHash} from 'node:crypto';
 import {modernNativeObservation,modernBuildBinding} from '../scripts/local-headless-desktop-check.mjs';
-import {matrix,workspaceStates,makeWorkspacePlan,makeDialogPlan,makeClearPlan,makeRestorePlan,assertMeasurement,makeProbeReceipt,runModernPhase,layoutExpression,observedRuntime} from '../scripts/modern-ui-check.mjs';
+import {matrix,workspaceStates,makeWorkspacePlan,makeDialogPlan,makeClearPlan,makeRestorePlan,assertMeasurement,makeProbeReceipt,runModernPhase,layoutExpression,settledMotionExpression,observedRuntime} from '../scripts/modern-ui-check.mjs';
 
 const launch={outputRoot:path.resolve('evidence-owned/output'),cdp:{port:9333,expectedUrl:'file:///C:/owned/resources/app.asar/src/renderer/index.html'}};
 const probeEvidence={observe:async()=>({}),persist:async({measurements})=>measurements.length};
@@ -149,4 +149,37 @@ test('build binding rejects stale source, dirty or failed builds and wrong execu
 test('modern dialog and clear attachments retry proof, restoration removes opt-in',()=>{
  for(const p of [makeDialogPlan({launch,receipt,tuple:matrix[0]}),makeClearPlan({launch,receipt,phase:'workspace',tuple:matrix[0]}),makeClearPlan({launch,receipt,phase:'dialog',tuple:matrix[0]}),makeRestorePlan({launch,receipt,phase:'start'})])assert.equal(p.startupOwnershipAttempts,3);
  assert.equal(Object.hasOwn(makeRestorePlan({launch,receipt,phase:'end',purpose:'recovery'}),'startupOwnershipAttempts'),false);
+});
+
+test('clear minimum allows only tiny floating arithmetic without changing raw rectangles',()=>{
+ for(const size of [44,43.99998474121094,43.9999]){const value=measurement();value.fields[0].height=size;assert.equal(assertMeasurement(value,matrix[0]),true);assert.equal(value.fields[0].height,size);}
+ for(const size of [43.999,43.99,43,0,NaN,Infinity,'44'])for(const axis of ['width','height']){const value=measurement();value.fields[0][axis]=size;assert.throws(()=>assertMeasurement(value,matrix[0]));}
+});
+function motionFixture(){
+ const ancestor={getClientRects:()=>[{}],contains:element=>element===target},target={getClientRects:()=>[{}],contains:element=>element===descendant},descendant={getClientRects:()=>[{}],contains:()=>false},unrelated={getClientRects:()=>[{}],contains:()=>false};
+ let animations=[];const context={document:{querySelectorAll:()=>[target],getAnimations:()=>animations}};
+ return {context,ancestor,target,descendant,unrelated,setAnimations:value=>animations=value};
+}
+test('measurement readiness waits for visible ancestor and descendant motion including pending and paused effects',()=>{
+ const fixture=motionFixture(),expression=settledMotionExpression('#owned');
+ for(const element of [fixture.ancestor,fixture.target,fixture.descendant]){
+  const animation={effect:{target:element},playState:'running',pending:false};fixture.setAnimations([animation]);assert.equal(vm.runInNewContext(expression,fixture.context),false);
+  animation.playState='finished';animation.pending=true;assert.equal(vm.runInNewContext(expression,fixture.context),false);
+  animation.pending=false;animation.playState='paused';assert.equal(vm.runInNewContext(expression,fixture.context),false);
+  animation.playState='finished';assert.equal(vm.runInNewContext(expression,fixture.context),true);
+ }
+ fixture.setAnimations([{effect:{target:fixture.unrelated},playState:'running'}]);assert.equal(vm.runInNewContext(expression,fixture.context),true);
+ delete fixture.context.document.getAnimations;assert.equal(vm.runInNewContext(expression,fixture.context),false);
+});
+test('every modern measurement and paired capture is preceded by bounded settled-motion polling',()=>{
+ for(const p of [makeWorkspacePlan({launch,receipt,tuple:matrix[0]}),makeDialogPlan({launch,receipt,tuple:matrix[0]}),...['workspace','dialog'].map(phase=>makeClearPlan({launch,receipt,phase,tuple:matrix[0]}))]){
+  assert.equal(p.timeoutMs,90000);
+  for(const [index,step]of p.steps.entries())if(step.id.endsWith('-measure')){assert.equal(p.steps[index-1].op,'poll');assert.equal(p.steps[index-1].equals,true);assert.equal(p.steps[index-1].intervalMs,100);assert.ok(p.steps[index-1].id.endsWith('-motion-settled'));assert.equal(p.steps[index+1].op,'capture');}
+ }
+});
+test('unsettled motion deadline stays unsuccessful before measurement or capture',async()=>{
+ const records=[];let captured=0,measured=0;
+ const fixture=motionFixture();fixture.setAnimations([{effect:{target:fixture.ancestor},playState:'running'}]);
+ const executePlan=async p=>{for(const step of p.steps){if(step.id.endsWith('-motion-settled')){for(let i=0;i<3;i++)assert.equal(vm.runInNewContext(step.expression,fixture.context),false);throw Object.assign(new Error('PLAN_TIMEOUT'),{code:'PLAN_TIMEOUT'});}if(step.op==='capture')captured++;if(step.id.endsWith('-measure'))measured++;}return {results:[]};};
+ await assert.rejects(runModernPhase({launch,receipt,phase:'workspace',executePlan,probeEvidence,report:()=>{},record:async event=>records.push(event)}),/PLAN_TIMEOUT/);assert.equal(captured,0);assert.equal(measured,0);assert.ok(records.some(row=>row.status==='failed'&&row.reason==='PLAN_EXECUTION_FAILED'));
 });

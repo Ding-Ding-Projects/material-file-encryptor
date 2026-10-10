@@ -28,11 +28,21 @@ function selectView(steps,view,id) {
 }
 
 // Read-only measurement: names and values are deliberately excluded.
+function settledMotion(target) {
+ if(typeof document.getAnimations!=='function')return false;
+ return !document.getAnimations().some(animation=>{
+  const element=animation.effect?.target;
+  return element?.getClientRects().length>0&&(element===target||target.contains(element)||element.contains(target))&&(animation.pending||['running','paused'].includes(animation.playState));
+ });
+}
+export function settledMotionExpression(selector) {
+ return `(()=>{const matches=[...document.querySelectorAll(${quote(selector)})].filter(el=>el.getClientRects().length>0);return matches.length===1&&(${settledMotion.toString()})(matches[0]);})()`;
+}
 export function layoutExpression(selector) {
  return `(()=>{const selector=${quote(selector)};const matches=[...document.querySelectorAll(selector)].filter(el=>el.getClientRects().length>0);if(matches.length!==1)throw new Error('Expected one visible layout target');const target=matches[0];const properties=['display','position','boxSizing','width','minWidth','maxWidth','height','minHeight','maxHeight','margin','padding','gap','flexDirection','flexBasis','flexGrow','flexShrink','gridTemplateColumns','gridTemplateRows','alignItems','justifyContent','overflowX','overflowY','transform','fontSize','lineHeight','visibility','opacity','zIndex'];const measure=(el,selector)=>{const style=getComputedStyle(el),r=el.getBoundingClientRect();return{selector,matchedCount:1,chosenIndex:0,rect:Object.fromEntries(['x','y','top','right','bottom','left','width','height'].map(key=>[key,r[key]])),computed:Object.fromEntries(properties.map(key=>[key,style[key]]))}};const elements=[measure(target,selector)];let ancestor=target.parentElement;for(let i=0;ancestor&&i<4;i++,ancestor=ancestor.parentElement)elements.push(measure(ancestor,'ancestor:'+i));const fields=[...(target.matches('.clearable-field')?[target]:[]),...target.querySelectorAll('.clearable-field')].filter(el=>el.getClientRects().length>0).map(el=>{const input=el.querySelector('input,textarea'),button=el.querySelector('.field-clear'),r=button?.getBoundingClientRect(),ir=input?.getBoundingClientRect();return{id:input?.id||null,type:input?.type||input?.tagName,buttonCount:el.querySelectorAll('.field-clear').length,buttonType:button?.type,hasLabel:Boolean(button?.getAttribute('aria-label')),width:r?.width||0,height:r?.height||0,insideField:Boolean(r&&ir&&r.left>=ir.left-1&&r.right<=ir.right+1&&r.top>=ir.top-1&&r.bottom<=ir.bottom+1),disabled:Boolean(button?.disabled)}});return{selector,matchedCount:matches.length,chosenIndex:0,viewport:{width:innerWidth,height:innerHeight,scale:devicePixelRatio},pageOverflow:document.documentElement.scrollWidth>innerWidth+1,elements,fields}})()`;
 }
 function captureAndMeasure(steps,launch,id,selector) {
- steps.push({id:id+'-measure',op:'evaluate',expression:layoutExpression(selector)},{id:id+'-capture',op:'capture',path:path.join(launch.outputRoot,'modern-'+id+'.png'),overwrite:false});
+ steps.push(poll(id+'-motion-settled',settledMotionExpression(selector)),{id:id+'-measure',op:'evaluate',expression:layoutExpression(selector)},{id:id+'-capture',op:'capture',path:path.join(launch.outputRoot,'modern-'+id+'.png'),overwrite:false});
 }
 function prepareTuple(steps,tuple,id) {
  assert.ok(matrix.some(item=>JSON.stringify(item)===JSON.stringify(tuple)),'Unknown matrix tuple');
@@ -184,7 +194,10 @@ export function assertMeasurement(value,tuple) {
  assert.equal(value.matchedCount,1);assert.equal(value.chosenIndex,0);
  assert.equal(value.viewport.width,tuple.width);assert.equal(value.viewport.height,tuple.height);assert.ok(Math.abs(value.viewport.scale-tuple.scale)<.01);
  assert.equal(value.pageOverflow,false,'Page content exceeds the viewport');
- for(const field of value.fields){assert.equal(field.buttonCount,1);assert.equal(field.buttonType,'button');assert.equal(field.hasLabel,true);assert.ok(field.width>=44&&field.height>=44,'Clear target below 44 CSS pixels');assert.equal(field.insideField,true,'Clear target escapes its field');}
+ // Retain raw rectangles. This allowance covers only subpixel arithmetic at
+ // the clear-control minimum, not overflow, selection, or ownership checks.
+ const minimum=44-1e-4;
+ for(const field of value.fields){assert.equal(field.buttonCount,1);assert.equal(field.buttonType,'button');assert.equal(field.hasLabel,true);assert.ok(Number.isFinite(field.width)&&Number.isFinite(field.height)&&field.width>=minimum&&field.height>=minimum,'Clear target below 44 CSS pixels');assert.equal(field.insideField,true,'Clear target escapes its field');}
  assert.ok(value.elements[0].rect.width>0&&value.elements[0].rect.height>0);
  return true;
 }
