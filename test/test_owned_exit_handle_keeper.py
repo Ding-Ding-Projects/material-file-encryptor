@@ -272,10 +272,10 @@ class KeeperTests(unittest.TestCase):
         with self.assertRaisesRegex(tool.KeeperFailure, 'INVALID_EXIT_PROOF'):
             tool.Keeper(lifecycle, policy, self.native, self.state, self.proof, {}, lambda: None, self.confirm)
 
-    def execute_main(self, commands, failed_release=False):
+    def execute_main(self, commands, failed_release=False, receipt_name='exit-handle-keeper.json'):
         helper = self.directory / 'helper.py'
         helper.write_text('# private sentinel')
-        receipt = self.directory / 'exit-handle-keeper.json'
+        receipt = self.directory / receipt_name
         state = dict(self.saved, runRoot=str(self.directory), outputRoot=str(self.directory / 'output'))
         self.state.write_text(json.dumps(state))
         python = Path(sys.executable)
@@ -351,6 +351,47 @@ class KeeperTests(unittest.TestCase):
         tool.os.link(self.proof, linked)
         with self.assertRaisesRegex(tool.KeeperFailure, 'UNSAFE_EXIT_INPUT'):
             tool.Keeper(lifecycle, policy, self.native, self.state, self.proof, {}, lambda: None, self.confirm)
+
+    def test_private_diagnostic_retains_stage_type_without_message(self):
+        with patch.object(self.native, 'open', side_effect=TimeoutError('private sentinel C:/private/identity')):
+            status, public, receipt = self.execute_main('')
+        self.assertEqual(status, 1)
+        self.assertEqual(receipt['failure']['stage'], 'handle-acquisition')
+        self.assertEqual(receipt['failure']['exceptionType'], 'TimeoutError')
+        self.assertTrue(receipt['failure']['callsites'])
+        self.assertLessEqual(len(receipt['failure']['callsites']), 8)
+        self.assertNotIn('private sentinel', json.dumps(receipt['failure']))
+        self.assertNotIn('C:/private', json.dumps(receipt['failure']))
+        self.assertEqual(set(json.loads(public.strip())), {'ok', 'code', 'heldCount'})
+
+    def test_versioned_attempt_preserves_failed_original_receipt(self):
+        status, _, _ = self.execute_main('')
+        self.assertEqual(status, 1)
+        original = (self.directory / 'exit-handle-keeper.json').read_bytes()
+        name = 'exit-handle-keeper-' + 'a' * 32 + '.json'
+        self.native = Native()
+        status, _, receipt = self.execute_main('{"command":"confirm"}\n{"command":"release"}\n', receipt_name=name)
+        self.assertEqual(status, 0)
+        self.assertTrue(receipt['accepted'])
+        self.assertEqual((self.directory / 'exit-handle-keeper.json').read_bytes(), original)
+
+    def test_default_receipt_existing_remains_immutable(self):
+        self.execute_main('')
+        original = (self.directory / 'exit-handle-keeper.json').read_bytes()
+        status, public, _ = self.execute_main('')
+        self.assertEqual(status, 1)
+        self.assertIn('INVALID_RECEIPT_DESTINATION', public)
+        self.assertEqual((self.directory / 'exit-handle-keeper.json').read_bytes(), original)
+
+    def test_private_diagnostic_bounds_hostile_names(self):
+        hostile = type('C:/private/sentinel', (Exception,), {})
+        try:
+            raise hostile('identity payload')
+        except Exception as error:
+            result = tool.private_failure(error, 'C:/private/stage')
+        self.assertEqual(result['stage'], 'initialization')
+        self.assertEqual(result['exceptionType'], 'Exception')
+        self.assertNotIn('identity payload', json.dumps(result))
 
 
 if __name__ == '__main__':

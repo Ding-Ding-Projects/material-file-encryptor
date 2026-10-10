@@ -14,6 +14,23 @@ import stat
 import sys
 import threading
 import time
+import traceback
+
+STAGES = {'initialization', 'input-validation', 'helper-import', 'transport-validation', 'lifecycle-validation', 'receipt-validation', 'construction', 'full-tree-before', 'cim-before', 'handle-acquisition', 'native-pid', 'cim-after', 'full-tree-after', 'protocol-wait', 'confirm-invoke', 'confirm-validation', 'release-validation', 'handle-release'}
+
+
+def private_failure(error, stage):
+    """Retain bounded diagnostics without exception messages or identity payloads."""
+    known = {'owned-exit-handle-keeper.py', 'lowlevel_mcp_client.py', 'direct-cli-receipt.py', 'local-headless-desktop-check-policy.py'}
+    sites = []
+    for frame in traceback.extract_tb(error.__traceback__)[-8:]:
+        name = Path(frame.filename).name
+        sites.append({'module': name if name in known else 'external',
+                      'function': frame.name if re.fullmatch('[A-Za-z_][A-Za-z0-9_]{0,79}', frame.name) else 'unknown',
+                      'line': frame.lineno if type(frame.lineno) is int and 1 <= frame.lineno <= 1000000 else 0})
+    name = type(error).__name__
+    return {'stage': stage if stage in STAGES else 'initialization',
+            'exceptionType': name if re.fullmatch('[A-Za-z_][A-Za-z0-9_]{0,79}', name) else 'Exception', 'callsites': sites}
 
 
 class KeeperFailure(Exception):
@@ -91,6 +108,7 @@ class Keeper:
         self.handles = []
         self.confirmed = False
         self.events = []
+        self.stage = 'construction'
         self.deadline = deadline
         self.state_bytes = bound_bytes(self.state_path)
         self.proof_bytes = bound_bytes(self.proof_path)
@@ -134,21 +152,31 @@ class Keeper:
             raise KeeperFailure('PROCESS_TREE_CHANGED')
 
     def acquire(self):
+        self.stage = 'input-validation'
         state = self.unchanged()
         if state['cleaned'] is not False or state['created'] is not True:
             raise KeeperFailure('LIFECYCLE_NOT_ACTIVE')
+        self.stage = 'full-tree-before'
         self.exact_tree(state)
         try:
             for expected in self.proof['processes']:
                 if self.deadline is not None and time.monotonic() >= self.deadline:
                     raise KeeperFailure('KEEPER_TIMEOUT')
+                self.stage = 'cim-before'
                 if not self.lifecycle._same_process(expected, self.lifecycle._process_identity(expected['pid'])):
                     raise KeeperFailure('PROCESS_IDENTITY_CHANGED')
+                self.stage = 'handle-acquisition'
                 handle = self.native.open(expected['pid'])
                 self.handles.append(handle)
-                if self.native.pid(handle) != expected['pid'] or not self.lifecycle._same_process(expected, self.lifecycle._process_identity(expected['pid'])):
+                self.stage = 'native-pid'
+                if self.native.pid(handle) != expected['pid']:
                     raise KeeperFailure('PROCESS_IDENTITY_CHANGED')
+                self.stage = 'cim-after'
+                if not self.lifecycle._same_process(expected, self.lifecycle._process_identity(expected['pid'])):
+                    raise KeeperFailure('PROCESS_IDENTITY_CHANGED')
+            self.stage = 'input-validation'
             state = self.unchanged()
+            self.stage = 'full-tree-after'
             self.exact_tree(state)
             self.events.append({'event': 'ready', 'atUtc': utc(), 'count': len(self.handles)})
         except BaseException:
@@ -158,8 +186,11 @@ class Keeper:
     def confirm(self, timeout):
         if self.confirmed or not self.handles:
             raise KeeperFailure('INVALID_COMMAND_ORDER')
+        self.stage = 'input-validation'
         self.unchanged()
+        self.stage = 'confirm-invoke'
         result = self.confirm_command(timeout)
+        self.stage = 'confirm-validation'
         self.unchanged(final=True)
         if result.get('ok') is not True or result.get('client_ok') is not True or result.get('gracefulExit') is not True or result.get('recordedProcessesAbsent') is not True or result.get('desktopClosed') is not True or self.lifecycle._recorded_tree_absent(self.proof['processes']) is not True:
             raise KeeperFailure('ORIGINAL_CONFIRM_NOT_VERIFIED')
@@ -189,6 +220,7 @@ def serve(keeper, messages, deadline, emit):
     keeper.acquire()
     emit({'ok': True, 'code': 'HANDLES_READY', 'heldCount': len(keeper.handles)})
     while True:
+        keeper.stage = 'protocol-wait'
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise KeeperFailure('KEEPER_TIMEOUT')
@@ -202,9 +234,11 @@ def serve(keeper, messages, deadline, emit):
             keeper.confirm(min(30, remaining))
             emit({'ok': True, 'code': 'ORIGINAL_CONFIRM_VERIFIED', 'heldCount': len(keeper.handles)})
         elif command == {'command': 'release'} and keeper.confirmed:
+            keeper.stage = 'release-validation'
             keeper.unchanged(final=True)
             if keeper.lifecycle._recorded_tree_absent(keeper.proof['processes']) is not True:
                 raise KeeperFailure('RECORDED_PROCESSES_PRESENT')
+            keeper.stage = 'handle-release'
             keeper.release()
             emit({'ok': True, 'code': 'HANDLES_RELEASED', 'heldCount': 0})
             return
@@ -225,7 +259,9 @@ def main():
     pins = contextlib.ExitStack()
     receipt = {'schemaVersion': 1, 'startedAtUtc': utc(), 'accepted': False}
     code = 'KEEPER_FAILED'
+    stage = 'initialization'
     try:
+        stage = 'input-validation'
         if not 1 <= args.timeout <= 300:
             raise KeeperFailure('INVALID_DEADLINE')
         deadline = time.monotonic() + args.timeout
@@ -244,12 +280,14 @@ def main():
         if source.returncode or not re.fullmatch('[a-f0-9]{40}', args.source_commit) or source.stdout.strip() != args.source_commit:
             raise KeeperFailure('SOURCE_BINDING_CHANGED')
         receipt['sourceCommit'] = args.source_commit
+        stage = 'helper-import'
         lifecycle = load('keeper_lifecycle', helper)
         recorder = getattr(lifecycle, 'install_private_identity_recorder', None)
         if callable(recorder):
             recorder()
         if os.environ.get('MFE_LOWLEVEL_URL') or not os.environ.get('MFE_LOWLEVEL_CLI'):
             raise KeeperFailure('DIRECT_TRANSPORT_REQUIRED')
+        stage = 'transport-validation'
         verify = transport.install_receipt_transport(lifecycle, cli=Path(os.environ['MFE_LOWLEVEL_CLI']))
         provenance = verify()
         python = Path(provenance['python']['path'])
@@ -261,6 +299,7 @@ def main():
                 raise KeeperFailure('SOURCE_BINDING_CHANGED')
             lifecycle._checked_private_path(Path(args.state))
             lifecycle._checked_private_path(Path(args.state).with_name('exit-processes.json'))
+        stage = 'lifecycle-validation'
         state_path, state = lifecycle._read_state(args.state)
         root = lifecycle._checked_private_path(Path(state['runRoot']), directory=True)
         lifecycle._checked_private_path(state_path)
@@ -272,14 +311,16 @@ def main():
         # through acquisition and the original confirmation, without pinning
         # the lifecycle file that the original adapter must update.
         pins.enter_context(lifecycle._pinned_private_directories(root, proof_path))
+        stage = 'receipt-validation'
         requested_receipt = Path(args.receipt)
         lifecycle._reject_link_components(requested_receipt)
-        if requested_receipt.parent != state_path.parent or requested_receipt.name != 'exit-handle-keeper.json' or requested_receipt.exists():
+        if requested_receipt.parent != state_path.parent or not re.fullmatch(r'exit-handle-keeper(?:-[a-f0-9]{32})?\.json', requested_receipt.name) or requested_receipt.exists():
             raise KeeperFailure('INVALID_RECEIPT_DESTINATION')
         receipt_path = requested_receipt
         policy = load('keeper_policy', policy_path)
         def confirm(timeout):
             return original_confirm(python, adapter, state_path, timeout)
+        stage = 'construction'
         keeper = Keeper(lifecycle, policy, NativeHandles(), state_path, proof_path, bindings, verify_inputs, confirm, deadline)
         receipt.update(bindings=bindings, lifecyclePath=str(state_path), lifecycleSha256=keeper.state_hash, proofPath=str(proof_path), proofSha256=keeper.proof_hash, processes=keeper.proof['processes'])
         messages = queue.Queue()
@@ -298,6 +339,8 @@ def main():
         receipt['accepted'] = True
         code = 'HANDLES_RELEASED'
     except BaseException as error:
+        failure_stage = 'handle-release' if getattr(error, 'code', None) == 'HANDLE_RELEASE_FAILED' else (keeper.stage if keeper else stage)
+        receipt['failure'] = private_failure(error, failure_stage)
         code = error.code if isinstance(error, KeeperFailure) else getattr(error, 'code', 'KEEPER_FAILED')
         code = code if isinstance(code, str) and re.fullmatch('[A-Z][A-Z0-9_]{0,79}', code) else 'KEEPER_FAILED'
         print(json.dumps({'ok': False, 'code': code, 'heldCount': len(keeper.handles) if keeper else 0}), flush=True)
@@ -306,8 +349,9 @@ def main():
             try:
                 if keeper.handles:
                     keeper.release()
-            except Exception:
+            except Exception as error:
                 code = 'HANDLE_RELEASE_FAILED'
+                receipt['releaseFailure'] = private_failure(error, 'handle-release')
                 receipt['accepted'] = False
                 print(json.dumps({'ok': False, 'code': code, 'heldCount': len(keeper.handles)}), flush=True)
             receipt.update(events=keeper.events, unreleasedCount=len(keeper.handles))
