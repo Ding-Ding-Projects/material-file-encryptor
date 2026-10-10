@@ -7,6 +7,7 @@ export const cantonese = {
 "Emptying the Recycle Bin…":"清空緊資源回收筒…",
 "Creating and verifying an upgraded copy…":"建立同驗證緊升級副本…",
 "Private repository":"私人儲存庫",
+"Synchronized folder":"同步資料夾",
 "Versions":"版本",
 "Pending versions":"待儲存版本",
 "Synchronization pending":"同步待處理",

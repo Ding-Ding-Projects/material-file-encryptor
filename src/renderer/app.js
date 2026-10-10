@@ -49,6 +49,7 @@ function applyPreferences() {
  for (const key of ['celebration','patience']) { $(`${key}-setting`).value = preferences[key]; $(`${key}-output`).textContent = preferences[key]; $(`${key}-setting`).style.setProperty('--range-progress', `${preferences[key]}%`); }
  $('vocabulary-summary').textContent = preferences.language === 'yue' ? `已儲存 ${preferences.vocabulary.replacements.length} 個替換詞。` : `${preferences.vocabulary.replacements.length} label replacements saved on this device.`;
  historySearch?.refresh(); recycleSearch?.refresh();
+ $('history-retention')?.setAttribute('aria-label',t('Show history'));
  $('history-days')?.setAttribute('aria-label',t('Custom days'));
  clearFields.refresh();
  if (state) { render(); changeView(view); }
@@ -368,7 +369,8 @@ else {
 
 function initializeArchive() {
  const button=(id,text,handler)=>{const el=document.createElement('button');el.id=id;el.type='button';el.className='button outlined';el.textContent=t(text);dictionary.set(el,text);el.onclick=handler;return el;};
- $('history-actions').append(button('save-version','Save version now',()=>archiveMutation('history',()=>api.saveVersion())),document.createTextNode(t('Show history')));
+ const retentionLabel=document.createTextNode(t('Show history'));dictionary.set(retentionLabel,'Show history');
+ $('history-actions').append(button('save-version','Save version now',()=>archiveMutation('history',()=>api.saveVersion())),retentionLabel);
  const retention=document.createElement('select');retention.id='history-retention';retention.setAttribute('aria-label',t('Show history'));
  for(const [value,text] of [['forever','Forever'],['30','Last 30 days'],['90','Last 90 days'],['custom','Custom days']]) {const option=document.createElement('option');option.value=value;option.textContent=t(text);dictionary.set(option,text);retention.append(option);}
  const days=document.createElement('input');days.id='history-days';days.type='number';days.min='1';days.max='36500';days.value='365';days.hidden=true;days.setAttribute('aria-label',t('Custom days'));
