@@ -8,7 +8,7 @@ import {createHash} from 'node:crypto';
 import {spawn} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {createModernProbeEvidence} from './modern-ui-check.mjs';
-import {verificationScope,runIndependentModern,modernPhaseVerdict} from './modern-phase.mjs';
+import {verificationScope,runIndependentModern,modernPhaseVerdict,assertModernCaptureInventory} from './modern-phase.mjs';
 import {pathToFileURL,fileURLToPath} from 'node:url';
 
 export function makeLaunch({executable,runRoot,port}) {
@@ -121,6 +121,7 @@ export function finalVerdict(receipt) {
 async function reviewAllCaptures(receipt,runRoot,outputRoot) {
  const records=(await fs.readFile(path.join(runRoot,'step-receipts.jsonl'),'utf8')).trim().split('\n').filter(Boolean).map(line=>JSON.parse(line));
  const captures=[];for(const name of (await fs.readdir(outputRoot)).filter(name=>name.endsWith('.png')).sort()){const file=path.join(outputRoot,name);const stat=await fs.lstat(file);if(!stat.isFile()||stat.isSymbolicLink())throw new Error('Capture inventory contains a non-file or link.');const bytes=await fs.readFile(file);const sha256=createHash('sha256').update(bytes).digest('hex');captures.push({path:file,sha256,bytes:bytes.length,provenance:captureProvenance(records,file,sha256)});}
+ if(receipt.verificationScope==='modern-only')assertModernCaptureInventory(captures,receipt.launch);
  const inventory={version:1,sourceCommit:receipt.sourceCommit,executableSha256:receipt.executableSha256,captures};await fs.writeFile(path.join(runRoot,'capture-inventory.json'),JSON.stringify(inventory,null,2));
  const unavailable=captures.filter(item=>!item.provenance).length;if(unavailable)throw new Error(`Capture provenance unavailable for ${unavailable} image(s).`);
  if(!captures.some(item=>path.basename(item.path)==='native-baseline.png')||!captures.some(item=>path.basename(item.path)==='native-keyboard-tab.png'))throw new Error('Required native baseline or keyboard capture is missing.');

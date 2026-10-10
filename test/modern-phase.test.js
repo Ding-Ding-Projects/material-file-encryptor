@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {verificationScope,runIndependentModern,modernPhaseVerdict} from '../scripts/modern-phase.mjs';
+import {verificationScope,runIndependentModern,modernPhaseVerdict,assertModernCaptureInventory} from '../scripts/modern-phase.mjs';
 import {finalVerdict,resumeCaptureReview} from '../scripts/local-headless-desktop-check.mjs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
@@ -39,7 +39,16 @@ test('wrong fixture, failed status, and unsuccessful lock cannot reach dialog ma
  await assert.rejects(runIndependentModern(f.options));assert.equal(f.events.includes('dialog'),false);
  const g=setup();g.options.executePlan=async()=>({results:[{value:{done:true,failed:true}}]});await assert.rejects(runIndependentModern(g.options));assert.equal(g.events.length,0);
 });
-function completeReceipt(){return {verificationScope:'modern-only',sourceCommit:'a'.repeat(40),executableSha256:'b'.repeat(64),resourceHashes:{asar:'c'.repeat(64),nativeHost:'d'.repeat(64)},launched:true,baselineReview:{inspected:true,privacyPassed:true},keyboard:{verified:true},modernPhase:{scope:'modern-only',fixtureIdentityVerified:true,originalLocked:true,workspace:phase('workspace'),dialog:phase('dialog')},captureReview:{verified:true,provenanceVerified:true},cleanup:{client_ok:true,recordedProcessesAbsent:true,desktopClosed:true},quitRecovery:{restored:true},fixtureCleanup:{ownedCredentialForgotten:true}};}
+function captureInventory(launch) {
+ const names=['native-baseline.png','baseline.png','native-keyboard-tab.png'];
+ for(const [width,height]of [[1180,850],[880,650]])for(const language of ['en','yue','bilingual'])for(const theme of ['light','dark'])for(const scale of ['1','1_25','1_5','2']) {
+  const tuple=`${width}x${height}-${language}-${theme}-${scale}`;
+  for(const state of ['drive','offline','history','recycle','settings','help','dialog-password','dialog-keyFile','dialog-privateGit'])names.push(`modern-${tuple}-${state}.png`);
+ }
+ for(const field of ['file-search','part-size','retention','history-search','recycle-search','storage','cache','letter','password','confirm','creation-size','key-path','repository'])names.push(`modern-clear-${field}.png`);
+ return names.map(name=>({path:path.join(launch.outputRoot,name)}));
+}
+function completeReceipt(){const launch={runRoot:path.resolve('owned'),outputRoot:path.resolve('owned/output'),cdp:{port:9333,expectedUrl:'file:///C:/owned/index.html'}};return {launch,verificationScope:'modern-only',sourceCommit:'a'.repeat(40),executableSha256:'b'.repeat(64),resourceHashes:{asar:'c'.repeat(64),nativeHost:'d'.repeat(64)},launched:true,baselineReview:{inspected:true,privacyPassed:true},keyboard:{verified:true},modernPhase:{scope:'modern-only',fixtureIdentityVerified:true,originalLocked:true,workspace:phase('workspace'),dialog:phase('dialog')},captureReview:{verified:true,provenanceVerified:true,inventory:{captures:captureInventory(launch)}},cleanup:{client_ok:true,recordedProcessesAbsent:true,desktopClosed:true},quitRecovery:{restored:true},fixtureCleanup:{ownedCredentialForgotten:true}};}
 test('modern acceptance remains distinct from full workflow acceptance',()=>{
  const receipt=completeReceipt();assert.equal(modernPhaseVerdict(receipt).passed,true);assert.equal(modernPhaseVerdict(receipt).fullWorkflowVerified,false);assert.equal(finalVerdict(receipt).passed,false);
  assert.ok(finalVerdict(receipt).pending.some(x=>x.includes('copy upgrade')));
@@ -52,12 +61,25 @@ test('pixel review resumes a completed modern phase without inventing full workf
  const root=await fs.mkdtemp(path.join(await fs.realpath(os.tmpdir()),'mfe-modern-review-'));
  t.after(()=>fs.rm(root,{recursive:true,force:true}));
  const executable=path.join(root,'package','app.exe');await fs.mkdir(path.join(root,'package','resources','native'),{recursive:true});await fs.mkdir(path.join(root,'output'));
- const receipt=completeReceipt();receipt.launch={runRoot:root,outputRoot:path.join(root,'output'),executable};delete receipt.captureReview;receipt.reviewPending='Not yet reviewed';
+ const receipt=completeReceipt();receipt.launch={...receipt.launch,runRoot:root,outputRoot:path.join(root,'output'),executable};delete receipt.captureReview;receipt.reviewPending='Not yet reviewed';
  const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
  for(const [relative,field]of [['app.exe','executable'],['resources/app.asar','asar'],['resources/native/MaterialFileEncryptor.Host.exe','nativeHost']]){const bytes=Buffer.from(relative);await fs.writeFile(path.join(root,'package',relative),bytes);if(field==='executable')receipt.executableSha256=digest(bytes);else receipt.resourceHashes[field]=digest(bytes);}
  const receiptPath=path.join(root,'verification.json');const save=()=>fs.writeFile(receiptPath,JSON.stringify(receipt));await save();let calls=0;
- const review=async()=>{calls++;return {verified:true,provenanceVerified:true};};
+ await fs.writeFile(path.join(root,'step-receipts.jsonl'),'');
+ await assert.rejects(resumeCaptureReview(root),/capture inventory is incomplete/);
+ const review=async()=>{calls++;return {verified:true,provenanceVerified:true,inventory:{captures:captureInventory(receipt.launch)}};};
  const result=await resumeCaptureReview(root,{review});assert.equal(result.passed,true);assert.equal(result.fullWorkflowVerified,false);assert.equal(result.runtime,undefined);assert.equal(calls,1);
  for(const mutate of [r=>r.failure='PLAN_TIMEOUT',r=>r.cleanup.desktopClosed=false,r=>r.modernPhase.workspace.tuplesVerified=47,r=>r.fixtureCleanup.ownedCredentialForgotten=false]){const original=structuredClone(receipt);mutate(receipt);await save();await assert.rejects(resumeCaptureReview(root,{review}));Object.assign(receipt,original);delete receipt.failure;assert.equal(calls,1);}
  await save();await fs.writeFile(executable,'changed');await assert.rejects(resumeCaptureReview(root,{review}));assert.equal(calls,1);
+});
+
+test('exact capture inventory rejects a missing workspace, dialog, clear or baseline original',()=>{
+ const receipt=completeReceipt(),captures=receipt.captureReview.inventory.captures;
+ assert.equal(captures.length,448);assert.equal(assertModernCaptureInventory(captures,receipt.launch),true);
+ for(const name of ['modern-1180x850-en-light-1-drive.png','modern-880x650-bilingual-dark-2-dialog-privateGit.png','modern-clear-repository.png','baseline.png']) {
+  const removed=captures.filter(item=>path.basename(item.path)!==name);assert.equal(removed.length,447);
+  assert.throws(()=>assertModernCaptureInventory(removed,receipt.launch));
+  assert.equal(modernPhaseVerdict({...receipt,captureReview:{...receipt.captureReview,inventory:{captures:removed}}}).passed,false);
+ }
+ assert.throws(()=>assertModernCaptureInventory([...captures,captures[0]],receipt.launch));
 });

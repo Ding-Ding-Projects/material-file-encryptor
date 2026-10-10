@@ -1,6 +1,19 @@
 import assert from 'node:assert/strict';
 import {withCdpConnectionProof} from './cdp-connection-plan.mjs';
-import {runModernPhase} from './modern-ui-check.mjs';
+import path from 'node:path';
+import {runModernPhase,matrix,makeWorkspacePlan,makeDialogPlan,makeClearPlan} from './modern-ui-check.mjs';
+
+export function assertModernCaptureInventory(captures,launch) {
+ const receipt=path.join(launch.runRoot,'lifecycle.json');
+ const plans=matrix.flatMap(tuple=>[makeWorkspacePlan({launch,receipt,tuple}),makeDialogPlan({launch,receipt,tuple})]);
+ for(const phase of ['workspace','dialog'])plans.push(makeClearPlan({launch,receipt,phase,tuple:matrix[0]}));
+ const required=plans.flatMap(plan=>plan.steps.filter(step=>step.op==='capture').map(step=>path.resolve(step.path)));
+ assert.equal(required.length,445);assert.equal(new Set(required).size,445);
+ for(const name of ['native-baseline.png','baseline.png','native-keyboard-tab.png'])required.push(path.resolve(launch.outputRoot,name));
+ const actual=captures.map(capture=>path.resolve(capture.path));assert.equal(new Set(actual).size,actual.length,'Duplicate capture inventory entry');
+ const available=new Set(actual);assert.ok(required.every(file=>available.has(file)),'Independent modern capture inventory is incomplete');
+ return true;
+}
 
 export function verificationScope(env) {
  const scope=env.MFE_VERIFICATION_SCOPE||'full';
@@ -49,7 +62,9 @@ export function modernPhaseVerdict(receipt) {
  const phase=receipt.modernPhase;
  require(phase?.scope==='modern-only'&&phase?.fixtureIdentityVerified===true&&phase?.originalLocked===true,'Exact mounted fixture and real GUI lock');
  for(const name of ['workspace','dialog'])require(phase?.[name]?.phase===name&&phase[name].tuplesVerified===48&&phase[name].clearControlsVerified===true&&phase[name].probeReceiptsVerified===true,`Complete ${name} matrix and clear-control probes`);
- require(receipt.captureReview?.verified===true&&receipt.captureReview?.provenanceVerified===true,'Every capture inspected and provenance-bound');
+ let inventoryComplete=false;
+ try{inventoryComplete=assertModernCaptureInventory(receipt.captureReview?.inventory?.captures,receipt.launch);}catch{}
+ require(receipt.captureReview?.verified===true&&receipt.captureReview?.provenanceVerified===true&&inventoryComplete,'Every capture inspected and provenance-bound');
  require(receipt.cleanup?.client_ok===true&&receipt.cleanup?.recordedProcessesAbsent===true&&receipt.cleanup?.desktopClosed===true,'Owned process absence and desktop closure');
  require(receipt.quitRecovery?.restored===true,'Verification startup state restored');
  require(receipt.fixtureCleanup?.ownedCredentialForgotten===true,'Owned fixture credential retired');
