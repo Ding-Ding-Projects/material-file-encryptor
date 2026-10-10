@@ -27,10 +27,27 @@ export async function prepareRuntimeFixture({executable,profile,createClient=exe
  return fixture;
 }
 export async function forgetRuntimeFixture(fixture,{createClient=exe=>new NativeClient(exe)}={}) {
+ assert.equal(await fs.realpath(fixture.root),path.resolve(fixture.root));const rootInfo=await fs.lstat(fixture.root);assert.equal(rootInfo.isDirectory(),true);assert.equal(rootInfo.isSymbolicLink(),false);
  const saved=JSON.parse(await fs.readFile(path.join(fixture.root,'fixture.json'),'utf8'));assert.equal(saved.storageDir,fixture.storageDir);assert.equal(saved.cacheDir,fixture.cacheDir);assert.equal(saved.nativeExecutable,fixture.nativeExecutable);
  assert.equal(path.dirname(fixture.storageDir),fixture.root);assert.equal(path.dirname(fixture.cacheDir),fixture.root);
- const client=createClient(fixture.nativeExecutable);try {await client.request('forgetSavedCredential',{storageDir:fixture.storageDir,cacheDir:fixture.cacheDir});}finally{await disposeNative(client);}
- return {ownedCredentialForgotten:true,fixtureRetained:true};
+ const targets=[{storageDir:fixture.storageDir,cacheDir:fixture.cacheDir}],retired=[];
+ for(const label of ['gui','legacy','upgrade']) {
+  const record=path.join(fixture.root,'owned-'+label+'-fixture.json');let bytes;
+  try{const stat=await fs.lstat(record);assert.equal(stat.isFile(),true);assert.equal(stat.isSymbolicLink(),false);assert.equal(await fs.realpath(record),record);bytes=await fs.readFile(record,'utf8');}catch(error){if(error.code==='ENOENT')continue;throw error;}
+  const target=JSON.parse(bytes);assert.equal(target.version,1);assert.equal(target.root,fixture.root);assert.equal(target.nativeExecutable,fixture.nativeExecutable);
+  for(const [key,suffix]of [['storageDir','storage'],['cacheDir','cache']]){assert.equal(target[key],path.join(fixture.root,label+'-'+suffix));assert.equal(await fs.realpath(target[key]),target[key]);}
+  targets.push({storageDir:target.storageDir,cacheDir:target.cacheDir});retired.push(label);
+ }
+ const client=createClient(fixture.nativeExecutable);try {for(const target of targets)await client.request('forgetSavedCredential',target);}finally{await disposeNative(client);}
+ let ownedKeyRetired=false;
+ if(retired.includes('gui')){const key=path.join(fixture.root,'gui-verification.key');try{const stat=await fs.lstat(key);assert.equal(stat.isFile(),true);assert.equal(stat.isSymbolicLink(),false);assert.equal(await fs.realpath(key),key);await fs.unlink(key);}catch(error){if(error.code!=='ENOENT')throw error;}ownedKeyRetired=true;}
+ return {ownedCredentialForgotten:true,ownedFixtureCredentialsForgotten:retired,ownedKeyRetired,fixtureRetained:true};
+}
+
+async function registerGuiFixture(gui,label) {
+ assert.ok(['gui','legacy','upgrade'].includes(label));const saved=JSON.parse(await fs.readFile(path.join(gui.root,'fixture.json'),'utf8'));
+ assert.equal(saved.root,gui.root);for(const [key,suffix]of [['storageDir','storage'],['cacheDir','cache']]){assert.equal(gui[key],path.join(gui.root,label+'-'+suffix));assert.equal(await fs.realpath(gui[key]),gui[key]);}
+ await fs.writeFile(path.join(gui.root,'owned-'+label+'-fixture.json'),JSON.stringify({version:1,root:gui.root,nativeExecutable:saved.nativeExecutable,storageDir:gui.storageDir,cacheDir:gui.cacheDir}),{flag:'wx',mode:0o600});
 }
 export function runtimeCompletion(state,{synchronized=false,applicationError=false}={}) {
  if(applicationError||(synchronized&&state.sync?.error))return {failed:true,ready:false};
@@ -43,6 +60,7 @@ export async function prepareGuiVaultFixture(fixture) {
  const saved=JSON.parse(await fs.readFile(path.join(root,'fixture.json'),'utf8'));assert.equal(saved.root,fixture.root);assert.equal(saved.driveLetter,fixture.driveLetter);
  const gui={root,storageDir:path.join(root,'gui-storage'),cacheDir:path.join(root,'gui-cache'),keyFilePath:path.join(root,'gui-verification.key'),driveLetter:fixture.driveLetter};
  await fs.mkdir(gui.storageDir);await fs.mkdir(gui.cacheDir);
+ await registerGuiFixture(gui,'gui');
  const key=randomBytes(32);try{await fs.writeFile(gui.keyFilePath,key,{flag:'wx',mode:0o600});}finally{key.fill(0);}
  freshGuiFixtures.add(gui);return gui;
 }
@@ -117,20 +135,27 @@ export function makeGuiVaultFormSteps(gui,mode,outputRoot,label=mode) {
  steps.push({id:prefix+'-submit-ready',op:'poll',expression:"!document.querySelector('#dialog-submit').disabled && document.querySelector('#dialog-error').hidden",equals:true,intervalMs:200});
  return steps;
 }
-// This fixture conversion is restricted to a newly created, locked, empty vault.
-// It mirrors the native Legacy test and never rewrites an existing user's vault.
+// A fresh storage identity prevents rewriting the immutable header already recorded
+// by the GUI-created vault's host history. The original pair remains untouched.
 export async function prepareEmptyLegacyGuiVault(gui,observed) {
  assert.equal(observed.locked,true);assert.equal(observed.mounted,false);assert.equal(observed.emptyBeforeLock,true);
  const root=await fs.realpath(gui.root);assert.equal(root,path.resolve(gui.root));
- const changes=[];
+ const changes=[];const legacy={...gui,storageDir:path.join(root,'legacy-storage'),cacheDir:path.join(root,'legacy-cache')};
  for(const name of ['storageDir','cacheDir']) {
   const folder=gui[name];assert.equal(path.dirname(folder),root);assert.equal(await fs.realpath(folder),folder);
   const file=path.join(folder,'vault.json');const stat=await fs.lstat(file);assert.equal(stat.isFile(),true);assert.equal(stat.isSymbolicLink(),false);
-  const value=JSON.parse(await fs.readFile(file,'utf8'));assert.equal(value.Format,2);changes.push({file,value});
+  const value=JSON.parse(await fs.readFile(file,'utf8'));assert.equal(value.Format,2);changes.push({file:path.join(legacy[name],'vault.json'),value});
  }
- for(const {file,value} of changes){value.Format=1;await fs.writeFile(file,JSON.stringify(value));}
+ await fs.mkdir(legacy.storageDir);await fs.mkdir(legacy.cacheDir);await registerGuiFixture(legacy,'legacy');
+ for(const {file,value} of changes){value.Format=1;await fs.writeFile(file,JSON.stringify(value),{flag:'wx',mode:0o600});}
  for(const {file} of changes)assert.equal(JSON.parse(await fs.readFile(file,'utf8')).Format,1);
- return {format:1,emptyFixtureConverted:true};
+ return {format:1,emptyFixtureConverted:true,gui:legacy};
+}
+
+export function actionPollSteps(id,selector,expression) {
+ // Stop polling when the UI reports rejection, then assert it separately. A
+ // visible backend error must not be disguised as a successful completion.
+ return [{id,op:'click',selector},{id:id+'-state',op:'poll',expression:`!document.querySelector('#main-error').hidden || (${expression})`,equals:true,intervalMs:200},{id:id+'-result',op:'evaluate',expression:"({applicationError:!document.querySelector('#main-error').hidden,message:document.querySelector('#main-error').textContent.slice(0,400)})"}];
 }
 
 export async function checkMountedRuntime({fixture,launch,receipt,executePlan,prepareExit,modernProbeEvidence,modernUiCheck=process.env.MFE_MODERN_UI_CHECK==='1'}) {
@@ -147,7 +172,7 @@ export async function checkMountedRuntime({fixture,launch,receipt,executePlan,pr
   const completion=await query(`window.${key}`);assert.equal(completion.failed,undefined,'Backend completion reported an error.');assert.equal(completion.verified,true);
  };
  const click=async(id,selector,expression="document.querySelector('#main-error').hidden")=>{
-  await execute([{id,op:'click',selector},{id:id+'-state',op:'poll',expression,equals:true,intervalMs:200}]);
+  const result=await execute(actionPollSteps(id,selector,expression));assert.equal(result.results.at(-1).value.applicationError,false,'UI action reported a backend rejection; see the private step receipt.');
   if(selector==='#sync-button')await waitBackend(true);
   else if(['#restore-recycled','#confirm-action'].includes(selector)||selector.includes('button[value="folder"]')||selector.includes('button[value="subtree"]'))await waitBackend(false);
   await execute([capture(id)]);checks.push(id);
@@ -201,7 +226,7 @@ export async function checkMountedRuntime({fixture,launch,receipt,executePlan,pr
  await click('startup-disable','#startup-setting',"!document.querySelector('#startup-setting').disabled");const disabled=await asyncQuery('window.drive.status().then(s=>s.startupRegistration)');assert.equal(disabled.enabled,false);checks.push('native-startup-toggle-readback');
  await click('forget-owned-credential','#forget-credential',"!document.querySelector('#forget-credential').disabled");
  await click('drive-for-lock','[data-view="drive"]',"!document.querySelector('#view-drive').hidden");await click('lock','#lock-button',"document.querySelector('#vault-badge').dataset.state === 'locked'");const locked=await asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted}))');assert.equal(locked.locked,true);assert.equal(locked.mounted,false);checks.push('graceful-lock');
- const gui=await prepareGuiVaultFixture(fixture);
+ let gui=await prepareGuiVaultFixture(fixture);
  const guiMounted="!document.querySelector('#vault-dialog').open && document.querySelector('#vault-badge').dataset.state === 'mounted' && document.querySelector('#main-error').hidden";
  await click('gui-create-dialog','#create-button',"document.querySelector('#vault-dialog').open");
  await execute(makeGuiVaultFormSteps(gui,'create',launch.outputRoot));await click('gui-create-submit','#dialog-submit',guiMounted);await waitBackend(false);
@@ -211,7 +236,7 @@ export async function checkMountedRuntime({fixture,launch,receipt,executePlan,pr
  const emptyBeforeLock=emptyProof.empty;
  await click('gui-empty-lock','#lock-button',"document.querySelector('#vault-badge').dataset.state === 'locked'");
  const emptyLocked=await asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted}))');
- await prepareEmptyLegacyGuiVault(gui,{...emptyLocked,emptyBeforeLock});
+ gui=(await prepareEmptyLegacyGuiVault(gui,{...emptyLocked,emptyBeforeLock})).gui;
  await click('gui-legacy-dialog','#unlock-button',"document.querySelector('#vault-dialog').open");
  await execute(makeGuiVaultFormSteps(gui,'unlock',launch.outputRoot,'legacy-unlock'));await click('gui-legacy-submit','#dialog-submit',guiMounted);await waitBackend(false);
  const legacyState=await asyncQuery('window.drive.status().then(s=>({storageFormat:s.storageFormat,transport:s.transport?.mode}))');assert.equal(legacyState.storageFormat,1);assert.equal(legacyState.transport,'folder');checks.push('authentic-empty-legacy-fixture-mounted');
@@ -225,6 +250,7 @@ export async function checkMountedRuntime({fixture,launch,receipt,executePlan,pr
  const guiReopened=await asyncQuery('window.drive.status().then(s=>({locked:s.locked,mounted:s.mounted,driveLetter:s.driveLetter}))');assert.equal(guiReopened.locked,false);assert.equal(guiReopened.mounted,true);assert.equal(guiReopened.driveLetter,gui.driveLetter);assert.equal(await fs.readFile(guiFile,'utf8'),guiContent);checks.push('gui-unlock-manual-letter-persisted-read');
  const upgraded={...gui,storageDir:path.join(gui.root,'upgrade-storage'),cacheDir:path.join(gui.root,'upgrade-cache')};
  await fs.mkdir(upgraded.storageDir);await fs.mkdir(upgraded.cacheDir);
+ await registerGuiFixture(upgraded,'upgrade');
  await click('gui-upgrade-dialog','#upgrade-vault',"document.querySelector('#vault-dialog').open && document.querySelector('#storage-input').value === '' && document.querySelector('#cache-input').value === ''");
  await execute(makeGuiVaultFormSteps(upgraded,'upgrade',launch.outputRoot));
  // Exercise the actual private-transport validation surface without creating or contacting a repository.
