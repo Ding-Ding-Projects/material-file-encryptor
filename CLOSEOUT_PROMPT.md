@@ -2,6 +2,8 @@
 
 ## Isolated synthetic native child diagnostic
 
+The latest focused mode passed 36 checks with exact retained safe-handle closure and an active-handle negative. A fresh direct run at `5171897` exposed the previous PID-reopening assertion's ambiguity and failed before a trace was written; its evidence remains preserved. The latest closure refinement still requires a pinned root build and source-bound receipt before independent review. Earlier test counts below retain their earlier sources.
+
 The isolated unit starts from `4f7497f8e4484fd92c1063229cb2034498e87ee6`. It adds only an optional disabled-by-default runner diagnostic and dedicated native core-test mode, plus its verification documentation. Root build `0e963f2` passed unchanged-source/index and package privacy; its test-dispatch compile issue was fixed at `f7c836b`. Expanded focused checks passed 38 and the core suite passed 34/34. The latest source-bound root build and final receipt are pending. No installed or graphical candidate changed; no historical failure cause is claimed. Keep direct-child evidence private and do not integrate until independent review. The existing continuation below remains separate.
 
 ## Current authoritative continuation, 2026-10-10 UTC

@@ -14,7 +14,7 @@ public sealed record NativeChildPoint(string StartedUtc, string EndedUtc, string
 public sealed record NativeChildRecord(int Sequence, NativeChildCategory Category, int HostPid, int ChildPid,
     NativeChildPoint Started, NativeChildPoint Finished);
 public sealed record NativeChildTraceReceipt(int Version, NativeHostIdentity Host, long MonotonicFrequency,
-    bool Complete, string[] IncompleteReasons, NativeChildRecord[] Children);
+    bool Complete, bool HandlesClosed, string[] IncompleteReasons, NativeChildRecord[] Children);
 
 /// <summary>Explicit synthetic-test diagnostic. It never authorizes process ownership or stores command payloads.</summary>
 public sealed class NativeChildTrace
@@ -24,6 +24,7 @@ public sealed class NativeChildTrace
     private readonly NativeHostIdentity host;
     private readonly long began = Stopwatch.GetTimestamp();
     private readonly List<NativeChildRecord> records = [];
+    private readonly List<SafeProcessHandle> retainedHandles = [];
     private readonly HashSet<string> reasons = new(StringComparer.Ordinal);
     private readonly Action<NativeChildRecord>? sink;
     private int sequence, active;
@@ -54,15 +55,16 @@ public sealed class NativeChildTrace
             if (sequence >= MaximumChildren) { reasons.Add("child-limit"); return null; }
             if (CurrentHost() != host) { reasons.Add("host-identity"); return null; }
             var number = ++sequence;
-            try { var lease = new Lease(this, child, number); active++; return lease; }
+            try { var lease = new Lease(this, child, number); retainedHandles.Add(child.SafeHandle); active++; return lease; }
             catch { reasons.Add("observation-unavailable"); return null; }
         }
     }
 
     internal void Lost() { lock (gate) reasons.Add("observation-unavailable"); }
 
+    private bool HandlesClosed() => active == 0 && retainedHandles.All(handle => handle.IsClosed);
     private NativeChildTraceReceipt Receipt() => new(1, host, Stopwatch.Frequency,
-        reasons.Count == 0 && active == 0, reasons.Order(StringComparer.Ordinal).ToArray(), records.ToArray());
+        reasons.Count == 0 && HandlesClosed(), HandlesClosed(), reasons.Order(StringComparer.Ordinal).ToArray(), records.ToArray());
 
     public byte[] Finish()
     {
@@ -70,6 +72,7 @@ public sealed class NativeChildTrace
         {
             sealedTrace = true;
             if (active != 0) reasons.Add("active-children");
+            if (!HandlesClosed()) reasons.Add("handles-open");
             if (Stopwatch.GetElapsedTime(began) >= TimeSpan.FromSeconds(60)) reasons.Add("deadline");
             return JsonSerializer.SerializeToUtf8Bytes(Receipt());
         }

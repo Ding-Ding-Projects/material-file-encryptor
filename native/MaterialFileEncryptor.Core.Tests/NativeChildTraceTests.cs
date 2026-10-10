@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using MaterialFileEncryptor.Core;
@@ -40,16 +39,13 @@ internal static class NativeChildTraceTests
         var bytes = trace.Finish();
         Check(bytes.Length <= NativeChildTrace.MaximumBytes, "Receipt exceeds byte limit.");
         var receipt = JsonSerializer.Deserialize<NativeChildTraceReceipt>(bytes)!;
-        Check(receipt.Complete && receipt.Children.Length == 3 && receipt.Host == expected, "Trace incomplete.");
+        Check(receipt.Complete && receipt.HandlesClosed && receipt.Children.Length == 3 && receipt.Host == expected, "Trace incomplete.");
         foreach (var row in receipt.Children)
         {
             Check(row.Category == NativeChildCategory.SyntheticProbe && row.HostPid == expected.Pid && row.ChildPid > 0, "Invalid fixed identity fields.");
             Check(row.Started.TimesOk && row.Finished.TimesOk && row.Started.CreationFileTime == row.Finished.CreationFileTime, "Retained creation identity changed.");
             Check(row.Finished.WaitResult == 0 && row.Finished.ExitCodeOk && long.Parse(row.Finished.ExitFileTime!, CultureInfo.InvariantCulture) >= long.Parse(row.Finished.CreationFileTime!, CultureInfo.InvariantCulture), "Retained exit identity unavailable.");
             Check(string.CompareOrdinal(row.Started.StartedUtc, row.Finished.EndedUtc) <= 0 && long.Parse(row.Started.StartedMonotonic) <= long.Parse(row.Finished.EndedMonotonic), "Observation interval reversed.");
-            var handle = OpenProcess(0x00101000, false, (uint)row.ChildPid);
-            if (handle != IntPtr.Zero) { CloseHandle(handle); throw new InvalidOperationException("Exited synthetic child retains an open process object."); }
-            checks++;
         }
         Check(receipt.Children[1].Started.WaitResult == 258, "Held child did not supply live observation.");
         var sinkFault = new NativeChildTrace(expected, _ => throw new InvalidOperationException("not-recorded"));
@@ -72,9 +68,16 @@ internal static class NativeChildTraceTests
         typeof(NativeChildTrace).GetField("began", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.SetValue(expired, Stopwatch.GetTimestamp() - Stopwatch.Frequency * 61);
         var expiredReceipt = JsonSerializer.Deserialize<NativeChildTraceReceipt>(expired.Finish())!;
         Check(!expiredReceipt.Complete && expiredReceipt.IncompleteReasons.Contains("deadline"), "Expired observation window accepted.");
+        var activeTrace = new NativeChildTrace(expected);
+        using (var self = Process.GetCurrentProcess())
+        using (var lease = (IDisposable)typeof(NativeChildTrace).GetMethod("Begin", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(activeTrace, [self])!)
+        {
+            var activeReceipt = JsonSerializer.Deserialize<NativeChildTraceReceipt>(activeTrace.Finish())!;
+            Check(!activeReceipt.Complete && !activeReceipt.HandlesClosed && activeReceipt.IncompleteReasons.Contains("active-children") && activeReceipt.IncompleteReasons.Contains("handles-open"), "Active handle reported closed.");
+        }
         using var json = JsonDocument.Parse(bytes);
         void Fields(JsonElement value, params string[] allowed) => Check(value.EnumerateObject().Select(x => x.Name).Order().SequenceEqual(allowed.Order()), "Unexpected private schema field.");
-        Fields(json.RootElement, "Version", "Host", "MonotonicFrequency", "Complete", "IncompleteReasons", "Children");
+        Fields(json.RootElement, "Version", "Host", "MonotonicFrequency", "Complete", "HandlesClosed", "IncompleteReasons", "Children");
         Fields(json.RootElement.GetProperty("Host"), "Pid", "CreationFileTime");
         foreach (var row in json.RootElement.GetProperty("Children").EnumerateArray())
         {
@@ -86,6 +89,4 @@ internal static class NativeChildTraceTests
         using (var destination = new FileStream(args[1], FileMode.CreateNew, FileAccess.Write, FileShare.None)) { destination.Write(bytes); destination.Flush(true); }
         Console.WriteLine($"PASS: {checks} synthetic direct-child diagnostic checks.");
     }
-    [DllImport("kernel32.dll", SetLastError = true)] private static extern IntPtr OpenProcess(uint access, bool inherit, uint pid);
-    [DllImport("kernel32.dll", SetLastError = true)] private static extern bool CloseHandle(IntPtr handle);
 }
