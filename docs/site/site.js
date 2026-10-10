@@ -58,7 +58,7 @@ function updateSearch() {
   document.querySelector('#no-results').textContent = friendly('search');
   searchStatus.textContent = search.value.trim()
     ? pair(`${matched.size} of ${guides.length} guides match. Search stays in your browser.`, `${guides.length} 份指南入面有 ${matched.size} 份符合。搜尋只喺你嘅瀏覽器進行。`)
-    : localized('Four guides. Search stays in your browser.', preferences.language);
+    : pair(`${guides.length} entries. Search stays in your browser.`, `${guides.length} 項內容。搜尋只喺你嘅瀏覽器進行。`);
 }
 function updateMessages() {
   successTone.style.setProperty('--range-progress', `${(preferences.successTone - 1) * 25}%`);

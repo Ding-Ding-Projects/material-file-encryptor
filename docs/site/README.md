@@ -23,3 +23,11 @@ The interactive architecture explainer is conceptual. Its part-size calculation 
 The gallery preserves five genuine Linux captures and the historical Windows evidence at their original source revisions. Four current packaged Windows captures at source `1e16dea8` show reviewed recovery and appearance states; their inventory contains original hashes and recorded UTC times. These images do not substitute for verification of a later published installer.
 
 Capture provenance uses a translated description followed by a literal revision in a `code` element. Update the revision independently of the locale catalog. Image dimensions match `docs/images/captures/provenance.json`. The key-file selection image shows the real credential controls and scrollbar; the recording never autoplays.
+
+## Publication inventory and privacy
+
+The root build publishes a fresh stage from explicit runtime assets, conceptual diagrams and reviewed original captures. It does not recursively publish `docs/site` or `docs/images`. Raw receipts and source snapshots remain outside the deployment. An existing stage is moved to a separate ignored preservation directory before replacement, so stale files cannot remain reachable in the new stage.
+
+`gallery-review.json` lists approved original paths and binds each to its reviewed source revision and image SHA-256. `publication.mjs` verifies these bindings, original bytes and dimensions before staging. Generated `gallery-inventory.json` is the public, selected metadata record. Missing original capture timestamps remain unavailable.
+
+Two historical captures are withheld because their pixels contain absolute local storage or cache paths. Their original bytes were preserved privately before removal from the current tree. No image was edited or reconstructed. Current removal does not undo historical publication and does not rewrite history. New captures require individual pixel review and source-bound provenance before joining the allowlist.

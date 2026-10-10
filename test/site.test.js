@@ -134,9 +134,9 @@ test('capture gallery identifies actual Linux evidence and conceptual animation 
   assert.match(html, /Actual Electron application captures from Linux/);
   assert.match(html, /not proof of a Windows filesystem mount/);
   assert.match(html, /Linux Electron interface · source <code>[a-f0-9]+<\/code>/);
-  assert.match(html, /<video controls preload="metadata"/);
+  assert.match(html, /historical interface recording is withheld pending individual privacy review/);
   assert.doesNotMatch(html, /<video[^>]*autoplay/);
-  assert.match(html, /src="images\/captures\/desktop-linux\.webm"/);
+  assert.doesNotMatch(html, /src="images\/captures\/desktop-linux\.webm"/);
   assert.match(html, /Conceptual demonstration only/);
   assert.match(html, /id="workflow-play"/);
   assert.match(html, /id="workflow-replay"/);
