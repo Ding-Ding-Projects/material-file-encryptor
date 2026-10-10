@@ -177,3 +177,9 @@
 - [ ] Complete the 144-tuple current documentation-browser acceptance. The latest diagnostic retained 24 completed desktop tuples and one partial narrow tuple, then stopped on a resource-body protocol rejection. Its profile remains retained and zero audits are finalized.
 - [x] Hash-preserve all 4,068 nonprofile files from that closed diagnostic and independently inspect all 25 genuine PNGs with their available raw observations. The bounded protocol projection repair passed 110 focused checks and independent review.
 - [ ] Repair the documentation publication trigger's missing generated-content inputs and verify the actual new deployment, complete live inventory and exact About homepage.
+
+## Gallery pipeline candidate
+
+- [x] Implement explicit public metadata projection, workflow grouping, preserved exact-byte duplicate occurrences and searched empty-group hiding with focused negative regressions.
+- [ ] Independently review and render the grouped gallery before claiming visual acceptance.
+- [ ] Promote eligible current originals only after complete source, lifecycle, privacy and pixel evidence; the current 14 historical originals and two exclusions remain unchanged.

@@ -268,3 +268,7 @@ GitHub Projects is unavailable with the current authorization. The wiki is enabl
 Task: https://github.com/Ding-Ding-Projects/material-file-encryptor/issues/1
 Progress: https://github.com/Ding-Ding-Projects/material-file-encryptor/discussions/2
 Verification: [source-bound results](docs/features/release/preview-verification.md)
+
+## Gallery pipeline candidate
+
+The gallery pipeline now groups the unchanged 14 historical originals by workflow, projects only approved public metadata and preserves every occurrence of identical image bytes. Two exclusions remain explicit. Twenty-seven focused checks pass, including a synthetic 445-occurrence case and privacy/search rejection regressions. Independent source review is complete with no remaining findings. Rendered acceptance and main integration remain pending. No current runtime original or new publication is claimed. See [the evidence contract](docs/features/desktop/runtime-evidence.md#reviewed-gallery-publication-pipeline).

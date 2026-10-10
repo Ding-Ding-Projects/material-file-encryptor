@@ -132,3 +132,7 @@ The build obtains verified user-scoped Node and .NET tools, portable Git and Git
 Local verification covers the encrypted engine, range I/O, recovery, conflicts, offline pins, part limits, desktop bridge and renderer interactions. Real Electron captures on Linux verify interface behavior and isolation; they do not prove Windows Explorer mounting. Every authorized branch push and manual dispatch builds, packages and publishes a unique normal non-draft Windows release without tests or lint. Release notes state that runtime verification is pending and include the exact source, workflow run and timing. Mounted-drive and installed-lifecycle verification run explicitly on a local Windows account with isolated fixtures.
 
 </details>
+
+## Gallery pipeline candidate
+
+The gallery pipeline now groups the unchanged 14 historical originals by workflow, projects only approved public metadata and preserves every occurrence of identical image bytes. Two exclusions remain explicit. Twenty-seven focused checks pass, including a synthetic 445-occurrence case and privacy/search rejection regressions. Independent source review is complete with no remaining findings. Rendered acceptance and main integration remain pending. No current runtime original or new publication is claimed. See [the evidence contract](docs/features/desktop/runtime-evidence.md#reviewed-gallery-publication-pipeline).
