@@ -1,3 +1,21 @@
+# Preservation handoff, 2026-10-10 UTC
+
+Recorded at 2026-10-10T17:21:07.853617+00:00. Verified account allowance is 10% remaining, the inclusive preservation threshold. The wider goal remains unfinished. No new implementation, build or runtime launch is authorized by this preservation record.
+
+Current main source `4f214ac32f96048e0cc2ee08a11b055235ebb9eb` (I) is pushed and exactly verified, including its task-branch preservation. The minimum source-ID repair adds `-prepare-settings` in production. Focused regression evidence first reported 14 passed/1 failed with 31 unique IDs out of 33, then 15/15 passed after correction. Two independent source reviews are dry. This is source-level repair evidence only; new I local root production and actual runtime execution remain unperformed. Hosted automatic release runs `38071084426` and `38071217163` have terminal success; the observed normal release list shows v1.72.1 and v1.73.1 with draft/prerelease flags false. Full tag/source/assets metadata remains pending readback.
+
+The preceding G runtime lh9oaF at `8b74984bb0e44c00e5a1008009122b497ee85956` passed its first five clear-control measurements, then stopped in first matrix sequence 5 with INVALID_PLAN for duplicate IDs. Zero matrix tuples were accepted. Normal owned closure, credential retirement and fresh final 51-input binding passed. All 91 originals remain preserved, and the exact operational hold was independently closed. These partial G results are not I runtime acceptance.
+
+Normal H release v1.71.1 metadata is verified at source `761e542`, with four assets. Actual H documentation delivery is deployment `6984035573`: 52 files, 18 articles including two wiki pages, 73 anchors, 27 HTML routes and 873 links. Release classification and content delivery do not establish downloaded installation or browser/layout acceptance. The complete current wiki snapshot is copied from exact published revision `43f17a1f7cd24f4079409d1127bc1d145b1c97da`; a later documentation deployment must be verified separately.
+
+Browser E v16 retains 14 completed Home tuples, with all 14 pixels and raw observations independently reviewed. Original normal closure remains unproved and profiles remain retained. Supplemental current absence cannot supply missing original closure evidence. Category/article acceptance remains incomplete. Older source28f's single native observation and OpMyor's two baselines plus three intermediate images retain their original source-specific limits.
+
+Full runtime, all 48 configurations, 13 clear controls, downloaded and installed lifecycle, mounted-copy upgrade and transport workflows, complete browser acceptance and physical display-scale verification remain unfinished. One publication lane is assigned to a public gallery of reviewed genuine captures; publication remains pending. Five working trees and ignored announcement variants remain retained. No cleanup or deletion is claimed. Status Hub session delivery remains unavailable.
+
+Next: preserve and publish this factual handoff and wiki snapshot, verify the exact main remote result and associated instruction preservation, retain all unfinished evidence, and stop discretionary work at this allowance boundary. Future local root production/runtime must bind to its actual source and receipts. Do not convert partial evidence into completion.
+
+# Historical source-bound records
+
 # Current continuation snapshot, 2026-10-10 UTC
 
 Recorded at 2026-10-10T16:59:35.360045+00:00. Continuation remains incomplete. Latest supplied verified account allowance is 14% remaining; preservation starts at 10% remaining, inclusive. No fixed goal token cap is introduced.

@@ -1,3 +1,15 @@
+# Preservation checklist at source I
+
+- [x] Preserve and verify source I on task and main branches; complete focused 15/15 source checks and two dry reviews.
+- [x] Preserve unsuccessful G matrix run and its five passing clear-control measurements, normal closure and 91 originals.
+- [x] Record actual H normal release metadata and documentation delivery separately from runtime acceptance.
+- [ ] Complete local root production and actual runtime for source I; both remain unperformed. Hosted release runs 38071084426/38071217163 succeeded and normal v1.72.1/v1.73.1 list flags are false; full tag/source/assets readback remains pending.
+- [ ] Complete public capture gallery publication; assigned, pending.
+- [ ] Complete full runtime, 48 configurations, 13 clear controls, installed lifecycle, mounted-copy upgrade/transport, browser acceptance and physical scaling.
+- [ ] Verify preservation publication and retain all five working trees and ignored variants; no deletions.
+
+# Historical source-bound checklists
+
 # Current G continuation checklist
 
 - [x] Preserve G repair on its task branch and verify local main contains it; remote main remains F pending publication.
