@@ -1,4 +1,4 @@
-param([Parameter(Mandatory)][string]$DownloadedDirectory,[Parameter(Mandatory)][string]$TargetWorktree,[Parameter(Mandatory)][string]$ReleaseMetadata,[Parameter(Mandatory)][string]$Tag,[Parameter(Mandatory)][string]$ExpectedSource)
+﻿param([Parameter(Mandatory)][string]$DownloadedDirectory,[Parameter(Mandatory)][string]$TargetWorktree,[Parameter(Mandatory)][string]$ReleaseMetadata,[Parameter(Mandatory)][string]$Tag,[Parameter(Mandatory)][string]$ExpectedSource)
 $ErrorActionPreference='Stop'
 function Require([bool]$Condition,[string]$Message){if(!$Condition){throw $Message}}
 function Digest([string]$Path){(Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()}
@@ -56,5 +56,3 @@ Require (Test-Path -LiteralPath (Join-Path $payload 'MaterialFileEncryptor.exe')
 Require (Test-Path -LiteralPath (Join-Path $payload 'resources/app.asar')) 'ASAR_PAYLOAD_MISSING'
 @{version=1;sourceCommit=$ExpectedSource;verifierCommit=(& git -C $target rev-parse HEAD).Trim();tag=$Tag;preparedAtUtc=[DateTime]::UtcNow.ToString('o');buildProvenanceSha256=Digest (Join-Path $download 'build-provenance.json');assets=$verified;extractedEntries=$extracted.Count;files=$extracted;runtimeVerification='pending';installerVerification='pending'}|ConvertTo-Json -Depth 8|Set-Content -Encoding utf8 (Join-Path $evidence 'download-preparation.json')
 Write-Host ('Verified '+$verified.Count+' downloaded assets and extracted '+$extracted.Count+' real payload files. Runtime and installation remain pending.')
-
-
