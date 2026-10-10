@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {fixturePreferences,runtimeCompletion,prepareGuiVaultFixture,retireGuiVaultKey,makeGuiVaultFormSteps} from '../scripts/preview-runtime-fixture.mjs';
+import {prepareEmptyLegacyGuiVault,fixturePreferences,runtimeCompletion,prepareGuiVaultFixture,retireGuiVaultKey,makeGuiVaultFormSteps} from '../scripts/preview-runtime-fixture.mjs';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import path from 'node:path';
@@ -41,4 +41,16 @@ test('GUI fixture preserves its generated key until exact owned-path retirement'
   await assert.rejects(retireGuiVaultKey({...gui,cacheDir:path.join(path.dirname(root),'unowned-cache')}));await fs.access(gui.keyFilePath);
   assert.deepEqual(await retireGuiVaultKey(gui),{ownedKeyRetired:true});await assert.rejects(fs.access(gui.keyFilePath),error=>error.code==='ENOENT');
  }finally{await fs.rm(root,{recursive:true});}
+});
+
+test('legacy conversion rejects mounted, nonempty, foreign and unexpected-format fixtures before writing',async()=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-legacy-test-'));const gui={root,storageDir:path.join(root,'gui-storage'),cacheDir:path.join(root,'gui-cache')};
+ try {
+  for(const folder of [gui.storageDir,gui.cacheDir]){await fs.mkdir(folder);await fs.writeFile(path.join(folder,'vault.json'),JSON.stringify({Format:2,marker:'preserved'}));}
+  for(const observed of [{locked:false,mounted:false,emptyBeforeLock:true},{locked:true,mounted:true,emptyBeforeLock:true},{locked:true,mounted:false,emptyBeforeLock:false}])await assert.rejects(prepareEmptyLegacyGuiVault(gui,observed));
+  const observed={locked:true,mounted:false,emptyBeforeLock:true};await assert.rejects(prepareEmptyLegacyGuiVault({...gui,storageDir:path.dirname(root)},observed));
+  await fs.writeFile(path.join(gui.cacheDir,'vault.json'),JSON.stringify({Format:1}));await assert.rejects(prepareEmptyLegacyGuiVault(gui,observed));assert.equal(JSON.parse(await fs.readFile(path.join(gui.storageDir,'vault.json'),'utf8')).Format,2);
+  await fs.writeFile(path.join(gui.cacheDir,'vault.json'),JSON.stringify({Format:2,marker:'preserved'}));assert.equal((await prepareEmptyLegacyGuiVault(gui,observed)).format,1);
+  for(const folder of [gui.storageDir,gui.cacheDir])assert.deepEqual(JSON.parse(await fs.readFile(path.join(folder,'vault.json'),'utf8')),{Format:1,marker:'preserved'});
+ } finally {await fs.rm(root,{recursive:true});}
 });

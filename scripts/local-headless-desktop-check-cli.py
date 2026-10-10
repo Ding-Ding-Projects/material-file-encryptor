@@ -1,4 +1,4 @@
-"""Use the installed lifecycle safety checks with the documented direct tool CLI."""
+"""Use installed lifecycle checks with persistent loopback MCP or direct CLI transport."""
 import importlib.util
 import json
 import os
@@ -12,12 +12,39 @@ import contextlib
 import io
 
 
+def configure_transport(lifecycle, endpoint, direct_factory, failures):
+    # Capture before overriding: native MCP retains its validation and response bounds.
+    original_connect = lifecycle._connect
+    if endpoint:
+        lifecycle._validate_endpoint(endpoint)
+
+    class ObservedClient:
+        def __init__(self, client): self.client = client
+        def list_tools(self): return self.client.list_tools()
+        def call_tool(self, name, params):
+            result = self.client.call_tool(name, params)
+            if result.get('client_ok') is not True:
+                failures.append(result)
+            return result
+
+    def connect(saved_endpoint, timeout):
+        if endpoint:
+            lifecycle._validate_endpoint(saved_endpoint)
+            if saved_endpoint != endpoint:
+                raise lifecycle.ClientFailure('ENDPOINT_MISMATCH', 'Saved lifecycle endpoint differs from configured transport.')
+            return ObservedClient(original_connect(saved_endpoint, timeout))
+        return direct_factory(timeout)
+    lifecycle._connect = connect
+    return connect
+
+
 def main():
     global module, policy, transport_failures
     helper = Path(os.environ['MFE_LOWLEVEL_CLIENT'])
-    cli = Path(os.environ['MFE_LOWLEVEL_CLI'])
-    if not helper.is_file() or not cli.is_file():
-        raise SystemExit('Installed lifecycle helper and direct CLI are required.')
+    endpoint = os.environ.get('MFE_LOWLEVEL_URL')
+    cli = Path(os.environ['MFE_LOWLEVEL_CLI']) if os.environ.get('MFE_LOWLEVEL_CLI') else None
+    if not helper.is_file() or (not endpoint and (cli is None or not cli.is_file())):
+        raise SystemExit('Installed lifecycle helper and selected transport are required.')
     spec = importlib.util.spec_from_file_location('installed_lifecycle', helper)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
@@ -67,11 +94,11 @@ def main():
             return {'automaticallyClosed': True}
         raise SystemExit('Owned desktop close was not confirmed.')
 
-    module._connect = lambda endpoint, timeout: DirectClient(timeout)
+    connect = configure_transport(module, endpoint, DirectClient, transport_failures)
     if len(sys.argv) == 3 and sys.argv[1] in ['prepare-exit', 'confirm-exit']:
         state_path, state = module._read_state(sys.argv[2])
         proof_path = state_path.with_name('exit-processes.json')
-        client = DirectClient(20)
+        client = connect(state['endpoint'], 20)
         if sys.argv[1] == 'prepare-exit':
             tree = module._process_tree(state['process'])
             proof_path.write_text(json.dumps({'root': state['process'], 'processes': tree}), encoding='utf-8')
@@ -107,14 +134,14 @@ def main():
         try:
             result = module._cmd_cleanup(args)
         except module.ClientFailure as error:
-            result = {'ok': False, 'client_ok': False, 'code': error.code}
+            result = sanitized_failure(error.code, vars(error))
         if result.get('client_ok') is not True and not state['cleaned']:
             allowed = policy.automatically_closed(result, state['desktop'], proof['processes'], module._recorded_tree_absent) or policy.cleanup_absence_recovery_allowed(result)
             other_transport_failure = any(not policy.automatically_closed(item, state['desktop'], proof['processes'], module._recorded_tree_absent) for item in transport_failures)
             if not allowed or other_transport_failure:
                 print(json.dumps(result))
                 raise SystemExit(1)
-            closed_proof = close_after_absence(DirectClient(20), state, proof['processes'])
+            closed_proof = close_after_absence(connect(state['endpoint'], 20), state, proof['processes'])
             state['cleaned'] = True
             state_path.write_text(json.dumps(state), encoding='utf-8')
             result = {'ok': True, 'client_ok': True, 'recordedProcessesAbsent': True, 'desktopClosed': True, **closed_proof}
@@ -123,10 +150,18 @@ def main():
     raise SystemExit(module.main())
 
 
-def sanitized_failure(code):
+REASONS = {'ROOT_IDENTITY_CHANGED', 'DUPLICATE_PID', 'INVALID_NODE_IDENTITY', 'ROOT_CYCLE', 'CYCLE_OR_MISSING_PARENT', 'MISSING_PARENT', 'CHILD_PREDATES_PARENT', 'LIVE_IDENTITY_UNAVAILABLE', 'LIVE_IDENTITY_CHANGED', 'UNSPECIFIED_ANCESTRY_FAILURE'}
+STAGES = {'process-snapshot', 'ancestry', 'listener-query', 'owner-revalidation', 'native-observation'}
+
+def sanitized_failure(code, details=None):
     if not isinstance(code, str) or not re.fullmatch(r'[A-Z][A-Z0-9_]{0,79}', code):
         code = 'ADAPTER_FAILED'
-    return {'ok': False, 'client_ok': False, 'code': code, 'error': 'Owned lifecycle verification failed; processes and evidence are retained.'}
+    result = {'ok': False, 'client_ok': False, 'code': code, 'error': 'Owned lifecycle verification failed; processes and evidence are retained.'}
+    details = details or {}
+    for key, allowed in [('reasonCode', REASONS), ('stage', STAGES)]:
+        if details.get(key) in allowed:
+            result[key] = details[key]
+    return result
 
 
 def run():
@@ -143,7 +178,7 @@ def run():
     except Exception as error:
         lifecycle = globals().get('module')
         code = error.code if lifecycle and isinstance(error, lifecycle.ClientFailure) else 'ADAPTER_FAILED'
-        print(json.dumps(sanitized_failure(code)))
+        print(json.dumps(sanitized_failure(code, vars(error))))
         return 1
     try:
         result = json.loads(output.getvalue())
@@ -153,7 +188,7 @@ def run():
         print(json.dumps(sanitized_failure('ADAPTER_INVALID_RESULT')))
         return 1
     if result.get('client_ok') is False or result.get('ok') is False:
-        result = sanitized_failure(result.get('code', 'ADAPTER_FAILED'))
+        result = sanitized_failure(result.get('code', 'ADAPTER_FAILED'), result)
         exit_code = exit_code or 1
     print(json.dumps(result))
     return exit_code

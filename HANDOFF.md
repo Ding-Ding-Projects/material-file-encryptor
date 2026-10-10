@@ -1,6 +1,14 @@
 # Verification resumed, 2026-10-09
 
-The user resumed the accepted verification plan. Main now includes package-privacy source repair `93dfedbbfbe7d2dcf105c10c2270005ab2dae06a`: complete private task-directory exclusion, a rejecting Forge post-package hook, actual ASAR and loose-resource inspection, and a repeated production check before installer creation. Two focused regressions passed and independent source review found no blocking issue. Actual rebuilt-package privacy, current runtime, installation and visual acceptance remain pending.
+## Integrated verification tooling and package evidence
+
+Both exact build entrypoints exited zero at source `e902a2c073accd781de65e38a3eda68d2fb0d0d2`. Privacy inspection accepted 812 actual package entries with zero rejected entries. All 739 installer-package entries passed decompression and CRC verification, and independent ZIP inspection matched the embedded ASAR hash to the inspected package. These results do not establish runtime, installation or visual acceptance.
+
+Runtime tooling commits `b3c42ea6` and `b3e22bb8` add precise allowlisted diagnostics, native client/DPI observation, genuine legacy copy-upgrade fixtures, transport setup coverage, resumable final pixel review and persistent loopback transport. Independent source reviews found no actionable defect; the combined focused JavaScript checks passed 31/31. A new frozen build and real workflows remain required. Native scale observations cannot be substituted for the four-scale physical-display matrix.
+
+The current continuation file was corrected at `e902a2c` after an export command resolved a relative input against another repository. Historical `e156d5a` retains the incorrect handoff; history was not rewritten. Future exports use absolute paths and content comparison before publication.
+
+The user resumed the accepted verification plan. Main now includes package-privacy source repair `93dfedbbfbe7d2dcf105c10c2270005ab2dae06a`: complete private task-directory exclusion, a rejecting Forge post-package hook, actual ASAR and loose-resource inspection, and a repeated production check before installer creation. Two focused regressions passed and independent source review found no blocking issue. Package evidence at `e902a2c` is recorded above; the next integrated candidate still requires its own binding. Current runtime, installation and visual acceptance remain pending.
 
 Normal release `v1.20.1` targets the preceding main `b693c6bca5843a000d78b47c321948eaf1884c26`; workflow `37995783561` completed successfully and all four expected assets exist. No independent download or runtime acceptance of that release is claimed by this continuation. The earlier v1.19.1 download evidence and local quarantine remain unchanged.
 

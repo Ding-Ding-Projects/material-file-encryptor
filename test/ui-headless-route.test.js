@@ -4,7 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-import {makeLaunch,makeBaselinePlan,makeInterfacePlan,validateCaptureReview,finalVerdict,helperFailure,createPlanRecorder,recordNativeCapture,captureProvenance} from '../scripts/local-headless-desktop-check.mjs';
+import {lifecycleTransport,safeFailureDetails,resumeCaptureReview,makeLaunch,makeBaselinePlan,makeInterfacePlan,validateCaptureReview,finalVerdict,helperFailure,createPlanRecorder,recordNativeCapture,captureProvenance} from '../scripts/local-headless-desktop-check.mjs';
 test('local launch binds exact executable, isolated profile and loopback debugging to one run',()=>{
  const root=path.join(os.tmpdir(),'owned-run');const executable=path.join(root,'package','MaterialFileEncryptor.exe');
  const launch=makeLaunch({executable,runRoot:root,port:9333});
@@ -50,7 +50,7 @@ test('final review binds every exact image, source and executable, with explicit
  const stale=structuredClone(review);stale.captures[0].sha256='e'.repeat(64);assert.equal(validateCaptureReview(stale,inventory,binding),false);assert.equal(validateCaptureReview({...review,sourceCommit:'f'.repeat(40)},inventory,binding),false);
 });
 test('passing receipt requires runtime, real keyboard, pixels, cleanup, startup and owned credential proof',()=>{
- const receipt={sourceCommit:'a'.repeat(40),executableSha256:'b'.repeat(64),resourceHashes:{asar:'c'.repeat(64),nativeHost:'d'.repeat(64)},launched:true,runtime:{mountedFilesystemVerified:true,rendererAssertionsVerified:true,startupRegistration:{restored:true,verificationOnly:true,enabledReadback:true,disabledReadback:false}},keyboard:{verified:true},captureReview:{verified:true,provenanceVerified:true},cleanup:{client_ok:true,recordedProcessesAbsent:true,desktopClosed:true},fixtureCleanup:{ownedCredentialForgotten:true}};
+ const receipt={sourceCommit:'a'.repeat(40),executableSha256:'b'.repeat(64),resourceHashes:{asar:'c'.repeat(64),nativeHost:'d'.repeat(64)},launched:true,runtime:{copyUpgrade:{realControls:true,upgradedFormat:2,originalFormat:1,bothMountedBytesVerified:true},transportSetup:{folderBackendVerified:true,privateRepositoryValidationVerified:true},mountedFilesystemVerified:true,rendererAssertionsVerified:true,startupRegistration:{restored:true,verificationOnly:true,enabledReadback:true,disabledReadback:false}},keyboard:{verified:true},captureReview:{verified:true,provenanceVerified:true},cleanup:{client_ok:true,recordedProcessesAbsent:true,desktopClosed:true},fixtureCleanup:{ownedCredentialForgotten:true}};
  assert.equal(finalVerdict(receipt).passed,true);for(const key of ['runtime','keyboard','captureReview','cleanup','fixtureCleanup']) {const value=structuredClone(receipt);delete value[key];assert.equal(finalVerdict(value).passed,false);}
  assert.equal(finalVerdict({...receipt,failure:'runtime failure'}).passed,false);assert.equal(finalVerdict({...receipt,sourceCommit:undefined}).passed,false);
  assert.equal(finalVerdict({...receipt,captureReview:{verified:true}}).passed,false);
@@ -86,4 +86,30 @@ test('native capture interval surrounds the tool call and refuses an existing im
   assert.equal(provenance.captureMethod,'cheap-lowlevel-native');assert.ok(Date.parse(provenance.startedAt)<=within);assert.ok(Date.parse(provenance.capturedAt)>=within);
   await assert.rejects(recordNativeCapture(root,image,'reused',async()=>{throw new Error('must not execute');}),/already exists/);
  }finally{await fs.rm(root,{recursive:true});}
+});
+
+test('failure summaries retain allowlisted diagnostic metadata without reflecting native text',()=>{
+ assert.deepEqual(safeFailureDetails({reasonCode:'CHILD_PREDATES_PARENT',stage:'ancestry',error:'private'}),{reasonCode:'CHILD_PREDATES_PARENT',stage:'ancestry'});
+ assert.deepEqual(safeFailureDetails({reasonCode:'private-path',stage:'private-output'}),{});
+ assert.deepEqual(helperFailure({code:'UNPROVEN_PROCESS_ANCESTRY',reasonCode:'MISSING_PARENT',stage:'ancestry'}).helperDetails,{reasonCode:'MISSING_PARENT',stage:'ancestry'});
+});
+test('pixel review resume requires completed teardown and unchanged packaged bytes before review',async()=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-review-resume-'));const executable=path.join(root,'package','app.exe');
+ try {
+  await fs.mkdir(path.join(root,'package','resources','native'),{recursive:true});await fs.mkdir(path.join(root,'output'));
+  const files={executable,asar:path.join(root,'package','resources','app.asar'),nativeHost:path.join(root,'package','resources','native','MaterialFileEncryptor.Host.exe')};const hashes={};for(const [key,file] of Object.entries(files)){await fs.writeFile(file,key);hashes[key]=createHash('sha256').update(key).digest('hex');}
+  const receipt={launch:{runRoot:root,outputRoot:path.join(root,'output'),executable},executableSha256:hashes.executable,resourceHashes:hashes,cleanup:{client_ok:true,recordedProcessesAbsent:true,desktopClosed:true},runtime:{mountedFilesystemVerified:true,rendererAssertionsVerified:true},fixtureCleanup:{ownedCredentialForgotten:true}};
+  let calls=0;const review=async()=>{calls++;return {verified:false,provenanceVerified:false};};const save=()=>fs.writeFile(path.join(root,'verification.json'),JSON.stringify(receipt));
+  receipt.cleanup.desktopClosed=false;await save();await assert.rejects(resumeCaptureReview(root,{review}));assert.equal(calls,0);
+  receipt.cleanup.desktopClosed=true;await save();await fs.writeFile(executable,'changed');await assert.rejects(resumeCaptureReview(root,{review}));assert.equal(calls,0);
+  await fs.writeFile(executable,'executable');await save();const result=await resumeCaptureReview(root,{review});assert.equal(calls,1);assert.equal(result.passed,false);assert.equal(result.pixelsInspected,false);
+ }finally{await fs.rm(root,{recursive:true});}
+});
+
+test('persistent endpoint selects project lifecycle adapter even without a CLI',()=>{
+ const installedLowlevel=path.resolve('installed/lifecycle.py');
+ for(const options of [{endpoint:'http://127.0.0.1:8765/mcp'},{endpoint:'http://127.0.0.1:8765/mcp',cli:'unused.exe'},{cli:'direct.exe'}]){
+  const selected=lifecycleTransport({...options,installedLowlevel});assert.equal(selected.useAdapter,true);assert.equal(path.basename(selected.lowlevel),'local-headless-desktop-check-cli.py');assert.equal(selected.transport,options.endpoint?'persistent-http-adapter':'direct-cli-adapter');
+ }
+ assert.deepEqual(lifecycleTransport({installedLowlevel}),{useAdapter:false,lowlevel:installedLowlevel,transport:'streamable-http'});
 });

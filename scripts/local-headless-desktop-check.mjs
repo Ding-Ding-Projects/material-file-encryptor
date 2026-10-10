@@ -45,12 +45,16 @@ export function validateCaptureReview(review,inventory,binding) {
  const reviewed=new Map(review.captures.map(item=>[item.path,item]));if(reviewed.size!==inventory.length)return false;
  return inventory.every(item=>{const value=reviewed.get(item.path);return value?.sha256===item.sha256&&value.inspected===true&&value.privacyPassed===true;});
 }
+export function safeFailureDetails(result) {
+ const allowed={reasonCode:['ROOT_IDENTITY_CHANGED','DUPLICATE_PID','INVALID_NODE_IDENTITY','ROOT_CYCLE','CYCLE_OR_MISSING_PARENT','MISSING_PARENT','CHILD_PREDATES_PARENT','LIVE_IDENTITY_UNAVAILABLE','LIVE_IDENTITY_CHANGED','UNSPECIFIED_ANCESTRY_FAILURE'],stage:['process-snapshot','ancestry','listener-query','owner-revalidation','native-observation']};
+ return Object.fromEntries(Object.entries(allowed).filter(([key,values])=>values.includes(result?.[key])).map(([key])=>[key,result[key]]));
+}
 export function helperFailure(result,plan) {
  const code=typeof result?.code==='string'?result.code.slice(0,100):'VERIFICATION_HELPER_FAILED';
  const description=typeof result?.error==='string'?result.error:'';
  const step=plan?.steps?.find(item=>typeof item.id==='string'&&(description.startsWith(item.id+' ')||description.startsWith(item.id+':')));
  const error=new Error(code+(step?`: ${step.id.slice(0,120)} (${String(step.op).slice(0,30)})`:''));
- error.helperResult=result;error.helperCode=code;error.helperStep=step?{id:step.id,op:step.op}:null;return error;
+ error.helperResult=result;error.helperCode=code;error.helperDetails=safeFailureDetails(result);error.helperStep=step?{id:step.id,op:step.op}:null;return error;
 }
 async function appendStepReceipt(runRoot,value) {
  // Raw helper values remain in the task-owned private run root, never reports.
@@ -61,7 +65,7 @@ export function createPlanRecorder(runRoot,execute) {
  return async plan=>{
   const record={version:1,kind:'cdp-plan',sequence:++sequence,startedAt:new Date().toISOString(),steps:plan.steps.map(({id,op})=>({id,op}))};
   try {const result=await execute(plan);record.result=result;return result;}
-  catch(error){record.result=error.helperResult||{ok:false,code:error.helperCode||'VERIFICATION_HELPER_FAILED'};record.failure={code:error.helperCode||'VERIFICATION_HELPER_FAILED',step:error.helperStep||null};throw error;}
+  catch(error){record.result=error.helperResult||{ok:false,code:error.helperCode||'VERIFICATION_HELPER_FAILED'};record.failure={code:error.helperCode||'VERIFICATION_HELPER_FAILED',step:error.helperStep||null,...error.helperDetails};throw error;}
   finally {record.finishedAt=new Date().toISOString();await appendStepReceipt(runRoot,record);}
  };
 }
@@ -90,6 +94,8 @@ export function finalVerdict(receipt) {
  if(!/^[a-f0-9]{40}$/.test(receipt.sourceCommit||'')||!/^[a-f0-9]{64}$/.test(receipt.executableSha256||'')||!/^[a-f0-9]{64}$/.test(receipt.resourceHashes?.asar||'')||!/^[a-f0-9]{64}$/.test(receipt.resourceHashes?.nativeHost||''))pending.push('Exact packaged source and resource hash binding');
  if(!receipt.launched)pending.push('Exact packaged application launch');
  if(receipt.runtime?.mountedFilesystemVerified!==true||receipt.runtime?.rendererAssertionsVerified!==true)pending.push('Mounted filesystem and history/recycling workflow');
+ if(receipt.runtime?.copyUpgrade?.realControls!==true||receipt.runtime?.copyUpgrade?.upgradedFormat!==2||receipt.runtime?.copyUpgrade?.originalFormat!==1||receipt.runtime?.copyUpgrade?.bothMountedBytesVerified!==true)pending.push('Real copy upgrade and independently reopened original');
+ if(receipt.runtime?.transportSetup?.folderBackendVerified!==true||receipt.runtime?.transportSetup?.privateRepositoryValidationVerified!==true)pending.push('Folder backend and private transport setup validation');
  if(receipt.keyboard?.verified!==true)pending.push('Background native keyboard and observed focus transition');
  if(receipt.captureReview?.verified!==true)pending.push('Every capture inspected with matching hash and privacy verdict');
  if(receipt.captureReview?.provenanceVerified!==true)pending.push('Every capture has recorded timing and matching provenance hash');
@@ -142,8 +148,8 @@ export async function finishOwnedLifecycle({runtime,launch,statePath,python,lowl
    if(proof?.done!==true||proof.failed||proof.value?.restored!==true)throw Object.assign(new Error('Verification quit did not confirm startup restoration.'),{helperCode:'VERIFICATION_QUIT_NOT_RESTORED'});
    recovery.restored=true;quitRequested=true;
   } catch(error) {
-   recovery.code=error.helperCode||error.code||'VERIFICATION_QUIT_FAILED';
-   if(['UNPROVEN_PROCESS_ANCESTRY','PROCESS_IDENTITY_CHANGED','INVALID_PROCESS_IDENTITY','INVALID_PROCESS_TREE','PROCESS_PROOF_FAILED','IDENTITY_BOUND_TERMINATION_UNAVAILABLE'].includes(recovery.code))return {quitRequested:false,recovery,cleanup:{ok:false,client_ok:false,code:recovery.code}};
+   recovery.code=error.helperCode||error.code||'VERIFICATION_QUIT_FAILED';Object.assign(recovery,error.helperDetails);
+   if(['UNPROVEN_PROCESS_ANCESTRY','PROCESS_IDENTITY_CHANGED','INVALID_PROCESS_IDENTITY','INVALID_PROCESS_TREE','PROCESS_PROOF_FAILED','IDENTITY_BOUND_TERMINATION_UNAVAILABLE'].includes(recovery.code))return {quitRequested:false,recovery,cleanup:{ok:false,client_ok:false,code:recovery.code,...error.helperDetails}};
   }
  }
  const cleanup=quitRequested?await runCommand(python,[lowlevel,'confirm-exit',statePath]):await runCommand(python,[lowlevel,'cleanup','--state',statePath,'--timeout','20']);
@@ -167,7 +173,7 @@ async function readModernSource() {
  return git(['rev-parse','HEAD']);
 }
 
-export function modernNativeObservation({window,state,launch,sourceCommit,launchReceiptSha256,processSha256,inspection,profileResolved}) {
+export function modernNativeObservation({window,state,launch,sourceCommit,launchReceiptSha256,processSha256,inspection,profileResolved,native}) {
  assert.equal(window.client_ok,true);assert.ok(window.windowProcess,'Live HWND owner identity is unavailable');
  assert.equal(window.desktop,state.desktop);assert.equal(window.hwnd,state.hwnd);assert.ok(window.width>0&&window.height>0);
  assert.ok(Number.isFinite(Date.parse(window.observedAt)));assert.ok(Number.isInteger(window.windowProcess.pid)&&window.windowProcess.pid>0);
@@ -176,9 +182,33 @@ export function modernNativeObservation({window,state,launch,sourceCommit,launch
  assert.equal(state.cdp.port,launch.cdp.port);assert.equal(state.cdp.expectedUrl,launch.cdp.expectedUrl);
  assert.equal(inspection.ok,true);assert.equal(inspection.targetCount,1);assert.equal(inspection.exactUrl,launch.cdp.expectedUrl);
  assert.equal(profileResolved,path.join(launch.runRoot,'profile'));assert.ok(launch.arguments.includes(`--verification-profile=${profileResolved}`));
- return {sourceCommit,launchReceiptSha256,observedAt:window.observedAt,target:{desktop:window.desktop,title:window.title,className:window.class,pid:window.windowProcess.pid,hwnd:String(window.hwnd),creationDate:window.windowProcess.creationDate,processPath:launch.executable,processSha256},ownership:{pidResolvedLive:window.windowProcess.pid>0,hwndResolvedLive:window.hwnd===state.hwnd,exactProcessOwned:window.client_ok===true,cdpTargetVerified:inspection.targetCount===1&&inspection.exactUrl===launch.cdp.expectedUrl},privacy:{visibleDesktopUntouched:state.created===true&&window.desktop===state.desktop,taskOwnedProfile:profileResolved===path.join(launch.runRoot,'profile'),unrelatedTargetsObserved:inspection.targetCount!==1}};
+ assert.equal(native?.client_ok,true,'Independent native geometry is required');assert.equal(native.hwnd,window.hwnd);assert.equal(native.desktop,state.desktop);
+ assert.equal(native.process.pid,window.windowProcess.pid);assert.equal(native.process.creationDate,window.windowProcess.creationDate);assert.equal(path.resolve(native.process.executablePath),path.resolve(launch.executable));assert.equal(native.processSha256,processSha256);
+ assert.ok(native.clientRect?.width>0&&native.clientRect?.height>0);assert.ok(native.dpi>0);assert.equal(native.scaleKind,'current-window-effective-dpi');assert.equal(native.physicalScaleMatrixVerified,false);
+ return {sourceCommit,launchReceiptSha256,observedAt:native.observedAt,nativeGeometry:native,target:{desktop:window.desktop,title:window.title,className:window.class,pid:window.windowProcess.pid,hwnd:String(window.hwnd),creationDate:window.windowProcess.creationDate,processPath:launch.executable,processSha256},ownership:{pidResolvedLive:window.windowProcess.pid>0,hwndResolvedLive:window.hwnd===state.hwnd,exactProcessOwned:window.client_ok===true,cdpTargetVerified:inspection.targetCount===1&&inspection.exactUrl===launch.cdp.expectedUrl},privacy:{visibleDesktopUntouched:state.created===true&&window.desktop===state.desktop,taskOwnedProfile:profileResolved===path.join(launch.runRoot,'profile'),unrelatedTargetsObserved:inspection.targetCount!==1}};
 }
+// Resume only the human pixel-review phase. Never reuse a live PID, HWND or CDP target.
+export async function resumeCaptureReview(runRoot,{review=reviewAllCaptures}={}) {
+ runRoot=await fs.realpath(path.resolve(runRoot));
+ const receiptPath=path.join(runRoot,'verification.json');const receipt=JSON.parse(await fs.readFile(receiptPath,'utf8'));
+ assert.equal(await fs.realpath(receipt.launch.runRoot),runRoot);assert.equal(path.resolve(receipt.launch.outputRoot),path.join(runRoot,'output'));
+ assert.equal(receipt.failure,undefined);assert.equal(receipt.cleanup?.client_ok,true);assert.equal(receipt.cleanup?.recordedProcessesAbsent,true);assert.equal(receipt.cleanup?.desktopClosed,true);
+ assert.equal(receipt.runtime?.mountedFilesystemVerified,true);assert.equal(receipt.runtime?.rendererAssertionsVerified,true);assert.equal(receipt.fixtureCleanup?.ownedCredentialForgotten,true);
+ const hash=async file=>createHash('sha256').update(await fs.readFile(file)).digest('hex');
+ assert.equal(await hash(receipt.launch.executable),receipt.executableSha256);
+ for(const [key,file] of Object.entries({asar:path.join(path.dirname(receipt.launch.executable),'resources','app.asar'),nativeHost:path.join(path.dirname(receipt.launch.executable),'resources','native','MaterialFileEncryptor.Host.exe')}))assert.equal(await hash(file),receipt.resourceHashes[key]);
+ receipt.captureReview=await review(receipt,runRoot,receipt.launch.outputRoot);delete receipt.reviewPending;
+ Object.assign(receipt,finalVerdict(receipt));receipt.pixelsInspected=receipt.captureReview?.verified===true;
+ await fs.writeFile(receiptPath,JSON.stringify(receipt,null,2));return receipt;
+}
+
+export function lifecycleTransport({cli,endpoint,installedLowlevel}) {
+ const useAdapter=Boolean(cli||endpoint);
+ return {useAdapter,lowlevel:useAdapter?fileURLToPath(new URL('./local-headless-desktop-check-cli.py',import.meta.url)):installedLowlevel,transport:endpoint?'persistent-http-adapter':cli?'direct-cli-adapter':'streamable-http'};
+}
+
 export async function runLocalHeadlessCheck(env=process.env) {
+ if(env.MFE_CAPTURE_REVIEW_ROOT){const receipt=await resumeCaptureReview(env.MFE_CAPTURE_REVIEW_ROOT);const evidenceDir=path.resolve(env.MFE_DESKTOP_EVIDENCE_DIR||'out/evidence');const existingPath=path.join(evidenceDir,'desktop-check.json');const existing=JSON.parse(await fs.readFile(existingPath,'utf8'));assert.equal(existing.sourceCommit,receipt.sourceCommit);assert.equal(existing.executableSha256,receipt.executableSha256);assert.equal(path.resolve(existing.launch.runRoot),path.resolve(receipt.launch.runRoot));await fs.writeFile(existingPath,JSON.stringify({...existing,...receipt},null,2));console.log(JSON.stringify({reviewResumed:true,passed:receipt.passed,pending:receipt.pending}));if(!receipt.passed)throw new Error('Preserved review remains incomplete.');return receipt;}
  if(process.platform!=='win32')throw new Error('The local isolated desktop route requires Windows.');
  const executable=await fs.realpath(path.resolve(env.MFE_DESKTOP_EXECUTABLE||'out/material-file-encryptor-win32-x64/MaterialFileEncryptor.exe'));
  const runRoot=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-headless-'));const launch=makeLaunch({executable,runRoot,port:await freePort()});
@@ -187,16 +217,15 @@ export async function runLocalHeadlessCheck(env=process.env) {
  const installedLowlevel=env.MFE_LOWLEVEL_CLIENT||path.join(skillRoot,'run-lowlevel-headless-app','scripts','lowlevel_mcp_client.py');
  const cdp=env.MFE_CDP_DRIVER||path.join(skillRoot,'drive-electron-cdp-headless','scripts','cdp_driver.mjs');
  await fs.access(installedLowlevel);await fs.access(cdp);
- const cli=env.MFE_LOWLEVEL_CLI;
- const lowlevel=cli?fileURLToPath(new URL('./local-headless-desktop-check-cli.py',import.meta.url)):installedLowlevel;
- if(cli) {await fs.access(cli);process.env.MFE_LOWLEVEL_CLIENT=installedLowlevel;process.env.MFE_LOWLEVEL_CLI=cli;}
+ const cli=env.MFE_LOWLEVEL_CLI;const endpoint=env.MFE_LOWLEVEL_URL;const {useAdapter,lowlevel,transport}=lifecycleTransport({cli,endpoint,installedLowlevel});
+ if(useAdapter){process.env.MFE_LOWLEVEL_CLIENT=installedLowlevel;if(endpoint)process.env.MFE_LOWLEVEL_URL=endpoint;else delete process.env.MFE_LOWLEVEL_URL;if(cli){if(!endpoint)await fs.access(cli);process.env.MFE_LOWLEVEL_CLI=cli;}else delete process.env.MFE_LOWLEVEL_CLI;}
  const transportArgs=env.MFE_LOWLEVEL_URL?['--url',env.MFE_LOWLEVEL_URL]:[];
  const statePath=path.join(runRoot,'lifecycle.json');const plan=makeBaselinePlan(launch,statePath);
  const source=await new Promise((resolve,reject)=>{const child=spawn('git',['rev-parse','HEAD'],{windowsHide:true});let value='';child.stdout.on('data',data=>value+=data);child.on('close',code=>code===0?resolve(value.trim()):reject(new Error('Source identity unavailable.')));});
  if(env.MFE_HEADLESS_EXECUTE==='1'&&!/^[a-f0-9]{40}$/.test(env.MFE_SOURCE_COMMIT||''))throw new Error('Provide the exact packaged build source commit through MFE_SOURCE_COMMIT.');
  const sourceBinding=env.MFE_SOURCE_COMMIT||source;
  const resourceHashes={};for(const [name,file] of Object.entries({asar:path.join(path.dirname(executable),'resources','app.asar'),nativeHost:path.join(path.dirname(executable),'resources','native','MaterialFileEncryptor.Host.exe')}))resourceHashes[name]=createHash('sha256').update(await fs.readFile(file)).digest('hex');
- const receipt={version:1,transport:cli?'direct-cli-adapter':'streamable-http',resourceHashes,route:'cheap-lowlevel-headless',sourceCommit:sourceBinding,executableSha256:createHash('sha256').update(await fs.readFile(executable)).digest('hex'),launch,preparedAt:new Date().toISOString(),launched:false,pixelsInspected:false,interactionsVerified:false};
+ const receipt={version:1,transport,resourceHashes,route:'cheap-lowlevel-headless',sourceCommit:sourceBinding,executableSha256:createHash('sha256').update(await fs.readFile(executable)).digest('hex'),launch,preparedAt:new Date().toISOString(),launched:false,pixelsInspected:false,interactionsVerified:false};
  const modernBinding=env.MFE_MODERN_UI_CHECK==='1'?await modernBuildBinding({buildReceiptPath:env.MFE_BUILD_RECEIPT,sourceCommit:sourceBinding,executable,resourceHashes}):null;
  await fs.writeFile(path.join(runRoot,'prepared.json'),JSON.stringify(receipt,null,2));
  if(env.MFE_HEADLESS_EXECUTE!=='1') {console.log(JSON.stringify({prepared:true,launched:false,runRoot,requires:'Set MFE_HEADLESS_EXECUTE=1 only after reviewing the packaged executable and isolated profile arguments.'}));return receipt;}
@@ -208,13 +237,14 @@ export async function runLocalHeadlessCheck(env=process.env) {
   const window=await command(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30']);
   const bytes=await fs.readFile(statePath),state=JSON.parse(bytes),inspection=await command(process.execPath,[cdp,'inspect'],plan);
   const processSha256=createHash('sha256').update(await fs.readFile(executable)).digest('hex');assert.equal(processSha256,modernBinding.artifactSha256);
-  const observation=modernNativeObservation({window,state,launch,sourceCommit,launchReceiptSha256:createHash('sha256').update(bytes).digest('hex'),processSha256,inspection,profileResolved:await fs.realpath(path.join(runRoot,'profile'))});
+  const native=await command(python,[fileURLToPath(new URL('./native-window-observation.py',import.meta.url))],{helper:installedLowlevel,receipt:statePath});
+  const observation=modernNativeObservation({native,window,state,launch,sourceCommit,launchReceiptSha256:createHash('sha256').update(bytes).digest('hex'),processSha256,inspection,profileResolved:await fs.realpath(path.join(runRoot,'profile'))});
   await appendStepReceipt(runRoot,{version:1,kind:'modern-native-observation',observation,window,inspection});return observation;
  }}):undefined;
  try {
   await command(python,[installedLowlevel,'self-test']);await command(process.execPath,[cdp,'self-test']);
   await command(python,[lowlevel,'preflight',...transportArgs,'--require','launch_on_headless_desktop','--require','list_headless_windows','--require','screenshot','--require','close_headless_desktop']);
-  if(env.MFE_RUNTIME_FIXTURE==='1') {if(!cli)throw new Error('Runtime graceful-exit proof requires the direct CLI adapter.');fixture=await prepareRuntimeFixture({executable,profile:path.join(runRoot,'profile')});receipt.fixture={root:fixture.root,prepared:fixture.prepared,driveLetter:fixture.driveLetter};}
+  if(env.MFE_RUNTIME_FIXTURE==='1') {if(!useAdapter)throw new Error('Runtime graceful-exit proof requires the project lifecycle adapter.');fixture=await prepareRuntimeFixture({executable,profile:path.join(runRoot,'profile')});receipt.fixture={root:fixture.root,prepared:fixture.prepared,driveLetter:fixture.driveLetter};}
   await command(python,[lowlevel,'launch',...transportArgs,'--state',statePath],launch);receipt.launched=true;
   await command(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30']);
   const lifecycle=JSON.parse(await fs.readFile(statePath,'utf8'));
@@ -222,7 +252,7 @@ export async function runLocalHeadlessCheck(env=process.env) {
   await fs.writeFile(path.join(runRoot,'initial-capture-result.json'),JSON.stringify(initial,null,2));
   receipt.cdp=await executePlan(plan);
   if(env.MFE_HEADLESS_INTERACTIONS==='1'||fixture) {receipt.baselineReview=await requirePixelReview(runRoot,path.join(launch.outputRoot,'native-baseline.png'));if(fixture){receipt.keyboard=await verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,launch,executePlan});runtime=await checkMountedRuntime({fixture,launch,receipt:statePath,executePlan,modernProbeEvidence,modernUiCheck:env.MFE_MODERN_UI_CHECK==='1',prepareExit:()=>command(python,[lowlevel,'prepare-exit',statePath])});receipt.runtime=runtime;}else receipt.interfaceWorkflow=await executePlan(makeInterfacePlan(launch,statePath));receipt.rendererAssertionsVerified=true;}
- } catch(error) {failure=String(error.message).slice(0,200);}
+ } catch(error) {failure=String(error.message).slice(0,200);receipt.failureDetails=safeFailureDetails(error.helperResult);}
  finally {try {await fs.access(statePath);const finished=await finishOwnedLifecycle({runtime,launch,statePath,python,lowlevel,transportArgs,executePlan});cleanup=finished.cleanup;receipt.quitRecovery=finished.recovery;if(fixture&&finished.quitRequested&&cleanup.client_ok)receipt.fixtureCleanup=await forgetRuntimeFixture(fixture);}catch(error){cleanup={ok:false,code:error.helperCode||error.code||'OWNED_LIFECYCLE_FAILED',reason:String(error.message).slice(0,200)};}
   Object.assign(receipt,{finishedAt:new Date().toISOString(),failure,cleanup,profileRetained:true});
   if(!failure&&runtime&&cleanup?.client_ok){try{receipt.captureReview=await reviewAllCaptures(receipt,runRoot,launch.outputRoot);}catch(error){receipt.reviewPending=String(error.message).slice(0,200);}}
