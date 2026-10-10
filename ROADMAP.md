@@ -49,6 +49,6 @@
 
 ## Preservation follow-up
 
-- [ ] Exclude private local agent data from packaged archives, prove the negative regression and inspect a rebuilt package. Local 57a04e16 outputs are quarantined; downloaded v1.19.1 contains zero private announcement entries.
+- [ ] Inspect a rebuilt package after private local task-data exclusion. Source repair `93dfedbb` has two passing focused regressions and independent review; actual production output acceptance remains pending. Local 57a04e16 outputs stay quarantined; downloaded v1.19.1 contains zero private announcement entries.
 - [ ] Complete the final modern 48-tuple runtime matrix and source-bound installed verification.
 - [ ] Complete responsive website acceptance with actual captured dimensions and strict target isolation.

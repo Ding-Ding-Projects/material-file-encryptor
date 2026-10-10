@@ -1,3 +1,11 @@
+# Verification resumed, 2026-10-09
+
+The user resumed the accepted verification plan. Main now includes package-privacy source repair `93dfedbbfbe7d2dcf105c10c2270005ab2dae06a`: complete private task-directory exclusion, a rejecting Forge post-package hook, actual ASAR and loose-resource inspection, and a repeated production check before installer creation. Two focused regressions passed and independent source review found no blocking issue. Actual rebuilt-package privacy, current runtime, installation and visual acceptance remain pending.
+
+Normal release `v1.20.1` targets the preceding main `b693c6bca5843a000d78b47c321948eaf1884c26`; workflow `37995783561` completed successfully and all four expected assets exist. No independent download or runtime acceptance of that release is claimed by this continuation. The earlier v1.19.1 download evidence and local quarantine remain unchanged.
+
+Runtime verification work is isolated from the production checkout. Its scope is precise sanitized ancestry diagnostics, independent native client geometry, real transport setup observations and real format-1 copy-upgrade coverage. Physical display configuration must remain separate from renderer emulation. No shared display settings, original vaults, existing installations or credentials may be changed.
+
 # Preservation closeout, 2026-10-09
 
 The user requested preservation and safe task-owned cleanup. Further implementation and runtime launches stopped. The broader application-verification objective remains unfinished.
