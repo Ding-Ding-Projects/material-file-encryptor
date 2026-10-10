@@ -208,11 +208,29 @@ export function lifecycleTransport({cli,endpoint,installedLowlevel}) {
  return {useAdapter,lowlevel:useAdapter?fileURLToPath(new URL('./local-headless-desktop-check-cli.py',import.meta.url)):installedLowlevel,transport:endpoint?'persistent-http-adapter':cli?'direct-cli-adapter':'streamable-http'};
 }
 
+export async function createLiveRunRoot({temporaryRoot=os.tmpdir()}={}) {
+ const parent=await fs.realpath(temporaryRoot);
+ const root=await fs.realpath(await fs.mkdtemp(path.join(parent,'mfe-headless-')));
+ assert.equal(path.dirname(root),parent,'Live verification root must be a direct child of actual TEMP.');
+ return root;
+}
+
+export async function retireNeverLaunchedFixture({fixture,launchAttempted,statePath,retire=forgetRuntimeFixture,inspect=fs.lstat}) {
+ assert.equal(launchAttempted,false,'An attempted or uncertain launch requires lifecycle ownership proof.');
+ assert.equal(fixture?.prepared,true,'Only a completed prepared fixture may use never-launched retirement.');
+ assert.equal(path.isAbsolute(statePath),true);
+ try {await inspect(statePath);} catch(error) {
+  if(error.code!=='ENOENT')throw error;
+  return {fixtureCleanup:await retire(fixture),cleanup:{ok:true,client_ok:true,neverLaunched:true,desktopNeverCreated:true,reason:'Launch was never attempted; no lifecycle receipt exists.'}};
+ }
+ throw new Error('An existing lifecycle receipt requires ownership proof before fixture retirement.');
+}
+
 export async function runLocalHeadlessCheck(env=process.env) {
  if(env.MFE_CAPTURE_REVIEW_ROOT){const receipt=await resumeCaptureReview(env.MFE_CAPTURE_REVIEW_ROOT);const evidenceDir=path.resolve(env.MFE_DESKTOP_EVIDENCE_DIR||'out/evidence');const existingPath=path.join(evidenceDir,'desktop-check.json');const existing=JSON.parse(await fs.readFile(existingPath,'utf8'));assert.equal(existing.sourceCommit,receipt.sourceCommit);assert.equal(existing.executableSha256,receipt.executableSha256);assert.equal(path.resolve(existing.launch.runRoot),path.resolve(receipt.launch.runRoot));await fs.writeFile(existingPath,JSON.stringify({...existing,...receipt},null,2));console.log(JSON.stringify({reviewResumed:true,passed:receipt.passed,pending:receipt.pending}));if(!receipt.passed)throw new Error('Preserved review remains incomplete.');return receipt;}
  if(process.platform!=='win32')throw new Error('The local isolated desktop route requires Windows.');
  const executable=await fs.realpath(path.resolve(env.MFE_DESKTOP_EXECUTABLE||'out/material-file-encryptor-win32-x64/MaterialFileEncryptor.exe'));
- const runRoot=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-headless-'));const launch=makeLaunch({executable,runRoot,port:await freePort()});
+ const runRoot=await createLiveRunRoot();const launch=makeLaunch({executable,runRoot,port:await freePort()});
  await fs.mkdir(launch.outputRoot);await fs.mkdir(path.join(runRoot,'profile'));
  const skillRoot=path.join(os.homedir(),'.agents','skills');
  const installedLowlevel=env.MFE_LOWLEVEL_CLIENT||path.join(skillRoot,'run-lowlevel-headless-app','scripts','lowlevel_mcp_client.py');
@@ -231,7 +249,7 @@ export async function runLocalHeadlessCheck(env=process.env) {
  await fs.writeFile(path.join(runRoot,'prepared.json'),JSON.stringify(receipt,null,2));
  if(env.MFE_HEADLESS_EXECUTE!=='1') {console.log(JSON.stringify({prepared:true,launched:false,runRoot,requires:'Set MFE_HEADLESS_EXECUTE=1 only after reviewing the packaged executable and isolated profile arguments.'}));return receipt;}
  console.log(JSON.stringify({state:'source-bound-launch-prepared',runRoot,sourceCommit:receipt.sourceCommit,executableSha256:receipt.executableSha256,resourceHashes}));
- const python=env.MFE_PYTHON||'python';let cleanup;let failure;let fixture;let runtime;
+ const python=env.MFE_PYTHON||'python';let cleanup;let failure;let fixture;let runtime;let launchAttempted=false;
  const executePlan=createPlanRecorder(runRoot,plan=>command(process.execPath,[cdp,'run'],plan));
  const modernProbeEvidence=modernBinding?createModernProbeEvidence({binding:modernBinding,outputRoot:launch.outputRoot,helperPath:cdp,validate:input=>command(process.execPath,[path.join(skillRoot,'diagnose-built-ui-layout','scripts','validate-layout-probe.mjs'),'--input',input]),observe:async()=>{
   const sourceCommit=await readModernSource();assert.equal(sourceCommit,modernBinding.sourceCommit);
@@ -247,6 +265,7 @@ export async function runLocalHeadlessCheck(env=process.env) {
   await command(python,[installedLowlevel,'self-test']);await command(process.execPath,[cdp,'self-test']);
   await command(python,[lowlevel,'preflight',...transportArgs,'--require','launch_on_headless_desktop','--require','list_headless_windows','--require','screenshot','--require','close_headless_desktop']);
   if(env.MFE_RUNTIME_FIXTURE==='1') {if(!useAdapter)throw new Error('Runtime graceful-exit proof requires the project lifecycle adapter.');fixture=await prepareRuntimeFixture({executable,profile:path.join(runRoot,'profile')});receipt.fixture={root:fixture.root,prepared:fixture.prepared,driveLetter:fixture.driveLetter};}
+  launchAttempted=true;receipt.launchAttempted=true;
   await command(python,[lowlevel,'launch',...transportArgs,'--state',statePath],launch);receipt.launched=true;
   await command(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30']);
   const lifecycle=JSON.parse(await fs.readFile(statePath,'utf8'));
@@ -255,13 +274,17 @@ export async function runLocalHeadlessCheck(env=process.env) {
   receipt.cdp=await executePlan(plan);
   if(env.MFE_HEADLESS_INTERACTIONS==='1'||fixture) {receipt.baselineReview=await requirePixelReview(runRoot,path.join(launch.outputRoot,'native-baseline.png'));if(fixture){receipt.keyboard=await verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,launch,executePlan});runtime=await checkMountedRuntime({fixture,launch,receipt:statePath,executePlan,modernProbeEvidence,modernUiCheck:env.MFE_MODERN_UI_CHECK==='1',prepareExit:()=>command(python,[lowlevel,'prepare-exit',statePath])});receipt.runtime=runtime;}else receipt.interfaceWorkflow=await executePlan(makeInterfacePlan(launch,statePath));receipt.rendererAssertionsVerified=true;}
  } catch(error) {failure=String(error.message).slice(0,200);receipt.failureDetails=safeFailureDetails(error.helperResult);}
- finally {try {await fs.access(statePath);const finished=await finishOwnedLifecycle({runtime,launch,statePath,python,lowlevel,transportArgs,executePlan});cleanup=finished.cleanup;receipt.quitRecovery=finished.recovery;if(fixture&&finished.quitRequested&&cleanup.client_ok)receipt.fixtureCleanup=await forgetRuntimeFixture(fixture);}catch(error){cleanup={ok:false,code:error.helperCode||error.code||'OWNED_LIFECYCLE_FAILED',reason:String(error.message).slice(0,200)};}
+ finally {try {
+  if(fixture&&!launchAttempted){const retired=await retireNeverLaunchedFixture({fixture,launchAttempted,statePath});cleanup=retired.cleanup;receipt.fixtureCleanup=retired.fixtureCleanup;}
+  else {await fs.access(statePath);const finished=await finishOwnedLifecycle({runtime,launch,statePath,python,lowlevel,transportArgs,executePlan});cleanup=finished.cleanup;receipt.quitRecovery=finished.recovery;if(fixture&&finished.quitRequested&&cleanup.client_ok)receipt.fixtureCleanup=await forgetRuntimeFixture(fixture);}
+ }catch(error){cleanup={ok:false,code:error.helperCode||error.code||'OWNED_LIFECYCLE_FAILED',reason:String(error.message).slice(0,200)};}
+  receipt.launchAttempted=launchAttempted;
   Object.assign(receipt,{finishedAt:new Date().toISOString(),failure,cleanup,profileRetained:true});
   if(!failure&&runtime&&cleanup?.client_ok){try{receipt.captureReview=await reviewAllCaptures(receipt,runRoot,launch.outputRoot);}catch(error){receipt.reviewPending=String(error.message).slice(0,200);}}
   Object.assign(receipt,finalVerdict(receipt));receipt.pixelsInspected=receipt.captureReview?.verified===true;receipt.interactionsVerified=runtime?.rendererAssertionsVerified===true;
   await fs.writeFile(path.join(runRoot,'verification.json'),JSON.stringify(receipt,null,2));
   const evidenceDir=path.resolve(env.MFE_DESKTOP_EVIDENCE_DIR||'out/evidence');await fs.mkdir(evidenceDir,{recursive:true});
-  const compatible={...receipt,platform:'win32',packagedArtifact:{launchedBuiltArtifact:receipt.launched,asar:Boolean(resourceHashes.asar),nativeHelperPresent:Boolean(resourceHashes.nativeHost)},mountedFilesystemChecked:runtime?.mountedFilesystemVerified===true,startupRegistration:runtime?.startupRegistration||null,fixtureRetained:Boolean(fixture&&!(receipt.fixtureCleanup?.ownedCredentialForgotten&&cleanup?.client_ok&&cleanup?.recordedProcessesAbsent)),fixturePreservedByDesign:Boolean(fixture),fixtureRetentionReason:fixture?'Owned evidence retained; safe only after credential removal and process exit':null,cleanupErrors:cleanup?.client_ok===true?[]:[{phase:'owned-lifecycle',reason:cleanup?.reason||'Cleanup not verified'}]};
+  const compatible={...receipt,platform:'win32',packagedArtifact:{launchedBuiltArtifact:receipt.launched,asar:Boolean(resourceHashes.asar),nativeHelperPresent:Boolean(resourceHashes.nativeHost)},mountedFilesystemChecked:runtime?.mountedFilesystemVerified===true,startupRegistration:runtime?.startupRegistration||null,fixtureRetained:Boolean(fixture&&!(receipt.fixtureCleanup?.ownedCredentialForgotten&&cleanup?.client_ok&&(cleanup?.recordedProcessesAbsent||cleanup?.neverLaunched))),fixturePreservedByDesign:Boolean(fixture),fixtureRetentionReason:fixture?'Owned evidence retained; safe only after credential removal and process exit or proven never-attempted launch':null,cleanupErrors:cleanup?.client_ok===true?[]:[{phase:'owned-lifecycle',reason:cleanup?.reason||'Cleanup not verified'}]};
   await fs.writeFile(path.join(evidenceDir,'desktop-check.json'),JSON.stringify(compatible,null,2));}
  console.log(JSON.stringify({runRoot,launched:receipt.launched,passed:receipt.passed,pixelsInspected:receipt.pixelsInspected,pending:receipt.pending}));
  if(failure||cleanup?.ok===false)throw new Error(failure||'Owned lifecycle cleanup failed.');if(!receipt.passed)throw new Error('Desktop verification is incomplete: '+receipt.pending.join('; '));return receipt;

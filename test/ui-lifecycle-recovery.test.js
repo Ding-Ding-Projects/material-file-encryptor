@@ -1,8 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {finishOwnedLifecycle} from '../scripts/local-headless-desktop-check.mjs';
+import {finishOwnedLifecycle,retireNeverLaunchedFixture,createLiveRunRoot} from '../scripts/local-headless-desktop-check.mjs';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 const input={launch:{cdp:{port:9333,expectedUrl:'file:///owned/resources/app.asar/src/renderer/index.html'}},statePath:'C:/owned/lifecycle.json',python:'python',lowlevel:'owned-adapter.py'};
 const success={ok:true,client_ok:true,recordedProcessesAbsent:true,desktopClosed:true};
+
+test('live run root resolves actual TEMP before deriving child paths',async t=>{
+ const parent=await fs.realpath(os.tmpdir());const root=await createLiveRunRoot();
+ t.after(()=>fs.rm(root,{recursive:true}));assert.equal(path.dirname(root),parent);assert.equal(await fs.realpath(root),root);
+});
+test('never-attempted retirement requires receipt absence and retains the fixture',async()=>{
+ const fixture={root:'owned-fixture',prepared:true};let calls=0;
+ const result=await retireNeverLaunchedFixture({fixture,launchAttempted:false,statePath:path.resolve('absent-lifecycle.json'),inspect:async()=>{throw Object.assign(new Error('absent'),{code:'ENOENT'});},retire:async value=>{assert.equal(value,fixture);calls++;return {ownedCredentialForgotten:true,fixtureRetained:true};}});
+ assert.equal(calls,1);assert.equal(result.fixtureCleanup.fixtureRetained,true);assert.equal(result.cleanup.neverLaunched,true);
+ assert.equal(Object.hasOwn(result.cleanup,'desktopClosed'),false);assert.equal(Object.hasOwn(result.cleanup,'recordedProcessesAbsent'),false);
+});
+test('partial, uncertain, existing and inaccessible launch states cannot use never-launched retirement',async()=>{
+ let retired=0;const base={fixture:{prepared:true},statePath:path.resolve('lifecycle.json'),retire:async()=>{retired++;},inspect:async()=>{throw Object.assign(new Error('absent'),{code:'ENOENT'});}};
+ for(const launchAttempted of [true,undefined,null,0])await assert.rejects(retireNeverLaunchedFixture({...base,launchAttempted}));
+ await assert.rejects(retireNeverLaunchedFixture({...base,fixture:{prepared:false},launchAttempted:false}));
+ await assert.rejects(retireNeverLaunchedFixture({...base,launchAttempted:false,inspect:async()=>({isFile:()=>true})}),/existing lifecycle receipt/);
+ await assert.rejects(retireNeverLaunchedFixture({...base,launchAttempted:false,inspect:async()=>{throw Object.assign(new Error('inaccessible'),{code:'EACCES'});}}),{code:'EACCES'});
+ assert.equal(retired,0);
+});
 test('failed flow validates the isolated window and exit ancestry before normal verification quit',async()=>{
  const calls=[];
  const result=await finishOwnedLifecycle({...input,runCommand:async(_exe,args)=>{calls.push(args);return success;},executePlan:async plan=>{calls.push('quit');assert.equal(Object.hasOwn(plan,'startupOwnershipAttempts'),false);assert.equal(plan.receipt,input.statePath);assert.equal(plan.expectedUrl,input.launch.cdp.expectedUrl);assert.equal(plan.endpoint,'http://127.0.0.1:9333');assert.ok(plan.steps.some(step=>step.expression?.includes('window.drive.verificationQuit()')));return {results:[{value:{done:true,value:{restored:true}}}]};}});
