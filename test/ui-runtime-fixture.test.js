@@ -17,7 +17,7 @@ test('UI rejection ends its wait and preserves a separate negative result',()=>{
 test('failed-run retirement covers registered GUI and legacy identities and owned key only',async t=>{
  const root=await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(),'mfe-retirement-test-')));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  const fixture={root,driveLetter:'M:',storageDir:path.join(root,'storage'),cacheDir:path.join(root,'cache'),nativeExecutable:'owned-helper'};
- await fs.writeFile(path.join(root,'fixture.json'),JSON.stringify(fixture));const gui=await prepareGuiVaultFixture(fixture);
+ await fs.mkdir(fixture.storageDir);await fs.mkdir(fixture.cacheDir);await fs.writeFile(path.join(root,'fixture.json'),JSON.stringify(fixture));const gui=await prepareGuiVaultFixture(fixture);
  for(const folder of [gui.storageDir,gui.cacheDir])await fs.writeFile(path.join(folder,'vault.json'),JSON.stringify({Format:2}));
  const legacy=(await prepareEmptyLegacyGuiVault(gui,{locked:true,mounted:false,emptyBeforeLock:true})).gui;
  const calls=[];const createClient=()=>({child:new EventEmitter(),async request(method,args){calls.push({method,args});},dispose(){this.child.emit('exit',0);}});
@@ -77,4 +77,29 @@ test('legacy conversion rejects mounted, nonempty, foreign and unexpected-format
   for(const folder of [converted.gui.storageDir,converted.gui.cacheDir]){assert.notEqual(folder,gui.storageDir);assert.notEqual(folder,gui.cacheDir);assert.deepEqual(JSON.parse(await fs.readFile(path.join(folder,'vault.json'),'utf8')),{Format:1,marker:'preserved'});assert.deepEqual(await fs.readdir(folder),['vault.json']);}
   await assert.rejects(prepareEmptyLegacyGuiVault(gui,observed),{code:'EEXIST'});
  } finally {await fs.rm(root,{recursive:true});}
+});
+test('registered empty upgrade pair is never-created but nonempty missing-header target remains unverified',async t=>{
+ const root=await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(),'mfe-empty-retirement-')));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const fixture={root,storageDir:path.join(root,'storage'),cacheDir:path.join(root,'cache'),nativeExecutable:'owned-helper'};
+ for(const directory of [fixture.storageDir,fixture.cacheDir,path.join(root,'upgrade-storage'),path.join(root,'upgrade-cache')])await fs.mkdir(directory);
+ await fs.writeFile(path.join(root,'fixture.json'),JSON.stringify(fixture));
+ const target={version:1,root,nativeExecutable:fixture.nativeExecutable,storageDir:path.join(root,'upgrade-storage'),cacheDir:path.join(root,'upgrade-cache')};
+ await fs.writeFile(path.join(root,'owned-upgrade-fixture.json'),JSON.stringify(target));
+ const calls=[];const createClient=()=>({child:new EventEmitter(),async request(method,args){calls.push(args);if(args.storageDir===target.storageDir)throw Object.assign(new Error('Missing header'),{code:'ENOENT'});},dispose(){this.child.emit('exit',0);}});
+ let result=await forgetRuntimeFixture(fixture,{createClient});assert.equal(result.ownedCredentialForgotten,true);assert.equal(result.targetRetirement[1].status,'never-created');assert.equal(calls.length,1);
+ for(const directory of [target.storageDir,target.cacheDir]){
+  const file=path.join(directory,'unexpected');await fs.writeFile(file,'preserve');calls.length=0;
+  result=await forgetRuntimeFixture(fixture,{createClient});assert.equal(result.ownedCredentialForgotten,false);assert.equal(result.targetRetirement[1].status,'failed');assert.equal(calls.length,2);assert.equal(await fs.readFile(file,'utf8'),'preserve');await fs.unlink(file);
+ }
+ await fs.writeFile(path.join(target.storageDir,'vault.json'),'corrupt');result=await forgetRuntimeFixture(fixture,{createClient});assert.equal(result.ownedCredentialForgotten,false);
+ // A noncanonical link is rejected before any native mutation, even when its destination is empty.
+ await fs.unlink(path.join(target.storageDir,'vault.json'));await fs.rmdir(target.storageDir);const other=path.join(root,'other-empty');await fs.mkdir(other);await fs.symlink(other,target.storageDir,'junction');calls.length=0;
+ await assert.rejects(forgetRuntimeFixture(fixture,{createClient}));assert.equal(calls.length,0);
+});
+test('one credential error does not suppress later registered targets or owned key retirement',async t=>{
+ const root=await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(),'mfe-partial-retirement-')));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+ const fixture={root,driveLetter:'M:',storageDir:path.join(root,'storage'),cacheDir:path.join(root,'cache'),nativeExecutable:'owned-helper'};
+ await fs.mkdir(fixture.storageDir);await fs.mkdir(fixture.cacheDir);await fs.writeFile(path.join(root,'fixture.json'),JSON.stringify(fixture));const gui=await prepareGuiVaultFixture(fixture);await fs.writeFile(path.join(gui.storageDir,'vault.json'),'existing');
+ const calls=[];const createClient=()=>({child:new EventEmitter(),async request(method,args){calls.push(args);if(args.storageDir===fixture.storageDir)throw Object.assign(new Error('Unavailable'),{code:'EACCES'});},dispose(){this.child.emit('exit',0);}});
+ const result=await forgetRuntimeFixture(fixture,{createClient});assert.equal(result.ownedCredentialForgotten,false);assert.equal(result.targetRetirement[0].code,'EACCES');assert.equal(result.targetRetirement[1].status,'forgotten');assert.equal(calls.length,2);assert.equal(result.ownedKeyRetired,true);await assert.rejects(fs.access(gui.keyFilePath),{code:'ENOENT'});
 });

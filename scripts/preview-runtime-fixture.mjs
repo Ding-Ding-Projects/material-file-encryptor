@@ -28,20 +28,31 @@ export async function prepareRuntimeFixture({executable,profile,createClient=exe
 }
 export async function forgetRuntimeFixture(fixture,{createClient=exe=>new NativeClient(exe)}={}) {
  assert.equal(await fs.realpath(fixture.root),path.resolve(fixture.root));const rootInfo=await fs.lstat(fixture.root);assert.equal(rootInfo.isDirectory(),true);assert.equal(rootInfo.isSymbolicLink(),false);
- const saved=JSON.parse(await fs.readFile(path.join(fixture.root,'fixture.json'),'utf8'));assert.equal(saved.storageDir,fixture.storageDir);assert.equal(saved.cacheDir,fixture.cacheDir);assert.equal(saved.nativeExecutable,fixture.nativeExecutable);
+ const manifest=path.join(fixture.root,'fixture.json'),manifestInfo=await fs.lstat(manifest);assert.equal(manifestInfo.isFile(),true);assert.equal(manifestInfo.isSymbolicLink(),false);assert.equal(await fs.realpath(manifest),manifest);
+ const saved=JSON.parse(await fs.readFile(manifest,'utf8'));assert.equal(saved.root,fixture.root);assert.equal(saved.storageDir,fixture.storageDir);assert.equal(saved.cacheDir,fixture.cacheDir);assert.equal(saved.nativeExecutable,fixture.nativeExecutable);
  assert.equal(path.dirname(fixture.storageDir),fixture.root);assert.equal(path.dirname(fixture.cacheDir),fixture.root);
- const targets=[{storageDir:fixture.storageDir,cacheDir:fixture.cacheDir}],retired=[];
+ const targets=[{label:'original',storageDir:fixture.storageDir,cacheDir:fixture.cacheDir}],retired=[];
  for(const label of ['gui','legacy','upgrade']) {
   const record=path.join(fixture.root,'owned-'+label+'-fixture.json');let bytes;
   try{const stat=await fs.lstat(record);assert.equal(stat.isFile(),true);assert.equal(stat.isSymbolicLink(),false);assert.equal(await fs.realpath(record),record);bytes=await fs.readFile(record,'utf8');}catch(error){if(error.code==='ENOENT')continue;throw error;}
   const target=JSON.parse(bytes);assert.equal(target.version,1);assert.equal(target.root,fixture.root);assert.equal(target.nativeExecutable,fixture.nativeExecutable);
   for(const [key,suffix]of [['storageDir','storage'],['cacheDir','cache']]){assert.equal(target[key],path.join(fixture.root,label+'-'+suffix));assert.equal(await fs.realpath(target[key]),target[key]);}
-  targets.push({storageDir:target.storageDir,cacheDir:target.cacheDir});retired.push(label);
+  targets.push({label,storageDir:target.storageDir,cacheDir:target.cacheDir});
  }
- const client=createClient(fixture.nativeExecutable);try {for(const target of targets)await client.request('forgetSavedCredential',target);}finally{await disposeNative(client);}
+ // Validate every registered directory before requesting any credential mutation.
+ for(const target of targets)for(const key of ['storageDir','cacheDir']){const info=await fs.lstat(target[key]);assert.equal(info.isDirectory(),true);assert.equal(info.isSymbolicLink(),false);assert.equal(await fs.realpath(target[key]),target[key]);}
+ const retirement=[];const client=createClient(fixture.nativeExecutable);
+ try {for(const target of targets){
+  const {label,...arguments_}=target;
+  // Only registered, canonical empty pairs prove that no vault was created.
+  const empty=label!=='original'&&(await fs.readdir(target.storageDir)).length===0&&(await fs.readdir(target.cacheDir)).length===0;
+  if(empty){retirement.push({label,status:'never-created',verified:true,storageEmpty:true,cacheEmpty:true});continue;}
+  try{await client.request('forgetSavedCredential',arguments_);retirement.push({label,status:'forgotten',verified:true});if(label!=='original')retired.push(label);}
+  catch(error){retirement.push({label,status:'failed',verified:false,code:error.code||'CREDENTIAL_RETIREMENT_FAILED'});}
+ }}finally{await disposeNative(client);}
  let ownedKeyRetired=false;
- if(retired.includes('gui')){const key=path.join(fixture.root,'gui-verification.key');try{const stat=await fs.lstat(key);assert.equal(stat.isFile(),true);assert.equal(stat.isSymbolicLink(),false);assert.equal(await fs.realpath(key),key);await fs.unlink(key);}catch(error){if(error.code!=='ENOENT')throw error;}ownedKeyRetired=true;}
- return {ownedCredentialForgotten:true,ownedFixtureCredentialsForgotten:retired,ownedKeyRetired,fixtureRetained:true};
+ if(targets.some(target=>target.label==='gui')){const key=path.join(fixture.root,'gui-verification.key');try{const stat=await fs.lstat(key);assert.equal(stat.isFile(),true);assert.equal(stat.isSymbolicLink(),false);assert.equal(await fs.realpath(key),key);await fs.unlink(key);}catch(error){if(error.code!=='ENOENT')throw error;}ownedKeyRetired=true;}
+ return {ownedCredentialForgotten:retirement.every(target=>target.verified),ownedFixtureCredentialsForgotten:retired,ownedKeyRetired,fixtureRetained:true,targetRetirement:retirement};
 }
 
 async function registerGuiFixture(gui,label) {

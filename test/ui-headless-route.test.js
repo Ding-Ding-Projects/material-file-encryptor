@@ -72,6 +72,7 @@ test('passing receipt requires runtime, real keyboard, pixels, cleanup, startup 
  assert.equal(finalVerdict(receipt).passed,true);for(const key of ['runtime','keyboard','captureReview','cleanup','fixtureCleanup']) {const value=structuredClone(receipt);delete value[key];assert.equal(finalVerdict(value).passed,false);}
  assert.equal(finalVerdict({...receipt,failure:'runtime failure'}).passed,false);assert.equal(finalVerdict({...receipt,sourceCommit:undefined}).passed,false);
  assert.equal(finalVerdict({...receipt,captureReview:{verified:true}}).passed,false);
+ assert.equal(finalVerdict({...receipt,fixtureCleanup:{ownedCredentialForgotten:false}}).passed,false);
 });
 
 test('private plan ledger retains exact capture timing and bounded failure steps without input text',async()=>{
