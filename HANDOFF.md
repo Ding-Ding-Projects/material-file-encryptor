@@ -1,5 +1,7 @@
 # Current verification checkpoint, 2026-10-10
 
+Gallery67c1996 has now completed18 real browser tuples at1180/390/320 widths, three languages and both themes. All37 originals were individually inspected. Expanded provenance,54 workflow links,18 search-clear checks and18 default-state vocabulary-reset activations passed. Original browser and server closure held8 and2 exact identities respectively through original confirmation, then released every handle. Summary SHA256 c7d06fe496643122683bd51b27389f98ffc8f3922134ea29e362987285d0b27d. These results supersede the pending gallery-render observation below only for this exact candidate. Current desktop promotion and Home's separate part-limit clear remain pending. Reviewed localization repaira90fd99f020816ca8beef8b8563089f041008cac is preserved on its task branch, with rebuilt visual acceptance pending.
+
 Main `ef2a8d6be930c60ee70fb02e6ddba90b88e6a406` contains the independently reviewed modern-only verifier and bounded startup-readiness repair. Package source remains immutable `21e627402bd6075f3f9ee9b9e2d33badb82b1af7`; the active verifier is separately bound to `1c86e9aeb633096d256b739928ff9c3aea4ac424`. Forty-one independent focused checks passed. Fresh run RRFA1q passed actual startup readiness and exact mounted-fixture checks, then began its 432-state matrix and 13 baseline clear controls. Pixel review is active. No completed matrix or runtime verdict is claimed yet.
 
 Both exact root build entrypoints succeeded for package-r4 at source `21e6274`, with 812 privacy entries and zero rejected, 739 archive CRC entries passed, and a separately preserved 644-file runtime payload. Normal release v1.93.1 is bound to the same source and successful delivery run 38088833157. All four independently downloaded assets match hosted hashes and sizes; downloaded CRC and privacy checks passed separately. The principal executable, ASAR and native host executable match the local package. Six native DLL/PDB files differ, and two Squirrel-only files replace two local-only support files, so downloaded and installed runtime verdicts remain separate and unverified.
@@ -300,3 +302,7 @@ GitHub Projects is unavailable with the current authorization. The wiki is enabl
 Task: https://github.com/Ding-Ding-Projects/material-file-encryptor/issues/1
 Progress: https://github.com/Ding-Ding-Projects/material-file-encryptor/discussions/2
 Verification: [source-bound results](docs/features/release/preview-verification.md)
+
+## Gallery pipeline candidate
+
+The gallery pipeline now groups the unchanged 14 historical originals by workflow, projects only approved public metadata and preserves every occurrence of identical image bytes. Two exclusions remain explicit. Twenty-seven focused checks pass, including a synthetic 445-occurrence case and privacy/search rejection regressions. Independent source review is complete with no remaining findings. Rendered acceptance and main integration remain pending. No current runtime original or new publication is claimed. See [the evidence contract](docs/features/desktop/runtime-evidence.md#reviewed-gallery-publication-pipeline).

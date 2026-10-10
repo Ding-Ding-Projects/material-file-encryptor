@@ -1,4 +1,4 @@
-import { parseVocabulary, replaceVocabulary, filterGuides } from './preferences.js';
+import { parseVocabulary, replaceVocabulary, filterGuides, updateGalleryGroups } from './preferences.js';
 import { cantonese, localized, loadMessagePreferences, messagePair } from './locales.js';
 import { previewRelease, renderReleaseDownload } from './release.js';
 
@@ -53,6 +53,7 @@ function updateSearch() {
   const guides = guideElements.map(element => ({ id: element.id, text: `${guideEnglish.get(element)} ${element.textContent}` }));
   const matched = new Set(filterGuides(guides, search.value).map(guide => guide.id));
   guideElements.forEach(element => { element.hidden = !matched.has(element.id); });
+  updateGalleryGroups(document.querySelectorAll('[data-gallery-group]'), document.querySelectorAll('[data-gallery-group-link]'));
   searchClear.hidden = !search.value;
   document.querySelector('#no-results').hidden = matched.size > 0;
   document.querySelector('#no-results').textContent = friendly('search');

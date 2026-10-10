@@ -16,7 +16,8 @@
 - [ ] Resolve browser identity-evidence gaps without weakening strict ownership checks or substituting later absence.
 - [x] Preserve independently reviewed gallery grouping/projection candidate 67c19965 with 27 focused checks; inventory remains 14 historical originals and two exclusions.
 - [x] Build gallery candidate 67c19965 through the exact root entrypoint; preserve all 52 website files and 14 historical originals.
-- [ ] Verify the changed gallery in a genuine isolated browser, then publish every eligible unique current original with complete provenance.
+- [x] Verify gallery67c1996 in18 isolated browser tuples, inspect37 originals, and confirm original browser/server closure with8/2 exact identities held.
+- [ ] Publish every eligible unique current original with complete provenance; current desktop promotion remains pending.
 - [x] Complete and independently review the separate modern-phase verifier without changing the full-workflow verdict.
 - [ ] Complete final-release downloaded execution, genuine installation, installed workflows and removal.
 - [x] Verify deployed ef2a8d6 bytes: 52 files, 18 complete articles including two wiki pages, 790 valid references, 14 decoded originals and exact About homepage.
@@ -186,3 +187,9 @@
 - [ ] Complete the 144-tuple current documentation-browser acceptance. The latest diagnostic retained 24 completed desktop tuples and one partial narrow tuple, then stopped on a resource-body protocol rejection. Its profile remains retained and zero audits are finalized.
 - [x] Hash-preserve all 4,068 nonprofile files from that closed diagnostic and independently inspect all 25 genuine PNGs with their available raw observations. The bounded protocol projection repair passed 110 focused checks and independent review.
 - [ ] Repair the documentation publication trigger's missing generated-content inputs and verify the actual new deployment, complete live inventory and exact About homepage.
+
+## Gallery pipeline candidate
+
+- [x] Implement explicit public metadata projection, workflow grouping, preserved exact-byte duplicate occurrences and searched empty-group hiding with focused negative regressions.
+- [x] Independently review and render grouped gallery67c1996, preserving its exact-source evidence and genuine owned closure.
+- [ ] Promote eligible current originals only after complete source, lifecycle, privacy and pixel evidence; the current 14 historical originals and two exclusions remain unchanged.
