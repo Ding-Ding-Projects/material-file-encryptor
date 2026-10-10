@@ -1,4 +1,4 @@
-﻿param([ValidateSet('Snapshot', 'Verify')][string]$Mode = 'Verify', [switch]$Local, [string]$ExpectedCommit)
+﻿param([ValidateSet('Snapshot', 'Verify')][string]$Mode = 'Verify', [switch]$Local, [string]$ExpectedCommit, [string]$ExpectedPayloadCommit, [string]$ArtifactDirectory, [string]$PackageRoot, [string]$EvidenceDirectory, [string]$DownloadPreparationPath)
 # Explicit local mode uses the current user's real destination with strict fresh-install preflight.
 # Setup --silent suppresses first-run launch; Update --uninstall is the real Squirrel
 # lifecycle operation (electron-winstaller / Squirrel.Windows StartupOption).
@@ -6,12 +6,14 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
-$evidence = Join-Path $root 'out\evidence'
+$evidence = if ($EvidenceDirectory) { [IO.Path]::GetFullPath($EvidenceDirectory) } else { Join-Path $root 'out\evidence' }
 New-Item -ItemType Directory -Force $evidence | Out-Null
 $snapshotFile = Join-Path $evidence 'tested-package-manifest.json'
 $receiptFile = Join-Path $evidence 'installer-check.json'
 $phase = 'preflight'
 $sourceCommit = if ($Local) { (& git rev-parse HEAD).Trim() } else { $env:GITHUB_SHA }
+$verifierCommit = $sourceCommit
+if ($ExpectedPayloadCommit) { $sourceCommit = $ExpectedPayloadCommit }
 $runId = if ($Local) { 'local-' + [Guid]::NewGuid().ToString('N') } else { $env:GITHUB_RUN_ID }
 $runAttempt = if ($Local) { '1' } else { $env:GITHUB_RUN_ATTEMPT }
 $fixtureRoot = Join-Path ([IO.Path]::GetTempPath()) ('mfe-installer-' + [Guid]::NewGuid().ToString('N'))
@@ -27,6 +29,9 @@ $updateHash = $null
 . "$PSScriptRoot\squirrel-uninstall-residue.ps1"
 
 function Assert-Check([bool]$condition, [string]$code) { if (!$condition) { throw [InvalidOperationException]::new($code) } }
+function Assert-DownloadedSnapshotBinding($manifest, [string]$verifier, [string]$payload, [string]$preparationHash) {
+    if ($manifest.commit -ne $payload -or $manifest.verifierCommit -ne $verifier -or $manifest.downloadPreparationSha256 -ne $preparationHash) { throw 'DOWNLOADED_SNAPSHOT_STALE' }
+}
 function File-Digest([string]$filename, [string]$algorithm = 'SHA256') { return (Get-FileHash -LiteralPath $filename -Algorithm $algorithm).Hash.ToLowerInvariant() }
 function Stream-Digest($entry) {
     $stream = $entry.Open()
@@ -119,13 +124,27 @@ try {
     Assert-Check ($env:OS -eq 'Windows_NT') 'WINDOWS_REQUIRED'
     Assert-Check ($Local -or ($env:GITHUB_ACTIONS -eq 'true' -and $env:RUNNER_OS -eq 'Windows')) 'EXPLICIT_LOCAL_OR_DISPOSABLE_CI_REQUIRED'
     if ($Local) {
-        Assert-Check ($ExpectedCommit -match '^[0-9a-f]{40}$' -and $ExpectedCommit -eq $sourceCommit) 'LOCAL_SOURCE_COMMIT_REQUIRED'
+        Assert-Check ($ExpectedCommit -match '^[0-9a-f]{40}$' -and $ExpectedCommit -eq $verifierCommit) 'LOCAL_SOURCE_COMMIT_REQUIRED'
         Assert-Check (@(& git status --porcelain).Count -eq 0) 'LOCAL_SOURCE_NOT_CLEAN'
         $receipt.route = 'explicit-current-user-local-hidden-desktop'
     }
+    $receipt.verifierCommit = $verifierCommit
+    if ($ExpectedPayloadCommit) {
+        Assert-Check ($Local -and $ExpectedPayloadCommit -match '^[0-9a-f]{40}$' -and $ArtifactDirectory -and $PackageRoot -and $EvidenceDirectory -and $DownloadPreparationPath) 'DOWNLOADED_INPUTS_REQUIRED'
+        $preparation = Get-Content -LiteralPath $DownloadPreparationPath -Raw | ConvertFrom-Json
+        Assert-Check ($preparation.sourceCommit -eq $sourceCommit -and $preparation.verifierCommit -eq $verifierCommit) 'DOWNLOADED_SOURCE_MISMATCH'
+        $receipt.downloadPreparationSha256 = File-Digest $DownloadPreparationPath
+        Assert-Check (@($preparation.assets).Count -eq 4 -and @($preparation.files).Count -gt 5) 'DOWNLOADED_MANIFEST_INVALID'
+        foreach ($asset in $preparation.assets) {
+            if ($asset.name -eq 'build-provenance.json') { continue }
+            Assert-Check ($asset.name -match '^[A-Za-z0-9_.-]+$' -and !$asset.name.Contains('..')) 'DOWNLOADED_ASSET_NAME_INVALID'
+            $assetPath = Join-Path $ArtifactDirectory $asset.name
+            Assert-Check ((Test-Path -LiteralPath $assetPath -PathType Leaf) -and (Get-Item -LiteralPath $assetPath).Length -eq $asset.bytes -and (File-Digest $assetPath) -eq $asset.sha256) 'DOWNLOADED_ASSET_MISMATCH'
+        }
+    }
     $desktop = Get-Content -LiteralPath (Join-Path $evidence 'desktop-check.json') -Raw | ConvertFrom-Json
     Assert-Check ($desktop.passed -eq $true -and $desktop.packagedArtifact.launchedBuiltArtifact -eq $true -and $desktop.platform -eq 'win32') 'PACKAGED_DESKTOP_PASS_REQUIRED'
-    $packageRoot = Join-Path $root 'out\material-file-encryptor-win32-x64'
+    $packageRoot = if ($PackageRoot) { [IO.Path]::GetFullPath($PackageRoot) } else { Join-Path $root 'out\material-file-encryptor-win32-x64' }
     if ($Local) {
         Assert-Check ($desktop.route -eq 'cheap-lowlevel-headless' -and $desktop.sourceCommit -eq $sourceCommit) 'LOCAL_DESKTOP_SOURCE_OR_ROUTE_MISMATCH'
         Assert-Check ($desktop.executableSha256 -eq (File-Digest (Join-Path $packageRoot 'MaterialFileEncryptor.exe')) -and $desktop.resourceHashes.asar -eq (File-Digest (Join-Path $packageRoot 'resources\app.asar'))) 'LOCAL_DESKTOP_ARTIFACT_MISMATCH'
@@ -136,16 +155,19 @@ try {
             if (Payload-Selected $relative) { [ordered]@{ entry = $relative; bytes = $_.Length; sha256 = File-Digest $_.FullName } }
         } | Sort-Object { $_.entry })
         Assert-Check ($files.Count -gt 5) 'PACKAGE_PAYLOAD_MISSING'
-        [ordered]@{ schemaVersion = 1; commit = $sourceCommit; runId = $runId; runAttempt = $runAttempt; comparisonScope = @('application executable', 'ASAR', 'all native helper files and notices', 'all bundled driver files', 'all bundled portable transport tools and notices', 'dependency manifest'); packagedDesktopPassed = $true; desktopReceiptSha256 = File-Digest (Join-Path $evidence 'desktop-check.json'); files = $files } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $snapshotFile -Encoding UTF8
+        [ordered]@{ schemaVersion = 1; commit = $sourceCommit; verifierCommit = $verifierCommit; downloadPreparationSha256 = $receipt.downloadPreparationSha256; runId = $runId; runAttempt = $runAttempt; comparisonScope = @('application executable', 'ASAR', 'all native helper files and notices', 'all bundled driver files and notices', 'all bundled portable transport tools and notices', 'dependency manifest'); packagedDesktopPassed = $true; desktopReceiptSha256 = File-Digest (Join-Path $evidence 'desktop-check.json'); files = $files } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $snapshotFile -Encoding UTF8
         Write-Host "Snapshotted $($files.Count) tested package payload entries."
         exit 0
     }
 
     $phase = 'artifact-integrity'
     $manifest = Get-Content -LiteralPath $snapshotFile -Raw | ConvertFrom-Json
+    if ($ExpectedPayloadCommit) {
+        Assert-DownloadedSnapshotBinding $manifest $verifierCommit $sourceCommit $receipt.downloadPreparationSha256
+    }
     Assert-Check ($manifest.commit -eq $sourceCommit -and ($Local -or ($manifest.runId -eq $runId -and $manifest.runAttempt -eq $runAttempt))) 'SNAPSHOT_RUN_MISMATCH'
     Assert-Check ($manifest.packagedDesktopPassed -eq $true -and $manifest.desktopReceiptSha256 -eq (File-Digest (Join-Path $evidence 'desktop-check.json'))) 'DESKTOP_RECEIPT_CHANGED'
-    $artifacts = Join-Path $root 'out\make\squirrel.windows\x64'
+    $artifacts = if ($ArtifactDirectory) { [IO.Path]::GetFullPath($ArtifactDirectory) } else { Join-Path $root 'out\make\squirrel.windows\x64' }
     $setup = Join-Path $artifacts 'MaterialFileEncryptor-Setup.exe'
     $releases = Join-Path $artifacts 'RELEASES'
     $setupFiles = @(Get-ChildItem -LiteralPath $artifacts -Filter '*.exe' -File)
@@ -167,7 +189,7 @@ try {
     Assert-Check ($releaseNames.Count -eq $allPackages.Count -and $releaseNames.ContainsKey($package.Name)) 'UNINDEXED_RELEASE_PACKAGE'
     foreach ($candidate in $allPackages) { Assert-Check ($releaseNames.ContainsKey($candidate.Name)) 'UNINDEXED_RELEASE_PACKAGE' }
     $phase = 'full-archive-integrity'
-    & "$PSScriptRoot\package-integrity.ps1" -Packages @($allPackages | ForEach-Object FullName)
+    & "$PSScriptRoot\package-integrity.ps1" -Packages @($allPackages | ForEach-Object FullName) -ReceiptPath (Join-Path $evidence 'package-integrity.json')
     Assert-Check ((Get-AuthenticodeSignature -LiteralPath $setup).Status -eq 'NotSigned') 'EXPECTED_UNSIGNED_SETUP'
     $receipt.artifactHashes = @{ setupSha256 = File-Digest $setup; nupkgSha256 = File-Digest $package.FullName; releasesSha256 = File-Digest $releases; testedManifestSha256 = File-Digest $snapshotFile; releasesDigestAndSizeVerified = $true; fullPackages = $packages.Count; deltaPackages = @($allPackages | Where-Object { $_.Name.EndsWith('-delta.nupkg') }).Count }
 
@@ -179,6 +201,13 @@ try {
     $reader = [IO.StreamReader]::new($nuspecEntries[0].Open())
     try { [xml]$nuspec = $reader.ReadToEnd() } finally { $reader.Dispose() }
     $sourcePackage = Get-Content -LiteralPath (Join-Path $root 'package.json') -Raw | ConvertFrom-Json
+    if ($ExpectedPayloadCommit) {
+        $sourceText = & git -C $root show "${sourceCommit}:package.json"
+        Assert-Check ($LASTEXITCODE -eq 0) 'PAYLOAD_SOURCE_NOT_AVAILABLE'
+        $payloadPackage = $sourceText | ConvertFrom-Json
+        Assert-Check ($payloadPackage.version -eq $sourcePackage.version) 'SOURCE_PACKAGE_VERSION_MISMATCH'
+        $sourcePackage = $payloadPackage
+    }
     Assert-Check ($nuspec.package.metadata.id -eq 'MaterialFileEncryptor' -and $nuspec.package.metadata.version -eq $sourcePackage.version) 'PACKAGE_ID_OR_VERSION_MISMATCH'
     $receipt.package = @{ id = 'MaterialFileEncryptor'; version = $sourcePackage.version; architecture = 'x64' }
     $entries = @{}
@@ -199,6 +228,12 @@ try {
         Assert-Check ($entry.Length -eq $file.bytes -and (Stream-Digest $entry) -eq $file.sha256) 'TESTED_PAYLOAD_DIGEST_MISMATCH'
     }
     $dependencies = Get-Content -LiteralPath (Join-Path $root 'dependencies.json') -Raw | ConvertFrom-Json
+    if ($ExpectedPayloadCommit) {
+        $dependencyText = & git -C $root show "${sourceCommit}:dependencies.json"
+        Assert-Check ($LASTEXITCODE -eq 0) 'PAYLOAD_DEPENDENCIES_NOT_AVAILABLE'
+        $payloadDependencies = $dependencyText | ConvertFrom-Json
+        Assert-Check (($payloadDependencies | ConvertTo-Json -Depth 30 -Compress) -eq ($dependencies | ConvertTo-Json -Depth 30 -Compress)) 'SOURCE_DEPENDENCY_MANIFEST_MISMATCH'
+    }
     $required = @('resources/tools/git/cmd/git.exe', 'resources/tools/gh/bin/gh.exe', 'MaterialFileEncryptor.exe', 'resources/app.asar', 'resources/dependencies.json', 'resources/native/MaterialFileEncryptor.Host.exe', 'resources/native/notices/WinFsp-License.txt', 'resources/native/notices/WinFsp-Origin.md', 'resources/native/notices/MaterialFileEncryptor-License.txt', "resources/driver/winfsp-$($dependencies.winfsp.version).msi")
     foreach ($name in $required) { Assert-Check ($entries.ContainsKey($name) -and $entries[$name].Length -gt 0) 'REQUIRED_RESOURCE_MISSING' }
     Assert-Check ((Stream-Digest $entries['resources/dependencies.json']) -eq (File-Digest (Join-Path $root 'dependencies.json'))) 'DEPENDENCY_MANIFEST_MISMATCH'
@@ -261,7 +296,9 @@ try {
     $phase = 'installed-application'
     $oldExecutable = $env:MFE_DESKTOP_EXECUTABLE
     $oldEvidence = $env:MFE_DESKTOP_EVIDENCE_DIR
+    $oldSource = $env:MFE_SOURCE_COMMIT
     try {
+        if ($ExpectedPayloadCommit) { $env:MFE_SOURCE_COMMIT = $sourceCommit }
         $env:MFE_DESKTOP_EXECUTABLE = Join-Path $installedRoot 'MaterialFileEncryptor.exe'
         $env:MFE_DESKTOP_EVIDENCE_DIR = Join-Path $evidence 'installed'
         $safeToUninstall = $false
@@ -283,6 +320,7 @@ try {
     } finally {
         $env:MFE_DESKTOP_EXECUTABLE = $oldExecutable
         $env:MFE_DESKTOP_EVIDENCE_DIR = $oldEvidence
+        $env:MFE_SOURCE_COMMIT = $oldSource
     }
     $phase = 'uninstall'
     Uninstall-Owned
