@@ -1,5 +1,9 @@
 # Continue Material File Encryptor acceptance
 
+## Isolated synthetic native child diagnostic
+
+The isolated unit starts from `4f7497f8e4484fd92c1063229cb2034498e87ee6`. It adds only an optional disabled-by-default runner diagnostic and dedicated native core-test mode, plus its verification documentation. Root build and synthetic checks are pending. No installed or graphical candidate changed; no historical failure cause is claimed. Keep direct-child evidence private and do not integrate until independent review. The existing continuation below remains separate.
+
 ## Current authoritative continuation, 2026-10-10 UTC
 
 The goal is active with no fixed budget. The selected account preservation boundary is10%remaining, inclusive, using the lowest current applicable window. Main contains `ccde68a8b408e8125896e0cb95cea046d3ae6779`; runtime and installer task branches stay frozen there. Exact restore identity/original-exception retention passed20focused checks and independent reviews. Both exact root entrypoints exited zero with unchanged source/index/ref,812-entryprivacy and739-entryintegrity. Executable SHA84c8cec68e290de8570a1d79467fb6fabc2068bbcd3a0d01898d9825ca9c211d; ASAR SHA04b5d344aab5a285b410ff0d05155c3ed6b499152e208352ecd746aefb74916b. Older source55 outputs and receipts are preserved.

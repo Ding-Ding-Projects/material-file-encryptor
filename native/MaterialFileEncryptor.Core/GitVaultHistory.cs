@@ -15,7 +15,8 @@ public sealed class VaultProcessRunner : IVaultProcessRunner
 {
     private readonly string? gitExecutable, ghExecutable;
     private readonly string baseDirectory;
-    public VaultProcessRunner(string? gitExecutable = null, string? ghExecutable = null, string? baseDirectory = null) { this.gitExecutable = gitExecutable; this.ghExecutable = ghExecutable; this.baseDirectory = Path.GetFullPath(baseDirectory ?? AppContext.BaseDirectory); }
+    private readonly NativeChildTrace? diagnostic;
+    public VaultProcessRunner(string? gitExecutable = null, string? ghExecutable = null, string? baseDirectory = null, NativeChildTrace? diagnostic = null) { this.gitExecutable = gitExecutable; this.ghExecutable = ghExecutable; this.baseDirectory = Path.GetFullPath(baseDirectory ?? AppContext.BaseDirectory); this.diagnostic = diagnostic; }
     public string ResolveExecutable(string name)
     {
         var explicitPath = name == "git" ? gitExecutable : name == "gh" ? ghExecutable : null;
@@ -53,6 +54,9 @@ public sealed class VaultProcessRunner : IVaultProcessRunner
         try { process = Process.Start(start) ?? throw new IOException("Unable to start storage tool."); }
         catch (System.ComponentModel.Win32Exception) { throw new IOException("Required storage tool is unavailable. Install the bundled Git and GitHub CLI tools."); }
         using var ownedProcess = process;
+        NativeChildTrace.Lease? observation = null;
+        try { observation = diagnostic?.Begin(process); } catch { diagnostic?.Lost(); }
+        using var ownedObservation = observation;
         // Storage commands receive no input. Inheriting the desktop host's input
         // lets an unexpected prompt wait indefinitely for a user who cannot see it.
         process.StandardInput.Close();

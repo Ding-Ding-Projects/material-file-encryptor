@@ -1,3 +1,7 @@
+# Native child diagnostic unit, 2026-10-10 UTC
+
+An isolated diagnostic unit based on `4f7497f8e4484fd92c1063229cb2034498e87ee6` adds an optional disabled-by-default native runner sink and a dedicated core-test mode. It records only direct-child identity and native lifecycle timing, with exact FILETIME strings and explicit completeness bounds. No graphical or installed candidate has changed. Root build, focused synthetic verification and independent review are pending. This unit does not repair or explain the historical ancestry rejection. See [diagnostic contract](docs/features/release/native-child-diagnostics.md).
+
 # Current continuation milestone, 2026-10-10 UTC
 
 The integrated acceptance candidate is `ccde68a8b408e8125896e0cb95cea046d3ae6779`. Its exact restore identity and original-exception retention passed twenty focused checks and independent reviews. Runtime and installer checkouts remain frozen there while primary documentation advances independently. Both exact local entrypoints completed with exit zero and unchanged source/index/owning ref. Executable SHA-256 is `84c8cec68e290de8570a1d79467fb6fabc2068bbcd3a0d01898d9825ca9c211d`; ASAR SHA-256 is `04b5d344aab5a285b410ff0d05155c3ed6b499152e208352ecd746aefb74916b`. Privacy accepted 812 entries and all 739 archive entries passed. Earlier source55 outputs remain preserved with complete matching inventories.

@@ -1,5 +1,10 @@
 # First installable preview
 
+## Synthetic native child diagnostic unit
+
+- [ ] Build the opt-in direct-child timing diagnostic through the exact root entrypoint and verify short-lived/held/cancelled children, retained native times, privacy and bounds.
+- [ ] Independently review the diagnostic before integration or any graphical reproduction; historical failure cause remains unknown.
+
 ## Exact restore selection verification, 2026-10-10
 
 - [x] Replace backend-index/DOM-position correspondence with exact rendered version identity, completed archive generations and bounded pre-action observations; twenty focused checks and independent source reviews passed.
