@@ -6,16 +6,21 @@
 - [x] Preserve and inspect the unsuccessful 83-image runtime before modern-matrix entry, with separate supplemental fixture retirement.
 - [x] Integrate independently reviewed upgrade-letter and fixture-retirement source repairs; pass three and 32 focused checks respectively.
 - [x] Rebuild source ff244c78 through both exact root entrypoints; verify 812 privacy entries, 739 CRC entries and independently downloaded v1.87.1 assets.
+- [x] Build immutable source 21e6274 through both exact entrypoints; preserve and verify package-r4 and independently downloaded normal v1.93.1, with native DLL/PDB differences explicitly retained.
+- [x] Integrate independently reviewed modern-only verification and bounded startup readiness, keeping target 21e6274 and verifier 1c86e9a distinct; 41 independent focused checks passed.
+- [ ] Finish fresh modern run RRFA1q: actual mounted startup passed and captures began, but final matrix, pixel-review and original closure verdicts remain pending.
 - [ ] Complete actual integrated runtime acceptance: DYWZMv retained 75 originals and zero modern tuples; original ancestry/closure failures remain unchanged.
 - [ ] Complete 432 matrix state captures and 13 baseline clear-control captures, plus native and workflow evidence.
 - [x] Inspect all 127 responsive candidate 1028f4d page originals from 90 tuples and 108 clear checks, with no visible privacy or overflow findings.
 - [ ] Complete candidate 1028f4d browser lifecycle acceptance; category and gallery original closure remain rejected. Preserve preceding captures and exclusion records.
 - [ ] Resolve browser identity-evidence gaps without weakening strict ownership checks or substituting later absence.
 - [x] Preserve independently reviewed gallery grouping/projection candidate 67c19965 with 27 focused checks; inventory remains 14 historical originals and two exclusions.
-- [ ] Build and verify the changed gallery in a genuine isolated browser, then publish every eligible unique current original with complete provenance.
-- [ ] Complete and independently review the separate modern-phase verifier without changing the full-workflow verdict.
+- [x] Build gallery candidate 67c19965 through the exact root entrypoint; preserve all 52 website files and 14 historical originals.
+- [ ] Verify the changed gallery in a genuine isolated browser, then publish every eligible unique current original with complete provenance.
+- [x] Complete and independently review the separate modern-phase verifier without changing the full-workflow verdict.
 - [ ] Complete final-release downloaded execution, genuine installation, installed workflows and removal.
-- [ ] Verify complete deployed documentation/wiki, routes, assets, both clear controls and exact About homepage.
+- [x] Verify deployed ef2a8d6 bytes: 52 files, 18 complete articles including two wiki pages, 790 valid references, 14 decoded originals and exact About homepage.
+- [ ] Verify both clear controls and actual browser closure on the final changed website surface; retain previous source-bound evidence separately.
 - [ ] Establish native physical-scale evidence or retain its explicit unsupported-route limitation.
 - [ ] Finish preservation-backed, ownership-proven and ancestry-proven closeout; retained active and uncertain work remains untouched.
 
