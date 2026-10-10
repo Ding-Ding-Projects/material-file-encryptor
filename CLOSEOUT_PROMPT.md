@@ -2,6 +2,12 @@
 
 Continue the accepted Material File Encryptor verification plan. The wider objective remains unfinished. The user restored capacity and explicitly authorized implementation on 2026-10-09.
 
+Latest state: normal release v1.33.1 at fb839e93 passed independent four-asset verification, 812-entry privacy inspection and all 739 archive integrity checks. Its real downloaded replay passed the earlier restoration/recycling/descendant/offline/startup paths, then failed at Node enumeration of a newly created empty drive. All 57 images were inspected; all 130 run files were preserved with matching hashes. Recovery restored startup, retired the fixture credential and proved process/desktop absence. No final acceptance marker exists.
+
+A fresh native reproduction opened a valid directory handle on the expected MaterialVault volume and observed first-query STATUS_NO_SUCH_FILE, zero bytes, while Node returned ENOENT. Both credentials and the synthetic key were retired after orderly teardown. The owned runtime lane is implementing a strict native emptiness proof; do not swallow arbitrary ENOENT or change product root entries.
+
+The local fb839e93 application build passed but two installer attempts failed in bundled NuGet 2.8.3 before the archive writer. Their logs and outputs remain preserved. Reviewed change bcb626e1 pins official NuGet 7.9.0 by SHA-256 and exact file version in the genuine Squirrel vendor route. Source review and focused negative checks passed; exact production entrypoint recovery is the next action. Keep this separate from the successful hosted v1.33.1 production.
+
 Main includes package-privacy repair 93dfedbbfbe7d2dcf105c10c2270005ab2dae06a. At source e902a2c073accd781de65e38a3eda68d2fb0d0d2 both exact build entrypoints exited zero. The actual packaged tree and ASAR privacy inspection accepted 812 entries with zero rejected entries. All 739 installer-package entries passed decompression and CRC verification. Independent ZIP inspection found no private task-directory segments and matched its ASAR to the inspected packaged archive. These are packaging verdicts, not runtime or installed acceptance. Retain earlier quarantined outputs and original unsuccessful receipts.
 
 Normal release v1.20.1 targets the prior main b693c6bca5843a000d78b47c321948eaf1884c26. Workflow 37995783561 succeeded and four expected assets exist. Independent download/hash and runtime acceptance of v1.20.1 remain unverified. v1.19.1 retains its earlier independent integrity evidence only.

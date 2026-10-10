@@ -1,6 +1,6 @@
 # Material File Encryptor
 
-> Verification resumed on 2026-10-09. Rebuilt package `3e416a7` and all four independently downloaded v1.31.1 assets passed privacy and integrity checks. The website passed 18 responsive layout/control tuples, with two strict audit limitations retained. The latest desktop replay safely recovered from an incomplete process-identity snapshot during History verification. Reviewed tooling now permits bounded complete pre-attachment proofs without replaying actions; current runtime, installed lifecycle and native scale acceptance remain incomplete. See [the current handoff](HANDOFF.md) for exact evidence boundaries.
+> Verification resumed on 2026-10-09. All four independently downloaded v1.33.1 assets passed privacy and integrity checks. Its runtime reached new-vault creation before an empty-directory enumeration compatibility check stopped the run; safe recovery and exact native diagnosis are recorded. A separate reviewed NuGet pin repairs the local packaging path, with production recovery still pending. The website passed 18 responsive control tuples, with strict audit limitations retained. Current runtime, installed lifecycle and native scale acceptance remain incomplete. See [the current handoff](HANDOFF.md) for exact evidence boundaries.
 
 A Windows Explorer drive with encrypted fixed-size content blobs, recoverable history, and a Recycle Bin. Choose a synchronized folder or a private GitHub repository for transfer. Keep selected files available offline in an encrypted local cache.
 
