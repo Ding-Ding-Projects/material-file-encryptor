@@ -8,7 +8,9 @@
 - [x] Rebuild source ff244c78 through both exact root entrypoints; verify 812 privacy entries, 739 CRC entries and independently downloaded v1.87.1 assets.
 - [x] Build immutable source 21e6274 through both exact entrypoints; preserve and verify package-r4 and independently downloaded normal v1.93.1, with native DLL/PDB differences explicitly retained.
 - [x] Integrate independently reviewed modern-only verification and bounded startup readiness, keeping target 21e6274 and verifier 1c86e9a distinct; 41 independent focused checks passed.
-- [ ] Finish fresh modern run RRFA1q: actual mounted startup passed and captures began, but final matrix, pixel-review and original closure verdicts remain pending.
+- [x] Preserve terminal RRFA1q:48/48 workspace configurations,32/48 dialog configurations and13 baseline clear controls; original closure and fixture retirement passed, while the runtime result remains false after CLI_INVALID_RESULT.
+- [x] Inspect all403 available originals and verify the1205-file stable copy; retain three unvalidated images and45 missing planned images explicitly.
+- [ ] Retain bounded direct-transport results before JSON validation, record actual UTC producing-build timestamps, and complete the affected/missing exact-source matrix after reviewed localization repaira90fd99.
 - [ ] Complete actual integrated runtime acceptance: DYWZMv retained 75 originals and zero modern tuples; original ancestry/closure failures remain unchanged.
 - [ ] Complete 432 matrix state captures and 13 baseline clear-control captures, plus native and workflow evidence.
 - [x] Inspect all 127 responsive candidate 1028f4d page originals from 90 tuples and 108 clear checks, with no visible privacy or overflow findings.
@@ -18,6 +20,7 @@
 - [x] Build gallery candidate 67c19965 through the exact root entrypoint; preserve all 52 website files and 14 historical originals.
 - [x] Verify gallery67c1996 in18 isolated browser tuples, inspect37 originals, and confirm original browser/server closure with8/2 exact identities held.
 - [ ] Publish every eligible unique current original with complete provenance; current desktop promotion remains pending.
+- [ ] Resolve the verified promotion blocker: local producing receipts omit artifactBuiltAt; current original promotion remains zero and filesystem dates cannot supply missing proof.
 - [x] Complete and independently review the separate modern-phase verifier without changing the full-workflow verdict.
 - [ ] Complete final-release downloaded execution, genuine installation, installed workflows and removal.
 - [x] Verify deployed ef2a8d6 bytes: 52 files, 18 complete articles including two wiki pages, 790 valid references, 14 decoded originals and exact About homepage.
