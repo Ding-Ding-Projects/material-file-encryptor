@@ -1,3 +1,15 @@
+# Current G continuation checklist
+
+- [x] Preserve G repair on its task branch and verify local main contains it; remote main remains F pending publication.
+- [x] Obtain two dry independent source reviews, preserve the first unsuccessful build and pass the isolated parser probe.
+- [x] Complete exact G build attempt 2 and installer production at unchanged source; verify 739 CRC entries, 812 privacy entries and 644 produced files.
+- [ ] Execute the prepared 51-input G runtime candidate; no actual G GUI evidence exists yet.
+- [ ] Resolve browser v16 interrupted-run evidence boundary: 14 Home tuples retained, original normal closure unproved, category/article unlaunched.
+- [ ] Publish G main integration and current documentation with exact remote proof.
+- [ ] Complete full runtime, 48 configurations, 13 clear controls, installed lifecycle, mounted-copy upgrade/transport, browser acceptance and physical display scaling.
+
+# Historical source-bound checklists
+
 # First installable preview
 
 ## Current 28f continuation snapshot
