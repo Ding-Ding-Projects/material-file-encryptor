@@ -15,6 +15,7 @@ Move-Item -LiteralPath $toolStage -Destination $toolOutput
 Invoke-Checked { npm.cmd ci }
 Invoke-Checked { node scripts/build-site.mjs }
 Invoke-Checked { dotnet publish native/MaterialFileEncryptor.Host -c Release -r win-x64 --self-contained true -o out/native }
+Invoke-Checked { dotnet build native/MaterialFileEncryptor.Core.Tests -c Release }
 New-Item -ItemType Directory -Force out/native/notices | Out-Null
 Copy-Item native/vendor/WinFsp/License.txt out/native/notices/WinFsp-License.txt
 Copy-Item native/vendor/WinFsp/ORIGIN.md out/native/notices/WinFsp-Origin.md

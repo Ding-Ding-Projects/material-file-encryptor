@@ -1,5 +1,17 @@
 # Preview verification
 
+## Synthetic direct-child timing diagnostics
+
+The optional `NativeChildTrace` sink at `VaultProcessRunner.RunAsync()` is disabled by default. No production host or graphical workflow activates it. The native core test executable accepts `--native-child-trace <private-output-file>` for one synthetic operation, writing a new receipt without overwriting an existing file.
+
+The trace retains the runner's already-owned direct-child handle through final observation. It records fixed synthetic categories, sequence and host/child identity, exact native creation and exit FILETIME decimal strings, zero-time wait and exit results, native error codes, UTC observation intervals and monotonic intervals. It never records arguments, executable names or paths, working directories, environment, credentials, output or arbitrary exception messages.
+
+The in-memory operation is bounded to 60 seconds, 128 children and 64 KiB. Missing observations, active children, deadline expiry, count/byte overflow and sink faults explicitly mark the receipt incomplete. Diagnostics do not change ordinary output, cancellation, teardown or return values. They never authorize ownership or replace required CIM identity.
+
+The dedicated mode checks real short-lived and held children, retained-handle exit times, cancellation, exact retained safe-handle closure, active-handle refusal, identity mismatch, sink faults, overflow and exact schema privacy. The receipt reports `HandlesClosed` from the actual bounded retained handle objects after runner disposal, not from reopening a PID. Keep its trace in ignored private evidence with a source binding and SHA-256. The normal `build.bat /s` compiles the verification executable in Release through its checked, bootstrapped route without running tests. Execute `native/MaterialFileEncryptor.Core.Tests/bin/Release/net8.0/MaterialFileEncryptor.Core.Tests.exe --native-child-trace <private-output-file>` directly afterward; do not use implicit compilation as root-build proof. Results remain separate in the handoff.
+
+Only direct children are covered. The trace cannot establish grandchildren, reconstruct history, prove a historical graphical failure cause or supply installed-package acceptance. No global tracing, subscription, elevation or automatic production activation is involved. Installer production is separate and unnecessary for exercising this test-only mode.
+
 The first preview combines encrypted format 2 storage, Git snapshot history, folder and private GitHub transport, History, Recycle Bin, and an editable drive-letter picker. Verification uses synthetic vaults and isolated profiles. Existing user vaults and installations are not test fixtures.
 
 ## Current continuation, 2026-10-10

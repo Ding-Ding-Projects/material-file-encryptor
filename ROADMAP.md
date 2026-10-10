@@ -6,7 +6,7 @@
 - [x] Preserve and independently inspect all 42 current browser diagnostic captures and 6,040 tuple observations. Forty-one home tuples completed; partial tuple 41 and zero finalized audits remain explicit.
 - [ ] Repair current Document/request-lifecycle correlation in the private browser collector, review it independently and complete full browser acceptance without weakening exact-byte or ownership checks.
 - [x] Preserve all 105 downloaded native-run originals and inspect 23 captures; retain the sequence 77 ancestry rejection and original automatic-recovery failure separately from successful supplemental normal recovery.
-- [x] Verify root-entrypoint compilation and direct 36-check execution of the default-off native-child diagnostic unit at b43b4fd, with dry final independent reviews. Integration remains the next step.
+- [x] Verify root-entrypoint compilation and direct 36-check execution of the default-off native-child diagnostic unit at b43b4fd, with dry final independent reviews. The reviewed c15fd3d unit is included by this integration; remote proof is recorded separately.
 - [ ] Obtain decisive real-fixture process observations and complete mounted, copy-upgrade, transport, modern matrix and downloaded installed lifecycle acceptance.
 - [ ] Refresh the public wiki handoff and its deployed complete snapshot after the current evidence milestone.
 

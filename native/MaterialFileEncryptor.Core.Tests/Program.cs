@@ -2,6 +2,9 @@ using System.Security.Cryptography;
 using System.Text;
 using MaterialFileEncryptor.Core;
 
+if (args.Length > 0 && args[0] == "--native-child-trace") { await NativeChildTraceTests.RunAsync(args); return 0; }
+if (args.Length == 2 && args[0] == "--native-trace-child") { await NativeChildTraceTests.ChildAsync(args[1]); return 0; }
+
 var cases = new (string,Action)[] {
     ("hydration runs outside core and callback locks before atomic mutation",HydrationConcurrency),
     ("independent earlier deletion requires explicit selection",ExplicitDescendants),
