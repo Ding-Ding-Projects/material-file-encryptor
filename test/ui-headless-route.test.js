@@ -107,6 +107,9 @@ test('native capture interval surrounds the tool call and refuses an existing im
 });
 
 test('failure summaries retain allowlisted diagnostic metadata without reflecting native text',()=>{
+ assert.deepEqual(safeFailureDetails({diagnosticStage:'desktop-close',diagnosticCode:'NATIVE_DESKTOP_CLOSE_FAILED',diagnosticClosureCode:'DESKTOP_HANDLE_CLOSE_FAILED'}),{diagnosticClosureCode:'DESKTOP_HANDLE_CLOSE_FAILED',diagnosticStage:'desktop-close',diagnosticCode:'NATIVE_DESKTOP_CLOSE_FAILED'});
+ assert.deepEqual(safeFailureDetails({diagnosticCode:'WINDOW_OWNER_UNAVAILABLE',diagnosticClosureCode:'DESKTOP_HANDLE_CLOSE_FAILED',error:'hostile'}),{diagnosticClosureCode:'DESKTOP_HANDLE_CLOSE_FAILED',diagnosticCode:'WINDOW_OWNER_UNAVAILABLE'});
+ assert.deepEqual(safeFailureDetails({diagnosticClosureCode:'hostile private detail'}),{});
  assert.deepEqual(safeFailureDetails({diagnosticStage:'before-tree',diagnosticCode:'INVALID_PROCESS_TREE',error:'hostile credential',exception:'hostile'}),{diagnosticStage:'before-tree',diagnosticCode:'INVALID_PROCESS_TREE'});
  assert.deepEqual(safeFailureDetails({diagnosticStage:'hostile',diagnosticCode:'hostile'}),{});
  assert.deepEqual(safeFailureDetails({diagnosticStage:42,diagnosticCode:['PROCESS_NOT_FOUND']}),{});

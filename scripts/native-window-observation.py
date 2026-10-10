@@ -6,13 +6,16 @@ import importlib.util
 import json
 import os
 import sys
+import threading
+import re
 from pathlib import Path
 from datetime import datetime, timezone
 
 
-DIAGNOSTIC_STAGES = frozenset(('request', 'lifecycle-import', 'adapter-import', 'transport', 'state-read', 'state-validation', 'native-import', 'before-tree', 'before-owner', 'before-identity', 'before-hash', 'native-dpi-enter', 'native-geometry', 'native-dpi-query', 'native-geometry-validation', 'native-dpi-restore', 'after-tree', 'after-owner', 'after-identity', 'after-hash', 'bookend-validation'))
-INTERNAL_CODES = frozenset(('WINDOW_OWNER_UNPROVEN', 'WINDOW_OWNER_CHANGED', 'WINDOW_OWNER_UNAVAILABLE', 'NATIVE_DPI_CONTEXT_UNAVAILABLE', 'NATIVE_GEOMETRY_UNAVAILABLE', 'NATIVE_DPI_CONTEXT_RESTORE_FAILED', 'NATIVE_STATE_UNAVAILABLE', 'MIXED_TRANSPORT'))
+DIAGNOSTIC_STAGES = frozenset(('request', 'lifecycle-import', 'adapter-import', 'transport', 'state-read', 'state-validation', 'native-import', 'before-tree', 'before-owner', 'before-identity', 'before-hash', 'native-dpi-enter', 'native-geometry', 'native-dpi-query', 'native-geometry-validation', 'native-dpi-restore', 'after-tree', 'after-owner', 'after-identity', 'after-hash', 'bookend-validation', 'desktop-open', 'desktop-validation', 'desktop-attach', 'desktop-worker-wait', 'desktop-close', 'desktop-caller-check'))
+INTERNAL_CODES = frozenset(('WINDOW_OWNER_UNPROVEN', 'WINDOW_OWNER_CHANGED', 'WINDOW_OWNER_UNAVAILABLE', 'NATIVE_DPI_CONTEXT_UNAVAILABLE', 'NATIVE_GEOMETRY_UNAVAILABLE', 'NATIVE_DPI_CONTEXT_RESTORE_FAILED', 'NATIVE_STATE_UNAVAILABLE', 'MIXED_TRANSPORT', 'NATIVE_DESKTOP_OPEN_FAILED', 'NATIVE_DESKTOP_NAME_UNAVAILABLE', 'NATIVE_DESKTOP_MISMATCH', 'NATIVE_DESKTOP_ATTACH_FAILED', 'NATIVE_DESKTOP_WORKER_TIMEOUT', 'NATIVE_DESKTOP_WORKER_FAILED', 'NATIVE_DESKTOP_CLOSE_FAILED', 'NATIVE_CALLER_DESKTOP_CHANGED', 'NATIVE_DESKTOP_IDENTITY_UNAVAILABLE'))
 LIFECYCLE_CODES = frozenset(('UNSAFE_PATH', 'STATE_TOO_LARGE', 'INVALID_STATE', 'UNSUPPORTED_PLATFORM', 'PROCESS_NOT_FOUND', 'PROCESS_PROOF_FAILED', 'PROCESS_IDENTITY_CHANGED', 'INVALID_PROCESS_IDENTITY', 'INVALID_PROCESS_TREE', 'TRANSPORT_ERROR', 'INVALID_RESPONSE', 'INVALID_ENDPOINT', 'NON_LOOPBACK_ENDPOINT', 'UNSAFE_ENDPOINT'))
+CLOSURE_CODES = frozenset(('DESKTOP_HANDLE_NOT_OPENED', 'DESKTOP_HANDLE_CLOSED', 'DESKTOP_HANDLE_CLOSE_FAILED', 'DESKTOP_HANDLE_CLOSE_DEFERRED'))
 DIAGNOSTIC_CODES = INTERNAL_CODES | LIFECYCLE_CODES | frozenset(('UNEXPECTED_EXCEPTION',))
 
 
@@ -28,6 +31,7 @@ class DiagnosticContext:
     def __init__(self):
         self.stage = 'request'
         self.lifecycle_failure = None
+        self.closure_code = None
 
     def at(self, stage):
         if stage not in DIAGNOSTIC_STAGES:
@@ -43,9 +47,12 @@ def failure_payload(error, context):
         candidate = error.code
         if isinstance(candidate, str) and candidate in LIFECYCLE_CODES:
             code = candidate
-    return {'ok': False, 'client_ok': False, 'code': 'NATIVE_OBSERVATION_FAILED',
+    result = {'ok': False, 'client_ok': False, 'code': 'NATIVE_OBSERVATION_FAILED',
             'stage': 'native-observation', 'diagnosticStage': context.stage if context.stage in DIAGNOSTIC_STAGES else 'request',
             'diagnosticCode': code if code in DIAGNOSTIC_CODES else 'UNEXPECTED_EXCEPTION'}
+    if context.closure_code in CLOSURE_CODES:
+        result['diagnosticClosureCode'] = context.closure_code
+    return result
 
 
 def observe(lifecycle, state, hwnd, api, context=None):
@@ -129,6 +136,119 @@ class Native:
             self.context.at(pending_stage)
 
 
+class DesktopNative:
+    READ_ENUMERATE = 0x0041
+
+    def __init__(self):
+        self.user = ctypes.WinDLL('user32', use_last_error=True)
+        self.kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+        self.kernel.GetCurrentThreadId.restype = wintypes.DWORD
+        self.user.GetThreadDesktop.argtypes = [wintypes.DWORD]
+        self.user.GetThreadDesktop.restype = wintypes.HANDLE
+        self.user.GetUserObjectInformationW.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD, ctypes.POINTER(wintypes.DWORD)]
+        self.user.GetUserObjectInformationW.restype = wintypes.BOOL
+        self.user.OpenDesktopW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        self.user.OpenDesktopW.restype = wintypes.HANDLE
+        self.user.SetThreadDesktop.argtypes = [wintypes.HANDLE]
+        self.user.SetThreadDesktop.restype = wintypes.BOOL
+        self.user.CloseDesktop.argtypes = [wintypes.HANDLE]
+        self.user.CloseDesktop.restype = wintypes.BOOL
+
+    def current(self):
+        handle = self.user.GetThreadDesktop(self.kernel.GetCurrentThreadId())
+        if not handle:
+            raise ObservationFailure('NATIVE_DESKTOP_IDENTITY_UNAVAILABLE')
+        return handle  # Borrowed handle, never close it.
+
+    def name(self, handle):
+        buffer = ctypes.create_unicode_buffer(256)
+        needed = wintypes.DWORD()
+        if not self.user.GetUserObjectInformationW(handle, 2, buffer, ctypes.sizeof(buffer), ctypes.byref(needed)):
+            raise ObservationFailure('NATIVE_DESKTOP_NAME_UNAVAILABLE')
+        return buffer.value
+
+    def open(self, name):
+        return self.user.OpenDesktopW(name, 0, False, self.READ_ENUMERATE)
+
+    def attach(self, handle):
+        return bool(self.user.SetThreadDesktop(handle))
+
+    def close(self, handle):
+        return bool(self.user.CloseDesktop(handle))
+
+
+def observe_on_desktop(lifecycle, state, context, desktop_api=None, native_factory=Native, thread_factory=threading.Thread):
+    # The caller never attaches, enumerates desktops, switches input or creates UI.
+    context.at('desktop-validation')
+    desktop = state['desktop']
+    if not isinstance(desktop, str) or re.fullmatch(r'[A-Za-z0-9._-]{1,64}', desktop) is None:
+        raise ObservationFailure('NATIVE_DESKTOP_MISMATCH')
+    api = desktop_api or DesktopNative()
+    caller_desktop = api.current()
+    worker_context = DiagnosticContext()
+    worker_context.lifecycle_failure = context.lifecycle_failure
+    outcome = {}
+
+    def worker():
+        try:
+            worker_context.at('desktop-open')
+            handle = api.open(desktop)
+            outcome['handle'] = handle
+            if not handle:
+                raise ObservationFailure('NATIVE_DESKTOP_OPEN_FAILED')
+            worker_context.at('desktop-validation')
+            if api.name(handle).casefold() != desktop.casefold():
+                raise ObservationFailure('NATIVE_DESKTOP_MISMATCH')
+            worker_context.at('desktop-attach')
+            if not api.attach(handle):
+                raise ObservationFailure('NATIVE_DESKTOP_ATTACH_FAILED')
+            if api.name(api.current()).casefold() != desktop.casefold():
+                raise ObservationFailure('NATIVE_DESKTOP_MISMATCH')
+            worker_context.at('native-import')
+            outcome['result'] = observe(lifecycle, state, state['hwnd'], native_factory(worker_context), worker_context)
+        except BaseException as error:
+            outcome['error'] = error if isinstance(error, Exception) else ObservationFailure('NATIVE_DESKTOP_WORKER_FAILED')
+
+    thread = thread_factory(target=worker, daemon=True)
+    thread.start()
+    thread.join(60)
+    if thread.is_alive():
+        # Never close a handle while the worker can still be attached. The failed
+        # one-shot observer exits; process teardown releases any outstanding handle.
+        context.at('desktop-worker-wait')
+        context.closure_code = 'DESKTOP_HANDLE_CLOSE_DEFERRED'
+        raise ObservationFailure('NATIVE_DESKTOP_WORKER_TIMEOUT')
+    primary = outcome.get('error')
+    primary_stage = worker_context.stage
+    handle = outcome.get('handle')
+    context.closure_code = 'DESKTOP_HANDLE_NOT_OPENED'
+    if handle:
+        try:
+            closed = api.close(handle)
+        except Exception:
+            closed = False
+        context.closure_code = 'DESKTOP_HANDLE_CLOSED' if closed else 'DESKTOP_HANDLE_CLOSE_FAILED'
+        if not closed and primary is None:
+            primary = ObservationFailure('NATIVE_DESKTOP_CLOSE_FAILED')
+            primary_stage = 'desktop-close'
+    try:
+        if api.current() != caller_desktop:
+            raise ObservationFailure('NATIVE_CALLER_DESKTOP_CHANGED')
+    except Exception as error:
+        if primary is None:
+            primary = error
+            primary_stage = 'desktop-caller-check'
+    if primary is not None:
+        context.at(primary_stage)
+        raise primary
+    if 'result' not in outcome:
+        context.at('desktop-worker-wait')
+        raise ObservationFailure('NATIVE_DESKTOP_WORKER_FAILED')
+    result = outcome['result']
+    result['desktopObservation'] = {'callerDesktopUnchanged': True, 'desktopHandleClosed': True}
+    return result
+
+
 def main(context=None):
     context = context or DiagnosticContext()
     context.at('request')
@@ -153,8 +273,7 @@ def main(context=None):
     if state.get('cleaned') or not state.get('created') or not state.get('hwnd'):
         raise ObservationFailure('NATIVE_STATE_UNAVAILABLE')
     context.at('native-import')
-    api = Native(context)
-    return observe(module, state, state['hwnd'], api, context)
+    return observe_on_desktop(module, state, context)
 
 
 def run(operation=main):
