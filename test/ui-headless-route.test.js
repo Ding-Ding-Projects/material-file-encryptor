@@ -21,7 +21,7 @@ test('invalid local launch roots and ports cannot produce a launch request',()=>
 
 test('interface workflow asserts states after actions and keeps native proof separate',()=>{
  const root=path.join(os.tmpdir(),'owned-run');const launch=makeLaunch({executable:path.join(root,'package','app.exe'),runRoot:root,port:9333});const plan=makeInterfacePlan(launch,path.join(root,'lifecycle.json'));
- assert.equal(Object.hasOwn(plan,'startupOwnershipAttempts'),false);assert.ok(plan.steps.length<=100);assert.ok(plan.steps.some(step=>step.id==='locked-history-state'));assert.ok(plan.steps.some(step=>step.id==='locked-recycle-state'));
+ assert.equal(plan.startupOwnershipAttempts,3);assert.ok(plan.steps.length<=100);assert.ok(plan.steps.some(step=>step.id==='locked-history-state'));assert.ok(plan.steps.some(step=>step.id==='locked-recycle-state'));
  for(const [index,step] of plan.steps.entries())if(['click','type'].includes(step.op)){assert.equal(plan.steps[index+1].op,'poll');assert.equal(plan.steps[index+2].op,'capture');}
  assert.equal(JSON.stringify(plan).includes('password-input'),false);assert.equal(JSON.stringify(plan).includes('awaitPromise'),false);
 });
@@ -114,9 +114,9 @@ test('persistent endpoint selects project lifecycle adapter even without a CLI',
  assert.deepEqual(lifecycleTransport({installedLowlevel}),{useAdapter:false,lowlevel:installedLowlevel,transport:'streamable-http'});
 });
 
-test('modern native inspections explicitly omit the baseline startup retry opt-in',async()=>{
+test('modern native inspections explicitly use bounded fresh-attachment proof',async()=>{
  const source=await fs.readFile(new URL('../scripts/local-headless-desktop-check.mjs',import.meta.url),'utf8');
- assert.match(source,/const \{startupOwnershipAttempts,\.\.\.inspectionPlan\}=plan;/);
+ assert.match(source,/const inspectionPlan=withCdpConnectionProof\(plan,'modern-observation'\);/);
  assert.match(source,/\[cdp,'inspect'\],inspectionPlan/);
  assert.doesNotMatch(source,/\[cdp,'inspect'\],plan\)/);
 });

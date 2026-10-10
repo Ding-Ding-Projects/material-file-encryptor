@@ -5,7 +5,7 @@ const input={launch:{cdp:{port:9333,expectedUrl:'file:///owned/resources/app.asa
 const success={ok:true,client_ok:true,recordedProcessesAbsent:true,desktopClosed:true};
 test('failed flow validates the isolated window and exit ancestry before normal verification quit',async()=>{
  const calls=[];
- const result=await finishOwnedLifecycle({...input,runCommand:async(_exe,args)=>{calls.push(args);return success;},executePlan:async plan=>{calls.push('quit');assert.equal(plan.receipt,input.statePath);assert.equal(plan.expectedUrl,input.launch.cdp.expectedUrl);assert.equal(plan.endpoint,'http://127.0.0.1:9333');assert.ok(plan.steps.some(step=>step.expression?.includes('window.drive.verificationQuit()')));return {results:[{value:{done:true,value:{restored:true}}}]};}});
+ const result=await finishOwnedLifecycle({...input,runCommand:async(_exe,args)=>{calls.push(args);return success;},executePlan:async plan=>{calls.push('quit');assert.equal(Object.hasOwn(plan,'startupOwnershipAttempts'),false);assert.equal(plan.receipt,input.statePath);assert.equal(plan.expectedUrl,input.launch.cdp.expectedUrl);assert.equal(plan.endpoint,'http://127.0.0.1:9333');assert.ok(plan.steps.some(step=>step.expression?.includes('window.drive.verificationQuit()')));return {results:[{value:{done:true,value:{restored:true}}}]};}});
  assert.deepEqual(calls.map(call=>typeof call==='string'?call:call[1]),['wait-window','prepare-exit','quit','confirm-exit']);
  assert.equal(result.quitRequested,true);assert.equal(result.recovery.restored,true);assert.equal(result.cleanup,success);
 });

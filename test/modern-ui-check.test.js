@@ -6,14 +6,14 @@ import vm from 'node:vm';
 import os from 'node:os';
 import {createHash} from 'node:crypto';
 import {modernNativeObservation,modernBuildBinding} from '../scripts/local-headless-desktop-check.mjs';
-import {matrix,workspaceStates,makeWorkspacePlan,makeDialogPlan,makeClearPlan,assertMeasurement,makeProbeReceipt,runModernPhase,layoutExpression,observedRuntime} from '../scripts/modern-ui-check.mjs';
+import {matrix,workspaceStates,makeWorkspacePlan,makeDialogPlan,makeClearPlan,makeRestorePlan,assertMeasurement,makeProbeReceipt,runModernPhase,layoutExpression,observedRuntime} from '../scripts/modern-ui-check.mjs';
 
 const launch={outputRoot:path.resolve('evidence-owned/output'),cdp:{port:9333,expectedUrl:'file:///C:/owned/resources/app.asar/src/renderer/index.html'}};
 const probeEvidence={observe:async()=>({}),persist:async({measurements})=>measurements.length};
 const receipt=path.resolve('evidence-owned/lifecycle.json');
 test('matrix explicitly covers all 48 renderer tuples and each workspace state',()=>{
  assert.equal(matrix.length,48);assert.equal(new Set(matrix.map(JSON.stringify)).size,48);
- for(const tuple of matrix){const plan=makeWorkspacePlan({launch,receipt,tuple});assert.ok(plan.steps.length<=100);assert.equal(plan.steps.filter(step=>step.op==='capture').length,workspaceStates.length);assert.equal(plan.steps[0].op,'poll');assert.ok(plan.steps.some(step=>step.op==='poll'&&step.expression.includes('devicePixelRatio')));assert.deepEqual(plan.steps.find(step=>step.op==='emulate'),{id:plan.steps.find(step=>step.op==='emulate').id,op:'emulate',width:tuple.width,height:tuple.height,scale:tuple.scale,mobile:false,touch:false});}
+ for(const tuple of matrix){const plan=makeWorkspacePlan({launch,receipt,tuple});assert.equal(plan.startupOwnershipAttempts,3);assert.ok(plan.steps.length<=100);assert.equal(plan.steps.filter(step=>step.op==='capture').length,workspaceStates.length);assert.equal(plan.steps[0].op,'poll');assert.ok(plan.steps.some(step=>step.op==='poll'&&step.expression.includes('devicePixelRatio')));assert.deepEqual(plan.steps.find(step=>step.op==='emulate'),{id:plan.steps.find(step=>step.op==='emulate').id,op:'emulate',width:tuple.width,height:tuple.height,scale:tuple.scale,mobile:false,touch:false});}
 });
 test('dialog plans require a real locked state and never submit or inject a bridge',()=>{
  for(const tuple of matrix){const plan=makeDialogPlan({launch,receipt,tuple});assert.ok(plan.steps[0].expression.includes('locked-state'));assert.equal(plan.steps.filter(step=>step.op==='capture').length,3);assert.equal(plan.steps.at(-2).selector,'#dialog-cancel');assert.ok(plan.steps.every(step=>step.selector!=='#dialog-submit'));assert.doesNotMatch(JSON.stringify(plan),/window[.]drive\s*=/);}
@@ -43,6 +43,8 @@ test('opt-in runner records every tuple, restores defaults and retains exact evi
  }
  assert.equal(events.filter(event=>event.state==='modern-ui-verified'&&event.kind==='matrix').length,96);
  assert.equal(records.filter(event=>event.kind==='matrix').length,96);
+ assert.equal(Object.hasOwn(plans.at(-1),'startupOwnershipAttempts'),false);
+ for(const p of plans.filter(p=>p.steps.some(step=>step.id==='modern-recovery-dialog')))assert.equal(Object.hasOwn(p,'startupOwnershipAttempts'),false);
  assert.ok(plans.at(-1).steps.some(step=>step.selector==='#language-setting'&&step.text==='en'));
 });
 
@@ -105,4 +107,9 @@ test('build binding rejects stale source, dirty or failed builds and wrong execu
   for(const patch of [{sourceCommit:'c'.repeat(40)},{sourceEndCommit:'c'.repeat(40)},{sourceClean:false},{buildExitCode:1},{installerExitCode:1},{artifactSha256:'d'.repeat(64)},{asarSha256:'d'.repeat(64)}]){await fs.writeFile(buildReceiptPath,JSON.stringify({...build,...patch}));await assert.rejects(bind());}
   await assert.rejects(modernBuildBinding({sourceCommit,executable,resourceHashes:{asar}}));
  } finally {await fs.rm(root,{recursive:true,force:true});}
+});
+
+test('modern dialog and clear attachments retry proof, restoration removes opt-in',()=>{
+ for(const p of [makeDialogPlan({launch,receipt,tuple:matrix[0]}),makeClearPlan({launch,receipt,phase:'workspace'}),makeClearPlan({launch,receipt,phase:'dialog'}),makeRestorePlan({launch,receipt,phase:'start'})])assert.equal(p.startupOwnershipAttempts,3);
+ assert.equal(Object.hasOwn(makeRestorePlan({launch,receipt,phase:'end',purpose:'recovery'}),'startupOwnershipAttempts'),false);
 });

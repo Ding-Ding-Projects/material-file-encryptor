@@ -1,3 +1,4 @@
+import {withCdpConnectionProof} from './cdp-connection-plan.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
@@ -84,7 +85,7 @@ export async function prepareEmptyLegacyGuiVault(gui,observed) {
 export async function checkMountedRuntime({fixture,launch,receipt,executePlan,prepareExit,modernProbeEvidence,modernUiCheck=process.env.MFE_MODERN_UI_CHECK==='1'}) {
  const modernUi={enabled:modernUiCheck};
  const checks=[];let sequence=0;
- const execute=async steps=>executePlan({version:1,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:60000,steps});
+ const execute=async (steps,purpose='runtime')=>executePlan(withCdpConnectionProof({version:1,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:60000,steps},purpose));
  const query=async expression=>{const result=await execute([{id:'query-'+(++sequence),op:'evaluate',expression}]);return result.results.at(-1).value;};
  const asyncQuery=async expression=>{const key='__mfeRuntime'+(++sequence);await execute([{id:'begin-'+sequence,op:'evaluate',expression:`window.${key}={done:false};Promise.resolve(${expression}).then(value=>{window.${key}={done:true,value}},()=>{window.${key}={done:true,failed:true}});true`},{id:'wait-'+sequence,op:'poll',expression:`window.${key}.done`,equals:true,intervalMs:200}]);const result=await query(`window.${key}`);assert.equal(result.failed,undefined,'Runtime bridge request failed.');return result.value;};
  const capture=id=>({id:id+'-capture',op:'capture',path:path.join(launch.outputRoot,'runtime-'+id+'.png'),overwrite:false});
@@ -190,6 +191,6 @@ export async function checkMountedRuntime({fixture,launch,receipt,executePlan,pr
  for(const language of ['yue','bilingual','en'])await execute([{id:'gui-language-'+language,op:'type',selector:'#language-setting',text:language,clear:true},{id:'gui-language-'+language+'-state',op:'poll',expression:`document.querySelector('#language-setting').value === ${JSON.stringify(language)}`,equals:true,intervalMs:200},capture('gui-language-'+language)]);
  checks.push('gui-built-theme-and-language-controls');
  const guiCleanup=await retireGuiVaultKey(gui);
- await prepareExit();const quit=await execute([{id:'graceful-quit',op:'evaluate',expression:"window.__mfeQuit={done:false};window.drive.verificationQuit().then(value=>{window.__mfeQuit={done:true,value}},()=>{window.__mfeQuit={done:true,failed:true}});true"},{id:'quit-restoration',op:'poll',expression:"window.__mfeQuit.done",equals:true,intervalMs:50},{id:'quit-proof',op:'evaluate',expression:"window.__mfeQuit"}]);const quitResult=quit.results.at(-1).value;assert.equal(quitResult.failed,undefined);assert.equal(quitResult.value.restored,true);checks.push('verification-quit-startup-restored');
+ await prepareExit();const quit=await execute([{id:'graceful-quit',op:'evaluate',expression:"window.__mfeQuit={done:false};window.drive.verificationQuit().then(value=>{window.__mfeQuit={done:true,value}},()=>{window.__mfeQuit={done:true,failed:true}});true"},{id:'quit-restoration',op:'poll',expression:"window.__mfeQuit.done",equals:true,intervalMs:50},{id:'quit-proof',op:'evaluate',expression:"window.__mfeQuit"}],'teardown');const quitResult=quit.results.at(-1).value;assert.equal(quitResult.failed,undefined);assert.equal(quitResult.value.restored,true);checks.push('verification-quit-startup-restored');
  return {quitRequested:true,modernUi,transportSetup:{folderBackendVerified:true,privateRepositoryValidationVerified:true,authenticatedPrivateTransportVerified:false},copyUpgrade:{realControls:true,upgradedFormat:2,originalFormat:1,bothMountedBytesVerified:true},guiVault:{createdThroughControls:true,unlockedThroughControls:true,pickerVerified:true,manualLetterNormalized:true,mountedBytesVerified:true,locked:true,...guiCleanup},startupRegistration:{initial:false,enabledReadback:enabled.enabled,disabledReadback:disabled.enabled,restored:quitResult.value.restored,verificationOnly:true},checks,rendererAssertionsVerified:true,mountedFilesystemVerified:true,nativeKeyboardVerified:false,pixelsInspected:false};
 }

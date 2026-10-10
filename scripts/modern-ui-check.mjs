@@ -1,3 +1,4 @@
+import {withCdpConnectionProof} from './cdp-connection-plan.mjs';
 // Plans attach only through the installed CDP driver and an owned Lowlevel receipt.
 // This module never launches or terminates a process and never replaces real state.
 import assert from 'node:assert/strict';
@@ -12,11 +13,11 @@ const quote = JSON.stringify;
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const tupleId = tuple => `${tuple.width}x${tuple.height}-${tuple.language}-${tuple.theme}-${String(tuple.scale).replace('.','_')}`;
 
-function plan(launch,receipt,steps) {
+function plan(launch,receipt,steps,purpose='runtime') {
  assert.ok(path.isAbsolute(launch.outputRoot));assert.ok(path.isAbsolute(receipt));
  assert.ok(Number.isInteger(launch.cdp.port)&&launch.cdp.port>=1024&&launch.cdp.port<=65535);
  assert.ok(launch.cdp.expectedUrl.startsWith('file:'));
- return {version:1,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:90000,steps};
+ return withCdpConnectionProof({version:1,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:90000,steps},purpose);
 }
 const poll = (id,expression) => ({id,op:'poll',expression,equals:true,intervalMs:100});
 const click = (id,selector) => ({id,op:'click',selector});
@@ -87,10 +88,10 @@ export function makeClearPlan({launch,receipt,phase}) {
  return plan(launch,receipt,steps);
 }
 
-export function makeRestorePlan({launch,receipt,phase}) {
+export function makeRestorePlan({launch,receipt,phase,purpose='control'}) {
  const steps=[];prepareTuple(steps,matrix[0],'modern-restore-'+phase);
  selectView(steps,'drive','modern-restore-drive-'+phase);
- return plan(launch,receipt,steps);
+ return plan(launch,receipt,steps,purpose);
 }
 
 export async function runModernPhase({launch,receipt,phase,executePlan,probeEvidence,report=event=>console.log(JSON.stringify(event)),record=async event=>fs.appendFile(path.join(launch.runRoot,'modern-ui-measurements.jsonl'),JSON.stringify(event)+'\n')}) {
@@ -128,8 +129,8 @@ export async function runModernPhase({launch,receipt,phase,executePlan,probeEvid
   // A failed dialog can remain open. Closing it is an ordinary cancel operation,
   // not replacement of product state. The caller still owns graceful recovery.
   try {
-   if(phase==='dialog')await executePlan(plan(launch,receipt,[{id:'modern-recovery-dialog',op:'evaluate',expression:"(()=>{const dialog=document.querySelector('#vault-dialog');if(dialog.open)document.querySelector('#dialog-cancel').click();return !dialog.open;})()"}]));
-   await executePlan(makeRestorePlan({launch,receipt,phase:phase+'-end'}));
+   if(phase==='dialog')await executePlan(plan(launch,receipt,[{id:'modern-recovery-dialog',op:'evaluate',expression:"(()=>{const dialog=document.querySelector('#vault-dialog');if(dialog.open)document.querySelector('#dialog-cancel').click();return !dialog.open;})()"}],'recovery'));
+   await executePlan(makeRestorePlan({launch,receipt,phase:phase+'-end',purpose:'recovery'}));
   }catch(error){await record({version:1,phase,status:'restoration-failed',observedAt:new Date().toISOString()});if(!failure)throw error;}
  }
 }

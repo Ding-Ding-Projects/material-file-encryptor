@@ -1,3 +1,4 @@
+import {withCdpConnectionProof} from './cdp-connection-plan.mjs';
 import {prepareRuntimeFixture,checkMountedRuntime,forgetRuntimeFixture} from './preview-runtime-fixture.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -15,7 +16,7 @@ export function makeLaunch({executable,runRoot,port}) {
  const expectedUrl=pathToFileURL(path.join(path.dirname(executable),'resources','app.asar','src','renderer','index.html')).href;
  return {executable,arguments:['--desktop-check',`--verification-profile=${profile}`,`--remote-debugging-port=${port}`,'--remote-debugging-address=127.0.0.1'],runRoot,outputRoot,cdp:{port,expectedUrl}};
 }
-export function makeBaselinePlan(launch,receipt) {return {version:1,startupOwnershipAttempts:3,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:30000,steps:[{id:'ready',op:'poll',expression:"document.readyState === 'complete' && typeof window.drive?.status === 'function'",equals:true,intervalMs:200},{id:'baseline',op:'capture',path:path.join(launch.outputRoot,'baseline.png'),overwrite:false}]};}
+export function makeBaselinePlan(launch,receipt) {return withCdpConnectionProof({version:1,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:30000,steps:[{id:'ready',op:'poll',expression:"document.readyState === 'complete' && typeof window.drive?.status === 'function'",equals:true,intervalMs:200},{id:'baseline',op:'capture',path:path.join(launch.outputRoot,'baseline.png'),overwrite:false}]},'capture');}
 export function makeInterfacePlan(launch,receipt) {
  const steps=[];const poll=(id,expression,equals)=>steps.push({id,op:'poll',expression,equals,intervalMs:100});
  const capture=id=>steps.push({id:id+'-capture',op:'capture',path:path.join(launch.outputRoot,id+'.png'),overwrite:false});
@@ -31,8 +32,7 @@ export function makeInterfacePlan(launch,receipt) {
  click('locked-recycle','[data-view="recycle"]',"!document.querySelector('#view-recycle').hidden && document.querySelector('#recycle-list').children.length === 0 && document.querySelector('#restore-recycled').disabled");
  click('help','[data-view="help"]',"!document.querySelector('#view-help').hidden");
  click('return-drive','[data-view="drive"]',"!document.querySelector('#view-drive').hidden");
- const {startupOwnershipAttempts,...connection}=makeBaselinePlan(launch,receipt);
- return {...connection,timeoutMs:90000,steps};
+ return withCdpConnectionProof({...makeBaselinePlan(launch,receipt),timeoutMs:90000,steps},'control');
 }
 async function requirePixelReview(runRoot,image) {
  const hash=createHash('sha256').update(await fs.readFile(image)).digest('hex');
@@ -64,7 +64,7 @@ async function appendStepReceipt(runRoot,value) {
 export function createPlanRecorder(runRoot,execute) {
  let sequence=0;
  return async plan=>{
-  const record={version:1,kind:'cdp-plan',sequence:++sequence,startedAt:new Date().toISOString(),steps:plan.steps.map(({id,op})=>({id,op}))};
+  const record={version:1,kind:'cdp-plan',sequence:++sequence,startupOwnershipAttempts:plan.startupOwnershipAttempts??1,startedAt:new Date().toISOString(),steps:plan.steps.map(({id,op})=>({id,op}))};
   try {const result=await execute(plan);record.result=result;return result;}
   catch(error){record.result=error.helperResult||{ok:false,code:error.helperCode||'VERIFICATION_HELPER_FAILED'};record.failure={code:error.helperCode||'VERIFICATION_HELPER_FAILED',step:error.helperStep||null,...error.helperDetails};throw error;}
   finally {record.finishedAt=new Date().toISOString();await appendStepReceipt(runRoot,record);}
@@ -118,7 +118,7 @@ async function reviewAllCaptures(receipt,runRoot,outputRoot) {
 }
 async function verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,launch,executePlan}) {
  await command(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30']);const lifecycle=JSON.parse(await fs.readFile(statePath,'utf8'));
- const make=steps=>({version:1,receipt:statePath,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:15000,steps});
+ const make=steps=>withCdpConnectionProof({version:1,receipt:statePath,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:15000,steps},'control');
  await executePlan(make([{id:'keyboard-target-ready',op:'poll',expression:"document.querySelector('#file-search').getClientRects().length > 0 && !document.querySelector('#import-button').disabled",equals:true,intervalMs:200},{id:'keyboard-focus-setup',op:'evaluate',expression:"document.querySelector('#file-search').focus();document.activeElement.id === 'file-search'"},{id:'keyboard-empty-baseline',op:'poll',expression:"document.querySelector('#file-search').value === ''",equals:true,intervalMs:100},{id:'keyboard-before',op:'poll',expression:"document.activeElement.id",equals:'file-search',intervalMs:100}]));
  const input=await command(python,[lowlevel,'call','win_send_keys',...transportArgs],{hwnd:lifecycle.hwnd,keys:['tab']});
  if(input.window_hwnd!==lifecycle.hwnd)throw new Error('Native key result does not bind the owned window.');
@@ -139,12 +139,12 @@ export async function finishOwnedLifecycle({runtime,launch,statePath,python,lowl
   try {
    await runCommand(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','5']);
    await runCommand(python,[lowlevel,'prepare-exit',statePath]);
-   const quit=await executePlan({version:1,receipt:statePath,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:15000,steps:[
+   const quit=await executePlan(withCdpConnectionProof({version:1,receipt:statePath,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:15000,steps:[
     {id:'recovery-quit-route',op:'poll',expression:"typeof window.drive?.verificationQuit === 'function'",equals:true,intervalMs:100},
     {id:'recovery-quit',op:'evaluate',expression:"window.__mfeRecoveryQuit={done:false};window.drive.verificationQuit().then(value=>{window.__mfeRecoveryQuit={done:true,value}},()=>{window.__mfeRecoveryQuit={done:true,failed:true}});true"},
     {id:'recovery-quit-settled',op:'poll',expression:'window.__mfeRecoveryQuit.done',equals:true,intervalMs:50},
     {id:'recovery-quit-proof',op:'evaluate',expression:'window.__mfeRecoveryQuit'}
-   ]});
+   ]},'recovery'));
    const proof=quit.results?.at(-1)?.value;
    if(proof?.done!==true||proof.failed||proof.value?.restored!==true)throw Object.assign(new Error('Verification quit did not confirm startup restoration.'),{helperCode:'VERIFICATION_QUIT_NOT_RESTORED'});
    recovery.restored=true;quitRequested=true;
@@ -236,7 +236,7 @@ export async function runLocalHeadlessCheck(env=process.env) {
  const modernProbeEvidence=modernBinding?createModernProbeEvidence({binding:modernBinding,outputRoot:launch.outputRoot,helperPath:cdp,validate:input=>command(process.execPath,[path.join(skillRoot,'diagnose-built-ui-layout','scripts','validate-layout-probe.mjs'),'--input',input]),observe:async()=>{
   const sourceCommit=await readModernSource();assert.equal(sourceCommit,modernBinding.sourceCommit);
   const window=await command(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30']);
-  const {startupOwnershipAttempts,...inspectionPlan}=plan;
+  const inspectionPlan=withCdpConnectionProof(plan,'modern-observation');
   const bytes=await fs.readFile(statePath),state=JSON.parse(bytes),inspection=await command(process.execPath,[cdp,'inspect'],inspectionPlan);
   const processSha256=createHash('sha256').update(await fs.readFile(executable)).digest('hex');assert.equal(processSha256,modernBinding.artifactSha256);
   const native=await command(python,[fileURLToPath(new URL('./native-window-observation.py',import.meta.url))],{helper:installedLowlevel,receipt:statePath});
