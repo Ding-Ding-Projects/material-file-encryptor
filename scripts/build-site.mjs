@@ -1,5 +1,10 @@
 import fs from 'node:fs/promises';
+import {buildDocumentation,buildGallery} from '../docs/site/publication.mjs';
 await fs.mkdir('out/site/images', { recursive: true });
 await fs.cp('docs/site', 'out/site', { recursive: true });
 await fs.cp('docs/images', 'out/site/images', { recursive: true });
+const home=await fs.readFile('docs/site/index.html','utf8');
+const articles=await buildDocumentation(process.cwd(),'out/site',home);
+const images=await buildGallery(process.cwd(),'out/site',home);
+console.log(`Published ${articles.length} complete documentation/wiki articles and ${images.length} original capture records.`);
 console.log('Staged GitHub Pages site in out/site.');

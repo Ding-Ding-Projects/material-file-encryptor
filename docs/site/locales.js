@@ -1,5 +1,23 @@
 // Public Cantonese translations. Product names, commands and revision IDs stay exact.
 export const cantonese = Object.freeze({
+'Documentation library':'文件總覽',
+'Wiki':'維基',
+'Capture gallery':'畫面紀錄集',
+'Documentation navigation':'文件導覽',
+'Find in this page':'喺本頁尋找',
+'Complete source article':'完整原始文章',
+'Suggested articles':'建議文章',
+'All documentation categories':'所有文件分類',
+'Open this wiki article':'開啟呢篇維基文章',
+'Open original image':'開啟原始圖片',
+'Link to this section':'連結到呢一節',
+'Actual capture time':'實際擷取時間',
+'Original image SHA-256':'原始圖片 SHA-256',
+'Source revision':'原始碼版本',
+'Image dimensions':'圖片尺寸',
+'Theme / recorded scale':'主題／紀錄比例',
+'Unavailable in the original per-image provenance.':'原始逐張圖片紀錄未提供。',
+
 'A Windows virtual drive · Preview':'Windows 虛擬磁碟 · 預覽版',
 'An open-source Windows preview. Verification is tied to exact source and installer bytes.':'開源 Windows 預覽版。每項驗證都綁定精確原始碼同安裝程式位元組。',
 'These diagrams explain the architecture. Source-bound records separately verify native mounting, packaged behavior, installed execution and removal. Check the current preview status below. Fresh sign-in is outside this preview.':'呢啲圖解說明架構。有原始碼綁定嘅紀錄分別驗證原生掛載、封裝行為、安裝後執行同移除。請睇下面嘅目前預覽版狀態。全新登入唔屬於呢次預覽驗證。',

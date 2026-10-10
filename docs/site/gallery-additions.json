@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "records": [],
+  "pending": "New runtime captures are not accepted by this catalogue. They require reviewed original pixels, public-safe provenance, source and image hashes, dimensions, capture method, and explicit approval before addition."
+}

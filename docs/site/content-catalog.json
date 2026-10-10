@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "articles": [
+    "docs/features/README.md",
+    "docs/features/desktop/README.md",
+    "docs/features/desktop/package-integrity.md",
+    "docs/features/desktop/runtime-evidence.md",
+    "docs/features/drive/README.md",
+    "docs/features/interface/README.md",
+    "docs/features/interface/modern-fields.md",
+    "docs/features/interface/startup-registration.md",
+    "docs/features/release/README.md",
+    "docs/features/release/preview-delivery.md",
+    "docs/features/release/preview-verification.md",
+    "docs/features/storage/README.md",
+    "docs/features/storage/git-transport.md",
+    "docs/features/storage/history-and-recycle-bin.md",
+    "docs/features/storage/native-vault.md",
+    "DESIGN.md"
+  ],
+  "categories": ["desktop", "drive", "interface", "release", "storage"],
+  "wiki": {
+    "status": "available",
+    "source": "https://github.com/Ding-Ding-Projects/material-file-encryptor/wiki",
+    "sourceCommit": "4b6ba31ba9537d62aaf6e9caddef13d7a39bf4bf",
+    "files": ["Home.md"],
+    "previousBoundary": "An earlier attempt returned Repository not found. A subsequent Git CLI read succeeded; this snapshot contains every Markdown page in that fetched revision."
+  },
+  "excluded": [
+    {"path": "docs/site/README.md", "reason": "Website authoring instructions, not a product documentation article."},
+    {"path": "docs/site/DESIGN.md", "reason": "Website design brief, not a product documentation article."}
+  ]
+}
