@@ -86,6 +86,10 @@ if (!(Test-Path -LiteralPath $sevenZipExecutable) -or (Get-BootstrapDigest $seve
   Move-Item -LiteralPath $sevenZipStage -Destination $sevenZipRoot
 }
 $env:MFE_ARCHIVE_EXECUTABLE = $sevenZipExecutable
+$nugetExecutable = Join-Path $tools "nuget-$($manifest.nuget.version).exe"
+Get-Verified $manifest.nuget $nugetExecutable
+if ((Get-Item -LiteralPath $nugetExecutable).VersionInfo.FileVersion -ne $manifest.nuget.fileVersion) { throw 'Pinned NuGet version mismatch.' }
+$env:MFE_NUGET_EXECUTABLE = $nugetExecutable
 $nodeArchive = Join-Path $tools "node-$($manifest.node.version).zip"
 Get-Verified $manifest.node $nodeArchive
 $node = Join-Path $tools "node-v$($manifest.node.version)-win-x64"

@@ -22,11 +22,13 @@ Copy-Item LICENSE out/native/notices/MaterialFileEncryptor-License.txt
 Invoke-Checked { npm.cmd run package -- --platform=win32 --arch=x64 }
 Invoke-Checked { node scripts/package-privacy.mjs out/material-file-encryptor-win32-x64 }
 if ($Installer) {
-  # Keep Squirrel's supported vendor layout, replacing its legacy ZIP writer only.
+  # Keep Squirrel's supported vendor layout with pinned archive and NuGet tools.
   $vendorStage = Join-Path $root ('out\squirrel-vendor-' + [Guid]::NewGuid().ToString('N'))
   Copy-Item -LiteralPath (Join-Path $root 'node_modules\electron-winstaller\vendor') -Destination $vendorStage -Recurse
   Copy-Item -LiteralPath $env:MFE_ARCHIVE_EXECUTABLE -Destination (Join-Path $vendorStage '7z.exe') -Force
   if ((Get-BootstrapDigest (Join-Path $vendorStage '7z.exe')) -ne $manifest.sevenZip.executableSha256) { throw 'Staged archive writer mismatch.' }
+  Copy-Item -LiteralPath $env:MFE_NUGET_EXECUTABLE -Destination (Join-Path $vendorStage 'nuget.exe') -Force
+  if ((Get-BootstrapDigest (Join-Path $vendorStage 'nuget.exe')) -ne $manifest.nuget.sha256) { throw 'Staged NuGet mismatch.' }
   $env:MFE_SQUIRREL_VENDOR_DIRECTORY = $vendorStage
   try { Invoke-Checked { npm.cmd run make -- --platform=win32 --arch=x64 --from-package } }
   finally { Remove-Item Env:MFE_SQUIRREL_VENDOR_DIRECTORY -ErrorAction SilentlyContinue }

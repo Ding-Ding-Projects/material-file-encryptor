@@ -34,5 +34,11 @@
     "executableSha256": "15d4c788c148e3677e2fc1c4a01f191fb6669eba4f6acf8a465f0f1a6f1e1260",
     "extractorUrl": "https://github.com/ip7z/7zip/releases/download/26.04/7zr.exe",
     "extractorSha256": "256feca8e274e5da655e2a284fabafd9f554365eb164862089dacd4e8276d282"
+  },
+  "nuget": {
+    "version": "7.9.0",
+    "url": "https://dist.nuget.org/win-x86-commandline/v7.9.0/nuget.exe",
+    "sha256": "992d70cac5b06c38efec91806caba64cdcc07e6d963a0959dbbbaf264d33b800",
+    "fileVersion": "7.9.0.83"
   }
 }
