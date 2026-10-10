@@ -8,6 +8,7 @@ import {createHash} from 'node:crypto';
 import {spawn} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {createModernProbeEvidence} from './modern-ui-check.mjs';
+import {verificationScope,runIndependentModern,modernPhaseVerdict,assertModernCaptureInventory} from './modern-phase.mjs';
 import {pathToFileURL,fileURLToPath} from 'node:url';
 
 export function makeLaunch({executable,runRoot,port}) {
@@ -120,6 +121,7 @@ export function finalVerdict(receipt) {
 async function reviewAllCaptures(receipt,runRoot,outputRoot) {
  const records=(await fs.readFile(path.join(runRoot,'step-receipts.jsonl'),'utf8')).trim().split('\n').filter(Boolean).map(line=>JSON.parse(line));
  const captures=[];for(const name of (await fs.readdir(outputRoot)).filter(name=>name.endsWith('.png')).sort()){const file=path.join(outputRoot,name);const stat=await fs.lstat(file);if(!stat.isFile()||stat.isSymbolicLink())throw new Error('Capture inventory contains a non-file or link.');const bytes=await fs.readFile(file);const sha256=createHash('sha256').update(bytes).digest('hex');captures.push({path:file,sha256,bytes:bytes.length,provenance:captureProvenance(records,file,sha256)});}
+ if(receipt.verificationScope==='modern-only')assertModernCaptureInventory(captures,receipt.launch);
  const inventory={version:1,sourceCommit:receipt.sourceCommit,executableSha256:receipt.executableSha256,captures};await fs.writeFile(path.join(runRoot,'capture-inventory.json'),JSON.stringify(inventory,null,2));
  const unavailable=captures.filter(item=>!item.provenance).length;if(unavailable)throw new Error(`Capture provenance unavailable for ${unavailable} image(s).`);
  if(!captures.some(item=>path.basename(item.path)==='native-baseline.png')||!captures.some(item=>path.basename(item.path)==='native-keyboard-tab.png'))throw new Error('Required native baseline or keyboard capture is missing.');
@@ -205,12 +207,14 @@ export async function resumeCaptureReview(runRoot,{review=reviewAllCaptures}={})
  const receiptPath=path.join(runRoot,'verification.json');const receipt=JSON.parse(await fs.readFile(receiptPath,'utf8'));
  assert.equal(await fs.realpath(receipt.launch.runRoot),runRoot);assert.equal(path.resolve(receipt.launch.outputRoot),path.join(runRoot,'output'));
  assert.equal(receipt.failure,undefined);assert.equal(receipt.cleanup?.client_ok,true);assert.equal(receipt.cleanup?.recordedProcessesAbsent,true);assert.equal(receipt.cleanup?.desktopClosed,true);
- assert.equal(receipt.runtime?.mountedFilesystemVerified,true);assert.equal(receipt.runtime?.rendererAssertionsVerified,true);assert.equal(receipt.fixtureCleanup?.ownedCredentialForgotten,true);
+ if(receipt.verificationScope==='modern-only'){const pending=modernPhaseVerdict(receipt).pending.filter(reason=>reason!=='Every capture inspected and provenance-bound');assert.deepEqual(pending,[]);}
+ else {assert.equal(receipt.runtime?.mountedFilesystemVerified,true);assert.equal(receipt.runtime?.rendererAssertionsVerified,true);}
+ assert.equal(receipt.fixtureCleanup?.ownedCredentialForgotten,true);
  const hash=async file=>createHash('sha256').update(await fs.readFile(file)).digest('hex');
  assert.equal(await hash(receipt.launch.executable),receipt.executableSha256);
  for(const [key,file] of Object.entries({asar:path.join(path.dirname(receipt.launch.executable),'resources','app.asar'),nativeHost:path.join(path.dirname(receipt.launch.executable),'resources','native','MaterialFileEncryptor.Host.exe')}))assert.equal(await hash(file),receipt.resourceHashes[key]);
  receipt.captureReview=await review(receipt,runRoot,receipt.launch.outputRoot);delete receipt.reviewPending;
- Object.assign(receipt,finalVerdict(receipt));receipt.pixelsInspected=receipt.captureReview?.verified===true;
+ Object.assign(receipt,receipt.verificationScope==='modern-only'?modernPhaseVerdict(receipt):finalVerdict(receipt));receipt.pixelsInspected=receipt.captureReview?.verified===true;
  await fs.writeFile(receiptPath,JSON.stringify(receipt,null,2));return receipt;
 }
 
@@ -257,7 +261,8 @@ export async function retireNeverLaunchedFixture({fixture,launchAttempted,stateP
 }
 
 export async function runLocalHeadlessCheck(env=process.env) {
- if(env.MFE_CAPTURE_REVIEW_ROOT){const receipt=await resumeCaptureReview(env.MFE_CAPTURE_REVIEW_ROOT);const evidenceDir=path.resolve(env.MFE_DESKTOP_EVIDENCE_DIR||'out/evidence');const existingPath=path.join(evidenceDir,'desktop-check.json');const existing=JSON.parse(await fs.readFile(existingPath,'utf8'));assert.equal(existing.sourceCommit,receipt.sourceCommit);assert.equal(existing.executableSha256,receipt.executableSha256);assert.equal(path.resolve(existing.launch.runRoot),path.resolve(receipt.launch.runRoot));await fs.writeFile(existingPath,JSON.stringify({...existing,...receipt},null,2));console.log(JSON.stringify({reviewResumed:true,passed:receipt.passed,pending:receipt.pending}));if(!receipt.passed)throw new Error('Preserved review remains incomplete.');return receipt;}
+ const scope=verificationScope(env);const modernOnly=scope==='modern-only';
+ if(env.MFE_CAPTURE_REVIEW_ROOT){const receipt=await resumeCaptureReview(env.MFE_CAPTURE_REVIEW_ROOT);const evidenceDir=path.resolve(env.MFE_DESKTOP_EVIDENCE_DIR||'out/evidence');const existingPath=path.join(evidenceDir,receipt.verificationScope==='modern-only'?'modern-phase-check.json':'desktop-check.json');const existing=JSON.parse(await fs.readFile(existingPath,'utf8'));assert.equal(existing.sourceCommit,receipt.sourceCommit);assert.equal(existing.executableSha256,receipt.executableSha256);assert.equal(path.resolve(existing.launch.runRoot),path.resolve(receipt.launch.runRoot));await fs.writeFile(existingPath,JSON.stringify({...existing,...receipt},null,2));console.log(JSON.stringify({reviewResumed:true,passed:receipt.passed,pending:receipt.pending}));if(!receipt.passed)throw new Error('Preserved review remains incomplete.');return receipt;}
  if(process.platform!=='win32')throw new Error('The local isolated desktop route requires Windows.');
  const executable=await fs.realpath(path.resolve(env.MFE_DESKTOP_EXECUTABLE||'out/material-file-encryptor-win32-x64/MaterialFileEncryptor.exe'));
  const runRoot=await createLiveRunRoot();const launch=makeLaunch({executable,runRoot,port:await freePort()});
@@ -274,13 +279,13 @@ export async function runLocalHeadlessCheck(env=process.env) {
  if(env.MFE_HEADLESS_EXECUTE==='1'&&!/^[a-f0-9]{40}$/.test(env.MFE_SOURCE_COMMIT||''))throw new Error('Provide the exact packaged build source commit through MFE_SOURCE_COMMIT.');
  const sourceBinding=env.MFE_SOURCE_COMMIT||source;
  const resourceHashes={};for(const [name,file] of Object.entries({asar:path.join(path.dirname(executable),'resources','app.asar'),nativeHost:path.join(path.dirname(executable),'resources','native','MaterialFileEncryptor.Host.exe')}))resourceHashes[name]=createHash('sha256').update(await fs.readFile(file)).digest('hex');
- const receipt={version:1,transport,resourceHashes,route:'cheap-lowlevel-headless',sourceCommit:sourceBinding,executableSha256:createHash('sha256').update(await fs.readFile(executable)).digest('hex'),launch,preparedAt:new Date().toISOString(),launched:false,pixelsInspected:false,interactionsVerified:false};
+ const receipt={version:1,verificationScope:scope,transport,resourceHashes,route:'cheap-lowlevel-headless',sourceCommit:sourceBinding,executableSha256:createHash('sha256').update(await fs.readFile(executable)).digest('hex'),launch,preparedAt:new Date().toISOString(),launched:false,pixelsInspected:false,interactionsVerified:false};
  if(transport==='direct-cheap-cli') {
   const provenance=await command(env.MFE_PYTHON||'python',[lowlevel,'transport-provenance']);
   assert.equal(provenance.client_ok,true);assert.equal(provenance.transport,transport);assert.equal(Object.hasOwn(provenance,'endpoint'),false);
   receipt.transportProvenance=provenance.transportProvenance;
  }
- const modernBinding=env.MFE_MODERN_UI_CHECK==='1'?await modernBuildBinding({buildReceiptPath:env.MFE_BUILD_RECEIPT,sourceCommit:sourceBinding,executable,resourceHashes}):null;
+ const modernBinding=(modernOnly||env.MFE_MODERN_UI_CHECK==='1')?await modernBuildBinding({buildReceiptPath:env.MFE_BUILD_RECEIPT,sourceCommit:sourceBinding,executable,resourceHashes}):null;
  await fs.writeFile(path.join(runRoot,'prepared.json'),JSON.stringify(receipt,null,2));
  if(env.MFE_HEADLESS_EXECUTE!=='1') {console.log(JSON.stringify({prepared:true,launched:false,runRoot,requires:'Set MFE_HEADLESS_EXECUTE=1 only after reviewing the packaged executable and isolated profile arguments.'}));return receipt;}
  console.log(JSON.stringify({state:'source-bound-launch-prepared',runRoot,sourceCommit:receipt.sourceCommit,executableSha256:receipt.executableSha256,resourceHashes}));
@@ -299,7 +304,7 @@ export async function runLocalHeadlessCheck(env=process.env) {
  try {
   await command(python,[installedLowlevel,'self-test']);await command(process.execPath,[cdp,'self-test']);
   await command(python,[lowlevel,'preflight',...transportArgs,'--require','launch_on_headless_desktop','--require','list_headless_windows','--require','screenshot','--require','close_headless_desktop']);
-  if(env.MFE_RUNTIME_FIXTURE==='1') {if(!useAdapter)throw new Error('Runtime graceful-exit proof requires the project lifecycle adapter.');fixture=await prepareRuntimeFixture({executable,profile:path.join(runRoot,'profile')});receipt.fixture={root:fixture.root,prepared:fixture.prepared,driveLetter:fixture.driveLetter};}
+  if(modernOnly||env.MFE_RUNTIME_FIXTURE==='1') {if(!useAdapter)throw new Error('Runtime graceful-exit proof requires the project lifecycle adapter.');fixture=await prepareRuntimeFixture({executable,profile:path.join(runRoot,'profile')});receipt.fixture={root:fixture.root,prepared:fixture.prepared,driveLetter:fixture.driveLetter};}
   launchAttempted=true;receipt.launchAttempted=true;
   await command(python,[lowlevel,'launch',...transportArgs,'--state',statePath],launch);receipt.launched=true;
   if(transport==='direct-cheap-cli') {
@@ -311,7 +316,7 @@ export async function runLocalHeadlessCheck(env=process.env) {
   const initial=await recordNativeCapture(runRoot,path.join(launch.outputRoot,'native-baseline.png'),'native-baseline',()=>command(python,[lowlevel,'call','screenshot',...transportArgs],{hwnd:lifecycle.hwnd,output_path:path.join(launch.outputRoot,'native-baseline.png')}));
   await fs.writeFile(path.join(runRoot,'initial-capture-result.json'),JSON.stringify(initial,null,2));
   receipt.cdp=await executePlan(plan);
-  if(env.MFE_HEADLESS_INTERACTIONS==='1'||fixture) {receipt.baselineReview=await requirePixelReview(runRoot,path.join(launch.outputRoot,'native-baseline.png'));if(fixture){receipt.keyboard=await verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,launch,executePlan});runtime=await checkMountedRuntime({fixture,launch,receipt:statePath,executePlan,modernProbeEvidence,modernUiCheck:env.MFE_MODERN_UI_CHECK==='1',prepareExit:()=>command(python,[lowlevel,'prepare-exit',statePath])});receipt.runtime=runtime;}else receipt.interfaceWorkflow=await executePlan(makeInterfacePlan(launch,statePath));receipt.rendererAssertionsVerified=true;}
+  if(env.MFE_HEADLESS_INTERACTIONS==='1'||fixture) {receipt.baselineReview=await requirePixelReview(runRoot,path.join(launch.outputRoot,'native-baseline.png'));if(fixture){receipt.keyboard=await verifyNativeKeyboard({python,lowlevel,transportArgs,statePath,launch,executePlan});runtime=modernOnly?await runIndependentModern({fixture,launch,receipt:statePath,executePlan,probeEvidence:modernProbeEvidence}):await checkMountedRuntime({fixture,launch,receipt:statePath,executePlan,modernProbeEvidence,modernUiCheck:env.MFE_MODERN_UI_CHECK==='1',prepareExit:()=>command(python,[lowlevel,'prepare-exit',statePath])});if(modernOnly)receipt.modernPhase=runtime;else receipt.runtime=runtime;}else receipt.interfaceWorkflow=await executePlan(makeInterfacePlan(launch,statePath));receipt.rendererAssertionsVerified=true;}
  } catch(error) {failure=String(error.message).slice(0,200);receipt.failureDetails=safeFailureDetails(error.helperResult);}
  finally {try {
   if(fixture&&!launchAttempted){const retired=await retireNeverLaunchedFixture({fixture,launchAttempted,statePath});cleanup=retired.cleanup;receipt.fixtureCleanup=retired.fixtureCleanup;}
@@ -320,11 +325,11 @@ export async function runLocalHeadlessCheck(env=process.env) {
   receipt.launchAttempted=launchAttempted;
   Object.assign(receipt,{finishedAt:new Date().toISOString(),failure,cleanup,lifecycleClosure:cleanup,fixtureRetirement:receipt.fixtureCleanup||null,profileRetained:true});
   if(!failure&&runtime&&cleanup?.client_ok){try{receipt.captureReview=await reviewAllCaptures(receipt,runRoot,launch.outputRoot);}catch(error){receipt.reviewPending=String(error.message).slice(0,200);}}
-  Object.assign(receipt,finalVerdict(receipt));receipt.pixelsInspected=receipt.captureReview?.verified===true;receipt.interactionsVerified=runtime?.rendererAssertionsVerified===true;
+  Object.assign(receipt,receipt.verificationScope==='modern-only'?modernPhaseVerdict(receipt):finalVerdict(receipt));receipt.pixelsInspected=receipt.captureReview?.verified===true;receipt.interactionsVerified=runtime?.rendererAssertionsVerified===true;
   await fs.writeFile(path.join(runRoot,'verification.json'),JSON.stringify(receipt,null,2));
   const evidenceDir=path.resolve(env.MFE_DESKTOP_EVIDENCE_DIR||'out/evidence');await fs.mkdir(evidenceDir,{recursive:true});
   const compatible={...receipt,platform:'win32',packagedArtifact:{launchedBuiltArtifact:receipt.launched,asar:Boolean(resourceHashes.asar),nativeHelperPresent:Boolean(resourceHashes.nativeHost)},mountedFilesystemChecked:runtime?.mountedFilesystemVerified===true,startupRegistration:runtime?.startupRegistration||null,fixtureRetained:Boolean(fixture&&!(receipt.fixtureCleanup?.ownedCredentialForgotten&&cleanup?.client_ok&&(cleanup?.recordedProcessesAbsent||cleanup?.neverLaunched))),fixturePreservedByDesign:Boolean(fixture),fixtureRetentionReason:fixture?'Owned evidence retained; safe only after credential removal and process exit or proven never-attempted launch':null,cleanupErrors:cleanup?.client_ok===true?[]:[{phase:'owned-lifecycle',reason:cleanup?.reason||'Cleanup not verified'}]};
-  await fs.writeFile(path.join(evidenceDir,'desktop-check.json'),JSON.stringify(compatible,null,2));}
+  await fs.writeFile(path.join(evidenceDir,modernOnly?'modern-phase-check.json':'desktop-check.json'),JSON.stringify(compatible,null,2));}
  console.log(JSON.stringify({runRoot,launched:receipt.launched,passed:receipt.passed,pixelsInspected:receipt.pixelsInspected,pending:receipt.pending}));
  if(failure||cleanup?.ok===false)throw new Error(failure||'Owned lifecycle cleanup failed.');if(!receipt.passed)throw new Error('Desktop verification is incomplete: '+receipt.pending.join('; '));return receipt;
 }
