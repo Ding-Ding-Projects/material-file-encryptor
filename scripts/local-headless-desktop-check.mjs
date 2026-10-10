@@ -15,7 +15,7 @@ export function makeLaunch({executable,runRoot,port}) {
  const expectedUrl=pathToFileURL(path.join(path.dirname(executable),'resources','app.asar','src','renderer','index.html')).href;
  return {executable,arguments:['--desktop-check',`--verification-profile=${profile}`,`--remote-debugging-port=${port}`,'--remote-debugging-address=127.0.0.1'],runRoot,outputRoot,cdp:{port,expectedUrl}};
 }
-export function makeBaselinePlan(launch,receipt) {return {version:1,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:30000,steps:[{id:'ready',op:'poll',expression:"document.readyState === 'complete' && typeof window.drive?.status === 'function'",equals:true,intervalMs:200},{id:'baseline',op:'capture',path:path.join(launch.outputRoot,'baseline.png'),overwrite:false}]};}
+export function makeBaselinePlan(launch,receipt) {return {version:1,startupOwnershipAttempts:3,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:30000,steps:[{id:'ready',op:'poll',expression:"document.readyState === 'complete' && typeof window.drive?.status === 'function'",equals:true,intervalMs:200},{id:'baseline',op:'capture',path:path.join(launch.outputRoot,'baseline.png'),overwrite:false}]};}
 export function makeInterfacePlan(launch,receipt) {
  const steps=[];const poll=(id,expression,equals)=>steps.push({id,op:'poll',expression,equals,intervalMs:100});
  const capture=id=>steps.push({id:id+'-capture',op:'capture',path:path.join(launch.outputRoot,id+'.png'),overwrite:false});
@@ -31,7 +31,8 @@ export function makeInterfacePlan(launch,receipt) {
  click('locked-recycle','[data-view="recycle"]',"!document.querySelector('#view-recycle').hidden && document.querySelector('#recycle-list').children.length === 0 && document.querySelector('#restore-recycled').disabled");
  click('help','[data-view="help"]',"!document.querySelector('#view-help').hidden");
  click('return-drive','[data-view="drive"]',"!document.querySelector('#view-drive').hidden");
- return {...makeBaselinePlan(launch,receipt),timeoutMs:90000,steps};
+ const {startupOwnershipAttempts,...connection}=makeBaselinePlan(launch,receipt);
+ return {...connection,timeoutMs:90000,steps};
 }
 async function requirePixelReview(runRoot,image) {
  const hash=createHash('sha256').update(await fs.readFile(image)).digest('hex');
@@ -235,7 +236,8 @@ export async function runLocalHeadlessCheck(env=process.env) {
  const modernProbeEvidence=modernBinding?createModernProbeEvidence({binding:modernBinding,outputRoot:launch.outputRoot,helperPath:cdp,validate:input=>command(process.execPath,[path.join(skillRoot,'diagnose-built-ui-layout','scripts','validate-layout-probe.mjs'),'--input',input]),observe:async()=>{
   const sourceCommit=await readModernSource();assert.equal(sourceCommit,modernBinding.sourceCommit);
   const window=await command(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30']);
-  const bytes=await fs.readFile(statePath),state=JSON.parse(bytes),inspection=await command(process.execPath,[cdp,'inspect'],plan);
+  const {startupOwnershipAttempts,...inspectionPlan}=plan;
+  const bytes=await fs.readFile(statePath),state=JSON.parse(bytes),inspection=await command(process.execPath,[cdp,'inspect'],inspectionPlan);
   const processSha256=createHash('sha256').update(await fs.readFile(executable)).digest('hex');assert.equal(processSha256,modernBinding.artifactSha256);
   const native=await command(python,[fileURLToPath(new URL('./native-window-observation.py',import.meta.url))],{helper:installedLowlevel,receipt:statePath});
   const observation=modernNativeObservation({native,window,state,launch,sourceCommit,launchReceiptSha256:createHash('sha256').update(bytes).digest('hex'),processSha256,inspection,profileResolved:await fs.realpath(path.join(runRoot,'profile'))});
