@@ -5,11 +5,15 @@
 - [x] Independently download normal v1.75.1 and verify all four asset hashes/sizes, actual payload privacy and archive integrity.
 - [x] Preserve and inspect the unsuccessful 83-image runtime before modern-matrix entry, with separate supplemental fixture retirement.
 - [x] Integrate independently reviewed upgrade-letter and fixture-retirement source repairs; pass three and 32 focused checks respectively.
-- [ ] Rebuild and execute the integrated repairs; source checks alone do not satisfy runtime acceptance.
+- [x] Rebuild source ff244c78 through both exact root entrypoints; verify 812 privacy entries, 739 CRC entries and independently downloaded v1.87.1 assets.
+- [ ] Complete actual integrated runtime acceptance: DYWZMv retained 75 originals and zero modern tuples; original ancestry/closure failures remain unchanged.
 - [ ] Complete 432 matrix state captures and 13 baseline clear-control captures, plus native and workflow evidence.
-- [ ] Verify responsive candidate 1028f4d, preserving the preceding 108 reviewed originals and 12 narrow-gallery exclusions.
+- [x] Inspect all 127 responsive candidate 1028f4d page originals from 90 tuples and 108 clear checks, with no visible privacy or overflow findings.
+- [ ] Complete candidate 1028f4d browser lifecycle acceptance; category and gallery original closure remain rejected. Preserve preceding captures and exclusion records.
 - [ ] Resolve browser identity-evidence gaps without weakening strict ownership checks or substituting later absence.
-- [ ] Publish every eligible unique current original with complete provenance through the existing product gallery.
+- [x] Preserve independently reviewed gallery grouping/projection candidate 67c19965 with 27 focused checks; inventory remains 14 historical originals and two exclusions.
+- [ ] Build and verify the changed gallery in a genuine isolated browser, then publish every eligible unique current original with complete provenance.
+- [ ] Complete and independently review the separate modern-phase verifier without changing the full-workflow verdict.
 - [ ] Complete final-release downloaded execution, genuine installation, installed workflows and removal.
 - [ ] Verify complete deployed documentation/wiki, routes, assets, both clear controls and exact About homepage.
 - [ ] Establish native physical-scale evidence or retain its explicit unsupported-route limitation.
