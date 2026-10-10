@@ -50,6 +50,7 @@
 
 ## Preservation follow-up
 
-- [x] Inspect rebuilt packages after private local task-data exclusion. Candidates `ca9d63c` and `81cba398` passed actual 812-entry privacy and 739-entry integrity checks. Independent v1.25.1 and v1.27.1 payload inspection also found zero private task-directory entries. Local 57a04e16 outputs stay quarantined.
+- [x] Inspect rebuilt packages after private local task-data exclusion. Candidates through `3e416a7` passed actual 812-entry privacy and 739-entry integrity checks. Independent v1.25.1, v1.27.1 and v1.31.1 payload inspection also found zero private task-directory entries. Local 57a04e16 outputs stay quarantined.
+- [x] Retain exact incomplete process rows privately and verify bounded pre-attachment proof routing without partial-action replay; runtime acceptance remains a separate unchecked item.
 - [ ] Complete the final modern 48-tuple runtime matrix and source-bound installed verification.
 - [ ] Complete responsive website acceptance with actual captured dimensions and strict target isolation.
