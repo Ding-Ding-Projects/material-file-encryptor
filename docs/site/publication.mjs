@@ -70,7 +70,7 @@ async function markdownFiles(directory) {
 export async function buildDocumentation(root,output,home) {
  const catalog=JSON.parse(await fs.readFile(path.join(root,'docs/site/content-catalog.json'),'utf8'));
  if(catalog.version!==1||!Array.isArray(catalog.articles)||new Set(catalog.articles).size!==catalog.articles.length||catalog.articles.some(file=>!/^docs\/features\/[a-z0-9/-]+\.md$/i.test(file)&&file!=='DESIGN.md'))throw new Error('Invalid documentation catalogue');
- if(!/^[a-f0-9]{40}$/.test(catalog.wiki.sourceCommit)||catalog.wiki.source!==repository+'/wiki'||catalog.wiki.files.some(file=>!/^[-a-z0-9]+\.md$/i.test(file)))throw new Error('Invalid wiki provenance');
+ if(!/^[a-f0-9]{40}$/.test(catalog.wiki.sourceCommit)||catalog.wiki.source!==repository+'/wiki'||catalog.wiki.files.some(file=>!/^[-_a-z0-9]+\.md$/i.test(file)))throw new Error('Invalid wiki provenance');
  const actual=(await markdownFiles(path.join(root,'docs/features'))).map(file=>path.relative(root,file).replaceAll('\\','/')).sort();
  const expected=catalog.articles.filter(file=>file.startsWith('docs/features/')).sort();
  if(JSON.stringify(actual)!==JSON.stringify(expected))throw new Error('Documentation inventory differs from feature articles');

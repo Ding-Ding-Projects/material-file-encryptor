@@ -18,16 +18,31 @@
     "docs/features/storage/native-vault.md",
     "DESIGN.md"
   ],
-  "categories": ["desktop", "drive", "interface", "release", "storage"],
+  "categories": [
+    "desktop",
+    "drive",
+    "interface",
+    "release",
+    "storage"
+  ],
   "wiki": {
     "status": "available",
     "source": "https://github.com/Ding-Ding-Projects/material-file-encryptor/wiki",
-    "sourceCommit": "4b6ba31ba9537d62aaf6e9caddef13d7a39bf4bf",
-    "files": ["Home.md"],
+    "sourceCommit": "761258a8dcf0df4fb57d4099ed30741f1728795d",
+    "files": [
+      "CLOSEOUT_PROMPT.md",
+      "Home.md"
+    ],
     "previousBoundary": "An earlier attempt returned Repository not found. A subsequent Git CLI read succeeded; this snapshot contains every Markdown page in that fetched revision."
   },
   "excluded": [
-    {"path": "docs/site/README.md", "reason": "Website authoring instructions, not a product documentation article."},
-    {"path": "docs/site/DESIGN.md", "reason": "Website design brief, not a product documentation article."}
+    {
+      "path": "docs/site/README.md",
+      "reason": "Website authoring instructions, not a product documentation article."
+    },
+    {
+      "path": "docs/site/DESIGN.md",
+      "reason": "Website design brief, not a product documentation article."
+    }
   ]
 }

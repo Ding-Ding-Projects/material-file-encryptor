@@ -2,6 +2,14 @@
 
 The first preview combines encrypted format 2 storage, Git snapshot history, folder and private GitHub transport, History, Recycle Bin, and an editable drive-letter picker. Verification uses synthetic vaults and isolated profiles. Existing user vaults and installations are not test fixtures.
 
+## Current continuation, 2026-10-10
+
+Source `55ebe8bb` integrates strict direct-CLI transport provenance, comparison with actual persisted launch bytes before HWND lookup/capture, and independent downloaded-payload/verifier source identities. Both runtime review lenses are dry; installer provenance passed 11 rejection checks. The frozen source55 local build completed both exact entrypoints with unchanged source/index/owning branch; current runtime acceptance remains pending.
+
+Both exact root entrypoints passed at frozen `ae4ce996` with unchanged source. Its normal release `v1.43.1` was independently downloaded and all four hosted hashes, complete archive integrity, 644 safely extracted payload files and actual 84-entry ASAR privacy passed. No installed lifecycle is claimed. Normal `v1.50.1` targets `55ebe8bb` and its successful production workflow attaches all four expected assets; all four assets were independently downloaded, 644 payload files safely extracted, all 739 archive entries checked and 812 privacy entries accepted with zero rejected. Installed lifecycle acceptance remains unfinished.
+
+The documentation deployment at `aac061e1` passed 51 exact live file hashes, 17 complete immutable article hashes, 59 anchors, 738 internal links/assets and eight excluded-path checks. Fourteen reviewed historical originals retain exact source boundaries. Two path-bearing original captures are excluded from current delivery and preserved privately without alteration. Current browser interaction and rendered geometry remain pending.
+
 ## Reproduced defects and repairs
 
 - Storage subprocesses now receive closed standard input. Standard output, standard error and process exit share bounded cancellation. This prevents an invisible prompt or inherited pipe from keeping synchronization active indefinitely.
@@ -39,10 +47,10 @@ Local application verification uses the installed hidden-desktop route through `
 
 Publication is automatic for every branch push and manual dispatch, with exact source and package evidence. Tags cannot retrigger publication. Every delivery is non-draft and non-prerelease. See [package integrity and publication](../desktop/package-integrity.md).
 
-Automatic updates, permanent history purging, fresh-sign-in certification and broad provider/operating-system certification are outside this preview. GitHub Projects is unavailable with the current authorization. The wiki is enabled in repository metadata but its Git endpoint returns `Repository not found`; checked-in categorized documentation remains available.
+Automatic updates, permanent history purging, fresh-sign-in certification and broad provider/operating-system certification are outside this preview. GitHub Projects is unavailable with the current authorization. The wiki is readable at revision `4b6ba31ba9537d62aaf6e9caddef13d7a39bf4bf`, containing `Home.md`. Its complete checked-in snapshot is deployed with the articles; the task-specific handoff refresh is published at `761258a8dcf0df4fb57d4099ed30741f1728795d` with Home.md and CLOSEOUT_PROMPT.md. Its complete refreshed website deployment remains pending.
 
-## Current normal delivery and quarantine
+## Historical normal delivery and quarantine
 
 Main 57a04e16 produced v1.19.1 through successful workflow 37993136207. Both release classification flags are false. Four independent downloads match hosted hashes and sizes, all 739 package entries pass CRC/decompression, and 648 payload file hashes match. The downloaded application archive contains zero private announcement entries. Current runtime acceptance is pending.
 
-The local build from the same source completed both root entrypoints, but its archive included 11 local announcement entries because .agent is missing from forge.config.cjs exclusions. Those local outputs are quarantined, hash-preserved and not approved for distribution. Repair the exclusion and add a negative regression before rebuilding locally. See [current handoff](../../../HANDOFF.md).
+The local build from the same source completed both root entrypoints, but its archive included 11 local announcement entries because .agent is missing from forge.config.cjs exclusions. Those local outputs are quarantined, hash-preserved and not approved for distribution. The exclusion and negative regression were subsequently repaired; current builds retain independent privacy inspection. Preserve the original quarantined outputs and failed receipts. See [current handoff](../../../HANDOFF.md).

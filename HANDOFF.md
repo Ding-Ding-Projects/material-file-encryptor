@@ -1,3 +1,22 @@
+# Continuation milestone, 2026-10-10 UTC
+
+The approved continuation remains active. The current source is `55ebe8bbc84efd2cb2ee6964e224ea5af0fbd819`, verified on remote main. The following source units are integrated, not full runtime acceptance:
+
+- Runtime fixture preparation at `ae4ce996` uses the real canonical TEMP root and distinguishes provably never-launched credential retirement from uncertain launch. Independent reviews and 28 focused checks passed.
+- Downloaded installer provenance at `9d693652` distinguishes verifier source from payload source, verifies four exact hosted assets and safely extracts a fresh complete payload. Eleven rejection checks passed; installation remains pending.
+- Direct CLI provenance at `2016d808` and `212acd06` records the actual transport/runtime inventory, retains endpoint absence, and compares actual persisted launch provenance before HWND lookup or capture. Both independent reviews are dry. Twenty-one focused JavaScript checks passed, followed by the direct-binding check after its final assertion.
+- Documentation at `aac061e1` includes complete articles/wiki and 14 reviewed historical originals. All 51 deployed file hashes, 17 immutable article hashes, 59 anchors and 738 local links/assets passed; eight excluded paths returned 404. Browser interaction, responsive geometry and accessibility remain pending. The exact repository homepage is `https://ding-ding-projects.github.io/material-file-encryptor/`.
+
+Both exact local entrypoints passed at frozen `ae4ce996`, with unchanged source. Executable SHA-256 is `31f2f7c3aaee16f3395414da648c32e70296dca892e40f3ae0dbdca560122ef8`; ASAR SHA-256 is `9fe27666a61d2153aa4da53609295ab1a3339993fd23fa43cbcf20620e15fef0`. The source-bound rebuild at `55ebe8bb` completed both exact entrypoints with exit zero, unchanged source/index and owning branch. Its extra wrapper returned one solely because other shared refs advanced; the original receipt retains that distinction. Privacy accepted 812 entries and all 739 package entries passed. Earlier bytes and receipts must remain preserved when outputs are superseded.
+
+Normal release `v1.50.1` targets `55ebe8bb`; both classification flags are false, all four expected assets are attached, and workflow `38029653428` succeeded. All four independent v1.50.1 downloads now match hosted hashes/sizes. Safe preparation extracted 644 payload files, all 739 archive entries passed and final actual privacy accepted 812 entries with zero rejected. No installed-runtime verdict is claimed. Earlier independently downloaded normal release `v1.43.1` targets `ae4ce996`: all four hosted hashes matched, all archive entries passed, 644 payload files were safely extracted and its actual ASAR has 84 entries with zero private task-directory entries. No application or installer was launched from that staged payload.
+
+Remaining acceptance is actual mounted legacy/copy-upgrade/transport workflows, 48 renderer-emulation tuples, 13 clear controls, a source-bound downloaded normal-release installed lifecycle, and current browser/responsive evidence. Physical operating-system display scaling remains separate and unavailable through an established isolated route. Preserve original failures, quarantined packages, vaults, installation state and all private announcement variants. Two path-bearing historical PNGs have matching protected private copies; current public delivery excludes them, while old public history remains unchanged.
+
+The wiki handoff is pushed at `761258a8dcf0df4fb57d4099ed30741f1728795d`, containing Home.md and CLOSEOUT_PROMPT.md. The complete refreshed snapshot is staged with 18 articles and 14 historical captures; fresh deployment acceptance remains pending. Its safe underscore basename correction passed eight checks, deliberate old-rule red replay and dry independent review.
+
+The earlier preservation sections below retain their historical scope. The incomplete documentation source described there was subsequently reviewed, corrected and integrated above. Read CLOSEOUT_PROMPT.md for the current continuation queue.
+
 # Preservation handoff, 2026-10-10 UTC
 
 The user requested early preservation, including unfinished work. Full acceptance remains incomplete. See CLOSEOUT_PROMPT.md for the current continuation inventory.

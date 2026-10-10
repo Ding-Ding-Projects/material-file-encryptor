@@ -61,5 +61,22 @@
 
 ## Preserved documentation expansion
 
-- [ ] Finish the incomplete article/wiki/gallery generator on codex/package-privacy at dd4ab51, including navigation, styling, localization, negative checks and real rendered verification.
-- [ ] Publish a substantial gallery of current reviewed, source-bound original captures and verify every live asset.
+- [x] Integrate the corrected article/wiki/gallery generator at `aac061e1`, with 19 focused checks, two independent reviews and complete live content/link/hash verification.
+- [ ] Finish current browser interaction, responsive geometry and accessibility acceptance for the expanded documentation.
+- [x] Publish 14 reviewed historical originals with exact source/hash boundaries and verify every live byte; exclude two path-bearing originals and unreviewed recordings.
+- [ ] Add current source-bound captures after the final runtime acceptance.
+
+## Current verifier and downloaded-package preparation
+
+- [x] Repair real TEMP-root preparation and never-launched credential retirement at `ae4ce996`; retain 28 focused checks and dry independent reviews.
+- [x] Build frozen `ae4ce996` through both exact root entrypoints with unchanged source and retained executable/ASAR hashes.
+- [x] Integrate downloaded payload/verifier source separation and 11 rejection checks at `9d693652`.
+- [x] Independently download normal `v1.43.1`, verify all four assets, all archive entries, 644 extracted files and the 84-entry ASAR privacy inventory.
+- [x] Integrate actual direct-CLI launch binding at `55ebe8bb`, with dry correctness/privacy reviews and focused mismatch rejection checks.
+- [x] Complete both exact local entrypoints at frozen `55ebe8bb`, with unchanged source/index/owning branch, 812-entry privacy and 739-entry package integrity.
+- [ ] Complete actual runtime acceptance at frozen `55ebe8bb`.
+- [x] Update the public wiki handoff at `761258a8` and verify its remote HEAD.
+- [ ] Deploy and reverify the complete refreshed two-page wiki snapshot.
+
+- [x] Independently download normal v1.50.1 at source55 and verify four hosted assets, 644 extracted payload files, all 739 archive entries and 812-entry privacy.
+- [x] Repair safe underscore wiki basenames with eight focused checks, deliberate old-rule red replay and independent review.
