@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['docs/site/**', 'docs/images/**', 'scripts/build-site.mjs', '.github/workflows/pages.yml']
+    paths: ['docs/site/**', 'docs/images/**', 'docs/features/**', 'DESIGN.md', 'scripts/build-site.mjs', '.github/workflows/pages.yml']
 permissions:
   contents: read
   pages: write
