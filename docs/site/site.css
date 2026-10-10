@@ -108,5 +108,15 @@ html:focus-within, html.is-scrolling, dialog:hover, dialog:focus-within, dialog.
 #part-limit-clear:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 #part-limit-clear:disabled{opacity:.4;cursor:default}
 
+/* Long localized navigation wraps without squeezing the brand or release action. */
+.header-inner{flex-wrap:wrap}
+.brand{flex-shrink:0;max-width:100%}
+#navigation{min-width:0;flex-wrap:wrap;justify-content:flex-end;row-gap:4px;padding-block:8px}
+#navigation>a:not(.button){white-space:normal;overflow-wrap:anywhere;max-width:100%}
+#navigation>.button{flex-shrink:0;flex-wrap:wrap;max-width:100%;row-gap:4px}
+#navigation>.button .translation{white-space:nowrap}
+@media(min-width:800px){#navigation{flex:1 1 600px}}
+@media(max-width:799px){#navigation{justify-content:flex-start;padding-block:16px 24px;max-height:calc(100dvh - 72px);overflow-y:auto}}
+
 /* Complete documentation and original capture records. */
-.publication{padding-block:32px;max-width:1080px}.publication-nav{display:flex;flex-wrap:wrap;gap:12px;margin-block:12px 24px}.publication-nav a,.article-links a{display:inline-block;padding:10px 4px;min-height:44px}.publication-search{max-width:100%;margin-block:24px}.documentation-article{overflow-wrap:anywhere;line-height:1.7}.documentation-article pre{overflow:auto;max-width:100%;padding:16px}.documentation-article code,.publication-gallery code{overflow-wrap:anywhere}.table-scroll{overflow:auto;max-width:100%;margin-block:16px}.table-scroll td,.table-scroll th{padding:8px;text-align:start;vertical-align:top}.heading-link{margin-inline-start:8px}.article-links{padding-inline-start:24px}.publication-gallery{align-items:start}.publication-gallery img{width:100%;height:auto}.publication-gallery dd{margin-inline-start:0;overflow-wrap:anywhere}.publication-gallery dt{font-weight:600;margin-block-start:12px}.publication h1,.publication h2,.publication h3{overflow-wrap:anywhere}.publication [hidden]{display:none!important}
+.publication{padding-block:32px;max-width:1080px}.publication-nav{display:flex;flex-wrap:wrap;gap:12px;margin-block:12px 24px}.publication-nav a,.article-links a{display:inline-block;padding:10px 4px;min-height:44px}.publication-search{max-width:100%;margin-block:24px}.documentation-article{overflow-wrap:anywhere;line-height:1.7}.documentation-article pre{overflow:auto;max-width:100%;padding:16px}.publication code{overflow-wrap:anywhere}.table-scroll{overflow:auto;max-width:100%;margin-block:16px}.table-scroll td,.table-scroll th{padding:8px;text-align:start;vertical-align:top}.heading-link{margin-inline-start:8px}.article-links{padding-inline-start:24px}.publication-gallery{align-items:start}.publication-gallery img{width:100%;height:auto}.publication-gallery dd{margin-inline-start:0;overflow-wrap:anywhere}.publication-gallery dt{font-weight:600;margin-block-start:12px}.publication h1,.publication h2,.publication h3{overflow-wrap:anywhere}.publication [hidden]{display:none!important}
