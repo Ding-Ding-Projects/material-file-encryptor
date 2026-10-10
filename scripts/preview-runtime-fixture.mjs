@@ -158,6 +158,40 @@ export function actionPollSteps(id,selector,expression) {
  return [{id,op:'click',selector},{id:id+'-state',op:'poll',expression:`!document.querySelector('#main-error').hidden || (${expression})`,equals:true,intervalMs:200},{id:id+'-result',op:'evaluate',expression:"({applicationError:!document.querySelector('#main-error').hidden,message:document.querySelector('#main-error').textContent.slice(0,400)})"}];
 }
 
+export function historyRestoreObservation(versionId) {
+ const surface=document.querySelector('#view-history');
+ const {archiveRequest:request,archiveCompletedRequest:completedRequest,archiveRender:render,archiveRendered:rendered,archiveState:state}=surface.dataset;
+ const ready=state==='ready'&&surface.getAttribute('aria-busy')==='false'&&Boolean(request)&&request===completedRequest&&Boolean(render)&&render===rendered;
+ const matches=[...document.querySelectorAll('#history-list [data-archive-restore]')].filter(el=>el.dataset.versionId===versionId);
+ const controls=matches.slice(0,2).map(el=>{const rect=el.getBoundingClientRect(),style=getComputedStyle(el);return {visible:rect.width>0&&rect.height>0&&style.visibility!=='hidden'&&style.display!=='none',enabled:!el.disabled};});
+ return {versionId,request,completedRequest,render,rendered,state,ariaBusy:surface.getAttribute('aria-busy'),ready,count:matches.length,controls};
+}
+export function historyRestoreSelector(versionId) {
+ assert.equal(typeof versionId,'string');assert.ok(versionId.length>0&&versionId.length<=512&&!/[\x00-\x1f\x7f]/.test(versionId));
+ return '#history-list [data-archive-restore][data-version-id='+JSON.stringify(versionId)+']';
+}
+export function assertHistoryRestoreObservation(observed) {
+ assert.equal(observed.ready,true,'History render is not complete.');
+ assert.equal(observed.count,1,'Exact history version must resolve to one rendered restore control.');
+ assert.equal(observed.controls[0].visible,true,'Exact history restore control is hidden.');
+ assert.equal(observed.controls[0].enabled,true,'Exact history restore control is disabled.');
+}
+export async function inspectHistoryRestore({versionId,observe,record}) {
+ const observed=await observe();
+ await record(observed);
+ assert.equal(observed.versionId,versionId,'History observation identity changed.');
+ assertHistoryRestoreObservation(observed);
+ return observed;
+}
+export async function retainRestoreActionFailure(error,{observe,record}) {
+ const diagnostic={version:1,recordedAt:new Date().toISOString(),phase:'failed-action',code:error.helperCode||error.code||'RESTORE_ACTION_FAILED'};
+ try {diagnostic.observation=await observe();}
+ catch(queryError) {diagnostic.queryFault={code:queryError.helperCode||queryError.code||'OBSERVATION_FAILED'};error.restoreObservationFault=diagnostic.queryFault;}
+ try {await record(diagnostic);}
+ catch(saveError) {error.restoreDiagnosticSaveFault={code:saveError.code||'DIAGNOSTIC_SAVE_FAILED'};}
+ throw error;
+}
+
 export async function checkMountedRuntime({fixture,launch,receipt,executePlan,prepareExit,modernProbeEvidence,modernUiCheck=process.env.MFE_MODERN_UI_CHECK==='1'}) {
  const modernUi={enabled:modernUiCheck};
  const checks=[];let sequence=0;
@@ -187,8 +221,15 @@ export async function checkMountedRuntime({fixture,launch,receipt,executePlan,pr
  await fs.writeFile(filename,'Second verified version.\n');assert.equal(await fs.readFile(filename,'utf8'),'Second verified version.\n');checks.push('mounted-edit-read');
  await click('drive-after-edit','[data-view="drive"]',"!document.querySelector('#view-drive').hidden");await click('sync-edit','#sync-button',"!document.querySelector('#sync-button').disabled");
  await click('history-after-edit','[data-view="history"]',"!document.querySelector('#view-history').hidden && document.querySelector('#history-list').children.length > 0");
- const restoreIndex=await asyncQuery('window.drive.history().then(rows=>rows.findIndex(row=>row.id==='+JSON.stringify(versions[0].id)+'))');assert.ok(restoreIndex>=0);
- await click('restore-version',`#history-list tr:nth-child(${restoreIndex+1}) button`,"document.querySelector('#confirm-dialog').open");await click('confirm-version','#confirm-action',"!document.querySelector('#confirm-dialog').open && !document.querySelector('#save-version').disabled");
+ const versionId=versions[0].id,restoreSelector=historyRestoreSelector(versionId);
+ const observationExpression=`(${historyRestoreObservation.toString()})(${JSON.stringify(versionId)})`;
+ await execute([{id:'history-render-complete',op:'poll',expression:observationExpression+'.ready',equals:true,intervalMs:200}]);
+ await inspectHistoryRestore({versionId,observe:()=>query(observationExpression),record:observed=>fs.appendFile(path.join(launch.runRoot,'history-restore-observations.jsonl'),JSON.stringify({version:1,recordedAt:new Date().toISOString(),...observed})+'\n')});
+ try {await click('restore-version',restoreSelector,"document.querySelector('#confirm-dialog').open");}
+ catch(error) {
+  await retainRestoreActionFailure(error,{observe:()=>query(observationExpression),record:diagnostic=>fs.appendFile(path.join(launch.runRoot,'history-restore-observations.jsonl'),JSON.stringify(diagnostic)+'\n')});
+ }
+ await click('confirm-version','#confirm-action',"!document.querySelector('#confirm-dialog').open && !document.querySelector('#save-version').disabled");
  // A version restore must change current bytes without deleting retained history.
  assert.equal(await fs.readFile(filename,'utf8'),'First verified version.\n');const afterRestore=await asyncQuery('window.drive.history().then(rows=>rows.length)');assert.ok(afterRestore>=versions.length);checks.push('restored-bytes-and-retained-history');
  await fs.unlink(filename);await click('drive-after-delete','[data-view="drive"]',"!document.querySelector('#view-drive').hidden");await click('sync-delete','#sync-button',"!document.querySelector('#sync-button').disabled");

@@ -1,5 +1,15 @@
 # Runtime rejection evidence
 
+## Exact history restore identity
+
+History restore verification identifies the version selected by the fixture, then finds that exact ID on the rendered restore control. The ID is metadata from the existing handler's version identity; it does not change restoration semantics. A separately fetched backend row position cannot identify a row in the renderer's independently loaded and filtered snapshot.
+
+Before selection, the verifier requires a ready archive, `aria-busy="false"`, matching request/completion markers and matching render/rendered generations. It records the bounded requested identity, matching count, visible/enabled state and generation markers, then requires exactly one visible enabled control. The click uses the same exact ID. Missing, duplicate, hidden, disabled or stale targets fail explicitly; no position fallback is permitted.
+
+If an action fails, a later diagnostic query or write cannot replace its exception. The original object and code are rethrown, with separate observation/save faults when available. An unsuccessful query never becomes a fabricated observation. Restored file bytes and retained-history assertions remain required after a real successful action.
+
+Twenty focused checks cover reordered backend inventories, stale generations, identity encoding, absent/duplicate/hidden/disabled controls, bounded observations and combined action/query/write failures. These checks and independent source review establish the verifier correction, not a fresh built runtime or installation verdict. The earlier source55 restore attempt stopped before invoking restore and remains failed evidence.
+
 When the installed lifecycle validator exposes a bounded rejected ancestry edge, the project adapter records it before the canonical command handler sanitizes the exception. It rethrows the original exception without authorizing any additional process action.
 
 The recorder accepts only the versioned producer fields for missing-parent or child-before-parent rejection. It validates the exact child and optional parent identity, claimed parent PID, 100 ns creation ticks, absence/order statement and 64 KiB edge bound. Unsupported or unavailable metadata remains unrecorded.

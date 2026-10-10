@@ -1,5 +1,12 @@
 # First installable preview
 
+## Exact restore selection verification, 2026-10-10
+
+- [x] Replace backend-index/DOM-position correspondence with exact rendered version identity, completed archive generations and bounded pre-action observations; twenty focused checks and independent source reviews passed.
+- [x] Preserve the original restore-action exception when diagnostic query or write fails, with combined behavioral regressions.
+- [ ] Rebuild through both exact root entrypoints and verify restore in a fresh source-bound packaged workflow; the source55 failed run remains unchanged.
+- [ ] Complete the downloaded installed lifecycle, 48 renderer-emulation tuples, 13 clear controls and full browser acceptance; partial captures and normal release metadata do not satisfy these items.
+
 ## Encrypted storage and recovery
 
 - [x] Verify integrated format 2 fixed ciphertext chunks, 10 MiB default and 90,000,000-byte physical maximum in core/controller checks at `1e16dea8`.
