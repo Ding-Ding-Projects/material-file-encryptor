@@ -4,6 +4,7 @@ from ctypes import wintypes
 import hashlib
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 from datetime import datetime, timezone
@@ -78,6 +79,14 @@ def main():
     request = json.load(sys.stdin)
     spec = importlib.util.spec_from_file_location('native_lifecycle', request['helper'])
     module = importlib.util.module_from_spec(spec); sys.modules[spec.name] = module; spec.loader.exec_module(module)
+    adapter_spec = importlib.util.spec_from_file_location('direct_receipt', Path(__file__).with_name('direct-cli-receipt.py'))
+    adapter = importlib.util.module_from_spec(adapter_spec); adapter_spec.loader.exec_module(adapter)
+    endpoint = os.environ.get('MFE_LOWLEVEL_URL')
+    cli = os.environ.get('MFE_LOWLEVEL_CLI')
+    if endpoint and cli:
+        raise ValueError('Mixed lifecycle transport')
+    if endpoint or cli:
+        adapter.install_receipt_transport(module, endpoint=endpoint, cli=cli if not endpoint else None)
     _, state = module._read_state(request['receipt'])
     if state.get('cleaned') or not state.get('created') or not state.get('hwnd'):
         raise ValueError('NATIVE_STATE_UNAVAILABLE')
