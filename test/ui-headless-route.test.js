@@ -107,6 +107,13 @@ test('native capture interval surrounds the tool call and refuses an existing im
 });
 
 test('failure summaries retain allowlisted diagnostic metadata without reflecting native text',()=>{
+ assert.deepEqual(safeFailureDetails({diagnosticStage:'before-tree',diagnosticCode:'INVALID_PROCESS_TREE',error:'hostile credential',exception:'hostile'}),{diagnosticStage:'before-tree',diagnosticCode:'INVALID_PROCESS_TREE'});
+ assert.deepEqual(safeFailureDetails({diagnosticStage:'hostile',diagnosticCode:'hostile'}),{});
+ assert.deepEqual(safeFailureDetails({diagnosticStage:42,diagnosticCode:['PROCESS_NOT_FOUND']}),{});
+ const native=helperFailure({ok:false,client_ok:false,code:'NATIVE_OBSERVATION_FAILED',stage:'native-observation',diagnosticStage:'native-dpi-restore',diagnosticCode:'NATIVE_DPI_CONTEXT_RESTORE_FAILED',error:'hostile credential'});
+ assert.equal(native.helperCode,'NATIVE_OBSERVATION_FAILED');
+ assert.equal(native.message,'NATIVE_OBSERVATION_FAILED');
+ assert.deepEqual(native.helperDetails,{diagnosticStage:'native-dpi-restore',diagnosticCode:'NATIVE_DPI_CONTEXT_RESTORE_FAILED',stage:'native-observation'});
  assert.deepEqual(safeFailureDetails({reasonCode:'CHILD_PREDATES_PARENT',stage:'ancestry',error:'private'}),{reasonCode:'CHILD_PREDATES_PARENT',stage:'ancestry'});
  assert.deepEqual(safeFailureDetails({reasonCode:'private-path',stage:'private-output'}),{});
  assert.deepEqual(helperFailure({code:'UNPROVEN_PROCESS_ANCESTRY',reasonCode:'MISSING_PARENT',stage:'ancestry'}).helperDetails,{reasonCode:'MISSING_PARENT',stage:'ancestry'});

@@ -47,7 +47,9 @@ export function validateCaptureReview(review,inventory,binding) {
  return inventory.every(item=>{const value=reviewed.get(item.path);return value?.sha256===item.sha256&&value.inspected===true&&value.privacyPassed===true;});
 }
 export function safeFailureDetails(result) {
- const allowed={reasonCode:['ROOT_IDENTITY_CHANGED','DUPLICATE_PID','INVALID_NODE_IDENTITY','ROOT_CYCLE','CYCLE_OR_MISSING_PARENT','MISSING_PARENT','CHILD_PREDATES_PARENT','LIVE_IDENTITY_UNAVAILABLE','LIVE_IDENTITY_CHANGED','UNSPECIFIED_ANCESTRY_FAILURE'],stage:['process-snapshot','ancestry','listener-query','owner-revalidation','native-observation']};
+ const allowed={
+  diagnosticStage:['request', 'lifecycle-import', 'adapter-import', 'transport', 'state-read', 'state-validation', 'native-import', 'before-tree', 'before-owner', 'before-identity', 'before-hash', 'native-dpi-enter', 'native-geometry', 'native-dpi-query', 'native-geometry-validation', 'native-dpi-restore', 'after-tree', 'after-owner', 'after-identity', 'after-hash', 'bookend-validation'],
+  diagnosticCode:['UNEXPECTED_EXCEPTION', 'WINDOW_OWNER_UNPROVEN', 'WINDOW_OWNER_CHANGED', 'WINDOW_OWNER_UNAVAILABLE', 'NATIVE_DPI_CONTEXT_UNAVAILABLE', 'NATIVE_GEOMETRY_UNAVAILABLE', 'NATIVE_DPI_CONTEXT_RESTORE_FAILED', 'NATIVE_STATE_UNAVAILABLE', 'MIXED_TRANSPORT', 'UNSAFE_PATH', 'STATE_TOO_LARGE', 'INVALID_STATE', 'UNSUPPORTED_PLATFORM', 'PROCESS_NOT_FOUND', 'PROCESS_PROOF_FAILED', 'PROCESS_IDENTITY_CHANGED', 'INVALID_PROCESS_IDENTITY', 'INVALID_PROCESS_TREE', 'TRANSPORT_ERROR', 'INVALID_RESPONSE', 'INVALID_ENDPOINT', 'NON_LOOPBACK_ENDPOINT', 'UNSAFE_ENDPOINT'],reasonCode:['ROOT_IDENTITY_CHANGED','DUPLICATE_PID','INVALID_NODE_IDENTITY','ROOT_CYCLE','CYCLE_OR_MISSING_PARENT','MISSING_PARENT','CHILD_PREDATES_PARENT','LIVE_IDENTITY_UNAVAILABLE','LIVE_IDENTITY_CHANGED','UNSPECIFIED_ANCESTRY_FAILURE'],stage:['process-snapshot','ancestry','listener-query','owner-revalidation','native-observation']};
  return Object.fromEntries(Object.entries(allowed).filter(([key,values])=>values.includes(result?.[key])).map(([key])=>[key,result[key]]));
 }
 export function helperFailure(result,plan) {

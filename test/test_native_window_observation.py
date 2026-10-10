@@ -3,12 +3,93 @@ import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
+import contextlib
+import io
+import json
 
 spec = importlib.util.spec_from_file_location('observer', Path(__file__).resolve().parents[1] / 'scripts/native-window-observation.py')
 observer = importlib.util.module_from_spec(spec); spec.loader.exec_module(observer)
 
 
 class NativeObservation(unittest.TestCase):
+    def test_failure_projection_is_fixed_and_preserves_rejection(self):
+        class ClientFailure(RuntimeError):
+            def __init__(self, code):
+                self.code = code
+                super().__init__('hostile credential path argument environment')
+        context = observer.DiagnosticContext()
+        context.lifecycle_failure = ClientFailure
+        for stage in observer.DIAGNOSTIC_STAGES:
+            context.at(stage)
+            for code in observer.INTERNAL_CODES:
+                result = observer.failure_payload(observer.ObservationFailure(code), context)
+                self.assertEqual(result['diagnosticStage'], stage)
+                self.assertEqual(result['diagnosticCode'], code)
+                self.assertFalse(result['ok'])
+                self.assertFalse(result['client_ok'])
+                self.assertEqual(result['code'], 'NATIVE_OBSERVATION_FAILED')
+                self.assertEqual(result['stage'], 'native-observation')
+                self.assertEqual(set(result), {'ok', 'client_ok', 'code', 'stage', 'diagnosticStage', 'diagnosticCode'})
+        for code in observer.LIFECYCLE_CODES:
+            self.assertEqual(observer.failure_payload(ClientFailure(code), context)['diagnosticCode'], code)
+        class Impostor(ClientFailure): pass
+        for error in (ClientFailure('hostile'), Impostor('PROCESS_NOT_FOUND'), ValueError('WINDOW_OWNER_CHANGED hostile'), RuntimeError('hostile')):
+            result = observer.failure_payload(error, context)
+            self.assertEqual(result['diagnosticCode'], 'UNEXPECTED_EXCEPTION')
+            self.assertNotIn('hostile', json.dumps(result))
+        with self.assertRaises(ValueError): context.at('hostile')
+        with self.assertRaises(ValueError): observer.ObservationFailure('hostile')
+        output = io.StringIO()
+        def rejected(ctx):
+            ctx.at('before-tree')
+            raise ClientFailure('INVALID_PROCESS_TREE')
+        with contextlib.redirect_stdout(output):
+            self.assertEqual(observer.run(rejected), 1)
+        result = json.loads(output.getvalue())
+        self.assertFalse(result['ok'])
+        self.assertEqual(result['diagnosticStage'], 'before-tree')
+        self.assertNotIn('hostile', output.getvalue())
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            self.assertEqual(observer.run(lambda ctx: {'notSerializable': object()}), 1)
+        self.assertEqual(json.loads(output.getvalue())['code'], 'NATIVE_OBSERVATION_FAILED')
+
+    def test_native_geometry_stages_and_restoration_are_strict(self):
+        class User:
+            def __init__(self, fail): self.fail = fail; self.calls = 0
+            def SetThreadDpiAwarenessContext(self, value):
+                self.calls += 1
+                return 0 if self.fail == ('enter' if self.calls == 1 else 'restore') else 17
+            def GetClientRect(self, hwnd, rect):
+                if self.fail == 'rect': return 0
+                rect._obj.right = 100; rect._obj.bottom = 80
+                return 1
+            def GetWindowRect(self, hwnd, rect): return 1
+            def GetDpiForWindow(self, hwnd):
+                if self.fail == 'query': raise RuntimeError('hostile private detail')
+                return 0 if self.fail == 'validate' else 96
+            def GetWindowDpiAwarenessContext(self, hwnd): return 17
+            def GetAwarenessFromDpiAwarenessContext(self, value): return 2
+        for failure, stage, code, calls in (
+            ('enter', 'native-dpi-enter', 'NATIVE_DPI_CONTEXT_UNAVAILABLE', 1),
+            ('rect', 'native-geometry', 'NATIVE_GEOMETRY_UNAVAILABLE', 2),
+            ('query', 'native-dpi-query', 'UNEXPECTED_EXCEPTION', 2),
+            ('validate', 'native-geometry-validation', 'NATIVE_GEOMETRY_UNAVAILABLE', 2),
+            ('restore', 'native-dpi-restore', 'NATIVE_DPI_CONTEXT_RESTORE_FAILED', 2)):
+            context = observer.DiagnosticContext()
+            native = observer.Native.__new__(observer.Native)
+            native.context = context; native.user = User(failure)
+            with self.assertRaises(Exception) as caught: native.geometry(123)
+            result = observer.failure_payload(caught.exception, context)
+            self.assertEqual(result['diagnosticStage'], stage)
+            self.assertEqual(result['diagnosticCode'], code)
+            self.assertFalse(result['ok'])
+            self.assertEqual(native.user.calls, calls)
+            self.assertNotIn('hostile', json.dumps(result))
+        native.user = User(None)
+        self.assertEqual(native.geometry(123)['dpi'], 96)
+        self.assertEqual(native.user.calls, 2)
+
     def test_bookends_reject_changed_identity_and_executable(self):
         with tempfile.TemporaryDirectory() as directory:
             executable = Path(directory) / 'fixture.bin'; executable.write_bytes(b'fixture')

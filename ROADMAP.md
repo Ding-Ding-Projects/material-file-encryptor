@@ -1,5 +1,9 @@
 # First installable preview
 
+## Bounded native observer diagnostics
+
+- [ ] Complete independent review and pinned root-build verification of fixed native observer diagnostic categories. Three offline Python cases and 13 caller cases passed; installed runtime and historical cause remain unverified.
+
 ## Current source-bound acceptance, 2026-10-10
 
 - [x] Verify the actual d683 documentation deployment, run 38044356274 and deployment 6979358841: 52 live files, 18 articles including two wiki pages, 66 anchors, 860 links and eight excluded 404 results; exact homepage read back.
