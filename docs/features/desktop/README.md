@@ -4,4 +4,6 @@
 
 - [Runtime rejection evidence](runtime-evidence.md): private exact-edge retention and unchanged lifecycle rejection.
 
+- [Prospective graceful-exit handle retention](owned-exit-handles.md): exact process identity retention, original confirmation, bounded private diagnostics and exclusive attempt receipts.
+
 This category has no HTTP API; a Postman collection is not applicable.

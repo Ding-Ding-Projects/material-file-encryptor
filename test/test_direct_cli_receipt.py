@@ -7,12 +7,43 @@ import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest import mock
 
 spec = importlib.util.spec_from_file_location('direct_receipt', Path(__file__).resolve().parents[1] / 'scripts/direct-cli-receipt.py')
 adapter = importlib.util.module_from_spec(spec); spec.loader.exec_module(adapter)
 
 
 class ReceiptTransport(unittest.TestCase):
+    def test_noninteractive_provenance_calls_have_empty_stdin_and_original_limits(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder).resolve()
+            scripts = root / '.venv' / 'Scripts'
+            scripts.mkdir(parents=True)
+            cli = scripts / 'lowlevel-computer-use-cheap.exe'
+            python = scripts / 'python.exe'
+            base = root / 'base-python.exe'
+            dll = root / 'python313.dll'
+            package = root / 'src' / 'lowlevel_computer_use_mcp'
+            package.mkdir(parents=True)
+            for file in [cli, python, base, dll, package / 'server.py', package / 'winio.py']:
+                file.write_bytes(b'bounded fixture')
+            calls = []
+            def run(argv, **kwargs):
+                calls.append((argv, kwargs))
+                self.assertIs(kwargs['stdin'], adapter.subprocess.DEVNULL)
+                if argv[0] == str(python):
+                    self.assertEqual(argv[1], '-c')
+                    self.assertEqual(kwargs['timeout'], 15)
+                    return SimpleNamespace(returncode=0, stdout=json.dumps({'package': str(package), 'baseExecutable': str(base), 'runtimeDll': str(dll)}))
+                self.assertEqual(kwargs['timeout'], 10)
+                return SimpleNamespace(returncode=0, stdout='https://github.com/Ding-Ding-Projects/lowlevel-computer-use-mcp.git' if 'remote' in argv else 'a' * 40)
+            with mock.patch.object(adapter.subprocess, 'run', side_effect=run):
+                proof = adapter.direct_provenance(cli)
+            self.assertEqual(len(calls), 3)
+            self.assertEqual(proof['sourceCommit'], 'a' * 40)
+            self.assertEqual(proof['python'], adapter.file_binding(python))
+            self.assertEqual({Path(item['path']).name for item in proof['files']}, {'server.py', 'winio.py'})
+
     def fixture(self):
         writes = []
         def require(value, label):

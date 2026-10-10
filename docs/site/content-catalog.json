@@ -3,6 +3,7 @@
   "articles": [
     "docs/features/README.md",
     "docs/features/desktop/README.md",
+    "docs/features/desktop/owned-exit-handles.md",
     "docs/features/desktop/package-integrity.md",
     "docs/features/desktop/runtime-evidence.md",
     "docs/features/drive/README.md",

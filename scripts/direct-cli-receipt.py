@@ -22,21 +22,21 @@ def direct_provenance(cli):
         raise ValueError('Unsupported direct CLI layout')
     root = cli.parents[2]
     python = cli.with_name('python.exe')
-    result = subprocess.run([str(python), '-c', 'import importlib.util,json,sys; print(json.dumps({"package":importlib.util.find_spec("lowlevel_computer_use_mcp").submodule_search_locations[0],"baseExecutable":sys._base_executable,"runtimeDll":str(__import__("pathlib").Path(sys.base_prefix)/("python"+str(sys.version_info.major)+str(sys.version_info.minor)+".dll"))}))'], capture_output=True, text=True, timeout=15, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+    result = subprocess.run([str(python), '-c', 'import importlib.util,json,sys; print(json.dumps({"package":importlib.util.find_spec("lowlevel_computer_use_mcp").submodule_search_locations[0],"baseExecutable":sys._base_executable,"runtimeDll":str(__import__("pathlib").Path(sys.base_prefix)/("python"+str(sys.version_info.major)+str(sys.version_info.minor)+".dll"))}))'], stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=15, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
     if result.returncode != 0:
         raise ValueError('Direct runtime source discovery failed')
     discovery = json.loads(result.stdout)
     package = Path(discovery['package']).resolve(strict=True)
     if package != root / 'src' / 'lowlevel_computer_use_mcp':
         raise ValueError('Direct runtime source differs from sibling checkout')
-    origin = subprocess.run(['git', '-C', str(root), 'remote', 'get-url', 'origin'], capture_output=True, text=True, timeout=10, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+    origin = subprocess.run(['git', '-C', str(root), 'remote', 'get-url', 'origin'], stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=10, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
     if origin.returncode != 0 or origin.stdout.strip() not in {
         'https://github.com/Ding-Ding-Projects/lowlevel-computer-use-mcp.git',
         'https://github.com/Ding-Ding-Projects/lowlevel-computer-use-mcp',
         'git@github.com:Ding-Ding-Projects/lowlevel-computer-use-mcp.git',
     }:
         raise ValueError('Direct sibling source origin is not canonical')
-    source = subprocess.run(['git', '-C', str(root), 'rev-parse', 'HEAD'], capture_output=True, text=True, timeout=10, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+    source = subprocess.run(['git', '-C', str(root), 'rev-parse', 'HEAD'], stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=10, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
     commit = source.stdout.strip()
     if source.returncode != 0 or not re.fullmatch('[a-f0-9]{40}', commit):
         raise ValueError('Direct source identity unavailable')
