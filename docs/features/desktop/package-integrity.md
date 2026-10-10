@@ -1,5 +1,15 @@
 # Package integrity and local installer verification
 
+## Private packaging boundaries
+
+Forge excludes `.agent` as a complete, case-insensitive directory segment at any depth. Similar names such as `.agent-helper` remain eligible. This protects local task material even when the source directory contains ignored files, since Git ignore rules do not define the packager's input policy.
+
+The Forge `postPackage` hook and the production build both require `scripts/package-privacy.mjs` to accept the produced application directory before installation packaging proceeds. The inspector walks external resources and the real `resources/app.asar` entry inventory, rejects `.agent` entries and links, and reads every archived file to reject missing or truncated data. Missing, empty or unreadable output fails closed. Archive caches are discarded before inspection, so replacing an archive cannot reuse an earlier verdict.
+
+Diagnostics contain only neutral result codes, entry/rejection counts and the accepted archive SHA-256. Rejected entry names, file contents, archive metadata and underlying exception messages are never printed. This is a directory-boundary protection, not a general-purpose secret detector: confidential material must still remain outside approved package inputs.
+
+Run `node --test test/package-privacy.test.js` for the focused regression. Harmless synthetic files demonstrate exclusion removal, rejection of an actual ASAR with a private directory, restored acceptance, external-resource rejection, corrupt-archive rejection and production-hook propagation. No private source material is used. Production output and installer verification remain separate required evidence.
+
 `build-installer.bat /s` bootstraps official 7-Zip 26.04 from the upstream release, verifies the archive, extraction helper and x64 standalone executable against `dependencies.json`, and stages the existing Squirrel.Windows vendor distribution. The supported `vendorDirectory` option selects that distribution with its legacy ZIP writer replaced by the verified standalone writer. Squirrel's updater and setup components remain unchanged and unsigned.
 
 After production, `scripts/package-integrity.ps1` runs the pinned reader's archive test over every full and delta `.nupkg`. It verifies decompression and stored CRC for every entry, including entries outside the runtime comparison manifest. Failure prevents successful packaging and preview publication. The receipt records the reader digest, source commit and each package's digest, size, entry count and exit result. Selected runtime hashes and `RELEASES` hashes remain separate checks.

@@ -20,6 +20,7 @@ Copy-Item native/vendor/WinFsp/License.txt out/native/notices/WinFsp-License.txt
 Copy-Item native/vendor/WinFsp/ORIGIN.md out/native/notices/WinFsp-Origin.md
 Copy-Item LICENSE out/native/notices/MaterialFileEncryptor-License.txt
 Invoke-Checked { npm.cmd run package -- --platform=win32 --arch=x64 }
+Invoke-Checked { node scripts/package-privacy.mjs out/material-file-encryptor-win32-x64 }
 if ($Installer) {
   # Keep Squirrel's supported vendor layout, replacing its legacy ZIP writer only.
   $vendorStage = Join-Path $root ('out\squirrel-vendor-' + [Guid]::NewGuid().ToString('N'))
