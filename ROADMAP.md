@@ -1,5 +1,22 @@
 # First installable preview
 
+## Current 28f continuation snapshot
+
+- [x] Independently review the worker-context repair twice; retain 8 Python/13 JavaScript tool-return strings with missing original timestamps and full streams explicitly disclosed.
+- [x] Complete both exact root entrypoints at frozen 28f/tree ab8; verify 739-entry CRC/decompression, 812-entry privacy, 644 produced files, 642 common-file matches, unsigned status and RELEASES checks.
+- [x] Preserve earlier ad473 outputs and first 28f outputs; verify task-branch preservation separately from pending main publication.
+- [x] Verify normal v1.65.1 metadata and source63 documentation delivery: 52 files, 18 articles including two wiki pages, 70 anchors, 27 HTML routes, 870 links and eight excluded 404s.
+- [x] Prepare modern28 v2 with 51 inputs, six host-pin checks and two dry reviews.
+- [x] Preserve all 80 actual OpMyor originals, two genuine baselines and three intermediate clear-control PNGs without a final probe or acceptance verdict; record first-tuple SELECTOR_ACTION_FAILED, zero tuple acceptance, normal owned recovery and separate final 51-input/producer readback.
+- [x] Independently locate and hash-bind the one successful native observation before the selector stop; exact ownership, desktop restoration/handle closure and DPI144/effective1.5 are recorded, with physical-scale matrix false.
+- [x] Independently confirm reversed verifier host/wrapper selector topology in two source/receipt reviews; actual failed-query state remains unavailable and no product clear-control defect is proven.
+- [ ] Repair the verifier selector separately, rebuild and rebind before any actual retry; full runtime/matrix acceptance remains false.
+- [x] Record owner acknowledgement and closure of only this run-specific installed-helper/runtime/configuration hold; unrelated holds remain unaffected.
+- [ ] Complete remaining browser v12 readiness and actual deployment rebinding. Three actual synthetic stream cases record zero dispositions and 15 closes each; both reviews are dry and the closure producer remains unlaunched.
+- [ ] Publish the completed 28f main integration and this documentation update with exact remote proof.
+- [ ] Complete installed lifecycle, full mounted/copy-upgrade/private transport workflows, 48 modern configurations, 13 desktop clear controls, full browser acceptance and physical display-scale verification.
+
+
 ## Bounded native observer diagnostics
 
 - [x] Complete independent source review and both exact root entrypoints for fixed native observer diagnostic categories at ad47307. Three Python and thirteen JavaScript checks passed; actual modern run supplies before-owner/WINDOW_OWNER_UNAVAILABLE, with cause unverified.
