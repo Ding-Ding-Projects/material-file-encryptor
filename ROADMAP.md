@@ -53,6 +53,6 @@
 - [x] Inspect rebuilt packages after private local task-data exclusion. Candidates through `3e416a7` passed actual 812-entry privacy and 739-entry integrity checks. Independent v1.25.1, v1.27.1 and v1.31.1 payload inspection also found zero private task-directory entries. Local 57a04e16 outputs stay quarantined.
 - [x] Retain exact incomplete process rows privately and verify bounded pre-attachment proof routing without partial-action replay; runtime acceptance remains a separate unchecked item.
 - [ ] Complete the final modern 48-tuple runtime matrix and source-bound installed verification.
-- [ ] Verify production recovery using pinned NuGet 7.9.0; focused selection/version/digest checks and independent source review passed at `bcb626e1`.
+- [x] Verify production recovery using pinned NuGet 7.9.0 at `15e5c70c`: both exact root entrypoints, 812-entry privacy inspection and all 739 archive-entry checks passed with unchanged source.
 - [ ] Replace the empty-root verification assumption with strict native evidence and complete a fresh real replay; the exact native no-file status is reproduced with a valid mounted root.
 - [ ] Complete responsive website acceptance with actual captured dimensions and strict target isolation.
