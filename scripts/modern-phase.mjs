@@ -21,9 +21,27 @@ export function verificationScope(env) {
  return scope;
 }
 
+export function modernStartupReadiness(state,applicationError=false) {
+ const failed=applicationError||Boolean(state?.sync?.error)||Boolean(state?.driver?.checking===false&&state?.driver?.available===false);
+ return {failed,ready:!failed&&state?.driver?.checking===false&&state?.driver?.available===true&&state?.locked===false&&state?.mounted===true&&state?.operation==null};
+}
+
+export function verifierSourceBinding({scope,targetSource,actualSource,requestedVerifierSource}) {
+ for(const value of [targetSource,actualSource])assert.match(value,/^[a-f0-9]{40}$/);
+ if(requestedVerifierSource!==undefined){assert.equal(scope,'modern-only','Separate verifier binding is limited to modern-only scope');assert.equal(requestedVerifierSource,actualSource,'Verifier source does not match its checkout');}
+ else assert.equal(actualSource,targetSource,'Separate target and verifier sources require explicit verifier binding');
+ return {targetSourceCommit:targetSource,verifierSourceCommit:actualSource};
+}
+
 // Native fixture creation is setup, never evidence of the GUI create workflow.
 export async function runIndependentModern({fixture,launch,receipt,executePlan,probeEvidence,runPhase=runModernPhase}) {
  const plan=steps=>withCdpConnectionProof({version:1,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:30000,steps},'control');
+ const startup=await executePlan(plan([
+  {id:'modern-startup-observation',op:'evaluate',expression:'window.__mfeModernStartup={done:false,inFlight:false};true'},
+  {id:'modern-startup-ready',op:'poll',intervalMs:100,equals:true,expression:`(()=>{const p=window.__mfeModernStartup;if(p.done)return true;if(!p.inFlight){p.inFlight=true;window.drive.status().then(s=>{p.inFlight=false;const result=(${modernStartupReadiness.toString()})(s,document.querySelector('#main-error')?.hidden===false);if(result.failed){p.done=true;p.failed=true;}else if(result.ready){p.done=true;p.ready=true;}},()=>{p.done=true;p.failed=true;p.inFlight=false;});}return p.done;})()`},
+  {id:'modern-startup-result',op:'evaluate',expression:'window.__mfeModernStartup'}
+ ]));
+ const ready=startup.results?.at(-1)?.value;assert.equal(ready?.done,true);assert.equal(ready.failed,undefined,'Modern fixture startup failed');assert.equal(ready.ready,true,'Modern fixture startup is not ready');
  const inspect=async label=>{
   const key='__mfeModernFixture';
   const result=await executePlan(plan([
@@ -53,6 +71,7 @@ export function modernPhaseVerdict(receipt) {
  const pending=[];const require=(condition,reason)=>{if(!condition)pending.push(reason);};
  require(receipt.verificationScope==='modern-only','Explicit modern-only scope');
  require(/^[a-f0-9]{40}$/.test(receipt.sourceCommit||'')&&[receipt.executableSha256,receipt.resourceHashes?.asar,receipt.resourceHashes?.nativeHost].every(x=>/^[a-f0-9]{64}$/.test(x||'')),'Exact source and packaged resources');
+ require(receipt.verifierBinding?.targetSourceCommit===receipt.sourceCommit&&/^[a-f0-9]{40}$/.test(receipt.verifierBinding?.verifierSourceCommit||''),'Explicit target and verifier source binding');
  require(receipt.launched===true,'Fresh packaged launch');
  if(receipt.transport==='direct-cheap-cli') {
   try{assert.equal(receipt.transportProvenance?.version,1);assert.equal(receipt.launchTransportBinding?.transport,receipt.transport);assert.deepEqual(receipt.launchTransportBinding?.transportProvenance,receipt.transportProvenance);assert.match(receipt.launchTransportBinding?.lifecycleReceiptSha256||'',/^[a-f0-9]{64}$/);}catch{pending.push('Prepared and launched direct transport binding');}

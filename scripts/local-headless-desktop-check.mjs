@@ -8,7 +8,7 @@ import {createHash} from 'node:crypto';
 import {spawn} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {createModernProbeEvidence} from './modern-ui-check.mjs';
-import {verificationScope,runIndependentModern,modernPhaseVerdict,assertModernCaptureInventory} from './modern-phase.mjs';
+import {verificationScope,runIndependentModern,modernPhaseVerdict,assertModernCaptureInventory,verifierSourceBinding} from './modern-phase.mjs';
 import {pathToFileURL,fileURLToPath} from 'node:url';
 
 export function makeLaunch({executable,runRoot,port}) {
@@ -286,20 +286,21 @@ export async function runLocalHeadlessCheck(env=process.env) {
   receipt.transportProvenance=provenance.transportProvenance;
  }
  const modernBinding=(modernOnly||env.MFE_MODERN_UI_CHECK==='1')?await modernBuildBinding({buildReceiptPath:env.MFE_BUILD_RECEIPT,sourceCommit:sourceBinding,executable,resourceHashes}):null;
+ if(modernBinding)receipt.verifierBinding=verifierSourceBinding({scope,targetSource:sourceBinding,actualSource:await readModernSource(),requestedVerifierSource:env.MFE_VERIFIER_SOURCE_COMMIT});
  await fs.writeFile(path.join(runRoot,'prepared.json'),JSON.stringify(receipt,null,2));
  if(env.MFE_HEADLESS_EXECUTE!=='1') {console.log(JSON.stringify({prepared:true,launched:false,runRoot,requires:'Set MFE_HEADLESS_EXECUTE=1 only after reviewing the packaged executable and isolated profile arguments.'}));return receipt;}
  console.log(JSON.stringify({state:'source-bound-launch-prepared',runRoot,sourceCommit:receipt.sourceCommit,executableSha256:receipt.executableSha256,resourceHashes}));
  const python=env.MFE_PYTHON||'python';let cleanup;let failure;let fixture;let runtime;let launchAttempted=false;
  const executePlan=createPlanRecorder(runRoot,plan=>command(process.execPath,[cdp,'run'],plan));
  const modernProbeEvidence=modernBinding?createModernProbeEvidence({binding:modernBinding,outputRoot:launch.outputRoot,helperPath:cdp,validate:input=>command(process.execPath,[path.join(skillRoot,'diagnose-built-ui-layout','scripts','validate-layout-probe.mjs'),'--input',input]),observe:async()=>{
-  const sourceCommit=await readModernSource();assert.equal(sourceCommit,modernBinding.sourceCommit);
+  const verifierSourceCommit=await readModernSource();assert.equal(verifierSourceCommit,receipt.verifierBinding.verifierSourceCommit);const sourceCommit=modernBinding.sourceCommit;
   const window=await command(python,[lowlevel,'wait-window','--state',statePath,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30']);
   const inspectionPlan=withCdpConnectionProof(plan,'modern-observation');
   const bytes=await fs.readFile(statePath),state=JSON.parse(bytes),inspection=await command(process.execPath,[cdp,'inspect'],inspectionPlan);
   const processSha256=createHash('sha256').update(await fs.readFile(executable)).digest('hex');assert.equal(processSha256,modernBinding.artifactSha256);
   const native=await command(python,[fileURLToPath(new URL('./native-window-observation.py',import.meta.url))],{helper:installedLowlevel,receipt:statePath});
   const observation=modernNativeObservation({native,window,state,launch,sourceCommit,launchReceiptSha256:createHash('sha256').update(bytes).digest('hex'),processSha256,inspection,profileResolved:await fs.realpath(path.join(runRoot,'profile'))});
-  await appendStepReceipt(runRoot,{version:1,kind:'modern-native-observation',observation,window,inspection});return observation;
+  await appendStepReceipt(runRoot,{version:1,kind:'modern-native-observation',verifierBinding:receipt.verifierBinding,observation,window,inspection});return observation;
  }}):undefined;
  try {
   await command(python,[installedLowlevel,'self-test']);await command(process.execPath,[cdp,'self-test']);
