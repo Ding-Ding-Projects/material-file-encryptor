@@ -66,12 +66,13 @@ export async function buildDocumentation(root,output,home) {
  const catalog=JSON.parse(await fs.readFile(path.join(root,'docs/site/content-catalog.json'),'utf8'));
  if(catalog.version!==1||!Array.isArray(catalog.articles)||new Set(catalog.articles).size!==catalog.articles.length||catalog.articles.some(file=>typeof file!=='string'||file.split('/').some(part=>part==='..')||(!/^docs\/features\/[a-z0-9/.-]+\.md$/i.test(file)&&file!=='DESIGN.md')))throw new Error('Invalid documentation catalogue');
  if(!/^[a-f0-9]{40}$/.test(catalog.wiki.sourceCommit)||catalog.wiki.source!==repository+'/wiki'||catalog.wiki.files.some(file=>!/^[-_a-z0-9]+\.md$/i.test(file)))throw new Error('Invalid wiki provenance');
+ const wikiHashes=catalog.wiki.fileSha256;if(!wikiHashes||typeof wikiHashes!=='object'||Array.isArray(wikiHashes)||JSON.stringify(Object.keys(wikiHashes).sort())!==JSON.stringify([...catalog.wiki.files].sort())||Object.values(wikiHashes).some(value=>typeof value!=='string'||!/^[a-f0-9]{64}$/.test(value)))throw new Error('Invalid wiki content hash inventory');
  const actual=(await markdownFiles(path.join(root,'docs/features'))).map(file=>path.relative(root,file).replaceAll('\\','/')).sort();
  const expected=catalog.articles.filter(file=>file.startsWith('docs/features/')).sort();
  if(JSON.stringify(actual)!==JSON.stringify(expected))throw new Error('Documentation inventory differs from feature articles');
  const wikiFiles=(await markdownFiles(path.join(root,'docs/site/wiki'))).map(file=>path.basename(file)).sort();
  if(JSON.stringify(wikiFiles)!==JSON.stringify([...catalog.wiki.files].sort()))throw new Error('Wiki snapshot inventory differs');
- if(catalog.wiki.fileSha256)for(const file of wikiFiles){const expected=catalog.wiki.fileSha256[file],actual=digest(await fs.readFile(path.join(root,'docs/site/wiki',file)));if(!/^[a-f0-9]{64}$/.test(expected)||actual!==expected)throw new Error('Wiki snapshot content hash differs: '+file);}
+ for(const file of wikiFiles){const expected=wikiHashes[file],actual=digest(await fs.readFile(path.join(root,'docs/site/wiki',file)));if(actual!==expected)throw new Error('Wiki snapshot content hash differs: '+file);}
  const routes=new Map(catalog.articles.map(source=>[source,route(source)]));
  for(const file of wikiFiles)routes.set('docs/site/wiki/'+file,route('wiki/'+file));
  const articles=[];

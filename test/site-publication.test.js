@@ -73,7 +73,7 @@ test('wiki underscore basename renders the actual continuation snapshot',async()
  await fs.mkdir(path.join(temp,'docs/features'),{recursive:true});
  const markdown=await fs.readFile('docs/site/wiki/CLOSEOUT_PROMPT.md','utf8');
  await fs.writeFile(path.join(temp,'docs/site/wiki/CLOSEOUT_PROMPT.md'),markdown);
- await fs.writeFile(path.join(temp,'docs/site/content-catalog.json'),JSON.stringify({...catalog,articles:[],categories:[],wiki:{...catalog.wiki,files:['CLOSEOUT_PROMPT.md']}}));
+ await fs.writeFile(path.join(temp,'docs/site/content-catalog.json'),JSON.stringify({...catalog,articles:[],categories:[],wiki:{...catalog.wiki,files:['CLOSEOUT_PROMPT.md'],fileSha256:{'CLOSEOUT_PROMPT.md':catalog.wiki.fileSha256['CLOSEOUT_PROMPT.md']}}}));
  const output=path.join(temp,'output');
  const articles=await buildDocumentation(temp,output,await fs.readFile('docs/site/index.html','utf8'));
  assert.equal(articles.length,1);assert.equal(articles[0].markdown,markdown);
@@ -83,7 +83,10 @@ test('wiki underscore basename renders the actual continuation snapshot',async()
  }finally{await fs.rm(temp,{recursive:true,force:true});}
 });
 test('source-bound wiki hashes reject edited snapshot content before publication',async()=>{
- const temp=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-wiki-hash-'));try{await fs.mkdir(path.join(temp,'docs/site/wiki'),{recursive:true});await fs.mkdir(path.join(temp,'docs/features'),{recursive:true});const markdown=await fs.readFile('docs/site/wiki/CLOSEOUT_PROMPT.md','utf8');await fs.writeFile(path.join(temp,'docs/site/wiki/CLOSEOUT_PROMPT.md'),markdown+'\nUnexpected content.\n');await fs.writeFile(path.join(temp,'docs/site/content-catalog.json'),JSON.stringify({...catalog,articles:[],categories:[],wiki:{...catalog.wiki,files:['CLOSEOUT_PROMPT.md']}}));await assert.rejects(buildDocumentation(temp,path.join(temp,'output'),''),/Wiki snapshot content hash differs/);}finally{await fs.rm(temp,{recursive:true,force:true});}
+ const temp=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-wiki-hash-'));try{await fs.mkdir(path.join(temp,'docs/site/wiki'),{recursive:true});await fs.mkdir(path.join(temp,'docs/features'),{recursive:true});const markdown=await fs.readFile('docs/site/wiki/CLOSEOUT_PROMPT.md','utf8');await fs.writeFile(path.join(temp,'docs/site/wiki/CLOSEOUT_PROMPT.md'),markdown+'\nUnexpected content.\n');await fs.writeFile(path.join(temp,'docs/site/content-catalog.json'),JSON.stringify({...catalog,articles:[],categories:[],wiki:{...catalog.wiki,files:['CLOSEOUT_PROMPT.md'],fileSha256:{'CLOSEOUT_PROMPT.md':catalog.wiki.fileSha256['CLOSEOUT_PROMPT.md']}}}));await assert.rejects(buildDocumentation(temp,path.join(temp,'output'),''),/Wiki snapshot content hash differs/);}finally{await fs.rm(temp,{recursive:true,force:true});}
+});
+test('wiki content binding requires a complete exact hash inventory',async()=>{
+ for(const mutate of[wiki=>delete wiki.fileSha256,wiki=>delete wiki.fileSha256['Home.md'],wiki=>wiki.fileSha256['Extra.md']='a'.repeat(64),wiki=>wiki.fileSha256['Home.md']='invalid']){const temp=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-wiki-inventory-'));try{await fs.mkdir(path.join(temp,'docs/site'),{recursive:true});const value=structuredClone(catalog);mutate(value.wiki);await fs.writeFile(path.join(temp,'docs/site/content-catalog.json'),JSON.stringify(value));await assert.rejects(buildDocumentation(temp,path.join(temp,'output'),''),/Invalid wiki content hash inventory/);}finally{await fs.rm(temp,{recursive:true,force:true});}}
 });
 
 test('wiki basenames reject traversal, separators and unsafe punctuation',async()=>{
