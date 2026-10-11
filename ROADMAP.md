@@ -1,9 +1,12 @@
 ## Active redesign acceptance, 2026-10-11
 
 - [x] Independently verify and publish the native 80 MiB storage unit at main f6990e24 and normal release v1.275.1.
-- [ ] Complete the current interface production build and exact installer entrypoint.
-- [ ] Verify badge, guidance CSP, stationary frame, real context-menu actions and registered controls in the rebuilt runtime.
-- [ ] Complete 89 states across 4272 visual tuples, plus separate physical DPI proof.
+- [x] Complete exact build.bat /s and build-installer.bat /s at dc498289; verify 963 archive entries and 861 extracted payload files.
+- [x] Independently review the measured registered-button reset and live-announcer source repair; observe focused red/green regressions. Source acceptance only.
+- [ ] Finish the quiet nested-process route and rebuild the later stylesheet candidate without a visible terminal.
+- [ ] Complete combined JavaScript verification. The dc498289 run had 20 fixture failures; repairs passed focused checks, while the later shell-mediated attempt is unverified.
+- [ ] Verify repaired button geometry, live announcement behavior, stationary frame, real context-menu actions and all registered controls in the rebuilt runtime.
+- [ ] Complete 89 states across 4272 visual tuples, plus separate physical DPI proof. Zero tuples are accepted.
 - [ ] Complete applicable finite-ledger behavior, including the full interactive server manager and protected complete-reset transaction.
 - [ ] Resolve actual main-runtime cryptographic comparison with exact process ownership evidence.
 - [ ] Real-data migration is deferred by the user while the existing drive remains mounted.

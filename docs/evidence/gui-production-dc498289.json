@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "dc498289433e534bd63ae542e56230ccdc410f5b",
+  "sourceCleanBeforeAndAfter": true,
+  "commands": [
+    "build.bat /s",
+    "build-installer.bat /s"
+  ],
+  "startedAt": "2026-10-11T21:31:47.191Z",
+  "completedAt": "2026-10-11T21:36:59.386Z",
+  "exitCode": 0,
+  "hashes": {
+    "executable": "443c6f4ca13d03fd6ba660f45c52b4909cff2773600e27115e73fabc09ee92f1",
+    "asar": "bdae4e09add3b97aba7c236373b59f1e4a77a507e76c3ba6ecc85089266b4a06",
+    "nativeHost": "d4e6643b9b9820840634864d30c59e04e307e30d6039a6be73c7b57dfe29ee94"
+  },
+  "package": {
+    "name": "MaterialFileEncryptor-0.2.0-full.nupkg",
+    "bytes": 404435381,
+    "sha256": "2732ae80b14cb8390e957a4eba5c3b44af07ad8cc0b0d515a8a1b3cb4be5da53",
+    "all963EntriesValidated": true,
+    "extractedPayloadMatches": 861
+  },
+  "verification": {
+    "build": "passed",
+    "installerProduction": "passed",
+    "installation": "deferred",
+    "installedUpdate": "deferred",
+    "removal": "deferred",
+    "visualMatrix": "incomplete",
+    "newPublicRelease": "not published from this receipt"
+  },
+  "limitations": [
+    "Local package version is 0.2.0.",
+    "Later fixture, acceptance-controller and stylesheet commits are not certified by these package hashes.",
+    "The 89-state, 4272-tuple visual matrix has no accepted tuples.",
+    "Main-runtime cryptographic comparison remains unresolved.",
+    "Current user data migration remains deferred while the existing owner is mounted."
+  ]
+}

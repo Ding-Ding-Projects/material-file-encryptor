@@ -1,8 +1,10 @@
 ## Current interface integration checkpoint, 2026-10-11
 
-The redesigned interface remains under verification on the integration branch. The user explicitly deferred real-data migration while keeping the existing drive mounted. Do not use another letter to create a second vault/cache owner. Installation, installed update and removal remain deferred.
+The interface remains under verification. The user deferred real-data migration and actual installed lifecycle work, and explicitly requires no visible terminal windows. Main f6990e24 and normal release v1.275.1 retain the separately accepted 80 MiB storage result.
 
-Published main f6990e24 and normal release v1.275.1 contain the separately accepted 80 MiB storage unit. The latest completed interface build is 0f5d2b9; actual startup title and inner create-dialog accessible-name checks passed. New badge and guidance CSP fixes require a fresh build. The 89-state/4272-tuple matrix has zero accepted tuples, and retained diagnostic images are private because machine paths are visible. Main cryptographic comparison, full server management, protected complete reset and other finite-ledger gaps remain unfinished. See CLOSEOUT_PROMPT.md for the exact checkpoint and next verification actions.
+Exact production entrypoints passed at dc498289 with 963 validated package entries and 861 matching extracted files. Later stylesheet source528ace6 has independent acceptance and observed two-check red/green proof, but needs a fresh build and measured pixels. The broad dc498289 run had 1294 passing, 20 failing and 24 skipped checks; reviewed fixture fixes passed73 focused checks. The subsequent8000ee5 attempt is unverified because its empty captured log and visible terminal do not establish the child result. A quiet nested-process route is being prepared.
+
+Actual diagnostics established the button reset cause and refuted persistent palette overflow at the settled tuple. Zero of4272 visual tuples are accepted. Main cryptographic comparison, full server management, protected complete reset and other finite-ledger gaps remain unfinished. See CLOSEOUT_PROMPT.md and docs/evidence/gui-production-dc498289.json for current evidence boundaries. Historical records below retain their original scope.
 
 # Verified native storage unit, 2026-10-11
 
