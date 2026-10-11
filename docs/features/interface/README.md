@@ -19,3 +19,5 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 - [啟動登記讀取確認](startup-registration.zh-HK.md)
 
 - [Visitor-local website personalization](visitor-personalization.md)
+
+- [Browser workspace role](public-workspace-role.md)

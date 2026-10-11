@@ -20,9 +20,16 @@ try{siteStorage.removeItem('material-file-encryptor.site.vocabulary.v1');}catch{
 async function replacePrivateVocabulary(source) {
  const next=parseVocabulary(source),access=privateCacheAccess,ticket=++wordingGeneration;
  if(!privateWordingAvailable||!access?.authenticated||typeof access.encryptPrivateCache!=='function')throw Error('Unlock your private profile before applying local wording.');
- const envelope=await access.encryptPrivateCache(serializeVocabulary(next),'public-site-personal-vocabulary');
+ if(!globalThis.navigator?.locks?.request)throw Error('Protected local storage requires browser Web Locks support.');
+ let persisted=true;
+ await globalThis.navigator.locks.request('material-file-encryptor.visitor.access.write',async()=>{
+  const envelope=await access.encryptPrivateCache(serializeVocabulary(next),'public-site-personal-vocabulary');
+  if(ticket!==wordingGeneration||!access.authenticated||schoolEnabled)throw Error('Authentication changed. Original wording remains active.');
+  access.credentialStore.assertSession();
+  try{siteStorage.setItem(vocabularyStorageKey,JSON.stringify(envelope));}catch{persisted=false;}
+  access.credentialStore.assertSession();
+ });
  if(ticket!==wordingGeneration||!access.authenticated||schoolEnabled)throw Error('Authentication changed. Original wording remains active.');
- let persisted=true;try{siteStorage.setItem(vocabularyStorageKey,JSON.stringify(envelope));}catch{persisted=false;}
  vocabulary=next;vocabularyState={kind:'success',persisted};
 }
 export async function setAuthenticatedLocalSession(authenticated,access) {
