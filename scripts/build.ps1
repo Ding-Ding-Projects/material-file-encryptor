@@ -23,6 +23,7 @@ $toolOutput = Join-Path $root 'out\tools'
 if (Test-Path -LiteralPath $toolOutput) { Move-Item -LiteralPath $toolOutput -Destination (Join-Path $tools ('bundle.previous-' + [Guid]::NewGuid().ToString('N'))) }
 Move-Item -LiteralPath $toolStage -Destination $toolOutput
 Invoke-Checked { npm.cmd ci }
+Invoke-Checked { node scripts/stage-font-outputs.mjs }
 Invoke-Checked { node scripts/build-workspace.mjs }
 Invoke-Checked { node scripts/build-site.mjs }
 Invoke-Checked { dotnet publish native/MaterialFileEncryptor.Host -c Release -r win-x64 --self-contained true -o out/native }

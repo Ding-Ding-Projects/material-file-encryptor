@@ -48,6 +48,8 @@
     "docs/features/interface/animation-transition.zh-HK.md",
     "docs/features/interface/appearance-editor.md",
     "docs/features/interface/appearance-editor.zh-HK.md",
+    "docs/features/interface/bundled-fonts.md",
+    "docs/features/interface/bundled-fonts.zh-HK.md",
     "docs/features/interface/font-metadata.md",
     "docs/features/interface/font-metadata.zh-HK.md",
     "docs/features/interface/local-personalization.md",
@@ -160,15 +162,15 @@
   "wiki": {
     "status": "available",
     "source": "https://github.com/Ding-Ding-Projects/material-file-encryptor/wiki",
-    "sourceCommit": "39152ec10575b151e08aedea9d3edf333d3cc42f",
+    "sourceCommit": "1347189c7c143996f8ba5a1c6acdba4a52620cfc",
     "files": [
       "CLOSEOUT_PROMPT.md",
       "Home.md"
     ],
     "previousBoundary": "An earlier attempt returned Repository not found. A subsequent Git CLI read succeeded; this snapshot contains every Markdown page in that fetched revision.",
     "fileSha256": {
-      "Home.md": "0eed95c7b27ac9cd1fa560b1597142ab25359e2116d588ac91274a6b7b8421a8",
-      "CLOSEOUT_PROMPT.md": "ac5eb825fc528e257762a66da5c54684f9e6b8e1ed9ca59963602f0c76aace8b"
+      "Home.md": "4edddfa3d643a233ebb994c3bcfc5ce1a854e7306ba0545626bcf5ff5e2d34ff",
+      "CLOSEOUT_PROMPT.md": "4b25cea618109eb849a4c9fef8bb503f0c8273a2ef78fc8862fc13e1bafbf89b"
     }
   },
   "excluded": [

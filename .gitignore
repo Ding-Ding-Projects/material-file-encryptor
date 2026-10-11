@@ -5,8 +5,11 @@ out/
 *.log
 *.key
 coverage/
+/font-assets/
 **/bin/
 **/obj/
 **/__pycache__/
 /src/shared/build-metadata.json
 /src/shared/documentation-catalog.json
+
+/src/renderer/fonts/

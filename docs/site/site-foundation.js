@@ -82,7 +82,7 @@ export function mountSiteFoundation({document,storage,getPreferences,onPreferenc
   notify:message=>foundation.notify({title:localized('Website preferences',language()),message,level:'warning'})});
  const hadVisitorSettings=(()=>{try{return storage.getItem(VISITOR_PREFIX+'material-file-encryptor.local-ux.v1')!==null;}catch{return false;}})();
  const prior={...getPreferences()};
- visitorPersonalization=mountVisitorPersonalization(personalizationHost,{storage,foundation,historyCredentialStore:visitorAccess.historyCredentialStore,historyManager:visitorAccess.historyManager,isAuthenticated:()=>visitorAccess.authenticated,credentialCapabilities:visitorAccess.credentialCapabilities,
+ visitorPersonalization=mountVisitorPersonalization(personalizationHost,{storage,foundation,bundledFontBaseURL:new URL('./fonts/',import.meta.url).href,historyCredentialStore:visitorAccess.historyCredentialStore,historyManager:visitorAccess.historyManager,isAuthenticated:()=>visitorAccess.authenticated,credentialCapabilities:visitorAccess.credentialCapabilities,
   onChange:value=>{shared({detail:{verified:true,school:value.school}});onCanonicalSettings(value);visitorAccess?.setLanguage(value.school.enabled?'en':value.language);},
   onLock:target=>visitorAccess.openLockWizard(target.id||'public-element-'+crypto.randomUUID(),target)});
  if(!hadVisitorSettings)visitorPersonalization.store.update({language:prior.language,emoji:prior.emoji},'website preferences migrated');

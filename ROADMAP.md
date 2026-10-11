@@ -6,7 +6,8 @@
 - [x] Verify main acbdf10 push and exact deployed documentation provenance, all 198 files, 6,430 internal references and repository homepage.
 - [ ] Verify current main cloud production and its normal release independently.
 - [x] Repair and independently refute installed-font mount rollback/subscription recovery and cached bundled-font cancellation; source acceptance only.
-- [ ] Integrate and verify bundled-font build/site hooks, actual face forwarding and rendered controls.
+- [x] Integrate independently reviewed bundled-font build/site hooks and loaded-alias consumer admission; source/cache checks only.
+- [ ] Verify actual cloud package/site font inclusion, real browser decoding, exact rendered face behavior and controls.
 - [ ] Verify persistent launch observer on the intended installed candidate and the restart isolation selector before any actual native update.
 - [ ] Prove installed automatic download, ready/Later behavior, active-work refusal and native update/restart without real-profile access.
 - [ ] Complete every app/site/settings/editor/motion/guidance/server feature and its genuine built-surface evidence; all 210 complete-surface rows remain unverified.
