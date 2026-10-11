@@ -1,7 +1,8 @@
 ﻿param([switch]$PrepareOnly)
 $ErrorActionPreference = 'Stop'
+. "$PSScriptRoot/../../scripts/squirrel-file-hash.ps1"
 function Assert([bool]$condition, [string]$message) { if (!$condition) { throw $message } }
-function Digest([string]$path, [string]$algorithm='SHA256') { (Get-FileHash -LiteralPath $path -Algorithm $algorithm).Hash.ToLowerInvariant() }
+function Digest([string]$path, [string]$algorithm='SHA256') { (Get-SquirrelFileHash -LiteralPath $path -Algorithm $algorithm).Hash.ToLowerInvariant() }
 function Gh([string[]]$Arguments) { [Management.Automation.ApplicationInfo]$nativeGh = Get-Command gh.exe -CommandType Application -ErrorAction Stop | Select-Object -First 1; $result = & $nativeGh.Source @Arguments; if ($LASTEXITCODE -ne 0) { throw 'GITHUB_CLI_OPERATION_FAILED' }; return $result }
 $repo=$env:GITHUB_REPOSITORY; $source=$env:GITHUB_SHA
 $workflowUrl="https://github.com/$repo/actions/runs/$($env:GITHUB_RUN_ID)"
@@ -11,9 +12,8 @@ $workflowStartedUtc=[DateTimeOffset]::Parse($workflowStarted).ToUniversalTime()
 Assert ($env:GITHUB_RUN_NUMBER -match '^[1-9][0-9]*$' -and $env:GITHUB_RUN_ATTEMPT -match '^[1-9][0-9]*$') 'INVALID_RUN_IDENTITY'
 $tag="v1.$($env:GITHUB_RUN_NUMBER).$($env:GITHUB_RUN_ATTEMPT)"
 $packageVersion=$tag.Substring(1)
-Assert ((Get-Content package.json -Raw | ConvertFrom-Json).version -eq $packageVersion) 'RELEASE_PACKAGE_VERSION_MISMATCH'
-$lock=Get-Content package-lock.json -Raw | ConvertFrom-Json
-Assert ($lock.version -eq $packageVersion -and $lock.packages.PSObject.Properties[''].Value.version -eq $packageVersion) 'RELEASE_LOCK_VERSION_MISMATCH'
+& node scripts/release-version.mjs --verify $packageVersion
+Assert ($LASTEXITCODE -eq 0) 'RELEASE_MANIFEST_VERIFICATION_FAILED'
 $output='release-output'; New-Item -ItemType Directory -Force $output | Out-Null
 $directory='out/make/squirrel.windows/x64'
 Assert (!(Test-Path -LiteralPath (Join-Path $directory 'reassembly-unsettled.json'))) 'SQUIRREL_PREVIOUS_PRODUCER_UNSETTLED'

@@ -1,5 +1,6 @@
 // Local-only parsing and replacement. This module performs no network access.
 export const MAX_VOCABULARY_BYTES = 256 * 1024;
+export const MAX_VOCABULARY_ENTRIES = 10000;
 const unsafe = new Set(['__proto__', 'prototype', 'constructor']);
 const size = text => [...text].length;
 const invalid = () => { throw new Error('Invalid vocabulary JSON. Use schemaVersion 1 with entries, or version 1 with replacements.'); };
@@ -55,6 +56,7 @@ export function parseVocabulary(source) {
   if (exact(value, ['schemaVersion', 'entries']) && value.schemaVersion === 1 && value.entries && typeof value.entries === 'object' && !Array.isArray(value.entries)) replacements = Object.entries(value.entries).map(([from, to]) => ({ from, to }));
   else if (exact(value, ['version', 'replacements']) && value.version === 1 && Array.isArray(value.replacements)) replacements = value.replacements;
   else invalid();
+  if (replacements.length > MAX_VOCABULARY_ENTRIES) invalid();
   const seen = new Set();
   for (const entry of replacements) {
     if (!exact(entry, ['from', 'to']) || typeof entry.from !== 'string' || typeof entry.to !== 'string' || !entry.from.trim() || size(entry.from) > 160 || size(entry.to) > 1000 || /[\u0000-\u001f\u007f-\u009f]/u.test(entry.from + entry.to) || unsafe.has(entry.from) || unsafe.has(entry.to) || seen.has(entry.from)) invalid();
