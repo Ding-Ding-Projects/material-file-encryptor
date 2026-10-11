@@ -48,10 +48,10 @@ export function createSurfaceModel({ storage, storageKey = 'surface-state', tabs
     return values.filter(tab => tab && typeof tab.id === 'string' && tab.id && tab.id.length <= 128 && !seen.has(tab.id) && seen.add(tab.id)).slice(0, 100).map(sanitizeTab);
   };
   const validId = id => typeof id === 'string' && id.length > 0 && id.length <= 128;
-  const sanitizeNotification = item => ({ id: item.id, title: notificationText(item.title, 256), message: notificationText(item.message, 4096), level: ['info', 'success', 'warning', 'error'].includes(item.level) ? item.level : 'info', read: item.read === true, createdAt: new Date(item.createdAt).toISOString() });
+  const sanitizeNotification = item => ({ progress: item.progress && Number.isFinite(Number(item.progress.value)) ? {value:Math.max(0,Math.min(100,Number(item.progress.value))),label:notificationText(item.progress.label,256)} : null, recovery: (Array.isArray(item.recovery)?item.recovery:[]).filter(action=>action&&/^[a-zA-Z0-9:_-]{1,128}$/.test(action.id)).slice(0,4).map(action=>({id:action.id,label:notificationText(action.label,256)})), id: item.id, title: notificationText(item.title, 256), message: notificationText(item.message, 4096), level: ['info', 'success', 'warning', 'error'].includes(item.level) ? item.level : 'info', read: item.read === true, createdAt: new Date(item.createdAt).toISOString() });
   const defaults = uniqueTabs(tabs);
   if (!defaults.length) defaults.push({ id: 'home', label: 'Home', group: '', pinned: false });
-  let state = { notificationFormat: 2, droppedLegacyNotifications: 0, version: VERSION, tabs: defaults, activeTabId: defaults[0].id, closedTabs: [], closedTabIds: [], groups: [], notifications: [] };
+  let state = { notificationFormat: 2, notificationAudio: false, droppedLegacyNotifications: 0, version: VERSION, tabs: defaults, activeTabId: defaults[0].id, closedTabs: [], closedTabIds: [], groups: [], notifications: [] };
   try {
     const raw = storage?.getItem(storageKey);
     if (raw && raw.length <= 2097152) {
@@ -60,6 +60,7 @@ export function createSurfaceModel({ storage, storageKey = 'surface-state', tabs
         const restored = uniqueTabs(saved.tabs);
         if (restored.length) {
           state.tabs = restored;
+          // Audio requires a new user gesture in each browser session.
           state.activeTabId = restored.some(tab => tab.id === saved.activeTabId) ? saved.activeTabId : restored[0].id;
           state.closedTabs = uniqueTabs(Array.isArray(saved.closedTabs) ? saved.closedTabs : []).filter(tab => !restored.some(open => open.id === tab.id)).slice(-20);
           state.closedTabIds = [...new Set([...(Array.isArray(saved.closedTabIds)?saved.closedTabIds:[]),...state.closedTabs.map(tab=>tab.id)])].filter(id=>validId(id)&&!restored.some(tab=>tab.id===id)).slice(-100);
@@ -143,6 +144,10 @@ export function createSurfaceModel({ storage, storageKey = 'surface-state', tabs
       state.notifications.push(sanitizeNotification({ ...input, id, read: false, createdAt: new Date().toISOString() }));
       state.notifications = state.notifications.slice(-200); persist(); return id;
     },
+    setNotificationAudio(enabled) {state.notificationAudio=enabled===true;persist();return state.notificationAudio;},
+    updateNotification(id,patch={}) {const index=state.notifications.findIndex(item=>item.id===id);if(index<0)return false;const previous=state.notifications[index];state.notifications[index]=sanitizeNotification({...previous,...patch,id:previous.id,createdAt:previous.createdAt,read:previous.read});persist();return true;},
+    readNotifications(ids,read=true) {if(!Array.isArray(ids))return 0;let changed=0;for(const item of state.notifications)if(ids.includes(item.id)){item.read=!!read;changed++;}persist();return changed;},
+    dismissNotifications(ids) {if(!Array.isArray(ids))return 0;const count=state.notifications.length;state.notifications=state.notifications.filter(item=>!ids.includes(item.id));persist();return count-state.notifications.length;},
     readNotification(id, read = true) { const item = state.notifications.find(row => row.id === id); if (!item) return false; item.read = !!read; persist(); return true; },
     dismissNotification(id) { const length = state.notifications.length; state.notifications = state.notifications.filter(row => row.id !== id); if (length === state.notifications.length) return false; persist(); return true; },
     filterNotifications(query = '', options = {}) { return matchRows(state.notifications.filter(row => !options.unreadOnly || !row.read), query, options, row => `${row.title} ${row.message} ${row.level}`); },
@@ -150,8 +155,8 @@ export function createSurfaceModel({ storage, storageKey = 'surface-state', tabs
       if (format === 'json') return JSON.stringify(state.notifications, null, 2);
       if (format !== 'csv') throw new TypeError('Unsupported export format.');
       const cell = value => `"${String(value).replace(/^\s*[=+@-]/, "'$&").replace(/"/g, '""')}"`;
-      const fields = ['id', 'title', 'message', 'level', 'read', 'createdAt'];
-      return [fields.join(','), ...state.notifications.map(row => fields.map(field => cell(row[field])).join(','))].join('\r\n');
+      const fields = ['id', 'title', 'message', 'level', 'read', 'createdAt', 'progress', 'recovery'];
+      return [fields.join(','), ...state.notifications.map(row => fields.map(field => cell(typeof row[field] === 'object' ? JSON.stringify(row[field]) : row[field])).join(','))].join('\r\n');
     }
   };
 }

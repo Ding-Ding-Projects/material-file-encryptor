@@ -174,3 +174,15 @@ test('trusted tab registration repairs open and closed labels without renaming g
  assert.equal(model.getState().tabs.find(tab=>tab.id==='extra').label,'Canonical extra');
  assert.equal(model.getState().groups[0].label,'Custom group');
 });
+
+test('progress and recovery updates are bounded canonical records with bulk actions',()=>{
+ const model=createSurfaceModel({tabs});
+ const first=model.addNotification({title:'Task',progress:{value:300,label:'Canonical progress'},recovery:[{id:'retry',label:'Try again'},{id:'invalid action',label:'Rejected'}]});
+ const second=model.addNotification({title:'Second'});
+ assert.equal(model.getState().notifications[0].progress.value,100);
+ assert.deepEqual(model.getState().notifications[0].recovery,[{id:'retry',label:'Try again'}]);
+ assert.equal(model.updateNotification(first,{progress:{value:35,label:'Working'}}),true);
+ assert.equal(model.getState().notifications[0].progress.value,35);
+ assert.equal(model.readNotifications([first,second]),2);assert.ok(model.getState().notifications.every(item=>item.read));
+ assert.equal(model.dismissNotifications([first]),1);assert.equal(model.getState().notifications[0].id,second);
+});
