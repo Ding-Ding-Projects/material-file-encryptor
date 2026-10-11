@@ -1,4 +1,4 @@
-﻿param([switch]$Installer)
+﻿param([switch]$Installer, [switch]$BrowserHostOnly)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
@@ -10,6 +10,27 @@ if (!(Test-Path Env:PRIVATE_INSTRUCTIONS_SOURCE)) {
   if ($LASTEXITCODE -eq 0 -and ![string]::IsNullOrWhiteSpace($instructionSource)) { $env:PRIVATE_INSTRUCTIONS_SOURCE = $instructionSource }
 }
 Invoke-Checked { node scripts/check-vocabulary.mjs }
+function Publish-BrowserHost {
+  Invoke-Checked { dotnet publish native/MaterialFileEncryptor.BrowserHost -c Release -r win-x64 --self-contained true -o out/browser-host }
+  $browserHostReceipt = @{
+    schemaVersion=1; sourceCommit=((& git rev-parse HEAD).Trim()); sourceTree=((& git rev-parse 'HEAD^{tree}').Trim())
+    projectSha256=(Get-BootstrapDigest 'native/MaterialFileEncryptor.BrowserHost/MaterialFileEncryptor.BrowserHost.csproj')
+    hostSourceSha256=(Get-BootstrapDigest 'native/MaterialFileEncryptor.BrowserHost/Program.cs')
+    nativeChecksSha256=(Get-BootstrapDigest 'native/MaterialFileEncryptor.BrowserHost/NativeChecks.cs')
+    executableSha256=(Get-BootstrapDigest 'out/browser-host/MaterialFileEncryptor.BrowserHost.exe')
+    assemblySha256=(Get-BootstrapDigest 'out/browser-host/MaterialFileEncryptor.BrowserHost.dll')
+    runtimeConfigSha256=(Get-BootstrapDigest 'out/browser-host/MaterialFileEncryptor.BrowserHost.runtimeconfig.json')
+    dependenciesSha256=(Get-BootstrapDigest 'out/browser-host/MaterialFileEncryptor.BrowserHost.deps.json')
+    runtimeVerification='not-run'; installation='not-performed'; registryMutation='not-performed'
+  }
+  New-Item -ItemType Directory -Force out/evidence | Out-Null
+  [IO.File]::WriteAllText((Join-Path $root 'out/evidence/browser-host-build.json'), ($browserHostReceipt | ConvertTo-Json), [Text.UTF8Encoding]::new($false))
+}
+if ($BrowserHostOnly) {
+  if ($Installer) { throw 'Browser host focus cannot produce an installer.' }
+  Publish-BrowserHost
+  return
+}
 if ($env:GITHUB_ACTIONS -eq 'true') {
   # Every producer in one run uses the same Squirrel and application version.
   Invoke-Checked { node scripts/release-version.mjs }
@@ -36,6 +57,7 @@ Invoke-Checked { node scripts/stage-font-outputs.mjs }
 Invoke-Checked { node scripts/build-workspace.mjs }
 Invoke-Checked { node scripts/build-site.mjs }
 Invoke-Checked { dotnet publish native/MaterialFileEncryptor.Host -c Release -r win-x64 --self-contained true -o out/native }
+Publish-BrowserHost
 # Compile focused native verification before unrelated runtime provisioning.
 Invoke-Checked { dotnet build native/MaterialFileEncryptor.Core.Tests -c Release }
 # Compile verification tooling only; runtime acceptance runs independently.
