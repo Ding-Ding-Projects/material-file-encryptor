@@ -14,7 +14,7 @@ function fixture(response,result={busy:true,locked:false}) {
     dialog:{showMessageBox:async(window,options)=>{shown=options;return {response};}},
     helper:{request:async method=>{calls.push(method);return method==='forceLock'?result:{mounted:false,locked:true};}},
     nativeState:value=>value,publish:()=>calls.push('publish')});
-  vm.runInContext(main.slice(main.indexOf('async function forceLockDrive('),main.indexOf('async function request(method, params)')),context);
+  const start=main.indexOf('async function forceLockDrive('),end=main.indexOf('async function request(',start);assert.ok(start>=0&&end>start);vm.runInContext(main.slice(start,end),context);
   return {context,calls,get shown(){return shown;}};
 }
 test('force lock cancellation keeps helper untouched in every current language',async()=>{
