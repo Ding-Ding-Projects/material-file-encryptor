@@ -3,6 +3,11 @@ import {IMAGE_TRANSFORM_SURFACE} from '../../renderer/features/personalization/i
 import { localized } from './localization.js';
 
 export const surfaceRegistry = Object.freeze([
+  { tag: 'mfe-navigation-rail', role: 'navigation', module: '../../renderer/features/shell/navigation.js', primitives: ['md-text-button','md-filled-tonal-button'] },
+  { tag: 'mfe-top-bar', role: 'banner', module: '../../renderer/features/shell/navigation.js', primitives: ['md-icon-button','md-outlined-button'] },
+  { tag: 'mfe-date-field', role: 'group', module: 'controls.js', primitives: ['md-outlined-text-field','md-outlined-button'], nativeInternals: ['input[type=date]','input[type=time]','input[type=datetime-local]'] },
+  { tag: 'mfe-file-picker', role: 'group', module: 'controls.js', primitives: ['md-outlined-text-field','md-outlined-button'], nativeInternals: ['input[type=file]'] },
+  { tag: 'mfe-dialog', role: 'dialog', module: 'controls.js', primitives: ['md-dialog'] },
   { tag: 'mfe-transition-properties', role: 'region', module: '../../renderer/features/personalization/transition-property-inspector.js', primitives: ['md-outlined-text-field','md-text-button'] },
   IMAGE_TRANSFORM_SURFACE,
   { tag: 'mfe-motion-keyframes', role: 'region', module: '../../renderer/features/personalization/motion-keyframe-inspector.js', primitives: ['md-outlined-text-field','md-text-button','md-checkbox'] },
@@ -20,7 +25,7 @@ export const surfaceRegistry = Object.freeze([
 ]);
 
 export function register(tag, constructor) {
-  if (!customElements.get(tag)) customElements.define(tag, constructor);
+  if (globalThis.customElements && !customElements.get(tag)) customElements.define(tag, constructor);
 }
 
 export { localized };
@@ -41,7 +46,7 @@ export function element(tag, props = {}, children = []) {
   return node;
 }
 
-export class SurfaceElement extends HTMLElement {
+export class SurfaceElement extends (globalThis.HTMLElement||class{}) {
   constructor() { super(); this.attachShadow({mode:'open'}); this.language = 'en'; }
   t(en, yue) { return localized(text(en,yue),this.language); }
   emit(type, detail) { this.dispatchEvent(new CustomEvent(type,{ detail,bubbles:true,composed:true })); }
