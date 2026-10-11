@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {sha256} from './gui-acceptance.mjs';
 import {observeOwnedPackagedFixture} from './gui-acceptance-packaged.mjs';
+import {createContextFoundationFixture} from './gui-acceptance-context-fixtures.mjs';
 
 // Uses the actual mounted verification filesystem. This producer cannot unlock
 // a prior locked session. Schedule mounted states before locked states, or open
@@ -11,7 +12,7 @@ export function createMountedFoundationFixtures({opened,io=fs}){
  assert.equal(opened.connectionOwned,true);assert.equal(opened.target.kind,'extracted-packaged-runtime');
  const {page,fixture,target}=opened;assert.match(fixture.driveLetter,/^[D-Z]:$/);assert.notEqual(fixture.driveLetter,'M:');
  const files=[['Acceptance A.txt','Synthetic alpha.\n'],['Acceptance B.txt','Synthetic beta.\n']].map(([name,text])=>({name,text,path:path.win32.join(fixture.driveLetter+'\\',name),sha256:sha256(text)}));
- const written=new Set();
+ const written=new Set(),removed=new Set();
  const identity=async context=>{
   assert.equal(context.binding.sourceCommit,target.sourceCommit);assert.equal(page.url(),target.expectedUrl);
   const state=await observeOwnedPackagedFixture(page,fixture);
@@ -31,6 +32,9 @@ export function createMountedFoundationFixtures({opened,io=fs}){
  };
  const prepare=async context=>{
   await identity(context);
+  // Only recreate files this producer deliberately removed, never a partial write.
+  if(removed.size){const before=await list();assert.equal(before.more,false);assert.deepEqual(before.rows.map(row=>row.path.replace(/^[/\\]+/,'')).sort(),files.filter(file=>written.has(file.name)).map(file=>file.name).sort(),'Unexpected files prevent fixture recreation');for(const file of files.filter(file=>written.has(file.name)))assert.equal(sha256(await io.readFile(file.path)),file.sha256,'Changed bytes prevent fixture recreation');}
+  for(const file of files.filter(file=>removed.has(file.name))){await io.writeFile(file.path,file.text,{flag:'wx'});written.add(file.name);removed.delete(file.name);}
   if(!written.size){const before=await list();assert.equal(before.more,false);assert.equal(before.rows.length,0,'Native fixture must initially be empty');
    // Exclusive creation prevents overwriting an unexpected mounted file.
    for(const file of files){await io.writeFile(file.path,file.text,{flag:'wx'});written.add(file.name);}
@@ -48,9 +52,20 @@ export function createMountedFoundationFixtures({opened,io=fs}){
    for(const file of owned){await io.unlink(file.path);written.delete(file.name);}await sync();
   }
   const after=await list();assert.equal(after.more,false);assert.equal(after.rows.length,0);
+  removed.clear();
   return {ownedSyntheticFixture:true,sourceCommit:target.sourceCommit,restored:true,productionFilesystem:true,fileCount:0};
  };
- return {'drive-populated':{prepare,restore},'drive-selected':{prepare,restore}};
+ const removeTarget=async(context,id)=>{
+  await identity(context);await assertFiles();const listing=await list();
+  const row=listing.rows.find(row=>row.id===id);const file=files[1];
+  assert.equal(row?.path.replace(/^[/\\]+/,''),file.name,'Only the second owned file may be removed');
+  assert.ok(written.has(file.name));assert.equal(sha256(await io.readFile(file.path)),file.sha256);
+  await io.unlink(file.path);written.delete(file.name);removed.add(file.name);await sync();
+  const after=await list();assert.equal(after.more,false);assert.deepEqual(after.rows.map(row=>row.path.replace(/^[/\\]+/,'')).sort(),[files[0].name]);
+  return {removedId:id,remainingId:after.rows[0].id};
+ };
+ const context=createContextFoundationFixture({opened,prepare,restore,identity,list,removeTarget});
+ return {'drive-populated':{prepare,restore},'drive-selected':{prepare,restore},'drive-overflow':context};
 }
 
 export function createKeyboardFoundationFixtures({opened}){

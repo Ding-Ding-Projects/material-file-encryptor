@@ -46,6 +46,20 @@ The five-adapter baseline is historical. The current packaged producer composes 
 
 The remaining finite acquisition capabilities are:
 
+The mounted foundation producer now supplies `drive-overflow` preparation,
+restoration, right-click opening, renderer viewport resize and target removal.
+It selects owned file A and right-clicks owned file B, then records the actual
+captured target independently of selection. Its keyboard action callback observes
+exactly one target-specific appearance-editor render and checks focus inside the
+editor and back on B after Escape. This counts the observable render effect, not
+hidden handler invocations. The consumer requires that evidence when the fixture
+sets `requireActionProof`; older externally supplied fixtures keep their existing
+action contract. Removal checks both owned file hashes before deleting only B,
+and subsequent preparation recreates only that deliberate deletion with exclusive
+creation. Foreign files or changed bytes prevent mutation. Resize uses actual
+browser viewport input and does not establish physical display scaling. These
+producers remain source-verified until the pinned packaged candidate runs them.
+
 | State family | Required supported setup |
 | --- | --- |
 | Drive populated, selected, offline, history, recycle, busy and error | Import tiny owned synthetic files through the native engine, create actual versions and deleted records, retain the exact fixture identity. Use an observed operation for busy state and an intentionally invalid owned operation for an error. Never inject status objects. |
