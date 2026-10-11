@@ -77,3 +77,12 @@ test('service never calls cloud model metadata or arbitrary network targets',asy
   const service=createOllamaService({dataDir:dir,fetchImpl:async u=>{urls.push(u);if(u.endsWith('/api/tags'))return response({models:[{name:'alpha:1',size:1}]});if(u.endsWith('/api/ps'))return response({models:[]});return response({remote_host:'https://cloud.invalid',remote_model:'alpha'});}});
   try{await service.request('models');await assert.rejects(service.request('chat',{model:'alpha:1',prompt:'hello'}),/cloud service/);assert.ok(urls.every(u=>u.startsWith('http://127.0.0.1:11434/')));assert.equal((await service.request('sessions')).length,0);}finally{await service.dispose();await fs.rm(dir,{recursive:true,force:true});}
 });
+test('guided model mutations refuse arbitrary destinations and generation streams locally',async()=>{
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'ollama-actions-'));let installed=[{name:'alpha:1',size:1}];const calls=[];
+  const service=createOllamaService({dataDir:dir,fetchImpl:async(u,o)=>{calls.push(u);const body=o.body?JSON.parse(o.body):{};if(u.endsWith('/api/tags'))return response({models:installed});if(u.endsWith('/api/ps'))return response({models:[]});if(u.endsWith('/api/copy')){installed.push({name:body.destination,size:1});return response({});}if(u.endsWith('/api/delete')){installed=installed.filter(m=>m.name!==body.model);return response({});}if(u.endsWith('/api/generate'))return response('{"response":"answer"}\n{"done":true}\n');return response({capabilities:['completion']});}});
+  try{await service.request('models');await assert.rejects(service.request('copyModel',{model:'alpha:1',slot:'../arbitrary'}));await assert.rejects(service.request('deleteModel',{model:'alpha:1',confirmation:'yes'}));
+    assert.equal((await service.request('copyModel',{model:'alpha:1',slot:'local-copy'})).copied,'alpha:local-copy');
+    const events=[];const finished=new Promise(resolve=>service.subscribe(e=>{events.push(e);if(e.type==='complete')resolve();}));await service.request('generate',{model:'alpha:1',prompt:'hi'});await finished;assert.equal(events.find(e=>e.type==='generate').delta,'answer');
+    await service.request('deleteModel',{model:'alpha:local-copy',confirmation:'alpha:local-copy'});assert.equal(installed.length,1);assert.ok(calls.every(u=>u.startsWith('http://127.0.0.1:11434/')));
+  }finally{await service.dispose();await fs.rm(dir,{recursive:true,force:true});}
+});
