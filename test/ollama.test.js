@@ -102,3 +102,21 @@ test('unknown tag metadata never borrows size or context from its neighbor',()=>
   const result=parsePage(html,'https://ollama.com/library/alpha/tags','alpha');
   assert.equal(result.tags[0].sizeBytes,null);assert.equal(result.tags[0].contextLength,null);assert.equal(result.tags[1].sizeBytes,4e9);assert.equal(result.tags[1].contextLength,8000);
 });
+test('safe shutdown waits for actual stream settlement and drains operation inventory',async()=>{
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'ollama-shutdown-'));let settled=false,aborted;
+  const abortSeen=new Promise(resolve=>{aborted=resolve;});
+  const service=createOllamaService({dataDir:dir,fetchImpl:async(u,options)=>{
+    if(u.endsWith('/api/tags'))return response({models:[{name:'alpha:1',size:1}]});
+    if(u.endsWith('/api/ps'))return response({models:[]});
+    if(u.endsWith('/api/show'))return response({capabilities:['completion']});
+    return new Response(new ReadableStream({start(controller){options.signal.addEventListener('abort',()=>{aborted();setTimeout(()=>{settled=true;controller.error(new DOMException('Cancelled','AbortError'));},40);},{once:true});}}));
+  }});
+  try{
+    await service.request('models');await service.request('generate',{model:'alpha:1',prompt:'hello'});
+    assert.ok(service.operations().some(op=>op.kind==='generate'));
+    let returned=false;const shutdown=service.cancelAll().then(()=>{returned=true;});await abortSeen;
+    assert.equal(returned,false);assert.equal(settled,false);await shutdown;
+    assert.equal(settled,true);assert.equal(service.operations().length,0);
+    await service.dispose();await assert.rejects(service.request('status'),/stopping/);
+  }finally{await service.dispose();await fs.rm(dir,{recursive:true,force:true});}
+});

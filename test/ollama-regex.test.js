@@ -35,3 +35,11 @@ test('renderer does not evaluate user expressions on its event loop',async()=>{
   const renderer=await readFile(new URL('../src/renderer/features/ollama/index.js',import.meta.url),'utf8');
   assert.ok(renderer.includes('regexFilter.filter('));assert.ok(renderer.includes('regexFilter.dispose()'));assert.ok(!renderer.includes('new RegExp('));
 });
+test('renderer is strict UTF-8 and uses the shipped stylesheet instead of inline styles',async()=>{
+  const bytes=await readFile(new URL('../src/renderer/features/ollama/index.js',import.meta.url));
+  const renderer=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
+  assert.ok(!renderer.includes('\uFFFD'));assert.ok(!renderer.includes('\u00C2\u00B7'));
+  assert.ok(!renderer.includes("createElement('style')"));
+  assert.ok(renderer.includes('${m.tag} · ${m.installed'));
+  const css=await readFile(new URL('../src/renderer/features/ollama/ollama.css',import.meta.url),'utf8');assert.ok(css.includes('.ollama-suite'));assert.ok(css.includes('overflow-wrap:anywhere'));
+});

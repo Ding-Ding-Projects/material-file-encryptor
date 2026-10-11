@@ -11,13 +11,13 @@ const HELP=Object.freeze({title:'Local Ollama recovery',steps:['Install the offi
 export function createOllamaService({dataDir,fetchImpl=fetch,hardwareProbe,profileLauncher,verifyExecutable,validateProfile,profileHealthCheck}={}) {
   if(!dataDir||!path.isAbsolute(dataDir))throw new Error('An absolute private data directory is required.');
   const client=new OllamaClient({fetchImpl}),catalogClient=new OfficialCatalog({fetchImpl}),profiles=new ProfileManager({launcher:profileLauncher,verifyExecutable,validateProfile,healthCheck:profileHealthCheck});
-  const listeners=new Set(),operations=new Map(),metadataByTag=new Map();let catalog=null,cart=[],sessions=[],installed=[],running=[],hardware=null,loadPromise=null,reservingChat=false,saveQueue=Promise.resolve();
+  const listeners=new Set(),operations=new Map(),metadataByTag=new Map(),pendingRequests=new Map();let catalog=null,cart=[],sessions=[],installed=[],running=[],hardware=null,loadPromise=null,reservingChat=false,saveQueue=Promise.resolve(),closing=false,cancelling=false,cancellationPromise=null;
   const emit=e=>{for(const listener of listeners)try{listener(e);}catch{}};
   const persist=()=>{const value=JSON.stringify({version:1,catalog,cart,sessions});if(Buffer.byteLength(value)>32*1024*1024)throw new Error('Local state exceeds 32 MiB. Remove old sessions before continuing.');saveQueue=saveQueue.catch(()=>{}).then(async()=>{await fs.mkdir(dataDir,{recursive:true,mode:0o700});const temp=path.join(dataDir,'ollama-state.tmp');await fs.writeFile(temp,value,{mode:0o600});await fs.rename(temp,path.join(dataDir,'ollama-state.json'));});return saveQueue;};
   // Every reader and mutation joins the same initialization promise. Publishing
   // a boolean before the asynchronous read would expose empty defaults to peers.
   const load=()=>{if(!loadPromise)loadPromise=(async()=>{try{const file=path.join(dataDir,'ollama-state.json');if((await fs.stat(file)).size>32*1024*1024)throw new Error('Saved state is too large.');const s=JSON.parse(await fs.readFile(file,'utf8'));if(s.version===1){catalog=s.catalog;cart=Array.isArray(s.cart)?s.cart.slice(0,100).map(c=>({...c,state:c.state==='pulling'?'interrupted':c.state})):[];sessions=Array.isArray(s.sessions)?s.sessions.slice(0,100):[];}}catch(error){if(error.code!=='ENOENT')emit({type:'storage-warning',message:'Saved local state could not be read. The original file has been retained.'});}})();return loadPromise;};
-  const begin=async(kind,work)=>{if(operations.size>=4)throw new Error('Four operations are already active. Stop one before starting another.');const id=randomUUID(),controller=new AbortController();operations.set(id,{controller,kind});void Promise.resolve().then(()=>work(controller.signal,id)).then(result=>emit({type:'complete',operationId:id,result}),error=>emit({type:controller.signal.aborted?'cancelled':'error',operationId:id,message:controller.signal.aborted?'Operation cancelled.':error.message})).finally(()=>operations.delete(id));return {operationId:id,state:'started'};};
+  const begin=async(kind,work)=>{if(closing||cancelling)throw new Error('The local model service is stopping.');if(operations.size>=4)throw new Error('Four operations are already active. Stop one before starting another.');const id=randomUUID(),controller=new AbortController(),entry={controller,kind,done:null};operations.set(id,entry);entry.done=Promise.resolve().then(()=>work(controller.signal,id)).then(result=>emit({type:'complete',operationId:id,result}),error=>emit({type:controller.signal.aborted?'cancelled':'error',operationId:id,message:controller.signal.aborted?'Operation cancelled.':error.message})).finally(()=>operations.delete(id));return {operationId:id,state:'started'};};
   const refreshModels=async()=>{const a=await client.call('installed');const b=await client.call('running');if(!Array.isArray(a.models)||!Array.isArray(b.models)||a.models.length>50000||b.models.length>50000)throw new Error('Invalid model inventory.');installed=a.models;running=b.models;return reconcile(catalog,installed,running);};
   const tagKnown=tag=>{modelName(tag);if(!reconcile(catalog,installed,running).some(v=>v.tag===tag))throw new Error('Select a verified catalog or installed tag first.');return tag;};
   const findSession=id=>{const s=sessions.find(s=>s.id===id);if(!s)throw new Error('Session not found.');return s;};
@@ -96,6 +96,29 @@ export function createOllamaService({dataDir,fetchImpl=fetch,hardwareProbe,profi
         case 'restore':return profiles.restore(p.id);
       }
     },
-    async dispose(){for(const op of operations.values())op.controller.abort();await saveQueue;listeners.clear();},
-  };return api;
+    operations(){return [...operations.entries()].map(([id,op])=>({id,kind:op.kind,state:op.controller.signal.aborted?'cancelling':'running'})).concat([...pendingRequests.values()].map(kind=>({kind,state:'pending'})));},
+    async cancelAll(){
+      if(cancellationPromise)return cancellationPromise;
+      cancelling=true;
+      cancellationPromise=(async()=>{
+        // A request admitted before cancellation may still be loading or doing
+        // a metadata preflight. Drain it too, so it cannot start work afterward.
+        while(operations.size||pendingRequests.size){
+          for(const op of operations.values())op.controller.abort();
+          await Promise.allSettled([...pendingRequests.keys(),...operations.values()].map(item=>item.done||item));
+        }
+        await saveQueue;
+      })();
+      try{await cancellationPromise;return {state:'idle'};}finally{cancellationPromise=null;cancelling=false;}
+    },
+    async dispose(){closing=true;await api.cancelAll();listeners.clear();},
+  };
+  const dispatch=api.request;
+  api.request=(action,payload)=>{
+    if(closing||cancelling)return Promise.reject(new Error('The local model service is stopping.'));
+    const pending=dispatch(action,payload);pendingRequests.set(pending,action);
+    void pending.finally(()=>pendingRequests.delete(pending)).catch(()=>{});
+    return pending;
+  };
+  return api;
 }

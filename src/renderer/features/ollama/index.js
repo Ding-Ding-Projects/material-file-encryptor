@@ -6,7 +6,6 @@ export function mountOllama(root,{services,translate=(s)=>s,confirm:confirmActio
   let models=[],cart=[],catalog={},sessions=[],profiles=[],hardware=null,selected=null,operation=null,sessionId=null,disposed=false;
   const regexFilter=createRegexFilter();let searchRevision=0;
   const elements={};const section=document.createElement('section');section.className='ollama-suite';section.setAttribute('aria-label',t('Local models'));root.append(section);
-  const style=document.createElement('style');style.textContent='.ollama-suite{display:grid;gap:16px;min-width:0}.ollama-suite nav,.ollama-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.ollama-suite input,.ollama-suite select,.ollama-suite textarea{max-width:100%;box-sizing:border-box}.ollama-suite textarea{width:100%;min-height:90px}.ollama-suite button{min-height:40px}.ollama-suite article{padding:16px;border:1px solid currentColor;border-radius:16px;min-width:0}.ollama-suite [hidden]{display:none!important}.ollama-list{display:grid;gap:8px;max-height:420px;overflow:auto}.ollama-model{text-align:start;width:100%;white-space:normal;overflow-wrap:anywhere}.ollama-output{white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto}.ollama-suite label{display:grid;gap:4px;min-width:0}.ollama-suite .ollama-status{overflow-wrap:anywhere}.ollama-suite pre{white-space:pre-wrap;overflow-wrap:anywhere}';section.append(style);
   const el=(tag,text,parent=section)=>{const e=document.createElement(tag);if(text)e.textContent=t(text);parent.append(e);return e;};
   const button=(text,parent,fn)=>{const b=el('button',text,parent);b.type='button';b.addEventListener('click',()=>safe(fn));return b;};
   const label=(text,type,parent)=>{const l=el('label',text,parent),input=el(type,null,l);return input;};
@@ -49,7 +48,7 @@ export function mountOllama(root,{services,translate=(s)=>s,confirm:confirmActio
     if(disposed||revision!==searchRevision)return;
     filtered.sort(sort.value==='size'?(a,b)=>(a.sizeBytes??Infinity)-(b.sizeBytes??Infinity):(a,b)=>a.tag.localeCompare(b.tag));list.replaceChildren();
     el('p',`${filtered.length} ${t('matching variants')}`,list);
-    for(const m of filtered.slice(0,200)){const b=button(`${m.tag} · ${m.installed?t('Installed'):t('Available')} · ${m.fit?.verdict||t('Unknown')} · ${m.sizeBytes?formatBytes(m.sizeBytes):t('Size unknown')}`,list,()=>showModel(m));b.className='ollama-model';}
+    for(const m of filtered.slice(0,200)){const b=button(`${m.tag} Â· ${m.installed?t('Installed'):t('Available')} Â· ${m.fit?.verdict||t('Unknown')} Â· ${m.sizeBytes?formatBytes(m.sizeBytes):t('Size unknown')}`,list,()=>showModel(m));b.className='ollama-model';}
     if(filtered.length>200)el('p','Refine the search to show more variants. All variants are included in filtering.',list);
   }
   for(const control of [search,installedFilter,capability,fitFilter,sort,familyFilter,quantFilter,regexMode,anchor])control.addEventListener('input',()=>safe(renderModels));
