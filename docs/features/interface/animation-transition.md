@@ -35,7 +35,7 @@ No HTTP API is introduced; a Postman collection is not applicable.
 
 ## Explicit timing guidance inventory
 
-The following twelve handwritten concepts have bilingual explanation records. These twelve concepts mount the reviewed optional guide immediately above their exact fields, use the original change event and await its admitted consumer. A mounted-component test covers guided numeric persistence. Other motion controls, complete documentation-reader integration and genuine browser guidance acceptance remain pending.
+The following twenty handwritten concepts have bilingual explanation records. These twenty concepts mount the reviewed optional guide immediately above their exact fields, use the original change event and await its admitted consumer. A mounted-component test covers guided numeric persistence. Other motion controls, complete documentation-reader integration and genuine browser guidance acceptance remain pending.
 
 ### duration
 
@@ -263,4 +263,156 @@ Enter the fade track identifier to move only after the fade completes.
 Missing identifiers, cycles and infinite predecessors are rejected.
 
 Clear the predecessor identifier to restore an independent start.
+
+
+### track-name
+
+Track name
+
+Name this track in the selectable track strip.
+
+Plain text up to 160 characters.
+
+Animation, or Transition for a new transition rule.
+
+Changes its visible label without changing its stable identifier or dependencies.
+
+Name an opacity track Fade in.
+
+Control characters and overlong names are rejected.
+
+Reset the name or undo its appearance revision.
+
+
+### parallel-group
+
+Parallel group
+
+Label tracks that belong to the same authored parallel group.
+
+Empty or a plain-text group name.
+
+Empty.
+
+Retains a grouping label; actual timing still comes from offsets and dependencies.
+
+Use entrance on opacity and transform tracks with equal offsets.
+
+A group name does not silently synchronize independently authored offsets.
+
+Clear the group label to remove this organizational grouping.
+
+
+### sequence-offset
+
+Sequence offset
+
+Move this track relative to the resolved predecessor boundary.
+
+Signed fractional milliseconds.
+
+0 milliseconds.
+
+Adds directly to the native start delay after dependency resolution.
+
+Use -50 to overlap the predecessor ending by 50 ms.
+
+The complete dependency graph must remain finite and acyclic.
+
+Reset Sequence offset to 0 and inspect the predecessor link.
+
+
+### stagger-offset
+
+Stagger offset
+
+Space this track using its authored position in the track list.
+
+Signed fractional milliseconds per list position.
+
+0 milliseconds.
+
+Adds stagger multiplied by this track index; moving a track changes this contribution.
+
+Use 25 for a track at index 2 to add 50 ms.
+
+The resulting native delay must be accepted by the renderer.
+
+Reset Stagger offset to 0 to remove list-position spacing.
+
+
+### target-scope
+
+Target scope
+
+Choose whether this effect changes the element or a real independent image layer.
+
+element or layer.
+
+element.
+
+Layer scope needs an actual rendered image-layer node; cascading CSS layers cannot supply one.
+
+Choose layer to move one image overlay without moving its target element.
+
+Missing independent layer nodes produce an unavailable preview with authored values retained.
+
+Choose element or create a real image layer before using layer scope.
+
+
+### target-state
+
+Target state
+
+Restrict this track to an explicit interaction or result state.
+
+One of the documented normal, interaction, validation, loading or result states.
+
+The selected appearance state when adding a track; resetting a track uses normal.
+
+An inactive inherited layer cancels its native handles; state filters also apply to reduced motion.
+
+Choose hover for an effect that belongs only to the hovered target.
+
+Unknown states are rejected and unavailable states are never claimed active.
+
+Choose normal or inspect the state inheritance setting.
+
+
+### composition
+
+Composition
+
+Choose how this effect combines with existing property values.
+
+replace, add, or accumulate.
+
+replace.
+
+Native effect composition and authored track order determine overlapping-property precedence.
+
+Use add for a supported transform contribution above the base transform.
+
+Renderer support depends on the property and its value type.
+
+Choose replace and disable competing tracks to isolate the effect.
+
+
+### iteration-composition
+
+Iteration composition
+
+Choose whether completed iterations accumulate into later iterations.
+
+replace or accumulate.
+
+replace.
+
+Accumulation is applied only when the native effect exposes iterationComposite.
+
+Use accumulate with a repeated supported transform.
+
+An unsupported iterationComposite capability cancels the attempted handle and reports unavailable.
+
+Reset Iteration composition to replace to use the ordinary renderer path.
 
