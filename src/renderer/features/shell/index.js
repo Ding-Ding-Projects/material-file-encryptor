@@ -1,3 +1,4 @@
+import {registerOwnedCommands} from '../../../shared/surface/control-guidance.js';
 import '../../../shared/surface/material.js';
 import {createSurfaceModel} from '../../../shared/surface/model.js';
 import {element,localized,text} from '../../../shared/surface/registry.js';
@@ -53,7 +54,7 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
     setLanguage(value){const next=['en','yue','bilingual'].includes(value)?value:'en';if(next===activeLanguage)return;const roots=[shell,palette,notifications];const states=roots.map(captureSurfaceState);activeLanguage=next;configure();roots.forEach((root,index)=>restoreSurfaceState(root,states[index]));shell.renderTabs();palette.renderResults();notifications.renderEntries();for(const panel of panels.values())panel.setLanguage(next);},
     registerPanel,
     setProvenance(value){provenance=value;build.value=value;},
-    registerCommands(value){hostCommands=[...hostCommands,...value];configure();},
+    registerCommands(value){return registerOwnedCommands({get:()=>hostCommands,set:value=>{hostCommands=value;},refresh:configure},value);},
     registerViews(value){const active=model.getState().activeTabId;for(const view of value){if(!view.id||!(view.root instanceof HTMLElement))throw new TypeError('A view id and root are required');views.set(view.id,view);if(view.layout!==false)registerPanel(view.id,view.root);if(!tabs.some(t=>t.id===view.id))tabs.push(view);labels.set(view.id,view.label);if(shouldOpenRegisteredView(model.getState(),view.id))model.openTab({id:view.id,label:localized(view.label,'en')});}model.activateTab(active);configure();showView(model.getState().activeTabId);},
     destroy(){audio.destroy();for(const panel of panels.values())panel.destroy();panels.clear();clearTimeout(messageTimer);document.removeEventListener('keydown',keydown);for(const node of[shell,build,toolbar,notifications,live,palette,context])node.remove();}
   };
