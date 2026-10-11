@@ -57,3 +57,9 @@ test('complete relative paths and option values remain literal', () => {
   const vocabulary=parseVocabulary(words('cabinet'));
   assert.equal(replaceVocabulary('folder folder/file ./folder/file ../folder/file --encrypt=folder --output="folder/file"',vocabulary),'cabinet folder/file ./folder/file ../folder/file --encrypt=folder --output="folder/file"');
 });
+test('Unicode path prefixes and quoted paths with spaces preserve both separators', () => {
+  const vocabulary=parseVocabulary(JSON.stringify({schemaVersion:1,entries:{'資料夾':'replacement',folder:'cabinet'}}));
+  for (const path of ['資料夾/file','資料夾\\file','"資料夾 name/file name"',"'資料夾 name\\file name'",'"folder name/file name"']) {
+    assert.equal(replaceVocabulary(`${path} folder 資料夾`,vocabulary),`${path} cabinet replacement`);
+  }
+});
