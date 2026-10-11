@@ -9,6 +9,7 @@ import { mountSurfaceFoundation } from './features/shell/index.js';
 import { mountFileDetails } from './features/file-details/index.js';
 import { createTranslator } from '../shared/local-ux/language.js';
 import { createSettingsStore, DEFAULTS as LOCAL_DEFAULTS } from '../shared/local-ux/store.js';
+import { createPrivateWordingView } from '../shared/surface/private-wording-view.js';
 const $ = id => document.getElementById(id);
 const api = window.drive;
 let preferences = loadSettings(localStorage);
@@ -21,10 +22,11 @@ const recycledSelection=new Set(); let historySearch, recycleSearch;
 let driveLetterEdited = false, activeDriveLetter = '';
 let foundation=null,fileDetails=null,fileSearch=null,renderedFilesKey='',pagedFiles=null,fileNextCursor=null,filePageRevision=null,filePageRequest=0;
 const featureMounts=new Map(),featureRoots=new Map(),workspaceDisposers=[];
+const canonicalViewLabels={drive:'My drive',offline:'Available offline',history:'History',recycle:'Recycle Bin',settings:'Settings',help:'How it works',details:'File details',converter:'Converter',ollama:'Local models',access:'Local access',personalization:'Personalization',documentation:'Documentation',changelog:'Changelog',status:'Status'};
 const localSettings=createSettingsStore({storage:localStorage});
 if(localSettings.provenance==='default')try{localSettings.update({...LOCAL_DEFAULTS,...preferences,vocabulary:undefined},'existing preferences migrated');}catch{}
 let effectiveLocalSettings=localSettings.get();
-const enhancedLabels={'Export queued. Cancel unfinished work from Operations.':'匯出已加入佇列。可以在操作面板取消未完成工作。','File details':'檔案詳情','Converter':'轉換工具','Local models':'本機模型','Personalization':'個人化','Local access':'本機存取','Documentation':'說明文件','Changelog':'更新記錄','Status':'狀態','Load more files':'載入更多檔案','Retry loading files':'重試載入檔案','Cancel operation':'取消操作','Operations':'操作','Force lock':'強制鎖定','Quit application':'結束程式','Feature unavailable':'功能無法使用','Refresh':'重新整理','Search settings':'搜尋設定'};
+const enhancedLabels={'Notification history reset':'通知記錄已重設','Previous notification text was cleared because its original wording could not be verified.':'舊有通知文字已清除，因為無法確認原有用詞。','Export queued. Cancel unfinished work from Operations.':'匯出已加入佇列。可以在操作面板取消未完成工作。','File details':'檔案詳情','Converter':'轉換工具','Local models':'本機模型','Personalization':'個人化','Local access':'本機存取','Documentation':'說明文件','Changelog':'更新記錄','Status':'狀態','Load more files':'載入更多檔案','Retry loading files':'重試載入檔案','Cancel operation':'取消操作','Operations':'操作','Force lock':'強制鎖定','Quit application':'結束程式','Feature unavailable':'功能無法使用','Refresh':'重新整理','Search settings':'搜尋設定'};
 const dictionary = new Map();
 document.querySelectorAll('[data-i18n]').forEach(el => dictionary.set(el, el.textContent));
 initializeIcons();
@@ -37,8 +39,9 @@ document.addEventListener('scroll', event => {
  scrollTimers.set(surface, setTimeout(() => { surface.classList.remove('is-scrolling'); scrollTimers.delete(surface); }, 900));
 }, {capture:true,passive:true});
 document.querySelector('main').prepend($('operation'), $('main-error'));
-const translateWorkspace=createTranslator(()=>({...effectiveLocalSettings,...preferences,school:effectiveLocalSettings.school}),{dictionary:{...cantonese,...enhancedLabels},vocabulary:{isAuthenticated:()=>featureMounts.get('access')?.authenticated===true,replace:value=>replaceVocabulary(value,preferences.vocabulary)}});
+const translateWorkspace=createTranslator(()=>({...effectiveLocalSettings,...preferences,school:effectiveLocalSettings.school}),{dictionary:{...cantonese,...enhancedLabels}});
 function t(source,options) { return translateWorkspace(source,options); }
+const privateWordingView=createPrivateWordingView({root:document.body,replace:value=>replaceVocabulary(value,preferences.vocabulary),isActive:()=>featureMounts.get('access')?.authenticated===true&&!effectiveLocalSettings.school.enabled});
 function setText(id, source) { $(id).textContent = t(source); }
 function savePreferences() { try { localStorage.setItem('material-drive.preferences.v1', JSON.stringify({...preferences, vocabulary: JSON.parse(serializeVocabulary(preferences.vocabulary))})); return true; } catch { showError('Your device could not save these preferences.'); return false; } }
 const clearFields = installClearFields(document.body, t);
@@ -60,6 +63,7 @@ function applyPreferences() {
  for(const module of featureMounts.values())module.refresh?.();
  if (state) { render(); changeView(view); }
  if ($('vault-dialog').open) updateDialog();
+ privateWordingView.refresh();
 }
 colorQuery.addEventListener('change', applyPreferences);
 function showError(error, inDialog = false) {
@@ -75,7 +79,8 @@ function toast(source, values = {}) {
  $('snackbar').textContent = message;
  $('snackbar').hidden = false;
  snackbarTimer = setTimeout(() => { $('snackbar').hidden = true; }, 5500);
- foundation?.notify({title:'Update',message,level:'success'});
+ const original=String(source).replace(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g,(match,key)=>Object.hasOwn(values,key)?String(values[key]):match);
+ foundation?.notify({title:'Update',message:original,level:'success'});
 }
 function operation(label) {
  label = ({ saveVersion:'Saving a version…', restoreVersion:'Restoring a version…', restoreDeleted:'Restoring deleted entries…', emptyRecycleBin:'Emptying the Recycle Bin…', upgrading:'Creating and verifying an upgraded copy…' })[label] || label;
@@ -462,7 +467,7 @@ function attachEnhancedSearch(input,area) {
 }
 function addFeatureRoot(id,label,labelYue) {
  const root=document.createElement('section');root.id=`view-${id}`;root.className='view enhanced-feature-view';root.hidden=true;root.setAttribute('aria-label',label);document.querySelector('main').append(root);featureRoots.set(id,root);
- foundation.registerViews([{id,label:{en:label,yue:labelYue},root}]);return root;
+ foundation.model.registerCanonicalTab(id,label);foundation.registerViews([{id,label:{en:label,yue:labelYue},root}]);return root;
 }
 async function mountFeature(id,label,labelYue,loader,mount) {
  const root=addFeatureRoot(id,label,labelYue);
@@ -486,7 +491,7 @@ function refreshPaletteInventory() {
  if(!foundation)return;
  const commands=workspaceCommands();
  for(const root of document.querySelectorAll('main > .view')){
-  const id=root.id.replace(/^view-/,'');const title=root.getAttribute('aria-label')||root.querySelector('h1,h2')?.textContent||id;
+  const id=root.id.replace(/^view-/,'');const title=canonicalViewLabels[id]||id;
   commands.push({id:`destination:${id}`,label:title,run:()=>{foundation.model.openTab({id,label:title});foundation.shell.activate(id);}});
   [...root.querySelectorAll('button,input,select,textarea')].forEach((control,index)=>{
    if(control.type==='password'||control.type==='file'||control.type==='hidden'||control.hidden||control.closest('dialog:not([open])'))return;
@@ -502,8 +507,10 @@ function refreshPaletteInventory() {
 function guardControl(control,action){const access=featureMounts.get('access');return access?access.guard(ensureLockId(control),action):action();}
 function ensureLockId(element){if(element.dataset.lockId)return element.dataset.lockId;const parts=[];for(let node=element;node&&node!==document.body;node=node.parentElement){parts.unshift(node.id?`id:${node.id}`:`${node.tagName.toLowerCase()}:${[...node.parentElement.children].indexOf(node)}`);if(node.id)break;}const id=parts.join('/').slice(0,180);element.dataset.lockId=id;return id;}
 function setupEnhancedWorkspace() {
- const main=document.querySelector('main');foundation=mountSurfaceFoundation({host:main,before:main.firstChild,storage:localStorage,language:preferences.language,tabs:[{id:'drive',label:'My drive',labelYue:'我的磁碟'},{id:'offline',label:'Available offline',labelYue:'可離線使用'},{id:'history',label:'History',labelYue:'歷史記錄'},{id:'recycle',label:'Recycle Bin',labelYue:'資源回收筒'},{id:'settings',label:'Settings',labelYue:'設定'},{id:'help',label:'How it works',labelYue:'使用方法'}],onActivate:changeView,commands:workspaceCommands(),onExport:exportText});
- const openPalette=foundation.palette.open.bind(foundation.palette);foundation.palette.open=()=>{refreshPaletteInventory();openPalette();};const originalChangeButtons=[...document.querySelectorAll('[data-view]')];for(const button of originalChangeButtons)button.addEventListener('click',()=>{foundation.model.openTab({id:button.dataset.view,label:button.textContent});foundation.shell.activate(button.dataset.view);});
+ const main=document.querySelector('main');foundation=mountSurfaceFoundation({host:main,before:main.firstChild,storage:localStorage,language:preferences.language,tabs:[{id:'drive',label:'My drive',labelYue:'我的磁碟'},{id:'offline',label:'Available offline',labelYue:'可離線使用'},{id:'history',label:'History',labelYue:'歷史記錄'},{id:'recycle',label:'Recycle Bin',labelYue:'資源回收筒'},{id:'settings',label:'Settings',labelYue:'設定'},{id:'help',label:'How it works',labelYue:'使用方法'}],onActivate:changeView,commands:workspaceCommands(),onExport:exportText,renderText:t});
+ for(const [id,label]of Object.entries(canonicalViewLabels))foundation.model.registerCanonicalTab(id,label);
+ if(foundation.model.getState().droppedLegacyNotifications)foundation.notify({title:'Notification history reset',message:'Previous notification text was cleared because its original wording could not be verified.',level:'info'});
+ const openPalette=foundation.palette.open.bind(foundation.palette);foundation.palette.open=()=>{refreshPaletteInventory();openPalette();};const originalChangeButtons=[...document.querySelectorAll('[data-view]')];for(const button of originalChangeButtons)button.addEventListener('click',()=>{foundation.model.openTab({id:button.dataset.view,label:canonicalViewLabels[button.dataset.view]||button.dataset.view});foundation.shell.activate(button.dataset.view);});
  const forceLockButton=document.createElement('md-outlined-button');forceLockButton.id='force-lock-button';forceLockButton.textContent=t('Force lock');forceLockButton.onclick=()=>run('Locking drive…',()=>api.forceLock());$('lock-button').after(forceLockButton);
  const fileHost=document.createElement('mfe-search');fileHost.setAttribute('label',t('Search files'));fileHost.setAttribute('scope','drive-files');fileHost.language=preferences.language;const old=$('file-search');old.closest('.search-box').hidden=true;old.closest('.search-box').after(fileHost);fileSearch=fileHost;fileHost.addEventListener('search-change',()=>{old.value=fileHost.query;renderFiles();});
  const pager=document.createElement('div');pager.className='file-page-actions';const more=document.createElement('md-outlined-button');more.id='load-more-files';more.textContent=t('Load more files');more.hidden=true;more.onclick=()=>loadFilePage(true);const retry=document.createElement('md-text-button');retry.textContent=t('Retry loading files');retry.onclick=()=>{filePageRevision=null;loadFilePage();};pager.append(more,retry);$('file-list').closest('.table-scroll').after(pager);
@@ -522,7 +529,7 @@ function setupEnhancedWorkspace() {
   mountFeature('converter','Converter','轉換工具',()=>import('./features/converter/index.js'),(module,root)=>module.mountConverter(root,{translate:t,services:{converter:Object.fromEntries(['catalog','inspect','enqueue','list','control'].map(action=>[action,payload=>featureRequest('converter',action,payload)])),pickSources:()=>featureRequest('converter','pickSources'),pickDestination:payload=>featureRequest('converter','pickDestination',payload),pickDestinationDirectory:()=>featureRequest('converter','pickDestinationDirectory'),confirmOverwrite:()=>confirmAction('Replace output file?','The selected output file will be replaced. Source files remain unchanged.','Replace')}})),
   mountFeature('ollama','Local models','本機模型',()=>import('./features/ollama/index.js'),(module,root)=>module.mountOllama(root,{translate:t,confirm:confirmFeature,services:{ollama:{request:(action,payload)=>featureRequest('ollama',action,payload),subscribe:callback=>api.onFeatureEvent?.('ollama',callback)}}})),
   mountFeature('access','Local access','本機存取',()=>import('./features/access/index.js'),async(module,root)=>{const access=module.mountAccess(root,{credentialStore,translate:(source,options)=>t(source,options),schoolMode:()=>effectiveLocalSettings.school.enabled,onAuthenticatedChange:()=>queueMicrotask(applyPreferences),notify:featureNotify,dataPath:await featureRequest('access','dataFolder'),openDataFolder:()=>featureRequest('access','openDataFolder')});const keys=await featureRequest('access','credentialList',{prefix:'element-lock:'});await access.load((Array.isArray(keys)?keys:keys.keys||[]).map(key=>key.replace(/^element-lock:/,'')));access.bind(document.body);return access;}),
-  mountFeature('personalization','Personalization','個人化',()=>import('./features/personalization/index.js'),(module,root)=>module.mountPersonalization(root,{store:localSettings,storage:localStorage,surfaceRoot:document.documentElement,attachSearch:attachEnhancedSearch,notify:featureNotify,onLock:target=>{const access=featureMounts.get('access');if(!access)throw Error('Local access is not ready.');foundation.model.openTab({id:'access',label:'Local access'});foundation.shell.activate('access');access.openLockWizard(ensureLockId(target),target);},historyCredentialStore,listFonts:()=>featureRequest('personalization','listFonts'),verifySharedCredential:value=>featureRequest('personalization','verifySharedCredential',{password:value}),setSharedCredential:value=>featureRequest('personalization','setSharedCredential',{password:value}),fetchScheduleSource:rule=>featureRequest('personalization','fetchScheduleSource',{rule}),vocabulary:{isAuthenticated:()=>featureMounts.get('access')?.authenticated===true,replace:value=>replaceVocabulary(value,preferences.vocabulary)},sharedSettings:{read:()=>featureRequest('personalization','sharedRead'),write:value=>featureRequest('personalization','sharedWrite',{value}),subscribe:callback=>api.onFeatureEvent?.('personalization',event=>{if(event.type==='sharedSettings')callback(event.value);})},onChange:value=>{effectiveLocalSettings=value;let changed=false;for(const key of ['language','theme','emoji','funnyEnglish','funnyCantonese'])if(value[key]!==undefined&&preferences[key]!==value[key]){preferences[key]=value[key];changed=true;}if(changed)savePreferences();applyPreferences();}})),
+  mountFeature('personalization','Personalization','個人化',()=>import('./features/personalization/index.js'),(module,root)=>module.mountPersonalization(root,{store:localSettings,storage:localStorage,surfaceRoot:document.documentElement,attachSearch:attachEnhancedSearch,notify:featureNotify,onLock:target=>{const access=featureMounts.get('access');if(!access)throw Error('Local access is not ready.');foundation.model.openTab({id:'access',label:'Local access'});foundation.shell.activate('access');access.openLockWizard(ensureLockId(target),target);},historyCredentialStore,listFonts:()=>featureRequest('personalization','listFonts'),verifySharedCredential:value=>featureRequest('personalization','verifySharedCredential',{password:value}),setSharedCredential:value=>featureRequest('personalization','setSharedCredential',{password:value}),fetchScheduleSource:rule=>featureRequest('personalization','fetchScheduleSource',{rule}),vocabulary:{isAuthenticated:()=>false,replace:value=>value},sharedSettings:{read:()=>featureRequest('personalization','sharedRead'),write:value=>featureRequest('personalization','sharedWrite',{value}),subscribe:callback=>api.onFeatureEvent?.('personalization',event=>{if(event.type==='sharedSettings')callback(event.value);})},onChange:value=>{effectiveLocalSettings=value;let changed=false;for(const key of ['language','theme','emoji','funnyEnglish','funnyCantonese'])if(value[key]!==undefined&&preferences[key]!==value[key]){preferences[key]=value[key];changed=true;}if(changed)savePreferences();applyPreferences();}})),
   mountFeature('documentation','Documentation','說明文件',()=>import('./features/documentation/index.js'),async(module,root)=>module.mountDocumentation(root,{translate:t,catalog:await featureRequest('documentation','catalog'),onExport:exportText})),
   mountFeature('changelog','Changelog','更新記錄',()=>import('./features/documentation/changelog.js'),async(module,root)=>module.mountChangelog(root,{translate:t,entries:await featureRequest('documentation','changelog'),onExport:exportText})),
   mountFeature('status','Status','狀態',()=>import('./features/status/index.js'),(module,root)=>module.mountStatus(root,{translate:t,getStatus:()=>featureRequest('status','status')}))
@@ -530,5 +537,5 @@ function setupEnhancedWorkspace() {
  Promise.allSettled(mounts).then(()=>{foundation.shell.activate(view);refreshPaletteInventory();});
  foundation.registerCommands([{id:'vault:force-lock',label:{en:'Force lock',yue:'強制鎖定'},run:()=>run('Locking drive…',()=>api.forceLock())},{id:'application:quit',label:{en:'Quit application',yue:'結束程式'},run:()=>api.quit?api.quit():api.windowControl('close')}]);
  const paletteShortcut=event=>{if((event.ctrlKey||event.metaKey)&&event.shiftKey&&event.key.toLowerCase()==='f')refreshPaletteInventory();};document.addEventListener('keydown',paletteShortcut,true);workspaceDisposers.push(()=>document.removeEventListener('keydown',paletteShortcut,true));
- window.addEventListener('beforeunload',()=>{fileDetails?.destroy();foundation?.destroy();for(const module of featureMounts.values())module.destroy?.();for(const dispose of workspaceDisposers)dispose();},{once:true});
+ window.addEventListener('beforeunload',()=>{privateWordingView.destroy();fileDetails?.destroy();foundation?.destroy();for(const module of featureMounts.values())module.destroy?.();for(const dispose of workspaceDisposers)dispose();},{once:true});
 }
