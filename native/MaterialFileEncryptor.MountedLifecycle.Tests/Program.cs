@@ -4,7 +4,9 @@ using System.IO.MemoryMappedFiles;
 using System.Security.Cryptography;
 using System.Text.Json;
 
-if(args.Length!=3)throw new ArgumentException("Supply package root, output JSON and exact source commit.");
+if(args.Length is <3 or >4)throw new ArgumentException("Supply package root, output JSON, exact source commit and optional --ordinary-only.");
+bool ordinaryOnly=args.Length==4&&args[3]=="--ordinary-only";
+if(args.Length==4&&!ordinaryOnly)throw new ArgumentException("Unknown verification mode.");
 string package=Path.GetFullPath(args[0]),output=Path.GetFullPath(args[1]),sourceCommit=args[2];
 if(sourceCommit.Length!=40||!sourceCommit.All(Uri.IsHexDigit))throw new ArgumentException("A full source commit is required.");
 string executable=Path.Combine(package,"resources","native","MaterialFileEncryptor.Host.exe");
@@ -40,8 +42,11 @@ try
         Require(locked&&!result.GetProperty("busy").GetBoolean(),"Idle open handle prevented force lock.");mounted=false;
         Require(!Directory.Exists(mountedRoot),"Owned drive remained visible after force lock.");
         checks.Add(new{name="idle-open-handle-force-lock",verified=true,locked,driveAbsent=true});
+        await Unlock();await Mount();mountedRoot=drive+"\\";
+        Require(File.ReadAllBytes(Path.Combine(mountedRoot,"idle.bin")).SequenceEqual(new byte[]{1,2,3,4}),"Immediate unlock lost durable bytes.");
+        checks.Add(new{name="immediate-reunlock-with-old-idle-handle",verified=true});
     }
-    await Unlock();await Mount();mountedRoot=drive+"\\";
+    OrdinaryOperations.Run(root,mountedRoot,checks);
     File.WriteAllText(Path.Combine(mountedRoot,"prior.bin"),"existing destination stays intact");
     string small=Path.Combine(root,"completed.txt"),large=Path.Combine(root,"prior.bin");File.WriteAllText(small,"completed batch item");
     using(var stream=File.Create(large)){byte[] block=new byte[65536];RandomNumberGenerator.Fill(block);for(int i=0;i<4096;i++)stream.Write(block);CryptographicOperations.ZeroMemory(block);}
@@ -67,9 +72,12 @@ try
     Require(!File.Exists(Path.Combine(mountedRoot,"prior (2).bin")),"Unfinished imported file became visible.");
     checks.Add(new{name="mounted-managed-batch-cancellation",verified=true,cancelAcknowledgementMilliseconds=cancelAck,terminalState=terminal,completedFileRetained=true,originalDestinationRetained=true,incompleteFileAbsent=true});
 
+    bool exactOverlap=false;
+    if(!ordinaryOnly)
+    {
     string mappedFile=Path.Combine(mountedRoot,"mapped.bin");
     using(var seed=new FileStream(mappedFile,FileMode.CreateNew,FileAccess.Write,FileShare.ReadWrite)){seed.SetLength(64L*1024*1024);seed.Flush(true);}
-    bool exactOverlap=false,concurrentBusy=false;JsonElement last=default;Exception? writerFailure=null;
+    bool concurrentBusy=false;JsonElement last=default;Exception? writerFailure=null;
     using(var file=new FileStream(mappedFile,FileMode.Open,FileAccess.ReadWrite,FileShare.ReadWrite|FileShare.Delete))
     using(var mapping=MemoryMappedFile.CreateFromFile(file,null,0,MemoryMappedFileAccess.ReadWrite,HandleInheritability.None,true))
     using(var view=mapping.CreateViewAccessor())
@@ -89,8 +97,9 @@ try
         stop.Cancel();await writer.WaitAsync(TimeSpan.FromSeconds(10));
     }
     checks.Add(new{name="active-mapped-io-force-lock",verified=exactOverlap,concurrentBusyObserved=concurrentBusy,exactActiveIoOverlap=exactOverlap,verdict=exactOverlap?"passed":"unverified",reason=exactOverlap?null:"No response proved a nonzero activeFilesystemIo counter while mapped I/O was active.",writerFailure=writerFailure?.GetType().Name});
+    }
     if(mounted){for(int attempt=0;attempt<10;attempt++){var result=await helper.Call("forceLock",new{});if(result.GetProperty("locked").GetBoolean()){mounted=false;break;}await Task.Delay(100);}}
-    Require(!mounted,"Owned mount did not detach after workload stopped.");finished=exactOverlap;
+    Require(!mounted,"Owned mount did not detach after workload stopped.");finished=ordinaryOnly||exactOverlap;
 }
 catch(Exception error){checks.Add(new{name="run-error",verified=false,type=error.GetType().Name,message=error.Message});}
 finally
