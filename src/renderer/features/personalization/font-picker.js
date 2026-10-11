@@ -9,7 +9,7 @@ export function bundledFontMapping(face){const asset=BUNDLED_FONT_MANIFEST.asset
 export const fontFaceCSSFamily=face=>bundledFontMapping(face)?face.cssFamily:face.family;
 export function validateFontFaceSelection(face,catalog){
  const mapping=bundledFontMapping(face);if(mapping)return mapping;
- if(!/^(regular|normal)$/i.test(face.style||''))throw Error('This font style needs an exact face mapping before it can be applied.');
+ if(face.source==='bundled'||!/^(regular|normal)$/i.test(face.style||''))throw Error('This font style needs an exact face mapping before it can be applied.');
  const identity=fontFamilyKey;
  if(face.axes?.length&&(catalog?.faces||[]).filter(candidate=>identity(fontFaceCSSFamily(candidate))===identity(face.family)).length!==1)throw Error('Variable axes cannot be applied to an ambiguous font family. Choose a uniquely mapped regular face.');
  return {fontStyle:'normal',fontWeight:'400'};
