@@ -2,7 +2,7 @@ import {passwordVerifier,verifyPassword,verifyTotp,randomId} from './crypto.js';
 export const LOCK_POLICIES = Object.freeze({pin:['pin'],password:['password'],'pin-password':['pin','password'],'password-totp':['password','totp'],'pin-totp':['pin','totp'],'password-pin-totp':['password','pin','totp']});
 // This controller is an opt-in local convenience lock, not an authorization boundary.
 export class LockController {
-  constructor({store,now=Date.now,onBlocked=()=>{},getDishChallenge}={}) { this.store=store;this.now=now;this.onBlocked=onBlocked;this.records=new Map();this.sessions=new Map();this.attempts=new Map();this.creating=new Set();this.waitLadder=new WaitLadder({now,getDishChallenge});this.waitTarget=null; }
+  constructor({store,now=Date.now,onBlocked=()=>{},getDishChallenge}={}) { this.store=store;this.now=now;this.onBlocked=onBlocked;this.records=new Map();this.sessions=new Map();this.attempts=new Map();this.creating=new Set();this.generations=new Map();this.removing=new Set();this.waitLadder=new WaitLadder({now,getDishChallenge});this.waitTarget=null; }
   async load(ids=[]) { if(!this.store) return; for(const id of ids){const record=await this.store.get(`element-lock:${id}`);if(record)this.records.set(id,record);} }
   async set(id,policy,credentials,duration=0) {
     if(!id||!LOCK_POLICIES[policy])throw new Error('Select a valid lock policy.');
@@ -23,7 +23,10 @@ export class LockController {
   describe(id) {const r=this.records.get(id);return r?{id,policy:r.policy,duration:r.duration,locked:this.isLocked(id)}:null;}
   list(){return [...this.records.keys()].map(id=>this.describe(id));}
   isLocked(id){if(!this.records.has(id))return false;const until=this.sessions.get(id);return until===undefined||until<=this.now();}
-  lock(id){this.sessions.delete(id);}
+  generation(id){return this.generations.get(id)||0;}
+  bumpGeneration(id){this.generations.set(id,this.generation(id)+1);return this.generation(id);}
+  cancel(id){this.bumpGeneration(id);this.sessions.delete(id);return this.generation(id);}
+  lock(id){this.cancel(id);}
   waiting(id){return Math.max(0,(this.attempts.get(id)?.until||0)-this.now());}
   challengeWait(id,{schoolMode=false}={}){
     if(!this.waiting(id))return null;
@@ -39,12 +42,35 @@ export class LockController {
     // Only the deadline changes: no credential, failure count, escalation or session changes.
     attempt.until=this.now();return true;
   }
-  async remove(id){if(this.store)await this.store.delete(`element-lock:${id}`);this.records.delete(id);this.sessions.delete(id);}
+  async remove(id,{expectedGeneration=this.generation(id)}={}){
+    if(this.generation(id)!==expectedGeneration||this.removing.has(id))return false;
+    if(this.isLocked(id)){this.cancel(id);return false;}
+    const record=this.records.get(id);if(!record)return true;
+    expectedGeneration=this.bumpGeneration(id);
+    this.removing.add(id);
+    try {
+      if(this.store){
+        // Recheck after asynchronous storage access and directly before deletion.
+        await this.store.get(`element-lock:${id}`);
+        if(this.generation(id)!==expectedGeneration||this.isLocked(id))return false;
+        await this.store.delete(`element-lock:${id}`);
+        if(this.generation(id)!==expectedGeneration||this.isLocked(id)){
+          // A cancellation during the storage operation must leave the lock intact.
+          await this.store.set(`element-lock:${id}`,record);return false;
+        }
+      }
+      if(this.generation(id)!==expectedGeneration||this.isLocked(id))return false;
+      this.cancel(id);this.records.delete(id);return true;
+    }finally{this.removing.delete(id);}
+  }
   async unlock(id,credentials) {
     const r=this.records.get(id);if(!r)return true;
+    if(this.removing.has(id))return false;
+    const generation=this.cancel(id);
     const a=this.attempts.get(id)||{failures:0,until:0,level:0};if(a.until>this.now())return false;
     let valid=true;
-    for(const f of LOCK_POLICIES[r.policy])valid=(f==='totp'?await verifyTotp(r.factors.totp,credentials.totp,this.now()):await verifyPassword(credentials[f]||'',r.factors[f]))&&valid;
+    for(const f of LOCK_POLICIES[r.policy]){valid=(f==='totp'?await verifyTotp(r.factors.totp,credentials.totp,this.now()):await verifyPassword(credentials[f]||'',r.factors[f]))&&valid;if(this.generation(id)!==generation||this.records.get(id)!==r)return false;}
+    if(this.generation(id)!==generation||this.records.get(id)!==r)return false;
     if(!valid){a.failures++;if(a.failures>=5){a.level++;a.until=this.now()+Math.min(3600000,30000*2**(a.level-1));a.failures=0;}this.attempts.set(id,a);return false;}
     this.attempts.delete(id);this.sessions.set(id,r.duration?this.now()+r.duration*60000:Infinity);return true;
   }

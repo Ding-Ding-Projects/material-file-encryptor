@@ -37,3 +37,9 @@ Password verifiers and encryption keys use distinct, versioned purpose prefixes 
 Legacy format-1 password verifiers remain usable for password verification, but format-1 encrypted records are explicitly rejected. Those records used a derivation whose encryption key equalled the persisted verifier. They cannot be made retrospectively confidential. The application does not silently decrypt, upgrade, or describe them as protected: retain a copy if needed, reset the affected local record and re-import from a trusted original through an explicit user action. New ciphertext created after a legacy password check uses the separated format-2 derivation.
 
 Creating a lock for an existing target is rejected, including a target found only in the persistent store and concurrent creation attempts. The existing lock must be authenticated and removed before a replacement is created. Logout and destruction invalidate pending profile unlock operations; late password derivations cannot restore an authenticated session.
+
+## Cancellation and live refresh
+
+Every element uses a generation counter for asynchronous authentication. Relock, prompt cancellation and removal invalidate prior attempts. Authentication checks the current generation before installing a session. Removal requires an unlocked current generation and rechecks it around asynchronous storage access; a cancellation during deletion restores the original persistent record before returning an incomplete result.
+
+The access mount exposes `refresh()` for host language and mode updates. It updates registered static text and rebuilds live lists while preserving profile authentication and user-entered field values. An open waiting challenge closes during refresh so a newly enabled School mode cannot leave a prior dish challenge visible. Supply `translate(source, options)` and either a boolean or live function for `schoolMode`.

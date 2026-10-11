@@ -56,6 +56,20 @@ test('profile logout invalidates an immediately pending correct-password unlock'
   await assert.rejects(profile.encrypt({value:1}),/Unlock/);
   await profile.unlock('profile cancellation sample');assert.equal(profile.authenticated,true);
 });
+test('relocking cancels a pending element unlock before it can install a session',async()=>{
+  const controller=new LockController();await controller.set('pending','pin',{pin:'2468'});
+  const pending=controller.unlock('pending',{pin:'2468'});controller.lock('pending');
+  assert.equal(await pending,false);assert.equal(controller.isLocked('pending'),true);assert.equal(controller.sessions.has('pending'),false);
+});
+test('cancelled removal cannot delete a lock even during asynchronous storage deletion',async()=>{
+  const records=new Map();let releaseDelete;let deletionStarted;
+  const started=new Promise(resolve=>deletionStarted=resolve);
+  const store={get:async key=>records.get(key),set:async(key,value)=>records.set(key,value),delete:async key=>{deletionStarted();await new Promise(resolve=>releaseDelete=resolve);records.delete(key);}};
+  const controller=new LockController({store});await controller.set('pending-remove','pin',{pin:'2468'});await controller.unlock('pending-remove',{pin:'2468'});
+  const pending=controller.remove('pending-remove',{expectedGeneration:controller.generation('pending-remove')});await started;
+  controller.cancel('pending-remove');releaseDelete();assert.equal(await pending,false);
+  assert.equal(controller.isLocked('pending-remove'),true);assert.ok(records.has('element-lock:pending-remove'));
+});
 test('private cache reopens only with matching profile password and stable identity',async()=>{
   const verifier=await passwordVerifier('sample profile');const first=await deriveCacheKey('sample profile',verifier.salt);
   const encrypted=await seal({settings:['private value']},first,'private-cache');
