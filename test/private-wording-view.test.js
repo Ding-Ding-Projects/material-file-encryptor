@@ -94,4 +94,3 @@ test('recorded text mutations only revisit the changed subtree',async()=>{
  f.observers[0].callback([{type:'characterData',target:f.label.children[0]}]);await Promise.resolve();
  assert.equal(calls-before,1);assert.equal(f.label.children[0].nodeValue,'Synthetic updated');projection.destroy();
 });
-

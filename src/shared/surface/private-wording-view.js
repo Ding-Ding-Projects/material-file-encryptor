@@ -71,6 +71,3 @@ export function createPrivateWordingView({root=globalThis.document?.body,replace
  function destroy(){if(destroyed)return;destroyed=true;stop('destroyed');for(const observer of observers.values())observer.disconnect();restoreAll();observers.clear();}
  refresh();return{refresh,destroy,whenSettled:()=>settled};
 }
-
-
-
