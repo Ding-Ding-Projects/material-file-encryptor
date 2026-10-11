@@ -1,3 +1,5 @@
+import { localized } from './localization.js';
+
 export const surfaceRegistry = Object.freeze([
   { tag: 'mfe-workspace-shell', role: 'region', module: 'workspace-shell.js', primitives: ['md-tabs','md-primary-tab','md-outlined-button'] },
   { tag: 'mfe-search', role: 'search', module: 'search.js', primitives: ['md-outlined-text-field','md-outlined-button','md-switch'] },
@@ -12,7 +14,7 @@ export function register(tag, constructor) {
   if (!customElements.get(tag)) customElements.define(tag, constructor);
 }
 
-export {localized} from './localization.js';
+export { localized };
 
 export const text = (en, yue) => ({ en, yue });
 
