@@ -1,4 +1,11 @@
 export const ACCESS_COPY = Object.freeze({
+ ...{
+  "Atomic protected-record updates are unavailable.": "無法使用受保護記錄嘅原子更新。",
+  "Access history recovery intent is invalid.": "存取歷史復原意圖無效。",
+  "Access history recovery ownership changed.": "存取歷史復原擁有權已改變。",
+  "Access history pending record requires recovery.": "存取歷史待完成記錄需要復原。",
+  "Access history recovery integrity check failed.": "存取歷史復原完整性檢查失敗。"
+},
  'Local Git history is unavailable. Install the supported Git runtime and retry.':'無法使用本機 Git 歷史。請安裝受支援嘅 Git 執行環境後再試。',
 
  'Invalid display name.':'顯示名稱無效。',
