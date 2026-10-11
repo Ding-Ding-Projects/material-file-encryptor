@@ -4,9 +4,10 @@ import { mountWorkbenchTools } from './workbench-tools.js';
 export class SurfaceSearch extends SurfaceElement {
   constructor() { super(); this.query = ''; this.regex = false; this.flags = 'iu'; this.pending = new Map(); this.generation = 0; }
   connectedCallback() { this.render(); }
-  disconnectedCallback() { for (const stop of this.pending.values()) stop(); }
+  disconnectedCallback() { this.generation++; for (const stop of this.pending.values()) stop(); this.pending.clear(); }
   setLanguage(language) { this.language=language; this.render(); }
   render() {
+    this.generation++;for(const stop of this.pending.values())stop();this.pending.clear();
     this.style(`.builder{margin-top:8px;padding:16px;border-radius:16px;border:1px solid var(--md-sys-color-outline,#74777f);background:var(--md-sys-color-surface-container,#f0f1f7);max-height:65vh;overflow:auto}.builder[hidden]{display:none}.tokens{display:flex;flex-wrap:wrap;gap:4px}pre{white-space:pre-wrap;overflow-wrap:anywhere} .query{min-width:120px;flex:1} .row{align-items:center} h3{margin:0}`);
     this.input=element('md-outlined-text-field',{label:this.getAttribute('label') || this.t('Search','搜尋'),value:this.query,maxLength:512,class:'query',oninput:()=> { this.query=this.input.value; this.emitChange(); }});
     this.toggle=element('md-outlined-button',{text:this.t('Regex builder','正則表達式工具'),'aria-expanded':'false',onclick:()=>{this.builder.hidden=!this.builder.hidden;this.toggle.setAttribute('aria-expanded',String(!this.builder.hidden));}});
@@ -45,11 +46,11 @@ export class SurfaceSearch extends SurfaceElement {
   }
   async filter(rows) {
     const generation=this.generation;
-    if(!this.regex) {this.status.textContent='';const q=this.query.toLocaleLowerCase();return rows.filter(row=>row.text.toLocaleLowerCase().includes(q));}
-    if(rows.length>10000){this.status.textContent=this.t('Too many rows for regex. Narrow the collection first.','資料太多，請先縮小範圍。');return [];}
+    if(!this.regex) {if(this.status)this.status.textContent='';const q=this.query.toLocaleLowerCase();return rows.filter(row=>row.text.toLocaleLowerCase().includes(q));}
+    if(rows.length>10000){if(this.status)this.status.textContent=this.t('Too many rows for regex. Narrow the collection first.','資料太多，請先縮小範圍。');return [];}
     const result=await this.evaluate({rows});
     if(generation!==this.generation)return null;
-    this.status.textContent=result.error || this.t(`${result.matches.length} matches`,`${result.matches.length} 個結果`);
+    if(this.status)this.status.textContent=result.error || this.t(`${result.matches.length} matches`,`${result.matches.length} 個結果`);
     return result.error?[]:rows.filter(row=>result.matches.includes(row.id));
   }
 }
