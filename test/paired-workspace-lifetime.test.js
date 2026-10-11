@@ -1,0 +1,33 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mountLocalAdapter,assertCompanionRequest,createCompanionPreferences,createCompanionSharedSettings,COMPANION_PREFERENCE_CAPABILITIES} from '../docs/site/local-adapter.js';
+
+test('paired schedule payload keeps source/id and never manufactures desktop-only services',async()=>{
+ const calls=[],bridge=createCompanionPreferences(async(feature,action,payload={})=>{assertCompanionRequest('featureRequest',{feature,action,payload});calls.push({feature,action,payload});});
+ const source={type:'api',url:'https://example.test/schedule'};await bridge.fetchScheduleSource(source,{id:'owned.schedule-1'});assert.deepEqual(calls[0].payload,{source,id:'owned.schedule-1'});
+ for(const key of ['setScheduleCredential','clearScheduleCredential','normalizeImage','fontMetadata','cancelFontMetadata','configureRuntime'])assert.equal(bridge[key],undefined);
+ assert.equal(COMPANION_PREFERENCE_CAPABILITIES.runtimeConfiguration,false);assert.deepEqual(COMPANION_PREFERENCE_CAPABILITIES.accessibilitySupport,{known:false,enabled:false});assert.equal(bridge.isScreenReaderActive(),true);
+});
+test('invalid envelopes, obsolete schedule shape and unsupported privilege requests stop before transport',()=>{
+ const valid={feature:'status',action:'status',payload:{}};for(const request of [{...valid,extra:true},Object.assign(Object.create({inherited:true}),valid),{...valid,payload:Object.create({value:true})},{...valid,[Symbol('extra')]:true},{...valid,payload:{[Symbol('extra')]:true}},{...valid,payload:{value:'x'.repeat(262145)}}])assert.throws(()=>assertCompanionRequest('featureRequest',request));
+ for(const payload of [{rule:{source:{}}},{source:[],id:'x'},{source:{},id:'../bad'}])assert.throws(()=>assertCompanionRequest('featureRequest',{feature:'personalization',action:'fetchScheduleSource',payload}));
+ for(const [feature,action]of [['personalization','setScheduleCredential'],['personalization','normalizeImage'],['personalization','fontMetadata'],['ollama','configureRuntime'],['workflow','publishPublication']])assert.throws(()=>assertCompanionRequest('featureRequest',{feature,action,payload:{}}));
+});
+test('direct shared read and write results from expired sessions cannot be applied to a new session',async()=>{
+ for(const action of ['read','write']){let finish,connected=true,calls=0;const bridge=createCompanionSharedSettings({isConnected:()=>connected,request:()=>{calls++;return new Promise(resolve=>{finish=resolve;});}});const pending=bridge[action]({enabled:true});connected=false;bridge.invalidate();connected=true;finish({enabled:true});await assert.rejects(pending,/session is unavailable or changed/);assert.equal(calls,1);bridge.destroy();}
+});
+test('disconnected and disposed shared bridges cannot send reads or mutations',async()=>{
+ let connected=false,calls=0;const bridge=createCompanionSharedSettings({isConnected:()=>connected,request:async()=>{calls++;return{};}});await assert.rejects(bridge.read());await assert.rejects(bridge.write({enabled:false}));await bridge.refresh();assert.equal(calls,0);connected=true;bridge.destroy();await assert.rejects(bridge.read());await assert.rejects(bridge.write({enabled:false}));await bridge.refresh();assert.throws(()=>bridge.subscribe(()=>{}));assert.equal(calls,0);
+});
+test('invalidated shared refresh cannot notify and replacement refresh retains its own lifecycle',async()=>{
+ const pending=[],events=[];const bridge=createCompanionSharedSettings({isConnected:()=>true,request:()=>new Promise(resolve=>pending.push(resolve))});bridge.subscribe(value=>events.push(value));const old=bridge.refresh();bridge.invalidate();const current=bridge.refresh();pending[0]({enabled:true});await old;assert.deepEqual(events,[]);pending[1]({enabled:false});await current;assert.deepEqual(events,[{enabled:false}]);bridge.destroy();
+});
+function browser(){const nodes=[],document={createElement:tag=>{const node={tag,children:[],events:{},append(...values){this.children.push(...values);},setAttribute(){},addEventListener(name,fn){this.events[name]=fn;},remove(){}};nodes.push(node);return node;},defaultView:{addEventListener(){},removeEventListener(){}}};return{nodes,adapter:mountLocalAdapter({ownerDocument:document,append(){}})};}
+test('request snapshot cannot change while authenticated status is pending',async()=>{
+ const original=globalThis.fetch,b=browser();let waitStatus=false,finish;const requests=[];globalThis.fetch=async(url,options)=>{const endpoint=new URL(url).pathname;if(endpoint==='/pair')return{ok:true,text:async()=>JSON.stringify({token:'a'.repeat(43)})};if(endpoint==='/status'){if(waitStatus)return new Promise(resolve=>{finish=()=>resolve({ok:true,text:async()=>JSON.stringify({authenticated:true,actions:['featureRequest']})});});return{ok:true,text:async()=>JSON.stringify({authenticated:true,actions:['featureRequest']})};}requests.push(JSON.parse(options.body));return{ok:true,text:async()=>JSON.stringify({result:{ok:true}})};};
+ try{b.nodes.find(n=>n.type==='url').value='http://127.0.0.1:23456';b.nodes.find(n=>n.type==='password').value='b'.repeat(24);await b.nodes.find(n=>n.tag==='form').events.submit({preventDefault(){}});waitStatus=true;const params={feature:'status',action:'status',payload:{}};const result=b.adapter.featureRequest('featureRequest',params);params.feature='ollama';params.action='deleteModel';params.payload={name:'changed'};finish();await result;assert.deepEqual(requests[0].params,{feature:'status',action:'status',payload:{}});}finally{b.adapter.dispose();globalThis.fetch=original;}
+});
+test('expired browser session rejects pending status before any action request',async()=>{
+ const original=globalThis.fetch,b=browser();let waitStatus=false,finish,requests=0;globalThis.fetch=async(url)=>{const endpoint=new URL(url).pathname;if(endpoint==='/pair')return{ok:true,text:async()=>JSON.stringify({token:'a'.repeat(43)})};if(endpoint==='/status'){if(waitStatus)return new Promise(resolve=>{finish=()=>resolve({ok:true,text:async()=>JSON.stringify({authenticated:true,actions:['featureRequest']})});});return{ok:true,text:async()=>JSON.stringify({authenticated:true,actions:['featureRequest']})};}requests++;throw Error('Unexpected action');};
+ try{b.nodes.find(n=>n.type==='url').value='http://127.0.0.1:23456';b.nodes.find(n=>n.type==='password').value='b'.repeat(24);await b.nodes.find(n=>n.tag==='form').events.submit({preventDefault(){}});waitStatus=true;const result=b.adapter.featureRequest('featureRequest',{feature:'status',action:'status',payload:{}});b.adapter.disconnect();finish();await assert.rejects(result,/Connect and unlock/);assert.equal(requests,0);}finally{b.adapter.dispose();globalThis.fetch=original;}
+});
