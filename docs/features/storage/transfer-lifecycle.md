@@ -35,3 +35,17 @@ Status requests return an immutable cached snapshot directly from the input loop
 The helper records encrypted import, edit, rename, restore, cancel, export, and synchronization activity. Activity publication is explicit in the synchronization worker. Creating an event does not rescan the existing activity inventory. `listActivity`, `previewVersion`, `listVersionLabels`, `labelVersion`, and `exportVersion` expose the selected file history workflow. `startExport` adds cancellable export through the operation registry; the synchronous method remains compatible. User-selected export destinations are outside vault storage and cache folders. Atomic destination replacement keeps a previous exported file intact if preparation, decryption, or cancellation fails before installation.
 
 Random immutable part identifiers allow a part to contain several independently authenticated blocks. Integrity comes from each block's authentication and its bound part identifier and offset, not from treating the filename as a digest. Regression checks reject byte tampering, equal-sized block substitution, and truncation, and separately read an independently constructed format 2 ciphertext fixture.
+
+## Source-bound ordinary mounted verification
+
+The [native lifecycle evidence](../performance/native-lifecycle-performance.md) records ten passing ordinary checks at source `7e6877556da7aae8426d76d817c95c23fd33e719`, helper SHA-256 `7ba9bb0c3ba575d32c7bd2688998d8f1f3270ff86dc0dd2a089e1f5b5c73d8a4`. The checks cover idle-handle force lock/reunlock, temporary-save rename, mapped write/flush/reopen, ordinary close semantics, deletion, progress-copy cancel/stop comparison and managed batch cancellation. No GUI was used. Successful fixture teardown is recorded separately from operation correctness.
+
+A separate forced detach with a concurrent mapped writer produced a native fatal exception. Its expected-detach classification is unknown and remains unresolved. Do not infer full force-lock safety or erase the adverse probe from the ten ordinary passes.
+
+## Current-file export source addition
+
+Source `6086ff30c532c6a59a2ddc0869a28651e9a20dc1` adds current-file export to `startExport`: supply exactly one of `path` or `versionId`, plus `destination`. A current `path` is exported from an immutable read snapshot whose referenced ciphertext remains protected from cache eviction until disposal. The worker streams at most 65,536 plaintext bytes per block to a same-directory temporary file, checks cancellation between preparation and writes, flushes it durably and replaces the destination atomically.
+
+Cancellation before installation preserves a prior destination and removes the temporary output. Installation wins a late cancellation and is reported as completed. The plaintext buffer is cleared and the snapshot disposed in the finalization path. Exporting the current file does not manufacture a history version.
+
+This paragraph records implemented source behavior only. At the reviewed parent baseline `8ec5ef37e593fe4ef8ba88e9e4205bc67c4c36c3`, this export addition was not yet integrated. The ordinary mounted receipt predates it and does not verify it. Final parent integration, packaged execution and mounted current-export acceptance remain unverified.
