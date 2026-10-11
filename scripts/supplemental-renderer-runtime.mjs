@@ -10,6 +10,11 @@ const scriptRoot=fileURLToPath(new URL('./',import.meta.url));
 const sourceFiles=['supplemental-renderer-runtime.mjs','supplemental-renderer-recovery.py','renderer-process-snapshot.py','test-renderer-browser.mjs','packaged-renderer-runtime.mjs'];
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 async function hashes(){const result={};for(const name of sourceFiles)result[name]=hash(await fs.readFile(path.join(scriptRoot,name)));return result;}
+async function bounded(promise,label,timeoutMs) {
+ let timer;
+ try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(`${label} outcome remains unknown after its bounded wait.`)),timeoutMs);})]);}
+ finally{clearTimeout(timer);}
+}
 
 export async function attachSupplementalRenderer({admissionPath,admissionSha256,verifierSourceCommit,verifierHashes,evidenceRoot},runtime={}) {
  if(!path.isAbsolute(admissionPath||'')||!path.isAbsolute(evidenceRoot||'')||!/^[a-f0-9]{64}$/.test(admissionSha256||'')||!/^[a-f0-9]{40}$/.test(verifierSourceCommit||''))throw new Error('Exact supplemental receipt and verifier identities are required.');
@@ -64,17 +69,25 @@ export async function attachSupplementalRenderer({admissionPath,admissionSha256,
   const close=async()=>{
    if(closed)throw new Error('Supplemental closure already attempted.');
    closed=true;
-   let closure={resourcesAbsent:false},error,closeSendError;
+   let closure={resourcesAbsent:false},error,closeSendError,detachError;
+   const protocolTimeout=Math.min(5000,Math.max(1,runtime.protocolTimeoutMs??5000));
+   const validateCloseBytes=async()=>{await validate();if(hash(await read(receiptPath))!==freshSha)throw new Error('Fresh supplemental receipt bytes changed before closure.');};
    try {
     const before=await checked('prepare-close',proofInput);
     if(!Array.isArray(before.exitProcesses)||!before.exitProcesses.length)throw new Error('Fresh native exit snapshot is unavailable.');
-    const session=await browser.newBrowserCDPSession();
-    try {await session.send('Browser.close');}catch(value){closeSendError=value.message;}finally{await session.detach().catch(()=>{});}
+    await validateCloseBytes();
+    const session=await bounded(browser.newBrowserCDPSession(),'Closure session creation',protocolTimeout);
+    try {
+     await validateCloseBytes();
+     try {await bounded(session.send('Browser.close'),'Browser.close',protocolTimeout);}catch(value){closeSendError=value.message;if(value.message.includes('outcome remains unknown'))error=value;}
+    }finally{
+     try{await bounded(session.detach(),'Closure session detach',protocolTimeout);}catch(value){detachError=value.message;error ||= value;}
+    }
     closure=await checked('confirm-exit',{exitProcesses:before.exitProcesses});
     if(closure.resourcesAbsent!==true)throw new Error('Supplemental process, port or desktop absence remains unverified.');
    }catch(value){error=value;}
-   try{await transport.disconnect();}catch(value){error ||= value;}
-   await retain({connectionOwned,closure,error:error?.message,closeSendError,pixelsInspected:false,nativeCaptureVerified:false});
+   try{await bounded(transport.disconnect(),'Owned socket disconnect',3500);}catch(value){error ||= value;}
+   await retain({connectionOwned,closure,error:error?.message,closeSendError,detachError,pixelsInspected:false,nativeCaptureVerified:false});
    if(error)throw error;
    return closure;
   };

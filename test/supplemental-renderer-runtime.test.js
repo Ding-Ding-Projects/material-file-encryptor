@@ -5,7 +5,7 @@ import os from 'node:os';
 import {createHash} from 'node:crypto';
 import {attachSupplementalRenderer} from '../scripts/supplemental-renderer-runtime.mjs';
 
-function fixture({proofFails=false,closeFails=false,byteChange=false,wrongTarget=false}={}) {
+function fixture({proofFails=false,closeFails=false,byteChange=false,wrongTarget=false,changeDuringPrepareClose=false,changeDuringSession=false,hangClose=false,hangDetach=false}={}) {
  const events=[],writes=new Map(),root=path.join(os.tmpdir(),'supplemental-mocked-only');
  const targetId='page1',url='file:///packaged/app.asar/src/renderer/index.html';
  const admission={kind:'supplemental-partial-launch-recovery',originalResourcesAbsent:false,connectionOwned:false,pageActionsAllowed:false,request:{port:9222,target:{expectedUrl:url,files:{executable:'exact.exe'}}}};
@@ -15,19 +15,19 @@ function fixture({proofFails=false,closeFails=false,byteChange=false,wrongTarget
  let changed=false;
  const input={admissionPath,admissionSha256:createHash('sha256').update(bytes).digest('hex'),verifierSourceCommit:'b'.repeat(40),verifierHashes:hashes,evidenceRoot};
  const browser={
-  async newBrowserCDPSession(){return {async send(name){events.push(name);if(name==='Target.getTargets')return {targetInfos:[{targetId,type:'page',url:wrongTarget?'file:///other':url}]};if(name==='Browser.close'&&closeFails)throw new Error('close transport stopped');return {};},async detach(){events.push('detach');}};},
+  async newBrowserCDPSession(){const closing=events.includes('prepare-close');if(closing&&changeDuringSession)changed=true;return {async send(name){events.push(name);if(name==='Target.getTargets')return {targetInfos:[{targetId,type:'page',url:wrongTarget?'file:///other':url}]};if(name==='Browser.close'&&hangClose)return new Promise(()=>{});if(name==='Browser.close'&&closeFails)throw new Error('close transport stopped');return {};},async detach(){events.push('detach');if(closing&&hangDetach)return new Promise(()=>{});}};},
   contexts(){events.push('pages');return [{pages(){return [{url:()=>url,evaluate(){events.push('evaluate');},screenshot(){events.push('capture');}}];}}];}
  };
  const runtime={
   readFile:async p=>p===admissionPath?(changed?Buffer.from('changed'):bytes):fresh,
   writeFile:async(p,value)=>{assert.equal(writes.has(p),false);writes.set(p,JSON.parse(value));},
-  mkdir:async()=>{},hashes:async()=>hashes,inspectTarget:async()=>{events.push('inspect');},
+  mkdir:async()=>{},hashes:async()=>hashes,inspectTarget:async()=>{events.push('inspect');},protocolTimeoutMs:10,
   createTransport:async()=>({transport:{},async disconnect(){events.push('disconnect');}}),
   chromium:{async connectOverCDP(){events.push('connect');return browser;}},
   async command(exe,args,input){const operation=args[1];events.push(operation);
    if(operation==='prepare')return {recovery:{originalResourcesAbsent:false,connectionOwned:false,pageActionsAllowed:false,targetProof:{targetCount:1,targetId,exactUrl:url}}};
    if(operation==='prove-connected'){if(proofFails)throw new Error('peer identity differs');if(byteChange)changed=true;return {client_ok:true,clientIdentity:{pid:process.pid},establishedPeerPair:{clientPid:process.pid},targetId,exactUrl:url};}
-   if(operation==='prepare-close')return {exitProcesses:[{pid:77}]};
+   if(operation==='prepare-close'){if(changeDuringPrepareClose)changed=true;return {exitProcesses:[{pid:77}]};}
    if(operation==='confirm-exit')return {resourcesAbsent:!closeFails,originalResourcesAbsent:false};
   }
  };
@@ -60,4 +60,27 @@ test('actual wrapper retains failed graceful closure and never substitutes termi
  assert.equal(f.events.filter(e=>e==='Browser.close').length,1);
  assert.equal(f.events.includes('confirm-exit'),true);
  assert.equal(f.events.includes('disconnect'),true);
+});
+
+test('receipt races during close preparation and session creation prevent every close send',async()=>{
+ for(const option of [{changeDuringPrepareClose:true},{changeDuringSession:true}]){
+  const f=fixture(option);const opened=await attachSupplementalRenderer(f.input,f.runtime);
+  await assert.rejects(opened.close(),/bytes changed/);
+  assert.equal(f.events.includes('Browser.close'),false);
+  assert.equal(f.events.includes('disconnect'),true);
+  assert.equal([...f.writes.values()][0].closure.resourcesAbsent,false);
+ }
+});
+
+test('hung close and detach settle as unknown without duplicate close or missing socket teardown',async()=>{
+ for(const option of [{hangClose:true},{hangDetach:true},{hangClose:true,hangDetach:true}]){
+  const f=fixture(option);const opened=await attachSupplementalRenderer(f.input,f.runtime);
+  await assert.rejects(opened.close(),/outcome remains unknown/);
+  assert.equal(f.events.filter(e=>e==='Browser.close').length,1);
+  assert.equal(f.events.includes('confirm-exit'),true);
+  assert.equal(f.events.includes('disconnect'),true);
+  assert.match([...f.writes.values()][0].error,/outcome remains unknown/);
+  await assert.rejects(opened.close(),/already attempted/);
+  assert.equal(f.events.filter(e=>e==='Browser.close').length,1);
+ }
 });
