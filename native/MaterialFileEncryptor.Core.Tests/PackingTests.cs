@@ -71,6 +71,30 @@ internal static class PackingTests
             var resized=Read(reopened,"data");Assert(resized.AsSpan(0,777).SequenceEqual(bytes.AsSpan(0,777))&&resized.AsSpan(777).IndexOfAnyExcept((byte)0)<0,"Truncate regrowth exposed stale data");
         }
     }
+    internal static void CancellationGeneration()
+    {
+        using var fixture=new Fixture();using var engine=fixture.Create();engine.CreateFile("data");engine.WriteRange("data",0,Data(200000));
+        using var writer=engine.AcquireWriterById(engine.GetInfo("data")!.EntryId);
+        long older=engine.PackAsync("data",4096).GetAwaiter().GetResult();
+        using var entered=new ManualResetEventSlim();using var release=new ManualResetEventSlim();using var cancellation=new CancellationTokenSource();
+        engine.PublicationTestPoint=point=>{if(point=="part"){entered.Set();Assert(release.Wait(TimeSpan.FromSeconds(10)),"Publication release timed out");}};
+        var olderPublication=Task.Run(async()=>
+        {
+            try{await engine.FlushAsync(cancellation.Token);throw new Exception("Older publication was not cancelled");}
+            catch(OperationCanceledException){engine.PausePacking(older);}
+        });
+        try
+        {
+            Assert(entered.Wait(TimeSpan.FromSeconds(10)),"Publication did not reach the controlled stall");
+            long newer=engine.PackAsync("data",8192).GetAwaiter().GetResult();Assert(newer>older,"Packing request generation did not advance");
+            cancellation.Cancel();release.Set();olderPublication.WaitAsync(TimeSpan.FromSeconds(10)).GetAwaiter().GetResult();
+            Assert(!engine.PackingStatus.Paused,"Older publication cancellation paused the newer request");
+            engine.PublicationTestPoint=null;writer.Dispose();engine.ProcessPackingQueueAsync().GetAwaiter().GetResult();
+            Assert(engine.GetInfo("data")!.PartSizeBytes==8192,"Newer packing target was lost after older cancellation");
+            engine.PausePacking(newer);Assert(engine.PackingStatus.Paused,"Current generation cancellation failed to persist pause");
+        }
+        finally{release.Set();olderPublication.WaitAsync(TimeSpan.FromSeconds(10)).GetAwaiter().GetResult();}
+    }
     internal static void PauseResume()
     {
         using var fixture=new Fixture();string version;

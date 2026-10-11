@@ -16,9 +16,13 @@ The native command `startPacking` accepts optional `path` and `partSizeBytes` pr
 
 Migration is resumable: the encrypted checkpoint stores pending entry IDs and target caps. Completed packed generations are skipped. Files with active writers stay queued and are revisited after close or periodic maintenance. A completed command does not mean every deferred writer has closed; inspect `pendingPackingFiles` and `activeWriters`. Cancellation preserves completed adoptions and outstanding requests, and durably pauses automatic packing. The timer and writable-handle close cannot resume a paused migration. An explicit new startPacking request resumes it. Status exposes paused and diagnostics exposes packingPaused.
 
+A cancellation carries its packing request generation through publication. An older operation cannot pause a newer explicit packing or resplit request.
+
 ## Publication and responsiveness
 
-One publication consumer snapshots durable pending commits. It verifies and copies immutable parts outside the core lock, writes every referenced part before its commit metadata, then acknowledges only that uploaded commit ID in a durable checkpoint. Commits created during publication remain pending. A source publication that succeeded before local acknowledgement is retried idempotently. Source unavailability preserves durable local work.
+One publication consumer snapshots durable pending commits. It verifies materialized source parts and copies missing immutable parts outside the core lock before writing commit metadata, then acknowledges only that uploaded commit ID in a durable checkpoint. Remote-only immutable objects advertised by the transport retain lazy availability without downloading unchanged content. Corrupt materialized source parts are repaired only from authenticated local ciphertext; otherwise the commit remains pending. Commits created during publication remain pending. A source publication that succeeded before local acknowledgement is retried idempotently. Source unavailability preserves durable local work.
+
+Encrypted local history hashes at most 64 paths per child, with a 24,000-character argument budget and a 128 MiB batch budget; a single larger object still obeys the existing publication cap. Index updates also use at most 64 entries per child. Immutable ciphertext comparisons, bounded publication batches and part-before-metadata ordering remain enforced.
 
 Synchronization gathers source metadata outside the namespace lock. Before replay, it captures local edits made during source I/O, so replay cannot replace those edits with an earlier view. Quiet version maintenance and filesystem Flush are local durability operations. Background packing and source publication are distinct phases; neither synchronous final-close repacking nor a larger plaintext buffer is used to hide copy latency.
 
