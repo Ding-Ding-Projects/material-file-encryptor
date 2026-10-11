@@ -1,8 +1,10 @@
 # Material File Encryptor
 
+Pure Material Design 3 remains the interface requirement for the desktop workspace, documentation website, settings and nested editors. The reviewed typed appearance unit converts number fields, layer names and preset drafts to registered outlined text fields while preserving range rejection, current-layer ownership and storage rollback. This source conversion does not complete optional guidance, Clear actions, vendor keyboard behavior or rendered conformance. Specialized property, color, mesh, path and file controls remain unfinished.
+
 **An encrypted drive for Windows Explorer, with local recovery and an encrypted offline cache.** Work through a mounted drive while the application stores encrypted file data and metadata in your chosen storage folder. A native .NET engine and WinFsp adapter handle the drive; the desktop workspace brings transfers, recovery, settings and documentation together.
 
-[Download Windows x64 installer · v1.232.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/download/v1.232.1/MaterialFileEncryptor-Setup.exe) · [Read the documentation](https://ding-ding-projects.github.io/material-file-encryptor/) · [Release and provenance](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.232.1) · [中文文件](docs/features/README.zh-HK.md)
+[Download Windows x64 installer · v1.259.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/download/v1.259.1/MaterialFileEncryptor-Setup.exe) · [Read the documentation](https://ding-ding-projects.github.io/material-file-encryptor/) · [Release and provenance](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.259.1) · [中文文件](docs/features/README.zh-HK.md)
 
 > **Development status:** the current package and documentation delivery are independently verified. Installed startup, real updating, restart continuity and current rebuilt interface acceptance are unfinished. The complete delivery inventory contains **105 feature IDs and 210 desktop/website rows**, all still unverified as complete surfaces. Source components and focused checks are not full product acceptance. The interface target is Material Design 3 throughout; implementation is partial and complete visual conformance is not yet verified.
 

@@ -444,3 +444,10 @@
 - [x] Implement explicit public metadata projection, workflow grouping, preserved exact-byte duplicate occurrences and searched empty-group hiding with focused negative regressions.
 - [x] Independently review and render grouped gallery67c1996, preserving its exact-source evidence and genuine owned closure.
 - [ ] Promote eligible current originals only after complete source, lifecycle, privacy and pixel evidence; the current 14 historical originals and two exclusions remain unchanged.
+# Pure Material Design 3 typed-field continuation, 2026-10-11 UTC
+
+- [ ] Complete registered appearance number/name fields: candidate c5d412f passes focused source checks and two reviews; genuine keyboard, accessibility and pixels remain pending.
+- [ ] Complete optional unique guidance and Clear actions for those fields; both were inherited gaps and remain open.
+- [ ] Convert remaining specialized property, color, mesh, path, file and state-tab controls through real supported workflows.
+- [ ] Repair the three unsuccessful exact-source ten-scene capture states, then verify the newer typed-field source separately.
+- [ ] Complete installed startup/updater lifecycle after independently accepted corrective v1.259.1 bytes. Repaired observer preparation passes, but fresh memory remains below the unchanged launch floor.
