@@ -4,7 +4,7 @@
 
 ## Configuration
 
-Set the process environment variable `PRIVATE_INSTRUCTIONS_SOURCE` to an existing absolute filename outside this repository. The checker does not search personal directories or guess a source location. When the setting is absent, it prints a generic skip message and succeeds, allowing contributors without private instructions to build. An empty or invalid setting fails.
+Set the process environment variable `PRIVATE_INSTRUCTIONS_SOURCE` to an existing absolute filename outside this repository. Alternatively, set the repository-local `privateInstructions.source` Git configuration value; the build and hook read it only when the environment variable is absent. The checker does not search personal directories or guess a source location. When neither setting exists, it prints a generic skip message and succeeds, allowing contributors without private instructions to build. An explicitly empty environment variable or invalid setting fails.
 
 The external source must have exactly one level-two heading named `Vocabulary and locations`. The dictionary section starts at that heading and ends immediately before the next level-one or level-two heading, or at the end of the file. Heading recognition uses regular expressions at the start of a line. CRLF and CR are normalized to LF, and the section ends with one LF before hashing with SHA-256. Other sections do not affect its digest.
 
@@ -14,6 +14,6 @@ Missing sources, missing or malformed sidecars, stale digests, duplicate or abse
 
 ## Hook and build integration
 
-The checked-in `.githooks/pre-push` invokes the same checker and propagates its exit status. Activating a hooks directory remains an explicit repository-owner operation; do not overwrite an existing hook configuration. The hook needs Node.js on PATH and does not install tools. The parent build entrypoint must separately invoke `node scripts/check-vocabulary.mjs` before build work. Adding these files alone does not claim that the build invocation or local hook configuration is active.
+The checked-in `.githooks/pre-push` invokes the same checker and propagates its exit status. Activating a hooks directory remains an explicit repository-owner operation; do not overwrite an existing hook configuration. The hook needs Node.js on PATH and does not install tools. The root build entrypoint invokes the checker after tool bootstrap and before output staging. Local hook and private-source configuration are not part of the distributed source.
 
 Run `node --test test/check-vocabulary.test.js` for neutral synthetic fixtures covering absence, a valid lock, stale and malformed locks, line endings, scope extraction, external-path enforcement, and non-disclosing output. No canonical private content is included in those fixtures.

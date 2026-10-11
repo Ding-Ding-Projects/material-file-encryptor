@@ -4,6 +4,11 @@ $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
 . "$PSScriptRoot\bootstrap.ps1"
 function Invoke-Checked([scriptblock]$command) { & $command; if ($LASTEXITCODE -ne 0) { throw "Build command failed with exit code $LASTEXITCODE" } }
+if (!(Test-Path Env:PRIVATE_INSTRUCTIONS_SOURCE)) {
+  $instructionSource = & git config --local --get privateInstructions.source
+  if ($LASTEXITCODE -eq 0 -and ![string]::IsNullOrWhiteSpace($instructionSource)) { $env:PRIVATE_INSTRUCTIONS_SOURCE = $instructionSource }
+}
+Invoke-Checked { node scripts/check-vocabulary.mjs }
 $toolStage = Join-Path $root ('out\tools.stage-' + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force $toolStage | Out-Null
 Copy-Item -LiteralPath $env:MFE_GIT_TOOL_ROOT -Destination (Join-Path $toolStage 'git') -Recurse
