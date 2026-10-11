@@ -49,4 +49,6 @@ Hash checks narrow the replacement window but are not an operating-system execut
 
 ## External navigation and verification
 
+Runtime start and each profile execution require a native confirmation naming the trusted executable, fixed action and loopback boundary. Cancel is the default and raises `USER_CANCELLED` before process creation. Renderer confirmation fields do not replace this dialog. Both profile adapter and service launcher exports share the same wrapper. Trust verification remains read-only and never displays a prompt; the underlying launchers recheck trust after the execution confirmation.
+
 Only exact `https://ollama.com/download/windows` is accepted, and a native confirmation occurs before opening it. No installer is downloaded or executed. Tests use synthetic, non-executable files and injected signature responses, and exercise missing trust, explicit approval, changed bytes, folder confinement and fixed-URL confirmation. They do not establish a real Ollama publisher identity or claim a real runtime launch.
