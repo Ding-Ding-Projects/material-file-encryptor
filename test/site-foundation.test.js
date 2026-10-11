@@ -75,3 +75,10 @@ test('home section tabs use bilingual labels and preference palette values bind 
  for(const label of ["overview:text('Overview','概覽')","documentation:text('Documentation','文件')","download:text('Release downloads','版本下載')"])assert.ok(source.includes(label));
  for(const part of ["type:'range'","type:'switch'","type:'select'","control.dispatchEvent(new Event('input'","control.dispatchEvent(new Event('change'","control:binding"])assert.ok(source.includes(part));
 });
+test('actual public authentication callback invalidates pending reset before a later unlock',async()=>{
+ const {createSettingsResetWorkflow}=await import('../src/shared/local-ux/settings-reset.js'),source=(await readFile(new URL('../docs/site/site-foundation.js',import.meta.url),'utf8')).replace(/\r\n/g,'\n');
+ const start=source.indexOf('onAuthentication:authenticated=>')+'onAuthentication:'.length,end=source.indexOf(',\n  notify:',start);assert.ok(start>0&&end>start);const callbackSource=source.slice(start,end);
+ let authenticated=true,release,writes=0;const pending=new Promise(resolve=>release=resolve),workflow=createSettingsResetWorkflow({store:{reset:()=>writes++},isAuthenticated:()=>authenticated,requestConfirmation:()=>pending});
+ const calls=[],callback=Function('visitorPersonalization','visitorAccess','onAuthentication','foundation','localized','language','return ('+callbackSource+');')({onAuthentication:value=>{calls.push(['personalization',value]);if(!value)workflow.invalidate();}},null,value=>calls.push(['wording',value]),{notify(){}},value=>value,()=> 'en');
+ const reset=workflow.reset();authenticated=false;await callback(false);authenticated=true;await callback(true);release({confirmed:true});await assert.rejects(reset,/cancelled/);assert.equal(writes,0);assert.deepEqual(calls,[['personalization',false],['wording',false],['personalization',true],['wording',true]]);workflow.destroy();
+});

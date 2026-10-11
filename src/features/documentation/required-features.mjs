@@ -13,6 +13,7 @@ export const REQUIRED_FEATURE_IDS = Object.freeze([
   'workflow-navigation',
   'motion',
   'appearance-editor',
+  'minecraft-server-manager',
   'color-picker',
   'logo-customization',
   'overlay-panels',

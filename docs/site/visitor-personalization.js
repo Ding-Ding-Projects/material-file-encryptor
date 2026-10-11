@@ -91,14 +91,14 @@ export function mountVisitorPersonalization(container,options={}) {
  };
  const attachSearch=(input,area)=>{
   const search=doc.createElement('mfe-search');search.setAttribute('label',input.getAttribute('aria-label')||translate('Search website settings'));search.setAttribute('scope','visitor-personalization');search.language=controller.store.get().language;input.hidden=true;input.before(search);let generation=0;
-  const update=async()=>{const current=++generation;const nodes=[...area.querySelectorAll('.local-ux-field')];if(typeof search.filter!=='function'){notify('The settings search component is unavailable. All settings remain visible.');return;}const rows=await search.filter(nodes.map((node,index)=>({id:String(index),text:node.textContent})));if(!alive||current!==generation||rows===null)return;const visible=new Set(rows.map(row=>row.id));nodes.forEach((node,index)=>node.hidden=!visible.has(String(index)));};
+  const update=async()=>{const current=++generation;const nodes=[...area.querySelectorAll('.local-ux-field')];if(typeof search.filter!=='function'){notify('The settings search component is unavailable. All settings remain visible.');return;}const rows=await search.filter(nodes.map((node,index)=>({id:String(index),text:node.textContent+' '+(node.dataset.guidanceSearch||'')})));if(!alive||current!==generation||rows===null)return;const visible=new Set(rows.map(row=>row.id));nodes.forEach((node,index)=>node.hidden=!visible.has(String(index)));};
   search.addEventListener('search-change',update);
   return()=>{generation++;search.removeEventListener('search-change',update);search.remove();input.hidden=false;};
  };
  const externalUnavailable=async()=>{throw Error('External settings are unavailable on this static website. Use a local schedule; no provider request or credential was sent.');};
  const module=mountPersonalization(container,{
   storage:controller.storage,store:controller.store,surfaceRoot:doc.documentElement,attentionHost:options.attentionHost||doc.body,
-  attachSearch,notify,dictionary:VISITOR_COPY,historyCredentialStore,historyManager:sharedHistory,history:options.history,
+  attachSearch,notify,guidanceHelpBase:options.guidanceHelpBase||new URL('articles/docs--features--interface--settings-guidance.html',import.meta.url).href,registerHelp:options.registerHelp,registerCommands:value=>foundation?.registerCommands?.(value),dictionary:VISITOR_COPY,historyCredentialStore,historyManager:sharedHistory,history:options.history,
   vocabulary:{isAuthenticated:()=>false,replace:value=>value},
  verifySharedCredential:password=>controller.authorizeModeChange(false,password),
  setSharedCredential:controller.setSharedCredential,
@@ -106,7 +106,7 @@ export function mountVisitorPersonalization(container,options={}) {
   setScheduleCredential:credentialCapabilities.setScheduleCredential,
   clearScheduleCredential:credentialCapabilities.clearScheduleCredential,
   sharedSettings:{read:async()=>controller.store.get().school,write:async()=>{}},
-  confirmDestructive:options.confirmDestructive,onLock:options.onLock,
+  confirmDestructive:options.confirmDestructive,isAuthenticated:options.isAuthenticated,onLock:options.onLock,
   onLogoChange:options.onLogoChange,isScreenReaderActive:options.isScreenReaderActive,
   onChange:settings=>{foundation?.setLanguage?.(settings.school.enabled?'en':settings.language);onChange(settings,{persistent:controller.storage.persistent,provenance});},
  });
@@ -116,7 +116,7 @@ export function mountVisitorPersonalization(container,options={}) {
  // The shared renderer still uses native controls in several nested editors.
  // Preserve their semantics rather than replacing them with decorative tags.
  return {store:controller.store,storage:controller.storage,apply:module.apply,
-  getSettings:()=>controller.store.get(),open:module.open,narrator:module.narrator,appearance:module.appearance,history:module.history,
+  getSettings:()=>controller.store.get(),onAuthentication:module.onAuthentication,open:module.open,narrator:module.narrator,appearance:module.appearance,history:module.history,
   addLocalSchedule:controller.addLocalSchedule,
   authorizeModeChange:controller.authorizeModeChange,flushHistory:controller.flushHistory,
   destroy(){if(!alive)return;alive=false;win.removeEventListener('storage',storageChanged);module.destroy();controller.destroy();}};

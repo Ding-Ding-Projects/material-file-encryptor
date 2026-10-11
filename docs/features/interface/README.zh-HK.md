@@ -23,3 +23,11 @@
 - [瀏覽器工作區角色](public-workspace-role.zh-HK.md)
 
 - [設定完整性同一致性](settings-completeness.zh-HK.md)
+
+- [動畫同過渡來源實作及限制](animation-transition.zh-HK.md)
+
+- [選用控制導引同獨立說明](settings-guidance.zh-HK.md)
+
+- [巢狀外觀控制項指引](nested-appearance-guidance.zh-HK.md)
+
+- [本機字型中繼資料同可變軸](font-metadata.zh-HK.md)

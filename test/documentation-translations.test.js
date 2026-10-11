@@ -10,12 +10,13 @@ const REQUIRED = [
   'access/README', 'access/local-access', 'access/visitor-local-access', 'appearance/README', 'appearance/raster-workflows',
   'converter/README', 'converter/spreadsheets', 'converter/archive-runtime', 'converter/archive-and-data', 'converter/media-plan', 'converter/minimal-component', 'converter/minimal-runtime',
   'desktop/README', 'desktop/owned-exit-handles', 'desktop/package-integrity', 'desktop/runtime-evidence', 'drive/README',
-  'interface/README', 'interface/public-workspace-role', 'interface/settings-completeness', 'interface/appearance-editor', 'interface/local-personalization', 'interface/modern-fields', 'interface/personal-vocabulary', 'interface/startup-registration', 'interface/visitor-personalization',
+  'interface/README', 'interface/animation-transition', 'interface/public-workspace-role', 'interface/settings-completeness', 'interface/settings-guidance', 'interface/nested-appearance-guidance', 'interface/font-metadata', 'interface/appearance-editor', 'interface/local-personalization', 'interface/modern-fields', 'interface/personal-vocabulary', 'interface/startup-registration', 'interface/visitor-personalization',
   'ollama/README', 'ollama/local-models', 'ollama/native-host', 'ollama/regression-verification', 'ollama/release-provenance',
   'performance/README', 'performance/native-helper', 'performance/native-lifecycle-performance',
   'platform/README', 'platform/public-route-acceptance', 'platform/current-integration', 'platform/documentation-and-status', 'platform/instruction-currency', 'platform/public-document-foundation',
   'release/README', 'release/installer-repair', 'release/native-update-controller', 'release/preview-delivery', 'release/preview-verification',
   'schedules/README', 'schedules/external-sources', 'storage/README', 'storage/file-history-activity', 'storage/git-transport', 'storage/history-and-recycle-bin', 'storage/native-vault', 'storage/transfer-lifecycle',
+  'server-manager/README', 'server-manager/foundation',
   'surface-foundation/README', 'surface-foundation/coverage', 'surface-foundation/integration', 'surface-foundation/layout-and-notifications', 'surface-foundation/updates-panel', 'surface-foundation/workflow-handoffs',
 ].map(name => `docs/features/${name}.md`).sort();
 const normalized = text => text.replace(/\r\n?/g, '\n');

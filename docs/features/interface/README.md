@@ -23,3 +23,11 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 - [Browser workspace role](public-workspace-role.md)
 
 - [Settings completeness and integrity](settings-completeness.md)
+
+- [Animation and Transition source implementation and limits](animation-transition.md)
+
+- [Optional control guidance and unique explanations](settings-guidance.md)
+
+- [Nested appearance control guidance](nested-appearance-guidance.md)
+
+- [Local font metadata and variable axes](font-metadata.md)

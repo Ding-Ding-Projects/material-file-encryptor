@@ -13,6 +13,7 @@ import { REVIEWED_OLLAMA_MANIFESTS, OLLAMA_PUBLISHER_POLICIES } from './ollama-p
 import { createWorkflowServices } from './workflow-services.js';
 import {createAppearanceImageService, APPEARANCE_IMAGE_REQUEST_BYTES} from './appearance-image-service.js';
 import {createOllamaConfiguration} from './ollama-configuration.js';
+import {collectInstalledFontMetadata,createFontScanAdmission} from './font-catalog.js';
 const scrypt=promisify(scryptCallback);
 const executeFile=promisify(execFile);
 const object=value=>value&&typeof value==='object'&&!Array.isArray(value);
@@ -52,6 +53,7 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
  const scheduleAuthorization={};
  const schedules=createScheduleSource({credentials,authorizeCredentialMutation:context=>context?.authorization===scheduleAuthorization});
  const workflows=createWorkflowServices({dataDirectory,dialog,getWindow,openPath,openExternal,emit});
+ const fontMetadataAdmission=createFontScanAdmission();const cancelFontMetadata=()=>fontMetadataAdmission.cancelAll();
  const grants=new Map();let converter,ollama,ollamaPromise,closed=false,exiting=false,sharedCredentialGranted=false,pendingRequests=0;
  const modelEvents=[];let modelSequence=0,modelEventBytes=0,activeOllamaRequests=0;
  const ollamaConfiguration=createOllamaConfiguration({directory:dataDirectory});
@@ -106,6 +108,8 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
    if(action==='dataFolder')return dataDirectory;
   }
   if(feature==='personalization'){
+   if(action==='cancelFontMetadata')return fontMetadataAdmission.cancel(payload.requestId);
+   if(action==='fontMetadata'){const requestId=payload.requestId||randomUUID();return fontMetadataAdmission.run(requestId,signal=>collectInstalledFontMetadata({signal,onProgress:progress=>emit('personalization',{type:'fontMetadataProgress',requestId,...progress})}));}
    if(action==='normalizeImage')return imageService.normalize(payload);
    if(action==='sharedRead'){try{return JSON.parse(await fs.readFile(settingsPath,'utf8'));}catch(e){if(e.code==='ENOENT')return null;throw e;}}
    if(action==='sharedWrite'){const value=plainSettings(payload.value);let previous=null;try{previous=JSON.parse(await fs.readFile(settingsPath,'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}if(previous?.enabled&&!sharedCredentialGranted)throw Error('Verify the existing local credential before changing the active mode.');sharedCredentialGranted=false;await fs.mkdir(dataDirectory,{recursive:true});const temporary=settingsPath+'.'+randomUUID()+'.tmp';try{await fs.writeFile(temporary,encoded(value),{flag:'wx',mode:0o600});await fs.rename(temporary,settingsPath);}finally{await fs.rm(temporary,{force:true});}emit('personalization',{type:'sharedSettings',value});return true;}
@@ -127,5 +131,5 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
   throw Error('Unsupported feature action.');
  }
  async function request(...args){pendingRequests++;try{return await dispatch(...args);}finally{pendingRequests--;}}
- return {request,credentials,beginExit(){exiting=true;},endExit(){exiting=false;},async pending(){return pendingRequests+workflows.pending+(converter?await converter.pending():0)+(ollama?.operations().length||0);},async cancelAll(){workflows.cancelAll();await imageService.cancelAll();await Promise.allSettled([converterPromise,ollamaPromise]);await Promise.all([converter?.cancelAll(),ollama?.cancelAll()]);},async checkpoint(summary,progress){return(await statusPromise).checkpoint(summary,progress);},async close(){closed=true;await schedules.dispose();await imageService.close();await workflows.close();await Promise.allSettled([converterPromise,ollamaPromise]);await converter?.close();await ollama?.dispose();await(await statusPromise).finish('waiting');grants.clear();}};
+ return {request,credentials,beginExit(){exiting=true;},endExit(){exiting=false;},async pending(){return pendingRequests+workflows.pending+(converter?await converter.pending():0)+(ollama?.operations().length||0);},async cancelAll(){cancelFontMetadata();workflows.cancelAll();await imageService.cancelAll();await Promise.allSettled([converterPromise,ollamaPromise]);await Promise.all([converter?.cancelAll(),ollama?.cancelAll()]);},async checkpoint(summary,progress){return(await statusPromise).checkpoint(summary,progress);},async close(){closed=true;cancelFontMetadata();await schedules.dispose();await imageService.close();await workflows.close();await Promise.allSettled([converterPromise,ollamaPromise]);await converter?.close();await ollama?.dispose();await(await statusPromise).finish('waiting');grants.clear();}};
 }

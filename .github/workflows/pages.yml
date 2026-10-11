@@ -33,9 +33,15 @@ jobs:
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
       - name: Update and verify repository homepage
         if: github.repository == 'Ding-Ding-Projects/material-file-encryptor'
-        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || github.token }}
         run: |
+          set -euo pipefail
+          expectedHomepage=https://ding-ding-projects.github.io/material-file-encryptor/
           gh api --method PATCH repos/Ding-Ding-Projects/material-file-encryptor -f homepage=https://ding-ding-projects.github.io/material-file-encryptor/ --silent
-          gh api repos/Ding-Ding-Projects/material-file-encryptor --jq .homepage
+          actualHomepage=$(gh api repos/Ding-Ding-Projects/material-file-encryptor --jq .homepage)
+          if [ "$actualHomepage" != "$expectedHomepage" ]; then
+            echo 'Repository homepage readback differs from the deployed documentation URL.' >&2
+            exit 1
+          fi
+          echo "Verified repository homepage: $actualHomepage"
