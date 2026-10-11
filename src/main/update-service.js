@@ -35,7 +35,8 @@ async function hashFile(filename, expected, signal) {
 /** Main-process controller. It never starts native updating before explicit confirmation. */
 export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl = globalThis.fetch,
   platform = process.platform, argv = process.argv, isActiveWork = () => true,
-  acquireInstallLease, getLanguage = () => 'en', clock = () => Date.now(), setTimer = setTimeout, clearTimer = clearTimeout,
+  acquireInstallLease, prepareRestart = async () => { throw new Error('RESTART_PREPARATION_REQUIRED'); },
+  getLanguage = () => 'en', clock = () => Date.now(), setTimer = setTimeout, clearTimer = clearTimeout,
   intervalMs = 4 * 60 * 60 * 1000, autoSchedule = true,
   requestTimeoutMs = 30_000, nativeTimeoutMs = 10 * 60 * 1000,
 } = {}) {
@@ -193,7 +194,7 @@ export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl
       const zh = { title: '安裝更新', message: `重新啟動以安裝 ${candidate.version} 版本？`,
         detail: '此更新未經簽署。請先儲存工作。只會重新啟動此應用程式，電腦不會重新啟動。', buttons: ['重新啟動並安裝更新', '稍後'] };
       const language = getLanguage();
-      const copy = language === 'zh-HK' ? zh : language === 'bilingual' ? {
+      const copy = ['yue', 'zh-HK'].includes(language) ? zh : language === 'bilingual' ? {
         title: `${en.title} / ${zh.title}`, message: `${en.message}\n${zh.message}`,
         detail: `${en.detail}\n${zh.detail}`, buttons: en.buttons.map((text, i) => `${text} / ${zh.buttons[i]}`),
       } : en;
@@ -220,6 +221,8 @@ export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl
           try {
             await hashFile(path.win32.join(root, 'packages', candidate.name), candidate);
             assert(!disposed && !(await isActiveWork()), 'ACTIVE_WORK');
+            if (finished || disposed) return;
+            await prepareRestart();
             if (finished || disposed) return;
             autoUpdater.quitAndInstall(); finish();
           } catch (error) { finish(error); }
