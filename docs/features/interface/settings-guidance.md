@@ -986,3 +986,9 @@ Include Saturday as a starting day for this schedule.
 - logo.editor: Logo conversion and nested controls require their own asynchronous workflow descriptors.
 - access.profile: Access is a separately mounted credential and recovery surface.
 - search.workbench: Regex-builder nested controls require their dedicated inventory.
+
+## Registered personalization actions
+
+The shared personalization action factory renders registered md-outlined-button controls, using the same callbacks and optional guidance as the direct actions. It retains the original asynchronous consumer promise, so guidance waits for completion and reports its rejection rather than inventing success. Disabled, read-only, detached and disposed controls cannot admit a new action; admission is rechecked before the queued consumer executes. Existing reset confirmation cancellation, schedule validation, storage and file-picker authority remain unchanged.
+
+This conversion covers action buttons only. Native fields/selects and other surfaces remain separate work. Component checks exercise deferred completion, disabled and detached controls, reset cancellation and schedule validation. Current built screenshots and visual Material Design 3 acceptance remain pending.
