@@ -6,13 +6,14 @@ export * from './crypto.js';
 export * from './locks.js';
 
 export function mountAccess(container,services={}) {
-  const document=container.ownerDocument;const renderedTranslations=new Map();const t=(key,fallback,options={})=>{const value=services.translate?.(fallback,options)??services.t?.(key,fallback,options)??fallback;renderedTranslations.set(value,{key,fallback,options});return value;};const translate=(text,message=false)=>{const original=renderedTranslations.get(text);return t(original?.key||text,original?.fallback||text,{...original?.options,message});};const cleanups=[];const waitingClosers=new Set();const entries=new Map();const tickets=[];
+  const document=container.ownerDocument;const renderedTranslations=new Map(),copyBindings=new Map();const t=(key,fallback,options={})=>{const value=services.translate?.(fallback,options)??services.t?.(key,fallback,options)??fallback;renderedTranslations.set(value,{key,fallback,options});return value;};const translate=(text,message=false)=>{const original=renderedTranslations.get(text);return t(original?.key||text,original?.fallback||text,{...original?.options,message});};const cleanups=[];const waitingClosers=new Set();const entries=new Map();const tickets=[];
+  function bindCopy(node,render){const bindings=copyBindings.get(node)||[];bindings.push(render);copyBindings.set(node,bindings);render();}
   const controller=new LockController({store:services.credentialStore,getDishChallenge:services.getDishChallenge,onBlocked:id=>{services.notify?.(t('access.locked','This element is locked.'));openUnlock(id);}});
   const root=document.createElement('section');root.className='access-workspace';root.setAttribute('aria-label',t('access.title','Local access'));container.append(root);
   const heading=document.createElement('h2');heading.textContent=t('access.title','Local access');root.append(heading);
   const notice=document.createElement('p');notice.textContent=t('access.disclosure','These local convenience locks do not encrypt files. Reset them by clearing this application’s local data.');root.append(notice);
-  function button(label,action,parent=root){const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',action);parent.append(b);return b;}
-  function field(label,type='text',parent=root){const wrap=document.createElement('label');wrap.textContent=label;const input=document.createElement('input');input.type=type;input.autocomplete='off';wrap.append(input);button(t('access.clear','Clear')+' '+label,()=>{input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));input.focus();},wrap);parent.append(wrap);return input;}
+  function button(label,action,parent=root){const b=document.createElement('button');b.type='button';if(typeof label==='function')bindCopy(b,()=>b.textContent=label());else b.textContent=label;b.addEventListener('click',action);parent.append(b);return b;}
+  function field(label,type='text',parent=root){const source=renderedTranslations.get(label),renderLabel=()=>source?t(source.key,source.fallback,source.options):label;const wrap=document.createElement('label'),caption=document.createTextNode('');bindCopy(caption,()=>caption.nodeValue=renderLabel());wrap.append(caption);const input=document.createElement('input');input.type=type;input.autocomplete='off';wrap.append(input);button(()=>t('access.clear','Clear')+' '+renderLabel(),()=>{input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));input.focus();},wrap);parent.append(wrap);return input;}
   function keypad(input,parent){const pad=document.createElement('div');pad.setAttribute('role','group');pad.setAttribute('aria-label',t('access.keypad','PIN keypad'));for(const digit of '1234567890')button(digit,()=>{input.value+=digit;input.dispatchEvent(new Event('input',{bubbles:true}));input.focus();},pad);button(t('access.backspace','Backspace'),()=>{input.value=input.value.slice(0,-1);input.focus();},pad);parent.append(pad);return pad;}
   const output=document.createElement('p');output.setAttribute('role','status');root.append(output);
   const report=error=>{output.textContent=translate(error?.message||String(error),true);};
@@ -48,7 +49,7 @@ export function mountAccess(container,services={}) {
       }
     }next();
   }
-  function openUnlock(id,remove=false){const panel=document.createElement('form');panel.setAttribute('aria-label',t('access.unlock','Unlock')+' '+id);const record=controller.describe(id);if(!record)return;
+  function openUnlock(id,remove=false){const panel=document.createElement('form');bindCopy(panel,()=>panel.setAttribute('aria-label',t('access.unlock','Unlock')+' '+id));const record=controller.describe(id);if(!record)return;
     let closed=false,busy=false;const origin=document.activeElement;
     const close=(cancelPending=true)=>{if(closed)return;closed=true;if(cancelPending)controller.cancel(id);Object.values(fields).forEach(input=>input.value='');panel.remove();origin?.focus?.();};
     const fields={};for(const factor of LOCK_POLICIES[record.policy])fields[factor]=field(factor==='password'?t('access.password','Password'):factor==='totp'?t('access.code','Current code'):'PIN',factor==='totp'?'text':'password',panel);
@@ -113,7 +114,8 @@ export function mountAccess(container,services={}) {
     const walker=document.createTreeWalker(root,4);let text;
     while((text=walker.nextNode())){if(!text.parentElement?.closest('[data-entry-id]'))text.nodeValue=replace(text.nodeValue);}
     for(const element of [root,...root.querySelectorAll('*')])for(const attribute of ['aria-label','title','placeholder'])if(element.hasAttribute(attribute))element.setAttribute(attribute,replace(element.getAttribute(attribute)));
+    for(const [node,bindings]of copyBindings){if(!node.isConnected){copyBindings.delete(node);continue;}bindings.forEach(render=>render());}
     refreshLocks();renderEntries();renderTickets();updatePolicy();return root;
   }
-  return {controller,refresh,refreshLocks,openUnlock,openLockWizard,loadAuthenticators,encryptPrivateCache,decryptPrivateCache,logout:endSession,get authenticated(){return profileSession.authenticated;},async load(ids){await controller.load(ids);refreshLocks();},guard:(id,callback,...args)=>controller.run(id,callback,...args),bind(rootNode){const dispose=controller.intercept(rootNode);cleanups.push(dispose);return dispose;},destroy(){endSession();cleanups.forEach(f=>f());entries.clear();root.remove();}};
+  return {controller,refresh,refreshLocks,openUnlock,openLockWizard,loadAuthenticators,encryptPrivateCache,decryptPrivateCache,logout:endSession,get authenticated(){return profileSession.authenticated;},async load(ids){await controller.load(ids);refreshLocks();},guard:(id,callback,...args)=>controller.run(id,callback,...args),bind(rootNode){const dispose=controller.intercept(rootNode);cleanups.push(dispose);return dispose;},destroy(){endSession();cleanups.forEach(f=>f());copyBindings.clear();entries.clear();root.remove();}};
 }
