@@ -46,18 +46,19 @@ function applyMetadata(doc, metadata) {
 
 function rejectSignatures(doc) {
   const seen = new Set();
-  const visit = object => {
+  const visit = (object, depth = 0) => {
+    if (depth > 64 || seen.size > 100000) throw new Error('PDF object graph exceeds the safety limit.');
     if (!object || seen.has(object)) return;
     seen.add(object);
     if (object instanceof PDFArray) {
-      for (const value of object.asArray()) visit(value);
+      for (const value of object.asArray()) visit(value, depth + 1);
     } else if (object instanceof PDFDict) {
       const type = object.get(PDFName.of('Type'))?.toString();
       const fieldType = object.get(PDFName.of('FT'))?.toString();
       if (type === '/Sig' || fieldType === '/Sig' || object.has(PDFName.of('ByteRange'))) {
         throw new Error('Signed PDFs are not supported; changing them invalidates signatures.');
       }
-      for (const [, value] of object.entries()) visit(value);
+      for (const [, value] of object.entries()) visit(value, depth + 1);
     }
   };
   for (const [, object] of doc.context.enumerateIndirectObjects()) visit(object);
@@ -74,10 +75,14 @@ function rejectRawMarkers(bytes) {
 function fingerprint(doc, page) {
   const box = page.getMediaBox();
   const streams = [];
-  const collect = object => {
+  const visited = new Set();
+  const collect = (object, depth = 0) => {
+    if (depth > 64 || visited.size > 100000) throw new Error('PDF content graph exceeds the safety limit.');
     const item = doc.context.lookup(object);
+    if (visited.has(item)) throw new Error('Cyclic PDF content graph is unsupported.');
+    visited.add(item);
     if (item instanceof PDFArray) {
-      for (let i = 0; i < item.size(); i++) collect(item.get(i));
+      for (let i = 0; i < item.size(); i++) collect(item.get(i), depth + 1);
     } else if (item?.getContents) {
       const bytes = item.getContents();
       let hash = 2166136261;
