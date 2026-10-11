@@ -21,3 +21,7 @@ Outside pointer input, Escape (including nonempty search), selection, navigation
 The checked-in deterministic references and state inventory live under `design/gui-redesign/`. They are design references, not screenshots or runtime evidence. Focused local tests cover tab persistence/discovery, control mapping, contextual keyboard layout, Escape and listener teardown, hidden-host behavior and negative raw-control mutations. Integrated desktop build, actual input, layout matrix and visual parity remain separate required checks and are not claimed by these source tests.
 
 New drive forms default to 80 MiB (83,886,080 bytes). Existing stored drive values remain unchanged.
+
+## Notification narration
+
+Opt-in narration receives canonical notification and operation changes through the existing serialized speech engine. Byte-progress changes do not repeat speech. Quiet attention settings and an unknown or enabled runtime accessibility-support state suppress narration without hiding visual notifications. Missing voices or speech failures produce one visual recovery notice directing the user to Personalization language settings. The runtime accessibility signal is conservative and does not claim to identify a particular screen reader.

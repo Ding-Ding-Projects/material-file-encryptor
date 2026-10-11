@@ -13,7 +13,7 @@ import {captureSurfaceState,restoreSurfaceState} from '../../../shared/surface/t
 import {shouldOpenRegisteredView} from '../../../shared/surface/view-registration.js';
 
 /** Mounts reusable chrome without mutating host content or acquiring host capabilities. */
-export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport,renderText=value=>value,onNotificationAction,navigationHost}={}) {
+export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport,renderText=value=>value,onNotificationAction,onNotification,navigationHost}={}) {
   if(!(host instanceof HTMLElement))throw new TypeError('A host element is required');
   tabs=[...tabs];
   const model=createSurfaceModel({storage,storageKey:'mfe.surface.tabs.v1',tabs:tabs.slice(0,1).map(tab=>({...tab,label:localized(tab.label,'en')}))});
@@ -52,8 +52,8 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
   };
   document.addEventListener('keydown',keydown);
   const api={model,shell,palette,notifications,context,openContextMenu,closeContextMenu,
-    notify(input){const id=model.addNotification(input);if(model.getState().notificationAudio)audio.play();notifications.renderEntries();live.textContent=`${renderText(input.title)}: ${renderText(input.message||'')}`;clearTimeout(messageTimer);messageTimer=setTimeout(()=>{live.textContent='';},8000);return id;},
-    updateNotification(id,patch){const changed=model.updateNotification(id,patch);if(changed)notifications.renderEntries();return changed;},
+    notify(input){const id=model.addNotification(input);if(model.getState().notificationAudio)audio.play();notifications.renderEntries();live.textContent=`${renderText(input.title)}: ${renderText(input.message||'')}`;clearTimeout(messageTimer);messageTimer=setTimeout(()=>{live.textContent='';},8000);const record=model.getState().notifications.find(row=>row.id===id);onNotification?.(record,{narrate:input.narration!==false});return id;},
+    updateNotification(id,patch){const changed=model.updateNotification(id,patch);if(changed){notifications.renderEntries();onNotification?.(model.getState().notifications.find(row=>row.id===id),{narrate:patch.narration!==false});}return changed;},
     setLanguage(value){const next=['en','yue','bilingual'].includes(value)?value:'en';if(next===activeLanguage)return;const roots=[shell,palette,notifications];const states=roots.map(captureSurfaceState);activeLanguage=next;configure();frame?.setLanguage(next);roots.forEach((root,index)=>restoreSurfaceState(root,states[index]));shell.renderTabs();palette.renderResults();notifications.renderEntries();for(const panel of panels.values())panel.setLanguage(next);},
     registerPanel,
     setLogo(value){frame?.setLogo(value);},
