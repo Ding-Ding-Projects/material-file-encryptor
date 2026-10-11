@@ -1,3 +1,4 @@
+import {ACCESS_HOST_ACTIONS,validateAccessHostRequest} from './access-host.js';
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
 export const WORKFLOW_DESKTOP_ACTIONS = Object.freeze(['owners','accountState','signInAccount','refreshAccount','setActiveAccount','signOutAccount','preparePublication','publishPublication','cancelPublication','browserProposals','prepareCapturedDownload','cancelBrowserProposal']);
 export function validateWorkflowAdmission(action, {locked,lockVerified,quitPending,shuttingDown,updateInstallLease} = {}) {
@@ -25,11 +26,15 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
     ...(!browser ? {surprise:['resolvePublishedDish']} : {}),
     personalization: [...(!browser?['accessibilityState']:[]),'sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts',...(!browser?['setScheduleCredential','clearScheduleCredential','normalizeImage','fontMetadata','cancelFontMetadata']:[])],
     ...(!browser ? { 'server-manager': ['snapshot','refreshCatalogue','versions','resolveVersion','prepare','cancel','reviewLicense'] } : {}),
-    ...(!browser ? { access: ['credentialGet','credentialSet','credentialDelete','credentialList','openDataFolder','dataFolder'] } : {}),
+    ...(!browser ? { access: ['credentialGet','credentialSet','credentialDelete','credentialList','openDataFolder','dataFolder',...ACCESS_HOST_ACTIONS] } : {}),
   };
   const limit=!browser&&feature==='personalization'&&action==='normalizeImage'?Math.ceil(4*1024*1024*4/3)+256:262144;
   if (!actions[feature]?.includes(action) || !object(payload) || Buffer.byteLength(JSON.stringify(payload)) > limit) throw new Error('Unsupported feature request.');
   if ((feature==='surprise'||feature==='personalization'&&action==='accessibilityState') && (Object.getPrototypeOf(payload)!==Object.prototype&&Object.getPrototypeOf(payload)!==null||Reflect.ownKeys(payload).length!==0)) throw new Error('This read-only request accepts no payload.');
+  if(feature==='access'&&ACCESS_HOST_ACTIONS.includes(action)){
+    const inspect=(value,depth=0)=>{if(depth>12)throw Error('Access payload is too deeply nested.');if(value&&typeof value==='object'){if(!Array.isArray(value)&&Object.getPrototypeOf(value)!==Object.prototype||Reflect.ownKeys(value).some(key=>typeof key!=='string'||['__proto__','prototype','constructor'].includes(key)))throw Error('Unsupported access payload.');for(const item of Object.values(value))inspect(item,depth+1);}};
+    inspect(payload);validateAccessHostRequest(action,payload);
+  }
   if (feature === 'workflow' && WORKFLOW_DESKTOP_ACTIONS.includes(action)) validateDesktopWorkflow(action,payload);
   if (feature === 'server-manager') {
     const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
