@@ -32,7 +32,7 @@ function navigate(steps,view,id){
 export const stateRoutes=Object.freeze({
  ...Object.fromEntries(['locked','unlocked','waiting'].map(name=>['access-history-'+name,{view:'access',tab:'#access-tab-history'}])),
  ...Object.fromEntries(['bulk-all','bulk-invert','bulk-range','export-selected','export-filtered','export-format'].map(name=>['p-history-'+name,{view:'personalization',tab:'#view-personalization md-primary-tab[id$="-tab-history"]'}])),
- ...Object.fromEntries(['preset','crop','safe-area','background'].map(name=>['p-logo-'+name,{view:'personalization',tab:'#view-personalization md-primary-tab[id$="-tab-appearance"]'}])),
+ ...Object.fromEntries(['preset','crop','safe-area','background','reopened-recipe','title-preview'].map(name=>['p-logo-'+name,{view:'personalization',tab:'#view-personalization md-primary-tab[id$="-tab-appearance"]'}])),
  'drive-locked':{view:'drive'},'drive-empty':{view:'drive'},'drive-populated':{view:'drive'},'drive-selected':{view:'drive'},'drive-busy':{view:'drive'},'drive-error':{view:'drive'},
  'offline-populated':{view:'offline'},'history-populated':{view:'history'},'recycle-selected':{view:'recycle'},'settings-default':{view:'settings'},'help-default':{view:'help'},
  'create-password':{view:'drive',dialog:'password'},'create-key-file':{view:'drive',dialog:'keyFile'},'create-private-repository':{view:'drive',dialog:'privateGit'},

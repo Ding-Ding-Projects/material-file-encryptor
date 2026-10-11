@@ -1042,6 +1042,36 @@
         "reason": "Implemented independently privileged host history and challenge flows within the agreed access family",
         "sourceCommit": "ba83867bcdc7a497a04953e25acac0f569baa627"
       }
+    },
+    {
+      "id": "p-logo-reopened-recipe",
+      "owner": "personalization",
+      "selector": ".appearance-logo",
+      "fixture": "Owned original PNG with saved cropX 0.25, cropWidth 0.5, safeArea 0.125, x 0 and lock preset",
+      "observable": "Reopening restores recipe controls and editing uses retained original without selecting another file",
+      "actions": [
+        "logo.reopen-recipe",
+        "logo.edit-retained-source"
+      ],
+      "addition": {
+        "reason": "Implemented retained logo recipe and effective title preview within the agreed appearance family",
+        "sourceCommit": "5061f746febf05e8945a9ee543e31b964b1849f9"
+      }
+    },
+    {
+      "id": "p-logo-title-preview",
+      "owner": "personalization",
+      "selector": "[data-logo-preview-target=\"window-brand\"]",
+      "fixture": "Owned saved base logo and clock-relative enabled logo schedule",
+      "observable": "Actual 20 pixel title preview matches effective logo while 64 and 128 pixel editing previews retain saved base",
+      "actions": [
+        "logo.verify-title-preview",
+        "logo.verify-scheduled-preview"
+      ],
+      "addition": {
+        "reason": "Implemented retained logo recipe and effective title preview within the agreed appearance family",
+        "sourceCommit": "5061f746febf05e8945a9ee543e31b964b1849f9"
+      }
     }
   ]
 }
