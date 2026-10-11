@@ -27,6 +27,8 @@ Invoke-Checked { node scripts/stage-font-outputs.mjs }
 Invoke-Checked { node scripts/build-workspace.mjs }
 Invoke-Checked { node scripts/build-site.mjs }
 Invoke-Checked { dotnet publish native/MaterialFileEncryptor.Host -c Release -r win-x64 --self-contained true -o out/native }
+# Compile focused native verification before unrelated runtime provisioning.
+Invoke-Checked { dotnet build native/MaterialFileEncryptor.Core.Tests -c Release }
 # Compile verification tooling only; runtime acceptance runs independently.
 Invoke-Checked { dotnet publish native/MaterialFileEncryptor.MountedLifecycle.Tests -c Release -r win-x64 --self-contained false -o out/verification/mounted-lifecycle }
 Invoke-Checked { dotnet publish native/MaterialFileEncryptor.ServerLease.Verifier -c Release -r win-x64 --self-contained false -o out/verification/server-file-lease }
@@ -49,7 +51,6 @@ foreach ($companion in @('ConverterSandbox.dll', 'ConverterSandbox.runtimeconfig
   if (Test-Path -LiteralPath $companionPath) { $converterManifest.launcherCompanionHashes[$companion] = (Get-BootstrapDigest $companionPath).ToLowerInvariant() }
 }
 [IO.File]::WriteAllText((Join-Path $root 'out/converter/manifest.json'), ($converterManifest | ConvertTo-Json -Depth 4), [Text.UTF8Encoding]::new($false))
-Invoke-Checked { dotnet build native/MaterialFileEncryptor.Core.Tests -c Release }
 New-Item -ItemType Directory -Force out/native/notices | Out-Null
 Copy-Item native/vendor/WinFsp/License.txt out/native/notices/WinFsp-License.txt
 Copy-Item native/vendor/WinFsp/ORIGIN.md out/native/notices/WinFsp-Origin.md

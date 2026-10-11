@@ -16,7 +16,7 @@ public sealed partial class VaultEngine
     {
         // Open deleted handles have process-local lifetimes and must never resurrect a path.
         if(orphans.TryGetValue(entry.Id,out var orphan)&&ReferenceEquals(orphan,entry))return;
-        journalMutations.Add(new JournalMutation { Kind="update",Id=entry.Id,Metadata=MetadataOnly(entry),Records=records??[],Overlay=overlay,TruncateOverlayAt=truncate,Due=versionDue.GetValueOrDefault(entry.Id) });
+        journalMutations.Add(new JournalMutation { Kind="update",Id=entry.Id,Metadata=MetadataOnly(entry),Records=records??[],Overlay=overlay,TruncateOverlayAt=truncate,Due=versionDue.GetValueOrDefault(entry.Id),PackingCap=packingQueue.GetValueOrDefault(entry.Id) });
     }
     private byte[] HeaderMac(ReadOnlySpan<byte> header)
     {
@@ -98,7 +98,7 @@ public sealed partial class VaultEngine
         if(mutation.Kind=="delete")
         {
             var path=VaultPath.Normalize(mutation.Path);if(!entries.TryGetValue(path,out var target)||target.Id!=mutation.Id)throw new InvalidDataException("Invalid local delete mutation.");
-            entries.Remove(path);versionDue.Remove(mutation.Id);if(mutation.Version!=null)pendingVersions.Add(mutation.Version);return;
+            entries.Remove(path);versionDue.Remove(mutation.Id);packingQueue.Remove(mutation.Id);if(mutation.Version!=null)pendingVersions.Add(mutation.Version);return;
         }
         if(mutation.Kind=="rename")
         {
@@ -116,13 +116,16 @@ public sealed partial class VaultEngine
         var records=mutation.Overlay?replacement.Overlays:replacement.Records;foreach(var pair in mutation.Records)records[pair.Key]=pair.Value;
         var pathKey=entries.First(p=>ReferenceEquals(p.Value,entry)).Key;entries[pathKey]=replacement;
         if(mutation.Due is DateTimeOffset due&&due!=default)versionDue[entry.Id]=due;
+        if(mutation.PackingCap is long cap && cap!=0){ValidatePartSize(cap);packingQueue[entry.Id]=cap;}
     }
     private void SaveJournalCheckpoint()
     {
         revision++;
         var path=Path.Combine(cache,"journal.mfe");
-        WriteMetadata(path,new Journal { LogSequence=logSequence,LogDigest=Convert.ToHexString(logDigest),PartSize=partSize,Entries=entries,Baseline=baseline,Pending=pending,Known=known,Heads=heads,Pinned=pinned,VersionDue=versionDue,PendingVersions=pendingVersions,HiddenBin=hiddenBin },"journal","");
-        checkpointBytes+=new FileInfo(path).Length;checkpointCount++;checkpointHighWater=logSequence;
+        WriteMetadata(path,new Journal { LogSequence=logSequence,LogDigest=Convert.ToHexString(logDigest),PartSize=partSize,PackingQueue=packingQueue,PackingPaused=packingPaused,Entries=entries,Baseline=baseline,Pending=pending,Known=known,Heads=heads,Pinned=pinned,VersionDue=versionDue,PendingVersions=pendingVersions,HiddenBin=hiddenBin },"journal","");
+        // No fallible accounting operation may report a durable checkpoint as failed.
+        try{checkpointBytes+=new FileInfo(path).Length;}catch(IOException){}catch(UnauthorizedAccessException){}
+        checkpointCount++;checkpointHighWater=logSequence;
         journalMutations.Clear();
         // The durable checkpoint is authoritative before the obsolete prefix is removed.
         try { VaultCrypto.AtomicWrite(LogPath,ReadOnlySpan<byte>.Empty);logLength=0; }

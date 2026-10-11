@@ -63,6 +63,43 @@ internal sealed partial class VaultController
         summarySignature=signature;
         Volatile.Write(ref cachedStatusSummary,summary);
     }
+    private sealed class PackingProgress(Action<MaterialFileEncryptor.Core.VaultPackingProgress> report):IProgress<MaterialFileEncryptor.Core.VaultPackingProgress>
+    {public void Report(MaterialFileEncryptor.Core.VaultPackingProgress value)=>report(value);}
+    private object StartPacking(JsonElement args)
+    {
+        string? path=OptionalString(args,"path");long cap=OptionalLong(args,"partSizeBytes")??80L*1024*1024;
+        MaterialFileEncryptor.Core.VaultEngine.ValidatePartSize(cap);
+        lock(admissionGate)
+        {
+            if(forceLocking)throw new InvalidOperationException("The vault is locking.");
+            MaterialFileEncryptor.Core.VaultEngine captured;
+            lock(gate)captured=Engine;
+            return operations.StartWithPhases(path==null?[]:[path],"packing",async(_,cancellation,progress,phase)=>
+            {
+                lock(gate){if(!ReferenceEquals(vault,captured))throw new InvalidOperationException("The vault changed.");++activePreparedOperations;}
+                try
+                {
+                    phase("packing");
+                    await captured.PackAsync(path,cap,cancellation,new PackingProgress(value=>progress(value.BytesCompleted,value.TotalBytes,value.CompletedFiles,value.TotalFiles))).ConfigureAwait(false);
+                    cancellation.ThrowIfCancellationRequested();phase("publication");
+                    await captured.FlushAsync(cancellation).ConfigureAwait(false);
+                    if(captured.Status.PendingCommits!=0)throw new IOException("Encrypted source publication remains pending.");
+                }
+                catch(OperationCanceledException){captured.PausePacking();throw;}
+                finally{lock(gate)--activePreparedOperations;}
+            });
+        }
+    }
+    private object StorageDiagnostics()
+    {
+        MaterialFileEncryptor.Core.VaultEngine captured;lock(gate){captured=Engine;++activePreparedOperations;}
+        try
+        {
+            var value=captured.GetStorageDiagnostics();
+            return new {targetPartSizeBytes=value.TargetPartSizeBytes,pendingPackingFiles=value.PendingPackingFiles,activeWriters=value.ActiveWriters,packingRunning=value.PackingRunning,packingPaused=value.PackingPaused,packingError=value.PackingError,currentReferencedParts=value.CurrentReferencedParts,currentReferencedBytes=value.CurrentReferencedBytes,historicalOnlyParts=value.HistoricalOnlyParts,historicalOnlyBytes=value.HistoricalOnlyBytes,temporaryFiles=value.TemporaryFiles,temporaryBytes=value.TemporaryBytes};
+        }
+        finally{lock(gate)--activePreparedOperations;}
+    }
     private object StartImport(JsonElement args)
     {
         string[] paths;
@@ -154,7 +191,7 @@ internal sealed partial class VaultController
         {
             if(forceLocking)throw new InvalidOperationException("The vault is locking.");
             return operations.Start([RequiredString(args,"destination")],(_,cancellation,progress)=>Task.Run(()=>
-            { if(current)ExportCurrentFile(capturedArgs,cancellation,progress);else {ExportVersionFile(capturedArgs,cancellation);progress(0,0,1,1);} },cancellation));
+            { if(current)ExportCurrentFile(capturedArgs,cancellation,progress);else {ExportVersionFile(capturedArgs,cancellation);progress(0,0,1,1);} },cancellation),"export");
         }
     }
     private object ExportCurrentFile(JsonElement args,CancellationToken cancellation,Action<long,long,int,int> progress)

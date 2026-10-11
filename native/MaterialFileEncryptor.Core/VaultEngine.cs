@@ -48,7 +48,7 @@ public sealed partial class VaultEngine : IDisposable
             checkpointSequence=journal.LogSequence;checkpointDigest=journal.LogDigest;
             ValidateEntries(journal.Entries); ValidateEntries(journal.Baseline); ValidateStoredPartSize(journal.PartSize);
             entries = new(journal.Entries, StringComparer.OrdinalIgnoreCase); baseline = new(journal.Baseline,StringComparer.OrdinalIgnoreCase);
-            pending = journal.Pending; known = journal.Known; heads = journal.Heads; pinned = journal.Pinned; partSize = journal.PartSize; versionDue=journal.VersionDue; pendingVersions=journal.PendingVersions; hiddenBin=journal.HiddenBin;
+            pending = journal.Pending; known = journal.Known; heads = journal.Heads; pinned = journal.Pinned; partSize = journal.PartSize; packingQueue=journal.PackingQueue; packingPaused=journal.PackingPaused; foreach(var cap in packingQueue.Values)ValidatePartSize(cap); versionDue=journal.VersionDue; pendingVersions=journal.PendingVersions; hiddenBin=journal.HiddenBin;
         }
         ReplayJournal(checkpointSequence,checkpointDigest);
         sourceAvailable = Directory.Exists(source);
@@ -246,12 +246,12 @@ public sealed partial class VaultEngine : IDisposable
         using var input=File.OpenRead(remote); if(input.Length>1073741824 || input.Length<VaultCrypto.Overhead) throw new InvalidDataException("Invalid part size.");
         CopyAtomic(input,local); return local;
     }
-    private static void CopyAtomic(Stream input,string destination)
+    private static void CopyAtomic(Stream input,string destination,CancellationToken token=default)
     {
         using var bufferBudget=TransferBufferBudget.Reserve(3L*65536);
         VaultCrypto.ValidatePhysicalPath(destination);
         Directory.CreateDirectory(Path.GetDirectoryName(destination)!); var temp=destination+"."+Guid.NewGuid().ToString("N")+".tmp";
-        try { using(var output=new FileStream(temp,FileMode.CreateNew,FileAccess.Write,FileShare.None,65536,FileOptions.WriteThrough)) { input.CopyTo(output,65536); output.Flush(true); } File.Move(temp,destination,true); } finally { if(File.Exists(temp)) File.Delete(temp); }
+        try { using(var output=new FileStream(temp,FileMode.CreateNew,FileAccess.Write,FileShare.None,65536,FileOptions.WriteThrough)) { var buffer=new byte[65536];int read;while((read=input.Read(buffer))!=0){token.ThrowIfCancellationRequested();output.Write(buffer,0,read);} output.Flush(true); } File.Move(temp,destination,true); } finally { if(File.Exists(temp)) File.Delete(temp); }
     }
     private int Read(Entry e,long offset,Span<byte> destination,CancellationToken cancellationToken=default)
     {
@@ -322,13 +322,13 @@ public sealed partial class VaultEngine : IDisposable
         // Legacy blocks remain immutable. Only the touched bounded overlay is replaced.
         if(e.ChunkSize>ChunkBytes(partSize) || e.PartSize!=partSize || e.OverlaySize>0)
         {
-            if(e.OverlaySize==0) { e.OverlaySize=Math.Min(988,ChunkBytes(partSize)); e.BaseLength=e.Length; }
+            if(e.OverlaySize==0) { e.OverlaySize=ChunkBytes(partSize); e.BaseLength=e.Length; }
             WriteOverlay(e,offset,data);
             return;
         }
         var replacements=new Dictionary<long,RecordRef>(); using var writer=new PartWriter(this); var consumed=0;
         while(consumed<data.Length) { var index=offset/e.ChunkSize; var within=(int)(offset%e.ChunkSize); var take=Math.Min(data.Length-consumed,e.ChunkSize-within); var chunk=ReadChunk(e,index); try { var incomingBytes=data.Slice(consumed,take); if(!incomingBytes.SequenceEqual(chunk.AsSpan(within,take))) { incomingBytes.CopyTo(chunk.AsSpan(within)); replacements[index]=writer.Add(chunk); } } finally { CryptographicOperations.ZeroMemory(chunk); } offset+=take; consumed+=take; }
-        writer.Finish(); foreach(var pair in replacements)e.Records[pair.Key]=pair.Value; e.Length=Math.Max(e.Length,offset); Touch(e); MarkDue(e); TrackEntry(e,replacements);
+        writer.Finish(); foreach(var pair in replacements)e.Records[pair.Key]=pair.Value; e.Length=Math.Max(e.Length,offset); Touch(e); MarkDue(e); QueuePacking(e); TrackEntry(e,replacements);
     }
     private void WriteOverlay(Entry e,long offset,ReadOnlySpan<byte> data)
     {
@@ -342,7 +342,7 @@ public sealed partial class VaultEngine : IDisposable
             offset+=take;consumed+=take;
         }
         writer.Finish();foreach(var replacement in replacements)e.Overlays[replacement.Key]=replacement.Value;
-        e.Length=Math.Max(e.Length,offset);Touch(e);MarkDue(e);TrackEntry(e,replacements,true);
+        e.Length=Math.Max(e.Length,offset);Touch(e);MarkDue(e);QueuePacking(e);TrackEntry(e,replacements,true);
     }
 
     private void Touch(Entry e) { revision++; e.Version=Guid.NewGuid().ToString("N"); e.Modified=DateTimeOffset.UtcNow; }
@@ -354,13 +354,13 @@ public sealed partial class VaultEngine : IDisposable
         if(length<e.Length)
         {
             RequireAvailable(RangeRecords(e,length,length%e.ChunkSize!=0?1:0));
-            if(e.OverlaySize==0) { e.OverlaySize=Math.Min(988,ChunkBytes(partSize));e.BaseLength=e.Length; }
+            if(e.OverlaySize==0) { e.OverlaySize=ChunkBytes(partSize);e.BaseLength=e.Length; }
             e.BaseLength=Math.Min(e.BaseLength??e.Length,length);
             var last=length/e.OverlaySize;
             foreach(var index in e.Overlays.Keys.Where(i=>i>=last+(length%e.OverlaySize==0?0:1)).ToArray())e.Overlays.Remove(index);
             if(length%e.OverlaySize!=0) { var block=new byte[e.OverlaySize];try {Read(e,last*e.OverlaySize,block);block.AsSpan((int)(length%e.OverlaySize)).Clear();using var writer=new PartWriter(this);e.Overlays[last]=writer.Add(block);writer.Finish();}finally{CryptographicOperations.ZeroMemory(block);} }
         }
-        e.Length=length; Touch(e); MarkDue(e);
+        e.Length=length; Touch(e); MarkDue(e); QueuePacking(e);
         var changed=new Dictionary<long,RecordRef>();if(e.OverlaySize>0&&length%e.OverlaySize!=0&&e.Overlays.TryGetValue(length/e.OverlaySize,out var tail))changed[length/e.OverlaySize]=tail;
         TrackEntry(e,changed,true,e.OverlaySize>0?length/e.OverlaySize+(length%e.OverlaySize==0?0:1):null);
     }
@@ -379,7 +379,7 @@ public sealed partial class VaultEngine : IDisposable
     {
         lock(gate) { Check(); if(id==config.VaultId)throw new IOException("Cannot delete root."); var path=entries.FirstOrDefault(p=>p.Value.Id==id).Key; if(path!=null)Delete(path,recursive);else FindId(id); }
     }
-    private void Remove(string path,string? deletionBatch=null) { var e=Find(path); CaptureVersion(path,e,true,deletionBatch); versionDue.Remove(e.Id); if(open.ContainsKey(e.Id))orphans[e.Id]=e; entries.Remove(path); revision++; journalMutations.Add(new JournalMutation { Kind="delete",Path=path,Id=e.Id,Version=pendingVersions.LastOrDefault() }); }
+    private void Remove(string path,string? deletionBatch=null) { var e=Find(path); CaptureVersion(path,e,true,deletionBatch); versionDue.Remove(e.Id); packingQueue.Remove(e.Id); if(open.ContainsKey(e.Id))orphans[e.Id]=e; entries.Remove(path); revision++; journalMutations.Add(new JournalMutation { Kind="delete",Path=path,Id=e.Id,Version=pendingVersions.LastOrDefault() }); }
     public void Delete(string path,bool recursive=false)
     {
         lock(gate) { Check(); path=VaultPath.Normalize(path); if(path=="")throw new IOException("Cannot delete root."); var e=Find(path); var children=entries.Keys.Where(p=>p.StartsWith(path+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); if(e.Directory && children.Length>0 && !recursive)throw new IOException("Directory is not empty."); var deletionBatch=Guid.NewGuid().ToString("N"); foreach(var child in children)Remove(child,deletionBatch); Remove(path,deletionBatch); }
@@ -420,26 +420,79 @@ public sealed partial class VaultEngine : IDisposable
         }
         SaveJournal();
     }
-    public Task FlushAsync(CancellationToken cancellationToken=default)
+    private readonly SemaphoreSlim publicationWorker=new(1,1);
+    private readonly HashSet<string> publicationParts=[];
+    public async Task FlushAsync(CancellationToken cancellationToken=default)
     {
-        lock(gate) { Check(); cancellationToken.ThrowIfCancellationRequested(); FlushLocal(); Publish(cancellationToken); SaveJournal(); return Task.CompletedTask; }
-    }
-    private IEnumerable<string> Parts(Commit commit) => commit.Changes.Where(c=>c.Value!=null).Select(c=>c.Value!).Concat(commit.Versions.Select(v=>v.Value)).SelectMany(e=>AllRecords(e)).Select(r=>r.Part).Distinct(StringComparer.Ordinal);
-    private void Publish(CancellationToken token)
-    {
-        sourceAvailable=Directory.Exists(source); lastError=null; if(!sourceAvailable) { lastError="Storage folder is offline; encrypted changes are queued locally."; return; }
+        using var lifetime=AcquireStorageOperation();
+        await publicationWorker.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            foreach(var id in pending.ToArray())
+            lock(gate){Check();cancellationToken.ThrowIfCancellationRequested();FlushLocal();}
+            Publish(cancellationToken);
+        }
+        finally{publicationWorker.Release();}
+    }
+    private IEnumerable<string> Parts(Commit commit) => commit.Changes.Where(c=>c.Value!=null).Select(c=>c.Value!).Concat(commit.Versions.Select(v=>v.Value)).SelectMany(e=>AllRecords(e)).Select(r=>r.Part).Distinct(StringComparer.Ordinal);
+    // Call only while owning publicationWorker, never while holding gate.
+    private void Publish(CancellationToken token)
+    {
+        if(Monitor.IsEntered(gate))throw new InvalidOperationException("Source publication cannot run inside the namespace lock.");
+        string[] batch;
+        lock(gate){Check();batch=pending.ToArray();lastError=null;}
+        bool available=Directory.Exists(source);
+        lock(gate){sourceAvailable=available;if(!available)lastError="Storage folder is offline; encrypted changes are queued locally.";}
+        if(!available)return;
+        var verifiedSource=new HashSet<string>(StringComparer.Ordinal);
+        try
+        {
+            foreach(var id in batch)
             {
-                token.ThrowIfCancellationRequested(); var local=ObjectPath(cache,"commits",id); var commit=ReadMetadata<Commit>(local,"commit",id);
-                VerifyComplete(commit,false);
-                var encodings=commit.Changes.Where(c=>c.Value!=null).SelectMany(c=>AllRecords(c.Value!)).Concat(commit.Versions.SelectMany(v=>AllRecords(v.Value))).GroupBy(r=>r.Part).ToDictionary(g=>g.Key,g=>g.First().Encoding);
-                foreach(var part in Parts(commit)) { token.ThrowIfCancellationRequested(); var target=ObjectPath(source,"parts",part); if(!File.Exists(target)&&IsEncryptedFileAvailable?.Invoke("parts/"+part+".mfe")!=true) { var localPart=EnsurePart(part);VerifyPart(localPart,part,encodings[part],token);using var input=File.OpenRead(localPart); CopyAtomic(input,target); } }
-                using(var input=File.OpenRead(local))CopyAtomic(input,ObjectPath(source,"commits",id)); pending.Remove(id);
+                token.ThrowIfCancellationRequested();var local=ObjectPath(cache,"commits",id);var commit=ReadMetadata<Commit>(local,"commit",id);
+                var referenced=Parts(commit).ToArray();
+                lock(gate){Check();publicationParts.UnionWith(referenced);}
+                try
+                {
+                    VerifyComplete(commit,false);
+                    var encodings=commit.Changes.Where(c=>c.Value!=null).SelectMany(c=>AllRecords(c.Value!)).Concat(commit.Versions.SelectMany(v=>AllRecords(v.Value))).GroupBy(r=>r.Part).ToDictionary(g=>g.Key,g=>g.First().Encoding);
+                    foreach(var part in referenced)
+                    {
+                        token.ThrowIfCancellationRequested();PublicationTestPoint?.Invoke("part");
+                        if(verifiedSource.Contains(part))continue;
+                        var target=ObjectPath(source,"parts",part);bool validSource=false;
+                        if(File.Exists(target))
+                        {
+                            try{VerifyPart(target,part,encodings[part],token);validSource=true;}
+                            catch(Exception error)when(error is IOException or CryptographicException or InvalidDataException){ }
+                        }
+                        if(!validSource)
+                        {
+                            var cached=ObjectPath(cache,"parts",part);
+                            if(!File.Exists(cached)&&!File.Exists(target)&&HydrateEncryptedFileAsync!=null)
+                                HydrateEncryptedFileAsync("parts/"+part+".mfe",token).GetAwaiter().GetResult();
+                            // A corrupt source is replaced only by authenticated local
+                            // ciphertext. Failure retains the durable pending commit.
+                            var localPart=EnsurePart(part);VerifyPart(localPart,part,encodings[part],token);
+                            using(var input=File.OpenRead(localPart))CopyAtomic(input,target,token);
+                            VerifyPart(target,part,encodings[part],token);
+                        }
+                        verifiedSource.Add(part);
+                    }
+                    token.ThrowIfCancellationRequested();PublicationTestPoint?.Invoke("before-metadata");
+                    using(var input=File.OpenRead(local))CopyAtomic(input,ObjectPath(source,"commits",id),token);
+                    PublicationTestPoint?.Invoke("published");
+                    lock(gate)
+                    {
+                        Check();if(pending.Remove(id))
+                        {try{SaveJournal();}catch{pending.Add(id);throw;}}
+                    }
+                    PublicationTestPoint?.Invoke("acknowledged");
+                }
+                finally{lock(gate)publicationParts.ExceptWith(referenced);}
             }
         }
-        catch(Exception ex) when(ex is IOException or UnauthorizedAccessException) { sourceAvailable=Directory.Exists(source); lastError=ex.Message; }
+        catch(Exception error)when(error is IOException or UnauthorizedAccessException or CryptographicException or InvalidDataException)
+        {bool remainsAvailable=Directory.Exists(source);lock(gate){sourceAvailable=remainsAvailable;lastError="Encrypted source publication is incomplete; durable local changes remain queued.";}}
     }
     private bool VerifyComplete(Commit commit,bool authenticateContent=true)
     {
@@ -472,26 +525,48 @@ public sealed partial class VaultEngine : IDisposable
         }
     }
     private static string ConflictId(string original,string commit,string path) => Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(original+"/"+commit+"/"+path))).ToLowerInvariant()[..32];
-    public Task SyncAsync(CancellationToken cancellationToken=default)
+    public async Task SyncAsync(CancellationToken cancellationToken=default)
     {
-        lock(gate)
+        using var lifetime=AcquireStorageOperation();
+        await publicationWorker.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            Check(); cancellationToken.ThrowIfCancellationRequested(); FlushLocal(); Publish(cancellationToken); incoming=0;
+            string[] initial;
+            lock(gate){Check();cancellationToken.ThrowIfCancellationRequested();FlushLocal();initial=known.ToArray();incoming=0;}
+            Publish(cancellationToken);
             var commits=new Dictionary<string,Commit>();
-            foreach(var id in known) { var path=ObjectPath(cache,"commits",id); if(File.Exists(path))commits[id]=ReadMetadata<Commit>(path,"commit",id); }
-            if(sourceAvailable)
+            foreach(var id in initial){var path=ObjectPath(cache,"commits",id);if(File.Exists(path))commits[id]=ReadMetadata<Commit>(path,"commit",id);}
+            int incomplete=0;string? incomingError=null;
+            if(Directory.Exists(source))
             {
                 try
                 {
-                    var folder=Path.Combine(source,"commits"); VaultCrypto.ValidatePhysicalPath(folder); if(Directory.Exists(folder)) foreach(var path in Directory.EnumerateFiles(folder,"*.mfe").Order(StringComparer.Ordinal))
+                    var folder=Path.Combine(source,"commits");VaultCrypto.ValidatePhysicalPath(folder);
+                    if(Directory.Exists(folder))foreach(var path in Directory.EnumerateFiles(folder,"*.mfe").Order(StringComparer.Ordinal))
                     {
-                        cancellationToken.ThrowIfCancellationRequested(); var id=Path.GetFileNameWithoutExtension(path); ValidateId(id); if(commits.ContainsKey(id))continue;
-                        try { var commit=ReadMetadata<Commit>(path,"commit",id); if(commit.Id!=id || commit.Parents.Contains(id))throw new InvalidDataException("Invalid commit identity."); foreach(var parent in commit.Parents)ValidateId(parent); VerifyComplete(commit,false); using(var input=File.OpenRead(path))CopyAtomic(input,ObjectPath(cache,"commits",id)); commits[id]=commit; }
-                        catch(Exception ex) when(ex is IOException or CryptographicException or InvalidDataException) { incoming++; lastError="An incoming version is incomplete or failed authentication: "+ex.Message; }
+                        cancellationToken.ThrowIfCancellationRequested();var id=Path.GetFileNameWithoutExtension(path);ValidateId(id);if(commits.ContainsKey(id))continue;
+                        try
+                        {
+                            var commit=ReadMetadata<Commit>(path,"commit",id);
+                            if(commit.Id!=id||commit.Parents.Contains(id))throw new InvalidDataException("Invalid commit identity.");
+                            foreach(var parent in commit.Parents)ValidateId(parent);
+                            VerifyComplete(commit,false);
+                            using(var input=File.OpenRead(path))CopyAtomic(input,ObjectPath(cache,"commits",id),cancellationToken);
+                            commits[id]=commit;
+                        }
+                        catch(Exception error)when(error is IOException or CryptographicException or InvalidDataException)
+                        {incomplete++;incomingError="An incoming version is incomplete or failed authentication.";}
                     }
                 }
-                catch(Exception ex) when(ex is IOException or UnauthorizedAccessException) { lastError=ex.Message; sourceAvailable=false; }
+                catch(Exception error)when(error is IOException or UnauthorizedAccessException){incomingError="Encrypted source is unavailable.";}
             }
+            lock(gate)
+            {
+                Check();cancellationToken.ThrowIfCancellationRequested();
+                // Capture writes admitted while source I/O was in flight before replay.
+                FlushLocal();
+                foreach(var id in known)if(!commits.ContainsKey(id))commits[id]=ReadMetadata<Commit>(ObjectPath(cache,"commits",id),"commit",id);
+                incoming=incomplete;if(incomingError!=null)lastError=incomingError;
             var rebuilt=new Dictionary<string,Entry>(StringComparer.OrdinalIgnoreCase); var directories=new Dictionary<string,Entry>(StringComparer.OrdinalIgnoreCase); var applied=new HashSet<string>(); var remaining=new Dictionary<string,Commit>(commits);
             while(remaining.Count>0)
             {
@@ -515,11 +590,14 @@ public sealed partial class VaultEngine : IDisposable
                 bool repairedIdentity=false;
                 foreach(var entry in rebuilt.Values)
                     if(orphans.ContainsKey(entry.Id)) { entry.Id=Guid.NewGuid().ToString("N");Touch(entry);repairedIdentity=true; }
-                entries=rebuilt; known=applied; heads=new(applied); foreach(var c in commits.Values.Where(c=>applied.Contains(c.Id)))heads.ExceptWith(c.Parents);
-                if(repairedIdentity) { FlushLocal();Publish(cancellationToken); }
+                entries=rebuilt; foreach(var queued in packingQueue.Keys.Where(id=>!entries.Values.Any(e=>e.Id==id)).ToArray())packingQueue.Remove(queued); known=applied; heads=new(applied); foreach(var c in commits.Values.Where(c=>applied.Contains(c.Id)))heads.ExceptWith(c.Parents);
+                if(repairedIdentity)FlushLocal();
             }
-            SaveJournal(); return Task.CompletedTask;
+
+                SaveJournal();
+            }
         }
+        finally{publicationWorker.Release();}
     }
     public Task SetPinnedAsync(string path,bool keepOffline,CancellationToken cancellationToken=default)
     {
@@ -531,25 +609,21 @@ public sealed partial class VaultEngine : IDisposable
             SaveJournal(); return Task.CompletedTask;
         }
     }
-    public Task ResplitAsync(string path,long newPartSize,CancellationToken cancellationToken=default)
+    public async Task ResplitAsync(string path,long newPartSize,CancellationToken cancellationToken=default)
     {
-        lock(gate)
-        {
-            Check(); ValidatePartSize(newPartSize); path=VaultPath.Normalize(path); var e=Find(path); if(e.Directory)throw new IOException("Resplit requires a file."); RequireAvailable(AllRecords(e)); CaptureVersion(path,e,false); var replacement=Clone(e); Repack(replacement,newPartSize,cancellationToken); Touch(replacement); entries[path]=replacement;
-            CaptureVersion(path,replacement,false); FlushLocal(); Publish(cancellationToken); SaveJournal(); return Task.CompletedTask;
-        }
+        await PackAsync(path,newPartSize,cancellationToken).ConfigureAwait(false);
+        await FlushAsync(cancellationToken).ConfigureAwait(false);
     }
-    private void Repack(Entry e,long newPartSize,CancellationToken token)
+    private void Repack(Entry e,long newPartSize,CancellationToken token,Action<long>? progress=null)
     {
         RequireAvailable(AllRecords(e)); var chunkSize=ChunkBytes(newPartSize); var targetChunks=new SortedSet<long>();
-        foreach(var range in e.Records.Keys.Select(index=>(Start:checked(index*e.ChunkSize),Size:e.ChunkSize)).Concat(e.Overlays.Keys.Select(index=>(Start:checked(index*e.OverlaySize),Size:e.OverlaySize))))
+        foreach(var range in e.Records.Keys.Select(index=>(Start:checked(index*e.ChunkSize),Size:e.ChunkSize,Limit:e.BaseLength??e.Length)).Concat(e.Overlays.Keys.Select(index=>(Start:checked(index*e.OverlaySize),Size:e.OverlaySize,Limit:e.Length))))
         {
-            var start=range.Start; var end=Math.Min(e.Length,start+range.Size); if(start>=end)continue;
+            var start=range.Start; var end=start>=range.Limit?start:start+Math.Min(range.Size,range.Limit-start); if(start>=end)continue;
             for(var target=start/chunkSize;target<=(end-1)/chunkSize;target++)targetChunks.Add(target);
         }
-        var records=new Dictionary<long,RecordRef>(); var oldCap=partSize; partSize=newPartSize;
-        try { using var writer=new PartWriter(this); foreach(var index in targetChunks) { token.ThrowIfCancellationRequested(); var offset=index*chunkSize; var buffer=new byte[(int)Math.Min(chunkSize,e.Length-offset)]; try { Read(e,offset,buffer); records[index]=writer.Add(buffer); } finally { CryptographicOperations.ZeroMemory(buffer); } } writer.Finish(); }
-        finally { partSize=oldCap; }
+        var records=new Dictionary<long,RecordRef>();
+        { using var writer=new PartWriter(this,newPartSize); foreach(var index in targetChunks) { token.ThrowIfCancellationRequested(); var offset=index*chunkSize; var buffer=new byte[(int)Math.Min(chunkSize,e.Length-offset)]; try { Read(e,offset,buffer,token); records[index]=writer.Add(buffer); progress?.Invoke(Math.Min(e.Length,offset+buffer.Length)); } finally { CryptographicOperations.ZeroMemory(buffer); } } writer.Finish(); }
         e.Records=records; e.Overlays.Clear();e.OverlaySize=0;e.BaseLength=null; e.ChunkSize=chunkSize; e.PartSize=newPartSize;
     }
     /// <summary>Evicts safe ciphertext referenced by an entry or subtree, preserving unrelated and shared content.</summary>
@@ -571,6 +645,7 @@ public sealed partial class VaultEngine : IDisposable
                     protectedParts.UnionWith(AllRecords(pair.Value).Select(r=>r.Part));
             foreach(var orphan in orphans.Values)protectedParts.UnionWith(AllRecords(orphan).Select(r=>r.Part));
             foreach(var snapshot in readSnapshots.Values)protectedParts.UnionWith(AllRecords(snapshot).Select(r=>r.Part));
+            protectedParts.UnionWith(publicationParts);
             foreach(var id in pending)protectedParts.UnionWith(Parts(ReadMetadata<Commit>(ObjectPath(cache,"commits",id),"commit",id)));
             candidates.ExceptWith(protectedParts);
 
@@ -604,9 +679,10 @@ public sealed partial class VaultEngine : IDisposable
             foreach(var pair in entries)if(IsPinned(pair.Key,pair.Value)||open.ContainsKey(pair.Value.Id)||!baseline.Values.Any(b=>b.Version==pair.Value.Version))protectedParts.UnionWith(AllRecords(pair.Value).Select(r=>r.Part));
             foreach(var e in orphans.Values)protectedParts.UnionWith(AllRecords(e).Select(r=>r.Part));
             foreach(var snapshot in readSnapshots.Values)protectedParts.UnionWith(AllRecords(snapshot).Select(r=>r.Part));
+            protectedParts.UnionWith(publicationParts);
             foreach(var id in pending)protectedParts.UnionWith(Parts(ReadMetadata<Commit>(ObjectPath(cache,"commits",id),"commit",id)));
             VaultCrypto.ValidatePhysicalPath(Path.Combine(cache,"parts")); long removed=0; foreach(var path in Directory.EnumerateFiles(Path.Combine(cache,"parts"),"*.mfe")) { if(removed>=desiredBytes)break; var id=Path.GetFileNameWithoutExtension(path); if(protectedParts.Contains(id)||!sourceAvailable||!File.Exists(ObjectPath(source,"parts",id)))continue; VerifyPart(ObjectPath(source,"parts",id),id); var size=new FileInfo(path).Length;File.Delete(path);removed+=size; } return removed;
         }
     }
-    public void Dispose() { lock(gate) { if(disposed)return; try { FlushLocal(); } finally { disposed=true;CryptographicOperations.ZeroMemory(key); } } }
+    public void Dispose() { lock(gate) { if(disposed)return; try { FlushLocal(); } finally { disposed=true;CancelBackground(); if(activeStorageOperations==0)CryptographicOperations.ZeroMemory(key); } } }
 }

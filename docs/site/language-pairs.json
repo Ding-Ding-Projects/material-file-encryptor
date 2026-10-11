@@ -295,8 +295,8 @@
     {
       "source": "docs/features/storage/README.md",
       "translation": "docs/features/storage/README.zh-HK.md",
-      "sourceSha256": "69a7f7a0f90246ad977e21386663d54b58d87777a21e17c7eb82001e26ce7e85",
-      "translationSha256": "57b63d2a3cae2e00ee880bf33c36a4032876dffcce1ffbd83517b71a7d26c505"
+      "sourceSha256": "e2cde5fce20e098424c7c3b3c7134ed15e3706e06ba94cf9976701db055dedb3",
+      "translationSha256": "810bc15bdfbf43ae5cb8244c84a3c874df5d7f80a92eda4bc6d1299d10c454fa"
     },
     {
       "source": "docs/features/storage/file-history-activity.md",
@@ -321,6 +321,12 @@
       "translation": "docs/features/storage/native-vault.zh-HK.md",
       "sourceSha256": "e8e959b7e37036be253e7f8e7c80e5529dbfe63d975fb1a72f9a2eacb8d1add8",
       "translationSha256": "5794efcdd93ecd1b9d71f32fcc0cc11a62490b9e6c95780c88a8cebea8d71b0c"
+    },
+    {
+      "source": "docs/features/storage/physical-packing.md",
+      "translation": "docs/features/storage/physical-packing.zh-HK.md",
+      "sourceSha256": "7a9d67b860e9eb8a7bb1858ee93bb9ea1cdf30a6915725c0e042cd75a6bd50b4",
+      "translationSha256": "3c359434a67e4698ca12a3c3f5be8992799a04f8aa49433f03d340f7162feb95"
     },
     {
       "source": "docs/features/storage/transfer-lifecycle.md",
