@@ -39,3 +39,5 @@
 - [繪畫同狀態預覽嘅可選指引](workbench-guidance.zh-HK.md)
 
 - [具型別色彩選擇器](color-picker.zh-HK.md)：表示方式、調色盤、彩虹同能力界線。
+
+- [具型別關鍵影格檢查器](motion-keyframes.zh-HK.md)：精確時間、數值同可復原編輯。

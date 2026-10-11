@@ -1,6 +1,7 @@
 import { localized } from './localization.js';
 
 export const surfaceRegistry = Object.freeze([
+  { tag: 'mfe-motion-keyframes', role: 'region', module: '../../renderer/features/personalization/motion-keyframe-inspector.js', primitives: ['md-outlined-text-field','md-text-button','md-checkbox'] },
   { tag: 'mfe-color-picker', role: 'region', module: '../../renderer/features/personalization/color-picker.js', primitives: ['md-outlined-text-field','md-text-button','md-slider'] },
   { tag: 'mfe-typography-inspector', role: 'region', module: '../../renderer/features/personalization/typography-inspector.js', primitives: ['md-outlined-text-field','md-text-button'] },
   { tag: 'mfe-control-guidance', role: 'region', module: 'control-guidance.js', primitives: ['md-text-button','md-filled-button'] },
