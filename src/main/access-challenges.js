@@ -1,3 +1,4 @@
+import {waitingAnswer} from '../renderer/features/access/wait-answer.js';
 import {randomUUID} from 'node:crypto';
 import {WaitLadder,LOCK_POLICIES} from '../renderer/features/access/locks.js';
 import {verifyPassword,verifyTotp} from '../renderer/features/access/crypto.js';
@@ -41,7 +42,7 @@ export function createAccessChallenges({credentials,getActor,getSchoolMode=async
     if(action==='waitChallenge'){const challenge=session.ladder.challenge();return challenge?{...challenge,expires:now()+120000,until:a.until}:null;}
     if(action==='waitAnswer'){
      if(typeof payload.nonce!=='string'||payload.nonce.length>80)throw Error('Invalid waiting challenge.');
-     const answer=payload.answer;if(!(typeof answer==='number'||Array.isArray(answer)&&answer.length<=128))throw Error('Invalid waiting answer.');
+     const answer=payload.answer;if(!waitingAnswer(answer))throw Error('Invalid waiting answer.');
      const won=session.ladder.answer(payload.nonce,answer);current();if(!won)return {won:false,...snapshot(a)};
      limits.uses.push(now());await credentials.set(BUDGET_KEY,limits);current();
      a.until=now();saved.targets[id]=a;await credentials.set(STATE_KEY,saved);current();ladders.delete(key);return {won:true,...snapshot(a)};

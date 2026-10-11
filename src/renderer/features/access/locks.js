@@ -1,3 +1,4 @@
+import {denseAnswerArray,waitingAnswer} from './wait-answer.js';
 import {controlHelperOwner} from '../../../shared/surface/controls.js';
 import {passwordVerifier,verifyPassword,verifyTotp,randomId} from './crypto.js';
 export const LOCK_POLICIES = Object.freeze({pin:['pin'],password:['password'],'pin-password':['pin','password'],'password-totp':['password','totp'],'pin-totp':['pin','totp'],'password-pin-totp':['password','pin','totp']});
@@ -160,8 +161,8 @@ export class WaitLadder {
     const p=this.pending;this.pending=null;if(!p||p.nonce!==nonce||this.now()>p.expires)return false;
     let correct=false;
     if(p.rung==='dish')correct=value===p.answer;
-    else if(p.rung==='sums')correct=Array.isArray(value)&&value.length===10&&value.every((v,i)=>v===p.answer[i]);
-    else if(this.now()-p.issued>=8400&&Array.isArray(value)) {const hits=new Set();for(const tap of value){const index=p.question.findIndex(m=>m.cell===tap.cell&&tap.time>=m.start&&tap.time<=m.end&&tap.time<=this.now()-p.issued);if(index>=0)hits.add(index);}correct=hits.size>=8;}
+    else if(p.rung==='sums')correct=denseAnswerArray(value,10)&&value.length===10&&Array.from({length:10},(_,i)=>i).every(i=>Object.getOwnPropertyDescriptor(value,String(i)).value===p.answer[i]);
+    else if(p.rung==='moles'&&this.now()-p.issued>=8400&&Array.isArray(value)&&waitingAnswer(value)) {const hits=new Set();for(const tap of value){if(!tap||typeof tap!=='object')continue;const index=p.question.findIndex(m=>m.cell===tap.cell&&tap.time>=m.start&&tap.time<=m.end&&tap.time<=this.now()-p.issued);if(index>=0)hits.add(index);}correct=hits.size>=8;}
     if(correct){this.skips.push(this.now());return true;}
     if(p.rung==='dish'){if(++this.wrongDishes>=5)this.rung='sums';}else this.rung=p.rung==='sums'?'moles':'clock';return false;
   }
