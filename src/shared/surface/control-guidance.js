@@ -15,9 +15,20 @@ export function createGuidanceSession({steps,validate=()=>{},run=()=>{},availabl
  let index=0,state='ready';const controller=new AbortController();
  return {get index(){return index;},get state(){return state;},get signal(){return controller.signal;},
   back(){if(state==='ready')index=Math.max(0,index-1);},
-  async next(){if(state!=='ready')return;if(!available())throw Error('This control is unavailable. Review its adjacent explanation.');await validate(index,controller.signal);if(controller.signal.aborted)return;if(index<steps.length-1){index++;return;}state='running';try{await run({signal:controller.signal});state=controller.signal.aborted?'cancelled':'finished';}catch(error){if(!controller.signal.aborted)state='ready';throw error;}},
+  async next(){if(state!=='ready')return;state='validating';try{if(!available())throw Error('This control is unavailable. Review its adjacent explanation.');await validate(index,controller.signal);if(controller.signal.aborted)return;if(!available())throw Error('This control is unavailable. Review its adjacent explanation.');if(index<steps.length-1){index++;state='ready';return;}state='running';await run({signal:controller.signal});state=controller.signal.aborted?'cancelled':'finished';}catch(error){if(!controller.signal.aborted)state='ready';throw error;}},
   cancel(){controller.abort();state='cancelled';},
  };
+}
+
+/** Preserve the target event, including capture-phase element locks, and await
+ * the actual consumer promise admitted by that event. */
+export async function clearGuidedField(target,{eventType='change',getFlight=()=>null,resetFlight=()=>{}}={}){
+ if(target.disabled||target.readOnly)throw Error('This control is unavailable. Review its adjacent explanation.');
+ const before=target.value;resetFlight();target.value='';
+ const EventType=target.ownerDocument?.defaultView?.Event||globalThis.Event;
+ const admitted=target.dispatchEvent(new EventType(eventType,{bubbles:true,cancelable:true,composed:true})),flight=getFlight();
+ if(!admitted||!flight){target.value=before;throw Error('This control is unavailable. Review its adjacent explanation.');}
+ try{await flight;}catch(error){if(target.isConnected!==false)target.value=before;throw error;}finally{target.focus?.();}
 }
 
 
@@ -40,8 +51,8 @@ export function mountControlGuidance(target,{descriptor,t=s=>s,run,validate=()=>
  let session=null,disposed=false;const disposers=[];
  const close=()=>{session?.cancel();panel.hidden=true;entry.setAttribute('aria-expanded','false');target.focus?.();};
  const paint=()=>{if(disposed||!session)return;panel.replaceChildren();const step=descriptor.steps[session.index];panel.append(element('h4',{text:`${session.index+1}/${descriptor.steps.length}: ${t(descriptor.label)}`}),element('p',{text:t(step)}),status);
-  const back=element('md-text-button',{text:t('Back'),disabled:session.index===0||session.state==='running',onclick:()=>{session.back();paint();}}),next=element('md-filled-button',{text:t(session.index===descriptor.steps.length-1?'Apply through the direct control':'Next'),disabled:session.state==='running'||session.state==='finished'}),cancel=element('md-text-button',{text:t('Cancel guidance'),onclick:()=>{status.textContent=t('Guidance cancelled. Completed effects are retained.');close();}}),focus=element('md-text-button',{text:t('Return to control'),onclick:()=>target.focus?.()});
-  next.addEventListener('click',async()=>{try{status.textContent=t('Working through the original action.');await session.next();if(disposed){if(target.id)doc.getElementById?.(target.id)?.focus?.();return;}status.textContent=t(session.state==='finished'?'Ready. Review the original control and its result.':descriptor.steps[session.index]);paint();}catch(error){status.textContent=t(error.message);paint();}});panel.append(back,next,cancel,focus);
+  const back=element('md-text-button',{text:t('Back'),disabled:session.index===0||session.state!=='ready',onclick:()=>{session.back();paint();}}),next=element('md-filled-button',{text:t(session.index===descriptor.steps.length-1?'Apply through the direct control':'Next'),disabled:session.state!=='ready'}),cancel=element('md-text-button',{text:t('Cancel guidance'),onclick:()=>{status.textContent=t('Guidance cancelled. Completed effects are retained.');close();}}),focus=element('md-text-button',{text:t('Return to control'),onclick:()=>target.focus?.()});
+  next.addEventListener('click',async()=>{const current=session;if(!current||current.state!=='ready')return;next.disabled=true;try{status.textContent=t('Working through the original action.');await current.next();if(disposed){if(target.id)doc.getElementById?.(target.id)?.focus?.();return;}if(current!==session||current.state==='cancelled')return;status.textContent=t(current.state==='finished'?'Ready. Review the original control and its result.':descriptor.steps[current.index]);paint();panel.querySelector('md-filled-button')?.focus();}catch(error){if(disposed||current!==session||current.state==='cancelled')return;status.textContent=t(error.message);paint();panel.querySelector('md-filled-button')?.focus();}});panel.append(back,next,cancel,focus);
  };
  const open=()=>{if(disposed)return;session?.cancel();session=createGuidanceSession({steps:descriptor.steps,available:()=>!target.disabled&&!target.readOnly&&target.isConnected!==false,validate:async(index,signal)=>{if(target.checkValidity&&!target.checkValidity())throw Error('A required value is invalid. Correct the original control before continuing.');await validate(index,signal);},run:run||(()=>target.focus?.())});panel.hidden=false;entry.setAttribute('aria-expanded','true');status.textContent='';paint();panel.querySelector('md-filled-button')?.focus();};
  entry.setAttribute('aria-expanded','false');entry.addEventListener('click',open);explain.addEventListener('click',()=>{details.hidden=!details.hidden;explain.setAttribute('aria-expanded',String(!details.hidden));});panel.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();close();}});root.append(entry,explain,details,panel);

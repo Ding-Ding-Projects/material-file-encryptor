@@ -1562,3 +1562,7 @@ Steps: Choose whether this rule starts on Saturday.
 - logo.editor: Logo conversion and nested controls require their own asynchronous workflow descriptors.
 - access.profile: Access is a separately mounted credential and recovery surface.
 - search.workbench: Regex-builder nested controls require their dedicated inventory.
+
+## Async interaction integrity
+
+Validation admits one pending Next operation. Availability is checked again after validation, and a cancelled invocation cannot repaint a newer one. Clear dispatches the original target change event and awaits its actual consumer; blocked or rejected changes retain the prior visible value. These behaviors have focused DOM-fixture and actual settings-consumer checks; native and browser acceptance remain pending.
