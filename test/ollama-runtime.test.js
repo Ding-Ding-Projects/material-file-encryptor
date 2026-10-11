@@ -1,11 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import {createRuntimeController,probeOllamaHealth,OFFICIAL_INSTALL_PAGE,createVerifiedRuntimeLauncher} from '../src/features/ollama/runtime.js';
+import {createRuntimeController,probeOllamaHealth,probeRuntimeProcesses,OFFICIAL_INSTALL_PAGE,createVerifiedRuntimeLauncher} from '../src/features/ollama/runtime.js';
 import {createNativeProfileAdapter} from '../src/features/ollama/native-profiles.js';
 import {inspectImageAttachment} from '../src/features/ollama/attachments.js';
 const exe=path.resolve('fixtures/ollama.exe');
 const filesystem={realpath:async p=>p,stat:async()=>({isFile:()=>true})};
+
+test('empty native process inventory is explicitly serialized as an array',async()=>{
+  const rows=await probeRuntimeProcesses({systemRoot:'C:\\Windows',executeFile:async(_file,args)=>{
+    assert.match(args.at(-1),/ConvertTo-Json -InputObject @\(/);
+    assert.doesNotMatch(args.at(-1),/\| ConvertTo-Json/);
+    return {stdout:'[]'};
+  }});
+  assert.deepEqual(rows,[]);
+});
 test('runtime diagnosis distinguishes missing, stopped, unhealthy and healthy without starting anything',async()=>{
   const common={candidatePaths:[exe],filesystem,platform:'win32',processProbe:async()=>[],apiProbe:async()=>({healthy:false,reachable:false}),verifyExecutable:async()=>true};
   assert.equal((await createRuntimeController(common).inspect()).state,'stopped');
