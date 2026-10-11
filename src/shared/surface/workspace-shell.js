@@ -6,14 +6,14 @@ import './group-manager.js';
 export class WorkspaceShell extends SurfaceElement {
   connectedCallback(){this.render();}
   configure({model,language,labels,onActivate,onContext}){Object.assign(this,{model,language,labels,onActivate,onContext});this.render();}
-  render(){this.style(`.bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.tabs{min-width:0;flex:1;overflow:auto}md-tabs{min-width:max-content}.tools{display:flex;gap:4px;flex-wrap:wrap}.groups{display:flex;gap:4px;flex-wrap:wrap}.status{font-size:12px}mfe-search{margin-top:8px} .heading{font-size:14px;margin:0} .search-row{margin-bottom:8px}`);
+  render(){const previous=this.search,searchState=previous?{query:previous.query,regex:previous.regex,flags:previous.flags,hidden:previous.hidden}:null;this.style(`.bar{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}.tabs{min-width:0;width:100%;overflow-x:auto}md-tabs{min-width:max-content}.tools{display:flex;width:100%;gap:4px;flex-wrap:wrap}.groups{display:flex;gap:4px;flex-wrap:wrap}.status{font-size:12px}mfe-search{margin-top:8px} .heading{font-size:14px;margin:0} .search-row{margin-bottom:8px}`);
     if(!this.model)return;
-    this.search=element('mfe-search',{label:this.t('Find open tabs','搜尋已開分頁')});this.search.language=this.language;
+    this.search=element('mfe-search',{label:this.t('Find all views','搜尋所有檢視')});this.search.language=this.language;if(searchState)Object.assign(this.search,searchState);
     this.tabsHost=element('div',{class:'tabs'});this.groupsHost=element('div',{class:'groups'});this.selected??=new Set();
     this.manager=element('mfe-group-manager');this.manager.model=this.model;this.manager.language=this.language;this.manager.changed=()=>this.renderTabs();
     const restore=element('md-outlined-button',{text:this.t('Restore closed tab','還原已關閉分頁'),disabled:!this.model.getState().closedTabs.length,onclick:()=>{const id=this.model.restoreTab();if(id)this.activate(id);}});
-    const find=element('md-text-button',{text:this.t('Find tabs','搜尋分頁'),'aria-expanded':'false',onclick:()=>{this.search.hidden=!this.search.hidden;find.setAttribute('aria-expanded',String(!this.search.hidden));if(!this.search.hidden)this.search.input.focus();}});
-    this.search.hidden=true;
+    const find=element('md-text-button',{text:this.t('Find all views','搜尋所有檢視'),'aria-expanded':String(searchState?.hidden===false),onclick:()=>{this.search.hidden=!this.search.hidden;find.setAttribute('aria-expanded',String(!this.search.hidden));if(!this.search.hidden)this.search.input.focus();this.renderTabs();}});
+    this.search.hidden=searchState?.hidden??true;
     const manage=element('md-outlined-button',{text:this.t('Manage groups','管理群組'),onclick:()=>this.manager.open()});
     const bulk=element('md-text-button',{text:this.t('Close selected tabs','關閉所選分頁'),onclick:()=>{this.model.closeTabs([...this.selected]);this.selected.clear();this.onActivate?.(this.model.getState().activeTabId);this.render();}});
     this.shadowRoot.append(element('div',{class:'bar'},[this.tabsHost,element('div',{class:'tools'},[find,restore,manage,bulk])]),this.groupsHost,this.search,this.manager);
@@ -21,11 +21,17 @@ export class WorkspaceShell extends SurfaceElement {
   }
   label(tab){return localized(this.labels?.get(tab.id)||tab.label,this.language);}
   activate(id){if(this.model.activateTab(id)){this.onActivate?.(id);this.render();}}
-  async renderTabs(){const state=this.model.getState();const rows=await this.search.filter(state.tabs.map(tab=>({id:tab.id,text:`${this.label(tab)} ${state.groups.find(g=>g.id===tab.group)?.label||tab.group}`})));if(!rows)return;const tabs=element('md-tabs',{'aria-label':this.t('Workspace tabs','工作區分頁')});
-    for(const row of rows){const tab=state.tabs.find(x=>x.id===row.id);if(state.groups.find(g=>g.id===tab.group)?.collapsed&&tab.id!==state.activeTabId&&!this.search.query)continue;const label=`${this.selected.has(tab.id)?'✓ ':''}${tab.pinned?'● ':''}${this.label(tab)}`;const node=element('md-primary-tab',{text:label,active:tab.id===state.activeTabId,'aria-label':label});node.addEventListener('click',e=>{if(e.ctrlKey||e.metaKey){if(this.selected.has(tab.id))this.selected.delete(tab.id);else this.selected.add(tab.id);this.renderTabs();}else this.activate(tab.id);});node.addEventListener('contextmenu',e=>{e.preventDefault();this.openTabMenu(tab,node);});node.addEventListener('keydown',e=>{if((e.shiftKey&&e.key==='F10')||e.key==='ContextMenu'){e.preventDefault();this.openTabMenu(tab,node);}});tabs.append(node);}
-    this.tabsHost.replaceChildren(tabs);this.groupsHost.replaceChildren();const active=state.tabs.find(x=>x.id===state.activeTabId);if(active)this.groupsHost.append(element('md-text-button',{text:this.t('Tab actions','分頁操作'),onclick:e=>this.openTabMenu(active,e.currentTarget)}));
+  viewRows(state,all=false){
+    const open=new Map(state.tabs.map(tab=>[tab.id,tab]));
+    const rows=all?[...new Set([...open.keys(),...(this.labels?.keys()||[])])].map(id=>open.get(id)||state.closedTabs.find(tab=>tab.id===id)||{id,label:this.labels.get(id),group:'',pinned:false}):state.tabs;
+    return rows.map(tab=>({...tab,closed:!open.has(tab.id),text:`${this.label(tab)} ${state.groups.find(g=>g.id===tab.group)?.label||tab.group||''} ${all?(open.has(tab.id)?this.t('Open','已開啟'):this.t('Closed','已關閉')):''}`}));
+  }
+  activateView(tab){if(tab.closed&&!this.model.openTab({...tab,label:localized(this.labels?.get(tab.id)||tab.label,'en')}))return;this.pendingFocusId=tab.id;this.activate(tab.id);}
+  async renderTabs(){const version=this.renderVersion=(this.renderVersion||0)+1,state=this.model.getState(),all=!this.search.hidden,candidates=this.viewRows(state,all),rows=await this.search.filter(candidates);if(!rows||version!==this.renderVersion)return;const tabs=element('md-tabs',{'aria-label':this.t('Workspace tabs','工作區分頁')});
+    for(const tab of rows){if(!all&&state.groups.find(g=>g.id===tab.group)?.collapsed&&tab.id!==state.activeTabId&&!this.search.query)continue;const label=`${this.selected.has(tab.id)?'✓ ':''}${tab.pinned?'● ':''}${this.label(tab)}${all?` · ${tab.closed?this.t('Closed','已關閉'):this.t('Open','已開啟')}`:''}`;const node=element('md-primary-tab',{text:label,active:tab.id===state.activeTabId,'aria-label':label});node.addEventListener('click',e=>{if(!tab.closed&&(e.ctrlKey||e.metaKey)){if(this.selected.has(tab.id))this.selected.delete(tab.id);else this.selected.add(tab.id);this.renderTabs();}else this.activateView(tab);});node.addEventListener('contextmenu',e=>{if(tab.closed)return;e.preventDefault();this.openTabMenu(tab,node);});node.addEventListener('keydown',e=>{if(!tab.closed&&((e.shiftKey&&e.key==='F10')||e.key==='ContextMenu')){e.preventDefault();this.openTabMenu(tab,node);}});if(this.pendingFocusId===tab.id){this.pendingFocusNode=node;}tabs.append(node);}
+    this.tabsHost.replaceChildren(tabs);if(this.pendingFocusNode){this.pendingFocusNode.focus();this.pendingFocusNode=null;this.pendingFocusId=null;}this.groupsHost.replaceChildren();const active=state.tabs.find(x=>x.id===state.activeTabId);if(active)this.groupsHost.append(element('md-text-button',{text:this.t('Tab actions','分頁操作'),onclick:e=>this.openTabMenu(active,e.currentTarget)}));
     for(const group of state.groups)this.groupsHost.append(element('md-text-button',{text:`${group.collapsed?'▸':'▾'} ${group.label}`,'aria-expanded':String(!group.collapsed),onclick:()=>{this.model.collapseGroup(group.id,!group.collapsed);this.renderTabs();}}));
-    if(!rows.length)this.tabsHost.append(element('p',{role:'status',text:this.t('No matching tabs','沒有相符分頁')}));
+    if(!rows.length)this.tabsHost.append(element('p',{role:'status',text:this.t('No matching views','沒有相符檢視')}));
   }
   openTabMenu(tab,anchor){this.onContext?.({anchor,language:this.language,items:[
     {label:tab.pinned?text('Unpin tab','取消固定分頁'):text('Pin tab','固定分頁'),run:()=>{this.model.pinTab(tab.id,!tab.pinned);this.render();}},
