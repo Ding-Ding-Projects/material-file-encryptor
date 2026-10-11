@@ -208,7 +208,8 @@
         "edit-field",
         "clear-field",
         "cancel-dialog"
-      ]
+      ],
+      "layoutSelector": "#vault-dialog >>> md-dialog >>> dialog"
     },
     {
       "id": "create-key-file",
@@ -220,7 +221,8 @@
         "open-picker",
         "select-synthetic-file",
         "cancel-dialog"
-      ]
+      ],
+      "layoutSelector": "#vault-dialog >>> md-dialog >>> dialog"
     },
     {
       "id": "create-private-repository",
@@ -231,7 +233,8 @@
       "actions": [
         "edit-transport",
         "cancel-dialog"
-      ]
+      ],
+      "layoutSelector": "#vault-dialog >>> md-dialog >>> dialog"
     },
     {
       "id": "converter-source",
