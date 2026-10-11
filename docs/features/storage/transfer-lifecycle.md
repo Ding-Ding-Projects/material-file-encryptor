@@ -49,3 +49,47 @@ Source `6086ff30c532c6a59a2ddc0869a28651e9a20dc1` adds current-file export to `s
 Cancellation before installation preserves a prior destination and removes the temporary output. Installation wins a late cancellation and is reported as completed. The plaintext buffer is cleared and the snapshot disposed in the finalization path. Exporting the current file does not manufacture a history version.
 
 This paragraph records implemented source behavior only. At the reviewed parent baseline `8ec5ef37e593fe4ef8ba88e9e4205bc67c4c36c3`, this export addition was not yet integrated. The ordinary mounted receipt predates it and does not verify it. Final parent integration, packaged execution and mounted current-export acceptance remain unverified.
+## Legacy authentication memory and cost
+
+On Windows, legacy format 1 and 2 records use the Microsoft CNG `BCryptDecrypt` authenticated chaining API. A first pass verifies the complete record into a cleared, bounded discard buffer. Only after the final tag succeeds does a second pass over the same write-excluding file handle decrypt the requested range. Format 1 retains its record-offset associated data; format 2 retains both its associated data and whole-object SHA-256 identity. No plaintext staging file is created.
+
+Legacy records have one authentication tag for the entire record. A small read or edit therefore still requires authentication work proportional to that legacy record, and decryption may scan the prefix leading to the requested range. Bounded overlays avoid rewriting the entire legacy file, but do not make old authentication independently seekable. Modern format 3 records retain independent authentication at no more than 64 KiB per block.
+
+Owned transfer buffers share a process-wide 64 MiB admission budget across current reads/writes, staged imports, managed imports/exports, synchronization, ciphertext copying and legacy authentication. Reservations conservatively include the bounded stream buffers used by those operations. Exhaustion produces a retryable failure instead of waiting while holding an engine lock. This is a transfer-buffer bound, not a process working-set limit: caller-provided output, metadata/object graphs, runtime overhead and the operating system cryptographic provider's internal allocations are separate. `transferBuffers` exposes active/peak reserved bytes and the limit; `VaultEngine.LegacyReadBuffers` separately reports the legacy reader's accounted workspaces.
+
+Focused tests include independent 90,000,000-byte format 1 and 2 records, one-byte overlay edits, block-boundary and empty records, invalid associated data/tags/ciphertext/truncation, shared-budget exhaustion, concurrent readers, and cancellation during both passes. The provider contract is documented in [Microsoft's authenticated cipher mode information reference](https://learn.microsoft.com/en-us/windows/win32/api/bcrypt/ns-bcrypt-bcrypt_authenticated_cipher_mode_info).
+
+## Background scheduling preference
+
+The helper defaults to `responsive` performance mode. Synchronous managed-import staging, export, timer maintenance and synchronization run at below-normal thread priority on Windows. Each scope restores the calling thread's prior priority in `finally`; asynchronous reads occur outside the import scopes. Process priority, the control reader and foreground filesystem callbacks are unchanged.
+
+`setPerformanceMode` accepts `{ "mode": "responsive" }` or `{ "mode": "throughput" }`. Throughput mode leaves the existing thread priority unchanged. `status` and `statusSummary` report `performanceMode`. Settings exposes this choice under Transfer responsiveness, persists it locally, and reapplies it when starting the helper. Scheduling priority is a responsiveness hint, not a throughput or latency guarantee.
+
+Managed import failures expose an optional `errorPhase` alongside the redacted
+`errorCode`. Its fixed values are `metadata`, `source-open`, `source-read`,
+`staging-begin`, `staging-write`, `install`, and `activity`. Exception text, paths,
+and stack traces are not included. A failure recording activity after installation
+retains the completed file and its completed-file counter. The phase identifies
+the operation in progress, including disposal during unwinding, rather than
+claiming a lower-level operating-system cause.
+
+The optional lifecycle test modes `--large-import-only`, `--large-managed-only`,
+and `--large-background-only` exercise synthetic 512 MiB imports with a 10 MiB
+part cap. They distinguish core staging, managed source reads, and periodic
+controller work. They do not substitute for a packaged mounted-drive run.
+
+For trusted storage exceptions, operation diagnostics also include `storageStage`:
+`part-create`, `part-write`, `part-flush`, `part-finish-rename`, `part-cleanup`,
+`metadata-temp-create`, `metadata-write`, `metadata-flush`, `metadata-replace`, or
+`metadata-cleanup`. These fixed values identify the storage action; they do not
+expose a path or the operating-system message. A cleanup failure after a failed
+atomic metadata write preserves the original write exception and leaves the
+existing destination unchanged.
+
+Atomic metadata replacement retries only a confirmed Windows sharing conflict.
+Sharing/lock violations qualify directly; access denied qualifies only when a
+separate delete-access probe reports sharing/lock violation on the old or new
+file. Read-only attributes and permanent access denial do not qualify. The
+replacement keeps the same durably flushed temporary file, with at most ten
+15 ms waits. Exhaustion retains the first exception and the prior destination.
+The control reader remains independent while the current block settles.

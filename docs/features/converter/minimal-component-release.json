@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "version": "9.0.2",
+  "profile": "minimal-v1",
+  "asset": "ffmpeg-9.0.2-minimal-v1-win64.zip",
+  "sha256": "da315b36eaae5f0aeee512fea6f0c920c25e13d80c9d77a9db23ed626e30eddd",
+  "bytes": 19533797,
+  "manifestSha256": "995e6efd01e257486139be36889033029983486844cf627510120a57770124e8",
+  "files": {
+    "COPYING.GPLv3": {
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "bytes": 35147
+    },
+    "COPYING.LGPLv2.1": {
+      "sha256": "246041b6ecf9bc32d718a62c57877c78b5eb397b6467e74ed7ae2626ab189c30",
+      "bytes": 26517
+    },
+    "COPYING.MinGW-w64-runtime.txt": {
+      "sha256": "e9b2dc02451ea29092a1f25fa0f3c07207ed421f1807dffb0c4e6dce69dee7bd",
+      "bytes": 10936
+    },
+    "GCC-RUNTIME-EXCEPTION.txt": {
+      "sha256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74",
+      "bytes": 3324
+    },
+    "README.txt": {
+      "sha256": "70da13538750e91b249130890fe5ea79a29ef3408ec3c6b396b02e476833c50f",
+      "bytes": 417
+    },
+    "README.zlib": {
+      "sha256": "4026d921213bb2e311d8d42b44ef53361c102d5d45ae32f93f8e52eaee8d068f",
+      "bytes": 5291
+    },
+    "ffmpeg-9.0.2-minimal-corresponding-source.zip": {
+      "sha256": "7f6e1fe23c78ba7d3419adf31be83f53229bc7a93c6e0cdd74a43af02a850e75",
+      "bytes": 13594970
+    },
+    "ffmpeg.exe": {
+      "sha256": "3afaeabe603e0a869f782621b8ef3877c98db8832dac756fd4518af9cfc2b8a3",
+      "bytes": 7498254
+    },
+    "ffprobe.exe": {
+      "sha256": "6f02e4e18eb928ff48d8fdad2840d8419a1868931cbdf0da6d1da8f8a59987a4",
+      "bytes": 7287822
+    },
+    "manifest.json": {
+      "sha256": "995e6efd01e257486139be36889033029983486844cf627510120a57770124e8",
+      "bytes": 3073
+    }
+  }
+}

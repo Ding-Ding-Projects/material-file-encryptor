@@ -122,7 +122,8 @@ internal sealed partial class VaultController : IDisposable
                 },
                 autoUnlock = cachedAutoUnlock,
                 history = new { versionCount = cachedVersionCount, recycledCount = cachedRecycledCount, pendingVersionCount = vault?.PendingVersionCount ?? 0, retentionDays = historyRetentionDays, gitAvailable = historyStore is not null },
-                storageFormat = vault?.StorageFormat, journal = JournalInfo(),
+                storageFormat = vault?.StorageFormat, journal = JournalInfo(), transferBuffers = TransferBufferBudget.Statistics,
+                performanceMode = Volatile.Read(ref performanceMode)==0?"responsive":"throughput",
                 transport = new { mode = transportMode, remoteRepository, available = vault is not null && (transportMode == "privateGit" ? transportAvailable : vault.Status.IsSourceAvailable), pendingSynchronization = vault is not null && transportMode == "privateGit" && (pendingPrivatePublication || historyPending || vault.Status.PendingCommits > 0 || vault.JournalStatistics.PendingFrames > 0 || vault.PendingVersionCount > 0), lastError = syncError },
                 availableDriveLetters = cachedDriveLetters
             };
@@ -184,6 +185,11 @@ internal sealed partial class VaultController : IDisposable
             switch (method)
             {
                 case "status": return Status();
+                case "setPerformanceMode":
+                    string mode=RequiredString(args,"mode");
+                    if(mode is not ("responsive" or "throughput"))throw new ArgumentException("Choose responsive or throughput performance mode.");
+                    Volatile.Write(ref performanceMode,mode=="throughput"?1:0);
+                    break;
                 case "create": Open(args, true, false); break;
                 case "unlock": Open(args, false, false); break;
                 case "autoUnlock": Open(args, false, true); break;
@@ -493,6 +499,8 @@ internal sealed partial class VaultController : IDisposable
         using var cancellation = new CancellationTokenSource();
         try
         {
+            using var priority=BackgroundPriority();
+            using var bufferBudget=TransferBufferBudget.Reserve(4L*65536,cancellation.Token);
             lock (gate)
             {
                 if (vault is null || activePreparedOperations != 0) return;
@@ -551,6 +559,7 @@ internal sealed partial class VaultController : IDisposable
         bool synchronize=false;
         try
         {
+            using var priority=BackgroundPriority();
             lock (gate)
             {
                 if (vault is null || activePreparedOperations != 0) return;
@@ -616,6 +625,6 @@ internal sealed partial class VaultController : IDisposable
     private static string? OptionalString(JsonElement args, string name) => args.ValueKind == JsonValueKind.Object && args.TryGetProperty(name, out var value) && value.ValueKind != JsonValueKind.Null ? value.GetString() : null;
     private static bool OptionalBool(JsonElement args, string name) => args.ValueKind == JsonValueKind.Object && args.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.True;
     private static long RequiredLong(JsonElement args, string name) => OptionalLong(args, name) ?? throw new ArgumentException("A required number is missing.");
-    private static long? OptionalLong(JsonElement args, string name) => args.ValueKind == JsonValueKind.Object && args.TryGetProperty(name, out var value) ? value.GetInt64() : null;
+    internal static long? OptionalLong(JsonElement args, string name) => args.ValueKind == JsonValueKind.Object && args.TryGetProperty(name, out var value) && value.ValueKind != JsonValueKind.Null ? value.GetInt64() : null;
     public void Dispose() { Unmount(); LockEngine(); }
 }

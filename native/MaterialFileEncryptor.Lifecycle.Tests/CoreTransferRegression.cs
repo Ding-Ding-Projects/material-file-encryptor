@@ -85,7 +85,7 @@ internal static class CoreTransferRegression
 
                 // Build an actual authenticated v2 record independently of the new
                 // writer. This prevents a new-writer round trip masking old-reader regressions.
-                byte[] legacy = RandomNumberGenerator.GetBytes(200000), blob = new byte[200036], key = engine.ExportMasterKey();
+                byte[] legacy = RandomNumberGenerator.GetBytes(89999964), blob = new byte[90000000], key = engine.ExportMasterKey();
                 try
                 {
                     "MFE1"u8.CopyTo(blob); System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(blob.AsSpan(4), legacy.Length);
@@ -104,10 +104,27 @@ internal static class CoreTransferRegression
                 Type rt = typeof(VaultEngine).Assembly.GetType("MaterialFileEncryptor.Core.RecordRef", true)!;
                 records.Add(0L, Activator.CreateInstance(rt, id, 0L, legacy.Length, blob.Length, 2));
                 long before = Directory.GetFiles(options.CacheRoot + "/parts", "*.mfe").Sum(path => new FileInfo(path).Length);
+                long beforeAllocation=GC.GetAllocatedBytesForCurrentThread();
                 engine.WriteRange("legacy.bin", 70000, new byte[] { 77 }); legacy[70000] = 77;
+                long editAllocation=GC.GetAllocatedBytesForCurrentThread()-beforeAllocation;
+                Assert(editAllocation<1024*1024,"One-byte legacy edit allocated a whole legacy record");
+                Console.WriteLine($"Large legacy one-byte edit allocated={editAllocation}, authenticated workspace peak={VaultEngine.LegacyReadBuffers.PeakBytes}");
                 long added = Directory.GetFiles(options.CacheRoot + "/parts", "*.mfe").Sum(path => new FileInfo(path).Length) - before;
                 Assert(added < 10000, "First edit repacked entire legacy file");
                 byte[] readLegacy = new byte[legacy.Length]; engine.ReadRange("legacy.bin", 0, readLegacy); Assert(legacy.SequenceEqual(readLegacy), "Legacy overlay changed unrelated bytes");
+                string packedId=Guid.NewGuid().ToString("N");key=engine.ExportMasterKey();
+                byte[] prefix=new byte[64];"MFE1"u8.CopyTo(prefix);System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(prefix.AsSpan(4),28);RandomNumberGenerator.Fill(prefix.AsSpan(8,12));
+                try{using var aes=new AesGcm(key,16);aes.Encrypt(blob.AsSpan(8,12),legacy,blob.AsSpan(36),blob.AsSpan(20,16),Encoding.UTF8.GetBytes($"mfe-v1/{engine.VaultId}/record/{packedId}:64"));aes.Encrypt(prefix.AsSpan(8,12),new byte[28],prefix.AsSpan(36),prefix.AsSpan(20,16),Encoding.UTF8.GetBytes($"mfe-v1/{engine.VaultId}/record/{packedId}:0"));}
+                finally{CryptographicOperations.ZeroMemory(key);}
+                using(var packed=File.Create(Path.Combine(options.CacheRoot,"parts",packedId+".mfe"))){packed.Write(prefix);packed.Write(blob);}
+                engine.CreateFile("legacy-format1.bin");object packedEntry=entries["legacy-format1.bin"]!;
+                et.GetProperty("Length")!.SetValue(packedEntry,(long)legacy.Length);et.GetProperty("ChunkSize")!.SetValue(packedEntry,legacy.Length);et.GetProperty("PartSize")!.SetValue(packedEntry,90000000L);
+                ((IDictionary)et.GetProperty("Records")!.GetValue(packedEntry)!).Add(0L,Activator.CreateInstance(rt,packedId,64L,legacy.Length,blob.Length,1));
+                beforeAllocation=GC.GetAllocatedBytesForCurrentThread();engine.WriteRange("legacy-format1.bin",1234,new byte[]{55});
+                editAllocation=GC.GetAllocatedBytesForCurrentThread()-beforeAllocation;Assert(editAllocation<1024*1024,"Format1 edit allocated its whole record");
+                byte[] format1Read=new byte[65536];engine.ReadRange("legacy-format1.bin",0,format1Read);legacy[1234]=55;
+                Assert(format1Read.SequenceEqual(legacy.AsSpan(0,format1Read.Length).ToArray()),"Format1 overlay changed unrelated bytes");
+                Console.WriteLine($"Large format1 one-byte edit allocated={editAllocation}");
                 engine.SetLength("legacy.bin", 70001); engine.SetLength("legacy.bin", 90000);
                 byte[] tail = new byte[19999]; engine.ReadRange("legacy.bin", 70001, tail); Assert(tail.All(value => value == 0), "Truncated legacy bytes reappeared");
                 engine.SetPartSize(1024); engine.WriteRange("legacy.bin", 80000, new byte[] { 45 });

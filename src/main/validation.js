@@ -2,6 +2,8 @@ const object = value => value && typeof value === 'object' && !Array.isArray(val
 export function validateFeatureRequest(feature, action, payload, { browser = false } = {}) {
   const actions = {
     converter: ['catalog','inspect','enqueue','list','control','pickSources','pickDestination','pickDestinationDirectory'],
+    workflow: ['documents','pickDocument','pickProject','readDocument','saveDocument','createDocument','templates','editors','pickEditor','openEditor','openInCode','editorDownload','downloads','prepareDownload','startDownload','cancelDownload','accounts','owners','prepareHandoff','exportHandoff','openHandoff'],
+    updates: ['status','check','download',...(!browser?['install']:[])],
     ollama: ['status','catalog','refreshCatalog','models','show','deleteModel','copyModel','generate','hardware','cart','addToCart','removeFromCart','retryPull','startPulls','cancel','sessions','session','renameSession','deleteSession','exportSession','chat','profiles','preflight','launch','snapshots','restore','events','runtimeInstall','runtimeStart','chooseRuntimeExecutable','registerProfile'],
     documentation: ['catalog','changelog'], status: ['status'],
     personalization: ['sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts',...(!browser?['setScheduleCredential','clearScheduleCredential']:[])],
@@ -22,7 +24,7 @@ export function validateRequest(method, value = {}) {
     lockVault: {}, selectFolder: { kind: 'kind' }, selectKeyFile: {}, createKeyFile: { storageDir: 'path?', cacheDir: 'path?' },
     importFiles: {}, openExplorer: {}, openFile: { path: 'relative' }, exportFile: { path: 'relative' },
     keepOffline: { path: 'relative' }, releaseOffline: { path: 'relative' }, setPartSize: { partSizeBytes: 'size' },
-    resplit: { path: 'relative', partSizeBytes: 'size?' }, sync: {}, listVersions: { entryId: 'path?', retentionDays: 'days?' }, saveVersion: { path: 'relative?' }, restoreVersion: { versionId: 'path' }, listDeleted: {}, restoreDeleted: { ids: 'ids' }, emptyRecycleBin: {}, setPreferences: { historyRetentionDays: 'days?', startup: 'boolean?', autoUnlock: 'boolean?', driveLetter: 'drive?' },
+    resplit: { path: 'relative', partSizeBytes: 'size?' }, sync: {}, listVersions: { entryId: 'path?', retentionDays: 'days?' }, saveVersion: { path: 'relative?' }, restoreVersion: { versionId: 'path' }, listDeleted: {}, restoreDeleted: { ids: 'ids' }, emptyRecycleBin: {}, setPreferences: { historyRetentionDays: 'days?', startup: 'boolean?', autoUnlock: 'boolean?', driveLetter: 'drive?', performanceMode: 'performance?' },
     windowControl: { action: 'window' }, openExternal: { url: 'url' }, installDriver: {}, importVocabulary: {},
   };
   schemas.upgradeVault = schemas.createVault;
@@ -46,6 +48,7 @@ export function validateRequest(method, value = {}) {
     else if (type === 'paths') valid = Array.isArray(item) && item.length <= 1000 && item.every(file => typeof file === 'string' && file.length > 0 && file.length < 32768 && !file.includes('\0'));
     else if (type === 'fileAction') valid = ['open', 'export', 'keepOffline', 'releaseOffline'].includes(item);
     else if (type === 'boolean') valid = typeof item === 'boolean';
+    else if (type === 'performance') valid = ['responsive','throughput'].includes(item);
     else if (type === 'size') valid = Number.isSafeInteger(item) && item >= 1024 && item <= 90000000;
     else if (type === 'drive') valid = typeof item === 'string' && /^[D-Z]:?$/i.test(item);
     else if (type === 'kind') valid = ['storage', 'cache'].includes(item);

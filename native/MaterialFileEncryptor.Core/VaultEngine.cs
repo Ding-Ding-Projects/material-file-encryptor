@@ -178,27 +178,59 @@ public sealed partial class VaultEngine : IDisposable
     private byte[] ReadRecord(string path,RecordRef record,int maximum)
     {
         var encoding=record.Encoding==0?config.Format:record.Encoding;
-        if(encoding==2)VerifyPart(path,record.Part,encoding);
+        if(encoding is 1 or 2)
+        {
+            if(record.PlainLength>65536)throw new InvalidOperationException("Use bounded range reads for legacy records.");
+            var plain=new byte[record.PlainLength];CngLegacyRecord.Read(path,key,encoding==2?Domain("chunk"):Domain("record",record.Part+":"+record.Offset),encoding==2?record.Part:null,record.PlainLength,0,plain,recordOffset:record.Offset);return plain;
+        }
         var encrypted=new byte[record.RecordLength];
         using(var stream=File.OpenRead(path)) { if(stream.Length>1073741824 || record.Offset>stream.Length-record.RecordLength)throw new InvalidDataException("Incomplete or oversized encrypted part."); stream.Position=record.Offset; stream.ReadExactly(encrypted); }
         return VaultCrypto.Unseal(encrypted,key,encoding>=2?encoding==3?Domain("block",record.Part+":"+record.Offset):Domain("chunk"):Domain("record",record.Part+":"+record.Offset),maximum);
     }
-    private void VerifyPart(string path,string id,int encoding=0)
+    public static LegacyBufferStatistics LegacyReadBuffers=>CngLegacyRecord.Statistics;
+    private void VerifyRecord(RecordRef record,int maximum,CancellationToken cancellationToken=default)
+    {
+        string path=EnsurePart(record.Part);
+        int encoding=record.Encoding==0?config.Format:record.Encoding;
+        if(encoding is 1 or 2)
+            CngLegacyRecord.Read(path,key,encoding==2?Domain("chunk"):Domain("record",record.Part+":"+record.Offset),encoding==2?record.Part:null,record.PlainLength,0,Span<byte>.Empty,cancellationToken,recordOffset:record.Offset);
+        else {using var bufferBudget=TransferBufferBudget.Reserve(3L*65572,cancellationToken);var plain=ReadRecord(path,record,maximum);CryptographicOperations.ZeroMemory(plain);}
+    }
+    private void ReadChunkRange(Entry entry,long index,int offset,Span<byte> destination,CancellationToken cancellationToken=default)
+    {
+        if(!entry.Records.TryGetValue(index,out var record)){destination.Clear();return;}
+        int encoding=record.Encoding==0?config.Format:record.Encoding;
+        if(encoding is not (1 or 2))
+        {var chunk=ReadChunk(entry,index);try{chunk.AsSpan(offset,destination.Length).CopyTo(destination);}finally{CryptographicOperations.ZeroMemory(chunk);}return;}
+        destination.Clear();int count=(int)Math.Min(destination.Length,Math.Max(0,record.PlainLength-offset));if(count==0)return;
+        string domain=encoding==2?Domain("chunk"):Domain("record",record.Part+":"+record.Offset);
+        try{CngLegacyRecord.Read(EnsurePart(record.Part),key,domain,encoding==2?record.Part:null,record.PlainLength,offset,destination[..count],cancellationToken,recordOffset:record.Offset);}
+        catch(Exception error) when(error is IOException or CryptographicException or InvalidDataException)
+        {
+            var remote=ObjectPath(source,"parts",record.Part);if(!File.Exists(remote))throw;
+            VerifyPart(remote,record.Part,encoding,cancellationToken);using(var input=File.OpenRead(remote))CopyAtomic(input,ObjectPath(cache,"parts",record.Part));
+            CngLegacyRecord.Read(ObjectPath(cache,"parts",record.Part),key,domain,encoding==2?record.Part:null,record.PlainLength,offset,destination[..count],cancellationToken,recordOffset:record.Offset);
+        }
+    }
+    private void VerifyPart(string path,string id,int encoding=0,CancellationToken cancellationToken=default)
     {
         VaultCrypto.ValidatePhysicalPath(path);using var stream=File.OpenRead(path);
         if(encoding==0)encoding=id.Length==64?2:0;
         if(encoding==2)
         {
             if(stream.Length>90000000 || stream.Length<VaultCrypto.Overhead)throw new InvalidDataException("Invalid chunk size.");
-            if(!Convert.ToHexString(SHA256.HashData(stream)).Equals(id,StringComparison.OrdinalIgnoreCase))throw new CryptographicException("Chunk hash mismatch.");
-            stream.Position=0;var blob=new byte[(int)stream.Length];stream.ReadExactly(blob);var content=VaultCrypto.Unseal(blob,key,Domain("chunk"),89999964);CryptographicOperations.ZeroMemory(content);return;
+            CngLegacyRecord.Read(path,key,Domain("chunk"),id,(int)stream.Length-VaultCrypto.Overhead,0,Span<byte>.Empty,cancellationToken);return;
         }
         if(stream.Length<VaultCrypto.Overhead || stream.Length>1073741824)throw new InvalidDataException("Invalid part size.");
+        using var bufferBudget=TransferBufferBudget.Reserve(3L*65572,cancellationToken);
         var header=new byte[VaultCrypto.Overhead];
         while(stream.Position<stream.Length)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var offset=stream.Position;stream.ReadExactly(header);var length=System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(header.AsSpan(4));
-            if(length<0 || length>65536 || length>stream.Length-stream.Position)throw new InvalidDataException("Invalid packed record length.");
+            if(length<0 || length>(encoding==3?65536:89999964) || length>stream.Length-stream.Position)throw new InvalidDataException("Invalid packed record length.");
+            if(encoding==1||length>65536)
+            {CngLegacyRecord.Read(path,key,Domain("record",id+":"+offset),null,length,0,Span<byte>.Empty,cancellationToken,recordOffset:offset);stream.Position+=length;continue;}
             var encrypted=new byte[length+VaultCrypto.Overhead];header.CopyTo(encrypted,0);stream.ReadExactly(encrypted.AsSpan(VaultCrypto.Overhead));
             byte[] plain;
             if(encoding==3)plain=VaultCrypto.Unseal(encrypted,key,Domain("block",id+":"+offset),65536);
@@ -216,12 +248,14 @@ public sealed partial class VaultEngine : IDisposable
     }
     private static void CopyAtomic(Stream input,string destination)
     {
+        using var bufferBudget=TransferBufferBudget.Reserve(3L*65536);
         VaultCrypto.ValidatePhysicalPath(destination);
         Directory.CreateDirectory(Path.GetDirectoryName(destination)!); var temp=destination+"."+Guid.NewGuid().ToString("N")+".tmp";
-        try { using(var output=new FileStream(temp,FileMode.CreateNew,FileAccess.Write,FileShare.None,65536,FileOptions.WriteThrough)) { input.CopyTo(output); output.Flush(true); } File.Move(temp,destination,true); } finally { if(File.Exists(temp)) File.Delete(temp); }
+        try { using(var output=new FileStream(temp,FileMode.CreateNew,FileAccess.Write,FileShare.None,65536,FileOptions.WriteThrough)) { input.CopyTo(output,65536); output.Flush(true); } File.Move(temp,destination,true); } finally { if(File.Exists(temp)) File.Delete(temp); }
     }
-    private int Read(Entry e,long offset,Span<byte> destination)
+    private int Read(Entry e,long offset,Span<byte> destination,CancellationToken cancellationToken=default)
     {
+        using var bufferBudget=TransferBufferBudget.Reserve(4L*65572,cancellationToken);
         if(e.Directory) throw new IOException("Cannot read a directory."); if(offset<0) throw new ArgumentOutOfRangeException(nameof(offset)); if(offset>=e.Length) return 0;
         var count=(int)Math.Min(destination.Length,e.Length-offset); RequireAvailable(RangeRecords(e,offset,count)); var written=0;
         while(written<count)
@@ -235,10 +269,15 @@ public sealed partial class VaultEngine : IDisposable
             }
             else
             {
+                if(e.OverlaySize>0)
+                {
+                    long nextOverlay=e.Overlays.Keys.Where(value=>value>index).DefaultIfEmpty(long.MaxValue/e.OverlaySize).Min()*e.OverlaySize;
+                    take=(int)Math.Min(count-written,nextOverlay-offset);
+                }
                 destination.Slice(written,take).Clear();
                 var baseLimit=e.BaseLength??e.Length; var available=(int)Math.Min(take,Math.Max(0,baseLimit-offset));
                 var copied=0;
-                while(copied<available) { var baseIndex=offset/e.ChunkSize; var baseWithin=(int)(offset%e.ChunkSize); var baseTake=Math.Min(available-copied,e.ChunkSize-baseWithin); var chunk=ReadChunk(e,baseIndex); try { chunk.AsSpan(baseWithin,baseTake).CopyTo(destination.Slice(written+copied,baseTake)); } finally { CryptographicOperations.ZeroMemory(chunk); } copied+=baseTake; offset+=baseTake; }
+                while(copied<available) { cancellationToken.ThrowIfCancellationRequested();var baseIndex=offset/e.ChunkSize; var baseWithin=(int)(offset%e.ChunkSize); var baseTake=Math.Min(available-copied,e.ChunkSize-baseWithin); ReadChunkRange(e,baseIndex,baseWithin,destination.Slice(written+copied,baseTake),cancellationToken); copied+=baseTake; offset+=baseTake; }
                 offset-=copied;
             }
             written+=take; offset+=take;
@@ -256,25 +295,28 @@ public sealed partial class VaultEngine : IDisposable
         internal PartWriter(VaultEngine engine,long? cap=null) { this.engine=engine;this.cap=cap??engine.partSize; }
         internal RecordRef Add(ReadOnlySpan<byte> plain)
         {
+            using var bufferBudget=TransferBufferBudget.Reserve(2L*65572);
             if(plain.Length>65536 || plain.Length+VaultCrypto.Overhead>cap)throw new IOException("Block exceeds physical cap.");
             if(stream==null || stream.Position+plain.Length+VaultCrypto.Overhead>cap)
             {
                 Finish();id=Guid.NewGuid().ToString("N");final=engine.ObjectPath(engine.cache,"parts",id);temporary=final+".tmp";
-                stream=new FileStream(temporary,FileMode.CreateNew,FileAccess.Write,FileShare.None,65536,FileOptions.WriteThrough);
+                StorageOperationException.Run(StorageOperationStage.PartCreate,()=>stream=new FileStream(temporary,FileMode.CreateNew,FileAccess.Write,FileShare.None,65536,FileOptions.WriteThrough));
             }
-            var offset=stream.Position;var blob=VaultCrypto.Seal(plain,engine.key,engine.Domain("block",id+":"+offset));stream.Write(blob);
+            var offset=stream!.Position;var blob=VaultCrypto.Seal(plain,engine.key,engine.Domain("block",id+":"+offset));StorageOperationException.Run(StorageOperationStage.PartWrite,()=>stream.Write(blob));
             return new(id,offset,plain.Length,blob.Length,3);
         }
-        internal void FlushDurable() => stream?.Flush(true);
+        internal void FlushDurable() => StorageOperationException.Run(StorageOperationStage.PartFlush,()=>stream?.Flush(true));
         internal void Finish()
         {
             if(stream==null)return;
-            stream.Flush(true);stream.Dispose();stream=null;File.Move(temporary!,final!,false);temporary=null;
+            FlushDurable();StorageOperationException.Run(StorageOperationStage.PartCleanup,()=>stream.Dispose());stream=null;
+            StorageOperationException.Run(StorageOperationStage.PartFinishRename,()=>File.Move(temporary!,final!,false));temporary=null;
         }
         public void Dispose() { stream?.Dispose();if(temporary!=null&&File.Exists(temporary))File.Delete(temporary); }
     }
     private void Write(Entry e,long offset,ReadOnlySpan<byte> data)
     {
+        using var bufferBudget=TransferBufferBudget.Reserve(4L*65572);
         if(e.Directory) throw new IOException("Cannot write a directory."); if(offset<0 || offset>long.MaxValue-data.Length)throw new ArgumentOutOfRangeException(nameof(offset)); if(data.Length==0)return;
         RequireAvailable(RangeRecords(e,offset,data.Length));
         // Legacy blocks remain immutable. Only the touched bounded overlay is replaced.
@@ -393,7 +435,7 @@ public sealed partial class VaultEngine : IDisposable
                 token.ThrowIfCancellationRequested(); var local=ObjectPath(cache,"commits",id); var commit=ReadMetadata<Commit>(local,"commit",id);
                 VerifyComplete(commit,false);
                 var encodings=commit.Changes.Where(c=>c.Value!=null).SelectMany(c=>AllRecords(c.Value!)).Concat(commit.Versions.SelectMany(v=>AllRecords(v.Value))).GroupBy(r=>r.Part).ToDictionary(g=>g.Key,g=>g.First().Encoding);
-                foreach(var part in Parts(commit)) { token.ThrowIfCancellationRequested(); var target=ObjectPath(source,"parts",part); if(!File.Exists(target)&&IsEncryptedFileAvailable?.Invoke("parts/"+part+".mfe")!=true) { var localPart=EnsurePart(part);VerifyPart(localPart,part,encodings[part]);using var input=File.OpenRead(localPart); CopyAtomic(input,target); } }
+                foreach(var part in Parts(commit)) { token.ThrowIfCancellationRequested(); var target=ObjectPath(source,"parts",part); if(!File.Exists(target)&&IsEncryptedFileAvailable?.Invoke("parts/"+part+".mfe")!=true) { var localPart=EnsurePart(part);VerifyPart(localPart,part,encodings[part],token);using var input=File.OpenRead(localPart); CopyAtomic(input,target); } }
                 using(var input=File.OpenRead(local))CopyAtomic(input,ObjectPath(source,"commits",id)); pending.Remove(id);
             }
         }
@@ -407,7 +449,7 @@ public sealed partial class VaultEngine : IDisposable
         foreach(var item in commit.Changes.Where(c=>c.Value!=null).Select(c=>(c.Path,Value:c.Value!)).Concat(commit.Versions.Select(v=>(v.Path,v.Value))))
         {
             ValidateEntries(new Dictionary<string,Entry> { [item.Path]=item.Value });
-            foreach(var record in AllRecords(item.Value)) { if(authenticateContent){var plain=ReadRecord(EnsurePart(record.Part),record,Math.Max(item.Value.ChunkSize,item.Value.OverlaySize)); CryptographicOperations.ZeroMemory(plain);}else if(!PartAvailable(record.Part))throw new IOException("Referenced encrypted content is unavailable."); }
+            foreach(var record in AllRecords(item.Value)) { if(authenticateContent)VerifyRecord(record,Math.Max(item.Value.ChunkSize,item.Value.OverlaySize));else if(!PartAvailable(record.Part))throw new IOException("Referenced encrypted content is unavailable."); }
         }
         return true;
     }
@@ -484,7 +526,7 @@ public sealed partial class VaultEngine : IDisposable
         lock(gate)
         {
             Check(); path=VaultPath.Normalize(path); var selected=path==""?entries.Values.ToArray():new[]{Find(path)}.Concat(entries.Where(p=>p.Key.StartsWith(path+"/",StringComparison.OrdinalIgnoreCase)).Select(p=>p.Value)).ToArray();
-            if(keepOffline) { foreach(var e in selected) foreach(var record in AllRecords(e)) { cancellationToken.ThrowIfCancellationRequested(); var plain=ReadRecord(EnsurePart(record.Part),record,Math.Max(e.ChunkSize,e.OverlaySize)); CryptographicOperations.ZeroMemory(plain); } foreach(var e in selected)pinned.Add(e.Id); if(path=="")pinned.Add(config.VaultId); }
+            if(keepOffline) { foreach(var e in selected) foreach(var record in AllRecords(e)) { cancellationToken.ThrowIfCancellationRequested(); VerifyRecord(record,Math.Max(e.ChunkSize,e.OverlaySize),cancellationToken); } foreach(var e in selected)pinned.Add(e.Id); if(path=="")pinned.Add(config.VaultId); }
             else { foreach(var e in selected)pinned.Remove(e.Id); if(path=="")pinned.Remove(config.VaultId); }
             SaveJournal(); return Task.CompletedTask;
         }

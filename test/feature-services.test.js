@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createCredentialStore, createFeatureServices, readConverterManifest } from '../src/main/feature-services.js';
-import { validateFeatureRequest } from '../src/main/validation.js';
+import { validateFeatureRequest, validateRequest } from '../src/main/validation.js';
 const safeStorage={isEncryptionAvailable:()=>true,encryptString:text=>Buffer.from(text),decryptString:value=>value.toString()};
 async function fixture(t){const directory=await fs.mkdtemp(path.join(os.tmpdir(),'feature-services-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));return directory;}
 test('converter manifests support Windows UTF-8 output without accepting malformed JSON',async t=>{
@@ -36,6 +36,39 @@ test('desktop feature allowlist keeps protected records unavailable to browser r
  assert.throws(()=>validateFeatureRequest('access','credentialGet',{key:'local-profile:v1'},{browser:true}));
  assert.throws(()=>validateFeatureRequest('converter','constructor',{}));
  assert.throws(()=>validateFeatureRequest('ollama','exec',{}));
+});
+
+test('workflow bridge observes native picker work and shutdown admission',async t=>{
+ const directory=await fixture(t);let release;
+ const selecting=new Promise(resolve=>{release=resolve;});
+ const services=createFeatureServices({dataDirectory:directory,applicationRoot:directory,safeStorage,dialog:{showOpenDialog:()=>selecting},getWindow:()=>null,openPath:async()=>{}});
+ const request=services.request('workflow','pickDocument',{});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.ok(await services.pending()>0);
+ services.beginExit();
+ await assert.rejects(services.request('workflow','createDocument',{text:''}),/waiting/);
+ assert.deepEqual(await services.request('workflow','downloads',{}),[]);
+ release({canceled:true,filePaths:[]});
+ assert.equal(await request,null);assert.equal(await services.pending(),0);
+ await services.cancelAll();await services.close();
+ await assert.rejects(services.request('workflow','documents',{}),/closing/);
+});
+
+test('workflow IPC exposes declared actions without an arbitrary execution route',()=>{
+ assert.equal(validateFeatureRequest('workflow','pickDocument',{}).action,'pickDocument');
+ assert.equal(validateFeatureRequest('workflow','cancelDownload',{id:'grant'},{browser:true}).action,'cancelDownload');
+ for(const action of ['exec','spawn','constructor','publish'])assert.throws(()=>validateFeatureRequest('workflow',action,{}));
+});
+
+test('performance preferences accept only the two explicit scheduling modes',()=>{
+ for(const performanceMode of ['responsive','throughput'])assert.equal(validateRequest('setPreferences',{performanceMode}).performanceMode,performanceMode);
+ assert.throws(()=>validateRequest('setPreferences',{performanceMode:'realtime'}));
+});
+
+test('browser update requests cannot invoke native installation',()=>{
+ assert.equal(validateFeatureRequest('updates','status',{language:'en'},{browser:true}).action,'status');
+ assert.equal(validateFeatureRequest('updates','install',{}).action,'install');
+ assert.throws(()=>validateFeatureRequest('updates','install',{}, {browser:true}));
 });
 
 

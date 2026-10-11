@@ -57,7 +57,7 @@ public sealed partial class VaultEngine
     }
     private string Restore(StoredVersion version,bool restoreCurrent=false)
     {
-        foreach(var record in AllRecords(version.Value)){var plain=ReadRecord(EnsurePart(record.Part),record,Math.Max(version.Value.ChunkSize,version.Value.OverlaySize));CryptographicOperations.ZeroMemory(plain);}
+        foreach(var record in AllRecords(version.Value))VerifyRecord(record,Math.Max(version.Value.ChunkSize,version.Value.OverlaySize));
         var path=version.Path;
         for(var parent=VaultPath.Parent(path);parent!="";parent=VaultPath.Parent(parent)) if(entries.TryGetValue(parent,out var existing)&&!existing.Directory)throw new IOException("Restore parent is occupied by a file.");
         var parents=new Stack<string>();for(var parent=VaultPath.Parent(path);parent!="";parent=VaultPath.Parent(parent))parents.Push(parent);
@@ -79,7 +79,7 @@ public sealed partial class VaultEngine
     }
     public Task RestoreDeletedAsync(IReadOnlyList<string> ids,CancellationToken cancellationToken=default)
     {
-        lock(gate){Check();var all=AllVersions();var selected=all.Where(v=>v.Deleted&&!hiddenBin.Contains(v.Id)&&(ids.Contains(v.Id)||all.Any(root=>ids.Contains(root.Id)&&root.Deleted&&root.Value.Directory&&(root.DeletionBatch!=""&&v.DeletionBatch==root.DeletionBatch)&&v.Path.StartsWith(root.Path+"/",StringComparison.OrdinalIgnoreCase)))).OrderBy(v=>v.Path.Count(c=>c=='/')).ToArray();foreach(var selectedVersion in selected)foreach(var record in AllRecords(selectedVersion.Value)){cancellationToken.ThrowIfCancellationRequested();var content=ReadRecord(EnsurePart(record.Part),record,Math.Max(selectedVersion.Value.ChunkSize,selectedVersion.Value.OverlaySize));CryptographicOperations.ZeroMemory(content);}
+        lock(gate){Check();var all=AllVersions();var selected=all.Where(v=>v.Deleted&&!hiddenBin.Contains(v.Id)&&(ids.Contains(v.Id)||all.Any(root=>ids.Contains(root.Id)&&root.Deleted&&root.Value.Directory&&(root.DeletionBatch!=""&&v.DeletionBatch==root.DeletionBatch)&&v.Path.StartsWith(root.Path+"/",StringComparison.OrdinalIgnoreCase)))).OrderBy(v=>v.Path.Count(c=>c=='/')).ToArray();foreach(var selectedVersion in selected)foreach(var record in AllRecords(selectedVersion.Value)){cancellationToken.ThrowIfCancellationRequested();VerifyRecord(record,Math.Max(selectedVersion.Value.ChunkSize,selectedVersion.Value.OverlaySize),cancellationToken);}
             var oldEntries=CloneEntries(entries);var oldVersions=pendingVersions.ToList();var oldHidden=new HashSet<string>(hiddenBin);var oldPendingHidden=new HashSet<string>(pendingBinHidden);var oldDue=new Dictionary<string,DateTimeOffset>(versionDue);
             try{var remapped=new List<(string Batch,string EntryId,string Path,string Restored)>();foreach(var v in selected){cancellationToken.ThrowIfCancellationRequested();var originalPath=v.Path;var copy=new StoredVersion {Id=v.Id,Path=v.Path,Value=v.Value,Timestamp=v.Timestamp,Deleted=v.Deleted};var parentMapping=remapped.Where(p=>(p.Batch==v.DeletionBatch||(v.Ancestors.TryGetValue(p.Path,out var parentId)&&parentId==p.EntryId))&&originalPath.StartsWith(p.Path+"/",StringComparison.OrdinalIgnoreCase)).OrderByDescending(p=>p.Path.Length).FirstOrDefault();if(parentMapping.Path!=null)copy.Path=parentMapping.Restored+originalPath[parentMapping.Path.Length..];var restoredPath=Restore(copy);if(v.Value.Directory)remapped.Add((v.DeletionBatch,v.Value.Id,originalPath,restoredPath));hiddenBin.Add(v.Id);pendingBinHidden.Add(v.Id);}}catch{entries=oldEntries;pendingVersions=oldVersions;hiddenBin=oldHidden;pendingBinHidden=oldPendingHidden;versionDue=oldDue;throw;}FlushLocal();Publish(cancellationToken);SaveJournal();return Task.CompletedTask;}
     }
@@ -93,7 +93,7 @@ public sealed partial class VaultEngine
         {
             Check();var destinationRoots=new[]{Path.GetFullPath(destination.StorageRoot),Path.GetFullPath(destination.CacheRoot)};foreach(var root in destinationRoots)RejectReparseAncestors(root);foreach(var original in new[]{source,cache})foreach(var candidate in destinationRoots)if(IsWithin(candidate,original)||IsWithin(original,candidate))throw new ArgumentException("Upgrade storage and cache must be separate from both original folders.");
             var originalVersions=AllVersions();RequireAvailable(entries.Values.Concat(originalVersions.Select(v=>v.Value)).SelectMany(e=>AllRecords(e)));
-            foreach(var original in entries.Values.Concat(originalVersions.Select(v=>v.Value)))foreach(var record in AllRecords(original)){cancellationToken.ThrowIfCancellationRequested();var content=ReadRecord(EnsurePart(record.Part),record,Math.Max(original.ChunkSize,original.OverlaySize));CryptographicOperations.ZeroMemory(content);}
+            foreach(var original in entries.Values.Concat(originalVersions.Select(v=>v.Value)))foreach(var record in AllRecords(original)){cancellationToken.ThrowIfCancellationRequested();VerifyRecord(record,Math.Max(original.ChunkSize,original.OverlaySize),cancellationToken);}
             var target=Create(destination,credentials);
             try
             {
@@ -128,7 +128,7 @@ public sealed partial class VaultEngine
                 for(long offset=0;offset<version.Value.Length;)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    int count=Read(version.Value,offset,buffer.AsSpan(0,(int)Math.Min(buffer.Length,version.Value.Length-offset)));
+                    int count=Read(version.Value,offset,buffer.AsSpan(0,(int)Math.Min(buffer.Length,version.Value.Length-offset)),cancellationToken);
                     destination.Write(buffer,0,count);offset+=count;
                 }
             }

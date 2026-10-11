@@ -10,10 +10,27 @@ const config = createRequire(import.meta.url)('../forge.config.cjs');
 
 test('directory-boundary exclusion blocks only complete private segments', () => {
   const excluded = name => config.packagerConfig.ignore.some(rule => rule.test(name));
-  for (const name of ['/.agent', '/.agent/a', '/nested/.agent/a', '/nested/.AGENT/a', '\\nested\\.agent\\a']) assert.equal(excluded(name), true);
+  for (const name of ['/.agent', '/.agent/a', '/nested/.agent/a', '/nested/.AGENT/a', '\\nested\\.agent\\a', '/.test-output', '/.test-output/fixture.bin', '/nested/.test-output/fixture.bin', '/src/features/converter/native/bin/Release/native.exe', '/src/features/converter/native/obj/generated.cs']) assert.equal(excluded(name), true);
   for (const name of ['/agent/a', '/.agent-helper/a', '/nested/agent.txt']) assert.equal(excluded(name), false);
   const weakened = config.packagerConfig.ignore.filter(rule => !rule.test('/.agent/a'));
   assert.equal(weakened.some(rule => rule.test('/.agent/a')), false, 'removed exclusion reproduces the regression');
+});
+
+test('verification fixtures are rejected from actual archive contents', async () => {
+  const temporary = await mkdtemp(path.join(os.tmpdir(), 'package-fixture-exclusion-'));
+  try {
+    const source = path.join(temporary, 'source'), output = path.join(temporary, 'output');
+    const archive = path.join(output, 'resources', 'app.asar');
+    await mkdir(path.join(source, '.test-output'), { recursive: true });
+    await mkdir(path.dirname(archive), { recursive: true });
+    await writeFile(path.join(source, 'index.js'), 'export const ready = true;');
+    await writeFile(path.join(source, '.test-output', 'fixture.bin'), 'synthetic verification data');
+    await createPackage(source, archive);
+    assert.equal((await inspectPackage(output)).code, 'PACKAGE_PRIVACY_REJECTED');
+    await rm(path.join(source, '.test-output'), { recursive: true });
+    await createPackage(source, archive);
+    assert.equal((await inspectPackage(output)).code, 'PACKAGE_PRIVACY_OK');
+  } finally { await rm(temporary, { recursive: true, force: true }); }
 });
 
 test('actual ASAR and resource inspection rejects synthetic private entries then accepts restored output', async () => {

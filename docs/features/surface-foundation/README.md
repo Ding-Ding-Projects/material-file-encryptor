@@ -7,3 +7,4 @@ This module adds locally bundled Material Web 2.5.0 controls to the current desk
 
 The foundation exposes no HTTP API. A Postman collection is not applicable.
 - [Panel layout and actionable notifications](layout-and-notifications.md)
+- [Document workflow and native handoffs](workflow-handoffs.md)

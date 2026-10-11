@@ -10,6 +10,8 @@
     "docs/features/converter/README.md",
     "docs/features/converter/archive-and-data.md",
     "docs/features/converter/media-plan.md",
+    "docs/features/converter/minimal-component.md",
+    "docs/features/converter/minimal-runtime.md",
     "docs/features/desktop/README.md",
     "docs/features/desktop/owned-exit-handles.md",
     "docs/features/desktop/package-integrity.md",
@@ -33,8 +35,10 @@
     "docs/features/performance/native-lifecycle-performance.md",
     "docs/features/platform/README.md",
     "docs/features/platform/current-integration.md",
+    "docs/features/platform/instruction-currency.md",
     "docs/features/platform/documentation-and-status.md",
     "docs/features/release/README.md",
+    "docs/features/release/native-update-controller.md",
     "docs/features/release/preview-delivery.md",
     "docs/features/release/preview-verification.md",
     "docs/features/schedules/README.md",
@@ -48,7 +52,9 @@
     "docs/features/surface-foundation/README.md",
     "docs/features/surface-foundation/coverage.md",
     "docs/features/surface-foundation/integration.md",
-    "docs/features/surface-foundation/layout-and-notifications.md"
+    "docs/features/surface-foundation/layout-and-notifications.md",
+    "docs/features/surface-foundation/workflow-handoffs.md",
+    "docs/features/surface-foundation/updates-panel.md"
   ],
   "categories": [
     "access",
@@ -60,6 +66,7 @@
     "performance",
     "platform",
     "release",
+    "schedules",
     "storage",
     "surface-foundation"
   ],

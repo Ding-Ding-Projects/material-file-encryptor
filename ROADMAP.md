@@ -4,6 +4,8 @@
 - [x] Categorize the three previously loose product articles and retain compatibility links.
 - [x] Enumerate every current feature article in the documentation catalogue.
 - [x] Record bounded native helper status measurements with exact binary hashes and explicit source uncertainty.
+- [x] Publish and independently download the source-built minimal conversion component, preserving its exact source and asset inventories separately from application acceptance.
+- [x] Reject private verification folders from packaged archives and retain the failed local package as diagnostic evidence.
 - [ ] Build and package the final immutable integrated source through both root entrypoints.
 - [ ] Verify current native mounted transfer, cancellation, journal recovery and selected-file activity workflows.
 - [ ] Verify every mounted desktop/browser feature with full language, theme, scale, keyboard, accessibility and persistence evidence.
