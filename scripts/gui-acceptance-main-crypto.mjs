@@ -4,7 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import {fileURLToPath} from 'node:url';
 import {pbkdf2Sync} from 'node:crypto';
-import {command} from './test-renderer-browser.mjs';
+import {command,proveStableRendererTree} from './test-renderer-browser.mjs';
 import {inspectPackagedRendererTarget} from './packaged-renderer-runtime.mjs';
 import {sha256} from './gui-acceptance.mjs';
 
@@ -16,7 +16,8 @@ export async function probePackagedMainCrypto({opened,port,evidenceRoot}){
  const env={...process.env,PYTHONUTF8:'1',MFE_LOWLEVEL_CLIENT:path.join(os.homedir(),'.agents/skills/run-lowlevel-headless-app/scripts/lowlevel_mcp_client.py'),MFE_LOWLEVEL_CLI:cli,MFE_LOWLEVEL_PYTHON:python,MFE_RENDERER_NODE_EXECUTABLE:process.execPath,MFE_RENDERER_PROCESS_BACKEND:'native-v1',MFE_RENDERER_SOURCE_COMMIT:opened.receipt.verifierSourceCommit};
  const input={receipt:opened.statePath,port,verifierSourceCommit:opened.receipt.verifierSourceCommit,executableSha256:target.hashes.executable};
  const helper=path.join(scriptRoot,'gui-acceptance-main-inspector.py');
- const prove=value=>command(python,[helper],value,env,undefined,{timeoutMs:30000});
+ await fs.mkdir(evidenceRoot,{recursive:true});let proofNumber=0;
+ const prove=value=>proveStableRendererTree(async()=>{const number=++proofNumber;let outcome;try{return await command(python,[helper],value,env,result=>{outcome=result;},{timeoutMs:30000});}finally{if(outcome)await fs.writeFile(path.join(evidenceRoot,`main-proof-${number}.json`),JSON.stringify(outcome,null,2),{flag:'wx'});}});
  const before=await prove(input);
  const clientBinding=(await command(python,[path.join(scriptRoot,'test-renderer-browser-cli.py'),'bind-client',opened.statePath],{clientPid:process.pid},env)).clientBinding;
  const socket=new WebSocket(before.target.webSocketDebuggerUrl),pending=new Map();let nextId=0;
