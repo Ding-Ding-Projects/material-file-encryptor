@@ -1,6 +1,6 @@
 # User-requested preservation closeout, 2026-10-11 UTC
 
-The user requested preservation and safe cleanup before full delivery. The current account reading reports 75 percent used and 25 percent remaining in its seven-day window; this is a user-triggered closeout, not the automatic 10-percent-remaining threshold. The full goal remains unfinished.
+The user requested preservation and safe cleanup before full delivery. The full goal remains unfinished.
 
 Verified main f569c52257275cf52532629d359084bae1e836e5 includes c5d412f typed appearance numeric/name fields. The README opening is rewritten around the independently accepted v1.259.1 download, separate source/package/UI/native verdicts and explicit pure Material Design 3 requirement; historical records and image provenance remain retained. All 31 opening local references exist.
 
