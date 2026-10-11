@@ -175,8 +175,8 @@
     {
       "source": "docs/features/ollama/native-host.md",
       "translation": "docs/features/ollama/native-host.zh-HK.md",
-      "sourceSha256": "8debed900e5bb83c5cbfe5c8fe2f6e6c610f491596c4f8c080e5422491716cb2",
-      "translationSha256": "626121fff9385e15096425481cfc5a98d939fbf520b3ae31e89d103043247eb6"
+      "sourceSha256": "2d5f2a62adfadaa7e05012f413068142d26c2e5ef5248d0a6f716ed80619410c",
+      "translationSha256": "8a21ddad1fcb5ab730e22e9b66e88539915bcfeeb0dfbd8a81d4a0682229960b"
     },
     {
       "source": "docs/features/ollama/regression-verification.md",
@@ -217,8 +217,8 @@
     {
       "source": "docs/features/platform/current-integration.md",
       "translation": "docs/features/platform/current-integration.zh-HK.md",
-      "sourceSha256": "ee42e0afa66d20639a877fc497605997055c6e73eda2c131c9b929f3fdbafa67",
-      "translationSha256": "107cec6622b09d3491a57b44c4905ee4ef7509deb51ac9bf17283b22e4b982c6"
+      "sourceSha256": "fafce0c6be608f175840b4181eb0caf31c73277bfd20b6b99715063acd86155c",
+      "translationSha256": "032305b489656def8564061934e39c28705dd79b12bd071dea883eeb2a754228"
     },
     {
       "source": "docs/features/platform/documentation-and-status.md",

@@ -1,12 +1,16 @@
 # Current continuation status
 
-The current source baseline is `d1ca1e4`; the source-bound native receipt identifies `3b9c5b4`. Main has not yet been pushed. All 208 desktop/site delivery rows remain `unverified`. Installed execution, native update and removal are explicitly deferred by the maintainer, not completed or waiting for an environment request.
+The current source baseline is `1faecd9`; the source-bound native receipt identifies `3b9c5b4`. Main `3f3e97c` was pushed and its remote reference verified. All 208 desktop/site delivery rows remain `unverified`. Installed execution, native update and removal are explicitly deferred by the maintainer, not completed or waiting for an environment request.
 
 A real 512 MiB import completed and its full mounted SHA-256 matched. A second 2 GiB file was cancelled during work at 1,419,575,296 bytes through **Cancel unfinished work then quit**. After exit, reopening the encrypted fixture showed only the completed 512 MiB file with its exact hash; the cancelled file was absent, and the fixture was locked again. Owned-process absence and hidden-desktop closure passed. Cancellation acknowledgement latency and the final cryptographic block were not instrumented, so these timings remain unverified.
 
-The PNG GUI decoder remains unavailable while the direct provider loaded from the frozen application archive passes. Diagnosis is ongoing; the direct-provider result does not establish the GUI route. The earlier canonical vocabulary upload used 145 real entries and passed 17 mapped DOM checks plus 17 reload checks. A 1,025-entry synthetic file was accepted. No payload network transfer or export occurred.
+The PNG GUI decoder remains unavailable while the direct provider loaded from the frozen application archive passes. Diagnostic source `1faecd9` awaits a new build; the direct-provider result does not establish the GUI route. The earlier canonical vocabulary upload used 145 real entries and passed 17 mapped DOM checks plus 17 reload checks. A 1,025-entry synthetic file was accepted. No payload network transfer or export occurred.
 
-The broad JavaScript run recorded 586 tests: 564 passed, 2 failed and 20 skipped. Both failures require unavailable Playwright Chromium revision 1248; this is not a green run. The shared-instructions sweep recorded 84 checks: 83 passed, zero failed and one unverified Windows Bash check, with a separate exact Linux pass. These are distinct receipts, not an all-platform green verdict.
+The exact root build and installer entrypoints succeeded for `3f3e97c`; unsigned status and archive CRC checks passed. Actual installed execution remains deferred. In the real mounted GUI, all four Updates controls ran without an exception; native installation remained disabled for the portable application with `INSTALLED_WINDOWS_SQUIRREL_REQUIRED`. This does not establish an installed update.
+
+Deployment `38101869288` was independently checked: all 169 live files matched, all 115 article/wiki documents and 4,662 internal references passed, and the exact repository homepage was correct. Release workflow `38101869261` failed in the component-extraction subprocess and did not publish a release. Repair is in progress; successful website delivery is not successful release publication.
+
+The earlier-source broad JavaScript run recorded 586 tests: 564 passed, 2 failed and 20 skipped. Both failures require unavailable Playwright Chromium revision 1248; this is not a green run. The shared-instructions sweep recorded 84 checks: 83 passed, zero failed and one unverified Windows Bash check, with a separate exact Linux pass. These are distinct receipts, not an all-platform green verdict.
 
 Continue the existing objective without replacing historical evidence. The integration owner controls main and publication. Do not execute installed update or removal while the explicit deferral remains in force.
 

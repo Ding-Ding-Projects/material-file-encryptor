@@ -1,19 +1,23 @@
 # Current integrated workspace checklist
 
-- [x] Record current source `d1ca1e4` and source-bound native receipt `3b9c5b4`, preserving historical evidence.
+- [x] Record current source `1faecd9` and source-bound native receipt `3b9c5b4`, preserving historical evidence.
 - [x] Verify a real 512 MiB import with full mounted SHA-256 comparison for that receipt.
 - [x] Verify cancellation during a second 2 GiB import at 1,419,575,296 bytes, reopening with only the completed file and exact hash, cancelled file absent, and final lock.
 - [x] Verify owned-process absence and hidden-desktop closure for that run.
 - [x] Record canonical upload with 145 real entries, 17 mapped DOM checks, 17 reload checks, and a separately accepted 1,025-entry synthetic file, with no payload network transfer or export.
 - [ ] Instrument cancellation acknowledgement latency and the final cryptographic block.
-- [ ] Diagnose the unavailable PNG GUI decoder; direct frozen-archive provider success does not prove the GUI route.
-- [ ] Complete the broad JavaScript run: current result is 586 total, 564 passed, 2 failed from missing Playwright Chromium revision 1248, and 20 skipped.
+- [ ] Diagnose the unavailable PNG GUI decoder; diagnostic source `1faecd9` awaits a build and direct frozen-archive provider success does not prove the GUI route.
+- [ ] Complete the broad JavaScript run: earlier-source result is 586 total, 564 passed, 2 failed from missing Playwright Chromium revision 1248, and 20 skipped.
 - [ ] Resolve or retain the shared-instructions Windows Bash check as unverified: 84 total, 83 passed, zero failed, one unverified; separate exact Linux check passed.
 - [ ] Complete every required proof dimension independently for all 208 desktop/site inventory rows, all currently unverified.
 - [ ] Complete the full native-scale and language/theme interaction matrix for the final candidate.
 - [ ] Installed execution, native update and removal: explicitly deferred by the maintainer, unverified.
 - [ ] Finish final publication and source-bound release acceptance without substituting historical receipts.
-- [ ] Push and verify main through the integration owner; main has not yet been pushed.
+- [x] Push and verify main `3f3e97c` through the integration owner.
+- [x] Run exact build and installer entrypoints for `3f3e97c`, verifying unsigned status and archive CRC without installed execution.
+- [x] Exercise four Updates controls in the real mounted GUI without exceptions; portable installation remains disabled with `INSTALLED_WINDOWS_SQUIRREL_REQUIRED`.
+- [x] Verify deployment `38101869288`: 169 live files, 115 article/wiki documents, 4,662 internal references and exact repository homepage.
+- [ ] Repair component extraction after release workflow `38101869261` failed without publishing a release.
 
 # Historical source-bound checklists
 
