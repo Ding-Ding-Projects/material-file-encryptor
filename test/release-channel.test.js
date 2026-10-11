@@ -79,3 +79,27 @@ test('promotion command helper resolves the actual executable despite its case-i
   const result=spawnSync('powershell.exe',['-NoProfile','-NonInteractive','-Command',command],{encoding:'utf8',windowsHide:true,timeout:30000});
   assert.equal(result.status,0,result.stderr); assert.match(result.stdout,/ACTUAL_EXECUTABLE_RESOLVED_FUNCTION_COLLISION_PROVED/);
 });
+
+test('existing preview workflow guard executes pure inventory and publication negatives', { skip: process.platform !== 'win32' }, () => {
+  const command = `
+    $ErrorActionPreference='Stop'; $tokens=$null; $errors=$null
+    $root=(Get-Location).Path
+    $ast=[Management.Automation.Language.Parser]::ParseFile((Join-Path $root 'scripts/test-preview-workflow.ps1'),[ref]$tokens,[ref]$errors)
+    if ($errors.Count) { throw 'PREVIEW_GUARD_PARSE_FAILED' }
+    $workflow=Get-Content (Join-Path $root '.github/workflows/windows.yml') -Raw
+    $publisher=Get-Content (Join-Path $root '.github/scripts/publish-preview.ps1') -Raw
+    $inventory=Get-Content (Join-Path $root '.github/workflows/windows.dependencies.json') -Raw | ConvertFrom-Json
+    $checks=0
+    foreach ($statement in $ast.EndBlock.Statements) {
+      if ($statement -is [Management.Automation.Language.FunctionDefinitionAst]) { . ([scriptblock]::Create($statement.Extent.Text)) }
+    }
+    foreach ($statement in $ast.EndBlock.Statements) {
+      $text=$statement.Extent.Text
+      if ($text -match '^Check ' -and !$text.Contains('$timingNotes')) { . ([scriptblock]::Create($text)) }
+    }
+    if ($checks -lt 18) { throw 'PREVIEW_GUARD_COVERAGE_MISSING' }
+    "PURE_PREVIEW_GUARD_CHECKS=$checks"
+  `;
+  const result=spawnSync('powershell.exe',['-NoProfile','-NonInteractive','-Command',command],{encoding:'utf8',windowsHide:true,timeout:30000});
+  assert.equal(result.status,0,result.stderr); assert.match(result.stdout,/PURE_PREVIEW_GUARD_CHECKS=/);
+});
