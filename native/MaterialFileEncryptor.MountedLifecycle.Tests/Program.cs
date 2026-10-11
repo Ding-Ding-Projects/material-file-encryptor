@@ -4,7 +4,7 @@ using System.IO.MemoryMappedFiles;
 using System.Security.Cryptography;
 using System.Text.Json;
 
-if(args.Length==1&&args[0]=="--settlement-self-test"){await DetachSettlement.SelfTest();return;}
+if(args.Length==1&&args[0]=="--settlement-self-test"){await DetachSettlement.SelfTest();await MountedTeardown.SelfTest();return;}
 
 if(args.Length==1&&args[0]=="--teardown-self-test"){await BoundedProcessStop.SelfTest();await ChildDiagnostics.SelfTest();HelperAdmission.SelfTest();return;}
 
@@ -26,7 +26,7 @@ string history=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.
 if(Directory.Exists(history))throw new InvalidOperationException("Synthetic history destination already exists.");
 Directory.CreateDirectory(Path.GetDirectoryName(output)!);await File.WriteAllTextAsync(output+".fixture.json",JsonSerializer.Serialize(new{root,storage,cache,history,executable},new JsonSerializerOptions{WriteIndented=true}));
 string password=Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-var checks=new List<object>();string? drive=null;bool mounted=false,finished=false,cleanup=false;MountedHelper? helper=null;bool writerExitEstablished=true;int? writerId=null;DateTime? writerStartedUtc=null;ProcessStopResult? writerStop=null;string? originalException=null;
+var checks=new List<object>();string? drive=null;bool mounted=false,finished=false,cleanup=false;MountedHelper? helper=null;bool writerExitEstablished=true;int? writerId=null;DateTime? writerStartedUtc=null;ProcessStopResult? writerStop=null;string? originalException=null;bool protocolOutcomeUnknown=false;MountedTeardown.Disposition? helperDisposition=null;
 async Task PersistProgress()=>await File.WriteAllTextAsync(output+".progress.json",JsonSerializer.Serialize(new{sourceCommit,checks,originalException,writerId,writerStartedUtc,writerExitEstablished,writerStop},new JsonSerializerOptions{WriteIndented=true}));
 void Require(bool condition,string message){if(!condition)throw new InvalidOperationException(message);}
 async Task Mount()
@@ -40,8 +40,10 @@ async Task Mount()
 async Task SettleDetach(string phase)
 {
     var result=await DetachSettlement.Run((method,timeout)=>helper!.Call(method,new{},timeout),async observation=>{
+        if(observation.Error is not null)protocolOutcomeUnknown=true;
         checks.Add(new{name="detach-settlement-observation",phase,observation});await PersistProgress();
     });
+    if(result.Terminal is "protocol-timeout" or "protocol-error" or "invalid-response")protocolOutcomeUnknown=true;
     checks.Add(new{name="detach-settlement-terminal",phase,deadlineMilliseconds=DetachSettlement.Deadline.TotalMilliseconds,intervalMilliseconds=DetachSettlement.Interval.TotalMilliseconds,result,verified=result.Terminal=="detached"});
     await PersistProgress();
     if(result.Terminal=="detached")mounted=false;
@@ -157,15 +159,18 @@ finally
     try
     {
         try { await PersistProgress(); } catch(Exception error) { teardownFailed=true;checks.Add(new{name="pre-teardown-receipt-error",verified=false,type=error.GetType().Name}); }
-        if(helper!=null&&writerExitEstablished)
+        if(helper!=null)
         {
-            try{if(mounted){var locked=await helper.Call("forceLock",new{});checks.Add(new{name="teardown-force-lock-response",response=locked});mounted=!locked.GetProperty("locked").GetBoolean();}}
-            catch(Exception error){teardownFailed=true;checks.Add(new{name="helper-force-lock-error",verified=false,type=error.GetType().Name});}
-            var helperStop=await helper.Stop();
-            if(!helperStop.ExitEstablished||helperStop.Errors.Length!=0)teardownFailed=true;
-            checks.Add(new{name="helper-stop",verified=helperStop.ExitEstablished&&helperStop.Errors.Length==0,helperStop});
+            helperDisposition=await MountedTeardown.Run(writerExitEstablished,()=>protocolOutcomeUnknown||helper.OutcomeUnknown,async()=>{
+                if(mounted){var locked=await helper.Call("forceLock",new{});checks.Add(new{name="teardown-force-lock-response",response=locked});mounted=!locked.GetProperty("locked").GetBoolean();}
+            },async()=>{
+                var helperStop=await helper.Stop();
+                if(!helperStop.ExitEstablished||helperStop.Errors.Length!=0)teardownFailed=true;
+                checks.Add(new{name="helper-stop",verified=helperStop.ExitEstablished&&helperStop.Errors.Length==0,helperStop});
+            });
+            if(helperDisposition.Retained||helperDisposition.Errors.Length!=0)teardownFailed=true;
+            checks.Add(new{name="helper-disposition",verified=!helperDisposition.Retained,helperDisposition,writerId,writerStartedUtc});
         }
-        else if(helper!=null){teardownFailed=true;checks.Add(new{name="helper-retained-for-live-or-unknown-writer",verified=false,writerId,writerStartedUtc});}
         driveAbsent=drive is null||!Directory.Exists(drive+"\\");
         if(writerExitEstablished&&!teardownFailed&&!mounted&&driveAbsent){FixtureCleanup.DeleteOwned(root);FixtureCleanup.DeleteOwned(history);cleanup=!Directory.Exists(root)&&!Directory.Exists(history);}
     }
@@ -175,19 +180,42 @@ finally
         bool complete=finished&&cleanup&&!teardownFailed&&writerExitEstablished;
         string? helperSha256=null;
         try{helperSha256=Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(executable)));}catch(Exception error){complete=false;checks.Add(new{name="helper-hash-error",verified=false,type=error.GetType().Name});}
-        var report=new{schemaVersion=1,sourceCommit,helperSha256,admittedHelperSha256,route="native-helper-protocol-and-win32-mapped-io",guiUsed=false,originalException,checks,teardown=new{mounted,driveAbsent,ownedFixtureRemoved=cleanup,helperId=helper?.ProcessId,helperStartedUtc=helper?.StartedUtc,writerId,writerStartedUtc,writerExitEstablished,writerStop},complete};
+        using var runnerIdentity=Process.GetCurrentProcess();
+        var runner=new{pid=runnerIdentity.Id,startedUtc=runnerIdentity.StartTime.ToUniversalTime(),executable=runnerIdentity.MainModule?.FileName};
+        var report=new{schemaVersion=1,runner,sourceCommit,helperSha256,admittedHelperSha256,route="native-helper-protocol-and-win32-mapped-io",guiUsed=false,originalException,checks,teardown=new{mounted,mountState=(protocolOutcomeUnknown||helper?.OutcomeUnknown==true)?"unknown":"last-confirmed",driveAbsent,protocolOutcomeUnknown=protocolOutcomeUnknown||helper?.OutcomeUnknown==true,helperDisposition,ownedFixtureRemoved=cleanup,helperId=helper?.ProcessId,helperStartedUtc=helper?.StartedUtc,helperExecutable=executable,runnerHoldRequired=helperDisposition?.Retained==true,recoveryDisposition=helperDisposition?.Retained==true?"Retain runner, helper, original pipes and fixture for separately reviewed exact-owned recovery; no further detach, stop or deletion.":null,writerId,writerStartedUtc,writerExitEstablished,writerStop},complete};
         string reportJson=JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true});
-        try{await File.WriteAllTextAsync(output,reportJson);}finally{Console.WriteLine(reportJson);Environment.ExitCode=complete?0:2;}
+        try{await File.WriteAllTextAsync(output,reportJson);}finally{
+            Console.WriteLine(reportJson);Environment.ExitCode=complete?0:2;
+            if(helperDisposition?.Retained==true&&helper is not null)
+            {
+                int holdReceipt=0;
+                await RetainedRunnerHold.Run(helper.OwnedExit(),helper.OriginalOutcome,async(state,response)=>{
+                    string retainedJson=JsonSerializer.Serialize(new{schemaVersion=1,runner,helperId=helper.ProcessId,helperStartedUtc=helper.StartedUtc,helperExecutable=executable,fixture=root,state,response,atUtc=DateTimeOffset.UtcNow,complete=false,acceptance="incomplete",recovery="Separate exact-owned review required; no detach, stop or deletion issued."},new JsonSerializerOptions{WriteIndented=true});
+                    // A receipt failure never converts retention into implicit EOF.
+                    try{await File.WriteAllTextAsync(output+".hold-"+(++holdReceipt)+".json",retainedJson);}catch(Exception error){Console.Error.WriteLine("Retention receipt write failed: "+error.GetType().Name);}
+                });
+            }
+        }
     }
 }
 
 sealed class MountedHelper:IAsyncDisposable
 {
     readonly Process process;readonly ConcurrentDictionary<long,TaskCompletionSource<JsonElement>> pending=new();readonly Task reader;long sequence;
+    internal Task<JsonElement>? OriginalOutcome { get; private set; }
+    internal Task OwnedExit()=>process.WaitForExitAsync();
+    internal bool OutcomeUnknown { get; private set; }
     internal int ProcessId { get; private set; }
     internal DateTime StartedUtc { get; private set; }
     internal MountedHelper(string executable,string expectedSha256){HelperAdmission.Verify(executable,expectedSha256);process=Process.Start(new ProcessStartInfo(executable){UseShellExecute=false,CreateNoWindow=true,RedirectStandardInput=true,RedirectStandardOutput=true,RedirectStandardError=true})!;ProcessId=process.Id;StartedUtc=process.StartTime.ToUniversalTime();_=process.StandardError.ReadToEndAsync();reader=Task.Run(async()=>{string? line;while((line=await process.StandardOutput.ReadLineAsync())!=null){using var document=JsonDocument.Parse(line);if(!document.RootElement.TryGetProperty("id",out var id)||id.ValueKind!=JsonValueKind.Number)continue;if(pending.TryRemove(id.GetInt64(),out var completion)){if(document.RootElement.TryGetProperty("error",out var error))completion.TrySetException(new IOException(error.GetString()));else completion.TrySetResult(document.RootElement.GetProperty("result").Clone());}}});}
-    internal async Task<JsonElement> Call(string method,object parameters,TimeSpan? timeout=null){long id=Interlocked.Increment(ref sequence);var completion=new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);pending[id]=completion;await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(new{id,method,@params=parameters}));await process.StandardInput.FlushAsync();return await completion.Task.WaitAsync(timeout??TimeSpan.FromSeconds(20));}
+    internal async Task<JsonElement> Call(string method,object parameters,TimeSpan? timeout=null)
+    {
+        if(OutcomeUnknown)throw new InvalidOperationException("Original protocol outcome is unknown; further requests are prohibited.");
+        long id=Interlocked.Increment(ref sequence);var completion=new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);pending[id]=completion;OriginalOutcome=completion.Task;
+        try{await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(new{id,method,@params=parameters}));await process.StandardInput.FlushAsync();return await completion.Task.WaitAsync(timeout??TimeSpan.FromSeconds(20));}
+        catch{OutcomeUnknown=true;throw;}
+    }
+
     internal async Task<ProcessStopResult> Stop()
     {
         var result=await BoundedProcessStop.Run(process,()=>process.StandardInput.Close());
