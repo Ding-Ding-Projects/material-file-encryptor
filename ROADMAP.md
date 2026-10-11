@@ -1,3 +1,8 @@
+- [x] Independently validate corrected-source raw capture integrity while recording its missed requested scene.
+- [x] Review stable-target, separate-navigation and post-rerender current-control capture mechanics. Source only.
+- [ ] Run the corrected producer against exact2f59 static bytes and inspect actual navigation/Appearance/dark pixels.
+- [ ] Replace remaining native visible preferences controls with registered Material adapters and preserve original operation semantics.
+
 # Preserved native contribution integration, 2026-10-11 UTC
 
 - [x] Independently prove all four preserved verifier patches already have exact equivalent source in main.

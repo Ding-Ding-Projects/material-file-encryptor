@@ -1,3 +1,13 @@
+# Corrected-source capture limitation, 2026-10-11 UTC
+
+Normal v1.232.1/source2f59 independently passed five downloaded assets,763 CRC/decompression entries,664 actual Squirrel payload files, exact Setup embedding,5520 ASAR entries,6271 privacy entries with zero rejected paths, unsigned targets and immutable helper/source/config bookends. Run38144574559 and actual exact-current-main promotion succeeded. README now points to this verified version and its225-file/8288-reference live delivery. Installed and rendered acceptance remain separate.
+
+Run38144665236 admitted exact2f59 static bytes and completed sandboxed capture with process/profile/server closure, but the requested scene was not observed. Appearance matched0, no dark request occurred, and both320x844 PNGs show the upper light preferences while the shared host/tabs remain below the viewport. Independent local archive/PNG/measurement validation and five tampered negatives passed; sceneAcceptance is explicitly false. No current visual proof or image promotion follows from this run.
+
+The reviewed producer correction targets the stable Appearance ID, scrolls through normal controls, captures navigation separately, and freshly observes the replacement theme control after theme-triggered rerender. Missing/offscreen/unobserved states keep diagnostic filenames. Product rendering source remains2f59; the next producer must use the same independently admitted static run38144574509, artifact11703943545 and ZIP1e5a28d803f052ba725975c4b6c8e6171ec64aead3dd45eb6b3cc7b0f3ef576d.
+
+Pure Material Design 3 remains unfinished: shared native field/action factories and public preference controls still need registered adapters with their original validation, cancellation, localization and storage authority. A real file picker remains the transport behind a registered visible action. Full matrix draft is preserved unexecuted until the baseline scene works.
+
 # Preferences source correction and native admission, 2026-10-11 UTC
 
 Independently reviewed candidate ec5b81b9e0f8a2c11c40e1d36c08fdd8c44ee195 restores shared palette/font authority and genuine registered Material tabs. Stable instance-scoped tab/panel associations, optional per-tab guidance, original selection/reset/disposal behavior and shared five-column geometry passed focused mounted and negative checks. The normal merge retains later main documentation and native ancestry. This is source acceptance only; rebuilt current pixels and pure Material Design 3 conformance remain pending.

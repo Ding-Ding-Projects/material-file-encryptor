@@ -2,7 +2,7 @@
 
 **An encrypted drive for Windows Explorer, with local recovery and an encrypted offline cache.** Work through a mounted drive while the application stores encrypted file data and metadata in your chosen storage folder. A native .NET engine and WinFsp adapter handle the drive; the desktop workspace brings transfers, recovery, settings and documentation together.
 
-[Download Windows x64 installer · v1.221.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/download/v1.221.1/MaterialFileEncryptor-Setup.exe) · [Read the documentation](https://ding-ding-projects.github.io/material-file-encryptor/) · [Release and provenance](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.221.1) · [中文文件](docs/features/README.zh-HK.md)
+[Download Windows x64 installer · v1.232.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/download/v1.232.1/MaterialFileEncryptor-Setup.exe) · [Read the documentation](https://ding-ding-projects.github.io/material-file-encryptor/) · [Release and provenance](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.232.1) · [中文文件](docs/features/README.zh-HK.md)
 
 > **Development status:** the current package and documentation delivery are independently verified. Installed startup, real updating, restart continuity and current rebuilt interface acceptance are unfinished. The complete delivery inventory contains **105 feature IDs and 210 desktop/website rows**, all still unverified as complete surfaces. Source components and focused checks are not full product acceptance. The interface target is Material Design 3 throughout; implementation is partial and complete visual conformance is not yet verified.
 
@@ -13,6 +13,8 @@ The [server preparation source](docs/features/server-manager/preparation.md) add
 The reviewed [typed keyframe inspector](docs/features/interface/motion-keyframes.md) adds explicit offset/absolute/relative time, numeric units, selection and strict group movement. Its current-layer and layer-lock handling survives storage rollback; direct and guided edits share the original mutation and history route. Source checks pass; full timeline/transition/path authoring and rendered acceptance remain unfinished.
 
 The reviewed [image-placement controls](docs/features/appearance/image-placement.md) use explicit fit, crop and focal geometry with current-layer persistence, retry, locks and Undo. The [transition-property editor](docs/features/interface/transition-properties.md) retains independent endpoints through explicit versioned migration. These are source-verified workflows; full compositor pixels, per-property timing and complete rendered editing remain unfinished.
+
+The shared preferences source now projects existing palette and font settings into registered Material tabs and preserves optional guidance, accessible associations and cancellation. The current capture producer is being corrected after a source-bound run missed the intended editor scene. Native fields and actions still need genuine registered adapters; complete Material Design 3 and current visual acceptance remain unfinished.
 
 ## What you can work on
 
@@ -25,14 +27,14 @@ The repository also contains local conversion, local-model and server-management
 
 ## Current verification at a glance
 
-Delivery below is bound to source [`7af86621d60b87c6f3c1da8dd9188bccef72154d`](https://github.com/Ding-Ding-Projects/material-file-encryptor/commit/7af86621d60b87c6f3c1da8dd9188bccef72154d), not whatever a moving branch contains later.
+Delivery below is bound to source [`2f59f45763501a112e77b46e3e1915e0fef81b37`](https://github.com/Ding-Ding-Projects/material-file-encryptor/commit/2f59f45763501a112e77b46e3e1915e0fef81b37), not whatever a moving branch contains later.
 
 | Area | Verified result | Boundary |
 |---|---|---|
-| Production and release | Both exact root entrypoints passed [run 38140488226](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38140488226); normal **v1.221.1**, exact source and five assets verified | A release is not installed execution |
+| Production and release | Both exact root entrypoints passed [run 38144574559](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38144574559); normal **v1.232.1**, exact source and five assets verified | A release is not installed execution |
 | Downloaded package | All five hosted assets match size/hash/provenance/feed; 763 CRC/decompression entries, 664 actual Squirrel payload files and exact Setup embedding passed | Setup was inspected, not executed |
-| Unsigned delivery and privacy | Setup, application and native host are unsigned; 6,269 privacy entries have zero rejected paths, including 5,518 ASAR entries; verification-only payloads are absent | Unsigned publisher warnings remain expected |
-| Live documentation | [Deployment 38140488168](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38140488168): 225 files, 60,613,583 bytes and 8,272 internal references verified, no missing files/anchors; provenance and About homepage match | Content delivery is not browser interaction or rendered font proof |
+| Unsigned delivery and privacy | Setup, application and native host are unsigned; 6,271 privacy entries have zero rejected paths, including 5,520 ASAR entries; verification-only payloads are absent | Unsigned publisher warnings remain expected |
+| Live documentation | [Deployment 38144574509](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38144574509): 225 files, 60,678,334 bytes and 8,288 internal references verified, no missing files/anchors; provenance and About homepage match | Content delivery is not browser interaction or rendered font proof |
 | Native sharing lease | Separate immutable source `66b21b8` passed eight actual compiled synthetic boundaries | Product IPC, provider availability and full server management remain pending |
 | Installed lifecycle and current UI | **Unfinished**: automatic startup/download/ready/Later, real installed update, restart continuity, current captures and complete-surface acceptance | Historical results retain their original sources |
 
