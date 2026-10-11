@@ -1,3 +1,5 @@
+import {createStartupSurprise} from '../shared/local-ux/surprise.js';
+import {createStartupPresentation} from './features/shell/startup-surprise.js';
 import {createNotificationNarration} from './features/shell/notification-narration.js';
 import {control,prepareControl,controlKind,CONTROL_SELECTOR} from '../shared/surface/controls.js';
 import {resolveGuidanceArticle} from '../shared/surface/control-guidance.js';
@@ -38,6 +40,14 @@ const localSettings=settingsIntegrity.store;
 if(localSettings.provenance==='default')try{localSettings.update({...LOCAL_DEFAULTS,...preferences,vocabulary:undefined},'existing preferences migrated');}catch{}
 let effectiveLocalSettings=localSettings.get();
 let screenReaderActive=null;
+let startupReady=false,statusReady=false,startupStarted=false,updateSnapshot=null;
+let firstLaunch=true;try{firstLaunch=localStorage.getItem('mfe.startup.completed.v1')!=='1';}catch{}
+const startupState=()=>{const operations=state?.operations||[],rows=Array.isArray(operations)?operations:Object.values(operations);return{school:effectiveLocalSettings.school,firstRun:firstLaunch,busy:busy||rows.some(row=>!['completed','cancelled','failed'].includes(row.state||row.status)),error:!$('main-error')?.hidden||rows.some(row=>(row.state||row.status)==='failed'),updating:!updateSnapshot||!['idle','current','unavailable'].includes(updateSnapshot.state),quiet:effectiveLocalSettings.attention?.lowStimulation===true||Number(effectiveLocalSettings.attention?.snoozedUntil)>Date.now(),reducedMotion:effectiveLocalSettings.motion==='reduced'||matchMedia('(prefers-reduced-motion: reduce)').matches};};
+const startupPresentation=createStartupPresentation({getState:startupState});
+const startupSurprise=createStartupSurprise({getState:startupState,show:details=>startupPresentation.show(details),resolvePublishedDish:()=>featureRequest('surprise','resolvePublishedDish',{})});
+function attemptStartup(){if(startupStarted||!startupReady||!statusReady||!updateSnapshot)return;startupStarted=true;void startupSurprise.attempt().catch(()=>{});try{localStorage.setItem('mfe.startup.completed.v1','1');}catch{}}
+function acceptUpdateSnapshot(value){updateSnapshot=value?.snapshot||value;const s=startupState();if(s.updating||s.error||s.busy||s.quiet||s.school?.enabled)startupPresentation.dismiss();attemptStartup();return value;}
+
 const narrationEvents=createNotificationNarration({getNarrator:()=>featureMounts.get('personalization')?.narrator,getSettings:()=>effectiveLocalSettings,translate:(source,options)=>t(source,options),isScreenReaderActive:()=>screenReaderActive!==false,onUnavailable:()=>foundation?.notify({title:'Narration unavailable',message:'Open Settings, Personalization, then Language to select an installed voice. Visual notifications remain available.',level:'warning',narration:false})});
 function forceLockOptions(){return {language:effectiveLocalSettings.school.enabled?'en':preferences.language};}
 const enhancedLabels={'Notification history reset':'通知記錄已重設','Previous notification text was cleared because its original wording could not be verified.':'舊有通知文字已清除，因為無法確認原有用詞。','Export queued. Cancel unfinished work from Operations.':'匯出已加入佇列。可以在操作面板取消未完成工作。','File details':'檔案詳情','Converter':'轉換工具','Local models':'本機模型','Personalization':'個人化','Local access':'本機存取','Documentation':'說明文件','Changelog':'更新記錄','Status':'狀態','Load more files':'載入更多檔案','Retry loading files':'重試載入檔案','Cancel operation':'取消操作','Operations':'操作','Force lock':'強制鎖定','Quit application':'結束程式','Feature unavailable':'功能無法使用','Refresh':'重新整理','Search settings':'搜尋設定'};
@@ -106,7 +116,7 @@ function operation(label) {
  $('operation').hidden = !label;
  if (label) $('operation-text').textContent = t(label,{message:true});
 }
-async function refresh() { state = await api.status(); render(); }
+async function refresh() { state = await api.status(); render();statusReady=true;attemptStartup(); }
 async function run(label, task, success, inDialog = false) {
  if (busy) return;
  busy = true; $('main-error').hidden = true; $('dialog-error').hidden = true; operation(label); renderAvailability();
@@ -411,7 +421,7 @@ setupEnhancedWorkspace();
 applyPreferences(); renderAvailability();
 if (!api) { setText('vault-badge','Not mounted'); showError('The desktop bridge is unavailable. Open this interface through Material File Encryptor.'); }
 else {
- const unsubscribe = api.onStatus(next => { state = next; render(); featureMounts.get('storage')?.refresh?.(); }); onPageDiscard(window,() => unsubscribe?.());
+ const unsubscribe = api.onStatus(next => { state = next; render(); const startup=startupState();if(startup.busy||startup.error)startupPresentation.dismiss(); featureMounts.get('storage')?.refresh?.(); }); onPageDiscard(window,() => unsubscribe?.());
  refresh().catch(error => showError(error));
 }
 
@@ -565,7 +575,7 @@ function setupEnhancedWorkspace() {
  const settingsPrivateHistory=createPrivateHistory({storage:localStorage,credentialStore:historyCredentialStore});settingsIntegrity.connectHistory(settingsPrivateHistory);const confirmationLifetime=createSettingsConfirmationLifetime({target:window,isAuthenticated:()=>featureMounts.get('access')?.authenticated===true,isHistoryUnlocked:()=>settingsPrivateHistory.unlocked});workspaceDisposers.push(()=>confirmationLifetime.destroy());let historyApproval=null;const pruneHistory=settingsPrivateHistory.prune.bind(settingsPrivateHistory);settingsPrivateHistory.prune=options=>{const signal=historyApproval;historyApproval=null;if(!signal)throw Error('Confirm history pruning before continuing.');return pruneHistory({...options,signal,validate:()=>confirmationLifetime.validate(signal,{history:true})});};
  const confirmSettingsDestructive=async({action,description})=>{const signal=confirmationLifetime.signal,validate=()=>confirmationLifetime.validate(signal,{history:true});validate();const result=await requestSuperConfirmation(document.body,{action,affected:description||action,translate:t,signal,confirmationOnly:true,validateConfirmation:validate});if(!result.confirmed)return false;validate();historyApproval=signal;return true;};
  const mounts=[
-  mountFeature('updates','Updates','更新',()=>import('./features/updates/index.js'),(module,root)=>module.mountUpdates(root,{translate:t,language:preferences.language,services:{request:(action,payload)=>featureRequest('updates',action,{...payload,language:preferences.language}),subscribe:callback=>api.onFeatureEvent?.('updates',callback)}})),
+  mountFeature('updates','Updates','更新',()=>import('./features/updates/index.js'),(module,root)=>module.mountUpdates(root,{translate:t,language:preferences.language,services:{request:(action,payload)=>featureRequest('updates',action,{...payload,language:preferences.language}).then(acceptUpdateSnapshot),subscribe:callback=>api.onFeatureEvent?.('updates',event=>{acceptUpdateSnapshot(event);callback(event);})}})),
   mountFeature('workflow','Documents and downloads','文件與下載',()=>import('../shared/surface/workflow-tools.js'),(module,root)=>module.mount(root,{translate:t,services:{storage:localStorage,getLanguage:()=>preferences.language,request:(action,payload)=>featureRequest('workflow',action,payload),subscribe:callback=>api.onFeatureEvent?.('workflow',callback)}})),
   mountFeature('converter','Converter','轉換工具',()=>import('./features/converter/index.js'),(module,root)=>module.mountConverter(root,{translate:t,getLanguage:()=>preferences.language,services:{getLanguage:()=>preferences.language,converter:Object.fromEntries(['catalog','inspect','enqueue','list','control'].map(action=>[action,payload=>featureRequest('converter',action,payload)])),pickSources:()=>featureRequest('converter','pickSources'),pickDestination:payload=>featureRequest('converter','pickDestination',payload),pickDestinationDirectory:()=>featureRequest('converter','pickDestinationDirectory'),confirmOverwrite:()=>confirmAction('Replace output file?','The selected output file will be replaced. Source files remain unchanged.','Replace')}})),
   mountFeature('ollama','Local models','本機模型',()=>import('./features/ollama/index.js'),(module,root)=>module.mountOllama(root,{translate:t,getLanguage:()=>preferences.language,confirm:confirmFeature,services:{getLanguage:()=>preferences.language,ollama:{configureRuntime:payload=>featureRequest('ollama','configureRuntime',payload),request:(action,payload)=>featureRequest('ollama',action,payload),subscribe:callback=>api.onFeatureEvent?.('ollama',callback)}}})),
@@ -577,8 +587,8 @@ function setupEnhancedWorkspace() {
   mountFeature('storage','Storage maintenance','儲存維護',()=>import('./features/storage-maintenance/index.js'),(module,root)=>module.mountStorageMaintenance(root,{translate:t,language:preferences.language,services:{storageDiagnostics:()=>api.storageDiagnostics(),startPacking:payload=>api.startPacking(payload),operations:()=>api.operations(),cancelOperation:id=>api.cancelOperation(id)}})),
   mountFeature('status','Status','狀態',()=>import('./features/status/index.js'),(module,root)=>module.mountStatus(root,{translate:t,getStatus:()=>featureRequest('status','status')}))
  ];
- Promise.allSettled(mounts).then(()=>{foundation.shell.activate(view);refreshPaletteInventory();});
+ Promise.allSettled(mounts).then(()=>{foundation.shell.activate(view);refreshPaletteInventory();startupReady=true;attemptStartup();});
  foundation.registerCommands([{id:'vault:force-lock',label:{en:'Force lock',yue:'強制鎖定'},run:()=>run('Locking drive…',()=>api.forceLock(forceLockOptions()))},{id:'application:quit',label:{en:'Quit application',yue:'結束程式'},run:()=>api.quit?api.quit():api.windowControl('close')}]);
  const paletteShortcut=event=>{if((event.ctrlKey||event.metaKey)&&event.shiftKey&&event.key.toLowerCase()==='f')refreshPaletteInventory();};document.addEventListener('keydown',paletteShortcut,true);workspaceDisposers.push(()=>document.removeEventListener('keydown',paletteShortcut,true));
- onPageDiscard(window,()=>{narrationEvents.destroy();privateWordingView.destroy();settingsIntegrity.destroy();fileDetails?.destroy();foundation?.destroy();for(const module of featureMounts.values())module.destroy?.();for(const dispose of workspaceDisposers)dispose();});
+ onPageDiscard(window,()=>{narrationEvents.destroy();startupPresentation.destroy();privateWordingView.destroy();settingsIntegrity.destroy();fileDetails?.destroy();foundation?.destroy();for(const module of featureMounts.values())module.destroy?.();for(const dispose of workspaceDisposers)dispose();});
 }

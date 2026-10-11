@@ -25,3 +25,7 @@ New drive forms default to 80 MiB (83,886,080 bytes). Existing stored drive valu
 ## Notification narration
 
 Opt-in narration receives canonical notification and operation changes through the existing serialized speech engine. Byte-progress changes do not repeat speech. Quiet attention settings and an unknown or enabled runtime accessibility-support state suppress narration without hiding visual notifications. Missing voices or speech failures produce one visual recovery notice directing the user to Personalization language settings. The runtime accessibility signal is conservative and does not claim to identify a particular screen reader.
+
+## Startup presentation
+
+After initial status and update state are known, an eligible returning launch makes one ten-percent draw through the shared startup helper. School mode, first launch, active work, failures, update activity and quiet attention settings suppress it. The host resolves the approved public catalogue and returns verified bounded image bytes; the renderer performs no image network request. State is checked again after resolution. A dismissible card shows the bilingual dish name for at most five seconds without moving focus, and is removed when the application becomes busy or quiet. Missing metadata or images leave the normal workspace unchanged.
