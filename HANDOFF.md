@@ -326,3 +326,7 @@ Verification: [source-bound results](docs/features/release/preview-verification.
 ## Gallery pipeline candidate
 
 The gallery pipeline now groups the unchanged 14 historical originals by workflow, projects only approved public metadata and preserves every occurrence of identical image bytes. Two exclusions remain explicit. Twenty-seven focused checks pass, including a synthetic 445-occurrence case and privacy/search rejection regressions. Independent source review is complete with no remaining findings. Rendered acceptance and main integration remain pending. No current runtime original or new publication is claimed. See [the evidence contract](docs/features/desktop/runtime-evidence.md#reviewed-gallery-publication-pipeline).
+
+## Delivery-reference refresh
+
+The current review uses parent baseline `785fdf2` with ready revisions `4ca05780`, `455153bd`, `86c5cec`, `6ac06935` and `5f02f6c`. `contracts/feature-delivery.json` retains 208 unverified rows; 88 rows now carry concrete source mappings for 44 requirements on each surface. All 95 distinct referenced files resolve to an available reviewed commit. Ready source is not automatically described as integrated parent behavior, and no build interaction or screenshot is inferred. See [current integration boundaries](docs/features/platform/current-integration.md) before choosing the next verification step.

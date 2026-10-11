@@ -1,28 +1,53 @@
 # Current integration and verification status
 
-This source snapshot was reviewed on 2026-10-11 UTC. The parent checkout reported commit `3b145cc99ed5e711ace55998fd07533d199b0227` with additional active, uncommitted feature-bridge changes. Those active files were read but not changed by this documentation pass. This is a source-integration record, not a release or full runtime verdict.
+This source review uses parent baseline `785fdf2` and the ready source revisions listed below. A ready revision is not evidence that the parent has integrated it, that packaging includes it, or that its runtime behavior passed. All 208 desktop/site delivery rows remain `unverified`.
 
-## Implemented source paths
+## Reviewed source sets
 
-| Area | Current source behavior | Evidence boundary |
+| Revision | Source change | Integration boundary |
 | --- | --- | --- |
-| Native drive lifecycle | Format 3 blocks and encrypted journal, managed import/export operations, cancellation, force-lock admission, revision paging and selected-file activity | Native source and focused tests are present. Current packaged Explorer workflows and installed lifecycle remain unverified. |
-| Shared workspace | Material Web-backed tabs, groups, scoped search, regex workbench, command palette and notification center | Module tests and source wiring exist. Complete keyboard, accessibility, language, theme and scale coverage remains unverified. |
-| Personalization | Language/style controls, narration, attention modes, schedules, local history and appearance editor | Modules are mounted from the desktop host. External scheduling is explicitly unavailable without a configured provider. Full shared-state propagation and all-message coverage remain unverified. |
-| Local access | Protected-record adapter, local profile, element locks, authenticator and support desk | Source hooks are connected. These convenience controls do not replace vault encryption or provide protection against a user controlling the renderer. Complete factor/wizard/export coverage remains unverified. |
-| Converter | Capability grants, persistent queue, bounded adapters and AppContainer launcher contract | Unsupported adapters stay unavailable. Packaged operating-system isolation and current integrated runtime require their own proof. |
-| Local models | Official catalog/cache, installed models, hardware estimates, pull cart, local chat and profile contracts | Host bridge and renderer mount exist. No download, model-server installation, real GPU measurement or complete integration acceptance is implied. |
-| Documentation and changelog | Full local article/wiki catalogue, safe Markdown, local images, internal routes, search, filters and export | Six focused checks and an isolated-browser interaction test passed at the lane's recorded source. Production packaging and full visual acceptance remain unverified. |
-| Status | Official client adapter and allowlisted renderer snapshot | Configured state is not successful delivery. Missing enrollment remains unavailable. No live authenticated publication is claimed. |
+| `785fdf2` | Parent baseline keeps translated display wording out of persisted notification and tab records | Canonical-storage repair is source evidence, not a completed private-data or language runtime audit |
+| `4ca05780` | Persistent panel move/resize/reset, notification progress and recovery actions, selected notification operations, opt-in local audio and transient control restoration | Ready source and deterministic fixtures; production host registration, callback behavior and geometry remain unverified |
+| `455153bd` | Disconnected search cancellation and stale palette-result handling | Ready lifecycle repair; full browser/desktop interaction remains unverified |
+| `86c5cec` | One-activation lock grants, selected authenticator/ticket operations, authenticated metadata exports and local clock-offset diagnostics | Ready source; no full factor, camera, bulk-cancellation or production accessibility verdict |
+| `6ac06935` | Close pending record dialogs when local profile logs out | Ready invalidation repair; final production logout interactions remain unverified |
+| `5f02f6c` | Guided local runtime recovery, native profile recipes and attachment handling | Ready source; installer navigation, process startup, executable validation and model operations still need final host/runtime proof |
 
-## Delivery inventory
+## Existing implemented modules
 
-`contracts/feature-delivery.json` contains 104 stable feature identifiers for desktop and site independently, 208 rows. Every row remains `unverified`. Partial module implementation and tests do not satisfy the full requirements for documentation, localization, persistence, negative regression and built evidence on both surfaces.
+- Native storage has format 3 authenticated blocks, journal records, managed transfer operations, cancellation, revision paging, file history and encrypted activity. The source-bound ordinary mounted checks and adverse concurrent-detach result retain their separate meanings.
+- Shared workspace modules provide tabs/groups, scoped worker-based regular-expression search, palette controls, notifications and registered Material components. The ready source adds panel geometry and actionable notifications.
+- Personalization modules provide language/style settings, narration, schedules, attention modes, local encrypted settings history, appearance layers and logo conversion. An external schedule remains unavailable without a paired trusted provider.
+- Local access modules provide local profiles, element lock policies, authenticators, recovery waiting and support records. The ready source adds one-activation sessions and selected-record management. These convenience controls do not replace file encryption or protect against control of the renderer.
+- The converter provides a persistent bounded queue, a limited adapter set and an operating-system sandbox contract. Unsupported adapters remain unavailable.
+- Local model modules provide catalog/cache, model inventory, pull cart, local chat and profile contracts. The ready source adds guided runtime recovery and native recipes.
+- Documentation modules provide the local article/wiki catalogue, safe Markdown, local images, internal routes, worker search, changelog filters and export. Their isolated-browser fixture is not proof of final package or site delivery.
+- Status uses the official client adapter and a redacted snapshot. Configuration is not authenticated delivery, and no complete live status interaction is claimed here.
 
-## Measurements
+## How to read the delivery inventory
 
-The [native helper measurement](../performance/native-helper.md) records five process starts and 100 sequential warm status requests against existing packaged bytes. The exact executable and assembly hashes are retained. Their source binding is unknown, so these measurements do not validate the current native source, encryption throughput or GUI responsiveness.
+`contracts/feature-delivery.json` has 104 stable IDs for desktop and site independently. Its 88 mapped rows identify partial source work for 44 requirements on each surface. Each referenced path is associated with an available reviewed commit in `referenceSources`. Ready revisions are stated in the review metadata rather than silently described as parent code.
 
-## Remaining release work
+`implementation`, `documentation`, `localization`, `tests` and `persistence` are source pointers. A localization path does not certify complete translated copy; a persistence path does not certify every restart flow; a focused-test path does not say the suite was rerun during this inventory pass. Every `evidence` array remains empty, and every `builtInteraction` and `visualEvidence` value remains `unverified`. Nothing in this update marks a requirement complete.
 
-Build and package the final immutable integrated source through the root entrypoints. Exercise the real desktop and browser surfaces with source-bound evidence, including language, theme, scale, keyboard, access and persistence flows. Verify native mounted workflows and downloaded installed lifecycle separately. Rebuild documentation from the complete catalogue and verify any actual deployment before updating live-delivery claims. Preserve historical unsuccessful evidence and its original source boundaries.
+The unmapped rows are retained explicitly. An empty mapping means this review did not establish a complete implementation/proof map, not that all related project files are absent. Repository and release duties must be assessed separately against their real records.
+
+## Explicit remaining implementation and evidence gaps
+
+- Pure registered Material controls on every surface, full reference parity, complete language/style extremes, all scale/viewport combinations and current screenshots are not established.
+- Universal per-element context menus, protected-action wiring, guided forms, preset coverage, settings explanations and all-format export are not established for every element and workflow.
+- Advanced appearance capabilities still lack complete freehand drawing, independent raster groups, embedded smart objects, mesh warp, guides and verified isolated image decoding.
+- Cross-application shared settings, authenticated external schedule providers and complete native settings-history integration remain incomplete or unverified.
+- Waiting challenges remain local convenience behavior. Authoritative service-side challenge enforcement, all recovery flows and the complete production access matrix are not established.
+- Conversion support is limited to available adapters; general image, media, archive and spreadsheet conversion remains unavailable without bundled implementations and proof.
+- Local runtime recovery/profile recipes need final host wiring and verification. Real installation, model download, chat, hardware-fit and persisted profile behavior are not inferred from source fixtures.
+- Universal external-editor handoff, browser download handoff and forge-publishing workflows have no complete mapped delivery proof in this review.
+- Full live Status Hub registration, questions/replies, terminal delivery, notification bridge, panic destinations and display endpoints remain unverified or unavailable.
+- New release, downloaded installation, automatic updates, complete documentation deployment and exact homepage readback require separate current evidence. Historical records remain historical.
+- Concurrent forced detach with a mapped writer remains unresolved. Ten passing ordinary mounted checks do not prove full force-lock safety.
+
+## Measurements and next verification
+
+The [native lifecycle/performance article](../performance/native-lifecycle-performance.md) preserves exact receipt hashes, helper/source bindings, measured CPU/status/cancellation values, ten ordinary checks and the unresolved adverse probe. The earlier [helper status measurement](../performance/native-helper.md) retains its unknown packaged-source binding.
+
+Integrate the selected ready revisions, freeze the final candidate, then run the smallest relevant checks and source-bound production interactions. Add actual evidence only to the corresponding surface and requirement. Preserve unsupported features and failed or incomplete results instead of marking the entire inventory complete from a passing subset.
