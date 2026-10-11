@@ -55,6 +55,7 @@ if(args.Length==2 && args[0]=="crash-write") {
 }
 var failed=0;
 if(args.Length==2 && args[0]=="filter") cases=cases.Where(c=>c.Item1.Contains(args[1],StringComparison.OrdinalIgnoreCase)).ToArray();
+if(args.Length==2 && args[0]=="filter-exclude") cases=cases.Where(c=>!c.Item1.Contains(args[1],StringComparison.OrdinalIgnoreCase)).ToArray();
 foreach(var (name,test) in cases) {try {test();Console.WriteLine("PASS "+name);}catch(Exception e){failed++;Console.Error.WriteLine("FAIL "+name+": "+e);}}
 Console.WriteLine($"{cases.Length-failed}/{cases.Length} checks passed");
 return failed==0?0:1;
