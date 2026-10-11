@@ -29,7 +29,7 @@ export function mountLogoEditor(root,services={}) {
  const preview=doc.createElement('img');preview.alt=t('Logo preview');preview.width=preview.height=64;const status=doc.createElement('p');status.setAttribute('role','status');
  const fit=doc.createElement('button');fit.textContent=`${t('Fit')}: ${t('contain')}`;let mode='contain',source;
  const x=doc.createElement('input'),y=doc.createElement('input');for(const [control,label]of [[x,'Horizontal focal point'],[y,'Vertical focal point']]){control.type='range';control.min='0';control.max='1';control.step='.01';control.value='.5';control.setAttribute('aria-label',t(label));}
- const publish=async data=>{await services.onChange?.(data);preview.src=data;};
+ const publish=async data=>{const accepted=await services.onChange?.(data);if(accepted===false)throw Error('The original control could not complete this action.');preview.src=data;};
  async function update(){if(!source)throw Error('Choose a local logo first.');const epoch=++generation;status.textContent=message('Converting locally…');const result=await convertLogo(source,{fit:mode,x:x.value,y:y.value});if(disposed||epoch!==generation)throw Error('This control is unavailable.');storage?.setItem(key,result.data);await publish(result.data);if(disposed||epoch!==generation)throw Error('This control is unavailable.');status.textContent=message('Converted to 128 × 128 PNG locally. Metadata and color profile are flattened.');return result;}
  const reset=doc.createElement('button');reset.textContent=t('Reset logo');
  box.append(title,input,fit,x,y,preview,reset,status);root.append(box);
@@ -37,7 +37,7 @@ export function mountLogoEditor(root,services={}) {
  wire(input,'logo-file',()=>{source=input.files?.[0];return update();},'change');
  wire(fit,'logo-fit',()=>{mode=mode==='contain'?'cover':'contain';fit.textContent=`${t('Fit')}: ${t(mode)}`;return update();});
  for(const [control,name]of [[x,'logo-x'],[y,'logo-y']])wire(control,name,()=>{const value=Number(control.value);if(!Number.isFinite(value)||value<0||value>1)throw Error('A required value is invalid. Correct the original control before continuing.');return update();},'change');
- wire(reset,'logo-reset',async()=>{generation++;storage?.removeItem(key);source=undefined;input.value='';await services.onChange?.(null);if(disposed)throw Error('This control is unavailable.');preview.removeAttribute('src');status.textContent=message('Original logo restored.');});
+ wire(reset,'logo-reset',async()=>{generation++;storage?.removeItem(key);source=undefined;input.value='';const accepted=await services.onChange?.(null);if(accepted===false)throw Error('The original control could not complete this action.');if(disposed)throw Error('This control is unavailable.');preview.removeAttribute('src');status.textContent=message('Original logo restored.');});
  try{const saved=storage?.getItem(key);if(saved?.startsWith('data:image/png;base64,')&&saved.length<LOGO_LIMITS.bytes*2)publish(saved).catch(error=>{if(!disposed)status.textContent=message(error.message);});}catch{status.textContent=message('Saved logo unavailable.');}
  return{destroy(){disposed=true;generation++;guides.forEach(guide=>guide.destroy());bindings.forEach(binding=>binding.destroy());box.remove();},reset:()=>reset.click()};
 }
