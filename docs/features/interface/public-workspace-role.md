@@ -8,7 +8,7 @@ The browser adapter accepts only feature requests for its explicit personalizati
 
 ## Confirmation and page lifetime
 
-Output replacement, model deletion and session deletion use the shared in-surface two-key confirmation and full slider. An exact required phrase or model name remains mandatory where the consumer requires it. No operation is approved by merely opening or cancelling the dialog. Owner teardown cancels pending confirmation.
+Output replacement, model deletion and session deletion use the shared in-surface two-key confirmation and full slider. An exact required phrase or model name remains mandatory where the consumer requires it. Approval resolves at the final Confirm action. It does not display operation-completed or Done states before the caller actually performs its action. No operation is approved by merely opening or cancelling the dialog. Session loss and every page departure cancel pending approval, and cached pages receive a fresh confirmation controller. The shared operation-execution mode remains unchanged for other workflows.
 
 A cached browser navigation clears local pairing and private wording while retaining usable document controls. Normal departure disposes tools, timers, observers and shared controls. Saved legacy Files tabs are removed from open and restore inventories, preserving other saved tab, group and notification state.
 

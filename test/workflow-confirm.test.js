@@ -17,3 +17,17 @@ test('Escape and owner teardown cancel without invoking the action',async()=>{
  for(const mode of ['escape','abort']){const host=new Node();host.ownerDocument=doc;const controller=new AbortController();let ran=false;const result=requestSuperConfirmation(host,{action:'Discard',affected:'test draft',run:async()=>{ran=true;},signal:controller.signal});if(mode==='escape')doc.keydown({key:'Escape',preventDefault(){}});else controller.abort();assert.deepEqual(await result,{confirmed:false});assert.equal(ran,false);}
 });
 test.after(()=>{for(const[key,value]of Object.entries(previous))if(value===undefined)delete globalThis[key];else globalThis[key]=value;});
+
+test('approval-only mode resolves immediately without running or reporting an operation',async()=>{
+ const host=new Node();host.ownerDocument=doc;let runs=0;const pending=requestSuperConfirmation(host,{action:'Delete',affected:'fixture',confirmationOnly:true,run:async()=>{runs++;}});const c=controls(host);
+ c.first.selected=true;c.second.selected=true;c.slider.value=100;await c.execute.listeners.click();assert.deepEqual(await pending,{confirmed:true});assert.equal(runs,0);assert.equal(c.execute.textContent,'Confirm');assert.notEqual(c.dialog.children[1].children[5].textContent,'Operation completed.');
+});
+test('approval-only validation and abort never create a stored completion result',async()=>{
+ const host=new Node();host.ownerDocument=doc;const owner=new AbortController();const pending=requestSuperConfirmation(host,{action:'Delete',affected:'fixture',confirmationOnly:true,signal:owner.signal,validateConfirmation:()=>{throw Error('Exact text required');}});const c=controls(host);
+ c.first.selected=true;c.second.selected=true;c.slider.value=100;await c.execute.listeners.click();assert.equal(c.dialog.children[1].children[5].textContent,'Exact text required');owner.abort();await c.execute.listeners.click();assert.deepEqual(await pending,{confirmed:false});
+});
+
+test('owner abort during final approval validation wins over confirmation',async()=>{
+ const host=new Node();host.ownerDocument=doc;const owner=new AbortController();const pending=requestSuperConfirmation(host,{action:'Delete',affected:'fixture',confirmationOnly:true,signal:owner.signal,validateConfirmation:()=>owner.abort()});const c=controls(host);
+ c.first.selected=true;c.second.selected=true;c.slider.value=100;await c.execute.listeners.click();assert.deepEqual(await pending,{confirmed:false});
+});
