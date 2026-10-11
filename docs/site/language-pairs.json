@@ -127,8 +127,8 @@
     {
       "source": "docs/features/interface/README.md",
       "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "b682e467afa7bcb85e606ea6edb20438ae910f35b90e97e95e90a4401b5dd1a1",
-      "translationSha256": "63a2a53e3fb12fd360623dea62e07c74cce4c7c2fa23bf9763c81208327dfa3d"
+      "sourceSha256": "2b667e498f7e41f22264abaf9b83e41b72ea020bb773a19d2c3fd61210d4039a",
+      "translationSha256": "ae0bcc0b2edf23cc921a2e35cc9b7051f3fbdb87e64a1c8c6a5507b64a5a3fcc"
     },
     {
       "source": "docs/features/interface/appearance-editor.md",
@@ -415,8 +415,14 @@
     {
       "source": "docs/features/interface/font-metadata.md",
       "translation": "docs/features/interface/font-metadata.zh-HK.md",
-      "sourceSha256": "6b584b5c4bf04214ca08839f0d088363a1b9d74388c0e2eba812aff2040d255b",
-      "translationSha256": "30ae128796248100ac204453ab5bb63325218c43103b4d123a470ff61506c70f"
+      "sourceSha256": "01d048217360f76e95c2dfe83db948b692e909ff825584d63501a55d554bf3b8",
+      "translationSha256": "a9828ca8a4dc6950a4b52cbf64a12dd285f0755e70a7a47784e513bc229c6a5e"
+    },
+    {
+      "source": "docs/features/interface/bundled-fonts.md",
+      "translation": "docs/features/interface/bundled-fonts.zh-HK.md",
+      "sourceSha256": "cd7fab86a7b23bd5a16009f96d0c3629c7d3938d8c204c1b57cd44a439d941cc",
+      "translationSha256": "86dd22edcf3d8f082f296dcea2345a67918e9f49fbe0173597f7352738e0044a"
     }
   ]
 }

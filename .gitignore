@@ -11,3 +11,5 @@ coverage/
 **/__pycache__/
 /src/shared/build-metadata.json
 /src/shared/documentation-catalog.json
+
+/src/renderer/fonts/

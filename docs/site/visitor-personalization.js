@@ -97,7 +97,7 @@ export function mountVisitorPersonalization(container,options={}) {
  };
  const externalUnavailable=async()=>{throw Error('External settings are unavailable on this static website. Use a local schedule; no provider request or credential was sent.');};
  const module=mountPersonalization(container,{
-  storage:controller.storage,store:controller.store,surfaceRoot:doc.documentElement,attentionHost:options.attentionHost||doc.body,
+  bundledFontBaseURL:options.bundledFontBaseURL,storage:controller.storage,store:controller.store,surfaceRoot:doc.documentElement,attentionHost:options.attentionHost||doc.body,
   attachSearch,notify,guidanceHelpBase:options.guidanceHelpBase||new URL('articles/docs--features--interface--settings-guidance.html',import.meta.url).href,registerHelp:options.registerHelp,registerCommands:value=>foundation?.registerCommands?.(value),dictionary:VISITOR_COPY,historyCredentialStore,historyManager:sharedHistory,history:options.history,
   vocabulary:{isAuthenticated:()=>false,replace:value=>value},
  verifySharedCredential:password=>controller.authorizeModeChange(false,password),

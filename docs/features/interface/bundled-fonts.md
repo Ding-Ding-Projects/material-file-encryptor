@@ -25,7 +25,7 @@ Linked staging paths are unsupported.
 The returned `rendererDirectory` and `siteDirectory` each contain local
 `fonts.css`, three complete font files and two license notices. Copy the complete
 directory into each product's packaged/local asset tree and load its CSS. CSS has
-only relative asset URLs, no runtime network requests and no glyph subsetting.
+only relative asset URLs, no external runtime font requests and no glyph subsetting.
 `bundledFontDescriptors` requires a same-origin directory URL and reports
 unavailable until the integrator supplies verified asset presence. Staging means
 `staged-awaiting-renderer-validation`, not proof of rendering.
@@ -46,6 +46,24 @@ ignored under `font-assets/` and `.cache/`; they are not committed to ordinary
 version control or standard Git LFS. No supported cloud-transfer publication was
 established in this unit, and none is claimed.
 
-Build, packaging, website hooks, descriptor forwarding, exact face mapping and
-genuine rendered acceptance remain separate integration work. No system font was
-installed and no product GUI or heavy build was run.
+Build and website source hooks now copy and verify the complete local tree,
+including both licenses, and generate a receipt module containing the manifest
+identity and exact asset sizes/hashes. Packaging includes the renderer font tree
+and excludes the staging cache. The existing root entrypoints remain unchanged.
+
+The source loader imports only the same-origin receipt, verifies the complete
+manifest identity, then loads local FontFace aliases. It admits the three known
+alias/style mappings only after their load promises complete. Original metadata
+still identifies the italic and Thin faces honestly. Installed faces retain their
+conservative restrictions. Loaded aliases belong to the document, so closing an
+editor cannot remove a saved appearance font. The constructor, load and document
+registration behavior follows the [CSS Font Loading specification](https://www.w3.org/TR/css-font-loading/).
+
+A cache-only integration check copied five assets totaling 41,738,686 bytes to
+both ignored renderer and website trees with zero download calls. Component
+checks exercise the actual loader code with injected FontFace consumers, not a
+real browser. Wrong receipts, missing staging, partial decoding and cancellation
+cannot admit the inventory. Actual root production, native bridge admission,
+inspected rendered glyph identity, complete typography and replacement screenshots
+remain unverified. No system font was installed and no product GUI or heavy build
+was run.

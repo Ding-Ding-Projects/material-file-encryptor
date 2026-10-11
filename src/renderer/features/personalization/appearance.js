@@ -1,3 +1,4 @@
+import {sharedBundledFontCatalog} from './bundled-font-loader.js';
 import {mountAppearanceFontWorkflow} from './font-workflow.js';
 import {bindNestedConsumer,mountNestedGuidance} from './nested-guidance-mount.js';
 import {defaultMotion,validateMotion} from './motion-model.js';
@@ -65,6 +66,7 @@ const kebab=s=>s.replace(/[A-Z]/g,c=>`-${c.toLowerCase()}`);
 export function mountAppearanceEditor(root,services={}) {
  const t=appearanceTranslator(services.translate),message=source=>t(source,{message:true});
  const doc=root.ownerDocument||document, storage=services.storage||globalThis.localStorage,key='m4e.appearance.v1',disposers=[];let state=defaultAppearance(),target,selectedState='normal',layerIndex=0,groupPath=[],previewMode='after',editorTab='appearance',undo=[],redo=[],counter=0,workbenches=[],imageOverlays=[],uploadEpoch=0,disposed=false;
+ if(services.bundledFontBaseURL)sharedBundledFontCatalog({baseURL:services.bundledFontBaseURL,document:doc}).catch(()=>{});
  const journal=createAppearanceJournal({storage}),pendingImages=new Set(),imageAdmission=createImageJobAdmission();const runImageJob=operation=>imageAdmission.run(async()=>{const controller=new AbortController();pendingImages.add(controller);try{return await operation(controller.signal);}finally{pendingImages.delete(controller);}});const processImage=request=>runImageJob(signal=>(services.processImage||runRasterOperation)(request,{signal}));const normalizeImage=services.normalizeImage?request=>runImageJob(signal=>services.normalizeImage(request,{signal})):undefined;
  try{const saved=storage?.getItem(key);if(saved)state=validateAppearance(JSON.parse(saved));}catch{services.notify?.(message('Saved appearance could not be loaded.'));}
  const sheet=new (doc.defaultView?.CSSStyleSheet||globalThis.CSSStyleSheet)();doc.adoptedStyleSheets=[...doc.adoptedStyleSheets,sheet];

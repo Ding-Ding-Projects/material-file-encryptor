@@ -31,3 +31,5 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 - [Nested appearance control guidance](nested-appearance-guidance.md)
 
 - [Local font metadata and variable axes](font-metadata.md)
+
+- [Complete local bundled fonts](bundled-fonts.md)
