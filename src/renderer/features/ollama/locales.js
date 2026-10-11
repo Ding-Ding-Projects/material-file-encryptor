@@ -1,4 +1,5 @@
 export const ollamaCantonese = Object.freeze({
+  'Local runtime port':'本機執行環境連接埠','Apply runtime port':'套用執行環境連接埠','Choose a port from 1024 to 65535.':'請選擇 1024 至 65535 的連接埠。','Application-managed model storage':'應用程式管理的模型儲存','Existing runtime model storage':'現有執行環境的模型儲存',
   'Runtime state':'執行環境狀態','healthy':'正常','missing':'未找到','stopped':'已停止','unhealthy':'狀態異常','unknown':'未知',
   'Open official installation guide':'開啟官方安裝指引','Open the official installer page?':'開啟官方安裝頁面？','No installer will be downloaded or executed by this application. Complete the official installation, then check runtime again.':'此程式唔會下載或執行安裝檔，請完成官方安裝後再檢查執行環境。',
   'Start verified local runtime':'啟動已驗證本機執行環境','Start the verified local runtime?':'啟動已驗證本機執行環境？','Starts the verified Ollama executable with a loopback-only address and cloud features disabled. No model will be downloaded.':'使用只限本機地址啟動已驗證 Ollama，停用雲端功能，唔會下載任何模型。','Locate installed runtime':'尋找已安裝執行環境',

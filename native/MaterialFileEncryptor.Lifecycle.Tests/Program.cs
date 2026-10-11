@@ -2,10 +2,11 @@ using System.Reflection;
 using System.Text.Json;
 using MaterialFileEncryptor.Core;
 
+if (args.Length == 2 && args[0] == "--import-crash-child") { ImportJournalRegression.CrashChild(args[1]);return; }
 if (args.Length == 2 && args[0] == "--journal-child") { JournalRegression.Child(args[1]); return; }
 if (args.Length == 1 && args[0] == "--optional-numbers") { OptionalParameterRegression.Run(); return; }
 if (args.Length == 1 && args[0] == "--legacy-only") { CoreTransferRegression.Run();CngLegacyRegression.Run();return; }
-if (args.Length == 1 && args[0] == "--phase-only") { await TransferPhaseRegression.Run();StorageStageRegression.Run();return; }
+if (args.Length == 1 && args[0] == "--phase-only") { await TransferPhaseRegression.Run();StorageStageRegression.Run();ImportJournalRegression.Run();return; }
 if (args.Length == 1 && args[0] == "--priority-only") { BackgroundPriorityRegression.Run();return; }
 if (args.Length == 1 && args[0] == "--large-background-only") { await LargeManagedImportRegression.Run(true);return; }
 if (args.Length == 1 && args[0] == "--large-managed-only") { await LargeManagedImportRegression.Run();return; }
@@ -19,6 +20,7 @@ await StatusProtocolRegression.Run();
 await BackgroundAdmissionRegression.Run();
 await TransferPhaseRegression.Run();
 StorageStageRegression.Run();
+ImportJournalRegression.Run();
 
 var type = Assembly.Load("MaterialFileEncryptor.Host").GetType("MaterialFileEncryptor.Host.VaultController", true)!;
 object Make() => Activator.CreateInstance(type)!;

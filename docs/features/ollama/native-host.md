@@ -49,6 +49,16 @@ Hash checks narrow the replacement window but are not an operating-system execut
 
 ## External navigation and verification
 
+## Local endpoint configuration
+
+The native constructor accepts `loopbackPort`, an integer from 1024 through 65535, defaulting to 11434. No hostname, URL, environment map or model-directory path is accepted from a renderer. `runtimeOptions` and `serviceOptions` carry that port to the runtime controller and API client respectively. Health probes, fixed launch validation and native execution confirmation use the same endpoint. Profile commands use that endpoint too.
+
+New owned runtime launches set `OLLAMA_MODELS` to `dataDirectory/local-models/runtime-models`. The directory is created and checked through the same canonical no-redirection boundary as profile storage immediately before launch. It does not migrate or modify an existing external runtime's model store. `host.managedModelDirectory` and `host.initializeModels()` are available for native hardware measurement and startup preparation.
+
+Runtime status exposes `endpoint`, `managedModelStoreConfigured` and `managedModelStore`. The last field is true only after this controller owns a runtime launch, never merely because an external API responds. `runtime.dispose()` stops only its returned owned process; service disposal first cancels and waits for pending API operations, then disposes the runtime. An external runtime is not stopped.
+
+Configuration is immutable for each constructed instance. The desktop owner must enforce idle state, show native confirmation, dispose the old service and owned runtime, persist the selected numeric port atomically, then reconstruct both objects. The renderer invokes the optional `services.ollama.configureRuntime({port})` desktop bridge. Browser adapters must not expose that privileged configuration operation. The UI displays the actual endpoint and managed-store state. Configuration must not change under pending requests.
+
 Runtime start and each profile execution require a native confirmation naming the trusted executable, fixed action and loopback boundary. Cancel is the default and raises `USER_CANCELLED` before process creation. Renderer confirmation fields do not replace this dialog. Both profile adapter and service launcher exports share the same wrapper. Trust verification remains read-only and never displays a prompt; the underlying launchers recheck trust after the execution confirmation.
 
 Only exact `https://ollama.com/download/windows` is accepted, and a native confirmation occurs before opening it. No installer is downloaded or executed. Tests use synthetic, non-executable files and injected signature responses, and exercise missing trust, explicit approval, changed bytes, folder confinement and fixed-URL confirmation. They do not establish a real Ollama publisher identity or claim a real runtime launch.
