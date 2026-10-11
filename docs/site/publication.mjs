@@ -102,7 +102,10 @@ function canonicalPresentationAttributes(tag){
  return attributes;
 }
 function presentationMeaning(text){
- return text.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos);/gi,(_,entity)=>{
+ // Project actual markup first. Escaped angle brackets remain literal text.
+ const projected=text.replace(/<[^>]*>/g,'');
+ if(/&(?!(?:#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos);)[a-z0-9#]/i.test(projected))throw Error('Unsupported capture text entity');
+ return projected.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos);/gi,(_,entity)=>{
   if(entity[0]==='#'){const value=entity[1].toLowerCase()==='x'?parseInt(entity.slice(2),16):Number(entity.slice(1));if(value<1||value>0x10ffff||value>=0xd800&&value<=0xdfff)throw Error('Invalid capture text entity');return String.fromCodePoint(value);}
   return {amp:'&',lt:'<',gt:'>',quot:'"',apos:"'"}[entity.toLowerCase()];
  }).replace(/&[a-z0-9#]+;/gi,()=>{throw Error('Unsupported capture text entity');});
@@ -128,13 +131,14 @@ export function assertGalleryPresentation(home,records,{intendedSource=INTENDED_
    presented++;
    const record=byPath.get(image[1]);if(!record)throw Error('Presentation image is absent from reviewed gallery');
    const imageAttributes=canonicalPresentationAttributes(figure[2].match(/<img\b[^>]*>/i)[0]);
-   for(const tag of figure[2].matchAll(/<(?:a|img)\b[^>]*>/gi))canonicalPresentationAttributes(tag[0]);
+   const relatedAttributes=[];
+   for(const tag of figure[2].matchAll(/<(?:a|img)\b[^>]*>/gi))relatedAttributes.push(canonicalPresentationAttributes(tag[0]));
    const role=figure[1].match(/data-gallery-role="(historical|current)"/)?.[1];
    if(role!==(record.historical?'historical':'current'))throw Error('Presentation capture role differs from gallery');
    const labels=[...figure[2].matchAll(/aria-label="([^"]+)"/g)].map(row=>row[1]);
    const caption=figure[2].match(/<figcaption\b[^>]*>([\s\S]*?)<\/figcaption>/)?.[1]||'';
-   const accessible=[imageAttributes.alt||'',imageAttributes.title||''];
-   if(record.historical&&[...headings,...labels,...accessible,caption].some(text=>/\bcurrent\b/i.test(presentationMeaning(text))))throw Error('Historical capture has a current presentation label');
+   const accessible=[imageAttributes.alt||'',...relatedAttributes.flatMap(attributes=>[attributes.title||'',attributes['aria-label']||''])];
+   if(record.historical&&[...headings,...labels,...accessible,caption].some(text=>/current/i.test(presentationMeaning(text))))throw Error('Historical capture has a current presentation label');
   }
  }
  if(presented!==captureImages.length)throw Error('Capture presentation is outside a reviewed section and figure');
