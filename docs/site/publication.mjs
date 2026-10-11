@@ -91,10 +91,33 @@ export async function buildDocumentation(root,output,home) {
 // Capture promotion may follow this application revision. Never derive it from
 // the documentation checkout's moving HEAD.
 export const INTENDED_CAPTURE_UI_SOURCE = '617320a910a86cf685241e544c0f93fb6794c714';
+function canonicalPresentationAttributes(tag){
+ const match=tag.match(/^<([a-z][a-z0-9-]*)([\s\S]*?)\/?\s*>$/);if(!match)throw Error('Noncanonical capture presentation tag');
+ const attributes={};let rest=match[2];
+ while(rest.trim()){
+  const attribute=rest.match(/^\s+([a-z][a-z0-9-]*)="([^"<>]*)"/);
+  if(!attribute||Object.hasOwn(attributes,attribute[1]))throw Error('Noncanonical capture presentation attribute');
+  attributes[attribute[1]]=attribute[2];rest=rest.slice(attribute[0].length);
+ }
+ return attributes;
+}
+function presentationMeaning(text){
+ return text.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos);/gi,(_,entity)=>{
+  if(entity[0]==='#'){const value=entity[1].toLowerCase()==='x'?parseInt(entity.slice(2),16):Number(entity.slice(1));if(value<1||value>0x10ffff||value>=0xd800&&value<=0xdfff)throw Error('Invalid capture text entity');return String.fromCodePoint(value);}
+  return {amp:'&',lt:'<',gt:'>',quot:'"',apos:"'"}[entity.toLowerCase()];
+ }).replace(/&[a-z0-9#]+;/gi,()=>{throw Error('Unsupported capture text entity');});
+}
 export function assertGalleryPresentation(home,records,{intendedSource=INTENDED_CAPTURE_UI_SOURCE}={}) {
  if(!/^[a-f0-9]{40}$/.test(intendedSource))throw Error('Invalid intended capture source');
  const byPath=new Map(records.map(record=>[record.path,record]));
  let presented=0;
+ // Deliberately require one canonical serialization. Alternate quoting, case or
+ // whitespace must fail admission rather than disappear from the inventory.
+ const captureImages=[];
+ for(const match of home.matchAll(/<img\b[^>]*>/gi)){
+  const attributes=canonicalPresentationAttributes(match[0]);
+  if(presentationMeaning(attributes.src||'').startsWith('images/captures/'))captureImages.push(attributes.src);
+ }
  for(const record of records)if(!record.historical&&(record.sourceCommit!==intendedSource||!record.promotionReceiptSha256))throw Error('Current capture does not match intended UI source');
  for(const section of home.matchAll(/<section\b[^>]*>[\s\S]*?<\/section>/g)){
   if(!section[0].includes('src="images/captures/'))continue;
@@ -104,14 +127,17 @@ export function assertGalleryPresentation(home,records,{intendedSource=INTENDED_
    const image=figure[2].match(/<img\b[^>]*src="(images\/captures\/[^\"]+)"/);if(!image)continue;
    presented++;
    const record=byPath.get(image[1]);if(!record)throw Error('Presentation image is absent from reviewed gallery');
+   const imageAttributes=canonicalPresentationAttributes(figure[2].match(/<img\b[^>]*>/i)[0]);
+   for(const tag of figure[2].matchAll(/<(?:a|img)\b[^>]*>/gi))canonicalPresentationAttributes(tag[0]);
    const role=figure[1].match(/data-gallery-role="(historical|current)"/)?.[1];
    if(role!==(record.historical?'historical':'current'))throw Error('Presentation capture role differs from gallery');
    const labels=[...figure[2].matchAll(/aria-label="([^"]+)"/g)].map(row=>row[1]);
    const caption=figure[2].match(/<figcaption\b[^>]*>([\s\S]*?)<\/figcaption>/)?.[1]||'';
-   if(record.historical&&[...headings,...labels,caption].some(text=>/\bcurrent\b/i.test(text)))throw Error('Historical capture has a current presentation label');
+   const accessible=[imageAttributes.alt||'',imageAttributes.title||''];
+   if(record.historical&&[...headings,...labels,...accessible,caption].some(text=>/\bcurrent\b/i.test(presentationMeaning(text))))throw Error('Historical capture has a current presentation label');
   }
  }
- if(presented!==[...home.matchAll(/<img\b[^>]*src="images\/captures\//g)].length)throw Error('Capture presentation is outside a reviewed section and figure');
+ if(presented!==captureImages.length)throw Error('Capture presentation is outside a reviewed section and figure');
  return true;
 }
 export async function galleryRecords(root) {
