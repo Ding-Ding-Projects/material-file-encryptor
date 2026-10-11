@@ -58,8 +58,36 @@ export async function assertMenuBehavior(page,{host='mfe-context-menu',anchor='#
  return {scope:'source-fixture',menuFocusPreserved:true,builderPreserved:true,dismissal:['escape','selection','outside','resize','target-removed'],actionEffect:true,keyboardExactlyOnce:true,staleItemRejected:true,lockedTargetRejected:true};
 }
 
-export async function runComponentAcceptance({evidenceRoot,runtime={},checks=['menu','choiceSearch','palette','filePicker']}) {
- const knownChecks=['menu','choiceSearch','palette','filePicker'];assert.ok(checks.length>0&&new Set(checks).size===checks.length&&checks.every(check=>knownChecks.includes(check)));
+export async function assertMenuKeyboardNavigation(page,{capture=async()=>{}}={}){
+ const menu=page.locator('mfe-context-menu');
+ await page.evaluate(()=>{const anchor=document.querySelector('#palette-anchor');document.querySelector('mfe-context-menu').open({anchor,target:anchor,items:[{label:'First action'},{label:'Last action'}]});});
+ await menu.locator('md-menu-item').last().waitFor({state:'visible'});
+ const input=menu.locator('mfe-search md-outlined-text-field').first().locator('input');await input.focus();
+ await page.keyboard.type('action');await page.keyboard.press('ArrowLeft');
+ assert.equal(await input.evaluate(node=>node.getRootNode().activeElement===node&&node.selectionStart===5),true,'ArrowLeft was intercepted outside the editable input');
+ await input.fill('');await page.waitForFunction(()=>document.querySelector('mfe-context-menu').itemsHost.querySelectorAll('md-menu-item').length===2);
+ await page.keyboard.press('ArrowUp');
+ assert.equal(await menu.locator('md-menu-item').last().evaluate(node=>node.getRootNode().activeElement===node),true,'ArrowUp from search did not focus the last action');
+ await input.focus();
+ const builderButton=menu.locator('mfe-search md-outlined-button').first();let reachedBuilder=false;
+ for(let index=0;index<5;index++){
+  await page.keyboard.press('Tab');assert.equal(await menu.isVisible(),true,'Tab closed the menu before focus exited');
+  reachedBuilder=await builderButton.evaluate(node=>node.getRootNode().activeElement===node);if(reachedBuilder)break;
+ }
+ assert.equal(reachedBuilder,true,'Regex builder is not reachable by Tab from query');
+ await page.keyboard.press('Enter');const builder=menu.locator('mfe-search .builder');await builder.waitFor({state:'visible'});
+ await page.keyboard.press('Tab');assert.equal(await menu.isVisible(),true,'Tab into builder closed the menu');
+ await page.keyboard.press('Shift+Tab');assert.equal(await menu.isVisible(),true,'Reverse Tab inside menu closed it');
+ await capture('menu-keyboard-builder');
+ let exited=false;
+ for(let index=0;index<100;index++){await page.keyboard.press('Tab');if(!await menu.isVisible()){exited=true;break;}}
+ assert.equal(exited,true,'Tab could not exit the menu');
+ assert.equal(await page.evaluate(()=>{let node=document.activeElement;while(node?.shadowRoot?.activeElement)node=node.shadowRoot.activeElement;for(let current=node;current;current=current.parentElement||current.getRootNode?.().host)if(current.localName==='mfe-context-menu')return false;return Boolean(node);}),true,'Menu dismissal left focus inside the closed menu');
+ return {scope:'source-fixture',route:'browser-keyboard',arrowLeftRetained:true,arrowUpLast:true,queryToBuilderTab:true,reverseTabWithinMenu:true,tabExitDismissed:true,outsideFocus:true};
+}
+
+export async function runComponentAcceptance({evidenceRoot,runtime={},checks=['menu','menuKeyboardNavigation','choiceSearch','palette','filePicker']}) {
+ const knownChecks=['menu','menuKeyboardNavigation','choiceSearch','palette','filePicker'];assert.ok(checks.length>0&&new Set(checks).size===checks.length&&checks.every(check=>knownChecks.includes(check)));
  assert.ok(path.isAbsolute(evidenceRoot));await fs.mkdir(evidenceRoot,{recursive:true});
  const index=await fs.readFile(new URL('../src/renderer/index.html',import.meta.url),'utf8');
  const csp=index.match(/<meta http-equiv="Content-Security-Policy"[^>]+>/)?.[0];assert.ok(csp,'Production CSP missing');
@@ -82,6 +110,7 @@ export async function runComponentAcceptance({evidenceRoot,runtime={},checks=['m
   await page.goto(url);await page.waitForFunction(()=>window.acceptanceReady&&customElements.get('md-menu')&&customElements.get('md-outlined-text-field'));
   const capture=async name=>{const file=path.join(evidenceRoot,name+'.png'),startedAt=new Date().toISOString();const bytes=await page.screenshot({path:file});result.captures.push({path:file,sha256:createHash('sha256').update(bytes).digest('hex'),startedAt,capturedAt:new Date().toISOString(),scope:'source-fixture',inspected:false});};
   if(checks.includes('menu'))result.menu=await assertMenuBehavior(page,{capture});
+  if(checks.includes('menuKeyboardNavigation'))result.menuKeyboardNavigation=await assertMenuKeyboardNavigation(page,{capture});
   if(checks.includes('choiceSearch'))result.choiceSearch=await assertChoiceSearchBehavior(page,{capture});
   if(checks.includes('palette'))result.palette=await assertPaletteBehavior(page,{capture});
   if(checks.includes('filePicker'))result.filePicker=await assertFilePickerBehavior(page);
