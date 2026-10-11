@@ -32,6 +32,10 @@ test('guided execution admits only the original event consumer and awaits its va
  target.readOnly=true;await assert.rejects(invokeNestedAppearanceControl(target,adapter),/unavailable/);target.readOnly=false;
  target.isConnected=false;await assert.rejects(invokeNestedAppearanceControl(target,adapter),/unavailable/);
  await assert.rejects(invokeNestedAppearanceControl(new EventTarget()),/admission adapter/);
+ for(const invalidFlight of [{pending:true},'pending',true]){
+  const noConsumer=new EventTarget();
+  await assert.rejects(invokeNestedAppearanceControl(noConsumer,{resetFlight(){},getFlight:()=>invalidFlight}),/did not admit/);
+ }
  const invalid=new EventTarget();invalid.addEventListener('change',()=>{flight=Promise.reject(Error('Original validator rejected draft'));});
  await assert.rejects(invokeNestedAppearanceControl(invalid,adapter),/Original validator rejected draft/);assert.equal(writes,1);
 });

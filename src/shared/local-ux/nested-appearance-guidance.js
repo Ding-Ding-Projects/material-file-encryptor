@@ -41,6 +41,6 @@ export async function invokeNestedAppearanceControl(target,{eventType='click',re
  if(typeof resetFlight!=='function'||typeof getFlight!=='function')throw Error('An original consumer admission adapter is required.');
  resetFlight();const EventType=target.ownerDocument?.defaultView?.Event||globalThis.Event;
  const admitted=target.dispatchEvent(new EventType(eventType,{bubbles:true,cancelable:true,composed:true}));
- const flight=getFlight();if(!admitted||!flight)throw Error('The original control did not admit this action.');
+ const flight=getFlight();if(!admitted||!flight||typeof flight.then!=='function')throw Error('The original control did not admit this action.');
  return await flight;
 }
