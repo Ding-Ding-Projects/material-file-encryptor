@@ -4,7 +4,15 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import {sha256} from '../scripts/gui-acceptance.mjs';
-import {readPackagedBuildBinding} from '../scripts/gui-acceptance-producer.mjs';
+import {readPackagedBuildBinding,createPackagedAdapters} from '../scripts/gui-acceptance-producer.mjs';
+
+test('all 89 inventoried states compose once with every exact action and no fixture side effects',async()=>{
+ const inventory=JSON.parse(await fs.readFile(new URL('../contracts/gui-states.json',import.meta.url)));
+ let mutations=0;
+ const adapters=createPackagedAdapters({inventory,launch:{cdp:{port:54321,expectedUrl:'file:///owned/app.asar/src/renderer/index.html'}},receipt:path.resolve('owned-receipt.json'),prepareOwnedFixture:async()=>{mutations++;},fixtures:{}});
+ assert.equal(mutations,0);assert.equal(Object.keys(adapters).length,89);assert.deepEqual(Object.keys(adapters).sort(),inventory.states.map(state=>state.id).sort());
+ for(const state of inventory.states)assert.deepEqual(Object.keys(adapters[state.id].actions).sort(),[...state.actions].sort(),state.id);
+});
 
 test('copied package binding requires the successful original build and unchanged bytes',async()=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-package-build-binding-'));

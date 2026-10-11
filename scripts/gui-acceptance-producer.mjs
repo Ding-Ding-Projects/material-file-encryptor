@@ -8,11 +8,24 @@ import {bindingFor,sha256,matrixFor} from './gui-acceptance.mjs';
 import {acquireMatrix,composeAdapters} from './gui-acceptance-acquire.mjs';
 import {baselineAdapters,ownedFixturePreparation} from './gui-acceptance-baseline.mjs';
 import {createFoundationAdapters} from './gui-acceptance-foundation.mjs';
+import {createAccessAdapters} from './gui-acceptance-access.mjs';
+import {createRecordsAdapters} from './gui-acceptance-records.mjs';
+import {createPersonalizationAdapters} from './gui-acceptance-personalization.mjs';
+import {createToolsAdapters} from './gui-acceptance-tools.mjs';
 import {createModernProbeEvidence} from './modern-ui-check.mjs';
 import {makeLaunch,modernNativeObservation,createPlanRecorder} from './local-headless-desktop-check.mjs';
 import {withCdpConnectionProof} from './cdp-connection-plan.mjs';
 
 const scriptRoot=fileURLToPath(new URL('./',import.meta.url));
+export async function packagedVerifierHash(root=scriptRoot){
+ const fixed=['modern-ui-check.mjs','local-headless-desktop-check.mjs','modern-phase.mjs','cdp-connection-plan.mjs','preview-runtime-fixture.mjs','test-renderer-browser.mjs','test-renderer-browser-cli.py','native-window-observation.py','renderer-process-snapshot.py','renderer-launch-observer.mjs','renderer-launch-observer.py','supplemental-renderer-recovery.py','packaged-renderer-runtime.mjs'];
+ const names=[...new Set([...fixed,...(await fs.readdir(root)).filter(name=>/^gui-acceptance.*\.mjs$/.test(name))])].sort();
+ const hashes=[];for(const name of names)hashes.push({name,sha256:sha256(await fs.readFile(path.join(root,name)))});
+ return sha256(JSON.stringify(hashes));
+}
+export function createPackagedAdapters(context){
+ return composeAdapters(context.inventory,baselineAdapters(context),createFoundationAdapters(context),createAccessAdapters(context),createRecordsAdapters(context),createPersonalizationAdapters(context),createToolsAdapters(context));
+}
 export async function readPackagedBuildBinding(target,buildReceiptPath){
  const bytes=await fs.readFile(buildReceiptPath),build=JSON.parse(bytes);
  assert.equal(build.sourceCommit,target.sourceCommit);assert.equal(build.sourceEndCommit,target.sourceCommit);
@@ -42,8 +55,7 @@ export async function acquirePackagedBaseline({opened,inventory,buildReceiptPath
  const target=opened.target,receipt=opened.statePath,state=JSON.parse(await fs.readFile(receipt));
  const launch=makeLaunch({executable:target.executable,runRoot:opened.runRoot,port:state.cdp.port});assert.equal(launch.cdp.expectedUrl,target.expectedUrl);
  const build=await readPackagedBuildBinding(target,buildReceiptPath);
- const verifierBytes=await fs.readFile(fileURLToPath(import.meta.url));
- const binding=bindingFor({inventory,sourceCommit:target.sourceCommit,executableSha256:target.hashes.executable,resourceSha256:target.hashes.asar,verifierSha256:sha256(verifierBytes),referenceSha256:sha256(await fs.readFile(referencePath))});
+ const binding=bindingFor({inventory,sourceCommit:target.sourceCommit,executableSha256:target.hashes.executable,resourceSha256:target.hashes.asar,verifierSha256:await packagedVerifierHash(),referenceSha256:sha256(await fs.readFile(referencePath))});
  const skillRoot=path.join(os.homedir(),'.agents','skills');
  const installed=path.join(skillRoot,'run-lowlevel-headless-app','scripts','lowlevel_mcp_client.py');
  const cdp=path.join(skillRoot,'drive-electron-cdp-headless','scripts','cdp_driver.mjs');
@@ -53,7 +65,7 @@ export async function acquirePackagedBaseline({opened,inventory,buildReceiptPath
  const env={...process.env,PYTHONUTF8:'1',MFE_LOWLEVEL_CLIENT:installed,MFE_LOWLEVEL_CLI:cli,MFE_LOWLEVEL_PYTHON:python,MFE_RENDERER_NODE_EXECUTABLE:process.execPath,MFE_RENDERER_PROCESS_BACKEND:'native-v1',MFE_RENDERER_SOURCE_COMMIT:opened.receipt.verifierSourceCommit};delete env.MFE_LOWLEVEL_URL;
  const executePlan=createPlanRecorder(opened.runRoot,plan=>runEvidenceJson(process.execPath,[cdp,'run'],plan,env));
  const observe=async()=>{
-  assert.equal(sha256(await fs.readFile(fileURLToPath(import.meta.url))),binding.verifierSha256);
+  assert.equal(await packagedVerifierHash(),binding.verifierSha256);
   const window=await runEvidenceJson(python,[lowlevel,'wait-window','--state',receipt,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30'],undefined,env);
   const inspectionPlan=withCdpConnectionProof({version:1,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:30000,steps:[]},'capture');
   const bytes=await fs.readFile(receipt),current=JSON.parse(bytes),inspection=await runEvidenceJson(process.execPath,[cdp,'inspect'],inspectionPlan,env);
@@ -62,7 +74,7 @@ export async function acquirePackagedBaseline({opened,inventory,buildReceiptPath
  };
  const prepareOwnedFixture=ownedFixturePreparation({launch,receipt,fixture:opened.fixture});
  const context={launch,receipt,inventory,prepareOwnedFixture,fixtures};
- const adapters=composeAdapters(inventory,baselineAdapters(context),createFoundationAdapters(context));
+ const adapters=createPackagedAdapters(context);
  const createProbeEvidence=({outputRoot})=>createModernProbeEvidence({binding:build,outputRoot,helperPath:cdp,observe,validate:file=>runEvidenceJson(process.execPath,[path.join(skillRoot,'diagnose-built-ui-layout','scripts','validate-layout-probe.mjs'),'--input',file],undefined,env)});
  await fs.mkdir(outputRoot,{recursive:true});
  await fs.writeFile(path.join(outputRoot,'producer-binding.json'),JSON.stringify({binding,build,packageBinding:opened.receiptPath,physicalDpiVerified:false},null,2),{flag:'wx'});
