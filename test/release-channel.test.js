@@ -95,6 +95,9 @@ test('existing preview workflow guard executes pure inventory and publication ne
     }
     foreach ($statement in $ast.EndBlock.Statements) {
       $text=$statement.Extent.Text
+      if ($text.StartsWith('$incompleteInventory=') -or $text.StartsWith('$incompleteInventory.')) { . ([scriptblock]::Create($text)) }
+      if ($text.Contains("'omitted promotion tool is rejected'") -and
+          ($null -eq $incompleteInventory -or @($incompleteInventory.jobs.promote.tools).Count -ne 1 -or $incompleteInventory.jobs.promote.tools[0] -ne 'GitHub CLI')) { throw 'OMITTED_TOOL_FIXTURE_NOT_INITIALIZED' }
       if ($text -match '^Check ' -and !$text.Contains('$timingNotes')) { . ([scriptblock]::Create($text)) }
     }
     if ($checks -lt 18) { throw 'PREVIEW_GUARD_COVERAGE_MISSING' }
