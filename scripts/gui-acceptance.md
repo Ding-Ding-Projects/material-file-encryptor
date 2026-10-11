@@ -65,6 +65,13 @@ overlay dismissal, viewport restoration and independently verified native-file
 restoration even if an earlier step fails. Any failed step rejects the overall
 restoration with aggregated causes; successful file removal alone is not reported
 as complete restoration.
+Resize and target-removal action evidence retains a validated `providerReceipt`
+beside the final observable. It includes the actual route, bounded target IDs and
+observations, restored viewport and `physicalDpiVerified: false` for renderer
+resize, or the removed/remaining native identities. Only selected fields are
+retained, with a 4,096-character bound. Required owned receipts fail closed when
+missing or malformed; legacy fixtures without route receipts remain compatible
+and do not receive inferred evidence.
 
 | State family | Required supported setup |
 | --- | --- |

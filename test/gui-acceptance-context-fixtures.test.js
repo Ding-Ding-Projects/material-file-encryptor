@@ -92,3 +92,17 @@ test('restoration retains all failures and does not mutate after identity reject
  await assert.rejects(producer.restore(context),error=>error instanceof AggregateError&&error.errors.length===2);assert.equal(nativeCalls,1);
  await assert.rejects(producer.restore({binding:{sourceCommit:'foreign'}}));assert.equal(nativeCalls,1);
 });
+test('native context action retains bounded route and removal receipts beside the final observable',async()=>{
+ const inventory=JSON.parse(await fs.readFile(new URL('../contracts/gui-states.json',import.meta.url),'utf8'));
+ const observation={count:0,targetId:null,selectedIds:['a'],focusConnected:true,focusFileId:'b'};
+ const common={ownedSyntheticFixture:true,sourceCommit,activated:true,activation:'production-api',capturedTargetId:'b',observation};
+ const native={requireActionProof:true,'open-context':async()=>({ownedSyntheticFixture:true,sourceCommit}),resize:async()=>({...common,inputRoute:'browser-viewport-resize',physicalDpiVerified:false,viewportRestored:{width:1180,height:850}}),'target-removal':async()=>({...common,inputRoute:'owned-native-filesystem',removal:{removedId:'b',remainingId:'a'}})};
+ const actions=createFoundationAdapters({launch:{cdp:{port:12345,expectedUrl:'file:///fixture'}},receipt:'fixture',inventory,fixtures:{foundation:{'drive-overflow':native}}})['drive-overflow'].actions;
+ const c={...context,executePlan:async plan=>({ok:true,results:plan.steps.map(step=>({id:step.id,value:true}))})};
+ const resized=JSON.parse(JSON.stringify(await actions.resize(c)));
+ assert.equal(resized.evidence.passed,true);assert.equal(resized.evidence.providerReceipt.physicalDpiVerified,false);assert.equal(resized.evidence.providerReceipt.inputRoute,'browser-viewport-resize');assert.deepEqual(resized.evidence.providerReceipt.viewportRestored,{width:1180,height:850});
+ const removed=await actions['target-removal'](c);assert.deepEqual(removed.evidence.providerReceipt.removal,{removedId:'b',remainingId:'a'});assert.equal(removed.evidence.providerReceipt.observation.count,0);
+ native.resize=async()=>common;await assert.rejects(actions.resize(c),/receipt/);
+ native.requireActionProof=false;const legacy=await actions.resize(c);assert.equal(Object.hasOwn(legacy.evidence,'providerReceipt'),false);
+ native.resize=async()=>({...common,inputRoute:'browser-viewport-resize',physicalDpiVerified:false,capturedTargetId:'x'.repeat(300),viewportRestored:{width:1180,height:850}});await assert.rejects(actions.resize(c),/receipt/);
+});
