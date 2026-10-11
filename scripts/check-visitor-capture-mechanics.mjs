@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
-import {containedFile,verifyStatic,installNetworkBoundary,processIdentity,ownedTree,absent} from './capture-visitor-evidence.mjs';
+import {containedFile,verifyStatic,installNetworkBoundary,processIdentity,ownedTree,absent,profileDisposition} from './capture-visitor-evidence.mjs';
 const parent=path.resolve('out/capture-mechanics');await fs.mkdir(parent,{recursive:true});const root=await fs.mkdtemp(path.join(parent,'owned-'));await fs.writeFile(path.join(root,'index.html'),'synthetic public fixture');
 const data=await fs.readFile(path.join(root,'index.html'));const receipt={sourceCommit:'a'.repeat(40),files:[{path:'index.html',bytes:data.length,sha256:createHash('sha256').update(data).digest('hex')}]};
 assert.equal(await verifyStatic(root,receipt),true);
@@ -32,3 +32,10 @@ assert.equal((await absent([{pid:1,startTicks:'123'}],{readFile:async()=>stat('1
 const deniedChildren=async name=>name.endsWith('/stat')?stat('123'):failing('EACCES')();assert.equal((await ownedTree(1,{readFile:deniedChildren})).complete,false);
 const overflow=async name=>name.endsWith('/stat')?stat('123'):'2 3';const tree=await ownedTree(1,{readFile:overflow,limit:2});assert.equal(tree.complete,false);assert.ok(tree.reasons.includes('tree-limit'));assert.equal(tree.identities.length,2);
 console.log('PASS: actual process/tree consumers distinguish unknown EACCES/EIO from ENOENT and changed birth, and report unreadable or truncated trees. No processes launched.');
+
+assert.deepEqual(await profileDisposition('owned-profile',{lstat:async()=>({})}),{state:'retained'});
+assert.deepEqual(await profileDisposition('owned-profile',{lstat:failing('ENOENT')}),{state:'absent'});
+for(const code of ['EACCES','EIO'])assert.deepEqual(await profileDisposition('owned-profile',{lstat:failing(code)}),{state:'unknown',reason:code});
+assert.deepEqual(await profileDisposition('owned-profile',{lstat:failing('unbounded sensitive message')}),{state:'unknown',reason:'OBSERVATION_FAILED'});
+assert.deepEqual(await profileDisposition(null,{lstat:async()=>{throw Error('Must not inspect an unobserved profile');}}),{state:'unobserved'});
+console.log('PASS: actual profile consumer reports present, ENOENT absence and EACCES/EIO unknown with bounded codes. No browser launched.');

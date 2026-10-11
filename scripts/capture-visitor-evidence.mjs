@@ -21,6 +21,10 @@ export async function verifyStatic(root,receipt){
  for(const row of receipt.files){const file=containedFile(root,'/material-file-encryptor/'+row.path);if(!file)throw Error('STATIC_PATH_INVALID');const info=await fs.lstat(file);if(!info.isFile()||info.isSymbolicLink()||info.size!==row.bytes||digest(await fs.readFile(file))!==row.sha256)throw Error('STATIC_BYTES_CHANGED');}
  return true;
 }
+export async function profileDisposition(profile,{lstat=fs.lstat}={}){
+ if(!profile)return{state:'unobserved'};
+ try{await lstat(profile);return{state:'retained'};}catch(error){if(error.code==='ENOENT')return{state:'absent'};return{state:'unknown',reason:typeof error.code==='string'&&/^[A-Z0-9_]{1,40}$/.test(error.code)?error.code:'OBSERVATION_FAILED'};}
+}
 export async function processIdentity(pid,{readFile=fs.readFile}={}){
  try{const stat=await readFile(`/proc/${pid}/stat`,'utf8'),end=stat.lastIndexOf(')');if(end<0)throw Error('INVALID_PROCESS_STAT');const fields=stat.slice(end+2).trim().split(/\s+/);if(!/^\d+$/.test(fields[19]||''))throw Error('INVALID_PROCESS_STAT');return{state:'present',identity:{pid,startTicks:fields[19]}};}catch(error){return error.code==='ENOENT'?{state:'absent'}:{state:'unknown',reason:error.code||'INVALID_PROCESS_STAT'};}
 }
@@ -90,7 +94,7 @@ export async function capture(){
   if(treeTimer)clearInterval(treeTimer);try{await bounded(treeFlight,2000,'TREE_OBSERVATION_TIMEOUT');}catch{treeReasons.add('tree-observation-incomplete');}receipt.closure.attempted=true;const failures=[];try{if(context)await bounded(context.close(),10000,'CONTEXT_CLOSE_TIMEOUT');}catch{failures.push('context-close');}try{if(browserServer)await bounded(browserServer.close(),15000,'BROWSER_CLOSE_TIMEOUT');}catch{failures.push('browser-close');}try{if(browser)await bounded(browser.close(),5000,'TRANSPORT_CLOSE_TIMEOUT');}catch{failures.push('transport-close');}
   if(!identities.length)treeReasons.add('browser-tree-not-observed');receipt.closure.treeComplete=treeReasons.size===0;receipt.closure.treeIncompleteReasons=[...treeReasons];receipt.closure.absence=await absent(identities);receipt.closure.observedProcessesGone=receipt.closure.treeComplete&&receipt.closure.absence.verified;receipt.closure.observedProcesses=identities;
   try{if(server){await bounded(new Promise((resolve,reject)=>server.close(error=>error?reject(error):resolve())),5000,'SERVER_CLOSE_TIMEOUT');receipt.closure.serverClosed=true;}}catch{failures.push('server-close');}
-  receipt.closure.profileDisposition=profile?await fs.lstat(profile).then(()=> 'retained',()=> 'absent'):'unobserved';receipt.closure.failures=failures;receipt.finishedAtUtc=new Date().toISOString();await save();
+  receipt.closure.profileObservation=await profileDisposition(profile);receipt.closure.profileDisposition=receipt.closure.profileObservation.state;receipt.closure.failures=failures;receipt.finishedAtUtc=new Date().toISOString();await save();
  }
 }
 
