@@ -3,9 +3,9 @@ import {withCdpConnectionProof} from './cdp-connection-plan.mjs';
 
 // Producers own privileged synthetic setup and never return credentials. The
 // adapter drives ordinary controls and separately observes the production UI.
-const protectedActions=new Set(['set-up-local-profile','unlock-local-profile','begin-unlock','open-target-wizard','save-target-lock','open-picker-without-consumption','choose-once','second-change-denied','invalid-factor','open-picker','select-synthetic-file','export-selected-metadata','export-selected']);
+const protectedActions=new Set(['set-up-local-profile','unlock-local-profile','begin-unlock','open-target-wizard','save-target-lock','open-picker-without-consumption','choose-once','second-change-denied','invalid-factor','open-picker','select-synthetic-file','export-selected-metadata','export-selected','unlock-history','export-redacted-history','restore-entry']);
 export function createAccessAdapters({launch,receipt,inventory,prepareOwnedFixture,fixtures={}}){
- const entries=inventory.states.filter(state=>state.owner==='access');
+ const entries=inventory.states.filter(state=>state.owner==='access'&&state.id.startsWith('access-'));
  const plan=steps=>withCdpConnectionProof({version:1,receipt,endpoint:'http://127.0.0.1:'+launch.cdp.port,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:15000,steps},'control');
  const execute=async(executePlan,id,expression,poll=false)=>{
   const result=await executePlan(plan([{id,op:poll?'poll':'evaluate',expression,...(poll?{equals:true,intervalMs:100}:{})}]));
@@ -16,7 +16,7 @@ export function createAccessAdapters({launch,receipt,inventory,prepareOwnedFixtu
  const actionSelector=(name,parent='')=>(parent?parent+' ':'')+'[data-access-action="'+name+'"]';
  const click=selector=>'(()=>{const el='+query(selector)+';if(!el||el.disabled||!el.getClientRects().length||el.closest("[hidden]"))throw Error("Active access control unavailable");el.click();return true;})()';
  const change=(selector,value)=>'(()=>{const el='+query(selector)+';if(!el||el.disabled||el.readOnly||!el.getClientRects().length||el.closest("[hidden]"))throw Error("Editable access control unavailable");el.value='+JSON.stringify(value)+';el.dispatchEvent(new Event("input",{bubbles:true,composed:true}));el.dispatchEvent(new Event("change",{bubbles:true,composed:true}));return true;})()';
- const privacy='(()=>{const root=document.querySelector(".access-workspace");if(!root)return false;const privateFields=[...root.querySelectorAll("[type=password],[data-access-field=current-code]")];const qr=[...root.querySelectorAll("[data-access-qr-preview]")];const videos=[...root.querySelectorAll("video")];const codes=[...root.querySelectorAll("[data-entry-id] output,[data-entry-id] [data-next]")];return privateFields.every(el=>!el.value)&&qr.every(el=>el.hidden&&el.childElementCount===0)&&videos.every(el=>el.hidden&&!el.srcObject)&&codes.every(el=>!el.getClientRects().length);})()';
+ const privacy='(()=>{const root=document.querySelector(".access-workspace");if(!root)return false;const privateFields=[...root.querySelectorAll("[type=password],[data-access-field=current-code],[data-access-history-field=history-password]")];const qr=[...root.querySelectorAll("[data-access-qr-preview]")];const videos=[...root.querySelectorAll("video")];const codes=[...root.querySelectorAll("[data-entry-id] output,[data-entry-id] [data-next]")];return privateFields.every(el=>!el.value)&&qr.every(el=>el.hidden&&el.childElementCount===0)&&videos.every(el=>el.hidden&&!el.srcObject)&&codes.every(el=>!el.getClientRects().length);})()';
  function capability(name){const producer=fixtures[name];if(!producer)throw Error('CAPABILITY_UNAVAILABLE: '+name);return producer;}
  function access(){const producer=capability('access');for(const method of ['prepare','perform','observe','restore'])if(typeof producer[method]!=='function')throw Error('CAPABILITY_UNAVAILABLE: access.'+method);return producer;}
  function proof(value,binding){assert.equal(value?.ownedSyntheticFixture,true,'Synthetic ownership missing');assert.equal(value.sourceCommit,binding.sourceCommit,'Source binding changed');assert.equal(value.productionApi,true,'Production fixture route required');}
@@ -40,13 +40,26 @@ export function createAccessAdapters({launch,receipt,inventory,prepareOwnedFixtu
    if(['open-picker','select-synthetic-file'].includes(id))capability('nativePicker');
    const result=await access().perform({...context,state:state.id,action:id,nativePicker:fixtures.nativePicker});proof(result,binding);
    await observeProducer(context,state.id,id);
+   await execute(executePlan,id+'-private-output',privacy,true);
+   const expected=id==='open-target-wizard'?visible('[data-access-wizard]'):id==='save-target-lock'?'document.querySelector("[data-access-wizard]").hidden':visible(state.selector);
+   await execute(executePlan,id+'-production-state',expected,true);
    // A successful producer must leave only safe booleans in returned evidence.
-   return {id,activated:true,observablePassed:true,activation:'owned-production-fixture',evidence:{protectedState:true,privacySafe:true,stateId:state.id,actionId:id,sourceCommit:binding.sourceCommit}};
+   return {id,activated:true,observablePassed:true,activation:'owned-production-fixture',evidence:{protectedState:true,privacySafe:true,stateId:state.id,actionId:id,sourceCommit:binding.sourceCommit,planId:id+'-production-state',privateOutputAbsent:true}};
   }
   if(ordinary[id]){
    const [name,parent,expected]=ordinary[id];
    if((id==='log-out'||id==='logout'||id==='logout-clears-wait')&&!state.selector.includes('profile'))await execute(executePlan,id+'-profile-tab',click('#access-tab-profile'));
    await execute(executePlan,id+'-activate',click(actionSelector(name,parent)));await execute(executePlan,id+'-result',expected,true);
+  }else if(id==='lock-history'||id==='cancel-history-unlock'){
+   await execute(executePlan,id,click('[data-access-history-action=lock-history]'));await execute(executePlan,id+'-result','document.querySelector("[data-access-history] section").hidden',true);await observeProducer(context,state.id,id);
+  }else if(id==='open-history-wait'){
+   await execute(executePlan,id,click('[data-access-history-action=try-the-waiting-ladder]'));await execute(executePlan,id+'-result',visible('[data-access-waiting=history]'),true);
+  }else if(id==='cancel-history-wait'){
+   await execute(executePlan,id,click('[data-access-waiting=history] [data-access-action=close]'));await execute(executePlan,id+'-result','!document.querySelector("[data-access-waiting=history]")',true);
+  }else if(id==='label-entry'){
+   await execute(executePlan,id+'-field',change('[data-access-history-field=entry-label]','Synthetic reviewed label'));await execute(executePlan,id,click('[data-access-history-action=save-label]'));await execute(executePlan,id+'-result','[...document.querySelectorAll("[data-access-history] article span")].some(el=>el.textContent==="Synthetic reviewed label")',true);
+  }else if(id==='compare-entries'){
+   await execute(executePlan,id+'-select','(()=>{const items=[...document.querySelectorAll("[data-history-entry]")];if(items.length<2)throw Error("Two history entries required");for(const el of items){if(el.disabled||!el.getClientRects().length)throw Error("History selection unavailable");el.checked=false;el.dispatchEvent(new Event("change",{bubbles:true,composed:true}));}for(const el of items.slice(0,2)){el.checked=true;el.dispatchEvent(new Event("change",{bubbles:true,composed:true}));}return true;})()');await execute(executePlan,id,click('[data-access-history-action=compare-selected-entries]'));await execute(executePlan,id+'-result','(()=>{const el=document.querySelector("[data-access-history] output");if(!el?.textContent)return false;const value=JSON.parse(el.textContent);return Array.isArray(value)&&value.every(row=>row.valuesOmitted===true);})()',true);
   }else if(id==='cancel-dialog'){
    await execute(executePlan,id,click('#dialog-cancel'));await execute(executePlan,id+'-result','!document.querySelector("#vault-dialog").open',true);
   }else if(id==='edit-transport'){
@@ -83,7 +96,7 @@ export function createAccessAdapters({launch,receipt,inventory,prepareOwnedFixtu
  }
  return Object.fromEntries(entries.map(state=>[state.id,{
   async prepare(context){
-   const producer=access();if(state.id==='create-key-file')capability('nativePicker');
+   const producer=access();if(state.id==='access-once')capability('nativePicker');
    if(typeof prepareOwnedFixture!=='function')throw Error('CAPABILITY_UNAVAILABLE: prepareOwnedFixture');
    const native=await prepareOwnedFixture({...context,state:state.id,requiredDriveState:state.id.startsWith('create-')?'locked':'unchanged'});assert.equal(native.ownedSyntheticFixture,true);assert.equal(native.sourceCommit,context.binding.sourceCommit);
    const result=await producer.prepare({...context,state:state.id,phase:'prepare'});proof(result,context.binding);
