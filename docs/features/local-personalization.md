@@ -32,6 +32,8 @@ The startup surprise helper evaluates at most once, draws at 10%, excludes first
 
 ## Verification and remaining work
 
+The Private local history tab stores password-encrypted snapshots in a separate bounded local record. Its password is independent of element locks and local-profile access. Records have chained integrity hashes and authenticated encryption, and snapshot redaction excludes credentials, authenticator secrets, personal vocabulary and custom images. It supports search, date/action filters, comparison, append-only restore and labels, redacted metadata export, retention and explicitly confirmed pruning. The browser implementation is an encrypted journal, not a Git repository. Desktop integration may supply `historyManager` and `historyCredentialStore` for native storage. Automatic settings recording begins only while history is unlocked; changes made while it is locked are not falsely described as recorded. Full native Git-backed history remains a separate integration requirement.
+
 `node --test test/local-personalization.test.js` covers settings persistence, unsafe input, mode restoration, overnight/date boundaries, precedence, external-generation races, language boundaries, serialized narration and startup exclusion. These are module checks, not proof of desktop or browser rendering. Full picker search integration, all-message localization, protected durable history, full advanced appearance capabilities, verified shared desktop record propagation, safe external networking and real built-surface capture remain host integration or subsequent verification requirements. No claim of full universal feature completion is made by these modules.
 
 ## 廣東話說明

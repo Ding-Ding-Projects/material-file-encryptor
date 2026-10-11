@@ -2,7 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {passwordVerifier,verifyPassword,createSessionKey,deriveCacheKey,seal,unseal,totp,parseOtpUri} from '../src/renderer/features/access/crypto.js';
 import {LockController,LOCK_POLICIES,WaitLadder} from '../src/renderer/features/access/locks.js';
+import {otpUri,qrPixels,qrSvg,decodeQrPixels} from '../src/renderer/features/access/qr.js';
 const base32 = value => {let bits=0,acc=0,out='';for(const byte of new TextEncoder().encode(value)){acc=(acc<<8)|byte;bits+=8;while(bits>=5){bits-=5;out+='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'[(acc>>bits)&31];}}if(bits)out+='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'[(acc<<(5-bits))&31];return out;};
+test('local QR encoder and decoder round-trip registration parameters without a network',()=>{
+  const entry={secret:'JBSWY3DPEHPK3PXP',issuer:'Example account',account:'sample@example.test',algorithm:'SHA512',digits:8,period:45};
+  const uri=otpUri(entry);const pixels=qrPixels(uri);assert.equal(decodeQrPixels(pixels.data,pixels.width,pixels.height),uri);
+  assert.deepEqual(parseOtpUri(uri),entry);assert.match(qrSvg(uri),/fill="white"/);assert.match(qrSvg(uri),/fill="black"/);
+  assert.throws(()=>decodeQrPixels(new Uint8ClampedArray(4),5000,5000),/megapixel/);
+});
 test('password records are salted and protected cache rejects altered identity',async()=>{
   const a=await passwordVerifier('sample credential'),b=await passwordVerifier('sample credential');assert.notEqual(a.salt,b.salt);assert.equal(await verifyPassword('sample credential',a),true);assert.equal(await verifyPassword('incorrect',a),false);
   const key=await createSessionKey(),record=await seal({value:42},key,'entry-a');assert.deepEqual(await unseal(record,key,'entry-a'),{value:42});await assert.rejects(unseal(record,key,'entry-b'));
@@ -13,6 +20,11 @@ test('private cache reopens only with matching profile password and stable ident
   assert.equal(JSON.stringify(encrypted).includes('private value'),false);
   assert.deepEqual(await unseal(encrypted,await deriveCacheKey('sample profile',verifier.salt),'private-cache'),{settings:['private value']});
   await assert.rejects(unseal(encrypted,await deriveCacheKey('wrong profile',verifier.salt),'private-cache'));
+});
+test('protected cache supports large snapshots and enforces byte limits',async()=>{
+  const key=await createSessionKey();const snapshot={text:'x'.repeat(300000)};assert.deepEqual(await unseal(await seal(snapshot,key,'large'),key,'large'),snapshot);
+  await assert.rejects(seal({text:'x'.repeat(1048576)},key,'large'),/1 MiB/);
+  await assert.rejects(unseal({version:1,iv:'a'.repeat(16),ciphertext:'a'.repeat(22369625)},key,'large'),/limits/);
 });
 test('RFC6238 vectors for all three hash algorithms and six/eight digits',async()=>{
   const cases=[['SHA1','12345678901234567890',['94287082','07081804','14050471','89005924','69279037','65353130']],['SHA256','12345678901234567890123456789012',['46119246','68084774','67062674','91819424','90698825','77737706']],['SHA512','1234567890123456789012345678901234567890123456789012345678901234',['90693936','25091201','99943326','93441116','38618901','47863826']]];

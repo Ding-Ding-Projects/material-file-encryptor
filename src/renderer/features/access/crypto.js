@@ -1,6 +1,6 @@
 const utf8 = new TextEncoder();
 const bytes = value => Uint8Array.from(atob(value), c => c.charCodeAt(0));
-const base64 = value => btoa(String.fromCharCode(...new Uint8Array(value)));
+const base64 = value => {const input=new Uint8Array(value);let binary='';for(let start=0;start<input.length;start+=8192)binary+=String.fromCharCode(...input.subarray(start,start+8192));return btoa(binary);};
 export const randomId = () => crypto.randomUUID();
 export async function passwordVerifier(value, iterations = 310000) {
   if (typeof value !== 'string' || !value.length) throw new Error('A credential is required.');
@@ -25,12 +25,14 @@ export async function deriveCacheKey(password,salt) {
   return crypto.subtle.deriveKey({name:'PBKDF2',hash:'SHA-256',salt:bytes(salt),iterations:310000},material,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
 }
 export async function seal(value,key,identity) {
+  const plain=utf8.encode(JSON.stringify(value));if(plain.byteLength>1048576)throw new Error('Protected record exceeds the 1 MiB limit.');
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ciphertext = await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:utf8.encode(identity)},key,utf8.encode(JSON.stringify(value)));
+  const ciphertext = await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:utf8.encode(identity)},key,plain);
   return {version:1,iv:base64(iv),ciphertext:base64(ciphertext)};
 }
 export async function unseal(record,key,identity) {
   if (record?.version !== 1) throw new Error('Unsupported protected record.');
+  if(typeof record.ciphertext!=='string'||record.ciphertext.length>22369624||typeof record.iv!=='string'||record.iv.length!==16)throw new Error('Protected record exceeds its limits.');
   const plain = await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(record.iv),additionalData:utf8.encode(identity)},key,bytes(record.ciphertext));
   return JSON.parse(new TextDecoder().decode(plain));
 }
