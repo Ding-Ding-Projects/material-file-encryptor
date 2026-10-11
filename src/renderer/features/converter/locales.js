@@ -1,0 +1,1 @@
+export const converterWorkspaceCopy=Object.freeze({'Converter sections':'轉換工具分頁','Source files':'來源檔案','Formats':'格式','Options':'選項','No conversion jobs on this page.':'此頁未有轉換工作。','Conversion progress':'轉換進度'});
