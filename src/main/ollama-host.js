@@ -5,6 +5,7 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {createNativeProfileAdapter} from '../features/ollama/native-profiles.js';
 import {createVerifiedRuntimeLauncher,OFFICIAL_INSTALL_PAGE} from '../features/ollama/runtime.js';
+import {localEndpoint} from '../features/ollama/endpoint.js';
 const execute=promisify(execFile);
 const samePath=(a,b)=>process.platform==='win32'?a.toLowerCase()===b.toLowerCase():a===b;
 const inside=(root,target)=>{const relative=path.relative(root,target);return !relative||(!relative.startsWith('..'+path.sep)&&relative!=='..'&&!path.isAbsolute(relative));};
@@ -21,9 +22,10 @@ function normalizeManifest(value){
   const manifest={sha256:value.sha256,bytes:value.bytes,version:value.version,sourceUrl:value.sourceUrl,artifactSha256:value.artifactSha256,member:value.member};
   return {...manifest,id:createHash('sha256').update(JSON.stringify(manifest)).digest('hex')};
 }
-export function createNativeOllamaHost({dialog,getWindow=()=>null,openExternal,credentials,dataDirectory,reviewedManifests=[],publisherPolicies=[],signatureInspector=inspectAuthenticode,filesystem=fs,executeProfile,spawnRuntime}={}){
+export function createNativeOllamaHost({dialog,getWindow=()=>null,openExternal,credentials,dataDirectory,loopbackPort=11434,reviewedManifests=[],publisherPolicies=[],signatureInspector=inspectAuthenticode,filesystem=fs,executeProfile,spawnRuntime}={}){
   if(!path.isAbsolute(dataDirectory||''))throw new Error('An absolute application data directory is required.');
   const ownedRoot=path.join(dataDirectory,'local-models','profiles');
+  const endpoint=localEndpoint(loopbackPort),managedModelDirectory=path.join(dataDirectory,'local-models','runtime-models');
   const manifests=reviewedManifests.map(normalizeManifest);
   for(const policy of publisherPolicies)if(!policy||typeof policy.publisher!=='string'||!policy.publisher||policy.publisher.length>512||!officialSource(policy.sourceUrl)||Object.keys(policy).some(k=>!['publisher','sourceUrl','thumbprint'].includes(k))||(policy.thumbprint!==undefined&&!/^[A-Fa-f0-9]{40,64}$/.test(policy.thumbprint)))throw new Error('Invalid established publisher policy.');
   const policies=publisherPolicies.map(policy=>({...policy}));
@@ -65,16 +67,17 @@ export function createNativeOllamaHost({dialog,getWindow=()=>null,openExternal,c
   }
   async function pickOwnedDirectory(){const root=await initialize();if(!dialog?.showOpenDialog)throw new Error('Native directory picker is unavailable.');const options={title:'Select a working folder within the owned profile directory',defaultPath:root,properties:['openDirectory']};const window=getWindow();const selected=window?await dialog.showOpenDialog(window,options):await dialog.showOpenDialog(options);if(selected.canceled||selected.filePaths?.length!==1)return null;const directory=await canonical(selected.filePaths[0]);if(!inside(root,directory.resolved))throw new Error('Choose a folder within the application-owned profile directory.');return directory.resolved;}
   async function openOfficialPage(url){if(url!==OFFICIAL_INSTALL_PAGE)throw new Error('Only the fixed official installation page is permitted.');if(!openExternal)throw new Error('External navigation is unavailable.');const answer=await message({type:'question',title:'Open official Ollama installation page?',message:'Open the official Windows download page in your browser?',detail:'This application will not download or execute an installer.',buttons:['Open official page','Cancel'],defaultId:1,cancelId:1,noLink:true});if(answer.response===0)await openExternal(OFFICIAL_INSTALL_PAGE);return {opened:answer.response===0};}
-  const profiles=createNativeProfileAdapter({pickExecutable,pickOwnedDirectory,verifyExecutable,...(executeProfile?{executeFile:executeProfile}:{})});
+  async function initializeModels(){await initialize();try{await filesystem.mkdir(managedModelDirectory,{mode:0o700});}catch(error){if(error.code!=='EEXIST')throw error;}const checked=await canonical(managedModelDirectory);if(!inside(dataDirectory,checked.resolved))throw new Error('Model directory escaped application data.');return checked.resolved;}
+  const profiles=createNativeProfileAdapter({pickExecutable,pickOwnedDirectory,verifyExecutable,loopbackPort,...(executeProfile?{executeFile:executeProfile}:{})});
   async function confirmLaunch(executable,action){
     if(await verifyExecutable(executable)!==true)throw new Error('Executable failed native trust verification.');
-    const answer=await message({type:'question',title:'Confirm local Ollama execution',message:'Run this trusted executable for the displayed action?',detail:`Executable: ${executable}\nAction: ${action}\nNetwork boundary: 127.0.0.1:11434 only; cloud disabled.`,buttons:['Run local action','Cancel'],defaultId:1,cancelId:1,noLink:true});
+    const answer=await message({type:'question',title:'Confirm local Ollama execution',message:'Run this trusted executable for the displayed action?',detail:`Executable: ${executable}\nAction: ${action}\nNetwork boundary: ${endpoint.host} only; cloud disabled.\nManaged model directory: ${managedModelDirectory}`,buttons:['Run local action','Cancel'],defaultId:1,cancelId:1,noLink:true});
     if(answer.response!==0){const error=new Error('Native execution confirmation was cancelled. No process was started.');error.code='USER_CANCELLED';throw error;}
   }
-  const rawRuntimeLaunch=createVerifiedRuntimeLauncher({verifyExecutable,...(spawnRuntime?{spawnImpl:spawnRuntime}:{})});
-  const launchVerified=async request=>{const selected={executable:request.executable,args:[...(request.args||[])],environment:{...request.environment}};if(JSON.stringify(selected.args)!=='["serve"]'||JSON.stringify(selected.environment)!=='{"OLLAMA_HOST":"127.0.0.1:11434","OLLAMA_NO_CLOUD":"1"}')throw new Error('Runtime launch does not match the fixed local-server profile.');await confirmLaunch(selected.executable,'serve');return rawRuntimeLaunch(selected);};
+  const rawRuntimeLaunch=createVerifiedRuntimeLauncher({verifyExecutable,loopbackPort,managedModelDirectory,...(spawnRuntime?{spawnImpl:spawnRuntime}:{})});
+  const launchVerified=async request=>{const selected={executable:request.executable,args:[...(request.args||[])],environment:{...request.environment}};if(JSON.stringify(selected.args)!=='["serve"]'||JSON.stringify(selected.environment)!==JSON.stringify({OLLAMA_HOST:endpoint.host,OLLAMA_NO_CLOUD:'1'}))throw new Error('Runtime launch does not match the fixed local-server profile.');await confirmLaunch(selected.executable,'serve');await initializeModels();return rawRuntimeLaunch(selected);};
   const rawProfileLaunch=profiles.launcher;
   profiles.launcher=async profile=>{if(!await profiles.validateProfile(profile))throw new Error('Profile failed native launch validation.');const selected={...profile,args:[...profile.args],env:{...profile.env}};await confirmLaunch(selected.executable,selected.args.map(value=>value==='{model}'?selected.model:value).join(' '));return rawProfileLaunch(selected);};
-  const runtimeOptions={pickExecutable,verifyExecutable,openOfficialPage,launchVerified};
-  return {initialize,ownedRoot,verifyExecutable,pickExecutable,pickOwnedDirectory,openOfficialPage,runtimeOptions,profileOptions:profiles,serviceOptions:{profileOwnedRoots:[ownedRoot],profilePicker:profiles.pickProfile,profileLauncher:profiles.launcher,profileHealthCheck:profiles.healthCheck,verifyExecutable,validateProfile:profiles.validateProfile},trustStatus(){return {establishedPublisherPolicies:policies.length,reviewedManifests:manifests.length,automaticTrust:policies.length>0,limitation:policies.length||manifests.length?null:'No official publisher identity or reviewed executable manifest is configured. Execution remains disabled.'};}};
+  const runtimeOptions={pickExecutable,verifyExecutable,openOfficialPage,launchVerified,loopbackPort,managedModelDirectory};
+  return {initialize,initializeModels,ownedRoot,managedModelDirectory,verifyExecutable,pickExecutable,pickOwnedDirectory,openOfficialPage,runtimeOptions,profileOptions:profiles,serviceOptions:{loopbackPort,profileOwnedRoots:[ownedRoot],profilePicker:profiles.pickProfile,profileLauncher:profiles.launcher,profileHealthCheck:profiles.healthCheck,verifyExecutable,validateProfile:profiles.validateProfile},trustStatus(){return {establishedPublisherPolicies:policies.length,reviewedManifests:manifests.length,automaticTrust:policies.length>0,limitation:policies.length||manifests.length?null:'No official publisher identity or reviewed executable manifest is configured. Execution remains disabled.'};}};
 }
