@@ -14,7 +14,8 @@ const poll=(id,expression)=>({id,op:'poll',expression,equals:true,intervalMs:100
 export function settledComposedMotion(selector){
  const visible=[...document.querySelectorAll(selector)].filter(node=>node.getClientRects().length>0);if(visible.length!==1||typeof document.getAnimations!=='function')return false;
  const within=(node,ancestor)=>{for(let current=node;current;current=current.parentElement||current.getRootNode?.().host){if(current===ancestor)return true;}return false;};
- const target=visible[0];return !document.getAnimations().some(animation=>{const node=animation.effect?.target;return node?.getClientRects().length>0&&(within(node,target)||within(target,node))&&(animation.pending||['running','paused'].includes(animation.playState));});
+ const animations=new Set(document.getAnimations());const scan=root=>{for(const node of root.querySelectorAll('*'))if(node.shadowRoot){for(const animation of node.shadowRoot.getAnimations?.()||[])animations.add(animation);scan(node.shadowRoot);}};scan(document);
+ const target=visible[0];return ![...animations].some(animation=>{const node=animation.effect?.target;return node?.getClientRects().length>0&&(within(node,target)||within(target,node))&&(animation.pending||['running','paused'].includes(animation.playState));});
 }
 // Open shadow roots are part of the production component graph. Only rendered
 // enabled controls are eligible. Calling click is explicitly a DOM activation.

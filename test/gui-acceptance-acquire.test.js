@@ -16,6 +16,7 @@ test('motion admission includes animated descendants across an open shadow root'
  const context={document:{querySelectorAll:()=>[target],getAnimations:()=>[animation]}};
  const run=()=>vm.runInNewContext(`(${settledComposedMotion.toString()})('#target')`,context);
  assert.equal(run(),false);animation.playState='finished';assert.equal(run(),true);animation.pending=true;assert.equal(run(),false);
+ context.document.getAnimations=()=>[];target.shadowRoot={querySelectorAll:()=>[],getAnimations:()=>[animation]};assert.equal(run(),false);
 });
 test('area composition rejects duplicate ownership and unlisted state adapters',()=>{
  const adapter={prepare:async()=>{},assertState:async()=>{},actions:{}};
