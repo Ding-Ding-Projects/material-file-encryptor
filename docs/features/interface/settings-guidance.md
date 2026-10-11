@@ -1003,6 +1003,8 @@ The adapter keeps the original change-owned consumer promise. Direct and guided 
 
 ## Material select and slider follow-on
 
+The source6d016f7 six-scene capture38148359873 reached registered selects, the font-family text field, scale sliders and language checkboxes at English320x844/DPR1. Raw bytes, measurements and owned closure were independently verified. It also exposed an ellipsized reset-action caption. The shared action stylesheet now uses the pinned component's supported text-wrap and text-overflow customization so complete labels can wrap within their available width. Original wording, accessible names, guidance and callbacks are unchanged. Corrected wrapping pixels and the wider language/scale matrix remain pending.
+
 Select controls now use registered md-outlined-select and md-select-option, with explicitly offered localized labels and original semantic values. Range controls use md-slider, preserving numeric values and the original min/max/step constraints. Select owns its component label; slider retains an associated visible label. The original change consumer remains the only mutation route, with execution-time disabled/read-only/disposed/disconnected admission even for the vendor noncancelable change events. Help reads offered select labels and actual slider bounds. Date/time/color/file/search and nested editor controls remain unfinished.
 
 The raw capture procedure opens the original Material select and clicks its offered option, without assigning values; historical native controls retain their original selectOption path. Current-control resolution and observed theme checks remain required after mutation. Source and injected consumers do not prove real menu keyboard/accessibility, numeric gesture precision or pixels.

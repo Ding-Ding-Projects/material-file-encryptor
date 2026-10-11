@@ -1,3 +1,7 @@
+- [x] Inspect exact6d016f7 genuine six-scene capture including registered selects, textfield, sliders and checkboxes; verify raw hashes and owned cloud closure.
+- [x] Independently review supported host caption-wrap source repair and additive private-safe label measurements.
+- [ ] Rebuild/recapture the identical320x844 caption tuple and inspect complete wrapped wording and geometry.
+
 - [x] Independently review shared genuine Material select/slider source, supported option initialization, numeric precision and noncancelable late-lock negatives. Source only.
 - [x] Verify exact940 raw capture hashes and complete cloud closure, while retaining its missing textfield/checkbox pixel coverage.
 - [ ] Execute and inspect new exact-control scenes, actual select menu/slider keyboard/accessibility and full responsive matrix.
