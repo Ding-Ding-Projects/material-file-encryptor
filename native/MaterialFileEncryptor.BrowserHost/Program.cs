@@ -60,7 +60,6 @@ public static class PipeIdentity
     public static string CurrentSid() => WindowsIdentity.GetCurrent().User?.Value ?? throw new InvalidDataException("Current user identity unavailable.");
     public static string Name(string sid) => "mfe-browser-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(sid))).ToLowerInvariant()[..32];
     [DllImport("advapi32.dll", SetLastError = true)] static extern uint GetSecurityInfo(IntPtr handle, int type, uint information, out IntPtr owner, out IntPtr group, out IntPtr dacl, out IntPtr sacl, out IntPtr descriptor);
-    [DllImport("advapi32.dll", SetLastError = true)] static extern uint SetSecurityInfo(IntPtr handle, int type, uint information, IntPtr owner, IntPtr group, IntPtr dacl, IntPtr sacl);
     [DllImport("kernel32.dll")] static extern IntPtr LocalFree(IntPtr value);
     [DllImport("advapi32.dll", SetLastError = true)] static extern uint GetSecurityDescriptorLength(IntPtr descriptor);
 
@@ -81,8 +80,6 @@ public static class PipeIdentity
         }
         finally { LocalFree(descriptor); }
     }
-    [DllImport("advapi32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
-    static extern bool GetSecurityDescriptorDacl(IntPtr descriptor, [MarshalAs(UnmanagedType.Bool)] out bool present, out IntPtr dacl, [MarshalAs(UnmanagedType.Bool)] out bool defaulted);
 }
 
 public static class Program

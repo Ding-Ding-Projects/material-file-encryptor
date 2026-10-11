@@ -40,8 +40,9 @@ public static class NativeChecks
         await client.ConnectAsync(timeout.Token);
         await serverConnection;
         Console.WriteLine("Synthetic pipe connection passed; verifying frame traffic.");
+        var reading = NativeFrames.Read(server, timeout.Token);
         await NativeFrames.Write(client, new { fixture = true }, timeout.Token);
-        if ((await NativeFrames.Read(server, timeout.Token))?.GetProperty("fixture").GetBoolean() != true) throw new InvalidDataException("Same-user pipe round trip failed.");
+        if ((await reading)?.GetProperty("fixture").GetBoolean() != true) throw new InvalidDataException("Same-user pipe round trip failed.");
         checks++;
         Console.WriteLine($"PASS: {checks} synthetic native framing and same-user pipe checks. No installation or browser profile was changed.");
         return 0;

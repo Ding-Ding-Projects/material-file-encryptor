@@ -9,10 +9,10 @@ The transport does not open a vault, handle plaintext file contents, or store
 browser pairing credentials on disk.
 
 The production pipe name is derived from the current Windows user SID. Both the
-client and server request `PipeOptions.CurrentUserOnly`. The server also replaces
-the DACL with one allow entry for the actual user SID and reads the resulting
-security descriptor back. Missing, broad, or unexpected permissions stop the
-broker before it reports ready. This extra restriction avoids treating the token
+client and server request `PipeOptions.CurrentUserOnly`. The server reads the
+actual DACL back and accepts it only when it contains one allow entry for the
+actual user SID with read and write access. Missing, broad, or unexpected permissions
+stop the broker before it reports ready. This inspection avoids treating the token
 owner SID used by some .NET versions as necessarily equal to the actual user SID.
 Different integrity or elevation levels may still prevent connection. The
 supported path uses the desktop and browser at the same normal user level.
