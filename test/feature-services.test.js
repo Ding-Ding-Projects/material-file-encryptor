@@ -124,7 +124,8 @@ test('access host validation rejects browser admission and nested extra metadata
  assert.throws(()=>validateFeatureRequest('access','localVerify',{target:'profile',credentials:Object.assign(Object.create({pin:'synthetic'}),{password:'synthetic'})}));
  assert.throws(()=>validateFeatureRequest('access','waitAnswer',{target:'profile',nonce:'x',answer:[{cell:0,time:1,actor:'forged'}]}));
  const decorated=Object.assign([1],{actor:'forged'}),inherited=[1];Object.setPrototypeOf(inherited,Object.create(Array.prototype));
- for(const answer of [decorated,inherited])assert.throws(()=>validateFeatureRequest('access','waitAnswer',{target:'profile',nonce:'x',answer}));
+ for(const answer of [decorated,inherited,Array(10),[1,,3]])assert.throws(()=>validateFeatureRequest('access','waitAnswer',{target:'profile',nonce:'x',answer}));
+ let calls=0;const accessor=[1];Object.defineProperty(accessor,'0',{get(){calls++;return 1;},enumerable:true});assert.throws(()=>validateFeatureRequest('access','waitAnswer',{target:'profile',nonce:'x',answer:accessor}));assert.equal(calls,0);
  assert.throws(()=>validateFeatureRequest('access','displayNameSet',{value:'x'.repeat(161)}));
 });
 
