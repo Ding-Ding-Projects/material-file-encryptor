@@ -35,7 +35,7 @@ No HTTP API is introduced; a Postman collection is not applicable.
 
 ## Explicit timing guidance inventory
 
-The following twenty handwritten concepts have bilingual explanation records. These twenty concepts mount the reviewed optional guide immediately above their exact fields, use the original change event and await its admitted consumer. A mounted-component test covers guided numeric persistence. Other motion controls, complete documentation-reader integration and genuine browser guidance acceptance remain pending.
+The following 34 handwritten concepts have bilingual explanation records. These 34 concepts mount the reviewed optional guide immediately above their exact fields, use the original change event and await its admitted consumer. A mounted-component test covers guided numeric persistence. Other motion controls, complete documentation-reader integration and genuine browser guidance acceptance remain pending.
 
 ### duration
 
@@ -415,4 +415,270 @@ Use accumulate with a repeated supported transform.
 An unsupported iterationComposite capability cancels the attempted handle and reports unavailable.
 
 Reset Iteration composition to replace to use the ordinary renderer path.
+
+
+### trigger
+
+Trigger
+
+Choose the target event or state change that starts this effect.
+
+The listed state, pointer, focus, drag, visibility and explicit command events.
+
+entry.
+
+Starts animation only; it never invokes protected product operations.
+
+Choose hover for a pointer-entry effect.
+
+Unlisted events are rejected before saving.
+
+Return to entry and restart preview to isolate event delivery.
+
+
+### from-state
+
+From state
+
+Require a particular previous state before accepting this trigger.
+
+any or one documented target state.
+
+any.
+
+Filters transitions using the state set captured before the change.
+
+Choose normal for an entry from the ordinary state.
+
+A mismatched previous state leaves the effect unstarted.
+
+Choose any to remove the previous-state restriction.
+
+
+### to-state
+
+To state
+
+Require the destination state when this trigger is delivered.
+
+One documented target state.
+
+normal.
+
+Filters the effect against the current target state set.
+
+Choose invalid for a validation-result animation.
+
+Unknown destination states are rejected.
+
+Choose normal or correct the target state that drives the effect.
+
+
+### progress-threshold
+
+Progress threshold
+
+Set the minimum delivered visibility progress for this trigger.
+
+A fractional value from 0 through 1.
+
+0.
+
+Visibility events below the threshold do not start the track.
+
+Use 0.5 to require at least half visibility.
+
+Values outside 0 through 1 are rejected; ordinary events deliver full progress.
+
+Reset Progress threshold to 0 to remove the visibility restriction.
+
+
+### debounce
+
+Debounce
+
+Suppress repeated deliveries close to this track last accepted trigger.
+
+0 through 60000 milliseconds.
+
+0 milliseconds.
+
+Uses the runtime clock per track, without delaying product actions.
+
+Use 250 to suppress rapid duplicate pointer events.
+
+Negative or excessive intervals are rejected.
+
+Reset Debounce to 0 when investigating missing repeated triggers.
+
+
+### retrigger
+
+Retrigger behavior
+
+Decide what a new trigger does to an already running handle.
+
+restart, ignore, reverse, or replace.
+
+restart.
+
+Ignore keeps a running handle; reverse reverses it; restart and replace cancel then start a fresh effect.
+
+Use ignore to keep a hover effect from restarting while it runs.
+
+A completed handle may start again; its fill is cancelled on replacement.
+
+Choose restart and stop existing preview if reentrancy is confusing.
+
+
+### cancel-on-exit
+
+Cancel on exit
+
+Choose whether leaving this track active state cancels its effect.
+
+true or false.
+
+true.
+
+Cancels the native handle on state exit; inactive inherited layers still stop independently.
+
+Keep true for a hover effect that should disappear when the pointer leaves.
+
+Only Boolean values are accepted after field conversion.
+
+Restore true or press Stop to release a lingering effect.
+
+
+### trigger-priority
+
+Priority
+
+Order effects delivered by the same trigger.
+
+A finite value from -1000 through 1000.
+
+0.
+
+Lower priorities start first; later authored effects and composition determine overlapping presentation.
+
+Use 10 to start a highlight after a priority 0 base effect.
+
+Priority does not authorize product commands or change event scope.
+
+Reset Priority to 0 to restore ordinary authored ordering.
+
+
+### timeline-source
+
+Timeline source
+
+Choose the native clock that drives this effect.
+
+document, scroll, or view.
+
+document.
+
+Document uses milliseconds; native scroll and view clocks use progress.
+
+Choose scroll to tie motion to the chosen scroll source.
+
+Unavailable native timeline constructors produce a retained-model unavailable status.
+
+Choose document for a renderer without scroll or view timeline support.
+
+
+### timeline-element
+
+Timeline element
+
+Identify the actual element supplying native timeline progress.
+
+target, parent, or document scrolling element.
+
+target.
+
+Scroll timelines use this source; view timelines observe this subject.
+
+Choose parent when the target sits inside the relevant scrolling container.
+
+Native construction failures are contained and shown without abandoning listeners.
+
+Return to target or inspect which ancestor actually scrolls.
+
+
+### timeline-axis
+
+Timeline axis
+
+Choose the physical or writing-mode axis measured by the native timeline.
+
+block, inline, x, or y.
+
+block.
+
+Changes which scroll movement or view progression advances this effect.
+
+Choose x for a horizontal scrolling strip.
+
+Only native axis choices are stored.
+
+Reset Timeline axis to block for the ordinary writing flow.
+
+
+### view-inset
+
+View inset
+
+Adjust the visibility range used by a native view timeline.
+
+A renderer-supported inset string or auto.
+
+auto.
+
+Changes native view-progress boundaries while retaining authored keyframes.
+
+Use 10% when the renderer supports an inset visibility band.
+
+Safe syntax is preserved, but invalid native inset construction reports unavailable.
+
+Reset View inset to auto after a native constructor rejection.
+
+
+### attachment-start
+
+Attachment start
+
+Set where the native effect attaches to the progress timeline beginning.
+
+normal or a renderer-supported attachment range value.
+
+normal.
+
+Passes rangeStart to the native animation options.
+
+Use entry 0% when supported to attach at the beginning of entry.
+
+Native unsupported range values report unavailable instead of being claimed applied.
+
+Reset Attachment start to normal to restore the native default range.
+
+
+### attachment-end
+
+Attachment end
+
+Set where the native effect ends within the progress timeline.
+
+normal or a renderer-supported attachment end value.
+
+normal.
+
+Passes rangeEnd without changing the stored timeline playback range.
+
+Use exit 100% when supported to finish at the end of exit.
+
+The native renderer validates attachment ordering and accepted range syntax.
+
+Reset Attachment end to normal if the effect never reaches completion.
 
