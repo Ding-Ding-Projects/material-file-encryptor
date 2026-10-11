@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "jobs": [
+    {
+      "workflow": ".github/workflows/windows.yml",
+      "job": "windows",
+      "inventory": ".github/workflows/windows.dependencies.json",
+      "record": "jobs.windows"
+    },
+    {
+      "workflow": ".github/workflows/windows.yml",
+      "job": "promote",
+      "inventory": ".github/workflows/windows.dependencies.json",
+      "record": "jobs.promote"
+    },
+    {
+      "workflow": ".github/workflows/capture-evidence.yml",
+      "job": "evidence",
+      "inventory": "scripts/visitor-capture-dependencies.json",
+      "record": "."
+    },
+    {
+      "workflow": ".github/workflows/pages.yml",
+      "job": "deploy",
+      "inventory": ".github/workflows/pages.dependencies.json",
+      "record": "jobs.deploy"
+    },
+    {
+      "workflow": ".github/workflows/release-verified-windows.yml",
+      "job": "explain",
+      "bootstrapApplicable": false,
+      "reason": "Retired job uses only the hosted runner POSIX shell echo. It installs no project runtime, builds nothing and publishes nothing.",
+      "onlyRun": "echo 'Preview publication runs once in windows.yml. This retired route never publishes.'"
+    }
+  ]
+}

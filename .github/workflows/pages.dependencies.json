@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "workflow": ".github/workflows/pages.yml",
+  "freshEnvironmentVerification": "Pending a genuine cache-miss hosted run",
+  "jobs": {
+    "deploy": {
+      "tools": [
+        "Node.js",
+        "npm",
+        "esbuild",
+        "locked browser packages",
+        "verified bundled fonts"
+      ],
+      "versions": "Node.js 24.19.0 from dependencies.json; npm bundled with that runtime; package-lock.json; esbuild@0.25.11 in scripts/build-site-workspace.mjs; pinned font manifest",
+      "bootstrapMarkers": [
+        "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+        "npm ci --ignore-scripts --no-audit --no-fund",
+        "node scripts/build-site.mjs"
+      ],
+      "route": "Pinned Node setup and locked package installation; the existing static stager obtains exact esbuild and hash-verified bundled fonts. No tests or lint."
+    }
+  }
+}

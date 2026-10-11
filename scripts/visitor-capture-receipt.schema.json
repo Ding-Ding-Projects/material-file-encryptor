@@ -88,7 +88,10 @@
         "attempted",
         "observedProcessesGone",
         "serverClosed",
-        "profileDisposition"
+        "profileDisposition",
+        "treeComplete",
+        "treeIncompleteReasons",
+        "absence"
       ],
       "properties": {
         "attempted": {
@@ -106,8 +109,26 @@
             "retained",
             "absent"
           ]
+        },
+        "treeComplete": {
+          "type": "boolean"
+        },
+        "treeIncompleteReasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
+    },
+    "networkRecording": {
+      "type": "object",
+      "required": [
+        "limit",
+        "seen",
+        "dropped",
+        "truncated"
+      ]
     }
   },
   "additionalProperties": true
