@@ -15,3 +15,9 @@ The desktop must display separate always-on-top Start and completion surfaces, p
 ## Verification
 
 `test/browser-download-receiver.test.js` verifies native approval, session revocation, caller allowlisting, strict proposal shape, URL/path checks, replay admission, lock during consent and bounded split-frame decoding. Existing download-service tests verify the actual queue's network and destination protections separately.
+
+## Local extension packaging and transfer correlation
+
+The extension packaging entrypoint stages local `vendor/material.js`, `vendor/search.js` and `vendor/regex-worker.js` through `scripts/build-browser-extension.mjs`. Material Web 2.5.0 and esbuild 0.25.11 remain pinned. The staging receipt records source/output hashes and explicitly marks signing, installation and runtime verification as not performed. Popup code uses no CDN.
+
+Native preparation emits a ready download with `browserCaptureId`; transfer events preserve this identifier through completion or failure. Pending proposal cancellation emits `browser-proposal-cancelled`. The companion retains the proposed identifier and queries the native broker with `{type:'status',session,id}`. A proposed response means awaiting confirmation, never completed transfer. Installed caller and three-surface presentation proof remain pending.

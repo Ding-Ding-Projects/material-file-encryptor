@@ -15,3 +15,9 @@
 ## 驗證
 
 `test/browser-download-receiver.test.js` 驗證原生批准、工作階段撤銷、呼叫者白名單、嚴格建議形狀、網址同路徑檢查、重播限制、同意期間上鎖，同埋有界限嘅分段訊息解碼。現有下載服務測試會另外驗證實際佇列嘅網絡同目的地保護。
+
+## 本機擴充套件封裝與傳輸識別
+
+擴充套件封裝入口透過 `scripts/build-browser-extension.mjs` 準備本機 `vendor/material.js`、`vendor/search.js` 同 `vendor/regex-worker.js`。Material Web 2.5.0 同 esbuild 0.25.11 維持固定版本。準備收據記錄來源及輸出雜湊，明確標示簽署、安裝同執行驗證尚未進行。彈出頁程式唔使用 CDN。
+
+原生準備會發出帶有 `browserCaptureId` 嘅就緒下載；傳輸事件保留呢個識別碼直到完成或失敗。取消待處理提案會發出 `browser-proposal-cancelled`。配套保留提案識別碼，透過 `{type:'status',session,id}` 查詢原生接收器。提案回覆代表等待確認，唔代表傳輸完成。已安裝呼叫者及三個畫面嘅實際證據仍待完成。

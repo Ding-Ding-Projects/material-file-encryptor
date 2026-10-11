@@ -27,3 +27,7 @@ The account mutation and publication actions are desktop-only. Browser adapters 
 ## Verification
 
 `test/forge-workflow.test.js` and `test/forge-transport.test.js` use synthetic command responses, fake credential subprocesses and disposable folders. They verify selected-account binding across external account switches, missing selected-keyring refusal, cancellation before mutation and during capture, partial mutation results, capture-error redaction, helper path quoting, bundle hashes, exact confirmation and revision proof. These tests do not publish a repository or use an existing user's account. Live account, protected-store, publication and installed package acceptance remain unverified until separately performed.
+
+## Protected enrollment availability
+
+Add account currently fails before invoking CLI login because that route can fall back to plaintext storage. Account refresh is also unavailable. Existing accounts already in operating-system protected storage remain supported for account-bound publication. A guaranteed protected enrollment transaction is separate unfinished work; no live login or current credential command was executed during development.
