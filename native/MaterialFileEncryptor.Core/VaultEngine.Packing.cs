@@ -71,7 +71,7 @@ public sealed partial class VaultEngine
         });
     }
     /// <summary>Durably queues current files. Repeating after interruption skips already packed generations.</summary>
-    public async Task PackAsync(string? path=null,long? newPartSize=null,CancellationToken cancellationToken=default,IProgress<VaultPackingProgress>? progress=null)
+    public async Task<long> PackAsync(string? path=null,long? newPartSize=null,CancellationToken cancellationToken=default,IProgress<VaultPackingProgress>? progress=null)
     {
         using var lifetime=AcquireStorageOperation();long request;
         lock(gate)
@@ -90,10 +90,10 @@ public sealed partial class VaultEngine
             }
             catch{packingQueue=savedQueue;partSize=savedCap;packingPaused=savedPause;throw;}
         }
-        try{await ProcessPackingQueueAsync(cancellationToken,progress).ConfigureAwait(false);}
+        try{await ProcessPackingQueueAsync(cancellationToken,progress).ConfigureAwait(false);return request;}
         catch(OperationCanceledException){PausePacking(request);throw;}
     }
-    public void PausePacking()=>PausePacking(null);
+    public void PausePacking(long generation)=>PausePacking((long?)generation);
     private void PausePacking(long? generation)
     {
         lock(gate)

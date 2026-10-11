@@ -16,7 +16,7 @@ export async function assertUnlinkedPath(target){
  if(process.platform==='win32'){
   const literals=ancestors.map(p=>"'"+p.replaceAll("'","''")+"'").join(',');
   const script=`$ErrorActionPreference='Stop'; foreach ($p in @(${literals})) { if (((Get-Item -LiteralPath $p -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { exit 9 } }`;
-  await runBounded(path.join(process.env.SystemRoot,'System32/WindowsPowerShell/v1.0/powershell.exe'),['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(script,'utf16le').toString('base64')],{timeoutMs:10000,stage:'destination-reparse-check'});
+  await runBounded(path.join(process.env.SystemRoot,'System32/WindowsPowerShell/v1.0/powershell.exe'),['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(script,'utf16le').toString('base64')],{timeoutMs:30000,stage:'destination-reparse-check'});
  }
  return absolute;
 }

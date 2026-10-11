@@ -147,7 +147,13 @@ public sealed class GitVaultHistory
     internal async Task<string> PublishTreeAsync(Dictionary<string,string> tree, string message, IReadOnlyList<string> parents, CancellationToken ct)
     {
         await Git(ct, "read-tree", "--empty");
-        foreach (var item in tree) await Git(ct, "update-index", "--add", "--cacheinfo", "100644," + item.Value + "," + ValidateRelativePath(item.Key));
+        foreach (var batch in tree.Chunk(64))
+        {
+            ct.ThrowIfCancellationRequested();
+            var arguments = new List<string> { "update-index", "--add" };
+            foreach (var item in batch) { arguments.Add("--cacheinfo"); arguments.Add("100644," + item.Value + "," + ValidateRelativePath(item.Key)); }
+            await Git(ct, arguments.ToArray());
+        }
         var treeId = (await Git(ct, "write-tree")).Text.Trim();
         var args = new List<string> { "commit-tree", treeId, "-m", message };
         foreach (var parent in parents) { args.Add("-p"); args.Add(parent); }
@@ -168,6 +174,7 @@ public sealed class GitVaultHistory
         var paths = encryptedRelativePaths.Select(ValidateRelativePath).Distinct(StringComparer.Ordinal).ToArray();
         await CheckIndexAsync(paths, ct);
         var parent = await HeadAsync(ct); var originalParent = parent; var tree = await TreeAsync("HEAD", ct); var changed = false;
+        var blobs = await HashObjectsAsync(paths, ct);
         long batchBytes = 4096; var partsBatch = true;
         foreach (var relative in paths.OrderBy(p => p.StartsWith("parts/", StringComparison.Ordinal) ? 0 : 1))
         {
@@ -180,11 +187,39 @@ public sealed class GitVaultHistory
                 changed = false; batchBytes = 4096;
             }
             partsBatch = relative.StartsWith("parts/", StringComparison.Ordinal);
-            var blob = (await Git(ct, "hash-object", "-w", "--no-filters", "--", source)).Text.Trim();
+            var blob = blobs[relative];
             if (tree.TryGetValue(relative, out var old)) { if (old != blob) throw new InvalidDataException("Immutable ciphertext collision."); }
             else { tree.Add(relative, blob); changed = true; batchBytes += length + 160; }
         }
         return changed ? await PublishTreeAsync(tree, "Store encrypted snapshot", parent == null ? [] : [parent], ct) : parent != originalParent ? parent : null;
+    }
+    private async Task<Dictionary<string,string>> HashObjectsAsync(string[] paths, CancellationToken ct)
+    {
+        var result = new Dictionary<string,string>(StringComparer.Ordinal);
+        var batch = new List<string>(); long bytes = 0; int characters = 0;
+        async Task Flush()
+        {
+            if (batch.Count == 0) return;
+            ct.ThrowIfCancellationRequested();
+            var arguments = new List<string> { "hash-object", "-w", "--no-filters", "--" };
+            foreach (var relative in batch) { var path = Path.Combine(SourceRoot, relative); CheckPath(path); arguments.Add(path); }
+            var output = (await Git(ct, arguments.ToArray())).Text.Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(value => value.Trim()).ToArray();
+            if (output.Length != batch.Count || output.Any(value => !Regex.IsMatch(value, @"\A(?:[a-f0-9]{40}|[a-f0-9]{64})\z", RegexOptions.CultureInvariant))) throw new InvalidDataException("Invalid encrypted history object response.");
+            for (int index = 0; index < batch.Count; index++) result.Add(batch[index], output[index]);
+            batch.Clear(); bytes = 0; characters = 0;
+        }
+        foreach (var relative in paths)
+        {
+            ct.ThrowIfCancellationRequested();
+            var path = Path.Combine(SourceRoot, relative); CheckPath(path); var length = new FileInfo(path).Length;
+            if (length + 4096 > PublicationBudgetBytes) throw new NotSupportedException("Encrypted object exceeds the bounded publication budget. Preserve local history and use smaller encrypted parts.");
+            // Bound native command-line size and per-child I/O without buffering ciphertext.
+            int cost = checked(path.Length * 2 + 3);
+            if (cost > 24000) throw new PathTooLongException("Encrypted history object path exceeds the command budget.");
+            if (batch.Count != 0 && (batch.Count >= 64 || characters + cost > 24000 || bytes + length > 128L * 1024 * 1024)) await Flush();
+            batch.Add(relative); characters += cost; bytes += length;
+        }
+        await Flush(); return result;
     }
     public async Task<IReadOnlyList<string>> ListSnapshotsAsync(CancellationToken ct = default)
     {

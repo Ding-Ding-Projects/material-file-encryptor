@@ -6,9 +6,11 @@ if (args.Length > 0 && args[0] == "--native-child-trace") { await NativeChildTra
 if (args.Length == 2 && args[0] == "--native-trace-child") { await NativeChildTraceTests.ChildAsync(args[1]); return 0; }
 
 var cases = new (string,Action)[] {
+    ("history batches preserve immutable publication and cancellation",HistoryBatchTests.Run),
     ("packing writer admissions, snapshots and namespace races",PackingTests.Races),
     ("packing cancellation and checkpoint durability",PackingTests.Durability),
     ("packing cancellation stays paused across reopen",PackingTests.PauseResume),
+    ("packing older cancellation preserves newer request generation",PackingTests.CancellationGeneration),
     ("packing publication stalls and exact acknowledgement",PackingTests.Publication),
     ("packing authenticates and repairs pre-existing source ciphertext",PackingTests.SourceAuthentication),
     ("packing dense 80 MiB physical caps and bounded records",PackingTests.Dense),
@@ -55,6 +57,7 @@ if(args.Length==2 && args[0]=="crash-write") {
 }
 var failed=0;
 if(args.Length==2 && args[0]=="filter") cases=cases.Where(c=>c.Item1.Contains(args[1],StringComparison.OrdinalIgnoreCase)).ToArray();
+if(args.Length==2 && args[0]=="filter-exclude") cases=cases.Where(c=>!c.Item1.Contains(args[1],StringComparison.OrdinalIgnoreCase)).ToArray();
 foreach(var (name,test) in cases) {try {test();Console.WriteLine("PASS "+name);}catch(Exception e){failed++;Console.Error.WriteLine("FAIL "+name+": "+e);}}
 Console.WriteLine($"{cases.Length-failed}/{cases.Length} checks passed");
 return failed==0?0:1;
