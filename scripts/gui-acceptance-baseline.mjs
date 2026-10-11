@@ -47,11 +47,24 @@ export function baselineAdapters({launch,receipt,prepareOwnedFixture,inventory})
   'open-unlock':action('open-unlock',[click('open-unlock','#unlock-button')],dialogOpen),
   'cancel-unlock':action('cancel-unlock',[click('cancel-unlock','#dialog-cancel')],dialogClosed)
  };
+ const attentionToggle=(id,fieldId,attribute)=>async({executePlan})=>{
+  const selector='#'+fieldId;
+  const read=await executePlan(plan([{id:id+'-before',op:'evaluate',expression:`(()=>{const field=document.querySelector(${JSON.stringify(selector)});if(!field||field.disabled)throw Error('Attention control unavailable');return {checked:field.checked,root:document.documentElement.dataset[${JSON.stringify(attribute)}]};})()`}]));assert.equal(read.ok,true);
+  const before=read.results.at(-1).value;assert.equal(before.root,String(before.checked));
+  const first=await action(id,[click(id+'-toggle',selector)],`document.documentElement.dataset[${JSON.stringify(attribute)}]===${JSON.stringify(String(!before.checked))}`)({executePlan});
+  const restored=await action(id,[click(id+'-restore',selector)],`document.documentElement.dataset[${JSON.stringify(attribute)}]===${JSON.stringify(String(before.checked))}`)({executePlan});
+  return {...first,restoration:restored,before};
+ };
  const make=(id,expression,actions)=>({
   prepare:async context=>{const result=await prepareOwnedFixture({...context,state:id,requiredDriveState:id==='drive-locked'||id.startsWith('create-')?'locked':'unchanged'});assert.equal(result.ownedSyntheticFixture,true);assert.equal(result.sourceCommit,context.binding.sourceCommit);return result;},
   assertState:async({executePlan})=>({passed:Boolean(await check(executePlan,id+'-state',expression)),observable:inventory.states.find(state=>state.id===id).observable}),actions
  });
  return {
+  'p-attention':make('p-attention',"!document.querySelector('#view-personalization').hidden&&['local-ux-focus','local-ux-low-stimulation','local-ux-one-thing-at-a-time'].every(id=>document.getElementById(id)?.getClientRects().length>0)",{
+   'toggle-focus':attentionToggle('toggle-focus','local-ux-focus','focusMode'),
+   'toggle-low-stimulation':attentionToggle('toggle-low-stimulation','local-ux-low-stimulation','lowStimulation'),
+   'toggle-one-thing':attentionToggle('toggle-one-thing','local-ux-one-thing-at-a-time','oneThing')
+  }),
   'ollama-help':make('ollama-help',"!document.querySelector('#ollama-panel-5').hidden&&document.querySelector('#ollama-panel-5 p').textContent.trim().length>0",{
    'open-help':action('open-help',[click('leave-help','#ollama-panel-1-tab'),click('open-help','#ollama-panel-5-tab')],"!document.querySelector('#ollama-panel-5').hidden&&document.querySelector('#ollama-panel-5-tab').getAttribute('aria-selected')==='true'")
   }),
