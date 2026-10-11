@@ -33,7 +33,7 @@ test('superseding and disposal terminate pending workers and enforce payload bou
 });
 test('renderer does not evaluate user expressions on its event loop',async()=>{
   const renderer=await readFile(new URL('../src/renderer/features/ollama/index.js',import.meta.url),'utf8');
-  assert.ok(renderer.includes('regexFilter.filter('));assert.ok(renderer.includes('regexFilter.dispose()'));assert.ok(!renderer.includes('new RegExp('));
+  assert.ok(renderer.includes('modelSearch.filter('));assert.ok(renderer.includes('modelSearch.destroy()'));const shared=await readFile(new URL('../src/shared/surface/search.js',import.meta.url),'utf8');assert.ok(shared.includes('new Worker('));assert.ok(shared.includes('worker.terminate()'));assert.ok(!renderer.includes('new RegExp('));
 });
 test('renderer is strict UTF-8 and uses the shipped stylesheet instead of inline styles',async()=>{
   const bytes=await readFile(new URL('../src/renderer/features/ollama/index.js',import.meta.url));
