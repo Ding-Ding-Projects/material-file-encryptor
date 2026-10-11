@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
 import { promoteDefaultRelease } from '../scripts/release-channel.mjs';
 
 const source = 'a'.repeat(40);
@@ -25,6 +26,83 @@ test('invalid or unavailable main proof never invokes promotion', async () => {
 test('publisher creates download-only releases and invokes channel consumer after download hashes', async () => {
   const source = await readFile(new URL('../.github/scripts/publish-preview.ps1', import.meta.url), 'utf8');
   assert.match(source, /'--latest=false'/); assert.doesNotMatch(source, /make_latest=legacy/);
-  assert.ok(source.indexOf('DOWNLOADED_ASSET_MISMATCH') < source.indexOf('& node scripts/release-channel.mjs'));
-  assert.match(source, /Assert \(\$LASTEXITCODE -eq 0\) 'RELEASE_CHANNEL_VERIFICATION_FAILED'/);
+  assert.doesNotMatch(source, /& node scripts\/release-channel.mjs/);
+  assert.ok(source.indexOf('DOWNLOADED_ASSET_MISMATCH') < source.indexOf('promotion-input.json'));
+  const promotion = await readFile(new URL('../.github/scripts/promote-release.ps1', import.meta.url), 'utf8');
+  assert.ok(promotion.indexOf('PROMOTION_ASSET_HASH_MISMATCH') < promotion.indexOf('& node scripts/release-channel.mjs'));
+  assert.match(promotion, /Assert \(\$LASTEXITCODE -eq 0\) 'RELEASE_CHANNEL_VERIFICATION_FAILED'/);
+});
+
+test('promotion alone serializes with a fixed repository group', async () => {
+ const workflow=await readFile(new URL('../.github/workflows/windows.yml',import.meta.url),'utf8');
+ const promotion=workflow.slice(workflow.indexOf('\n  promote:'));
+ assert.match(promotion,/needs: windows\s+if: github.ref == 'refs\/heads\/main'/);
+ assert.match(promotion,/concurrency:\s+group: default-release-promotion\s+cancel-in-progress: false/);
+ assert.doesNotMatch(promotion,/Build application|Preserve compiled server lease verifier|Preserve dependency download diagnostics|node --test|npm test|build\.bat/);
+ assert.match(workflow.slice(0,workflow.indexOf('\n  promote:')),/group: windows-release-/);
+  assert.match(promotion, /bootstrap-promotion.ps1/);
+  assert.match(promotion, /Record safe promotion result\s+if: always\(\)\s+continue-on-error: true/);
+  assert.match(promotion, /Preserve promotion decision\s+if: always\(\)\s+continue-on-error: true/);
+  assert.match(promotion, /retention-days: 14/);
+});
+
+test('actual PowerShell promotion script parses and rejects task refs before any provider', { skip: process.platform !== 'win32' }, t => {
+  const command = `
+    $tokens=$null; $errors=$null
+    $file=Join-Path (Get-Location) '.github/scripts/promote-release.ps1'
+    $null=[Management.Automation.Language.Parser]::ParseFile($file,[ref]$tokens,[ref]$errors)
+    if ($errors.Count) { throw 'PROMOTION_PARSE_FAILED' }
+    $text=[IO.File]::ReadAllText($file).Replace('. "$PSScriptRoot/../../scripts/squirrel-file-hash.ps1"','. "./scripts/squirrel-file-hash.ps1"')
+    function gh { throw 'UNEXPECTED_PROVIDER' }
+    $env:GITHUB_REF='refs/heads/task/example'
+    try { & ([scriptblock]::Create($text)); throw 'TASK_REF_ACCEPTED' }
+    catch { if ($_.Exception.Message -ne 'PROMOTION_MAIN_ONLY') { throw }; 'TASK_REF_REJECTED_BEFORE_PROVIDER' }
+  `;
+  const result = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', command], { encoding: 'utf8', windowsHide: true, timeout: 30000 });
+  if (/running scripts is disabled/.test(result.stderr)) { t.skip('Host execution policy prevents the actual script dependency; admission execution unverified'); return; }
+  assert.equal(result.status, 0, result.stderr); assert.match(result.stdout, /TASK_REF_REJECTED_BEFORE_PROVIDER/);
+});
+
+test('promotion command helper resolves the actual executable despite its case-insensitive function name', { skip: process.platform !== 'win32' }, () => {
+  const command = `
+    $tokens=$null; $errors=$null
+    $ast=[Management.Automation.Language.Parser]::ParseFile((Join-Path (Get-Location) '.github/scripts/promote-release.ps1'),[ref]$tokens,[ref]$errors)
+    $function=$ast.Find({param($n) $n -is [Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'Gh'},$true).Extent.Text
+    function Assert([bool]$value,[string]$code) { if (!$value) { throw $code } }
+    . ([scriptblock]::Create($function))
+    $result=Gh -Arguments @('--version')
+    if (($result -join ' ') -notmatch '^gh version ') { throw 'EXECUTABLE_NOT_OBSERVED' }
+    if ((Get-Command gh).CommandType -ne 'Function') { throw 'NEGATIVE_RESOLUTION_NOT_OBSERVED' }
+    if ((Get-Command gh.exe -CommandType Application).CommandType -ne 'Application') { throw 'APPLICATION_RESOLUTION_MISSING' }
+    'ACTUAL_EXECUTABLE_RESOLVED_FUNCTION_COLLISION_PROVED'
+  `;
+  const result=spawnSync('powershell.exe',['-NoProfile','-NonInteractive','-Command',command],{encoding:'utf8',windowsHide:true,timeout:30000});
+  assert.equal(result.status,0,result.stderr); assert.match(result.stdout,/ACTUAL_EXECUTABLE_RESOLVED_FUNCTION_COLLISION_PROVED/);
+});
+
+test('existing preview workflow guard executes pure inventory and publication negatives', { skip: process.platform !== 'win32' }, () => {
+  const command = `
+    $ErrorActionPreference='Stop'; $tokens=$null; $errors=$null
+    $root=(Get-Location).Path
+    $ast=[Management.Automation.Language.Parser]::ParseFile((Join-Path $root 'scripts/test-preview-workflow.ps1'),[ref]$tokens,[ref]$errors)
+    if ($errors.Count) { throw 'PREVIEW_GUARD_PARSE_FAILED' }
+    $workflow=Get-Content (Join-Path $root '.github/workflows/windows.yml') -Raw
+    $publisher=Get-Content (Join-Path $root '.github/scripts/publish-preview.ps1') -Raw
+    $inventory=Get-Content (Join-Path $root '.github/workflows/windows.dependencies.json') -Raw | ConvertFrom-Json
+    $checks=0
+    foreach ($statement in $ast.EndBlock.Statements) {
+      if ($statement -is [Management.Automation.Language.FunctionDefinitionAst]) { . ([scriptblock]::Create($statement.Extent.Text)) }
+    }
+    foreach ($statement in $ast.EndBlock.Statements) {
+      $text=$statement.Extent.Text
+      if ($text.StartsWith('$incompleteInventory=') -or $text.StartsWith('$incompleteInventory.')) { . ([scriptblock]::Create($text)) }
+      if ($text.Contains("'omitted promotion tool is rejected'") -and
+          ($null -eq $incompleteInventory -or @($incompleteInventory.jobs.promote.tools).Count -ne 1 -or $incompleteInventory.jobs.promote.tools[0] -ne 'GitHub CLI')) { throw 'OMITTED_TOOL_FIXTURE_NOT_INITIALIZED' }
+      if ($text -match '^Check ' -and !$text.Contains('$timingNotes')) { . ([scriptblock]::Create($text)) }
+    }
+    if ($checks -lt 18) { throw 'PREVIEW_GUARD_COVERAGE_MISSING' }
+    "PURE_PREVIEW_GUARD_CHECKS=$checks"
+  `;
+  const result=spawnSync('powershell.exe',['-NoProfile','-NonInteractive','-Command',command],{encoding:'utf8',windowsHide:true,timeout:30000});
+  assert.equal(result.status,0,result.stderr); assert.match(result.stdout,/PURE_PREVIEW_GUARD_CHECKS=/);
 });

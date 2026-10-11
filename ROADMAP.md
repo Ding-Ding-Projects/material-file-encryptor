@@ -1,3 +1,13 @@
+# Updater and image integration, 2026-10-11 UTC
+
+- [x] Independently review image source and updater ancestry admission, preserving original persistence, locks and history. Source acceptance only.
+- [x] Implement serialized main-only default promotion, executable resolution, explicit job dependencies and meaningful workflow omission checks. Cloud execution remains unverified.
+- [ ] Verify combined main delivery, exact cloud entrypoints, independently downloaded new release assets and live documentation.
+- [ ] Diagnose and repair the mobile preferences mismatch from genuine source-bound pixels and computed styles.
+- [ ] Prove pure Material Design 3 across every visible surface and all 210 complete-surface rows.
+- [ ] Complete installed corrective installation, removal, startup, automatic update ready/Later and native restart.
+- [ ] Finish full editor, animation/transition, optional guidance and four-target server workflows with real interaction evidence.
+
 ## Verified color/server delivery and typed motion, 2026-10-11 UTC
 
 - [x] Deliver source9fa as normalv1.212.1 with independently downloaded package and complete live-content acceptance.
