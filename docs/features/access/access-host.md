@@ -6,7 +6,7 @@ The access host implements authoritative password/PIN/TOTP verification, persist
 
 Create one `createAccessHost({dataDirectory, credentials, getActor, getSchoolMode})` per protected host lifetime. `getActor` must derive identity from the verified main-frame sender. `getSchoolMode` must read trusted native shared settings. Never copy either value from a renderer request. Call `validateAccessHostRequest(action, payload)` at the bridge boundary and retain the existing feature/schema validation.
 
-The protected store must provide asynchronous `get`, `set`, `delete`, `list` and `compareAndSet(key, expected, replacement)`. The last method compares and writes within the store's existing serialization queue. Null represents absence or deletion. False means the expected value changed. History setup and mutations fail closed when this atomic operation is unavailable.
+The protected store must provide asynchronous `get`, `set`, `delete`, `list` and `readVersioned(key) and compareAndSetVersioned(key, expectedRevision, replacement)`. Versioned reads return a value and its protected persistent revision. Conditional writes return updated and a new revision, comparing within the store's existing serialization queue. All writers, including same-value writes and deletions, replace that receipt; deleted keys retain a tombstone. Null replacement means deletion. A mismatched revision stops rollback even when another writer restored an identical value. History setup and mutations fail closed when this atomic operation is unavailable.
 
 Route the exported `ACCESS_HOST_ACTIONS` through `host.request`. Route every renderer authenticator credential set/delete through `host.setCredential` and `host.deleteCredential`; preserve existing credential key allowlists. Reserved `lock:` and `profile:` host records remain inaccessible to renderer credential APIs. Close the host on teardown.
 
@@ -18,7 +18,7 @@ History has a separate password and a ten-minute grant bound to the trusted acto
 
 Changes are serialized and use compare-and-set writes. Recording failures restore only the values owned by that operation; a concurrent writer is preserved and the caller receives a recovery error. Successful restore appends a new entry instead of rewriting prior commits. Labels, date/action filtering, redacted comparison/export, retention and confirmed pruning are available in the Material history panel.
 
-Pruning hides expired entries from the manager. Historical encrypted commits remain, so this does not promise secure erasure or disk-space reclamation. Forgotten history passwords have no recovery or reset route. A failure between Git commit and protected-tail persistence stops history for explicit local recovery. It is not described as an atomic transaction across two storage systems.
+Pruning hides expired entries from the manager. Historical encrypted commits remain, so this does not promise secure erasure or disk-space reclamation. Forgotten history passwords have no recovery or reset route. Before recording an envelope, a protected pending intent binds its exact ciphertext hash, prior tail and relative record identity. An interrupted tail write can recover only that attested committed envelope after checking both Git content and the current file. Recovery preserves the committed record and appends a compensation after an owned rollback. Unattested, altered or missing records stop for explicit local recovery. This is not an atomic transaction across two storage systems.
 
 ## Availability and verification
 
