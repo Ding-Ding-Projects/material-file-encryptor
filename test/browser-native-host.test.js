@@ -49,11 +49,11 @@ test('unknown callers, consent denial, unsafe proposal fields, replay and expire
  unlocked=false;await assert.rejects(broker.receive(origin,{type:'pair'}),/Unlock/);broker.close();
 });
 test('native broker child requires actual ACL ready receipt and frames correlated host requests',async()=>{
- const child=new EventEmitter();child.stdin=new PassThrough();child.stdout=new PassThrough();child.stderr=new PassThrough();child.kill=()=>{};let spawnOptions;
+ const child=new EventEmitter();child.stdin=new PassThrough();child.stdout=new PassThrough();child.stderr=new PassThrough();child.kill=()=>queueMicrotask(()=>{child.emit('exit',0);child.stdout.destroy();child.stderr.destroy();child.emit('close',0);});let spawnOptions;
  const broker=factory({hostPath:'C:\\OwnedFixture\\MaterialFileEncryptor.BrowserHost.exe',spawnHost:(_path,args,options)=>{assert.deepEqual(args,['--broker']);spawnOptions=options;return child;}});
  const starting=broker.start();child.stdout.write(nativeFrame({type:'ready',aclVerified:true}));assert.deepEqual(await starting,{started:true,aclVerified:true});assert.equal(spawnOptions.windowsHide,true);assert.equal(spawnOptions.shell,false);
  const reply=new Promise(resolve=>child.stdin.once('data',resolve));const requestId='11111111-1111-1111-1111-111111111111';child.stdout.write(nativeFrame({requestId,origin,message:{type:'pair'}}));const bytes=await reply,message=JSON.parse(bytes.subarray(4));assert.equal(message.requestId,requestId);assert.equal(message.response.type,'paired');
- const malformed=Buffer.alloc(4);malformed.writeUInt32LE(65537);child.stdout.write(malformed);assert.equal(broker.available,false);broker.close();
+ const malformed=Buffer.alloc(4);malformed.writeUInt32LE(65537);child.stdout.write(malformed);assert.equal(broker.available,false);assert.equal((await broker.close()).verified,true);
 });
 test('native frame encoder rejects over 64 KiB before sending any bytes',()=>{assert.throws(()=>nativeFrame({data:'x'.repeat(65536)}),/64 KiB/);});
 
@@ -75,7 +75,17 @@ test('compiled native host relays synthetic pairing and proposal frames through 
   broker.observeDownload({type:'download',item:{browserCaptureId:proposed.id,state:'completed',received:2,total:2}});assert.equal((await request({type:'status',session:paired.session,id:proposed.id})).state,'completed');
   assert.equal((await request({type:'propose',session:paired.session,proposal})).type,'error');
  }finally{
-  const exit=client?new Promise(resolve=>{if(client.exitCode!==null)resolve();else{client.once('exit',resolve);client.kill();}}):Promise.resolve();broker?.close();await exit;
+  const exit=client?new Promise(resolve=>{if(client.exitCode!==null)resolve();else{client.once('exit',resolve);client.kill();}}):Promise.resolve();const receipt=await broker?.close();if(receipt)assert.deepEqual({processExited:receipt.processExited,stdioClosed:receipt.stdioClosed,verified:receipt.verified},{processExited:true,stdioClosed:true,verified:true});await exit;
   if(!folder.startsWith(fixtureRoot+path.sep))throw Error('Fixture cleanup target is outside its owned root.');await fs.rm(folder,{recursive:true,force:true});
  }
+});
+
+test('close waits for owned process exit and stdio closure and reports an unverified deadline',async()=>{
+ const child=new EventEmitter();child.stdin=new PassThrough();child.stdout=new PassThrough();child.stderr=new PassThrough();let killed=0;child.kill=()=>{killed++;};
+ const broker=factory({closeTimeoutMs:25,hostPath:'C:\\OwnedFixture\\MaterialFileEncryptor.BrowserHost.exe',spawnHost:()=>child});const starting=broker.start();child.stdout.write(nativeFrame({type:'ready',aclVerified:true}));await starting;
+ const closing=broker.close();assert.equal(broker.close(),closing);const receipt=await closing;assert.equal(killed,1);assert.equal(receipt.processExited,false);assert.equal(receipt.stdioClosed,false);assert.equal(receipt.verified,false);assert.equal(receipt.deadlineMs,25);await assert.rejects(broker.start(),/closed/);
+ child.stdout.destroy();child.stderr.destroy();child.emit('exit',0);child.emit('close',0);
+});
+test('close revokes an unresolved native approval and never upgrades it to a drained receipt',async()=>{
+ let approve;const broker=factory({authorizePair:()=>new Promise(resolve=>{approve=resolve;})});const pairing=broker.receive(origin,{type:'pair'});const receipt=await broker.close();assert.equal(receipt.pendingRequests,1);assert.equal(receipt.verified,false);approve(true);await assert.rejects(pairing,/not approved/);assert.equal(broker.available,false);
 });
