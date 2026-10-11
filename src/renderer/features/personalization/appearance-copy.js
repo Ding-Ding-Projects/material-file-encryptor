@@ -1,3 +1,4 @@
+import {SCHEDULE_CUSTOMIZATION_COPY} from './schedule-customization-copy.js';
 import {COLOR_PICKER_COPY} from './color-picker-copy.js';
 import {WORKBENCH_GUIDANCE_COPY} from './workbench-guidance.js';
 import {FONT_GUIDANCE_COPY} from './font-guidance.js';
@@ -11,6 +12,7 @@ import {MOTION_COPY} from './motion-copy.js';
 import {MOTION_GUIDANCE_COPY} from './motion-guidance.js';
 /** Public source copy inventory. Values are Cantonese, not generated placeholders. */
 const BASE_COPY = Object.freeze({
+ ...SCHEDULE_CUSTOMIZATION_COPY,
  'This motion control is unavailable.':'呢個動畫控制項暫時未能使用。','Image placement is unavailable.':'圖像位置設定暫時未能使用。','Clear':'清除',
  'Images and groups':'圖像同群組','Selection and masks':'選取範圍同遮罩','Channels and effects':'色彩通道同效果','Text and decoration presets':'文字同裝飾預設','Layer organization':'圖層管理','Font and typography':'字型同排版','Size and spacing':'大小同間距','Edges and elevation':'邊框同陰影','Background and blending':'背景同混合','Advanced visual properties':'進階視覺屬性','History, presets and transfer':'記錄、預設同傳送','The appearance lock adapter is unavailable.':'外觀鎖定介面暫時未能使用。',
  'Add local image layer':'新增本機圖像圖層','Image':'圖像','Too many image layers.':'圖像圖層數目太多。','Non-destructive image transform':'保留原圖嘅圖像變形','Image blend mode':'圖像混合模式','Reset image transform':'重設圖像變形',

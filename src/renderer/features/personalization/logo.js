@@ -1,3 +1,5 @@
+import {createLocalSnapshotRegistry} from './local-snapshots.js';
+import {inspectPngSource} from './image-source.js';
 import {control as materialControl} from '../../../shared/surface/controls.js';
 import {bindNestedConsumer,mountNestedGuidance} from './nested-guidance-mount.js';
 import {appearanceTranslator} from './appearance-copy.js';
@@ -21,6 +23,27 @@ export async function convertLogo(file,options={}) {
  const width=bitmap.width*scale,height=bitmap.height*scale, x=Math.max(0,Math.min(1,Number(options.x) || .5)),y=Math.max(0,Math.min(1,Number(options.y)||.5));
  ctx.drawImage(bitmap,(size-width)*x,(size-height)*y,width,height); const data=canvas.toDataURL('image/png'); if(!data.startsWith('data:image/png;base64,'))throw new Error('PNG conversion failed.');return {data,width:size,height:size,type:'image/png'};
  }finally{bitmap.close();}
+}
+export function validateLogoSnapshot(value){
+ if(!value||value.version!==1||Object.keys(value).some(key=>!['version','dataUrl'].includes(key)))throw Error('Invalid local logo snapshot.');
+ if(value.dataUrl===null)return{version:1,dataUrl:null};
+ const data=value.dataUrl;if(typeof data!=='string'||data.length>1024*1024*4/3+64||!/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/.test(data))throw Error('Invalid local logo snapshot.');
+ const encoded=data.slice(22);let binary;try{binary=atob(encoded);}catch{throw Error('Invalid local logo snapshot.');}if(btoa(binary)!==encoded)throw Error('Invalid local logo snapshot.');const metadata=inspectPngSource(Uint8Array.from(binary,c=>c.charCodeAt(0)));if(metadata.width!==128||metadata.height!==128)throw Error('Local logo snapshots require a normalized 128 by 128 PNG.');return{version:1,dataUrl:data};
+}
+/** Display overrides are ephemeral. The editor remains the only base-storage writer. */
+export function createLogoPresentation({storage=globalThis.localStorage,onChange=()=>{},onError=()=>{}}={}){
+ let base={version:1,dataUrl:null},active=null,disposed=false,generation=0;
+ const snapshots=createLocalSnapshotRegistry({storage,key:'m4e.logo.snapshots.v1',validate:validateLogoSnapshot});
+ try{base=validateLogoSnapshot({version:1,dataUrl:storage.getItem('m4e.logo.private.v1')||null});}catch(error){onError(error);}
+ const show=async next=>{if(disposed)throw Error('This control is unavailable.');const epoch=++generation;const result=await onChange(next.dataUrl);if(disposed||epoch!==generation)throw Error('This control is unavailable.');if(result===false)throw Error('The original control could not complete this action.');return true;};
+ return{
+  getBase:()=>structuredClone(base),getEffective:()=>structuredClone(active||base),
+  resolve:reference=>snapshots.resolve(reference),registerSnapshot:(reference,snapshot=base,label=reference)=>snapshots.register(reference,snapshot,label),listSnapshots:()=>snapshots.list(),removeSnapshot:reference=>snapshots.remove(reference),
+  async updateBase(dataUrl){const next=validateLogoSnapshot({version:1,dataUrl});if(active){base=next;return true;}await show(next);base=next;return true;},
+  async applyTransient(snapshot){const next=validateLogoSnapshot(snapshot);await show(next);active=next;return true;},
+  async clearTransient(){await show(base);active=null;return true;},
+  destroy(){disposed=true;generation++;active=null;}
+ };
 }
 export function mountLogoEditor(root,services={}) {
  const doc=root.ownerDocument,t=appearanceTranslator(services.translate),message=source=>t(source,{message:true});

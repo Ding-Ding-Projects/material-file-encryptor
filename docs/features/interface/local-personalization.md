@@ -59,3 +59,11 @@ Accent entry retains a typed field and offers the existing color workbench in an
 The host supplies onLogoChange(dataUrlOrNull) to apply the normalized local logo to the application identity and restore its saved value at startup. The module itself owns conversion, local storage and editor preview. School-mode sharing, narration voices and external schedule requests retain their real host boundaries. Model checks do not establish those external capabilities.
 
 The reference and state inventory are under design/gui-personalization/. Built-surface verification belongs to the integrated evidence, not that design reference.
+
+## Local schedule snapshots
+
+Appearance and logo schedules use versioned local references. Capture current appearance or Capture current logo records the saved base presentation under the schedule name. A schedule exports only its reference, never the private pixel data. Each local registry holds at most 20 entries and 4 MiB in total; missing, corrupt or oversized records are reported without resetting them. Snapshot references are bounded and are not paths or URLs.
+
+The schedule value editor offers typed narration and attention controls. Appearance and logo values use a saved-reference picker with the shared regex search. Remove local snapshot requires the destructive confirmation workflow and refuses references used by any saved schedule.
+
+The returned appearance and logo adapters expose resolve, registerSnapshot, listSnapshots, removeSnapshot, applyTransient and clearTransient. Applying or clearing a schedule does not write the base appearance record, logo record, undo history or revision journal. Editing the base during an override preserves that new base for restoration. Logo snapshots accept only a normalized static 128 by 128 PNG or an explicit original-logo value. The appearance validator continues to reject external resources and unsafe declarations.
