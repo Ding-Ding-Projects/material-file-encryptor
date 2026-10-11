@@ -1,0 +1,88 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import dns from 'node:dns/promises';
+import https from 'node:https';
+import net from 'node:net';
+import {randomUUID,createHash} from 'node:crypto';
+import {spawn} from 'node:child_process';
+
+const TEXT_LIMIT=256*1024,DOWNLOAD_LIMIT=256*1024*1024;
+const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
+const decode=bytes=>new TextDecoder('utf-8',{fatal:true}).decode(bytes);
+export function isPublicAddress(address){
+ if(net.isIP(address)===4){const n=address.split('.').map(Number);return !(n[0]===0||n[0]===10||n[0]===127||n[0]>=224||n[0]===169&&n[1]===254||n[0]===172&&n[1]>=16&&n[1]<=31||n[0]===192&&[0,168].includes(n[1])||n[0]===100&&n[1]>=64&&n[1]<=127||n[0]===198&&[18,19,51].includes(n[1])||n[0]===203&&n[1]===0);}
+ if(net.isIP(address)===6){const lower=address.toLowerCase();return /^[23][0-9a-f]{3}:/.test(lower)&&!lower.includes('.')&&!/^(2001:(?:0:|db8:|2:|10:|20:)|2002:)/.test(lower);}
+ return false;
+}
+function publicUrl(value){if(typeof value!=='string'||value.length>2048)throw new Error('URL exceeds 2048 characters.');const url=new URL(value);if(url.protocol!=='https:'||url.username||url.password||url.port&&url.port!=='443')throw new Error('Use a public HTTPS URL on port 443 without credentials.');url.hash='';return url;}
+async function nativeSignature(file){const {inspectAuthenticode}=await import('./ollama-host.js');return inspectAuthenticode(file);}
+function responseFor(url,{address,signal}){return new Promise((resolve,reject)=>{const request=https.get(url,{signal,lookup:(_host,_options,done)=>done(null,address.address,address.family)},resolve);request.on('error',reject);});}
+
+/** All filesystem and process actions require opaque grants created by native pickers. */
+export function createWorkflowServices({dataDirectory,dialog,getWindow=()=>null,openExternal,openPath,emit=()=>{},signatureInspector=nativeSignature,lookup=hostname=>dns.lookup(hostname,{all:true}),request=responseFor,spawnEditor=spawn,forgeAccounts=async()=>[],forgeOwners=async()=>[],env=process.env}={}){
+ const documents=new Map(),editors=new Map(),downloads=new Map(),handoffs=new Map(),pending=new Set(),writing=new Set();let closed=false,activeDownload=null;
+ const picker=async(method,options)=>{if(!dialog?.[method])throw new Error('Native picker unavailable.');const window=getWindow();return window?dialog[method](window,options):dialog[method](options);};
+ const operation=async fn=>{if(closed)throw new Error('Workflow service is closed.');const promise=Promise.resolve().then(()=>{if(closed)throw new Error('Workflow service is closed.');return fn();});pending.add(promise);try{return await promise;}finally{pending.delete(promise);}};
+ const grant=async(file,kind='file')=>{const parent=await fs.realpath(path.dirname(file)),target=path.join(parent,path.basename(file));let stat;try{stat=await fs.lstat(target);}catch(error){if(error.code!=='ENOENT')throw error;}
+  if(stat?.isSymbolicLink()||stat&&(kind==='folder'?!stat.isDirectory():!stat.isFile()))throw new Error('Choose a regular file or folder.');const id=randomUUID();documents.set(id,{path:target,kind});return{id,name:path.basename(target),kind};};
+ const get=id=>{const item=documents.get(id);if(!item)throw new Error('Select the file through the native picker again.');return item;};
+ const readBounded=async target=>{const file=await fs.open(target,'r');try{const buffer=Buffer.alloc(TEXT_LIMIT+1);let size=0;while(size<buffer.length){const {bytesRead}=await file.read(buffer,size,buffer.length-size,size);if(!bytesRead)break;size+=bytesRead;}if(size>TEXT_LIMIT)throw new Error('Text exceeds 256 KiB.');return buffer.subarray(0,size);}finally{await file.close();}};
+ const read=async id=>{const item=get(id),stat=await fs.lstat(item.path);if(item.kind!=='file'||!stat.isFile()||stat.isSymbolicLink()||stat.size>TEXT_LIMIT)throw new Error('Choose a regular UTF-8 text file no larger than 256 KiB.');const bytes=await readBounded(item.path);if(bytes.length>TEXT_LIMIT)throw new Error('Text exceeds 256 KiB.');return{id,name:path.basename(item.path),text:decode(bytes),revision:hash(bytes)};};
+ async function atomicWrite(target,bytes,{revision,newOnly=false}={}){
+  target=path.join(await fs.realpath(path.dirname(target)),path.basename(target));
+  if(bytes.length>TEXT_LIMIT)throw new Error('Text exceeds 256 KiB.');let existing;try{const stat=await fs.lstat(target);if(stat.isSymbolicLink()||!stat.isFile())throw new Error('Destination is not a regular file.');existing=await readBounded(target);}catch(error){if(error.code!=='ENOENT')throw error;}
+  if(existing&&(newOnly||!revision||hash(existing)!==revision))throw new Error('The destination changed. Reload it before saving.');
+  if(writing.has(target))throw new Error('A save is already in progress.');writing.add(target);
+  const temporary=path.join(path.dirname(target),`.workflow-${randomUUID()}.tmp`);try{await fs.writeFile(temporary,bytes,{flag:'wx',mode:0o600});if(existing){const current=await readBounded(target);if(hash(current)!==revision)throw new Error('The destination changed. Reload it before saving.');await fs.rename(temporary,target);}else{await fs.link(temporary,target);await fs.unlink(temporary);}}finally{writing.delete(target);await fs.rm(temporary,{force:true});}
+ }
+ const editorIdentity=async file=>{const real=await fs.realpath(file);const stat=await fs.stat(real);if(!stat.isFile()||stat.size>512*1024*1024)throw new Error('Choose a bounded regular editor executable.');if(!['code.exe','code - insiders.exe','notepad.exe'].includes(path.basename(real).toLowerCase()))throw new Error('Choose a supported editor executable.');const signature=await signatureInspector(real);if(!signature.valid||!/(?:^|,\s*)(?:O=Microsoft Corporation|CN=Microsoft Windows)(?:,|$)/i.test(signature.publisher||''))throw new Error('The editor requires a valid Microsoft publisher signature.');return{path:real,sha256:hash(await fs.readFile(real)),name:path.basename(real)};};
+ const rememberEditor=async file=>{const identity=await editorIdentity(file);const old=[...editors].find(([,entry])=>entry.path===identity.path);if(old)return{id:old[0],name:identity.name};const id=hash(Buffer.from(identity.path)).slice(0,32);editors.set(id,identity);return{id,name:identity.name};};
+ const downloadView=item=>({id:item.id,name:item.name,source:item.source,destination:item.destination,state:item.state,received:item.received,total:item.total??null,rate:item.rate??null,eta:item.eta??null,error:item.error||null});
+ const publish=item=>emit('workflow',{type:'download',item:downloadView(item)});
+ async function runDownload(item){
+  if(activeDownload)throw new Error('Another download is active.');activeDownload=item.id;item.controller=new AbortController();const signal=item.controller.signal;const timeout=setTimeout(()=>item.controller.abort(),120000);const temporary=path.join(path.dirname(item.destination),`.download-${randomUUID()}.tmp`);let file;
+  try{item.state='downloading';item.received=0;item.error=null;item.total=null;item.rate=null;item.eta=null;publish(item);let url=item.url,response;
+   for(let redirects=0;redirects<=3;redirects++){
+    const addresses=await Promise.race([lookup(url.hostname),new Promise((_,reject)=>{if(signal.aborted)reject(new Error('Download cancelled.'));else signal.addEventListener('abort',()=>reject(new Error('Download cancelled.')),{once:true});})]);if(!addresses.length||addresses.some(row=>!isPublicAddress(row.address)))throw new Error('Downloads require public internet addresses.');
+    response=await request(url,{address:addresses[0],signal});
+    // A stream may abort while the destination handle is opening. The iterator
+    // still observes its stored error; this listener prevents an unhandled event.
+    response.on('error',()=>{});if(signal.aborted){response.destroy();throw new Error('Download cancelled.');}
+    if([301,302,303,307,308].includes(response.statusCode)){response.destroy();if(redirects===3||!response.headers.location)throw new Error('Download redirect limit exceeded.');url=publicUrl(new URL(response.headers.location,url).href);continue;}break;
+   }
+   if(response.statusCode!==200){response.destroy();throw new Error('The download server did not return a file.');}
+   const total=Number(response.headers['content-length']);if(Number.isFinite(total)&&total>DOWNLOAD_LIMIT){response.destroy();throw new Error('Download exceeds 256 MiB.');}item.total=Number.isFinite(total)&&total>0?total:null;
+   file=await fs.open(temporary,'wx',0o600);const started=Date.now();let last=0;
+   for await(const chunk of response){if(signal.aborted)throw new Error('Download cancelled.');item.received+=chunk.length;if(item.received>DOWNLOAD_LIMIT){response.destroy();throw new Error('Download exceeds 256 MiB.');}let offset=0;while(offset<chunk.length){const {bytesWritten}=await file.write(chunk,offset,chunk.length-offset);if(!bytesWritten)throw new Error('Destination write made no progress.');offset+=bytesWritten;}const elapsed=Math.max(1,(Date.now()-started)/1000);item.rate=Math.round(item.received/elapsed);item.eta=item.total&&item.rate?Math.max(0,(item.total-item.received)/item.rate):null;if(Date.now()-last>200){publish(item);last=Date.now();}}
+   await file.close();file=null;if(signal.aborted)throw new Error('Download cancelled.');if(item.total&&item.received!==item.total)throw new Error('The transfer ended before its declared size.');
+   // A native destination grant does not authorize silently replacing a file.
+   await fs.link(temporary,item.destination);await fs.unlink(temporary);item.state='completed';publish(item);
+  }catch(error){item.state=signal.aborted?'cancelled':'failed';item.error=signal.aborted?'Download cancelled.':String(error.message);publish(item);}
+  finally{clearTimeout(timeout);await file?.close();await fs.rm(temporary,{force:true});item.controller=null;activeDownload=null;}
+  return downloadView(item);
+ }
+ const actions={
+  async documents(){return[...documents].map(([id,item])=>({id,name:path.basename(item.path),kind:item.kind}));},
+  async pickDocument(){const result=await picker('showOpenDialog',{title:'Open text document',properties:['openFile']});return result.canceled?null:grant(result.filePaths[0]);},
+  async pickProject(){const result=await picker('showOpenDialog',{title:'Open project folder',properties:['openDirectory']});return result.canceled?null:grant(result.filePaths[0],'folder');},
+  async readDocument({id}){return read(id);},
+  async saveDocument({id,text,revision}){if(typeof text!=='string')throw new Error('Text is required.');const item=get(id);await atomicWrite(item.path,Buffer.from(text,'utf8'),{revision});return read(id);},
+  async createDocument({name='document.txt',text=''}){if(typeof name!=='string'||!name||name.length>200||/[\\/\x00-\x1f]/.test(name)||typeof text!=='string')throw new Error('Choose a valid file name and text.');const result=await picker('showSaveDialog',{title:'Create text document',defaultPath:name});if(result.canceled)return null;await atomicWrite(result.filePath,Buffer.from(text,'utf8'),{newOnly:true});const item=await grant(result.filePath);return read(item.id);},
+  async templates(){return[{id:'blank',name:'Blank text',nameSuggestion:'document.txt',text:''},{id:'markdown',name:'Markdown notes',nameSuggestion:'notes.md',text:'# Notes\n\n'},{id:'json',name:'JSON object',nameSuggestion:'document.json',text:'{}\n'}];},
+  async editors(){for(const file of [env.LOCALAPPDATA&&path.join(env.LOCALAPPDATA,'Programs','Microsoft VS Code','Code.exe'),env.ProgramFiles&&path.join(env.ProgramFiles,'Microsoft VS Code','Code.exe'),env['ProgramFiles(x86)']&&path.join(env['ProgramFiles(x86)'],'Microsoft VS Code','Code.exe'),...(env.PATH||'').split(path.delimiter).filter(Boolean).slice(0,128).map(folder=>path.join(folder,'Code.exe')),env.LOCALAPPDATA&&path.join(env.LOCALAPPDATA,'Programs','Microsoft VS Code Insiders','Code - Insiders.exe'),env.SystemRoot&&path.join(env.SystemRoot,'System32','notepad.exe')].filter(Boolean))try{await rememberEditor(file);}catch{}return[...editors].map(([id,item])=>({id,name:item.name}));},
+  async pickEditor(){const result=await picker('showOpenDialog',{title:'Select signed supported editor',properties:['openFile'],filters:[{name:'Editor executable',extensions:['exe']}]});return result.canceled?null:rememberEditor(result.filePaths[0]);},
+  async openEditor({editorId,documentId}){const editor=editors.get(editorId);if(!editor)throw new Error('Choose an installed editor first.');const identity=await editorIdentity(editor.path);if(identity.sha256!==editor.sha256)throw new Error('The editor changed. Detect it again.');const document=get(documentId);if(document.kind==='folder'&&path.basename(editor.path).toLowerCase()==='notepad.exe')throw new Error('Choose Visual Studio Code to open a project folder.');const child=spawnEditor(editor.path,[document.path],{shell:false,windowsHide:false,detached:false,stdio:'ignore'});await new Promise((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject);});child.unref?.();return{opened:true};},
+  async openInCode({documentId}){await actions.editors();const editor=[...editors].find(([,item])=>/^code(?: - insiders)?\.exe$/i.test(item.name));if(!editor)throw new Error('Visual Studio Code is unavailable. Use Get Visual Studio Code.');return actions.openEditor({editorId:editor[0],documentId});},
+  async editorDownload(){if(!openExternal)throw new Error('External browser unavailable.');await openExternal('https://code.visualstudio.com/download');return{opened:true};},
+  async downloads(){return[...downloads.values()].map(downloadView);},
+  async prepareDownload({url}){const parsed=publicUrl(url);let name=path.basename(decodeURIComponent(parsed.pathname))||'download.bin';name=name.replace(/[\\/<>:"|?*\x00-\x1f]/g,'_').slice(0,180);const result=await picker('showSaveDialog',{title:'Choose download destination',defaultPath:name});if(result.canceled)return null;const parent=await fs.realpath(path.dirname(result.filePath));const destination=path.join(parent,path.basename(result.filePath));try{await fs.lstat(destination);throw new Error('Choose a new destination. Existing files are preserved.');}catch(error){if(error.code!=='ENOENT')throw error;}const id=randomUUID();const item={id,url:parsed,name:path.basename(destination),source:parsed.origin+parsed.pathname,destination,state:'ready',received:0};downloads.set(id,item);return downloadView(item);},
+  async startDownload({id}){if(activeDownload)throw new Error('Another download is active.');const item=downloads.get(id);if(!item||!['ready','failed','cancelled'].includes(item.state))throw new Error('Choose a ready download.');const work=runDownload(item);pending.add(work);work.then(()=>pending.delete(work),()=>pending.delete(work));return{started:true,id};},
+  async cancelDownload({id}){const item=downloads.get(id);if(!item)throw new Error('Download not found.');item.controller?.abort();if(item.state==='ready')item.state='cancelled';publish(item);return downloadView(item);},
+  async accounts(){return(await forgeAccounts()).map(({id,label})=>({id,label}));},
+  async owners({accountId}){const accounts=await actions.accounts();if(!accounts.some(item=>item.id===accountId))throw new Error('Choose a signed-in account.');return(await forgeOwners(accountId)).map(({id,label,canFork})=>({id,label,canFork:canFork===true}));},
+  async prepareHandoff({documentId,accountId,ownerId,route}){const owners=await actions.owners({accountId});const owner=owners.find(item=>item.id===ownerId);if(!owner||!['copy-push','fork'].includes(route)||route==='fork'&&!owner.canFork)throw new Error('Choose an available account, owner and route.');const document=get(documentId);const id=randomUUID(),summary=`Publication handoff\nDocument: ${path.basename(document.path)}\nAccount: ${accountId}\nOwner: ${owner.label}\nRoute: ${route}\nReview the source and destination before publishing. Never force-push, rewrite or drop existing commits, or switch branches to repair a rejected push.\n`;handoffs.set(id,{summary});return{id,summary};},
+  async exportHandoff({id}){const item=handoffs.get(id);if(!item)throw new Error('Prepare a handoff first.');const result=await picker('showSaveDialog',{title:'Export publication handoff',defaultPath:'publication-handoff.txt'});if(result.canceled)return null;await atomicWrite(result.filePath,Buffer.from(item.summary),{newOnly:true});const document=await grant(result.filePath);return{exported:true,documentId:document.id};},
+  async openHandoff({id}){const item=handoffs.get(id);if(!item||!dataDirectory||!openPath)throw new Error('Local handoff opening unavailable.');const folder=path.join(dataDirectory,'workflow-handoffs');await fs.mkdir(folder,{recursive:true,mode:0o700});const target=path.join(folder,`${id}.txt`);await fs.writeFile(target,item.summary,{flag:'wx',mode:0o600});const error=await openPath(target);if(error)throw new Error('The handoff could not be opened.');return{opened:true};}
+ };
+ return{actions:Object.freeze(Object.keys(actions)),dispatch(action,payload={}){if(!Object.hasOwn(actions,action)||!payload||typeof payload!=='object'||Array.isArray(payload))return Promise.reject(new Error('Unsupported workflow action.'));return operation(()=>actions[action](payload));},get pending(){return pending.size;},cancelAll(){for(const item of downloads.values())item.controller?.abort();},async close(){closed=true;for(const item of downloads.values())item.controller?.abort();while(pending.size){for(const item of downloads.values())item.controller?.abort();await Promise.allSettled([...pending]);}documents.clear();editors.clear();downloads.clear();handoffs.clear();}};
+}
