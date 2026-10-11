@@ -8,6 +8,13 @@ import {command,proveStableRendererTree} from './test-renderer-browser.mjs';
 import {inspectPackagedRendererTarget} from './packaged-renderer-runtime.mjs';
 import {sha256} from './gui-acceptance.mjs';
 
+export async function runPreparedComparison({prepare,compare,validate,retain}){
+ const binding=await prepare();
+ const result=await compare();
+ validate(result);
+ return retain(result,binding);
+}
+
 export async function retainMainComparison({comparison,binding,evidenceRoot,attest}){
  const provisional={schemaVersion:1,scope:'packaged-main-webcrypto',...binding,...comparison,postProofVerified:false,derivedBytesRetained:false,rendererProbed:false};
  await fs.writeFile(path.join(evidenceRoot,'main-crypto-provisional.json'),JSON.stringify(provisional,null,2),{flag:'wx'});
@@ -40,12 +47,13 @@ export async function probePackagedMainCrypto({opened,port,evidenceRoot}){
   assert.equal(connected.peer?.clientPid,process.pid);assert.equal(connected.peer.serverPid,before.root.pid);
   reference=pbkdf2Sync('synthetic',Buffer.alloc(16,7),310000,32,'sha256');
   const expression=`(async()=>{if(process.type!=='browser'||process.execPath.toLowerCase()!==${JSON.stringify(target.executable.toLowerCase())})throw Error('Unexpected main context');const subtle=globalThis.crypto?.subtle||process.getBuiltinModule?.('crypto')?.webcrypto?.subtle;if(!subtle)throw Error('Main WebCrypto unavailable');const expected=${JSON.stringify([...reference])};const key=await subtle.importKey('raw',new TextEncoder().encode('synthetic'),'PBKDF2',false,['deriveBits']);let completed=0,firstMismatch=null;for(let i=0;i<100;i++){const bytes=new Uint8Array(await subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:new Uint8Array(16).fill(7),iterations:310000},key,256));const matched=bytes.length===expected.length&&bytes.every((value,index)=>value===expected[index]);bytes.fill(0);completed++;if(!matched){firstMismatch=i+1;break;}}expected.fill(0);return{completed,firstMismatch,allMatched:firstMismatch===null,mainContext:true,runtime:{node:process.versions.node,v8:process.versions.v8,openssl:process.versions.openssl,desktopRuntime:process.versions.electron}};})()`;
-  const response=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});
-  if(response.exceptionDetails)throw Error('Main synthetic comparison returned an exception');const result=response.result?.value;
-  assert.equal(result?.mainContext,true);assert.ok(Number.isInteger(result.completed)&&result.completed>=1&&result.completed<=100);assert.equal(result.allMatched,result.firstMismatch===null);if(result.allMatched)assert.equal(result.completed,100);else assert.equal(result.completed,result.firstMismatch);
-  const binding={sourceCommit:target.sourceCommit,executableSha256:target.hashes.executable,resourceSha256:target.hashes.asar,proofHelperSha256:sha256(await fs.readFile(helper)),referenceRuntime:{node:process.version,executableSha256:sha256(await fs.readFile(process.execPath))},maximumDerivations:100,iterationsPerDerivation:310000};
-  return await retainMainComparison({comparison:result,binding,evidenceRoot,attest:async()=>{
-   const after=await prove({...input,clientPid:process.pid,clientBinding,targetId:before.target.id});assert.deepEqual(after.root,before.root);assert.deepEqual(after.peer,connected.peer);await inspectPackagedRendererTarget(target);return {before,connected,after};
-  }});
+  return await runPreparedComparison({
+   prepare:async()=>({sourceCommit:target.sourceCommit,executableSha256:target.hashes.executable,resourceSha256:target.hashes.asar,proofHelperSha256:sha256(await fs.readFile(helper)),referenceRuntime:{node:process.version,executableSha256:sha256(await fs.readFile(process.execPath))},maximumDerivations:100,iterationsPerDerivation:310000}),
+   compare:async()=>{const response=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(response.exceptionDetails)throw Error('Main synthetic comparison returned an exception');return response.result?.value;},
+   validate:result=>{assert.equal(result?.mainContext,true);assert.ok(Number.isInteger(result.completed)&&result.completed>=1&&result.completed<=100);assert.equal(result.allMatched,result.firstMismatch===null);if(result.allMatched)assert.equal(result.completed,100);else assert.equal(result.completed,result.firstMismatch);},
+   retain:(result,binding)=>retainMainComparison({comparison:result,binding,evidenceRoot,attest:async()=>{
+    const after=await prove({...input,clientPid:process.pid,clientBinding,targetId:before.target.id});assert.deepEqual(after.root,before.root);assert.deepEqual(after.peer,connected.peer);await inspectPackagedRendererTarget(target);return {before,connected,after};
+   }})
+  });
  }finally{reference?.fill(0);socket.close();rejectPending();}
 }
