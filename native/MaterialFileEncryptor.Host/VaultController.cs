@@ -590,7 +590,7 @@ internal sealed partial class VaultController : IDisposable
     private object? PackingInfo()
     {
         if(vault is null)return null;var value=vault.PackingStatus;
-        return new {targetPartSizeBytes=value.TargetPartSizeBytes,pendingFiles=value.PendingFiles,activeWriters=value.ActiveWriters,running=value.Running,lastError=value.LastError};
+        return new {targetPartSizeBytes=value.TargetPartSizeBytes,pendingFiles=value.PendingFiles,activeWriters=value.ActiveWriters,running=value.Running,paused=value.Paused,lastError=value.LastError};
     }
     private static object VersionInfo(VaultVersionInfo version) => new
     {

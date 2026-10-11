@@ -325,8 +325,8 @@
     {
       "source": "docs/features/storage/physical-packing.md",
       "translation": "docs/features/storage/physical-packing.zh-HK.md",
-      "sourceSha256": "9510fa9042135aa0d7b3019956a04d19ffaefa5d33af9d56d8ee4afdcffefb3b",
-      "translationSha256": "cf0a5e2cb1a2590a9b04d341d8825e42286210dd350838f3216a84352a51d34b"
+      "sourceSha256": "7a9d67b860e9eb8a7bb1858ee93bb9ea1cdf30a6915725c0e042cd75a6bd50b4",
+      "translationSha256": "3c359434a67e4698ca12a3c3f5be8992799a04f8aa49433f03d340f7162feb95"
     },
     {
       "source": "docs/features/storage/transfer-lifecycle.md",

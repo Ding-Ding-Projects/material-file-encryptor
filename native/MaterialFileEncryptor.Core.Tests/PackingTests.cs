@@ -71,6 +71,26 @@ internal static class PackingTests
             var resized=Read(reopened,"data");Assert(resized.AsSpan(0,777).SequenceEqual(bytes.AsSpan(0,777))&&resized.AsSpan(777).IndexOfAnyExcept((byte)0)<0,"Truncate regrowth exposed stale data");
         }
     }
+    internal static void PauseResume()
+    {
+        using var fixture=new Fixture();string version;
+        using(var engine=fixture.Create())
+        {
+            engine.CreateFile("data");engine.WriteRange("data",0,Data(200000));engine.FlushLocalOnly();version=engine.GetInfo("data")!.VersionId;
+            using var cancellation=new CancellationTokenSource();
+            engine.PackingTestPoint=point=>{if(point=="packed")cancellation.Cancel();};
+            try{engine.PackAsync("data",4096,cancellation.Token).GetAwaiter().GetResult();throw new Exception("Missing cancellation");}catch(OperationCanceledException){}
+            Assert(engine.PackingStatus.Paused&&engine.PackingStatus.PendingFiles==1,"Cancellation did not retain a paused request");
+        }
+        using(var reopened=fixture.Open())
+        {
+            Assert(reopened.PackingStatus.Paused,"Packing pause did not survive reopen");
+            reopened.ProcessPackingQueueAsync().GetAwaiter().GetResult();
+            Assert(reopened.GetInfo("data")!.VersionId==version,"Automatic work resumed a cancelled migration");
+            reopened.PackAsync("data",4096).GetAwaiter().GetResult();
+            Assert(!reopened.PackingStatus.Paused&&reopened.PackingStatus.PendingFiles==0,"Explicit resume did not finish queued work");
+        }
+    }
     internal static void Publication()
     {
         using var fixture=new Fixture();using var engine=fixture.Create();engine.CreateFile("first");engine.WriteRange("first",0,Data(200000));engine.FlushLocalOnly();

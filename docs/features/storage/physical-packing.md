@@ -14,7 +14,7 @@ The replacement map is committed by an atomic full journal checkpoint, including
 
 The native command `startPacking` accepts optional `path` and `partSizeBytes` properties. Omitting the path queues every current file and saves the chosen cap as the default for future writes. The default migration target is 83,886,080 bytes. Selecting a path queues that file or subtree without changing the global default. The returned operation ID is observed with `operations` and cancelled with `cancelOperation`.
 
-Migration is resumable: the encrypted checkpoint stores pending entry IDs and target caps. Completed packed generations are skipped. Files with active writers stay queued and are revisited after close or periodic maintenance. A completed command does not mean every deferred writer has closed; inspect `pendingPackingFiles` and `activeWriters`. Cancellation preserves completed adoptions and outstanding requests.
+Migration is resumable: the encrypted checkpoint stores pending entry IDs and target caps. Completed packed generations are skipped. Files with active writers stay queued and are revisited after close or periodic maintenance. A completed command does not mean every deferred writer has closed; inspect `pendingPackingFiles` and `activeWriters`. Cancellation preserves completed adoptions and outstanding requests, and durably pauses automatic packing. The timer and writable-handle close cannot resume a paused migration. An explicit new startPacking request resumes it. Status exposes paused and diagnostics exposes packingPaused.
 
 ## Publication and responsiveness
 

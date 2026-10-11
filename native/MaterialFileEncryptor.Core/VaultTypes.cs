@@ -80,6 +80,7 @@ internal sealed class Journal
     public string LogDigest { get; set; } = "";
     public long PartSize { get; set; }
     public Dictionary<string,long> PackingQueue { get; set; } = [];
+    public bool PackingPaused { get; set; }
     public Dictionary<string, DateTimeOffset> VersionDue { get; set; } = [];
     public List<StoredVersion> PendingVersions { get; set; } = [];
     public HashSet<string> HiddenBin { get; set; } = [];
@@ -108,5 +109,5 @@ internal sealed class JournalMutation
 }
 
 public sealed record VaultPackingProgress(string Phase,long BytesCompleted,long TotalBytes,int CompletedFiles,int TotalFiles);
-public sealed record VaultPackingStatus(long TargetPartSizeBytes,int PendingFiles,int ActiveWriters,bool Running,string? LastError);
-public sealed record VaultStorageDiagnostics(long TargetPartSizeBytes,int PendingPackingFiles,int ActiveWriters,bool PackingRunning,string? PackingError,int CurrentReferencedParts,long CurrentReferencedBytes,int HistoricalOnlyParts,long HistoricalOnlyBytes,int TemporaryFiles,long TemporaryBytes);
+public sealed record VaultPackingStatus(long TargetPartSizeBytes,int PendingFiles,int ActiveWriters,bool Running,string? LastError,bool Paused=false);
+public sealed record VaultStorageDiagnostics(long TargetPartSizeBytes,int PendingPackingFiles,int ActiveWriters,bool PackingRunning,string? PackingError,int CurrentReferencedParts,long CurrentReferencedBytes,int HistoricalOnlyParts,long HistoricalOnlyBytes,int TemporaryFiles,long TemporaryBytes,bool PackingPaused=false);

@@ -8,6 +8,7 @@ if (args.Length == 2 && args[0] == "--native-trace-child") { await NativeChildTr
 var cases = new (string,Action)[] {
     ("packing writer admissions, snapshots and namespace races",PackingTests.Races),
     ("packing cancellation and checkpoint durability",PackingTests.Durability),
+    ("packing cancellation stays paused across reopen",PackingTests.PauseResume),
     ("packing publication stalls and exact acknowledgement",PackingTests.Publication),
     ("packing dense 80 MiB physical caps and bounded records",PackingTests.Dense),
     ("encrypted activity snapshots, paging, tamper refusal and upgrade",ActivityTests.Run),

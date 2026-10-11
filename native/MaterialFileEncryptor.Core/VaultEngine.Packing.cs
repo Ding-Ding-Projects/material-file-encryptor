@@ -9,10 +9,11 @@ public sealed partial class VaultEngine
     private readonly SemaphoreSlim packingWorker=new(1,1);
     private readonly CancellationTokenSource backgroundCancellation=new();
     private int activeStorageOperations;
-    private bool packingRunning;
+    private bool packingRunning,packingPaused;
+    private long packingRequestGeneration;
     private string? packingError;
     private int packingScheduled;
-    public VaultPackingStatus PackingStatus { get { lock(gate)return new(partSize,packingQueue.Count,writers.Values.Sum(),packingRunning,packingError); } }
+    public VaultPackingStatus PackingStatus { get { lock(gate)return new(partSize,packingQueue.Count,writers.Values.Sum(),packingRunning,packingError,packingPaused); } }
     internal Action<string>? PackingTestPoint { get; set; }
     internal Action<string>? PublicationTestPoint { get; set; }
     private void QueuePacking(Entry entry)
@@ -55,9 +56,10 @@ public sealed partial class VaultEngine
             return new WriterLease(this,id,opened);
         }
     }
-    public void ResumePacking(){lock(gate){Check();if(!packingQueue.Any(p=>writers.GetValueOrDefault(p.Key)==0))return;}SchedulePacking();}
+    public void ResumePacking(){lock(gate){Check();if(packingPaused||!packingQueue.Any(p=>writers.GetValueOrDefault(p.Key)==0))return;}SchedulePacking();}
     private void SchedulePacking()
     {
+        lock(gate){if(disposed||packingPaused)return;}
         if(Interlocked.CompareExchange(ref packingScheduled,1,0)!=0)return;
         _=Task.Run(async()=>
         {
@@ -71,23 +73,35 @@ public sealed partial class VaultEngine
     /// <summary>Durably queues current files. Repeating after interruption skips already packed generations.</summary>
     public async Task PackAsync(string? path=null,long? newPartSize=null,CancellationToken cancellationToken=default,IProgress<VaultPackingProgress>? progress=null)
     {
-        using var lifetime=AcquireStorageOperation();
+        using var lifetime=AcquireStorageOperation();long request;
         lock(gate)
         {
             Check();cancellationToken.ThrowIfCancellationRequested();long cap=newPartSize??partSize;ValidatePartSize(cap);
             string? normalized=path==null?null:VaultPath.Normalize(path);
             if(normalized is not null && normalized!="")Find(normalized);
             var selected=entries.Where(p=>!p.Value.Directory&&(normalized==null||normalized==""||p.Key.Equals(normalized,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(normalized+"/",StringComparison.OrdinalIgnoreCase))).ToArray();
-            var savedQueue=new Dictionary<string,long>(packingQueue);long savedCap=partSize;
+            var savedQueue=new Dictionary<string,long>(packingQueue);long savedCap=partSize;bool savedPause=packingPaused;
+            request=++packingRequestGeneration;packingPaused=false;
             try
             {
                 if(normalized is null||normalized=="")partSize=cap;
                 foreach(var pair in selected)if(!IsPacked(pair.Value,cap)||packingQueue.ContainsKey(pair.Value.Id))packingQueue[pair.Value.Id]=cap;
                 SaveJournal();
             }
-            catch{packingQueue=savedQueue;partSize=savedCap;throw;}
+            catch{packingQueue=savedQueue;partSize=savedCap;packingPaused=savedPause;throw;}
         }
-        await ProcessPackingQueueAsync(cancellationToken,progress).ConfigureAwait(false);
+        try{await ProcessPackingQueueAsync(cancellationToken,progress).ConfigureAwait(false);}
+        catch(OperationCanceledException){PausePacking(request);throw;}
+    }
+    public void PausePacking()=>PausePacking(null);
+    private void PausePacking(long? generation)
+    {
+        lock(gate)
+        {
+            if(disposed||generation.HasValue&&generation.Value!=packingRequestGeneration)return;
+            bool previous=packingPaused;packingPaused=true;
+            try{SaveJournal();}catch{packingPaused=previous;throw;}
+        }
     }
     // Record offsets, lengths and ordering prove packing without reading cloud file metadata.
     private static bool IsPacked(Entry entry,long cap)
@@ -119,7 +133,7 @@ public sealed partial class VaultEngine
             (string Id,long Cap,long Length)[] work;
             lock(gate)
             {
-                Check();packingRunning=true;packingError=null;
+                Check();if(packingPaused)return;packingRunning=true;packingError=null;
                 work=packingQueue.Select(p=>(Id:p.Key,Cap:p.Value,Entry:entries.Values.FirstOrDefault(e=>e.Id==p.Key))).Where(p=>p.Entry!=null&&!p.Entry.Directory).Select(p=>(p.Id,p.Cap,p.Entry!.Length)).ToArray();
             }
             long total=work.Sum(p=>p.Length),completedBytes=0;int completed=0;
@@ -192,6 +206,6 @@ public sealed partial class VaultEngine
         history.ExceptWith(current);
         long Size(string id){var local=ObjectPath(cache,"parts",id);var remote=ObjectPath(source,"parts",id);try{return File.Exists(local)?new FileInfo(local).Length:File.Exists(remote)?new FileInfo(remote).Length:0;}catch(IOException){return 0;}}
         var temporary=Directory.EnumerateFiles(Path.Combine(cache,"parts"),"*.tmp").Select(p=>new FileInfo(p)).ToArray();
-        return new(status.TargetPartSizeBytes,status.PendingFiles,status.ActiveWriters,status.Running,status.LastError,current.Count,current.Sum(Size),history.Count,history.Sum(Size),temporary.Length,temporary.Sum(p=>p.Exists?p.Length:0));
+        return new(status.TargetPartSizeBytes,status.PendingFiles,status.ActiveWriters,status.Running,status.LastError,current.Count,current.Sum(Size),history.Count,history.Sum(Size),temporary.Length,temporary.Sum(p=>p.Exists?p.Length:0),status.Paused);
     }
 }

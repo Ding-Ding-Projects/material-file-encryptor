@@ -85,6 +85,7 @@ internal sealed partial class VaultController
                     await captured.FlushAsync(cancellation).ConfigureAwait(false);
                     if(captured.Status.PendingCommits!=0)throw new IOException("Encrypted source publication remains pending.");
                 }
+                catch(OperationCanceledException){captured.PausePacking();throw;}
                 finally{lock(gate)--activePreparedOperations;}
             });
         }
@@ -95,7 +96,7 @@ internal sealed partial class VaultController
         try
         {
             var value=captured.GetStorageDiagnostics();
-            return new {targetPartSizeBytes=value.TargetPartSizeBytes,pendingPackingFiles=value.PendingPackingFiles,activeWriters=value.ActiveWriters,packingRunning=value.PackingRunning,packingError=value.PackingError,currentReferencedParts=value.CurrentReferencedParts,currentReferencedBytes=value.CurrentReferencedBytes,historicalOnlyParts=value.HistoricalOnlyParts,historicalOnlyBytes=value.HistoricalOnlyBytes,temporaryFiles=value.TemporaryFiles,temporaryBytes=value.TemporaryBytes};
+            return new {targetPartSizeBytes=value.TargetPartSizeBytes,pendingPackingFiles=value.PendingPackingFiles,activeWriters=value.ActiveWriters,packingRunning=value.PackingRunning,packingPaused=value.PackingPaused,packingError=value.PackingError,currentReferencedParts=value.CurrentReferencedParts,currentReferencedBytes=value.CurrentReferencedBytes,historicalOnlyParts=value.HistoricalOnlyParts,historicalOnlyBytes=value.HistoricalOnlyBytes,temporaryFiles=value.TemporaryFiles,temporaryBytes=value.TemporaryBytes};
         }
         finally{lock(gate)--activePreparedOperations;}
     }

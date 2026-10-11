@@ -122,7 +122,7 @@ public sealed partial class VaultEngine
     {
         revision++;
         var path=Path.Combine(cache,"journal.mfe");
-        WriteMetadata(path,new Journal { LogSequence=logSequence,LogDigest=Convert.ToHexString(logDigest),PartSize=partSize,PackingQueue=packingQueue,Entries=entries,Baseline=baseline,Pending=pending,Known=known,Heads=heads,Pinned=pinned,VersionDue=versionDue,PendingVersions=pendingVersions,HiddenBin=hiddenBin },"journal","");
+        WriteMetadata(path,new Journal { LogSequence=logSequence,LogDigest=Convert.ToHexString(logDigest),PartSize=partSize,PackingQueue=packingQueue,PackingPaused=packingPaused,Entries=entries,Baseline=baseline,Pending=pending,Known=known,Heads=heads,Pinned=pinned,VersionDue=versionDue,PendingVersions=pendingVersions,HiddenBin=hiddenBin },"journal","");
         // No fallible accounting operation may report a durable checkpoint as failed.
         try{checkpointBytes+=new FileInfo(path).Length;}catch(IOException){}catch(UnauthorizedAccessException){}
         checkpointCount++;checkpointHighWater=logSequence;

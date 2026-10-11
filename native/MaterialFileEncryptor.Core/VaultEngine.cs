@@ -48,7 +48,7 @@ public sealed partial class VaultEngine : IDisposable
             checkpointSequence=journal.LogSequence;checkpointDigest=journal.LogDigest;
             ValidateEntries(journal.Entries); ValidateEntries(journal.Baseline); ValidateStoredPartSize(journal.PartSize);
             entries = new(journal.Entries, StringComparer.OrdinalIgnoreCase); baseline = new(journal.Baseline,StringComparer.OrdinalIgnoreCase);
-            pending = journal.Pending; known = journal.Known; heads = journal.Heads; pinned = journal.Pinned; partSize = journal.PartSize; packingQueue=journal.PackingQueue; foreach(var cap in packingQueue.Values)ValidatePartSize(cap); versionDue=journal.VersionDue; pendingVersions=journal.PendingVersions; hiddenBin=journal.HiddenBin;
+            pending = journal.Pending; known = journal.Known; heads = journal.Heads; pinned = journal.Pinned; partSize = journal.PartSize; packingQueue=journal.PackingQueue; packingPaused=journal.PackingPaused; foreach(var cap in packingQueue.Values)ValidatePartSize(cap); versionDue=journal.VersionDue; pendingVersions=journal.PendingVersions; hiddenBin=journal.HiddenBin;
         }
         ReplayJournal(checkpointSequence,checkpointDigest);
         sourceAvailable = Directory.Exists(source);
