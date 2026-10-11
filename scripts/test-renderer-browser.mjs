@@ -237,7 +237,7 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
    await new Promise(resolve=>setTimeout(resolve,100));
   }
   if(!Array.isArray(targets)||targets.length!==1||targets[0].type!=='page'||targets[0].url!==expectedUrl||!targets[0].webSocketDebuggerUrl?.startsWith(`ws://127.0.0.1:${port}/`))throw new Error('Renderer fixture CDP isolation proof failed.');
-  if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await lifecycleCommand([adapter,'prove-cdp',state]);
+  if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await proveStableRendererTree(()=>lifecycleCommand([adapter,'prove-cdp',state]));
   const clientBinding=(await lifecycleCommand([adapter,'bind-client',state],{clientPid:process.pid})).clientBinding;
   if(clientBinding?.clientIdentity?.pid!==process.pid)throw new Error('Fresh renderer client ancestry binding is unavailable.');
   cdpTransport=await (runtime.createTransport||createRendererCdpTransport)(endpoint);

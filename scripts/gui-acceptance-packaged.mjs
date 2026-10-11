@@ -36,7 +36,11 @@ export async function openGuiAcceptancePackage({expected,evidenceRoot,runtime,op
  assert.equal(typeof openTarget,'function');assert.ok(path.isAbsolute(evidenceRoot));
  const producer=createPackagedFixturePreparation({prepare});let opened;
  try{
-  opened=await openTarget(expected,{evidenceRoot,runtime:{...runtime,prepareProfile:context=>producer.prepareProfile(context)}});
+  opened=await openTarget(expected,{evidenceRoot,runtime:{...runtime,prepareProfile:async context=>{
+   const receipt=await producer.prepareProfile(context);
+   await fs.writeFile(path.join(evidenceRoot,'native-fixture-prepared.json'),JSON.stringify({...receipt,fixture:producer.fixture},null,2),{flag:'wx'});
+   return receipt;
+  }}});
   assert.ok(producer.fixture,'Packaged opener did not prepare the owned fixture');
   await opened.page.waitForFunction(()=>typeof window.drive?.status==='function');
   await observeOwnedPackagedFixture(opened.page,producer.fixture);
