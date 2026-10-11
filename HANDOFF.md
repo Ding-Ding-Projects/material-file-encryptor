@@ -1,5 +1,15 @@
 # Current corrective production continuation
 
+Update, 2026-10-11: both exact root entrypoints passed on 11268c21079d8771d5feb713b4fb8ef4ca9a0213. Actual Squirrel extraction matched all 663 payload files; archive CRC, package privacy (6,194 entries, zero rejected) and Setup embedding passed. The complete output was copied with hashes verified to out/installer-repair/local-package-11268c2. Installed acceptance is separate and pending.
+
+The publisher's Windows PowerShell JSON compatibility repair is integrated and pushed at 6b259a3263ff9cb995885e6b2f92117d2b998a08. Release run 38113069082 succeeded; normal release v1.133.1 has both draft/prerelease flags false, its immutable tag matches that source and five expected assets are attached. Independent download has started, without an installed-success claim.
+
+Both local-only wording parsers now enforce 10,000 entries independently from 256 KiB. Exactly 10,000 remains accepted in both schemas, and 10,001 is rejected before replacement. Thirteen parser checks and three translation checks passed; an in-memory negative control accepted both oversized inventories only after removing the new check. Visible English/Cantonese upload help and paired documentation were corrected. Independent review found no remaining parser logic issue.
+
+Website repairs remain isolated and unaccepted as deployed behavior: shared home/article controls, visitor personalization, encrypted local profile/history, and a documentation-first workspace. Review found and is correcting protected-mode transitions, history recording, cross-tab profile reset, reset-error recovery and confirmation cancellation. Existing source checks do not satisfy route-by-route browser acceptance. Retain all seven worktrees and all failed or incomplete evidence. Browser profile deletion was blocked by automatic approval review and that profile remains untouched.
+
+The records below are historical checkpoints and do not override this resumed installation authorization or current production results.
+
 The current request also explicitly requires repairing the public website contracts. A source audit confirmed that the home and generated article shells omit the shared controls exposed separately by the browser workspace. Incorrect message-category sliders, missing regex builders and public-shell navigation/settings gaps are implementation defects, not just absent evidence. An isolated documentation lane owns the direct public-surface repair. Live inspection and per-route acceptance remain pending.
 
 The shared compression helper reproduced all 663 original package payload files through the genuine Squirrel extractor, with version/source checks. Actual receipt: out/installer-repair/actual-recompression-a1b53a9.json. Root build a1b53a9 passed; local root installer production stopped on unavailable Get-FileHash, and hosted run 38111213871 stopped on an archive path separator mismatch after Setup embedding and CRC passed. The verifier now uses framework hashes and native archive paths. Both exact entrypoints must pass on the corrected candidate; installed acceptance remains pending.
