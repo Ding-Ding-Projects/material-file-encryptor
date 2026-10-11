@@ -1,9 +1,12 @@
+- [x] Independently review and integrate registered appearance action/Close source with original bindings, locks, rejection and focus semantics. Source only.
+- [ ] Convert remaining appearance state-tab anatomy, typed fields/uploads and nested controls; verify genuine appearance keyboard/accessibility/pixels.
+
 - [x] Independently review history registered-control source and red-before/green-after selection/session/away-back regressions;10 mounted checks pass.
 - [ ] Verify genuine history keyboard/accessibility/pixels, remaining date/search controls and deployed new history articles.
 
 - [x] Inspect exact6d016f7 genuine six-scene capture including registered selects, textfield, sliders and checkboxes; verify raw hashes and owned cloud closure.
 - [x] Independently review supported host caption-wrap source repair and additive private-safe label measurements.
-- [ ] Rebuild/recapture the identical320x844 caption tuple and inspect complete wrapped wording and geometry.
+- [x] Inspect exact0df identical English320x844/DPR1dark recapture: full reset caption across two lines, matching label geometry and raw/closure hashes. Other tuples remain pending.
 
 - [x] Independently review shared genuine Material select/slider source, supported option initialization, numeric precision and noncancelable late-lock negatives. Source only.
 - [x] Verify exact940 raw capture hashes and complete cloud closure, while retaining its missing textfield/checkbox pixel coverage.
