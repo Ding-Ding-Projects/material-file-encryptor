@@ -27,6 +27,21 @@ class Binding:
 
 
 class Tests(unittest.TestCase):
+    def test_stdlib_and_uv_configuration_require_actual_base_identity(self):
+        root = Path(tempfile.gettempdir()).resolve()
+        launcher = root / 'isolated' / 'Scripts' / 'python.exe'
+        base = root / 'runtime' / 'python.exe'
+        values = {'home':str(base.parent),'include-system-site-packages':'false','executable':str(base)}
+        self.assertEqual(recovery.configured_base_interpreter(values,launcher,str(base)),base)
+        uv = {key:value for key,value in values.items() if key != 'executable'}
+        uv.update(implementation='CPython',uv='0.12.23')
+        self.assertEqual(recovery.configured_base_interpreter(uv,launcher,str(base)),base)
+        for invalid in [{**uv,'home':'relative'},{**uv,'implementation':'Other'},{**uv,'include-system-site-packages':'true'},{**uv,'uv':''},{**values,'executable':str(root/'wrong.exe')}]:
+            with self.assertRaises(recovery.Error):
+                recovery.configured_base_interpreter(invalid,launcher,str(base))
+        with self.assertRaises(recovery.Error):
+            recovery.configured_base_interpreter(uv,launcher,str(root/'unrelated.exe'))
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
