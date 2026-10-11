@@ -31,12 +31,19 @@ test('verifier admission requires independently expected source and byte identit
 test('production Windows PowerShell receipt serialization is directly readable JSON without BOM', {skip:process.platform!=='win32'},()=>{
   const writer=readFileSync('scripts/build.ps1','utf8').split(/\r?\n/).filter(line=>line.includes('[IO.File]::WriteAllText')&&line.includes('server-file-lease/source-receipt.json'));
   assert.equal(writer.length,1);
-  const root=path.join(os.tmpdir(),`server-lease-receipt-${randomUUID()}`).replaceAll("'","''");
-  const command=`$ErrorActionPreference='Stop';$root='${root}';New-Item -ItemType Directory (Join-Path $root 'out/verification/server-file-lease')|Out-Null;$leaseVerifierReceipt=@{schemaVersion=1;sourceCommit=('a'*40);verifierDllSha256=('b'*64)};${writer[0]};[Console]::Out.Write([IO.File]::ReadAllText((Join-Path $root 'out/verification/server-file-lease/source-receipt.json')))`;
-  const result=spawnSync('powershell.exe',['-NoProfile','-Command',command],{encoding:'utf8',timeout:10000,windowsHide:true});
-  assert.equal(result.error,undefined);assert.equal(result.status,0,result.stderr);
-  const receipt=JSON.parse(result.stdout);assert.equal(receipt.schemaVersion,1);assert.equal(receipt.sourceCommit,'a'.repeat(40));assert.equal(receipt.verifierDllSha256,'b'.repeat(64));
-  assert.throws(()=>JSON.parse('\uFEFF'+JSON.stringify(receipt)),SyntaxError,'BOM regression control must fail the actual JSON consumer');
+  const serialize=statement=>{
+    const root=path.join(os.tmpdir(),`server-lease-receipt-${randomUUID()}`).replaceAll("'","''");
+    const command=`$ErrorActionPreference='Stop';$root='${root}';New-Item -ItemType Directory (Join-Path $root 'out/verification/server-file-lease')|Out-Null;$leaseVerifierReceipt=@{schemaVersion=1;sourceCommit=('a'*40);verifierDllSha256=('b'*64)};${statement};[Console]::Out.Write([Convert]::ToBase64String([IO.File]::ReadAllBytes((Join-Path $root 'out/verification/server-file-lease/source-receipt.json'))))`;
+    const result=spawnSync('powershell.exe',['-NoProfile','-Command',command],{encoding:'utf8',timeout:10000,windowsHide:true});
+    assert.equal(result.error,undefined);assert.equal(result.status,0,result.stderr);
+    return Buffer.from(result.stdout,'base64');
+  };
+  const bytes=serialize(writer[0]);
+  assert.notDeepEqual([...bytes.subarray(0,3)],[239,187,191]);
+  const receipt=JSON.parse(bytes.toString('utf8'));assert.equal(receipt.schemaVersion,1);assert.equal(receipt.sourceCommit,'a'.repeat(40));assert.equal(receipt.verifierDllSha256,'b'.repeat(64));
+  const oldBytes=serialize("$leaseVerifierReceipt | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $root 'out/verification/server-file-lease/source-receipt.json') -Encoding UTF8");
+  assert.deepEqual([...oldBytes.subarray(0,3)],[239,187,191],'Actual old WinPS writer must emit BOM');
+  assert.throws(()=>JSON.parse(oldBytes.toString('utf8')),SyntaxError,'Actual old writer bytes must fail the JSON consumer');
 });
 test('Windows cloud-compiled server lease verifier protects exact bytes and ancestors', {skip:process.platform!=='win32'||!process.env.SERVER_FILE_LEASE_VERIFIER_DLL||!process.env.SERVER_FILE_LEASE_DOTNET?'Cloud-compiled verifier DLL and verified .NET host paths are required.':false},()=>{
   const root=path.join(os.tmpdir(),`server-lease-verifier-${randomUUID()}`);
