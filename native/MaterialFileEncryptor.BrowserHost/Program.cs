@@ -143,9 +143,10 @@ public static class Program
             }
             throw new InvalidDataException("Native connection request limit reached.");
         }
-        catch
+        catch (Exception error)
         {
             // Neither payloads nor origin/session credentials reach stderr.
+            if (args.Length == 1 && args[0] == "--self-test") Console.Error.WriteLine("Synthetic check: " + error.GetType().Name + ": " + error.Message);
             Console.Error.WriteLine("Native browser handoff unavailable."); return 1;
         }
     }
