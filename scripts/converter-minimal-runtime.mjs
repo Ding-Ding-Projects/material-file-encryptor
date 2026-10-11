@@ -1,0 +1,32 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {spawn} from 'node:child_process';
+import {createHash} from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+const manifest=JSON.parse(await fs.readFile(new URL('../docs/features/converter/minimal-runtime-manifest.json',import.meta.url),'utf8'));
+const hash=async p=>createHash('sha256').update(await fs.readFile(p)).digest('hex');
+export const configureArguments=['--target-os=mingw32','--arch=x86_64','--disable-everything','--disable-autodetect','--disable-network','--disable-doc','--disable-debug','--disable-x86asm','--disable-programs','--enable-ffmpeg','--enable-ffprobe','--disable-devices','--enable-protocol=file,pipe','--enable-demuxer=mov,mp3,flac,wav,image_png_pipe,image_jpeg_pipe,image2','--enable-muxer=image2,wav,flac,mp3,mp4,null','--enable-decoder=png,mjpeg,flac,mp3,mp3float,pcm_s16le,aac,h264,mpeg4','--enable-encoder=png,mjpeg,flac,pcm_s16le,aac,mpeg4,mp3_mf','--enable-mediafoundation','--enable-d3d11va','--enable-filter=format,aformat,aresample,null,anull','--enable-zlib','--pkg-config=false'];
+/** Uses existing build tools only. Source archives are verified before executing configure. */
+export async function buildMinimalRuntime({workDirectory,bashPath,gccDirectory,makePath}){
+ for(const p of [workDirectory,bashPath,gccDirectory,makePath])if(!path.isAbsolute(p))throw new Error('Explicit absolute tool and workspace paths are required.');
+ const root=path.resolve(workDirectory);await fs.mkdir(root,{recursive:true});
+ async function fetchSource(item,name){const p=path.join(root,name);if(await hash(p).catch(()=>null)===item.sha256)return p;const response=await fetch(item.url,{signal:AbortSignal.timeout(120000)});if(!response.ok)throw new Error('Source download unavailable.');const chunks=[];let total=0;for await(const chunk of response.body){total+=chunk.length;if(total>64*1024*1024)throw new Error('Source download exceeds limit.');chunks.push(chunk);}const bytes=Buffer.concat(chunks);if(createHash('sha256').update(bytes).digest('hex')!==item.sha256)throw new Error('Source hash or size mismatch.');await fs.writeFile(p,bytes,{flag:'wx'});return p;}
+ await fetchSource(manifest.ffmpeg,'ffmpeg-9.0.2.tar.xz');await fetchSource(manifest.zlib,'zlib-1.3.2.tar.gz');
+ const script=path.join(root,'build-recipe.sh');const quoted=configureArguments.map(x=>"'"+x+"'").join(' ');
+ await fs.writeFile(script,`set -eu\nexport PATH="/usr/bin:/bin:$PATH"\nroot=$(cygpath -u "$1")\ngccdir=$(cygpath -u "$2")\nmakeexe=$(cygpath -u "$3")\nexport PATH="$gccdir:/usr/bin:/bin"\ncd "$root"\ntest -d ffmpeg-9.0.2 || tar -xf ffmpeg-9.0.2.tar.xz\ntest -d zlib-1.3.2 || tar -xf zlib-1.3.2.tar.gz\ncd zlib-1.3.2\n"$makeexe" -f win32/Makefile.gcc -j4 libz.a\ncd ../ffmpeg-9.0.2\nzlibwin=$(cygpath -m "$root/zlib-1.3.2")\n./configure ${quoted} "--extra-cflags=-I$zlibwin" "--extra-ldflags=-L$zlibwin -static"\n"$makeexe" -j4 ffmpeg.exe ffprobe.exe\n`);
+ await new Promise((resolve,reject)=>{const child=spawn(bashPath,[script.replaceAll('\\','/'),root,gccDirectory,makePath],{windowsHide:true,stdio:'inherit'});const timer=setTimeout(()=>{child.kill();reject(new Error('Build exceeded 30-minute limit.'));},1800000);child.once('error',reject);child.once('exit',code=>{clearTimeout(timer);code===0?resolve():reject(new Error('Minimal media build failed.'));});});
+ const outputs={};for(const name of ['ffmpeg.exe','ffprobe.exe'])outputs[name]=await hash(path.join(root,'ffmpeg-9.0.2',name));
+ await fs.writeFile(path.join(root,'build-receipt.json'),JSON.stringify({schema:1,source:manifest,configureArguments,outputs},null,2)+'\n');return outputs;
+}
+export async function packageMinimalSource(workDirectory){
+ const root=path.resolve(workDirectory),bundle=path.join(root,'source-package');await fs.mkdir(path.join(bundle,'scripts'),{recursive:true});await fs.mkdir(path.join(bundle,'docs/features/converter'),{recursive:true});
+ for(const [name,expected]of [['ffmpeg-9.0.2.tar.xz',manifest.ffmpeg.sha256],['zlib-1.3.2.tar.gz',manifest.zlib.sha256]]){const input=path.join(root,name);if(await hash(input)!==expected)throw new Error('Source archive hash mismatch.');await fs.copyFile(input,path.join(bundle,name));}
+ await fs.copyFile(fileURLToPath(import.meta.url),path.join(bundle,'scripts/converter-minimal-runtime.mjs'));
+ await fs.copyFile(fileURLToPath(new URL('../docs/features/converter/minimal-runtime-manifest.json',import.meta.url)),path.join(bundle,'docs/features/converter/minimal-runtime-manifest.json'));
+ await fs.copyFile(path.join(root,'ffmpeg-9.0.2/COPYING.LGPLv2.1'),path.join(bundle,'COPYING.FFmpeg.LGPLv2.1'));
+ await fs.copyFile(path.join(root,'zlib-1.3.2/README'),path.join(bundle,'README.zlib'));
+ await fs.writeFile(path.join(bundle,'BUILD.txt'),'Unmodified official FFmpeg 9.0.2 and zlib 1.3.2 source archives.\nRun the included Node build helper with this directory as work-directory and explicit existing Bash/GCC/Make paths.\nThe recipe contains exact configure options. No toolchain download is performed.\n');
+ const inventory=[];async function visit(dir){for(const e of await fs.readdir(dir,{withFileTypes:true})){const p=path.join(dir,e.name);if(e.isDirectory())await visit(p);else inventory.push({name:path.relative(bundle,p).split(path.sep).join('/'),sha256:await hash(p),bytes:(await fs.stat(p)).size});}}await visit(bundle);await fs.writeFile(path.join(bundle,'SOURCE-INVENTORY.json'),JSON.stringify({schema:1,files:inventory},null,2)+'\n');
+ const output=path.join(root,'ffmpeg-9.0.2-minimal-corresponding-source.zip');const tar=path.join(process.env.SystemRoot,'System32/tar.exe');await new Promise((resolve,reject)=>{const child=spawn(tar,['-a','-cf',output,'-C',bundle,'.'],{windowsHide:true,stdio:'ignore'});child.once('error',reject);child.once('exit',c=>c===0?resolve():reject(new Error('Source packaging failed.')));});const bytes=(await fs.stat(output)).size;if(bytes>=1500000000)throw new Error('Source package exceeds transfer limit.');return {name:path.basename(output),sha256:await hash(output),bytes,contents:inventory};
+}
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){if(process.argv.length!==6)throw new Error('Usage: node scripts/converter-minimal-runtime.mjs <work-directory> <bash.exe> <gcc-directory> <make.exe>');console.log(JSON.stringify(await buildMinimalRuntime({workDirectory:process.argv[2],bashPath:process.argv[3],gccDirectory:process.argv[4],makePath:process.argv[5]})));}
