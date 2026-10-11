@@ -1,6 +1,6 @@
 export {};
 
-type FeatureName = 'converter'|'ollama'|'documentation'|'status'|'personalization'|'access'|'workflow';
+type FeatureName = 'converter'|'ollama'|'documentation'|'status'|'personalization'|'access'|'workflow'|'surprise';
 interface FileEntry {id:string;entryId?:string;path:string;size:number;offline:boolean;modified:string;partCount?:number;partSizeBytes?:number}
 interface FilePage {items:FileEntry[];nextCursor:string|null;revision?:string|number}
 interface Operation {id?:string;operationId:string;kind?:'import'|'export'|'packing';phase?:'queued'|'staging'|'packing'|'publication'|'completed';bytesCompleted?:number;totalBytes?:number;type?:string;label?:string;state:string;progress?:number;error?:string}
