@@ -283,8 +283,14 @@
     {
       "source": "docs/features/schedules/README.md",
       "translation": "docs/features/schedules/README.zh-HK.md",
-      "sourceSha256": "4f2542cfb9d6ac639a14d34c07eb579b8ecee1168c31437465646ed18eb10b82",
-      "translationSha256": "b80cc131574075767884f6972673413eee63c3e72900618caa8ea8d5aaab639e"
+      "sourceSha256": "ddb818ff41b9f0d1de8af4b4c155176cef19be6af398c74f48809ea44a102778",
+      "translationSha256": "74acd1c15bacbe9da3eaa90445ed2370fc2ffb2d5f7c477059bc6070f03b277a"
+    },
+    {
+      "source": "docs/features/schedules/customization.md",
+      "translation": "docs/features/schedules/customization.zh-HK.md",
+      "sourceSha256": "3d3d1b1f2389cd808c4ea2997c79720d02fda1c2380d68510741d7b28a443973",
+      "translationSha256": "8253dbda4b3f210bd1f2c1db8444917a8841491b451b0a86ef2d05ff05a6e29c"
     },
     {
       "source": "docs/features/schedules/external-sources.md",
