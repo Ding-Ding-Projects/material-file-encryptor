@@ -75,3 +75,7 @@ Mounted checks cover constructor inventory, disabled actions, stale group bindin
 ## Typed appearance fields
 
 Layer names, preset-name drafts and numeric effect, channel and selection fields use registered Material outlined text fields. Numeric input keeps the original finite-range rejection and step metadata; correcting an invalid value clears its prior custom validity. Mutations retain persistence rollback and history, and stale, detached, disposed or locked field handlers cannot mutate a replaced target or group. Preset input remains a draft until Save preset. CSS property and color bridges, mesh, path, file controls and the search placeholder are outside this conversion. Mounted consumer checks do not establish vendor rendering, keyboard behavior or full Material Design 3 conformance.
+
+## CSS property fields
+
+Non-typography CSS property rows now use registered outlined text fields and the existing settings-change and Clear adapters. The original candidate validator, renderer CSS.supports check, persistence rollback and Reset deletion remain authoritative. Fields bind the exact target, state, group, index and layer, reject stale or locked admission, and permit Retry after their own successful rollback. Owned field mapping replaces native-input-only synchronization. Typography remains the color authority; its skipped color keys made the retired property color branch unreachable. Complete unique above-control guidance for these rows remains unfinished, as do real vendor rendering and full Material Design 3 acceptance.
