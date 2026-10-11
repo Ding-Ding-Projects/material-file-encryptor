@@ -308,7 +308,7 @@ else {
     localAdapter=createLocalAdapter({isAuthenticated:()=>!state.locked&&state.lockVerified!==false,authorizePair:async({origin})=>(await dialog.showMessageBox(window,{type:'question',buttons:['Reject','Pair browser'],defaultId:0,cancelId:0,title:'Pair browser tools',message:'Allow this browser to use local tools?',detail:origin+' will be able to operate approved workflows until the drive locks or the session expires.'})).response===1,dispatch:request});
     window = new BrowserWindow({ width: 1180, height: 850, minWidth: 880, minHeight: 650, frame: false, show: false, backgroundColor: '#f7f9f8', webPreferences: { preload: path.join(directory, 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false, webSecurity: true } });
     window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-    window.webContents.on('will-navigate', event => event.preventDefault());
+    window.webContents.on('will-navigate', (event, url) => { if(url!==rendererURL)event.preventDefault(); });
     window.webContents.on('will-attach-webview', event => event.preventDefault());
     let rendererRecoveries=0;
     window.webContents.on('render-process-gone',()=>{if(!shuttingDown&&rendererRecoveries++<3)void window.loadFile(rendererPath);});
