@@ -237,7 +237,17 @@ internal sealed partial class VaultController
         activePreparedOperations = Volatile.Read(ref activePreparedOperations),
         activeSynchronization = Volatile.Read(ref syncFlight)
     };
-    private object ForceLock()
+    internal bool TryBeginBackgroundWork()
+    {
+        lock(admissionGate)
+        {
+            if(forceLocking||syncFlight!=0)return false;
+            Volatile.Write(ref syncFlight,1);return true;
+        }
+    }
+    internal void EndBackgroundWork(){lock(admissionGate)Volatile.Write(ref syncFlight,0);}
+    internal void EndForceLock(){lock(admissionGate)forceLocking=false;}
+    internal object? TryReserveForceLock()
     {
         lock (admissionGate)
         {
@@ -255,6 +265,11 @@ internal sealed partial class VaultController
             }
             finally { Monitor.Exit(gate); }
         }
+        return null;
+    }
+    private object ForceLock()
+    {
+        object? busy=TryReserveForceLock();if(busy is not null)return busy;
         try
         {
             // Stopping the dispatcher may wait for callbacks and must never own
@@ -264,7 +279,7 @@ internal sealed partial class VaultController
             Status();
             return ForceLockResult(true, false, "locked", 0, 0);
         }
-        finally { lock (admissionGate) forceLocking = false; }
+        finally { EndForceLock(); }
     }
     private void FileSystemHostDetach()
     {
