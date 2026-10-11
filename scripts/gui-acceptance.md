@@ -1,6 +1,6 @@
 # GUI acceptance
 
-`contracts/gui-states.json` is a hand-written state inventory. Every state requires two viewports (1180×850 and 880×650), three languages, two themes and four renderer scales. The current 74 states produce 3,552 tuples. An inventory row is a requirement, not a completion claim.
+`contracts/gui-states.json` is a hand-written state inventory. Every state requires two viewports (1180×850 and 880×650), three languages, two themes and four renderer scales. The current 84 states produce 4,032 tuples. An inventory row is a requirement, not a completion claim.
 
 Run `node scripts/gui-acceptance.mjs inventory` to validate and print the current count. The focused admission regressions are `node --test test/gui-acceptance.test.js test/gui-acceptance-target.test.js`.
 
@@ -25,7 +25,7 @@ Native display-scale evidence is independent. Supply one real receipt for each s
 The audit CLI accepts `node scripts/gui-acceptance.mjs audit <run.json>`, where the JSON contains `binding`, `rows`, `root` and `physicalDpi`. Exit 0 means all declared evidence was admitted; exit 2 means required evidence remains pending. The validator verifies declarations and bytes. It cannot independently prove human inspection or that a producer truthfully reported its route, so retain original acquisition receipts and independent review.
 # Packaged acquisition producer
 
-`gui-acceptance-acquire.mjs` builds deterministic production navigation plans for all 74 inventoried states and 3,552 tuples. `acquireMatrix` accepts the existing exact-owned packaged launch, proof-bound `executePlan`, and `createModernProbeEvidence` adapter. It retains raw results before validation, validates native bookends and version-1 layout receipts, hashes the original PNG, and leaves each capture awaiting independent inspection and reference comparison. A captured row is never automatically an accepted row. Renderer emulation does not prove physical display scaling.
+`gui-acceptance-acquire.mjs` builds deterministic production navigation plans for all 84 inventoried states and 4,032 tuples. `acquireMatrix` accepts the existing exact-owned packaged launch, proof-bound `executePlan`, and `createModernProbeEvidence` adapter. It retains raw results before validation, validates native bookends and version-1 layout receipts, hashes the original PNG, and leaves each capture awaiting independent inspection and reference comparison. A captured row is never automatically an accepted row. Renderer emulation does not prove physical display scaling.
 
 `gui-acceptance-baseline.mjs` supplies initial action adapters for settings, locked-drive create/unlock/cancel, and password-dialog edit/clear/cancel. These adapters use the actual mounted production UI. Their plans are source-checked only until a pinned packaged candidate executes them. The caller must supply `prepareOwnedFixture`, proving the source and exact synthetic fixture through the native bridge. The fixture producer now excludes `M:` unconditionally and fails when no other valid drive letter exists.
 

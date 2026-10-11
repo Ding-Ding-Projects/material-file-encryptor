@@ -854,6 +854,146 @@
         "resume-packing",
         "verify-pause-cleared"
       ]
+    },
+    {
+      "id": "p-history-bulk-all",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "Three synthetic unlocked records a/b/c with b filtered out",
+      "observable": "Only visible records a and c are selected",
+      "actions": [
+        "history.select-all-filtered"
+      ],
+      "addition": {
+        "reason": "Implemented history bulk selection and record export controls within the agreed history family",
+        "sourceCommit": "664c57f4e949916e51849db08aff4088e96d53f4"
+      }
+    },
+    {
+      "id": "p-history-bulk-invert",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "Three synthetic unlocked records a/b/c with b filtered out",
+      "observable": "Inverting selected visible records leaves none selected",
+      "actions": [
+        "history.invert-filtered"
+      ],
+      "addition": {
+        "reason": "Implemented history bulk selection and record export controls within the agreed history family",
+        "sourceCommit": "664c57f4e949916e51849db08aff4088e96d53f4"
+      }
+    },
+    {
+      "id": "p-history-bulk-range",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "Three synthetic unlocked records a/b/c with b filtered out",
+      "observable": "Shift selection includes only the visible a to c range",
+      "actions": [
+        "history.select-range"
+      ],
+      "addition": {
+        "reason": "Implemented history bulk selection and record export controls within the agreed history family",
+        "sourceCommit": "664c57f4e949916e51849db08aff4088e96d53f4"
+      }
+    },
+    {
+      "id": "p-history-export-selected",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "Three synthetic unlocked records a/b/c with b filtered out",
+      "observable": "Export contains exactly selected visible IDs and an omission manifest",
+      "actions": [
+        "history.export-selected"
+      ],
+      "addition": {
+        "reason": "Implemented history bulk selection and record export controls within the agreed history family",
+        "sourceCommit": "664c57f4e949916e51849db08aff4088e96d53f4"
+      }
+    },
+    {
+      "id": "p-history-export-filtered",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "Three synthetic unlocked records a/b/c with b filtered out",
+      "observable": "Export contains exactly current visible IDs and an omission manifest",
+      "actions": [
+        "history.export-filtered"
+      ],
+      "addition": {
+        "reason": "Implemented history bulk selection and record export controls within the agreed history family",
+        "sourceCommit": "664c57f4e949916e51849db08aff4088e96d53f4"
+      }
+    },
+    {
+      "id": "p-history-export-format",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "Three synthetic unlocked records a/b/c with b filtered out",
+      "observable": "All ten formats preserve records, schema and omissions with correct MIME and extension",
+      "actions": [
+        "history.format"
+      ],
+      "addition": {
+        "reason": "Implemented history bulk selection and record export controls within the agreed history family",
+        "sourceCommit": "664c57f4e949916e51849db08aff4088e96d53f4"
+      }
+    },
+    {
+      "id": "p-logo-preset",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "Owned synthetic static 256 by 128 PNG with zero focal position",
+      "observable": "Lock and key presets update the local 128 pixel PNG and title consumer without network",
+      "actions": [
+        "logo.preset"
+      ],
+      "addition": {
+        "reason": "Implemented logo authoring controls within the agreed appearance family",
+        "sourceCommit": "8d4f903acda2f9e374cd5ca1e3859790be29431b"
+      }
+    },
+    {
+      "id": "p-logo-crop",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "Owned synthetic static 256 by 128 PNG with zero focal position",
+      "observable": "Crop X 0.25, width 0.5 and height 1 uses the correct region of a synthetic 256 by 128 PNG",
+      "actions": [
+        "logo.crop"
+      ],
+      "addition": {
+        "reason": "Implemented logo authoring controls within the agreed appearance family",
+        "sourceCommit": "8d4f903acda2f9e374cd5ca1e3859790be29431b"
+      }
+    },
+    {
+      "id": "p-logo-safe-area",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "Owned synthetic static 256 by 128 PNG with zero focal position",
+      "observable": "Safe area 0.125 produces a 16 pixel border in the 128 pixel output",
+      "actions": [
+        "logo.safe-area"
+      ],
+      "addition": {
+        "reason": "Implemented logo authoring controls within the agreed appearance family",
+        "sourceCommit": "8d4f903acda2f9e374cd5ca1e3859790be29431b"
+      }
+    },
+    {
+      "id": "p-logo-background",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "Owned synthetic static 256 by 128 PNG with zero focal position",
+      "observable": "Static background #11223380 preserves alpha and animated background remains disabled",
+      "actions": [
+        "logo.background"
+      ],
+      "addition": {
+        "reason": "Implemented logo authoring controls within the agreed appearance family",
+        "sourceCommit": "8d4f903acda2f9e374cd5ca1e3859790be29431b"
+      }
     }
   ]
 }
