@@ -17,3 +17,5 @@
 - [本機個人用詞](personal-vocabulary.zh-HK.md)
 - [現代介面同可清除欄位](modern-fields.zh-HK.md)
 - [啟動登記讀取確認](startup-registration.zh-HK.md)
+
+- [訪客本機網站個人化](visitor-personalization.zh-HK.md)

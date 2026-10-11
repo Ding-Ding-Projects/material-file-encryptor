@@ -7,10 +7,10 @@ import { createHash } from 'node:crypto';
 // Independent required inventory: adding an article requires explicit review here.
 const REQUIRED = [
   'README', 'access-local', 'appearance-editor', 'local-personalization',
-  'access/README', 'access/local-access', 'appearance/README', 'appearance/raster-workflows',
+  'access/README', 'access/local-access', 'access/visitor-local-access', 'appearance/README', 'appearance/raster-workflows',
   'converter/README', 'converter/spreadsheets', 'converter/archive-runtime', 'converter/archive-and-data', 'converter/media-plan', 'converter/minimal-component', 'converter/minimal-runtime',
   'desktop/README', 'desktop/owned-exit-handles', 'desktop/package-integrity', 'desktop/runtime-evidence', 'drive/README',
-  'interface/README', 'interface/appearance-editor', 'interface/local-personalization', 'interface/modern-fields', 'interface/personal-vocabulary', 'interface/startup-registration',
+  'interface/README', 'interface/appearance-editor', 'interface/local-personalization', 'interface/modern-fields', 'interface/personal-vocabulary', 'interface/startup-registration', 'interface/visitor-personalization',
   'ollama/README', 'ollama/local-models', 'ollama/native-host', 'ollama/regression-verification', 'ollama/release-provenance',
   'performance/README', 'performance/native-helper', 'performance/native-lifecycle-performance',
   'platform/README', 'platform/current-integration', 'platform/documentation-and-status', 'platform/instruction-currency', 'platform/public-document-foundation',

@@ -29,7 +29,7 @@ test('public foundation composition requires direct chrome, isolated state and i
  const builder=await readFile(new URL('../scripts/build-site-workspace.mjs',import.meta.url),'utf8');
  const required=["mountSurfaceFoundation({host", "scopedStorage(storage,location.pathname)", "'data-site-search':'content'", "'data-site-search':'settings'", "foundation.registerCommands(commands)", "site-provenance.json", "foundation.notify(", "foundation.destroy()"];
  const check=text=>required.every(part=>text.includes(part));
- assert.ok(check(source));for(const part of required)assert.equal(check(source.replace(part,'')),false,part);
+ assert.ok(check(source));for(const part of required)assert.equal(check(source.replaceAll(part,'')),false,part);
  assert.match(script,/import \{ mountSiteFoundation \} from '\.\/site-foundation.js'/);
  assert.ok(builder.includes("build('docs/site/site-foundation.js','site-foundation.js')"));
  assert.ok(source.includes('search.filter('));assert.ok(source.includes('settingsSearch.filter('));
@@ -53,7 +53,7 @@ test('public navigation and locked wording status translate in Cantonese and bil
 
 test('School command filtering survives a language refresh and BFCache retains controls',async()=>{
  const source=await readFile(new URL('../docs/site/site-foundation.js',import.meta.url),'utf8');
- assert.match(source,/pagehide',event=>\{if\(event.persisted\)return;foundation.destroy\(\)/);
+ assert.match(source,/pagehide',event=>\{if\(event.persisted\)return;[\s\S]*?foundation.destroy\(\)/);
  const filter=source.slice(source.indexOf('const visibleCommands='),source.indexOf('const handleLanguage='));
  const evaluate=Function('commands','schoolEnabled',filter+'return visibleCommands();');
  const commands=[{id:'preferences'},{id:'setting:language-select'},{id:'setting:theme-select'},{id:'setting:vocabulary-file'}];

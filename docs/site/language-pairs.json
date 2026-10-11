@@ -19,14 +19,20 @@
     {
       "source": "docs/features/access/README.md",
       "translation": "docs/features/access/README.zh-HK.md",
-      "sourceSha256": "fff3fc84dcb3a67d158519224b73c11cff31e40ab41af70448460932f3dc2187",
-      "translationSha256": "1287c1ec4dc238fb85e3655a008492fe1695fb9a8e60f241aa41a2d2cd5f8d2d"
+      "sourceSha256": "35df266e0e3775a8306b2634eb0b93377285bb1689c44cada9aa043c8784dac1",
+      "translationSha256": "69da8a4614ca7e3161474daf9d28072d57f40b20b994f2e99cc97f5d16d01a28"
     },
     {
       "source": "docs/features/access/local-access.md",
       "translation": "docs/features/access/local-access.zh-HK.md",
       "sourceSha256": "9b91285af35b3518cf94f664282b48d808d7403820e3ac75719404760083b6ec",
       "translationSha256": "c58fa8f411978db6c7623814cd5e64bf28135d8c3fae6ff7c2768376ec072e2f"
+    },
+    {
+      "source": "docs/features/access/visitor-local-access.md",
+      "translation": "docs/features/access/visitor-local-access.zh-HK.md",
+      "sourceSha256": "37038d0ee5a0125b9f0bda868d7f40b7538c962c560cfb5ff90004a87f546b71",
+      "translationSha256": "e52001f2b35f254cbb536aea3bb2a011dc03dad82cc9e998bfec626a84b16c5b"
     },
     {
       "source": "docs/features/appearance-editor.md",
@@ -121,8 +127,8 @@
     {
       "source": "docs/features/interface/README.md",
       "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "eb64497b8b8252628eedf7a5e5c0cbccd7c2fbf3ab7db6510a2ce0bad58f661e",
-      "translationSha256": "03c3a84f8d4559894da104aa333908c9eaf0f5d0b73b34dceccfe3a0c68b1c84"
+      "sourceSha256": "e9f451d24387d2707ad8d9728574a3e1a218e44b56c9feab4b6dece4a27c87fa",
+      "translationSha256": "ecb59e3fd31c5fb8609a17fe6d43c27904c82d221e6a9d9df73c05e9ceca1966"
     },
     {
       "source": "docs/features/interface/appearance-editor.md",
@@ -153,6 +159,12 @@
       "translation": "docs/features/interface/startup-registration.zh-HK.md",
       "sourceSha256": "01fed31ad47f43b9214efebeb985e9e816def6dbb80a6a23993ae589ace4df66",
       "translationSha256": "6e012dd49269e95516b15063a6d868e6954914417b0a139edbe9f945dd5bced7"
+    },
+    {
+      "source": "docs/features/interface/visitor-personalization.md",
+      "translation": "docs/features/interface/visitor-personalization.zh-HK.md",
+      "sourceSha256": "9a0adf4ba0424b8bef0ea40d19ce8c0502278e782728adf3c62e37d1c6b1f3db",
+      "translationSha256": "02761b70688a58c20fdf19ca25e881cefa66dfa37c9a9fd6fe61a4c1064e1dd7"
     },
     {
       "source": "docs/features/local-personalization.md",

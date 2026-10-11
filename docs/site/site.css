@@ -125,3 +125,10 @@ html:focus-within, html.is-scrolling, dialog:hover, dialog:focus-within, dialog.
 
 /* Shared registered Material chrome is mounted directly on every public document. */
 .public-document-tools{padding-block:12px;min-width:0}.public-document-tools mfe-workspace-shell{border:1px solid var(--outline,#777);border-radius:16px;padding:12px;display:block}.public-document-tools mfe-live-notification{position:fixed;bottom:16px;right:16px;z-index:8000;max-width:min(420px,calc(100vw - 32px));background:var(--surface,#fdfbff);color:var(--on-surface,#202124);border-radius:16px;padding:12px;box-shadow:0 4px 20px #0003}.public-document-tools mfe-live-notification:empty{display:none}mfe-search{display:block;min-width:0;margin-block:12px}.site-setting-results{display:flex;flex-wrap:wrap;gap:8px}.public-document-tools mfe-notification-center{margin-block:12px}#main>[hidden]{display:none!important}
+
+/* Visitor-owned typography applies to the public document and shared chrome. */
+body{font-family:var(--local-ux-font,system-ui,sans-serif);font-size:calc(17px * var(--local-ux-font-scale,1));font-weight:var(--local-ux-font-weight,400);--mfe-font:var(--local-ux-font,system-ui,sans-serif)}
+:root{--md-sys-color-primary:var(--local-ux-seed,#52643f)}
+[data-density=compact] .public-document-tools{padding-block:4px}[data-density=spacious] .public-document-tools{padding-block:24px}
+[data-motion=reduced] *,[data-low-stimulation=true] *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+[data-one-thing=true] .public-document-tools{border-inline-start:4px solid var(--md-sys-color-primary)}

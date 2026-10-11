@@ -22,7 +22,7 @@ export async function stageWorkspace(root=process.cwd(),destination=path.join(ro
   const target=path.join(cache,relative);await fs.mkdir(path.dirname(target),{recursive:true});await fs.writeFile(target,bytes);
  }
  await clone('src/renderer');await clone('src/shared');
- for(const file of ['workspace.js','site-foundation.js','locales.js','local-adapter.js','personal-vocabulary.js'])await clone(path.join('docs/site',file));
+ for(const file of ['workspace.js','site-foundation.js','visitor-personalization.js','visitor-access.js','visitor-records.js','locales.js','local-adapter.js','personal-vocabulary.js'])await clone(path.join('docs/site',file));
  const required=['src/renderer/features/ollama/index.js','src/renderer/features/converter/index.js','src/renderer/features/personalization/index.js','src/renderer/features/access/index.js','src/renderer/features/documentation/index.js'];
  for(const file of required)await fs.access(path.join(cache,file));
  const workers=new Map();
@@ -51,6 +51,9 @@ export async function stageWorkspace(root=process.cwd(),destination=path.join(ro
   try{css+='\n'+await fs.readFile(path.join(root,relative),'utf8');}catch(error){if(error.code!=='ENOENT')throw error;}
  }
  await fs.writeFile(path.join(cache,'dist/workspace.css'),css);
+ let publicCss=await fs.readFile(path.join(root,'docs/site/site.css'),'utf8');
+ for(const relative of ['src/renderer/features/access/access.css','src/renderer/features/personalization/personalization.css','src/renderer/features/personalization/appearance.css','docs/site/visitor-access.css'])publicCss+='\n'+await fs.readFile(path.join(root,relative),'utf8');
+ await fs.writeFile(path.join(cache,'dist/site.css'),publicCss);
  await fs.copyFile(path.join(root,'docs/site/workspace.html'),path.join(cache,'dist/workspace.html'));
  const sourceCommit=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();
  const sourceDirty=!!execFileSync('git',['status','--porcelain'],{cwd:root,encoding:'utf8'}).trim();

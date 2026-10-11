@@ -1,6 +1,6 @@
 import { mountSiteFoundation } from './site-foundation.js';
 import { parseVocabulary, replaceVocabulary, filterGuides, updateGalleryGroups } from './preferences.js';
-import { createVocabularyStore, emptyVocabulary } from './personal-vocabulary.js';
+import { emptyVocabulary, serializeVocabulary } from './personal-vocabulary.js';
 import { cantonese, localized, loadMessagePreferences, effectiveMessagePair } from './locales.js';
 import { previewRelease, renderReleaseDownload } from './release.js';
 
@@ -12,18 +12,29 @@ try { preferences = loadMessagePreferences(siteStorage); } catch { preferences =
 let vocabulary = { version: 1, replacements: [] };
 // The owning private-profile controller must authenticate before enabling wording.
 let privateWordingAvailable = false;
-let vocabularyStore = null;
+let privateCacheAccess = null, wordingGeneration = 0;
 let pendingVocabularySource = null;
-const vocabularyStorageKey = 'material-file-encryptor.site.vocabulary.v1';
-export function setAuthenticatedLocalSession(authenticated) {
-  privateWordingAvailable = authenticated === true;
-  if (privateWordingAvailable) {
-    vocabularyStore = createVocabularyStore(siteStorage, vocabularyStorageKey);
-    const result = pendingVocabularySource === null ? { vocabulary: vocabularyStore.current, persisted: vocabularyStore.persisted } : vocabularyStore.replace(pendingVocabularySource);
-    pendingVocabularySource = null; vocabulary = result.vocabulary;
-    vocabularyState = { kind: vocabulary.replacements.length ? 'success' : 'default', persisted: result.persisted };
-  } else { vocabulary = emptyVocabulary(); vocabularyStore = null; vocabularyState = { kind: pendingVocabularySource === null ? 'locked' : 'pending' }; }
-  renderCopy();
+const vocabularyStorageKey = 'material-file-encryptor.visitor.private-wording.v1';
+// Retire the previous plaintext cache. Authentication never trusts its contents.
+try{siteStorage.removeItem('material-file-encryptor.site.vocabulary.v1');}catch{}
+async function replacePrivateVocabulary(source) {
+ const next=parseVocabulary(source),access=privateCacheAccess,ticket=++wordingGeneration;
+ if(!privateWordingAvailable||!access?.authenticated||typeof access.encryptPrivateCache!=='function')throw Error('Unlock your private profile before applying local wording.');
+ const envelope=await access.encryptPrivateCache(serializeVocabulary(next),'public-site-personal-vocabulary');
+ if(ticket!==wordingGeneration||!access.authenticated||schoolEnabled)throw Error('Authentication changed. Original wording remains active.');
+ let persisted=true;try{siteStorage.setItem(vocabularyStorageKey,JSON.stringify(envelope));}catch{persisted=false;}
+ vocabulary=next;vocabularyState={kind:'success',persisted};
+}
+export async function setAuthenticatedLocalSession(authenticated,access) {
+ const ticket=++wordingGeneration;privateCacheAccess=access;
+ privateWordingAvailable=authenticated===true&&access?.authenticated===true&&!schoolEnabled;
+ vocabulary=emptyVocabulary();
+ if(!privateWordingAvailable){vocabularyState={kind:pendingVocabularySource===null?'locked':'pending'};renderCopy();return;}
+ try{
+  if(pendingVocabularySource!==null){const source=pendingVocabularySource;pendingVocabularySource=null;await replacePrivateVocabulary(source);}
+  else {const raw=siteStorage.getItem(vocabularyStorageKey);if(raw){const clear=await access.decryptPrivateCache(JSON.parse(raw),'public-site-personal-vocabulary');if(ticket!==wordingGeneration||!access.authenticated)return;vocabulary=parseVocabulary(clear);vocabularyState={kind:'success',persisted:true};}else vocabularyState={kind:'default'};}
+ }catch{if(ticket!==wordingGeneration)return;vocabulary=emptyVocabulary();vocabularyState={kind:'error',message:'Saved private wording could not be unlocked. Original wording remains active.'};}
+ if(access.authenticated&&!schoolEnabled)renderCopy();
 }
 let vocabularyState = { kind: 'default' };
 const dynamic = '#search-status,#no-results,#vocabulary-status,#success-preview,#search-preview,output';
@@ -95,6 +106,7 @@ function updateMessages() {
   updateSearch();
 }
 let schoolEnabled = false;
+let siteDisplayName='Material File Encryptor';
 function renderCopy() {
   document.documentElement.lang = (!schoolEnabled && preferences.language === 'yue') ? 'yue-Hant-HK' : 'en';
   document.documentElement.dataset.language = schoolEnabled?'en':preferences.language;
@@ -116,6 +128,7 @@ function renderCopy() {
   }
   for (const record of attributes) record.element.setAttribute(record.name, localized(record.original, schoolEnabled?'en':preferences.language));
   menuToggle.setAttribute('aria-label', localized(menu.classList.contains('is-open') ? 'Close navigation' : 'Open navigation', preferences.language));
+  if(siteDisplayName!=='Material File Encryptor'){for(const node of document.querySelectorAll('.brand span,.footer-brand'))node.textContent=siteDisplayName;document.title=siteDisplayName+' · '+localized('Documentation library',activeLanguage());}
   updateMessages();
   window.dispatchEvent(new CustomEvent('site-language', { detail: { language: schoolEnabled ? 'en' : preferences.language } }));
 }
@@ -161,11 +174,11 @@ vocabularyFile.addEventListener('change', async () => {
     if (file.size > 256 * 1024) throw new Error('Vocabulary JSON must be no larger than 256 KiB.');
     const source = await file.text(); const next = parseVocabulary(source); if (version !== uploadVersion) return;
     if (!privateWordingAvailable) { pendingVocabularySource = source; vocabularyState = { kind: 'pending' }; updateMessages(); return; }
-    const result = vocabularyStore.replace(source); vocabulary = next; vocabularyState = { kind: 'success', persisted: result.persisted }; renderCopy();
+    await replacePrivateVocabulary(source);if(version===uploadVersion)renderCopy();
   } catch (error) { if (version !== uploadVersion) return; vocabularyState = { kind: 'error', message: error.message }; updateMessages(); }
 });
-document.querySelector('#vocabulary-reset').addEventListener('click', () => { uploadVersion++; pendingVocabularySource = null; vocabulary = emptyVocabulary(); vocabularyFile.value = ''; let persisted = true; try { siteStorage.removeItem(vocabularyStorageKey); } catch { persisted = false; } vocabularyStore?.clear(); vocabularyState = persisted ? { kind: 'default' } : { kind: 'error', message: 'Original wording restored for this session. Stored wording could not be removed.' }; renderCopy(); });
-const foundation = mountSiteFoundation({document, storage:siteStorage, getPreferences:()=>preferences, onPreferences:()=>dialog.showModal(), onSearch:control=>{enhancedSearch=control;}, onSchool:enabled=>{schoolEnabled=enabled; if(enabled){privateWordingAvailable=false;vocabulary=emptyVocabulary();} renderCopy();}});
+document.querySelector('#vocabulary-reset').addEventListener('click', () => { uploadVersion++; wordingGeneration++; pendingVocabularySource = null; vocabulary = emptyVocabulary(); vocabularyFile.value = ''; let persisted = true; try { siteStorage.removeItem(vocabularyStorageKey); } catch { persisted = false; } vocabularyState = persisted ? { kind: 'default' } : { kind: 'error', message: 'Original wording restored for this session. Stored wording could not be removed.' }; renderCopy(); });
+const foundation = mountSiteFoundation({document, storage:siteStorage, getPreferences:()=>preferences, onPreferences:()=>dialog.showModal(), onSearch:control=>{enhancedSearch=control;}, onSchool:enabled=>{schoolEnabled=enabled;if(enabled){wordingGeneration++;privateWordingAvailable=false;vocabulary=emptyVocabulary();}renderCopy();},onAuthentication:setAuthenticatedLocalSession,onCanonicalSettings:value=>{siteDisplayName=value.displayName;preferences={...preferences,language:value.language,funnyEnglish:value.funnyEnglish,funnyCantonese:value.funnyCantonese,emoji:value.emoji};schoolEnabled=value.school.enabled;languageSelect.value=value.language;emojiToggle.checked=value.emoji;successTone.value=value.funnyEnglish;searchTone.value=value.funnyCantonese;renderCopy();if(!schoolEnabled&&privateCacheAccess?.authenticated&&!privateWordingAvailable)setAuthenticatedLocalSession(true,privateCacheAccess);}});
 for(const [id,key] of [['english-tone-reset','funnyEnglish'],['cantonese-tone-reset','funnyCantonese']]) document.getElementById(id)?.addEventListener('click',()=>{preferences[key]=5;(key==='funnyEnglish'?successTone:searchTone).value=5;savePreferences();updateMessages();});
 renderCopy(); revealHash();
 

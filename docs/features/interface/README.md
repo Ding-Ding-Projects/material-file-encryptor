@@ -17,3 +17,5 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 - [本機個人用詞](personal-vocabulary.zh-HK.md)
 - [現代介面同可清除欄位](modern-fields.zh-HK.md)
 - [啟動登記讀取確認](startup-registration.zh-HK.md)
+
+- [Visitor-local website personalization](visitor-personalization.md)
