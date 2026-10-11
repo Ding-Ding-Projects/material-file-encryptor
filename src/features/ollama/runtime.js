@@ -18,7 +18,7 @@ export function createVerifiedRuntimeLauncher({verifyExecutable,spawnImpl=spawn,
     child.unref?.();return {pid:child.pid,async stop(){if(child.exitCode===null&&!child.killed)child.kill();await exited;}};
   };
 }
-const PROCESS_QUERY="$ErrorActionPreference='Stop'; @(Get-CimInstance -ClassName Win32_Process -Filter \"Name = 'ollama.exe' OR Name = 'ollama app.exe'\" | Select-Object Name,ExecutablePath) | ConvertTo-Json -Compress";
+const PROCESS_QUERY="$ErrorActionPreference='Stop'; ConvertTo-Json -InputObject @(Get-CimInstance -ClassName Win32_Process -Filter \"Name = 'ollama.exe' OR Name = 'ollama app.exe'\" | Select-Object Name,ExecutablePath) -Compress";
 export async function probeRuntimeProcesses({executeFile=execute,systemRoot=process.env.SystemRoot}={}){
   if(typeof systemRoot!=='string'||!/^[A-Za-z]:\\Windows$/i.test(systemRoot))throw new Error('Native process inspection is unavailable.');
   const {stdout}=await executeFile(path.win32.join(systemRoot,'System32','WindowsPowerShell','v1.0','powershell.exe'),['-NoLogo','-NoProfile','-NonInteractive','-Command',PROCESS_QUERY],{windowsHide:true,timeout:10000,maxBuffer:1024*1024,encoding:'utf8'});
