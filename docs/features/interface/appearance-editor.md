@@ -42,4 +42,16 @@ Draw selection opens a bounded SVG workbench. Pointer strokes are sampled into a
 
 Compare all states displays all twelve resolved state appearances simultaneously using safe text samples and constructed stylesheets compatible with the current CSP. It does not clone private field values, active controls or event handlers. Samples show resolved CSS properties; locally generated channel filter resources and animated color markers are not reproduced in the sample grid. The target itself retains the full renderer. This grid is an editing preview, not evidence of runtime interaction with each state.
 
-The workbench does not enable image-layer import, smart objects or warp. Those controls remain unavailable because the bounded isolated decoder and independent raster-layer renderer are not implemented.
+The drawing workbench is separate from the local PNG image picker. General smart-object formats and mesh warp remain unavailable; the normalized image-source workflow is described below.
+
+## Bounded local image sources and transforms
+
+The image-layer picker accepts static PNG only. Before decoding, it checks the signature, IHDR fields, chunk framing and animation markers. Raw input is limited to 4 MiB, dimensions to 4096 per side and 8 million pixels. Browser decoding and canvas normalization produce a metadata-flattened PNG capped at 1 MiB. Invalid inputs preserve the existing model. The decoder bitmap is closed after conversion. This does not supply an independent process sandbox, CPU timeout or CRC validation; those remain explicit limitations.
+
+Each normalized source is immutable. The layer stores separate translation, scale, rotation, affine skew, crop, opacity and blend parameters. Resetting transforms leaves source pixels unchanged. Existing layer duplication, visibility, ordering, nested groups and undo operate on those records. Image groups render as independent nested SVG groups with isolation, group opacity, affine transforms and geometric masks. This is a local immutable-source workflow, not a general smart-object format or editable vector document. Skew approximates planar deformation; arbitrary mesh warp is still unavailable.
+
+Image overlays use the target's viewport bounding rectangle and update on scroll or resize. They do not reproduce arbitrary transformed ancestor geometry or all stacking contexts. The currently selected editor state controls the image preview; live pseudo-state image switching and channel effects on individual image groups are not implemented. The original CSS styling renderer remains separate.
+
+Local persistence includes image sources, subject to the browser's storage quota and the 8 MiB appearance-model bound. Portable appearance export recursively removes image sources and marks them omitted; an exported file cannot restore those pixels. It preserves transforms and other ordinary appearance settings. Sources are never sent to a server. Clearing appearance removes them from active local settings; undo history remains local to the mounted editor until destruction.
+
+Focused tests verify structural input bounds, immutable source metadata, export omission, independent nested group rendering, transform rejection, mounted persistence/reset/teardown and decoder resource closure. These are component checks, not real-browser pixel or isolated-decoder evidence.

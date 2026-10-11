@@ -5,8 +5,8 @@ import {APPEARANCE_COPY,APPEARANCE_COPY_KEYS,appearanceTranslator} from '../src/
 import {PROPERTIES,STATES} from '../src/renderer/features/personalization/appearance.js';
 
 test('appearance static controls and diagnostics all have real Cantonese copy',()=>{
- const required=new Set([...Object.keys(PROPERTIES),...STATES]);
- for(const name of ['appearance','color','logo','appearance-workbench']){
+ const required=new Set([...Object.keys(PROPERTIES),...STATES,'Image','x','y','scaleX','scaleY','rotate','skewX','skewY','Crop left','Crop top','Crop width','Crop height','multiply','screen','overlay','darken','lighten','difference']);
+ for(const name of ['appearance','color','logo','appearance-workbench','image-source','image-layers']){
   const source=readFileSync(new URL(`../src/renderer/features/personalization/${name}.js`,import.meta.url),'utf8');
   for(const match of source.matchAll(/(?:new (?:TypeError|Error)|\bt|\bmessage|\bbutton)\('([^']+)'/g))required.add(match[1]);
  }
