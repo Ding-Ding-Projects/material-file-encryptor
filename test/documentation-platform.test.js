@@ -15,8 +15,10 @@ test('catalog includes every nested Markdown article, full body and duplicate he
     await mkdir(path.join(root, 'docs/wiki'), { recursive: true });
     await writeFile(path.join(root, 'docs/README.md'), '# Index\n[Wiki](wiki/Home.md#second)\n');
     await writeFile(path.join(root, 'docs/wiki/Home.md'), '# Home\n## Second\nComplete final paragraph.\n## Second\n');
+    await writeFile(path.join(root, 'CHANGELOG.md'), '# Changes\n## Version 1 - 2026-10-10\nReleased content.\n');
     const catalog = await buildDocumentationCatalog(root);
-    assert.equal(catalog.documents.length, 2);
+    assert.equal(catalog.documents.length, 3);
+    assert.equal(catalog.changelog[0].date, '2026-10-10');
     assert.match(catalog.documents[1].markdown, /Complete final paragraph/);
     assert.deepEqual(resolveDocumentLink(catalog, 'docs/README', 'wiki/Home.md#second'), { id: 'docs/wiki/Home', anchor: 'second' });
     assert.equal(resolveDocumentLink(catalog, 'docs/README', 'javascript:alert(1)'), null);

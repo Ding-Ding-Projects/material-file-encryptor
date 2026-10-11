@@ -649,7 +649,7 @@
       "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
     },
     {
-      "id": "public-huishot-gallery",
+      "id": "public-screenshot-gallery",
       "surface": "desktop",
       "status": "unverified",
       "implementation": [],
@@ -1065,7 +1065,7 @@
       "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
     },
     {
-      "id": "wiki-day-teet-hui-sync",
+      "id": "wiki-documentation-sync",
       "surface": "desktop",
       "status": "unverified",
       "implementation": [],
@@ -1829,7 +1829,7 @@
       "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
     },
     {
-      "id": "public-huishot-gallery",
+      "id": "public-screenshot-gallery",
       "surface": "site",
       "status": "unverified",
       "implementation": [],
@@ -2245,7 +2245,7 @@
       "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
     },
     {
-      "id": "wiki-day-teet-hui-sync",
+      "id": "wiki-documentation-sync",
       "surface": "site",
       "status": "unverified",
       "implementation": [],

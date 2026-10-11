@@ -52,7 +52,8 @@ export async function buildDocumentationCatalog(root) {
       assets.push({ source, mime, sha256: createHash('sha256').update(bytes).digest('hex'), dataUrl: `data:${mime};base64,${bytes.toString('base64')}` });
     } catch (error) { if (!['ENOENT', 'EACCES'].includes(error.code)) throw error; }
   }
-  return { schemaVersion: 1, documents, assets };
+  const changelog = parseChangelog(documents.find(document => document.source === 'CHANGELOG.md')?.markdown || '');
+  return { schemaVersion: 1, documents, assets, changelog };
 }
 export function resolveDocumentLink(catalog, currentId, href) {
   if (typeof href !== 'string' || /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(href)) return null;
