@@ -1,0 +1,2369 @@
+{
+  "schemaVersion": 1,
+  "surfaces": [
+    "desktop",
+    "site"
+  ],
+  "features": [
+    {
+      "id": "language",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "funny-emoji",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "personal-vocabulary",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "school-mode",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "narration",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "scheduled-settings",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "display-name",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "adhd-modes",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "dim-sum",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "dim-sum-photo-source",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "material-design",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "workflow-navigation",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "motion",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "appearance-editor",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "color-picker",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "logo-customization",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "overlay-panels",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "collapse-filters",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "accessibility-sizing",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "functional-ui",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "tabs",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "regex-search",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "command-palette",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "context-menus",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "menu-shortcuts",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "rich-controls",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "guided-forms",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "settings-explanations",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "blank-editors",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "super-confirmation",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "element-locks",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "support-tickets",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "unlock-ladder",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "authenticator",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "qr-pairing",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "honest-monetization",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "local-history",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "exports",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "bulk-actions",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "changelog",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [
+        "src/renderer/features/documentation/changelog.js"
+      ],
+      "documentation": [
+        "docs/features/platform/documentation-and-status.md"
+      ],
+      "localization": [
+        "src/renderer/features/documentation/localization.js"
+      ],
+      "tests": [
+        "test/documentation-platform.test.js"
+      ],
+      "evidence": [],
+      "reason": "Module implementation exists; host integration and complete per-surface runtime evidence remain unverified."
+    },
+    {
+      "id": "offline-docs",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [
+        "src/features/documentation/catalog.mjs",
+        "src/renderer/features/documentation/index.js",
+        "src/renderer/features/documentation/markdown.js"
+      ],
+      "documentation": [
+        "docs/features/platform/documentation-and-status.md"
+      ],
+      "localization": [
+        "src/renderer/features/documentation/localization.js"
+      ],
+      "tests": [
+        "test/documentation-platform.test.js",
+        "test/documentation-browser.test.js"
+      ],
+      "evidence": [],
+      "reason": "Module implementation exists; host integration and complete per-surface runtime evidence remain unverified."
+    },
+    {
+      "id": "rendered-provider-text",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "notifications",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "file-converter",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "ollama-suite",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "external-editor",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "download-handoff",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "forge-publishing",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "progress-recovery",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "completeness-parity",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [
+        "src/features/documentation/feature-delivery.mjs"
+      ],
+      "documentation": [
+        "docs/features/platform/documentation-and-status.md"
+      ],
+      "localization": [
+        "src/renderer/features/documentation/localization.js"
+      ],
+      "tests": [
+        "test/documentation-platform.test.js"
+      ],
+      "evidence": [],
+      "reason": "Module implementation exists; host integration and complete per-surface runtime evidence remain unverified."
+    },
+    {
+      "id": "front-provenance",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "product-evidence",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "screen-recording",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "design-reference-parity",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "design-folder",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "cheap-jor-matrix",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "public-screenshot-gallery",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "landing-site",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "deen-wah-site",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "installer-download-button",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "feature-articles",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "vendored-fonts",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "shared-link-embed",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "homepage-link",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "vocabulary-unlock-boundary",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "status-hub",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [
+        "src/features/documentation/status-service.mjs",
+        "src/renderer/features/status/index.js"
+      ],
+      "documentation": [
+        "docs/features/platform/documentation-and-status.md"
+      ],
+      "localization": [
+        "src/renderer/features/documentation/localization.js"
+      ],
+      "tests": [
+        "test/documentation-platform.test.js"
+      ],
+      "evidence": [],
+      "reason": "Module implementation exists; host integration and complete per-surface runtime evidence remain unverified."
+    },
+    {
+      "id": "discord-status-bridge",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "panic-webhooks",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "tidbyt-displays",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "build-entrypoints",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "fresh-build-run-command",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "dependency-fetcher",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "bundled-dependencies",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "squirrel-installer",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "self-signing",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "auto-updates",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "app-icon",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "release-workflow",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "release-timing",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "release-line-counts",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "release-dim-sum-photo",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "dim-sum-code-names",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "ci-bootstrap",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "runner-selection",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "encrypted-public-builder",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "tabbed-readme",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "human-time-estimate",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "sanitized-instruction-copy",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "agents-md-vocabulary-block",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "vocabulary-hash-lock",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "roadmap-checklist",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "feature-docs",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "postman-collections",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "wiki-documentation-sync",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "handoff-record",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "closeout-prompt",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "discussion-records",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "project-board",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "operational-skill",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "readme-prompt-banner",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "uh-single-file-editions",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "project-profile",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "roblox-model-catalogue",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "roblox-visual-realism",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "language",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "funny-emoji",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "personal-vocabulary",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "school-mode",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "narration",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "scheduled-settings",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "display-name",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "adhd-modes",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "dim-sum",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "dim-sum-photo-source",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "material-design",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "workflow-navigation",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "motion",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "appearance-editor",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "color-picker",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "logo-customization",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "overlay-panels",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "collapse-filters",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "accessibility-sizing",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "functional-ui",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "tabs",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "regex-search",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "command-palette",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "context-menus",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "menu-shortcuts",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "rich-controls",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "guided-forms",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "settings-explanations",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "blank-editors",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "super-confirmation",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "element-locks",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "support-tickets",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "unlock-ladder",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "authenticator",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "qr-pairing",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "honest-monetization",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "local-history",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "exports",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "bulk-actions",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "changelog",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [
+        "src/renderer/features/documentation/changelog.js"
+      ],
+      "documentation": [
+        "docs/features/platform/documentation-and-status.md"
+      ],
+      "localization": [
+        "src/renderer/features/documentation/localization.js"
+      ],
+      "tests": [
+        "test/documentation-platform.test.js"
+      ],
+      "evidence": [],
+      "reason": "Module implementation exists; host integration and complete per-surface runtime evidence remain unverified."
+    },
+    {
+      "id": "offline-docs",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [
+        "src/features/documentation/catalog.mjs",
+        "src/renderer/features/documentation/index.js",
+        "src/renderer/features/documentation/markdown.js"
+      ],
+      "documentation": [
+        "docs/features/platform/documentation-and-status.md"
+      ],
+      "localization": [
+        "src/renderer/features/documentation/localization.js"
+      ],
+      "tests": [
+        "test/documentation-platform.test.js",
+        "test/documentation-browser.test.js"
+      ],
+      "evidence": [],
+      "reason": "Module implementation exists; host integration and complete per-surface runtime evidence remain unverified."
+    },
+    {
+      "id": "rendered-provider-text",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "notifications",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "file-converter",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "ollama-suite",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "external-editor",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "download-handoff",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "forge-publishing",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "progress-recovery",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "completeness-parity",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [
+        "src/features/documentation/feature-delivery.mjs"
+      ],
+      "documentation": [
+        "docs/features/platform/documentation-and-status.md"
+      ],
+      "localization": [
+        "src/renderer/features/documentation/localization.js"
+      ],
+      "tests": [
+        "test/documentation-platform.test.js"
+      ],
+      "evidence": [],
+      "reason": "Module implementation exists; host integration and complete per-surface runtime evidence remain unverified."
+    },
+    {
+      "id": "front-provenance",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "product-evidence",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "screen-recording",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "design-reference-parity",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "design-folder",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "cheap-jor-matrix",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "public-screenshot-gallery",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "landing-site",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "deen-wah-site",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "installer-download-button",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "feature-articles",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "vendored-fonts",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "shared-link-embed",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "homepage-link",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "vocabulary-unlock-boundary",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "status-hub",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [
+        "src/features/documentation/status-service.mjs",
+        "src/renderer/features/status/index.js"
+      ],
+      "documentation": [
+        "docs/features/platform/documentation-and-status.md"
+      ],
+      "localization": [
+        "src/renderer/features/documentation/localization.js"
+      ],
+      "tests": [
+        "test/documentation-platform.test.js"
+      ],
+      "evidence": [],
+      "reason": "Module implementation exists; host integration and complete per-surface runtime evidence remain unverified."
+    },
+    {
+      "id": "discord-status-bridge",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "panic-webhooks",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "tidbyt-displays",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "build-entrypoints",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "fresh-build-run-command",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "dependency-fetcher",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "bundled-dependencies",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "squirrel-installer",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "self-signing",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "auto-updates",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "app-icon",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "release-workflow",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "release-timing",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "release-line-counts",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "release-dim-sum-photo",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "dim-sum-code-names",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "ci-bootstrap",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "runner-selection",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "encrypted-public-builder",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "tabbed-readme",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "human-time-estimate",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "sanitized-instruction-copy",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "agents-md-vocabulary-block",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "vocabulary-hash-lock",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "roadmap-checklist",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "feature-docs",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "postman-collections",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "wiki-documentation-sync",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "handoff-record",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "closeout-prompt",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "discussion-records",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "project-board",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "operational-skill",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "readme-prompt-banner",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "uh-single-file-editions",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "project-profile",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "roblox-model-catalogue",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    },
+    {
+      "id": "roblox-visual-realism",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+    }
+  ]
+}
