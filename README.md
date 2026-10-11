@@ -2,13 +2,13 @@
 
 A Windows Explorer encrypted drive with a native .NET engine, encrypted offline cache, version recovery and a desktop workspace. The current source adds managed transfer/activity workflows, tabs and search, local access and personalization, conversion and local-model tools, offline documentation, changelog and status modules.
 
-**Current state:** source integration is in progress. The complete feature inventory has 208 desktop/site rows and all remain unverified. Existing historical release, runtime and capture results retain their original source boundaries. They do not establish acceptance of this combined source.
+**Current state:** source integration is in progress. The complete feature inventory has 210 desktop/site rows and all remain unverified. Existing historical release, runtime and capture results retain their original source boundaries. They do not establish acceptance of this combined source.
 
 [Current integration and limits](docs/features/platform/current-integration.md) · [Feature documentation](docs/features/README.md) · [Roadmap](ROADMAP.md) · [Handoff](HANDOFF.md) · [Changelog](CHANGELOG.md)
 
 The [installation and update repair](docs/features/release/installer-repair.md) addresses incomplete Squirrel extraction and unchanged release package versions. Current-source downloaded installation and real updating remain pending independent acceptance.
 
-Production builds use the existing Windows GitHub Actions workflow whenever supported, invoking exact root `build.bat /s` and `build-installer.bat /s`. It compiles and uploads the mounted verifier separately from the installer, without CI tests or lint. Downloaded normal v1.148.1 (source a82) passed independent package verification and genuine mounted lifecycle checks using the separately cloud-compiled b516 verifier. Earlier v1.133.1 actually installed and registered correctly with all 663 payload files matched. Installed startup, automatic updating, current GUI and complete feature acceptance remain pending. See the [handoff](HANDOFF.md) for exact source boundaries.
+Production builds use the existing Windows GitHub Actions workflow whenever supported, invoking exact root `build.bat /s` and `build-installer.bat /s`. It compiles and uploads the mounted verifier separately from the installer, without CI tests or lint. Downloaded normal v1.158.1 (source f8f3638) passed independent package verification and genuine mounted lifecycle checks using the separately cloud-compiled b516 verifier. Earlier v1.133.1 actually installed and registered correctly with all 663 payload files matched. Installed startup, automatic updating, current GUI and complete feature acceptance remain pending. See the [handoff](HANDOFF.md) for exact source boundaries.
 
 ## Build and package
 
