@@ -9,10 +9,32 @@ import {spawn} from 'node:child_process';
 const TEXT_LIMIT=256*1024,DOWNLOAD_LIMIT=256*1024*1024;
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 const decode=bytes=>new TextDecoder('utf-8',{fatal:true}).decode(bytes);
+function ipv6Number(address){
+ const halves=address.split('::'),left=halves[0]?halves[0].split(':'):[],right=halves[1]?halves[1].split(':'):[];
+ const groups=halves.length===2?[...left,...Array(8-left.length-right.length).fill('0'),...right]:left;
+ return groups.reduce((value,part)=>(value<<16n)|BigInt(parseInt(part,16)),0n);
+}
+const inPrefix=(value,prefix,bits)=>(value>>BigInt(128-bits))===(prefix>>BigInt(128-bits));
 export function isPublicAddress(address){
  if(net.isIP(address)===4){const n=address.split('.').map(Number);return !(n[0]===0||n[0]===10||n[0]===127||n[0]>=224||n[0]===169&&n[1]===254||n[0]===172&&n[1]>=16&&n[1]<=31||n[0]===192&&[0,168].includes(n[1])||n[0]===100&&n[1]>=64&&n[1]<=127||n[0]===198&&[18,19,51].includes(n[1])||n[0]===203&&n[1]===0);}
- if(net.isIP(address)===6){const lower=address.toLowerCase();return /^[23][0-9a-f]{3}:/.test(lower)&&!lower.includes('.')&&!/^(2001:(?:0:|db8:|2:|10:|20:)|2002:)/.test(lower);}
+ if(net.isIP(address)===6){
+  if(address.includes('.'))return false;
+  const value=ipv6Number(address);
+  return inPrefix(value,ipv6Number('2000::'),3)&&![[ '2001::',23],['2001:db8::',32],['2002::',16]].some(([prefix,bits])=>inPrefix(value,ipv6Number(prefix),bits));
+ }
  return false;
+}
+const sameFile=(a,b)=>['dev','ino','size','mtimeMs','ctimeMs'].every(key=>a[key]===b[key]);
+/** Hash with a bounded buffer and verify the opened file still has the same identity. */
+export async function hashEditorFile(file,expected){
+ const handle=await fs.open(file,'r');
+ try{
+  const before=await handle.stat();if(!before.isFile()||before.size>512*1024*1024||expected&&!sameFile(before,expected))throw new Error('The editor changed during verification.');
+  const digest=createHash('sha256'),buffer=Buffer.alloc(64*1024);let size=0;
+  for(;;){const {bytesRead}=await handle.read(buffer,0,buffer.length,null);if(!bytesRead)break;size+=bytesRead;if(size>512*1024*1024)throw new Error('The editor exceeds the verification limit.');digest.update(buffer.subarray(0,bytesRead));}
+  if(size!==before.size||!sameFile(before,await handle.stat())||!sameFile(before,await fs.stat(file)))throw new Error('The editor changed during verification.');
+  return digest.digest('hex');
+ }finally{await handle.close();}
 }
 function publicUrl(value){if(typeof value!=='string'||value.length>2048)throw new Error('URL exceeds 2048 characters.');const url=new URL(value);if(url.protocol!=='https:'||url.username||url.password||url.port&&url.port!=='443')throw new Error('Use a public HTTPS URL on port 443 without credentials.');url.hash='';return url;}
 async function nativeSignature(file){const {inspectAuthenticode}=await import('./ollama-host.js');return inspectAuthenticode(file);}
@@ -35,7 +57,7 @@ export function createWorkflowServices({dataDirectory,dialog,getWindow=()=>null,
   if(writing.has(target))throw new Error('A save is already in progress.');writing.add(target);
   const temporary=path.join(path.dirname(target),`.workflow-${randomUUID()}.tmp`);try{await fs.writeFile(temporary,bytes,{flag:'wx',mode:0o600});if(existing){const current=await readBounded(target);if(hash(current)!==revision)throw new Error('The destination changed. Reload it before saving.');await fs.rename(temporary,target);}else{await fs.link(temporary,target);await fs.unlink(temporary);}}finally{writing.delete(target);await fs.rm(temporary,{force:true});}
  }
- const editorIdentity=async file=>{const real=await fs.realpath(file);const stat=await fs.stat(real);if(!stat.isFile()||stat.size>512*1024*1024)throw new Error('Choose a bounded regular editor executable.');if(!['code.exe','code - insiders.exe','notepad.exe'].includes(path.basename(real).toLowerCase()))throw new Error('Choose a supported editor executable.');const signature=await signatureInspector(real);if(!signature.valid||!/(?:^|,\s*)(?:O=Microsoft Corporation|CN=Microsoft Windows)(?:,|$)/i.test(signature.publisher||''))throw new Error('The editor requires a valid Microsoft publisher signature.');return{path:real,sha256:hash(await fs.readFile(real)),name:path.basename(real)};};
+ const editorIdentity=async file=>{const real=await fs.realpath(file);const stat=await fs.stat(real);if(!stat.isFile()||stat.size>512*1024*1024)throw new Error('Choose a bounded regular editor executable.');if(!['code.exe','code - insiders.exe','notepad.exe'].includes(path.basename(real).toLowerCase()))throw new Error('Choose a supported editor executable.');const signature=await signatureInspector(real);if(!signature.valid||!/(?:^|,\s*)(?:O=Microsoft Corporation|CN=Microsoft Windows)(?:,|$)/i.test(signature.publisher||''))throw new Error('The editor requires a valid Microsoft publisher signature.');return{path:real,sha256:await hashEditorFile(real,stat),name:path.basename(real)};};
  const rememberEditor=async file=>{const identity=await editorIdentity(file);const old=[...editors].find(([,entry])=>entry.path===identity.path);if(old)return{id:old[0],name:identity.name};const id=hash(Buffer.from(identity.path)).slice(0,32);editors.set(id,identity);return{id,name:identity.name};};
  const downloadView=item=>({id:item.id,name:item.name,source:item.source,destination:item.destination,state:item.state,received:item.received,total:item.total??null,rate:item.rate??null,eta:item.eta??null,error:item.error||null});
  const publish=item=>emit('workflow',{type:'download',item:downloadView(item)});
