@@ -59,6 +59,13 @@ revokes pairing. Quit, update preparation and verification exit await a verified
 close receipt before completing service shutdown. `getState` includes a factual
 `browserDownloadHandoff` status and the last close receipt.
 
+The startup failure handler uses the same verified close boundary before
+`app.exit(1)`. An unverified receipt retains the desktop, records recovery-required
+state, and offers a native Keep running / Retry shutdown choice with Keep running
+as default. Retry rechecks the same owned process and stream evidence. An unavailable
+recovery dialog also retains the process and reports the unverified state. Startup
+failure is not permission to leave an unverified broker behind.
+
 ## Identity and registration plan
 
 `scripts/browser-native-registration.mjs` accepts a reviewed CRX3 package and a
