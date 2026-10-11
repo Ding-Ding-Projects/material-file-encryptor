@@ -4,6 +4,8 @@ using System.IO.MemoryMappedFiles;
 using System.Security.Cryptography;
 using System.Text.Json;
 
+if(args.Length==2&&args[0]=="--mapped-child"){await IsolatedMappedProbe.Child(args[1]);return;}
+if(args.Length==5&&args[0]=="--isolated-mapped"){await IsolatedMappedProbe.Run(args[1],args[2],args[3],args[4]);return;}
 if(args.Length is <3 or >4)throw new ArgumentException("Supply package root, output JSON, exact source commit and optional --ordinary-only.");
 bool ordinaryOnly=args.Length==4&&args[3]=="--ordinary-only";
 if(args.Length==4&&!ordinaryOnly)throw new ArgumentException("Unknown verification mode.");
