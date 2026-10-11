@@ -7,7 +7,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
 import {extensionId,verifyExtensionIdentity,createRegistrationPlan} from '../scripts/browser-native-registration.mjs';
-import {createBrowserNativeBroker,nativeFrame,validateBrowserHostConfig} from '../src/main/browser-native-host.js';
+import {createBrowserNativeBroker,createBrowserHandoffLifecycle,nativeFrame,validateBrowserHostConfig} from '../src/main/browser-native-host.js';
 import {createNativeMessageDecoder} from '../src/main/browser-download-receiver.js';
 
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -85,7 +85,23 @@ test('close waits for owned process exit and stdio closure and reports an unveri
  const broker=factory({closeTimeoutMs:25,hostPath:'C:\\OwnedFixture\\MaterialFileEncryptor.BrowserHost.exe',spawnHost:()=>child});const starting=broker.start();child.stdout.write(nativeFrame({type:'ready',aclVerified:true}));await starting;
  const closing=broker.close();assert.equal(broker.close(),closing);const receipt=await closing;assert.equal(killed,1);assert.equal(receipt.processExited,false);assert.equal(receipt.stdioClosed,false);assert.equal(receipt.verified,false);assert.equal(receipt.deadlineMs,25);await assert.rejects(broker.start(),/closed/);
  child.stdout.destroy();child.stderr.destroy();child.emit('exit',0);child.emit('close',0);
+ assert.equal((await broker.close()).verified,true);
 });
 test('close revokes an unresolved native approval and never upgrades it to a drained receipt',async()=>{
  let approve;const broker=factory({authorizePair:()=>new Promise(resolve=>{approve=resolve;})});const pairing=broker.receive(origin,{type:'pair'});const receipt=await broker.close();assert.equal(receipt.pendingRequests,1);assert.equal(receipt.verified,false);approve(true);await assert.rejects(pairing,/not approved/);assert.equal(broker.available,false);
+});
+
+test('desktop lifecycle never starts the broker without reviewed configuration or in verification mode',async()=>{
+ let spawned=0,reads=0;const options={hostDirectory:'C:\\OwnedFixture',platform:'win32',isUnlocked:()=>true,authorizePair:async()=>true,onProposal:()=>{},createBroker:()=>{spawned++;throw Error('must not start');},readConfiguration:async()=>{reads++;throw Error('missing');}};
+ const missing=createBrowserHandoffLifecycle(options);assert.equal((await missing.initialize()).reason,'REVIEWED_EXTENSION_IDENTITY_UNAVAILABLE');assert.equal(spawned,0);assert.equal((await missing.close()).verified,true);
+ const malformed=createBrowserHandoffLifecycle({...options,readConfiguration:async()=>({...plan.config,extra:true})});assert.equal((await malformed.initialize()).configured,false);assert.equal(spawned,0);await malformed.close();
+ const isolated=createBrowserHandoffLifecycle({...options,verificationMode:true});assert.equal((await isolated.initialize()).reason,'VERIFICATION_MODE_NATIVE_HANDOFF_DISABLED');assert.equal(reads,1);assert.equal(spawned,0);await isolated.close();
+});
+test('desktop lifecycle connects host-only proposals and workflow events with native consent and admission',async()=>{
+ let unlocked=true,admit=true,approvals=0,revocations=0,closed=0,options;const received=[],events=[];
+ const broker={available:false,pending:0,async start(){this.available=true;},observeDownload:event=>events.push(event),revoke(){revocations++;},async close(){closed++;this.available=false;return{closed:true,processExited:true,stdioClosed:true,pendingRequests:0,pendingResponses:0,verified:true,deadlineMs:3000};}};
+ const lifecycle=createBrowserHandoffLifecycle({hostDirectory:'C:\\OwnedFixture',platform:'win32',readConfiguration:async()=>plan.config,createBroker:value=>{options=value;return broker;},isUnlocked:()=>unlocked,canAdmit:()=>admit,authorizePair:async()=>{approvals++;return true;},onProposal:item=>received.push(item)});
+ assert.equal((await lifecycle.initialize()).available,true);assert.equal(await options.authorizePair({origin}),true);assert.equal(approvals,1);options.onProposal({id:'fixture'});assert.equal(received.length,1);const event={type:'download',item:{state:'downloading'}};lifecycle.observeDownload(event);assert.equal(events[0],event);
+ admit=false;assert.equal(await options.authorizePair({origin}),false);assert.equal(approvals,1);assert.throws(()=>options.onProposal({id:'blocked'}),/Unlock/);unlocked=false;lifecycle.revoke();assert.equal(revocations,1);
+ const receipt=await lifecycle.close();assert.equal(receipt.verified,true);assert.equal(closed,1);assert.equal(lifecycle.status().available,false);assert.equal(lifecycle.status().closeReceipt,receipt);await assert.rejects(lifecycle.initialize(),/closed/);
 });

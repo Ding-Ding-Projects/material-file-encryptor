@@ -15,6 +15,7 @@ import { createLocalAdapter } from './local-adapter.js';
 import { explorerCopyPath, registerExplorerCommand } from './explorer-command.js';
 import { createUpdateService } from './update-service.js';
 import { createRestartPreparation } from './restart-preparation.js';
+import { createBrowserHandoffLifecycle } from './browser-native-host.js';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const rendererPath = path.resolve(directory, '../renderer/index.html');
@@ -74,15 +75,16 @@ const configPath = () => path.join(app.getPath('userData'), 'preferences.json');
 const sessionMarkerPath = () => path.join(app.getPath('userData'), 'session-open.json');
 const selectedImports = new Set();
 const selectedExports = new Set();
-let window, tray, helper, features, localAdapter, updates, shuttingDown = false, operation = null, quitPending = false, updateInstallLease = false, updateLanguage = 'en', interruptedSession = false;
+let window, tray, helper, features, localAdapter, browserHandoff, updates, shuttingDown = false, operation = null, quitPending = false, updateInstallLease = false, updateLanguage = 'en', interruptedSession = false;
 let cachedStartupRegistration = { enabled: false, verificationOnly: false, restored: false };
 const buildMetadata = { version: app.getVersion(), builtAt: null };
 let preferences = { startup: true, autoUnlock: false, driveLetter: 'M:', transport: 'folder', historyRetentionDays: null, performanceMode: 'responsive' };
 let state = { locked: true, mounted: false, files: [], availableDriveLetters: [], sync: { running: false, lastSync: null, error: null }, driver: { available: false, checking: true, error: 'Checking WinFsp availability.' } };
 const inside = (parent, child) => { const rel = path.relative(parent, child); return rel === '' || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel)); };
 const nativeState = value => ({ ...value, driver: { ...value.driver, checking: false } });
-const snapshot = () => ({ ...state, operation, build: buildMetadata, startupRegistration: cachedStartupRegistration, defaults: { cacheDir: preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache'), driveLetter: preferences.driveLetter }, preferences: { ...preferences }, cacheDir: state.cacheDir || preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache') });
-function publish() { updateTray(); if (window && !window.isDestroyed()) window.webContents.send('vault:state', snapshot()); }
+const snapshot = () => ({ ...state, operation, build: buildMetadata, browserDownloadHandoff:browserHandoff?.status()||{available:false,configured:false,reason:'NOT_INITIALIZED',installation:'not-performed'},startupRegistration: cachedStartupRegistration, defaults: { cacheDir: preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache'), driveLetter: preferences.driveLetter }, preferences: { ...preferences }, cacheDir: state.cacheDir || preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache') });
+function publish() { if(state.locked||state.lockVerified===false)browserHandoff?.revoke();updateTray(); if (window && !window.isDestroyed()) window.webContents.send('vault:state', snapshot()); }
+async function closeBrowserHandoff(){const receipt=await browserHandoff?.close();if(receipt&&receipt.verified!==true)throw new Error('Native browser handoff exit is unverified. Resolve pending pairing approval and retry Quit.');return receipt;}
 async function savePreferences() { await fs.mkdir(app.getPath('userData'), { recursive: true }); await fs.writeFile(configPath(), JSON.stringify(preferences), { mode: 0o600 }); }
 async function backend(method, params = {}) {
   if (!helper) throw new Error('The mounted drive is available on Windows.');
@@ -239,7 +241,7 @@ const activeTransfers = () => (state.operations || []).filter(item => ['queued',
 async function hasActiveWork() {
   if (restartPreparation.started) return false;
   const active=helper?await helper.request('operations'):[];
-  return Boolean(operation || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
+  return Boolean(operation || browserHandoff?.pending || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
 }
 async function updateStatus() {
   const snapshot=updates?.status()||{state:'unavailable',reason:'NOT_INITIALIZED'};
@@ -273,7 +275,7 @@ async function acquireUpdateLease() {
 const restartPreparation=createRestartPreparation({
   verify:async()=>{if(!updateInstallLease||!state.locked||state.lockVerified===false||await hasActiveWork())throw new Error('The application is not ready to restart safely.');},
   preflight:async()=>{verificationStartup?.restore();},
-  closeServices:async()=>{await localAdapter?.close();await features?.close();},
+  closeServices:async()=>{await closeBrowserHandoff();await localAdapter?.close();await features?.close();},
   clearMarker:()=>fs.rm(sessionMarkerPath(),{force:true}),
   disposeHelper:async()=>{helper?.dispose();},
   prepared:()=>{shuttingDown=true;}
@@ -312,7 +314,7 @@ async function quit() {
     features.beginExit();
     if (helper && !state.locked) await perform('unmounting', () => backend('lock'));
     if (!state.locked) throw new Error('The drive has not confirmed that it is locked.');
-    await updates?.dispose();await localAdapter?.close();await features?.close(); verificationStartup?.restore();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit());
+    await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features?.close(); verificationStartup?.restore();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit());
   } catch (error) { showWindow(); await dialog.showMessageBox(window, { type: 'error', title: 'Application is still running', message: error.message }); }
   finally {quitPending=false;if(!shuttingDown)features.endExit();}
 }
@@ -340,7 +342,7 @@ else {
     applyStartup(preferences.startup);
     cachedStartupRegistration=startupRegistration();
     try { Object.assign(buildMetadata, JSON.parse(await fs.readFile(path.resolve(directory,'../shared/build-metadata.json'),'utf8'))); } catch { /* Development builds have no invented build date. */ }
-    features=createFeatureServices({accessibilityState:()=>readRuntimeAccessibility(app),dataDirectory:app.getPath('userData'),applicationRoot:path.resolve(directory,'../..'),sandboxDirectory:app.isPackaged?path.join(process.resourcesPath,'converter'):path.resolve('out/converter'),safeStorage,dialog,getWindow:()=>window,openPath,openExternal:url=>shell.openExternal(url),onConverterDiagnostic:record=>console.warn('Converter initialization:',JSON.stringify(record)),emit:(feature,data)=>window?.webContents.send('feature:event',feature,data)});
+    features=createFeatureServices({accessibilityState:()=>readRuntimeAccessibility(app),dataDirectory:app.getPath('userData'),applicationRoot:path.resolve(directory,'../..'),sandboxDirectory:app.isPackaged?path.join(process.resourcesPath,'converter'):path.resolve('out/converter'),safeStorage,dialog,getWindow:()=>window,openPath,openExternal:url=>shell.openExternal(url),onConverterDiagnostic:record=>console.warn('Converter initialization:',JSON.stringify(record)),emit:(feature,data)=>{if(feature==='workflow')browserHandoff?.observeDownload(data);window?.webContents.send('feature:event',feature,data);}});
     app.on('accessibility-support-changed', () => { if(!shuttingDown)window?.webContents.send('feature:event','personalization',{type:'accessibilityState',state:readRuntimeAccessibility(app)}); });
     updates=createUpdateService({app,autoUpdater,dialog,isActiveWork:hasActiveWork,acquireInstallLease:acquireUpdateLease,prepareRestart:prepareUpdateRestart,getLanguage:()=>updateLanguage});
     updates.on('status',()=>{void updateStatus().then(snapshot=>window?.webContents.send('feature:event','updates',{snapshot})).catch(()=>{});});
@@ -352,6 +354,11 @@ else {
     let rendererRecoveries=0;
     window.webContents.on('render-process-gone',()=>{if(!shuttingDown&&rendererRecoveries++<3)void window.loadFile(rendererPath);});
     window.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+    browserHandoff=createBrowserHandoffLifecycle({hostDirectory:app.isPackaged?path.join(process.resourcesPath,'browser-host'):path.resolve('out/browser-host'),verificationMode:verificationMode||testMode,isUnlocked:()=>!state.locked&&state.lockVerified!==false,canAdmit:()=>!quitPending&&!shuttingDown&&!updateInstallLease,onProposal:item=>features.receiveBrowserProposal(item),authorizePair:async({origin})=>{
+      if(!window||window.isDestroyed())return false;
+      const answer=await dialog.showMessageBox(window,{type:'question',buttons:['Reject · 拒絕','Pair downloads · 配對下載'],defaultId:0,cancelId:0,title:'Pair browser downloads · 配對瀏覽器下載',message:'Allow download proposals from this origin? · 允許此來源提出下載建議？',detail:origin+'\nThis origin allowlist cannot authenticate a manually launched same-user process. Pairing lasts up to 15 minutes and ends when the drive locks. Each download still needs its own destination choice and Start confirmation.\n來源允許清單無法驗證手動啟動嘅同用戶程序。配對最多維持 15 分鐘，磁碟鎖定就撤銷。每次下載仍要獨立選擇目的地同確認開始。'});return answer.response===1;
+    }});
+    await browserHandoff.initialize();
     ipcMain.handle('vault:request', async (event, method, params) => { if (!trustedFrame(event, window, rendererURL)) throw new Error('Untrusted request source.'); return request(method, params); });
     ipcMain.handle('feature:request', async (event, feature, action, params) => { if (!trustedFrame(event, window, rendererURL)) throw new Error('Untrusted request source.'); const request = validateFeatureRequest(feature, action, params); return featureRequest(request.feature, request.action, request.payload); });
     ipcMain.handle('vault:verification-quit', async event => {
@@ -361,7 +368,7 @@ else {
       if (helper && !state.locked) await perform('unmounting', () => backend('lock'));
       const proof = verificationStartup.restore();
       if (!state.locked) throw new Error('The drive has not confirmed that it is locked.');
-      await updates?.dispose();await localAdapter?.close();await features.close();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose();
+      await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features.close();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose();
       setTimeout(() => app.quit(), 250);
       return proof;
     });
@@ -376,7 +383,7 @@ else {
       try { await backend('statusSummary'); await backend('setPerformanceMode', { mode: preferences.performanceMode }); if(interruptedSession){state.recoveryRequired=true;state.sync.error='An interrupted session was detected. Recovery starts locked; unlock explicitly to review encrypted records.';publish();} if (!interruptedSession && preferences.autoUnlock && preferences.storageDir) { await backend('autoUnlock', { storageDir: preferences.storageDir, cacheDir: preferences.cacheDir, driveLetter: preferences.driveLetter, transport: preferences.transport, remoteRepository: preferences.remoteRepository }); await backend('setHistoryRetention', { days: preferences.historyRetentionDays }); await backend('mount', { driveLetter: preferences.driveLetter }); } } catch (error) { state.driver.checking = false; state.sync.error = error.message; publish(); }
     } else { state.driver.checking = false; state.driver.error = 'Windows and WinFsp are required to mount a drive.'; publish(); }
     await handleExplorerCopy(process.argv);
-  }).catch(() => { app.exit(1); });
+  }).catch(async () => {await browserHandoff?.close();app.exit(1);});
   app.on('before-quit', event => { if (!shuttingDown && !testMode) { event.preventDefault(); void quit(); } });
-  app.on('window-all-closed', () => { if (testMode) { verificationStartup?.restore(); shuttingDown = true; helper?.dispose(); app.quit(); } });
+  app.on('window-all-closed', async () => { if (testMode) {await closeBrowserHandoff();verificationStartup?.restore(); shuttingDown = true; helper?.dispose(); app.quit(); } });
 }

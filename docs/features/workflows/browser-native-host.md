@@ -39,13 +39,25 @@ The correlation ID stays attached to the queue item as `browserCaptureId`.
 Status responses never include a destination path, URL, plaintext, or credentials.
 The desktop must revoke the broker on lock and close the owned child on exit.
 
-`close()` revokes admission immediately and returns one stable asynchronous
+`close()` revokes admission immediately and concurrent callers share its asynchronous
 receipt. Within a three-second deadline it observes the owned process exit,
 closure of all inherited standard-I/O streams, and outstanding response callbacks.
 The receipt includes `processExited`, `stdioClosed`, pending request/response
 counts, and `verified`. A missing exit, undrained stream or unresolved native
 approval keeps `verified` false. No unrelated process is terminated and an issued
 termination request is never treated as proof of process exit.
+If an earlier receipt was unverified, a later retry observes the current exit and
+drain state again. A completed successful receipt remains stable.
+
+The desktop initializes `createBrowserHandoffLifecycle` from its bundled
+`browser-host` directory. Missing or invalid reviewed configuration prevents
+broker creation. The desktop's isolated verification mode also disables the
+production broker, keeping synthetic tests separate from the current user flow.
+Startup connects native consent, unlocked/closing admission, host-only proposal
+delivery and download events. Every published locked or unverified helper state
+revokes pairing. Quit, update preparation and verification exit await a verified
+close receipt before completing service shutdown. `getState` includes a factual
+`browserDownloadHandoff` status and the last close receipt.
 
 ## Identity and registration plan
 
@@ -98,7 +110,7 @@ Installed-browser behavior and the visible three-surface presentation require
 separate real installed evidence before they can be claimed verified.
 
 The focused transport continuation passed the exact production entrypoint and
-10 native synthetic checks. The JavaScript suite passed 12 tests with no skips
+10 native synthetic checks. The JavaScript suite passed 14 tests with no skips
 when supplied `MFE_BROWSER_HOST_EXE` from that build. Its compiled-host test copies
 the built host into a fresh owned fixture directory, adds only a generated synthetic
 configuration, launches both real relay processes hidden, verifies explicit
