@@ -8,7 +8,7 @@ import { createHash } from 'node:crypto';
 const REQUIRED = [
   'README', 'access-local', 'appearance-editor', 'local-personalization',
   'access/README', 'access/local-access', 'appearance/README', 'appearance/raster-workflows',
-  'converter/README', 'converter/archive-and-data', 'converter/media-plan', 'converter/minimal-component', 'converter/minimal-runtime',
+  'converter/README', 'converter/spreadsheets', 'converter/archive-runtime', 'converter/archive-and-data', 'converter/media-plan', 'converter/minimal-component', 'converter/minimal-runtime',
   'desktop/README', 'desktop/owned-exit-handles', 'desktop/package-integrity', 'desktop/runtime-evidence', 'drive/README',
   'interface/README', 'interface/appearance-editor', 'interface/local-personalization', 'interface/modern-fields', 'interface/personal-vocabulary', 'interface/startup-registration',
   'ollama/README', 'ollama/local-models', 'ollama/native-host', 'ollama/regression-verification', 'ollama/release-provenance',

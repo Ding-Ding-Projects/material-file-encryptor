@@ -26,7 +26,7 @@ Capture provenance uses a translated description followed by a literal revision 
 
 ## Publication inventory and privacy
 
-`language-pairs.json` explicitly binds all 54 English feature articles and category indexes to their complete Cantonese counterparts. Each record contains both paths and SHA-256 hashes of UTF-8 content normalized to LF line endings. Both paths also belong to the publication catalog. These bindings describe article coverage, not completed native runtime acceptance.
+`language-pairs.json` explicitly binds all 56 English feature articles and category indexes to their complete Cantonese counterparts. Each record contains both paths and SHA-256 hashes of UTF-8 content normalized to LF line endings. Both paths also belong to the publication catalog. These bindings describe article coverage, not completed native runtime acceptance.
 
 Run `node --test test/documentation-translations.test.js` after changing an article or its translation. Its independent required list checks complete pairing, publication inclusion, exact code blocks, inline technical literals and link targets. Negative cases exercise omitted pairs, missing files, stale hashes, unpublished articles and changed protected content. Updating a hash requires reviewing the actual translation against its source; the check cannot prove semantic translation quality or visual layout. It does not automatically regenerate the manifest or approve new articles.
 

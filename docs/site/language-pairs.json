@@ -49,14 +49,20 @@
     {
       "source": "docs/features/converter/README.md",
       "translation": "docs/features/converter/README.zh-HK.md",
-      "sourceSha256": "9b0448926f33043cebe3c8f4e1c2b7bde5b4596ae0fc68cd515e8686cd5eafb7",
-      "translationSha256": "f84cc59a203fe2a19dc936cef24a6fd9d772df083dfe21ab5dde2babd8cd217f"
+      "sourceSha256": "f3194b6e8dfc95d5b798a0d2c7b02c13e3a37e9b373b71240ccc4927775c0b15",
+      "translationSha256": "c7e10c8f29f7bb3616b9f8cac732bf160d6d11013d68eb19be74e8fd339101dc"
     },
     {
       "source": "docs/features/converter/archive-and-data.md",
       "translation": "docs/features/converter/archive-and-data.zh-HK.md",
       "sourceSha256": "3e7d6f7d8e68d994fedad60eed5d3ab3b7f36e53ffc267aa0d875d1cb749cd45",
       "translationSha256": "bb2232dde0241c71994fc1069bd9434c66edcfe2d212ca0382d62b31b2c26e11"
+    },
+    {
+      "source": "docs/features/converter/archive-runtime.md",
+      "translation": "docs/features/converter/archive-runtime.zh-HK.md",
+      "sourceSha256": "c7d02d78b7441bceb640b24c60031926f3e599747d812f6e164938bd89d3c6ae",
+      "translationSha256": "f19a8e7d1cc28be5b553ba62a80f5bd0d7b1dea66ac242edbd63ea6d7364d2c3"
     },
     {
       "source": "docs/features/converter/media-plan.md",
@@ -75,6 +81,12 @@
       "translation": "docs/features/converter/minimal-runtime.zh-HK.md",
       "sourceSha256": "9fe0a9d627f52b6334f40f14499d34aa26b981839cd96634847c0fa81c94b393",
       "translationSha256": "73080461689a59b1899dd81f6d9d07b36f582765135c7b853724be642423aca7"
+    },
+    {
+      "source": "docs/features/converter/spreadsheets.md",
+      "translation": "docs/features/converter/spreadsheets.zh-HK.md",
+      "sourceSha256": "90722a4a615423e601ef128a2e42d71e291f17b6bc312bf4391261cf655899d1",
+      "translationSha256": "f0954e10ac243de68fd2a710082848e67ce16df7b7bd32106585da620dfbe557"
     },
     {
       "source": "docs/features/desktop/README.md",
