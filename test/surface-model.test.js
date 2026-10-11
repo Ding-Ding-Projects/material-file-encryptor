@@ -77,7 +77,7 @@ test('tab movement and bulk close respect ordering pinned tabs and final tab', (
 
 test('notification reload sanitizes malformed entries and preserves unique identifiers', () => {
   const storage = memory();
-  storage.setItem('surface-state', JSON.stringify({ version: 1, tabs, notifications: [
+  storage.setItem('surface-state', JSON.stringify({ version: 1, notificationFormat: 2, tabs, notifications: [
     { id: 'notification-1', title: 'Done', message: 'password=hidden token:abc', createdAt: '2026-10-10T12:00:00Z', read: true, arbitrary: 'excluded' },
     { id: 'notification-1', title: 'Duplicate', createdAt: '2026-10-10T12:00:00Z' },
     { id: 'invalid-date', createdAt: 'invalid' },
@@ -145,4 +145,32 @@ test('notification bounds, read filters, dismissal and safe CSV export', () => {
   assert.equal(JSON.parse(model.exportNotifications()).length, 200);
   assert.equal(model.dismissNotification(id), true);
   assert.equal(model.dismissNotification(id), false);
+});
+
+
+test('legacy notification messages are dropped once while custom groups survive',()=>{
+ const storage=memory();storage.setItem('surface-state',JSON.stringify({version:1,tabs,groups:[{id:'custom',label:'User named group'}],notifications:[{id:'old',title:'Synthetic mapped title',message:'Synthetic mapped text',createdAt:'2026-10-10T12:00:00Z'}]}));
+ const model=createSurfaceModel({storage,tabs});
+ assert.equal(model.getState().notificationFormat,2);
+ assert.equal(model.getState().droppedLegacyNotifications,1);
+ assert.deepEqual(model.getState().notifications,[]);
+ assert.equal(model.getState().groups[0].label,'User named group');
+ assert.ok(!storage.getItem('surface-state').includes('Synthetic mapped'));
+ model.addNotification({title:'Canonical title',message:'Canonical message'});
+ const restored=createSurfaceModel({storage,tabs});
+ assert.equal(restored.getState().droppedLegacyNotifications,0);
+ assert.equal(restored.getState().notifications[0].message,'Canonical message');
+});
+
+test('trusted tab registration repairs open and closed labels without renaming groups',()=>{
+ const model=createSurfaceModel({tabs});model.renameGroup('Work','Custom group');
+ model.openTab({id:'extra',label:'Synthetic mapped label',group:'Work'});model.closeTab('extra');
+ assert.equal(model.registerCanonicalTab('extra','Canonical extra'),true);
+ assert.equal(model.getState().closedTabs[0].label,'Canonical extra');
+ model.restoreTab();assert.equal(model.getState().tabs.find(tab=>tab.id==='extra').label,'Canonical extra');
+ model.registerCanonicalTab('home','Canonical home');
+ assert.equal(model.getState().tabs[0].label,'Canonical home');
+ model.closeTab('extra');model.openTab({id:'extra',label:'Synthetic mapped label'});
+ assert.equal(model.getState().tabs.find(tab=>tab.id==='extra').label,'Canonical extra');
+ assert.equal(model.getState().groups[0].label,'Custom group');
 });
