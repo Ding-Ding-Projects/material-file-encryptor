@@ -1,3 +1,15 @@
+# Typed motion source and verified color/server delivery, 2026-10-11 UTC
+
+Typed-motion source bd5e827987b25a31187f02ff3b272395aba072c5 is independently reviewed and incorporated into this candidate. Registered keyframe controls provide explicit offset, absolute and relative positions, numeric units, selected-frame metadata, strict group movement and 19 authored guidance concepts. Fresh layer resolution preserves storage rollback, retry and row-specific locking. Both review lenses are dry. The final merge passed 38 motion/translation checks and 27 existing color/typography checks, 65 in total. Full multi-track timelines, per-property transitions, motion paths and rendered acceptance remain unfinished.
+
+Exact source 9fa84a9d6ee7fed62cceeb8bb7660fe8e78f6cc9 is delivered as normal v1.212.1 from successful production run 38134711184. Independent download acceptance passed all five assets, 763 CRC/decompression entries, 664 actual Squirrel payload files, exact Setup embedding, unsigned targets and 6,258 privacy entries with zero rejected paths. The ASAR contains 5,507 entries; 196 tracked source files match immutable source under documented line-ending equivalence. Six verifier/config admissions and post-verification bookends passed. Verification-only components are absent. Installed lifecycle remains unverified.
+
+Live deployment 38134711122 independently matched 217 files, 60,183,001 bytes and 7,416 internal references, with zero missing files or anchors, stable provenance and the exact About homepage. Both new bilingual color/server articles, previous typography/workbench pairs and the complete wiki046 content are verified. These receipts establish package and content delivery, not rendered or native runtime acceptance.
+
+Pure Material Design 3 is required across all visible surfaces. All 210 complete-surface rows remain unverified, and the reported mobile preferences presentation remains unresolved. The full original objective stays active. All eight working trees and ignored evidence remain retained; no destructive cleanup qualifies.
+
+Next: verify this motion source through cloud production, complete and wire the typed image geometry inspector, then resume installed and genuine rendered acceptance after resource and identity admission.
+
 # Renderer mount correction, 2026-10-11 UTC
 
 Final integration review found that server source85 placed await inside synchronous setupEnhancedWorkspace, so the whole renderer failed actual node --check. Corrective sourceedc473a4f6a6f2eab43e0746fdb9e0e7ca8d4615 moves the mount into the existing mounts array and retains synchronous setup, allSettled activation and disposal. Independent review confirmed fullmodule parsing and two real queue checks, including deferred success and rejection. This correction is incorporated into the combined candidate before main delivery. Earlier component checks did not prove the complete application parsed.
