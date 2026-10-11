@@ -1,6 +1,6 @@
 # Account and repository publication
 
-The installed desktop uses the GitHub CLI for browser sign-in, account discovery, refresh, active-account selection and per-account sign-out. Credentials remain in the operating-system credential store managed by `gh`. The service rejects plaintext credential configuration, strips bearer environment overrides, returns only account names and active state, and never asks the renderer for a credential.
+The installed desktop uses the GitHub CLI for browser sign-in, account discovery, active-account selection and per-account sign-out. Credentials remain in the operating-system credential store managed by `gh`. The service rejects plaintext credential configuration, strips bearer environment overrides, returns only account names and active state, and never asks the renderer for a credential. Selected-account refresh currently fails before any command because the CLI refresh transaction uses mutable active-account state; browser sign-in is the available account renewal path.
 
 Publication preparation starts with a project folder selected through the native picker. Select an authenticated active account, an available personal or organization owner, a repository name, visibility and either copy-and-push or fork. Preparation freezes a clean committed source revision. A future copy-and-push operation would upload the complete committed history of that revision; a future fork would preserve upstream visibility without uploading local changes.
 

@@ -18,7 +18,7 @@ export function runForgeCommand(file,args,{cwd,signal,env=process.env,interactiv
  });
 }
 
-/** gh owns account credentials. This service never reads or returns credential values. */
+/** gh owns account credentials. This service never returns credential values to callers. */
 export function createForgeWorkflow({dataDirectory,execute=runForgeCommand,env=process.env,credentialStorageCheck,onAuthenticationChallenge=()=>{}}={}){
  let closed=false,busy=false,cancelGeneration=0;const controllers=new Set(),plans=new Map(),operationContext=new AsyncLocalStorage();
  const publicationUnavailable='Publication is unavailable: the supported GitHub CLI cannot durably bind every command and Git credential lookup to the reviewed account without exposing credentials. No repository was created or uploaded.';
@@ -43,7 +43,7 @@ export function createForgeWorkflow({dataDirectory,execute=runForgeCommand,env=p
  return{
   accounts,owners,
   signIn:()=>serialized(async()=>{await gh(['auth','login','--hostname','github.com','--git-protocol','https','--web'],{interactive:true});return accounts();}),
-  refresh:({accountId})=>serialized(async()=>{await active(accountId);await gh(['auth','refresh','--hostname','github.com'],{interactive:true});return accounts();}),
+  refresh:({accountId})=>serialized(async()=>{if(!validLogin(accountId))throw new Error('Choose a signed-in account.');throw new Error('Account refresh is unavailable until the supported CLI refresh transaction can be durably bound to the selected account. Add the account again through browser sign-in.');}),
   setActive:({accountId})=>serialized(async()=>{if(!(await accounts()).some(row=>row.id===accountId))throw new Error('Choose a signed-in account.');await gh(['auth','switch','--hostname','github.com','--user',accountId]);return accounts();}),
   signOut:({accountId})=>serialized(async()=>{if(!(await accounts()).some(row=>row.id===accountId))throw new Error('Choose a signed-in account.');await gh(['auth','logout','--hostname','github.com','--user',accountId]);return accounts();}),
   prepare:({folder,accountId,ownerId,name,visibility,route,upstream})=>serialized(async()=>{
