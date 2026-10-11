@@ -18,6 +18,7 @@ sys.modules[spec.name] = module
 spec.loader.exec_module(module)
 
 transport_failures = []
+native_backend = None
 
 class DirectClient:
     def __init__(self, timeout):
@@ -49,16 +50,17 @@ policy_spec.loader.exec_module(policy)
 def close_after_absence(client, state, processes):
     if not module._recorded_tree_absent(processes):
         raise SystemExit('Recorded owned processes remain.')
+    execution_proof = dict(native_backend.proof.last_absence) if native_backend else {}
     windows = client.call_tool('list_headless_windows', {'name': state['desktop']})
     if policy.automatically_closed(windows, state['desktop'], processes, module._recorded_tree_absent):
-        return {'automaticallyClosed': True}
+        return {'automaticallyClosed': True, **execution_proof}
     if not windows.get('client_ok') or windows.get('windows'):
         raise SystemExit('Desktop is not proven empty after exit.')
     closed = client.call_tool('close_headless_desktop', {'name': state['desktop']})
     if module._desktop_close_confirmed(closed):
-        return {'automaticallyClosed': False}
+        return {'automaticallyClosed': False, **execution_proof}
     if policy.automatically_closed(closed, state['desktop'], processes, module._recorded_tree_absent):
-        return {'automaticallyClosed': True}
+        return {'automaticallyClosed': True, **execution_proof}
     raise SystemExit('Owned desktop close was not confirmed.')
 
 module._connect = lambda endpoint, timeout: DirectClient(timeout)
@@ -91,6 +93,29 @@ ConvertTo-Json -InputObject $all -Compress -Depth 4
     return not present
 
 module._recorded_tree_absent = recorded_tree_absent
+backend_name = os.environ.get('MFE_RENDERER_PROCESS_BACKEND', 'cim')
+if backend_name not in ['cim', 'native-v1']:
+    raise SystemExit('Unknown renderer process backend.')
+snapshot_spec = importlib.util.spec_from_file_location('renderer_snapshot', Path(__file__).with_name('renderer-process-snapshot.py'))
+snapshot_module = importlib.util.module_from_spec(snapshot_spec)
+snapshot_spec.loader.exec_module(snapshot_module)
+if backend_name == 'native-v1' and len(sys.argv) > 1 and sys.argv[1] != 'preflight':
+    state_arg = sys.argv[sys.argv.index('--state') + 1] if '--state' in sys.argv else sys.argv[2]
+    native_backend = snapshot_module.RendererNativeBackend(module, state_arg, os.environ.get('MFE_RENDERER_SOURCE_COMMIT'), helper, fresh_launch=sys.argv[1] == 'launch').install()
+elif backend_name == 'cim':
+    if len(sys.argv) > 1 and sys.argv[1] == 'launch' and '--state' in sys.argv and snapshot_module.marker_path(sys.argv[sys.argv.index('--state') + 1]).exists():
+        raise SystemExit('CIM launch cannot overwrite native provenance.')
+    original_read_state = module._read_state
+    def read_cim_state(path):
+        if snapshot_module.marker_path(path).exists():
+            raise module.ClientFailure('PROCESS_PROOF_FAILED', 'Native renderer receipt requires its explicit backend.')
+        return original_read_state(path)
+    module._read_state = read_cim_state
+if len(sys.argv) == 3 and sys.argv[1] == 'prove-cdp':
+    if native_backend is None:
+        raise SystemExit('Native renderer target proof requires its explicit backend.')
+    print(json.dumps(snapshot_module.prove_renderer_target(native_backend)))
+    raise SystemExit(0)
 if len(sys.argv) == 3 and sys.argv[1] in ['prepare-exit', 'confirm-exit']:
     state_path, state = module._read_state(sys.argv[2])
     proof_path = state_path.with_name('exit-processes.json')

@@ -7,9 +7,17 @@ import os
 import hashlib
 import json
 from pathlib import Path
+import re
+import subprocess
+from urllib.request import urlopen
+from urllib.parse import urlparse
 
 
 class SnapshotError(RuntimeError):
+    pass
+
+
+class ProcessAbsent(SnapshotError):
     pass
 
 
@@ -124,10 +132,33 @@ class Proof:
     def __init__(self, lifecycle, api=None):
         self.lifecycle, self.api = lifecycle, api or Native()
 
+    def identity(self, pid):
+        with self.api.handle(pid) as handle:
+            rows = self.api.inventory()
+            if handle is None:
+                if pid not in rows:
+                    raise ProcessAbsent('Exact process PID is absent.')
+                raise SnapshotError('Process changed during identity inventory.')
+            if pid not in rows:
+                raise SnapshotError('Running process missing from identity inventory.')
+            before = self.api.observe(handle, pid, rows[pid])
+            after_rows = self.api.inventory()
+            if after_rows.get(pid) != rows[pid]:
+                raise SnapshotError('Process parent changed during identity proof.')
+            after = self.api.observe(handle, pid, rows[pid])
+            self.lifecycle._validate_process_identity(before)
+            if not self.lifecycle._same_process(before, after):
+                raise SnapshotError('Process identity changed during identity proof.')
+            return before
+
     def tree(self, root):
         self.lifecycle._validate_process_identity(root)
         with ExitStack() as stack:
             root_handle = stack.enter_context(self.api.handle(root['pid']))
+            if root_handle is None:
+                if root['pid'] not in self.api.inventory():
+                    raise ProcessAbsent('Exact root PID is absent.')
+                raise SnapshotError('Root changed during process proof.')
             first = self.api.observe(root_handle, root['pid'], root['parentPid'])
             if not self.lifecycle._same_process(root, first):
                 raise SnapshotError('Root identity changed before inventory.')
@@ -185,6 +216,150 @@ class Proof:
             'legacyAbsenceMeaning': 'No recorded execution remains; exited kernel objects may still exist.',
         }
         return not present
+
+
+def marker_path(state_path):
+    state_path = Path(state_path)
+    return state_path.with_name(state_path.name + '.native-v1.json')
+
+
+class RendererNativeBackend:
+    """Explicit fresh-launch renderer backend; never reinterprets old receipts."""
+    def __init__(self, lifecycle, state_path, source_commit, lifecycle_helper, fresh_launch=False, api=None):
+        if not re.fullmatch('[a-f0-9]{40}', source_commit or ''):
+            raise SnapshotError('Native renderer source binding is required.')
+        self.lifecycle = lifecycle
+        self.path = Path(os.path.abspath(state_path))
+        self.marker = marker_path(self.path)
+        lifecycle._reject_link_components(self.path)
+        lifecycle._reject_link_components(self.marker)
+        self.binding = {
+            'version': 1, 'backend': 'native-v1', 'sourceCommit': source_commit,
+            'helperSha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+            'lifecycleHelperSha256': hashlib.sha256(Path(lifecycle_helper).read_bytes()).hexdigest(),
+        }
+        self.proof = Proof(lifecycle, api)
+        self.original_read = lifecycle._read_state
+        self.original_write = lifecycle._atomic_write_json
+        self.fresh_launch = fresh_launch
+        self.launch_identity = None
+        if fresh_launch and (self.path.exists() or self.marker.exists()):
+            raise SnapshotError('Native backend requires a fresh state and sidecar.')
+
+    def verify(self, state):
+        self.lifecycle._reject_link_components(self.marker)
+        data = self.marker.read_bytes()
+        if len(data) > 65536:
+            raise SnapshotError('Native provenance exceeds bound.')
+        marker = json.loads(data)
+        if not isinstance(marker, dict) or set(marker) != set(self.binding) | {'rootIdentity'}:
+            raise SnapshotError('Native provenance schema is invalid.')
+        if any(marker.get(key) != value for key, value in self.binding.items()):
+            raise SnapshotError('Native provenance binding differs.')
+        if marker['rootIdentity'] != state['process']:
+            raise SnapshotError('Native provenance root differs from lifecycle.')
+        self.lifecycle._validate_process_identity(marker['rootIdentity'])
+
+    def read(self, path):
+        self.lifecycle._reject_link_components(self.path)
+        if Path(path).resolve(strict=False) != self.path:
+            raise SnapshotError('Native backend cannot read a different lifecycle.')
+        state_path, state = self.original_read(path)
+        self.verify(state)
+        return state_path, state
+
+    def write(self, path, state):
+        self.lifecycle._reject_link_components(self.path)
+        if Path(path).resolve(strict=False) != self.path:
+            raise SnapshotError('Native backend cannot write a different lifecycle.')
+        if self.fresh_launch:
+            if state['process'] != self.launch_identity or self.path.exists():
+                raise SnapshotError('Fresh native state identity does not match launch.')
+            self.marker.parent.mkdir(parents=True, exist_ok=True)
+            self.lifecycle._reject_link_components(self.marker)
+            # Write provenance first. A partial launch never becomes an
+            # unmarked native receipt that the default CIM route could read.
+            with self.marker.open('x', encoding='utf-8') as stream:
+                json.dump({**self.binding, 'rootIdentity': self.launch_identity}, stream)
+                stream.flush()
+                os.fsync(stream.fileno())
+            self.original_write(path, state)
+            self.fresh_launch = False
+        else:
+            self.verify(state)
+            self.original_write(path, state)
+
+    def identity(self, pid):
+        if not self.fresh_launch:
+            self.read(self.path)
+        identity = self.proof.identity(pid)
+        if self.fresh_launch:
+            self.launch_identity = identity
+        return identity
+
+    def tree(self, root):
+        _, state = self.read(self.path)
+        if root != state['process']:
+            raise SnapshotError('Requested tree differs from native provenance.')
+        return self.proof.tree(root)
+
+    def absent(self, tree):
+        self.read(self.path)
+        return self.proof.absent(tree)
+
+    def install(self):
+        def checked(function):
+            def invoke(*args):
+                try:
+                    return function(*args)
+                except ProcessAbsent as error:
+                    raise self.lifecycle.ClientFailure('PROCESS_NOT_FOUND', str(error)) from error
+                except (SnapshotError, OSError, ValueError) as error:
+                    raise self.lifecycle.ClientFailure('PROCESS_PROOF_FAILED', str(error)) from error
+            return invoke
+        for name, function in [('_read_state', self.read), ('_atomic_write_json', self.write), ('_process_identity', self.identity), ('_process_tree', self.tree), ('_recorded_tree_absent', self.absent)]:
+            setattr(self.lifecycle, name, checked(function))
+        return self
+
+
+def prove_renderer_target(backend, run=None, fetch=None):
+    """Exact loopback listener and page proof for this renderer-only backend."""
+    _, state = backend.read(backend.path)
+    cdp = state['cdp']
+    if not cdp:
+        raise SnapshotError('Renderer target proof requires a recorded CDP binding.')
+    before = backend.tree(state['process'])
+    run = run or subprocess.run
+    output = run(['netstat.exe', '-ano', '-p', 'tcp'], capture_output=True, text=True, timeout=10, check=True, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0)).stdout
+    if len(output.encode('utf-8')) > 2_097_152:
+        raise SnapshotError('Listener inventory exceeds bound.')
+    selected = []
+    address = f"127.0.0.1:{cdp['port']}"
+    for line in output.splitlines():
+        parts = line.split()
+        if len(parts) == 5 and parts[0] == 'TCP' and parts[1] == address and parts[3] == 'LISTENING':
+            selected.append(int(parts[4]))
+    if len(selected) != 1 or selected[0] not in {item['pid'] for item in before}:
+        raise SnapshotError('Exact loopback listener lacks one native tree owner.')
+    endpoint = f"http://{address}/json/list"
+    if fetch is None:
+        with urlopen(endpoint, timeout=5) as response:
+            data = response.read(65537)
+    else:
+        data = fetch(endpoint)
+    if len(data) > 65536:
+        raise SnapshotError('Renderer target response exceeds bound.')
+    targets = json.loads(data)
+    if not isinstance(targets, list) or len(targets) != 1 or not isinstance(targets[0], dict):
+        raise SnapshotError('Renderer target inventory is not exactly one page.')
+    target = targets[0]
+    websocket = urlparse(target.get('webSocketDebuggerUrl', ''))
+    if target.get('type') != 'page' or target.get('url') != cdp['expectedUrl'] or websocket.scheme != 'ws' or websocket.hostname != '127.0.0.1' or websocket.port != cdp['port'] or websocket.username or websocket.password or not websocket.path.startswith('/devtools/page/'):
+        raise SnapshotError('Renderer target does not match the exact loopback binding.')
+    after = backend.tree(state['process'])
+    if sorted(before, key=lambda item: item['pid']) != sorted(after, key=lambda item: item['pid']):
+        raise SnapshotError('Native ancestry changed around renderer target proof.')
+    return {'ok': True, 'client_ok': True, 'backend': 'native-v1', 'listenerOwnerPid': selected[0], 'listenerAddress': address, 'targetCount': 1, 'exactUrl': cdp['expectedUrl'], 'nativeProcesses': after}
 
 
 def supplemental_precision_bridge(lifecycle, receipt_path, api=None, filtered_identity=None):

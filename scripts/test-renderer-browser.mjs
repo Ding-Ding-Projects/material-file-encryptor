@@ -90,6 +90,11 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot}={}) {
  for(const file of [installed,cli,python,executable])await fs.access(file);
  const adapter=fileURLToPath(new URL('./test-renderer-browser-cli.py',import.meta.url));
  const env={...process.env,PYTHONUTF8:'1',MFE_LOWLEVEL_CLIENT:installed,MFE_LOWLEVEL_CLI:cli};
+ if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1') {
+  const {stdout}=await promisify(execFile)('git',['rev-parse','HEAD'],{cwd:fileURLToPath(new URL('../',import.meta.url)),windowsHide:true,timeout:10000});
+  if(!/^[a-f0-9]{40}$/.test(stdout.trim()))throw new Error('Native renderer source binding is unavailable.');
+  env.MFE_RENDERER_SOURCE_COMMIT=stdout.trim();
+ }
  const runRoot=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-renderer-test-'));
  const state=path.join(runRoot,'lifecycle.json');const port=await freePort();
  let browser,launchAttempted=false,closed=false;
@@ -140,6 +145,7 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot}={}) {
   let targets;
   while(Date.now()<deadline){try{targets=await (await fetch(`${endpoint}/json/list`,{signal:AbortSignal.timeout(1000)})).json();break;}catch{await new Promise(resolve=>setTimeout(resolve,100));}}
   if(!Array.isArray(targets)||targets.length!==1||targets[0].type!=='page'||targets[0].url!==expectedUrl||!targets[0].webSocketDebuggerUrl?.startsWith(`ws://127.0.0.1:${port}/`))throw new Error('Renderer fixture CDP isolation proof failed.');
+  if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await lifecycleCommand([adapter,'prove-cdp',state]);
   browser=await chromium.connectOverCDP(endpoint);
   const page=browser.contexts()[0].pages()[0];
   if(!page||browser.contexts()[0].pages().length!==1)throw new Error('Renderer fixture page inventory changed.');

@@ -9,6 +9,10 @@ import unittest
 import tempfile
 import json
 import hashlib
+import argparse
+import socket
+import threading
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -62,6 +66,100 @@ class Fake:
 
 
 class SnapshotTests(unittest.TestCase):
+    def test_backend_marker_mismatch_missing_and_old_receipts_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'lifecycle.json'
+            local = load('marker_lifecycle', Path.home() / '.agents/skills/run-lowlevel-headless-app/scripts/lowlevel_mcp_client.py')
+            backend = native.RendererNativeBackend(local, path, 'a' * 40, local.__file__, fresh_launch=True, api=Fake())
+            state = {'process': identity}
+            backend.launch_identity = identity
+            backend.write(path, state)
+            marker = native.marker_path(path)
+            saved = marker.read_bytes()
+            backend.verify(state)
+            for field, value in [('backend', 'cim'), ('sourceCommit', 'b' * 40), ('helperSha256', '0' * 64), ('rootIdentity', child)]:
+                changed = json.loads(saved)
+                changed[field] = value
+                marker.write_text(json.dumps(changed))
+                with self.subTest(field=field), self.assertRaises(native.SnapshotError):
+                    backend.verify(state)
+            marker.write_bytes(saved)
+            with self.assertRaises(native.SnapshotError):
+                native.RendererNativeBackend(local, path, 'a' * 40, local.__file__, fresh_launch=True, api=Fake())
+            marker.unlink()
+            with self.assertRaises(FileNotFoundError):
+                backend.verify(state)
+
+    @unittest.skipUnless(os.name == 'nt', 'Requires actual Windows native process and listener APIs')
+    def test_fresh_backend_production_launch_and_owned_listener_seams(self):
+        local = load('fresh_lifecycle', Path.home() / '.agents/skills/run-lowlevel-headless-app/scripts/lowlevel_mcp_client.py')
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            state_path = root / 'lifecycle.json'
+            with socket.socket() as reservation:
+                reservation.bind(('127.0.0.1', 0))
+                port = reservation.getsockname()[1]
+            expected_url = 'http://127.0.0.1:49151/'
+            child_code = '''import http.server,json,sys,threading
+port=int(sys.argv[1])
+class Handler(http.server.BaseHTTPRequestHandler):
+ def log_message(self,*args): pass
+ def do_GET(self):
+  body=json.dumps([{'type':'page','url':'http://127.0.0.1:49151/','webSocketDebuggerUrl':'ws://127.0.0.1:'+str(port)+'/devtools/page/fixture'}]).encode()
+  self.send_response(200);self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
+server=http.server.HTTPServer(('127.0.0.1',port),Handler)
+threading.Thread(target=server.serve_forever,daemon=True).start()
+print('ready',flush=True)
+sys.stdin.buffer.read(1)
+server.shutdown();server.server_close()
+'''
+            request = root / 'request.json'
+            request.write_text(json.dumps({'desktop':'fixture-native-owned','executable':sys.executable,'arguments':['-c','exec('+repr(child_code)+')',str(port)],'runRoot':str(root),'outputRoot':str(root / 'out'),'cdp':{'port':port,'expectedUrl':expected_url}}))
+            # Simulate only Lowlevel launch transport. The launched child,
+            # installed production handler, native identities, listener and
+            # HTTP response are real; this does not prove hidden GUI launch.
+            process = None
+            class Transport:
+                def call_tool(self, name, params):
+                    nonlocal process
+                    if name == 'list_headless_windows':
+                        return {'client_ok':False,'error':"OpenDesktopW('fixture-native-owned') failed (GetLastError=2:"}
+                    if name != 'launch_on_headless_desktop':
+                        raise AssertionError('Unexpected transport operation')
+                    process = subprocess.Popen(params['command'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW)
+                    ready = []
+                    worker = threading.Thread(target=lambda: ready.append(process.stdout.readline()), daemon=True)
+                    worker.start();worker.join(timeout=5)
+                    if ready != [b'ready\r\n'] and ready != [b'ready\n']:
+                        raise AssertionError('Owned listener fixture did not become ready')
+                    return {'client_ok':True,'pid':process.pid}
+            local._connect = lambda endpoint, timeout: Transport()
+            backend = native.RendererNativeBackend(local,state_path,'a'*40,local.__file__,fresh_launch=True).install()
+            try:
+                result = local._cmd_launch(argparse.Namespace(input=str(request),state=str(state_path),overwrite_state=False,url='http://127.0.0.1:49152/mcp',timeout=5))
+                self.assertTrue(result['client_ok'])
+                _, state = local._read_state(state_path)
+                self.assertEqual(state['process'], backend.proof.identity(process.pid))
+                self.assertFalse(local._recorded_tree_absent([state['process']]))
+                target = native.prove_renderer_target(backend)
+                self.assertEqual(target['listenerOwnerPid'], process.pid)
+                self.assertEqual(target['exactUrl'], expected_url)
+                bad_run = lambda *args, **kwargs: SimpleNamespace(stdout=f'TCP 127.0.0.1:{port} 0.0.0.0:0 LISTENING 1')
+                with self.assertRaises(native.SnapshotError):
+                    native.prove_renderer_target(backend,run=bad_run)
+                with self.assertRaises(native.SnapshotError):
+                    native.prove_renderer_target(backend,fetch=lambda endpoint:b'[]')
+                # A separate invocation reads the exact provenance sidecar.
+                reread = load('fresh_second_lifecycle', Path(local.__file__))
+                second = native.RendererNativeBackend(reread,state_path,'a'*40,reread.__file__).install()
+                self.assertEqual(reread._read_state(state_path)[1]['process'],state['process'])
+                self.assertEqual(second.tree(state['process'])[0],state['process'])
+            finally:
+                if process:
+                    process.stdin.close()
+                    self.assertEqual(process.wait(timeout=10),0)
+                    process.stdout.close();process._handle.Close()
+
     def test_precision_bridge_preserves_original_and_records_both_identities(self):
         precise = {**identity, 'creationDate': '2026-10-09T12:00:00.1234568Z'}
         api = Fake(observations={77: precise, 78: {**child, 'creationDate': '2026-10-09T12:00:00.1234569Z'}})
@@ -136,7 +234,9 @@ class SnapshotTests(unittest.TestCase):
         with subprocess.Popen([sys.executable, '-c', 'import sys; sys.stdin.buffer.read(1)'], stdin=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW) as process:
             try:
                 proof = native.Proof(lifecycle, api)
-                tree = proof.tree(root)
+                child_root = proof.identity(process.pid)
+                self.assertEqual(child_root['parentPid'], root['pid'])
+                tree = proof.tree(child_root)
                 self.assertIn(process.pid, [item['pid'] for item in tree])
                 recorded = [item for item in tree if item['pid'] == process.pid]
                 self.assertFalse(proof.absent(recorded))
