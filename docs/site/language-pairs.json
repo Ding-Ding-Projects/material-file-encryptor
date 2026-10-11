@@ -427,8 +427,8 @@
     {
       "source": "docs/features/interface/bundled-fonts.md",
       "translation": "docs/features/interface/bundled-fonts.zh-HK.md",
-      "sourceSha256": "a94803c086bafbca6b3fe308e17a34058c25b4d8ced6a8a8a047835c4b6fb504",
-      "translationSha256": "8adfcbe4f4b046d94c52a1c313113dddf996189ca92d7e0aa461f9b95375cff4"
+      "sourceSha256": "0ea46e75efabfad5624a5a62d632c7b22e8a92e24f93a7d170cb4c63928c8346",
+      "translationSha256": "a55ec6ad7b92d3ad8288fb46958bad658562d98580505d080497b55fa93588b0"
     },
     {
       "source": "docs/features/interface/typography-inspector.md",

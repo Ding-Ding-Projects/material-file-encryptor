@@ -47,7 +47,8 @@ export function renderMarkdown(markdown,source,routeMap,prefix='../') {
  flush();return output;
 }
 export function pageShell(home,title,body,{depth=0,search=true}={}) {
- const prefix=depth?'../':'./';
+ if(!Number.isInteger(depth)||depth<0||depth>8)throw Error('Unsupported publication route depth');
+ const prefix=depth?'../'.repeat(depth):'./';
  const header=home.match(/<header class="site-header">[\s\S]*?<\/header>/)[0];
  const footer=home.match(/<footer class="container site-footer">[\s\S]*?<\/footer>/)[0];
  const dialog=home.match(/<dialog id="preferences-dialog"[\s\S]*?<\/dialog>/)[0];
@@ -55,7 +56,7 @@ export function pageShell(home,title,body,{depth=0,search=true}={}) {
  const linkedNavigation=navigation.replace(/href="(library|wiki|gallery|workspace)\.html"/g,(_,name)=>`href="${prefix}${name}.html"`);
  const split=linkedNavigation.indexOf('<footer');
  const searchBox=`<div class="search-wrap publication-search" ${search?'':'hidden'}><label for="doc-search">Find in this page</label><div class="search-field"><input id="doc-search" type="search" maxlength="160" autocomplete="off"><button id="search-clear" type="button" aria-label="Clear documentation search" hidden>×</button></div><p id="search-status" class="small" role="status"></p></div>`;
- return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>${escapeHtml(title)} · Material File Encryptor</title><meta name="description" content="Complete product documentation and source-bound capture records."><link rel="icon" href="${prefix}favicon.svg"><link rel="stylesheet" href="${prefix}site.css"><script type="module" src="${prefix}site.js"></script></head><body><a class="skip-link" href="#main">Skip to content</a>${linkedNavigation.slice(0,split)}<main id="main" class="container publication"><nav class="publication-nav" aria-label="Documentation navigation"><a href="${prefix}index.html">Home</a><a href="${prefix}library.html">Documentation library</a><a href="${prefix}wiki.html">Wiki</a><a href="${prefix}gallery.html">Capture gallery</a></nav>${searchBox}${body}<p id="no-results" class="no-results" hidden>No entries match this search.</p></main>${linkedNavigation.slice(split)}${dialog}</body></html>`;
+ return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>${escapeHtml(title)} · Material File Encryptor</title><meta name="description" content="Complete product documentation and source-bound capture records."><link rel="icon" href="${prefix}favicon.svg"><link rel="stylesheet" href="${prefix}fonts/fonts.css"><link rel="stylesheet" href="${prefix}site.css"><script type="module" src="${prefix}site.js"></script></head><body><a class="skip-link" href="#main">Skip to content</a>${linkedNavigation.slice(0,split)}<main id="main" class="container publication"><nav class="publication-nav" aria-label="Documentation navigation"><a href="${prefix}index.html">Home</a><a href="${prefix}library.html">Documentation library</a><a href="${prefix}wiki.html">Wiki</a><a href="${prefix}gallery.html">Capture gallery</a></nav>${searchBox}${body}<p id="no-results" class="no-results" hidden>No entries match this search.</p></main>${linkedNavigation.slice(split)}${dialog}</body></html>`;
 }
 async function markdownFiles(directory) {
  const result=[];for(const entry of await fs.readdir(directory,{withFileTypes:true})){
