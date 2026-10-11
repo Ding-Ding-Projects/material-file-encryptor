@@ -34,6 +34,8 @@ internal static class Program
             return driver.GetProperty("available").GetBoolean() ? 0 : 1;
         }
         using var cancellation = new CancellationTokenSource();
+        controller.Status();
+        object previousSummary=controller.StatusSummary();
         Task background = Task.Run(async () =>
         {
             using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
@@ -41,13 +43,15 @@ internal static class Program
             {
                 while (await timer.WaitForNextTickAsync(cancellation.Token))
                 {
-                    try { controller.TickIfUnlocked(); Send(new { @event = "status", status = controller.Status() }); }
-                    catch { try { Send(new { @event = "status", status = controller.Status() }); } catch { } }
+                    try { controller.TickIfUnlocked();controller.Status(); } catch { }
+                    object summary=controller.StatusSummary();
+                    if(!ReferenceEquals(summary,previousSummary))
+                    {previousSummary=summary;Send(new { @event = "status", status = summary });}
                 }
             }
             catch (OperationCanceledException) { }
         });
-        Send(new { @event = "status", status = controller.Status() });
+        Send(new { @event = "status", status = previousSummary });
         var requests = new List<Task>();
         try
         {
