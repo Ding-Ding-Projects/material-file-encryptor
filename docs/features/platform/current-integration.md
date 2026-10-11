@@ -36,7 +36,7 @@ The current source review uses integrated baseline `b5b3096`. The applicability 
 
 ## How to read the delivery inventory
 
-`contracts/feature-delivery.json` has 104 stable IDs for desktop and site independently. Its 168 mapped rows identify product implementation or repository-support source work. Mapped rows do not imply completeness. Each referenced path is associated with an available reviewed commit in `referenceSources`. Ready revisions are stated in the review metadata rather than silently described as parent code.
+`contracts/feature-delivery.json` has 104 stable IDs for desktop and site independently. Its 180 mapped rows identify product implementation or repository-support source work. Twelve previously empty rows now reference confirmation, editor/download handoffs, publication-handoff preparation, automatic updates and instruction-currency checking at `e824003`. Publication-handoff preparation is partial support, not publication execution. Mapped rows do not imply completeness. Each referenced path is associated with an available reviewed commit in `referenceSources`. Ready revisions are stated in the review metadata rather than silently described as parent code.
 
 `implementation`, `documentation`, `localization`, `tests` and `persistence` are source pointers. A localization path does not certify complete translated copy; a persistence path does not certify every restart flow; a focused-test path does not say the suite was rerun during this inventory pass. Every `evidence` array remains empty, and every `builtInteraction` and `visualEvidence` value remains `unverified`. Nothing in this update marks a requirement complete.
 
@@ -46,7 +46,7 @@ The unmapped rows are retained explicitly. An empty mapping means this review di
 
 - Pure registered Material controls on every surface, full reference parity, complete language/style extremes, all scale/viewport combinations and current screenshots are not established.
 - Universal per-element context menus, protected-action wiring, guided forms, preset coverage, settings explanations and all-format export are not established for every element and workflow.
-- Advanced appearance capabilities still lack complete freehand drawing, independent raster groups, embedded smart objects, mesh warp, guides and verified isolated image decoding.
+- Advanced appearance capabilities still lack independent raster groups, embedded smart objects, mesh warp and verified isolated image decoding. Pointer drawing and guides exist in source; complete integrated acceptance remains unverified.
 - Cross-application shared settings, authenticated external schedule providers and complete native settings-history integration remain incomplete or unverified.
 - Waiting challenges remain local convenience behavior. Authoritative service-side challenge enforcement, all recovery flows and the complete production access matrix are not established.
 - Conversion support is limited to available adapters and the reviewed minimal media profile. Broader formats, arbitrary codecs and full installed-package conversion acceptance remain unavailable or unverified.
