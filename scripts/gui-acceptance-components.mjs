@@ -49,11 +49,12 @@ export async function runComponentAcceptance({evidenceRoot,runtime={}}) {
  const server=createServer((request,response)=>{if(request.url==='/'){response.setHeader('Content-Type','text/html');response.end(html);}else if(request.url==='/acceptance-components.js'){response.setHeader('Content-Type','text/javascript');response.end(script);}else void serveRendererFixture(request,response);});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  const url=`http://127.0.0.1:${server.address().port}/`;
- let browser,primaryError,closure;const result={schemaVersion:1,scope:'source-fixture',packagedAcceptance:false,nativeDriveAcceptance:false};
+ let browser,primaryError,closure;const result={schemaVersion:1,scope:'source-fixture',packagedAcceptance:false,nativeDriveAcceptance:false,browserErrors:[],failedResources:[]};
  try{
   browser=await openRendererBrowser(url,{evidenceRoot:path.join(evidenceRoot,'lifecycle'),runtime});
   const page=browser.page;await page.setViewportSize({width:1180,height:850});
-  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  const errors=result.browserErrors;page.on('pageerror',error=>errors.push(error.message));
+  page.on('response',response=>{if(response.status()>=400&&response.url().startsWith(url))result.failedResources.push({path:new URL(response.url()).pathname,status:response.status()});});
   await page.goto(url);await page.waitForFunction(()=>window.acceptanceReady&&customElements.get('md-menu')&&customElements.get('md-outlined-text-field'));
   result.menu=await assertMenuBehavior(page);
   result.filePicker=await assertFilePickerBehavior(page);

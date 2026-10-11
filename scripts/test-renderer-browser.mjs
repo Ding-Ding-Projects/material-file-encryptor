@@ -42,7 +42,7 @@ export async function serveRendererFixture(request,response,{sourceRoot=fileURLT
  const parts=pathname.split('/');
  if(parts.some(part=>part==='.'||part==='..')||pathname.includes('\\')||!/^\/[a-zA-Z0-9_./-]*$/.test(pathname)){response.writeHead(404).end();return;}
  const relative=pathname.slice(1);
- const mapped=relative.startsWith('shared/')?relative:`renderer/${relative||'index.html'}`;
+ const mapped=relative.startsWith('shared/')||relative.startsWith('renderer/')?relative:`renderer/${relative||'index.html'}`;
  if(!/\.(?:html|js|mjs|css|json|svg|png|woff2?)$/.test(mapped)){response.writeHead(404).end();return;}
  const filename=path.resolve(sourceRoot,mapped);
  const allowed=path.resolve(sourceRoot,mapped.startsWith('shared/')?'shared':'renderer');
