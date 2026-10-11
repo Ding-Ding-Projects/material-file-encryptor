@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "classification": "design-only",
+  "reference": "publication-reference.html",
+  "routeTemplate": "publication-reference.html?state={state}",
+  "verificationStatus": "unverified",
+  "states": [
+    "review",
+    "unavailable",
+    "authentication",
+    "publishing",
+    "partial",
+    "cancelled"
+  ],
+  "viewports": [
+    {
+      "width": 1180,
+      "height": 850
+    },
+    {
+      "width": 880,
+      "height": 650
+    },
+    {
+      "width": 380,
+      "height": 580
+    }
+  ],
+  "languages": [
+    "en",
+    "yue",
+    "bilingual"
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "scales": [
+    1,
+    1.25,
+    1.5,
+    2
+  ],
+  "popupStates": [
+    "checking",
+    "unpaired",
+    "pairing",
+    "paired",
+    "disconnecting",
+    "unavailable"
+  ],
+  "securityStates": [
+    "mismatched-exact-confirmation",
+    "changed-source",
+    "late-authentication-event",
+    "cancel-during-confirmation",
+    "cancel-during-publication",
+    "partial-external-result"
+  ],
+  "runtimeEvidence": null
+}
