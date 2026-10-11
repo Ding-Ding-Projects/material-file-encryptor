@@ -28,6 +28,13 @@ internal static class PackingTests
             first.Dispose();Assert(engine.PackingStatus.ActiveWriters==1,"First close lost retained writer");
         }
         engine.ProcessPackingQueueAsync().GetAwaiter().GetResult();Assert(Read(engine,"data").SequenceEqual(bytes),"Writer-close packing changed content");
+        using(var held=engine.AcquireWriterById(engine.GetInfo("data")!.EntryId))
+        {
+            engine.PackAsync("data",8192).GetAwaiter().GetResult();
+            engine.PackAsync("data",2048).GetAwaiter().GetResult();
+        }
+        engine.ProcessPackingQueueAsync().GetAwaiter().GetResult();
+        Assert(engine.GetInfo("data")!.PartSizeBytes==2048&&engine.PackingStatus.PendingFiles==0,"Superseded target survived a newer matching-cap request");
         using var snapshot=engine.AcquireReadSnapshot("data");
         engine.PackingTestPoint=point=>{if(point=="packed"){engine.PackingTestPoint=null;engine.WriteRange("data",0,new byte[]{123});engine.FlushLocalOnly();}};
         engine.PackAsync("data",4096).GetAwaiter().GetResult();

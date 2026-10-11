@@ -82,7 +82,7 @@ public sealed partial class VaultEngine
             try
             {
                 if(normalized is null||normalized=="")partSize=cap;
-                foreach(var pair in selected)if(!IsPacked(pair.Value,cap))packingQueue[pair.Value.Id]=cap;
+                foreach(var pair in selected)if(!IsPacked(pair.Value,cap)||packingQueue.ContainsKey(pair.Value.Id))packingQueue[pair.Value.Id]=cap;
                 SaveJournal();
             }
             catch{packingQueue=savedQueue;partSize=savedCap;throw;}
