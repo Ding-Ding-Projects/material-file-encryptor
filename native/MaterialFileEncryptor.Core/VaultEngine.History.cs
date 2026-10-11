@@ -47,13 +47,25 @@ public sealed partial class VaultEngine
     {
         lock(gate) { Check();var deleted=AllVersions().Where(v=>v.Deleted&&!hiddenBin.Contains(v.Id)).OrderByDescending(v=>v.Timestamp).ToArray();return deleted.Select(v=>VersionInfo(v) with {DescendantIds=v.Value.Directory?deleted.Where(child=>child.Id!=v.Id&&child.DeletionBatch!=v.DeletionBatch&&child.Ancestors.TryGetValue(v.Path,out var ancestorId)&&ancestorId==v.Value.Id).Select(child=>child.Id).ToArray():[]}).ToArray(); }
     }
-    public Task SaveVersionAsync(string? path=null,CancellationToken cancellationToken=default)
+    public async Task SaveVersionAsync(string? path=null,CancellationToken cancellationToken=default)
     {
-        lock(gate) { Check();cancellationToken.ThrowIfCancellationRequested();var selected=path==null?entries.ToArray():entries.Where(p=>p.Key.Equals(VaultPath.Normalize(path),StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(VaultPath.Normalize(path)+"/",StringComparison.OrdinalIgnoreCase)).ToArray();if(path!=null&&selected.Length==0)throw new FileNotFoundException();foreach(var pair in selected){CaptureVersion(pair.Key,pair.Value,false);versionDue.Remove(pair.Value.Id);}FlushLocal();Publish(cancellationToken);SaveJournal();return Task.CompletedTask; }
+        lock(gate) { Check();cancellationToken.ThrowIfCancellationRequested();var selected=path==null?entries.ToArray():entries.Where(p=>p.Key.Equals(VaultPath.Normalize(path),StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(VaultPath.Normalize(path)+"/",StringComparison.OrdinalIgnoreCase)).ToArray();if(path!=null&&selected.Length==0)throw new FileNotFoundException();foreach(var pair in selected){CaptureVersion(pair.Key,pair.Value,false);versionDue.Remove(pair.Value.Id);}FlushLocal(); }
+        await FlushAsync(cancellationToken).ConfigureAwait(false);
     }
-    public Task SaveDueVersionsAsync(DateTimeOffset now,CancellationToken cancellationToken=default)
+    public bool SaveDueVersionsLocal(DateTimeOffset now,CancellationToken cancellationToken=default)
     {
-        lock(gate) { Check();cancellationToken.ThrowIfCancellationRequested();var dueEntries=entries.Where(p=>versionDue.TryGetValue(p.Value.Id,out var due)&&due<=now).ToArray();if(dueEntries.Length==0)return Task.CompletedTask;foreach(var pair in dueEntries){cancellationToken.ThrowIfCancellationRequested();CaptureVersion(pair.Key,pair.Value,false);versionDue.Remove(pair.Value.Id);}FlushLocal();Publish(cancellationToken);SaveJournal();return Task.CompletedTask; }
+        lock(gate)
+        {
+            Check();cancellationToken.ThrowIfCancellationRequested();
+            var dueEntries=entries.Where(p=>versionDue.TryGetValue(p.Value.Id,out var due)&&due<=now).ToArray();
+            if(dueEntries.Length==0)return false;
+            foreach(var pair in dueEntries){cancellationToken.ThrowIfCancellationRequested();CaptureVersion(pair.Key,pair.Value,false);versionDue.Remove(pair.Value.Id);}
+            FlushLocal();return true;
+        }
+    }
+    public async Task SaveDueVersionsAsync(DateTimeOffset now,CancellationToken cancellationToken=default)
+    {
+        if(SaveDueVersionsLocal(now,cancellationToken))await FlushAsync(cancellationToken).ConfigureAwait(false);
     }
     private string Restore(StoredVersion version,bool restoreCurrent=false)
     {
@@ -73,19 +85,22 @@ public sealed partial class VaultEngine
         if(orphans.ContainsKey(restored.Id)||entries.Any(p=>!p.Key.Equals(path,StringComparison.OrdinalIgnoreCase)&&p.Value.Id==restored.Id))restored.Id=Guid.NewGuid().ToString("N");
         Touch(restored);entries[path]=restored;versionDue.Remove(restored.Id);CaptureVersion(path,restored,false);RecordActivity(restored.Id,"restore",path,version.Id);return path;
     }
-    public Task RestoreVersionAsync(string versionId,CancellationToken cancellationToken=default)
+    public async Task RestoreVersionAsync(string versionId,CancellationToken cancellationToken=default)
     {
-        lock(gate){Check();cancellationToken.ThrowIfCancellationRequested();var version=AllVersions().SingleOrDefault(v=>v.Id==versionId)??throw new FileNotFoundException("Version not found.");Restore(version,true);FlushLocal();Publish(cancellationToken);SaveJournal();return Task.CompletedTask;}
+        lock(gate){Check();cancellationToken.ThrowIfCancellationRequested();var version=AllVersions().SingleOrDefault(v=>v.Id==versionId)??throw new FileNotFoundException("Version not found.");Restore(version,true);FlushLocal();}
+        await FlushAsync(cancellationToken).ConfigureAwait(false);
     }
-    public Task RestoreDeletedAsync(IReadOnlyList<string> ids,CancellationToken cancellationToken=default)
+    public async Task RestoreDeletedAsync(IReadOnlyList<string> ids,CancellationToken cancellationToken=default)
     {
         lock(gate){Check();var all=AllVersions();var selected=all.Where(v=>v.Deleted&&!hiddenBin.Contains(v.Id)&&(ids.Contains(v.Id)||all.Any(root=>ids.Contains(root.Id)&&root.Deleted&&root.Value.Directory&&(root.DeletionBatch!=""&&v.DeletionBatch==root.DeletionBatch)&&v.Path.StartsWith(root.Path+"/",StringComparison.OrdinalIgnoreCase)))).OrderBy(v=>v.Path.Count(c=>c=='/')).ToArray();foreach(var selectedVersion in selected)foreach(var record in AllRecords(selectedVersion.Value)){cancellationToken.ThrowIfCancellationRequested();VerifyRecord(record,Math.Max(selectedVersion.Value.ChunkSize,selectedVersion.Value.OverlaySize),cancellationToken);}
             var oldEntries=CloneEntries(entries);var oldVersions=pendingVersions.ToList();var oldHidden=new HashSet<string>(hiddenBin);var oldPendingHidden=new HashSet<string>(pendingBinHidden);var oldDue=new Dictionary<string,DateTimeOffset>(versionDue);
-            try{var remapped=new List<(string Batch,string EntryId,string Path,string Restored)>();foreach(var v in selected){cancellationToken.ThrowIfCancellationRequested();var originalPath=v.Path;var copy=new StoredVersion {Id=v.Id,Path=v.Path,Value=v.Value,Timestamp=v.Timestamp,Deleted=v.Deleted};var parentMapping=remapped.Where(p=>(p.Batch==v.DeletionBatch||(v.Ancestors.TryGetValue(p.Path,out var parentId)&&parentId==p.EntryId))&&originalPath.StartsWith(p.Path+"/",StringComparison.OrdinalIgnoreCase)).OrderByDescending(p=>p.Path.Length).FirstOrDefault();if(parentMapping.Path!=null)copy.Path=parentMapping.Restored+originalPath[parentMapping.Path.Length..];var restoredPath=Restore(copy);if(v.Value.Directory)remapped.Add((v.DeletionBatch,v.Value.Id,originalPath,restoredPath));hiddenBin.Add(v.Id);pendingBinHidden.Add(v.Id);}}catch{entries=oldEntries;pendingVersions=oldVersions;hiddenBin=oldHidden;pendingBinHidden=oldPendingHidden;versionDue=oldDue;throw;}FlushLocal();Publish(cancellationToken);SaveJournal();return Task.CompletedTask;}
+            try{var remapped=new List<(string Batch,string EntryId,string Path,string Restored)>();foreach(var v in selected){cancellationToken.ThrowIfCancellationRequested();var originalPath=v.Path;var copy=new StoredVersion {Id=v.Id,Path=v.Path,Value=v.Value,Timestamp=v.Timestamp,Deleted=v.Deleted};var parentMapping=remapped.Where(p=>(p.Batch==v.DeletionBatch||(v.Ancestors.TryGetValue(p.Path,out var parentId)&&parentId==p.EntryId))&&originalPath.StartsWith(p.Path+"/",StringComparison.OrdinalIgnoreCase)).OrderByDescending(p=>p.Path.Length).FirstOrDefault();if(parentMapping.Path!=null)copy.Path=parentMapping.Restored+originalPath[parentMapping.Path.Length..];var restoredPath=Restore(copy);if(v.Value.Directory)remapped.Add((v.DeletionBatch,v.Value.Id,originalPath,restoredPath));hiddenBin.Add(v.Id);pendingBinHidden.Add(v.Id);}}catch{entries=oldEntries;pendingVersions=oldVersions;hiddenBin=oldHidden;pendingBinHidden=oldPendingHidden;versionDue=oldDue;throw;}FlushLocal();}
+        await FlushAsync(cancellationToken).ConfigureAwait(false);
     }
-    public Task EmptyRecycleBinAsync(CancellationToken cancellationToken=default)
+    public async Task EmptyRecycleBinAsync(CancellationToken cancellationToken=default)
     {
-        lock(gate){Check();cancellationToken.ThrowIfCancellationRequested();foreach(var v in AllVersions().Where(v=>v.Deleted)){hiddenBin.Add(v.Id);pendingBinHidden.Add(v.Id);}FlushLocal();Publish(cancellationToken);SaveJournal();return Task.CompletedTask;}
+        lock(gate){Check();cancellationToken.ThrowIfCancellationRequested();foreach(var v in AllVersions().Where(v=>v.Deleted)){hiddenBin.Add(v.Id);pendingBinHidden.Add(v.Id);}FlushLocal();}
+        await FlushAsync(cancellationToken).ConfigureAwait(false);
     }
     public Task<VaultEngine> CopyUpgradeAsync(VaultOptions destination,VaultCredentials credentials,CancellationToken cancellationToken=default)
     {
@@ -105,7 +120,7 @@ public sealed partial class VaultEngine
                 }
                 foreach(var pair in entries)target.entries[pair.Key]=ConvertEntry(pair.Value);
                 foreach(var version in AllVersions()){var copy=new StoredVersion {Id=version.Id,Path=version.Path,Value=ConvertEntry(version.Value),Timestamp=version.Timestamp,Deleted=version.Deleted,DeletionBatch=version.DeletionBatch,Ancestors=new(version.Ancestors)};target.pendingVersions.Add(copy);}
-                target.hiddenBin.UnionWith(hiddenBin);target.pendingBinHidden.UnionWith(hiddenBin);CopyActivityTo(target);target.FlushLocal();target.Publish(cancellationToken);
+                target.hiddenBin.UnionWith(hiddenBin);target.pendingBinHidden.UnionWith(hiddenBin);CopyActivityTo(target);target.FlushAsync(cancellationToken).GetAwaiter().GetResult();
                 if(target.pending.Count!=0)throw new IOException("Upgrade destination could not be published.");
                 foreach(var id in target.known){var commit=target.ReadMetadata<Commit>(target.ObjectPath(target.source,"commits",id),"commit",id);target.VerifyComplete(commit);foreach(var part in target.Parts(commit))target.VerifyPart(target.ObjectPath(target.source,"parts",part),part);}
                 target.SaveJournal();return Task.FromResult(target);

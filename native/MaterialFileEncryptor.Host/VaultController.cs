@@ -106,7 +106,8 @@ internal sealed partial class VaultController : IDisposable
             var snapshot = new
             {
                 locked = vault is null, mounted = host is not null, unmountBusy, driveLetter, storageDir, cacheDir, files, revision = vault?.Revision ?? -1, filesRevision = vault?.Revision ?? -1, historyRevision = revision, operations = operations.Snapshot(),
-                partSizeBytes = vault?.PartSizeBytes ?? 10L * 1024 * 1024, lastOfflineRelease, mountDiagnostic = cachedMountDiagnostic,
+                packing = PackingInfo(),
+                partSizeBytes = vault?.PartSizeBytes ?? 80L * 1024 * 1024, lastOfflineRelease, mountDiagnostic = cachedMountDiagnostic,
                 sync = new { running = syncing, lastSync, error = fileSystem?.LastError ?? syncError ?? (vault?.Status.LastError is null ? null : "Encrypted storage synchronization needs attention."), pendingCommits = vault?.Status.PendingCommits ?? 0, pendingLocalFrames = vault?.JournalStatistics.PendingFrames ?? 0, sourceAvailable = vault?.Status.IsSourceAvailable ?? false },
                 driver = cachedDriver ??= new
                 {
@@ -155,6 +156,8 @@ internal sealed partial class VaultController : IDisposable
         if (method == "startImport") return StartImport(args);
         if (method == "exportVersion") return ExportVersionFile(args);
         if (method == "startExport") return StartExport(args);
+        if (method == "startPacking") return StartPacking(args);
+        if (method == "storageDiagnostics") return StorageDiagnostics();
         if (method == "listFiles") return ListFiles(args);
         if (method == "statusSummary") return StatusSummary();
         if (method == "getFile")
@@ -168,9 +171,20 @@ internal sealed partial class VaultController : IDisposable
         }
         // Dispatcher stop waits for callbacks. It must run outside the callback gate.
         if (method is "lock" or "unmount") { Unmount(); if (method == "lock") LockEngine(); return Status(); }
+        if(method is "saveVersion" or "resplit")
+        {
+            VaultEngine captured;lock(gate){captured=Engine;++activePreparedOperations;}
+            try
+            {
+                if(method=="saveVersion")captured.SaveVersionAsync(OptionalString(args,"path")).GetAwaiter().GetResult();
+                else captured.ResplitAsync(RequiredString(args,"path"),RequiredLong(args,"partSizeBytes")).GetAwaiter().GetResult();
+                return Status();
+            }
+            finally{lock(gate)--activePreparedOperations;}
+        }
         if (method == "sync") { SyncIfUnlocked(); return Status(); }
         if (method == "importFiles") { Import(args); SyncIfUnlocked(); return Status(); }
-        if (method is "restoreVersion" or "restoreDeleted" or "keepOffline" or "resplit" or "previewVersion") return ExecutePrepared(method, args);
+        if (method is "restoreVersion" or "restoreDeleted" or "keepOffline" or "previewVersion") return ExecutePrepared(method, args);
         if (method == "copyUpgrade")
         {
             Unmount();
@@ -219,7 +233,7 @@ internal sealed partial class VaultController : IDisposable
                     Engine.SetPinnedAsync(releasedPath, false).GetAwaiter().GetResult();
                     lastOfflineRelease = new { path = releasedPath, bytesFreed = Engine.EvictEntryCache(releasedPath) };
                     break;
-                case "setPartSize": Engine.SetPartSize(RequiredLong(args, "partSizeBytes")); Engine.FlushAsync().GetAwaiter().GetResult(); break;
+                case "setPartSize": Engine.SetPartSize(RequiredLong(args, "partSizeBytes")); break;
 
                 case "forgetSavedCredential": Forget(args); break;
                 case "setAutoUnlock":
@@ -287,7 +301,7 @@ internal sealed partial class VaultController : IDisposable
         if (Volatile.Read(ref syncFlight) != 0) throw new InvalidOperationException("Previous synchronization is stopping. Wait before opening another vault.");
         string selectedTransport = OptionalString(args, "transport") ?? "folder";
         if (selectedTransport is not ("folder" or "privateGit")) throw new ArgumentException("Choose a supported transfer method.");
-        var options = new VaultOptions { StorageRoot = System.IO.Path.GetFullPath(RequiredString(args, "storageDir")), CacheRoot = System.IO.Path.GetFullPath(RequiredString(args, "cacheDir")), PartSizeBytes = OptionalLong(args, "partSizeBytes") ?? 10L * 1024 * 1024 };
+        var options = new VaultOptions { StorageRoot = System.IO.Path.GetFullPath(RequiredString(args, "storageDir")), CacheRoot = System.IO.Path.GetFullPath(RequiredString(args, "cacheDir")), PartSizeBytes = OptionalLong(args, "partSizeBytes") ?? 80L * 1024 * 1024 };
         string chosenDrive = ValidateDrive(OptionalString(args, "driveLetter") ?? driveLetter);
         string? selectedRepository = OptionalString(args, "remoteRepository");
         string historyIdentity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(options.StorageRoot.ToUpperInvariant() + "|" + selectedTransport + "|" + selectedRepository))).ToLowerInvariant();
@@ -377,7 +391,7 @@ internal sealed partial class VaultController : IDisposable
         {
             StorageRoot = System.IO.Path.GetFullPath(RequiredString(args, "storageDir")),
             CacheRoot = System.IO.Path.GetFullPath(RequiredString(args, "cacheDir")),
-            PartSizeBytes = OptionalLong(args, "partSizeBytes") ?? 10L * 1024 * 1024
+            PartSizeBytes = OptionalLong(args, "partSizeBytes") ?? 80L * 1024 * 1024
         };
         foreach (string target in new[] { destination.StorageRoot, destination.CacheRoot })
             foreach (string existing in new[] { storageDir!, cacheDir! })
@@ -450,8 +464,8 @@ internal sealed partial class VaultController : IDisposable
             if (operations.Outstanding != 0) throw new InvalidOperationException("A transfer is active. Cancel it or wait before locking.");
             if (activePreparedOperations > (completingPreparedOperation ? 1 : 0)) throw new InvalidOperationException("A vault operation is retrieving content. Wait before locking.");
             if (vault is null) return;
-            vault.SaveDueVersionsAsync(DateTimeOffset.MaxValue).GetAwaiter().GetResult();
-            vault.FlushAsync().GetAwaiter().GetResult();
+            vault.SaveDueVersionsLocal(DateTimeOffset.MaxValue);
+            vault.FlushLocalOnly();
             // Network work never owns the engine. Invalidate its captured identity
             // before disposal and retain durable local changes for the next sync.
             engineGeneration++; syncCancellation?.Cancel();
@@ -563,7 +577,8 @@ internal sealed partial class VaultController : IDisposable
             lock (gate)
             {
                 if (vault is null || activePreparedOperations != 0) return;
-                Engine.SaveDueVersionsAsync(DateTimeOffset.UtcNow).GetAwaiter().GetResult();
+                Engine.SaveDueVersionsLocal(DateTimeOffset.UtcNow);
+                Engine.ResumePacking();
                 synchronize=DateTimeOffset.UtcNow>=nextSyncAttempt;
             }
         }
@@ -571,6 +586,11 @@ internal sealed partial class VaultController : IDisposable
         // The queued worker must acquire admission again. Force lock may win
         // after the timer releases its reservation and before the task starts.
         if(synchronize)_ = Task.Run(() => { try { SyncIfUnlocked(); } catch { /* Status retains the safe synchronization error. */ } });
+    }
+    private object? PackingInfo()
+    {
+        if(vault is null)return null;var value=vault.PackingStatus;
+        return new {targetPartSizeBytes=value.TargetPartSizeBytes,pendingFiles=value.PendingFiles,activeWriters=value.ActiveWriters,running=value.Running,lastError=value.LastError};
     }
     private static object VersionInfo(VaultVersionInfo version) => new
     {

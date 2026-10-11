@@ -6,6 +6,10 @@ if (args.Length > 0 && args[0] == "--native-child-trace") { await NativeChildTra
 if (args.Length == 2 && args[0] == "--native-trace-child") { await NativeChildTraceTests.ChildAsync(args[1]); return 0; }
 
 var cases = new (string,Action)[] {
+    ("packing writer admissions, snapshots and namespace races",PackingTests.Races),
+    ("packing cancellation and checkpoint durability",PackingTests.Durability),
+    ("packing publication stalls and exact acknowledgement",PackingTests.Publication),
+    ("packing dense 80 MiB physical caps and bounded records",PackingTests.Dense),
     ("encrypted activity snapshots, paging, tamper refusal and upgrade",ActivityTests.Run),
     ("hydration runs outside core and callback locks before atomic mutation",HydrationConcurrency),
     ("independent earlier deletion requires explicit selection",ExplicitDescendants),

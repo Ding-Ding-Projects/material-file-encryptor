@@ -195,7 +195,7 @@ internal sealed class VaultFileSystem : FileSystemBase
             if (entry.IsDirectory && (options & FILE_NON_DIRECTORY_FILE) != 0) return STATUS_FILE_IS_A_DIRECTORY;
             if (!entry.IsDirectory && (options & FILE_DIRECTORY_FILE) != 0) return STATUS_NOT_A_DIRECTORY;
             node = NodeFor(entry);
-            fileDesc = new Handle(vault.AcquireOpenById(entry.EntryId));
+            fileDesc = new Handle((access & (0x00000002u|0x00000004u|0x40000000u|0x10000000u))!=0 ? vault.AcquireWriterById(entry.EntryId) : vault.AcquireOpenById(entry.EntryId));
             ++activeHandles;
             info = ToInfo(entry);
             normalizedName = "\\" + entry.Path.Replace('/', '\\');

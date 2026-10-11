@@ -11,6 +11,8 @@ internal sealed class TransferOperationRegistry
         public readonly string Id = id;
         public readonly CancellationTokenSource Cancellation = new();
         public string State = "queued";
+        public string Kind = "import";
+        public string Phase = "queued";
         public long Bytes, TotalBytes;
         public int CompletedFiles, TotalFiles;
         public string? Error;
@@ -24,7 +26,8 @@ internal sealed class TransferOperationRegistry
     private readonly SemaphoreSlim worker = new(1, 1);
     private int outstanding;
     public int Outstanding { get { lock (gate) return outstanding; } }
-    public object Start(string[] paths, Func<string[], CancellationToken, Action<long, long, int, int>, Task> run)
+    public object Start(string[] paths, Func<string[], CancellationToken, Action<long, long, int, int>, Task> run,string kind="import") => StartWithPhases(paths,kind,(selected,cancellation,progress,phase)=>run(selected,cancellation,progress));
+    public object StartWithPhases(string[] paths,string kind,Func<string[],CancellationToken,Action<long,long,int,int>,Action<string>,Task> run)
     {
         Operation item;
         lock (gate)
@@ -38,7 +41,7 @@ internal sealed class TransferOperationRegistry
                 for (int index = 0; index < count; ++index) { string retained = order.Dequeue(); if (retained != old) order.Enqueue(retained); }
                 entries[old].Cancellation.Dispose(); entries.Remove(old);
             }
-            item = new Operation(Guid.NewGuid().ToString("N")) { TotalFiles = paths.Length };
+            item = new Operation(Guid.NewGuid().ToString("N")) { TotalFiles = paths.Length, Kind=kind };
             entries.Add(item.Id, item); order.Enqueue(item.Id); ++outstanding;
         }
         Task turn = worker.WaitAsync(item.Cancellation.Token);
@@ -48,14 +51,14 @@ internal sealed class TransferOperationRegistry
             try
             {
                 await turn; entered = true;
-                lock (gate) item.State = "running";
+                lock (gate) {item.State = "running";item.Phase=item.Kind=="packing"?"packing":"staging";}
                 await run(paths, item.Cancellation.Token, (bytes, total, complete, count) =>
                 {
                     lock (gate) { item.Bytes = bytes; item.TotalBytes = total; item.CompletedFiles = complete; item.TotalFiles = count; }
-                });
+                },phase=>{lock(gate)item.Phase=phase;});
                 // Commit wins the cancellation race. A late request never relabels
                 // already installed output as discarded.
-                lock (gate) item.State = "completed";
+                lock (gate) {item.State = "completed";item.Phase="completed";}
             }
             catch (OperationCanceledException) when (item.Cancellation.IsCancellationRequested)
             { lock (gate) item.State = "cancelled"; }
@@ -78,7 +81,7 @@ internal sealed class TransferOperationRegistry
     public object Snapshot()
     {
         lock (gate) return order.Select(id => entries[id]).Select(item => new
-        { operationId = item.Id, state = item.State, bytesCompleted = item.Bytes, totalBytes = item.TotalBytes,
+        { operationId = item.Id, kind=item.Kind,phase=item.Phase, state = item.State, bytesCompleted = item.Bytes, totalBytes = item.TotalBytes,
           completedFiles = item.CompletedFiles, totalFiles = item.TotalFiles, error = item.Error, errorCode = item.ErrorCode, errorPhase = item.ErrorPhase, storageStage = item.StorageStage }).ToArray();
     }
     internal static string? GetStorageStage(Exception error)

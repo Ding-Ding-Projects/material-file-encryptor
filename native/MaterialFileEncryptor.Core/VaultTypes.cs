@@ -5,7 +5,7 @@ public sealed class VaultOptions
 {
     public required string StorageRoot { get; init; }
     public required string CacheRoot { get; init; }
-    public long PartSizeBytes { get; init; } = 10 * 1024 * 1024;
+    public long PartSizeBytes { get; init; } = 80 * 1024 * 1024;
     public string? DeviceId { get; init; }
 }
 public sealed class VaultCredentials : IDisposable
@@ -79,6 +79,7 @@ internal sealed class Journal
     public long LogSequence { get; set; }
     public string LogDigest { get; set; } = "";
     public long PartSize { get; set; }
+    public Dictionary<string,long> PackingQueue { get; set; } = [];
     public Dictionary<string, DateTimeOffset> VersionDue { get; set; } = [];
     public List<StoredVersion> PendingVersions { get; set; } = [];
     public HashSet<string> HiddenBin { get; set; } = [];
@@ -103,4 +104,9 @@ internal sealed class JournalMutation
     public long? TruncateOverlayAt { get; set; }
     public StoredVersion? Version { get; set; }
     public DateTimeOffset? Due { get; set; }
+    public long? PackingCap { get; set; }
 }
+
+public sealed record VaultPackingProgress(string Phase,long BytesCompleted,long TotalBytes,int CompletedFiles,int TotalFiles);
+public sealed record VaultPackingStatus(long TargetPartSizeBytes,int PendingFiles,int ActiveWriters,bool Running,string? LastError);
+public sealed record VaultStorageDiagnostics(long TargetPartSizeBytes,int PendingPackingFiles,int ActiveWriters,bool PackingRunning,string? PackingError,int CurrentReferencedParts,long CurrentReferencedBytes,int HistoricalOnlyParts,long HistoricalOnlyBytes,int TemporaryFiles,long TemporaryBytes);
