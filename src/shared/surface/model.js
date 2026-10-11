@@ -41,7 +41,8 @@ export function buildPattern(tokens = [], { anchorStart = false, anchorEnd = fal
 }
 
 export function createSurfaceModel({ storage, storageKey = 'surface-state', tabs = [] } = {}) {
-  const sanitizeTab = tab => ({ id: text(tab.id, 128), label: text(tab.label), group: text(tab.group, 128), pinned: tab.pinned === true });
+  const canonicalTabs = new Map();
+  const sanitizeTab = tab => ({ id: text(tab.id, 128), label: canonicalTabs.get(tab.id) ?? text(tab.label), group: text(tab.group, 128), pinned: tab.pinned === true });
   const uniqueTabs = values => {
     const seen = new Set();
     return values.filter(tab => tab && typeof tab.id === 'string' && tab.id && tab.id.length <= 128 && !seen.has(tab.id) && seen.add(tab.id)).slice(0, 100).map(sanitizeTab);
@@ -50,7 +51,7 @@ export function createSurfaceModel({ storage, storageKey = 'surface-state', tabs
   const sanitizeNotification = item => ({ id: item.id, title: notificationText(item.title, 256), message: notificationText(item.message, 4096), level: ['info', 'success', 'warning', 'error'].includes(item.level) ? item.level : 'info', read: item.read === true, createdAt: new Date(item.createdAt).toISOString() });
   const defaults = uniqueTabs(tabs);
   if (!defaults.length) defaults.push({ id: 'home', label: 'Home', group: '', pinned: false });
-  let state = { version: VERSION, tabs: defaults, activeTabId: defaults[0].id, closedTabs: [], closedTabIds: [], groups: [], notifications: [] };
+  let state = { notificationFormat: 2, droppedLegacyNotifications: 0, version: VERSION, tabs: defaults, activeTabId: defaults[0].id, closedTabs: [], closedTabIds: [], groups: [], notifications: [] };
   try {
     const raw = storage?.getItem(storageKey);
     if (raw && raw.length <= 2097152) {
@@ -65,7 +66,8 @@ export function createSurfaceModel({ storage, storageKey = 'surface-state', tabs
           const groupIds = new Set();
           state.groups = (Array.isArray(saved.groups) ? saved.groups : []).filter(group => group && validId(group.id) && !groupIds.has(group.id) && groupIds.add(group.id)).slice(0, 100).map(group => ({ id: group.id, label: text(group.label), collapsed: group.collapsed === true }));
           const notificationIds = new Set();
-          state.notifications = (Array.isArray(saved.notifications) ? saved.notifications : []).filter(item => item && validId(item.id) && typeof item.createdAt === 'string' && Number.isFinite(Date.parse(item.createdAt)) && !notificationIds.has(item.id) && notificationIds.add(item.id)).slice(-200).map(sanitizeNotification);
+          state.droppedLegacyNotifications = saved.notificationFormat === 2 ? 0 : (Array.isArray(saved.notifications) ? saved.notifications.length : 0);
+          state.notifications = (saved.notificationFormat === 2 && Array.isArray(saved.notifications) ? saved.notifications : []).filter(item => item && validId(item.id) && typeof item.createdAt === 'string' && Number.isFinite(Date.parse(item.createdAt)) && !notificationIds.has(item.id) && notificationIds.add(item.id)).slice(-200).map(sanitizeNotification);
         }
       }
     }
@@ -80,6 +82,8 @@ export function createSurfaceModel({ storage, storageKey = 'surface-state', tabs
   const persist = () => {
     try { storage?.setItem(storageKey, JSON.stringify(state)); } catch { /* State remains usable when storage is full. */ }
   };
+  // Persist the format migration before a caller can add a new canonical record.
+  persist();
   const tabById = id => state.tabs.find(tab => tab.id === id);
   const ensureGroup = id => {
     if (!id || state.groups.some(group => group.id === id)) return true;
@@ -102,6 +106,12 @@ export function createSurfaceModel({ storage, storageKey = 'surface-state', tabs
   };
   return {
     getState: () => copy(state),
+    registerCanonicalTab(id,label) {
+      if(!validId(id)||typeof label!=='string')return false;
+      const canonical=text(label);canonicalTabs.set(id,canonical);
+      for(const tab of [...state.tabs,...state.closedTabs])if(tab.id===id)tab.label=canonical;
+      persist();return true;
+    },
     openTab(tab) {
       if (!tab || typeof tab.id !== 'string' || !tab.id || tab.id.length > 128) return null;
       if (!tabById(tab.id)) {

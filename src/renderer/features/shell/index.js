@@ -7,7 +7,7 @@ import '../../../shared/surface/notification-center.js';
 import {shouldOpenRegisteredView} from '../../../shared/surface/view-registration.js';
 
 /** Mounts reusable chrome without mutating host content or acquiring host capabilities. */
-export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport}={}) {
+export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport,renderText=value=>value}={}) {
   if(!(host instanceof HTMLElement))throw new TypeError('A host element is required');
   tabs=[...tabs];
   const model=createSurfaceModel({storage,storageKey:'mfe.surface.tabs.v1',tabs:tabs.map(tab=>({...tab,label:localized(tab.label,'en')}))});
@@ -28,7 +28,7 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
     shell.configure({model,language:activeLanguage,labels,onActivate:showView,onContext:options=>context.open(options)});
     build.language=activeLanguage;build.value=provenance;
     palette.language=activeLanguage;palette.render();palette.setCommands([...tabs.map(tab=>({id:`view:${tab.id}`,label:labels.get(tab.id),run:()=>{model.openTab({id:tab.id,label:localized(labels.get(tab.id),'en')});shell.activate(tab.id);}})),...hostCommands]);
-    notifications.configure({model,language:activeLanguage,onExport});
+    notifications.configure({model,language:activeLanguage,onExport,renderText});
     const sheet=new CSSStyleSheet();sheet.replaceSync(':host{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}');toolbar.shadowRoot.adoptedStyleSheets=[sheet];
     toolbar.shadowRoot.replaceChildren(element('md-outlined-button',{text:localized(text('Commands · Ctrl+Shift+F','指令 · Ctrl+Shift+F'),activeLanguage),onclick:()=>palette.open()}),element('md-outlined-button',{text:localized(text('Notifications','通知'),activeLanguage),onclick:()=>{notifications.hidden=!notifications.hidden;}}));
   };
@@ -42,7 +42,7 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
   };
   document.addEventListener('keydown',keydown);
   const api={model,shell,palette,notifications,
-    notify(input){const id=model.addNotification(input);notifications.renderEntries();live.textContent=`${input.title}: ${input.message||''}`;clearTimeout(messageTimer);messageTimer=setTimeout(()=>{live.textContent='';},8000);return id;},
+    notify(input){const id=model.addNotification(input);notifications.renderEntries();live.textContent=`${renderText(input.title)}: ${renderText(input.message||'')}`;clearTimeout(messageTimer);messageTimer=setTimeout(()=>{live.textContent='';},8000);return id;},
     setLanguage(value){activeLanguage=['en','yue','bilingual'].includes(value)?value:'en';configure();},
     setProvenance(value){provenance=value;build.value=value;},
     registerCommands(value){hostCommands=[...hostCommands,...value];configure();},
