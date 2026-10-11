@@ -66,6 +66,38 @@ class Fake:
 
 
 class SnapshotTests(unittest.TestCase):
+    def test_membership_retry_requires_all_endpoint_and_identity_bookends(self):
+        state = {'process': identity, 'cdp': {'port': 49150, 'expectedUrl': 'http://127.0.0.1:49151/'}}
+        for mode in ('membership', 'shared-identity', 'target', 'owner', 'root'):
+            api = Fake()
+            trees = [[identity, child], [identity], [identity, child]]
+            if mode == 'shared-identity':
+                trees[2] = [identity, {**child, 'creationDate': '2026-10-09T12:00:00.1234570Z'}]
+            counts = {'tree': 0, 'tcp': 0, 'fetch': 0}
+            def tree(root):
+                value = trees[counts['tree']]
+                counts['tree'] += 1
+                return value
+            backend = SimpleNamespace(path='fixture', read=lambda path: ('fixture', state), tree=tree, proof=native.Proof(lifecycle, api))
+            def run(*args, **kwargs):
+                counts['tcp'] += 1
+                owner = 999 if mode == 'owner' and counts['tcp'] > 1 else 77
+                return SimpleNamespace(stdout=f'TCP 127.0.0.1:49150 0.0.0.0:0 LISTENING {owner}')
+            def fetch(endpoint):
+                counts['fetch'] += 1
+                target_id = 'changed' if mode == 'target' and counts['fetch'] > 1 else 'fixture'
+                if mode == 'root' and counts['fetch'] > 1:
+                    api.observations[77] = {**identity, 'creationDate': '2026-10-09T12:00:00.1234570Z'}
+                return json.dumps([{'id': target_id, 'type': 'page', 'url': state['cdp']['expectedUrl'], 'webSocketDebuggerUrl': 'ws://127.0.0.1:49150/devtools/page/' + target_id}]).encode()
+            with self.subTest(mode=mode), self.assertRaises(native.SnapshotError) as caught:
+                native.prove_renderer_target(backend, run=run, fetch=fetch)
+            if mode == 'membership':
+                self.assertIsInstance(caught.exception, native.DescendantMembershipChanged)
+                self.assertEqual(counts, {'tree': 3, 'tcp': 3, 'fetch': 2})
+                self.assertEqual(caught.exception.evidence['final'], trees[2])
+            else:
+                self.assertNotIsInstance(caught.exception, native.DescendantMembershipChanged)
+
     def test_target_fetch_and_connect_races_reject_matching_url(self):
         client = {**identity, 'pid':99, 'parentPid':1, 'executablePath':'C:/owned/client.exe'}
         api = Fake(rows={77:1,99:1},observations={77:identity,99:client})

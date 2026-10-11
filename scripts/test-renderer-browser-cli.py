@@ -125,6 +125,13 @@ if len(sys.argv) == 3 and sys.argv[1] == 'bind-client':
         result = {'ok': True, 'client_ok': True, 'clientBinding': binding, 'clientLaunchChain': chain}
     print(json.dumps(result))
     raise SystemExit(0)
+def target_proof(**kwargs):
+    try:
+        return snapshot_module.prove_renderer_target(native_backend, **kwargs)
+    except snapshot_module.DescendantMembershipChanged as error:
+        print(json.dumps({'ok': False, 'client_ok': False, 'code': error.code, 'error': str(error), 'evidence': error.evidence}))
+        raise SystemExit(1)
+
 if len(sys.argv) == 3 and sys.argv[1] == 'prove-cdp':
     if native_backend is None:
         raise SystemExit('Native renderer target proof requires its explicit backend.')
@@ -145,12 +152,12 @@ if len(sys.argv) == 3 and sys.argv[1] == 'prove-cdp':
         if not request.get('clientBinding'):
             raise SystemExit('Connected renderer requires pinned actual client ancestry.')
         with recovery.owning_client(client_pid, request['clientBinding']) as (binding, chain):
-            result = snapshot_module.prove_renderer_target(native_backend, client_pid=client_pid, target_id=target_id)
+            result = target_proof(client_pid=client_pid, target_id=target_id)
             if result['clientIdentity'] != binding['clientIdentity']:
                 raise SystemExit('Connected renderer socket client differs from held ancestry.')
             result['clientLaunchChain'] = chain
     else:
-        result = snapshot_module.prove_renderer_target(native_backend)
+        result = target_proof()
     print(json.dumps(result))
     raise SystemExit(0)
 if len(sys.argv) == 3 and sys.argv[1] in ['prepare-exit', 'confirm-exit']:
