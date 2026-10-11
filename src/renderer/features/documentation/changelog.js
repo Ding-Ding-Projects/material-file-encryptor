@@ -1,4 +1,4 @@
-import {control, connectSelectSearch} from '../../../shared/surface/controls.js';
+import {control, connectSelectSearch, setControlLanguage} from '../../../shared/surface/controls.js';
 import {renderMarkdown} from './markdown.js';
 import { createScopedSearch } from '../../scoped-search.js';
 
@@ -6,7 +6,7 @@ export function filterChanges(entries, { from = '', to = '', category = '' } = {
   return entries.filter(entry => (!from || (entry.date && entry.date >= from)) && (!to || (entry.date && entry.date <= to)) && (!category || entry.category === category));
 }
 export function mountChangelog(host, { entries = [], translate = value => value, onExport, language = 'en' } = {}) {
-  host.replaceChildren(); let generation = 0, selected = [], disposed = false;
+  host.replaceChildren();setControlLanguage(host,language); let generation = 0, selected = [], disposed = false;
   const searchHost = document.createElement('div'), controls = document.createElement('div'), content = document.createElement('div');
   const date = label => { const wrap = document.createElement('label'), input = control('input', {type:'date',label:translate(label),'aria-label':translate(label)}); wrap.textContent = translate(label); input.type = 'date'; wrap.append(input); controls.append(wrap); return input; };
   const from = date('From date'), to = date('To date');
@@ -33,5 +33,5 @@ export function mountChangelog(host, { entries = [], translate = value => value,
     if (onExport) return onExport(data);
     const url = URL.createObjectURL(new Blob([data.text], { type: data.mime })); const link = document.createElement('a'); link.href = url; link.download = data.name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
-  render(); return { refresh: render, destroy() { disposed = true; generation++; stopSelectSearch(); search.destroy(); host.replaceChildren(); } };
+  render(); return { setLanguage(value){language=value;for(const [field,label]of [[from,'From date'],[to,'To date']]){field.label=translate(label);field.setAttribute('aria-label',translate(label));if(field.parentNode?.firstChild?.nodeType===3)field.parentNode.firstChild.nodeValue=translate(label);}category.setAttribute('aria-label',translate('Category'));exportButton.textContent=translate('Export filtered changes');setControlLanguage(host,language);}, refresh: render, destroy() { disposed = true; generation++; stopSelectSearch(); search.destroy(); host.replaceChildren(); } };
 }
