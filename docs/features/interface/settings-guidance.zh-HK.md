@@ -997,6 +997,12 @@
 
 ## 語義 Material 欄位轉接
 
-共用工廠使用已註冊 md-outlined-text-field 處理文字、密碼、URL 同數值，md-checkbox 處理核取值。文字欄位使用元件標籤，唔重複顯示外部標籤；核取方塊保留關聯可見標籤。明確語義種類清單將 select、date、time、range、color、file 同 search 保留為本次未完成原生控制。日期／時間唔會當成不支援 Material 文字欄位類型傳入。
+共用工廠使用已註冊 md-outlined-text-field 處理文字、密碼、URL 同數值，md-checkbox 處理核取值。文字欄位使用元件標籤，唔重複顯示外部標籤；核取方塊保留關聯可見標籤。明確語義種類清單將 date、time、color、file 同 search 保留為本次未完成原生控制。日期／時間唔會當成不支援 Material 文字欄位類型傳入。
 
 轉接保留原有 change consumer promise。直接同指引操作共用原始 consumer，執行前再核對停用／唯讀／生命週期、遵守取消並保留拒絕。清除使用原事件同等待 promise，拒絕時還原並恢復焦點。語義說明正確描述核取同密碼，唔讀秘密值；密碼預設／說明輸出會遮蔽。重設、排程、儲存同檔案選擇權限來源不變。真正元件可存取性、驗證顯示同像素仍須新建產物驗證。
+
+## Material 選單同滑桿後續
+
+選單使用已註冊 md-outlined-select 同 md-select-option，明確提供本地化標籤同原始語義值。範圍控制使用 md-slider，保留數值同原有 min／max／step。選單使用元件標籤，滑桿保留關聯可見標籤。原 change consumer 仍係唯一修改來源，即使供應商 change 事件唔可以取消，執行時仍核對停用／唯讀／釋放／連接。說明讀取實際選項文字同滑桿限制。日期／時間／顏色／檔案／搜尋同巢狀編輯器控制仍未完成。
+
+原始畫面操作會開真正 Material 選單再點擊提供嘅選項，唔直接指定數值；歷史原生控制保留 selectOption 路線。修改後仍須重新取得目前控制同觀察主題。來源同注入 consumer 唔證明真正選單鍵盤／可存取性、數值手勢精度或者像素。
