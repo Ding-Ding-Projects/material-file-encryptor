@@ -16,12 +16,12 @@ export function resolveTargetImageLayers(model,id,active) {
  const selected=Object.keys(states).filter(name=>name!=='normal'&&active.has(name)).at(-1)||'normal';
  return resolve(selected);
 }
-export function createImageStateController(root,onChange,{MutationObserverClass=root.ownerDocument?.defaultView?.MutationObserver||globalThis.MutationObserver}={}) {
+export function createImageStateController(root,onChange,{MutationObserverClass=root.ownerDocument?.defaultView?.MutationObserver||globalThis.MutationObserver,discoverTargets}={}) {
  const targets=new Map(),pressed=new Set(),dragged=new Set(),doc=root.ownerDocument||root,view=doc.defaultView;let disposed=false,queued=false;
  const contains=(parent,child)=>parent===child||!!parent.contains?.(child)||(()=>{for(let n=child;n;n=n.parentElement)if(n===parent)return true;return false;})();
  const states=target=>targetImageStates(target,{pressed:pressed.has(target),dragged:dragged.has(target)});
  const signature=target=>[...states(target)].join('|');
- const flush=()=>{queued=false;if(disposed)return;let changed=false;for(const [target,previous]of targets){if(!target.isConnected||!contains(root,target)){targets.delete(target);pressed.delete(target);dragged.delete(target);changed=true;}else{const next=signature(target);if(next!==previous){targets.set(target,next);changed=true;}}}if(changed)onChange();};
+ const flush=()=>{queued=false;if(disposed)return;let changed=false;if(discoverTargets)for(const target of discoverTargets()){if(target.isConnected&&contains(root,target)&&!targets.has(target)){targets.set(target,signature(target));changed=true;}}for(const [target,previous]of targets){if(!target.isConnected||!contains(root,target)){targets.delete(target);pressed.delete(target);dragged.delete(target);changed=true;}else{const next=signature(target);if(next!==previous){targets.set(target,next);changed=true;}}}if(changed)onChange();};
  const schedule=()=>{if(!disposed&&!queued){queued=true;queueMicrotask(flush);}};
  const event=event=>{
   if(event.type==='pointerdown'||event.type==='keydown'&&[' ','Enter'].includes(event.key)&&!event.repeat){for(const target of targets.keys())if(contains(target,event.target)&&!states(target).has('disabled'))pressed.add(target);}

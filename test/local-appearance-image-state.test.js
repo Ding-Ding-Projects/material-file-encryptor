@@ -54,6 +54,13 @@ test('mounted appearance editor applies live state to one target and destroys it
   f.a.pseudos.add(':hover');f.dispatch({type:'pointerover',target:f.a});await tick();
   assert.deepEqual(f.doc.body.querySelectorAll('image').map(node=>node.parentElement.parentElement.getAttribute('transform')),['translate(10 0) translate(50 50) rotate(0) skewX(0) skewY(0) scale(1 1) translate(-50 -50)','translate(0 0) translate(50 50) rotate(0) skewX(0) skewY(0) scale(1 1) translate(-50 -50)']);
   f.a.remove();f.mutate();await tick();assert.deepEqual(f.doc.body.querySelectorAll('image').map(node=>node.parentElement.parentElement.getAttribute('transform')),['translate(0 0) translate(50 50) rotate(0) skewX(0) skewY(0) scale(1 1) translate(-50 -50)']);
+  f.root.append(f.a);f.mutate();await tick();assert.equal(f.doc.body.querySelectorAll('image').length,2,'reattachment automatically restores the overlay');
+  const added=f.doc.createElement('button');added.id='a';f.root.append(added);f.mutate();await tick();assert.equal(f.doc.body.querySelectorAll('image').length,3,'new matching target automatically receives its image');
+  const stable=[...f.doc.body.querySelectorAll('image')];
+  // Repeated observer deliveries caused by our generated SVG/defs must settle,
+  // rather than replace overlays again and cause an unbounded mutation cycle.
+  for(let i=0;i<20;i++){f.mutate();await tick();}
+  assert.deepEqual(f.doc.body.querySelectorAll('image'),stable,'owned rendering mutations do not repaint an unchanged target topology');
   editor.destroy();editor=null;f.b.pseudos.add(':hover');f.dispatch({type:'pointerover',target:f.b});await tick();assert.equal(f.doc.body.querySelectorAll('image').length,0);assert.equal(f.disconnected,true);
  }finally{editor?.destroy();for(const [key,value]of Object.entries(previous)){if(value===undefined)delete globalThis[key];else globalThis[key]=value;}}
 });
