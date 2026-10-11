@@ -1,3 +1,9 @@
+# Generated-route font linkage, 2026-10-11 UTC
+
+Reviewed candidate6c914f0a863c3f43a94ef9d518e8a91851d3b2cf extends the local stylesheet link to generated library/wiki/gallery/article/category shells. Every actual current caller uses depth0 or1; bounded0..8 URL resolution and missing/external-link negatives passed. Local staged fonts, source/privacy/wiki projections and CSP are unchanged. Initial linkage now covers home, desktop and generated documentation shells at source level.
+
+Next: verify this exact live deployment and its local font assets, capture genuine current navigation/Appearance light/dark and inspect concise captions, registered actions and FontFaceSet. Actual font decoding/glyph identity, full matrix, remaining native fields/selects/public-shell controls and original installed lifecycle stay unfinished.
+
 # Declarative initial fonts and concise navigation, 2026-10-11 UTC
 
 Reviewed caption candidatee9b42 is integrated in main3bee78a: navigation alone uses localized concise visible labels with full accessible action/target names. Reviewed font candidate12e33 now links the existing local font stylesheet before modules in the website home and desktop initial entries. Exact staging/path/CSP/loader checks passed independently; async metadata receipt validation and selection authority remain unchanged. The unchanged publisher literal was narrowly classified against baseline rather than hidden by a blanket scan claim.

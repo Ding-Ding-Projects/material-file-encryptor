@@ -1,6 +1,7 @@
 - [x] Integrate reviewed concise localized navigation-caption source, preserving full accessible names.
 - [x] Independently review declarative local font linkage for website home and desktop initial entries. Source only.
-- [ ] Add initial font linkage to generated article/category/wiki routes and inspect fresh font/caption/action pixels.
+- [x] Independently review and integrate generated article/category/wiki initial font linkage with actual route-output negatives. Source only.
+- [ ] Verify current live assets and inspect fresh font/caption/action pixels.
 
 - [x] Independently review genuine registered shared action buttons and original-operation/lifetime consumers. Source acceptance only.
 - [x] Verify genuine source2f59 Appearance light-to-dark interaction and palette tuple.
