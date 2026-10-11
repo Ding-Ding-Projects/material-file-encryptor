@@ -2,13 +2,16 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID, scrypt as scryptCallback, timingSafeEqual, randomBytes } from 'node:crypto';
 import { promisify } from 'node:util';
+import { execFile } from 'node:child_process';
 import { createStatusHubClient } from '../status-hub/status-hub-client.mjs';
 import { collectWorktrees } from '../status-hub/worktree-inventory.mjs';
 import { createApplicationStatus } from '../features/documentation/status-service.mjs';
 const scrypt=promisify(scryptCallback);
+const executeFile=promisify(execFile);
 const object=value=>value&&typeof value==='object'&&!Array.isArray(value);
 const encoded=value=>JSON.stringify(value);
-const keyPattern=/^(?:(?:profile:|lock:|element-lock:|authenticator:|history:|shared:|grant:)[a-zA-Z0-9:_.-]{1,160}|local-profile:v1)$/;
+const keyPattern=/^(?:(?:profile:|lock:|authenticator:|history:|shared:|grant:)[a-zA-Z0-9:_.-]{1,160}|element-lock:[^\x00-\x1f\x7f]{1,256}|local-profile:v1)$/;
+const rendererCredentialKey=key=>typeof key==='string'&&/^(?:local-profile:v1|element-lock:|authenticator:|history:)/.test(key)&&keyPattern.test(key);
 const secretKey=/^(?:password|pin|secret|token|credential|credentials|vocabulary|replacements|entries)$/i;
 function bounded(value,limit=262144){const text=encoded(value);if(typeof text!=='string'||Buffer.byteLength(text)>limit)throw Error('Request exceeds its size limit.');function visit(v,depth){if(depth>12)throw Error('Request is too deeply nested.');if(object(v)){for(const[k,item]of Object.entries(v)){if(['__proto__','prototype','constructor'].includes(k))throw Error('Invalid record key.');visit(item,depth+1);}}else if(Array.isArray(v)){for(const item of v)visit(item,depth+1);}}visit(value,0);return value;}
 function plainSettings(value){bounded(value);if(!object(value))throw Error('Expected a settings record.');function visit(v){if(!object(v)&&!Array.isArray(v))return;for(const[k,item]of Object.entries(v)){if(secretKey.test(k))throw Error('Credentials and personal wording cannot be saved in shared settings.');visit(item);}}visit(value);return value;}
@@ -31,7 +34,7 @@ export function createCredentialStore({directory,safeStorage}){
 
 export function createFeatureServices({dataDirectory,applicationRoot,sandboxDirectory,safeStorage,dialog,getWindow,openPath,emit=()=>{},sandboxProvider}){
  const credentials=createCredentialStore({directory:dataDirectory,safeStorage});
- const grants=new Map();let converter,ollama,closed=false,sharedCredentialGranted=false;
+ const grants=new Map();let converter,ollama,ollamaPromise,closed=false,exiting=false,sharedCredentialGranted=false,pendingRequests=0;
  const statusPromise=createApplicationStatus({createClient:createStatusHubClient,clientOptions:{sessionId:'material-file-encryptor-'+randomUUID(),title:'Material File Encryptor',repository:'Ding-Ding-Projects/material-file-encryptor',branch:'main',machine:process.platform+' desktop',exitHooks:false},collectWorktrees,repoPath:applicationRoot});
  const settingsPath=path.join(dataDirectory,'shared-settings.json');
  const grant=async(filename,mode)=>{const id=randomUUID();const value={filename,mode,parent:await fs.realpath(path.dirname(filename))};grants.set(id,value);await credentials.set('grant:'+id,value);return id;};
@@ -39,10 +42,11 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
  const ensureOpen=()=>{if(closed)throw Error('Application is closing.');};
  let converterPromise;
  async function converterService(){if(!converterPromise)converterPromise=(async()=>{let provider=sandboxProvider;if(!provider&&sandboxDirectory){try{const manifest=JSON.parse(await fs.readFile(path.join(sandboxDirectory,'manifest.json'),'utf8'));const{createWindowsSandboxProvider}=await import('../features/converter/windows-sandbox.mjs');provider=await createWindowsSandboxProvider({launcherPath:path.join(sandboxDirectory,'ConverterSandbox.exe'),launcherSha256:manifest.launcherSha256,runtimePath:path.join(sandboxDirectory,'node.exe'),runtimeSha256:manifest.runtimeSha256,launcherCompanionHashes:manifest.launcherCompanionHashes});}catch{provider=null;}}const{createConverterService}=await import('../features/converter/service.mjs');converter=createConverterService({stateDirectory:path.join(dataDirectory,'conversion-queue'),resolveGrant,bundledProof:{pdfLib:true},sandboxProvider:provider});void converter.run();return converter;})();return converterPromise;}
- async function ollamaService(){if(!ollama){const{createOllamaService}=await import('../features/ollama/service.js');ollama=createOllamaService({dataDir:path.join(dataDirectory,'local-models')});ollama.subscribe(data=>emit('ollama',data));}return ollama;}
+ async function ollamaService(){if(!ollamaPromise)ollamaPromise=(async()=>{const{createOllamaService}=await import('../features/ollama/service.js');ollama=createOllamaService({dataDir:path.join(dataDirectory,'local-models')});ollama.subscribe(data=>emit('ollama',data));return ollama;})();return ollamaPromise;}
  async function pick(properties,title){const result=await dialog.showOpenDialog(getWindow(),{title,properties});return result.canceled?[]:result.filePaths;}
- async function request(feature,action,payload={}){
+ async function dispatch(feature,action,payload={}){
   ensureOpen();if(typeof feature!=='string'||typeof action!=='string'||!object(payload))throw Error('Invalid feature request.');bounded(payload);
+  if(exiting&&!['status','catalog','models','cart','list','operations','cancel','control'].includes(action))throw Error('The application is waiting for active work before quitting.');
   if(feature==='converter'){
    if(action==='pickSources')return Promise.all((await pick(['openFile','multiSelections'],'Choose conversion sources')).map(filename=>grant(filename,'read')));
    if(action==='pickDestinationDirectory'){const chosen=await pick(['openDirectory','createDirectory'],'Choose conversion output folder');return chosen[0]?grant(chosen[0],'directory'):null;}
@@ -56,6 +60,8 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
   }
   if(feature==='status'&&action==='status')return(await statusPromise).snapshot();
   if(feature==='access'){
+   if(['credentialGet','credentialSet','credentialDelete'].includes(action)&&!rendererCredentialKey(payload.key))throw Error('This protected record is reserved for the native process.');
+   if(action==='credentialList'&&!['element-lock:','authenticator:','history:'].includes(payload.prefix))throw Error('This protected record prefix is reserved for the native process.');
    if(action==='credentialGet')return credentials.get(payload.key);
    if(action==='credentialSet')return credentials.set(payload.key,payload.value);
    if(action==='credentialDelete')return credentials.delete(payload.key);
@@ -68,10 +74,11 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
    if(action==='sharedWrite'){const value=plainSettings(payload.value);let previous=null;try{previous=JSON.parse(await fs.readFile(settingsPath,'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}if(previous?.enabled&&!sharedCredentialGranted)throw Error('Verify the existing local credential before changing the active mode.');sharedCredentialGranted=false;await fs.mkdir(dataDirectory,{recursive:true});const temporary=settingsPath+'.'+randomUUID()+'.tmp';try{await fs.writeFile(temporary,encoded(value),{flag:'wx',mode:0o600});await fs.rename(temporary,settingsPath);}finally{await fs.rm(temporary,{force:true});}emit('personalization',{type:'sharedSettings',value});return true;}
    if(action==='setSharedCredential'){if(await credentials.get('shared:mode'))throw Error('A local credential already exists. Use the documented local recovery route to reset it.');if(typeof payload.password!=='string'||payload.password.length<1||payload.password.length>4096)throw Error('Enter a bounded credential.');const salt=randomBytes(32),hash=await scrypt(payload.password,salt,32);await credentials.set('shared:mode',{salt:salt.toString('base64'),hash:hash.toString('base64')});hash.fill(0);return true;}
    if(action==='verifySharedCredential'){const value=await credentials.get('shared:mode');if(!value||typeof payload.password!=='string'||payload.password.length>4096)return false;const actual=await scrypt(payload.password,Buffer.from(value.salt,'base64'),32);try{const expected=Buffer.from(value.hash,'base64');sharedCredentialGranted=expected.length===actual.length&&timingSafeEqual(actual,expected);return sharedCredentialGranted;}finally{actual.fill(0);}}
-   if(action==='listFonts')return{families:['system-ui','Segoe UI','Arial','Georgia','Consolas'],complete:false,detail:'These standard families use local font fallback. Full installed-font enumeration is unavailable.'};
+   if(action==='listFonts'){if(process.platform!=='win32')throw Error('Native font enumeration is unavailable on this platform.');const result=await executeFile('powershell.exe',['-NoLogo','-NoProfile','-NonInteractive','-Command','Add-Type -AssemblyName System.Drawing; @((New-Object System.Drawing.Text.InstalledFontCollection).Families | ForEach-Object { $_.Name } | Sort-Object -Unique) | ConvertTo-Json -Compress'],{windowsHide:true,timeout:10000,maxBuffer:1024*1024});const names=JSON.parse(result.stdout.replace(/^\uFEFF/,''));if(!Array.isArray(names)||names.some(name=>typeof name!=='string'||name.length>256))throw Error('Invalid native font inventory.');return names;}
    if(action==='fetchScheduleSource')throw Error('No external schedule source has been paired. Configure an authenticated provider before enabling this schedule.');
   }
   throw Error('Unsupported feature action.');
  }
- return {request,credentials,async checkpoint(summary,progress){return(await statusPromise).checkpoint(summary,progress);},async close(){closed=true;await converter?.close();await ollama?.close?.();await(await statusPromise).finish('waiting');grants.clear();}};
+ async function request(...args){pendingRequests++;try{return await dispatch(...args);}finally{pendingRequests--;}}
+ return {request,credentials,beginExit(){exiting=true;},endExit(){exiting=false;},async pending(){return pendingRequests+(converter?await converter.pending():0)+(ollama?.operations().length||0);},async cancelAll(){await Promise.allSettled([converterPromise,ollamaPromise]);await Promise.all([converter?.cancelAll(),ollama?.cancelAll()]);},async checkpoint(summary,progress){return(await statusPromise).checkpoint(summary,progress);},async close(){closed=true;await Promise.allSettled([converterPromise,ollamaPromise]);await converter?.close();await ollama?.dispose();await(await statusPromise).finish('waiting');grants.clear();}};
 }

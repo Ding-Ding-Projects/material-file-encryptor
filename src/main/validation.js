@@ -1,15 +1,20 @@
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
+export function validateFeatureRequest(feature, action, payload, { browser = false } = {}) {
+  const actions = {
+    converter: ['catalog','inspect','enqueue','list','control','pickSources','pickDestination','pickDestinationDirectory'],
+    ollama: ['status','catalog','refreshCatalog','models','show','deleteModel','copyModel','generate','hardware','cart','addToCart','removeFromCart','retryPull','startPulls','cancel','sessions','session','renameSession','deleteSession','exportSession','chat','profiles','preflight','launch','snapshots','restore'],
+    documentation: ['catalog','changelog'], status: ['status'],
+    personalization: ['sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts'],
+    ...(!browser ? { access: ['credentialGet','credentialSet','credentialDelete','credentialList','openDataFolder','dataFolder'] } : {}),
+  };
+  if (!actions[feature]?.includes(action) || !object(payload) || Buffer.byteLength(JSON.stringify(payload)) > 262144) throw new Error('Unsupported feature request.');
+  return { feature, action, payload };
+}
 export function validateRequest(method, value = {}) {
   if (!object(value)) throw new Error('Invalid request.');
   if (method === 'featureRequest') {
-    const actions = {
-      converter: ['catalog','inspect','enqueue','list','control','pickSources','pickDestination','pickDestinationDirectory'],
-      ollama: ['status','catalog','refreshCatalog','models','show','deleteModel','copyModel','generate','hardware','cart','addToCart','removeFromCart','retryPull','startPulls','cancel','sessions','session','renameSession','deleteSession','exportSession','chat','profiles','preflight','launch','snapshots','restore'],
-      documentation: ['catalog','changelog'], status: ['status'],
-      personalization: ['sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts']
-    };
-    if (Object.keys(value).length !== 3 || !actions[value.feature]?.includes(value.action) || !object(value.payload) || Buffer.byteLength(JSON.stringify(value.payload)) > 262144) throw new Error('Unsupported feature request.');
-    return value;
+    if (Object.keys(value).length !== 3) throw new Error('Unsupported feature request.');
+    return validateFeatureRequest(value.feature, value.action, value.payload, { browser: true });
   }
   const schemas = {
     getState: {}, buildMetadata: {}, browserPairing: {}, mount: { driveLetter: 'drive?' }, unmount: {}, chooseFiles: {}, chooseExport: { name: 'path' }, importSelected: { paths: 'paths' }, startImport: { paths: 'paths' }, operations: {}, cancelOperation: { operationId: 'path' }, forceLock: {}, quit: {}, listFiles: { cursor: 'nonnegative?', limit: 'page?', revision: 'nonnegative?' }, listVersionLabels: { entryId: 'path' }, listActivity: { entryId: 'path?', cursor: 'path?', limit: 'page?', action: 'short?', from: 'short?', to: 'short?', fromUtc:'short?',toUtc:'short?',pattern:'short?' }, previewVersion: { versionId: 'path' }, labelVersion: { versionId: 'path', label: 'short' }, exportVersion: { versionId: 'path' }, exportText: { name: 'filename', mime: 'mime', content: 'text' }, fileAction: { id: 'path', action: 'fileAction', destination: 'path?' }, resplitAll: {}, createVault: { storageDir: 'path', cacheDir: 'path', driveLetter: 'drive', password: 'password?', keyFilePath: 'path?', partSizeBytes: 'size', transport: 'transport?', remoteRepository: 'repository?', autoUnlock: 'boolean?' },
