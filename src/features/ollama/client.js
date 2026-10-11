@@ -1,5 +1,5 @@
 import {inspectImageAttachment} from './attachments.js';
-const BASE = 'http://127.0.0.1:11434';
+import {localEndpoint} from './endpoint.js';
 const ROUTES = Object.freeze({ version:['GET','/api/version'], installed:['GET','/api/tags'], running:['GET','/api/ps'], show:['POST','/api/show'], pull:['POST','/api/pull'], delete:['DELETE','/api/delete'], copy:['POST','/api/copy'], chat:['POST','/api/chat'], generate:['POST','/api/generate'] });
 export const LIMITS = Object.freeze({ request: 6 * 1024 * 1024, response: 16 * 1024 * 1024, line: 1024 * 1024, messages: 128, prompt: 65536, images: 4, image: 1024 * 1024 });
 export function modelName(value) {
@@ -37,12 +37,12 @@ export function validatePayload(action, body) {
   return out;
 }
 export class OllamaClient {
-  constructor({fetchImpl=fetch, timeout=120000}={}) { this.fetch=fetchImpl; this.timeout=timeout; }
+  constructor({fetchImpl=fetch, timeout=120000,loopbackPort=11434}={}) { this.fetch=fetchImpl; this.timeout=timeout;Object.defineProperty(this,'endpoint',{value:localEndpoint(loopbackPort)}); }
   async call(action, body={}, {signal,onChunk}={}) {
     if(!Object.hasOwn(ROUTES,action)) throw new Error('Unsupported local API operation.');
     const data=validatePayload(action,body), [method,route]=ROUTES[action];
     const combined=signal ? AbortSignal.any([signal,AbortSignal.timeout(this.timeout)]) : AbortSignal.timeout(this.timeout);
-    const response=await this.fetch(BASE+route,{method,redirect:'error',signal:combined,headers:{'Content-Type':'application/json'},...(method==='GET'?{}:{body:JSON.stringify(data)})});
+    const response=await this.fetch(this.endpoint.url+route,{method,redirect:'error',signal:combined,headers:{'Content-Type':'application/json'},...(method==='GET'?{}:{body:JSON.stringify(data)})});
     if(!response.ok) throw new Error(`Local Ollama returned HTTP ${response.status}. Use the runtime troubleshooter.`);
     if(!response.body) throw new Error('Local Ollama returned an empty response.');
     const reader=response.body.getReader(), decoder=new TextDecoder(); let text='', bytes=0, last={}, count=0;

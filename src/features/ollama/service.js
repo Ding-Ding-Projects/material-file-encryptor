@@ -9,10 +9,10 @@ import {createRuntimeController,probeOllamaHealth} from './runtime.js';
 export const OLLAMA_ACTIONS=Object.freeze(['status','runtimeInstall','runtimeStart','chooseRuntimeExecutable','registerProfile','catalog','refreshCatalog','models','show','deleteModel','copyModel','generate','hardware','cart','addToCart','removeFromCart','startPulls','cancel','retryPull','chat','sessions','session','renameSession','deleteSession','exportSession','profiles','preflight','launch','snapshots','restore']);
 export function redactChat(text) {return text.replace(/(?:[A-Za-z]:[\\/]|\/home\/|\/Users\/)[^\s]+/g,'[private path]').replace(/\b(?:password|passwd|secret|api[_ -]?key|token|authorization)\s*[:=]\s*[^\s,;]+/gi,'[credential redacted]').replace(/\bBearer\s+\S+/gi,'[credential redacted]').replace(/\b(?:sk-|ghp_|github_pat_)[A-Za-z0-9_-]+\b/g,'[credential redacted]').replace(/\b[A-Z][A-Z_0-9]{2,}=[^\s]+/g,'[environment value redacted]');}
 const HELP=Object.freeze({title:'Local Ollama recovery',steps:['Install the official Ollama desktop application with its verified platform installer if it is missing. Installation is never started automatically.','For a detected stopped runtime, choose Start verified local runtime and review the confirmation. Startup is loopback-only with cloud features disabled.','Choose Check runtime again. A successful version response confirms API health, not model compatibility.','If health fails, inspect the Ollama application logs using its own troubleshooting controls. No arbitrary command is required here.','Return to Model Store or Local chat after a successful check. Cached catalog, saved sessions, and profiles remain available offline.'],officialInstaller:'https://ollama.com/download/windows',boundary:'This suite never automatically installs or starts Ollama and never exposes it over the network.'});
-export function createOllamaService({dataDir,fetchImpl=fetch,hardwareProbe,profileLauncher,verifyExecutable,validateProfile,profileHealthCheck,profileOwnedRoots=[],runtimeController,profilePicker}={}) {
+export function createOllamaService({dataDir,fetchImpl=fetch,hardwareProbe,profileLauncher,verifyExecutable,validateProfile,profileHealthCheck,profileOwnedRoots=[],runtimeController,profilePicker,loopbackPort=11434}={}) {
   if(!dataDir||!path.isAbsolute(dataDir))throw new Error('An absolute private data directory is required.');
-  const client=new OllamaClient({fetchImpl}),catalogClient=new OfficialCatalog({fetchImpl}),profiles=new ProfileManager({launcher:profileLauncher,verifyExecutable,validateProfile,healthCheck:profileHealthCheck,ownedRoots:profileOwnedRoots,onStateChange:()=>persist()});
-  const runtime=runtimeController||createRuntimeController({apiProbe:()=>probeOllamaHealth(fetchImpl)});
+  const client=new OllamaClient({fetchImpl,loopbackPort}),catalogClient=new OfficialCatalog({fetchImpl}),profiles=new ProfileManager({launcher:profileLauncher,verifyExecutable,validateProfile,healthCheck:profileHealthCheck,ownedRoots:profileOwnedRoots,onStateChange:()=>persist()});
+  const runtime=runtimeController||createRuntimeController({loopbackPort,apiProbe:()=>probeOllamaHealth(fetchImpl,loopbackPort)});
   const listeners=new Set(),operations=new Map(),metadataByTag=new Map(),pendingRequests=new Map();let catalog=null,cart=[],sessions=[],installed=[],running=[],hardware=null,loadPromise=null,reservingChat=false,saveQueue=Promise.resolve(),closing=false,cancelling=false,cancellationPromise=null;
   const emit=e=>{for(const listener of listeners)try{listener(e);}catch{}};
   const persist=()=>{const value=JSON.stringify({version:1,catalog,cart,sessions,profileState:profiles.state()});if(Buffer.byteLength(value)>32*1024*1024)throw new Error('Local state exceeds 32 MiB. Remove old sessions before continuing.');saveQueue=saveQueue.catch(()=>{}).then(async()=>{await fs.mkdir(dataDir,{recursive:true,mode:0o700});const temp=path.join(dataDir,'ollama-state.tmp');await fs.writeFile(temp,value,{mode:0o600});await fs.rename(temp,path.join(dataDir,'ollama-state.json'));});return saveQueue;};
@@ -117,7 +117,7 @@ export function createOllamaService({dataDir,fetchImpl=fetch,hardwareProbe,profi
       })();
       try{await cancellationPromise;return {state:'idle'};}finally{cancellationPromise=null;cancelling=false;}
     },
-    async dispose(){closing=true;await api.cancelAll();listeners.clear();},
+    async dispose(){closing=true;await api.cancelAll();await runtime.dispose?.();listeners.clear();},
   };
   const dispatch=api.request;
   api.request=(action,payload)=>{
