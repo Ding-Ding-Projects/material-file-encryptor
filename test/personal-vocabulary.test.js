@@ -71,3 +71,15 @@ test('long quote runs and protected spans use the complete original text', () =>
   assert.equal(replaceVocabulary(quotes+' folder',vocabulary),quotes+' cabinet');
   assert.equal(replaceVocabulary('"folder path/file name" folder',vocabulary),'"folder path/file name" cabinet');
 });
+test('numeric facts retain punctuation, grouping and decimal forms', () => {
+  const vocabulary=parseVocabulary(canonical({'10':'changed','1':'one','234':'other','MiB':'unit'}));
+  for (const fact of ['10.', '10,', '(10)', '[10]', '{10}', '10.25.', '1,234.50,', '(1.234,50)', '-10.', '+10,', '(10 MiB).']) {
+    assert.equal(replaceVocabulary(`${fact} label`,vocabulary),`${fact} label`);
+  }
+});
+test('apostrophes within ordinary words do not protect the rest of a sentence', () => {
+  const vocabulary=parseVocabulary(canonical({encrypt:'lock',folder:'directory'}));
+  assert.equal(replaceVocabulary("Don't encrypt /folder.",vocabulary),"Don't lock /folder.");
+  assert.equal(replaceVocabulary("It’s time to encrypt folder/file.",vocabulary),"It’s time to lock folder/file.");
+  assert.equal(replaceVocabulary("Don't encrypt 'folder with spaces/file' folder",vocabulary),"Don't lock 'folder with spaces/file' directory");
+});

@@ -89,12 +89,13 @@ function protectedParts(text) {
     while (position < text.length) {
       const character = text[position];
       if (quote) { if (character === quote) quote = null; position++; continue; }
-      if (character === '"' || character === "'" || character === '\x60') { quote = character; position++; continue; }
+      if ((character === '"' || character === "'" || character === '\x60') && (position === start || text[position - 1] === '=')) { quote = character; position++; continue; }
       if (/\s/u.test(character)) break;
       position++;
     }
     const token = text.slice(start, position);
-    if (/[\\/]/u.test(token) || token.startsWith('--') || token.startsWith('\x60') || /\.(?:exe|json|js|dll|txt|md)\b/u.test(token) || /^\d+(?:[.,]\d+)*(?:%|KiB|MiB|GiB|KB|MB|GB|bytes)?$/u.test(token) || /^(?:KiB|MiB|GiB|KB|MB|GB|bytes)$/u.test(token)) {
+    const factualToken = token.replace(/^[([{"']+/u, '').replace(/[)\]}"',.;:!?]+$/u, '');
+    if (/[\\/]/u.test(token) || token.startsWith('--') || token.startsWith('\x60') || /\.(?:exe|json|js|dll|txt|md)\b/u.test(token) || /^[+-]?\d+(?:[.,]\d+)*(?:%|KiB|MiB|GiB|KB|MB|GB|bytes)?$/u.test(factualToken) || /^(?:KiB|MiB|GiB|KB|MB|GB|bytes)$/u.test(factualToken)) {
       parts.push(text.slice(plainStart, start), token); plainStart = position;
     }
   }
