@@ -49,41 +49,47 @@ policy_spec.loader.exec_module(policy)
 def close_after_absence(client, state, processes):
     if not module._recorded_tree_absent(processes):
         raise SystemExit('Recorded owned processes remain.')
-    execution_proof = dict(snapshot_proof.last_absence)
     windows = client.call_tool('list_headless_windows', {'name': state['desktop']})
     if policy.automatically_closed(windows, state['desktop'], processes, module._recorded_tree_absent):
-        return {'automaticallyClosed': True, **execution_proof}
+        return {'automaticallyClosed': True}
     if not windows.get('client_ok') or windows.get('windows'):
         raise SystemExit('Desktop is not proven empty after exit.')
     closed = client.call_tool('close_headless_desktop', {'name': state['desktop']})
     if module._desktop_close_confirmed(closed):
-        return {'automaticallyClosed': False, **execution_proof}
+        return {'automaticallyClosed': False}
     if policy.automatically_closed(closed, state['desktop'], processes, module._recorded_tree_absent):
-        return {'automaticallyClosed': True, **execution_proof}
+        return {'automaticallyClosed': True}
     raise SystemExit('Owned desktop close was not confirmed.')
 
 module._connect = lambda endpoint, timeout: DirectClient(timeout)
 
-# Native read-only proof avoids shell startup and CIM service latency. The
-# installed lifecycle protocol and ancestry validators remain authoritative.
-snapshot_spec = importlib.util.spec_from_file_location('renderer_snapshot', Path(__file__).with_name('renderer-process-snapshot.py'))
-snapshot_module = importlib.util.module_from_spec(snapshot_spec)
-snapshot_spec.loader.exec_module(snapshot_module)
-snapshot_proof = snapshot_module.Proof(module)
-
-def native_tree(root):
-    try:
-        return snapshot_proof.tree(root)
-    except snapshot_module.SnapshotError as error:
-        raise module.ClientFailure('PROCESS_PROOF_FAILED', str(error)) from error
-
+# Query all recorded identities in one CIM snapshot. The installed helper's
+# per-process query is safe but multiplies shell startup time for browser trees.
 def recorded_tree_absent(tree):
-    try:
-        return snapshot_proof.absent(tree)
-    except snapshot_module.SnapshotError as error:
-        raise module.ClientFailure('PROCESS_PROOF_FAILED', str(error)) from error
+    snapshot = module._powershell_json(r'''
+$all = @(Get-CimInstance Win32_Process | ForEach-Object {
+    [pscustomobject]@{
+        pid = [int]$_.ProcessId
+        parentPid = [int]$_.ParentProcessId
+        creationDate = if ($null -eq $_.CreationDate) { $null } else { $_.CreationDate.ToUniversalTime().ToString('o', [Globalization.CultureInfo]::InvariantCulture) }
+        executablePath = [string]$_.ExecutablePath
+    }
+})
+ConvertTo-Json -InputObject $all -Compress -Depth 4
+''', {})
+    if not isinstance(snapshot, list):
+        raise module.ClientFailure('PROCESS_PROOF_FAILED', 'Process snapshot was not an array.')
+    current_by_pid = {item['pid']: item for item in snapshot}
+    present = False
+    for expected in tree:
+        current = current_by_pid.get(expected['pid'])
+        if current is None:
+            continue
+        if not module._same_process(expected, current):
+            raise module.ClientFailure('PROCESS_IDENTITY_CHANGED', 'A recorded launch-tree PID was reused; cleanup stopped.')
+        present = True
+    return not present
 
-module._process_tree = native_tree
 module._recorded_tree_absent = recorded_tree_absent
 if len(sys.argv) == 3 and sys.argv[1] in ['prepare-exit', 'confirm-exit']:
     state_path, state = module._read_state(sys.argv[2])
