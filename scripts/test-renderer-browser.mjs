@@ -58,6 +58,13 @@ export function requireClosureProof(result) {
  if(result?.recordedProcessesAbsent!==true||result?.desktopClosed!==true)throw new Error('Renderer closure lacks explicit process and desktop absence proof.');
  return true;
 }
+export function rendererTargetReadiness(targets,expectedUrl,port) {
+ if(!Array.isArray(targets))return 'invalid';
+ if(targets.length===0)return 'pending';
+ if(targets.length!==1||targets[0].type!=='page')return 'invalid';
+ if(targets[0].url==='about:blank'||targets[0].url==='')return 'pending';
+ return targets[0].url===expectedUrl&&targets[0].webSocketDebuggerUrl?.startsWith(`ws://127.0.0.1:${port}/`)?'ready':'invalid';
+}
 export async function verifyConnectedRenderer(browser,{expectedUrl,targetId},prove) {
  const session=await browser.newBrowserCDPSession();
  try {
@@ -198,7 +205,14 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
   if(!headlessShell)windowObservation=await lifecycleCommand([adapter,'wait-window','--state',state,'--title-pattern','.*','--class-pattern','^Chrome_WidgetWin_1$','--timeout','10']);
   const endpoint=`http://127.0.0.1:${port}`;const deadline=Date.now()+15000;
   let targets;
-  while(Date.now()<deadline){try{targets=await (await (runtime.fetch||fetch)(`${endpoint}/json/list`,{signal:AbortSignal.timeout(1000),headers:{Connection:'close'}})).json();break;}catch{await new Promise(resolve=>setTimeout(resolve,100));}}
+  while(Date.now()<deadline){
+   try{targets=await (await (runtime.fetch||fetch)(`${endpoint}/json/list`,{signal:AbortSignal.timeout(1000),headers:{Connection:'close'}})).json();}
+   catch{await new Promise(resolve=>setTimeout(resolve,100));continue;}
+   const readiness=rendererTargetReadiness(targets,expectedUrl,port);
+   outcomes.push({operation:'target-inventory',result:{readiness,count:Array.isArray(targets)?targets.length:null,types:Array.isArray(targets)?targets.map(target=>target.type):[],exactMatches:Array.isArray(targets)?targets.filter(target=>target.url===expectedUrl).length:0}});
+   if(readiness!=='pending')break;
+   await new Promise(resolve=>setTimeout(resolve,100));
+  }
   if(!Array.isArray(targets)||targets.length!==1||targets[0].type!=='page'||targets[0].url!==expectedUrl||!targets[0].webSocketDebuggerUrl?.startsWith(`ws://127.0.0.1:${port}/`))throw new Error('Renderer fixture CDP isolation proof failed.');
   if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await lifecycleCommand([adapter,'prove-cdp',state]);
   const clientBinding=(await lifecycleCommand([adapter,'bind-client',state],{clientPid:process.pid})).clientBinding;
