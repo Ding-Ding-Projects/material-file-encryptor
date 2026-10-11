@@ -12,3 +12,12 @@ test('font publication rejects incomplete hashes and cancellation without publis
  const output=path.join(root,'output'),cache=path.join(root,'cache');await assert.rejects(stageBundledFonts({output,cache,fetchAsset:async()=>new Response(bytes)}),/size|hash/);assert.deepEqual(await fs.readdir(output),[]);
  const controller=new AbortController();controller.abort();await assert.rejects(stageBundledFonts({output,cache,signal:controller.signal,fetchAsset:()=>{throw Error('Cancelled download reached network');}}),/abort/i);assert.deepEqual(await fs.readdir(output),[]);
 });
+test('reused valid trees reject initial and verification-time cancellation without publication or network',async t=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'bundled-reuse-fixture-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));const original=BUNDLED_FONT_MANIFEST.assets,bytes=Buffer.from('verified fixture'),asset={name:'fixture.ttf',bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')};
+ BUNDLED_FONT_MANIFEST.assets=[asset];try{
+  const identity=createHash('sha256').update(JSON.stringify(BUNDLED_FONT_MANIFEST)).digest('hex'),output=path.join(root,'output'),cache=path.join(root,'cache'),published=path.join(output,identity);await fs.mkdir(cache);for(const target of ['renderer','site']){await fs.mkdir(path.join(published,target,'assets'),{recursive:true});await fs.writeFile(path.join(published,target,'assets',asset.name),bytes);await fs.copyFile(new URL('../src/shared/fonts/fonts.css',import.meta.url),path.join(published,target,'fonts.css'));}
+  const before=await fs.readdir(output),network=()=>{throw Error('Reuse attempted network');},initial=new AbortController();initial.abort();await assert.rejects(stageBundledFonts({output,cache,signal:initial.signal,fetchAsset:network}),/abort/i);
+  const during=new AbortController();let verified=0;await assert.rejects(stageBundledFonts({output,cache,signal:during.signal,fetchAsset:network,onProgress:event=>{if(event.phase==='verify'){verified++;during.abort();}}}),/abort/i);assert.equal(verified,1);assert.deepEqual(await fs.readdir(output),before);
+  for(const target of ['renderer','site'])assert.deepEqual(await fs.readFile(path.join(published,target,'assets',asset.name)),bytes);
+ }finally{BUNDLED_FONT_MANIFEST.assets=original;}
+});
