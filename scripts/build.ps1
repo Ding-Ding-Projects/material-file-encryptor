@@ -26,6 +26,8 @@ Invoke-Checked { npm.cmd ci }
 Invoke-Checked { node scripts/build-workspace.mjs }
 Invoke-Checked { node scripts/build-site.mjs }
 Invoke-Checked { dotnet publish native/MaterialFileEncryptor.Host -c Release -r win-x64 --self-contained true -o out/native }
+# Compile verification tooling only; runtime acceptance runs independently.
+Invoke-Checked { dotnet publish native/MaterialFileEncryptor.MountedLifecycle.Tests -c Release -r win-x64 --self-contained false -o out/verification/mounted-lifecycle }
 Invoke-Checked { dotnet publish src/features/converter/native/ConverterSandbox.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o out/converter }
 Copy-Item -LiteralPath (Join-Path $node 'node.exe') -Destination 'out/converter/node.exe' -Force
 if (Test-Path -LiteralPath (Join-Path $root 'out\converter\media')) { throw 'Obsolete media runtime present. Preserve it outside out/converter before packaging.' }

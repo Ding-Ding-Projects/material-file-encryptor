@@ -61,6 +61,7 @@ jobs:
             out/make/squirrel.windows/x64/*.nupkg
             out/make/squirrel.windows/x64/RELEASES
             out/evidence/*.json
+            out/verification/mounted-lifecycle/**
             release-output/*
           if-no-files-found: warn
           retention-days: 14
