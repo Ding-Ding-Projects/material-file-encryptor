@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import {createHash} from 'node:crypto';
 import {command,serveRendererFixture,requireClosureProof,retainClosureAttempt} from '../scripts/test-renderer-browser.mjs';
 
 async function request(url){let status=200,body;await serveRendererFixture({url},{writeHead(value){status=value;return this;},setHeader(){},end(value){body=value;}});return {status,body};}
@@ -39,6 +40,10 @@ test('repeated closure retention preserves each original state and diagnostics',
  assert.notEqual(first.statePath,second.statePath);
  assert.equal(await fs.readFile(first.statePath,'utf8'),'original state');
  assert.equal(await fs.readFile(second.statePath,'utf8'),'later state');
+ assert.equal(first.stateSha256,createHash('sha256').update(await fs.readFile(first.statePath)).digest('hex'));
+ assert.equal(second.stateSha256,createHash('sha256').update(await fs.readFile(second.statePath)).digest('hex'));
+ const missing=await retainClosureAttempt(path.join(root,'evidence'),path.join(root,'missing.json'),{});
+ assert.equal(missing.statePath,null);assert.equal(missing.stateSha256,null);
  assert.equal(JSON.parse(await fs.readFile(first.outcomePath,'utf8')).error,'first failure');
  assert.equal(JSON.parse(await fs.readFile(second.outcomePath,'utf8')).error,'second failure');
 });

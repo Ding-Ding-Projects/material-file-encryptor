@@ -66,7 +66,7 @@ export async function retainClosureAttempt(destination,state,observation) {
  const outcomeBytes=Buffer.from(JSON.stringify({...observation,stateAvailable:!!stateBytes},null,2),'utf8');
  if(stateBytes)await fs.writeFile(statePath,stateBytes,{flag:'wx'});
  await fs.writeFile(outcomePath,outcomeBytes,{flag:'wx'});
- return {statePath:stateBytes?statePath:null,outcomePath,outcomeSha256:createHash('sha256').update(outcomeBytes).digest('hex')};
+ return {statePath:stateBytes?statePath:null,stateSha256:stateBytes?createHash('sha256').update(stateBytes).digest('hex'):null,outcomePath,outcomeSha256:createHash('sha256').update(outcomeBytes).digest('hex')};
 }
 async function freePort(){const server=net.createServer();await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});const port=server.address().port;await new Promise(resolve=>server.close(resolve));return port;}
 
