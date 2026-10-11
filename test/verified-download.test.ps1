@@ -32,6 +32,36 @@ try {
   Assert (@(Get-ChildItem (Split-Path $file) -Recurse -Filter '*.json').Count -eq 0) 'Valid cache labeled invalid'
 } finally { Set-Item Function:Get-BootstrapDigest $script:originalDigest }
 Write-Host 'PASS: deterministic valid concurrent cache replacement retained without download.'
+foreach ($destinationValid in @($true,$false)) {
+  $file=New-Case ('restore-collision-' + $destinationValid); [IO.File]::WriteAllBytes($file,$bad)
+  $script:raceFile=$file; $script:raceArmed=$true; $script:claimArmed=$true
+  function Get-BootstrapDigest([string]$filename,[string]$algorithm='SHA256') {
+    $result=& $script:originalDigest $filename $algorithm
+    if ($script:raceArmed -and $filename -eq $script:raceFile) { $script:raceArmed=$false; [IO.File]::WriteAllBytes($filename,$good) }
+    elseif ($script:claimArmed -and [IO.Path]::GetFileName($filename) -like '.cache-claim-*') {
+      $script:claimArmed=$false
+      $replacement=if($destinationValid){$good}else{$bad}
+      [IO.File]::WriteAllBytes($script:raceFile,$replacement)
+    }
+    return $result
+  }
+  try {
+    $script:calls=@(); $failed=$false
+    try { Get-Verified $entry $file $transport } catch { $failed=$true }
+    Assert ($failed -eq !$destinationValid) 'Wrong restore collision verdict'
+    Assert ($script:calls.Count -eq 0) 'Restore collision reached network'
+    $expectedText=if($destinationValid){'verified fixture'}else{'corrupt fixture'}
+    Assert ([IO.File]::ReadAllText($file) -ceq $expectedText) 'Destination overwritten'
+    $receipts=@(Get-ChildItem (Join-Path (Split-Path $file) 'download-evidence') -Filter '*.json')
+    Assert ($receipts.Count -eq 1) 'Valid claim receipt missing'
+    $receipt=Get-Content $receipts[0].FullName -Raw|ConvertFrom-Json
+    $outcome=if($destinationValid){'redundant-valid-cache'}else{'valid-cache-restore-conflict'}
+    Assert ($receipt.outcome -ceq $outcome) 'Valid claim mislabeled'
+    Assert ($receipt.actualDigest -ceq $expected) 'Valid claim changed'
+    Assert ([IO.File]::ReadAllText((Join-Path $receipts[0].DirectoryName $receipt.quarantine)) -ceq 'verified fixture') 'Valid claim not retained'
+  } finally { Set-Item Function:Get-BootstrapDigest $script:originalDigest }
+}
+Write-Host 'PASS: valid and invalid restore collisions preserve both sequences with correct verdicts.'
 foreach ($kind in @('evidence', 'parent', 'cache')) {
   $file=New-Case ('junction-' + $kind); $dir=Split-Path $file
   $outside=Join-Path $root ('outside-' + $kind); New-Item -ItemType Directory $outside|Out-Null

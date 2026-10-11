@@ -60,7 +60,16 @@ function Get-Verified($entry, [string]$file, [scriptblock]$transport = $null) {
     [IO.File]::Move($file, $claim)
     if ((Get-BootstrapDigest $claim $algorithm) -eq $expected) {
       Assert-BootstrapPath $file
-      [IO.File]::Move($claim, $file)
+      try { [IO.File]::Move($claim, $file) }
+      catch {
+        Assert-BootstrapPath $file
+        if ((Test-Path -LiteralPath $file -PathType Leaf) -and (Get-BootstrapDigest $file $algorithm) -eq $expected) {
+          Save-Rejected $claim $null $null 'redundant-valid-cache'
+          return
+        }
+        Save-Rejected $claim $null $null 'valid-cache-restore-conflict'
+        throw 'Dependency cache restore conflict; both byte sequences retained.'
+      }
       return
     }
     Save-Rejected $claim $null $null 'invalid-cache'
