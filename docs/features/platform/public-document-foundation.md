@@ -16,6 +16,8 @@ The notification centre stores visitor-owned messages in its document namespace 
 
 The shell can consume verified shared School settings and suppress restricted settings, palette entries and translated presentation while preserving prior choices. A static browser cannot directly read the desktop's protected shared record. Visitor personalization and access adapters provide the browser-local settings and authentication boundary; native cross-application propagation requires a separately established bridge. The public shell does not treat selecting a vocabulary file as authentication.
 
+A validated pending wording file remains available for retry if authenticated encryption fails, and the failure is shown without applying partial wording. Authentication and replacement operations have separate ownership. Clear uses the same browser write lock as encrypted persistence; authentication waits for a queued clear before restoring saved wording.
+
 ## Verification
 
 Focused tests cover defaults and migration, independent language levels, serious-mode messages, document-state isolation, required foundation registration and generated route depths. A deliberate source-boundary removal makes the composition check fail. Real built-page interaction, narrow-layout checks, screenshots and live deployment readback remain separate verification requirements.
