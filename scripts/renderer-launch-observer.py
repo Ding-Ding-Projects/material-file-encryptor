@@ -4,6 +4,7 @@ import hashlib
 import importlib.metadata
 import importlib.util
 import inspect
+import io
 import json
 import os
 from pathlib import Path
@@ -41,6 +42,17 @@ class Journal:
         os.link(published,self.root/'terminal.json')
 
 
+def launch_with_input(lifecycle, request, state_path):
+    """Keep the installed parser authoritative with a complete non-TTY stream."""
+    original_stdin = sys.stdin
+    stream = io.TextIOWrapper(io.BytesIO(json.dumps(request).encode('utf-8')), encoding='utf-8')
+    try:
+        sys.stdin = stream
+        return lifecycle._cmd_launch(lifecycle._parser().parse_args(['launch', '--state', state_path]))
+    finally:
+        sys.stdin = original_stdin
+        stream.close()
+
 def run(intent_path):
     journal=Journal(intent_path)
     try:
@@ -77,15 +89,7 @@ def run(intent_path):
                 return result
         life._connect=lambda endpoint,timeout:Client()
         # The installed parser and launch validator remain authoritative.
-        original_stdin=sys.stdin
-        import io
-        sys.stdin=io.StringIO(json.dumps(intent['request']))
-        # Installed JSON input reads standard-input bytes.
-        class Input:
-            buffer=io.BytesIO(json.dumps(intent['request']).encode())
-        sys.stdin=Input()
-        try:result=life._cmd_launch(life._parser().parse_args(['launch','--state',intent['statePath']]))
-        finally:sys.stdin=original_stdin
+        result=launch_with_input(life,intent['request'],intent['statePath'])
         if result.get('client_ok') is True:
             _,state=backend.read(intent['statePath'])
             if Path(state['process']['executablePath'])!=Path(intent['request']['executable']) or source_hashes!={str(p):digest(p) for p in source_paths}:raise RuntimeError('Launch image or bytes changed before admission.')
