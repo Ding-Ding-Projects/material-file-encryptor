@@ -5,4 +5,6 @@
 - [External instruction currency check](instruction-currency.md)
 - [Native helper measurement limits](../performance/native-helper.md)
 
+- [Public document controls](public-document-foundation.md)
+
 The documentation catalog is generated locally from all Markdown files under `docs/` and available root project articles. The documentation site has a separately enumerated article and wiki inventory. No HTTP API is introduced by these modules; a Postman collection is not applicable.

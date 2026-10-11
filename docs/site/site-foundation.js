@@ -1,3 +1,4 @@
+import {cantonese,localized} from './locales.js';
 import {mountSurfaceFoundation} from '../../src/renderer/features/shell/index.js';
 import {element, text} from '../../src/shared/surface/registry.js';
 import '../../src/shared/surface/search.js';
@@ -5,13 +6,14 @@ import '../../src/shared/surface/search.js';
 const routeNames = [['index.html','Home','首頁'],['library.html','Documentation library','文件總覽'],['wiki.html','Wiki','維基'],['gallery.html','Capture gallery','畫面紀錄集']];
 // Namespace shared chrome state per document, without storing content or local file metadata.
 export function scopedStorage(storage, scope) {
- const prefix='mfe.public-document.'+scope+'.';
- return {getItem:key=>storage.getItem(prefix+key),setItem:(key,value)=>storage.setItem(prefix+key,value),removeItem:key=>storage.removeItem(prefix+key)};
+ const prefix='mfe.public-document.'+scope+'.', memory=new Map();let persistent=!!storage;
+ return {get persistent(){return persistent;},getItem(key){const name=prefix+key;if(persistent)try{const value=storage.getItem(name);memory.set(name,value);return value;}catch{persistent=false;}return memory.get(name)??null;},setItem(key,value){const name=prefix+key;memory.set(name,String(value));if(persistent)try{storage.setItem(name,String(value));}catch{persistent=false;}},removeItem(key){const name=prefix+key;memory.delete(name);if(persistent)try{storage.removeItem(name);}catch{persistent=false;}}};
 }
 export function mountSiteFoundation({document,storage,getPreferences,onPreferences,onSearch,onSchool}={}) {
  const main=document.querySelector('#main');
  const base=new URL('./',new URL(import.meta.url));
- const language=()=>getPreferences().language;
+ let schoolEnabled=false;
+ const language=()=>schoolEnabled?'en':getPreferences().language;
  const host=element('mfe-public-document-tools',{class:'container public-document-tools'});
  main.before(host);
  const role=element('p',{class:'small',text:'Documentation, release downloads and browser preferences. This page does not open vaults, mount drives or run native product actions.'});host.append(role);
@@ -31,8 +33,9 @@ export function mountSiteFoundation({document,storage,getPreferences,onPreferenc
  // Index actual settings controls, including upload and reset, and reveal the exact control.
  for(const control of document.querySelectorAll('#preferences-dialog input,#preferences-dialog select,#preferences-dialog button')) {
   if(!control.id)continue;
-  const label=document.querySelector(`label[for="${control.id}"]`)?.textContent||control.getAttribute('aria-label')||control.textContent||control.id;
-  commands.push({id:'setting:'+control.id,label:{en:label,yue:label},description:text('Website preference','網站偏好設定'),reveal:()=>{onPreferences();control.focus();control.scrollIntoView({block:'center'});},run:()=>{onPreferences();control.focus();}});
+  const caption=document.querySelector(`label[for="${control.id}"]`)?.cloneNode(true);caption?.querySelectorAll('output').forEach(node=>node.remove());
+  const label=(caption?.textContent||control.getAttribute('aria-label')||control.textContent||control.id).trim();
+  commands.push({id:'setting:'+control.id,label:{en:label,yue:cantonese[label]||label},description:text('Website preference','網站偏好設定'),reveal:()=>{onPreferences();control.focus();control.scrollIntoView({block:'center'});},run:()=>{onPreferences();control.focus();}});
  }
  foundation.registerCommands(commands);
  const oldSearch=document.querySelector('#doc-search'), oldRow=oldSearch?.closest('.search-field');
@@ -53,12 +56,13 @@ export function mountSiteFoundation({document,storage,getPreferences,onPreferenc
  settingsSearch.addEventListener('search-change',async()=>{const rows=await settingsSearch.filter(settings.map(command=>({id:command.id,text:command.label.en})));if(!rows)return;results.replaceChildren(...rows.map(row=>{const command=settings.find(item=>item.id===row.id);return element('md-text-button',{text:command.label.en,onclick:command.reveal});}));});
  const changed=event=>{if(!event.target.closest('#preferences-dialog'))return;foundation.notify({title:language()==='yue'?'偏好設定已更改':'Preference changed',message:language()==='yue'?'此頁面已套用目前選擇。':'This page now uses the current selection.',level:'info'});};
  dialog.addEventListener('change',changed);
- const handleLanguage=event=>{const value=event.detail.language;foundation.setLanguage(value);search.setLanguage(value);settingsSearch.setLanguage(value);role.textContent=value==='yue'?'說明文件、版本下載同瀏覽器偏好設定。此頁面唔會開啟保險庫、掛載磁碟或執行本機操作。':value==='bilingual'?'Documentation, downloads and browser preferences. 此頁面提供說明文件、下載同瀏覽器偏好設定。 No native actions. 唔會執行本機操作。':'Documentation, release downloads and browser preferences. This page does not open vaults, mount drives or run native product actions.';};
+ const visibleCommands=()=>commands.filter(command=>!schoolEnabled||!command.id.startsWith('setting:')||command.id==='setting:theme-select');
+ const handleLanguage=event=>{const value=schoolEnabled?'en':event.detail.language;foundation.setLanguage(value);search.setAttribute('label',localized('Find in this page',value));search.setLanguage(value);settingsSearch.setAttribute('label',localized('Search website preferences',value));settingsSearch.setLanguage(value);foundation.palette.setCommands(visibleCommands());role.textContent=value==='yue'?'說明文件、版本下載同瀏覽器偏好設定。此頁面唔會開啟保險庫、掛載磁碟或執行本機操作。':value==='bilingual'?'Documentation, downloads and browser preferences. 此頁面提供說明文件、下載同瀏覽器偏好設定。 No native actions. 唔會執行本機操作。':'Documentation, release downloads and browser preferences. This page does not open vaults, mount drives or run native product actions.';};
  window.addEventListener('site-language',handleLanguage);
- const hash=()=>{const target=document.getElementById(decodeURIComponent(location.hash.slice(1)));const view=views.find(view=>view.root===target||view.root.contains(target));if(view)openSection(view.id);};window.addEventListener('hashchange',hash);hash();
- const shared=event=>{if(event.detail?.verified!==true||typeof event.detail?.school?.enabled!=='boolean')return;const enabled=event.detail.school.enabled;for(const group of document.querySelectorAll('[data-school-suppressed]'))group.hidden=enabled;settings=commands.filter(command=>command.id.startsWith('setting:')&&(!enabled||command.id==='setting:theme-select'));foundation.palette.setCommands(commands.filter(command=>!enabled||!command.id.startsWith('setting:')||command.id==='setting:theme-select'));results.replaceChildren();for(const id of ['language-select','success-tone','search-tone','emoji-toggle','vocabulary-file','vocabulary-reset','english-tone-reset','cantonese-tone-reset']){const control=document.getElementById(id);if(control){control.hidden=enabled;const label=document.querySelector(`label[for="${id}"]`);if(label)label.hidden=enabled;}}onSchool(enabled);foundation.setLanguage(enabled?'en':language());};
+ const hash=()=>{let id;try{id=decodeURIComponent(location.hash.slice(1));}catch{return;}const target=document.getElementById(id);const view=views.find(view=>view.root===target||view.root.contains(target));if(view)openSection(view.id);};window.addEventListener('hashchange',hash);hash();
+ const shared=event=>{if(event.detail?.verified!==true||typeof event.detail?.school?.enabled!=='boolean')return;const enabled=event.detail.school.enabled;schoolEnabled=enabled;for(const group of document.querySelectorAll('[data-school-suppressed]'))group.hidden=enabled;settings=commands.filter(command=>command.id.startsWith('setting:')&&(!enabled||command.id==='setting:theme-select'));foundation.palette.setCommands(visibleCommands());results.replaceChildren();for(const id of ['language-select','success-tone','search-tone','emoji-toggle','vocabulary-file','vocabulary-reset','english-tone-reset','cantonese-tone-reset']){const control=document.getElementById(id);if(control){control.hidden=enabled;const label=document.querySelector(`label[for="${id}"]`);if(label)label.hidden=enabled;}}onSchool(enabled);foundation.setLanguage(enabled?'en':language());};
  window.addEventListener('site-shared-settings',shared);
  fetch(new URL('site-provenance.json',base),{credentials:'omit',cache:'no-store'}).then(response=>{if(!response.ok)throw Error('Build provenance unavailable');return response.json();}).then(value=>foundation.setProvenance(value)).catch(()=>foundation.setProvenance(null));
- window.addEventListener('pagehide',()=>{foundation.destroy();window.removeEventListener('site-language',handleLanguage);window.removeEventListener('site-shared-settings',shared);window.removeEventListener('hashchange',hash);dialog.removeEventListener('change',changed);},{once:true});
+ window.addEventListener('pagehide',event=>{if(event.persisted)return;foundation.destroy();window.removeEventListener('site-language',handleLanguage);window.removeEventListener('site-shared-settings',shared);window.removeEventListener('hashchange',hash);dialog.removeEventListener('change',changed);});
  return foundation;
 }

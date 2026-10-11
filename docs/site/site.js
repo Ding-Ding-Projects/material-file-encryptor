@@ -6,8 +6,9 @@ import { previewRelease, renderReleaseDownload } from './release.js';
 
 renderReleaseDownload(document, previewRelease);
 
+let siteStorage;try{siteStorage=window.localStorage;}catch{siteStorage={getItem:()=>null,setItem:()=>{throw Error('Browser storage unavailable');},removeItem:()=>{throw Error('Browser storage unavailable');}};}
 let preferences;
-try { preferences = loadMessagePreferences(localStorage); } catch { preferences = loadMessagePreferences({ getItem: () => null }); }
+try { preferences = loadMessagePreferences(siteStorage); } catch { preferences = loadMessagePreferences({ getItem: () => null }); }
 let vocabulary = { version: 1, replacements: [] };
 // The owning private-profile controller must authenticate before enabling wording.
 let privateWordingAvailable = false;
@@ -17,7 +18,7 @@ const vocabularyStorageKey = 'material-file-encryptor.site.vocabulary.v1';
 export function setAuthenticatedLocalSession(authenticated) {
   privateWordingAvailable = authenticated === true;
   if (privateWordingAvailable) {
-    vocabularyStore = createVocabularyStore(localStorage, vocabularyStorageKey);
+    vocabularyStore = createVocabularyStore(siteStorage, vocabularyStorageKey);
     const result = pendingVocabularySource === null ? { vocabulary: vocabularyStore.current, persisted: vocabularyStore.persisted } : vocabularyStore.replace(pendingVocabularySource);
     pendingVocabularySource = null; vocabulary = result.vocabulary;
     vocabularyState = { kind: vocabulary.replacements.length ? 'success' : 'default', persisted: result.persisted };
@@ -65,7 +66,7 @@ function friendly(kind, count = 0) {
   return `${(!schoolEnabled && preferences.emoji) ? kind === 'success' ? '✅ ' : '🔎 ' : ''}${pair(en, yue)}`;
 }
 function savePreferences() {
-  try { localStorage.setItem('material-file-encryptor.site.messages', JSON.stringify(preferences)); } catch { /* Preferences remain usable in this tab. */ }
+  try { siteStorage.setItem('material-file-encryptor.site.messages', JSON.stringify(preferences)); } catch { /* Preferences remain usable in this tab. */ }
 }
 let enhancedSearch = null;
 function updateSearch() {
@@ -138,8 +139,8 @@ function applyTheme(theme) {
   if (theme === 'system') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = theme;
   themeSelect.value = theme;
 }
-try { applyTheme(localStorage.getItem('material-file-encryptor.site.theme') || 'system'); } catch { applyTheme('system'); }
-themeSelect.addEventListener('change', () => { applyTheme(themeSelect.value); try { localStorage.setItem('material-file-encryptor.site.theme', themeSelect.value); } catch {} });
+try { applyTheme(siteStorage.getItem('material-file-encryptor.site.theme') || 'system'); } catch { applyTheme('system'); }
+themeSelect.addEventListener('change', () => { applyTheme(themeSelect.value); try { siteStorage.setItem('material-file-encryptor.site.theme', themeSelect.value); } catch {} });
 languageSelect.value = preferences.language; emojiToggle.checked = preferences.emoji;
 successTone.value = preferences.funnyEnglish; searchTone.value = preferences.funnyCantonese;
 languageSelect.addEventListener('change', () => { preferences.language = languageSelect.value; savePreferences(); renderCopy(); });
@@ -163,8 +164,8 @@ vocabularyFile.addEventListener('change', async () => {
     const result = vocabularyStore.replace(source); vocabulary = next; vocabularyState = { kind: 'success', persisted: result.persisted }; renderCopy();
   } catch (error) { if (version !== uploadVersion) return; vocabularyState = { kind: 'error', message: error.message }; updateMessages(); }
 });
-document.querySelector('#vocabulary-reset').addEventListener('click', () => { uploadVersion++; pendingVocabularySource = null; vocabulary = emptyVocabulary(); vocabularyFile.value = ''; let persisted = true; try { localStorage.removeItem(vocabularyStorageKey); } catch { persisted = false; } vocabularyStore?.clear(); vocabularyState = persisted ? { kind: 'default' } : { kind: 'error', message: 'Original wording restored for this session. Stored wording could not be removed.' }; renderCopy(); });
-const foundation = mountSiteFoundation({document, storage:localStorage, getPreferences:()=>preferences, onPreferences:()=>dialog.showModal(), onSearch:control=>{enhancedSearch=control;}, onSchool:enabled=>{schoolEnabled=enabled; if(enabled){privateWordingAvailable=false;vocabulary=emptyVocabulary();} renderCopy();}});
+document.querySelector('#vocabulary-reset').addEventListener('click', () => { uploadVersion++; pendingVocabularySource = null; vocabulary = emptyVocabulary(); vocabularyFile.value = ''; let persisted = true; try { siteStorage.removeItem(vocabularyStorageKey); } catch { persisted = false; } vocabularyStore?.clear(); vocabularyState = persisted ? { kind: 'default' } : { kind: 'error', message: 'Original wording restored for this session. Stored wording could not be removed.' }; renderCopy(); });
+const foundation = mountSiteFoundation({document, storage:siteStorage, getPreferences:()=>preferences, onPreferences:()=>dialog.showModal(), onSearch:control=>{enhancedSearch=control;}, onSchool:enabled=>{schoolEnabled=enabled; if(enabled){privateWordingAvailable=false;vocabulary=emptyVocabulary();} renderCopy();}});
 for(const [id,key] of [['english-tone-reset','funnyEnglish'],['cantonese-tone-reset','funnyCantonese']]) document.getElementById(id)?.addEventListener('click',()=>{preferences[key]=5;(key==='funnyEnglish'?successTone:searchTone).value=5;savePreferences();updateMessages();});
 renderCopy(); revealHash();
 
