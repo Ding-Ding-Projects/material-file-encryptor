@@ -27,3 +27,9 @@ class Node {
  closest(selector){return this.matches(selector)?this:this.parentElement?.closest(selector)||null;}
 }
 export function createAccessDocument(){const document={activeElement:null,createElement(tag){return new Node(document,tag);},createTextNode(text){return new Node(document,null,text);},createTreeWalker(root){const nodes=[];const walk=node=>{for(const child of node.childNodes){if(child.nodeType===3)nodes.push(child);else walk(child);}};walk(root);let index=0;return{nextNode:()=>nodes[index++]||null};}};document.body=new Node(document,'body');document.activeElement=document.body;return document;}
+
+// Stores source text only; CSS parsing and computed styles require a real browser.
+export class FixtureCSSStyleSheet {
+ constructor(){this.cssText="";}
+ replaceSync(text){this.cssText=String(text);}
+}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createAccessDocument} from './helpers/local-access-dom.js';
+import {createAccessDocument,FixtureCSSStyleSheet} from './helpers/local-access-dom.js';
 const previousHTMLElement=globalThis.HTMLElement;globalThis.HTMLElement=class{};
 const {mountServerPreparation,registerServerPreparation}=await import('../src/renderer/features/server-manager/index.js');
 if(previousHTMLElement===undefined)delete globalThis.HTMLElement;else globalThis.HTMLElement=previousHTMLElement;
@@ -9,7 +9,7 @@ const flush=async()=>{for(let i=0;i<4;i++)await new Promise(resolve=>setImmediat
 function scene(){
  const doc=createAccessDocument(),original=doc.createElement.bind(doc),definitions=new Map();const decorate=node=>{node.hidden=false;node.disabled=false;node.readOnly=false;node.before=function(other){other.remove();other.parentNode=this.parentNode;this.parentNode.childNodes.splice(this.parentNode.childNodes.indexOf(this),0,other);};return node;};const Base=original('div').constructor;
  class Element extends Base{constructor(){super(doc,'mfe-control-guidance');decorate(this);}attachShadow(){this.shadowRoot=decorate(original('shadow'));}}
- doc.defaultView={HTMLElement:Element,Event,customElements:{get:key=>definitions.get(key),define:(key,value)=>definitions.set(key,value)}};
+ doc.defaultView={CSSStyleSheet:FixtureCSSStyleSheet,HTMLElement:Element,Event,customElements:{get:key=>definitions.get(key),define:(key,value)=>definitions.set(key,value)}};
  doc.createElement=tag=>{const C=definitions.get(tag),node=decorate(C?new C():original(tag));node.tagName=tag.toUpperCase();if(tag==='mfe-search'){node.query='';node.input=decorate(original('md-outlined-text-field'));node.filter=async rows=>rows.filter(row=>row.text.includes(node.query));node.emitChange=()=>node.dispatchEvent(new Event('search-change'));}return node;};const host=doc.createElement('div');doc.body.append(host);return{doc,host};
 }
 const button=(host,label)=>host.querySelectorAll('md-outlined-button').find(node=>node.textContent===label||node.textContent.startsWith(label+':'));
