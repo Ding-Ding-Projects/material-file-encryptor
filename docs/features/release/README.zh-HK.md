@@ -2,6 +2,8 @@
 
 # 版本文件
 
+- [安裝解壓同更新版本修正](installer-repair.zh-HK.md)
+
 - [原生更新控制器與待完成整合](native-update-controller.zh-HK.md)
 - [合成直接子程序時間診斷](preview-verification.md#synthetic-direct-child-timing-diagnostics)
 - [預覽交付與獨立本機驗證](preview-delivery.zh-HK.md)

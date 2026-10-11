@@ -6,6 +6,8 @@ A Windows Explorer encrypted drive with a native .NET engine, encrypted offline 
 
 [Current integration and limits](docs/features/platform/current-integration.md) · [Feature documentation](docs/features/README.md) · [Roadmap](ROADMAP.md) · [Handoff](HANDOFF.md) · [Changelog](CHANGELOG.md)
 
+The [installation and update repair](docs/features/release/installer-repair.md) addresses incomplete Squirrel extraction and unchanged release package versions. Current-source downloaded installation and real updating remain pending independent acceptance.
+
 ## Build and package
 
 Run `build.bat /s` to produce the Windows application and `build-installer.bat /s` to produce its genuine unsigned Squirrel.Windows installer. Explicit local checks use the repository's verification scripts. Production builds and releases do not imply that current runtime or installed-lifecycle verification passed.

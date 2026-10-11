@@ -2,6 +2,16 @@ param([Parameter(Mandatory)][string]$Package, [Parameter(Mandatory)][string]$Upd
   [string]$ExpectedVersion, [string]$ExpectedSource, [string]$ReceiptPath)
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+$packagePath = [IO.Path]::GetFullPath($Package)
+# Validate all paths before allowing the native extractor to write any entry.
+$preflight = [IO.Compression.ZipFile]::OpenRead($packagePath)
+try {
+  $seen = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+  foreach ($entry in $preflight.Entries) {
+    $name = $entry.FullName.Replace('\','/')
+    if ($name.StartsWith('/') -or $name.Contains(':') -or $name -match '(^|/)\.\.(/|$)' -or !$seen.Add($name)) { throw 'UNSAFE_PACKAGE_PATH' }
+  }
+} finally { $preflight.Dispose() }
 $scratch = Join-Path ([IO.Path]::GetTempPath()) ('mfe-squirrel-extract-' + [Guid]::NewGuid().ToString('N'))
 $payload = Join-Path $scratch 'app'; $stubRoot = Join-Path $scratch 'root'
 New-Item -ItemType Directory $payload,$stubRoot | Out-Null

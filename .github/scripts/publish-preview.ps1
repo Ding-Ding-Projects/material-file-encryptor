@@ -16,6 +16,7 @@ $lock=Get-Content package-lock.json -Raw | ConvertFrom-Json
 Assert ($lock.version -eq $packageVersion -and $lock.packages.PSObject.Properties[''].Value.version -eq $packageVersion) 'RELEASE_LOCK_VERSION_MISMATCH'
 $output='release-output'; New-Item -ItemType Directory -Force $output | Out-Null
 $directory='out/make/squirrel.windows/x64'
+Assert (!(Test-Path -LiteralPath (Join-Path $directory 'reassembly-unsettled.json'))) 'SQUIRREL_PREVIOUS_PRODUCER_UNSETTLED'
 $setup=Join-Path $directory 'MaterialFileEncryptor-Setup.exe'; $releases=Join-Path $directory 'RELEASES'
 Assert ((Test-Path $setup) -and (Test-Path $releases)) 'INSTALLER_ASSETS_MISSING'
 Assert ((Get-AuthenticodeSignature $setup).Status -eq 'NotSigned') 'EXPECTED_UNSIGNED_SETUP'
@@ -24,6 +25,7 @@ Assert (@($packages | Where-Object Name -Like '*-full.nupkg').Count -eq 1) 'EXPE
 Assert (@($packages | Where-Object Name -CEQ "MaterialFileEncryptor-$packageVersion-full.nupkg").Count -eq 1) 'RELEASE_PACKAGE_NAME_MISMATCH'
 $fullPackage=@($packages | Where-Object Name -Like '*-full.nupkg')[0]
 & scripts/squirrel-payload-check.ps1 -Package $fullPackage.FullName -Updater 'node_modules/electron-winstaller/vendor/Squirrel.exe' -ExpectedVersion $packageVersion -ExpectedSource $source
+& scripts/squirrel-setup-check.ps1 -Setup $setup -Package $fullPackage.FullName -Updater 'node_modules/electron-winstaller/vendor/Squirrel.exe'
 $indexed=@{}
 foreach ($line in Get-Content $releases) {
  if (!$line.Trim()) { continue }

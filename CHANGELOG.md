@@ -1,3 +1,7 @@
+# Installation and update repair continuation
+
+Replaced the blocked compiled archive adapter with supported .NET streaming recompression, verified the real Squirrel extractor against an incompressible nested archive, and added exact Setup embedded-package inspection. Updated the bilingual publication inventory. Current corrective installation, real updating and full-product acceptance remain pending.
+
 # Changelog
 
 ## Integrated feature workspace - 2026-10-11

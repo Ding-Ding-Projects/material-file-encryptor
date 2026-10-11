@@ -3,6 +3,8 @@
 ## Installation and update repair
 
 - [x] Reproduce incomplete extraction from independently downloaded v1.122.1 and identify the stored nested ZIP boundary with the exact Squirrel extractor.
+- [x] Verify the shared .NET recompression helper against the actual extractor and inspect original Setup's embedded package, updater and feed separately from installed acceptance.
+- [x] Repair publication inventory omissions for the new bilingual installer article.
 - [ ] Complete the Deflate-writer regression and both exact root production entrypoints.
 - [ ] Publish version-coherent corrective packages and independently verify downloaded installation, installed launch and a real update.
 - [ ] Complete preservation, verified archive and ownership-qualified branch/worktree cleanup.
