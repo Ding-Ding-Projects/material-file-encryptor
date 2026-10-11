@@ -3,8 +3,8 @@ import { SurfaceElement, element, register, localized } from './registry.js';
 import './search.js';
 /** One Material menu. The host is transparent plumbing, never a second dialog. */
 export class ContextMenu extends SurfaceElement {
-  constructor(){super();this.hidden=true;this.epoch=0;this.controller=null;}
-  connectedCallback(){this.render();}
+  constructor(){super();this.epoch=0;this.controller=null;}
+  connectedCallback(){this.hidden=true;this.render();}
   disconnectedCallback(){this.close('teardown',{restoreFocus:false});}
   render(){
     this.style(':host{position:fixed;inset:0;margin:0;padding:0;border:0;background:transparent;width:auto;height:auto;z-index:10000;pointer-events:none}:host([hidden]){display:none!important}.point{position:fixed;width:1px;height:1px;pointer-events:none}md-menu{pointer-events:auto;max-width:min(440px,calc(100vw - 24px));--md-menu-container-color:var(--md-sys-color-surface-container-high,var(--md-sys-color-surface-container));--md-menu-container-shape:12px}mfe-search{display:block;padding:8px 12px;width:min(400px,calc(100vw - 32px))}md-menu-item{max-width:420px}.empty{padding:12px 16px}.shortcut{margin-inline-start:20px}');
