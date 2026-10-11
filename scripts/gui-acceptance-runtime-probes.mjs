@@ -45,10 +45,18 @@ export async function probePackagedAccessibility(page,{target,dialogSelector='#v
   return {label:node.getAttribute('aria-label')||ids.map(id=>node.ownerDocument.getElementById(id)?.textContent||'').join(' ').trim(),outerDisplay:getComputedStyle(node).display,innerDialogGeometry:boxes};
  });
  assert.ok(declared.label,'Outer dialog has no declared accessible name');
- const session=await page.context().newCDPSession(page);let nodes;
- try{await session.send('Accessibility.enable');({nodes}=await session.send('Accessibility.getFullAXTree'));}finally{await session.detach();}
- const dialogs=nodes.filter(node=>!node.ignored&&['dialog','alertdialog'].includes(node.role?.value)).map(node=>({role:node.role.value,name:node.name?.value||'',backendNodeId:node.backendDOMNodeId}));
- assert.equal(dialogs.length,1,'Expected one open accessible dialog');
+ const session=await page.context().newCDPSession(page);let nodes,backendNodeId;
+ const bounded=async promise=>{let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Bounded dialog AX request did not return')),10000);})]);}finally{clearTimeout(timer);}};
+ try{
+  const expression=`document.querySelector(${JSON.stringify(dialogSelector)}).dialog.shadowRoot.querySelector('dialog')`;
+  const object=await bounded(session.send('Runtime.evaluate',{expression,objectGroup:'gui-acceptance-dialog',returnByValue:false}));
+  assert.ok(object.result?.objectId,'Exact inner native dialog is unavailable');
+  const {node}=await bounded(session.send('DOM.describeNode',{objectId:object.result.objectId,depth:0}));backendNodeId=node.backendNodeId;
+  ({nodes}=await bounded(session.send('Accessibility.getPartialAXTree',{backendNodeId,fetchRelatives:false})));
+  await bounded(session.send('Runtime.releaseObjectGroup',{objectGroup:'gui-acceptance-dialog'}));
+ }finally{await bounded(session.detach());}
+ const dialogs=nodes.filter(node=>node.backendDOMNodeId===backendNodeId&&!node.ignored&&['dialog','alertdialog'].includes(node.role?.value)).map(node=>({role:node.role.value,name:node.name?.value||'',backendNodeId:node.backendDOMNodeId}));
+ assert.equal(dialogs.length,1,'Expected the exact open inner accessible dialog');
  const result={schemaVersion:1,scope:'packaged-accessibility-tree',binding,dialog:{declaredName:declared.label,outerDisplay:declared.outerDisplay,innerDialogGeometry:declared.innerDialogGeometry,...dialogs[0],namePresent:Boolean(dialogs[0].name.trim()),nameMatchesDeclared:dialogs[0].name.trim()===declared.label.trim()},historyProbed:false};
  // History cannot be probed behind a modal dialog. The caller must use a
  // separate visible-history invocation after ordinary dialog dismissal.
