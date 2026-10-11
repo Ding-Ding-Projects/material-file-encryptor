@@ -26,6 +26,10 @@ Capture provenance uses a translated description followed by a literal revision 
 
 ## Publication inventory and privacy
 
+The hand-written `content-catalog.json` includes every current Markdown article under `docs/features`, plus the design reference and the two fetched wiki pages. The current converter additions are [the minimal runtime recipe](../features/converter/minimal-runtime.md) and [the reviewed minimal component](../features/converter/minimal-component.md). The [native update controller](../features/release/native-update-controller.md), [desktop update workspace](../features/surface-foundation/updates-panel.md) and [schedule category](../features/schedules/README.md) are also included. Staging compares the explicit article list with the actual feature tree and fails on an omitted article.
+
+The wiki menu still points to the complete bundled [Home snapshot](wiki/Home.md) and [continuation snapshot](wiki/CLOSEOUT_PROMPT.md), sourced from the exact wiki revision recorded in the catalog. Those historical snapshot bytes have not been edited to imply a newer wiki fetch. Current source facts belong to [current integration status](../features/platform/current-integration.md). This local inventory repair does not claim a new wiki publication or live documentation deployment.
+
 The root build publishes a fresh stage from explicit runtime assets, conceptual diagrams and reviewed original captures. It does not recursively publish `docs/site` or `docs/images`. Raw receipts and source snapshots remain outside the deployment. An existing stage is moved to a separate ignored preservation directory before replacement, so stale files cannot remain reachable in the new stage.
 
 `gallery-review.json` lists approved original paths and binds each to its reviewed source revision and image SHA-256. `publication.mjs` verifies these bindings, original bytes and dimensions before staging. Generated `gallery-inventory.json` is the public, selected metadata record. Missing original capture timestamps remain unavailable.

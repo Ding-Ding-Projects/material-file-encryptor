@@ -31,3 +31,8 @@ Build the native project through the host build entrypoint, then run its native/
 pending() streams the complete durable inventory and returns the numeric count of queued or running items, excluding paused work. cancelAll() invalidates outstanding admissions, waits for their bounded reads to settle, cancels every queued/running record across all pages, signals active workers, and waits for native cleanup and durable terminal records. It returns {cancelled, remaining}. Paused work remains available for a later session. close() uses the same cancellation barrier. Publication and cancellation share a per-record lock, so an already completed atomic publication is reported as completed rather than being rewritten as cancelled.
 
 See [Archive and structured-data adapters](archive-and-data.md) for enabled ZIP/CSV/TSV/JSON behavior and [Offline media conversion](media-plan.md) for the implemented image/audio/video adapters, verified runtime prerequisites, and parent build manifest contract.
+
+## Source-built minimal media runtime
+
+- [Minimal runtime recipe and source verification](minimal-runtime.md) describes the pinned source archives, existing build tools and intentionally restricted codec/protocol profile.
+- [Reviewed minimal component and local acceptance](minimal-component.md) records exact runtime/archive hashes, source closure and six-format AppContainer checks. Component publication and application-installed acceptance are separate boundaries.

@@ -10,6 +10,8 @@
     "docs/features/converter/README.md",
     "docs/features/converter/archive-and-data.md",
     "docs/features/converter/media-plan.md",
+    "docs/features/converter/minimal-component.md",
+    "docs/features/converter/minimal-runtime.md",
     "docs/features/desktop/README.md",
     "docs/features/desktop/owned-exit-handles.md",
     "docs/features/desktop/package-integrity.md",
@@ -63,6 +65,7 @@
     "performance",
     "platform",
     "release",
+    "schedules",
     "storage",
     "surface-foundation"
   ],
