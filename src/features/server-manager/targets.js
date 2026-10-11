@@ -6,7 +6,7 @@ const requirements={
   'ssh-container':['approved-host-key','protected-authentication','daemon-identity','image-digest','owned-container-labels','mounts','ports','reconnect']
 };
 export function targetCapabilities() {
-  return TARGET_IDS.map(id=>({id,discovery:'not-implemented',lifecycle:'not-implemented',extensions:'not-implemented',available:false,reason:'This unit provides metadata and configuration contracts only; no runtime target adapter is installed.',requiredProofs:[...requirements[id]],adoptionRequiresConsent:true,disconnectedMeansStopped:false}));
+  return TARGET_IDS.map(id=>({id,discovery:'not-implemented',lifecycle:id==='local-process'?'implemented-unverified':'not-implemented',extensions:'not-implemented',available:false,reason:id==='local-process'?'An internal conditional lifecycle adapter exists, but trusted native file leases, runtime/network admission and product integration remain unavailable.':'No runtime target adapter is implemented.',requiredProofs:[...requirements[id]],adoptionRequiresConsent:true,disconnectedMeansStopped:false}));
 }
 export function assertTargetInventory(rows) {
   if(!Array.isArray(rows)||rows.length!==TARGET_IDS.length||new Set(rows.map(x=>x.id)).size!==TARGET_IDS.length||TARGET_IDS.some(id=>!rows.some(x=>x.id===id))) throw new Error('Execution target inventory is incomplete.');

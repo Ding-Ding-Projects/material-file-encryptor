@@ -1,6 +1,6 @@
 # Server manager foundation
 
-This unit supplies authoritative Java version discovery, selected-version server-distribution metadata resolution, source-bound configuration descriptors, typed configuration controls, and an explicit four-target capability inventory. It does not install or execute a server, accept a license, contact an SSH host, adopt a process/container, or modify an existing configuration.
+This unit supplies authoritative Java version discovery, selected-version server-distribution metadata resolution, source-bound configuration descriptors, typed configuration controls, and an explicit four-target capability inventory. A separate internal local-process adapter now implements conditional creation and lifecycle operations; it is not wired into the product interface. No real server execution or license acceptance was performed during verification. SSH/container adapters and existing-server adoption remain unavailable.
 
 ## Catalogue and provenance
 
@@ -12,7 +12,15 @@ This unit supplies authoritative Java version discovery, selected-version server
 
 Descriptors require edition, exact version, verified distribution SHA-256, authoritative source revision, help, permission, persistence consumer and live/restart semantics. Booleans map to switches, enumerations to searchable selectors, numbers to bounded numeric controls and text to text controls. The renderer accepts localized copy and a real action callback from its owner. Unknown extension data survives configuration patches unchanged; editing an unknown extension requires a real descriptor. A generic JSON or shell editor is not provided.
 
-Local processes, local containers, SSH processes and SSH containers are independently inventoried with required identity and permission proofs. All runtime adapters are currently disabled and explicitly not implemented. Connection loss must never be represented as a stopped server.
+Local processes, local containers, SSH processes and SSH containers are independently inventoried with required identity and permission proofs. The local-process lifecycle has an internal conditional implementation but remains unavailable and unverified; the other three runtime adapters are not implemented. Connection loss must never be represented as a stopped server.
+
+## Internal local-process adapter
+
+`LocalProcessServerAdapter` creates a new exclusive task-owned root, streams a bounded official distribution download, verifies exact size and SHA-1, records SHA-256, and publishes only verified bytes. Failed or canceled creation retains a durable non-ready state and owned staging for recovery. Existing roots are never overwritten. License state begins with `eula=false`; writing `eula=true` requires explicit consent bound to the exact server identity, version, distribution digest and official EULA URL. Fixture tests simulate this contract only, without accepting a real server license.
+
+Launch remains unavailable by default: the trusted host must supply a verified compatible Java executable/digest and version-bound loopback configuration, supported property-schema and available-port proof. These services must come from real protected providers, never renderer-supplied self-attestation. After asynchronous approvals, distribution/runtime bytes are rechecked while a trusted native deny-write/delete file lease protects both exact files. This lease provider is unavailable by default and must retain real native handles until the owned process exits; a Boolean claim or a rehash alone is not atomic file pinning. No native lease implementation or guarantee was exercised by the fake-process tests. Startup cancellation before publication leaves no configuration; a later canceled attempt records its generated configuration and permits a fresh attempt only when those owned bytes remain unchanged. Launch is shell-free and hidden. The JVM uses `-Xmx512M`; this is not a complete native-process memory/CPU job boundary. The default `windowsProcessIdentity` reads exact PID, creation time and executable path through a bounded native process query. The adapter also retains its own child-process object and fails closed on identity loss.
+
+Normal stop writes only `stop` to the verified owned process, waits within a bounded timeout and never force-terminates it. Lifecycle state writes are serialized so an older running snapshot cannot overwrite a later exit. Process launch is not server readiness: readiness remains unverified. Restart/recovery adoption, complete resource/job limits, storage-capacity admission, full logs/status protocols, GUI licensing controls, native IPC/provider integration and real server acceptance remain pending. A new adapter session cannot silently adopt a persisted process or root. The other three target adapters remain unavailable.
 
 ## Integration handoff
 

@@ -56,6 +56,8 @@ test('configuration patches preserve unknown extensions and reject invalid/unkno
 });
 test('all four target boundaries remain unavailable and omitted target/proof mutations turn red',()=>{
   const rows=targetCapabilities();assert.equal(assertTargetInventory(rows),true);
+  assert.equal(rows.find(row=>row.id==='local-process').lifecycle,'implemented-unverified');
+  assert.ok(rows.filter(row=>row.id!=='local-process').every(row=>row.lifecycle==='not-implemented'));
   for(let i=0;i<4;i++)assert.throws(()=>assertTargetInventory(rows.filter((_,j)=>j!==i)),/incomplete/);
   const changed=structuredClone(rows);changed[2].requiredProofs=[];assert.throws(()=>assertTargetInventory(changed),/proof/);
   const fake=structuredClone(rows);fake[0].available=true;assert.throws(()=>assertTargetInventory(fake),/misrepresented/);
