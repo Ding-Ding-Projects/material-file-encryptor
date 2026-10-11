@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {createNativeHardwareProbe,queryWindowsGraphics} from '../src/features/ollama/native-hardware.js';
-import {ProfileManager} from '../src/features/ollama/profiles.js';
+import {ProfileManager,BUILTIN_PROFILES} from '../src/features/ollama/profiles.js';
 import {createOllamaService} from '../src/features/ollama/service.js';
 test('native graphics query uses a fixed executable and fixed bounded command without shell expansion',async()=>{
   let call;const rows=await queryWindowsGraphics({systemRoot:'C:\\Windows',executeFile:async(...args)=>{call=args;return {stdout:JSON.stringify({Name:'Test GPU',DriverVersion:'1.2',AdapterRAM:4293918720,ConfigManagerErrorCode:0,Status:'OK'})};}});
@@ -29,4 +29,22 @@ test('profile snapshot state persists through service restart and revalidates ow
     const manager=new ProfileManager({ownedRoots:[dir],verifyExecutable:async()=>true,validateProfile:async()=>true});await assert.rejects(manager.registerPicked({id:'outside',name:'Outside',executable:process.execPath,cwd:path.dirname(dir),args:[]}),/outside/);
     const state=JSON.parse(await fs.readFile(path.join(dir,'ollama-state.json'),'utf8'));assert.equal(state.profileState.lastLaunch.state,'restored');assert.ok(state.profileState.profiles.every(p=>Object.keys(p.env).length===0));
   }finally{await service.dispose();await fs.rm(dir,{recursive:true,force:true});}
+});
+test('interrupted launch remains durable across two service restarts and field bounds fail closed',async()=>{
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'ollama-interrupted-'));
+  const at='2026-10-11T01:00:00.000Z',snapshotId='snapshot-1';
+  const profileState={version:1,profiles:[],snapshots:[{id:snapshotId,at,profiles:BUILTIN_PROFILES}],lastLaunch:{state:'starting',profileId:'local-chat',snapshotId,at}};
+  const file=path.join(dir,'ollama-state.json');
+  await fs.writeFile(file,JSON.stringify({version:1,catalog:null,cart:[],sessions:[],profileState}));
+  try{
+    for(let restart=0;restart<2;restart++){
+      const service=createOllamaService({dataDir:dir});
+      try{await service.request('removeFromCart',{model:'absent'});}finally{await service.dispose();}
+      const saved=JSON.parse(await fs.readFile(file,'utf8'));
+      assert.equal(saved.profileState.lastLaunch.state,'interrupted');assert.equal(saved.profileState.lastLaunch.profileId,'local-chat');assert.equal(saved.profileState.lastLaunch.snapshotId,snapshotId);
+    }
+    const manager=new ProfileManager();
+    for(const override of [{profileId:'x'.repeat(65)},{snapshotId:'x'.repeat(129)},{at:'not-a-date'},{unexpected:'value'}])await assert.rejects(manager.importState({...profileState,lastLaunch:{...profileState.lastLaunch,...override}}),/Invalid saved launch/);
+    assert.equal(manager.state().lastLaunch,null);
+  }finally{await fs.rm(dir,{recursive:true,force:true});}
 });

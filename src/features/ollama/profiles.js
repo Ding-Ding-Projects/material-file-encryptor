@@ -36,8 +36,13 @@ export class ProfileManager {
     if(!state||state.version!==1||!Array.isArray(state.profiles)||state.profiles.length>98||!Array.isArray(state.snapshots)||state.snapshots.length>20)throw new Error('Invalid saved profile state.');
     const entries=await Promise.all(state.profiles.map(p=>this.validateExternal(p)));const snapshots=[];
     for(const saved of state.snapshots){if(typeof saved.id!=='string'||!Number.isFinite(Date.parse(saved.at))||!Array.isArray(saved.profiles)||saved.profiles.length>100)throw new Error('Invalid profile snapshot.');const external=await Promise.all(saved.profiles.filter(p=>p.kind!=='internal').map(p=>this.validateExternal(p)));snapshots.push({id:saved.id,at:saved.at,profiles:[...BUILTIN_PROFILES,...external],configuration:'Only application-owned profile state; no Ollama server settings.'});}
-    this.profiles=new Map([...BUILTIN_PROFILES,...entries].map(p=>[p.id,p]));this.snapshots=snapshots;
-    if(state.lastLaunch&&['ready','failed','starting','restored'].includes(state.lastLaunch.state))this.lastLaunch={state:state.lastLaunch.state==='starting'?'interrupted':state.lastLaunch.state,at:state.lastLaunch.at,profileId:state.lastLaunch.profileId,snapshotId:state.lastLaunch.snapshotId};
+    const importedProfiles=new Map([...BUILTIN_PROFILES,...entries].map(p=>[p.id,p]));let lastLaunch=null;
+    if(state.lastLaunch!==null&&state.lastLaunch!==undefined){
+      const launch=state.lastLaunch;
+      if(typeof launch!=='object'||Array.isArray(launch)||Object.keys(launch).some(key=>!['state','at','profileId','snapshotId'].includes(key))||!['ready','failed','starting','interrupted','restored'].includes(launch.state)||typeof launch.at!=='string'||launch.at.length>40||!Number.isFinite(Date.parse(launch.at))||typeof launch.snapshotId!=='string'||launch.snapshotId.length>128||!snapshots.some(s=>s.id===launch.snapshotId)||(launch.profileId!==undefined&&(typeof launch.profileId!=='string'||launch.profileId.length>64||!importedProfiles.has(launch.profileId)))||(launch.state!=='restored'&&launch.profileId===undefined))throw new Error('Invalid saved launch state.');
+      lastLaunch={state:launch.state==='starting'?'interrupted':launch.state,at:launch.at,snapshotId:launch.snapshotId,...(launch.profileId===undefined?{}:{profileId:launch.profileId})};
+    }
+    this.profiles=importedProfiles;this.snapshots=snapshots;this.lastLaunch=lastLaunch;
   }
   async preflight(id,model,fit){modelName(model);let p=this.profiles.get(id);if(!p)throw new Error('Select a registered profile.');const blockers=[];if(p.kind==='external'){try{p=await this.validateExternal(p);}catch(error){blockers.push(error.message);}if(!this.launcher||!this.healthCheck)blockers.push('The host has not registered a process launcher and readiness verifier.');}if(fit?.verdict==='Unlikely')blockers.push(fit.reason);return {profile:{...p},model,fit:fit||{verdict:'Unknown'},environmentKeys:[],blockers,ready:blockers.length===0};}
   async launch(id,model,fit){
