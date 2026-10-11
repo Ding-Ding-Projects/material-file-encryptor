@@ -264,6 +264,10 @@ def configured_base_interpreter(values, launcher, actual_base):
         base = home / 'python.exe'
     else:
         raise Error('Base interpreter metadata is unavailable.')
+    if launcher.name.lower() == 'pythonw.exe':
+        base = base.with_name('pythonw.exe')
+    elif launcher.name.lower() != 'python.exe':
+        raise Error('Unsupported interpreter launcher name.')
     if not base.is_absolute() or base.parent != home or base != Path(actual_base):
         raise Error('Configured base interpreter differs from the executing interpreter.')
     return base

@@ -42,6 +42,15 @@ class Tests(unittest.TestCase):
         with self.assertRaises(recovery.Error):
             recovery.configured_base_interpreter(uv,launcher,str(root/'unrelated.exe'))
 
+    def test_gui_launcher_requires_exact_gui_base(self):
+        root = Path(tempfile.gettempdir()).resolve()
+        launcher = root / 'isolated' / 'Scripts' / 'pythonw.exe'
+        base = root / 'runtime' / 'pythonw.exe'
+        values = {'home': str(base.parent), 'include-system-site-packages': 'false', 'implementation': 'CPython', 'uv': 'fixture'}
+        self.assertEqual(recovery.configured_base_interpreter(values, launcher, str(base)), base)
+        with self.assertRaises(recovery.Error):
+            recovery.configured_base_interpreter(values, launcher, str(base.with_name('python.exe')))
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
