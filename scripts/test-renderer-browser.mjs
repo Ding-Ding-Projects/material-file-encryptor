@@ -67,6 +67,25 @@ export async function verifyConnectedRenderer(browser,{expectedUrl,targetId},pro
  if(result?.client_ok!==true||result.clientIdentity?.pid!==process.pid||result.establishedPeerPair?.clientPid!==process.pid||result.exactUrl!==expectedUrl||result.targetId!==targetId)throw new Error('Connected renderer lacks exact client peer ownership proof.');
  return result;
 }
+export async function createRendererCdpTransport(endpoint,{fetchImpl=fetch,WebSocketImpl=WebSocket}={}) {
+ const response=await fetchImpl(`${endpoint}/json/version`,{signal:AbortSignal.timeout(3000),headers:{Connection:'close'}});
+ const text=await response.text();
+ if(text.length>65536)throw new Error('CDP version response exceeds limit.');
+ const address=new URL(JSON.parse(text).webSocketDebuggerUrl);
+ const expected=new URL(endpoint);
+ if(address.protocol!=='ws:'||address.hostname!=='127.0.0.1'||address.port!==expected.port||address.username||address.password||!address.pathname.startsWith('/devtools/browser/'))throw new Error('CDP transport endpoint is not the exact loopback browser.');
+ const socket=new WebSocketImpl(address.href);
+ let disconnected=false;
+ const transport={send(message){socket.send(JSON.stringify(message));},close(){socket.close();},onmessage:undefined,onclose:undefined};
+ socket.addEventListener('message',event=>{try{if(typeof event.data!=='string'||event.data.length>1048576)throw new Error('Invalid CDP transport message.');transport.onmessage?.(JSON.parse(event.data));}catch{socket.close();}});
+ socket.addEventListener('close',()=>{disconnected=true;transport.onclose?.();});
+ await new Promise((resolve,reject)=>{
+  const timer=setTimeout(()=>{socket.close();reject(new Error('CDP transport open timed out.'));},10000);
+  socket.addEventListener('open',()=>{clearTimeout(timer);resolve();},{once:true});
+  socket.addEventListener('error',()=>{clearTimeout(timer);reject(new Error('CDP transport connection failed.'));},{once:true});
+ });
+ return {transport,async disconnect(){if(disconnected)return;socket.close();await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('CDP transport disconnect remains unverified.')),3000);socket.addEventListener('close',()=>{clearTimeout(timer);resolve();},{once:true});if(disconnected){clearTimeout(timer);resolve();}});}};
+}
 export async function retainClosureAttempt(destination,state,observation) {
  await fs.mkdir(destination,{recursive:true});
  const attempt=await fs.mkdtemp(path.join(destination,'attempt-'));
@@ -80,8 +99,8 @@ export async function retainClosureAttempt(destination,state,observation) {
 }
 async function freePort(){const server=net.createServer();await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});const port=server.address().port;await new Promise(resolve=>server.close(resolve));return port;}
 
-export async function openRendererBrowser(expectedUrl,{evidenceRoot}={}) {
- const {chromium}=await import('playwright');
+export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={}}={}) {
+ const {chromium}=runtime.chromium?{chromium:runtime.chromium}:await import('playwright');
  if(process.platform!=='win32') {
   const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
   try {return {page:await browser.newPage(),close:()=>browser.close()};}catch(error){await browser.close();throw error;}
@@ -95,35 +114,37 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot}={}) {
  const cli=process.env.MFE_LOWLEVEL_CLI||path.join(documents,'GitHub','lowlevel-computer-use-mcp','.venv','Scripts','lowlevel-computer-use-cheap.exe');
  const python=process.env.MFE_LOWLEVEL_PYTHON||path.join(path.dirname(cli),'python.exe');
  const fullChromium=chromium.executablePath();
- const executable=process.env.CHROMIUM_PATH||path.join(path.dirname(path.dirname(path.dirname(fullChromium))),path.basename(path.dirname(path.dirname(fullChromium))).replace('chromium-','chromium_headless_shell-'),'chrome-headless-shell-win64','chrome-headless-shell.exe');
+ const executable=runtime.executable||process.env.CHROMIUM_PATH||path.join(path.dirname(path.dirname(path.dirname(fullChromium))),path.basename(path.dirname(path.dirname(fullChromium))).replace('chromium-','chromium_headless_shell-'),'chrome-headless-shell-win64','chrome-headless-shell.exe');
  const headlessShell=path.basename(executable)==='chrome-headless-shell.exe';
  for(const file of [installed,cli,python,executable])await fs.access(file);
  const adapter=fileURLToPath(new URL('./test-renderer-browser-cli.py',import.meta.url));
- const env={...process.env,PYTHONUTF8:'1',MFE_LOWLEVEL_CLIENT:installed,MFE_LOWLEVEL_CLI:cli};
+ const env={...process.env,PYTHONUTF8:'1',MFE_LOWLEVEL_CLIENT:installed,MFE_LOWLEVEL_CLI:cli,MFE_RENDERER_PROCESS_BACKEND:process.env.MFE_RENDERER_PROCESS_BACKEND||'native-v1'};
+ if(env.MFE_RENDERER_PROCESS_BACKEND!=='native-v1')throw new Error('Fresh renderer connections require explicit native ownership proof.');
  if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1') {
-  const {stdout}=await promisify(execFile)('git',['rev-parse','HEAD'],{cwd:fileURLToPath(new URL('../',import.meta.url)),windowsHide:true,timeout:10000});
+  const {stdout}=runtime.sourceCommit?{stdout:runtime.sourceCommit}:await promisify(execFile)('git',['rev-parse','HEAD'],{cwd:fileURLToPath(new URL('../',import.meta.url)),windowsHide:true,timeout:10000});
   if(!/^[a-f0-9]{40}$/.test(stdout.trim()))throw new Error('Native renderer source binding is unavailable.');
   env.MFE_RENDERER_SOURCE_COMMIT=stdout.trim();
  }
  const runRoot=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-renderer-test-'));
  const state=path.join(runRoot,'lifecycle.json');const port=await freePort();
- let browser,launchAttempted=false,closed=false;
+ let browser,cdpTransport,connectionOwned=false,launchAttempted=false,closed=false;
  const outcomes=[];
  let retainedEvidence;
  let closureObservation={normalClose:'not attempted',fallback:'not attempted',resourcesAbsent:false};
- const lifecycleCommand=(args,input)=>command(python,args,input,env,outcome=>outcomes.push(outcome));
+ const lifecycleCommand=(args,input)=>(runtime.command||command)(python,args,input,env,outcome=>outcomes.push(outcome));
  const retainEvidence=async()=>{
   const destination=evidenceRoot||path.join(runRoot,'evidence');
-  const receipt=await retainClosureAttempt(destination,state,{version:3,runRoot,closure:{...closureObservation},launchAttempted,profileRetained:true,retentionReason:'Profiles and ownership evidence retained; filesystem deletion is disabled.',outcomes});
+  const receipt=await retainClosureAttempt(destination,state,{version:3,runRoot,closure:{...closureObservation},connectionOwned,launchAttempted,profileRetained:true,retentionReason:'Profiles and ownership evidence retained; filesystem deletion is disabled.',outcomes});
   retainedEvidence={runRoot,...receipt,profileRetained:true,closure:{...closureObservation}};
  };
  const close=async()=>{
   if(closed)return retainedEvidence;
   let primaryError,closureError;
   try {
+   if(cdpTransport&&!connectionOwned){await cdpTransport.disconnect();closureObservation.transportDisconnected=true;}
    if(launchAttempted) {
     await fs.access(state);
-    if(browser) {
+    if(browser&&connectionOwned) {
      await lifecycleCommand([adapter,'prepare-exit',state]);
      const session=await browser.newBrowserCDPSession();
      await Promise.race([session.send('Browser.close').catch(()=>{}),new Promise(resolve=>setTimeout(resolve,3000))]);
@@ -153,11 +174,13 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot}={}) {
   if(!headlessShell)await lifecycleCommand([adapter,'wait-window','--state',state,'--title-pattern','.*','--class-pattern','^Chrome_WidgetWin_1$','--timeout','10']);
   const endpoint=`http://127.0.0.1:${port}`;const deadline=Date.now()+15000;
   let targets;
-  while(Date.now()<deadline){try{targets=await (await fetch(`${endpoint}/json/list`,{signal:AbortSignal.timeout(1000),headers:{Connection:'close'}})).json();break;}catch{await new Promise(resolve=>setTimeout(resolve,100));}}
+  while(Date.now()<deadline){try{targets=await (await (runtime.fetch||fetch)(`${endpoint}/json/list`,{signal:AbortSignal.timeout(1000),headers:{Connection:'close'}})).json();break;}catch{await new Promise(resolve=>setTimeout(resolve,100));}}
   if(!Array.isArray(targets)||targets.length!==1||targets[0].type!=='page'||targets[0].url!==expectedUrl||!targets[0].webSocketDebuggerUrl?.startsWith(`ws://127.0.0.1:${port}/`))throw new Error('Renderer fixture CDP isolation proof failed.');
   if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await lifecycleCommand([adapter,'prove-cdp',state]);
-  browser=await chromium.connectOverCDP(endpoint);
+  cdpTransport=await (runtime.createTransport||createRendererCdpTransport)(endpoint);
+  browser=await chromium.connectOverCDP(cdpTransport.transport);
   if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await verifyConnectedRenderer(browser,{expectedUrl,targetId:targets[0].id},input=>lifecycleCommand([adapter,'prove-cdp',state],input));
+  connectionOwned=true;
   const page=browser.contexts()[0].pages()[0];
   if(!page||browser.contexts()[0].pages().length!==1)throw new Error('Renderer fixture page inventory changed.');
   return {page,close};
