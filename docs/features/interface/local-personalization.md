@@ -41,3 +41,11 @@ The Private local history tab stores password-encrypted snapshots in a separate 
 個人設定包括語言及語音、外觀、時間表同專注設定。英文同廣東話趣味程度各自儲存，預設為 5。啟用學校模式後，畫面只用英文，原有語言同趣味設定會保留，通過本機驗證關閉模式後恢復。此模式只係介面限制，唔係資料保安。
 
 語音旁白預設關閉，聲線按本機實際可用資料顯示，兩種語言依次播放。時間表使用指定時區；跨午夜時段歸開始當日，臨時設定唔會覆蓋原有設定。專注選項各自開關，預設全部關閉。桌面共用記錄、受保護歷史、外部來源同完整畫面驗證需要主程式整合，未驗證部分唔會當成完成。
+
+### Incremental display projection
+
+Personal wording is projected onto eligible display text and accessibility attributes in bounded event-loop slices. The view does not reject a document because its total node count exceeds a fixed ceiling. Each slice visits at most 500 nodes by default (configurable up to 2,000); continuation uses a timer so input and painting can run between slices. Ordinary mutation records revisit their changed subtrees, including discovered shadow roots, rather than rescanning the document.
+
+`refresh()` retains the small-document synchronous result and returns `{ projected: false, reason: 'pending' }` while more slices remain. Integrations requiring a completed display can await `whenSettled()`. Revoking activation or destroying the view cancels outstanding work and restores only tracked modified display values immediately. A replacement exception restores earlier writes and settles with `replacement-failed`. Canonical application data, inputs, code blocks, exports, and network requests are not rewritten. The projection is incremental, so a partially completed active pass can temporarily show both canonical and personalized display text; it is not an atomic whole-document paint.
+
+Focused verification covers a synthetic document exceeding 42,000 nodes, bounded scheduling, changed-subtree updates, shadow-root removal, cancellation, restoration, and rollback after a later-slice exception. This does not by itself establish native runtime or installer acceptance.

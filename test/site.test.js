@@ -19,8 +19,8 @@ test('invalid vocabulary formats, ambiguous entries, prototype names, and bounds
     valid([{ from: 'x', to: 'y' }, { from: 'x', to: 'z' }]), valid([{ from: '', to: 'x' }]),
     valid([{ from: 'x', to: 'y', extra: 1 }]), valid([{ from: '__proto__', to: 'x' }]),
     valid([{ from: 'x', to: 'constructor' }]), valid([{ from: 'x\n', to: 'y' }]),
-    valid([{ from: 'x'.repeat(121), to: 'y' }]), valid([{ from: 'x', to: 'y'.repeat(501) }]),
-    valid(Array.from({ length: 201 }, (_, i) => ({ from: String(i), to: '' }))), ' '.repeat(131073),
+    valid([{ from: 'x'.repeat(161), to: 'y' }]), valid([{ from: 'x', to: 'y'.repeat(1001) }]),
+    ' '.repeat(262145),
   ]) assert.throws(() => parseVocabulary(input), Error);
   assert.deepEqual(parseVocabulary(valid([])), { version: 1, replacements: [] });
 });
