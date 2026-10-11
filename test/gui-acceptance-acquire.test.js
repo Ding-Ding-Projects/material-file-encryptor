@@ -3,12 +3,18 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import {stateRoutes,acquisitionCapabilities,makeAcquisitionPlan,acquireMatrix} from '../scripts/gui-acceptance-acquire.mjs';
+import {stateRoutes,acquisitionCapabilities,makeAcquisitionPlan,acquireMatrix,composeAdapters} from '../scripts/gui-acceptance-acquire.mjs';
 import {bindingFor,matrixFor} from '../scripts/gui-acceptance.mjs';
 import {chooseVerificationDriveLetter} from '../scripts/preview-runtime-fixture.mjs';
 import {ownedFixturePreparation} from '../scripts/gui-acceptance-baseline.mjs';
 const inventory=JSON.parse(await fs.readFile(new URL('../contracts/gui-states.json',import.meta.url)));
 const launch={cdp:{port:19222,expectedUrl:'file:///synthetic/resources/index.html'}};
+test('area composition rejects duplicate ownership and unlisted state adapters',()=>{
+ const adapter={prepare:async()=>{},assertState:async()=>{},actions:{}};
+ assert.throws(()=>composeAdapters(inventory,{'drive-locked':adapter},{'drive-locked':adapter}),/Duplicate state adapter/);
+ assert.throws(()=>composeAdapters(inventory,{'not-in-inventory':adapter}),/no inventoried state/);
+ assert.throws(()=>composeAdapters(inventory,{'drive-locked':{}}),/Missing fixture preparation/);
+});
 const frozenBaseline='drive-locked drive-empty drive-populated drive-selected drive-busy drive-error drive-overflow drive-search drive-notifications offline-populated history-populated recycle-selected tools-default settings-default help-default create-password create-key-file create-private-repository converter-source converter-formats converter-options converter-queue ollama-model-store ollama-pull-cart ollama-chat ollama-profiles ollama-help server-prepare server-progress p-language p-school-enabled p-narrator p-appearance p-schedules-draft p-attention p-history-locked p-history-unlocked appearance-context-pointer appearance-context-keyboard appearance-edit-normal appearance-edit-layer-locked appearance-edit-image appearance-motion-track appearance-motion-transition appearance-history-rollback storage-busy storage-running storage-unavailable storage-invalid-size file-details-versions file-details-preview access-profile access-locks access-once access-authenticators access-support access-removal access-waiting access-profile-locked access-profile-unlocked access-locks-empty access-lock-wizard access-unlock access-authenticator-list access-authenticator-registration access-qr-hidden access-confirmation p-schedule-narrator p-schedule-attention p-schedule-appearance-ref p-schedule-logo-ref p-schedule-active-override p-schedule-restored-base storage-paused'.split(' ');
 test('matrix expansion preserves all 74 frozen IDs and binds ten owner additions',()=>{
  assert.equal(frozenBaseline.length,74);assert.deepEqual(inventory.states.slice(0,74).map(state=>state.id),frozenBaseline);

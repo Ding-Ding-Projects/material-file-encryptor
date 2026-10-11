@@ -37,7 +37,7 @@ export function baselineAdapters({launch,receipt,prepareOwnedFixture,inventory})
  const action=(id,steps,expression)=>async({executePlan})=>{
   const result=await executePlan(plan(steps));assert.equal(result.ok,true);
   const observation=await check(executePlan,id+'-observable',expression);
-  return {id,activated:true,observablePassed:true,activation:'cdp-click-or-control-change',result,observation};
+  return {id,activated:true,observablePassed:true,activation:'cdp-click-or-control-change',evidence:{result,observation}};
  };
  const field=(id,selector,value)=>({id,op:'evaluate',expression:`(()=>{const field=document.querySelector(${JSON.stringify(selector)});if(!field||field.disabled||field.readOnly)throw Error('Editable field unavailable');field.value=${JSON.stringify(value)};field.dispatchEvent(new Event('input',{bubbles:true}));field.dispatchEvent(new Event('change',{bubbles:true}));return true;})()`});
  const dialogOpen="document.querySelector('#vault-dialog').open",dialogClosed="!document.querySelector('#vault-dialog').open";
@@ -57,7 +57,7 @@ export function baselineAdapters({launch,receipt,prepareOwnedFixture,inventory})
  };
  const make=(id,expression,actions)=>({
   prepare:async context=>{const result=await prepareOwnedFixture({...context,state:id,requiredDriveState:id==='drive-locked'||id.startsWith('create-')?'locked':'unchanged'});assert.equal(result.ownedSyntheticFixture,true);assert.equal(result.sourceCommit,context.binding.sourceCommit);return result;},
-  assertState:async({executePlan})=>({passed:Boolean(await check(executePlan,id+'-state',expression)),observable:inventory.states.find(state=>state.id===id).observable}),actions
+  assertState:async({executePlan})=>({passed:true,evidence:await check(executePlan,id+'-state',expression),observable:inventory.states.find(state=>state.id===id).observable}),actions
  });
  return {
   'p-attention':make('p-attention',"!document.querySelector('#view-personalization').hidden&&['local-ux-focus','local-ux-low-stimulation','local-ux-one-thing-at-a-time'].every(id=>document.getElementById(id)?.getClientRects().length>0)",{
