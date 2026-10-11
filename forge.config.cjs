@@ -5,7 +5,7 @@ module.exports = {
     executableName: 'MaterialFileEncryptor',
     appBundleId: 'uk.dewhui.material-file-encryptor',
     extraResource: [path.resolve('out/native'), path.resolve('out/converter'), path.resolve('out/tools'), path.resolve('.cache/driver'), path.resolve('dependencies.json')],
-    ignore: [/(?:^|[\\/])\.agent(?:[\\/]|$)/i, /^\/docs/, /^\/test/, /^\/scripts/, /^\/native/, /^\/out/, /^\/\.git/, /^\/\.cache/, /^\/\.github/, /^\/CLOSEOUT_PROMPT\.md/],
+    ignore: [/(?:^|[\\/])(?:\.agent|\.test-output)(?:[\\/]|$)/i, /^\/src\/features\/converter\/native\/(?:bin|obj)(?:\/|$)/i, /^\/coverage(?:\/|$)/, /^\/docs/, /^\/test/, /^\/scripts/, /^\/native/, /^\/out/, /^\/\.git/, /^\/\.cache/, /^\/\.github/, /^\/CLOSEOUT_PROMPT\.md/],
   },
   hooks: { postPackage: async (_config, result) => {
     const { requirePrivateFreePackage } = await import('./scripts/package-privacy.mjs');
