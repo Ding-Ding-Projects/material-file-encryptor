@@ -53,6 +53,12 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force out/evidence | Out-Null
           @{ commit=$env:GITHUB_SHA; runId=$env:GITHUB_RUN_ID; status=$env:BUILD_JOB_STATUS; runtimeVerification='pending independent local receipt' } | ConvertTo-Json | Set-Content out/evidence/build-receipt.json
+      - name: Preserve verified promotion input
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release-promotion-input
+          path: release-output/promotion-input.json
+          if-no-files-found: error
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         continue-on-error: true
@@ -88,4 +94,46 @@ jobs:
             ${{ env.DEPENDENCY_EVIDENCE_ROOT }}/*.json
             ${{ env.DEPENDENCY_EVIDENCE_ROOT }}/*.bin
           if-no-files-found: ignore
+          retention-days: 14
+
+  promote:
+    needs: windows
+    if: github.ref == 'refs/heads/main'
+    runs-on: windows-2022
+    timeout-minutes: 15
+    concurrency:
+      group: default-release-promotion
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-promotion-input
+          path: release-output
+      - name: Verify and promote current main release
+        shell: powershell
+        run: |
+          . ./.github/scripts/bootstrap-promotion.ps1
+          ./.github/scripts/promote-release.ps1
+      - name: Record safe promotion result
+        if: always()
+        continue-on-error: true
+        shell: powershell
+        env:
+          PROMOTION_JOB_STATUS: ${{ job.status }}
+        run: |
+          New-Item -ItemType Directory -Force release-output | Out-Null
+          if (!(Test-Path -LiteralPath release-output/promotion-receipt.json)) {
+            @{sourceCommit=$env:GITHUB_SHA;runId=$env:GITHUB_RUN_ID;status=$env:PROMOTION_JOB_STATUS;promoted='unverified';reason='promotion-not-verified'} | ConvertTo-Json | Set-Content release-output/promotion-receipt.json -Encoding utf8
+          }
+      - name: Preserve promotion decision
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release-promotion-receipt
+          path: release-output/promotion-receipt.json
+          if-no-files-found: warn
           retention-days: 14

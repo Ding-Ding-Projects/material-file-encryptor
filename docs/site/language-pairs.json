@@ -43,8 +43,8 @@
     {
       "source": "docs/features/appearance/README.md",
       "translation": "docs/features/appearance/README.zh-HK.md",
-      "sourceSha256": "1777e18060fbbfe6ba6058ad04d35c6a3a673b801a6f63376e20f39869fc4950",
-      "translationSha256": "123602b141d811e1ea5bc355a74e7d48a0c4c7ac48ee29a8684d85ba9b6155d3"
+      "sourceSha256": "c0300662cc7fdd983b1388bedbd1f46de9816d94fdb3241acd81525a44949eed",
+      "translationSha256": "ff2fa474794cc360c0c2b66608f54580e87bb58006c029259954b5243e9c3b30"
     },
     {
       "source": "docs/features/appearance/raster-workflows.md",
@@ -265,8 +265,8 @@
     {
       "source": "docs/features/release/native-update-controller.md",
       "translation": "docs/features/release/native-update-controller.zh-HK.md",
-      "sourceSha256": "5d84077ff7b0f271c0cb9461dcbd45e1d3a45b7d5e93684b2a7d383b1c6b202a",
-      "translationSha256": "1f71b2ebcd4b93b04ce4407e87141dbc5d8b1341ce8ebe06ce2a060a6da4e309"
+      "sourceSha256": "14a54e33a5d4bb1a8baf570d7c4ad58494496d50cbd54bc4eeaa0a9f9b2a38fb",
+      "translationSha256": "419fbf30f3ea41f12ed2bb00a25e3172dd98b63406cb3a5603565806be93f231"
     },
     {
       "source": "docs/features/release/preview-delivery.md",
@@ -459,6 +459,12 @@
       "translation": "docs/features/interface/motion-keyframes.zh-HK.md",
       "sourceSha256": "4544afb9d1ae29acef3108044a01b74fe066c1ba4d3c4305bdf4c57bf3191795",
       "translationSha256": "1467f23a8e26af5cc79e36a7595dfc80a50d30deac707e55e05acfbf3956f7b6"
+    },
+    {
+      "source": "docs/features/appearance/image-placement.md",
+      "translation": "docs/features/appearance/image-placement.zh-HK.md",
+      "sourceSha256": "2441c4987fb93c38d0df7e78f9e757b05690e1d481b96b4a0c93159f5ff9debf",
+      "translationSha256": "1400d6478cc38b4caa81b3c004fca276dbf5a312803569f852074ce0a403cdda"
     },
     {
       "source": "docs/features/interface/transition-properties.md",

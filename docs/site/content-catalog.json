@@ -155,7 +155,9 @@
     "docs/features/surface-foundation/updates-panel.md",
     "docs/features/surface-foundation/updates-panel.zh-HK.md",
     "docs/features/surface-foundation/workflow-handoffs.md",
-    "docs/features/surface-foundation/workflow-handoffs.zh-HK.md"
+    "docs/features/surface-foundation/workflow-handoffs.zh-HK.md",
+    "docs/features/appearance/image-placement.md",
+    "docs/features/appearance/image-placement.zh-HK.md"
   ],
   "categories": [
     "access",
