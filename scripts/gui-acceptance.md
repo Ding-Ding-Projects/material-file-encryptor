@@ -59,6 +59,12 @@ and subsequent preparation recreates only that deliberate deletion with exclusiv
 creation. Foreign files or changed bytes prevent mutation. Resize uses actual
 browser viewport input and does not establish physical display scaling. These
 producers remain source-verified until the pinned packaged candidate runs them.
+Menu keyboard input targets the unique `.query` field, excluding the hidden
+regular-expression builder fields. After ownership admission, restoration attempts
+overlay dismissal, viewport restoration and independently verified native-file
+restoration even if an earlier step fails. Any failed step rejects the overall
+restoration with aggregated causes; successful file removal alone is not reported
+as complete restoration.
 
 | State family | Required supported setup |
 | --- | --- |

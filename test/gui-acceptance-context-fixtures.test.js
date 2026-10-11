@@ -11,7 +11,7 @@ function fixture({wrongTarget=false,renders=1,wrongFocus=false}={}){
  const calls=[];let menu=false,editor=false,selected=[],focus='b',size={width:1180,height:850};
  const page={
   keyboard:{async press(key){calls.push(key);if(key==='Enter'){menu=false;editor=true;}if(key==='Escape'){menu=false;editor=false;}}},
-  locator(selector){return {async click(options){calls.push({selector,...options});if(options?.button==='right')menu=true;else if(selector.includes('data-file-id'))selected=['a'];}};},
+  locator(selector){return {async click(options){if(selector==='mfe-context-menu mfe-search md-outlined-text-field')throw Error('Strict locator: four search fields including hidden builder controls');calls.push({selector,...options});if(options?.button==='right')menu=true;else if(selector.includes('data-file-id'))selected=['a'];}};},
   async waitForFunction(){},
   async setViewportSize(value){calls.push({resize:value});size=value;menu=false;},
   async evaluate(fn){const text=String(fn);
@@ -74,4 +74,21 @@ test('mounted context removal verifies owned bytes and recreates only its delibe
  const prior=fake.page.evaluate;fake.page.evaluate=async fn=>String(fn).includes('window.drive.listFiles')?{more:false,rows:[{id:'a',path:'Acceptance A.txt'},{id:'x',path:'foreign.txt'}]}:prior(fn);
  await assert.rejects(producer.prepare(context),/Unexpected files/);assert.equal(data.has(paths[1]),false);data.delete('N:\\foreign.txt');fake.page.evaluate=prior;
  await producer.prepare(context);assert.equal(data.get(paths[1]),'Synthetic beta.\n');await producer.restore(context);assert.equal(data.size,0);
+});
+test('restoration attempts viewport and native cleanup even when dismissal and viewport fail',async()=>{
+ const fake=fixture({wrongFocus:true});let nativeCalls=0,viewportCalls=0;
+ const producer=createContextFoundationFixture({opened:{page:fake.page,target:{sourceCommit}},identity:async c=>assert.equal(c.binding.sourceCommit,sourceCommit),prepare:async()=>{},restore:async()=>{nativeCalls++;return {restored:true};},list:async()=>({more:false,rows:[{id:'a',path:'Acceptance A.txt'},{id:'b',path:'Acceptance B.txt'}]}),removeTarget:async()=>{}});
+ await producer['open-context'](context);await assert.rejects(producer.resize(context),/restore target focus/);
+ fake.page.evaluate=async()=>{throw Error('Dismissal observation unavailable');};
+ fake.page.setViewportSize=async()=>{viewportCalls++;throw Error('Viewport restoration unavailable');};
+ let result;try{await producer.restore(context);}catch(error){result=error;}
+ assert.equal(nativeCalls,1,'Native restoration must still run');assert.equal(viewportCalls,1,'Viewport restoration must still run');
+ assert.ok(result instanceof AggregateError);assert.equal(result.errors.length,2);
+});
+test('restoration retains all failures and does not mutate after identity rejection',async()=>{
+ const fake=fixture();let nativeCalls=0;
+ const producer=createContextFoundationFixture({opened:{page:fake.page,target:{sourceCommit}},identity:async c=>assert.equal(c.binding.sourceCommit,sourceCommit),restore:async()=>{nativeCalls++;throw Error('Native ownership changed');}});
+ fake.page.evaluate=async()=>{throw Error('Dismissal unavailable');};
+ await assert.rejects(producer.restore(context),error=>error instanceof AggregateError&&error.errors.length===2);assert.equal(nativeCalls,1);
+ await assert.rejects(producer.restore({binding:{sourceCommit:'foreign'}}));assert.equal(nativeCalls,1);
 });

@@ -27,7 +27,18 @@ export function createContextFoundationFixture({opened,prepare,restore,identity,
  return {
   requireActionProof:true,
   async prepare(context){await identity(context);await dismiss();return prepare(context);},
-  async restore(context){await identity(context);await dismiss();if(viewport){await page.setViewportSize(viewport);viewport=null;}capturedId=null;return restore(context);},
+  async restore(context){
+   await identity(context);
+   const errors=[];let result;
+   const attempt=async(name,operation)=>{try{await operation();}catch(cause){errors.push(new Error('Context restoration failed: '+name,{cause}));}};
+   await attempt('dismissal',dismiss);
+   await attempt('viewport',async()=>{if(viewport){await page.setViewportSize(viewport);viewport=null;}});
+   // UI transport failures must not skip separately identity/hash-checked files.
+   await attempt('native files',async()=>{result=await restore(context);assert.equal(result?.restored,true,'Native restoration was not confirmed');});
+   capturedId=null;
+   if(errors.length)throw new AggregateError(errors,'Context fixture restoration incomplete');
+   return result;
+  },
   async 'open-context'(context){
    await identity(context);await dismiss();const listing=await list();assert.equal(listing.more,false);
    const find=name=>listing.rows.find(row=>row.path.replace(/^[/\\]+/,'')===name)?.id;
@@ -51,7 +62,7 @@ export function createContextFoundationFixture({opened,prepare,restore,identity,
   },
   async 'select-action'(context){
    await identity(context);const before=await menuState();assert.equal(before.count,1);assert.equal(before.targetId,capturedId);
-   await page.locator('mfe-context-menu mfe-search md-outlined-text-field').click();
+   await page.locator('mfe-context-menu mfe-search md-outlined-text-field.query').click();
    await page.keyboard.press('Control+A');await page.keyboard.press('Backspace');
    await page.waitForFunction(()=>{const m=[...document.querySelectorAll('mfe-context-menu')].find(n=>!n.hidden&&n.menu?.open);return m&&m.itemsHost.querySelectorAll('md-menu-item').length===m.items.length;},undefined,{timeout:10000});
    const action=await page.evaluate(()=>{
@@ -71,7 +82,7 @@ export function createContextFoundationFixture({opened,prepare,restore,identity,
    let effect;
    try{
     // Start at the search field using actual input, then traverse to the action.
-    await page.locator('mfe-context-menu mfe-search md-outlined-text-field').click();
+    await page.locator('mfe-context-menu mfe-search md-outlined-text-field.query').click();
     for(let index=0;index<=action.index;index++)await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
     await page.waitForFunction(label=>{const panel=document.querySelector('.appearance-editor');return panel&&!panel.hidden&&panel.querySelector('h2')?.textContent.endsWith(': '+label);},action.label,{timeout:10000});
