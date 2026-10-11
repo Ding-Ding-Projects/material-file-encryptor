@@ -8,7 +8,7 @@ The desktop settings store now has one mutation boundary, including when supplie
 
 Protected mode changes require successful credential setup or verification followed by the privileged shared-record write. Only that successful write permits the matching renderer transition. Imports, reset and encrypted history restore cannot substitute for this path. Trusted host reads and subscription events synchronize the shared record through a distinct capability. Passwords remain at the existing privileged credential boundary and are never added to settings or history.
 
-Desktop settings reset and private-history pruning use the actual two-key, full-slider confirmation component. Reset does not override protected mode authorization. Cancelling confirmation leaves settings unchanged. This scoped change does not complete the other destructive actions in the product.
+Desktop settings reset and private-history pruning use the actual two-key, full-slider confirmation component. Reset does not override protected mode authorization. Approval mode never reports the caller operation as completed. Profile loss and pagehide cancel pending approvals, including cached navigation; pruning rechecks the original approval signal, history generation and stored tail before committing. Cancelling confirmation leaves settings unchanged. This scoped change does not complete the other destructive actions in the product.
 
 ## Independent delivery queue
 

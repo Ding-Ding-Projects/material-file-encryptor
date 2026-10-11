@@ -45,3 +45,15 @@ export function createDesktopSettingsIntegrity({storage,isAuthenticated=()=>fals
 }
 
 
+
+/** A navigation or authentication change invalidates approval, including a page
+ * entering the back-forward cache. Callers recheck after every approval await. */
+export function createSettingsConfirmationLifetime({target,isAuthenticated,isHistoryUnlocked=()=>true}={}) {
+ let controller=new AbortController(),closed=false;
+ const cancel=()=>{controller.abort();controller=new AbortController();};
+ target?.addEventListener('pagehide',cancel);
+ return {get signal(){return controller.signal;},cancel,
+  validate(signal,{history=false}={}){if(closed||signal.aborted||!isAuthenticated()||(history&&!isHistoryUnlocked()))throw Error('Unlock the local profile and private history before confirming this action.');},
+  destroy(){closed=true;cancel();target?.removeEventListener('pagehide',cancel);}
+ };
+}

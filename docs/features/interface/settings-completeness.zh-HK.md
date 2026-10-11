@@ -48,3 +48,5 @@
 
 - [本機個人化](local-personalization.zh-HK.md)
 - [訪客個人化](visitor-personalization.zh-HK.md)
+
+確認只會授權操作，唔會預先報告操作完成。設定檔鎖定同 pagehide 都會取消待處理授權，包括進入瀏覽器快取嘅導覽；清理歷史會喺寫入前重新檢查原有授權、歷史狀態同儲存記錄。
