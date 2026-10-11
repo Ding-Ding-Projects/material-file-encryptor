@@ -1,15 +1,15 @@
 /** Approval-only reset with an invocation-bound page and authentication lifetime.
  * The supplied store remains the authority for protected-mode transitions. */
 export function createSettingsResetWorkflow({store,host,requestConfirmation,translate=value=>value,isAuthenticated=()=>true,eventTarget}={}){
- let active=true,controller=new AbortController();
+ let active=true,controller=new AbortController();const pending=new Set();
  const invalidate=()=>{controller.abort();controller=new AbortController();};
  eventTarget?.addEventListener('pagehide',invalidate);
- return {invalidate,
+ return {invalidate,invalidatePending(){if(pending.size)invalidate();},
   async reset(){
    if(!requestConfirmation)throw Error('The settings reset confirmation adapter is unavailable.');
    invalidate();const signal=controller.signal;
    const validate=()=>{if(!active||signal.aborted||!isAuthenticated())throw Error('The settings reset was cancelled. Unlock the profile and try again.');};
-   validate();const approval=await requestConfirmation(host,{action:translate('Reset local preferences'),affected:translate('Language, appearance, attention and local schedule preferences'),translate,signal,confirmationOnly:true,validateConfirmation:validate});
+   validate();pending.add(signal);let approval;try{approval=await requestConfirmation(host,{action:translate('Reset local preferences'),affected:translate('Language, appearance, attention and local schedule preferences'),translate,signal,confirmationOnly:true,validateConfirmation:validate});}finally{pending.delete(signal);}
    if(!approval?.confirmed)return {confirmed:false};validate();
    const result=store.reset();return {confirmed:true,result};
   },

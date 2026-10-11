@@ -16,11 +16,12 @@ test('actual approval helper and visitor settings reset cancel safely and record
  const history=createPrivateHistory({storage});await history.setup('synthetic independent history');let authenticated=true;
  const controller=createVisitorSettings({storage,historyManager:history,isAuthenticated:()=>authenticated,credentialCapabilities:{setSharedCredential:async()=>true,verifySharedCredential:async()=>true}});
  controller.store.update({theme:'dark'});await controller.flushHistory();const baseline=(await history.list()).length;
- for(const mode of ['cancel','navigation','auth-loss','destroy']){
+ for(const mode of ['cancel','rerender','navigation','auth-loss','destroy']){
   const host=new Node();host.ownerDocument=doc;const target=new EventTarget();const workflow=createSettingsResetWorkflow({store:controller.store,host,requestConfirmation:requestSuperConfirmation,isAuthenticated:()=>authenticated,eventTarget:target});const operation=workflow.reset();
   if(mode==='cancel')host.children.at(-1).children[2].listeners.click();
+  else if(mode==='rerender'){workflow.invalidatePending();assert.equal(host.children.at(-1).removed,true);}
   else{confirm(host);if(mode==='navigation')target.dispatchEvent(new Event('pagehide'));if(mode==='auth-loss'){authenticated=false;workflow.invalidate();authenticated=true;}if(mode==='destroy')workflow.destroy();}
-  if(mode==='cancel')assert.deepEqual(await operation,{confirmed:false});else await assert.rejects(operation,/cancelled/);
+  if(mode==='cancel'||mode==='rerender')assert.deepEqual(await operation,{confirmed:false});else await assert.rejects(operation,/cancelled/);
   assert.equal(controller.store.get().theme,'dark');await controller.flushHistory();assert.equal((await history.list()).length,baseline);workflow.destroy();
  }
  const host=new Node();host.ownerDocument=doc;const workflow=createSettingsResetWorkflow({store:controller.store,host,requestConfirmation:requestSuperConfirmation,isAuthenticated:()=>authenticated});const reset=workflow.reset();confirm(host);assert.equal((await reset).confirmed,true);await controller.flushHistory();assert.equal(controller.store.get().theme,'system');assert.equal((await history.list()).length,baseline+1);
