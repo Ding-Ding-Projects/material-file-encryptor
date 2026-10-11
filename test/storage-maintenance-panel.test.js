@@ -26,3 +26,9 @@ test('cancel targets only the displayed packing operation and stays disabled whi
  const panel=new StorageMaintenance();panel.diagnostics=diagnostics;panel.operations=[{kind:'packing',operationId:'pack-1',state:'running',phase:'packing',bytesCompleted:10,totalBytes:20}];let id;
  panel.services={cancelOperation:async value=>{id=value;},storageDiagnostics:async()=>diagnostics,operations:async()=>[{kind:'packing',operationId:'pack-1',state:'cancelling'}]};panel.render();panel.operationList.children[0].children[2].listeners.click();await new Promise(resolve=>setImmediate(resolve));assert.equal(id,'pack-1');assert.equal(panel.operationList.children[0].children[2].disabled,true);
 });
+test('durable pause preserves queued counts and Resume clears it through a new packing request',async()=>{
+ const panel=new StorageMaintenance();let resumed=false,submitted;
+ panel.services={storageDiagnostics:async()=>({...diagnostics,packingPaused:!resumed}),operations:async()=>[{kind:'packing',operationId:'old',state:'cancelled',phase:'packing'}],startPacking:async value=>{submitted=value;resumed=true;}};
+ await panel.refresh();assert.equal(panel.pack.textContent,'Resume packing');assert.match(panel.message.textContent,/Queued files are retained/);assert.equal(panel.rows.pending.value.textContent,'2');assert.equal(panel.pack.disabled,false);
+ panel.setLanguage('yue');assert.equal(panel.pack.textContent,'繼續整理');assert.match(panel.message.textContent,/排隊檔案會保留/);await panel.start();assert.deepEqual(submitted,{partSizeBytes:83886080});assert.equal(panel.diagnostics.packingPaused,false);assert.equal(panel.pack.textContent,'整理目前檔案');
+});

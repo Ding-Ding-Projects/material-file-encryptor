@@ -9,3 +9,5 @@ Storage maintenance is a dedicated task panel with current-reference, history-on
 The panel distinguishes queued files and active writers. Historical ciphertext remains retained while recorded versions reference it. Packing does not rewrite history or pad a short part. No deletion action is provided by this panel.
 
 Source and synthetic tests are not built-surface evidence. Normal/minimum viewport, three language modes, both themes and 100/125/150/200 percent scale captures remain required at integration. No installation, installed update or removal is authorized by this specification.
+
+Cancelling packing durably pauses the queue without discarding pending files. The panel displays the paused state and changes its primary action to Resume packing, which submits startPacking and clears the native pause.
