@@ -56,11 +56,13 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
     updateNotification(id,patch){const changed=model.updateNotification(id,patch);if(changed)notifications.renderEntries();return changed;},
     setLanguage(value){const next=['en','yue','bilingual'].includes(value)?value:'en';if(next===activeLanguage)return;const roots=[shell,palette,notifications];const states=roots.map(captureSurfaceState);activeLanguage=next;configure();frame?.setLanguage(next);roots.forEach((root,index)=>restoreSurfaceState(root,states[index]));shell.renderTabs();palette.renderResults();notifications.renderEntries();for(const panel of panels.values())panel.setLanguage(next);},
     registerPanel,
+    setLogo(value){frame?.setLogo(value);},
     setProvenance(value){provenance=value;build.value=value;},
     registerCommands(value){return registerOwnedCommands({get:()=>hostCommands,set:value=>{hostCommands=value;},refresh:configure},value);},
     registerViews(value){const active=model.getState().activeTabId;for(const view of value){if(!view.id||!(view.root instanceof HTMLElement))throw new TypeError('A view id and root are required');views.set(view.id,view);if(view.layout!==false)registerPanel(view.id,view.root);if(!tabs.some(t=>t.id===view.id))tabs.push(view);labels.set(view.id,view.label);model.registerCanonicalTab(view.id,localized(view.label,'en'));if(shouldOpenRegisteredView(model.getState(),view.id))model.openTab({id:view.id,label:localized(view.label,'en')});}model.activateTab(active);configure();showView(model.getState().activeTabId);},
     destroy(){frame?.destroy();getContextOverlay(host.ownerDocument).destroy();audio.destroy();for(const panel of panels.values())panel.destroy();panels.clear();clearTimeout(messageTimer);document.removeEventListener('keydown',keydown);for(const node of[shell,build,toolbar,notifications,live,palette,context])node.remove();}
   };
+  context.addEventListener('context-action-error',event=>api.notify({title:localized(text('Action unavailable','操作無法使用'),activeLanguage),message:event.detail.error.message,level:'warning'}));
   palette.addEventListener('command-error',event=>api.notify({title:localized(text('Command failed','指令未能完成'),activeLanguage),message:event.detail.error.message,level:'error'}));
   return api;
 }

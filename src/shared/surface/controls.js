@@ -9,6 +9,7 @@ export const CONTROL_PROVENANCE = Object.freeze({
   'mfe-dialog': '@material/web/dialog with slotted form lifecycle'
 });
 export const CONTROL_SELECTOR = 'md-filled-button,md-filled-tonal-button,md-outlined-button,md-text-button,md-icon-button,md-outlined-text-field,md-outlined-select,md-checkbox,md-radio,md-switch,md-slider,mfe-date-field,mfe-file-picker';
+export function controlKind(node){const tag=String(node.localName||node.tagName||'').toLowerCase();if(tag==='md-outlined-select'||tag==='select')return 'select';if(tag==='md-switch')return 'switch';if(tag==='md-checkbox')return 'checkbox';if(tag==='md-radio')return 'radio';if(tag==='md-slider')return 'range';if(tag==='button'||/^md-.*button$/.test(tag))return 'button';if(tag==='mfe-file-picker')return 'file';return node.type||'text';}
 function alias(node, name, target) { if (!(name in node)) Object.defineProperty(node,name,{configurable:true,get(){return this[target];},set(value){this[target]=value;}}); }
 export function prepareControl(node) {
   if (node.localName === 'md-switch') alias(node,'checked','selected');
@@ -20,6 +21,7 @@ export function prepareControl(node) {
     for (const name of ['selectionStart','selectionEnd']) if (!(name in node)) Object.defineProperty(node,name,{get(){return this.shadowRoot?.querySelector('input,textarea')?.[name]??0;},set(value){const input=this.shadowRoot?.querySelector('input,textarea');if(input)input[name]=value;}});
     if (!node.setSelectionRange) node.setSelectionRange=(...args)=>node.shadowRoot?.querySelector('input,textarea')?.setSelectionRange(...args);
   }
+  if(node.localName==='md-outlined-text-field')queueMicrotask(()=>{if(node.isConnected)connectFieldClear(node);});
   if(node.dataset)node.dataset.materialPrimitive=node.localName;
   return node;
 }
@@ -53,7 +55,7 @@ class PlatformField extends (globalThis.HTMLElement||class{}) {
   get files(){return this.input?.files??[];}
   get disabled(){return this.hasAttribute('disabled');} set disabled(value){this.toggleAttribute('disabled',!!value);}
   get required(){return this.hasAttribute('required');} set required(value){this.toggleAttribute('required',!!value);}
-  get type(){return this.getAttribute('type')||'date';} set type(value){this.setAttribute('type',value);}
+  get type(){return this.getAttribute('type')||(this.localName==='mfe-file-picker'?'file':'date');} set type(value){this.setAttribute('type',value);}
   get validity(){return this.input?.validity;} get validationMessage(){return this.input?.validationMessage??'';}
   checkValidity(){return this.input?.checkValidity()??true;} reportValidity(){const valid=this.checkValidity();if(!valid){this.field.error=true;this.field.errorText=this.validationMessage;this.focus();}return valid;}
   setCustomValidity(value){this.customValidity=String(value);this.input?.setCustomValidity(this.customValidity);} focus(){this.button?.focus();} click(){this.showPicker();}
@@ -80,17 +82,20 @@ export function upgradeControls(root) {
     if(next.localName==='md-outlined-select')next.value=props.value;
   }
 }
+const fieldClearOwners=new WeakSet();
+function connectFieldClear(field){if(fieldClearOwners.has(field)||field.readOnly||field.querySelector('[slot="trailing-icon"]'))return;fieldClearOwners.add(field);const button=field.ownerDocument.createElement('md-icon-button');button.type='button';button.slot='trailing-icon';button.textContent='×';const refresh=()=>{const label=field.label||field.getAttribute('aria-label')||'Text field';button.setAttribute('aria-label',((field.ownerDocument.documentElement.lang||'').startsWith('zh')?'清除欄位：':'Clear field: ')+label);button.disabled=!!(field.disabled||field.readOnly);};refresh();button.addEventListener('pointerdown',refresh);field.addEventListener('focusin',refresh);button.addEventListener('click',()=>{if(field.disabled||field.readOnly||!requestControlAdmission(field))return;field.value='';field.setCustomValidity?.('');field.dispatchEvent(new Event('input',{bubbles:true,composed:true}));field.dispatchEvent(new Event('change',{bubbles:true,composed:true}));field.focus();});field.append(button);}
 export function requestControlAdmission(target){return target.dispatchEvent(new CustomEvent('mfe-action-request',{bubbles:true,composed:true,cancelable:true,detail:{target}}));}
 const selectSearchOwners=new WeakMap();
 /** Adjacent choice search uses the shared menu and its full regex workbench. */
 export function connectSelectSearch(select,{language='en'}={}) {
   if(selectSearchOwners.has(select))return selectSearchOwners.get(select);
   if(!select.parentNode)return()=>{};
-  const button=select.ownerDocument.createElement('md-icon-button');button.setAttribute('data-choice-search','');button.textContent='⌕';const label=select.label||select.getAttribute('aria-label')||'Choices';button.setAttribute('aria-label',(language==='yue'?'搜尋選項：':'Search choices: ')+label);button.title=button.getAttribute('aria-label');
+  const button=select.ownerDocument.createElement('md-icon-button');button.setAttribute('data-choice-search','');button.textContent='⌕';const label=select.label||select.getAttribute('aria-label')||'Choices';button.setAttribute('aria-label',(language==='yue'?'搜尋選項：':'Search choices: ')+label);button.title=button.getAttribute('aria-label');button.disabled=!!select.disabled;button.hidden=!!select.hidden;
+  const observer=typeof MutationObserver==='undefined'?null:new MutationObserver(()=>{button.disabled=!!select.disabled;button.hidden=!!select.hidden;});observer?.observe(select,{attributes:true,attributeFilter:['disabled','hidden']});
   const open=async event=>{if(select.disabled||!requestControlAdmission(select))return;const {openContextMenu}=await import('./overlay.js');if(!select.isConnected)return;const options=[...select.querySelectorAll('md-select-option')];openContextMenu({anchor:button,event,target:select,language,items:options.map(option=>({id:option.value,label:option.textContent,disabled:option.disabled,run:()=>{if(select.disabled||!select.isConnected||option.disabled||!requestControlAdmission(select))return;select.value=option.value;select.dispatchEvent(new Event('input',{bubbles:true,composed:true}));select.dispatchEvent(new Event('change',{bubbles:true,composed:true}));select.focus();}}))});};
-  button.addEventListener('click',open);select.after(button);const dispose=()=>{button.removeEventListener('click',open);button.remove();selectSearchOwners.delete(select);};selectSearchOwners.set(select,dispose);return dispose;
+  button.addEventListener('click',open);select.after(button);const dispose=()=>{observer?.disconnect();button.removeEventListener('click',open);button.remove();selectSearchOwners.delete(select);};selectSearchOwners.set(select,dispose);return dispose;
 }
 if(typeof document!=='undefined'&&typeof MutationObserver!=='undefined'){
-  const mount=()=>{if(!document.body)return;const scan=node=>{if(node.localName==='md-outlined-select')connectSelectSearch(node);for(const select of node.querySelectorAll?.('md-outlined-select')||[])connectSelectSearch(select);};scan(document.body);const observer=new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes)if(node.nodeType===1)scan(node);});observer.observe(document.body,{subtree:true,childList:true});};
+  const mount=()=>{if(!document.body)return;const scan=node=>{if(node.localName==='md-outlined-select')connectSelectSearch(node);if(node.localName==='md-outlined-text-field')connectFieldClear(node);for(const select of node.querySelectorAll?.('md-outlined-select')||[])connectSelectSearch(select);for(const field of node.querySelectorAll?.('md-outlined-text-field')||[])connectFieldClear(field);};scan(document.body);const observer=new MutationObserver(records=>{for(const record of records){for(const node of record.addedNodes)if(node.nodeType===1)scan(node);for(const node of record.removedNodes)if(node.nodeType===1&&!node.isConnected){if(node.localName==='md-outlined-select')selectSearchOwners.get(node)?.();for(const select of node.querySelectorAll?.('md-outlined-select')||[])selectSearchOwners.get(select)?.();}};});observer.observe(document.body,{subtree:true,childList:true});};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else queueMicrotask(mount);
 }
