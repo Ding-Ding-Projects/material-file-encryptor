@@ -4,7 +4,8 @@
 - [x] Pass genuine mounted lifecycle against exact f8 product bytes with the separately cloud-compiled b516 verifier; retain exact source-specific receipt and normal process/drive/fixture absence proof.
 - [x] Independently review and integrate f020 documentation/motion/guidance/server/font foundations, with 105 canonical IDs, 210 acceptance rows and 160 public routes.
 - [x] Verify main acbdf10 push and exact deployed documentation provenance, all 198 files, 6,430 internal references and repository homepage.
-- [ ] Verify current main cloud production and its normal release independently; 617320a stopped at unchanged SDK digest verification before compilation.
+- [ ] Verify current main cloud production and its normal release independently; 617320a stopped at SDK digest verification, 0222da9 stopped at Framework void-result output pollution, corrected source awaits cloud acceptance.
+- [x] Reproduce and independently refute actual Framework Task success-stream pollution at 3aa6eb6, including real portable activation output shape.
 - [x] Independently refute bounded download cache/replacement/junction recovery at 42ccd93; production HTTPS delivery remains separate.
 - [x] Verify exact 617320a live content: 207 files and 6,594 internal references, with stable source and exact homepage.
 - [x] Independently verify downloaded normal v1.179.1 package for exact d8 source, including 761 CRC entries, 663 files and zero rejected privacy entries.

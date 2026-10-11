@@ -9,3 +9,10 @@ test('verified download preserves rejected bytes and publishes only pinned conte
   assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
   assert.match(result.stdout, /PASS: six verified-download scenarios; no network used/);
 });
+
+test('Framework asynchronous body returns no leaked task result through portable activation', { skip: process.platform !== 'win32' }, () => {
+  const result = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', fileURLToPath(new URL('./verified-download-framework.test.ps1', import.meta.url))], { encoding: 'utf8', timeout: 30000, windowsHide: true });
+  assert.equal(result.error, undefined);
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.match(result.stdout, /actual Framework VoidTaskResult reproduction; verification output zero; activation output one path/);
+});
