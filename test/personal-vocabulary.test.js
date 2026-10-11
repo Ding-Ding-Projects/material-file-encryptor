@@ -83,3 +83,14 @@ test('apostrophes within ordinary words do not protect the rest of a sentence', 
   assert.equal(replaceVocabulary("It’s time to encrypt folder/file.",vocabulary),"It’s time to lock folder/file.");
   assert.equal(replaceVocabulary("Don't encrypt 'folder with spaces/file' folder",vocabulary),"Don't lock 'folder with spaces/file' directory");
 });
+
+
+test('dynamic inventories have no entry-count ceiling within the documented byte bounds', () => {
+  const entries=Object.fromEntries(Array.from({length:10001},(_,index)=>[index.toString(36),'x']));
+  const replacements=Object.entries(entries).map(([from,to])=>({from,to}));
+  for(const payload of [{schemaVersion:1,entries},{version:1,replacements}]) {
+    const source=JSON.stringify(payload);
+    assert.ok(new TextEncoder().encode(source).length < 256*1024);
+    assert.equal(parseVocabulary(source).replacements.length,Object.keys(entries).length);
+  }
+});
