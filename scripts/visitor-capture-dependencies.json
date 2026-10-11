@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "workflow": ".github/workflows/capture-evidence.yml",
+  "job": "evidence",
+  "purpose": "Produce raw visitor-preferences evidence, without UI acceptance or release gating",
+  "platform": "ubuntu-24.04",
+  "dependencies": [
+    {
+      "name": "Node.js",
+      "version": "24.19.0",
+      "source": "dependencies.json node.version",
+      "bootstrap": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020"
+    },
+    {
+      "name": "Python",
+      "version": "3.12.12",
+      "bootstrap": "actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065"
+    },
+    {
+      "name": "GitHub CLI",
+      "version": "2.102.0",
+      "source": "dependencies.json gh.version",
+      "bootstrap": "Reuse exact version or download official cli/cli release and verify published SHA-256 checksums"
+    },
+    {
+      "name": "project packages",
+      "source": "package-lock.json",
+      "bootstrap": "npm ci --ignore-scripts --no-audit --no-fund",
+      "notes": "No package lifecycle scripts or desktop binary download"
+    },
+    {
+      "name": "Playwright",
+      "version": "1.64.0",
+      "source": "package-lock.json"
+    },
+    {
+      "name": "Chromium",
+      "revision": "1248",
+      "version": "156.0.8078.4",
+      "source": "playwright-core browsers.json",
+      "bootstrap": "playwright install --with-deps --no-shell chromium",
+      "notes": "Sandbox is mandatory; no insecure fallback"
+    },
+    {
+      "name": "Linux browser shared libraries",
+      "source": "Pinned Playwright browser dependency installer on ubuntu-24.04",
+      "bootstrap": "playwright install --with-deps",
+      "notes": "Actual installed versions belong in production receipts; OS package repositories are not immutable binary pins"
+    }
+  ],
+  "bootstrapEvidence": "Not executed on a fresh cloud host yet",
+  "localMechanics": "node scripts/check-visitor-capture-mechanics.mjs",
+  "ciRunsLocalMechanics": false,
+  "acceptanceEvaluated": false
+}

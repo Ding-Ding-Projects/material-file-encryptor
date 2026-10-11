@@ -41,3 +41,5 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 - [Typed color picker](color-picker.md): representations, palettes, rainbow and capability boundaries.
 
 - [Typed keyframe inspector](motion-keyframes.md): precise timing, values and reversible editing.
+
+- [Visitor preferences raw evidence](visitor-capture.md): source-bound manual capture production, sandboxed browser receipts and independent review boundaries.

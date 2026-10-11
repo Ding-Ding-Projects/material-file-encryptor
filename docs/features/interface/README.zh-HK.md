@@ -41,3 +41,5 @@
 - [具型別色彩選擇器](color-picker.zh-HK.md)：表示方式、調色盤、彩虹同能力界線。
 
 - [具型別關鍵影格檢查器](motion-keyframes.zh-HK.md)：精確時間、數值同可復原編輯。
+
+- [訪客偏好設定原始畫面證據](visitor-capture.zh-HK.md)：綁定來源嘅手動畫面產生、sandbox 瀏覽器記錄同獨立檢閱界線。

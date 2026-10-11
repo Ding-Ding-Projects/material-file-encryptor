@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {containedFile,verifyStatic} from './capture-visitor-evidence.mjs';
+const parent=path.resolve('out/capture-mechanics');await fs.mkdir(parent,{recursive:true});const root=await fs.mkdtemp(path.join(parent,'owned-'));await fs.writeFile(path.join(root,'index.html'),'synthetic public fixture');
+const data=await fs.readFile(path.join(root,'index.html'));const receipt={sourceCommit:'a'.repeat(40),files:[{path:'index.html',bytes:data.length,sha256:createHash('sha256').update(data).digest('hex')}]};
+assert.equal(await verifyStatic(root,receipt),true);
+for(const name of ['/outside','/material-file-encryptor/../private','/material-file-encryptor/%2e%2e/private','/material-file-encryptor/%5cprivate','/material-file-encryptor/%00'])assert.equal(containedFile(root,name),null);
+await fs.writeFile(path.join(root,'index.html'),'changed');await assert.rejects(verifyStatic(root,receipt),/STATIC_BYTES_CHANGED/);await fs.writeFile(path.join(root,'index.html'),data);assert.equal(await verifyStatic(root,receipt),true);
+console.log('PASS: actual containment and static-byte admission mechanics. No browser was launched; owned fixtures retained.');

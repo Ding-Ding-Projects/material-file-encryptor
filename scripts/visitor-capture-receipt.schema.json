@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Raw visitor capture receipt, without UI acceptance",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "route",
+    "sourceCommit",
+    "artifactSha256",
+    "acceptanceEvaluated",
+    "viewport",
+    "observations",
+    "captures",
+    "closure"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "route": {
+      "const": "cloud-linux-playwright"
+    },
+    "sourceCommit": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "producerCommit": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "artifactSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "acceptanceEvaluated": {
+      "const": false
+    },
+    "productionCompleted": {
+      "type": "boolean"
+    },
+    "productionError": {
+      "type": "object"
+    },
+    "viewport": {
+      "type": "object",
+      "required": [
+        "width",
+        "height",
+        "scale",
+        "evidenceKind"
+      ],
+      "properties": {
+        "width": {
+          "const": 320
+        },
+        "height": {
+          "const": 844
+        },
+        "scale": {
+          "const": 1
+        },
+        "evidenceKind": {
+          "const": "emulated-mobile"
+        }
+      }
+    },
+    "observations": {
+      "type": "array"
+    },
+    "captures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "pngSha256",
+          "measurementSha256",
+          "bytes",
+          "width",
+          "height",
+          "capturedAtUtc"
+        ]
+      }
+    },
+    "closure": {
+      "type": "object",
+      "required": [
+        "attempted",
+        "observedProcessesGone",
+        "serverClosed",
+        "profileDisposition"
+      ],
+      "properties": {
+        "attempted": {
+          "type": "boolean"
+        },
+        "observedProcessesGone": {
+          "type": "boolean"
+        },
+        "serverClosed": {
+          "type": "boolean"
+        },
+        "profileDisposition": {
+          "enum": [
+            "unobserved",
+            "retained",
+            "absent"
+          ]
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

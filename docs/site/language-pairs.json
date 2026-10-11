@@ -127,8 +127,8 @@
     {
       "source": "docs/features/interface/README.md",
       "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "83b5729e6e03b41078334457745092d3dfe2f8f1066fd1d2d873e6607693dedb",
-      "translationSha256": "c5206153e229d29eae14e8bd60f0366a124924af6f1194f3c812678c5a30b18d"
+      "sourceSha256": "42167f18a497dda5ff12220ffb42f3f5035a2d287d94e0448500036bb5450e5f",
+      "translationSha256": "e6634a15813015ddf94da2291dcde270ebecace51e75915cb594e0fac6c2d5d0"
     },
     {
       "source": "docs/features/interface/appearance-editor.md",
@@ -459,6 +459,12 @@
       "translation": "docs/features/interface/motion-keyframes.zh-HK.md",
       "sourceSha256": "4544afb9d1ae29acef3108044a01b74fe066c1ba4d3c4305bdf4c57bf3191795",
       "translationSha256": "1467f23a8e26af5cc79e36a7595dfc80a50d30deac707e55e05acfbf3956f7b6"
+    },
+    {
+      "source": "docs/features/interface/visitor-capture.md",
+      "translation": "docs/features/interface/visitor-capture.zh-HK.md",
+      "sourceSha256": "de880d1897f2a075e5fdd0672f53c79cb0493f04e0201cfd2794295d95a18116",
+      "translationSha256": "ec97848595f4bbaba16b0002521231e498b2c8ea0c4448b53b675a3d91209554"
     }
   ]
 }

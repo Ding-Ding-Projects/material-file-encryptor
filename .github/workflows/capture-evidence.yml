@@ -1,0 +1,75 @@
+name: Produce visitor preferences raw evidence
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: Exact deployed static source commit
+        required: true
+        default: befcc57f53796f8c496336edbe3bb0ed14688a3c
+      deployment_run:
+        description: Successful deployment run containing the static artifact
+        required: true
+        default: '38135624365'
+      artifact_id:
+        description: Exact github-pages artifact ID
+        required: true
+        default: '11700663249'
+      artifact_sha256:
+        description: Downloaded artifact ZIP SHA-256
+        required: true
+        default: 8eacaebd4792ad45a9e665071c5cc56c6dd26e0b8534a3d0fad3d657c2d401d2
+permissions:
+  contents: read
+  actions: read
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.19.0'
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.12'
+      - name: Bootstrap pinned GitHub CLI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ! command -v gh >/dev/null; then sudo apt-get update && sudo apt-get install -y gh; fi
+          if ! gh --version | head -1 | grep -F 'gh version 2.102.0 '; then
+            mkdir -p "$RUNNER_TEMP/visitor-gh"
+            gh release download v2.102.0 --repo cli/cli --dir "$RUNNER_TEMP/visitor-gh" --pattern 'gh_2.102.0_linux_amd64.tar.gz' --pattern 'gh_2.102.0_checksums.txt'
+            (cd "$RUNNER_TEMP/visitor-gh" && sha256sum --check --ignore-missing gh_2.102.0_checksums.txt)
+            tar -xzf "$RUNNER_TEMP/visitor-gh/gh_2.102.0_linux_amd64.tar.gz" -C "$RUNNER_TEMP/visitor-gh"
+            echo "$RUNNER_TEMP/visitor-gh/gh_2.102.0_linux_amd64/bin" >> "$GITHUB_PATH"
+          fi
+      - name: Admit exact static production artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CAPTURE_SOURCE: ${{ inputs.source }}
+          CAPTURE_RUN: ${{ inputs.deployment_run }}
+          CAPTURE_ARTIFACT: ${{ inputs.artifact_id }}
+          CAPTURE_DIGEST: ${{ inputs.artifact_sha256 }}
+        run: python3 scripts/prepare-visitor-capture.py
+      - name: Bootstrap pinned browser dependencies
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx --no-install playwright install --with-deps --no-shell chromium
+      - name: Produce raw preferences pixels and measurements
+        env:
+          CAPTURE_SOURCE: ${{ inputs.source }}
+        run: node scripts/capture-visitor-evidence.mjs --capture
+      - name: Attach raw evidence for independent review
+        if: ${{ always() }}
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: visitor-preferences-raw-${{ github.run_id }}
+          path: out/visitor-capture/evidence
+          if-no-files-found: warn
+          retention-days: 14
