@@ -107,5 +107,5 @@ if __name__ == '__main__':
     try:
         print(json.dumps(prove(json.load(sys.stdin))))
     except Exception as error:
-        print(json.dumps({'ok': False, 'client_ok': False, 'error': str(error)}))
+        print(json.dumps({'ok': False, 'client_ok': False, 'code': 'PROCESS_PROOF_FAILED' if str(error) == 'Process ancestry changed during inventory.' else 'MAIN_INSPECTOR_ADMISSION_FAILED', 'error': str(error)}))
         sys.exit(1)
