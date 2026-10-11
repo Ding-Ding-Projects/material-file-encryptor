@@ -1,3 +1,9 @@
+# Declarative initial fonts and concise navigation, 2026-10-11 UTC
+
+Reviewed caption candidatee9b42 is integrated in main3bee78a: navigation alone uses localized concise visible labels with full accessible action/target names. Reviewed font candidate12e33 now links the existing local font stylesheet before modules in the website home and desktop initial entries. Exact staging/path/CSP/loader checks passed independently; async metadata receipt validation and selection authority remain unchanged. The unchanged publisher literal was narrowly classified against baseline rather than hidden by a blanket scan claim.
+
+Generated article/category/wiki pageShell routes still need equivalent initial stylesheet linkage. Current font decoding/glyphs, fresh compact-label and action-button pixels, full matrix and remaining native field/select/public-shell conversion remain unfinished. Genuine source2f59 run38145393537 remains the exact historical palette/interaction tuple, not proof for newer source.
+
 # Registered action buttons and genuine Appearance tuple, 2026-10-11 UTC
 
 Candidatebc859f2d40efb7ccd80ce7547b28c2a56e41b3ea uses genuine registered md-outlined-button actions with original callbacks/promises/guidance. Independent vendor and mounted-consumer reviews passed, including disabled/read-only/disconnected/disposed queued-action rejection, deferred original credential completion, reset cancellation and schedule validation. This is source acceptance only; new action pixels remain pending. Native fields/selects and the public shell remain separate unfinished work.

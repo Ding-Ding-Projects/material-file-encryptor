@@ -67,3 +67,7 @@ cannot admit the inventory. Actual root production, native bridge admission,
 inspected rendered glyph identity, complete typography and replacement screenshots
 remain unverified. No system font was installed and no product GUI or heavy build
 was run.
+
+## Initial declarative registration
+
+The website home and desktop initial HTML entries link the local ./fonts/fonts.css stylesheet before their module scripts. Existing staging copies this exact stylesheet and its three font assets into each fonts directory; stylesheet asset URLs resolve relative to that directory. No runtime CDN or additional dependency is introduced. The asynchronous catalog, manifest/receipt validation and original font-selection authority remain unchanged. Declarative registration can populate FontFaceSet before an editor opens, but does not prove successful decoding, glyph coverage or rendered face identity. Those observations require a fresh built capture.
