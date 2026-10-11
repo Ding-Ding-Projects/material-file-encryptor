@@ -38,6 +38,7 @@ async function list(directory) {
   return files;
 }
 function validate(manifest, texts, catalog) {
+  assert.equal(new Set(catalog.articles).size, catalog.articles.length, 'Duplicate publication article');
   assert.equal(manifest.schemaVersion, 1);
   assert.equal(manifest.sourceLocale, 'en'); assert.equal(manifest.targetLocale, 'zh-HK');
   assert.equal(manifest.normalization, 'UTF-8 with LF line endings');
@@ -79,4 +80,9 @@ test('language completeness rejects stale hashes, changed code, missing literal 
   const removed = new Map(texts); removed.set(literalPair.translation, texts.get(literalPair.translation).replace(/`[^`\n]+`/, 'omitted'));
   const literalRebound = structuredClone(manifest); literalRebound.pairs.find(row => row.source === literalPair.source).translationSha256 = digest(removed.get(literalPair.translation));
   assert.throws(() => validate(literalRebound, removed, catalog));
+});
+
+test('publication inventory rejects duplicate article entries', () => {
+  const duplicate = structuredClone(catalog); duplicate.articles.push(duplicate.articles[0]);
+  assert.throws(() => validate(manifest, texts, duplicate), /Duplicate publication article/);
 });
