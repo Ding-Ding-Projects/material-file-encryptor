@@ -30,7 +30,9 @@ jobs:
           ./scripts/check-publication-source.ps1 -ExpectedSourceCommit $env:EXPECTED_SOURCE_COMMIT
       - name: Record build start
         shell: powershell
-        run: '"BUILD_STARTED_AT=$([DateTime]::UtcNow.ToString(''o''))" | Out-File $env:GITHUB_ENV -Append -Encoding utf8'
+        run: |
+          "BUILD_STARTED_AT=$([DateTime]::UtcNow.ToString('o'))" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          "DEPENDENCY_EVIDENCE_ROOT=$(Join-Path $env:LOCALAPPDATA 'MaterialFileEncryptor-BuildTools/download-evidence')" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
       - name: Build application
         shell: cmd
         run: build.bat /s
@@ -64,4 +66,16 @@ jobs:
             out/verification/mounted-lifecycle/**
             release-output/*
           if-no-files-found: warn
+          retention-days: 14
+
+      - name: Preserve dependency download diagnostics
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: ${{ always() && env.DEPENDENCY_EVIDENCE_ROOT != '' }}
+        continue-on-error: true
+        with:
+          name: dependency-download-evidence
+          path: |
+            ${{ env.DEPENDENCY_EVIDENCE_ROOT }}/*.json
+            ${{ env.DEPENDENCY_EVIDENCE_ROOT }}/*.bin
+          if-no-files-found: ignore
           retention-days: 14

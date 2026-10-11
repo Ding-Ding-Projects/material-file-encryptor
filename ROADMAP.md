@@ -4,10 +4,14 @@
 - [x] Pass genuine mounted lifecycle against exact f8 product bytes with the separately cloud-compiled b516 verifier; retain exact source-specific receipt and normal process/drive/fixture absence proof.
 - [x] Independently review and integrate f020 documentation/motion/guidance/server/font foundations, with 105 canonical IDs, 210 acceptance rows and 160 public routes.
 - [x] Verify main acbdf10 push and exact deployed documentation provenance, all 198 files, 6,430 internal references and repository homepage.
-- [ ] Verify current main cloud production and its normal release independently.
+- [ ] Verify current main cloud production and its normal release independently; 617320a stopped at unchanged SDK digest verification before compilation.
+- [x] Independently refute bounded download cache/replacement/junction recovery at 42ccd93; production HTTPS delivery remains separate.
+- [x] Verify exact 617320a live content: 207 files and 6,594 internal references, with stable source and exact homepage.
+- [x] Independently verify downloaded normal v1.179.1 package for exact d8 source, including 761 CRC entries, 663 files and zero rejected privacy entries.
 - [x] Repair and independently refute installed-font mount rollback/subscription recovery and cached bundled-font cancellation; source acceptance only.
 - [x] Integrate independently reviewed bundled-font build/site hooks and loaded-alias consumer admission; source/cache checks only.
-- [ ] Verify actual cloud package/site font inclusion, real browser decoding, exact rendered face behavior and controls.
+- [x] Independently verify seven font outputs and five exact font/license pins in downloaded normal v1.181.1 package, bound to docs 2fea.
+- [ ] Verify real browser decoding, exact rendered face behavior and controls; package presence does not establish rendering.
 - [ ] Verify persistent launch observer on the intended installed candidate and the restart isolation selector before any actual native update.
 - [ ] Prove installed automatic download, ready/Later behavior, active-work refusal and native update/restart without real-profile access.
 - [ ] Complete every app/site/settings/editor/motion/guidance/server feature and its genuine built-surface evidence; all 210 complete-surface rows remain unverified.

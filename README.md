@@ -8,7 +8,7 @@ A Windows Explorer encrypted drive with a native .NET engine, encrypted offline 
 
 The [installation and update repair](docs/features/release/installer-repair.md) addresses incomplete Squirrel extraction and unchanged release package versions. Current-source downloaded installation and real updating remain pending independent acceptance.
 
-Production builds use the existing Windows GitHub Actions workflow whenever supported, invoking exact root `build.bat /s` and `build-installer.bat /s`. It compiles and uploads the mounted verifier separately from the installer, without CI tests or lint. Downloaded normal v1.158.1 (source f8f3638) passed independent package verification and genuine mounted lifecycle checks using the separately cloud-compiled b516 verifier. Earlier v1.133.1 actually installed and registered correctly with all 663 payload files matched. Installed startup, automatic updating, current GUI and complete feature acceptance remain pending. See the [handoff](HANDOFF.md) for exact source boundaries.
+Production builds use the existing Windows GitHub Actions workflow whenever supported, invoking exact root `build.bat /s` and `build-installer.bat /s`, without CI tests or lint. Main 617320a stopped before compilation at SDK digest verification; the independently reviewed downloader correction keeps the pin and preserves diagnostics. Downloaded normal v1.179.1 (source d8a8b21) passed package/source/privacy checks. Earlier v1.133.1 actually installed with all 663 payload files matched. Installed startup, automatic updating, current GUI and complete feature acceptance remain pending. Exact 617320a live documentation matched all 207 files and 6,594 internal references. See the [handoff](HANDOFF.md) for source boundaries.
 
 ## Build and package
 
