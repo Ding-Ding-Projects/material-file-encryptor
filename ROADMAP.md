@@ -1,3 +1,9 @@
+## Color source integration, 2026-10-11 UTC
+
+- [ ] Deliver the independently reviewed color foundation through main cloud production and real rendered acceptance.
+- [ ] Verify and integrate corrected server preparation; all four execution targets remain unavailable.
+- [ ] Prove pure Material Design 3 on every visible surface through genuine built captures and interaction evidence.
+
 ## Verified unit delivery, 2026-10-11 UTC
 
 - [x] Deliver typed typography and optional workbench guidance source 727 as normal v1.205.1 with independent package and live-content acceptance.

@@ -176,21 +176,43 @@ const linear=c=>c<=.04045?c/12.92:((c+.055)/1.055)**2.4;
 const gamma=c=>c<=.0031308?12.92*c:1.055*c**(1/2.4)-.055;
 const polar=([l,a,b])=>[l,Math.hypot(a,b),(Math.atan2(b,a)*180/Math.PI+360)%360];
 const cartesian=([l,c,h])=>[l,c*Math.cos(h*Math.PI/180),c*Math.sin(h*Math.PI/180)];
+// CSS Color 4 sample conversion matrices, Bradford D65/D50 adaptation:
+// https://www.w3.org/TR/2026/CRD-css-color-4-20261009/#color-conversion-code
+const multiply=(matrix,vector)=>matrix.map(row=>row.reduce((sum,value,index)=>sum+value*vector[index],0));
+const D50=[.3457/.3585,1,(1-.3457-.3585)/.3585];
+const TO_D50=[[1.0479297925449969,.022946870601609652,-.05019226628920524],[.02962780877005599,.9904344267538799,-.017073799063418826],[-.009243040646204504,.015055191490298152,.7518742814281371]];
+const TO_D65=[[.955473421488075,-.02309845494876471,.06325924320057072],[-.0283697093338637,1.0099953980813041,.021041441191917323],[.012314014864481998,-.020507649298898964,1.330365926242124]];
 export function perceptualColors(value){
  const [r,g,b,alpha]=parseColor(value),[R,G,B]=[r,g,b].map(c=>linear(c/255));
  const f=t=>t>216/24389?Math.cbrt(t):t*841/108+4/29;
- const x=f((.4124564*R+.3575761*G+.1804375*B)/.95047),y=f(.2126729*R+.7151522*G+.072175*B),z=f((.0193339*R+.119192*G+.9503041*B)/1.08883);
+ const xyz=multiply(TO_D50,[.4124564*R+.3575761*G+.1804375*B,.2126729*R+.7151522*G+.072175*B,.0193339*R+.119192*G+.9503041*B]);
+ const [x,y,z]=xyz.map((value,index)=>f(value/D50[index]));
  const lab=[116*y-16,500*(x-y),200*(y-z)];
  const l=Math.cbrt(.4122214708*R+.5363325363*G+.0514459929*B),m=Math.cbrt(.2119034982*R+.6806995451*G+.1073969566*B),s=Math.cbrt(.0883024619*R+.2817188376*G+.6299787005*B);
  const oklab=[.2104542553*l+.793617785*m-.0040720468*s,1.9779984951*l-2.428592205*m+.4505937099*s,.0259040371*l+.7827717662*m-.808675766*s];
  return {lab:[...lab,alpha],lch:[...polar(lab),alpha],oklab:[...oklab,alpha],oklch:[...polar(oklab),alpha]};
 }
-/** Parse bounded sRGB and D65 perceptual entries; never silently clip gamut. */
+/** Parse bounded sRGB, D50 Lab/LCH and D65 OKLab entries; never silently clip gamut. */
 export function parseColorEntry(input){
  input=String(input).trim();
+ if(input.length>1024)throw new Error('Color entry exceeds its size limit.');
+ if(/^#[\da-f]{3,4}$/i.test(input))input='#'+input.slice(1).split('').map(channel=>channel+channel).join('');
+ const extended=/^(hsv|hsb|hwb|cmyk)\(\s*([^)]*)\)$/i.exec(input);
+ if(extended){
+  if(/^[,\s/]*[,/]|[,/]\s*$|[,/]\s*[,/]/.test(extended[2]))throw new Error('Invalid color channels.');
+  const kind=extended[1].toLowerCase(),parts=extended[2].trim().split(/\s*[,/]\s*|\s+/).filter(Boolean),count=kind==='cmyk'?4:3;
+  if(parts.length<count||parts.length>count+1||parts.some(part=>!/^[-+]?\d*\.?\d+(?:e[-+]?\d+)?%?$/i.test(part)))throw new Error('Invalid color channels.');
+  if(kind!=='cmyk'&&parts[0].endsWith('%'))throw new Error('Invalid color channels.');
+  const values=parts.map((part,index)=>Number.parseFloat(part)/(index===count&&part.endsWith('%')?100:1));
+  const alpha=values[count]??1;if(!Number.isFinite(alpha)||alpha<0||alpha>1)throw new Error('Color is outside the sRGB gamut or alpha range.');let rgb;
+  if(kind==='cmyk'){const channels=parts.slice(0,4).map((part,index)=>values[index]/(part.endsWith('%')?100:1));if(channels.some(value=>!Number.isFinite(value)||value<0||value>1))throw new Error('CMYK channels must be between 0 and 1 or 0% and 100%.');const [c,m,y,k]=channels;rgb=[c,m,y].map(channel=>(1-channel)*(1-k));}
+  else{const [hue,second,third]=values;if(![hue,second,third].every(Number.isFinite)||hue<0||hue>360||second<0||second>100||third<0||third>100)throw new Error('Hue must be 0 to 360 and percentage channels 0 to 100.');const h=(hue%360)/60,s=second/100,v=third/100,c=(kind==='hwb'?1:v)*(kind==='hwb'?1:s),x=c*(1-Math.abs(h%2-1)),base=h<1?[c,x,0]:h<2?[x,c,0]:h<3?[0,c,x]:h<4?[0,x,c]:h<5?[x,0,c]:[c,0,x];rgb=kind==='hwb'?(s+v>=1?[s/(s+v),s/(s+v),s/(s+v)]:base.map(channel=>channel*(1-s-v)+s)):base.map(channel=>channel+v-c);}
+  return '#'+[...rgb,alpha].map(value=>Math.round(value*255).toString(16).padStart(2,'0')).join('');
+ }
  const name=input.toLowerCase();if(Object.hasOwn(CSS_NAMED_COLORS,name))return CSS_NAMED_COLORS[name];
  if(/^#[\da-f]{6}([\da-f]{2})?$/i.test(input)){parseColor(input);return input.toLowerCase();}
  const m=/^(lab|lch|oklab|oklch|rgb|rgba|hsl|hsla)\(\s*([^)]*)\)$/i.exec(String(input));if(!m)throw new Error('Use HEX, RGB, HSL, Lab, LCH, OKLab or OKLCH.');
+ if(/^[,\s/]*[,/]|[,/]\s*$|[,/]\s*[,/]/.test(m[2]))throw new Error('Invalid color channels.');
  const parts=m[2].split(/[\s,\/]+/).filter(Boolean);if(parts.length<3||parts.length>4||parts.some(p=>!/^[-+]?\d*\.?\d+(?:e[-+]?\d+)?%?$/i.test(p)))throw new Error('Invalid color channels.');
  const nums=parts.map(p=>parseFloat(p)),alpha=parts.length===4?nums[3]/(parts[3].endsWith('%')?100:1):1;let rgb;
  const kind=m[1].toLowerCase();let [a,b,c]=nums;
@@ -198,7 +220,7 @@ export function parseColorEntry(input){
  else if(kind.startsWith('hsl')){b/=100;c/=100;const q=(1-Math.abs(2*c-1))*b,x=q*(1-Math.abs(((a%360+360)%360/60)%2-1)),off=c-q/2;rgb=(a=((a%360+360)%360),a<60?[q,x,0]:a<120?[x,q,0]:a<180?[0,q,x]:a<240?[0,x,q]:a<300?[x,0,q]:[q,0,x]).map(v=>v+off);}
  else {if(kind==='lch'||kind==='oklch')[a,b,c]=cartesian([a,b,c]);let values;
  if(kind.startsWith('ok')){const l=(a+.3963377774*b+.2158037573*c)**3,m=(a-.1055613458*b-.0638541728*c)**3,s=(a-.0894841775*b-1.291485548*c)**3;values=[4.0767416621*l-3.3077115913*m+.2309699292*s,-1.2684380046*l+2.6097574011*m-.3413193965*s,-.0041960863*l-.7034186147*m+1.707614701*s];}
- else{const f=t=>t**3>216/24389?t**3:(t-4/29)*108/841,y=(a+16)/116,x=.95047*f(y+b/500),Y=f(y),z=1.08883*f(y-c/200);values=[3.2404542*x-1.5371385*Y-.4985314*z,-.969266*x+1.8760108*Y+.041556*z,.0556434*x-.2040259*Y+1.0572252*z];}rgb=values.map(gamma);}
+ else{const f=t=>t**3>216/24389?t**3:(t-4/29)*108/841,y=(a+16)/116,[x,Y,z]=multiply(TO_D65,[D50[0]*f(y+b/500),f(y),D50[2]*f(y-c/200)]);values=[3.2404542*x-1.5371385*Y-.4985314*z,-.969266*x+1.8760108*Y+.041556*z,.0556434*x-.2040259*Y+1.0572252*z];}rgb=values.map(gamma);}
  if(![...rgb,alpha].every(v=>Number.isFinite(v)&&v>=-.00001&&v<=1.00001))throw new Error('Color is outside the sRGB gamut or alpha range.');
  return '#'+[...rgb,alpha].map(v=>Math.round(Math.max(0,Math.min(1,v))*255).toString(16).padStart(2,'0')).join('');
 }

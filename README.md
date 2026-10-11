@@ -6,6 +6,8 @@
 
 > **Development status:** the current package and documentation delivery are independently verified. Installed startup, real updating, restart continuity and current rebuilt interface acceptance are unfinished. The complete delivery inventory contains **105 feature IDs and 210 desktop/website rows**, all still unverified as complete surfaces. Source components and focused checks are not full product acceptance. The interface target is Material Design 3 throughout; implementation is partial and complete visual conformance is not yet verified.
 
+The reviewed [color editor source](docs/features/interface/color-picker.md) now provides bidirectional color entry, explicit gamut checks, palettes, contrast preview and structured rainbow controls through the original appearance history. Focused consumers and independent source review pass; rendered and installed acceptance remain pending.
+
 ## What you can work on
 
 1. **Create and unlock a drive.** Choose encrypted storage, an encrypted cache and an unlock method, then access files through the Explorer drive. Read [drive integration](docs/features/drive/README.md) and [native storage](docs/features/storage/native-vault.md).

@@ -1,3 +1,15 @@
+# Color editor source integration, 2026-10-11 UTC
+
+Reviewed source ccc2f171bb7443abe7cf5a7c0a6eb739de8c75bd adds a registered Material color picker with bidirectional color representations, explicit gamut rejection, preview and contrast, recent/custom palettes, structured rainbow controls, optional guidance and original appearance mutation/history integration. The author ran 57 focused checks; two independent reviews found no confirmed correctness/security regression, including 2,376 representation round trips and a late sampler result after locking. The merged candidate passed 30 directly affected consumer/translation checks. Source evidence does not establish rendered or installed acceptance.
+
+Pure Material Design 3 is a requirement on every visible surface, including settings, editors, guidance, dialogs and documentation. Production primitive registration is checked separately from real geometry, keyboard, contrast, theme and motion acceptance. The reported mobile preferences presentation remains unresolved. No current screenshot is replaced with generated or fixture imagery.
+
+Documentation source 0c04e58c54d0b1f2e30ed737a2267f2c12d3d77b passed production run 38133276018 and live deployment 38133276019. Independent live verification matched 213 files, 59,957,983 bytes and 7,086 internal references with no missing files/anchors, stable provenance, the full wiki046 import and exact About homepage. Its newer package has not yet received independent download acceptance; the last fully accepted package remains source727/v1.205.1.
+
+Server preparation source cc42 is preserved locally with corrective source85f010d060a3e5edcbe042445757dd0ed698b866. Independent reviews confirmed retained-search refresh and concurrent metadata admission defects; the correction passed 24 focused checks and awaits final independent review. All four server execution targets remain unavailable. Installed startup/update/restart, full editors/motion, all 210 surface rows and genuine replacement captures remain unfinished. All eight working trees and ignored evidence remain retained; no cleanup qualifies.
+
+Next actions: verify and integrate corrected server preparation, build each completed source unit through exact root cloud entrypoints, and resume genuine rendered/installed acceptance after safe resource and identity admission.
+
 # Verified typography and workbench delivery, 2026-10-11 UTC
 
 Source 7271108f98e12be41281c0e8e0d5c40a88cd29b3 is delivered as normal v1.205.1, with both draft/prerelease flags false and a direct source tag. Exact root build.bat /s and build-installer.bat /s passed production run 38131720855; CI runs no tests or lint. Independent download acceptance passed all five assets, 763 archive CRC/decompression entries, 664 Squirrel payload files, exact Setup package/feed/updater embedding, unsigned targets and 6,249 privacy entries with zero rejected. ASAR has 5,498 entries and 191 compared source files match immutable source under recorded LF/CRLF projection. Verification-only components remain excluded.
