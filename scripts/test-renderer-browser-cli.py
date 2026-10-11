@@ -187,7 +187,7 @@ if len(sys.argv) > 1 and sys.argv[1] == 'cleanup':
             if error.code not in ['PROCESS_PROOF_FAILED', 'PROCESS_IDENTITY_CHANGED']:
                 raise
             if not proof_path.is_file():
-                raise SystemExit('No recorded owned process tree exists for absent-root cleanup.')
+                raise SystemExit('No recorded owned process tree exists after process-proof failure; root absence is unverified.')
         proof = json.loads(proof_path.read_text(encoding='utf-8'))
         if proof['root'] != state['process']:
             raise SystemExit('Cleanup process proof belongs to a different launch.')
