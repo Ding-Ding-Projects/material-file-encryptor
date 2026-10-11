@@ -19,14 +19,14 @@ export function mountLocalAdapter(root, { onAuthenticatedChange = () => {}, tran
   const heading = document.createElement('h3'); heading.textContent = translate('Connect your desktop');
   const explanation = document.createElement('p'); explanation.textContent = translate('Start the local adapter in the desktop app, unlock your profile, and enter its address and one-use code. Approve the connection in the desktop app. This connection stays on this computer.');
   const form = document.createElement('form');
-  const addressLabel = document.createElement('label'); addressLabel.textContent = translate('Local desktop address');
-  const addressInput = document.createElement('input'); addressInput.type = 'url'; addressInput.required = true; addressInput.placeholder = 'http://127.0.0.1:12345'; addressInput.autocomplete = 'off'; addressInput.spellcheck = false;
+  const addressLabel = document.createElement('label'); addressLabel.className = 'local-adapter-field';
+  const addressInput = document.createElement('md-outlined-text-field'); addressInput.label = translate('Local desktop address'); addressInput.type = 'url'; addressInput.required = true; addressInput.placeholder = 'http://127.0.0.1:12345'; addressInput.autocomplete = 'off'; addressInput.spellcheck = false;
   addressLabel.append(addressInput);
-  const codeLabel = document.createElement('label'); codeLabel.textContent = translate('One-use pairing code');
-  const codeInput = document.createElement('input'); codeInput.type = 'password'; codeInput.required = true; codeInput.autocomplete = 'off'; codeInput.spellcheck = false; codeInput.maxLength = 24;
+  const codeLabel = document.createElement('label'); codeLabel.className = 'local-adapter-field';
+  const codeInput = document.createElement('md-outlined-text-field'); codeInput.label = translate('One-use pairing code'); codeInput.type = 'password'; codeInput.required = true; codeInput.autocomplete = 'off'; codeInput.spellcheck = false; codeInput.maxLength = 24;
   codeLabel.append(codeInput);
-  const connect = document.createElement('button'); connect.type = 'submit'; connect.textContent = translate('Pair desktop');
-  const disconnect = document.createElement('button'); disconnect.type = 'button'; disconnect.textContent = translate('Disconnect'); disconnect.disabled = true;
+  const connect = document.createElement('md-filled-button'); connect.type = 'submit'; connect.textContent = translate('Pair desktop');
+  const disconnect = document.createElement('md-outlined-button'); disconnect.type = 'button'; disconnect.textContent = translate('Disconnect'); disconnect.disabled = true;
   const message = document.createElement('p'); message.setAttribute('role','status'); message.setAttribute('aria-live','polite'); message.textContent = translate('Not connected.');
   form.append(addressLabel,codeLabel,connect,disconnect); panel.append(heading,explanation,form,message); root.append(panel);
   let address = null, token = null, authenticated = false, generation = 0, timer = null, disposed = false;
@@ -99,4 +99,39 @@ export function mountLocalAdapter(root, { onAuthenticatedChange = () => {}, tran
     disconnect: () => clear('Disconnected.'),
     dispose() { disposed = true; clear(); document.defaultView?.removeEventListener('pagehide', onPageHide); panel.remove(); },
   };
+}
+
+/** Supported preference bridge. Desktop-only capabilities never cross the browser allowlist. */
+export function createCompanionPreferences(request) {
+ const call=(action,payload={})=>request('personalization',action,payload);
+ return {
+  fetchScheduleSource:(source,{id}={})=>call('fetchScheduleSource',{source,id}),
+  listFonts:()=>call('listFonts'),
+  verifySharedCredential:password=>call('verifySharedCredential',{password}),
+  setSharedCredential:password=>call('setSharedCredential',{password}),
+ };
+}
+
+/** Generation-bound snapshots emulate subscriptions without adding a privileged event route. */
+export function createCompanionSharedSettings({request,isConnected=()=>false,onError=()=>{}}) {
+ const listeners=new Set();let generation=0,pending=null,last;
+ const read=()=>request('personalization','sharedRead');
+ return {
+  read,
+  write:value=>request('personalization','sharedWrite',{value}),
+  subscribe(callback){listeners.add(callback);return()=>listeners.delete(callback);},
+  invalidate(){generation++;pending=null;last=undefined;},
+  async refresh(){
+   if(!isConnected()||pending)return;
+   const current=generation,flight={};pending=flight;
+   try{
+    const value=await read();if(current!==generation||!isConnected())return;
+    const serialized=JSON.stringify(value);
+    if(serialized===last)return;last=serialized;
+    if(value!==null&&value!==undefined)for(const listener of listeners)listener(value);
+   }catch(error){if(current===generation&&isConnected())onError(error);}
+   finally{if(pending===flight)pending=null;}
+  },
+  destroy(){generation++;pending=null;listeners.clear();},
+ };
 }
