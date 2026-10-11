@@ -58,5 +58,5 @@ export function sanitizeImageSources(value){
   else output[key]=sanitizeImageSources(item);
  }return output;
 }
-export function normalizeImageFile(file,document){return normalizePngSource(file,document?{createCanvas:()=>document.createElement('canvas')}:{});}
+export async function normalizeImageFile(file,document,{processImage,normalizeImage}={}){if(!file||typeof file.arrayBuffer!=='function'||file.size>IMAGE_SOURCE_LIMITS.bytes)throw Error('PNG exceeds 4 MiB.');const bytes=new Uint8Array(await file.arrayBuffer());inspectPngSource(bytes);if(normalizeImage){let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);return validateImageSource(await normalizeImage({dataUrl:'data:image/png;base64,'+btoa(binary)}));}const process=processImage||(await import('./appearance-raster.js')).runRasterOperation;return validateImageSource(await process({operation:'normalize',bytes}));}
 export const sanitizeImageExport=sanitizeImageSources;

@@ -6,10 +6,11 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
     updates: ['status','check','download',...(!browser?['install']:[])],
     ollama: ['status','catalog','refreshCatalog','models','show','deleteModel','copyModel','generate','hardware','cart','addToCart','removeFromCart','retryPull','startPulls','cancel','sessions','session','renameSession','deleteSession','exportSession','chat','profiles','preflight','launch','snapshots','restore','events','runtimeInstall','runtimeStart','chooseRuntimeExecutable','registerProfile'],
     documentation: ['catalog','changelog'], status: ['status'],
-    personalization: ['sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts',...(!browser?['setScheduleCredential','clearScheduleCredential']:[])],
+    personalization: ['sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts',...(!browser?['setScheduleCredential','clearScheduleCredential','normalizeImage']:[])],
     ...(!browser ? { access: ['credentialGet','credentialSet','credentialDelete','credentialList','openDataFolder','dataFolder'] } : {}),
   };
-  if (!actions[feature]?.includes(action) || !object(payload) || Buffer.byteLength(JSON.stringify(payload)) > 262144) throw new Error('Unsupported feature request.');
+  const limit=!browser&&feature==='personalization'&&action==='normalizeImage'?Math.ceil(4*1024*1024*4/3)+256:262144;
+  if (!actions[feature]?.includes(action) || !object(payload) || Buffer.byteLength(JSON.stringify(payload)) > limit) throw new Error('Unsupported feature request.');
   return { feature, action, payload };
 }
 export function validateRequest(method, value = {}) {
