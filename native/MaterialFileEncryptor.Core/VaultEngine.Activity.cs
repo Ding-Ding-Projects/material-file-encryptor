@@ -4,6 +4,49 @@ namespace MaterialFileEncryptor.Core;
 
 public sealed partial class VaultEngine
 {
+    public IReadOnlyList<string> GetEncryptedActivitySnapshotPaths()
+    {
+        lock (gate)
+        {
+            Check();
+            return ReadAllActivityObjects().Select(item => "activity/" + item.Id + ".mfe").ToArray();
+        }
+    }
+
+    private VaultActivity[] ReadAllActivityObjects()
+    {
+        var items = new Dictionary<string, VaultActivity>(StringComparer.Ordinal);
+        foreach (var root in new[] { cache, source })
+        {
+            var folder = Path.Combine(root, "activity"); VaultCrypto.ValidatePhysicalPath(folder);
+            if (!Directory.Exists(folder)) continue;
+            foreach (var file in Directory.EnumerateFiles(folder, "*.mfe"))
+            {
+                var id = ValidateId(Path.GetFileNameWithoutExtension(file));
+                var item = ReadActivity(file, id);
+                if (items.TryGetValue(id, out var previous) && previous != item) throw new InvalidDataException("Conflicting activity object.");
+                items[id] = item;
+            }
+        }
+        return items.Values.OrderBy(item => item.Id, StringComparer.Ordinal).ToArray();
+    }
+
+    private void CopyActivityTo(VaultEngine target)
+    {
+        // The caller already owns both newly created engine state and this engine's lock.
+        // Deserialize before writing, then re-encrypt under the destination vault domain.
+        var items = ReadAllActivityObjects();
+        if (items.Length == 0) return;
+        foreach (var root in new[] { target.cache, target.source })
+        {
+            var folder = Path.Combine(root, "activity"); VaultCrypto.ValidatePhysicalPath(folder); Directory.CreateDirectory(folder);
+            foreach (var item in items) target.WriteMetadata(target.ObjectPath(root, "activity", item.Id), item, "activity", item.Id);
+        }
+        foreach (var root in new[] { target.cache, target.source })
+        foreach (var item in items)
+            if (target.ReadActivity(target.ObjectPath(root, "activity", item.Id), item.Id) != item) throw new InvalidDataException("Upgraded activity verification failed.");
+    }
+
     public VaultVersionPreview PreviewVersion(string versionId)
     {
         lock (gate)

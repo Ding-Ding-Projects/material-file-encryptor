@@ -1,8 +1,10 @@
 import { filterVersions, compareText, selectedVersions } from './model.js';
+import { createVersionSearch } from './version-search.js';
 
 export function mountFileDetails(root, { services, translate = value => value } = {}) {
  if (!root || !services) throw new TypeError('File details requires a root and services.');
- let entry = null, tab = 'versions', versions = [], activity = [], cursor = null, generation = 0, destroyed = false, busy = false;
+ let entry = null, tab = 'versions', versions = [], visibleVersions = [], activity = [], cursor = null, generation = 0, destroyed = false, busy = false;
+ const versionSearch = createVersionSearch();
  const chosen = new Set(), filters = { from: '', to: '', pattern: '', action: '' };
  const doc = root.ownerDocument;
  const element = (tag, text, attributes = {}) => {
@@ -22,7 +24,7 @@ export function mountFileDetails(root, { services, translate = value => value } 
   field.addEventListener('change', () => { filters[key] = field.value; void refresh(); }); wrapper.append(field); controls.append(wrapper); return field;
  }
  input('From date (UTC)', 'date', 'from'); input('Through date (UTC)', 'date', 'to');
- input('Regular expression', 'search', 'pattern');
+ input('Regular expression', 'search', 'pattern').maxLength = 256;
  const action = element('select', null, { 'aria-label': translate('Activity type') });
  for (const type of ['', 'import', 'edit', 'rename', 'restore', 'cancel', 'sync', 'delete', 'create', 'export', 'label']) action.append(element('option', type || 'All activity', { value: type }));
  action.addEventListener('change', () => { filters.action = action.value; void refresh(); }); controls.append(action);
@@ -44,7 +46,7 @@ export function mountFileDetails(root, { services, translate = value => value } 
  }
  async function showPreview() {
   const request = generation;
-  const selected = selectedVersions(versions, chosen);
+  const selected = selectedVersions(visibleVersions, chosen);
   const texts = await Promise.all(selected.map(row => services.previewVersion(row.id)));
   if (destroyed || request !== generation) return;
   preview.textContent = texts.length === 2 ? compareText(texts[0].text ?? texts[0], texts[1].text ?? texts[1]) : String(texts[0]?.text ?? texts[0] ?? '');
@@ -57,7 +59,7 @@ export function mountFileDetails(root, { services, translate = value => value } 
   more.hidden = tab !== 'activity' || !cursor; more.disabled = busy;
   if (!entry) { status.textContent = translate('Select a file to view its recorded versions and activity.'); return; }
   if (tab === 'versions') {
-   let rows; try { rows = filterVersions(versions, filters); } catch (error) { fail(error); return; }
+   const rows = visibleVersions;
    const selected = selectedVersions(rows, chosen);
    toolbar.append(button('Select visible', () => { rows.forEach(row => chosen.add(row.id)); }), button('Clear selection', () => chosen.clear()));
    toolbar.append(button('Preview / compare', showPreview, !!services.previewVersion && selected.length > 0 && selected.length <= 2));
@@ -82,13 +84,18 @@ export function mountFileDetails(root, { services, translate = value => value } 
  }
  async function refresh(append = false) {
   const request = ++generation;
+  versionSearch.cancel();
   if (!entry || destroyed) return;
   const id = entry.entryId || entry.id; status.textContent = translate('Loading…');
+  if (tab === 'versions') { visibleVersions = []; render(); }
   try {
    if (tab === 'versions') {
     const result = await services.listVersions(id);
     if (request !== generation || destroyed) return;
     versions = result.filter(row => row.entryId === id);
+    const filtered = await filterVersions(versions, filters, versionSearch);
+    if (request !== generation || destroyed || filtered === null) return;
+    visibleVersions = filtered;
    } else {
     const page = await services.listActivity({ entryId: id, action: filters.action || null, fromUtc: filters.from ? `${filters.from}T00:00:00Z` : null, toUtc: filters.to ? `${filters.to}T23:59:59.999Z` : null, pattern: filters.pattern || null, cursor: append ? cursor : null, limit: 100 });
     if (request !== generation || destroyed) return;
@@ -100,5 +107,5 @@ export function mountFileDetails(root, { services, translate = value => value } 
  versionTab.addEventListener('click', () => { tab = 'versions'; preview.textContent = ''; render(); void refresh(); });
  activityTab.addEventListener('click', () => { tab = 'activity'; preview.textContent = ''; render(); void refresh(); });
  more.addEventListener('click', () => void refresh(true)); render();
- return { selectEntry(value) { generation++; entry = value; chosen.clear(); versions = []; activity = []; cursor = null; preview.textContent = ''; render(); return refresh(); }, refresh, destroy() { destroyed = true; generation++; root.replaceChildren(); } };
+ return { selectEntry(value) { generation++; versionSearch.cancel(); entry = value; chosen.clear(); versions = []; visibleVersions = []; activity = []; cursor = null; preview.textContent = ''; render(); return refresh(); }, refresh, destroy() { destroyed = true; generation++; versionSearch.cancel(); root.replaceChildren(); } };
 }

@@ -1,11 +1,13 @@
-export function filterVersions(rows, { from = '', to = '', pattern = '' } = {}) {
- const expression = pattern ? new RegExp(pattern, 'iu') : null;
+import { createVersionSearch } from './version-search.js';
+
+export async function filterVersions(rows, { from = '', to = '', pattern = '' } = {}, search = createVersionSearch()) {
  const start = from ? Date.parse(`${from}T00:00:00Z`) : -Infinity;
  const end = to ? Date.parse(`${to}T23:59:59.999Z`) : Infinity;
- return rows.filter(row => {
+ const dated = rows.filter(row => {
   const time = Date.parse(row.timestampUtc);
-  return time >= start && time <= end && (!expression || expression.test([row.path, row.label].filter(Boolean).join(' ')));
+  return time >= start && time <= end;
  });
+ return search.filter(dated, pattern);
 }
 
 // A bounded line comparison, deliberately avoiding an unbounded quadratic diff.
