@@ -48,7 +48,7 @@ The metadata origin is `https://api.github.com/repos/Ding-Ding-Projects/material
 
 The controller rejects draft/prerelease metadata, invalid versions, duplicate assets, malformed indexes, oversized metadata, mismatching source tags, and mismatching package sizes or hashes. The provenance source commit must match a direct commit tag, consistent with the current publisher. The package index must match its provenance SHA-256 and list one full package at the recorded package version. The selected package must match the provenance SHA-256 and the index SHA-1, both in isolated staging and in the native Squirrel cache. Provenance and tag validation establish consistency within the fixed project; they are not a code-signing or publisher-authenticity guarantee.
 
-The release publisher currently increments release tags independently of `package.json`. A newer tag containing the same package version is correctly reported as current. Production updating requires genuinely increasing package versions in the existing publishing pipeline; this module does not change that pipeline.
+The release publisher increments release tags independently of `package.json`. A newer tag containing the same package version is correctly reported as current. The current candidate increases the application package version to `0.2.0`; subsequent update candidates must also increase the package version.
 
 ## Why native downloading waits for consent
 

@@ -1,9 +1,20 @@
 # Isolated media commands
 
 The trusted parent may supply `media: { "operation": "..." }` in the existing
-launcher manifest. No other media properties or arbitrary arguments are accepted.
+launcher manifest, with an optional fixed `profile`. No other media properties or
+arbitrary arguments are accepted.
 The executable must be staged beneath `payload`: `ffprobe.exe` for `probe`, or
 `ffmpeg.exe` for all other operations. The parent verifies executable provenance.
+
+The optional `media.profile` accepts only `default` or `minimal-v1`. Omitting it
+selects `default`, preserving the existing libmp3lame MP3 and libx264 H.264 profiles.
+`minimal-v1` selects the fixed Media Foundation `mp3_mf` encoder at 192 kbit/s for
+MP3 and the native MPEG-4 Part 2 encoder at quality 3 plus native AAC at 128 kbit/s
+for MP4. It does not include libx264 preset or CRF arguments. The other operations
+use identical commands in either profile. An unavailable encoder produces a
+conversion failure; the launcher never silently substitutes codecs. The MP4
+container therefore has a different video codec under `minimal-v1`, which the
+parent must disclose. Profiles do not allow caller-supplied codec arguments.
 
 Input is always `work/input-0.bin`, from 1 byte through 64 MiB. Conversion output
 is always `work/result-0.bin`. The supported fixed operations are `probe`,
@@ -21,7 +32,8 @@ storage limit. These sampled bounds can briefly overshoot between checks.
 
 No automatic rotation or scaling is performed. Image conversion selects the
 first video frame. JPEG, MP3 and H.264/AAC conversion can be lossy, metadata and
-chapters are removed, and JPEG cannot preserve alpha. The parent must disclose
+chapters are removed, and JPEG cannot preserve alpha. MPEG-4 Part 2/AAC conversion
+under the minimal profile can also be lossy. The parent must disclose
 these effects, reject unsupported source dimensions or ambiguous streams using
 a prior isolated probe, and probe plus fully decode every converted result
 before presenting it as validated. A completed conversion result explicitly

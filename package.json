@@ -1,6 +1,6 @@
 {
   "name": "material-file-encryptor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Encrypted storage mounted as a Windows drive with WinFsp.",
   "private": true,
   "type": "module",

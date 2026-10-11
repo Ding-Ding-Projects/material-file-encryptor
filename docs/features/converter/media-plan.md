@@ -24,7 +24,7 @@ A missing or invalid optional media runtime disables only media adapters. Existi
 
 ## Execution and validation
 
-The host accepts only the six registered operation identifiers. The native launcher chooses a fixed command, fixed staged filenames and the exact staged executable name. It retains the zero-capability AppContainer, one-process job, 256 MiB memory bound, 30-second deadline per operation, cancellation signal, authenticated nonce/result hash, and profile cleanup. Protocols are restricted to `file,pipe`; user arguments, arbitrary paths and process spawning are unavailable.
+The host accepts only the six registered operation identifiers. The native launcher chooses a fixed command, fixed staged filenames and the exact staged executable name. It retains the zero-capability AppContainer, one-process job, 256 MiB memory bound, 30-second combined conversion deadline plus a 30-second native deadline per operation, cancellation signal, authenticated nonce/result hash, and profile cleanup. Protocols are restricted to `file,pipe`; user arguments, arbitrary paths and process spawning are unavailable.
 
 Every conversion performs four isolated operations: probe source, encode, probe output, decode output. The host rejects extra streams, unsupported image demuxers, animation, rotation metadata, dimension/layout changes, incorrect output codecs and duration drift. Images are limited to 8 megapixels and 4096 pixels per edge. Audio accepts one or two channels at 8–48 kHz for at most 10 minutes. Video accepts even dimensions up to 1920 by 1080 for at most 60 seconds. Input and media output each stay at or below 64 MiB. Sampled log/output storage limits supplement the job's hard memory and process limits; they are not a filesystem quota.
 
@@ -35,3 +35,9 @@ Source inspection presents actual probe metadata before submission. Each adapter
 `test/converter-media.test.js` checks metadata bounds, codec/layout comparisons and the unavailable-runtime catalog. `test/converter-media-windows.test.js` uses `CONVERTER_MEDIA_TEST_ROOT` pointing at the verified directory containing both binaries; it generates disposable synthetic fixtures, exercises all six operations through the actual provider, and checks cancellation. Native `media-command.tests.ps1` checks fixed command and receipt contracts; `media-smoke.ps1` exercises actual AppContainer media and denied external references. No user media or visible desktop is needed.
 
 Additional formats, arbitrary FFmpeg arguments, hardware encoders, streaming, subtitles, animated images, resizing and editing are outside this implementation. They remain unimplemented rather than being advertised as completed adapters.
+
+## Minimal source-built candidate
+
+The optional `minimal-v1` profile selects Media Foundation MP3 at 192 kbps and native MPEG-4 quality 3 with AAC 128 kbps, preserving the six adapter identifiers. MP3 requires 32, 44.1 or 48 kHz and does not silently resample. A real isolated MP3 startup conversion checks that the operating-system encoder is available before media adapters are enabled. The combined source-probe, conversion, output-probe and decode budget is 30 seconds; cancellation signals the active native job and waits for its cleanup.
+
+See [the minimal runtime recipe](minimal-runtime.md) for source pins and current candidate acceptance. A source-built candidate must use its own manifest hashes and cannot inherit acceptance from the earlier Gyan binary.

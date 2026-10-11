@@ -15,6 +15,8 @@ internal sealed class TransferOperationRegistry
         public int CompletedFiles, TotalFiles;
         public string? Error;
         public string? ErrorCode;
+        public string? ErrorPhase;
+        public string? StorageStage;
     }
     private readonly object gate = new();
     private readonly Dictionary<string, Operation> entries = new();
@@ -58,7 +60,7 @@ internal sealed class TransferOperationRegistry
             catch (OperationCanceledException) when (item.Cancellation.IsCancellationRequested)
             { lock (gate) item.State = "cancelled"; }
             catch (Exception error)
-            { lock (gate) { item.State = "failed"; item.ErrorCode = ClassifyFailure(error); item.Error = "Transfer could not finish. Completed files remain available; retry the remaining files."; } }
+            { lock (gate) { item.State = "failed"; item.ErrorCode = ClassifyFailure(error); item.ErrorPhase = TransferPhaseException.GetSafePhase(error); item.StorageStage = GetStorageStage(error); item.Error = "Transfer could not finish. Completed files remain available; retry the remaining files."; } }
             finally { if (entered) worker.Release(); lock (gate) --outstanding; }
         });
         return new { operationId = item.Id };
@@ -77,7 +79,13 @@ internal sealed class TransferOperationRegistry
     {
         lock (gate) return order.Select(id => entries[id]).Select(item => new
         { operationId = item.Id, state = item.State, bytesCompleted = item.Bytes, totalBytes = item.TotalBytes,
-          completedFiles = item.CompletedFiles, totalFiles = item.TotalFiles, error = item.Error, errorCode = item.ErrorCode }).ToArray();
+          completedFiles = item.CompletedFiles, totalFiles = item.TotalFiles, error = item.Error, errorCode = item.ErrorCode, errorPhase = item.ErrorPhase, storageStage = item.StorageStage }).ToArray();
+    }
+    internal static string? GetStorageStage(Exception error)
+    {
+        for(Exception? current=error;current is not null;current=current.InnerException)
+            if(current is MaterialFileEncryptor.Core.StorageOperationException storage)return storage.StorageStage;
+        return null;
     }
     internal static string ClassifyFailure(Exception error) => error.GetBaseException() switch
     {

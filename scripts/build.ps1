@@ -4,6 +4,11 @@ $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
 . "$PSScriptRoot\bootstrap.ps1"
 function Invoke-Checked([scriptblock]$command) { & $command; if ($LASTEXITCODE -ne 0) { throw "Build command failed with exit code $LASTEXITCODE" } }
+if (!(Test-Path Env:PRIVATE_INSTRUCTIONS_SOURCE)) {
+  $instructionSource = & git config --local --get privateInstructions.source
+  if ($LASTEXITCODE -eq 0 -and ![string]::IsNullOrWhiteSpace($instructionSource)) { $env:PRIVATE_INSTRUCTIONS_SOURCE = $instructionSource }
+}
+Invoke-Checked { node scripts/check-vocabulary.mjs }
 $toolStage = Join-Path $root ('out\tools.stage-' + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force $toolStage | Out-Null
 Copy-Item -LiteralPath $env:MFE_GIT_TOOL_ROOT -Destination (Join-Path $toolStage 'git') -Recurse
@@ -18,7 +23,8 @@ Invoke-Checked { node scripts/build-site.mjs }
 Invoke-Checked { dotnet publish native/MaterialFileEncryptor.Host -c Release -r win-x64 --self-contained true -o out/native }
 Invoke-Checked { dotnet publish src/features/converter/native/ConverterSandbox.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o out/converter }
 Copy-Item -LiteralPath (Join-Path $node 'node.exe') -Destination 'out/converter/node.exe' -Force
-Invoke-Checked { node scripts/converter-media-runtime.mjs out/converter/media }
+if (Test-Path -LiteralPath (Join-Path $root 'out\converter\media')) { throw 'Obsolete media runtime present. Preserve it outside out/converter before packaging.' }
+Invoke-Checked { node scripts/converter-minimal-component.mjs https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/download/ffmpeg-runtime-9.0.2.1/ffmpeg-9.0.2-minimal-v1-win64.zip out/converter/minimal-media }
 $converterManifest = @{
   schemaVersion = 1
   launcherSha256 = (Get-BootstrapDigest 'out/converter/ConverterSandbox.exe').ToLowerInvariant()
