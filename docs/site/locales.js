@@ -201,7 +201,7 @@ export const cantonese = Object.freeze({
 'Personal vocabulary':'個人用語',
 'Load a JSON file to change wording locally after unlocking your private profile. Valid wording is saved in this browser when storage is available; otherwise it lasts for this session. Nothing is uploaded. Links and technical identifiers stay intact.':'解鎖私人個人檔案後，可以載入 JSON 檔案替換顯示用語。瀏覽器儲存可用時會保存有效用語，否則只供今次使用。唔會上載任何內容。連結同技術識別碼保持原樣。',
 'View the file format':'查看檔案格式',
-'256 KiB and 10,000 entries per file. Source: 1–160 Unicode code points. Replacement: up to 1,000 Unicode code points. Maximum JSON depth: 8. Legacy version 1 replacement arrays are also accepted.':'每個檔案最多 256 KiB 同 10,000 個項目。原文為 1–160 個 Unicode 碼點，替換文字最多 1,000 個 Unicode 碼點。JSON 深度最多 8 層。亦接受舊版 version 1 替換陣列。',
+'256 KiB per file. No separate entry-count limit. Source: 1–160 Unicode code points. Replacement: up to 1,000 Unicode code points. Maximum JSON depth: 8. Legacy version 1 replacement arrays are also accepted.':'每個檔案最多 256 KiB，冇另外限制項目數量。原文為 1–160 個 Unicode 碼點，替換文字最多 1,000 個 Unicode 碼點。JSON 深度最多 8 層。亦接受舊版 version 1 替換陣列。',
 'Choose a vocabulary JSON file':'選擇用語 JSON 檔案',
 'Reset vocabulary':'重設用語',
 'Default wording is active.':'目前使用預設用語。',

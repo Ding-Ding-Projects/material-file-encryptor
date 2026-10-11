@@ -1,28 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { parseVocabulary, parseStrictJson, replaceVocabulary, createVocabularyStore, RENDER_LIMITS, MAX_VOCABULARY_ENTRIES, MAX_VOCABULARY_BYTES } from '../src/shared/personal-vocabulary.js';
+import { parseVocabulary, parseStrictJson, replaceVocabulary, createVocabularyStore, RENDER_LIMITS } from '../src/shared/personal-vocabulary.js';
 const canonical = entries => JSON.stringify({ schemaVersion: 1, entries });
-test('existing large canonical inventories remain supported inside both resource bounds', () => {
+test('canonical inventories beyond previous limits remain bounded by bytes only', () => {
   const entries = Object.fromEntries(Array.from({ length: 5000 }, (_, i) => [`word${i}`, `label${i}`]));
   const parsed = parseVocabulary(canonical(entries));
   assert.equal(parsed.replacements.length, 5000);
   assert.equal(replaceVocabulary('word4999', parsed), 'label4999');
   assert.equal(parseVocabulary(canonical({})).replacements.length, 0);
-});
-
-test('entry limit is independent from bytes and rejects both supported schemas before replacement', () => {
-  const entries=Object.fromEntries(Array.from({length:MAX_VOCABULARY_ENTRIES+1},(_,index)=>[index.toString(36),'x']));
-  const source=canonical(entries);
-  assert.ok(new TextEncoder().encode(source).length<MAX_VOCABULARY_BYTES);
-  assert.throws(()=>parseVocabulary(source));
-  const replacements=Object.entries(entries).map(([from,to])=>({from,to}));
-  const legacy=JSON.stringify({version:1,replacements});
-  assert.ok(new TextEncoder().encode(legacy).length<MAX_VOCABULARY_BYTES);
-  assert.throws(()=>parseVocabulary(legacy));
-  replacements.pop();
-  assert.equal(parseVocabulary(JSON.stringify({version:1,replacements})).replacements.length,MAX_VOCABULARY_ENTRIES);
-  assert.equal(parseVocabulary(canonical(Object.fromEntries(replacements.map(({from,to})=>[from,to])))).replacements.length,MAX_VOCABULARY_ENTRIES);
 });
 test('Unicode limits count code points and UTF-8 byte limit remains independent', () => {
   assert.equal(parseVocabulary(canonical({ ['😀'.repeat(160)]: '😀'.repeat(1000) })).replacements.length, 1);
@@ -96,4 +82,15 @@ test('apostrophes within ordinary words do not protect the rest of a sentence', 
   assert.equal(replaceVocabulary("Don't encrypt /folder.",vocabulary),"Don't lock /folder.");
   assert.equal(replaceVocabulary("It’s time to encrypt folder/file.",vocabulary),"It’s time to lock folder/file.");
   assert.equal(replaceVocabulary("Don't encrypt 'folder with spaces/file' folder",vocabulary),"Don't lock 'folder with spaces/file' directory");
+});
+
+
+test('dynamic inventories have no entry-count ceiling within the documented byte bounds', () => {
+  const entries=Object.fromEntries(Array.from({length:10001},(_,index)=>[index.toString(36),'x']));
+  const replacements=Object.entries(entries).map(([from,to])=>({from,to}));
+  for(const payload of [{schemaVersion:1,entries},{version:1,replacements}]) {
+    const source=JSON.stringify(payload);
+    assert.ok(new TextEncoder().encode(source).length < 256*1024);
+    assert.equal(parseVocabulary(source).replacements.length,Object.keys(entries).length);
+  }
 });
