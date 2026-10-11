@@ -154,6 +154,7 @@ try
 catch(Exception error){originalException??=error.GetType().Name+": "+error.Message;checks.Add(new{name="run-error",verified=false,type=error.GetType().Name,message=error.Message});}
 finally
 {
+    await RetentionOwnership.Run(async()=>{
     password="";
     bool driveAbsent=false;bool teardownFailed=false;
     try
@@ -185,19 +186,20 @@ finally
         var report=new{schemaVersion=1,runner,sourceCommit,helperSha256,admittedHelperSha256,route="native-helper-protocol-and-win32-mapped-io",guiUsed=false,originalException,checks,teardown=new{mounted,mountState=(protocolOutcomeUnknown||helper?.OutcomeUnknown==true)?"unknown":"last-confirmed",driveAbsent,protocolOutcomeUnknown=protocolOutcomeUnknown||helper?.OutcomeUnknown==true,helperDisposition,ownedFixtureRemoved=cleanup,helperId=helper?.ProcessId,helperStartedUtc=helper?.StartedUtc,helperExecutable=executable,runnerHoldRequired=helperDisposition?.Retained==true,recoveryDisposition=helperDisposition?.Retained==true?"Retain runner, helper, original pipes and fixture for separately reviewed exact-owned recovery; no further detach, stop or deletion.":null,writerId,writerStartedUtc,writerExitEstablished,writerStop},complete};
         string reportJson=JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true});
         try{await File.WriteAllTextAsync(output,reportJson);}finally{
-            Console.WriteLine(reportJson);Environment.ExitCode=complete?0:2;
-            if(helperDisposition?.Retained==true&&helper is not null)
-            {
-                int holdReceipt=0;
-                await RetainedRunnerHold.Run(helper.OwnedExit(),helper.OriginalOutcome,async(state,response)=>{
-                    string retainedJson=JsonSerializer.Serialize(new{schemaVersion=1,runner,helperId=helper.ProcessId,helperStartedUtc=helper.StartedUtc,helperExecutable=executable,fixture=root,state,response,atUtc=DateTimeOffset.UtcNow,complete=false,acceptance="incomplete",recovery="Separate exact-owned review required; no detach, stop or deletion issued."},new JsonSerializerOptions{WriteIndented=true});
-                    // A receipt failure never converts retention into implicit EOF.
-                    try{await File.WriteAllTextAsync(output+".hold-"+(++holdReceipt)+".json",retainedJson);}catch(Exception error){Console.Error.WriteLine("Retention receipt write failed: "+error.GetType().Name);}
-                });
-            }
+            SafeDiagnostics.Write(()=>Console.WriteLine(reportJson));Environment.ExitCode=complete?0:2;
         }
     }
+    },()=>helper is not null&&(protocolOutcomeUnknown||helper.OutcomeUnknown||!writerExitEstablished||helperDisposition?.Retained==true),async()=>{
+        var retainedHelper=helper!;int holdReceipt=0;
+        await RetainedRunnerHold.RunOwned(retainedHelper.OwnedExit,()=>retainedHelper.OriginalOutcome,async(state,response)=>{
+            using var identity=Process.GetCurrentProcess();
+            var runner=new{pid=identity.Id,startedUtc=identity.StartTime.ToUniversalTime(),executable=identity.MainModule?.FileName};
+            string retainedJson=JsonSerializer.Serialize(new{schemaVersion=1,runner,helperId=retainedHelper.ProcessId,helperStartedUtc=retainedHelper.StartedUtc,helperExecutable=executable,fixture=root,state,response,atUtc=DateTimeOffset.UtcNow,complete=false,acceptance="incomplete",recovery="Separate exact-owned review required; no detach, stop or deletion issued."},new JsonSerializerOptions{WriteIndented=true});
+            await File.WriteAllTextAsync(output+".hold-"+(++holdReceipt)+".json",retainedJson);
+        });
+    });
 }
+
 
 sealed class MountedHelper:IAsyncDisposable
 {

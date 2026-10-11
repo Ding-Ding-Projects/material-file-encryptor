@@ -27,34 +27,91 @@ internal static class MountedTeardown
         if(hold.IsCompleted||!states.Contains("observation-limit-retained"))throw new Exception("Retention hold closed pipes at its observation deadline.");
         exit.SetResult();await hold;
         if(states.Last()!="owned-helper-exit-observed")throw new Exception("Retention hold released without owned exit.");
+        foreach(string fault in new[]{"identity","serialization","console"})
+        {
+            var released=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);bool entered=false;
+            var ownership=RetentionOwnership.Run(()=>throw new IOException(fault),()=>true,async()=>{entered=true;await released.Task;});
+            if(!entered||ownership.IsCompleted)throw new Exception("Reporting failure released ownership: "+fault);
+            released.SetResult();try{await ownership;throw new Exception("Original reporting failure was lost.");}catch(IOException error){if(error.Message!=fault)throw;}
+        }
+        var recordExit=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var failedReply=Task.FromException<System.Text.Json.JsonElement>(new IOException("original reply failed"));
+        int recordAttempts=0;
+        var throwingRecord=RetainedRunnerHold.Run(recordExit.Task,failedReply,(state,response)=>{recordAttempts++;throw new IOException("record writer failed");},Task.CompletedTask);
+        await Task.Yield();if(throwingRecord.IsCompleted||recordAttempts<2)throw new Exception("A throwing record callback released ownership.");
+        recordExit.SetResult();await throwingRecord;
+        var writer=new ThrowingDiagnosticWriter();
+        var writerExit=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);bool writerHeld=false;
+        var writerFailure=RetentionOwnership.Run(()=>{writer.WriteLine("report");return Task.CompletedTask;},()=>true,async()=>{writerHeld=true;await writerExit.Task;});
+        if(!writerHeld||writerFailure.IsCompleted)throw new Exception("Throwing TextWriter skipped ownership retention.");
+        writerExit.SetResult();try{await writerFailure;throw new Exception("TextWriter failure was lost.");}catch(IOException){}
+        SafeDiagnostics.Write(()=>writer.WriteLine("diagnostic"));
         Console.WriteLine("Mounted outer teardown self-test passed: unknown settlement, unknown teardown and unknown writer retain helper without retry or stop.");
     }
 }
 
 internal static class RetainedRunnerHold
 {
+    static async Task SafeRecord(Func<string,System.Text.Json.JsonElement?,Task> record,string state,System.Text.Json.JsonElement? response)
+    {
+        try{await record(state,response);}catch{ /* Diagnostics cannot release ownership. */ }
+    }
+    internal static async Task RunOwned(Func<Task> ownedExit,Func<Task<System.Text.Json.JsonElement>?> originalOutcome,
+        Func<string,System.Text.Json.JsonElement?,Task> record)
+    {
+        Task exit;Task<System.Text.Json.JsonElement>? original=null;
+        try{exit=ownedExit();}catch{exit=Task.Delay(Timeout.InfiniteTimeSpan);await SafeRecord(record,"owned-exit-observer-unavailable-retained",null);}
+        try{original=originalOutcome();}catch{await SafeRecord(record,"original-response-unavailable-retained",null);}
+        await Run(exit,original,record);
+    }
     // Reaching the observation limit ends active observation, not pipe ownership.
     internal static async Task Run(Task ownedExit,Task<System.Text.Json.JsonElement>? originalOutcome,
         Func<string,System.Text.Json.JsonElement?,Task> record,Task? observationDeadline=null)
     {
         Task deadline=observationDeadline??Task.Delay(TimeSpan.FromHours(1));
-        await record("holding-original-pipes",null);
+        await SafeRecord(record,"holding-original-pipes",null);
         if(originalOutcome is not null)
         {
             Task first=await Task.WhenAny(ownedExit,originalOutcome,deadline);
             if(first==originalOutcome)
             {
-                try{await record("original-response-observed-no-acceptance",await originalOutcome);}
-                catch(Exception){await record("original-response-error-retained",null);}
+                try{await SafeRecord(record,"original-response-observed-no-acceptance",await originalOutcome);}
+                catch(Exception){await SafeRecord(record,"original-response-error-retained",null);}
             }
         }
         if(await Task.WhenAny(ownedExit,deadline)!=ownedExit)
         {
-            await record("observation-limit-retained",null);
+            await SafeRecord(record,"observation-limit-retained",null);
             // Passive wait retains original handles. Only separately reviewed owned
             // recovery or actual process exit may end this hold; no request is sent.
         }
-        await ownedExit;
-        await record("owned-helper-exit-observed",null);
+        try{await ownedExit;}catch{await SafeRecord(record,"owned-exit-observation-failed-retained",null);await Task.Delay(Timeout.InfiniteTimeSpan);}
+        await SafeRecord(record,"owned-helper-exit-observed",null);
     }
+}
+
+internal static class RetentionOwnership
+{
+    internal static async Task Run(Func<Task> body,Func<bool> retentionRequired,Func<Task> hold)
+    {
+        try{await body();}
+        finally
+        {
+            if(retentionRequired())
+            {
+                try{await hold();}
+                catch{await Task.Delay(Timeout.InfiniteTimeSpan);}
+            }
+        }
+    }
+}
+internal static class SafeDiagnostics
+{
+    internal static void Write(Action write){try{write();}catch{}}
+}
+
+internal sealed class ThrowingDiagnosticWriter:System.IO.TextWriter
+{
+    public override System.Text.Encoding Encoding=>System.Text.Encoding.UTF8;
+    public override void WriteLine(string? value)=>throw new IOException("injected diagnostic writer failure");
 }

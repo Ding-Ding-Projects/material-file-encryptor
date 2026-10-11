@@ -45,3 +45,19 @@ The retained caller observes the already-issued original response task and actua
 Hold receipts are separate from the original incomplete report and include timestamps and exact runner/helper identities. Recovery must be independently reviewed for those identities, and must preserve the synthetic fixture and original receipts. No persistent service or system configuration is created.
 
 The injected outer-caller self-test executes the same teardown executor used by `Program.cs`: unknown settlement allows zero detach/stop calls; a timeout in teardown allows no stop; unknown writer exit allows neither action. The retention test verifies that an expired observation deadline leaves the caller pending until owned exit is established. Removing the outer unknown-outcome check makes this test fail. These tests launch no helper and establish no real mounted acceptance.
+
+### Reporting cannot release retained ownership
+
+The complete teardown, identity collection, report serialization, receipt writing and console output run inside an ownership executor whose outer `finally` enters retention whenever protocol or writer outcome is unknown. Retention is no longer conditional on reporting finishing successfully. Console diagnostics are nonthrowing. Every hold-record callback is isolated from the passive owned-exit wait; identity, serialization, filesystem and diagnostic-writer failures may prevent a receipt, but cannot release the original pipes. A failed original reply is recorded only when possible, then retention continues. Failure to create or complete the owned-exit observer also retains the caller instead of declaring exit.
+
+Injected checks execute this shared ownership executor with throwing report bodies and a real throwing `TextWriter`. A throwing hold-record callback combined with a failed original response must leave the hold pending until actual injected owned exit. These tests distinguish diagnostic failure from ownership release and do not establish a real helper's exit or mounted acceptance.
+
+## Cloud compilation and separate runtime checks
+
+The exact root `build.bat /s` and `build-installer.bat /s` paths compile this verification tool through the pinned .NET SDK as framework-dependent `win-x64` output in `out/verification/mounted-lifecycle`. The existing Windows workflow uploads that directory alongside build evidence. It does not execute the self-tests or mounted checks in CI. A successful cloud compilation proves compilation and delivery only; it cannot establish mounted, native I/O, GUI or retention acceptance.
+
+The installer does not include this tool: Forge ignores the whole `out` source directory and its explicit `extraResource` list includes only native helper, converter, runtime tools, driver and dependency manifest paths. `out/verification` is absent from that resource list. Verify the actual package independently before claiming package-content acceptance.
+
+After downloading the exact source-bound workflow artifact, run its managed assembly with the matching .NET 8 runtime and `--settlement-self-test` for the injected settlement/outer-ownership checks. This executes the compiled test binary without a local compiler, helper launch or mount. A real mounted run still requires the reviewed packaged helper, exact production hash, fresh evidence path and independent authorization.
+
+The reporting-exception correction and cloud-delivery addition were preserved without a local compilation because physical memory pressure prevented that verification route. Their newly added throwing-writer/record regressions remain unrun until the source-bound cloud output is available. Earlier passing self-test receipts apply only to their earlier source revisions.
