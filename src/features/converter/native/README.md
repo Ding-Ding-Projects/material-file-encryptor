@@ -25,7 +25,7 @@ Protected file ACLs grant the current owner and LocalSystem full control, and th
 unique AppContainer SID read/execute on the staging root and payload. Only `work`
 receives AppContainer modification rights and a low-integrity label. Parent
 environment secrets are not forwarded. A minimal allowlist supplies operating
-system and profile paths; these names do not grant filesystem access. The Node
+system and profile paths; these names do not grant filesystem access. Before profile creation, the launcher resolves the registered user, local application data, and roaming application data folders through the operating system and initializes the required profile environment. An environment without those variables therefore does not prevent AppContainer creation; unavailable registered folders still fail closed. The Node
 symbolic-link preservation flags avoid its startup realpath walk outside staging.
 
 The job limit blocks additional executable processes. A Node child-launch probe

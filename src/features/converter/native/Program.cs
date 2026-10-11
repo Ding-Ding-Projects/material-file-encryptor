@@ -26,6 +26,7 @@ internal static class Program
             nonce = m.GetProperty("nonce").GetString()!;
             if (nonce.Length is < 32 or > 128 || nonce.Any(c => !Uri.IsHexDigit(c))) throw new ArgumentException("Nonce must contain 32 to 128 hexadecimal characters.");
             if (m.GetProperty("timeoutMs").GetInt32() != Timeout || m.GetProperty("memoryBytes").GetInt64() != MemoryLimit) throw new ArgumentException("Resource limits cannot be changed.");
+            InitializeProfileEnvironment();
             return Run(m, nonce);
         }
         catch (Exception ex)
@@ -35,6 +36,22 @@ internal static class Program
         }
     }
 
+    private static void InitializeProfileEnvironment()
+    {
+        // Hidden launchers may intentionally omit profile variables. Resolve the
+        // current token's registered folders instead of guessing a user path.
+        var profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        if (!Path.IsPathFullyQualified(profile) || !Path.IsPathFullyQualified(local) || !Path.IsPathFullyQualified(roaming))
+            throw new InvalidOperationException("Current-user profile folders are unavailable.");
+        Environment.SetEnvironmentVariable("USERPROFILE", profile);
+        Environment.SetEnvironmentVariable("LOCALAPPDATA", local);
+        Environment.SetEnvironmentVariable("APPDATA", roaming);
+        var root = Path.GetPathRoot(profile)!;
+        Environment.SetEnvironmentVariable("HOMEDRIVE", root.TrimEnd(Path.DirectorySeparatorChar));
+        Environment.SetEnvironmentVariable("HOMEPATH", profile[(root.Length - 1)..]);
+    }
     private static string ExactPath(string value)
     {
         if (!Path.IsPathFullyQualified(value)) throw new ArgumentException("All sandbox paths must be absolute.");
