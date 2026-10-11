@@ -529,14 +529,14 @@
     {
       "source": "docs/features/workflows/browser-download-handoff.md",
       "translation": "docs/features/workflows/browser-download-handoff.zh-HK.md",
-      "sourceSha256": "09ade15e2893dc5c6de811e1ef799ec5c947be5a2f55777f18174fde37f6fdff",
-      "translationSha256": "ec7245d6fc58e94c78f4e97fc5c2d39be21d3974897cb5328450208c9bcee443"
+      "sourceSha256": "5325357524f7c2fe3c410a2e9d0405b094d2abc91da0e5d27448bddc1e48d2df",
+      "translationSha256": "c4a3815522811c941240e6d166628aeae9e5ee9526ed9d904177f7742de95ba4"
     },
     {
       "source": "docs/features/workflows/forge-publication.md",
       "translation": "docs/features/workflows/forge-publication.zh-HK.md",
-      "sourceSha256": "3b6a20208fc85189e4320e4a30c9f2052a384e286d49961080211c93ce219321",
-      "translationSha256": "caccbaa471385b24f9216093188b59fe81838829b9a583e72d3227c93f14d707"
+      "sourceSha256": "1142b899dd5e87367eec1dca25a4d220b1b777434c00ddcc63346eed41bf0550",
+      "translationSha256": "089878bf64746be95d9fe3f726d1c96cd4d8f8f6ac6452d19404b287e69eb0b5"
     }
   ]
 }
