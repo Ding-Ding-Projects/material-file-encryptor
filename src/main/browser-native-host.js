@@ -14,10 +14,11 @@ export function nativeFrame(value){const body=Buffer.from(JSON.stringify(value))
 
 /** Host-only transport. Its caller origin is an allowlist input, never proof of
  * browser provenance. Every pair still requires approval in the unlocked app. */
-export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnlocked,onProposal,spawnHost=spawn,now=Date.now}={}){
+export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnlocked,onProposal,spawnHost=spawn,now=Date.now,closeTimeoutMs=3000}={}){
  if(typeof authorizePair!=='function'||typeof isUnlocked!=='function'||typeof onProposal!=='function')throw Error('Native approval, unlocked admission and host proposal delivery are required.');
- const allowedOrigins=validateBrowserHostConfig(config),sessions=new Map(),proposals=new Map();let child=null,closed=false,ready=false,active=0,starting=null,readyResolve,readyReject;
- const receiver=createBrowserDownloadReceiver({allowedOrigins,authorizePair,isUnlocked,now,onProposal:async item=>{await onProposal(item);proposals.set(item.id,{origin:item.origin,state:'awaiting-confirmation',received:0,total:null});}});
+ if(!Number.isSafeInteger(closeTimeoutMs)||closeTimeoutMs<25||closeTimeoutMs>5000)throw Error('Native close timeout must be between 25 and 5000 milliseconds.');
+ const allowedOrigins=validateBrowserHostConfig(config),sessions=new Map(),proposals=new Map(),owners=new Set(),jobs=new Set();let child=null,closed=false,ready=false,active=0,starting=null,readyResolve,readyReject,closing=null;
+ const receiver=createBrowserDownloadReceiver({allowedOrigins,authorizePair,isUnlocked,now,onProposal:async item=>{if(closed)throw Error('Native browser broker is closed.');await onProposal(item);unlocked();proposals.set(item.id,{origin:item.origin,state:'awaiting-confirmation',received:0,total:null});}});
  const revoke=()=>{receiver.revoke();sessions.clear();proposals.clear();};
  const unlocked=()=>{if(closed||isUnlocked()!==true){revoke();throw Error('Unlock the desktop before receiving downloads.');}};
  async function receive(origin,message){
@@ -37,7 +38,7 @@ export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnloc
   const state={ready:'awaiting-confirmation',downloading:'downloading',completed:'completed',failed:'failed',cancelled:'cancelled'}[row.state];if(!state)return;
   item.state=state;item.received=Number.isSafeInteger(row.received)&&row.received>=0?row.received:0;item.total=Number.isSafeInteger(row.total)&&row.total>=0?row.total:null;
  }
- function stop(error){ready=false;revoke();readyReject?.(error??Error('Native browser broker closed.'));if(child){child.stdin.destroy();child.kill();child=null;}}
+ function stop(error){ready=false;revoke();readyReject?.(error??Error('Native browser broker closed.'));if(child){const owned=child;child=null;owned.stdin.destroy();if(owned.exitCode===null||owned.exitCode===undefined)owned.kill();}}
  async function start(){
   if(closed)throw Error('Native browser broker is closed.');if(ready)return{started:true,aclVerified:true};if(starting)return starting;
   if(typeof hostPath!=='string'||!path.win32.isAbsolute(hostPath)||path.win32.basename(hostPath)!=='MaterialFileEncryptor.BrowserHost.exe')throw Error('A bundled native browser host is required.');
@@ -45,19 +46,35 @@ export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnloc
   const timer=setTimeout(()=>stop(Error('Native browser broker startup timed out.')),5000);timer.unref?.();
   try{
    const launched=spawnHost(hostPath,['--broker'],{shell:false,windowsHide:true,stdio:['pipe','pipe','pipe']});child=launched;
+   let terminate;const owner={processExited:false,stdioClosed:false,spawnFailed:false,promise:new Promise(resolve=>{terminate=resolve;})};owners.add(owner);
+   launched.once('exit',()=>{owner.processExited=true;});
+   launched.once('close',()=>{owner.stdioClosed=true;terminate();});
    const decoder=createNativeMessageDecoder(envelope=>{
+    if(child!==launched||closed)return;
     if(exact(envelope,['type','aclVerified'])&&envelope.type==='ready'&&envelope.aclVerified===true&&!ready){ready=true;readyResolve({started:true,aclVerified:true});return;}
     if(!ready||!exact(envelope,['requestId','origin','message'])||!uuid(envelope.requestId))throw Error('Invalid native broker envelope.');
-    void receive(envelope.origin,envelope.message).then(response=>write(envelope.requestId,response),()=>write(envelope.requestId,{type:'error',code:'HANDOFF_NOT_ACCEPTED'})).catch(()=>stop(Error('Native broker write failed.')));
+    const job=receive(envelope.origin,envelope.message).then(response=>write(envelope.requestId,response),()=>write(envelope.requestId,{type:'error',code:'HANDOFF_NOT_ACCEPTED'})).catch(()=>stop(Error('Native broker write failed.')));jobs.add(job);job.finally(()=>jobs.delete(job));
    });
    function write(requestId,response){return new Promise((resolve,reject)=>{if(child!==launched||closed)return reject(Error('Native broker closed.'));try{launched.stdin.write(nativeFrame({requestId,response}),error=>error?reject(error):resolve());}catch(error){reject(error);}});}
-   launched.stdout.on('data',chunk=>{try{decoder.push(chunk);}catch{stop(Error('Invalid native broker frame.'));}});
+   launched.stdout.on('data',chunk=>{if(child!==launched||closed)return;try{decoder.push(chunk);}catch{stop(Error('Invalid native broker frame.'));}});
    launched.stdout.on('end',()=>{try{decoder.end();}catch{stop(Error('Incomplete native broker frame.'));}});
    // Host diagnostic output is drained, never forwarded or retained.
-   launched.stderr.resume();launched.on('error',()=>stop(Error('Native browser host could not start.')));launched.on('exit',()=>{if(child===launched)stop(Error('Native browser host exited.'));});
+   launched.stdin.on('error',()=>{if(child===launched)stop(Error('Native broker input closed.'));});
+   launched.stderr.resume();launched.on('error',()=>{owner.spawnFailed=typeof launched.pid!=='number';if(child===launched)stop(Error('Native browser host could not start.'));});launched.on('exit',()=>{if(child===launched)stop(Error('Native browser host exited.'));});
    return await starting;
   }catch(error){stop(error);throw error;}
   finally{clearTimeout(timer);starting=null;readyResolve=null;readyReject=null;}
  }
- return{start,receive,observeDownload,revoke,get available(){return ready&&!closed;},close(){closed=true;receiver.close();stop();}};
+ function close(){
+  if(closing)return closing;closed=true;receiver.close();stop();
+  closing=(async()=>{
+   let timer;try{await Promise.race([Promise.all([...owners].map(owner=>owner.promise).concat([...jobs])),new Promise(resolve=>{timer=setTimeout(resolve,closeTimeoutMs);})]);}finally{clearTimeout(timer);}
+   // A process 'close' event observes exit plus closure of all inherited stdio.
+   // Drain completed response jobs without waiting indefinitely on native consent.
+   await Promise.resolve();
+   const processExited=[...owners].every(owner=>owner.processExited||owner.spawnFailed),stdioClosed=[...owners].every(owner=>owner.stdioClosed),pendingRequests=active,pendingResponses=jobs.size;
+   return{closed:true,processExited,stdioClosed,pendingRequests,pendingResponses,verified:processExited&&stdioClosed&&pendingRequests===0&&pendingResponses===0,deadlineMs:closeTimeoutMs};
+  })();return closing;
+ }
+ return{start,receive,observeDownload,revoke,get available(){return ready&&!closed;},close};
 }

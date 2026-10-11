@@ -32,6 +32,13 @@ JavaScript 代理將配對同下載建議交畀 `createBrowserDownloadReceiver`�
 保留喺佇列項目。狀態回覆唔包含目的地路徑、網址、明文或者憑證。
 桌面鎖定時必須撤銷代理配對，離開時必須關閉自行管理嘅子程序。
 
+`close()` 會即時撤銷接收權限，並回傳同一份非同步收據。
+喺三秒限時內，佢會觀察自行管理嘅程序離開、全部繼承標準輸入輸出串流關閉，
+以及未完成回覆 callback 嘅狀態。收據包含 `processExited`、`stdioClosed`、
+待處理要求／回覆數目同 `verified`。未觀察到程序離開、串流未清空，或者原生
+同意仍未完成，`verified` 都會保持 false。唔會終止無關程序，亦唔會將發出終止
+要求當成程序已離開嘅證明。
+
 ## 身分同登記計劃
 
 `scripts/browser-native-registration.mjs` 接受已審閱嘅 CRX3 套件，以及第 1 版
@@ -74,7 +81,7 @@ JavaScript 代理將配對同下載建議交畀 `createBrowserDownloadReceiver`�
 要有另外嘅真實已安裝證據，先可以聲稱已驗證。
 
 此聚焦傳輸實作已通過精確正式建置入口同 10 個原生合成檢查。
-向 JavaScript 測試提供該建置嘅 `MFE_BROWSER_HOST_EXE` 時，10 個測試全部通過，
+向 JavaScript 測試提供該建置嘅 `MFE_BROWSER_HOST_EXE` 時，12 個測試全部通過，
 冇略過。編譯主機測試將主機複製到全新自行管理嘅測試目錄，只加入產生嘅合成設定，
 以隱藏模式啟動兩個真實轉送程序，核實明確配對、建議、等候／下載中／完成狀態
 同重播拒絕，然後關閉自行管理嘅程序並移除測試目錄。

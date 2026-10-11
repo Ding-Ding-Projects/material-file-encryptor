@@ -39,6 +39,14 @@ The correlation ID stays attached to the queue item as `browserCaptureId`.
 Status responses never include a destination path, URL, plaintext, or credentials.
 The desktop must revoke the broker on lock and close the owned child on exit.
 
+`close()` revokes admission immediately and returns one stable asynchronous
+receipt. Within a three-second deadline it observes the owned process exit,
+closure of all inherited standard-I/O streams, and outstanding response callbacks.
+The receipt includes `processExited`, `stdioClosed`, pending request/response
+counts, and `verified`. A missing exit, undrained stream or unresolved native
+approval keeps `verified` false. No unrelated process is terminated and an issued
+termination request is never treated as proof of process exit.
+
 ## Identity and registration plan
 
 `scripts/browser-native-registration.mjs` accepts a reviewed CRX3 package and a
@@ -90,7 +98,7 @@ Installed-browser behavior and the visible three-surface presentation require
 separate real installed evidence before they can be claimed verified.
 
 The focused transport continuation passed the exact production entrypoint and
-10 native synthetic checks. The JavaScript suite passed 10 tests with no skips
+10 native synthetic checks. The JavaScript suite passed 12 tests with no skips
 when supplied `MFE_BROWSER_HOST_EXE` from that build. Its compiled-host test copies
 the built host into a fresh owned fixture directory, adds only a generated synthetic
 configuration, launches both real relay processes hidden, verifies explicit
