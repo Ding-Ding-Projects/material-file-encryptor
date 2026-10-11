@@ -35,11 +35,11 @@ test('packaged binding reads actual archive metadata and rejects wrong bytes, so
  }
 });
 
-function runtimeFixture(target,events){
+function runtimeFixture(target,events,{unknownClose=false,failedAbsence=false,failedConnection=false}={}){
  let port;
- const browser={contexts:()=>[{pages:()=>[{}]}],async newBrowserCDPSession(){return {async send(method){events.push(method);return method==='Target.getTargets'?{targetInfos:[{type:'page',url:target.expectedUrl,targetId:'owned'}]}:{};},async detach(){}};}};
+ const browser={contexts:()=>[{pages:()=>[{}]}],async newBrowserCDPSession(){return {async send(method){events.push(method);if(method==='Browser.close'&&unknownClose)return new Promise(()=>{});return method==='Target.getTargets'?{targetInfos:[{type:'page',url:target.expectedUrl,targetId:'owned'}]}:{};},async detach(){}};}};
  return {chromium:{executablePath:()=>process.execPath,async connectOverCDP(){return browser;}},async createTransport(){return {transport:{},async disconnect(){events.push('socket-disconnect');}};},async fetch(){return {async json(){return [{id:'owned',type:'page',url:target.expectedUrl,webSocketDebuggerUrl:`ws://127.0.0.1:${port}/devtools/page/owned`}];}};},async command(executable,args,input){
-  const operation=args[1];events.push({operation,input});
+  const operation=args[1];events.push({operation,input,args});
   if(operation==='bind-client')return {client_ok:true,clientBinding:{clientIdentity:{pid:process.pid}}};
   if(operation==='launch'){
    assert.equal(input.executable,target.executable);
@@ -49,7 +49,8 @@ function runtimeFixture(target,events){
    assert.equal(input.cdp.expectedUrl,target.expectedUrl);port=input.cdp.port;
    await fs.writeFile(args[3],JSON.stringify({fixtureOnly:true,process:{pid:123},desktop:'owned-packaged-unit'}));
   }
-  if(operation==='prove-cdp'&&input?.clientPid)return {client_ok:true,clientIdentity:{pid:process.pid},establishedPeerPair:{clientPid:process.pid},exactUrl:target.expectedUrl,targetId:'owned'};
+  if(operation==='prove-cdp'&&input?.clientPid){if(failedConnection)throw new Error('Owned peer remains unverified.');return {client_ok:true,clientIdentity:{pid:process.pid},establishedPeerPair:{clientPid:process.pid},exactUrl:target.expectedUrl,targetId:'owned'};}
+  if(operation==='confirm-exit'&&failedAbsence)throw new Error('Recorded execution remains unverified.');
   if(operation==='confirm-exit'||operation==='cleanup')return {client_ok:true,recordedProcessesAbsent:true,desktopClosed:true};
   return {client_ok:true};
  }};
@@ -66,6 +67,37 @@ test('packaged runner uses isolated product arguments and preserves target/verif
  assert.equal(final.bindingAndClosurePassed,true);assert.equal(final.targetAndVerifierBytesUnchanged,true);assert.equal(final.initialSurfaceAcceptance,false);
  assert.equal(events.filter(value=>value==='Browser.close').length,1);
  assert.equal((await fs.readFile(opened.receiptPath,'utf8')).includes('extracted-packaged-runtime'),true);
+});
+
+test('graceful-only packaged closure never invokes cleanup on unknown, absent or unproved outcomes',{skip:process.platform!=='win32'},async()=>{
+ for(const options of [{unknownClose:true},{failedAbsence:true},{failedConnection:true}]){
+  const {root,expected}=await fixture(),events=[];const target=await inspectPackagedRendererTarget(expected);
+  const runtime={...runtimeFixture(target,events,options),gracefulTimeoutMs:10};
+  let opened;
+  if(options.failedConnection)await assert.rejects(openPackagedRendererTarget(expected,{evidenceRoot:path.join(root,'evidence'),runtime,gracefulOnly:true}));
+  else {
+   opened=await openPackagedRendererTarget(expected,{evidenceRoot:path.join(root,'evidence'),runtime,gracefulOnly:true});
+   await assert.rejects(opened.close());
+   assert.equal((await opened.close()).bindingAndClosurePassed,false);
+   const retained=JSON.parse(await fs.readFile(path.join(root,'evidence/packaged-runtime-final.json')));assert.equal(retained.bindingAndClosurePassed,false);
+  }
+  assert.equal(events.some(value=>value.operation==='cleanup'),false);
+  assert.equal(events.some(value=>value.args?.includes('--allow-saved-pid-kill')),false);
+  assert.equal(events.filter(value=>value==='Browser.close').length,options.failedConnection?0:1);
+  assert.equal(events.includes('socket-disconnect'),true);
+  const attempts=(await fs.readdir(path.join(root,'evidence'))).filter(name=>name.startsWith('attempt-'));
+  const retained=JSON.parse(await fs.readFile(path.join(root,'evidence',attempts[0],'helper-outcomes.normalized.json')));
+  assert.equal(retained.closure.gracefulOnly,true);assert.equal(retained.profileRetained,true);
+  if(options.unknownClose){assert.equal(retained.closure.closeResponse,'unknown');assert.equal(retained.closure.resourcesAbsent,true);}
+  else assert.equal(retained.closure.resourcesAbsent,false);
+ }
+});
+
+test('graceful-only ordinary successful closure still requires strict absence flags',{skip:process.platform!=='win32'},async()=>{
+ const {root,expected}=await fixture(),events=[];const target=await inspectPackagedRendererTarget(expected);
+ const opened=await openPackagedRendererTarget(expected,{evidenceRoot:path.join(root,'evidence'),runtime:runtimeFixture(target,events),gracefulOnly:true});
+ const result=await opened.close();assert.equal(result.bindingAndClosurePassed,true);assert.equal(result.gracefulOnly,true);
+ assert.equal(events.some(value=>value.operation==='cleanup'),false);assert.equal(events.filter(value=>value==='Browser.close').length,1);
 });
 
 test('changed packaged bytes cannot become acceptance and owned closure still runs',{skip:process.platform!=='win32'},async()=>{

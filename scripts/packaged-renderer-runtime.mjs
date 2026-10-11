@@ -37,7 +37,7 @@ export async function inspectPackagedRendererTarget(expected) {
  return {kind:'extracted-packaged-runtime',sourceCommit:expected.sourceCommit,version:expected.version,executable,files,hashes,expectedUrl};
 }
 
-export async function openPackagedRendererTarget(expected,{evidenceRoot,runtime={}}={}) {
+export async function openPackagedRendererTarget(expected,{evidenceRoot,runtime={},gracefulOnly=false}={}) {
  if(process.platform!=='win32')throw new Error('Packaged runtime launch requires Windows.');
  const target=await inspectPackagedRendererTarget(expected);
  if(!path.isAbsolute(evidenceRoot||''))throw new Error('An explicit absolute packaged evidence destination is required.');
@@ -47,7 +47,7 @@ export async function openPackagedRendererTarget(expected,{evidenceRoot,runtime=
  const {stdout}=await promisify(execFile)('git',['rev-parse','HEAD'],{cwd:path.dirname(scriptRoot),windowsHide:true,timeout:10000});
  const verifierSourceCommit=stdout.trim();
  if(!/^[a-f0-9]{40}$/.test(verifierSourceCommit))throw new Error('Verifier source identity is unavailable.');
- const receipt={version:1,kind:target.kind,target,verifierSourceCommit,verifierHashes:initialVerifierHashes,launched:false,connectionOwned:false,installedAcceptance:false,updateAcceptance:false,nativeCaptureVerified:false,initialSurfaceAcceptance:false};
+ const receipt={version:1,kind:target.kind,target,verifierSourceCommit,verifierHashes:initialVerifierHashes,gracefulOnly,launched:false,connectionOwned:false,installedAcceptance:false,updateAcceptance:false,nativeCaptureVerified:false,initialSurfaceAcceptance:false};
  await fs.mkdir(evidenceRoot,{recursive:true});
  const preparedPath=path.join(evidenceRoot,'packaged-runtime-prepared.json');
  await fs.writeFile(preparedPath,JSON.stringify(receipt,null,2),{flag:'wx'});
@@ -56,7 +56,7 @@ export async function openPackagedRendererTarget(expected,{evidenceRoot,runtime=
   if(JSON.stringify(await fileHashes(paths))!==JSON.stringify(initialVerifierHashes))throw new Error('Verifier files changed during packaged verification.');
  };
  let opened;
- try{opened=await openRendererBrowser(target.expectedUrl,{evidenceRoot,runtime:{...runtime,sourceCommit:verifierSourceCommit},packagedTarget:{...target,revalidate}});}catch(error){
+ try{opened=await openRendererBrowser(target.expectedUrl,{evidenceRoot,runtime:{...runtime,sourceCommit:verifierSourceCommit},packagedTarget:{...target,revalidate},gracefulOnly});}catch(error){
   Object.assign(receipt,{launched:null,runnerAttempted:true,processLaunchOutcome:'Unverified; inspect retained lifecycle outcomes.',error:error.message});
   await fs.writeFile(path.join(evidenceRoot,'packaged-runtime-launch-failure.json'),JSON.stringify(receipt,null,2),{flag:'wx'});
   throw error;

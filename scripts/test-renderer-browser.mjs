@@ -100,7 +100,8 @@ export async function retainClosureAttempt(destination,state,observation) {
 }
 async function freePort(){const server=net.createServer();await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});const port=server.address().port;await new Promise(resolve=>server.close(resolve));return port;}
 
-export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},packagedTarget}={}) {
+export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},packagedTarget,gracefulOnly=false}={}) {
+ if(typeof gracefulOnly!=='boolean')throw new Error('Graceful-only closure option must be boolean.');
  const {chromium}=runtime.chromium?{chromium:runtime.chromium}:await import('playwright');
  if(process.platform!=='win32') {
   const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
@@ -129,10 +130,10 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
  const runRoot=await fs.mkdtemp(path.join(os.tmpdir(),packagedTarget?'mfe-packaged-renderer-test-':'mfe-renderer-test-'));
  if(packagedTarget){if(expectedUrl!==packagedTarget.expectedUrl)throw new Error('Packaged renderer URL differs from validated bytes.');await fs.mkdir(path.join(runRoot,'profile'));await fs.mkdir(path.join(runRoot,'output'));}
  const state=path.join(runRoot,'lifecycle.json');const port=await freePort();
- let browser,cdpTransport,windowObservation,connectionOwned=false,launchAttempted=false,launchPending=false,closed=false;
+ let browser,cdpTransport,windowObservation,connectionOwned=false,launchAttempted=false,launchPending=false,closed=false,closeAttemptError;
  const outcomes=[];
  let retainedEvidence;
- let closureObservation={normalClose:'not attempted',fallback:'not attempted',resourcesAbsent:false};
+ let closureObservation={normalClose:'not attempted',fallback:'not attempted',resourcesAbsent:false,gracefulOnly};
  const lifecycleCommand=(args,input)=>{
   const runner=runtime.command||(args[1]==='launch'?observeRendererLaunch:command);
   return runner(python,args,input,env,outcome=>outcomes.push(outcome)).catch(error=>{if(args[1]==='launch'&&error.launchPending)launchPending=true;throw error;});
@@ -143,8 +144,10 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
   retainedEvidence={runRoot,...receipt,profileRetained:true,closure:{...closureObservation}};
  };
  const close=async()=>{
-  if(closed)return retainedEvidence;
+  if(closed){if(closeAttemptError)throw closeAttemptError;return retainedEvidence;}
+  if(gracefulOnly)closed=true;
   let primaryError,closureError;
+  const bounded=async(promise,label)=>{let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(`${label} response remains unknown.`)),Math.min(3000,Math.max(1,runtime.gracefulTimeoutMs??3000)));})]);}finally{clearTimeout(timer);}};
   try {
    if(cdpTransport&&!connectionOwned){await cdpTransport.disconnect();closureObservation.transportDisconnected=true;}
    if(launchPending)throw new Error('Launch observer remains pending; no automatic cleanup is permitted.');
@@ -152,21 +155,32 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
     await fs.access(state);
     if(browser&&connectionOwned) {
      await lifecycleCommand([adapter,'prepare-exit',state]);
-     const session=await browser.newBrowserCDPSession();
-     await Promise.race([session.send('Browser.close').catch(()=>{}),new Promise(resolve=>setTimeout(resolve,3000))]);
+     let gracefulError;
+     if(gracefulOnly){
+      let session;
+      try{session=await bounded(browser.newBrowserCDPSession(),'Closure session');await bounded(session.send('Browser.close'),'Browser.close');closureObservation.closeResponse='acknowledged';}
+      catch(error){gracefulError=error;closureObservation.closeResponse='unknown';closureObservation.closeResponseReason=error.message;}
+      finally{if(session)try{await bounded(session.detach(),'Closure session detach');}catch(error){gracefulError ||= error;closureObservation.detachResponse='unknown';}}
+     }else{
+      const session=await browser.newBrowserCDPSession();
+      await Promise.race([session.send('Browser.close').catch(()=>{}),new Promise(resolve=>setTimeout(resolve,3000))]);
+     }
      requireClosureProof(await lifecycleCommand([adapter,'confirm-exit',state]));
-     closureObservation.normalClose='confirmed';closureObservation.resourcesAbsent=true;
-    } else {const result=await lifecycleCommand([adapter,'cleanup','--state',state,'--allow-saved-pid-kill','--timeout','20']);requireClosureProof(result);closureObservation.fallback='confirmed';closureObservation.resourcesAbsent=true;}
+     closureObservation.normalClose=gracefulError?'absence confirmed; close response unknown':'confirmed';closureObservation.resourcesAbsent=true;
+     if(gracefulError)throw gracefulError;
+    } else if(gracefulOnly){throw new Error('Graceful-only closure requires a proved connection; state and profile retained.');}
+    else {const result=await lifecycleCommand([adapter,'cleanup','--state',state,'--allow-saved-pid-kill','--timeout','20']);requireClosureProof(result);closureObservation.fallback='confirmed';closureObservation.resourcesAbsent=true;}
    }
   } catch(error) {
-   primaryError=error;closureObservation.normalClose='failed or ownership unavailable';
-   if(launchAttempted && !launchPending && await fs.access(state).then(()=>true,()=>false))try {const result=await lifecycleCommand([adapter,'cleanup','--state',state,'--allow-saved-pid-kill','--timeout','20']);requireClosureProof(result);closureObservation.fallback='confirmed';closureObservation.resourcesAbsent=true;}catch(error){closureError=error;closureObservation.fallback='failed';}
+   primaryError=error;if(!closureObservation.resourcesAbsent)closureObservation.normalClose='failed or ownership unavailable';
+   if(launchAttempted && !launchPending && !gracefulOnly && await fs.access(state).then(()=>true,()=>false))try {const result=await lifecycleCommand([adapter,'cleanup','--state',state,'--allow-saved-pid-kill','--timeout','20']);requireClosureProof(result);closureObservation.fallback='confirmed';closureObservation.resourcesAbsent=true;}catch(error){closureError=error;closureObservation.fallback='failed';}
   }
+  if(gracefulOnly&&cdpTransport)try{await bounded(cdpTransport.disconnect(),'Owned socket disconnect');closureObservation.transportDisconnected=true;}catch(error){closureError ||= error;}
   // Preserve ownership evidence even when launch failed before a state receipt.
   try {await retainEvidence();}catch(error){
    throw new AggregateError([primaryError,closureError,error].filter(Boolean),'Renderer lifecycle evidence retention failed.');
   }
-  if(primaryError||closureError)throw new AggregateError([primaryError,closureError].filter(Boolean),'Renderer lifecycle closure failed.');
+  if(primaryError||closureError){closeAttemptError=new AggregateError([primaryError,closureError].filter(Boolean),'Renderer lifecycle closure failed.');throw closeAttemptError;}
   if(launchAttempted&&!closureObservation.resourcesAbsent)throw new Error('Renderer closure remains unverified.');
   closed=true;
   return retainedEvidence;
