@@ -175,8 +175,8 @@
     {
       "source": "docs/features/interface/local-personalization.md",
       "translation": "docs/features/interface/local-personalization.zh-HK.md",
-      "sourceSha256": "4e930f55d871ff670d87fb969e8badd7b2ca9502ca003d1ef3cb6bc39123788a",
-      "translationSha256": "e5e43ad9d086c4c9deb1e494b53194a178d1f5b32f29e12b710c9a73255df103"
+      "sourceSha256": "6d2571fc52b28d1ec66c54dc09fdf35527f577572ba89e571a274c2208ec63c3",
+      "translationSha256": "11587843ed962f307aee434f9bbc1d7574bf709c6f902513a784b559aba65621"
     },
     {
       "source": "docs/features/interface/local-tools-workspaces.md",
@@ -343,8 +343,8 @@
     {
       "source": "docs/features/platform/current-integration.md",
       "translation": "docs/features/platform/current-integration.zh-HK.md",
-      "sourceSha256": "fafce0c6be608f175840b4181eb0caf31c73277bfd20b6b99715063acd86155c",
-      "translationSha256": "032305b489656def8564061934e39c28705dd79b12bd071dea883eeb2a754228"
+      "sourceSha256": "cf58e95fd8a8679a39649c9864d2ac0f6b5cb9a26891c0939050f9a51c2fe5c3",
+      "translationSha256": "caa3b988a52095cca96b8265acf15f785dcde13a6094b4d212b638c5d8b97898"
     },
     {
       "source": "docs/features/platform/documentation-and-status.md",
