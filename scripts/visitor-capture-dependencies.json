@@ -3,7 +3,7 @@
   "workflow": ".github/workflows/capture-evidence.yml",
   "job": "evidence",
   "purpose": "Produce raw visitor-preferences evidence, without UI acceptance or release gating",
-  "platform": "ubuntu-24.04",
+  "platform": "ubuntu-22.04",
   "dependencies": [
     {
       "name": "Node.js",
@@ -43,7 +43,7 @@
     },
     {
       "name": "Linux browser shared libraries",
-      "source": "Pinned Playwright browser dependency installer on ubuntu-24.04",
+      "source": "Pinned Playwright browser dependency installer on ubuntu-22.04",
       "bootstrap": "playwright install --with-deps",
       "notes": "Actual installed versions belong in production receipts; OS package repositories are not immutable binary pins"
     }
