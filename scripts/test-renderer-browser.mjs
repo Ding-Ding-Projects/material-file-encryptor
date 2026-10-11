@@ -221,8 +221,12 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
   await lifecycleCommand([adapter,'preflight','--require','launch_on_headless_desktop','--require','list_headless_windows','--require','kill_process','--require','close_headless_desktop']);
   if(packagedTarget)await packagedTarget.revalidate();
   await preparePackagedProfile({runtime,packagedTarget,runRoot});
-  launchAttempted=true;
   const launchArguments=packagedTarget?['--desktop-check',`--verification-profile=${path.join(runRoot,'profile')}`,`--remote-debugging-port=${port}`,'--remote-debugging-address=127.0.0.1']:[`--user-data-dir=${path.join(runRoot,'profile')}`,`--remote-debugging-port=${port}`,'--remote-debugging-address=127.0.0.1','--no-first-run','--no-default-browser-check','--disable-background-networking','--disable-extensions','--enable-automation',...(path.basename(executable).toLowerCase()==='msedge.exe'?['--edge-skip-compat-layer-relaunch','--disable-component-extensions-with-background-pages']:[]),headlessShell?expectedUrl:`--app=${expectedUrl}`];
+  if(runtime.mainInspectorPort!==undefined){
+   if(!packagedTarget||!Number.isInteger(runtime.mainInspectorPort)||runtime.mainInspectorPort<1024||runtime.mainInspectorPort>65535||runtime.mainInspectorPort===port)throw Error('A distinct packaged-only loopback main inspector port is required');
+   launchArguments.push(`--inspect=127.0.0.1:${runtime.mainInspectorPort}`);
+  }
+  launchAttempted=true;
   await lifecycleCommand([adapter,'launch','--state',state],{executable,arguments:launchArguments,runRoot,outputRoot:path.join(runRoot,'output'),cdp:{port,expectedUrl}});
   // Headless shell has no HWND. Its PID/creation-time/executable receipt and
   // exact CDP target prove ownership, not native pixels or keyboard delivery.

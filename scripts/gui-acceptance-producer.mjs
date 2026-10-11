@@ -20,7 +20,7 @@ import {withCdpConnectionProof} from './cdp-connection-plan.mjs';
 const scriptRoot=fileURLToPath(new URL('./',import.meta.url));
 export async function packagedVerifierHash(root=scriptRoot){
  const fixed=['modern-ui-check.mjs','local-headless-desktop-check.mjs','modern-phase.mjs','cdp-connection-plan.mjs','preview-runtime-fixture.mjs','test-renderer-browser.mjs','test-renderer-browser-cli.py','native-window-observation.py','renderer-process-snapshot.py','renderer-launch-observer.mjs','renderer-launch-observer.py','supplemental-renderer-recovery.py','packaged-renderer-runtime.mjs'];
- const names=[...new Set([...fixed,...(await fs.readdir(root)).filter(name=>/^gui-acceptance.*\.mjs$/.test(name))])].sort();
+ const names=[...new Set([...fixed,...(await fs.readdir(root)).filter(name=>/^gui-acceptance.*\.(?:mjs|py)$/.test(name))])].sort();
  const hashes=[];for(const name of names)hashes.push({name,sha256:sha256(await fs.readFile(path.join(root,name)))});
  return sha256(JSON.stringify(hashes));
 }
