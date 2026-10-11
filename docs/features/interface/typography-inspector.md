@@ -174,3 +174,57 @@ Default: none. The adjacent typed control validates syntax and renderer support.
 
 Example: 0px 0px 8px #6750a4 creates a purple glow.
 
+
+<a id="font-search"></a>
+## search
+
+Find an admitted font family or style.
+
+Filter the current admitted inventory only; no fonts are downloaded.
+
+Try a family name or Regular.
+
+<a id="font-face"></a>
+## face
+
+Apply this admitted face and its default axes.
+
+Changes family, compatible style, weight and axes through the original appearance action.
+
+Choose a loaded local alias for an exact bundled face.
+
+<a id="font-axis"></a>
+## axis
+
+Draft this variable axis within the face metadata bounds.
+
+A draft alone does not change the target; Apply axis values saves the complete draft.
+
+Use the displayed minimum, default and maximum as references.
+
+<a id="font-apply"></a>
+## apply
+
+Apply every current axis draft to the selected admitted face.
+
+All axes must validate together before one original appearance mutation.
+
+A weight draft of 700 requests a heavier variable outline.
+
+<a id="font-reset"></a>
+## reset
+
+Restore this face metadata default axis values.
+
+Replaces axis overrides through one original appearance mutation.
+
+Reset after an extreme width or weight experiment.
+
+<a id="font-instance"></a>
+## instance
+
+Apply this named instance from the admitted font metadata.
+
+The instance axis values must still pass the same face bounds and permissions.
+
+Choose a named instance instead of entering every axis manually.

@@ -1,0 +1,16 @@
+export const FONT_GUIDANCE_CONCEPTS=Object.freeze({
+ search:['Find an admitted font family or style.','尋找獲准字型家族或者樣式。','Filter the current admitted inventory only; no fonts are downloaded.','只會篩選目前獲准清單，唔會下載字型。','Try a family name or Regular.','試下輸入家族名稱或者 Regular。'],
+ face:['Apply this admitted face and its default axes.','套用呢個獲准字型及預設軸數值。','Changes family, compatible style, weight and axes through the original appearance action.','透過原有外觀操作修改家族、相容樣式、粗幼同軸數值。','Choose a loaded local alias for an exact bundled face.','選擇已載入本機別名，就可以對應隨附嘅精確字型。'],
+ axis:['Draft this variable axis within the face metadata bounds.','喺字型資料列明嘅範圍之內調整可變軸草稿。','A draft alone does not change the target; Apply axis values saves the complete draft.','草稿本身唔會改變目標，要用套用字型軸數值先會儲存全部草稿。','Use the displayed minimum, default and maximum as references.','可以參考顯示嘅最小值、預設值同最大值。'],
+ apply:['Apply every current axis draft to the selected admitted face.','將目前全部軸草稿套用到已選獲准字型。','All axes must validate together before one original appearance mutation.','全部軸必須一齊通過驗證，先會執行一次原有外觀修改。','A weight draft of 700 requests a heavier variable outline.','粗幼草稿設為 700，會要求較粗嘅可變字形。'],
+ reset:['Restore this face metadata default axis values.','還原呢個字型資料嘅預設軸數值。','Replaces axis overrides through one original appearance mutation.','透過一次原有外觀修改取代軸覆寫。','Reset after an extreme width or weight experiment.','試過極端闊度或者粗幼之後，可以重設。'],
+ instance:['Apply this named instance from the admitted font metadata.','套用獲准字型資料入面嘅命名實例。','The instance axis values must still pass the same face bounds and permissions.','實例軸數值仍然要通過同一套字型範圍同權限檢查。','Choose a named instance instead of entering every axis manually.','可以選擇命名實例，唔使逐個軸手動輸入。']
+});
+export const FONT_GUIDANCE_COPY=Object.freeze(Object.fromEntries(Object.values(FONT_GUIDANCE_CONCEPTS).flatMap(row=>[[row[0],row[1]],[row[2],row[3]],[row[4],row[5]]]).concat([
+ ['Current admitted local inventory','目前獲准本機清單'],['A numeric axis value is required.','請輸入字型軸數值。'],
+ ['Only admitted local faces and bounded numeric metadata are accepted.','只接受獲准本機字型同有範圍限制嘅數值資料。'],['Use the existing appearance Undo action to restore an accepted change.','用原有外觀復原操作還原已接受嘅修改。'],['Review the admitted face and its exact metadata.','檢查獲准字型同精確資料。'],['Use the original control to apply or validate this choice.','用原有控制項套用或者驗證呢個選擇。']
+])));
+export function fontGuidanceDescriptor(kind,{label,face,axis,instance,helpBase='docs/features/interface/typography-inspector.md'}={}){
+ const row=FONT_GUIDANCE_CONCEPTS[kind];if(!row)throw Error('Unknown font guidance concept.');
+ return {id:`typography:font:${kind}:${face?.id||'inventory'}:${axis?.tag||instance?.name||'default'}`,label,sourceId:'docs/features/interface/typography-inspector.md',concept:'font-'+kind,help:helpBase+'#font-'+kind,purpose:row[0],options:axis?`${axis.min} / ${axis.default} / ${axis.max}`:face?`${face.family} / ${face.style}`:'Current admitted local inventory',default:axis?String(axis.default):JSON.stringify(instance?.values||face?.axes?.map(axis=>[axis.tag,axis.default])||''),effects:row[2],example:row[4],validation:'Only admitted local faces and bounded numeric metadata are accepted.',recovery:'Use the existing appearance Undo action to restore an accepted change.',steps:['Review the admitted face and its exact metadata.','Use the original control to apply or validate this choice.']};
+}
