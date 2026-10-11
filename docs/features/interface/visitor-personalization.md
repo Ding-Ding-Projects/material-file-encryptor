@@ -16,6 +16,10 @@ Local schedules use the shared validated timezone, date, weekday, overnight and 
 
 The shared renderer retains native controls in several nested editors. Full registered component coverage, every-dropdown regex filtering, advanced appearance capability completeness and built browser interaction remain unverified. Source checks establish independent tone persistence, storage fallback, local schedule behavior and capability rejection; they do not establish rendered acceptance or narration audio output.
 
+The host supplies the same private history manager used by local access and an explicit profile-authentication predicate. Each changed settings snapshot is appended once only while both profile and history are unlocked. Unchanged updates create no history event. A history write failure reports a notification without undoing the live settings change.
+
+Mode enabled-state changes require a one-use authorization from successful credential setup or verification. The central settings consumer applies this rule to imports, reset and history restore as well as the visible control. Reset while the mode is enabled is rejected until the user explicitly verifies and disables it. Authorization is consumed on an attempted transition and is rejected if the profile has locked in the meantime.
+
 ## Suggested articles
 
 - [Local personalization](local-personalization.md)
