@@ -106,7 +106,7 @@ export function mountVisitorPersonalization(container,options={}) {
   setScheduleCredential:credentialCapabilities.setScheduleCredential,
   clearScheduleCredential:credentialCapabilities.clearScheduleCredential,
   sharedSettings:{read:async()=>controller.store.get().school,write:async()=>{}},
-  confirmDestructive:options.confirmDestructive,onLock:options.onLock,
+  confirmDestructive:options.confirmDestructive,isAuthenticated:options.isAuthenticated,onLock:options.onLock,
   onLogoChange:options.onLogoChange,isScreenReaderActive:options.isScreenReaderActive,
   onChange:settings=>{foundation?.setLanguage?.(settings.school.enabled?'en':settings.language);onChange(settings,{persistent:controller.storage.persistent,provenance});},
  });
@@ -116,7 +116,7 @@ export function mountVisitorPersonalization(container,options={}) {
  // The shared renderer still uses native controls in several nested editors.
  // Preserve their semantics rather than replacing them with decorative tags.
  return {store:controller.store,storage:controller.storage,apply:module.apply,
-  getSettings:()=>controller.store.get(),open:module.open,narrator:module.narrator,appearance:module.appearance,history:module.history,
+  getSettings:()=>controller.store.get(),onAuthentication:module.onAuthentication,open:module.open,narrator:module.narrator,appearance:module.appearance,history:module.history,
   addLocalSchedule:controller.addLocalSchedule,
   authorizeModeChange:controller.authorizeModeChange,flushHistory:controller.flushHistory,
   destroy(){if(!alive)return;alive=false;win.removeEventListener('storage',storageChanged);module.destroy();controller.destroy();}};

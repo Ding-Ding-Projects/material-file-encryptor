@@ -8,6 +8,12 @@ export function registerOwnedCommands({get,set,refresh},value){
  const owned=[...value];set([...get(),...owned]);refresh();let active=true;
  return()=>{if(!active)return;active=false;const identities=new Set(owned);set(get().filter(command=>!identities.has(command)));refresh();};
 }
+export function resolveGuidanceArticle(catalog,descriptor,{language='en',restricted=false}={}){
+ const declared=descriptor.sourceId||'docs/features/interface/settings-guidance.md';
+ if(typeof declared!=='string'||!declared.startsWith('docs/features/')||!declared.endsWith('.md')||declared.includes('..'))throw Error('Guidance documentation is unavailable.');
+ const base=declared.replace(/\.zh-HK\.md$/,'.md'),source=!restricted&&language==='yue'?base.replace(/\.md$/,'.zh-HK.md'):base;
+ const row=catalog?.documents?.find(row=>row.source===source);if(!row)throw Error('Guidance documentation is unavailable.');return row;
+}
 
 /** One invocation owns one target, draft and cancellation lifetime. */
 export function createGuidanceSession({steps,validate=()=>{},run=()=>{},available=()=>true}={}){
@@ -35,7 +41,7 @@ export async function clearGuidedField(target,{eventType='change',getFlight=()=>
 
 /** A registered non-modal Material component immediately precedes its target.
  * It never clones a secret, unlocks a target or substitutes an operation. */
-export function mountControlGuidance(target,{descriptor,t=s=>s,run,validate=()=>{},registerHelp,registerCommands,openHelp,provenance}={}){
+export function mountControlGuidance(target,{descriptor,t=s=>s,run,validate=()=>{},registerHelp,registerCommands,openHelp,provenance,getDetails}={}){
  if(!descriptor?.id||!descriptor.help||!descriptor.steps?.length)throw Error('A registered guidance descriptor is required.');
  if(!target.parentNode)throw Error('Attach the guidance target before mounting guidance.');
  const doc=target.ownerDocument,win=doc.defaultView;
@@ -45,9 +51,7 @@ export function mountControlGuidance(target,{descriptor,t=s=>s,run,validate=()=>
  host.initialize(':host{margin-block:4px}.panel{padding:12px;border:1px solid var(--md-sys-color-outline);border-radius:12px;overflow-wrap:anywhere}.status{min-height:1.5em}');
  const root=host.shadowRoot,entry=element('md-text-button',{text:t('Guide this control'),'aria-label':`${t('Guide this control')}: ${t(descriptor.label)}`}),explain=element('md-text-button',{text:t('Explain this control'),'aria-label':`${t('Explain this control')}: ${t(descriptor.label)}`}),panel=element('section',{class:'panel',hidden:true,'aria-label':t(descriptor.label)}),status=element('p',{role:'status','aria-live':'polite'});
  const details=element('section',{hidden:true,'aria-label':`${t('Explain this control')}: ${t(descriptor.label)}`});
- for(const key of ['purpose','options','default','effects','example','validation','recovery'])details.append(element('p',{text:`${t(key[0].toUpperCase()+key.slice(1))}: ${t(descriptor[key])}`}));
- if(provenance)details.append(element('p',{text:String(provenance())}));
- const article=element('a',{text:t('Authoritative documentation'),href:descriptor.help});if(openHelp)article.addEventListener('click',event=>{event.preventDefault();Promise.resolve(openHelp(descriptor)).catch(error=>{status.textContent=t(error.message);details.append(status);});});details.append(article);
+ const renderDetails=()=>{const live={...descriptor,...getDetails?.()};details.replaceChildren();for(const key of ['purpose','options','default','effects','example','validation','recovery'])details.append(element('p',{text:`${t(key[0].toUpperCase()+key.slice(1))}: ${t(live[key])}`}));const origin=live.provenance??provenance?.();if(origin)details.append(element('p',{text:String(origin)}));const article=element('a',{text:t('Authoritative documentation'),href:descriptor.help});if(openHelp)article.addEventListener('click',event=>{event.preventDefault();Promise.resolve(openHelp(descriptor)).catch(error=>{status.textContent=t(error.message);details.append(status);});});details.append(article);};renderDetails();
  let session=null,disposed=false;const disposers=[];
  const close=()=>{session?.cancel();panel.hidden=true;entry.setAttribute('aria-expanded','false');target.focus?.();};
  const paint=()=>{if(disposed||!session)return;panel.replaceChildren();const step=descriptor.steps[session.index];panel.append(element('h4',{text:`${session.index+1}/${descriptor.steps.length}: ${t(descriptor.label)}`}),element('p',{text:t(step)}),status);
@@ -55,8 +59,8 @@ export function mountControlGuidance(target,{descriptor,t=s=>s,run,validate=()=>
   next.addEventListener('click',async()=>{const current=session;if(!current||current.state!=='ready')return;next.disabled=true;try{status.textContent=t('Working through the original action.');await current.next();if(disposed)return;if(current!==session||current.state==='cancelled')return;status.textContent=t(current.state==='finished'?'Ready. Review the original control and its result.':descriptor.steps[current.index]);paint();panel.querySelector('md-filled-button')?.focus();}catch(error){if(disposed||current!==session||current.state==='cancelled')return;status.textContent=t(error.message);paint();panel.querySelector('md-filled-button')?.focus();}});panel.append(back,next,cancel,focus);
  };
  const open=()=>{if(disposed)return;session?.cancel();session=createGuidanceSession({steps:descriptor.steps,available:()=>!target.disabled&&!target.readOnly&&target.isConnected!==false,validate:async(index,signal)=>{if(target.checkValidity&&!target.checkValidity())throw Error('A required value is invalid. Correct the original control before continuing.');await validate(index,signal);},run:run||(()=>target.focus?.())});panel.hidden=false;entry.setAttribute('aria-expanded','true');status.textContent='';paint();panel.querySelector('md-filled-button')?.focus();};
- entry.setAttribute('aria-expanded','false');entry.addEventListener('click',open);explain.addEventListener('click',()=>{details.hidden=!details.hidden;explain.setAttribute('aria-expanded',String(!details.hidden));});panel.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();close();}});root.append(entry,explain,details,panel);
- const help={...descriptor,open,explain:()=>{details.hidden=false;host.scrollIntoView?.({block:'nearest'});explain.focus?.();}};
+ entry.setAttribute('aria-expanded','false');entry.addEventListener('click',open);explain.addEventListener('click',()=>{renderDetails();details.hidden=!details.hidden;explain.setAttribute('aria-expanded',String(!details.hidden));});panel.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();close();}});root.append(entry,explain,details,panel);
+ const help={...descriptor,open,explain:()=>{renderDetails();details.hidden=false;host.scrollIntoView?.({block:'nearest'});explain.focus?.();}};
  const off=registerHelp?.(help,target);if(typeof off==='function')disposers.push(off);
  const commands=registerCommands?.([{id:`guidance:${descriptor.id}`,label:{en:`Guide: ${descriptor.label}`,yue:`指引：${descriptor.labelYue||descriptor.label}`},run:open},{id:`explanation:${descriptor.id}`,label:{en:`Explain: ${descriptor.label}`,yue:`解釋：${descriptor.labelYue||descriptor.label}`},run:help.explain}]);if(typeof commands==='function')disposers.push(commands);
  return {host,open,explain:help.explain,destroy(){if(disposed)return;disposed=true;session?.cancel();disposers.forEach(fn=>fn());host.remove();}};
