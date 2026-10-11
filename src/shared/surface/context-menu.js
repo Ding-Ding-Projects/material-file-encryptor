@@ -22,6 +22,7 @@ export class ContextMenu extends SurfaceElement {
     this.controller=new AbortController();const options={capture:true,signal:this.controller.signal};
     this.ownerDocument.addEventListener('pointerdown',e=>{if(!e.composedPath().includes(this))this.close('outside');},options);
     this.ownerDocument.addEventListener('keydown',e=>this.handleKey(e),options);
+    this.ownerDocument.addEventListener('focusin',e=>{if(!e.composedPath().includes(this))this.close('focusout',{restoreFocus:false});},options);
     this.ownerDocument.defaultView.addEventListener('resize',()=>this.close('resize'),{signal:this.controller.signal});
     this.observer=new MutationObserver(()=>{if(this.target instanceof Element&&!this.target.isConnected)this.close('target-removed',{restoreFocus:false});});this.observer.observe(this.ownerDocument,{subtree:true,childList:true});
     this.renderItems().then(()=>{if(this.hidden||epoch!==this.epoch)return;this.menu.open=true;this.menu.updateComplete?.then(()=>{if(!this.hidden&&epoch===this.epoch)this.search.input?.focus();});});
@@ -34,12 +35,15 @@ export class ContextMenu extends SurfaceElement {
   handleKey(event){
     if(this.hidden)return;
     if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();this.close('escape');return;}
+    const path=event.composedPath();if(!path.includes(this))return;
+    if(event.key==='Tab'){this.close('tab',{restoreFocus:true});return;}
     const nodes=[...this.itemsHost.querySelectorAll('md-menu-item')].filter(node=>!node.disabled&&!node.hidden);if(!nodes.length)return;
-    const path=event.composedPath();const active=nodes.findIndex(node=>path.includes(node));const searching=path.includes(this.search);
+    const active=nodes.findIndex(node=>path.includes(node));const inSearch=path.includes(this.search),searching=inSearch&&path.includes(this.search.input);
+    if(inSearch&&!searching)return;
     if(searching&&!['ArrowDown','ArrowUp'].includes(event.key))return;
     let index=active;
     if(event.key==='ArrowDown')index=(active+1)%nodes.length;
-    else if(event.key==='ArrowUp')index=(active-1+nodes.length)%nodes.length;
+    else if(event.key==='ArrowUp')index=active<0?nodes.length-1:(active-1+nodes.length)%nodes.length;
     else if(event.key==='Home')index=0;
     else if(event.key==='End')index=nodes.length-1;
     else if((event.key==='Enter'||event.key===' ')&&active>=0){event.preventDefault();event.stopImmediatePropagation();nodes[active].click();return;}
