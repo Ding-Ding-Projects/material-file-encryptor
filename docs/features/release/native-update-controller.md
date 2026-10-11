@@ -1,6 +1,6 @@
 # Native update controller
 
-`src/main/update-service.js` implements an isolated main-process controller. It is not yet mounted in the application. No installed application, installer, release, or operating-system restart was exercised while developing this module. Native acceptance remains unverified.
+`src/main/update-service.js` implements a main-process controller with desktop source integration. No installed application, installer, release, or operating-system restart was exercised while developing this module. Native acceptance remains unverified.
 
 ## API and host integration
 
@@ -15,18 +15,22 @@ The controller exposes:
 | `download()` | Downloads the selected full package into an isolated application-data cache and verifies its size, SHA-256, and Squirrel SHA-1. Does not invoke the native updater. |
 | `installWhenSafe(parentWindow)` | Requires ready state, idle work, a native confirmation, and an exclusive installation lease before native updating. Verifies the native package cache before requesting application restart. |
 | `cancelSchedule()` | Stops future scheduled checks. Does not cancel an existing download or native transaction. |
-| `dispose()` | Stops scheduling, aborts owned HTTP work, removes native observers, and releases the installation lease. Does not claim to cancel Squirrel itself. |
+| `dispose({ shutdown: false })` | Stops scheduling and owned HTTP/observation work. If final restart preparation has begun, waits for that phase to settle. A partial-teardown recovery lease remains held unless the host explicitly confirms terminal shutdown with `shutdown: true`. Does not claim to cancel Squirrel itself. |
 | `on('status', listener)` / `off(...)` | Subscribes to state snapshots. The initial snapshot is available through `status()`. |
 
 The host must supply `isActiveWork`, covering unsaved edits, mounted-drive activity, exports, imports, conversions, and other work that must survive. Its conservative default is busy. The host must also supply `acquireInstallLease`, which atomically refuses when busy or returns a release function and prevents new work until released. A simple busy check cannot replace this lease. Missing lease support prevents installation.
 
 The host must supply `prepareRestart()` to lock storage, verify durability, retire owned helpers, and prepare its normal application shutdown path. It is awaited after native-cache verification and the last busy check, before requesting native restart. Its default throws `RESTART_PREPARATION_REQUIRED`; preparation failures prevent the restart request, with no forced-quit fallback.
 
-The native confirmation supports `en`, `yue`, `zh-HK`, and `bilingual` through `getLanguage()`. It defaults to the safe Later button. The host must present the persistent ready banner, manual check action, exact version and release link, localized state/reason descriptions, unsigned warning, Later action, and originating-window focus behavior. These renderer integrations are outstanding and are not implemented by this module.
+Final preparation is a non-abandonable phase. Before entering `preparing-restart`, the controller clears native observation timers and listeners. A passive error sink prevents late native error events from becoming uncaught exceptions. Timeout callbacks, late native errors, and disposal cannot release the lease or suppress the already-authorized restart after preparation succeeds. Disposal waits for the preparation promise. The host callback must not await this service's own `dispose()`, because disposal waits for that callback.
+
+The host must complete fallible preflight work, including durability checks and session-marker removal, before closing adapters, feature services, or helpers. After closure starts it must finish its shutdown preparation, set its shutdown flag, and resolve. If preparation throws after any possible partial closure, the controller reports `manual-restart-required` with `recoveryRequired: true` and `admissionBlocked: true`, skips native restart, and retains the lease. It cannot infer that a failed callback left the host reusable. Checks and new installation attempts cannot replace this terminal recovery state. The host must present the failure, keep mutations blocked, and guide a manual application restart or verified terminal shutdown. Only after terminal shutdown is committed may it call `dispose({ shutdown: true })` to release that recovery lease; ordinary disposal retains it. There is no automatic rollback or forced quit.
+
+The native confirmation supports `en`, `yue`, `zh-HK`, and `bilingual` through `getLanguage()`. It defaults to the safe Later button. The host must present the persistent ready banner, manual check action, exact version and release link, localized state/reason descriptions, unsigned warning, Later action, and originating-window focus behavior. The desktop source wiring is separate from this module; its installed acceptance remains outstanding.
 
 ## State and timing
 
-States include unavailable, idle, checking, current, available, downloading, ready, confirming, installing, restart-requested, failed, and disposed. Later preserves ready state. Active work preserves the staged package and reports `ACTIVE_WORK`. A native restart request is not proof of a successful update.
+States include unavailable, idle, checking, current, available, downloading, ready, confirming, installing, preparing-restart, manual-restart-required, restart-requested, failed, and disposed. Later preserves ready state. Active work preserves the staged package and reports `ACTIVE_WORK`. A native restart request is not proof of a successful update.
 
 Checks are enabled by default on a packaged Windows installation with the expected executable inside an `app-x.y.z` directory and a sibling real `Update.exe`. Unsupported and unpackaged contexts never request metadata. Startup runs immediately, except first-run Squirrel startup waits ten seconds for its installation lock. Background intervals are clamped between fifteen minutes and twenty-four hours, with a four-hour default. HTTP operations have a thirty-second deadline; native observation has a ten-minute deadline. Metadata is limited to 1 MiB and a package to 1,500 MiB. Successful staging is retained for later consent; failed staging is removed. Age-based cache cleanup is not implemented.
 
@@ -50,7 +54,7 @@ The release publisher currently increments release tags independently of `packag
 
 The native updater may apply a downloaded Squirrel update on the next application launch even without calling `quitAndInstall()`. Consequently ordinary background downloads use the isolated cache, and native `checkForUpdates()` starts only after explicit confirmation and an idle lease. Native updating downloads again from the validated fixed release feed. The native cache is checked before this controller calls `quitAndInstall()`.
 
-Once native Squirrel updating has started, its API supplies no cancellation or rollback mechanism. Disposal or a timeout stops this controller's observation and prevents a later callback from requesting restart, but cannot retract native work or guarantee what a future ordinary launch will do. A native cache mismatch or timeout is reported as failed, never as rollback success. The UI must communicate this limitation after a native failure. The module never invokes a shell, arbitrary command, installer executable, host shutdown, or host restart.
+Once native Squirrel updating has started, its API supplies no cancellation or rollback mechanism. Before final restart preparation begins, disposal or a timeout stops this controller's observation and prevents a later callback from requesting restart, but cannot retract native work or guarantee what a future ordinary launch will do. After final preparation begins, that phase is allowed to settle while admission remains blocked. A native cache mismatch or observation timeout is reported as failed, never as rollback success. The UI must communicate this limitation after a native failure. The module never invokes a shell, arbitrary command, installer executable, operating-system shutdown, or operating-system restart.
 
 ## Verification and remaining acceptance
 
