@@ -111,6 +111,21 @@ internal static class PackingTests
         using var observer=VaultEngine.Open(new VaultOptions{StorageRoot=fixture.Options().StorageRoot,CacheRoot=Path.Combine(fixture.Root,"observer")},fixture.Credentials());
         Assert(Read(observer,"other").SequenceEqual(new byte[]{42}),"Published metadata lost concurrent file");
     }
+    internal static void SourceAuthentication()
+    {
+        using var fixture=new Fixture();var bytes=Data(200000);
+        using(var engine=fixture.Create())
+        {
+            engine.CreateFile("data");engine.WriteRange("data",0,bytes);engine.FlushAsync().GetAwaiter().GetResult();
+            var part=Directory.GetFiles(Path.Combine(fixture.Options().StorageRoot,"parts"),"*.mfe").First();
+            using(var stream=new FileStream(part,FileMode.Open,FileAccess.ReadWrite,FileShare.None)){stream.Position=100;int original=stream.ReadByte();stream.Position=100;stream.WriteByte((byte)(original^128));stream.Flush(true);}
+            engine.SetBasicInfo("data",modifiedUtc:DateTimeOffset.UtcNow.AddMinutes(1));
+            engine.FlushAsync().GetAwaiter().GetResult();Assert(engine.Status.PendingCommits==0,"Healthy local ciphertext did not repair corrupt source");
+        }
+        using var credentials=fixture.Credentials();
+        using var observer=VaultEngine.Open(new VaultOptions{StorageRoot=fixture.Options().StorageRoot,CacheRoot=Path.Combine(fixture.Root,"observer")},credentials);
+        Assert(Read(observer,"data").SequenceEqual(bytes),"Existing corrupt source survived publication acknowledgement");
+    }
     internal static void Dense()
     {
         const long cap=83886080;const int block=65536;long length=cap*2+123456;

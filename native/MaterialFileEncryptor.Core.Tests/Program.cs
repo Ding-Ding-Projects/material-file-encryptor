@@ -10,6 +10,7 @@ var cases = new (string,Action)[] {
     ("packing cancellation and checkpoint durability",PackingTests.Durability),
     ("packing cancellation stays paused across reopen",PackingTests.PauseResume),
     ("packing publication stalls and exact acknowledgement",PackingTests.Publication),
+    ("packing authenticates and repairs pre-existing source ciphertext",PackingTests.SourceAuthentication),
     ("packing dense 80 MiB physical caps and bounded records",PackingTests.Dense),
     ("encrypted activity snapshots, paging, tamper refusal and upgrade",ActivityTests.Run),
     ("hydration runs outside core and callback locks before atomic mutation",HydrationConcurrency),

@@ -443,6 +443,7 @@ public sealed partial class VaultEngine : IDisposable
         bool available=Directory.Exists(source);
         lock(gate){sourceAvailable=available;if(!available)lastError="Storage folder is offline; encrypted changes are queued locally.";}
         if(!available)return;
+        var verifiedSource=new HashSet<string>(StringComparer.Ordinal);
         try
         {
             foreach(var id in batch)
@@ -457,9 +458,25 @@ public sealed partial class VaultEngine : IDisposable
                     foreach(var part in referenced)
                     {
                         token.ThrowIfCancellationRequested();PublicationTestPoint?.Invoke("part");
-                        var target=ObjectPath(source,"parts",part);
-                        if(!File.Exists(target)&&IsEncryptedFileAvailable?.Invoke("parts/"+part+".mfe")!=true)
-                        {var localPart=EnsurePart(part);VerifyPart(localPart,part,encodings[part],token);using var input=File.OpenRead(localPart);CopyAtomic(input,target,token);}
+                        if(verifiedSource.Contains(part))continue;
+                        var target=ObjectPath(source,"parts",part);bool validSource=false;
+                        if(File.Exists(target))
+                        {
+                            try{VerifyPart(target,part,encodings[part],token);validSource=true;}
+                            catch(Exception error)when(error is IOException or CryptographicException or InvalidDataException){ }
+                        }
+                        if(!validSource)
+                        {
+                            var cached=ObjectPath(cache,"parts",part);
+                            if(!File.Exists(cached)&&!File.Exists(target)&&HydrateEncryptedFileAsync!=null)
+                                HydrateEncryptedFileAsync("parts/"+part+".mfe",token).GetAwaiter().GetResult();
+                            // A corrupt source is replaced only by authenticated local
+                            // ciphertext. Failure retains the durable pending commit.
+                            var localPart=EnsurePart(part);VerifyPart(localPart,part,encodings[part],token);
+                            using(var input=File.OpenRead(localPart))CopyAtomic(input,target,token);
+                            VerifyPart(target,part,encodings[part],token);
+                        }
+                        verifiedSource.Add(part);
                     }
                     token.ThrowIfCancellationRequested();PublicationTestPoint?.Invoke("before-metadata");
                     using(var input=File.OpenRead(local))CopyAtomic(input,ObjectPath(source,"commits",id),token);
@@ -474,8 +491,8 @@ public sealed partial class VaultEngine : IDisposable
                 finally{lock(gate)publicationParts.ExceptWith(referenced);}
             }
         }
-        catch(Exception error)when(error is IOException or UnauthorizedAccessException)
-        {lock(gate){sourceAvailable=Directory.Exists(source);lastError="Encrypted source publication is incomplete; durable local changes remain queued.";}}
+        catch(Exception error)when(error is IOException or UnauthorizedAccessException or CryptographicException or InvalidDataException)
+        {bool remainsAvailable=Directory.Exists(source);lock(gate){sourceAvailable=remainsAvailable;lastError="Encrypted source publication is incomplete; durable local changes remain queued.";}}
     }
     private bool VerifyComplete(Commit commit,bool authenticateContent=true)
     {
