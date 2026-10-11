@@ -1,9 +1,15 @@
+import {surfaceRegistry} from '../../../shared/surface/registry.js';
 import {mountControlGuidance} from '../../../shared/surface/control-guidance.js';
 import {PREPARATION_GUIDANCE,preparationTranslator} from './copy.js';
 
+export function registerServerPreparation(view,registry=surfaceRegistry){
+ const row=registry.find(row=>row.tag==='mfe-server-preparation');
+ if(!row||row.role!=='region'||row.module!=='../../renderer/features/server-manager/index.js'||!['md-outlined-button','mfe-search','mfe-control-guidance'].every(tag=>row.primitives.includes(tag)))throw Error('Server preparation surface registration is incomplete.');
+ if(!view.customElements.get(row.tag))view.customElements.define(row.tag,class extends view.HTMLElement{});
+}
 /** Preparation only. No action accepts license consent or starts an execution target. */
 export function mountServerPreparation(host,services={}){
- const doc=host.ownerDocument,t=preparationTranslator(services.getLanguage),root=doc.createElement('section');root.className='server-preparation';host.append(root);
+ const doc=host.ownerDocument,t=preparationTranslator(services.getLanguage);registerServerPreparation(doc.defaultView);const root=doc.createElement('mfe-server-preparation');root.setAttribute('role','region');root.setAttribute('aria-label',t('Prepare a local Java server'));root.className='server-preparation';host.append(root);
  let alive=true,epoch=0,busy=false,reading=false,dirty=false,snapshot=null,page=null,selected=null,message='',query='',queryGeneration=0;const mounted=[],life=[];
  const available=()=>alive&&host.isConnected!==false;
  const node=(tag,text)=>{const item=doc.createElement(tag);if(text)item.textContent=t(text);return item;};
@@ -34,7 +40,7 @@ export function mountServerPreparation(host,services={}){
    const search=node('mfe-search');search.setAttribute('label',t('Search loaded versions'));search.setAttribute('scope','server-preparation-versions');search.language=services.getLanguage?.()||'en';root.append(search);search.query=query;if(search.input)search.input.value=query;
    const list=node('div');list.setAttribute('role','list');root.append(list);root.append(node('p','Search covers loaded versions only. Load more to inspect the complete catalogue.'));const rows=[],catalogueId=page.catalogueId,nextCursor=page.next;
    for(const version of page.versions){const row=node('div');row.setAttribute('role','listitem');list.append(row);rows.push({node:row,version});const choose=action(row,'Choose version','choose',()=>transact(async()=>{const result=await request('resolveVersion',{catalogueId,versionId:version.id});if(!available())return false;selected=result;return true;}),{disabled:busy,context:version.id});choose.textContent=t('Choose version')+': '+version.id;choose.setAttribute('aria-label',choose.textContent);row.append(node('p'));Array.from(row.children).at(-1).textContent=version.channel+' · '+version.releaseTime;}
-   const filter=async()=>{query=search.query;const generation=++queryGeneration;const matches=await search.filter(rows.map(({version},index)=>({id:String(index),text:version.id+' '+version.channel})));if(!available()||generation!==queryGeneration||matches===null)return;const ids=new Set(matches.map(row=>row.id));rows.forEach((row,index)=>row.node.hidden=!ids.has(String(index)));};search.addEventListener('search-change',filter);mounted.push(()=>search.removeEventListener('search-change',filter));guidance(search,'search',()=>{search.input?.focus();return true;});
+   const filter=async()=>{query=search.query;const generation=++queryGeneration;const matches=await search.filter(rows.map(({version},index)=>({id:String(index),text:version.id+' '+version.channel})));if(!available()||generation!==queryGeneration||matches===null)return;const ids=new Set(matches.map(row=>row.id));rows.forEach((row,index)=>row.node.hidden=!ids.has(String(index)));};search.addEventListener('search-change',filter);mounted.push(()=>search.removeEventListener('search-change',filter));guidance(search,'search',()=>{search.input?.focus();return true;});void filter();
    action(root,'Clear version search','clear',()=>{if(search.input?.disabled||search.input?.readOnly||typeof search.emitChange!=='function')return false;search.query='';query='';if(search.input){search.input.value='';search.input.focus();}search.emitChange();return true;});
    if(page.next)action(root,'Load more versions','page',()=>transact(async()=>{const next=await request('versions',{catalogueId,cursor:nextCursor});if(!available())return false;page={...next,versions:[...page.versions,...next.versions]};return true;}),{disabled:busy});
   }

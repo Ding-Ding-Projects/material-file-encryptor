@@ -10,7 +10,7 @@ const manifest=Buffer.from(JSON.stringify({latest:{release:'fixture',snapshot:'f
 async function fixture(t,options={}){
  const parent=path.resolve('out/server-manager-preparation-fixtures');await fs.mkdir(parent,{recursive:true});const root=await fs.mkdtemp(path.join(parent,'owned-'));const calls=[];
  const metadataBytes=options.metadataBytes||metadata,manifestValue=JSON.parse(manifest);manifestValue.versions[0].sha1=createHash('sha1').update(metadataBytes).digest('hex');const manifestBytes=Buffer.from(JSON.stringify(manifestValue));
- const fetchImpl=async(url,request)=>{calls.push(url);if(url.endsWith('version_manifest_v2.json'))return new Response(manifestBytes);if(url.endsWith('fixture.json'))return new Response(metadataBytes);if(url.endsWith('server.jar'))return options.download?options.download(request):new Response(bytes);throw Error('Unexpected fixture URL.');};
+ const fetchImpl=async(url,request)=>{calls.push(url);if(url.endsWith('version_manifest_v2.json'))return new Response(manifestBytes);if(url.endsWith('fixture.json'))return options.resolveMetadata?options.resolveMetadata(request):new Response(metadataBytes);if(url.endsWith('server.jar'))return options.download?options.download(request):new Response(bytes);throw Error('Unexpected fixture URL.');};
  const host=createServerManagerHost({dataDirectory:root,fetchImpl,capacity:async()=>1024n*1024n*1024n,...options});t.after(()=>host.close());return{root,host,calls};
 }
 async function choose(host){const value=await host.dispatch('refreshCatalogue');return host.dispatch('resolveVersion',{catalogueId:value.catalogue.sourceSha256,versionId:'fixture'});}
@@ -45,4 +45,13 @@ test('closing during a streamed transfer waits for cancellation and retains an i
  const f=await fixture(t,{download:async({signal})=>new Response(new ReadableStream({start(controller){signal.addEventListener('abort',()=>controller.error(signal.reason),{once:true});controller.enqueue(bytes.subarray(0,4));started();}}))});
  const selection=await choose(f.host),operation=await f.host.dispatch('prepare',{selectionId:selection.selectionId});await reached;await f.host.close();assert.equal(f.host.pending,0);await assert.rejects(f.host.dispatch('snapshot'),/closing/);
  const sessions=await fs.readdir(path.join(f.root,'server-manager')),base=path.join(f.root,'server-manager',sessions[0]);const receipt=JSON.parse(await fs.readFile(path.join(base,'operation-'+operation.id+'.json'),'utf8'));assert.equal(receipt.status,'canceled');assert.equal(receipt.bytesVerified,false);assert.equal(receipt.licenseAccepted,false);assert.equal(receipt.recoveryRequired,true);await assert.rejects(fs.access(path.join(base,operation.serverId,'server/server.jar')));
+});
+test('metadata admission counts pending and retained selections before invoking the provider',async t=>{
+ const waiting=[];let count=0;const f=await fixture(t,{resolveMetadata:({signal})=>{count++;return new Promise((resolve,reject)=>{waiting.push({resolve,reject});signal.addEventListener('abort',()=>reject(signal.reason),{once:true});});}});const value=await f.host.dispatch('refreshCatalogue'),payload={catalogueId:value.catalogue.sourceSha256,versionId:'fixture'};
+ const flights=Array.from({length:100},()=>f.host.dispatch('resolveVersion',payload));assert.equal(count,100);await assert.rejects(f.host.dispatch('resolveVersion',payload),/pending selections/);assert.equal(count,100);
+ waiting[0].reject(Error('Synthetic metadata failure.'));await assert.rejects(flights[0]);const replacement=f.host.dispatch('resolveVersion',payload);assert.equal(count,101);waiting[1].resolve(new Response(metadata));await flights[1];await assert.rejects(f.host.dispatch('resolveVersion',payload),/pending selections/);assert.equal(count,101);
+ const observed=Promise.allSettled([...flights.slice(2),replacement]);await f.host.close();assert.ok((await observed).every(row=>row.status==='rejected'));assert.equal(f.host.pending,0);
+});
+test('a synchronous metadata provider throw releases its reserved slot',async t=>{
+ let count=0;const f=await fixture(t,{resolveMetadata:()=>{count++;throw Error('Synthetic provider throw.');}});const value=await f.host.dispatch('refreshCatalogue'),payload={catalogueId:value.catalogue.sourceSha256,versionId:'fixture'};for(let i=0;i<101;i++)await assert.rejects(f.host.dispatch('resolveVersion',payload));assert.equal(count,101);assert.equal(f.host.pending,0);
 });

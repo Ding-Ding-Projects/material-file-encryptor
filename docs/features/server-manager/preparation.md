@@ -33,3 +33,7 @@ Desktop IPC validates action-specific bounded identifiers and rejects unknown ke
 ## Verification
 
 Focused tests exercise the real preparation host and local file adapter with synthetic bytes, strict desktop/browser IPC admission, and the mounted component with an injected DOM fixture. They cover byte mismatch, stale metadata, serial admission, capacity refusal, cancellation before publication and during streaming, license refusal, original identifier payloads, guidance ownership, search clearing and stale-instance disposal. No real server download, Java execution, native helper, GUI launch or product build was performed. Rendered layout, keyboard interaction, full language/theme/scale coverage and packaged-runtime acceptance remain pending.
+
+## Bounded metadata admission and retained search
+
+Pending metadata resolutions and retained selections share a synchronous 100-slot admission limit. A slot is reserved before contacting the provider and released in finally, including rejection and shutdown. Search reapplies the retained query after refresh, pagination, language changes and status repaint; disposed search generations cannot apply delayed results. The preparation region is registered as `mfe-server-preparation` with its exact Material Design 3 and shared control inventory. These are source/component checks, not rendered acceptance.
