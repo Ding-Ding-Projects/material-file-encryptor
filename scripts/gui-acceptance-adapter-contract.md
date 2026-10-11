@@ -23,7 +23,7 @@ Each state adapter implements:
     return {passed: true, observable: /* exact inventory observable */, evidence};
   },
   actions: {
-    /* every exact inventory action ID */: async ({tuple, executePlan}) => {
+    /* every exact inventory action ID */: async ({tuple, binding, executePlan, prepared}) => {
       // Drive a real control and assert its independent resulting observable.
       return {id: /* exact action ID */, activated: true,
         observablePassed: true, activation: /* actual route */, evidence};
