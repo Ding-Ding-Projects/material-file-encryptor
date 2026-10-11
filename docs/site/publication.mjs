@@ -88,6 +88,32 @@ export async function buildDocumentation(root,output,home) {
  await fs.writeFile(path.join(output,'documentation-inventory.json'),JSON.stringify({version:1,articles:articles.map(({markdown,...a})=>a),wiki:catalog.wiki,categories:catalog.categories},null,2));
  return articles;
 }
+// Capture promotion may follow this application revision. Never derive it from
+// the documentation checkout's moving HEAD.
+export const INTENDED_CAPTURE_UI_SOURCE = '617320a910a86cf685241e544c0f93fb6794c714';
+export function assertGalleryPresentation(home,records,{intendedSource=INTENDED_CAPTURE_UI_SOURCE}={}) {
+ if(!/^[a-f0-9]{40}$/.test(intendedSource))throw Error('Invalid intended capture source');
+ const byPath=new Map(records.map(record=>[record.path,record]));
+ let presented=0;
+ for(const record of records)if(!record.historical&&(record.sourceCommit!==intendedSource||!record.promotionReceiptSha256))throw Error('Current capture does not match intended UI source');
+ for(const section of home.matchAll(/<section\b[^>]*>[\s\S]*?<\/section>/g)){
+  if(!section[0].includes('src="images/captures/'))continue;
+  const headings=[...section[0].matchAll(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/g)].map(row=>row[0]);
+  headings.push(...[...section[0].matchAll(/<p\b[^>]*class="[^"]*\beyebrow\b[^"]*"[^>]*>[\s\S]*?<\/p>/g)].map(row=>row[0]));
+  for(const figure of section[0].matchAll(/<figure\b([^>]*)>([\s\S]*?)<\/figure>/g)){
+   const image=figure[2].match(/<img\b[^>]*src="(images\/captures\/[^\"]+)"/);if(!image)continue;
+   presented++;
+   const record=byPath.get(image[1]);if(!record)throw Error('Presentation image is absent from reviewed gallery');
+   const role=figure[1].match(/data-gallery-role="(historical|current)"/)?.[1];
+   if(role!==(record.historical?'historical':'current'))throw Error('Presentation capture role differs from gallery');
+   const labels=[...figure[2].matchAll(/aria-label="([^"]+)"/g)].map(row=>row[1]);
+   const caption=figure[2].match(/<figcaption\b[^>]*>([\s\S]*?)<\/figcaption>/)?.[1]||'';
+   if(record.historical&&[...headings,...labels,caption].some(text=>/\bcurrent\b/i.test(text)))throw Error('Historical capture has a current presentation label');
+  }
+ }
+ if(presented!==[...home.matchAll(/<img\b[^>]*src="images\/captures\//g)].length)throw Error('Capture presentation is outside a reviewed section and figure');
+ return true;
+}
 export async function galleryRecords(root) {
  const linux=JSON.parse(await fs.readFile(path.join(root,'docs/images/captures/provenance.json'),'utf8'));
  const windows=JSON.parse(await fs.readFile(path.join(root,'docs/images/captures/windows/provenance.json'),'utf8'));
@@ -175,6 +201,7 @@ export function renderGallery(records,review) {
 }
 export async function buildGallery(root,output,home) {
  const records=await galleryRecords(root);
+ assertGalleryPresentation(home,records);
  const review=JSON.parse(await fs.readFile(path.join(root,'docs/site/gallery-review.json'),'utf8'));
  const withheld=review.withheld.map(({path,sha256,reason})=>({path,sha256,reason}));
  await fs.writeFile(path.join(output,'gallery.html'),pageShell(home,'Capture gallery',renderGallery(records,review)));
