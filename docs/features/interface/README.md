@@ -34,4 +34,6 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 
 - [Complete local bundled fonts](bundled-fonts.md)
 
+- [Typed typography inspector](typography-inspector.md)
+
 - [Optional drawing and state-preview guidance](workbench-guidance.md)

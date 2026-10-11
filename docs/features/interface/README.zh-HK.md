@@ -34,4 +34,6 @@
 
 - [完整本機隨附字型](bundled-fonts.zh-HK.md)
 
+- [有型別嘅文字排版設定](typography-inspector.zh-HK.md)
+
 - [繪畫同狀態預覽嘅可選指引](workbench-guidance.zh-HK.md)

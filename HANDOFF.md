@@ -1,3 +1,15 @@
+# Typography and workbench source integration, 2026-10-11 UTC
+
+This integration combines reviewed typography ed801d035210d28185bdfa35a8729c5c4d8d49ee with workbench main 7769f6f0adef2577cc716e9a6ba98c8f1cce9c57. Typed controls use registered Material components and the original mutation, lock, history and storage routes. Actual inherited-size stepping, production enhanced search, font admission, draft clearing, guidance and rollback/retry are covered by 60 passing focused checks. Independent review of the final semantic merge seams found no concrete regression. Both complete bilingual documentation pairs, indexes, publication rows, language hashes and copy dictionaries remain present.
+
+This is source and fixture verification. Pure Material Design 3 rendered conformance, assistive technology, actual font identity and full viewport/language/theme/scale acceptance remain pending. The original mobile preferences image is still an open presentation defect. Latest browser admission observed 1,183,008 KiB available physical memory against a 1,572,864 KiB minimum, so no browser was launched.
+
+Main 7769 cloud documentation deployment 38131553586 completed successfully; independent live-byte verification is underway. Its release delivery and this newer integration delivery remain separately pending. The prior d2 normal release v1.197.1, package and live-content results below remain historical exact-source evidence. Workbench preservation builds 38130126640 and 38130807226 failed because their new articles were not yet registered in the publication catalogue; the main integration contains that registration, and those historical runs are not called green.
+
+The complete original goal remains active: installer/update runtime acceptance, full settings/editor/motion/server functionality, all 210 surface rows and replacement genuine current captures are unfinished. All eight working trees, ignored evidence and announcement variants remain retained. The older recovery archive does not cover the latest changes. No destructive cleanup is qualified. The three interrupted exactly-once accompaniment events remain explicitly uncertain. The latest verified account allowance is 49% remaining.
+
+Next actions: verify this source through exact root cloud build/package and independently downloaded release bytes, verify actual live documentation, and resume rendered/installed acceptance only after safe resource and identity admission. Continue the remaining bounded product workflows without relabelling source checks as full delivery.
+
 # Reviewed workbench integration, 2026-10-11 UTC
 
 Main delivery d2a1700077734efe4608d7e610ebdbe7d5ca2326 passed exact-root cloud build and package run 38128917759. Normal release v1.197.1 has draft/prerelease flags false and exact source binding. Independent download acceptance verified all five files, 763 archive entries, 664 Squirrel payload files and 6,242 privacy entries with zero rejected. Live deployment 38128917787 delivered 209 matching files, 59,673,021 bytes and 6,668 internal references without missing files or anchors. These results do not prove installed or rendered acceptance.

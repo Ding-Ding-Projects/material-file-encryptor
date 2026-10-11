@@ -2,7 +2,7 @@
 
 - [x] Revamp README and verify exact d2 cloud/package/live documentation delivery.
 - [ ] Optional workbench guidance: source and focused consumers pass; built visual and accessibility acceptance pending.
-- [ ] Typography: preserve reviewed source and repair inherited stepping and visible enhanced-search integration before delivery.
+- [ ] Typography: source integrated with inherited stepping and visible enhanced-search repairs; 60 focused checks pass, cloud and rendered acceptance pending.
 - [ ] Pure Material Design 3 on every visible surface: mobile preferences diagnosis and full rendered matrix pending.
 - [ ] Complete the original installer/updater and all 210 surface acceptance rows.
 
