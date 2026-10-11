@@ -399,6 +399,18 @@
       "translation": "docs/features/interface/nested-appearance-guidance.zh-HK.md",
       "sourceSha256": "8e63c4ee2b74dc78f8295002f604565137d77a01e42757efd04b8136ded3fff0",
       "translationSha256": "096fe7244d4d8592082de4b4b45c0de3ec8d1e4f31ef35a614eb627a9c1a6623"
+    },
+    {
+      "source": "docs/features/server-manager/README.md",
+      "translation": "docs/features/server-manager/README.zh-HK.md",
+      "sourceSha256": "1cf4dfc36f13f0cc75fba457fdc7ac61ed2a80af2d4a4668c779cd7921f86c71",
+      "translationSha256": "d6cdc454b216328ddde23272da0a79850bfe5d5f3b542be5ec16632632f0daa9"
+    },
+    {
+      "source": "docs/features/server-manager/foundation.md",
+      "translation": "docs/features/server-manager/foundation.zh-HK.md",
+      "sourceSha256": "855280f12666e7f3bb139e1d6fcfb49e9f7d4f47854d06d93e915a7bbb453db9",
+      "translationSha256": "dc1e4daff70c687e4b03e032554cbe4c26e655b66af8d89cd5967b7b669e0eea"
     }
   ]
 }
