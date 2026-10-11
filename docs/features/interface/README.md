@@ -23,3 +23,5 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 - [Browser workspace role](public-workspace-role.md)
 
 - [Settings completeness and integrity](settings-completeness.md)
+
+- [Animation and Transition source implementation and limits](animation-transition.md)

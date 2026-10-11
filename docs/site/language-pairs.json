@@ -127,14 +127,14 @@
     {
       "source": "docs/features/interface/README.md",
       "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "3a3e20e8bc4109c998fe516672e4652244d742780cf8502257016c94a756ae60",
-      "translationSha256": "85d1ae3fe4b09d691f4a7506e9122969e60cf4c89341a5536d1a2c49b838c927"
+      "sourceSha256": "b0ec95c7a1777b8ce7629d30d66dc562fdf7c7bf0081d70e1515459a6e5eba61",
+      "translationSha256": "fa8bc35c0ac72eea0a6a8d58a035cf69d8e7f80a47119fb57ff10dbd90b24aff"
     },
     {
       "source": "docs/features/interface/appearance-editor.md",
       "translation": "docs/features/interface/appearance-editor.zh-HK.md",
-      "sourceSha256": "4fce270c5cc547ff7a0746bc971d3d2d9d95cb78451e6e6264eed01c64abf000",
-      "translationSha256": "4a27b0f1c78d8a1d14cd61368a12930702f685bc513475c7567257f3b1894a3b"
+      "sourceSha256": "c9490d0bab95ba7210361ede10baa9ed56aa20a98b94264b99016251e9c86795",
+      "translationSha256": "8f5eadf878a7c33e62eeb901247545d2372336914b60b1d0cfd65ee80bcda0d5"
     },
     {
       "source": "docs/features/interface/local-personalization.md",
@@ -381,6 +381,12 @@
       "translation": "docs/features/interface/settings-completeness.zh-HK.md",
       "sourceSha256": "3169607dc50cb06d1a6430f8167162e7992f6ea1af3a1a39cf80cd0b54e5fde6",
       "translationSha256": "d5a8b19afcd59b9a1398aee9ca15357d65655b03148332cb878865bfa4d1c2a8"
+    },
+    {
+      "source": "docs/features/interface/animation-transition.md",
+      "translation": "docs/features/interface/animation-transition.zh-HK.md",
+      "sourceSha256": "ce81774b312cc445d0980067316435d55d1763ea68691c4d22ef201d025ee333",
+      "translationSha256": "0869a96f783f2124c7aa71e029e7ac95e8294d6298840a8f6a3718d3e58e776c"
     }
   ]
 }
