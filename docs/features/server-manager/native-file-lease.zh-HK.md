@@ -8,6 +8,12 @@
 
 原生元件尚未接駁 `LocalProcessServerAdapter` 或主機 IPC。可信擁有權登記、執行環境批准、請求身份、逾時復原，以及跨 IPC 生命週期保留仍然待完成。轉接器預設檔案租約服務仍然不可用。
 
-根目錄建置只編譯 `MaterialFileEncryptor.ServerLease.Verifier`，唔會執行佢。輸出會獨立上載，亦會從應用程式套件同 ASAR 內容排除。覆核者會用 `--fixture-root` 同全新、明確指定嘅合成目錄執行已編譯檔案。驗證器保留檔案同 `receipt.json`，涵蓋 handle 共用、上層目錄替換、未知擁有權保留、明確釋放、部分准入、現有寫入者、執行環境路徑範圍同真實 Windows junction。編譯、下載執行檔身份同實際驗證器執行，各自有獨立結論。呢個單元唔代表真實 Java 伺服器、完整管理器或 GUI 已通過驗收。
+根目錄建置只編譯 `MaterialFileEncryptor.ServerLease.Verifier`，唔會執行佢。輸出會獨立上載，亦會從應用程式套件同 ASAR 內容排除。覆核者會透過已驗證現有 .NET 主機，用 `--fixture-root` 同全新、明確指定嘅合成目錄執行已編譯 DLL。驗證器保留檔案同 `receipt.json`，涵蓋 handle 共用、上層目錄替換、未知擁有權保留、明確釋放、部分准入、現有寫入者、執行環境路徑範圍同真實 Windows junction。編譯、下載 DLL 身份同實際驗證器執行，各自有獨立結論。呢個單元唔代表真實 Java 伺服器、完整管理器或 GUI 已通過驗收。
 
 已編譯驗證器亦會建立可寫入映射、關閉原本檔案 handle，再嘗試准入同修改。收據會分開記錄准入被拒絕，或者持有共用租約期間仍觀察到映射修改；兩種結果都唔會靜靜變成位元組不可變保證。
+
+## 首次執行同無子程序測試
+
+交付採用依賴既有 Framework 嘅方式（`--self-contained false`），同現有掛載驗證器一致。建置收據會綁定驗證器 DLL 嘅 SHA-256。首次執行之前，要獨立核對下載來源收據同 DLL，確認符合指定雲端執行，再透過已驗證嘅現有 .NET 主機執行 `MaterialFileEncryptor.ServerLease.Verifier.dll`。呢個係初始路線，唔係執行被拒絕後先換路線。未曾嘗試任何新執行檔。可選 Node 消費端接收 `SERVER_FILE_LEASE_DOTNET` 同 `SERVER_FILE_LEASE_VERIFIER_DLL`，啟動前驗證交付 DLL 綁定，再比較結果嘅 DLL 同主機雜湊。
+
+Junction 測試而家直接喺新合成目錄建立原生掛載點重新解析緩衝區，唔會啟動 shell 或子程序。驗證器執行中斷仍然屬於未驗證；重用之前必須檢查保留現場。中斷或缺少收據都唔代表已釋放、檢查成功或伺服器通過驗收。

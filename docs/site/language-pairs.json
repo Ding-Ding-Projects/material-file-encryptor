@@ -415,8 +415,8 @@
     {
       "source": "docs/features/server-manager/native-file-lease.md",
       "translation": "docs/features/server-manager/native-file-lease.zh-HK.md",
-      "sourceSha256": "f561d4fb12b7af78c1bce3a5b322bda7199c510923b8f1bf6ea99d8fde193545",
-      "translationSha256": "e98dd6f84e3d12573048e43e03b2fd652c23c578fec67eac80e0c78a5cfca018"
+      "sourceSha256": "34e1a9ec31562a0d2ed57eee0194c4adc9e93009584a5635c492a580ace97422",
+      "translationSha256": "816202aeddea0944fdc390e9240b5ea3d0fe8ae2753a5edaa0db21b465f6aaaa"
     },
     {
       "source": "docs/features/interface/font-metadata.md",
