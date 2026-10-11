@@ -29,12 +29,13 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
     ...(!browser ? { access: ['credentialGet','credentialSet','credentialDelete','credentialList','openDataFolder','dataFolder',...ACCESS_HOST_ACTIONS] } : {}),
   };
   const limit=!browser&&feature==='personalization'&&action==='normalizeImage'?Math.ceil(4*1024*1024*4/3)+256:262144;
-  if (!actions[feature]?.includes(action) || !object(payload) || Buffer.byteLength(JSON.stringify(payload)) > limit) throw new Error('Unsupported feature request.');
-  if ((feature==='surprise'||feature==='personalization'&&action==='accessibilityState') && (Object.getPrototypeOf(payload)!==Object.prototype&&Object.getPrototypeOf(payload)!==null||Reflect.ownKeys(payload).length!==0)) throw new Error('This read-only request accepts no payload.');
+  if (!actions[feature]?.includes(action) || !object(payload)) throw new Error('Unsupported feature request.');
   if(feature==='access'&&ACCESS_HOST_ACTIONS.includes(action)){
-    const inspect=(value,depth=0)=>{if(depth>12)throw Error('Access payload is too deeply nested.');if(value&&typeof value==='object'){if(Object.getPrototypeOf(value)!==(Array.isArray(value)?Array.prototype:Object.prototype)||Reflect.ownKeys(value).some(key=>typeof key!=='string'||['__proto__','prototype','constructor'].includes(key)||Array.isArray(value)&&key!=='length'&&!/^(?:0|[1-9][0-9]*)$/.test(key)))throw Error('Unsupported access payload.');for(const item of Object.values(value))inspect(item,depth+1);}};
+    const inspect=(value,depth=0)=>{if(depth>12)throw Error('Access payload is too deeply nested.');if(value&&typeof value==='object'){const array=Array.isArray(value),keys=Reflect.ownKeys(value);if(Object.getPrototypeOf(value)!==(array?Array.prototype:Object.prototype)||keys.some(key=>typeof key!=='string'||['__proto__','prototype','constructor'].includes(key)||array&&key!=='length'&&!/^(?:0|[1-9][0-9]*)$/.test(key)))throw Error('Unsupported access payload.');if(array){if(value.length>128||keys.length!==value.length+1)throw Error('Unsupported access array.');for(let index=0;index<value.length;index++)if(!Object.hasOwn(value,index))throw Error('Unsupported access array.');}for(const key of keys){const descriptor=Object.getOwnPropertyDescriptor(value,key);if(!Object.hasOwn(descriptor,'value'))throw Error('Unsupported access accessor.');if(!array||key!=='length')inspect(descriptor.value,depth+1);}}};
     inspect(payload);validateAccessHostRequest(action,payload);
   }
+  if(Buffer.byteLength(JSON.stringify(payload))>limit)throw new Error('Unsupported feature request.');
+  if ((feature==='surprise'||feature==='personalization'&&action==='accessibilityState') && (Object.getPrototypeOf(payload)!==Object.prototype&&Object.getPrototypeOf(payload)!==null||Reflect.ownKeys(payload).length!==0)) throw new Error('This read-only request accepts no payload.');
   if (feature === 'workflow' && WORKFLOW_DESKTOP_ACTIONS.includes(action)) validateDesktopWorkflow(action,payload);
   if (feature === 'server-manager') {
     const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
