@@ -1,3 +1,5 @@
+import {ACTION_HELP,ACTION_HELP_COPY} from './settings-action-help.js';
+import {FIELD_HELP,FIELD_HELP_COPY} from './settings-field-help.js';
 /** Explicit control inventory. Values and choices come from each real consumer. */
 const fields=[
  ['Mode name','Name the shared presentation restriction','為共用顯示限制命名'],
@@ -48,6 +50,8 @@ const fields=[
  ['Access token','Enter the provider credential only in protected input','只在受保護輸入欄位填寫來源憑證'],
 ];
 const actions=[
+ ['Reset English playfulness','Restore only the English message humor level to 5','只把英文訊息趣味程度還原至 5'],
+ ['Reset Cantonese playfulness','Restore only the Cantonese message humor level to 5','只把廣東話訊息趣味程度還原至 5'],
  ['Set local credential','Store the mode credential in protected storage','把模式憑證儲存在受保護空間'],
  ['Enable mode','Enable the presentation restriction after credential setup','設定憑證後啟用顯示限制'],
  ['Turn off mode','Restore previous choices after credential verification','核對憑證後還原先前選擇'],
@@ -90,6 +94,7 @@ export const SETTINGS_GUIDANCE_COPY={
  'The original action retains its validation, permissions and confirmation.':'原有操作會保留驗證、權限及確認要求。',
 };
 const pair=(en,yue)=>{SETTINGS_GUIDANCE_COPY[en]=yue;return en;};
+Object.assign(SETTINGS_GUIDANCE_COPY,FIELD_HELP_COPY,ACTION_HELP_COPY);
 export const SETTINGS_GUIDANCE_INVENTORY=[...fields.map(row=>[...row,false]),...actions.map(row=>[...row,true])].map(([label,en,yue,action])=>({
  id:`settings.${action?'action.':''}${slug(label)}`,label,capable:true,complexity:action?'complicated':'simple',
  reason:action?'Invokes a workflow or changes retained state.':'Edits one explicit field through its original consumer.',
@@ -100,9 +105,10 @@ export const SETTINGS_GUIDANCE_INVENTORY=[...fields.map(row=>[...row,false]),...
  validation:pair(`Check the original ${label} control for its valid choices and unmet conditions.`,`請在原有控制項檢查「${yue}」的有效選項及尚未符合的條件。`),
  recovery:pair(`Return to ${label}, correct its input or cancel its open dialog. Completed changes remain visible at the target.`,`返回原有控制項修正輸入，或取消已開啟的對話框。已完成的修改會繼續顯示在目標。`),
  steps:action?[pair(en,yue),'Review required setup and consequences at the original control.','The original action retains its validation, permissions and confirmation.']:[pair(en,yue)],
+ ...FIELD_HELP.get(label),...ACTION_HELP.get(label),
 }));
 for(const row of SETTINGS_GUIDANCE_INVENTORY)if(Object.hasOwn(defaults,row.label))row.default=defaults[row.label]===''?'Empty':String(defaults[row.label]);
-for(const [day,yue]of [['Sunday','星期日'],['Monday','星期一'],['Tuesday','星期二'],['Wednesday','星期三'],['Thursday','星期四'],['Friday','星期五'],['Saturday','星期六']])SETTINGS_GUIDANCE_INVENTORY.push({...SETTINGS_GUIDANCE_INVENTORY.find(r=>r.label==='Start date'),id:`settings.weekday.${slug(day)}`,label:day,concept:`weekday-${slug(day)}`,help:`#weekday-${slug(day)}`,purpose:pair(`Include ${day} as a starting day for this schedule.`,`將${yue}包括在時間表的開始日。`),effects:pair(`${day} controls whether this starting weekday matches.`,`${yue}決定這個開始日是否符合規則。`),default:'true',steps:[pair(`Choose whether this rule starts on ${day}.`,`選擇規則是否在${yue}開始。`)]});
+for(const [day,yue]of [['Sunday','星期日'],['Monday','星期一'],['Tuesday','星期二'],['Wednesday','星期三'],['Thursday','星期四'],['Friday','星期五'],['Saturday','星期六']])SETTINGS_GUIDANCE_INVENTORY.push({...SETTINGS_GUIDANCE_INVENTORY.find(r=>r.label==='Start date'),id:`settings.weekday.${slug(day)}`,label:day,concept:`weekday-${slug(day)}`,help:`#weekday-${slug(day)}`,purpose:pair(`Include ${day} as a starting day for this schedule.`,`將${yue}包括在時間表的開始日。`),effects:pair(`${day} controls whether this starting weekday matches.`,`${yue}決定這個開始日是否符合規則。`),default:'true',options:pair('On includes this starting weekday; off excludes it.','開代表包括這個開始日，關代表略去。'),validation:pair('At least one starting weekday must remain selected.','最少必須保留一個已選取開始日。'),example:'On',recovery:pair('Select the required starting weekday again; overnight windows follow that starting day.','重新選擇所需開始日，跨夜範圍屬於開始的一日。'),steps:[pair(`Choose whether this rule starts on ${day}.`,`選擇規則是否在${yue}開始。`)]});
 export const NESTED_SETTINGS_GUIDANCE_PENDING=[
  {id:'appearance.editor',reason:'Appearance owner must register every property, layer, state and motion control.'},
  {id:'logo.editor',reason:'Logo conversion and nested controls require their own asynchronous workflow descriptors.'},
@@ -134,6 +140,7 @@ const workflows={
  ],
 };
 for(const[label,steps]of Object.entries(workflows)){const row=SETTINGS_GUIDANCE_INVENTORY.find(row=>row.label===label);row.steps=steps.map(([en,yue])=>pair(en,yue));row.options=row.steps[0];row.effects=row.steps[1];row.validation=row.steps.at(-1);row.recovery=pair(`Cancel ${label} before its final confirmation. Exported settings can restore supported preferences through the validated importer.`,`在最後確認前取消這個操作。已匯出的設定可透過已驗證匯入程序還原支援的偏好設定。`);}
+for(const row of SETTINGS_GUIDANCE_INVENTORY)if(ACTION_HELP.has(row.label))Object.assign(row,ACTION_HELP.get(row.label));
 for(const label of ['Local unlock credential','History password','Source','Value','Timezone','Setting']){
  const row=SETTINGS_GUIDANCE_INVENTORY.find(row=>row.label===label);row.complexity='complicated';row.reason='Requires credential setup, unfamiliar type selection or schedule dependencies.';row.steps=[row.purpose,row.validation,row.recovery];
 }
