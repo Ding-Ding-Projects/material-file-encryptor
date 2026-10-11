@@ -1,3 +1,13 @@
+# Sandboxed capture diagnosis and exact wiki import, 2026-10-11 UTC
+
+Main 4cd6b8b2547d9a18fe34e71484d5ecc7132e4022 contains the independently reviewed explicit Chromium launch binding. Its actual wrapper, five-job inventory and translation checks pass locally. Changed-source capture 38141498203 passed static input and browser bootstrap, then failed at browser-launch with observed sandbox-rejection and SIGABRT. It produced no PNGs, browser identity or layout observations. The precise underlying namespace or sandbox cause remains unproven; unknown process absence and profile disposition remain unverified. No host security setting was weakened. A supported Ubuntu 22.04 hosted capture route is being prepared with the same admitted executable and required sandbox.
+
+The complete wiki revision 0375b87c435ef1743d606233f47b0ee89120cd48 is imported byte-for-byte with verified Home/CLOSEOUT hashes and catalogue provenance. Eighteen publication checks passed, including edited/incomplete snapshot negatives. Hosted deployment of this new import remains pending. README now identifies independently accepted normal v1.221.1/source7af package and full live-content evidence.
+
+Pure Material Design 3 remains mandatory on every visible nested surface. All 105 features and 210 complete-surface rows remain unverified as complete surfaces. Installed lifecycle, full settings/editors/motion/server execution and genuine replacement screenshots remain unfinished. Current native resource admission is below its required memory floor. Account allowance remains unknown after three bounded reads, and the unlimited local goal remains active. Preserve all eight working trees and ignored originals; no cleanup qualifies.
+
+Next: integrate the supported host route, capture the same frozen static bytes without weakening the sandbox, inspect actual pixels/computed styles, and repair the verified preferences mismatch. Continue independently verified feature and installed lifecycle work within real admission boundaries.
+
 # Pure Material Design 3 and capture startup, 2026-10-11 UTC
 
 Pure Material Design 3 is required on every visible application and documentation surface, including nested settings, editors, guidance, tabs and dialogs. GOAL.md now separates historical preview evidence from current completion criteria. All 105 feature IDs and 210 complete-surface rows remain unverified as complete surfaces.

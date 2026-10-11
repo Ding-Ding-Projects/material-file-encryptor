@@ -1,3 +1,11 @@
+# Latest capture and wiki delivery, 2026-10-11 UTC
+
+- [x] Integrate independently reviewed explicit full-Chromium binding into main4cd and pass focused launch/inventory/translation checks.
+- [x] Import complete wiki0375 with exact raw hashes and pass 18 publication checks. Deployment pending.
+- [ ] Produce genuine preferences images. Changed-source capture38141498203 failed with sandbox-rejection/SIGABRT, no PNGs.
+- [ ] Verify a supported sandboxed hosted route, inspect actual pixels and repair the demonstrated preferences mismatch.
+- [ ] Complete pure Material Design 3, full feature and installed lifecycle acceptance.
+
 # Current appearance and capture boundary, 2026-10-11 UTC
 
 - [x] Reconcile GOAL.md historical preview checks with current unfinished completion criteria.
