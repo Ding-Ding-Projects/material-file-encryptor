@@ -2,7 +2,7 @@ import {passwordVerifier,verifyPassword,verifyTotp,randomId} from './crypto.js';
 export const LOCK_POLICIES = Object.freeze({pin:['pin'],password:['password'],'pin-password':['pin','password'],'password-totp':['password','totp'],'pin-totp':['pin','totp'],'password-pin-totp':['password','pin','totp']});
 // This controller is an opt-in local convenience lock, not an authorization boundary.
 export class LockController {
-  constructor({store,now=Date.now,onBlocked=()=>{},getDishChallenge}={}) { this.store=store;this.now=now;this.onBlocked=onBlocked;this.records=new Map();this.sessions=new Map();this.attempts=new Map();this.creating=new Set();this.generations=new Map();this.removing=new Set();this.waitLadder=new WaitLadder({now,getDishChallenge});this.waitTarget=null; }
+  constructor({store,now=Date.now,onBlocked=()=>{},getDishChallenge,waitBudget}={}) { this.store=store;this.now=now;this.onBlocked=onBlocked;this.records=new Map();this.sessions=new Map();this.attempts=new Map();this.creating=new Set();this.generations=new Map();this.removing=new Set();this.waitLadder=new WaitLadder({now,getDishChallenge,budget:waitBudget});this.waitTarget=null; }
   async load(ids=[]) { if(!this.store) return; for(const id of ids){const record=await this.store.get(`element-lock:${id}`);if(record)this.records.set(id,record);} }
   async set(id,policy,credentials,duration=0) {
     if(!id||!LOCK_POLICIES[policy])throw new Error('Select a valid lock policy.');
@@ -28,6 +28,8 @@ export class LockController {
   cancel(id){this.bumpGeneration(id);this.sessions.delete(id);return this.generation(id);}
   lock(id){this.cancel(id);}
   waiting(id){return Math.max(0,(this.attempts.get(id)?.until||0)-this.now());}
+  cancelWait(id){this.cancel(id);this.waitLadder.pending=null;}
+  async challengeWaitAsync(id,options={}){const generation=this.generation(id);if(this.waitLadder.budget){const state=await this.waitLadder.budget.status();if(!state.canConsume||state.remaining===0)return null;}if(this.generation(id)!==generation)return null;return this.challengeWait(id,options);}
   challengeWait(id,{schoolMode=false}={}){
     if(!this.waiting(id))return null;
     const identity=`${id}:${this.attempts.get(id).until}`;
@@ -36,9 +38,11 @@ export class LockController {
     if(schoolMode&&this.waitLadder.rung==='dish'){this.waitLadder.pending=null;this.waitLadder.rung='sums';}
     return this.waitLadder.challenge();
   }
-  answerWait(id,nonce,answer){
+  async answerWait(id,nonce,answer){
     const attempt=this.attempts.get(id);if(!attempt||!this.waiting(id)||this.waitTarget!==`${id}:${attempt.until}`)return false;
-    if(!this.waitLadder.answer(nonce,answer))return false;
+    const generation=this.generation(id),deadline=attempt.until;
+    if(!await this.waitLadder.answerAsync(nonce,answer))return false;
+    if(this.generation(id)!==generation||this.attempts.get(id)!==attempt||attempt.until!==deadline)return false;
     // Only the deadline changes: no credential, failure count, escalation or session changes.
     attempt.until=this.now();return true;
   }
@@ -82,7 +86,9 @@ export class LockController {
   }
 }
 export class WaitLadder {
-  constructor({now=Date.now,schoolMode=false,getDishChallenge}={}){this.now=now;this.schoolMode=schoolMode;this.getDishChallenge=getDishChallenge;this.skips=[];this.pending=null;this.rung=schoolMode?'sums':'dish';this.wrongDishes=0;}
+  constructor({now=Date.now,schoolMode=false,getDishChallenge,budget}={}){this.now=now;this.schoolMode=schoolMode;this.getDishChallenge=getDishChallenge;this.budget=budget;this.skips=[];this.pending=null;this.rung=schoolMode?'sums':'dish';this.wrongDishes=0;}
+  async challengeAsync(){if(this.budget){const state=await this.budget.status();if(!state.canConsume||state.remaining===0)return null;}return this.challenge();}
+  async answerAsync(nonce,value){if(!this.answer(nonce,value))return false;return this.budget?this.budget.consume():true;}
   challenge(){
     this.skips=this.skips.filter(t=>t>this.now()-3600000);if(this.skips.length>=3||this.rung==='clock')return null;
     const nonce=randomId(),issued=this.now();let question,answer,dishUnavailable=false;
