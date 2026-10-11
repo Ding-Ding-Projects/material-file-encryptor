@@ -10,6 +10,7 @@ class Node {
  get value(){return this._value??(this.tagName==='SELECT'?this.children[0]?.value||'':'');}
  set value(value){this._value=String(value);}
  append(...nodes){for(let node of nodes){if(typeof node==='string')node=this.ownerDocument.createTextNode(node);node.remove();node.parentNode=this;this.childNodes.push(node);}}
+ after(...nodes){const parent=this.parentNode;if(!parent)return;const additions=nodes.map(node=>typeof node==='string'?this.ownerDocument.createTextNode(node):node);let next=parent.childNodes[parent.childNodes.indexOf(this)+1];while(next&&additions.includes(next))next=parent.childNodes[parent.childNodes.indexOf(next)+1];for(const node of additions)node.remove();const index=next?parent.childNodes.indexOf(next):parent.childNodes.length;parent.childNodes.splice(index,0,...additions);for(const node of additions)node.parentNode=parent;}
  replaceChildren(...nodes){for(const node of this.childNodes)node.parentNode=null;this.childNodes=[];this.append(...nodes);}
  remove(){if(this.parentNode)this.parentNode.childNodes=this.parentNode.childNodes.filter(node=>node!==this);this.parentNode=null;}
  setAttribute(name,value){this.attributes.set(name,String(value));}
