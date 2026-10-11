@@ -463,8 +463,8 @@
     {
       "source": "docs/features/interface/visitor-capture.md",
       "translation": "docs/features/interface/visitor-capture.zh-HK.md",
-      "sourceSha256": "9f6b4c255728be5d14bae20c2de7b02b24528e8f39975f2559809ff1fcbeafe4",
-      "translationSha256": "ceb9ce6185c64d217d737be026c5ee5be551e0951a25ec3015e27384736c7781"
+      "sourceSha256": "9e655cc2688d632f1bc2ed1191251bb12d746091a99555d6fe402c7bbd995e16",
+      "translationSha256": "252f0d3bdfc9797484a094da0713a6e0bfa7b32f53cf11c69b203ca54d97c4c6"
     },
     {
       "source": "docs/features/appearance/image-placement.md",

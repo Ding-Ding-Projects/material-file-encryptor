@@ -35,3 +35,9 @@ Local controller checks exercise actual path containment and static-byte admissi
 ## Workflow job inventory
 
 The handwritten global inventory lists windows/windows, windows/promote, capture-evidence/evidence, pages/deploy and the retired publisher/explain. It reuses per-workflow dependency records and permits no additional bootstrap only for the exact retired shell-echo job. The local inventory checker discovers actual workflow jobs and rejects omitted or unknown jobs, absent inventories and missing bootstrap markers. Pages explicitly installs pinned Node and locked static-site packages. Fresh-host bootstrap verification remains separate and pending; these local mechanics checks never run in the capture workflow.
+
+## First cloud launch and bounded correction
+
+Run 38140563614 admitted the exact built static artifact and completed bootstrap, but browser launch failed before a browser identity or pixels were recorded. Its retained message hash does not establish the actual runtime cause. The workflow installs full Chromium with `--no-shell`, while the original headless launch omitted an executable override and Playwright selects its headless-shell binary by default. The controller now explicitly launches the same full Chromium executable whose bytes were admitted. Sandbox enforcement remains enabled. A changed-source run is still required.
+
+Before launching, the controller saves the launch phase and bounded options. A rejected launch records a message digest, fixed diagnostic categories and an observed exit code or signal when present, without uploading raw messages, private paths or endpoints. Local injected-wrapper checks establish option propagation and rejection handling only. They provide no browser, pixel or visual acceptance evidence.
