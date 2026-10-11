@@ -49,6 +49,16 @@ const service = createOllamaService({
 
 ## 外部導覽同驗證
 
+## 本機端點設定
+
+原生建構器接受 `loopbackPort`，必須係 1024 至 65535 嘅整數，預設 11434。唔接受渲染程序提供主機名稱、URL、環境映射或模型目錄路徑。`runtimeOptions` 同 `serviceOptions` 分別將該連接埠傳畀執行環境控制器同 API 用戶端。健康探測、固定啟動驗證同原生執行確認使用同一端點。設定指令亦使用該端點。
+
+新嘅自有執行環境啟動會將 `OLLAMA_MODELS` 設為 `dataDirectory/local-models/runtime-models`。啟動前即時以同設定儲存相同嘅標準無重新導向邊界建立同檢查目錄。唔會遷移或修改現有外部執行環境嘅模型儲存。`host.managedModelDirectory` 同 `host.initializeModels()` 可供原生硬件量度同啟動準備使用。
+
+執行環境狀態公開 `endpoint`、`managedModelStoreConfigured` 同 `managedModelStore`。最後一個欄位只喺此控制器擁有一次執行環境啟動後先係 true，唔會只因外部 API 有回應就變成 true。`runtime.dispose()` 只停止佢回傳嘅自有程序；服務銷毀會先取消並等待未完成 API 操作，再銷毀執行環境。外部執行環境唔會被停止。
+
+每個建構實例嘅設定不可改變。桌面擁有者必須強制閒置狀態、顯示原生確認、銷毀舊服務同自有執行環境、原子保存選定數值連接埠，再重新建立兩個物件。渲染程序呼叫可選嘅 `services.ollama.configureRuntime({port})` 桌面橋接。瀏覽器轉接器唔可以公開呢項特權設定操作。介面顯示實際端點同受管理儲存狀態。有未完成請求時唔可以改設定。
+
 執行環境啟動同每次設定執行，都要求原生確認，列明可信執行檔、固定動作同回送邊界。預設係取消，建立程序之前會拋出 `USER_CANCELLED`。渲染程序確認欄位唔可以代替此對話框。設定轉接器同服務啟動器匯出共用同一包裝。信任驗證保持唯讀，絕不顯示提示；底層啟動器喺執行確認後再次核對信任。
 
 只接受精確 `https://ollama.com/download/windows`，開啟前會原生確認。唔會下載或執行安裝程式。測試使用合成、不可執行檔案同注入簽署回應，涵蓋缺失信任、明確批准、內容改動、資料夾範圍同固定 URL 確認。佢哋唔會建立真實 Ollama 發佈者身分，亦唔聲稱真實執行環境啟動。

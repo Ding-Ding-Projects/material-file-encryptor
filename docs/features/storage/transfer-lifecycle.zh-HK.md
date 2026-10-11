@@ -73,3 +73,5 @@ Windows 上的舊格式 1、2 記錄使用 Microsoft CNG `BCryptDecrypt` 驗證�
 可信儲存例外的操作診斷另含 `storageStage`：`part-create`、`part-write`、`part-flush`、`part-finish-rename`、`part-cleanup`、`metadata-temp-create`、`metadata-write`、`metadata-flush`、`metadata-replace` 或 `metadata-cleanup`。固定值識別儲存動作，不暴露路徑或作業系統訊息。原子中繼資料寫入失敗後，若清理也失敗，會保留原寫入例外，現有目的地保持不變。
 
 原子中繼資料取代只重試已確認 Windows 共用衝突。Sharing／lock violations 直接符合；access denied 只有在獨立 delete-access 探測於舊或新檔回報 sharing／lock violation 才符合。唯讀屬性及永久存取拒絕不符合。取代保留同一已耐久沖寫暫存檔，最多等候十次、每次 15 ms。耗盡後保留第一個例外及原目的地。目前區塊收尾時，控制讀取器保持獨立。
+
+未完成嘅受管理匯入，依家會喺整個生命週期保持開啟一份只追加進度日誌。每次寫入都持久沖刷加密資料同經認證進度框架，唔再每個區塊都取代中繼資料檔。框架使用獨立 AES-GCM 加密、序號、前一框架雜湊同經認證標頭；每個加密前明文框架都少於 64 KiB。待處理尾段保持加密。驗證會拒絕完整但損壞嘅框架，只容許最後一個框架未完整。呢份日誌係進度證據，唔係安裝內容指令：啟動時唔會發佈未完成匯入，包括程序突然退出之後。完成安裝仍然經現有原子命名空間交易處理。

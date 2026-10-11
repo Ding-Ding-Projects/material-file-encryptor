@@ -43,8 +43,8 @@
     {
       "source": "docs/features/appearance/raster-workflows.md",
       "translation": "docs/features/appearance/raster-workflows.zh-HK.md",
-      "sourceSha256": "33981e4e0074269095dcf8cef1974c481e4cca69900d6f70c55d718562a46ced",
-      "translationSha256": "fae32d17fec56ad458857d6d861b8d30a66720948bd711b1e91ce95a5a76f230"
+      "sourceSha256": "a4929f8379ba8bd852bf2a3e4a1714d8b0ed729ca0dbe9b1ea3904f06c300dde",
+      "translationSha256": "badf1330c0b1730ab173eb1dfc4a401ed45e585a30715d9ef0e7951a40f1b59d"
     },
     {
       "source": "docs/features/converter/README.md",
@@ -175,8 +175,8 @@
     {
       "source": "docs/features/ollama/native-host.md",
       "translation": "docs/features/ollama/native-host.zh-HK.md",
-      "sourceSha256": "e277953dec2e9df781279c36784167b4579ca924b980657d8dc13b7651ce3d91",
-      "translationSha256": "95308b42aa151dd7513a1c69a71fd8dd4e792e5b73c14f8453abce5b81fa5006"
+      "sourceSha256": "8debed900e5bb83c5cbfe5c8fe2f6e6c610f491596c4f8c080e5422491716cb2",
+      "translationSha256": "626121fff9385e15096425481cfc5a98d939fbf520b3ae31e89d103043247eb6"
     },
     {
       "source": "docs/features/ollama/regression-verification.md",
@@ -301,8 +301,8 @@
     {
       "source": "docs/features/storage/transfer-lifecycle.md",
       "translation": "docs/features/storage/transfer-lifecycle.zh-HK.md",
-      "sourceSha256": "05a90d7d226ca645fae694b28fa5e578f29ecc49644c51a9fd380b0c4d6f07c6",
-      "translationSha256": "32e108863571434a947e8da69c942ba260c36fc34966c7bcc8a1eb0948907c47"
+      "sourceSha256": "e0b0afdcac0904349ac598323027d6810a211ce5954d04f8196d26c7cb05e761",
+      "translationSha256": "14ee80eaf302fb0bda1c8fbaea5530617c11aebdec4ada66717cfb9420f50be2"
     },
     {
       "source": "docs/features/surface-foundation/README.md",
