@@ -25,6 +25,8 @@ test('every inventoried state has an explicit production navigation route',()=>{
  assert.deepEqual(Object.keys(stateRoutes).sort(),inventory.states.map(state=>state.id).sort());
  const rows=acquisitionCapabilities(inventory);assert.equal(rows.length,74);assert.ok(rows.every(row=>!row.fixture&&!row.observable&&row.missingActions.length));
  const removed={...stateRoutes};delete removed['storage-paused'];assert.notDeepEqual(Object.keys(removed).sort(),inventory.states.map(state=>state.id).sort());
+ assert.equal(stateRoutes['ollama-help'].tab,'#ollama-panel-5-tab');
+ assert.deepEqual(inventory.states.find(state=>state.id==='ollama-help').actions,['open-help']);
 });
 test('all 3552 plans retain exact URL proof, scale and real navigation',()=>{
  for(const tuple of matrixFor(inventory)){

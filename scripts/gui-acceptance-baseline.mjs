@@ -52,6 +52,9 @@ export function baselineAdapters({launch,receipt,prepareOwnedFixture,inventory})
   assertState:async({executePlan})=>({passed:Boolean(await check(executePlan,id+'-state',expression)),observable:inventory.states.find(state=>state.id===id).observable}),actions
  });
  return {
+  'ollama-help':make('ollama-help',"!document.querySelector('#ollama-panel-5').hidden&&document.querySelector('#ollama-panel-5 p').textContent.trim().length>0",{
+   'open-help':action('open-help',[click('leave-help','#ollama-panel-1-tab'),click('open-help','#ollama-panel-5-tab')],"!document.querySelector('#ollama-panel-5').hidden&&document.querySelector('#ollama-panel-5-tab').getAttribute('aria-selected')==='true'")
+  }),
   'drive-locked':make('drive-locked',"!document.querySelector('#locked-state').hidden&&!document.querySelector('#create-button').disabled&&!document.querySelector('#unlock-button').disabled",dialogActions),
   'settings-default':make('settings-default',"!document.querySelector('#view-settings').hidden",{
    'change-theme':async context=>{const temporary=context.tuple.theme==='light'?'dark':'light';const change=action('change-theme',[field('change-theme','#theme-setting',temporary)],`document.documentElement.dataset.theme===${JSON.stringify(temporary)}`);return change(context);},

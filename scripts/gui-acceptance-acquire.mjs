@@ -28,7 +28,7 @@ export const stateRoutes=Object.freeze({
  'offline-populated':{view:'offline'},'history-populated':{view:'history'},'recycle-selected':{view:'recycle'},'settings-default':{view:'settings'},'help-default':{view:'help'},
  'create-password':{view:'drive',dialog:'password'},'create-key-file':{view:'drive',dialog:'keyFile'},'create-private-repository':{view:'drive',dialog:'privateGit'},
  ...Object.fromEntries(['source','formats','options','queue'].map((name,index)=>['converter-'+name,{view:'converter',tab:'#converter-tab-'+index}])),
- ...Object.fromEntries(['model-store','pull-cart','chat','profiles','help'].map((name,index)=>['ollama-'+name,{view:'ollama',tab:'#ollama-tab-'+(index+1)}])),
+ ...Object.fromEntries(['model-store','pull-cart','chat','profiles','help'].map((name,index)=>['ollama-'+name,{view:'ollama',tab:'#ollama-panel-'+(index+1)+'-tab'}])),
  'server-prepare':{view:'server-manager'},'server-progress':{view:'server-manager'},
  ...Object.fromEntries(['busy','running','unavailable','invalid-size','paused'].map(name=>['storage-'+name,{view:'storage'}])),
  ...Object.fromEntries(['versions','preview'].map(name=>['file-details-'+name,{view:'details'}])),

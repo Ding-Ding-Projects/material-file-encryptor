@@ -323,7 +323,7 @@
       "fixture": "bundled runtime help",
       "observable": "Runtime help content",
       "actions": [
-        "open-runtime-disclosure"
+        "open-help"
       ]
     },
     {
