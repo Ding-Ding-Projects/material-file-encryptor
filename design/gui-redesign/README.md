@@ -74,3 +74,7 @@ For every accepted tuple record the exact source commit, built executable and pa
 ## Account and publication extension
 
 The deterministic publication-reference.html and publication-inventory.json cover captured review, unavailable host, transient authentication, publishing, partial result and cancellation states. They use synthetic identities and are design references only. The extension popup source defines a separate bounded connection workspace: status, pairing, disconnect and source/destination review disclosures. The local bundled Material controls require packaged extension verification; these references do not prove installation, authentication or publication.
+
+### History selection
+
+The History table uses a single registered radio selection per version. Arrow keys, Home and End change selection and keep focus within the visible rows. Enter and Space select without restoring. A read-only summary shows the native version identity, file identity, path, saved time, size and availability. Filtering retains the selected identity and labels a selected record outside the current results. Language refresh retains selection and retention drafts. Locking or removal clears the summary. Restore remains a distinct button followed by confirmation and a second availability check. The state inventory names the exact production selectors. Source interaction checks do not replace built evidence.
