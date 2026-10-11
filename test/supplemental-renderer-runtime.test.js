@@ -26,6 +26,7 @@ function fixture({proofFails=false,closeFails=false,byteChange=false,wrongTarget
   chromium:{async connectOverCDP(){events.push('connect');return browser;}},
   async command(exe,args,input){const operation=args[1];events.push(operation);
    if(operation==='prepare')return {recovery:{originalResourcesAbsent:false,connectionOwned:false,pageActionsAllowed:false,targetProof:{targetCount:1,targetId,exactUrl:url}}};
+   if(operation==='bind-client')return {clientBinding:{clientIdentity:{pid:process.pid}}};
    if(operation==='prove-connected'){if(proofFails)throw new Error('peer identity differs');if(byteChange)changed=true;return {client_ok:true,clientIdentity:{pid:process.pid},establishedPeerPair:{clientPid:process.pid},targetId,exactUrl:url};}
    if(operation==='prepare-close'){if(changeDuringPrepareClose)changed=true;return {exitProcesses:[{pid:77}]};}
    if(operation==='confirm-exit')return {resourcesAbsent:!closeFails,originalResourcesAbsent:false};

@@ -34,7 +34,7 @@ export async function attachSupplementalRenderer({admissionPath,admissionSha256,
  await (runtime.mkdir||fs.mkdir)(evidenceRoot,{recursive:true});
  const receiptPath=path.join(evidenceRoot,'supplemental-fresh-admission.json');
  const adapter=path.join(scriptRoot,'supplemental-renderer-recovery.py');
- const env={...process.env,PYTHONUTF8:'1'};
+ const env={...process.env,PYTHONUTF8:'1',MFE_RENDERER_NODE_EXECUTABLE:process.execPath};
  const python=process.env.MFE_LOWLEVEL_PYTHON;
  if(!runtime.command&&!python)throw new Error('Installed Lowlevel Python path is required.');
  const outcomes=[];
@@ -54,13 +54,15 @@ export async function attachSupplementalRenderer({admissionPath,admissionSha256,
   return call(operation,input);
  };
  let browser,transport,connectionOwned=false,closed=false;
- const proofInput={clientPid:process.pid,targetId:fresh.targetProof.targetId};
+ const boundClient=await checked('bind-client',{clientPid:process.pid});
+ if(boundClient?.clientBinding?.clientIdentity?.pid!==process.pid)throw new Error('Actual Node client binding is unavailable.');
+ const proofInput={clientPid:process.pid,targetId:fresh.targetProof.targetId,clientBinding:boundClient.clientBinding};
  const retain=async(value)=>write(path.join(evidenceRoot,'supplemental-connection-final.json'),JSON.stringify({...value,admissionSha256,freshAdmissionSha256:freshSha,verifierSourceCommit,verifierHashes:initial,originalResourcesAbsent:false,outcomes},null,2),{flag:'wx'});
  try {
   transport=await (runtime.createTransport||createRendererCdpTransport)(`http://127.0.0.1:${request.port}`);
   const chromium=runtime.chromium||(await import('playwright')).chromium;
   browser=await chromium.connectOverCDP(transport.transport);
-  await verifyConnectedRenderer(browser,{expectedUrl:request.target.expectedUrl,targetId:proofInput.targetId},input=>checked('prove-connected',input));
+  await verifyConnectedRenderer(browser,{expectedUrl:request.target.expectedUrl,targetId:proofInput.targetId},input=>checked('prove-connected',{...input,clientBinding:proofInput.clientBinding}));
   await validate();
   if(hash(await read(receiptPath))!==freshSha)throw new Error('Fresh admission changed after connection proof.');
   connectionOwned=true;

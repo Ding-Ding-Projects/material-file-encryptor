@@ -132,6 +132,30 @@ class Tests(unittest.TestCase):
             self.assertIn('python', command.lower())
             self.assertEqual(binding.command(handle), command)
             self.assertEqual(api.observe(handle, os.getpid(), parent), before)
+    def test_exact_client_direct_and_single_launcher_routes(self):
+        node = {**self.root, 'pid': 80, 'parentPid': 1, 'executablePath': 'C:/node.exe', 'creationDate': '2026-10-09T12:00:00.1234560Z'}
+        launcher = {**self.root, 'pid': 79, 'parentPid': 80, 'executablePath': 'C:/venv/python.exe', 'creationDate': '2026-10-09T12:00:00.1234561Z'}
+        own = {**self.root, 'pid': 77, 'parentPid': 79, 'executablePath': 'C:/base/python.exe'}
+        configuration = {'selfPid':77,'base':own['executablePath'],'launcher':launcher['executablePath'],'node':node['executablePath'],'command':'exact adapter invocation','files':{'fixed':'hash'}}
+        observations = {77:own,79:launcher,80:node}
+        api = Fake(rows={77:79,79:80,80:1}, observations=observations)
+        class Commands:
+            def command(self, handle): return 'node invocation' if handle == 80 else configuration['command']
+        binding = Commands()
+        with recovery.owning_client(80,api=api,binding=binding,configuration=configuration) as (client,chain):
+            self.assertEqual(client['clientIdentity'],node); self.assertEqual(len(chain),3)
+        with recovery.owning_client(80,client,api=api,binding=binding,configuration=configuration): pass
+        for field,value in [('executablePath','C:/unrelated.exe'),('creationDate','2026-10-09T12:00:00.1234569Z')]:
+            bad = {**observations,79:{**launcher,field:value}}
+            with self.assertRaises(recovery.Error), recovery.owning_client(80,client,api=Fake(rows=api.rows,observations=bad),binding=binding,configuration=configuration): pass
+        class WrongCommand(Commands):
+            def command(self,handle): return 'unrelated command' if handle==79 else super().command(handle)
+        with self.assertRaises(recovery.Error), recovery.owning_client(80,client,api=api,binding=WrongCommand(),configuration=configuration): pass
+        changed={**client,'clientIdentity':{**node,'creationDate':'2026-10-09T12:00:00.1234559Z'}}
+        with self.assertRaises(recovery.Error), recovery.owning_client(80,changed,api=api,binding=binding,configuration=configuration): pass
+        own_direct={**own,'parentPid':80}
+        with recovery.owning_client(80,api=Fake(rows={77:80,80:1},observations={77:own_direct,80:node}),binding=binding,configuration=configuration) as (_,chain): self.assertEqual(len(chain),2)
+        with self.assertRaises(recovery.Error), recovery.owning_client(999,api=api,binding=binding,configuration=configuration): pass
 
 
 if __name__ == '__main__':

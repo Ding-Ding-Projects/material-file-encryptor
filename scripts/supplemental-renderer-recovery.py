@@ -11,6 +11,7 @@ import re
 import subprocess
 import sys
 import time
+from contextlib import ExitStack, contextmanager
 
 
 def load(name, path):
@@ -251,19 +252,78 @@ class Recovery:
             time.sleep(0.2)
 
 
+@contextmanager
+def owning_client(client_pid, expected=None, api=None, binding=None, configuration=None):
+    """Hold exact self/optional venv launcher/Node identities across proof."""
+    api, binding = api or snapshot.Native(), binding or NativeBinding()
+    if type(client_pid) is not int or client_pid <= 0:
+        raise Error('Actual client identity is required.')
+    if configuration is None:
+        launcher = Path(os.environ['MFE_LOWLEVEL_PYTHON'])
+        node = Path(os.environ['MFE_RENDERER_NODE_EXECUTABLE'])
+        cfg = launcher.parent.parent / 'pyvenv.cfg'
+        values = dict(line.split(' = ', 1) for line in cfg.read_text().splitlines() if ' = ' in line)
+        base = Path(values['executable'])
+        if launcher.parent.name.lower() != 'scripts' or values.get('include-system-site-packages') != 'false' or Path(values.get('home', '')) != base.parent:
+            raise Error('Supported isolated Python launcher configuration is required.')
+        configuration = {'launcher': str(launcher), 'base': str(base), 'node': str(node), 'files': {str(p): digest(p) for p in [launcher, base, cfg, node]}, 'command': subprocess.list2cmdline([os.environ['MFE_LOWLEVEL_PYTHON'], *sys.argv]), 'selfPid': os.getpid()}
+    rows, chain = api.inventory(), []
+    current = configuration['selfPid']
+    with ExitStack() as stack:
+        for _ in range(3):
+            if current not in rows:
+                raise Error('Client launcher ancestry is unavailable.')
+            handle = stack.enter_context(api.handle(current))
+            identity = api.observe(handle, current, rows[current])
+            command = binding.command(handle)
+            chain.append((identity, command, handle))
+            if current == client_pid:
+                break
+            current = rows[current]
+        else:
+            raise Error('Client is not a direct parent or one supported launcher ancestor.')
+        if len(chain) not in (2, 3) or chain[-1][0]['pid'] != client_pid or chain[-1][0]['executablePath'] != configuration['node']:
+            raise Error('Actual Node client ancestry differs.')
+        if chain[0][0]['executablePath'] != configuration['base'] or chain[0][1] != configuration['command']:
+            raise Error('Actual Python execution image or command differs.')
+        if len(chain) == 3 and (chain[1][0]['executablePath'] != configuration['launcher'] or chain[1][1] != configuration['command']):
+            raise Error('Intermediate Python launcher image or command differs.')
+        if any(chain[i][0]['creationDate'] < chain[i+1][0]['creationDate'] for i in range(len(chain)-1)):
+            raise Error('Client launcher creation ancestry differs.')
+        observed = {'clientIdentity': chain[-1][0], 'clientCommand': chain[-1][1], 'routeFiles': configuration['files']}
+        if expected is not None and observed != expected:
+            raise Error('Pinned client or Python route identity changed.')
+        yield observed, [{'identity': identity, 'command': command} for identity, command, _ in chain]
+        for identity, command, handle in chain:
+            if api.observe(handle, identity['pid'], api.inventory().get(identity['pid'])) != identity or binding.command(handle) != command:
+                raise Error('Client launcher identity changed around proof.')
+        if configuration.get('selfPid') == os.getpid() and any(digest(file) != value for file, value in configuration['files'].items()):
+            raise Error('Client launcher bytes changed around proof.')
+
+
 def main():
     lifecycle = load('recovery_lifecycle', os.environ['MFE_LOWLEVEL_CLIENT'])
     operation, receipt = sys.argv[1:3]
     if operation == 'prepare':
         request = json.load(sys.stdin)
         result = Recovery(lifecycle, request, receipt).prepare()
+    elif operation == 'bind-client':
+        request = json.load(sys.stdin)
+        if set(request) != {'clientPid'}:
+            raise Error('Actual client PID is required.')
+        with owning_client(request['clientPid']) as (client, chain):
+            result = {'clientBinding': client, 'clientLaunchChain': chain}
     elif operation in ('prove-connected', 'prepare-close'):
         request = json.load(sys.stdin)
-        if set(request) != {'clientPid', 'targetId'} or request['clientPid'] != os.getppid():
-            raise Error('Recovery requires the actual owning client PID.')
+        if set(request) != {'clientPid', 'targetId', 'clientBinding'}:
+            raise Error('Recovery requires pinned actual owning client identity.')
         backend = Recovery.from_receipt(lifecycle, receipt)
-        result = snapshot.prove_renderer_target(backend, client_pid=request['clientPid'], target_id=request['targetId'])
-        observation = backend.observe()
+        with owning_client(request['clientPid'], request['clientBinding']) as (client, chain):
+            result = snapshot.prove_renderer_target(backend, client_pid=request['clientPid'], target_id=request['targetId'])
+            if result['clientIdentity'] != client['clientIdentity']:
+                raise Error('Socket client differs from the held launcher ancestor.')
+            observation = backend.observe()
+            result['clientLaunchChain'] = chain
         if operation == 'prepare-close':
             admitted = json.loads(Path(receipt).read_bytes())['after']['nativeProcesses']
             if sorted(admitted, key=lambda p: p['pid']) != sorted(observation['nativeProcesses'], key=lambda p: p['pid']):
