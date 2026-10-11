@@ -1,3 +1,6 @@
+- [x] Independently review history registered-control source and red-before/green-after selection/session/away-back regressions;10 mounted checks pass.
+- [ ] Verify genuine history keyboard/accessibility/pixels, remaining date/search controls and deployed new history articles.
+
 - [x] Inspect exact6d016f7 genuine six-scene capture including registered selects, textfield, sliders and checkboxes; verify raw hashes and owned cloud closure.
 - [x] Independently review supported host caption-wrap source repair and additive private-safe label measurements.
 - [ ] Rebuild/recapture the identical320x844 caption tuple and inspect complete wrapped wording and geometry.

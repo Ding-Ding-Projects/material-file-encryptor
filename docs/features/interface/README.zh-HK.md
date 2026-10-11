@@ -1,5 +1,7 @@
 # 介面
 
+- [私人歷史控制項](private-history-controls.zh-HK.md)
+
 - [語言、旁白、排程同注意力模式](local-personalization.md)
 - [元素外觀同標誌自訂](appearance-editor.md)
 - [本機個人用語](personal-vocabulary.md)
