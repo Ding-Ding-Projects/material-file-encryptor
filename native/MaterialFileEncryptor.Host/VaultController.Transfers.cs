@@ -87,13 +87,16 @@ internal sealed partial class VaultController
         // One 64 KiB plaintext buffer is owned by the single transfer consumer.
         // No plaintext is queued or written to temporary files.
         byte[] buffer = new byte[65536];
-        long completedBytes = 0, total = paths.Sum(path => new FileInfo(path).Length);
+        long completedBytes = 0, total = 0;
+        var phase=TransferPhase.Metadata;
         int completedFiles = 0;
         try
         {
+            total=paths.Sum(path=>new FileInfo(path).Length);
             foreach (string path in paths)
             {
                 cancellation.ThrowIfCancellationRequested();
+                phase=TransferPhase.Metadata;
                 MaterialFileEncryptor.Core.VaultEngine captured;
                 string candidate;
                 lock (gate)
@@ -104,23 +107,30 @@ internal sealed partial class VaultController
                     for (int suffix = 2; captured.GetInfo(candidate) is not null; ++suffix)
                         candidate = Path.GetFileNameWithoutExtension(name) + " (" + suffix + ")" + Path.GetExtension(name);
                 }
+                phase=TransferPhase.SourceOpen;
                 using var input = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, FileOptions.Asynchronous | FileOptions.SequentialScan);
+                phase=TransferPhase.StagingBegin;
                 using var staged = captured.BeginImport(candidate);
                 long offset = 0;
                 int count;
+                phase=TransferPhase.SourceRead;
                 while ((count = await input.ReadAsync(buffer, cancellation)) != 0)
                 {
                     cancellation.ThrowIfCancellationRequested();
+                    phase=TransferPhase.StagingWrite;
                     using(BackgroundPriority())staged.Write(offset, buffer.AsSpan(0, count), cancellation);
                     offset += count;
                     progress(completedBytes + offset, total, completedFiles, paths.Length);
+                    phase=TransferPhase.SourceRead;
                 }
                 cancellation.ThrowIfCancellationRequested();
                 // No cancellation check follows atomic install: the file is now
                 // completed even if a concurrent cancellation arrives.
+                phase=TransferPhase.Install;
                 using(BackgroundPriority())staged.Commit(cancellation);
                 completedBytes += offset; ++completedFiles;
                 progress(completedBytes, total, completedFiles, paths.Length);
+                phase=TransferPhase.Activity;
                 var installed = captured.GetInfo(candidate)!;
                 using(BackgroundPriority())captured.RecordActivity(installed.EntryId, "import", candidate);
             }
@@ -131,6 +141,7 @@ internal sealed partial class VaultController
             lock (gate) { if (vault is not null) vault.RecordActivity(vault.VaultId, "cancel", detail: "Managed import cancelled"); }
             throw;
         }
+        catch(Exception error){throw new TransferPhaseException(phase,error);}
         finally { System.Security.Cryptography.CryptographicOperations.ZeroMemory(buffer); }
     }
     private object StartExport(JsonElement args)
