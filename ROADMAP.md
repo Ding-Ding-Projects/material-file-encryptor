@@ -1,3 +1,19 @@
+# Current continuation, 2026-10-11 UTC
+
+- [x] Verify exact main738 cloud production, normal v1.194.1 classification/source and all five independently downloaded release assets.
+- [x] Pass all 763 archive CRC entries, 664 actual Squirrel files, exact Setup embedding and 6,242-entry package privacy acceptance for v1.194.1.
+- [x] Verify exact main738 live delivery: 209 files, 6,666 internal references and exact stored homepage.
+- [x] Preserve all eight working trees and Git administration in a dated verified private archive, including 150 announcement files and owner-only access.
+- [ ] Verify archive cloud synchronization and preserve remaining ignored runtime evidence before any qualified cleanup.
+- [ ] Complete the requested README revamp with verified links, honest feature status and preserved historical evidence.
+- [ ] Reconcile every current canonical feature and subrequirement against desktop and website implementation and acceptance.
+- [ ] Reproduce and repair the reported mobile visitor-personalization theme, typography and navigation defect using real source-bound rendered evidence.
+- [ ] Demonstrate Material Design 3 conformance across every visible nested surface.
+- [ ] Complete corrective installed startup/download/ready/Later, native update/restart and removal without lowering resource or isolation requirements.
+- [ ] Complete every full editor/settings/motion/guidance/server workflow and all 210 per-surface acceptance rows.
+- [ ] Replace all current screenshots with genuine inspected current captures, preserving historical originals.
+- [ ] Integrate each verified unit, verify its own cloud delivery and retain all unqualified cleanup candidates.
+
 # Current integration acceptance
 
 - [x] Verify main f8 cloud production run 38118239407 and independently downloaded normal v1.158.1, including 761 CRC entries, 663 extracted files, source/feed/privacy and unsigned checks.
