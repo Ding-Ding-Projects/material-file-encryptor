@@ -43,8 +43,8 @@
     {
       "source": "docs/features/appearance/README.md",
       "translation": "docs/features/appearance/README.zh-HK.md",
-      "sourceSha256": "1777e18060fbbfe6ba6058ad04d35c6a3a673b801a6f63376e20f39869fc4950",
-      "translationSha256": "123602b141d811e1ea5bc355a74e7d48a0c4c7ac48ee29a8684d85ba9b6155d3"
+      "sourceSha256": "66dfbb285afc98555636bedf39da1be4cb8be3e56c88ff575e460f7d6abeb266",
+      "translationSha256": "2a02ef5e0e451bd2972c0f426609aec0787a08bf17c237ba2d9599f57b63a448"
     },
     {
       "source": "docs/features/appearance/raster-workflows.md",
@@ -453,6 +453,12 @@
       "translation": "docs/features/server-manager/preparation.zh-HK.md",
       "sourceSha256": "40bdf1ca49b622dc80b6a54b759c20d72f3273890911a9e521ff480d9d079554",
       "translationSha256": "fabdeedfa8c617f8d9a05105b0ac392378eb88675a79d75308811a6b8c0f5e02"
+    },
+    {
+      "source": "docs/features/appearance/image-placement.md",
+      "translation": "docs/features/appearance/image-placement.zh-HK.md",
+      "sourceSha256": "7523193b07f4be99e6d7915d00af6f566208de8b7fbbb8ac412a92f0e700062d",
+      "translationSha256": "fcc61fab498ffdb171ec852d94efa15e928f385b778b49b686117e4fbb600a52"
     }
   ]
 }
