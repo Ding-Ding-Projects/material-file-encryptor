@@ -25,3 +25,5 @@
 - [設定完整性同一致性](settings-completeness.zh-HK.md)
 
 - [動畫同過渡來源實作及限制](animation-transition.zh-HK.md)
+
+- [選用控制導引同獨立說明](settings-guidance.zh-HK.md)

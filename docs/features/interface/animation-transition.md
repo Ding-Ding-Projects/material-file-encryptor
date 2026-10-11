@@ -35,7 +35,7 @@ No HTTP API is introduced; a Postman collection is not applicable.
 
 ## Explicit timing guidance inventory
 
-The following twelve handwritten concepts have bilingual explanation records. Other motion controls and actual above-control mounting remain pending. These entries are documentation, not proof of a mounted wizard.
+The following twelve handwritten concepts have bilingual explanation records. These twelve concepts mount the reviewed optional guide immediately above their exact fields, use the original change event and await its admitted consumer. A mounted-component test covers guided numeric persistence. Other motion controls, complete documentation-reader integration and genuine browser guidance acceptance remain pending.
 
 ### duration
 

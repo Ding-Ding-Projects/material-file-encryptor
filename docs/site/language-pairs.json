@@ -127,8 +127,8 @@
     {
       "source": "docs/features/interface/README.md",
       "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "b0ec95c7a1777b8ce7629d30d66dc562fdf7c7bf0081d70e1515459a6e5eba61",
-      "translationSha256": "fa8bc35c0ac72eea0a6a8d58a035cf69d8e7f80a47119fb57ff10dbd90b24aff"
+      "sourceSha256": "fdc23eab7adbed6f7ac4e0d6aa4ef7a907c5f549358d100f7242c4952dc46a2f",
+      "translationSha256": "42e4f159c6c68488ed3d0740fe0473fa8a749cf96e67027e8cd565d9d751c111"
     },
     {
       "source": "docs/features/interface/appearance-editor.md",
@@ -385,8 +385,14 @@
     {
       "source": "docs/features/interface/animation-transition.md",
       "translation": "docs/features/interface/animation-transition.zh-HK.md",
-      "sourceSha256": "563619f43ce7a366c3c285ddaa30bac72d8df82337c8b4a8d0b4e9dc6313704b",
-      "translationSha256": "a6022853b0f549f82d12fcf72afbb43f493d06002cba62e083d4e0591fc52db7"
+      "sourceSha256": "fbebf672e72300d3e853ba8cb3dd8dfb0b868a058dc3fd0d677f9a3e8a4183b2",
+      "translationSha256": "96f1f2d784ffdfaa9db10e6ee8ffbba69da44eaad9f2d4f42e6bf70d547baa4c"
+    },
+    {
+      "source": "docs/features/interface/settings-guidance.md",
+      "translation": "docs/features/interface/settings-guidance.zh-HK.md",
+      "sourceSha256": "c1fb89e5a019101e1e982964f881bfec9f1bb1cb9d29d9a59e3f2337e67441c4",
+      "translationSha256": "be7a3fd754b8d92bf5c50dbc69cff390f746bd8e6cd44135d21aa4d524637bce"
     }
   ]
 }
