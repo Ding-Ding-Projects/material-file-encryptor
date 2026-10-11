@@ -3,10 +3,16 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { createCredentialStore, createFeatureServices } from '../src/main/feature-services.js';
+import { createCredentialStore, createFeatureServices, readConverterManifest } from '../src/main/feature-services.js';
 import { validateFeatureRequest } from '../src/main/validation.js';
 const safeStorage={isEncryptionAvailable:()=>true,encryptString:text=>Buffer.from(text),decryptString:value=>value.toString()};
 async function fixture(t){const directory=await fs.mkdtemp(path.join(os.tmpdir(),'feature-services-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));return directory;}
+test('converter manifests support Windows UTF-8 output without accepting malformed JSON',async t=>{
+ const directory=await fixture(t),filename=path.join(directory,'manifest.json');
+ const manifest={schemaVersion:1,launcherSha256:'a'.repeat(64),runtimeSha256:'b'.repeat(64),launcherCompanionHashes:{}};
+ for(const prefix of ['','\uFEFF']){await fs.writeFile(filename,prefix+JSON.stringify(manifest),'utf8');assert.deepEqual(await readConverterManifest(filename),manifest);}
+ await fs.writeFile(filename,'\uFEFF{"schemaVersion":');await assert.rejects(readConverterManifest(filename),SyntaxError);
+});
 test('protected record operations serialize, reload and reject unsupported keys',async t=>{const directory=await fixture(t);const store=createCredentialStore({directory,safeStorage});await Promise.all([store.set('local-profile:v1',{version:2}),store.set('element-lock:test',{policy:'pin'}),store.set('history:verifier',{version:2})]);assert.deepEqual(await store.get('local-profile:v1'),{version:2});assert.equal((await store.list('element-lock:')).length,1);await store.delete('history:verifier');assert.equal(await store.get('history:verifier'),null);assert.throws(()=>store.set('../escape',{}));assert.throws(()=>store.set('profile:unsafe',JSON.parse('{"__proto__":{"x":true}}')));});
 test('protected storage refuses plaintext fallback',async t=>{const directory=await fixture(t);const store=createCredentialStore({directory,safeStorage:{isEncryptionAvailable:()=>false}});await assert.rejects(store.get('local-profile:v1'));assert.throws(()=>store.set('local-profile:v1',{}));assert.deepEqual(await fs.readdir(directory),[]);});
 test('shared mode requires existing credentials to change an active record',async t=>{const directory=await fixture(t);const services=createFeatureServices({dataDirectory:directory,applicationRoot:directory,safeStorage,dialog:{},getWindow:()=>null,openPath:async()=>{}});await services.request('personalization','setSharedCredential',{password:'synthetic credential'});await services.request('personalization','sharedWrite',{value:{enabled:true,name:'School'}});await assert.rejects(services.request('personalization','sharedWrite',{value:{enabled:false}}));await assert.rejects(services.request('personalization','setSharedCredential',{password:'replacement'}));assert.equal(await services.request('personalization','verifySharedCredential',{password:'wrong'}),false);assert.equal(await services.request('personalization','verifySharedCredential',{password:'synthetic credential'}),true);await services.request('personalization','sharedWrite',{value:{enabled:false}});await assert.rejects(services.request('personalization','sharedWrite',{value:{vocabulary:{}}}));await services.close();});

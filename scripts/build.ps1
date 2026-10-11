@@ -28,7 +28,7 @@ foreach ($companion in @('ConverterSandbox.dll', 'ConverterSandbox.runtimeconfig
   $companionPath = Join-Path 'out/converter' $companion
   if (Test-Path -LiteralPath $companionPath) { $converterManifest.launcherCompanionHashes[$companion] = (Get-BootstrapDigest $companionPath).ToLowerInvariant() }
 }
-$converterManifest | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath 'out/converter/manifest.json' -Encoding utf8
+[IO.File]::WriteAllText((Join-Path $root 'out/converter/manifest.json'), ($converterManifest | ConvertTo-Json -Depth 4), [Text.UTF8Encoding]::new($false))
 Invoke-Checked { dotnet build native/MaterialFileEncryptor.Core.Tests -c Release }
 New-Item -ItemType Directory -Force out/native/notices | Out-Null
 Copy-Item native/vendor/WinFsp/License.txt out/native/notices/WinFsp-License.txt
