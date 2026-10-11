@@ -50,3 +50,5 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 
 - [Workspace shell, shared controls, notification narration and startup presentation](gui-redesign.md)
 - [Local tools workspaces](local-tools-workspaces.md)
+- [Storage maintenance](storage-maintenance.md)
+- [Verified startup photo host](startup-photo-host.md)

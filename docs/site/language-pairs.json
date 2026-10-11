@@ -133,8 +133,8 @@
     {
       "source": "docs/features/interface/README.md",
       "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "ab543fd37e70013b647a395904e4add7371a1d688fdcdc833a6341074a8780a1",
-      "translationSha256": "15086f6dac3d865b96d41928beb6ddde786de48272aa2de91278e53466c32919"
+      "sourceSha256": "3e49992d14ff1e6f5315a5383532d3a4a0f2602f2bd11db301cc6af8a2355b65",
+      "translationSha256": "2f1f7d7c49a689038ba9f44a32c18ee08f507137086ab7d35b54b6efbe847dd9"
     },
     {
       "source": "docs/features/interface/animation-transition.md",
@@ -233,10 +233,22 @@
       "translationSha256": "1a8b9ed617698f86a47bb74c51bc45ada2cdb40568680397a69651e103aebf44"
     },
     {
+      "source": "docs/features/interface/startup-photo-host.md",
+      "translation": "docs/features/interface/startup-photo-host.zh-HK.md",
+      "sourceSha256": "3f8163ee6755529cd00f8b18ba5f0710a7ba19ccb9595c93d761b4aa575afca1",
+      "translationSha256": "3b76fca130d573e56580402f75619e0e446fe24853a8a3def8b63c3c2dd3317d"
+    },
+    {
       "source": "docs/features/interface/startup-registration.md",
       "translation": "docs/features/interface/startup-registration.zh-HK.md",
       "sourceSha256": "01fed31ad47f43b9214efebeb985e9e816def6dbb80a6a23993ae589ace4df66",
       "translationSha256": "6e012dd49269e95516b15063a6d868e6954914417b0a139edbe9f945dd5bced7"
+    },
+    {
+      "source": "docs/features/interface/storage-maintenance.md",
+      "translation": "docs/features/interface/storage-maintenance.zh-HK.md",
+      "sourceSha256": "8fb492e77a024f687428529e9db49c71d7e55b02942d184609ad5e0be4011fe7",
+      "translationSha256": "007052511d849f7eccd0dd894e33d2f2734c317e1714dfc00893e6f2a37c644f"
     },
     {
       "source": "docs/features/interface/transition-properties.md",

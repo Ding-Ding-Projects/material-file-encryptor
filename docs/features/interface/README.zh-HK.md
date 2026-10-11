@@ -50,3 +50,5 @@
 
 - [工作區框架、共用控制項、通知朗讀及啟動展示](gui-redesign.zh-HK.md)
 - [本機工具工作區](local-tools-workspaces.zh-HK.md)
+- [儲存空間維護](storage-maintenance.zh-HK.md)
+- [已驗證啟動照片主機](startup-photo-host.zh-HK.md)
