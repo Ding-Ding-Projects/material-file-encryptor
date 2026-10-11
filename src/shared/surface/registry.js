@@ -5,18 +5,14 @@ export const surfaceRegistry = Object.freeze([
   { tag: 'mfe-context-menu', role: 'menu', module: 'context-menu.js', primitives: ['md-text-button'] },
   { tag: 'mfe-notification-center', role: 'region', module: 'notification-center.js', primitives: ['md-outlined-button','md-text-button','md-switch'] },
   { tag: 'mfe-build-provenance', role: 'status', module: 'provenance.js', primitives: [] }
+  ,{ tag: 'mfe-group-manager', role: 'dialog', module: 'group-manager.js', primitives: ['md-dialog','md-outlined-text-field','md-switch'] }
 ]);
 
 export function register(tag, constructor) {
   if (!customElements.get(tag)) customElements.define(tag, constructor);
 }
 
-export function localized(value, language = 'en') {
-  if (typeof value === 'string') return value;
-  const en = value?.en ?? '';
-  const yue = value?.yue ?? en;
-  return language === 'yue' ? yue : language === 'bilingual' && yue !== en ? `${en} · ${yue}` : en;
-}
+export {localized} from './localization.js';
 
 export const text = (en, yue) => ({ en, yue });
 

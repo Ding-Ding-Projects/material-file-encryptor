@@ -4,6 +4,7 @@ import {element,localized,text} from '../../../shared/surface/registry.js';
 import '../../../shared/surface/workspace-shell.js';
 import '../../../shared/surface/command-palette.js';
 import '../../../shared/surface/notification-center.js';
+import {shouldOpenRegisteredView} from '../../../shared/surface/view-registration.js';
 
 /** Mounts reusable chrome without mutating host content or acquiring host capabilities. */
 export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport}={}) {
@@ -26,7 +27,7 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
   const configure=()=>{
     shell.configure({model,language:activeLanguage,labels,onActivate:showView,onContext:options=>context.open(options)});
     build.language=activeLanguage;build.value=provenance;
-    palette.language=activeLanguage;palette.render();palette.setCommands([...tabs.map(tab=>({id:`view:${tab.id}`,label:labels.get(tab.id),run:()=>shell.activate(tab.id)})),...hostCommands]);
+    palette.language=activeLanguage;palette.render();palette.setCommands([...tabs.map(tab=>({id:`view:${tab.id}`,label:labels.get(tab.id),run:()=>{model.openTab({id:tab.id,label:localized(labels.get(tab.id),'en')});shell.activate(tab.id);}})),...hostCommands]);
     notifications.configure({model,language:activeLanguage,onExport});
     const sheet=new CSSStyleSheet();sheet.replaceSync(':host{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}');toolbar.shadowRoot.adoptedStyleSheets=[sheet];
     toolbar.shadowRoot.replaceChildren(element('md-outlined-button',{text:localized(text('Commands · Ctrl+Shift+F','指令 · Ctrl+Shift+F'),activeLanguage),onclick:()=>palette.open()}),element('md-outlined-button',{text:localized(text('Notifications','通知'),activeLanguage),onclick:()=>{notifications.hidden=!notifications.hidden;}}));
@@ -45,7 +46,7 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
     setLanguage(value){activeLanguage=['en','yue','bilingual'].includes(value)?value:'en';configure();},
     setProvenance(value){provenance=value;build.value=value;},
     registerCommands(value){hostCommands=[...hostCommands,...value];configure();},
-    registerViews(value){const active=model.getState().activeTabId;for(const view of value){if(!view.id||!(view.root instanceof HTMLElement))throw new TypeError('A view id and root are required');views.set(view.id,view);if(!tabs.some(t=>t.id===view.id))tabs.push(view);labels.set(view.id,view.label);model.openTab({id:view.id,label:localized(view.label,'en')});}model.activateTab(active);configure();showView(model.getState().activeTabId);},
+    registerViews(value){const active=model.getState().activeTabId;for(const view of value){if(!view.id||!(view.root instanceof HTMLElement))throw new TypeError('A view id and root are required');views.set(view.id,view);if(!tabs.some(t=>t.id===view.id))tabs.push(view);labels.set(view.id,view.label);if(shouldOpenRegisteredView(model.getState(),view.id))model.openTab({id:view.id,label:localized(view.label,'en')});}model.activateTab(active);configure();showView(model.getState().activeTabId);},
     destroy(){clearTimeout(messageTimer);document.removeEventListener('keydown',keydown);for(const node of[shell,build,toolbar,notifications,live,palette,context])node.remove();}
   };
   palette.addEventListener('command-error',event=>api.notify({title:localized(text('Command failed','指令未能完成'),activeLanguage),message:event.detail.error.message,level:'error'}));

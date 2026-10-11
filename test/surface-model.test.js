@@ -19,13 +19,14 @@ test('tab lifecycle preserves active tab and rejects last or pinned closure', ()
   assert.equal(model.restoreTab(), null);
 });
 
-test('safe tab metadata persists while content and notification text do not', () => {
+test('safe tab metadata and notification state persist without arbitrary content', () => {
   const storage = memory();
   const model = createSurfaceModel({ tabs, storage });
   model.openTab({ id: 'preview', label: 'Preview', content: 'sensitive content', path: '/private/file' });
   model.groupTab('preview', 'Review');
   model.pinTab('preview');
-  model.addNotification({ message: 'sensitive notification' });
+  const notificationId = model.addNotification({ message: 'Finished operation', secret: 'sensitive arbitrary property' });
+  model.readNotification(notificationId);
   model.activateTab('home');
   const raw = storage.getItem('surface-state');
   assert.ok(!raw.includes('sensitive'));
@@ -33,9 +34,64 @@ test('safe tab metadata persists while content and notification text do not', ()
   const restored = createSurfaceModel({ tabs, storage }).getState();
   assert.deepEqual(restored.tabs[2], { id: 'preview', label: 'Preview', group: 'Review', pinned: true });
   assert.equal(restored.activeTabId, 'home');
-  assert.deepEqual(restored.notifications, []);
+  assert.equal(restored.notifications[0].message, 'Finished operation');
+  assert.equal(restored.notifications[0].read, true);
   restored.tabs[0].label = 'Changed outside';
   assert.equal(model.getState().tabs[0].label, 'Home');
+});
+
+test('groups persist rename and collapse state and removal ungroups open and closed tabs', () => {
+  const storage = memory();
+  const model = createSurfaceModel({ tabs, storage });
+  assert.equal(model.createGroup({ id: 'review', label: 'Review' }), 'review');
+  assert.equal(model.createGroup({ id: 'review', label: 'Duplicate' }), null);
+  assert.equal(model.groupTab('home', 'review'), true);
+  model.groupTab('files', 'review');
+  model.closeTab('files');
+  model.renameGroup('review', 'Later');
+  model.collapseGroup('review', true);
+  const restored = createSurfaceModel({ tabs, storage });
+  assert.deepEqual(restored.getState().groups.find(group => group.id === 'review'), { id: 'review', label: 'Later', collapsed: true });
+  assert.equal(restored.removeGroup('review', { ungroup: false }), false);
+  assert.equal(restored.removeGroup('review', { ungroup: true }), true);
+  restored.restoreTab();
+  assert.ok(restored.getState().tabs.every(tab => tab.group === ''));
+  assert.equal(restored.getState().groups.some(group => group.id === 'review'), false);
+});
+
+test('tab movement and bulk close respect ordering pinned tabs and final tab', () => {
+  const model = createSurfaceModel({ tabs });
+  model.openTab({ id: 'third', label: 'Third' });
+  model.openTab({ id: 'fourth', label: 'Fourth' });
+  assert.equal(model.moveTab('fourth', 1), true);
+  assert.deepEqual(model.getState().tabs.map(tab => tab.id), ['home', 'fourth', 'files', 'third']);
+  assert.equal(model.moveTab('missing', 0), false);
+  model.pinTab('third');
+  assert.deepEqual(model.closeTabsToRight('fourth'), ['files']);
+  assert.deepEqual(model.closeOtherTabs('fourth'), ['home']);
+  assert.deepEqual(model.closeTabs(['fourth', 'third', 'fourth']), ['fourth']);
+  assert.deepEqual(model.getState().tabs.map(tab => tab.id), ['third']);
+  model.pinTab('third', false);
+  assert.deepEqual(model.closeTabs(['third']), []);
+});
+
+test('notification reload sanitizes malformed entries and preserves unique identifiers', () => {
+  const storage = memory();
+  storage.setItem('surface-state', JSON.stringify({ version: 1, tabs, notifications: [
+    { id: 'notification-1', title: 'Done', message: 'password=hidden token:abc', createdAt: '2026-10-10T12:00:00Z', read: true, arbitrary: 'excluded' },
+    { id: 'notification-1', title: 'Duplicate', createdAt: '2026-10-10T12:00:00Z' },
+    { id: 'invalid-date', createdAt: 'invalid' },
+    { id: 7, createdAt: '2026-10-10T12:00:00Z' }
+  ] }));
+  const model = createSurfaceModel({ tabs, storage });
+  assert.equal(model.getState().notifications.length, 1);
+  assert.equal(model.getState().notifications[0].message, 'password=[redacted] token=[redacted]');
+  const id = model.addNotification({ title: 'Another', message: 'api_key="hidden value"' });
+  assert.notEqual(id, 'notification-1');
+  assert.ok(!storage.getItem('surface-state').includes('hidden'));
+  assert.ok(!storage.getItem('surface-state').includes('arbitrary'));
+  model.dismissNotification('notification-1');
+  assert.equal(createSurfaceModel({ tabs, storage }).getState().notifications.length, 1);
 });
 
 test('invalid storage recovers to usable defaults and closed history is bounded', () => {
