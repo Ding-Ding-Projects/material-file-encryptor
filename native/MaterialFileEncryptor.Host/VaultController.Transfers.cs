@@ -110,12 +110,62 @@ internal sealed partial class VaultController
     }
     private object StartExport(JsonElement args)
     {
+        bool version=args.TryGetProperty("versionId",out _), current=args.TryGetProperty("path",out _);
+        if(version==current)throw new ArgumentException("Select exactly one current path or versionId to export.");
+        _=RequiredString(args,version?"versionId":"path");
         JsonElement capturedArgs=args.Clone();
         lock(admissionGate)
         {
             if(forceLocking)throw new InvalidOperationException("The vault is locking.");
             return operations.Start([RequiredString(args,"destination")],(_,cancellation,progress)=>Task.Run(()=>
-            { ExportVersionFile(capturedArgs,cancellation);progress(0,0,1,1); },cancellation));
+            { if(current)ExportCurrentFile(capturedArgs,cancellation,progress);else {ExportVersionFile(capturedArgs,cancellation);progress(0,0,1,1);} },cancellation));
+        }
+    }
+    private object ExportCurrentFile(JsonElement args,CancellationToken cancellation,Action<long,long,int,int> progress)
+    {
+        string path=RequiredString(args,"path"),destination=Path.GetFullPath(RequiredString(args,"destination"));
+        MaterialFileEncryptor.Core.VaultEngine captured;
+        MaterialFileEncryptor.Core.VaultEngine.ReadSnapshot snapshot;
+        lock(gate)
+        {
+            captured=Engine;
+            if(IsWithin(destination,storageDir!)||IsWithin(destination,cacheDir!))throw new ArgumentException("Export outside encrypted storage and cache folders.");
+            snapshot=captured.AcquireReadSnapshot(path);++activePreparedOperations;
+        }
+        string temporary=destination+"."+Guid.NewGuid().ToString("N")+".tmp";
+        byte[] buffer=new byte[65536];
+        try
+        {
+            using(var stream=new FileStream(temporary,FileMode.CreateNew,FileAccess.Write,FileShare.None,65536,FileOptions.WriteThrough))
+            {
+                progress(0,snapshot.Length,0,1);
+                for(long offset=0;offset<snapshot.Length;)
+                {
+                    cancellation.ThrowIfCancellationRequested();
+                    int length=(int)Math.Min(buffer.Length,snapshot.Length-offset);
+                    snapshot.PrepareRangeAsync(offset,length,cancellation).GetAwaiter().GetResult();
+                    cancellation.ThrowIfCancellationRequested();
+                    int count=snapshot.ReadRange(offset,buffer.AsSpan(0,length));
+                    if(count==0)throw new EndOfStreamException("Snapshot ended before its recorded length.");
+                    stream.Write(buffer,0,count);offset+=count;progress(offset,snapshot.Length,0,1);
+                }
+                stream.Flush(true);
+            }
+            cancellation.ThrowIfCancellationRequested();
+            File.Move(temporary,destination,true);
+            // Installation wins a late cancellation. Audit failure cannot undo it.
+            try{captured.RecordActivity(snapshot.EntryId,"export",path);}catch{ }
+            progress(snapshot.Length,snapshot.Length,1,1);
+            return new {exported=true};
+        }
+        catch(OperationCanceledException) when(cancellation.IsCancellationRequested)
+        {try{captured.RecordActivity(snapshot.EntryId,"cancel",path,detail:"Managed export cancelled");}catch{ }throw;}
+        finally
+        {
+            System.Security.Cryptography.CryptographicOperations.ZeroMemory(buffer);
+            snapshot.Dispose();
+            try{if(File.Exists(temporary))File.Delete(temporary);}
+            finally{lock(gate)--activePreparedOperations;}
         }
     }
     private object ExportVersionFile(JsonElement args,CancellationToken cancellation=default)
@@ -137,9 +187,11 @@ internal sealed partial class VaultController
             cancellation.ThrowIfCancellationRequested();
             File.Move(temporary,destination,true);
             var selected=captured.ListVersions().Single(version=>version.Id==versionId);
-            captured.RecordActivity(selected.EntryId,"export",selected.Path,versionId);
+            try{captured.RecordActivity(selected.EntryId,"export",selected.Path,versionId);}catch{ }
             return new { exported=true };
         }
+        catch(OperationCanceledException) when(cancellation.IsCancellationRequested)
+        {try{captured.RecordActivity(captured.VaultId,"cancel",versionId:versionId,detail:"Managed version export cancelled");}catch{ }throw;}
         finally
         {
             try { if(File.Exists(temporary))File.Delete(temporary); }

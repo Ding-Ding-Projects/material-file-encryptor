@@ -528,6 +528,7 @@ public sealed partial class VaultEngine : IDisposable
                 if(!selectedPaths.Contains(pair.Key) || IsPinned(pair.Key,pair.Value) || open.ContainsKey(pair.Value.Id) || !cleanVersions.Contains(pair.Value.Version))
                     protectedParts.UnionWith(AllRecords(pair.Value).Select(r=>r.Part));
             foreach(var orphan in orphans.Values)protectedParts.UnionWith(AllRecords(orphan).Select(r=>r.Part));
+            foreach(var snapshot in readSnapshots.Values)protectedParts.UnionWith(AllRecords(snapshot).Select(r=>r.Part));
             foreach(var id in pending)protectedParts.UnionWith(Parts(ReadMetadata<Commit>(ObjectPath(cache,"commits",id),"commit",id)));
             candidates.ExceptWith(protectedParts);
 
@@ -560,6 +561,7 @@ public sealed partial class VaultEngine : IDisposable
             Check(); if(desiredBytes<0)throw new ArgumentOutOfRangeException(nameof(desiredBytes)); var protectedParts=new HashSet<string>();
             foreach(var pair in entries)if(IsPinned(pair.Key,pair.Value)||open.ContainsKey(pair.Value.Id)||!baseline.Values.Any(b=>b.Version==pair.Value.Version))protectedParts.UnionWith(AllRecords(pair.Value).Select(r=>r.Part));
             foreach(var e in orphans.Values)protectedParts.UnionWith(AllRecords(e).Select(r=>r.Part));
+            foreach(var snapshot in readSnapshots.Values)protectedParts.UnionWith(AllRecords(snapshot).Select(r=>r.Part));
             foreach(var id in pending)protectedParts.UnionWith(Parts(ReadMetadata<Commit>(ObjectPath(cache,"commits",id),"commit",id)));
             VaultCrypto.ValidatePhysicalPath(Path.Combine(cache,"parts")); long removed=0; foreach(var path in Directory.EnumerateFiles(Path.Combine(cache,"parts"),"*.mfe")) { if(removed>=desiredBytes)break; var id=Path.GetFileNameWithoutExtension(path); if(protectedParts.Contains(id)||!sourceAvailable||!File.Exists(ObjectPath(source,"parts",id)))continue; VerifyPart(ObjectPath(source,"parts",id),id); var size=new FileInfo(path).Length;File.Delete(path);removed+=size; } return removed;
         }
