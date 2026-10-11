@@ -13,11 +13,11 @@ echo Unsupported build argument.
 exit /b 2
 :silent
 set "BUILD_SILENT=1"
-shift
+shift /1
 goto parse
 :browserhost
 set "BUILD_PS_ARGS=-BrowserHostOnly"
-shift
+shift /1
 goto parse
 :build
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\build.ps1" %BUILD_PS_ARGS%
