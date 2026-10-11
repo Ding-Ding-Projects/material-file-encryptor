@@ -11,23 +11,26 @@ function workbenchDocument(){
  document.createElement=tag=>{const node=create(tag);node.classList={add(...names){node.className=[node.className||'',...names].join(' ').trim();}};node.getBoundingClientRect=()=>({left:0,top:0,width:116,height:116});node.setPointerCapture=()=>{};node.setCustomValidity=value=>node.validationMessage=value;node.reportValidity=()=>!node.validationMessage;return node;};
  document.createElementNS=(_namespace,tag)=>document.createElement(tag);
  class Sheet {replaceSync(text){this.text=text;}}
- document.defaultView={CSSStyleSheet:Sheet};document.adoptedStyleSheets=[];
+ const definitions=new Map(),Base=create('div').constructor;
+ class Element extends Base {constructor(){super(document,'mfe-control-guidance');}attachShadow(){this.shadowRoot=document.createElement('shadow');}}
+ const decorate=document.createElement;document.createElement=tag=>{const C=definitions.get(tag),node=C?new C():decorate(tag);node.hidden=false;node.disabled=false;node.readOnly=false;node.before=function(other){other.remove();other.parentNode=this.parentNode;this.parentNode.childNodes.splice(this.parentNode.childNodes.indexOf(this),0,other);};return node;};
+ document.defaultView={CSSStyleSheet:Sheet,Event,HTMLElement:Element,customElements:{get:key=>definitions.get(key),define:(key,C)=>definitions.set(key,C)}};document.adoptedStyleSheets=[];
  // Global event registration is deliberately absent: workbenches must use owned nodes only.
  return document;
 }
-const action=(root,text)=>root.querySelectorAll('button').find(node=>node.textContent===text);
+const action=(root,text)=>root.querySelectorAll('md-outlined-button').find(node=>node.textContent===text);
 const key=(node,value,extra={})=>node.dispatchEvent({type:'keydown',key:value,preventDefault(){},...extra});
 
 test('mounted drawing applies keyboard polygon, cancels without changing selection, and persists guides',async()=>{
  const document=workbenchDocument(),host=document.createElement('div');document.body.append(host);const applied=[],saved=[];let searches=0,disposed=0;
- const workbench=mountSelectionWorkbench(host,{onSelection:value=>applied.push(value),onGuides:value=>saved.push(value),attachSearch(input,scope){assert.equal(input.type,'search');assert.equal(scope.tagName,'SECTION');searches++;return()=>disposed++;}});
+ const workbench=mountSelectionWorkbench(host,{onSelection:value=>{applied.push(value);return true;},onGuides:value=>{saved.push(value);return true;},attachSearch(input,scope){assert.equal(input.type,'search');assert.equal(scope.tagName,'SECTION');searches++;return()=>disposed++;}});
  const surface=host.querySelector('svg');await key(surface,' ');await key(surface,'ArrowRight',{shiftKey:true});await key(surface,' ');await key(surface,'ArrowDown',{shiftKey:true});await key(surface,' ');await key(surface,'Enter');
  assert.deepEqual(applied,[{kind:'polygon',values:[50,50,60,50,60,60]}]);
  await key(surface,'Escape');await key(surface,'Enter');assert.equal(applied.length,1,'cancelled drawing must not overwrite prior selection');
  await surface.dispatchEvent({type:'pointerdown',button:0,pointerId:1,clientX:20,clientY:20,preventDefault(){}});await surface.dispatchEvent({type:'pointermove',clientX:30,clientY:20});await surface.dispatchEvent({type:'pointermove',clientX:30,clientY:30});await surface.dispatchEvent({type:'pointercancel'});await key(surface,'Enter');assert.equal(applied.length,1,'pointer cancel must discard the unfinished stroke without overwriting the prior selection');
- action(host,'Add vertical guide').onclick();assert.deepEqual(saved.at(-1),[{axis:'x',value:50}]);
- const numeric=host.querySelectorAll('input').find(node=>node.type==='number');numeric.value='33';numeric.onchange();assert.deepEqual(saved.at(-1),[{axis:'x',value:33}]);
- numeric.value='101';numeric.onchange();assert.deepEqual(saved.at(-1),[{axis:'x',value:33}]);assert.ok(numeric.validationMessage);
+ await action(host,'Add vertical guide').click();await new Promise(resolve=>setImmediate(resolve));assert.deepEqual(saved.at(-1),[{axis:'x',value:50}]);
+ const numeric=host.querySelectorAll('md-outlined-text-field').find(node=>node.type==='number');numeric.value='33';await numeric.dispatchEvent({type:'change'});await new Promise(resolve=>setImmediate(resolve));assert.deepEqual(saved.at(-1),[{axis:'x',value:33}]);
+ const current=host.querySelectorAll('md-outlined-text-field').find(node=>node.type==='number');current.value='101';await current.dispatchEvent({type:'change'});assert.deepEqual(saved.at(-1),[{axis:'x',value:33}]);assert.ok(current.validationMessage);
  assert.equal(searches,1);workbench.destroy();assert.equal(disposed,1);assert.equal(host.children.length,0);
 });
 
@@ -35,6 +38,6 @@ test('mounted state previews preserve unrelated sheets, own teardown, and omit p
  const document=workbenchDocument(),unrelated={text:'unrelated'},host=document.createElement('div'),target=document.createElement('input');document.adoptedStyleSheets=[unrelated];document.body.append(host);target.value='private-form-value';target.setAttribute('type','password');target.setAttribute('aria-label','Protected field');let disposed=0;
  const preview=mountStatePreviews(host,{target,states:[{name:'normal',properties:{color:'#123456'}},{name:'hover',properties:{opacity:'.5'}}],attachSearch(){return()=>disposed++;}});
  assert.equal(document.adoptedStyleSheets.length,2);assert.equal(document.adoptedStyleSheets[0],unrelated);assert.match(document.adoptedStyleSheets[1].text,/color:#123456/);assert.match(document.adoptedStyleSheets[1].text,/opacity:.5/);
- assert.doesNotMatch(host.textContent,/private-form-value/);assert.match(host.textContent,/Protected field/);assert.equal(host.querySelectorAll('input').length,1,'only the local search input is rendered');
+ assert.doesNotMatch(host.textContent,/private-form-value/);assert.match(host.textContent,/Protected field/);assert.equal(host.querySelectorAll('md-outlined-text-field').length,1,'only the local search input is rendered');
  preview.destroy();assert.deepEqual(document.adoptedStyleSheets,[unrelated]);assert.equal(disposed,1);assert.equal(host.children.length,0);
 });
