@@ -26,6 +26,51 @@ internal static class StorageStageRegression
             catch(StorageOperationException error){if(!ReferenceEquals(error.InnerException,primary)||error.StorageStage!="metadata-write")throw new Exception("Cleanup replaced the primary failure.");}
             VaultCrypto.AtomicWrite(path,replacement);
             if(!File.ReadAllBytes(path).SequenceEqual(replacement))throw new Exception("Successful atomic install failed.");
+            if(OperatingSystem.IsWindows())
+            {
+                File.WriteAllBytes(path,original);string temporary=Path.Combine(root,"replacement.tmp");File.WriteAllBytes(temporary,replacement);
+                using(var blocked=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read))
+                {
+                    bool observed=false;
+                    try{File.Move(temporary,path,true);}
+                    catch(Exception error) when(error is IOException or UnauthorizedAccessException)
+                    {observed=true;if(!AtomicMetadataReplacement.IsSharingConflict(error,temporary,path))throw new Exception("Delete-sharing conflict was not recognized.");}
+                    if(!observed)throw new Exception("Missing negative replacement test.");
+                    var timer=System.Diagnostics.Stopwatch.StartNew();
+                    try{AtomicMetadataReplacement.Replace(temporary,path);throw new Exception("Permanent held reader was ignored.");}
+                    catch(Exception error) when(error is IOException or UnauthorizedAccessException){ }
+                    if(timer.ElapsedMilliseconds>1000)throw new Exception("Replacement retries exceeded their bound.");
+                    if(!File.ReadAllBytes(path).SequenceEqual(original)||!File.ReadAllBytes(temporary).SequenceEqual(replacement))throw new Exception("Failed replacement changed files.");
+                }
+                using(var heldForCancel=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read))
+                using(var entered=new ManualResetEventSlim())
+                {
+                    var registry=new TransferOperationRegistry();
+                    var operation=System.Text.Json.JsonSerializer.SerializeToElement(registry.Start(["synthetic"],(_,cancellation,_)=>Task.Run(()=>
+                    {
+                        entered.Set();
+                        try{AtomicMetadataReplacement.Replace(temporary,path);}
+                        finally{cancellation.ThrowIfCancellationRequested();}
+                    })));
+                    if(!entered.Wait(TimeSpan.FromSeconds(1)))throw new Exception("Replacement did not start.");
+                    var ack=System.Diagnostics.Stopwatch.StartNew();registry.Cancel(operation.GetProperty("operationId").GetString()!);
+                    if(ack.ElapsedMilliseconds>=250)throw new Exception("Cancel acknowledgement waited for metadata replacement.");
+                    for(int attempt=0;attempt<100&&registry.Outstanding!=0;attempt++)Thread.Sleep(10);
+                    if(registry.Outstanding!=0)throw new Exception("Cancelled replacement failed to settle.");
+                }
+                using(var held=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read))
+                {
+                    var release=Task.Run(async()=>{await Task.Delay(45);held.Dispose();});
+                    AtomicMetadataReplacement.Replace(temporary,path);release.GetAwaiter().GetResult();
+                }
+                if(!File.ReadAllBytes(path).SequenceEqual(replacement))throw new Exception("Released reader did not allow atomic replacement.");
+                File.WriteAllBytes(path,original);File.SetAttributes(path,FileAttributes.ReadOnly);
+                try
+                {
+                    if(AtomicMetadataReplacement.IsSharingConflict(new UnauthorizedAccessException(),path,path))throw new Exception("Read-only denial was treated as transient sharing.");
+                }
+                finally{File.SetAttributes(path,FileAttributes.Normal);}
+            }
             var untrusted=new IOException();untrusted.Data["storageStage"]="metadata-replace";
             if(TransferOperationRegistry.GetStorageStage(untrusted)!=null)throw new Exception("Untrusted diagnostic data was published.");
             foreach(var stage in Enum.GetValues<StorageOperationStage>())
