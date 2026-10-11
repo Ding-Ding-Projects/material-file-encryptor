@@ -93,3 +93,14 @@ file. Read-only attributes and permanent access denial do not qualify. The
 replacement keeps the same durably flushed temporary file, with at most ten
 15 ms waits. Exhaustion retains the first exception and the prior destination.
 The control reader remains independent while the current block settles.
+
+Unfinished managed imports now keep one append-only progress journal open for
+their lifetime. Each write durably flushes encrypted data and authenticated
+progress frames, rather than replacing a metadata file after every block.
+Frames use independent AES-GCM encryption, sequence numbers, a predecessor
+hash and an authenticated header; each encrypted plaintext frame is bounded
+below 64 KiB. The pending tail remains encrypted. Validation rejects complete
+corrupt frames and tolerates only an incomplete terminal frame. This journal
+is progress evidence, not an instruction to install content: startup does not
+publish unfinished imports, including after abrupt process exit. Completed
+installation continues through the existing atomic namespace transaction.

@@ -11,6 +11,7 @@ public sealed partial class VaultEngine
         private readonly Entry entry;
         private readonly string journal;
         private readonly PartWriter writer;
+        private readonly EncryptedImportJournal progressJournal;
         private readonly byte[] pendingBlock;
         private readonly IDisposable bufferReservation;
         private int pendingLength;
@@ -27,7 +28,7 @@ public sealed partial class VaultEngine
             entry=new Entry { ChunkSize=engine.ChunkBytes(engine.partSize),PartSize=engine.partSize,Attributes=32 };
             journal=Path.Combine(engine.cache,"import-"+entry.Id+".mfe");
             writer=new PartWriter(engine,entry.PartSize);bufferReservation=TransferBufferBudget.Reserve(entry.ChunkSize+65536L);
-            try{pendingBlock=new byte[entry.ChunkSize];}catch{bufferReservation.Dispose();throw;}
+            try{pendingBlock=new byte[entry.ChunkSize];progressJournal=new EncryptedImportJournal(journal,engine.key,engine.Domain("import-progress",entry.Id));}catch{bufferReservation.Dispose();throw;}
         }
         public void Write(long offset,ReadOnlySpan<byte> data,CancellationToken cancellationToken=default)
         {
@@ -50,11 +51,7 @@ public sealed partial class VaultEngine
                     }
                 }
                 writer.FlushDurable();
-                // A bounded encrypted checkpoint preserves the unfinished tail without
-                // serializing the growing record map or exposing a partial live entry.
-                var tail=pendingBlock.AsSpan(0,pendingLength).ToArray();
-                try { engine.WriteMetadata(journal,new { EntryId=entry.Id, Length=entry.Length, Offset=offset, Count=data.Length, PendingBlock=tail },"import",entry.Id); }
-                finally { CryptographicOperations.ZeroMemory(tail); }
+                progressJournal.Append(entry.Length,offset,data.Length,pendingBlock.AsSpan(0,pendingLength));
             }
         }
         public void Commit(CancellationToken cancellationToken=default)
@@ -84,7 +81,7 @@ public sealed partial class VaultEngine
                     engine.pendingVersions=savedVersions;engine.pendingBinHidden=savedHidden;engine.versionDue=savedDue;
                     throw;
                 }
-                finished=true;DisposeWriterAndBuffer(writer.Dispose,pendingBlock,bufferReservation);
+                finished=true;DisposeWriterAndBuffer(()=>{try{writer.Dispose();}finally{progressJournal.Dispose();}},pendingBlock,bufferReservation);
                 try { File.Delete(journal); } catch(IOException) { } catch(UnauthorizedAccessException) { }
 
             }
@@ -95,7 +92,7 @@ public sealed partial class VaultEngine
             {
                 if(finished)return;finished=true;engine.versionDue.Remove(entry.Id);
                 try { writer.Finish(); }
-                finally { try{DisposeWriterAndBuffer(writer.Dispose,pendingBlock,bufferReservation);}finally{if(File.Exists(journal))File.Delete(journal);} }
+                finally { try{DisposeWriterAndBuffer(()=>{try{writer.Dispose();}finally{progressJournal.Dispose();}},pendingBlock,bufferReservation);}finally{if(File.Exists(journal))File.Delete(journal);} }
                 // Completed ciphertext parts remain unreferenced cache garbage.
             }
         }
