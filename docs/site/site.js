@@ -43,6 +43,7 @@ for (const element of document.querySelectorAll('[aria-label],[alt],[title],[pla
   for (const name of ['aria-label', 'alt', 'title', 'placeholder']) if (element.hasAttribute(name)) attributes.push({ element, name, original: element.getAttribute(name) });
 }
 const originalTitle = document.title;
+const activeLanguage = () => schoolEnabled ? 'en' : preferences.language;
 const menu = document.querySelector('#navigation');
 const menuToggle = document.querySelector('#menu-toggle');
 const dialog = document.querySelector('#preferences-dialog');
@@ -88,8 +89,8 @@ function updateMessages() {
   document.querySelector('#success-preview').textContent = pair('Example message: ', '訊息示例：') + friendly('success', 2);
   document.querySelector('#search-preview').textContent = pair('Example message: ', '訊息示例：') + friendly('search');
   vocabularyStatus.dataset.error = String(vocabularyState.kind === 'error');
-  vocabularyStatus.textContent = vocabularyState.kind === 'error' ? localized(vocabularyState.message, preferences.language) : !privateWordingAvailable ? (pendingVocabularySource === null ? 'Private wording is locked. Choose a file to validate it locally, then unlock your private profile to apply it.' : 'File validated locally. Unlock your private profile to apply its wording. Public text remains unchanged.') : vocabularyState.kind === 'success' ? friendly('success', vocabulary.replacements.length) + (vocabularyState.persisted ? ' Saved on this device.' : ' Active for this session only; storage failed.')
-    : localized(vocabularyState.kind === 'error' ? vocabularyState.message : 'Default wording is active.', preferences.language);
+  vocabularyStatus.textContent = vocabularyState.kind === 'error' ? localized(vocabularyState.message, activeLanguage()) : !privateWordingAvailable ? localized(pendingVocabularySource === null ? 'Private wording is locked. Choose a file to validate it locally, then unlock your private profile to apply it.' : 'File validated locally. Unlock your private profile to apply its wording. Public text remains unchanged.',activeLanguage()) : vocabularyState.kind === 'success' ? friendly('success', vocabulary.replacements.length) + localized(vocabularyState.persisted ? ' Saved on this device.' : ' Active for this session only; storage failed.',activeLanguage())
+    : localized(vocabularyState.kind === 'error' ? vocabularyState.message : 'Default wording is active.', activeLanguage());
   updateSearch();
 }
 let schoolEnabled = false;

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {loadMessagePreferences,effectiveMessagePair} from '../docs/site/locales.js';
+import {loadMessagePreferences,effectiveMessagePair,localized} from '../docs/site/locales.js';
 import {pageShell} from '../docs/site/publication.mjs';
 const stored=value=>({getItem:()=>JSON.stringify(value)});
 test('language playfulness defaults, boundaries and category migration are explicit',()=>{
@@ -42,4 +42,10 @@ test('surface storage isolates page state without persisting content',async()=>{
  const records=new Map(),storage={getItem:key=>records.get(key)??null,setItem:(key,value)=>records.set(key,value),removeItem:key=>records.delete(key)};
  const home=scopedStorage(storage,'/index.html'),article=scopedStorage(storage,'/articles/a.html');
  home.setItem('tabs','home-state');article.setItem('tabs','article-state');assert.equal(home.getItem('tabs'),'home-state');assert.equal(article.getItem('tabs'),'article-state');home.removeItem('tabs');assert.equal(home.getItem('tabs'),null);assert.equal(article.getItem('tabs'),'article-state');
+});
+
+test('public navigation and locked wording status translate in Cantonese and bilingual modes',()=>{
+ for(const label of ['Browser workspace','Private wording is locked. Choose a file to validate it locally, then unlock your private profile to apply it.','File validated locally. Unlock your private profile to apply its wording. Public text remains unchanged.']){
+  assert.notEqual(localized(label,'yue'),label);assert.ok(localized(label,'bilingual').includes(' / '));assert.equal(localized(label,'en'),label);
+ }
 });
