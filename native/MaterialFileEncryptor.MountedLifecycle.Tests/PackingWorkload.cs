@@ -8,7 +8,7 @@ internal static class PackingWorkload
     private const string Name="physical-packing.bin";
     internal sealed record Result(long Length,string Sha256,int Parts,long PeakObservedPrivateBytes,long PeakWorkingSetBytes);
     private static void Require(bool value,string message){if(!value)throw new InvalidOperationException(message);}
-    internal static async Task<Result> Run(string mountedRoot,int helperId,Func<string,object,Task<JsonElement>> call,List<object> checks,Func<Task> persist)
+    internal static async Task<Result> Run(string mountedRoot,int helperId,Func<string,object,Task<JsonElement>> call,List<object> checks,Func<Task> persist,Action<Task> trackIo)
     {
         Require(!mountedRoot.StartsWith("M:",StringComparison.OrdinalIgnoreCase),"The live drive is excluded from synthetic packing checks.");
         long length=2*Cap+123456,offset=0;
@@ -63,7 +63,8 @@ internal static class PackingWorkload
                 {
                     var statusWatch=Stopwatch.StartNew();await call("statusSummary",new{});double statusMs=statusWatch.Elapsed.TotalMilliseconds;
                     var ioWatch=Stopwatch.StartNew();string other=Path.Combine(mountedRoot,"packing-independent.bin");
-                    await Task.Run(()=>{File.WriteAllBytes(other,new byte[]{4,2});Require(File.ReadAllBytes(other).SequenceEqual(new byte[]{4,2}),"Independent mounted read changed bytes.");_=Directory.GetFiles(mountedRoot);}).WaitAsync(TimeSpan.FromSeconds(10));
+                    var io=Task.Run(()=>{File.WriteAllBytes(other,new byte[]{4,2});Require(File.ReadAllBytes(other).SequenceEqual(new byte[]{4,2}),"Independent mounted read changed bytes.");_=Directory.GetFiles(mountedRoot);});
+                    trackIo(io);await io.WaitAsync(TimeSpan.FromSeconds(10));
                     double ioMs=ioWatch.Elapsed.TotalMilliseconds;
                     Require(statusMs<5000&&ioMs<5000,"Packing blocked unrelated mounted I/O or status beyond five seconds.");
                     helper.Refresh();peakPrivate=Math.Max(peakPrivate,helper.PrivateMemorySize64);

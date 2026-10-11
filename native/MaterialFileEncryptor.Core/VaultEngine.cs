@@ -460,6 +460,10 @@ public sealed partial class VaultEngine : IDisposable
                         token.ThrowIfCancellationRequested();PublicationTestPoint?.Invoke("part");
                         if(verifiedSource.Contains(part))continue;
                         var target=ObjectPath(source,"parts",part);bool validSource=false;
+                        // Remote-only immutable objects retain the transport availability
+                        // contract. Authenticate materialized source bytes, without
+                        // downloading every unchanged object to publish metadata.
+                        if(!File.Exists(target)&&IsEncryptedFileAvailable?.Invoke("parts/"+part+".mfe")==true)continue;
                         if(File.Exists(target))
                         {
                             try{VerifyPart(target,part,encodings[part],token);validSource=true;}
