@@ -35,6 +35,7 @@
     "docs/features/platform/current-integration.md",
     "docs/features/platform/documentation-and-status.md",
     "docs/features/release/README.md",
+    "docs/features/release/native-update-controller.md",
     "docs/features/release/preview-delivery.md",
     "docs/features/release/preview-verification.md",
     "docs/features/schedules/README.md",
@@ -49,7 +50,8 @@
     "docs/features/surface-foundation/coverage.md",
     "docs/features/surface-foundation/integration.md",
     "docs/features/surface-foundation/layout-and-notifications.md",
-    "docs/features/surface-foundation/workflow-handoffs.md"
+    "docs/features/surface-foundation/workflow-handoffs.md",
+    "docs/features/surface-foundation/updates-panel.md"
   ],
   "categories": [
     "access",

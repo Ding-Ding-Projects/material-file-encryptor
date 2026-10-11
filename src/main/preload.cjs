@@ -25,6 +25,7 @@ const api = {
   setHistoryRetention: historyRetentionDays => invoke('setPreferences', { historyRetentionDays }),
   sync: () => invoke('sync'), setPartSize: partSizeBytes => invoke('setPartSize', { partSizeBytes }), resplit: () => invoke('resplitAll'),
   setStartup: startup => invoke('setPreferences', { startup }), setAutoUnlock: autoUnlock => invoke('setPreferences', { autoUnlock }),
+  setPerformanceMode: performanceMode => invoke('setPreferences', { performanceMode }),
   forgetSavedCredential: () => invoke('setPreferences', { autoUnlock: false }),
   windowControl: action => invoke('windowControl', { action }), openExternal: url => invoke('openExternal', { url }),
   installDriver: () => invoke('installDriver'), importVocabulary: () => invoke('importVocabulary'),
