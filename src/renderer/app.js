@@ -24,7 +24,7 @@ const featureMounts=new Map(),featureRoots=new Map(),workspaceDisposers=[];
 const localSettings=createSettingsStore({storage:localStorage});
 if(localSettings.provenance==='default')try{localSettings.update({...LOCAL_DEFAULTS,...preferences,vocabulary:undefined},'existing preferences migrated');}catch{}
 let effectiveLocalSettings=localSettings.get();
-const enhancedLabels={'File details':'檔案詳情','Converter':'轉換工具','Local models':'本機模型','Personalization':'個人化','Local access':'本機存取','Documentation':'說明文件','Changelog':'更新記錄','Status':'狀態','Load more files':'載入更多檔案','Retry loading files':'重試載入檔案','Cancel operation':'取消操作','Operations':'操作','Force lock':'強制鎖定','Quit application':'結束程式','Feature unavailable':'功能無法使用','Refresh':'重新整理','Search settings':'搜尋設定'};
+const enhancedLabels={'Export queued. Cancel unfinished work from Operations.':'匯出已加入佇列。可以在操作面板取消未完成工作。','File details':'檔案詳情','Converter':'轉換工具','Local models':'本機模型','Personalization':'個人化','Local access':'本機存取','Documentation':'說明文件','Changelog':'更新記錄','Status':'狀態','Load more files':'載入更多檔案','Retry loading files':'重試載入檔案','Cancel operation':'取消操作','Operations':'操作','Force lock':'強制鎖定','Quit application':'結束程式','Feature unavailable':'功能無法使用','Refresh':'重新整理','Search settings':'搜尋設定'};
 const dictionary = new Map();
 document.querySelectorAll('[data-i18n]').forEach(el => dictionary.set(el, el.textContent));
 initializeIcons();
@@ -338,7 +338,7 @@ listen('export-button','click',async () => {
  const file = currentFiles().find(file => file.id === selected); if (!file) return;
  if (!await confirmAction('Export a decrypted copy?','The destination will contain an ordinary readable file. Choose a location you trust.','Continue')) return;
  const destination = await api.chooseExport(file.path.split(/[\\/]/).at(-1));
- if (destination) await run('Exporting copy…',() => api.exportFile({id:file.id,destination}),'Copy exported.');
+ if (destination) await run('Exporting copy…',() => api.exportFile({id:file.id,destination}),'Export queued. Cancel unfinished work from Operations.');
 });
 listen('offline-button','click',() => run('Keeping encrypted parts offline…',() => api.keepOffline(selected),'Offline copy retained.'));
 listen('release-button','click',async () => {

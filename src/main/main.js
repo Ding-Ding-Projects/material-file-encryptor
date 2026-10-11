@@ -133,7 +133,7 @@ async function request(method, params) {
   if (method === 'chooseFiles') { const picked = await dialog.showOpenDialog(window, { title: 'Import files into encrypted storage', properties: ['openFile', 'multiSelections'] }); if (picked.canceled) return []; for (const filename of picked.filePaths) selectedImports.add(filename); return picked.filePaths; }
   if (method === 'chooseExport') { const picked = await dialog.showSaveDialog(window, { title: 'Export a readable copy', defaultPath: path.win32.basename(params.name) }); if (picked.canceled) return null; selectedExports.add(picked.filePath); return picked.filePath; }
   if (method === 'importSelected' || method === 'startImport') { if (quitPending) throw new Error('The application is waiting to quit.'); if (params.paths.some(filename => !selectedImports.has(filename))) throw new Error('Choose files using the file picker.'); for (const filename of params.paths) selectedImports.delete(filename); return helper.request('startImport', { paths: params.paths }); }
-  if (method === 'fileAction') { const entry = state.files.find(file => file.id === params.id); if (!entry) throw new Error('Select a current file.'); if (params.action === 'open') return openPath(mountedPath(entry.path)); if (params.action === 'export') { if (!selectedExports.delete(params.destination)) throw new Error('Choose an export destination using the file picker.'); const target = await safeDestination(params.destination, [state.storageDir, state.cacheDir, mountedPath()]); await fs.copyFile(mountedPath(entry.path), target); return target; } return perform(params.action, () => backend(params.action, { path: entry.path })); }
+  if (method === 'fileAction') { const entry = state.files.find(file => file.id === params.id); if (!entry) throw new Error('Select a current file.'); if (params.action === 'open') return openPath(mountedPath(entry.path)); if (params.action === 'export') { if (!selectedExports.delete(params.destination)) throw new Error('Choose an export destination using the file picker.'); const target = await safeDestination(params.destination, [state.storageDir, state.cacheDir, mountedPath()]); if (quitPending || shuttingDown) throw new Error('The application is waiting to quit.'); return helper.request('startExport', {path:entry.path,destination:target}); } return perform(params.action, () => backend(params.action, { path: entry.path })); }
   if (method === 'resplitAll') return perform('resplit', async () => { for (const file of state.files.filter(file => !file.isDirectory)) await backend('resplit', { path: file.path, partSizeBytes: state.partSizeBytes }); return snapshot(); });
   if (method === 'windowControl') { if (params.action === 'minimize') window.minimize(); if (params.action === 'maximize') window.isMaximized() ? window.unmaximize() : window.maximize(); if (params.action === 'close') window.close(); return; }
   if (method === 'openExternal') return shell.openExternal(params.url);
@@ -167,9 +167,10 @@ async function request(method, params) {
   if (method === 'openExplorer') return openPath(mountedPath());
   if (method === 'openFile') return openPath(mountedPath(params.path));
   if (method === 'exportFile') {
-    const source = mountedPath(params.path);
     const picked = await dialog.showSaveDialog(window, { title: 'Export a readable copy', defaultPath: path.win32.basename(params.path) }); if (picked.canceled) return null;
-    const target = await safeDestination(picked.filePath, [state.storageDir, state.cacheDir, mountedPath()]); await fs.copyFile(source, target); return target;
+    const target = await safeDestination(picked.filePath, [state.storageDir, state.cacheDir, mountedPath()]);
+    if (quitPending || shuttingDown) throw new Error('The application is waiting to quit.');
+    return helper.request('startExport',{path:params.path,destination:target});
   }
   if (method === 'importFiles') { const picked = await dialog.showOpenDialog(window, { title: 'Import files into encrypted storage', properties: ['openFile', 'multiSelections'] }); if (picked.canceled) return snapshot(); return helper.request('startImport', { paths: picked.filePaths }); }
   if (method === 'createVault' || method === 'unlockVault' || method === 'upgradeVault') {
