@@ -139,6 +139,11 @@ async function request(method, params) {
     if (!helper) throw new Error('Unlock a Windows vault to browse its history.');
     return helper.request(method, params);
   }
+  if (method === 'storageDiagnostics' || method === 'startPacking') {
+    if (!helper || state.locked) throw new Error('Unlock the drive before maintaining storage.');
+    if (method === 'startPacking' && (quitPending || shuttingDown)) throw new Error('The application is waiting to quit.');
+    return helper.request(method, params);
+  }
   if (method === 'forceLock') return forceLockDrive(params.language);
   if (method === 'exportText') {
     const picked=await dialog.showSaveDialog(window,{title:'Export original records',defaultPath:params.name});
