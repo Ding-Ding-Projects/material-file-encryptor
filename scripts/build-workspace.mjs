@@ -8,3 +8,6 @@ try{sourceCommit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim
 await fs.writeFile('src/shared/build-metadata.json',JSON.stringify({version:manifest.version,builtAt:new Date().toISOString(),sourceCommit})+'\n');
 await writeDocumentationCatalog(root,'src/shared/documentation-catalog.json');
 await import('./build-surface-vendor.mjs');
+
+const {stageBrowserExtension}=await import('./build-browser-extension.mjs');
+await stageBrowserExtension({root});
