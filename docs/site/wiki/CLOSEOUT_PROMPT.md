@@ -1,5 +1,15 @@
 # Wiki continuation handoff
 
+## Verified main production update, 2026-10-11 UTC
+
+Main source `f8f3638633cc329d0ebcfc16dcd8355bd01562b4` passed [cloud release delivery 38118239407](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38118239407), executing exact `build.bat /s` and `build-installer.bat /s`. Normal [v1.158.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.158.1) is non-draft and non-prerelease, with the exact source tag verified. Five independent asset downloads, 761 archive CRC entries, 663 Squirrel payload files, Setup embedding and 6,193 privacy entries with zero rejected paths passed.
+
+The separately compiled b516 verifier passed a genuine mounted lifecycle against this downloaded main product, exit 0. Descriptor vetoes, replacement, rename, mapped persistence, deletion, copy/batch cancellation and authenticated reopen passed. Settlement took 43 attempts/22,249.734 ms after the workload, then 15 attempts/7,270.9541 ms after reopen. The writer and helper exited normally. Independent exact-process, drive and fixture absence observations passed. Receipt SHA-256: `29bbad9195ac570f933294bfc822171dcf6986e66e86cf9f4b030f70228561ca`. These are whole-loop observations, with product and verifier source recorded separately.
+
+Installed v1.133.1 startup and automatic updating remain pending. The original packaged GUI attempt remains failed. Supplemental recovery re-established the native target but rejected Python launcher ancestry before page access; no screenshot or close occurred. Its evidence is retained without rewriting the original result. Current screenshot replacement, full settings/editor/server features and final cleanup remain incomplete. Font and motion consumer findings are under independent repair.
+
+The [rolling implementation discussion](https://github.com/Ding-Ding-Projects/material-file-encryptor/discussions/2#discussioncomment-18859924) records current source-specific evidence and blockers. Earlier sections below remain historical checkpoints, not current acceptance.
+
 ## Current production and implementation status, 2026-10-11 UTC
 
 The current main revision is `ab7c05cb1fb9bacce508c3686726c06bf040555d`. The statements below this section are historical checkpoints and retain their original source bindings. Installation and installed updating are now authorized; earlier deferrals are superseded.
