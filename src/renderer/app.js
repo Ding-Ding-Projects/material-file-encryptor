@@ -1,12 +1,15 @@
 import { installClearFields } from './clear-fields.js';
 import { deletedDescendantCandidates } from './recycle-selection.js';
 import { createScopedSearch } from './scoped-search.js';
-import { parsePartSize, displayPartSize, parseVocabulary, loadSettings } from './preferences.js';
+import { parsePartSize, displayPartSize, parseVocabulary, replaceVocabulary, loadSettings } from './preferences.js';
+import { serializeVocabulary } from '../shared/personal-vocabulary.js';
 import { icon, initializeIcons } from './icons.js';
 import { cantonese } from './i18n.js';
 const $ = id => document.getElementById(id);
 const api = window.drive;
 let preferences = loadSettings(localStorage);
+let vocabularyPersisted = true;
+let vocabularyUploadVersion = 0;
 let state = null, selected = null, view = 'drive', busy = false, dialogMode = 'create', snackbarTimer;
 let archiveRows = {history:[],recycle:[]}, archiveRequests={history:0,recycle:0};
 const archiveRenders={history:0,recycle:0};
@@ -26,16 +29,10 @@ document.addEventListener('scroll', event => {
 document.querySelector('main').prepend($('operation'), $('main-error'));
 function t(source) {
  let value = preferences.language === 'yue' ? cantonese[source] || source : preferences.language === 'bilingual' && cantonese[source] ? `${source} · ${cantonese[source]}` : source;
- const entries = preferences.vocabulary.replacements;
- if (entries.length) {
-  const replacements = new Map(entries.map(entry => [entry.from, entry.to]));
-  const pattern = [...replacements.keys()].sort((a,b) => b.length-a.length).map(key => key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
-  value = value.replace(new RegExp(pattern, 'gu'), match => replacements.get(match));
- }
- return value.slice(0, 8192);
+ return replaceVocabulary(value, preferences.vocabulary);
 }
 function setText(id, source) { $(id).textContent = t(source); }
-function savePreferences() { try { localStorage.setItem('material-drive.preferences.v1', JSON.stringify(preferences)); } catch { showError('Your device could not save these preferences.'); } }
+function savePreferences() { try { localStorage.setItem('material-drive.preferences.v1', JSON.stringify({...preferences, vocabulary: JSON.parse(serializeVocabulary(preferences.vocabulary))})); return true; } catch { showError('Your device could not save these preferences.'); return false; } }
 const clearFields = installClearFields(document.body, t);
 const colorQuery = window.matchMedia('(prefers-color-scheme: dark)');
 function applyPreferences() {
@@ -47,7 +44,7 @@ function applyPreferences() {
  $('file-search').setAttribute('aria-label',t('Search files'));
  $('theme-setting').value = preferences.theme; $('language-setting').value = preferences.language; $('emoji-setting').checked = preferences.emoji;
  for (const key of ['celebration','patience']) { $(`${key}-setting`).value = preferences[key]; $(`${key}-output`).textContent = preferences[key]; $(`${key}-setting`).style.setProperty('--range-progress', `${preferences[key]}%`); }
- $('vocabulary-summary').textContent = preferences.language === 'yue' ? `已儲存 ${preferences.vocabulary.replacements.length} 個替換詞。` : `${preferences.vocabulary.replacements.length} label replacements saved on this device.`;
+ $('vocabulary-summary').textContent = preferences.language === 'yue' ? `${preferences.vocabulary.replacements.length} 個替換詞已啟用（${vocabularyPersisted ? '已儲存喺呢部裝置' : '只限今次使用，儲存失敗'}）。` : `${preferences.vocabulary.replacements.length} label replacements active (${vocabularyPersisted ? 'saved on this device' : 'this session only; saving failed'}).`;
  historySearch?.refresh(); recycleSearch?.refresh();
  $('history-days')?.setAttribute('aria-label',t('Custom days'));
  clearFields.refresh();
@@ -346,9 +343,10 @@ for (const key of ['theme','language','emoji','celebration','patience']) listen(
  savePreferences(); applyPreferences();
 });
 listen('vocabulary-label','keydown',event => { if (['Enter',' '].includes(event.key)) { event.preventDefault(); $('vocabulary-file').click(); } });
-listen('vocabulary-file','change',async event => { try { const file = event.target.files[0]; if (!file) return; if (file.size > 131072) throw new Error('Vocabulary JSON must be no larger than 128 KB.'); preferences.vocabulary = parseVocabulary(await file.text()); savePreferences(); applyPreferences(); toast('Saved.'); } finally { event.target.value = ''; } });
-listen('export-vocabulary','click',() => { const url = URL.createObjectURL(new Blob([JSON.stringify(preferences.vocabulary,null,2)],{type:'application/json'})); const link = document.createElement('a'); link.href = url; link.download = 'material-drive-vocabulary.json'; link.click(); setTimeout(() => URL.revokeObjectURL(url),1000); });
-listen('reset-vocabulary','click',() => { preferences.vocabulary = {version:1,replacements:[]}; savePreferences(); applyPreferences(); toast('Saved.'); });
+listen('vocabulary-file','change',async event => { const version = ++vocabularyUploadVersion; try { const file = event.target.files[0]; if (!file) return; if (file.size > 256 * 1024) throw new Error('Vocabulary JSON must be no larger than 256 KiB.'); const next = parseVocabulary(await file.text()); if (version !== vocabularyUploadVersion) return; preferences.vocabulary = next; vocabularyPersisted = savePreferences(); applyPreferences(); toast(vocabularyPersisted ? 'Saved.' : 'Active for this session only. Saving failed.'); } catch(error) { showError(error); } finally { event.target.value = ''; } });
+// Personal mappings are intentionally excluded from all download and export routes.
+$('export-vocabulary')?.remove();
+listen('reset-vocabulary','click',() => { vocabularyUploadVersion++; preferences.vocabulary = parseVocabulary('{"schemaVersion":1,"entries":{}}'); vocabularyPersisted = savePreferences(); if (!vocabularyPersisted) { try { localStorage.removeItem('material-drive.preferences.v1'); vocabularyPersisted = true; } catch {} } applyPreferences(); toast(vocabularyPersisted ? 'Original wording restored.' : 'Original wording restored for this session. Stored settings could not be removed.'); });
 for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListener('keydown', event => {
  if (event.key !== 'Tab') return;
  const controls = [...dialog.querySelectorAll('button,input,select,[tabindex]')].filter(el => !el.disabled && el.tabIndex >= 0 && el.getClientRects().length > 0);
