@@ -123,7 +123,9 @@ public sealed partial class VaultEngine
         revision++;
         var path=Path.Combine(cache,"journal.mfe");
         WriteMetadata(path,new Journal { LogSequence=logSequence,LogDigest=Convert.ToHexString(logDigest),PartSize=partSize,PackingQueue=packingQueue,Entries=entries,Baseline=baseline,Pending=pending,Known=known,Heads=heads,Pinned=pinned,VersionDue=versionDue,PendingVersions=pendingVersions,HiddenBin=hiddenBin },"journal","");
-        checkpointBytes+=new FileInfo(path).Length;checkpointCount++;checkpointHighWater=logSequence;
+        // No fallible accounting operation may report a durable checkpoint as failed.
+        try{checkpointBytes+=new FileInfo(path).Length;}catch(IOException){}catch(UnauthorizedAccessException){}
+        checkpointCount++;checkpointHighWater=logSequence;
         journalMutations.Clear();
         // The durable checkpoint is authoritative before the obsolete prefix is removed.
         try { VaultCrypto.AtomicWrite(LogPath,ReadOnlySpan<byte>.Empty);logLength=0; }

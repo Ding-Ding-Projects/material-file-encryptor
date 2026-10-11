@@ -10,6 +10,8 @@
 - [歷史及資源回收筒（廣東話）](history-and-recycle-bin.zh-HK.md)
 - [所選檔案版本及加密活動（廣東話）](file-history-activity.zh-HK.md)
 - [受管傳輸、日誌及安全生命週期（廣東話）](transfer-lifecycle.zh-HK.md)
+- [Physical encrypted-part packing](physical-packing.md)
+- [加密分段實體打包（廣東話）](physical-packing.zh-HK.md)
 
 The current source supports format 3 while retaining format 1 and format 2 reads. Source protocol tests and historical runtime evidence must not be substituted for current packaged or installed acceptance.
 

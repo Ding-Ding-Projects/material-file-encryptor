@@ -573,7 +573,7 @@ public sealed partial class VaultEngine : IDisposable
                 bool repairedIdentity=false;
                 foreach(var entry in rebuilt.Values)
                     if(orphans.ContainsKey(entry.Id)) { entry.Id=Guid.NewGuid().ToString("N");Touch(entry);repairedIdentity=true; }
-                entries=rebuilt; known=applied; heads=new(applied); foreach(var c in commits.Values.Where(c=>applied.Contains(c.Id)))heads.ExceptWith(c.Parents);
+                entries=rebuilt; foreach(var queued in packingQueue.Keys.Where(id=>!entries.Values.Any(e=>e.Id==id)).ToArray())packingQueue.Remove(queued); known=applied; heads=new(applied); foreach(var c in commits.Values.Where(c=>applied.Contains(c.Id)))heads.ExceptWith(c.Parents);
                 if(repairedIdentity)FlushLocal();
             }
 
@@ -600,9 +600,9 @@ public sealed partial class VaultEngine : IDisposable
     private void Repack(Entry e,long newPartSize,CancellationToken token,Action<long>? progress=null)
     {
         RequireAvailable(AllRecords(e)); var chunkSize=ChunkBytes(newPartSize); var targetChunks=new SortedSet<long>();
-        foreach(var range in e.Records.Keys.Select(index=>(Start:checked(index*e.ChunkSize),Size:e.ChunkSize)).Concat(e.Overlays.Keys.Select(index=>(Start:checked(index*e.OverlaySize),Size:e.OverlaySize))))
+        foreach(var range in e.Records.Keys.Select(index=>(Start:checked(index*e.ChunkSize),Size:e.ChunkSize,Limit:e.BaseLength??e.Length)).Concat(e.Overlays.Keys.Select(index=>(Start:checked(index*e.OverlaySize),Size:e.OverlaySize,Limit:e.Length))))
         {
-            var start=range.Start; var end=Math.Min(e.Length,start+range.Size); if(start>=end)continue;
+            var start=range.Start; var end=start>=range.Limit?start:start+Math.Min(range.Size,range.Limit-start); if(start>=end)continue;
             for(var target=start/chunkSize;target<=(end-1)/chunkSize;target++)targetChunks.Add(target);
         }
         var records=new Dictionary<long,RecordRef>();
