@@ -43,7 +43,9 @@
 ## 重現檢查
 
 ```sh
+
 dotnet run --project native/MaterialFileEncryptor.Core.Tests -c Release
+
 ```
 
 獨立執行器只用 .NET SDK，涵蓋隨機存取、稀疏／截斷資料、重新命名取代與穩定控制代碼、只改大小寫重新命名、憑證與金鑰還原、明文洩漏掃描、Windows 路徑驗證、打包實體上限及重新分割、防竄改與已驗證來源回復、程序退出日誌復原、來源中斷及排隊發佈、決定性並行修改副本、不完整新版本、持開啟控制代碼時遠端刪除、遞迴刪除目錄時後代修改、釘選／快取移除規則，以及根目錄／受管子項符號連結拒絕。Windows Explorer／WinFsp 行為需要另作 Windows 主機檢查。
