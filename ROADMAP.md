@@ -1,3 +1,11 @@
+# Genuine capture route, 2026-10-11 UTC
+
+- [x] Independently review source-bound raw capture production, bounded observations, truthful unknown states, pinned bootstrap and five-job inventory negatives. Source acceptance only.
+- [x] Verify normal v1.219.1 package bytes, exact current-main promotion and full 223-file live documentation delivery. Installed and rendered acceptance remain separate.
+- [ ] Execute the manual frozen-artifact capture and inspect real preferences pixels and computed styles.
+- [ ] Repair the evidence-backed preferences mismatch and prove pure Material Design 3 throughout all 210 complete-surface rows.
+- [ ] Finish original installed lifecycle, full editor/motion/settings and four-target server acceptance.
+
 # Typed transition source, 2026-10-11 UTC
 
 - [x] Independently review and integrate explicit version 2 transition-property endpoints, portability, original mutation authority and shared preview resolution. Source acceptance only.

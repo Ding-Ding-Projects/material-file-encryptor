@@ -28,7 +28,7 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Bootstrap pinned GitHub CLI
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           if ! command -v gh >/dev/null; then sudo apt-get update && sudo apt-get install -y gh; fi
@@ -63,7 +63,7 @@ jobs:
       - name: Update and verify repository homepage
         if: github.repository == 'Ding-Ding-Projects/material-file-encryptor'
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           expectedHomepage=https://ding-ding-projects.github.io/material-file-encryptor/

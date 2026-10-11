@@ -35,7 +35,7 @@ jobs:
           python-version: '3.12.12'
       - name: Bootstrap pinned GitHub CLI
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           if ! command -v gh >/dev/null; then sudo apt-get update && sudo apt-get install -y gh; fi
@@ -48,7 +48,7 @@ jobs:
           fi
       - name: Admit exact static production artifact
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
           CAPTURE_SOURCE: ${{ inputs.source }}
           CAPTURE_RUN: ${{ inputs.deployment_run }}
           CAPTURE_ARTIFACT: ${{ inputs.artifact_id }}
