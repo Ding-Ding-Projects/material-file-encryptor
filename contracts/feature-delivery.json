@@ -438,23 +438,42 @@
       "id": "changelog",
       "surface": "desktop",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/renderer/features/documentation/changelog.js"
+      ],
+      "documentation": [
+        "docs/features/platform/documentation-and-status.md"
+      ],
+      "localization": [
+        "src/renderer/features/documentation/localization.js"
+      ],
+      "tests": [
+        "test/documentation-platform.test.js"
+      ],
       "evidence": [],
-      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+      "reason": "Module implementation exists; host integration and complete per-surface runtime evidence remain unverified."
     },
     {
       "id": "offline-docs",
       "surface": "desktop",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/features/documentation/catalog.mjs",
+        "src/renderer/features/documentation/index.js",
+        "src/renderer/features/documentation/markdown.js"
+      ],
+      "documentation": [
+        "docs/features/platform/documentation-and-status.md"
+      ],
+      "localization": [
+        "src/renderer/features/documentation/localization.js"
+      ],
+      "tests": [
+        "test/documentation-platform.test.js",
+        "test/documentation-browser.test.js"
+      ],
       "evidence": [],
-      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+      "reason": "Module implementation exists; host integration and complete per-surface runtime evidence remain unverified."
     },
     {
       "id": "rendered-provider-text",
@@ -548,12 +567,20 @@
       "id": "completeness-parity",
       "surface": "desktop",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/features/documentation/feature-delivery.mjs"
+      ],
+      "documentation": [
+        "docs/features/platform/documentation-and-status.md"
+      ],
+      "localization": [
+        "src/renderer/features/documentation/localization.js"
+      ],
+      "tests": [
+        "test/documentation-platform.test.js"
+      ],
       "evidence": [],
-      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+      "reason": "Module implementation exists; host integration and complete per-surface runtime evidence remain unverified."
     },
     {
       "id": "front-provenance",
@@ -724,12 +751,21 @@
       "id": "status-hub",
       "surface": "desktop",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/features/documentation/status-service.mjs",
+        "src/renderer/features/status/index.js"
+      ],
+      "documentation": [
+        "docs/features/platform/documentation-and-status.md"
+      ],
+      "localization": [
+        "src/renderer/features/documentation/localization.js"
+      ],
+      "tests": [
+        "test/documentation-platform.test.js"
+      ],
       "evidence": [],
-      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+      "reason": "Module implementation exists; host integration and complete per-surface runtime evidence remain unverified."
     },
     {
       "id": "discord-status-bridge",
@@ -1582,23 +1618,42 @@
       "id": "changelog",
       "surface": "site",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/renderer/features/documentation/changelog.js"
+      ],
+      "documentation": [
+        "docs/features/platform/documentation-and-status.md"
+      ],
+      "localization": [
+        "src/renderer/features/documentation/localization.js"
+      ],
+      "tests": [
+        "test/documentation-platform.test.js"
+      ],
       "evidence": [],
-      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+      "reason": "Module implementation exists; host integration and complete per-surface runtime evidence remain unverified."
     },
     {
       "id": "offline-docs",
       "surface": "site",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/features/documentation/catalog.mjs",
+        "src/renderer/features/documentation/index.js",
+        "src/renderer/features/documentation/markdown.js"
+      ],
+      "documentation": [
+        "docs/features/platform/documentation-and-status.md"
+      ],
+      "localization": [
+        "src/renderer/features/documentation/localization.js"
+      ],
+      "tests": [
+        "test/documentation-platform.test.js",
+        "test/documentation-browser.test.js"
+      ],
       "evidence": [],
-      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+      "reason": "Module implementation exists; host integration and complete per-surface runtime evidence remain unverified."
     },
     {
       "id": "rendered-provider-text",
@@ -1692,12 +1747,20 @@
       "id": "completeness-parity",
       "surface": "site",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/features/documentation/feature-delivery.mjs"
+      ],
+      "documentation": [
+        "docs/features/platform/documentation-and-status.md"
+      ],
+      "localization": [
+        "src/renderer/features/documentation/localization.js"
+      ],
+      "tests": [
+        "test/documentation-platform.test.js"
+      ],
       "evidence": [],
-      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+      "reason": "Module implementation exists; host integration and complete per-surface runtime evidence remain unverified."
     },
     {
       "id": "front-provenance",
@@ -1868,12 +1931,21 @@
       "id": "status-hub",
       "surface": "site",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/features/documentation/status-service.mjs",
+        "src/renderer/features/status/index.js"
+      ],
+      "documentation": [
+        "docs/features/platform/documentation-and-status.md"
+      ],
+      "localization": [
+        "src/renderer/features/documentation/localization.js"
+      ],
+      "tests": [
+        "test/documentation-platform.test.js"
+      ],
       "evidence": [],
-      "reason": "Canonical requirement recorded; this surface has not been audited against implementation and runtime evidence."
+      "reason": "Module implementation exists; host integration and complete per-surface runtime evidence remain unverified."
     },
     {
       "id": "discord-status-bridge",

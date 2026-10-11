@@ -7,6 +7,7 @@ import { buildDocumentationCatalog, documentHeadings, resolveDocumentLink, parse
 import { validateFeatureDelivery } from '../src/features/documentation/feature-delivery.mjs';
 import { createApplicationStatus } from '../src/features/documentation/status-service.mjs';
 import { filterChanges } from '../src/renderer/features/documentation/changelog.js';
+import { resolveCatalogUrl } from '../src/renderer/features/documentation/markdown.js';
 
 test('catalog includes every nested Markdown article, full body and duplicate heading anchors', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'documentation-test-'));
@@ -33,6 +34,17 @@ test('changelog date and category filters exclude unknown dates only when bounde
   assert.equal(filterChanges(entries).length, 3);
   assert.deepEqual(filterChanges(entries, { from: '2026-10-10', to: '2026-10-10', category: 'feature' }), [entries[2]]);
   assert.deepEqual(filterChanges(entries, { to: '2026-10-09' }), [entries[1]]);
+});
+test('renderer URL allowlist rejects unsafe and uncatalogued targets', () => {
+  const catalog = { documents: [{ id: 'docs/home', source: 'docs/home.md', headings: [{ anchor: 'ok' }] }], assets: [{ source: 'docs/bad.png', dataUrl: 'javascript:alert(1)' }] };
+  assert.equal(resolveCatalogUrl(catalog, 'docs/home.md', 'javascript:alert(1)'), null);
+  assert.equal(resolveCatalogUrl(catalog, 'docs/home.md', 'file:///secret'), null);
+  assert.equal(resolveCatalogUrl(catalog, 'docs/home.md', '../../secret.md'), null);
+  assert.equal(resolveCatalogUrl(catalog, 'docs/home.md', 'home.md#absent'), null);
+  assert.equal(resolveCatalogUrl(catalog, 'docs/home.md', 'bad.png', true), null);
+  assert.equal(resolveCatalogUrl(catalog, 'docs/home.md', 'https://example.com/image.png', true), null);
+  assert.equal(resolveCatalogUrl(catalog, 'docs/home.md', 'https://example.com/').external, true);
+  assert.equal(resolveCatalogUrl(catalog, 'docs/home.md', '#ok').anchor, 'ok');
 });
 test('required inventory rejects omission and each missing proof dimension', async () => {
   const manifest = JSON.parse(await readFile(new URL('../contracts/feature-delivery.json', import.meta.url)));

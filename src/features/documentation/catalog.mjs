@@ -1,4 +1,4 @@
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { readdir, readFile, stat, realpath } from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 
@@ -35,7 +35,24 @@ export async function buildDocumentationCatalog(root) {
     const headings = documentHeadings(markdown);
     return { id: documentId(source), source, title: headings[0]?.text || path.basename(source), category: source.includes('/wiki/') ? 'wiki' : source.startsWith('docs/features/') ? source.split('/')[2] : 'project', markdown, headings, sha256: createHash('sha256').update(markdown).digest('hex') };
   }));
-  return { schemaVersion: 1, documents };
+  const assets = [], referenced = new Set(), rootReal = await realpath(root);
+  for (const document of documents) for (const match of document.markdown.matchAll(/!\[[^\]]*\]\(([^\s)]+)(?:\s+[^)]*)?\)/g)) {
+    if (/^(?:[a-z][a-z\d+.-]*:|\/\/|\/)/i.test(match[1]) || match[1].includes('\\')) continue;
+    let decoded; try { decoded = decodeURIComponent(match[1].split('#')[0]); } catch { continue; }
+    const source = path.posix.normalize(path.posix.join(path.posix.dirname(document.source), decoded));
+    if (source.startsWith('../') || referenced.has(source)) continue;
+    referenced.add(source);
+    const mime = ({ '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp' })[path.extname(source).toLowerCase()];
+    if (!mime) continue;
+    try {
+      const absolute = await realpath(path.join(root, source));
+      if (!absolute.startsWith(`${rootReal}${path.sep}`)) continue;
+      const info = await stat(absolute); if (!info.isFile() || info.size > 5 * 1024 * 1024) continue;
+      const bytes = await readFile(absolute);
+      assets.push({ source, mime, sha256: createHash('sha256').update(bytes).digest('hex'), dataUrl: `data:${mime};base64,${bytes.toString('base64')}` });
+    } catch (error) { if (!['ENOENT', 'EACCES'].includes(error.code)) throw error; }
+  }
+  return { schemaVersion: 1, documents, assets };
 }
 export function resolveDocumentLink(catalog, currentId, href) {
   if (typeof href !== 'string' || /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(href)) return null;

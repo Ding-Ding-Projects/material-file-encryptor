@@ -1,4 +1,5 @@
 export const documentationCantonese = Object.freeze({
+  'Image unavailable': '圖片暫時未能顯示', 'Opens an external website': '開啟外部網站', 'Documentation table': '說明文件表格',
   'Documentation articles': '說明文章', 'Export article': '匯出文章', 'No matching articles.': '搵唔到符合條件嘅文章。',
   'No bundled documentation is available.': '目前冇隨附嘅說明文件。', 'Linked content is not bundled.': '連結內容未有隨附。',
   'Status': '狀態', 'Refresh status': '重新整理狀態', 'Last accepted update': '上次成功接收更新',
