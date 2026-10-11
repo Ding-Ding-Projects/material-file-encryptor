@@ -64,22 +64,10 @@ public static class PipeIdentity
     [DllImport("kernel32.dll")] static extern IntPtr LocalFree(IntPtr value);
     [DllImport("advapi32.dll", SetLastError = true)] static extern uint GetSecurityDescriptorLength(IntPtr descriptor);
 
-    // CurrentUserOnly in older .NET versions uses the token owner SID. Replace
-    // that descriptor with the actual user SID and independently read it back.
+    // Inspect CurrentUserOnly's actual DACL. Some older runtimes use the token
+    // owner SID; fail closed when that is not the actual current user SID.
     public static void RestrictAndAssert(NamedPipeServerStream pipe, string sid)
     {
-        var desired = new RawSecurityDescriptor($"O:{sid}G:{sid}D:P(A;;FA;;;{sid})");
-        var bytes = new byte[desired.BinaryLength]; desired.GetBinaryForm(bytes, 0);
-        var pinned = GCHandle.Alloc(bytes, GCHandleType.Pinned);
-        try
-        {
-            // GetSecurityDescriptorDacl extracts the ACL from the descriptor.
-            if (!GetSecurityDescriptorDacl(pinned.AddrOfPinnedObject(), out var present, out var dacl, out _) || !present)
-                throw new InvalidDataException("Pipe ACL unavailable.");
-            if (SetSecurityInfo(pipe.SafePipeHandle.DangerousGetHandle(), 6, 4 | 0x80000000, IntPtr.Zero, IntPtr.Zero, dacl, IntPtr.Zero) != 0)
-                throw new InvalidDataException("Pipe ACL restriction failed.");
-        }
-        finally { pinned.Free(); }
         var status = GetSecurityInfo(pipe.SafePipeHandle.DangerousGetHandle(), 6, 4, out _, out _, out _, out _, out var descriptor);
         if (status != 0 || descriptor == IntPtr.Zero) throw new InvalidDataException("Pipe ACL readback failed.");
         try
@@ -88,7 +76,7 @@ public static class PipeIdentity
             var parsed = new RawSecurityDescriptor(actual, 0);
             if (parsed.DiscretionaryAcl is not { Count: 1 } acl || acl[0] is not CommonAce ace
                 || ace.AceQualifier != AceQualifier.AccessAllowed || ace.SecurityIdentifier.Value != sid
-                || ace.AceFlags != AceFlags.None || ace.AccessMask != 0x001F01FF)
+                || ace.AceFlags != AceFlags.None || (ace.AccessMask & 3) != 3)
                 throw new InvalidDataException("Pipe ACL does not restrict access to the current user.");
         }
         finally { LocalFree(descriptor); }
