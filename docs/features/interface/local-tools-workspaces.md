@@ -4,7 +4,7 @@
 
 Choose source files, review the detected source preview, choose a compatible format from its category, review conversion options, then choose the output destination. The four tabs retain state when switching. Left/Right and Home/End move between tabs. Every category and the option list has the shared local search with an anchored expression builder. Disabled formats keep their unavailability explanation.
 
-Conversion remains local through the existing bounded adapter service. Source files are unchanged. Destination replacement still invokes the existing confirmation flow. Queue history is loaded in pages of 50 with non-overlapping refresh requests. Each item exposes state, progress and its existing pause, resume and cancel actions. A pending picker cannot repaint a destroyed workspace.
+Conversion remains local through the existing bounded adapter service. Source files are unchanged. Destination replacement still invokes the existing confirmation flow. Queue history is loaded in pages of 50 with non-overlapping refresh requests. Pagination controls are disabled during a read and use the returned page offset; a failed page read restores the last displayed offset. Each item exposes state, progress and its existing pause, resume and cancel actions. A pending picker cannot repaint a destroyed workspace.
 
 ## Local models
 
