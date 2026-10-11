@@ -24,7 +24,7 @@
         "test/local-language.test.js"
       ],
       "evidence": [],
-      "reason": "Full message coverage, cross-application shared-state propagation and external schedule provider integration remain incomplete or unverified; production language/voice interactions lack complete evidence.",
+      "reason": "English, Cantonese and bilingual settings and propagation are integrated. Complete message coverage and all language extremes remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -48,7 +48,9 @@
           "entry": "language",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "funny-emoji",
@@ -69,7 +71,7 @@
         "test/local-language.test.js"
       ],
       "evidence": [],
-      "reason": "Full message coverage, cross-application shared-state propagation and external schedule provider integration remain incomplete or unverified; production language/voice interactions lack complete evidence.",
+      "reason": "Per-language humor and emoji controls exist in integrated personalization. Exhaustive copy coverage and saved behavior across both surfaces remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -93,7 +95,9 @@
           "entry": "funny-emoji",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "personal-vocabulary",
@@ -139,7 +143,9 @@
           "entry": "personal-vocabulary",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "school-mode",
@@ -160,7 +166,7 @@
         "test/local-language.test.js"
       ],
       "evidence": [],
-      "reason": "Full message coverage, cross-application shared-state propagation and external schedule provider integration remain incomplete or unverified; production language/voice interactions lack complete evidence.",
+      "reason": "Shared-mode host and companion adapters are integrated. Suppression of every restricted capability and authenticated shared persistence require current runtime acceptance.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -184,7 +190,9 @@
           "entry": "school-mode",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "narration",
@@ -192,7 +200,10 @@
       "status": "unverified",
       "implementation": [
         "src/renderer/features/personalization/index.js",
-        "src/main/feature-services.js"
+        "src/main/feature-services.js",
+        "src/renderer/features/shell/notification-narration.js",
+        "src/main/startup-photo-service.js",
+        "src/renderer/app.js"
       ],
       "documentation": [
         "docs/features/interface/local-personalization.md"
@@ -205,7 +216,7 @@
         "test/local-language.test.js"
       ],
       "evidence": [],
-      "reason": "Full message coverage, cross-application shared-state propagation and external schedule provider integration remain incomplete or unverified; production language/voice interactions lack complete evidence.",
+      "reason": "Desktop notification narration and runtime accessibility-state events are integrated. Unknown accessibility state suppresses narration. Actual assistive-technology and voice behavior remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -229,7 +240,9 @@
           "entry": "narration",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "scheduled-settings",
@@ -237,7 +250,8 @@
       "status": "unverified",
       "implementation": [
         "src/renderer/features/personalization/index.js",
-        "src/main/feature-services.js"
+        "src/main/feature-services.js",
+        "src/main/schedule-source.js"
       ],
       "documentation": [
         "docs/features/interface/local-personalization.md"
@@ -250,7 +264,7 @@
         "test/local-language.test.js"
       ],
       "evidence": [],
-      "reason": "Full message coverage, cross-application shared-state propagation and external schedule provider integration remain incomplete or unverified; production language/voice interactions lack complete evidence.",
+      "reason": "Schedule adapters, protected native credential controls and paired-browser source reading are integrated. Browser capability boundaries are explicit; authenticated provider and timezone/restart acceptance remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -274,7 +288,9 @@
           "entry": "scheduled-settings",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "display-name",
@@ -295,7 +311,7 @@
         "test/local-language.test.js"
       ],
       "evidence": [],
-      "reason": "Full message coverage, cross-application shared-state propagation and external schedule provider integration remain incomplete or unverified; production language/voice interactions lack complete evidence.",
+      "reason": "Display-name preferences exist in the integrated personalization surface. Complete persistence and title/accessibility propagation remain runtime-unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -319,7 +335,9 @@
           "entry": "display-name",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "adhd-modes",
@@ -340,7 +358,7 @@
         "test/local-language.test.js"
       ],
       "evidence": [],
-      "reason": "Full message coverage, cross-application shared-state propagation and external schedule provider integration remain incomplete or unverified; production language/voice interactions lack complete evidence.",
+      "reason": "Attention modes and their local settings controls exist. Current interaction, persistence and cross-surface presentation remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -364,14 +382,20 @@
           "entry": "adhd-modes",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "dim-sum",
       "surface": "desktop",
       "status": "unverified",
       "implementation": [
-        "src/renderer/features/personalization/index.js"
+        "src/renderer/features/personalization/index.js",
+        "src/shared/local-ux/surprise.js",
+        "src/renderer/features/shell/startup-surprise.js",
+        "src/main/startup-photo-service.js",
+        "src/renderer/app.js"
       ],
       "documentation": [
         "docs/features/interface/local-personalization.md"
@@ -383,7 +407,7 @@
         "test/local-personalization.test.js"
       ],
       "evidence": [],
-      "reason": "Startup exclusion helper exists; reviewed public photo adapter, complete integrated delivery and source-bound runtime proof remain missing.",
+      "reason": "Desktop startup coordinator integrates the single 10 percent draw, exclusions and transient presentation with the verified public-photo host. Current startup timing, no-focus-steal and visual acceptance remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -406,14 +430,17 @@
           "entry": "dim-sum",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "dim-sum-photo-source",
       "surface": "desktop",
       "status": "unverified",
       "implementation": [
-        "src/renderer/features/personalization/index.js"
+        "src/renderer/features/personalization/index.js",
+        "src/main/startup-photo-service.js"
       ],
       "documentation": [
         "docs/features/interface/local-personalization.md"
@@ -425,7 +452,7 @@
         "test/local-personalization.test.js"
       ],
       "evidence": [],
-      "reason": "Startup exclusion helper exists; reviewed public photo adapter, complete integrated delivery and source-bound runtime proof remain missing.",
+      "reason": "Host resolves pinned authoritative catalog metadata and matching catalog-v1 release assets, verifies digest and decoding bounds, and uses private application-data caching. Synthetic resolver checks passed; actual packaged decoding and display remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -448,7 +475,9 @@
           "entry": "dim-sum-photo-source",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "material-design",
@@ -457,7 +486,8 @@
       "implementation": [
         "src/shared/surface/registry.js",
         "src/shared/surface/workspace-shell.js",
-        "src/renderer/features/shell/index.js"
+        "src/renderer/features/shell/index.js",
+        "src/shared/surface/controls.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/coverage.md"
@@ -470,7 +500,7 @@
         "test/surface-model.test.js"
       ],
       "evidence": [],
-      "reason": "Registered components and source behavior exist; pure-component audit, complete reference comparison and every production interaction/viewport tuple remain unverified.",
+      "reason": "Fixed workspace frame and shared registered Material controls are integrated across assigned panels. Complete primitive inventory and the 3552-state current GUI matrix remain pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -493,7 +523,9 @@
           "entry": "material-design",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "workflow-navigation",
@@ -515,7 +547,7 @@
         "test/surface-model.test.js"
       ],
       "evidence": [],
-      "reason": "Registered components and source behavior exist; pure-component audit, complete reference comparison and every production interaction/viewport tuple remain unverified.",
+      "reason": "Stationary navigation, task destinations and open-workspace tabs are integrated. Production navigation and minimum-size interactions remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -538,7 +570,9 @@
           "entry": "workflow-navigation",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "motion",
@@ -560,7 +594,7 @@
         "test/surface-model.test.js"
       ],
       "evidence": [],
-      "reason": "Registered components and source behavior exist; pure-component audit, complete reference comparison and every production interaction/viewport tuple remain unverified.",
+      "reason": "Motion editor, schedule and transition controls exist in source. Integrated rendering, reduced-motion behavior and complete scope remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -583,7 +617,9 @@
           "entry": "motion",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "appearance-editor",
@@ -605,7 +641,7 @@
         "test/local-appearance-csp.test.js"
       ],
       "evidence": [],
-      "reason": "Advanced editing gaps include freehand drawing, independently rasterized groups, smart objects, mesh warp and guides; full native decoder and production visual proof remain unverified.",
+      "reason": "Current source contains pointer drawing, guides, raster groups, smart-object and mesh-warp editing paths. This corrects the older absence claim; complete behavior, isolated decoding and visual acceptance remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -629,7 +665,9 @@
           "entry": "appearance-editor",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "color-picker",
@@ -651,7 +689,7 @@
         "test/local-appearance-csp.test.js"
       ],
       "evidence": [],
-      "reason": "Advanced editing gaps include freehand drawing, independently rasterized groups, smart objects, mesh warp and guides; full native decoder and production visual proof remain unverified.",
+      "reason": "Typed color picker, representations and palette controls exist in current source. Full keyboard, localization and built visual proof remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -675,7 +713,9 @@
           "entry": "color-picker",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "logo-customization",
@@ -697,7 +737,7 @@
         "test/local-appearance-csp.test.js"
       ],
       "evidence": [],
-      "reason": "Advanced editing gaps include freehand drawing, independently rasterized groups, smart objects, mesh warp and guides; full native decoder and production visual proof remain unverified.",
+      "reason": "Existing logo controls are integrated; additional logo work is still in flight and is excluded from this fixed-baseline assessment. Full crop, background and display-target behavior remains pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -721,7 +761,9 @@
           "entry": "logo-customization",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "overlay-panels",
@@ -742,7 +784,7 @@
         "test/surface-transient-state.test.js"
       ],
       "evidence": [],
-      "reason": "Move/resize/reset and transient restoration exist in ready source; final host registration and real desktop/site geometry evidence remain unverified.",
+      "reason": "Shared contextual overlay, bounded panel layout and dismissal/focus restoration are integrated. Actual input and geometry matrix acceptance remains pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -765,7 +807,9 @@
           "entry": "overlay-panels",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "collapse-filters",
@@ -783,7 +827,7 @@
         "test/surface-workbench.test.js"
       ],
       "evidence": [],
-      "reason": "Some disclosures and filters exist. Universal persisted collapsed state and active-filter disclosure across every surface remain incomplete or unverified.",
+      "reason": "Search/filter disclosures exist. Universal persisted collapsed state and active-filter disclosure across every surface remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -804,7 +848,9 @@
           "entry": "collapse-filters",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "accessibility-sizing",
@@ -826,7 +872,7 @@
         "test/surface-model.test.js"
       ],
       "evidence": [],
-      "reason": "Registered components and source behavior exist; pure-component audit, complete reference comparison and every production interaction/viewport tuple remain unverified.",
+      "reason": "Shared controls and bounded frame rules are integrated. The 3552-state GUI matrix, keyboard and assistive-technology acceptance remain pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -849,7 +895,9 @@
           "entry": "accessibility-sizing",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "functional-ui",
@@ -871,7 +919,7 @@
         "test/surface-model.test.js"
       ],
       "evidence": [],
-      "reason": "Registered components and source behavior exist; pure-component audit, complete reference comparison and every production interaction/viewport tuple remain unverified.",
+      "reason": "Current integrated feature routes invoke their services. Complete workflow coverage cannot be inferred from successful source integration or synthetic fixtures.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -894,7 +942,9 @@
           "entry": "functional-ui",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "tabs",
@@ -915,7 +965,7 @@
         "test/surface-model.test.js"
       ],
       "evidence": [],
-      "reason": "Tab/group actions exist; universal per-element context menus and complete shortcut parity remain unverified.",
+      "reason": "Open-tab persistence, discovery, groups and contextual actions are implemented in the shared shell. Current integrated tab interaction and overflow evidence remain pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -938,7 +988,9 @@
           "entry": "tabs",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "regex-search",
@@ -961,7 +1013,7 @@
         "test/surface-lifecycle.test.js"
       ],
       "evidence": [],
-      "reason": "Scoped workbench and worker bounds exist; every search/picker surface and full production interaction evidence remain unverified.",
+      "reason": "Worker-bounded search and the shared expression workbench are integrated. Exhaustive coverage of every picker, menu and search surface remains unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -984,7 +1036,9 @@
           "entry": "regex-search",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "command-palette",
@@ -1005,7 +1059,7 @@
         "test/surface-workbench.test.js"
       ],
       "evidence": [],
-      "reason": "Palette controls and source enumeration exist; complete discovery and functional coverage of every setting and feature remain unverified.",
+      "reason": "Command discovery and activation are integrated. Complete feature/settings coverage and target focus/scroll behavior remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1026,7 +1080,9 @@
           "entry": "command-palette",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "context-menus",
@@ -1035,7 +1091,8 @@
       "implementation": [
         "src/shared/surface/model.js",
         "src/shared/surface/context-menu.js",
-        "src/shared/surface/group-manager.js"
+        "src/shared/surface/group-manager.js",
+        "src/shared/surface/overlay.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/integration.md"
@@ -1047,7 +1104,7 @@
         "test/surface-model.test.js"
       ],
       "evidence": [],
-      "reason": "Tab/group actions exist; universal per-element context menus and complete shortcut parity remain unverified.",
+      "reason": "One shared context overlay captures the originating target and handles dismissal and restoration. Universal target registration and runtime acceptance remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1070,7 +1127,9 @@
           "entry": "context-menus",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "menu-shortcuts",
@@ -1091,7 +1150,7 @@
         "test/surface-model.test.js"
       ],
       "evidence": [],
-      "reason": "Tab/group actions exist; universal per-element context menus and complete shortcut parity remain unverified.",
+      "reason": "Context menu keyboard navigation and shortcut labels exist. Exhaustive action/shortcut parity remains unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1114,7 +1173,9 @@
           "entry": "menu-shortcuts",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "rich-controls",
@@ -1135,7 +1196,7 @@
         "test/surface-workbench.test.js"
       ],
       "evidence": [],
-      "reason": "Palette controls and source enumeration exist; complete discovery and functional coverage of every setting and feature remain unverified.",
+      "reason": "Feature panels use shared Material control construction. Every option, affordance and input mode still needs current integrated acceptance.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1156,7 +1217,9 @@
           "entry": "rich-controls",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "guided-forms",
@@ -1177,7 +1240,7 @@
         "test/local-personalization.test.js"
       ],
       "evidence": [],
-      "reason": "Clear fields and guided controls exist. Complete per-setting explanation/provenance, real-value pickers, default-derived presets and every form path remain incomplete or unverified.",
+      "reason": "Guided controls, clearable inputs and typed fields exist. Complete per-field real-value guidance and all workflow paths remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1198,7 +1261,9 @@
           "entry": "guided-forms",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "settings-explanations",
@@ -1219,7 +1284,7 @@
         "test/local-personalization.test.js"
       ],
       "evidence": [],
-      "reason": "Clear fields and guided controls exist. Complete per-setting explanation/provenance, real-value pickers, default-derived presets and every form path remain incomplete or unverified.",
+      "reason": "Shared optional guidance and nested inspector explanations exist. Exhaustive setting coverage, localization and actual presentation remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1240,7 +1305,9 @@
           "entry": "settings-explanations",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "blank-editors",
@@ -1261,7 +1328,7 @@
         "test/local-personalization.test.js"
       ],
       "evidence": [],
-      "reason": "Clear fields and guided controls exist. Complete per-setting explanation/provenance, real-value pickers, default-derived presets and every form path remain incomplete or unverified.",
+      "reason": "Editor source has defaults, typed controls and guidance. Complete blank-state and preset coverage remains unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1282,7 +1349,9 @@
           "entry": "blank-editors",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "super-confirmation",
@@ -1303,7 +1372,7 @@
         "test/workflow-model.test.js"
       ],
       "evidence": [],
-      "reason": "Ordinary and typed confirmations exist, but the required two-independent-key plus full-range-slider flow is not established.",
+      "reason": "Two independent switches, a full-range slider, final confirmation, cancellation and origin-focus restoration are implemented. Complete destructive-entry-point wiring and runtime proof remain pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1322,7 +1391,9 @@
           "entry": "super-confirmation",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "element-locks",
@@ -1349,7 +1420,7 @@
         "test/local-access-management-ui.test.js"
       ],
       "evidence": [],
-      "reason": "Ready source adds activation sessions, selected-record management and shared waiting allowance. Final host integration, service-side challenge enforcement, full localization and real factor/camera/recovery workflows remain unverified.",
+      "reason": "Local locks, activation sessions and selected-record management are integrated. Additional access changes are in flight; real factors, recovery and every protected target remain pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1374,7 +1445,9 @@
           "entry": "element-locks",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "support-tickets",
@@ -1401,7 +1474,7 @@
         "test/local-access-management-ui.test.js"
       ],
       "evidence": [],
-      "reason": "Ready source adds activation sessions, selected-record management and shared waiting allowance. Final host integration, service-side challenge enforcement, full localization and real factor/camera/recovery workflows remain unverified.",
+      "reason": "Local support/recovery record controls exist. Additional access work is in flight; authoritative delivery and all recovery workflows remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1426,7 +1499,9 @@
           "entry": "support-tickets",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "unlock-ladder",
@@ -1453,7 +1528,7 @@
         "test/local-access-management-ui.test.js"
       ],
       "evidence": [],
-      "reason": "Ready source adds activation sessions, selected-record management and shared waiting allowance. Final host integration, service-side challenge enforcement, full localization and real factor/camera/recovery workflows remain unverified.",
+      "reason": "Local challenge and waiting-budget controls exist. Full production enforcement, factor recovery and integrated runtime acceptance remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1478,7 +1553,9 @@
           "entry": "unlock-ladder",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "authenticator",
@@ -1505,7 +1582,7 @@
         "test/local-access-management-ui.test.js"
       ],
       "evidence": [],
-      "reason": "Ready source adds activation sessions, selected-record management and shared waiting allowance. Final host integration, service-side challenge enforcement, full localization and real factor/camera/recovery workflows remain unverified.",
+      "reason": "Local authenticator storage and management controls exist. Real enrollment, time-based operation, recovery and complete runtime evidence remain pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1530,7 +1607,9 @@
           "entry": "authenticator",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "qr-pairing",
@@ -1557,7 +1636,7 @@
         "test/local-access-management-ui.test.js"
       ],
       "evidence": [],
-      "reason": "Ready source adds activation sessions, selected-record management and shared waiting allowance. Final host integration, service-side challenge enforcement, full localization and real factor/camera/recovery workflows remain unverified.",
+      "reason": "Local QR encoding/decoding and pairing controls exist. Actual camera, permission, native approval and recovery workflows remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1582,7 +1661,9 @@
           "entry": "qr-pairing",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "honest-monetization",
@@ -1593,7 +1674,7 @@
       "localization": [],
       "tests": [],
       "evidence": [],
-      "reason": "No paid feature is introduced by the reviewed source; every protected free workflow and absence of unwanted prompts still need runtime audit.",
+      "reason": "The reviewed source introduces no paid feature. An exhaustive free-workflow and unwanted-prompt audit was not performed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1614,7 +1695,9 @@
           "entry": "honest-monetization",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "unknown",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "local-history",
@@ -1636,7 +1719,7 @@
         "test/file-details.test.js"
       ],
       "evidence": [],
-      "reason": "Encrypted settings journal and file activity exist; complete native Git-backed settings history and every mutation/restore workflow remain unverified.",
+      "reason": "Encrypted settings history and native file history remain distinct implementations. Storage owner reports dense synthetic checks passed, but final detach timed out and reopen was not reached; complete restore/restart proof remains pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1659,7 +1742,9 @@
           "entry": "local-history",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "owner-receipts-only"
     },
     {
       "id": "exports",
@@ -1685,7 +1770,7 @@
         "test/documentation-platform.test.js"
       ],
       "evidence": [],
-      "reason": "Selected record and notification actions plus limited export formats exist; universal bulk actions and all required export formats remain incomplete.",
+      "reason": "Existing record, document and notification export routes exist. Expanded format work remains in flight and is not accepted into this baseline assessment.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1708,7 +1793,9 @@
           "entry": "exports",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "bulk-actions",
@@ -1734,7 +1821,7 @@
         "test/documentation-platform.test.js"
       ],
       "evidence": [],
-      "reason": "Selected record and notification actions plus limited export formats exist; universal bulk actions and all required export formats remain incomplete.",
+      "reason": "Selected-record and notification actions exist. Universal collection coverage and additional export/access changes remain incomplete or unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1757,7 +1844,9 @@
           "entry": "bulk-actions",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "changelog",
@@ -1780,7 +1869,7 @@
         "test/documentation-browser.test.js"
       ],
       "evidence": [],
-      "reason": "Module browser checks exist; final packaged/site content, complete translations and source-bound visual acceptance remain unverified.",
+      "reason": "Changelog filtering, safe Markdown rendering and export are integrated. Final packaged and deployed content and visual acceptance remain pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1801,7 +1890,9 @@
           "entry": "changelog",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "offline-docs",
@@ -1824,7 +1915,7 @@
         "test/documentation-browser.test.js"
       ],
       "evidence": [],
-      "reason": "Module browser checks exist; final packaged/site content, complete translations and source-bound visual acceptance remain unverified.",
+      "reason": "Bundled catalog, safe article rendering, navigation and exports are integrated. Exact final package inventory and offline built interactions remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1845,7 +1936,9 @@
           "entry": "offline-docs",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "rendered-provider-text",
@@ -1869,7 +1962,7 @@
         "test/ollama-regex.test.js"
       ],
       "evidence": [],
-      "reason": "Ready source adds guided runtime recovery/native recipes; final host adapter wiring, real installation/model download, provider Markdown and complete desktop/site proof remain unverified.",
+      "reason": "Local-model provider text uses safe rendered Markdown and bounded link handling in integrated source. Actual provider sessions and production rendering remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1892,7 +1985,9 @@
           "entry": "rendered-provider-text",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "notifications",
@@ -1914,7 +2009,7 @@
         "test/notification-audio.test.js"
       ],
       "evidence": [],
-      "reason": "Canonical progress/recovery controls and opt-in local tone exist in ready source; complete host recovery routing, narration and production behavior remain unverified.",
+      "reason": "Notification center, recovery actions and desktop narration routing are integrated. Complete host routing, actual voice and current built interactions remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1937,7 +2032,9 @@
           "entry": "notifications",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "file-converter",
@@ -1960,7 +2057,7 @@
         "test/converter-windows.test.js"
       ],
       "evidence": [],
-      "reason": "Bounded queue and selected adapters exist; universal conversion coverage, final packaged sandbox, restart capability and complete UI evidence remain unverified.",
+      "reason": "Bounded conversion queue and supported adapters are integrated. Broader format coverage, installed tool execution and complete native acceptance remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1983,7 +2080,9 @@
           "entry": "file-converter",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "ollama-suite",
@@ -2010,7 +2109,7 @@
         "test/ollama-provenance.test.js"
       ],
       "evidence": [],
-      "reason": "Ready source adds guided runtime recovery/native recipes; final host adapter wiring, real installation/model download, provider Markdown and complete desktop/site proof remain unverified. Runtime release provenance is recorded in ready source 2903fc5; this is not installed execution proof.",
+      "reason": "Catalog, model inventory, pull cart, local chat, profiles and native recovery recipes are integrated. Real model/runtime installation, downloads, hardware fit and persisted sessions remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -2033,7 +2132,9 @@
           "entry": "ollama-suite",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "external-editor",
@@ -2054,7 +2155,7 @@
         "test/workflow-tools.test.js"
       ],
       "evidence": [],
-      "reason": "A complete external-editor selection, launch and safe return workflow is not established.",
+      "reason": "Native editor discovery, selection, save validation, launch and return source paths exist and received independent source review. Actual editor round trips remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -2073,7 +2174,9 @@
           "entry": "external-editor",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "download-handoff",
@@ -2081,7 +2184,8 @@
       "status": "unverified",
       "implementation": [
         "src/main/workflow-services.js",
-        "src/shared/surface/workflow-tools.js"
+        "src/shared/surface/workflow-tools.js",
+        "src/main/browser-download-receiver.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/workflow-handoffs.md"
@@ -2094,7 +2198,7 @@
         "test/workflow-tools.test.js"
       ],
       "evidence": [],
-      "reason": "A complete browser-extension download handoff and native receiver workflow is not established.",
+      "reason": "Native download queue, captured-proposal validation and browser receiver source exist and received independent source review. Installed extension/native-host registration and live end-to-end handoff remain pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -2113,7 +2217,9 @@
           "entry": "download-handoff",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "forge-publishing",
@@ -2121,7 +2227,10 @@
       "status": "unverified",
       "implementation": [
         "src/main/workflow-services.js",
-        "src/shared/surface/workflow-tools.js"
+        "src/shared/surface/workflow-tools.js",
+        "src/main/forge-workflow.js",
+        "src/main/forge-transport.js",
+        "src/main/validation.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/workflow-handoffs.md"
@@ -2134,7 +2243,7 @@
         "test/workflow-tools.test.js"
       ],
       "evidence": [],
-      "reason": "Storage transport is not a complete user-facing forge-publishing workflow; that feature remains unverified.",
+      "reason": "Desktop account and publication preparation/execution services, strict bridge schemas and explicit confirmation are integrated and independently source-reviewed. Live authentication and publication were not exercised.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -2153,7 +2262,9 @@
           "entry": "forge-publishing",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "progress-recovery",
@@ -2162,7 +2273,8 @@
       "implementation": [
         "src/shared/surface/notification-center.js",
         "src/shared/surface/notification-audio.js",
-        "src/main/main.js"
+        "src/main/main.js",
+        "src/renderer/features/storage-maintenance/index.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/layout-and-notifications.md"
@@ -2175,7 +2287,7 @@
         "test/notification-audio.test.js"
       ],
       "evidence": [],
-      "reason": "Canonical progress/recovery controls and opt-in local tone exist in ready source; complete host recovery routing, narration and production behavior remain unverified.",
+      "reason": "Transfer and packing states, durable pause/resume and separate queued-writer diagnostics are integrated. Dense synthetic storage checks passed by owner report; final detach timed out and reopen was not reached.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -2198,7 +2310,9 @@
           "entry": "progress-recovery",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "owner-receipts-only"
     },
     {
       "id": "completeness-parity",
@@ -2215,7 +2329,7 @@
         "test/documentation-platform.test.js"
       ],
       "evidence": [],
-      "reason": "Inventory has all 208 rows; proof references are source pointers, not successful complete delivery, and missing dimensions remain explicit.",
+      "reason": "The ledger contains 105 stable families and 210 independently assessed rows. Structural validation and source mappings do not prove complete delivery; the 3552-state GUI matrix remains pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -2238,7 +2352,9 @@
           "entry": "completeness-parity",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "front-provenance",
@@ -2258,7 +2374,7 @@
         "test/surface-registry.test.js"
       ],
       "evidence": [],
-      "reason": "Source provenance display exists; exact final build version/date visibility across all required surfaces remains unverified.",
+      "reason": "Build provenance display exists in the integrated shell. Exact final build version and timestamp visibility across required surfaces remains unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -2279,7 +2395,9 @@
           "entry": "front-provenance",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "product-evidence",
@@ -2317,7 +2435,9 @@
           "entry": "product-evidence",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "screen-recording",
@@ -2353,7 +2473,9 @@
           "entry": "screen-recording",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "design-reference-parity",
@@ -2391,7 +2513,9 @@
           "entry": "design-reference-parity",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "design-folder",
@@ -2429,7 +2553,9 @@
           "entry": "design-folder",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "cheap-jor-matrix",
@@ -2468,7 +2594,9 @@
           "entry": "cheap-jor-matrix",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "public-screenshot-gallery",
@@ -2506,7 +2634,9 @@
           "entry": "public-screenshot-gallery",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "landing-site",
@@ -2550,7 +2680,9 @@
           "entry": "landing-site",
           "declaredScope": "Named product surface with companion support"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "deen-wah-site",
@@ -2594,7 +2726,9 @@
           "entry": "deen-wah-site",
           "declaredScope": "Named product surface with companion support"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "installer-download-button",
@@ -2638,7 +2772,9 @@
           "entry": "installer-download-button",
           "declaredScope": "Named product surface with companion support"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "feature-articles",
@@ -2682,7 +2818,9 @@
           "entry": "feature-articles",
           "declaredScope": "Named product surface with companion support"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "vendored-fonts",
@@ -2722,7 +2860,9 @@
           "entry": "vendored-fonts",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "shared-link-embed",
@@ -2766,7 +2906,9 @@
           "entry": "shared-link-embed",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "homepage-link",
@@ -2810,7 +2952,9 @@
           "entry": "homepage-link",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "vocabulary-unlock-boundary",
@@ -2856,7 +3000,9 @@
           "entry": "vocabulary-unlock-boundary",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "status-hub",
@@ -2900,12 +3046,14 @@
           "entry": "status-hub",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "external-access-unavailable"
     },
     {
       "id": "discord-status-bridge",
       "surface": "desktop",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -2932,12 +3080,14 @@
           "entry": "discord-status-bridge",
           "declaredScope": "Status Hub server implementation only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "panic-webhooks",
       "surface": "desktop",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -2964,12 +3114,14 @@
           "entry": "panic-webhooks",
           "declaredScope": "Status Hub server implementation only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "tidbyt-displays",
       "surface": "desktop",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -2996,7 +3148,9 @@
           "entry": "tidbyt-displays",
           "declaredScope": "Status Hub server implementation only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "build-entrypoints",
@@ -3037,7 +3191,9 @@
           "entry": "build-entrypoints",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "fresh-build-run-command",
@@ -3078,7 +3234,9 @@
           "entry": "fresh-build-run-command",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "dependency-fetcher",
@@ -3120,7 +3278,9 @@
           "entry": "dependency-fetcher",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "bundled-dependencies",
@@ -3162,7 +3322,9 @@
           "entry": "bundled-dependencies",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "squirrel-installer",
@@ -3182,7 +3344,7 @@
         "scripts/test-package-integrity.ps1"
       ],
       "evidence": [],
-      "reason": "Genuine unsigned Squirrel packaging exists; these outputs do not require a signature. Any future required signed format must be reviewed separately. Current installed-lifecycle acceptance is not inferred.",
+      "reason": "Genuine unsigned Squirrel packaging source exists. Actual installation, installed update and removal are explicitly deferred; final package and release proof are separate.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -3203,7 +3365,9 @@
           "entry": "squirrel-installer",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "deferred",
+      "evidenceVerdict": "deferred-installed-lifecycle"
     },
     {
       "id": "self-signing",
@@ -3244,7 +3408,9 @@
           "entry": "self-signing",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "auto-updates",
@@ -3269,7 +3435,7 @@
         "test/updates-panel.test.js"
       ],
       "evidence": [],
-      "reason": "Current Squirrel packaging does not establish the required scheduled update checks, validated feed, ready banner, deferred installation and rollback workflows.",
+      "reason": "Update metadata validation, staged readiness, explicit confirmation, idle admission and terminal recovery source paths are integrated. Actual installation, installed update and removal are explicitly deferred; rollback is not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -3290,7 +3456,9 @@
           "entry": "auto-updates",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "deferred",
+      "evidenceVerdict": "deferred-installed-lifecycle"
     },
     {
       "id": "app-icon",
@@ -3327,7 +3495,9 @@
           "entry": "app-icon",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "release-workflow",
@@ -3368,7 +3538,9 @@
           "entry": "release-workflow",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "release-timing",
@@ -3409,7 +3581,9 @@
           "entry": "release-timing",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "release-line-counts",
@@ -3450,7 +3624,9 @@
           "entry": "release-line-counts",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "release-dim-sum-photo",
@@ -3491,7 +3667,9 @@
           "entry": "release-dim-sum-photo",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "dim-sum-code-names",
@@ -3532,7 +3710,9 @@
           "entry": "dim-sum-code-names",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "ci-bootstrap",
@@ -3550,7 +3730,7 @@
         "scripts/test-preview-workflow.ps1"
       ],
       "evidence": [],
-      "reason": "Pinned bootstrap and a fixed windows-2022 runner are configured. Live best-runner selection/capacity proof is not implemented by a fixed label; current workflow execution remains separate evidence.",
+      "reason": "Pinned bootstrap and workflow configuration exist. Current exact-source execution and clean-environment provisioning require separate receipts.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -3571,7 +3751,9 @@
           "entry": "ci-bootstrap",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "runner-selection",
@@ -3589,7 +3771,7 @@
         "scripts/test-preview-workflow.ps1"
       ],
       "evidence": [],
-      "reason": "Pinned bootstrap and a fixed windows-2022 runner are configured. Live best-runner selection/capacity proof is not implemented by a fixed label; current workflow execution remains separate evidence.",
+      "reason": "The reviewed workflow uses a fixed runner label. Dynamic live runner selection and capacity proof are not implemented by that label.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -3610,12 +3792,14 @@
           "entry": "runner-selection",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "encrypted-public-builder",
       "surface": "desktop",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -3642,7 +3826,9 @@
           "entry": "encrypted-public-builder",
           "declaredScope": "Private repositories only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "tabbed-readme",
@@ -3678,7 +3864,9 @@
           "entry": "tabbed-readme",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "human-time-estimate",
@@ -3714,7 +3902,9 @@
           "entry": "human-time-estimate",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "unknown",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "sanitized-instruction-copy",
@@ -3750,7 +3940,9 @@
           "entry": "sanitized-instruction-copy",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "agents-md-vocabulary-block",
@@ -3786,7 +3978,9 @@
           "entry": "agents-md-vocabulary-block",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "vocabulary-hash-lock",
@@ -3805,7 +3999,7 @@
         "test/check-vocabulary.test.js"
       ],
       "evidence": [],
-      "reason": "No current runtime-derived private-source currency check or pre-push hook was established in the reviewed source; private dictionary data must never be added here.",
+      "reason": "Runtime-derived private-source currency checking and a pre-push hook exist in current source. Current lock execution and full source-currency proof are not claimed by this inventory.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -3824,7 +4018,9 @@
           "entry": "vocabulary-hash-lock",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "roadmap-checklist",
@@ -3860,7 +4056,9 @@
           "entry": "roadmap-checklist",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "feature-docs",
@@ -3898,7 +4096,9 @@
           "entry": "feature-docs",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "postman-collections",
@@ -3933,7 +4133,9 @@
           "entry": "postman-collections",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "wiki-documentation-sync",
@@ -3977,7 +4179,9 @@
           "entry": "wiki-documentation-sync",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "handoff-record",
@@ -3992,7 +4196,7 @@
       "localization": [],
       "tests": [],
       "evidence": [],
-      "reason": "A local handoff record exists. Its required current issue handoff and remote proof remain separate and were not inspected in this source review.",
+      "reason": "Local handoff and an owner-reported issue handoff exist. Current source integration and exact remote proof remain separate responsibilities.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4013,7 +4217,9 @@
           "entry": "handoff-record",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "owner-receipts-only"
     },
     {
       "id": "closeout-prompt",
@@ -4049,7 +4255,9 @@
           "entry": "closeout-prompt",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "unknown",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "discussion-records",
@@ -4060,7 +4268,7 @@
       "localization": [],
       "tests": [],
       "evidence": [],
-      "reason": "This is a repository record duty. Current task and release discussions were not queried in this source-only review.",
+      "reason": "Owner receipt records current task progress comments and issue handoff. This pass does not independently read back all release discussions, pins or later milestones.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4081,7 +4289,9 @@
           "entry": "discussion-records",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "owner-receipts-only"
     },
     {
       "id": "project-board",
@@ -4092,7 +4302,7 @@
       "localization": [],
       "tests": [],
       "evidence": [],
-      "reason": "This is a repository tracking duty. Current project linkage, ownership and item state were not queried in this source-only review.",
+      "reason": "Current account lacks read:project access by owner receipt. Project linkage and task-item state remain unavailable; this repository duty is not exempted.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4113,7 +4323,9 @@
           "entry": "project-board",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "unknown",
+      "evidenceVerdict": "external-access-unavailable"
     },
     {
       "id": "operational-skill",
@@ -4145,12 +4357,14 @@
           "entry": "operational-skill",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "unknown",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "readme-prompt-banner",
       "surface": "desktop",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -4177,12 +4391,14 @@
           "entry": "readme-prompt-banner",
           "declaredScope": "Canonical instruction repository only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "uh-single-file-editions",
       "surface": "desktop",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -4209,12 +4425,14 @@
           "entry": "uh-single-file-editions",
           "declaredScope": "Canonical instruction repository only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "project-profile",
       "surface": "desktop",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -4241,12 +4459,14 @@
           "entry": "project-profile",
           "declaredScope": "Canonical instruction repository only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "roblox-model-catalogue",
       "surface": "desktop",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -4273,12 +4493,14 @@
           "entry": "roblox-model-catalogue",
           "declaredScope": "Roblox/game projects only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "roblox-visual-realism",
       "surface": "desktop",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -4305,7 +4527,9 @@
           "entry": "roblox-visual-realism",
           "declaredScope": "Roblox/game projects only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "language",
@@ -4313,7 +4537,8 @@
       "status": "unverified",
       "implementation": [
         "src/renderer/features/personalization/index.js",
-        "src/main/feature-services.js"
+        "src/main/feature-services.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/local-personalization.md"
@@ -4326,7 +4551,7 @@
         "test/local-language.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Full message coverage, cross-application shared-state propagation and external schedule provider integration remain incomplete or unverified; production language/voice interactions lack complete evidence.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. English, Cantonese and bilingual settings and propagation are integrated. Complete message coverage and all language extremes remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4350,7 +4575,9 @@
           "entry": "language",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "funny-emoji",
@@ -4358,7 +4585,8 @@
       "status": "unverified",
       "implementation": [
         "src/renderer/features/personalization/index.js",
-        "src/main/feature-services.js"
+        "src/main/feature-services.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/local-personalization.md"
@@ -4371,7 +4599,7 @@
         "test/local-language.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Full message coverage, cross-application shared-state propagation and external schedule provider integration remain incomplete or unverified; production language/voice interactions lack complete evidence.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Per-language humor and emoji controls exist in integrated personalization. Exhaustive copy coverage and saved behavior across both surfaces remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4395,7 +4623,9 @@
           "entry": "funny-emoji",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "personal-vocabulary",
@@ -4404,7 +4634,8 @@
       "implementation": [
         "src/shared/personal-vocabulary.js",
         "src/renderer/preferences.js",
-        "src/renderer/features/access/profile.js"
+        "src/renderer/features/access/profile.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/personal-vocabulary.md"
@@ -4417,7 +4648,7 @@
         "test/private-wording-view.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Local validation and authenticated rendering exist; complete desktop/site upload, replacement, clearing and no-leak runtime matrix remains unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Local validation and authenticated rendering exist; complete desktop/site upload, replacement, clearing and no-leak runtime matrix remains unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4441,7 +4672,9 @@
           "entry": "personal-vocabulary",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "school-mode",
@@ -4449,7 +4682,8 @@
       "status": "unverified",
       "implementation": [
         "src/renderer/features/personalization/index.js",
-        "src/main/feature-services.js"
+        "src/main/feature-services.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/local-personalization.md"
@@ -4462,7 +4696,7 @@
         "test/local-language.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Full message coverage, cross-application shared-state propagation and external schedule provider integration remain incomplete or unverified; production language/voice interactions lack complete evidence.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Shared-mode host and companion adapters are integrated. Suppression of every restricted capability and authenticated shared persistence require current runtime acceptance.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4486,7 +4720,9 @@
           "entry": "school-mode",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "narration",
@@ -4494,7 +4730,11 @@
       "status": "unverified",
       "implementation": [
         "src/renderer/features/personalization/index.js",
-        "src/main/feature-services.js"
+        "src/main/feature-services.js",
+        "src/renderer/features/shell/notification-narration.js",
+        "src/main/startup-photo-service.js",
+        "src/renderer/app.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/local-personalization.md"
@@ -4507,7 +4747,7 @@
         "test/local-language.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Full message coverage, cross-application shared-state propagation and external schedule provider integration remain incomplete or unverified; production language/voice interactions lack complete evidence.",
+      "reason": "Companion personalization is mounted. Desktop runtime accessibility events do not prove browser screen-reader state; conservative browser narration and actual assistive-technology acceptance remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4531,7 +4771,9 @@
           "entry": "narration",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "scheduled-settings",
@@ -4539,7 +4781,9 @@
       "status": "unverified",
       "implementation": [
         "src/renderer/features/personalization/index.js",
-        "src/main/feature-services.js"
+        "src/main/feature-services.js",
+        "src/main/schedule-source.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/local-personalization.md"
@@ -4552,7 +4796,7 @@
         "test/local-language.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Full message coverage, cross-application shared-state propagation and external schedule provider integration remain incomplete or unverified; production language/voice interactions lack complete evidence.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Schedule adapters, protected native credential controls and paired-browser source reading are integrated. Browser capability boundaries are explicit; authenticated provider and timezone/restart acceptance remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4576,7 +4820,9 @@
           "entry": "scheduled-settings",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "display-name",
@@ -4584,7 +4830,8 @@
       "status": "unverified",
       "implementation": [
         "src/renderer/features/personalization/index.js",
-        "src/main/feature-services.js"
+        "src/main/feature-services.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/local-personalization.md"
@@ -4597,7 +4844,7 @@
         "test/local-language.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Full message coverage, cross-application shared-state propagation and external schedule provider integration remain incomplete or unverified; production language/voice interactions lack complete evidence.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Display-name preferences exist in the integrated personalization surface. Complete persistence and title/accessibility propagation remain runtime-unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4621,7 +4868,9 @@
           "entry": "display-name",
           "declaredScope": "Named product surface with companion support"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "adhd-modes",
@@ -4629,7 +4878,8 @@
       "status": "unverified",
       "implementation": [
         "src/renderer/features/personalization/index.js",
-        "src/main/feature-services.js"
+        "src/main/feature-services.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/local-personalization.md"
@@ -4642,7 +4892,7 @@
         "test/local-language.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Full message coverage, cross-application shared-state propagation and external schedule provider integration remain incomplete or unverified; production language/voice interactions lack complete evidence.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Attention modes and their local settings controls exist. Current interaction, persistence and cross-surface presentation remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4666,14 +4916,21 @@
           "entry": "adhd-modes",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "dim-sum",
       "surface": "site",
       "status": "unverified",
       "implementation": [
-        "src/renderer/features/personalization/index.js"
+        "src/renderer/features/personalization/index.js",
+        "src/shared/local-ux/surprise.js",
+        "src/renderer/features/shell/startup-surprise.js",
+        "src/main/startup-photo-service.js",
+        "src/renderer/app.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/local-personalization.md"
@@ -4685,7 +4942,7 @@
         "test/local-personalization.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Startup exclusion helper exists; reviewed public photo adapter, complete integrated delivery and source-bound runtime proof remain missing.",
+      "reason": "Shared startup eligibility logic and public-source rules exist, but the new desktop photo resolver is intentionally desktop-only. Complete browser startup-photo delivery and live acceptance remain unavailable or unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4708,14 +4965,18 @@
           "entry": "dim-sum",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "dim-sum-photo-source",
       "surface": "site",
       "status": "unverified",
       "implementation": [
-        "src/renderer/features/personalization/index.js"
+        "src/renderer/features/personalization/index.js",
+        "src/main/startup-photo-service.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/local-personalization.md"
@@ -4727,7 +4988,7 @@
         "test/local-personalization.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Startup exclusion helper exists; reviewed public photo adapter, complete integrated delivery and source-bound runtime proof remain missing.",
+      "reason": "Shared startup eligibility logic and public-source rules exist, but the new desktop photo resolver is intentionally desktop-only. Complete browser startup-photo delivery and live acceptance remain unavailable or unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4750,7 +5011,9 @@
           "entry": "dim-sum-photo-source",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "material-design",
@@ -4759,7 +5022,9 @@
       "implementation": [
         "src/shared/surface/registry.js",
         "src/shared/surface/workspace-shell.js",
-        "src/renderer/features/shell/index.js"
+        "src/renderer/features/shell/index.js",
+        "src/shared/surface/controls.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/coverage.md"
@@ -4772,7 +5037,7 @@
         "test/surface-model.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Registered components and source behavior exist; pure-component audit, complete reference comparison and every production interaction/viewport tuple remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Fixed workspace frame and shared registered Material controls are integrated across assigned panels. Complete primitive inventory and the 3552-state current GUI matrix remain pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4795,7 +5060,9 @@
           "entry": "material-design",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "workflow-navigation",
@@ -4804,7 +5071,8 @@
       "implementation": [
         "src/shared/surface/registry.js",
         "src/shared/surface/workspace-shell.js",
-        "src/renderer/features/shell/index.js"
+        "src/renderer/features/shell/index.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/coverage.md"
@@ -4817,7 +5085,7 @@
         "test/surface-model.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Registered components and source behavior exist; pure-component audit, complete reference comparison and every production interaction/viewport tuple remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Stationary navigation, task destinations and open-workspace tabs are integrated. Production navigation and minimum-size interactions remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4840,7 +5108,9 @@
           "entry": "workflow-navigation",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "motion",
@@ -4849,7 +5119,8 @@
       "implementation": [
         "src/shared/surface/registry.js",
         "src/shared/surface/workspace-shell.js",
-        "src/renderer/features/shell/index.js"
+        "src/renderer/features/shell/index.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/coverage.md"
@@ -4862,7 +5133,7 @@
         "test/surface-model.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Registered components and source behavior exist; pure-component audit, complete reference comparison and every production interaction/viewport tuple remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Motion editor, schedule and transition controls exist in source. Integrated rendering, reduced-motion behavior and complete scope remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4885,7 +5156,9 @@
           "entry": "motion",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "appearance-editor",
@@ -4894,7 +5167,8 @@
       "implementation": [
         "src/renderer/features/personalization/appearance.js",
         "src/renderer/features/personalization/color.js",
-        "src/renderer/features/personalization/logo.js"
+        "src/renderer/features/personalization/logo.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/appearance-editor.md"
@@ -4907,7 +5181,7 @@
         "test/local-appearance-csp.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Advanced editing gaps include freehand drawing, independently rasterized groups, smart objects, mesh warp and guides; full native decoder and production visual proof remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Current source contains pointer drawing, guides, raster groups, smart-object and mesh-warp editing paths. This corrects the older absence claim; complete behavior, isolated decoding and visual acceptance remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4931,7 +5205,9 @@
           "entry": "appearance-editor",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "color-picker",
@@ -4940,7 +5216,8 @@
       "implementation": [
         "src/renderer/features/personalization/appearance.js",
         "src/renderer/features/personalization/color.js",
-        "src/renderer/features/personalization/logo.js"
+        "src/renderer/features/personalization/logo.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/appearance-editor.md"
@@ -4953,7 +5230,7 @@
         "test/local-appearance-csp.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Advanced editing gaps include freehand drawing, independently rasterized groups, smart objects, mesh warp and guides; full native decoder and production visual proof remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Typed color picker, representations and palette controls exist in current source. Full keyboard, localization and built visual proof remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -4977,7 +5254,9 @@
           "entry": "color-picker",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "logo-customization",
@@ -4986,7 +5265,8 @@
       "implementation": [
         "src/renderer/features/personalization/appearance.js",
         "src/renderer/features/personalization/color.js",
-        "src/renderer/features/personalization/logo.js"
+        "src/renderer/features/personalization/logo.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/appearance-editor.md"
@@ -4999,7 +5279,7 @@
         "test/local-appearance-csp.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Advanced editing gaps include freehand drawing, independently rasterized groups, smart objects, mesh warp and guides; full native decoder and production visual proof remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Existing logo controls are integrated; additional logo work is still in flight and is excluded from this fixed-baseline assessment. Full crop, background and display-target behavior remains pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5023,7 +5303,9 @@
           "entry": "logo-customization",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "overlay-panels",
@@ -5031,7 +5313,8 @@
       "status": "unverified",
       "implementation": [
         "src/shared/surface/panel-layout.js",
-        "src/renderer/features/shell/index.js"
+        "src/renderer/features/shell/index.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/layout-and-notifications.md"
@@ -5044,7 +5327,7 @@
         "test/surface-transient-state.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Move/resize/reset and transient restoration exist in ready source; final host registration and real desktop/site geometry evidence remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Shared contextual overlay, bounded panel layout and dismissal/focus restoration are integrated. Actual input and geometry matrix acceptance remains pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5067,7 +5350,9 @@
           "entry": "overlay-panels",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "collapse-filters",
@@ -5075,7 +5360,8 @@
       "status": "unverified",
       "implementation": [
         "src/shared/surface/search.js",
-        "src/renderer/features/ollama/index.js"
+        "src/renderer/features/ollama/index.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/integration.md"
@@ -5085,7 +5371,7 @@
         "test/surface-workbench.test.js"
       ],
       "evidence": [],
-      "reason": "Some disclosures and filters exist. Universal persisted collapsed state and active-filter disclosure across every surface remain incomplete or unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Search/filter disclosures exist. Universal persisted collapsed state and active-filter disclosure across every surface remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5106,7 +5392,9 @@
           "entry": "collapse-filters",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "accessibility-sizing",
@@ -5115,7 +5403,8 @@
       "implementation": [
         "src/shared/surface/registry.js",
         "src/shared/surface/workspace-shell.js",
-        "src/renderer/features/shell/index.js"
+        "src/renderer/features/shell/index.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/coverage.md"
@@ -5128,7 +5417,7 @@
         "test/surface-model.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Registered components and source behavior exist; pure-component audit, complete reference comparison and every production interaction/viewport tuple remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Shared controls and bounded frame rules are integrated. The 3552-state GUI matrix, keyboard and assistive-technology acceptance remain pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5151,7 +5440,9 @@
           "entry": "accessibility-sizing",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "functional-ui",
@@ -5160,7 +5451,8 @@
       "implementation": [
         "src/shared/surface/registry.js",
         "src/shared/surface/workspace-shell.js",
-        "src/renderer/features/shell/index.js"
+        "src/renderer/features/shell/index.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/coverage.md"
@@ -5173,7 +5465,7 @@
         "test/surface-model.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Registered components and source behavior exist; pure-component audit, complete reference comparison and every production interaction/viewport tuple remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Current integrated feature routes invoke their services. Complete workflow coverage cannot be inferred from successful source integration or synthetic fixtures.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5196,7 +5488,9 @@
           "entry": "functional-ui",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "tabs",
@@ -5205,7 +5499,8 @@
       "implementation": [
         "src/shared/surface/model.js",
         "src/shared/surface/context-menu.js",
-        "src/shared/surface/group-manager.js"
+        "src/shared/surface/group-manager.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/integration.md"
@@ -5217,7 +5512,7 @@
         "test/surface-model.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Tab/group actions exist; universal per-element context menus and complete shortcut parity remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Open-tab persistence, discovery, groups and contextual actions are implemented in the shared shell. Current integrated tab interaction and overflow evidence remain pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5240,7 +5535,9 @@
           "entry": "tabs",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "regex-search",
@@ -5249,7 +5546,8 @@
       "implementation": [
         "src/shared/surface/search.js",
         "src/shared/surface/regex-workbench.js",
-        "src/shared/surface/regex-worker.js"
+        "src/shared/surface/regex-worker.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/integration.md"
@@ -5263,7 +5561,7 @@
         "test/surface-lifecycle.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Scoped workbench and worker bounds exist; every search/picker surface and full production interaction evidence remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Worker-bounded search and the shared expression workbench are integrated. Exhaustive coverage of every picker, menu and search surface remains unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5286,7 +5584,9 @@
           "entry": "regex-search",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "command-palette",
@@ -5294,7 +5594,8 @@
       "status": "unverified",
       "implementation": [
         "src/shared/surface/command-palette.js",
-        "src/renderer/app.js"
+        "src/renderer/app.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/integration.md"
@@ -5307,7 +5608,7 @@
         "test/surface-workbench.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Palette controls and source enumeration exist; complete discovery and functional coverage of every setting and feature remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Command discovery and activation are integrated. Complete feature/settings coverage and target focus/scroll behavior remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5328,7 +5629,9 @@
           "entry": "command-palette",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "context-menus",
@@ -5337,7 +5640,9 @@
       "implementation": [
         "src/shared/surface/model.js",
         "src/shared/surface/context-menu.js",
-        "src/shared/surface/group-manager.js"
+        "src/shared/surface/group-manager.js",
+        "src/shared/surface/overlay.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/integration.md"
@@ -5349,7 +5654,7 @@
         "test/surface-model.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Tab/group actions exist; universal per-element context menus and complete shortcut parity remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. One shared context overlay captures the originating target and handles dismissal and restoration. Universal target registration and runtime acceptance remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5372,7 +5677,9 @@
           "entry": "context-menus",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "menu-shortcuts",
@@ -5381,7 +5688,8 @@
       "implementation": [
         "src/shared/surface/model.js",
         "src/shared/surface/context-menu.js",
-        "src/shared/surface/group-manager.js"
+        "src/shared/surface/group-manager.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/integration.md"
@@ -5393,7 +5701,7 @@
         "test/surface-model.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Tab/group actions exist; universal per-element context menus and complete shortcut parity remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Context menu keyboard navigation and shortcut labels exist. Exhaustive action/shortcut parity remains unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5416,7 +5724,9 @@
           "entry": "menu-shortcuts",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "rich-controls",
@@ -5424,7 +5734,8 @@
       "status": "unverified",
       "implementation": [
         "src/shared/surface/command-palette.js",
-        "src/renderer/app.js"
+        "src/renderer/app.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/integration.md"
@@ -5437,7 +5748,7 @@
         "test/surface-workbench.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Palette controls and source enumeration exist; complete discovery and functional coverage of every setting and feature remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Feature panels use shared Material control construction. Every option, affordance and input mode still needs current integrated acceptance.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5458,7 +5769,9 @@
           "entry": "rich-controls",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "guided-forms",
@@ -5467,7 +5780,8 @@
       "implementation": [
         "src/renderer/clear-fields.js",
         "src/renderer/features/personalization/index.js",
-        "src/renderer/features/ollama/index.js"
+        "src/renderer/features/ollama/index.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/modern-fields.md",
@@ -5479,7 +5793,7 @@
         "test/local-personalization.test.js"
       ],
       "evidence": [],
-      "reason": "Clear fields and guided controls exist. Complete per-setting explanation/provenance, real-value pickers, default-derived presets and every form path remain incomplete or unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Guided controls, clearable inputs and typed fields exist. Complete per-field real-value guidance and all workflow paths remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5500,7 +5814,9 @@
           "entry": "guided-forms",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "settings-explanations",
@@ -5509,7 +5825,8 @@
       "implementation": [
         "src/renderer/clear-fields.js",
         "src/renderer/features/personalization/index.js",
-        "src/renderer/features/ollama/index.js"
+        "src/renderer/features/ollama/index.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/modern-fields.md",
@@ -5521,7 +5838,7 @@
         "test/local-personalization.test.js"
       ],
       "evidence": [],
-      "reason": "Clear fields and guided controls exist. Complete per-setting explanation/provenance, real-value pickers, default-derived presets and every form path remain incomplete or unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Shared optional guidance and nested inspector explanations exist. Exhaustive setting coverage, localization and actual presentation remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5542,7 +5859,9 @@
           "entry": "settings-explanations",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "blank-editors",
@@ -5551,7 +5870,8 @@
       "implementation": [
         "src/renderer/clear-fields.js",
         "src/renderer/features/personalization/index.js",
-        "src/renderer/features/ollama/index.js"
+        "src/renderer/features/ollama/index.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/modern-fields.md",
@@ -5563,7 +5883,7 @@
         "test/local-personalization.test.js"
       ],
       "evidence": [],
-      "reason": "Clear fields and guided controls exist. Complete per-setting explanation/provenance, real-value pickers, default-derived presets and every form path remain incomplete or unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Editor source has defaults, typed controls and guidance. Complete blank-state and preset coverage remains unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5584,7 +5904,9 @@
           "entry": "blank-editors",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "super-confirmation",
@@ -5592,7 +5914,8 @@
       "status": "unverified",
       "implementation": [
         "src/shared/surface/workflow-confirm.js",
-        "src/shared/surface/workflow-model.js"
+        "src/shared/surface/workflow-model.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/workflow-handoffs.md"
@@ -5605,7 +5928,7 @@
         "test/workflow-model.test.js"
       ],
       "evidence": [],
-      "reason": "Ordinary and typed confirmations exist, but the required two-independent-key plus full-range-slider flow is not established.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Two independent switches, a full-range slider, final confirmation, cancellation and origin-focus restoration are implemented. Complete destructive-entry-point wiring and runtime proof remain pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5624,7 +5947,9 @@
           "entry": "super-confirmation",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "element-locks",
@@ -5635,7 +5960,8 @@
         "src/renderer/features/access/locks.js",
         "src/renderer/features/access/profile.js",
         "src/renderer/features/access/management.js",
-        "src/renderer/features/access/wait-budget.js"
+        "src/renderer/features/access/wait-budget.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/access/local-access.md"
@@ -5651,7 +5977,7 @@
         "test/local-access-management-ui.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Ready source adds activation sessions, selected-record management and shared waiting allowance. Final host integration, service-side challenge enforcement, full localization and real factor/camera/recovery workflows remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Local locks, activation sessions and selected-record management are integrated. Additional access changes are in flight; real factors, recovery and every protected target remain pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5676,7 +6002,9 @@
           "entry": "element-locks",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "support-tickets",
@@ -5687,7 +6015,8 @@
         "src/renderer/features/access/locks.js",
         "src/renderer/features/access/profile.js",
         "src/renderer/features/access/management.js",
-        "src/renderer/features/access/wait-budget.js"
+        "src/renderer/features/access/wait-budget.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/access/local-access.md"
@@ -5703,7 +6032,7 @@
         "test/local-access-management-ui.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Ready source adds activation sessions, selected-record management and shared waiting allowance. Final host integration, service-side challenge enforcement, full localization and real factor/camera/recovery workflows remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Local support/recovery record controls exist. Additional access work is in flight; authoritative delivery and all recovery workflows remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5728,7 +6057,9 @@
           "entry": "support-tickets",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "unlock-ladder",
@@ -5739,7 +6070,8 @@
         "src/renderer/features/access/locks.js",
         "src/renderer/features/access/profile.js",
         "src/renderer/features/access/management.js",
-        "src/renderer/features/access/wait-budget.js"
+        "src/renderer/features/access/wait-budget.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/access/local-access.md"
@@ -5755,7 +6087,7 @@
         "test/local-access-management-ui.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Ready source adds activation sessions, selected-record management and shared waiting allowance. Final host integration, service-side challenge enforcement, full localization and real factor/camera/recovery workflows remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Local challenge and waiting-budget controls exist. Full production enforcement, factor recovery and integrated runtime acceptance remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5780,7 +6112,9 @@
           "entry": "unlock-ladder",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "authenticator",
@@ -5791,7 +6125,8 @@
         "src/renderer/features/access/locks.js",
         "src/renderer/features/access/profile.js",
         "src/renderer/features/access/management.js",
-        "src/renderer/features/access/wait-budget.js"
+        "src/renderer/features/access/wait-budget.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/access/local-access.md"
@@ -5807,7 +6142,7 @@
         "test/local-access-management-ui.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Ready source adds activation sessions, selected-record management and shared waiting allowance. Final host integration, service-side challenge enforcement, full localization and real factor/camera/recovery workflows remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Local authenticator storage and management controls exist. Real enrollment, time-based operation, recovery and complete runtime evidence remain pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5832,7 +6167,9 @@
           "entry": "authenticator",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "qr-pairing",
@@ -5843,7 +6180,8 @@
         "src/renderer/features/access/locks.js",
         "src/renderer/features/access/profile.js",
         "src/renderer/features/access/management.js",
-        "src/renderer/features/access/wait-budget.js"
+        "src/renderer/features/access/wait-budget.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/access/local-access.md"
@@ -5859,7 +6197,7 @@
         "test/local-access-management-ui.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Ready source adds activation sessions, selected-record management and shared waiting allowance. Final host integration, service-side challenge enforcement, full localization and real factor/camera/recovery workflows remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Local QR encoding/decoding and pairing controls exist. Actual camera, permission, native approval and recovery workflows remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5884,18 +6222,22 @@
           "entry": "qr-pairing",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "honest-monetization",
       "surface": "site",
       "status": "unverified",
-      "implementation": [],
+      "implementation": [
+        "docs/site/workspace.js"
+      ],
       "documentation": [],
       "localization": [],
       "tests": [],
       "evidence": [],
-      "reason": "No paid feature is introduced by the reviewed source; every protected free workflow and absence of unwanted prompts still need runtime audit.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. The reviewed source introduces no paid feature. An exhaustive free-workflow and unwanted-prompt audit was not performed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5916,7 +6258,9 @@
           "entry": "honest-monetization",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "unknown",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "local-history",
@@ -5924,7 +6268,8 @@
       "status": "unverified",
       "implementation": [
         "src/renderer/features/personalization/history.js",
-        "src/renderer/features/file-details/index.js"
+        "src/renderer/features/file-details/index.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/local-personalization.md",
@@ -5938,7 +6283,7 @@
         "test/file-details.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Encrypted settings journal and file activity exist; complete native Git-backed settings history and every mutation/restore workflow remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Encrypted settings history and native file history remain distinct implementations. Storage owner reports dense synthetic checks passed, but final detach timed out and reopen was not reached; complete restore/restart proof remains pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -5961,7 +6306,9 @@
           "entry": "local-history",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "owner-receipts-only"
     },
     {
       "id": "exports",
@@ -5970,7 +6317,8 @@
       "implementation": [
         "src/renderer/features/access/management.js",
         "src/shared/surface/notification-center.js",
-        "src/renderer/features/documentation/changelog.js"
+        "src/renderer/features/documentation/changelog.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/access/local-access.md",
@@ -5987,7 +6335,7 @@
         "test/documentation-platform.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Selected record and notification actions plus limited export formats exist; universal bulk actions and all required export formats remain incomplete.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Existing record, document and notification export routes exist. Expanded format work remains in flight and is not accepted into this baseline assessment.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6010,7 +6358,9 @@
           "entry": "exports",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "bulk-actions",
@@ -6019,7 +6369,8 @@
       "implementation": [
         "src/renderer/features/access/management.js",
         "src/shared/surface/notification-center.js",
-        "src/renderer/features/documentation/changelog.js"
+        "src/renderer/features/documentation/changelog.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/access/local-access.md",
@@ -6036,7 +6387,7 @@
         "test/documentation-platform.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Selected record and notification actions plus limited export formats exist; universal bulk actions and all required export formats remain incomplete.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Selected-record and notification actions exist. Universal collection coverage and additional export/access changes remain incomplete or unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6059,7 +6410,9 @@
           "entry": "bulk-actions",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "changelog",
@@ -6069,7 +6422,8 @@
         "src/features/documentation/catalog.mjs",
         "src/renderer/features/documentation/index.js",
         "src/renderer/features/documentation/markdown.js",
-        "src/renderer/features/documentation/changelog.js"
+        "src/renderer/features/documentation/changelog.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/platform/documentation-and-status.md"
@@ -6082,7 +6436,7 @@
         "test/documentation-browser.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Module browser checks exist; final packaged/site content, complete translations and source-bound visual acceptance remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Changelog filtering, safe Markdown rendering and export are integrated. Final packaged and deployed content and visual acceptance remain pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6103,7 +6457,9 @@
           "entry": "changelog",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "offline-docs",
@@ -6113,7 +6469,8 @@
         "src/features/documentation/catalog.mjs",
         "src/renderer/features/documentation/index.js",
         "src/renderer/features/documentation/markdown.js",
-        "src/renderer/features/documentation/changelog.js"
+        "src/renderer/features/documentation/changelog.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/platform/documentation-and-status.md"
@@ -6126,7 +6483,7 @@
         "test/documentation-browser.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Module browser checks exist; final packaged/site content, complete translations and source-bound visual acceptance remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Bundled catalog, safe article rendering, navigation and exports are integrated. Exact final package inventory and offline built interactions remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6147,7 +6504,9 @@
           "entry": "offline-docs",
           "declaredScope": "Named product surface with companion support"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "rendered-provider-text",
@@ -6157,7 +6516,8 @@
         "src/features/ollama/service.js",
         "src/features/ollama/runtime.js",
         "src/features/ollama/native-profiles.js",
-        "src/renderer/features/ollama/index.js"
+        "src/renderer/features/ollama/index.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/ollama/local-models.md"
@@ -6171,7 +6531,7 @@
         "test/ollama-regex.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Ready source adds guided runtime recovery/native recipes; final host adapter wiring, real installation/model download, provider Markdown and complete desktop/site proof remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Local-model provider text uses safe rendered Markdown and bounded link handling in integrated source. Actual provider sessions and production rendering remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6194,7 +6554,9 @@
           "entry": "rendered-provider-text",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "notifications",
@@ -6203,7 +6565,8 @@
       "implementation": [
         "src/shared/surface/notification-center.js",
         "src/shared/surface/notification-audio.js",
-        "src/main/main.js"
+        "src/main/main.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/layout-and-notifications.md"
@@ -6216,7 +6579,7 @@
         "test/notification-audio.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Canonical progress/recovery controls and opt-in local tone exist in ready source; complete host recovery routing, narration and production behavior remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Notification center, recovery actions and desktop narration routing are integrated. Complete host routing, actual voice and current built interactions remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6239,7 +6602,9 @@
           "entry": "notifications",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "file-converter",
@@ -6248,7 +6613,8 @@
       "implementation": [
         "src/features/converter/service.mjs",
         "src/features/converter/windows-sandbox.mjs",
-        "src/renderer/features/converter/index.js"
+        "src/renderer/features/converter/index.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/converter/README.md"
@@ -6262,7 +6628,7 @@
         "test/converter-windows.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Bounded queue and selected adapters exist; universal conversion coverage, final packaged sandbox, restart capability and complete UI evidence remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Bounded conversion queue and supported adapters are integrated. Broader format coverage, installed tool execution and complete native acceptance remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6285,7 +6651,9 @@
           "entry": "file-converter",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "ollama-suite",
@@ -6296,7 +6664,8 @@
         "src/features/ollama/runtime.js",
         "src/features/ollama/native-profiles.js",
         "src/renderer/features/ollama/index.js",
-        "src/main/ollama-provenance.js"
+        "src/main/ollama-provenance.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/ollama/local-models.md",
@@ -6312,7 +6681,7 @@
         "test/ollama-provenance.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Ready source adds guided runtime recovery/native recipes; final host adapter wiring, real installation/model download, provider Markdown and complete desktop/site proof remain unverified. Runtime release provenance is recorded in ready source 2903fc5; this is not installed execution proof.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Catalog, model inventory, pull cart, local chat, profiles and native recovery recipes are integrated. Real model/runtime installation, downloads, hardware fit and persisted sessions remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6335,7 +6704,9 @@
           "entry": "ollama-suite",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "external-editor",
@@ -6343,7 +6714,8 @@
       "status": "unverified",
       "implementation": [
         "src/main/workflow-services.js",
-        "src/shared/surface/workflow-tools.js"
+        "src/shared/surface/workflow-tools.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/workflow-handoffs.md"
@@ -6356,7 +6728,7 @@
         "test/workflow-tools.test.js"
       ],
       "evidence": [],
-      "reason": "A complete external-editor selection, launch and safe return workflow is not established.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Native editor discovery, selection, save validation, launch and return source paths exist and received independent source review. Actual editor round trips remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6375,7 +6747,9 @@
           "entry": "external-editor",
           "declaredScope": "Named product surface with companion support"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "download-handoff",
@@ -6383,7 +6757,9 @@
       "status": "unverified",
       "implementation": [
         "src/main/workflow-services.js",
-        "src/shared/surface/workflow-tools.js"
+        "src/shared/surface/workflow-tools.js",
+        "src/main/browser-download-receiver.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/workflow-handoffs.md"
@@ -6396,7 +6772,7 @@
         "test/workflow-tools.test.js"
       ],
       "evidence": [],
-      "reason": "A complete browser-extension download handoff and native receiver workflow is not established.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Native download queue, captured-proposal validation and browser receiver source exist and received independent source review. Installed extension/native-host registration and live end-to-end handoff remain pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6415,7 +6791,9 @@
           "entry": "download-handoff",
           "declaredScope": "Named product surface with companion support"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "forge-publishing",
@@ -6423,7 +6801,11 @@
       "status": "unverified",
       "implementation": [
         "src/main/workflow-services.js",
-        "src/shared/surface/workflow-tools.js"
+        "src/shared/surface/workflow-tools.js",
+        "src/main/forge-workflow.js",
+        "src/main/forge-transport.js",
+        "src/main/validation.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/workflow-handoffs.md"
@@ -6436,7 +6818,7 @@
         "test/workflow-tools.test.js"
       ],
       "evidence": [],
-      "reason": "Storage transport is not a complete user-facing forge-publishing workflow; that feature remains unverified.",
+      "reason": "The companion provides documentation and approved paired tools. New account/publication actions are desktop-only and cannot be invoked through the browser adapter; live desktop publication remains unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6455,7 +6837,9 @@
           "entry": "forge-publishing",
           "declaredScope": "Named product surface with companion support"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "progress-recovery",
@@ -6464,7 +6848,9 @@
       "implementation": [
         "src/shared/surface/notification-center.js",
         "src/shared/surface/notification-audio.js",
-        "src/main/main.js"
+        "src/main/main.js",
+        "src/renderer/features/storage-maintenance/index.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/layout-and-notifications.md"
@@ -6477,7 +6863,7 @@
         "test/notification-audio.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Canonical progress/recovery controls and opt-in local tone exist in ready source; complete host recovery routing, narration and production behavior remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Transfer and packing states, durable pause/resume and separate queued-writer diagnostics are integrated. Dense synthetic storage checks passed by owner report; final detach timed out and reopen was not reached.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6500,14 +6886,17 @@
           "entry": "progress-recovery",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "owner-receipts-only"
     },
     {
       "id": "completeness-parity",
       "surface": "site",
       "status": "unverified",
       "implementation": [
-        "src/features/documentation/feature-delivery.mjs"
+        "src/features/documentation/feature-delivery.mjs",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/platform/current-integration.md"
@@ -6517,7 +6906,7 @@
         "test/documentation-platform.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Inventory has all 208 rows; proof references are source pointers, not successful complete delivery, and missing dimensions remain explicit.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. The ledger contains 105 stable families and 210 independently assessed rows. Structural validation and source mappings do not prove complete delivery; the 3552-state GUI matrix remains pending.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6540,7 +6929,9 @@
           "entry": "completeness-parity",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "front-provenance",
@@ -6548,7 +6939,8 @@
       "status": "unverified",
       "implementation": [
         "src/shared/surface/provenance.js",
-        "src/renderer/features/shell/index.js"
+        "src/renderer/features/shell/index.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/coverage.md"
@@ -6560,7 +6952,7 @@
         "test/surface-registry.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Source provenance display exists; exact final build version/date visibility across all required surfaces remains unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Build provenance display exists in the integrated shell. Exact final build version and timestamp visibility across required surfaces remains unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6581,14 +6973,17 @@
           "entry": "front-provenance",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "product-evidence",
       "surface": "site",
       "status": "unverified",
       "implementation": [
-        "docs/site/publication.mjs"
+        "docs/site/publication.mjs",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/desktop/runtime-evidence.md"
@@ -6598,7 +6993,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "Historical reviewed capture publication exists. Current-source screenshots, complete capture inventory and live public delivery must retain their own proof; historical images do not certify this candidate.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Historical reviewed capture publication exists. Current-source screenshots, complete capture inventory and live public delivery must retain their own proof; historical images do not certify this candidate.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6619,14 +7014,17 @@
           "entry": "product-evidence",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "screen-recording",
       "surface": "site",
       "status": "unverified",
       "implementation": [
-        "scripts/local-headless-desktop-check.mjs"
+        "scripts/local-headless-desktop-check.mjs",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/desktop/runtime-evidence.md"
@@ -6634,7 +7032,7 @@
       "localization": [],
       "tests": [],
       "evidence": [],
-      "reason": "Capture infrastructure and historical records exist. A current complete source-bound screen recording with required review is not established.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Capture infrastructure and historical records exist. A current complete source-bound screen recording with required review is not established.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6655,7 +7053,9 @@
           "entry": "screen-recording",
           "declaredScope": "Named product surface with companion support"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "design-reference-parity",
@@ -6663,7 +7063,8 @@
       "status": "unverified",
       "implementation": [
         "design/modern-interface.md",
-        "design/surface-foundation/HANDOFF.md"
+        "design/surface-foundation/HANDOFF.md",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "DESIGN.md",
@@ -6672,7 +7073,7 @@
       "localization": [],
       "tests": [],
       "evidence": [],
-      "reason": "Checked-in design references exist. Dedicated deterministic reference rendering, complete paired captures and comparison evidence remain incomplete or unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Checked-in design references exist. Dedicated deterministic reference rendering, complete paired captures and comparison evidence remain incomplete or unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6693,7 +7094,9 @@
           "entry": "design-reference-parity",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "design-folder",
@@ -6731,7 +7134,9 @@
           "entry": "design-folder",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "cheap-jor-matrix",
@@ -6739,7 +7144,8 @@
       "status": "unverified",
       "implementation": [
         "scripts/modern-ui-check.mjs",
-        "scripts/local-headless-desktop-check.mjs"
+        "scripts/local-headless-desktop-check.mjs",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/desktop/runtime-evidence.md"
@@ -6749,7 +7155,7 @@
         "test/modern-ui-check.test.js"
       ],
       "evidence": [],
-      "reason": "Matrix and capture infrastructure exists. Complete accepted current-source viewport, language, theme and physical-scale tuples remain unverified; historical or rejected captures are not substituted.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Matrix and capture infrastructure exists. Complete accepted current-source viewport, language, theme and physical-scale tuples remain unverified; historical or rejected captures are not substituted.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6770,14 +7176,17 @@
           "entry": "cheap-jor-matrix",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "public-screenshot-gallery",
       "surface": "site",
       "status": "unverified",
       "implementation": [
-        "docs/site/publication.mjs"
+        "docs/site/publication.mjs",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/desktop/runtime-evidence.md"
@@ -6787,7 +7196,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "Historical reviewed capture publication exists. Current-source screenshots, complete capture inventory and live public delivery must retain their own proof; historical images do not certify this candidate.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Historical reviewed capture publication exists. Current-source screenshots, complete capture inventory and live public delivery must retain their own proof; historical images do not certify this candidate.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6808,7 +7217,9 @@
           "entry": "public-screenshot-gallery",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "landing-site",
@@ -6819,7 +7230,8 @@
         "docs/site/publication.mjs",
         "docs/site/content-catalog.json",
         "scripts/build-site.mjs",
-        ".github/workflows/pages.yml"
+        ".github/workflows/pages.yml",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/platform/current-integration.md",
@@ -6831,7 +7243,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6852,7 +7264,9 @@
           "entry": "landing-site",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "deen-wah-site",
@@ -6863,7 +7277,8 @@
         "docs/site/publication.mjs",
         "docs/site/content-catalog.json",
         "scripts/build-site.mjs",
-        ".github/workflows/pages.yml"
+        ".github/workflows/pages.yml",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/platform/current-integration.md",
@@ -6875,7 +7290,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6896,7 +7311,9 @@
           "entry": "deen-wah-site",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "installer-download-button",
@@ -6907,7 +7324,8 @@
         "docs/site/publication.mjs",
         "docs/site/content-catalog.json",
         "scripts/build-site.mjs",
-        ".github/workflows/pages.yml"
+        ".github/workflows/pages.yml",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/platform/current-integration.md",
@@ -6919,7 +7337,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6940,7 +7358,9 @@
           "entry": "installer-download-button",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "feature-articles",
@@ -6951,7 +7371,8 @@
         "docs/site/publication.mjs",
         "docs/site/content-catalog.json",
         "scripts/build-site.mjs",
-        ".github/workflows/pages.yml"
+        ".github/workflows/pages.yml",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/platform/current-integration.md",
@@ -6963,7 +7384,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -6984,7 +7405,9 @@
           "entry": "feature-articles",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "vendored-fonts",
@@ -6993,7 +7416,8 @@
       "implementation": [
         "scripts/build-surface-vendor.mjs",
         "src/renderer/index.html",
-        "docs/site/index.html"
+        "docs/site/index.html",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/surface-foundation/README.md"
@@ -7003,7 +7427,7 @@
         "test/surface-registry.test.js"
       ],
       "evidence": [],
-      "reason": "Local UI assets are staged. Complete required font-family coverage, glyph subsets and final no-network font behavior remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Local UI assets are staged. Complete required font-family coverage, glyph subsets and final no-network font behavior remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -7024,7 +7448,9 @@
           "entry": "vendored-fonts",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "shared-link-embed",
@@ -7035,7 +7461,8 @@
         "docs/site/publication.mjs",
         "docs/site/content-catalog.json",
         "scripts/build-site.mjs",
-        ".github/workflows/pages.yml"
+        ".github/workflows/pages.yml",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/platform/current-integration.md",
@@ -7047,7 +7474,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -7068,7 +7495,9 @@
           "entry": "shared-link-embed",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "homepage-link",
@@ -7079,7 +7508,8 @@
         "docs/site/publication.mjs",
         "docs/site/content-catalog.json",
         "scripts/build-site.mjs",
-        ".github/workflows/pages.yml"
+        ".github/workflows/pages.yml",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/platform/current-integration.md",
@@ -7091,7 +7521,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -7112,7 +7542,9 @@
           "entry": "homepage-link",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "vocabulary-unlock-boundary",
@@ -7121,7 +7553,8 @@
       "implementation": [
         "src/shared/personal-vocabulary.js",
         "src/renderer/preferences.js",
-        "src/renderer/features/access/profile.js"
+        "src/renderer/features/access/profile.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/interface/personal-vocabulary.md"
@@ -7134,7 +7567,7 @@
         "test/private-wording-view.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Local validation and authenticated rendering exist; complete desktop/site upload, replacement, clearing and no-leak runtime matrix remains unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Local validation and authenticated rendering exist; complete desktop/site upload, replacement, clearing and no-leak runtime matrix remains unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -7158,7 +7591,9 @@
           "entry": "vocabulary-unlock-boundary",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "status-hub",
@@ -7168,7 +7603,8 @@
         "src/features/documentation/status-service.mjs",
         "src/status-hub/status-hub-client.mjs",
         "src/main/feature-services.js",
-        "src/renderer/features/status/index.js"
+        "src/renderer/features/status/index.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/platform/documentation-and-status.md"
@@ -7181,7 +7617,7 @@
         "test/feature-services.test.js"
       ],
       "evidence": [],
-      "reason": "Shared source is staged for the browser surface; independent site wiring and runtime parity are not proven. Official client and safe status bridge exist; authenticated live registration, updates, questions/replies and terminal delivery remain unverified or unavailable.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Official client and safe status bridge exist; authenticated live registration, updates, questions/replies and terminal delivery remain unverified or unavailable.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -7202,12 +7638,14 @@
           "entry": "status-hub",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "external-access-unavailable"
     },
     {
       "id": "discord-status-bridge",
       "surface": "site",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -7234,12 +7672,14 @@
           "entry": "discord-status-bridge",
           "declaredScope": "Status Hub server implementation only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "panic-webhooks",
       "surface": "site",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -7266,12 +7706,14 @@
           "entry": "panic-webhooks",
           "declaredScope": "Status Hub server implementation only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "tidbyt-displays",
       "surface": "site",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -7298,7 +7740,9 @@
           "entry": "tidbyt-displays",
           "declaredScope": "Status Hub server implementation only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "build-entrypoints",
@@ -7339,7 +7783,9 @@
           "entry": "build-entrypoints",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "fresh-build-run-command",
@@ -7380,7 +7826,9 @@
           "entry": "fresh-build-run-command",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "dependency-fetcher",
@@ -7422,7 +7870,9 @@
           "entry": "dependency-fetcher",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "bundled-dependencies",
@@ -7432,7 +7882,8 @@
         "download-dependencies.bat",
         "scripts/bootstrap.ps1",
         "dependencies.json",
-        "scripts/converter-media-runtime.mjs"
+        "scripts/converter-media-runtime.mjs",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/desktop/README.md",
@@ -7443,7 +7894,7 @@
         "test/nuget-vendor.test.ps1"
       ],
       "evidence": [],
-      "reason": "Pinned acquisition and runtime bundling sources exist. Complete fresh-machine provisioning and final payload coverage remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Pinned acquisition and runtime bundling sources exist. Complete fresh-machine provisioning and final payload coverage remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -7464,7 +7915,9 @@
           "entry": "bundled-dependencies",
           "declaredScope": "Named product surface with companion support"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "squirrel-installer",
@@ -7473,7 +7926,8 @@
       "implementation": [
         "forge.config.cjs",
         "build-installer.bat",
-        "scripts/package-integrity.ps1"
+        "scripts/package-integrity.ps1",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/desktop/package-integrity.md",
@@ -7484,7 +7938,7 @@
         "scripts/test-package-integrity.ps1"
       ],
       "evidence": [],
-      "reason": "Genuine unsigned Squirrel packaging exists; these outputs do not require a signature. Any future required signed format must be reviewed separately. Current installed-lifecycle acceptance is not inferred.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Genuine unsigned Squirrel packaging source exists. Actual installation, installed update and removal are explicitly deferred; final package and release proof are separate.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -7505,7 +7959,9 @@
           "entry": "squirrel-installer",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "deferred",
+      "evidenceVerdict": "deferred-installed-lifecycle"
     },
     {
       "id": "self-signing",
@@ -7546,7 +8002,9 @@
           "entry": "self-signing",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "auto-updates",
@@ -7556,7 +8014,8 @@
         "src/main/update-service.js",
         "src/main/restart-preparation.js",
         "src/renderer/features/updates/index.js",
-        "src/main/main.js"
+        "src/main/main.js",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/release/native-update-controller.md",
@@ -7571,7 +8030,7 @@
         "test/updates-panel.test.js"
       ],
       "evidence": [],
-      "reason": "Current Squirrel packaging does not establish the required scheduled update checks, validated feed, ready banner, deferred installation and rollback workflows.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Update metadata validation, staged readiness, explicit confirmation, idle admission and terminal recovery source paths are integrated. Actual installation, installed update and removal are explicitly deferred; rollback is not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -7592,7 +8051,9 @@
           "entry": "auto-updates",
           "declaredScope": "Named product surface with companion support"
         }
-      }
+      },
+      "behaviorVerdict": "deferred",
+      "evidenceVerdict": "deferred-installed-lifecycle"
     },
     {
       "id": "app-icon",
@@ -7600,7 +8061,8 @@
       "status": "unverified",
       "implementation": [
         "forge.config.cjs",
-        "src/renderer/index.html"
+        "src/renderer/index.html",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "README.md"
@@ -7608,7 +8070,7 @@
       "localization": [],
       "tests": [],
       "evidence": [],
-      "reason": "Packaging and renderer icon references exist. Final visual/original-art review and every packaged icon surface remain unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Packaging and renderer icon references exist. Final visual/original-art review and every packaged icon surface remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -7629,7 +8091,9 @@
           "entry": "app-icon",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "release-workflow",
@@ -7670,7 +8134,9 @@
           "entry": "release-workflow",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "release-timing",
@@ -7711,7 +8177,9 @@
           "entry": "release-timing",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "release-line-counts",
@@ -7752,7 +8220,9 @@
           "entry": "release-line-counts",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "release-dim-sum-photo",
@@ -7793,7 +8263,9 @@
           "entry": "release-dim-sum-photo",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "dim-sum-code-names",
@@ -7801,7 +8273,8 @@
       "status": "unverified",
       "implementation": [
         ".github/workflows/windows.yml",
-        ".github/scripts/publish-preview.ps1"
+        ".github/scripts/publish-preview.ps1",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/release/preview-delivery.md",
@@ -7813,7 +8286,7 @@
         "scripts/test-preview-workflow.ps1"
       ],
       "evidence": [],
-      "reason": "The normal-release publisher records source, timing and release content. Current exact-source publication, assets and each release-metadata requirement need separate readback; source wiring alone is not a published release.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. The normal-release publisher records source, timing and release content. Current exact-source publication, assets and each release-metadata requirement need separate readback; source wiring alone is not a published release.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -7834,7 +8307,9 @@
           "entry": "dim-sum-code-names",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "ci-bootstrap",
@@ -7852,7 +8327,7 @@
         "scripts/test-preview-workflow.ps1"
       ],
       "evidence": [],
-      "reason": "Pinned bootstrap and a fixed windows-2022 runner are configured. Live best-runner selection/capacity proof is not implemented by a fixed label; current workflow execution remains separate evidence.",
+      "reason": "Pinned bootstrap and workflow configuration exist. Current exact-source execution and clean-environment provisioning require separate receipts.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -7873,7 +8348,9 @@
           "entry": "ci-bootstrap",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "runner-selection",
@@ -7891,7 +8368,7 @@
         "scripts/test-preview-workflow.ps1"
       ],
       "evidence": [],
-      "reason": "Pinned bootstrap and a fixed windows-2022 runner are configured. Live best-runner selection/capacity proof is not implemented by a fixed label; current workflow execution remains separate evidence.",
+      "reason": "The reviewed workflow uses a fixed runner label. Dynamic live runner selection and capacity proof are not implemented by that label.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -7912,12 +8389,14 @@
           "entry": "runner-selection",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "encrypted-public-builder",
       "surface": "site",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -7944,7 +8423,9 @@
           "entry": "encrypted-public-builder",
           "declaredScope": "Private repositories only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "tabbed-readme",
@@ -7980,7 +8461,9 @@
           "entry": "tabbed-readme",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "human-time-estimate",
@@ -8016,7 +8499,9 @@
           "entry": "human-time-estimate",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "unknown",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "sanitized-instruction-copy",
@@ -8052,7 +8537,9 @@
           "entry": "sanitized-instruction-copy",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "agents-md-vocabulary-block",
@@ -8088,7 +8575,9 @@
           "entry": "agents-md-vocabulary-block",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "vocabulary-hash-lock",
@@ -8107,7 +8596,7 @@
         "test/check-vocabulary.test.js"
       ],
       "evidence": [],
-      "reason": "No current runtime-derived private-source currency check or pre-push hook was established in the reviewed source; private dictionary data must never be added here.",
+      "reason": "Runtime-derived private-source currency checking and a pre-push hook exist in current source. Current lock execution and full source-currency proof are not claimed by this inventory.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -8126,7 +8615,9 @@
           "entry": "vocabulary-hash-lock",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "roadmap-checklist",
@@ -8162,7 +8653,9 @@
           "entry": "roadmap-checklist",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "feature-docs",
@@ -8200,7 +8693,9 @@
           "entry": "feature-docs",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "implemented-runtime-unverified",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "postman-collections",
@@ -8235,7 +8730,9 @@
           "entry": "postman-collections",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "wiki-documentation-sync",
@@ -8246,7 +8743,8 @@
         "docs/site/publication.mjs",
         "docs/site/content-catalog.json",
         "scripts/build-site.mjs",
-        ".github/workflows/pages.yml"
+        ".github/workflows/pages.yml",
+        "docs/site/workspace.js"
       ],
       "documentation": [
         "docs/features/platform/current-integration.md",
@@ -8258,7 +8756,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
+      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -8279,7 +8777,9 @@
           "entry": "wiki-documentation-sync",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "handoff-record",
@@ -8294,7 +8794,7 @@
       "localization": [],
       "tests": [],
       "evidence": [],
-      "reason": "A local handoff record exists. Its required current issue handoff and remote proof remain separate and were not inspected in this source review.",
+      "reason": "Local handoff and an owner-reported issue handoff exist. Current source integration and exact remote proof remain separate responsibilities.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -8315,7 +8815,9 @@
           "entry": "handoff-record",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "owner-receipts-only"
     },
     {
       "id": "closeout-prompt",
@@ -8351,7 +8853,9 @@
           "entry": "closeout-prompt",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "unknown",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "discussion-records",
@@ -8362,7 +8866,7 @@
       "localization": [],
       "tests": [],
       "evidence": [],
-      "reason": "This is a repository record duty. Current task and release discussions were not queried in this source-only review.",
+      "reason": "Owner receipt records current task progress comments and issue handoff. This pass does not independently read back all release discussions, pins or later milestones.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -8383,7 +8887,9 @@
           "entry": "discussion-records",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "owner-receipts-only"
     },
     {
       "id": "project-board",
@@ -8394,7 +8900,7 @@
       "localization": [],
       "tests": [],
       "evidence": [],
-      "reason": "This is a repository tracking duty. Current project linkage, ownership and item state were not queried in this source-only review.",
+      "reason": "Current account lacks read:project access by owner receipt. Project linkage and task-item state remain unavailable; this repository duty is not exempted.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -8415,7 +8921,9 @@
           "entry": "project-board",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "unknown",
+      "evidenceVerdict": "external-access-unavailable"
     },
     {
       "id": "operational-skill",
@@ -8447,12 +8955,14 @@
           "entry": "operational-skill",
           "declaredScope": "Repository obligation supporting the product"
         }
-      }
+      },
+      "behaviorVerdict": "unknown",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "readme-prompt-banner",
       "surface": "site",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -8479,12 +8989,14 @@
           "entry": "readme-prompt-banner",
           "declaredScope": "Canonical instruction repository only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "uh-single-file-editions",
       "surface": "site",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -8511,12 +9023,14 @@
           "entry": "uh-single-file-editions",
           "declaredScope": "Canonical instruction repository only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "project-profile",
       "surface": "site",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -8543,12 +9057,14 @@
           "entry": "project-profile",
           "declaredScope": "Canonical instruction repository only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "roblox-model-catalogue",
       "surface": "site",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -8575,12 +9091,14 @@
           "entry": "roblox-model-catalogue",
           "declaredScope": "Roblox/game projects only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "roblox-visual-realism",
       "surface": "site",
-      "status": "unverified",
+      "status": "not-applicable",
       "implementation": [],
       "documentation": [],
       "localization": [],
@@ -8607,7 +9125,9 @@
           "entry": "roblox-visual-realism",
           "declaredScope": "Roblox/game projects only"
         }
-      }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
     },
     {
       "id": "minecraft-server-manager",
@@ -8616,7 +9136,9 @@
       "implementation": [
         "src/features/server-manager/local-process.js",
         "src/features/server-manager/configuration.js",
-        "src/renderer/features/server-manager/configuration-controls.js"
+        "src/renderer/features/server-manager/configuration-controls.js",
+        "src/main/server-manager-host.js",
+        "src/renderer/features/server-manager/index.js"
       ],
       "documentation": [
         "docs/features/server-manager/foundation.md"
@@ -8629,7 +9151,7 @@
         "test/server-manager-local-process.test.js"
       ],
       "evidence": [],
-      "reason": "Conditional local process foundation and configuration primitives only. Full interactive management, provider installation and real server acceptance remain incomplete.",
+      "reason": "Preparation-only server workflow: catalog/version selection, bounded preparation, cancellation and license review exist. Full four-target interactive management, plugin/flavor lifecycle and real server acceptance are not implemented or proved here.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -8652,14 +9174,19 @@
           "entry": "minecraft-server-manager",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     },
     {
       "id": "minecraft-server-manager",
       "surface": "site",
       "status": "unverified",
       "implementation": [
-        "docs/site/publication.mjs"
+        "docs/site/publication.mjs",
+        "docs/site/workspace.js",
+        "src/main/server-manager-host.js",
+        "src/renderer/features/server-manager/index.js"
       ],
       "documentation": [
         "docs/features/server-manager/foundation.md"
@@ -8672,7 +9199,7 @@
         "test/server-manager-local-process.test.js"
       ],
       "evidence": [],
-      "reason": "Deployed article source and static documentation boundary only. Full interactive server management and real browser acceptance remain incomplete.",
+      "reason": "Companion documentation describes the preparation-only native boundary. Full browser-driven server management is not implemented or proved; desktop preparation is not full management.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -8693,7 +9220,9 @@
           "entry": "minecraft-server-manager",
           "declaredScope": "User-facing product surface"
         }
-      }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified"
     }
   ],
   "referenceSources": {
@@ -8870,6 +9399,30 @@
     "docs/features/server-manager/foundation.md": "42b95a51c84d68a3a5e0d4174788787680dbea2e",
     "docs/features/server-manager/foundation.zh-HK.md": "42b95a51c84d68a3a5e0d4174788787680dbea2e",
     "test/server-manager.test.js": "42b95a51c84d68a3a5e0d4174788787680dbea2e",
-    "test/server-manager-local-process.test.js": "42b95a51c84d68a3a5e0d4174788787680dbea2e"
+    "test/server-manager-local-process.test.js": "42b95a51c84d68a3a5e0d4174788787680dbea2e",
+    "src/renderer/features/shell/notification-narration.js": "a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c",
+    "src/main/startup-photo-service.js": "a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c",
+    "src/main/schedule-source.js": "a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c",
+    "src/shared/local-ux/surprise.js": "a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c",
+    "src/renderer/features/shell/startup-surprise.js": "a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c",
+    "src/shared/surface/controls.js": "a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c",
+    "src/shared/surface/overlay.js": "a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c",
+    "src/main/browser-download-receiver.js": "a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c",
+    "src/main/forge-workflow.js": "a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c",
+    "src/main/forge-transport.js": "a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c",
+    "src/main/validation.js": "a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c",
+    "src/renderer/features/storage-maintenance/index.js": "a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c",
+    "docs/site/workspace.js": "a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c",
+    "src/main/server-manager-host.js": "a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c",
+    "src/renderer/features/server-manager/index.js": "a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c"
+  },
+  "assessmentContext": {
+    "baseline": "a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c",
+    "scope": "Fixed combined-source assessment; historical sourceReview and per-path reference bindings remain preserved.",
+    "families": 105,
+    "rows": 210,
+    "guiMatrix": "3552-state current GUI acceptance pending.",
+    "installedLifecycle": "Actual installation, installed update and removal explicitly deferred.",
+    "storageReceipt": "Owner reports dense synthetic writes passed; final detach timed out and reopen was not reached. No whole-lifecycle acceptance claimed."
   }
 }
