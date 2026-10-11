@@ -1,4 +1,8 @@
+<a id="package-integrity-and-local-installer-verification"></a>
+
 # 套件完整性與本機安裝程式驗證
+
+<a id="private-packaging-boundaries"></a>
 
 ## 私人封裝邊界
 
@@ -20,6 +24,8 @@ Forge 的 `postPackage` hook 同正式建置都要求 `scripts/package-privacy.m
 
 已安裝桌面檢查採用 `local-headless-desktop-check.mjs`，以及同本機封裝驗證一樣經獨立審閱的擷取及掛載執行期流程。仍須互動像素審閱。安裝、啟動登記、掛載操作、正常退出及解除安裝各須自己的成功收據；封裝成功唔證明其中任何結果。解除安裝會記錄安裝根目錄每個殘留項目，包括 Squirrel 標記或記錄，唔會聲稱目錄已消失。
 
+<a id="failed-desktop-run-recovery"></a>
+
 ### 失敗桌面執行的復原
 
 本機桌面執行失敗後，先重新驗證儲存的隔離視窗及完整程序祖先關係，再對確切 CDP 目標嘗試現有 `window.drive.verificationQuit()` 路徑。啟動狀態還原及已記錄程序不存在都必須確認。即使復原成功，原有執行失敗仍保留喺收據。
@@ -27,6 +33,8 @@ Forge 的 `postPackage` hook 同正式建置都要求 `scripts/package-privacy.m
 程序證明使用完整 UTC 建立時間、執行檔路徑及相連父程序身份。只有 `PROCESS_NOT_FOUND` 證明不存在；查詢失敗、身份變更、無效祖先關係及 `IDENTITY_BOUND_TERMINATION_UNAVAILABLE` 都會保留所屬程序並令復原失敗。冇只按 PID 終止的後備方法。較早失敗收據保持原樣，唔能夠提供新的有效身份證明。每個直接配接器入口喺失敗時都回傳經清理 JSON，保留確切生命週期代碼，但唔含 traceback 或私人路徑。無法證明祖先關係時，退出及清理復原都會停止。
 
 離線回歸檢查係 `node --test test/ui-lifecycle-recovery.test.js test/ui-headless-route.test.js`、`python -B test/test_local_headless_lifecycle_policy.py` 同 `python -B test/test_local_headless_adapter_errors.py`。佢哋唔啟動或終止應用程式，測試復原次序、確切目標綁定、過期祖先關係、PID 重用及查詢失敗。
+
+<a id="verified-updater-only-uninstall-residue"></a>
 
 ### 已驗證、只剩更新器的解除安裝殘留
 
@@ -37,6 +45,8 @@ Forge 的 `postPackage` hook 同正式建置都要求 `scripts/package-privacy.m
 執行 `scripts/test-squirrel-uninstall-residue.ps1` 測試有效及刻意無效的合成案例。`diagnose-uninstall-residue.ps1` 另以唯讀方式重新分類保留殘留，將報告綁定原有失敗生命週期／程序收據及套件雜湊，記錄原有來源及目前檢查器版本，並驗證實際登記／啟動項／程序不存在。佢拒絕覆寫輸出。呢個診斷唔會重跑安裝或改寫原有失敗收據，亦唔係全新完整生命週期執行的證據。
 
 預覽說明連結已驗證的公開點心目錄版本圖片。產品版本唔會附上複製的目錄圖片。發佈會喺寫入版本計劃前重新檢查套件完整性。現有來源擁有的圖片會保留，直到另獲授權遷移。
+
+<a id="automatic-release-publication"></a>
 
 ## 自動版本發佈
 
