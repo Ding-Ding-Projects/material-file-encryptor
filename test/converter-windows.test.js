@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { PDFDocument } from 'pdf-lib';
+import {writeZip} from '../src/features/converter/archive.mjs';
 import { createWindowsSandboxProvider } from '../src/features/converter/windows-sandbox.mjs';
 const executable=path.resolve('src/features/converter/native/bin/Release/net8.0-windows/ConverterSandbox.exe');
 const available=process.platform==='win32'&&await fs.access(executable).then(()=>true,()=>false);
@@ -15,6 +16,8 @@ test('native provider validates a real isolated probe and PDF result',{skip:!ava
  const document=await PDFDocument.create();document.addPage([200,400]);const source=await document.save();
  const result=await provider.launch({inputs:[source],adapterId:'pdf-rotate',options:{rotation:90}}).result;
  const output=await PDFDocument.load(result.outputs[0].bytes);assert.equal(output.getPage(0).getRotation().angle,90);assert.equal(output.getPageCount(),1);
+ const zip=writeZip([{name:'nested/a.txt',bytes:Buffer.from('archive bytes')}]);const extracted=await provider.launch({inputs:[zip],adapterId:'zip-extract',options:{}}).result;assert.equal(extracted.outputs[0].name,'nested/a.txt');assert.equal(extracted.outputs[0].bytes.toString(),'archive bytes');
+ const table=await provider.launch({inputs:[Buffer.from('a,"b,c"\n')],adapterId:'csv-to-json',options:{formulaPolicy:'reject'}}).result;assert.deepEqual(JSON.parse(table.outputs[0].bytes),[['a','b,c']]);
 });
 test('native provider rejects executable hash mismatch',{skip:!available},async()=>{
  await assert.rejects(createWindowsSandboxProvider({launcherPath:executable,launcherCompanionHashes:await companions(),launcherSha256:'0'.repeat(64),runtimePath:process.execPath,runtimeSha256:await hash(process.execPath)}),/verification/);
