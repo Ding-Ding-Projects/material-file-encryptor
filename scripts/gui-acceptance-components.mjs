@@ -58,7 +58,8 @@ export async function assertMenuBehavior(page,{host='mfe-context-menu',anchor='#
  return {scope:'source-fixture',menuFocusPreserved:true,builderPreserved:true,dismissal:['escape','selection','outside','resize','target-removed'],actionEffect:true,keyboardExactlyOnce:true,staleItemRejected:true,lockedTargetRejected:true};
 }
 
-export async function runComponentAcceptance({evidenceRoot,runtime={}}) {
+export async function runComponentAcceptance({evidenceRoot,runtime={},checks=['menu','choiceSearch','palette','filePicker']}) {
+ const knownChecks=['menu','choiceSearch','palette','filePicker'];assert.ok(checks.length>0&&new Set(checks).size===checks.length&&checks.every(check=>knownChecks.includes(check)));
  assert.ok(path.isAbsolute(evidenceRoot));await fs.mkdir(evidenceRoot,{recursive:true});
  const index=await fs.readFile(new URL('../src/renderer/index.html',import.meta.url),'utf8');
  const csp=index.match(/<meta http-equiv="Content-Security-Policy"[^>]+>/)?.[0];assert.ok(csp,'Production CSP missing');
@@ -71,7 +72,7 @@ export async function runComponentAcceptance({evidenceRoot,runtime={}}) {
  });
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  const url=`http://127.0.0.1:${server.address().port}/`;
- let browser,primaryError,closure;const result={schemaVersion:1,scope:'source-fixture',packagedAcceptance:false,nativeDriveAcceptance:false,browserErrors:[],failedResources:[],captures:[]};
+ let browser,primaryError,closure;const result={schemaVersion:1,scope:'source-fixture',requestedChecks:checks,completeComponentSuite:checks.length===knownChecks.length,packagedAcceptance:false,nativeDriveAcceptance:false,browserErrors:[],failedResources:[],captures:[]};
  try{
   browser=await openRendererBrowser(url,{evidenceRoot:path.join(evidenceRoot,'lifecycle'),runtime});
   if(browser.statePath){const bytes=await fs.readFile(browser.statePath+'.native-v1.json');const source=JSON.parse(bytes);result.sourceCommit=source.sourceCommit;result.nativeProvenanceSha256=createHash('sha256').update(bytes).digest('hex');}
@@ -80,10 +81,10 @@ export async function runComponentAcceptance({evidenceRoot,runtime={}}) {
   page.on('response',response=>{if(response.status()>=400&&response.url().startsWith(url))result.failedResources.push({path:new URL(response.url()).pathname,status:response.status()});});
   await page.goto(url);await page.waitForFunction(()=>window.acceptanceReady&&customElements.get('md-menu')&&customElements.get('md-outlined-text-field'));
   const capture=async name=>{const file=path.join(evidenceRoot,name+'.png'),startedAt=new Date().toISOString();const bytes=await page.screenshot({path:file});result.captures.push({path:file,sha256:createHash('sha256').update(bytes).digest('hex'),startedAt,capturedAt:new Date().toISOString(),scope:'source-fixture',inspected:false});};
-  result.menu=await assertMenuBehavior(page,{capture});
-  result.choiceSearch=await assertChoiceSearchBehavior(page,{capture});
-  result.palette=await assertPaletteBehavior(page,{capture});
-  result.filePicker=await assertFilePickerBehavior(page);
+  if(checks.includes('menu'))result.menu=await assertMenuBehavior(page,{capture});
+  if(checks.includes('choiceSearch'))result.choiceSearch=await assertChoiceSearchBehavior(page,{capture});
+  if(checks.includes('palette'))result.palette=await assertPaletteBehavior(page,{capture});
+  if(checks.includes('filePicker'))result.filePicker=await assertFilePickerBehavior(page);
   assert.deepEqual(errors,[],'Production component graph emitted browser errors');result.browserErrors=errors;
   result.passed=true;
  }catch(error){primaryError=error;result.passed=false;result.failure=error.message;if(browser)try{result.menuDiagnostic=await browser.page.evaluate(()=>({stage:window.__acceptanceStage,events:window.__acceptanceMenuEvents||[],invoked:window.__acceptanceInvoked||[],menuHidden:document.querySelector('mfe-context-menu')?.hidden}));}catch{}}
@@ -129,7 +130,7 @@ export async function assertPaletteBehavior(page,{capture=async()=>{}}={}) {
 
 export async function assertFilePickerBehavior(page,{host='mfe-file-picker[label="Synthetic acceptance file"]',content='synthetic acceptance data'}={}) {
  const picker=page.locator(host);
- assert.equal(await picker.locator('input').evaluate(node=>node.type),'file','File-picker native type differs from its declared component');
+ assert.equal(await picker.evaluate(node=>node.shadowRoot.querySelector('input').type),'file','File-picker native type differs from its declared component');
  await picker.evaluate(node=>{window.__acceptancePickerChanges=[];node.addEventListener('change',()=>window.__acceptancePickerChanges.push(node.files?.length??-1));});
  const chooser=page.waitForEvent('filechooser');
  await picker.locator('md-outlined-button').click();
