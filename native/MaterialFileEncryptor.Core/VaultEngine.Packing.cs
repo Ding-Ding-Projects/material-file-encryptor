@@ -199,9 +199,8 @@ public sealed partial class VaultEngine
     }
     public VaultStorageDiagnostics GetStorageDiagnostics()
     {
-        using var lifetime=AcquireStorageOperation();HashSet<string> current;string[] commits;VaultPackingStatus status;
-        lock(gate){Check();current=entries.Values.SelectMany(AllRecords).Select(r=>r.Part).ToHashSet(StringComparer.Ordinal);commits=known.ToArray();status=PackingStatus;}
-        var history=new HashSet<string>(StringComparer.Ordinal);
+        using var lifetime=AcquireStorageOperation();HashSet<string> current,history;string[] commits;VaultPackingStatus status;
+        lock(gate){Check();current=entries.Values.SelectMany(AllRecords).Select(r=>r.Part).ToHashSet(StringComparer.Ordinal);history=pendingVersions.SelectMany(v=>AllRecords(v.Value)).Select(r=>r.Part).ToHashSet(StringComparer.Ordinal);commits=known.ToArray();status=PackingStatus;}
         foreach(var id in commits)history.UnionWith(Parts(ReadMetadata<Commit>(ObjectPath(cache,"commits",id),"commit",id)));
         history.ExceptWith(current);
         long Size(string id){var local=ObjectPath(cache,"parts",id);var remote=ObjectPath(source,"parts",id);try{return File.Exists(local)?new FileInfo(local).Length:File.Exists(remote)?new FileInfo(remote).Length:0;}catch(IOException){return 0;}}

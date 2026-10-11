@@ -125,7 +125,7 @@ internal static class PackingTests
         var digest=expected.GetHashAndReset();int before=engine.GetInfo("large")!.PartCount;
         var memoryBefore=GC.GetTotalMemory(true);engine.PackAsync().GetAwaiter().GetResult();var memoryAfter=GC.GetTotalMemory(true);
         var info=engine.GetInfo("large")!;Assert(info.PartCount==3&&before>info.PartCount,"Dense file was not packed into near-cap parts");
-        var diagnostics=engine.GetStorageDiagnostics();Assert(diagnostics.CurrentReferencedBytes<=cap*3&&diagnostics.CurrentReferencedBytes>length,"Physical bytes do not include encryption overhead");
+        var diagnostics=engine.GetStorageDiagnostics();Assert(diagnostics.HistoricalOnlyParts>=before,"Pending retained history is absent from diagnostics");Assert(diagnostics.CurrentReferencedBytes<=cap*3&&diagnostics.CurrentReferencedBytes>length,"Physical bytes do not include encryption overhead");
         using var actual=IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         for(offset=0;offset<length;){int count=engine.ReadRange("large",offset,buffer);actual.AppendData(buffer,0,count);offset+=count;}
         Assert(actual.GetHashAndReset().SequenceEqual(digest),"Dense packing changed plaintext hash");
