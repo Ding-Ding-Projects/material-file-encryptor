@@ -1,6 +1,7 @@
 
 
 export const GUIDANCE_COPY={
+ 'Guide':'指引','Explain':'解說',
  'Guide this control':'逐步了解這個控制項','Explain this control':'解釋這個控制項','Back':'上一步','Next':'下一步','Apply through the direct control':'透過原有控制項套用','Cancel guidance':'取消指引','Return to control':'返回控制項','Guidance cancelled. Completed effects are retained.':'指引已取消，已完成的修改會保留。','Ready. Review the original control and its result.':'準備就緒，請檢查原有控制項及其結果。','Working through the original action.':'正在執行原有操作。','Purpose':'用途','Options':'選項','Default':'預設值','Effects':'影響','Example':'例子','Validation':'驗證','Recovery':'復原方法','Authoritative documentation':'完整說明文件','Review the value at the original control.':'請檢查原有控制項的數值。','Review the consequences before continuing.':'繼續前請檢查操作的影響。','A required value is invalid. Correct the original control before continuing.':'必填數值無效，請先修正原有控制項。','This control is unavailable. Review its adjacent explanation.':'這個控制項目前無法使用，請查看旁邊的解釋。',
 };
 
@@ -41,7 +42,7 @@ export async function clearGuidedField(target,{eventType='change',getFlight=()=>
 
 /** A registered non-modal Material component immediately precedes its target.
  * It never clones a secret, unlocks a target or substitutes an operation. */
-export function mountControlGuidance(target,{descriptor,t=s=>s,run,validate=()=>{},registerHelp,registerCommands,openHelp,provenance,getDetails}={}){
+export function mountControlGuidance(target,{descriptor,t=s=>s,run,validate=()=>{},registerHelp,registerCommands,openHelp,provenance,getDetails,compactLabels=false}={}){
  if(!descriptor?.id||!descriptor.help||!descriptor.steps?.length)throw Error('A registered guidance descriptor is required.');
  if(!target.parentNode)throw Error('Attach the guidance target before mounting guidance.');
  const doc=target.ownerDocument,win=doc.defaultView;
@@ -49,7 +50,7 @@ export function mountControlGuidance(target,{descriptor,t=s=>s,run,validate=()=>
  const element=(tag,props={})=>{const node=doc.createElement(tag);for(const[key,value]of Object.entries(props)){if(key==='text')node.textContent=value;else if(key.startsWith('on'))node.addEventListener(key.slice(2),value);else if(key in node)node[key]=value;else node.setAttribute(key,value);}return node;};
  const host=doc.createElement('mfe-control-guidance');host.dataset.guidanceId=descriptor.id;target.before(host);
  host.initialize(':host{margin-block:4px}.panel{padding:12px;border:1px solid var(--md-sys-color-outline);border-radius:12px;overflow-wrap:anywhere}.status{min-height:1.5em}');
- const root=host.shadowRoot,entry=element('md-text-button',{text:t('Guide this control'),'aria-label':`${t('Guide this control')}: ${t(descriptor.label)}`}),explain=element('md-text-button',{text:t('Explain this control'),'aria-label':`${t('Explain this control')}: ${t(descriptor.label)}`}),panel=element('section',{class:'panel',hidden:true,'aria-label':t(descriptor.label)}),status=element('p',{role:'status','aria-live':'polite'});
+ const root=host.shadowRoot,entry=element('md-text-button',{text:t(compactLabels?'Guide':'Guide this control'),'aria-label':`${t('Guide this control')}: ${t(descriptor.label)}`}),explain=element('md-text-button',{text:t(compactLabels?'Explain':'Explain this control'),'aria-label':`${t('Explain this control')}: ${t(descriptor.label)}`}),panel=element('section',{class:'panel',hidden:true,'aria-label':t(descriptor.label)}),status=element('p',{role:'status','aria-live':'polite'});
  const details=element('section',{hidden:true,'aria-label':`${t('Explain this control')}: ${t(descriptor.label)}`});
  const renderDetails=()=>{const live={...descriptor,...getDetails?.()};details.replaceChildren();for(const key of ['purpose','options','default','effects','example','validation','recovery'])details.append(element('p',{text:`${t(key[0].toUpperCase()+key.slice(1))}: ${t(live[key])}`}));const origin=live.provenance??provenance?.();if(origin)details.append(element('p',{text:String(origin)}));const article=element('a',{text:t('Authoritative documentation'),href:descriptor.help});if(openHelp)article.addEventListener('click',event=>{event.preventDefault();Promise.resolve(openHelp(descriptor)).catch(error=>{status.textContent=t(error.message);details.append(status);});});details.append(article);};renderDetails();
  let session=null,disposed=false;const disposers=[];

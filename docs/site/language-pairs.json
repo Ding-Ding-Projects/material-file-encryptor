@@ -391,8 +391,8 @@
     {
       "source": "docs/features/interface/settings-guidance.md",
       "translation": "docs/features/interface/settings-guidance.zh-HK.md",
-      "sourceSha256": "ed5a7a8bf83d32d1181b31a9a3c90a481f292e353f07b70b7234aee8083557a1",
-      "translationSha256": "5e33cfbbf2c275ffd3a5db39bdb687066940a71286230459fb912a9b731517cc"
+      "sourceSha256": "344b22085cf3fa1471ee1b4479458943e3f193cfa3f5836f2750493d96572c88",
+      "translationSha256": "4ce35ed16eaae444a8bd94f293d347166f49ed725458ab62a039ff71b14b9b5b"
     },
     {
       "source": "docs/features/interface/nested-appearance-guidance.md",
