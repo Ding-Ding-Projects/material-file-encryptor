@@ -1,4 +1,25 @@
 export const ACCESS_COPY = Object.freeze({
+ 'Search profile controls':'搜尋個人檔案控制',
+ 'Search lock settings':'搜尋鎖定設定',
+ 'Search registration controls':'搜尋登記控制',
+ 'Search support controls':'搜尋支援控制',
+ 'Search unlock controls':'搜尋解鎖控制',
+
+ 'Lock creation was cancelled.':'建立鎖定已取消。',
+
+ 'Open an element context menu and choose Lock this element to create its own lock.':'開啟項目嘅內容選單，再選擇鎖定此項目，為佢建立獨立鎖定。',
+
+ 'First confirmation key':'第一條確認匙',
+ 'Second confirmation key':'第二條確認匙',
+ 'Confirmation progress':'確認進度',
+ 'Operate both confirmation keys and move the slider fully right.':'請啟用兩條確認匙，再將滑桿移到最右邊。',
+
+ 'Access workflows':'存取工作流程',
+ 'Element locks':'項目鎖定',
+ 'Search element locks':'搜尋項目鎖定',
+ 'Register or edit an authenticator':'登記或編輯驗證器',
+ 'Add authenticator':'新增驗證器',
+
  'Confirm the selected local records before continuing.':'繼續之前，請確認已選取嘅本機記錄。',
  'Confirm':'確認',
  'Select record':'選取記錄',

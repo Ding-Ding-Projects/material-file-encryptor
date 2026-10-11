@@ -1,10 +1,10 @@
+import {createAccessDocument} from './helpers/local-access-dom.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createWaitBudget,WAIT_BUDGET_KEY} from '../src/renderer/features/access/wait-budget.js';
 import {LocalProfile} from '../src/renderer/features/access/profile.js';
 import {LockController} from '../src/renderer/features/access/locks.js';
 import {mountAccess} from '../src/renderer/features/access/index.js';
-import {createAccessDocument} from './helpers/local-access-dom.js';
 
 function storage(){const values=new Map();return{getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,value),values};}
 function mutex(){let tail=Promise.resolve();return(_name,run)=>{const result=tail.then(run,run);tail=result.catch(()=>{});return result;};}
