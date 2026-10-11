@@ -107,6 +107,19 @@ export async function retainClosureAttempt(destination,state,observation) {
 }
 async function freePort(){const server=net.createServer();await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});const port=server.address().port;await new Promise(resolve=>server.close(resolve));return port;}
 
+export async function preparePackagedProfile({runtime,packagedTarget,runRoot}) {
+ if(!runtime.prepareProfile)return null;
+ if(!packagedTarget||packagedTarget.kind!=='extracted-packaged-runtime')throw new Error('Profile preparation requires a validated packaged target.');
+ const profile=path.join(runRoot,'profile');
+ if(await fs.realpath(profile)!==path.resolve(profile))throw new Error('Packaged profile must be canonical.');
+ if((await fs.readdir(profile)).length)throw new Error('Packaged profile must be fresh before fixture preparation.');
+ await packagedTarget.revalidate();
+ const result=await runtime.prepareProfile({profile,runRoot,target:packagedTarget});
+ if(result?.ownedSyntheticFixture!==true||result.sourceCommit!==packagedTarget.sourceCommit)throw new Error('Profile preparation ownership or source binding is invalid.');
+ await packagedTarget.revalidate();
+ return {ownedSyntheticFixture:true,sourceCommit:result.sourceCommit,profilePrepared:true};
+}
+
 export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},packagedTarget,gracefulOnly=false}={}) {
  if(typeof gracefulOnly!=='boolean')throw new Error('Graceful-only closure option must be boolean.');
  const {chromium}=runtime.chromium?{chromium:runtime.chromium}:await import('playwright');
@@ -197,6 +210,7 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
  try {
   await lifecycleCommand([adapter,'preflight','--require','launch_on_headless_desktop','--require','list_headless_windows','--require','kill_process','--require','close_headless_desktop']);
   if(packagedTarget)await packagedTarget.revalidate();
+  await preparePackagedProfile({runtime,packagedTarget,runRoot});
   launchAttempted=true;
   const launchArguments=packagedTarget?['--desktop-check',`--verification-profile=${path.join(runRoot,'profile')}`,`--remote-debugging-port=${port}`,'--remote-debugging-address=127.0.0.1']:[`--user-data-dir=${path.join(runRoot,'profile')}`,`--remote-debugging-port=${port}`,'--remote-debugging-address=127.0.0.1','--no-first-run','--no-default-browser-check','--disable-background-networking','--disable-extensions','--enable-automation',...(path.basename(executable).toLowerCase()==='msedge.exe'?['--edge-skip-compat-layer-relaunch','--disable-component-extensions-with-background-pages']:[]),headlessShell?expectedUrl:`--app=${expectedUrl}`];
   await lifecycleCommand([adapter,'launch','--state',state],{executable,arguments:launchArguments,runRoot,outputRoot:path.join(runRoot,'output'),cdp:{port,expectedUrl}});
