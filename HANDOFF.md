@@ -1,12 +1,14 @@
-# Current integration handoff - 2026-10-11 UTC
+# Current integration handoff
 
-Objective: finish the integrated encrypted-drive workspace without substituting module tests or old release captures for current production verification. The documentation pass read parent commit `3b145cc99ed5e711ace55998fd07533d199b0227` and observed active feature-bridge changes; it did not edit those source files.
+The current source baseline is `d1ca1e4`; the source-bound native receipt identifies `3b9c5b4`. Main has not yet been pushed. All 208 desktop/site delivery rows remain `unverified`. Installed execution, native update and removal are explicitly deferred by the maintainer, not completed or waiting for an environment request.
 
-Implemented source modules and their explicit limits are summarized in [current integration status](docs/features/platform/current-integration.md). All 208 feature-delivery rows remain unverified. Six focused documentation checks and an isolated-browser interaction check have passed in the documentation lane; they do not prove the final production package.
+A real 512 MiB import completed and its full mounted SHA-256 matched. A second 2 GiB file was cancelled during work at 1,419,575,296 bytes through **Cancel unfinished work then quit**. After exit, reopening the encrypted fixture showed only the completed 512 MiB file with its exact hash; the cancelled file was absent, and the fixture was locked again. Owned-process absence and hidden-desktop closure passed. Cancellation acknowledgement latency and the final cryptographic block were not instrumented, so these timings remain unverified.
 
-This pass categorizes local access, personalization and appearance articles, refreshes category indexes and the full site catalogue, records a new unreleased changelog entry and preserves historical project records below. The native helper measurement records 105 status requests across five processes, binary hashes, UTC time and source-binding uncertainty. No vault, mount, import/export, GUI, model download, installer or publication action was performed for that measurement.
+The PNG GUI decoder remains unavailable while the direct provider loaded from the frozen application archive passes. Diagnosis is ongoing; the direct-provider result does not establish the GUI route. The earlier canonical vocabulary upload used 145 real entries and passed 17 mapped DOM checks plus 17 reload checks. A 1,025-entry synthetic file was accepted. No payload network transfer or export occurred.
 
-Next owner: integration coordinator. Incorporate only the sanitized final diff from the documentation lane, not its unpublished historical commits. Preserve other active work. Build the final immutable candidate, complete source-bound runtime/installation/deployment evidence and update proof rows only when each surface's entire requirement is met. No current release or live status delivery is claimed.
+The broad JavaScript run recorded 586 tests: 564 passed, 2 failed and 20 skipped. Both failures require unavailable Playwright Chromium revision 1248; this is not a green run. The shared-instructions sweep recorded 84 checks: 83 passed, zero failed and one unverified Windows Bash check, with a separate exact Linux pass. These are distinct receipts, not an all-platform green verdict.
+
+Next: complete the PNG GUI diagnosis, preserve source-bound evidence, reconcile final documentation and push main only through the owning integration workflow. Retain deferred installed lifecycle checks as unverified. Preserve all historical records below.
 
 # Historical source-bound handoffs
 

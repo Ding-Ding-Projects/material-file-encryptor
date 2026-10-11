@@ -1,6 +1,14 @@
 # Current integration and verification status
 
-The current source review uses integrated baseline `b5b3096`. The applicability mapping was originally reviewed at `37fa47a`; that older inventory scope remains distinct from newer implementation changes. Earlier source reviews are retained below. Integration does not prove downloaded packaging, installed behavior, complete interface acceptance, or release delivery. All 208 desktop/site delivery rows remain `unverified`.
+The current source baseline is `d1ca1e4`; the source-bound native receipt identifies `3b9c5b4`. Main has not yet been pushed. All 208 desktop/site delivery rows remain `unverified`. Installed execution, native update and removal are explicitly deferred by the maintainer, not completed or waiting for an environment request.
+
+A real 512 MiB import completed and its full mounted SHA-256 matched. A second 2 GiB file was cancelled during work at 1,419,575,296 bytes through **Cancel unfinished work then quit**. After exit, reopening the encrypted fixture showed only the completed 512 MiB file with its exact hash; the cancelled file was absent, and the fixture was locked again. Owned-process absence and hidden-desktop closure passed. Cancellation acknowledgement latency and the final cryptographic block were not instrumented, so these timings remain unverified.
+
+The PNG GUI decoder remains unavailable while the direct provider loaded from the frozen application archive passes. Diagnosis is ongoing; the direct-provider result does not establish the GUI route. The earlier canonical vocabulary upload used 145 real entries and passed 17 mapped DOM checks plus 17 reload checks. A 1,025-entry synthetic file was accepted. No payload network transfer or export occurred.
+
+The broad JavaScript run recorded 586 tests: 564 passed, 2 failed and 20 skipped. Both failures require unavailable Playwright Chromium revision 1248; this is not a green run. The shared-instructions sweep recorded 84 checks: 83 passed, zero failed and one unverified Windows Bash check, with a separate exact Linux pass. These are distinct receipts, not an all-platform green verdict.
+
+The applicability mapping and earlier source reviews below remain historical source records. They do not upgrade current completion states.
 
 ## Reviewed source sets
 

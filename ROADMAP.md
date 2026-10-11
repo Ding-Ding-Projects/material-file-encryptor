@@ -1,19 +1,19 @@
 # Current integrated workspace checklist
 
-- [x] Record the current native, workspace, access, personalization, converter, local-model and documentation modules without claiming release acceptance.
-- [x] Categorize the three previously loose product articles and retain compatibility links.
-- [x] Enumerate every current feature article in the documentation catalogue.
-- [x] Record bounded native helper status measurements with exact binary hashes and explicit source uncertainty.
-- [x] Publish and independently download the source-built minimal conversion component, preserving its exact source and asset inventories separately from application acceptance.
-- [x] Reject private verification folders from packaged archives and retain the failed local package as diagnostic evidence.
-- [ ] Build and package the final immutable integrated source through both root entrypoints.
-- [ ] Verify current native mounted transfer, cancellation, journal recovery and selected-file activity workflows.
-- [ ] Verify every mounted desktop/browser feature with full language, theme, scale, keyboard, accessibility and persistence evidence.
-- [ ] Complete converter operating-system isolation and local-model integration evidence for the final package.
-- [ ] Complete authenticated Status Hub delivery or retain the exact unavailable condition.
-- [ ] Complete all required proof dimensions independently for each of the 208 desktop/site inventory rows.
-- [ ] Verify any new documentation deployment, internal routes, assets and stored repository homepage.
-- [ ] Verify downloaded installed lifecycle and complete authorized preservation/integration closeout.
+- [x] Record current source `d1ca1e4` and source-bound native receipt `3b9c5b4`, preserving historical evidence.
+- [x] Verify a real 512 MiB import with full mounted SHA-256 comparison for that receipt.
+- [x] Verify cancellation during a second 2 GiB import at 1,419,575,296 bytes, reopening with only the completed file and exact hash, cancelled file absent, and final lock.
+- [x] Verify owned-process absence and hidden-desktop closure for that run.
+- [x] Record canonical upload with 145 real entries, 17 mapped DOM checks, 17 reload checks, and a separately accepted 1,025-entry synthetic file, with no payload network transfer or export.
+- [ ] Instrument cancellation acknowledgement latency and the final cryptographic block.
+- [ ] Diagnose the unavailable PNG GUI decoder; direct frozen-archive provider success does not prove the GUI route.
+- [ ] Complete the broad JavaScript run: current result is 586 total, 564 passed, 2 failed from missing Playwright Chromium revision 1248, and 20 skipped.
+- [ ] Resolve or retain the shared-instructions Windows Bash check as unverified: 84 total, 83 passed, zero failed, one unverified; separate exact Linux check passed.
+- [ ] Complete every required proof dimension independently for all 208 desktop/site inventory rows, all currently unverified.
+- [ ] Complete the full native-scale and language/theme interaction matrix for the final candidate.
+- [ ] Installed execution, native update and removal: explicitly deferred by the maintainer, unverified.
+- [ ] Finish final publication and source-bound release acceptance without substituting historical receipts.
+- [ ] Push and verify main through the integration owner; main has not yet been pushed.
 
 # Historical source-bound checklists
 
