@@ -26,4 +26,8 @@ No GPL or nonfree configure flag is requested. zlib is the only additional sourc
 
 ## Acceptance state
 
-Source verification and recipe checks have passed. Configuration, compilation, exact output inventory, six-format isolated runtime checks, source-package validation and parent packaging are still required. This document does not claim the candidate is ready to distribute.
+Source verification, corrected configuration, compilation and all six isolated format conversions passed on the build host. Output probes, complete decodes and cancellation passed. The exact candidate hashes and source package are recorded in the manifest. Parent review and publication remain separate. The build emitted upstream compiler warnings; no warning-free or bit-identical rebuild claim is made.
+
+The final build used two compiler jobs at below-normal priority. Both executables import only operating-system DLLs. The static runtime notices for MinGW-w64 and the GCC Runtime Library Exception are included with the distribution, alongside the FFmpeg and zlib notices. No external GPL codec library is linked. The enabled-component list is included in the corresponding-source archive.
+
+Consumers should download the reviewed, hash-pinned component bundle instead of compiling on every machine. Source rebuilding requires the stated compiler, Make and Bash. Source and binary archives are distinct from the application release; parent publication must preserve both and verify each hash.
