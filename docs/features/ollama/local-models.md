@@ -14,7 +14,7 @@ Installed and running local tags are merged with the catalog without removing lo
 
 ## Hardware and downloads
 
-Hardware refresh measures RAM, available RAM, architecture and free space. GPU, usable VRAM and driver support remain unknown unless the host supplies a verified probe. Fit needs exact size, parameter, quantization and context-memory evidence. Unknown data remains Unknown; model names are never used to invent requirements. Storage estimates include a 20% allowance and do not guarantee sufficient space for concurrent downloads or other applications.
+Hardware refresh measures RAM, available RAM, architecture and application-data-volume free space. The actual Ollama model storage volume can differ, so its free space, GPU, usable VRAM and driver support remain unknown unless the host supplies a verified probe. Fit needs exact size, parameter, quantization and context-memory evidence. After inspecting an installed model, reported architecture dimensions can estimate an F16 key/value cache for a 2,048-token context. The dimensions, arithmetic and assumptions accompany the verdict. Unknown data remains Unknown; model names are never used to invent requirements. Storage estimates include a 20% allowance and do not guarantee sufficient space for concurrent downloads or other applications.
 
 The pull cart is only a download queue. Review exact tags, known sizes, additional storage and available space, then confirm network use. Choose one to three simultaneous pulls. Byte progress is displayed only when Ollama supplies it. Installed models are skipped; partial failure never marks the batch successful. Cancel and retry individual failed/interrupted items without deleting installed models. State is saved to the private application data directory.
 
@@ -22,7 +22,7 @@ The pull cart is only a download queue. Review exact tags, known sizes, addition
 
 Select an installed model, set system instructions and bounded parameters, and send a message. Responses stream locally and can be stopped or regenerated. Sessions can be selected, renamed and deleted through an explicit confirmation. Images require verified `vision` capability and are limited to four images of 1 MiB each. Context is bounded to 128 messages, individual text to 65,536 characters, requests to 6 MiB and responses to 16 MiB. One chat response runs at a time.
 
-History and attachments are local sensitive data. Exports retain messages while removing recognizable credential assignments, bearer values, environment assignments and private path patterns; image bytes are omitted. Automatic redaction cannot identify every secret. Review exports locally before sharing. Neither message bodies nor attachment bytes are sent to telemetry or logs by this module.
+History and attachments are local sensitive data. Exports retain messages while removing recognizable credential assignments, bearer values, environment assignments and private path patterns; image bytes are omitted. Automatic redaction cannot identify every secret. Review exports locally before sharing. Neither message bodies nor attachment bytes are sent to telemetry or logs by this module. Single-response generation uses the same bounded local model selection but does not append to a chat session. Installed models can be copied into one of three guided local tag destinations, and deleted only after typing the exact tag in the host confirmation control.
 
 ## Profiles and integration
 

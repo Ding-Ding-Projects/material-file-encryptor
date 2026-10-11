@@ -2,7 +2,13 @@ import os from 'node:os';
 import fs from 'node:fs/promises';
 export async function detectHardware(directory) {
   let freeDiskBytes=null;try{const s=await fs.statfs(directory);freeDiskBytes=Number(s.bavail)*Number(s.bsize);}catch{}
-  return {at:new Date().toISOString(),architecture:os.arch(),platform:os.platform(),ramBytes:os.totalmem(),availableRamBytes:os.freemem(),freeDiskBytes,gpu:null,vramBytes:null,backendSupported:null,evidence:['Node operating-system memory and architecture','Filesystem available blocks','GPU and driver evidence unavailable; no GPU assumption']};
+  return {at:new Date().toISOString(),architecture:os.arch(),platform:os.platform(),ramBytes:os.totalmem(),availableRamBytes:os.freemem(),freeDiskBytes:null,applicationDataFreeBytes:freeDiskBytes,gpu:null,vramBytes:null,backendSupported:null,evidence:['Node operating-system memory and architecture','Application-data filesystem available blocks; actual Ollama model storage volume is not established','GPU and driver evidence unavailable; no GPU assumption']};
+}
+export function modelEvidence(model,metadata={},requestedContext=2048) {
+  const info=metadata.model_info||{},architecture=info['general.architecture'];
+  const count=info['general.parameter_count'],layers=info[`${architecture}.block_count`],heads=info[`${architecture}.attention.head_count`],kvHeads=info[`${architecture}.attention.head_count_kv`],embedding=info[`${architecture}.embedding_length`],declared=info[`${architecture}.context_length`];
+  const valid=[layers,heads,kvHeads,embedding,declared,requestedContext].every(n=>Number.isSafeInteger(n)&&n>0)&&embedding%heads===0&&requestedContext<=declared;
+  return {model:{...model,parameterCount:count||null,quantization:metadata.details?.quantization_level||null,contextLength:declared||null},context:{contextLength:requestedContext,contextBytes:valid?2*2*layers*kvHeads*(embedding/heads)*requestedContext:null},assumptions:valid?['F16 key/value cache: 2 bytes per element, key and value, all reported transformer layers. Additional allocator overhead is covered only by the weights safety allowance.']:['Architecture dimensions or declared context are unavailable; no context memory estimate.']};
 }
 export function assessFit(model,hardware,{contextLength=model.contextLength,contextBytes=null}={}) {
   const evidence={modelBytes:model.sizeBytes??null,parameterCount:model.parameterCount??null,quantization:model.quantization??null,contextLength:contextLength??null,contextBytes,hardware};

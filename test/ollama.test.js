@@ -5,7 +5,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {OllamaClient,modelName,options} from '../src/features/ollama/client.js';
 import {OfficialCatalog,reconcile} from '../src/features/ollama/catalog.js';
-import {assessFit} from '../src/features/ollama/hardware.js';
+import {assessFit,modelEvidence} from '../src/features/ollama/hardware.js';
 import {ProfileManager} from '../src/features/ollama/profiles.js';
 import {createOllamaService,redactChat} from '../src/features/ollama/service.js';
 const response=value=>new Response(typeof value==='string'?value:JSON.stringify(value));
@@ -39,6 +39,10 @@ test('installed and running tags remain visible beyond catalog',()=>{const r=rec
 test('fit verdicts derive from explicit evidence and unknowns remain unknown',()=>{
   const model={sizeBytes:100,parameterCount:'1B',quantization:'Q4',contextLength:2048};const h={freeDiskBytes:1000,availableRamBytes:1000,vramBytes:1000,backendSupported:true};
   assert.equal(assessFit(model,h).verdict,'Unknown');assert.equal(assessFit(model,h,{contextBytes:100,contextLength:2048}).verdict,'Runs well');assert.equal(assessFit(model,{...h,backendSupported:false},{contextBytes:100,contextLength:2048}).verdict,'Runs with limits');assert.equal(assessFit(model,{...h,freeDiskBytes:50}).verdict,'Unlikely');assert.equal(assessFit({tag:'massive-999b'},h).verdict,'Unknown');
+});
+test('context memory comes from architecture metadata rather than model-name guesses',()=>{
+  const metadata={details:{quantization_level:'Q4_K_M'},model_info:{'general.architecture':'llama','general.parameter_count':1e9,'llama.block_count':16,'llama.attention.head_count':8,'llama.attention.head_count_kv':2,'llama.embedding_length':1024,'llama.context_length':8192}};
+  const result=modelEvidence({tag:'any-name',sizeBytes:1000},metadata,2048);assert.equal(result.context.contextBytes,4*16*2*128*2048);assert.equal(result.model.parameterCount,1e9);assert.equal(modelEvidence({tag:'llama-8b'}).context.contextBytes,null);
 });
 test('profile launch uses only verified picker registrations and rolls back failed readiness',async()=>{
   const dir=await fs.mkdtemp(path.join(os.tmpdir(),'ollama-profile-'));try{let stopped=false;const p=new ProfileManager({verifyExecutable:async()=>true,validateProfile:async p=>p.args.length===1&&p.args[0]==='--version',launcher:async()=>({stop:async()=>{stopped=true;}}),healthCheck:async()=>false});

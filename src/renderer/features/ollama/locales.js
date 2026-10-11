@@ -1,4 +1,5 @@
 export const ollamaCantonese = Object.freeze({
+  'Copy destination':'複製目的標籤','Copy installed model':'複製已安裝模型','Model copy created.':'已建立模型副本。','Delete installed model':'刪除已安裝模型','Delete installed model?':'刪除已安裝模型？','Installed model removed.':'已移除本機模型。','Generate a single response':'產生單次回應',
   'Local models':'本機模型','Local model sections':'本機模型分類','Model Store':'模型目錄','Pull cart':'下載清單','Local chat':'本機對話','Profiles':'設定組合','Help':'說明',
   'Check the local runtime to begin.':'先檢查本機執行環境。','No verified catalog is stored.':'未儲存已驗證目錄。','Check runtime':'檢查執行環境','Runtime ready':'執行環境已就緒','Refresh official catalog':'重新整理官方目錄','Refreshing all official model families and tags. Installed models remain available.':'正在重新整理所有官方模型系列同標籤，已安裝模型仍可使用。','Refresh installed models':'重新整理已安裝模型',
   'Search models':'搜尋模型','Installed state':'安裝狀態','All states':'全部狀態','Installed':'已安裝','Running':'運行中','Available to pull':'可下載','Available':'可用','Capability':'功能','All capabilities':'全部功能','Vision':'視覺','Tools':'工具','Embedding':'向量嵌入','Thinking':'推理',
