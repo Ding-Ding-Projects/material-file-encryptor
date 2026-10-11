@@ -86,8 +86,24 @@ export async function assertMenuKeyboardNavigation(page,{capture=async()=>{}}={}
  return {scope:'source-fixture',route:'browser-keyboard',arrowLeftRetained:true,arrowUpLast:true,queryToBuilderTab:true,reverseTabWithinMenu:true,tabExitDismissed:true,outsideFocus:true};
 }
 
-export async function runComponentAcceptance({evidenceRoot,runtime={},checks=['menu','menuKeyboardNavigation','choiceSearch','palette','filePicker']}) {
- const knownChecks=['menu','menuKeyboardNavigation','choiceSearch','palette','filePicker'];assert.ok(checks.length>0&&new Set(checks).size===checks.length&&checks.every(check=>knownChecks.includes(check)));
+export async function assertControlLanguageBehavior(page){
+ await page.evaluate(async()=>{const {prepareControl}=await import('/shared/surface/controls.js');const field=prepareControl(document.createElement('md-outlined-text-field'));field.id='acceptance-language-field';field.label='Synthetic field';field.value='Retained synthetic value';document.body.append(field);});
+ const field=page.locator('#acceptance-language-field'),input=field.locator('input');await input.waitFor({state:'visible'});await input.focus();
+ await page.evaluate(()=>{const field=document.querySelector('#acceptance-language-field');window.__acceptanceLanguageInput=field.shadowRoot.querySelector('input');});
+ const observed=[];
+ for(const language of ['en','yue','bilingual']){
+  const value=await page.evaluate(async language=>{const {setControlLanguage}=await import('/shared/surface/controls.js');if(typeof setControlLanguage!=='function')throw Error('Control language capability unavailable');setControlLanguage(document,language);const field=document.querySelector('#acceptance-language-field'),input=field.shadowRoot.querySelector('input');return {language,clear:field.querySelector('[slot=trailing-icon]').getAttribute('aria-label'),choice:document.querySelector('[data-choice-search]').getAttribute('aria-label'),picker:document.querySelector('mfe-file-picker[label="Synthetic acceptance file"]').button.textContent,value:field.value,sameInput:input===window.__acceptanceLanguageInput,focused:input.getRootNode().activeElement===input};},language);
+  assert.equal(value.value,'Retained synthetic value');assert.equal(value.sameInput,true);assert.equal(value.focused,true);
+  if(language!=='yue'){assert.match(value.clear,/Clear field:/);assert.match(value.choice,/Search choices:/);assert.match(value.picker,/Choose/);}
+  if(language!=='en'){assert.match(value.clear,/清除欄位/);assert.match(value.choice,/搜尋選項/);assert.match(value.picker,/選擇/);}
+  observed.push(value);
+ }
+ await page.evaluate(async()=>{const {setControlLanguage}=await import('/shared/surface/controls.js');setControlLanguage(document,'en');document.querySelector('#acceptance-language-field').remove();});
+ return {scope:'source-fixture',languageLabelsObserved:true,valuesPreserved:true,inputIdentityPreserved:true,focusPreserved:true,observed};
+}
+
+export async function runComponentAcceptance({evidenceRoot,runtime={},checks=['menu','menuKeyboardNavigation','choiceSearch','palette','filePicker','controlLanguage']}) {
+ const knownChecks=['menu','menuKeyboardNavigation','choiceSearch','palette','filePicker','controlLanguage'];assert.ok(checks.length>0&&new Set(checks).size===checks.length&&checks.every(check=>knownChecks.includes(check)));
  assert.ok(path.isAbsolute(evidenceRoot));await fs.mkdir(evidenceRoot,{recursive:true});
  const index=await fs.readFile(new URL('../src/renderer/index.html',import.meta.url),'utf8');
  const csp=index.match(/<meta http-equiv="Content-Security-Policy"[^>]+>/)?.[0];assert.ok(csp,'Production CSP missing');
@@ -114,6 +130,7 @@ export async function runComponentAcceptance({evidenceRoot,runtime={},checks=['m
   if(checks.includes('choiceSearch'))result.choiceSearch=await assertChoiceSearchBehavior(page,{capture});
   if(checks.includes('palette'))result.palette=await assertPaletteBehavior(page,{capture});
   if(checks.includes('filePicker'))result.filePicker=await assertFilePickerBehavior(page);
+  if(checks.includes('controlLanguage'))result.controlLanguage=await assertControlLanguageBehavior(page);
   assert.deepEqual(errors,[],'Production component graph emitted browser errors');result.browserErrors=errors;
   result.passed=true;
  }catch(error){primaryError=error;result.passed=false;result.failure=error.message;if(browser)try{result.menuDiagnostic=await browser.page.evaluate(()=>({stage:window.__acceptanceStage,events:window.__acceptanceMenuEvents||[],invoked:window.__acceptanceInvoked||[],menuHidden:document.querySelector('mfe-context-menu')?.hidden}));}catch{}}
