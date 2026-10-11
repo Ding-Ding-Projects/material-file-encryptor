@@ -20,13 +20,19 @@
       "source": "docs/features/access/README.md",
       "translation": "docs/features/access/README.zh-HK.md",
       "sourceSha256": "0a95190a274fa987d9b47cb1f22d4ef0260a336da2ca9d3a1d192ee565b6b748",
-      "translationSha256": "69da8a4614ca7e3161474daf9d28072d57f40b20b994f2e99cc97f5d16d01a28"
+      "translationSha256": "77094f7c3d7104c8fc65c8616abe47e957c6c296614e23b286743404c629c791"
+    },
+    {
+      "source": "docs/features/access/access-host.md",
+      "translation": "docs/features/access/access-host.zh-HK.md",
+      "sourceSha256": "c45bdf4473774026e6f20dc9ea4260c45c060d6a694aad978ba39b0ec8d9a6bc",
+      "translationSha256": "0ea10f8fb51743e18ce2ccb4f5b38159adc6ba52cf65b026a3e3a22d27d5f499"
     },
     {
       "source": "docs/features/access/local-access.md",
       "translation": "docs/features/access/local-access.zh-HK.md",
       "sourceSha256": "da05e177d8859e26e6d60b85b613afb0463984acf84cc0006aedb4d9876dc258",
-      "translationSha256": "3716e654c6e75a79796cde7dc3bfe54f642970f30c20a69a3b6ed12700eb2af7"
+      "translationSha256": "b600d0a1a3536c51a20e5d73f92afb51aae82f54cec685417c2262c52e9043b1"
     },
     {
       "source": "docs/features/access/visitor-local-access.md",
@@ -175,8 +181,8 @@
     {
       "source": "docs/features/interface/local-personalization.md",
       "translation": "docs/features/interface/local-personalization.zh-HK.md",
-      "sourceSha256": "6d2571fc52b28d1ec66c54dc09fdf35527f577572ba89e571a274c2208ec63c3",
-      "translationSha256": "11587843ed962f307aee434f9bbc1d7574bf709c6f902513a784b559aba65621"
+      "sourceSha256": "0f428c5faa05ab60531b1f3e95868dee2d03728f84a380628b32830d60059c25",
+      "translationSha256": "b9292455fb56c7a27a347bb4280fdb5a1e322f5b7781bff510bc08792c67dcd5"
     },
     {
       "source": "docs/features/interface/local-tools-workspaces.md",
@@ -535,8 +541,8 @@
     {
       "source": "docs/features/workflows/browser-native-host.md",
       "translation": "docs/features/workflows/browser-native-host.zh-HK.md",
-      "sourceSha256": "441515255e593377dc684bdcd2076846e13032afd684fc59422c5eae6be21051",
-      "translationSha256": "b021054ebcff93f1b30273c824607d1d20e834bb5072e8a33d75b0fc9aff3237"
+      "sourceSha256": "33f6be8f015fd4ecaa498e4b9b378e382601fceb18e4785cfee82e1dd2873470",
+      "translationSha256": "c06e42d0d06fae506689e3ad61cec4a34bee62b0eb37ff51f4fb960d35ffcce0"
     },
     {
       "source": "docs/features/workflows/forge-publication.md",

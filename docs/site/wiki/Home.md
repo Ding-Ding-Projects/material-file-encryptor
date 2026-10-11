@@ -1,3 +1,23 @@
+# Native packing acceptance and current limits, 2026-10-11 UTC
+
+Product main `f6990e24e8e17958079e0a7a5cd0f09a3338a0c4` contains independently verified native source `e06df2a14643932f5f23289ae4eea2d8e45b3676`. Exact `build.bat /s` exited 0 and 43/43 core checks passed. The packaged native helper and WinFsp synthetic mounted lifecycle passed for 167,895,616 logical bytes, 64 KiB and 1 MiB writes, two writable descriptors, a retained mapped writer, three current parts and authenticated reopen. Detach settled in 26.8498 ms after the workload and 11.471 ms after reopen, each on its first attempt under the unchanged 60,000 ms deadline. Helper and mapped writer exited normally without forced termination; the synthetic drive was absent and owned fixtures removed.
+
+A separate unmounted synthetic probe measured physical parts of 83,866,588, 83,866,588 and 254,672 bytes, all below the 83,886,080-byte cap, and verified authenticated export. It is a different fixture and is not a per-part measurement from the mounted run. [Exact evidence and limitations](https://github.com/Ding-Ding-Projects/material-file-encryptor/blob/f6990e24e8e17958079e0a7a5cd0f09a3338a0c4/docs/evidence/storage-packing-e06df2a.json) and [complete storage behavior](https://github.com/Ding-Ding-Projects/material-file-encryptor/blob/f6990e24e8e17958079e0a7a5cd0f09a3338a0c4/docs/features/storage/physical-packing.md) retain source and binary bindings. Earlier incomplete `1fd3581` settlement evidence remains failed and preserved.
+
+The real vault remains untouched. Production migration awaits active-copy completion and ownership verification. All 4,176 packaged-interface matrix tuples remain unverified. Installed actions are currently deferred; installation, update and removal acceptance is not established by synthetic native results. Earlier sections retain historical source-specific observations and do not supersede these current limits.
+
+Exact f699 documentation deployment 38172067379 completed successfully. Live verification checked 214 referenced files, 51,455,995 bytes and 15,514 internal references with no HTTP failures or missing anchors. All 165 complete articles matched immutable source hashes and full rendered content, including both native packing articles. Provenance bookends matched f699, and the stored About homepage matched the deployed home. This verifies content delivery, not complete rendered-interface acceptance. This new wiki section still needs import and deployment before it appears in that verified website snapshot.
+
+## 繁體廣東話
+
+主線 f699 已包含獨立驗證嘅 e06 原生修正。精確建置退出碼係 0，43 項核心檢查通過。真實封裝輔助程序加 WinFsp 合成掛載流程完成 167,895,616 邏輯位元組、兩種寫入大小、兩個可寫描述符、映射寫入者、三個目前分塊同認證重新開啟。兩次卸載分別係 26.8498 ms 同 11.471 ms，一次完成，維持原有 60,000 ms 門檻。程序正常退出，冇強制終止，合成磁碟及資料已移除。
+
+另一份冇掛載合成資料嘅三個實體分塊係 83,866,588、83,866,588、254,672 位元組，全部低於上限，認證匯出通過，唔可以冒充掛載流程嘅逐分塊量度。舊 1fd 失敗紀錄保留。真實保險庫冇改動，遷移要等現有複製完成同擁有權確認；4,176 組封裝介面矩陣未驗收，安裝、更新同移除動作目前延期。
+
+f699 文件部署及實際網站核對通過，165 篇完整文章符合來源及完整內容，但呢個新 wiki 段落仍要匯入再部署。內容上線唔代表完整介面交貨。
+
+Earlier sections below remain historical evidence.
+
 # Current delivery and unfinished interface acceptance, 2026-10-11 UTC
 
 The active goal still requires pure Material Design 3 across every visible desktop and website surface. All 105 canonical features and all 210 complete-surface acceptance rows remain unverified. Source/component checks and package or documentation delivery do not establish rendered, installed, startup or updater acceptance.
