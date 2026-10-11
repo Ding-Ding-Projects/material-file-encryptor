@@ -1,0 +1,79 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {parseJavaManifest,resolveJavaDistribution,catalogueState,readOfficialBytes,BEDROCK_CATALOGUE} from '../src/features/server-manager/catalog.js';
+import {validateDescriptors,applyConfigurationPatch} from '../src/features/server-manager/configuration.js';
+import {targetCapabilities,assertTargetInventory} from '../src/features/server-manager/targets.js';
+import {mountConfigurationControls} from '../src/renderer/features/server-manager/configuration-controls.js';
+
+const timestamp='2026-10-11T00:00:00Z';
+const metadata={id:'historic',downloads:{server:{url:'https://piston-data.mojang.com/v1/objects/'+ 'b'.repeat(40)+'/server.jar',sha1:'b'.repeat(40),size:1234}}};
+const bytes=Buffer.from(JSON.stringify(metadata));
+const row={id:'historic',type:'old_alpha',url:'https://piston-meta.mojang.com/v1/packages/'+ 'a'.repeat(40)+'/historic.json',sha1:createHash('sha1').update(bytes).digest('hex'),releaseTime:timestamp,time:timestamp};
+const manifest=()=>Buffer.from(JSON.stringify({latest:{release:'historic',snapshot:'historic'},versions:[row]}));
+const response=data=>async()=>new Response(data);
+test('authoritative catalogue retains historical channels without claiming distribution/runtime completeness',()=>{
+  const snapshot=parseJavaManifest(manifest(),timestamp);
+  assert.equal(snapshot.versions[0].channel,'old_alpha');assert.equal(snapshot.catalogueComplete,true);assert.equal(snapshot.distributionComplete,false);assert.equal(snapshot.runtimeVerified,false);
+  assert.equal(catalogueState(snapshot,{now:Date.parse(timestamp)+86400001}).state,'stale');
+  assert.equal(catalogueState(snapshot,{offline:true,now:Date.parse(timestamp)}).state,'offline');
+  assert.equal(catalogueState(null).state,'unavailable');assert.equal(BEDROCK_CATALOGUE.catalogueComplete,false);
+});
+test('catalogue rejects duplicated, omitted-latest and untrusted metadata identities',()=>{
+  for(const change of [v=>v.versions.push(row),v=>v.latest.release='missing',v=>v.versions[0].url='https://evil.example/file']) {
+    const v=JSON.parse(manifest());change(v);assert.throws(()=>parseJavaManifest(Buffer.from(JSON.stringify(v)),timestamp));
+  }
+});
+test('distribution resolves only digest-matching selected metadata and does not invent historical runtime',async()=>{
+  const selected=parseJavaManifest(manifest(),timestamp).versions[0];
+  const result=await resolveJavaDistribution(selected,{fetchImpl:response(bytes)});
+  assert.equal(result.state,'resolved');assert.equal(result.runtime.state,'unresolved');assert.equal(result.bytesVerified,false);assert.equal(result.eulaAccepted,false);
+  await assert.rejects(resolveJavaDistribution(selected,{fetchImpl:response(Buffer.from('{}'))}),/integrity/);
+  const missing=Buffer.from(JSON.stringify({id:'historic'}));
+  assert.equal((await resolveJavaDistribution({...selected,metadataSha1:createHash('sha1').update(missing).digest('hex')},{fetchImpl:response(missing)})).state,'unavailable');
+});
+test('network metadata is bounded and redirects cannot silently change authority',async()=>{
+  let options;await readOfficialBytes(row.url,{fetchImpl:async(url,o)=>{options=o;return new Response('ok');}});assert.equal(options.redirect,'error');
+  await assert.rejects(readOfficialBytes(row.url,{maxBytes:1,fetchImpl:response('too large')}),/limit/);
+  await assert.rejects(readOfficialBytes('https://evil.example/x',{fetchImpl:()=>{throw Error('must not fetch');}}),/Untrusted/);
+});
+const binding={edition:'java',version:'historic',distributionSha256:'a'.repeat(64)};
+const descriptor=(id,type,extra={})=>({id,type,...binding,sourceUrl:'https://www.minecraft.net/en-us/article/minecraft-java-edition-1-21-9',sourceRevision:'pinned-source',helpId:'server.'+id,permission:'server.configure',consumer:'server-properties',applyMode:'restart',...extra});
+test('typed controls are source/version bound and cannot collapse into a generic editor',()=>{
+  const inventory=validateDescriptors([descriptor('enabled','boolean'),descriptor('mode','enum',{choices:['a','b']}),descriptor('port','integer',{min:1,max:65535}),descriptor('name','string')],binding);
+  assert.deepEqual(inventory.map(x=>x.control),['switch','searchable-select','numeric-stepper','text']);
+  assert.throws(()=>validateDescriptors([{...inventory[0],version:'other'}],binding),/binding/);
+  assert.throws(()=>validateDescriptors([{...inventory[0],consumer:''}],binding),/incomplete/);
+  assert.throws(()=>validateDescriptors([descriptor('raw','json')],binding),/binding/);
+});
+test('configuration patches preserve unknown extensions and reject invalid/unknown edits atomically',()=>{
+  const original={enabled:false,extension:{opaque:[1,2]}};const descriptors=[descriptor('enabled','boolean')];
+  const next=applyConfigurationPatch(original,{enabled:true},descriptors,binding);
+  assert.deepEqual(next.extension,original.extension);assert.equal(original.enabled,false);assert.equal(next.enabled,true);
+  assert.throws(()=>applyConfigurationPatch(original,{enabled:'yes'},descriptors,binding));
+  assert.throws(()=>applyConfigurationPatch(original,{extension:{}},descriptors,binding));
+  assert.deepEqual(original,{enabled:false,extension:{opaque:[1,2]}});
+});
+test('all four target boundaries remain unavailable and omitted target/proof mutations turn red',()=>{
+  const rows=targetCapabilities();assert.equal(assertTargetInventory(rows),true);
+  for(let i=0;i<4;i++)assert.throws(()=>assertTargetInventory(rows.filter((_,j)=>j!==i)),/incomplete/);
+  const changed=structuredClone(rows);changed[2].requiredProofs=[];assert.throws(()=>assertTargetInventory(changed),/proof/);
+  const fake=structuredClone(rows);fake[0].available=true;assert.throws(()=>assertTargetInventory(fake),/misrepresented/);
+});
+test('actual configuration mount uses typed controls and cannot report an unconfirmed write as applied',async()=>{
+  class Element {
+    constructor(tag){this.tag=tag;this.children=[];this.events={};this.attributes={};this.ownerDocument=document;}
+    append(...children){this.children.push(...children);}
+    setAttribute(key,value){this.attributes[key]=value;}
+    addEventListener(name,handler){this.events[name]=handler;}
+    remove(){this.removed=true;}
+    get options(){return this.children;}
+  }
+  const document={createElement:tag=>new Element(tag)};
+  const root=new Element('root');let receipt;
+  const mounted=mountConfigurationControls(root,{descriptors:[descriptor('enabled','boolean')],binding,values:{enabled:false},translate:key=>key,onChange:async input=>{receipt=input;return {applied:false};}});
+  const section=root.children[0],row=section.children[0],control=row.children[0].children[0],status=row.children[2];
+  assert.equal(control.type,'checkbox');assert.equal(control.attributes.role,'switch');control.checked=true;await control.events.change();
+  assert.equal(status.textContent,'server.configuration.notApplied');assert.equal(receipt.id,'enabled');assert.equal(receipt.signal.aborted,false);
+  mounted.destroy();assert.equal(receipt.signal.aborted,true);assert.equal(section.removed,true);
+});
