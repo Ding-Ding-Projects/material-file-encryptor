@@ -12,17 +12,14 @@ test('malformed persisted geometry cannot place controls outside bounds',()=>{
  const model=createPanelLayoutModel({storage:{getItem:()=>'{invalid'},key:'panel'});assert.equal(model.get(),null);
 });
 import {mountPanelLayout} from '../src/shared/surface/panel-layout.js';
-test('panel keyboard and pointer controls change layout and reset without rebuilding content',()=>{
- const oldSheet=globalThis.CSSStyleSheet;globalThis.CSSStyleSheet=class{replaceSync(){}};
- const node=()=>({style:{},children:[],listeners:{},append(...values){this.children.push(...values);},attachShadow(){return this.shadowRoot=node();},addEventListener(name,fn){this.listeners[name]=fn;},setPointerCapture(){},remove(){this.removed=true;}});
- const win={innerWidth:900,innerHeight:732,addEventListener(){},removeEventListener(){}};const doc={defaultView:win,createElement:()=>node()};
- const panel={...node(),ownerDocument:doc,parentElement:{clientWidth:900},getBoundingClientRect:()=>({width:500,height:400}),prepend(value){this.controls=value;}};panel.children.push({identity:'existing content'});const existing=panel.children[0];
- try{
-  const layout=mountPanelLayout(panel,{id:'test'});const [move,resize,reset]=panel.controls.shadowRoot.children[0].children;
-  resize.listeners.keydown({key:'ArrowRight',shiftKey:true,preventDefault(){}});assert.equal(panel.style.width,'540px');
-  move.listeners.pointerdown({button:0,clientX:0,clientY:0,pointerId:1,preventDefault(){}});move.listeners.pointermove({clientX:20,clientY:10,pointerId:1});assert.equal(panel.style.transform,'translate(20px,10px)');
-  assert.equal(panel.children[0],existing);reset.listeners.click();assert.equal(layout.model.get(),null);assert.equal(panel.style.width,undefined);layout.destroy();assert.equal(panel.controls.removed,true);
- }finally{if(oldSheet===undefined)delete globalThis.CSSStyleSheet;else globalThis.CSSStyleSheet=oldSheet;}
+test('contextual keyboard layout preserves content without permanent helper controls',()=>{
+ const win={innerWidth:900,innerHeight:732,addEventListener(){},removeEventListener(){}};
+ const content={identity:'existing content'},listeners={};let provider,removed=false;
+ const panel={style:{},ownerDocument:{defaultView:win},parentElement:{clientWidth:900,clientHeight:700},clientWidth:500,clientHeight:400,children:[content],focus(){},setAttribute(){},removeAttribute(){},addEventListener(name,fn){listeners[name]=fn;},removeEventListener(){}};
+ const layout=mountPanelLayout(panel,{id:'test',registerContextActions:(root,value)=>{assert.equal(root,panel);provider=value;return()=>{removed=true;};}});
+ const items=provider({target:panel}).items;assert.equal(items.length,3);items[1].run();listeners.keydown({target:panel,key:'ArrowRight',shiftKey:true,preventDefault(){}});assert.equal(panel.style.width,'540px');
+ items[0].run();listeners.keydown({target:panel,key:'ArrowDown',preventDefault(){}});assert.equal(panel.style.transform,'translate(0px,10px)');assert.deepEqual(panel.children,[content]);
+ items[2].run();assert.equal(layout.model.get(),null);layout.destroy();assert.equal(removed,true);
 });
 
 test('an optional view without a distinct panel does not abort workspace initialization',()=>{

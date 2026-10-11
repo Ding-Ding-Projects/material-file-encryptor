@@ -14,3 +14,14 @@ import '@material/web/progress/linear-progress.js';
 
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
+
+import '@material/web/menu/menu.js';
+import '@material/web/menu/menu-item.js';
+import '@material/web/button/filled-tonal-button.js';
+import '@material/web/radio/radio.js';
+import '@material/web/list/list.js';
+import '@material/web/list/list-item.js';
+import '@material/web/progress/circular-progress.js';
+import '@material/web/chips/chip-set.js';
+import '@material/web/chips/filter-chip.js';
+import '@material/web/tabs/secondary-tab.js';

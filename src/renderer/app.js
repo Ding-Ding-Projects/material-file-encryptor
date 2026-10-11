@@ -1,3 +1,4 @@
+import {control,prepareControl,CONTROL_SELECTOR} from '../shared/surface/controls.js';
 import {resolveGuidanceArticle} from '../shared/surface/control-guidance.js';
 import { installClearFields } from './clear-fields.js';
 import { deletedDescendantCandidates } from './recycle-selection.js';
@@ -16,6 +17,7 @@ import {requestSuperConfirmation} from '../shared/surface/workflow-confirm.js';
 import { createPrivateWordingView } from '../shared/surface/private-wording-view.js';
 import { operationNotification } from './operation-notifications.js';
 import { onPageDiscard } from './page-lifecycle.js';
+for(const node of document.querySelectorAll(CONTROL_SELECTOR))prepareControl(node);
 const $ = id => document.getElementById(id);
 const api = window.drive;
 let preferences = loadSettings(localStorage);
@@ -49,7 +51,7 @@ document.addEventListener('scroll', event => {
  clearTimeout(scrollTimers.get(surface));
  scrollTimers.set(surface, setTimeout(() => { surface.classList.remove('is-scrolling'); scrollTimers.delete(surface); }, 900));
 }, {capture:true,passive:true});
-document.querySelector('main').prepend($('operation'), $('main-error'));
+$('view-drive').prepend($('operation'), $('main-error'));
 const translateWorkspace=createTranslator(()=>({...effectiveLocalSettings,...preferences,school:effectiveLocalSettings.school}),{dictionary:{...cantonese,...enhancedLabels}});
 function t(source,options) { return translateWorkspace(source,options); }
 const privateWordingView=createPrivateWordingView({root:document.body,replace:value=>replaceVocabulary(value,preferences.vocabulary),isActive:()=>featureMounts.get('access')?.authenticated===true&&!effectiveLocalSettings.school.enabled});
@@ -130,7 +132,7 @@ function renderAvailability() {
  $('auto-unlock-setting').disabled = busy || !unlocked;
  $('forget-credential').disabled = busy || !state;
  for(const el of document.querySelectorAll('[data-archive-restore]')) el.disabled=busy||!unlocked||el.dataset.available!=='true';
- for (const el of $('vault-form').querySelectorAll('button,input,select')) el.disabled = busy;
+ for (const el of $('vault-form').querySelectorAll(CONTROL_SELECTOR)) el.disabled = busy;
  const letter = normalizedDriveLetter($('drive-letter').value);
  const available = (state?.availableDriveLetters || []).map(normalizedDriveLetter);
  // Copy upgrade closes the owned original before mounting its verified replacement.
@@ -164,7 +166,7 @@ function render() {
  $('auto-unlock-setting').checked = state.autoUnlock ?? state.preferences?.autoUnlock ?? false;
  $('performance-mode-setting').value = state.preferences?.performanceMode || state.performanceMode || 'responsive';
  if (!['split-value','split-unit'].includes(document.activeElement?.id)) {
-  const size = displayPartSize(state.partSizeBytes || 10 * 1024 ** 2); $('split-value').value = size.value; $('split-unit').value = size.unit;
+  const size = displayPartSize(state.partSizeBytes || 80 * 1024 ** 2); $('split-value').value = size.value; $('split-unit').value = size.unit;
  }
  if (!busy) operation(state.operation || (state.sync?.running ? 'Syncing encrypted files…' : ''));
  if (state.sync?.error) $('sync-detail').textContent = state.sync.error;
@@ -190,7 +192,7 @@ async function renderFiles() {
  for (const file of filtered) {
   const row = document.createElement('tr'); row.dataset.fileId=file.id;row.classList.toggle('selected',file.id === selected);
   const cell = () => { const td = document.createElement('td'); row.append(td); return td; };
-  const select = document.createElement('input'); select.type = 'radio'; select.className = 'file-selection'; select.name = 'selected-file'; select.checked = file.id === selected; select.setAttribute('aria-label',`${t('Select')} ${file.path}`);
+  const select = control('input',{type:'radio'}); select.type = 'radio'; select.className = 'file-selection'; select.name = 'selected-file'; select.checked = file.id === selected; select.setAttribute('aria-label',`${t('Select')} ${file.path}`);
   select.addEventListener('change',() => selectFile(file)); cell().append(select);
   const name = document.createElement('div'); name.className = 'file-name'; const filename = document.createElement('span'); filename.textContent = file.path; name.append(icon('file'),filename); const nameCell = cell(); nameCell.append(name); nameCell.title = file.path;
   const availability = cell(); availability.className = 'availability'; const av = document.createElement('span'); av.className = 'availability-content'; const label = document.createElement('span'); label.textContent = t(file.offline ? 'Available offline' : 'Encrypted storage only'); av.append(icon(file.offline ? 'offline' : 'shield'),label); availability.append(av);
@@ -207,10 +209,11 @@ async function renderFiles() {
  setText('empty-title',query ? 'No matching files' : view === 'offline' ? 'No offline files yet' : 'Room for your first file');
  setText('empty-description',query ? 'Try a different search.' : view === 'offline' ? 'Select a file in My drive and choose Keep offline.' : 'Add files in Explorer or import them here.');
 }
-function updateSelectedFileRows(){for(const row of $('file-list').rows){const active=row.dataset.fileId===selected;row.classList.toggle('selected',active);const input=row.querySelector('input');if(input)input.checked=active;}const file=currentFiles().find(file=>file.id===selected);$('selection-label').textContent=file?.path||t('Select a file');}
+function updateSelectedFileRows(){for(const row of $('file-list').rows){const active=row.dataset.fileId===selected;row.classList.toggle('selected',active);const input=row.querySelector('md-radio,md-checkbox');if(input)input.checked=active;}const file=currentFiles().find(file=>file.id===selected);$('selection-label').textContent=file?.path||t('Select a file');}
 function selectFile(file){selected=file.id;updateSelectedFileRows();renderAvailability();fileDetails?.selectEntry(file);}
 async function loadFilePage(append=false){if(!api?.listFiles||state?.locked)return;const revision=state.filesRevision??state.revision??'initial';if(!append&&filePageRevision===revision)return;const request=++filePageRequest;filePageRevision=revision;if(!append){pagedFiles=[];selected=null;fileDetails?.selectEntry(null);renderedFilesKey='';renderFiles();}try{const page=await api.listFiles({cursor:append?fileNextCursor:null,limit:100,revision:revision==='initial'?undefined:revision});if(request!==filePageRequest||state?.locked)return;const items=Array.isArray(page)?page:page.items||page.files||[];pagedFiles=append?[...(pagedFiles||[]),...items]:items;fileNextCursor=page.nextCursor??null;const more=$('load-more-files');if(more)more.hidden=!fileNextCursor;renderedFilesKey='';renderFiles();}catch(error){if(request===filePageRequest)showError(error);}}
 function changeView(next) {
+ foundation?.closeContextMenu('navigation',{restoreFocus:false});
  view = next;
  document.querySelectorAll('.view').forEach(el => { el.hidden = el.id !== `view-${next === 'offline' ? 'drive' : next}`; });
  document.querySelectorAll('[data-view]').forEach(el => { const active = el.dataset.view === next; el.classList.toggle('active',active); active ? el.setAttribute('aria-current','page') : el.removeAttribute('aria-current'); });
@@ -225,7 +228,7 @@ function updateDialog() {
  setText('dialog-description',upgrading ? 'Choose separate destination storage and cache folders. The original vault is preserved. Choose credentials for the upgraded copy. No conversion happens when opening a vault.' : creating ? 'Choose the encrypted storage and local encrypted cache, then set your unlock method.' : 'Choose your existing encrypted storage and enter its password or key file.');
  setText('dialog-submit',upgrading ? 'Create upgraded copy' : creating ? 'Create & mount' : 'Unlock & mount');
  $('confirm-password-fields').hidden = !creating; $('generate-key').hidden = !creating; $('create-split').hidden = !creating;
- const isKey = document.querySelector('input[name="credential-mode"]:checked').value === 'keyFile';
+ const isKey = [...document.querySelectorAll('[name="credential-mode"]')].find(node=>node.checked).value === 'keyFile';
  $('password-fields').hidden = isKey; $('key-fields').hidden = !isKey;
  $('password-input').required = !isKey; $('confirm-password').required = creating && !isKey; $('key-path').required = isKey;
  $('password-input').autocomplete = creating ? 'new-password' : 'current-password';
@@ -273,7 +276,7 @@ function updateDriveLetters(preserveSelection = true) {
  if (list.dataset.choices !== signature) {
   const fragment = document.createDocumentFragment();
   for (const letter of letters) {
-   const option = document.createElement('button'); option.type = 'button'; option.tabIndex = -1;
+   const option = control('button'); option.type = 'button'; option.tabIndex = -1;
    option.id = `drive-option-${letter}`; option.dataset.letter = letter; option.setAttribute('role','option'); option.textContent = `${letter}:`;
    fragment.append(option);
   }
@@ -294,7 +297,7 @@ function openVaultDialog(mode) {
 function closeVaultDialog() { if (busy) return; closeDrivePicker(); $('vault-dialog').close(); $('password-input').value = ''; $('confirm-password').value = ''; $('key-path').value = ''; }
 async function confirmAction(title, description, action) {
  setText('confirm-title',title); setText('confirm-description',description); setText('confirm-action',action);
- const dialog = $('confirm-dialog'); dialog.returnValue = ''; dialog.showModal(); dialog.querySelector('button[value=cancel]').focus();
+ const dialog = $('confirm-dialog'); dialog.returnValue = ''; dialog.showModal(); dialog.querySelector('[value=cancel]').focus();
  return new Promise(resolve => dialog.addEventListener('close',() => resolve(dialog.returnValue === 'confirm'),{once:true}));
 }
 async function importFiles() { const paths = await api.chooseFiles(); if (paths?.length) await run('Importing files…',() => api.startImport?api.startImport(paths):api.importFiles(paths),api.startImport?'Import queued.':'Files imported.'); }
@@ -334,7 +337,7 @@ listen('choose-key','click',async () => { const path = await api.chooseKeyFile()
 listen('generate-key','click',async () => { const path = await api.generateKeyFile({storageDir:$('storage-input').value,cacheDir:$('cache-input').value}); if (path) $('key-path').value = path; });
 listen('vault-form','submit',async event => {
  event.preventDefault(); if (busy) return;
- const isKey = document.querySelector('[name=credential-mode]:checked').value === 'keyFile';
+ const isKey = [...document.querySelectorAll('[name=credential-mode]')].find(node=>node.checked).value === 'keyFile';
  if (!isKey && dialogMode !== 'unlock' && $('password-input').value !== $('confirm-password').value) return showError('The passwords do not match.',true);
  const options = {transport:$('transport-mode').value,storageDir:$('storage-input').value,cacheDir:$('cache-input').value,driveLetter:`${normalizedDriveLetter($('drive-letter').value)}:`};
  if (options.transport === 'privateGit') { options.remoteRepository = $('remote-repository').value.trim(); if (!/^[A-Za-z0-9][A-Za-z0-9-]{0,38}\/[A-Za-z0-9_.-]{1,100}$/.test(options.remoteRepository)) return showError(t('Enter owner/repository.'),true); }
@@ -385,14 +388,15 @@ for (const key of ['theme','language','emoji','funnyEnglish','funnyCantonese']) 
  localSettings.update({[key]:preferences[key]},'preference changed');
  savePreferences(); applyPreferences();
 });
+listen('vocabulary-label','click',event=>{event.preventDefault();$('vocabulary-file').click();});
 listen('vocabulary-label','keydown',event => { if (['Enter',' '].includes(event.key)) { event.preventDefault(); $('vocabulary-file').click(); } });
 listen('vocabulary-file','change',async event => { const version = ++vocabularyUploadVersion; try { const file = event.target.files[0]; if (!file) return; if (file.size > 256 * 1024) throw new Error('Vocabulary JSON must be no larger than 256 KiB.'); const next = parseVocabulary(await file.text()); if (version !== vocabularyUploadVersion) return; preferences.vocabulary = next; vocabularyPersisted = savePreferences(); if (!vocabularyPersisted) { try { localStorage.removeItem('material-drive.preferences.v1'); } catch {} } applyPreferences(); toast(vocabularyPersisted ? 'Saved.' : 'Active for this session only. Saving failed.'); } catch(error) { if (version === vocabularyUploadVersion) showError(error); } finally { if (version === vocabularyUploadVersion) event.target.value = ''; } });
 // Personal mappings are intentionally excluded from all download and export routes.
 $('export-vocabulary')?.remove();
 listen('reset-vocabulary','click',() => { vocabularyUploadVersion++; preferences.vocabulary = parseVocabulary('{"schemaVersion":1,"entries":{}}'); vocabularyPersisted = savePreferences(); if (!vocabularyPersisted) { try { localStorage.removeItem('material-drive.preferences.v1'); vocabularyPersisted = true; } catch {} } applyPreferences(); toast(vocabularyPersisted ? 'Original wording restored.' : 'Original wording restored for this session. Stored settings could not be removed.'); });
-for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListener('keydown', event => {
+for (const dialog of document.querySelectorAll('mfe-dialog')) dialog.addEventListener('keydown', event => {
  if (event.key !== 'Tab') return;
- const controls = [...dialog.querySelectorAll('button,input,select,[tabindex]')].filter(el => !el.disabled && el.tabIndex >= 0 && el.getClientRects().length > 0);
+ const controls = [...dialog.querySelectorAll(CONTROL_SELECTOR+', [tabindex]')].filter(el => !el.disabled && el.tabIndex >= 0 && el.getClientRects().length > 0);
  const first = controls[0], last = controls.at(-1);
  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
@@ -409,15 +413,15 @@ else {
 
 
 function initializeArchive() {
- const button=(id,text,handler)=>{const el=document.createElement('button');el.id=id;el.type='button';el.className='button outlined';el.textContent=t(text);dictionary.set(el,text);el.onclick=handler;return el;};
+ const button=(id,text,handler)=>{const el=control('button');el.id=id;el.type='button';el.className='button outlined';el.textContent=t(text);dictionary.set(el,text);el.onclick=handler;return el;};
  const retentionLabel=document.createTextNode(t('Show history'));dictionary.set(retentionLabel,'Show history');
  $('history-actions').append(button('save-version','Save version now',()=>archiveMutation('history',()=>api.saveVersion())),retentionLabel);
- const retention=document.createElement('select');retention.id='history-retention';retention.setAttribute('aria-label',t('Show history'));
- for(const [value,text] of [['forever','Forever'],['30','Last 30 days'],['90','Last 90 days'],['custom','Custom days']]) {const option=document.createElement('option');option.value=value;option.textContent=t(text);dictionary.set(option,text);retention.append(option);}
- const days=document.createElement('input');days.id='history-days';days.type='number';days.min='1';days.max='36500';days.value='365';days.hidden=true;days.setAttribute('aria-label',t('Custom days'));
+ const retention=control('select');retention.id='history-retention';retention.setAttribute('aria-label',t('Show history'));
+ for(const [value,text] of [['forever','Forever'],['30','Last 30 days'],['90','Last 90 days'],['custom','Custom days']]) {const option=control('option');option.value=value;option.textContent=t(text);dictionary.set(option,text);retention.append(option);}
+ const days=control('input');days.id='history-days';days.type='number';days.min='1';days.max='36500';days.value='365';days.hidden=true;days.setAttribute('aria-label',t('Custom days'));
  retention.onchange=()=>{days.hidden=retention.value!=='custom';};
  $('history-actions').append(retention,days,button('history-retention-apply','Apply',()=>{const value=retention.value==='forever'?null:retention.value==='custom'?Number(days.value):Number(retention.value);if(value!==null&&(!Number.isInteger(value)||value<1||value>36500))return showError(t('Enter 1 to 36500 days.'));archiveMutation('history',()=>api.setHistoryRetention(value));}));
- $('recycle-actions').append(button('select-recycled','Select all visible',()=>{for(const el of $('recycle-list').querySelectorAll('input:not(:disabled)')) {el.checked=true;recycledSelection.add(el.value);}renderAvailability();}),button('restore-recycled','Restore selected',()=>restoreRecycledSelection()),button('empty-recycle','Empty Recycle Bin',async()=>{if(await confirmAction('Empty Recycle Bin?','Deleted entries will disappear from the bin. Version history is retained. This does not promise to free storage space.','Empty Recycle Bin'))archiveMutation('recycle',()=>api.emptyRecycleBin());}));
+ $('recycle-actions').append(button('select-recycled','Select all visible',()=>{for(const el of $('recycle-list').querySelectorAll('md-checkbox:not([disabled])')) {el.checked=true;recycledSelection.add(el.value);}renderAvailability();}),button('restore-recycled','Restore selected',()=>restoreRecycledSelection()),button('empty-recycle','Empty Recycle Bin',async()=>{if(await confirmAction('Empty Recycle Bin?','Deleted entries will disappear from the bin. Version history is retained. This does not promise to free storage space.','Empty Recycle Bin'))archiveMutation('recycle',()=>api.emptyRecycleBin());}));
  historySearch=createScopedSearch($('history-search-host'),t,()=>renderArchive('history'));recycleSearch=createScopedSearch($('recycle-search-host'),t,()=>renderArchive('recycle'));
  $('transport-mode').onchange=()=>{$('private-git-fields').hidden=$('transport-mode').value!=='privateGit';};
 }
@@ -437,9 +441,9 @@ async function loadArchive(kind) {
 async function renderArchive(kind) {
  const generation=++archiveRenders[kind];$('view-'+kind).dataset.archiveRender=String(generation);const rows=await (kind==='history'?historySearch:recycleSearch).filter(archiveRows[kind]);if(generation!==archiveRenders[kind])return;const fragment=document.createDocumentFragment();
  for(const version of rows) {const row=document.createElement('tr');const cell=text=>{const el=document.createElement('td');el.textContent=text;row.append(el);return el;};
- const selection=cell('');if(kind==='recycle'){const check=document.createElement('input');check.type='checkbox';check.value=version.id;check.checked=recycledSelection.has(version.id);check.disabled=!version.isAvailable;check.setAttribute('aria-label',t('Select')+' '+version.path);check.onchange=()=>{check.checked?recycledSelection.add(version.id):recycledSelection.delete(version.id);renderAvailability();};selection.append(check);}
+ const selection=cell('');if(kind==='recycle'){const check=control('input',{type:'checkbox'});check.type='checkbox';check.value=version.id;check.checked=recycledSelection.has(version.id);check.disabled=!version.isAvailable;check.setAttribute('aria-label',t('Select')+' '+version.path);check.onchange=()=>{check.checked?recycledSelection.add(version.id):recycledSelection.delete(version.id);renderAvailability();};selection.append(check);}
  cell(version.path);cell(formatDate(version.timestampUtc));cell(version.isDirectory?t('Folder'):formatBytes(version.length));cell(t(version.isAvailable?'Available':'Encrypted data unavailable'));const actions=cell('');
- if(kind==='history'){const restore=document.createElement('button');restore.className='button small';restore.textContent=t('Restore as new version');restore.disabled=busy||!version.isAvailable;restore.dataset.archiveRestore='true';restore.dataset.versionId=version.id;restore.dataset.available=String(version.isAvailable);restore.onclick=async()=>{if(await confirmAction('Restore this version?','Restoring creates a new current version. Existing history remains encrypted.','Restore as new version'))archiveMutation('history',()=>api.restoreVersion(version.id));};actions.append(restore);}fragment.append(row);}
+ if(kind==='history'){const restore=control('button');restore.className='button small';restore.textContent=t('Restore as new version');restore.disabled=busy||!version.isAvailable;restore.dataset.archiveRestore='true';restore.dataset.versionId=version.id;restore.dataset.available=String(version.isAvailable);restore.onclick=async()=>{if(await confirmAction('Restore this version?','Restoring creates a new current version. Existing history remains encrypted.','Restore as new version'))archiveMutation('history',()=>api.restoreVersion(version.id));};actions.append(restore);}fragment.append(row);}
  $(kind+'-list').replaceChildren(fragment);setArchiveMessage(kind,rows.length?'':'No matching entries.');renderAvailability();$('view-'+kind).dataset.archiveRendered=String(generation);
 }
 
@@ -448,15 +452,15 @@ async function restoreRecycledSelection() {
  const rows=archiveRows.recycle;const byId=new Map(rows.map(row=>[row.id,row]));
  const candidates=deletedDescendantCandidates(rows,original);
  if(!candidates.length)return archiveMutation('recycle',()=>api.restoreDeleted(original));
- const dialog=document.createElement('dialog');dialog.setAttribute('aria-labelledby','descendant-dialog-title');
+ const dialog=control('dialog');dialog.setAttribute('aria-labelledby','descendant-dialog-title');
  const form=document.createElement('form');form.method='dialog';
  const heading=document.createElement('header');heading.className='dialog-heading';const title=document.createElement('h2');title.id='descendant-dialog-title';title.textContent=t('Choose deleted descendants to restore');heading.append(title);
  const body=document.createElement('div');body.className='dialog-body';const explanation=document.createElement('p');explanation.textContent=t('Originally selected entries are required. Additional deleted descendants start unchecked. Older independent deletions stay in the bin unless you select them. Entries deleted together may be restored together automatically.');body.append(explanation);
  const checks=[];
- for(const row of [...original.map(id=>byId.get(id)).filter(Boolean),...candidates]) {const label=document.createElement('label');const input=document.createElement('input');input.type='checkbox';input.value=row.id;input.checked=original.includes(row.id);input.disabled=input.checked||!row.isAvailable;const name=document.createElement('span');name.textContent=row.path+' · '+String(row.timestampUtc||'');label.append(input,name);body.append(label);checks.push(input);}
- const selectAll=document.createElement('button');selectAll.type='button';selectAll.className='button';selectAll.textContent=t('Select all descendants');selectAll.onclick=()=>{for(const input of checks)if(!input.disabled)input.checked=true;};body.append(selectAll);
- const footer=document.createElement('footer');footer.className='dialog-actions';for(const [value,text] of [['cancel','Cancel'],['folder','Restore original selection only'],['subtree','Restore explicitly selected descendants']]){const button=document.createElement('button');button.value=value;button.className='button'+(value==='subtree'?' primary':'');button.textContent=t(text);footer.append(button);}
- form.append(heading,body,footer);dialog.append(form);document.body.append(dialog);dialog.showModal();footer.querySelector('button').focus();
+ for(const row of [...original.map(id=>byId.get(id)).filter(Boolean),...candidates]) {const label=document.createElement('label');const input=control('input',{type:'checkbox'});input.type='checkbox';input.value=row.id;input.checked=original.includes(row.id);input.disabled=input.checked||!row.isAvailable;const name=document.createElement('span');name.textContent=row.path+' · '+String(row.timestampUtc||'');label.append(input,name);body.append(label);checks.push(input);}
+ const selectAll=control('button');selectAll.type='button';selectAll.className='button';selectAll.textContent=t('Select all descendants');selectAll.onclick=()=>{for(const input of checks)if(!input.disabled)input.checked=true;};body.append(selectAll);
+ const footer=document.createElement('footer');footer.className='dialog-actions';for(const [value,text] of [['cancel','Cancel'],['folder','Restore original selection only'],['subtree','Restore explicitly selected descendants']]){const button=control('button');button.value=value;button.className='button'+(value==='subtree'?' primary':'');button.textContent=t(text);footer.append(button);}
+ form.append(heading,body,footer);dialog.append(form);document.body.append(dialog);dialog.showModal();footer.querySelector('md-text-button,md-filled-button,md-outlined-button').focus();
  const action=await new Promise(resolve=>dialog.addEventListener('close',()=>resolve(dialog.returnValue),{once:true}));
  const ids=action==='folder'?original:[...new Set([...original,...checks.filter(input=>input.checked&&!input.disabled).map(input=>input.value)])];dialog.remove();
  if(['folder','subtree'].includes(action))await archiveMutation('recycle',()=>api.restoreDeleted(ids));
@@ -509,7 +513,7 @@ function refreshPaletteInventory() {
  for(const root of document.querySelectorAll('main > .view')){
   const id=root.id.replace(/^view-/,'');const title=canonicalViewLabels[id]||id;
   commands.push({id:`destination:${id}`,label:title,run:()=>{foundation.model.openTab({id,label:title});foundation.shell.activate(id);}});
-  [...root.querySelectorAll('button,input,select,textarea')].forEach((control,index)=>{
+  [...root.querySelectorAll(CONTROL_SELECTOR)].forEach((control,index)=>{
    if(control.type==='password'||control.type==='file'||control.type==='hidden'||control.hidden||control.closest('dialog:not([open])'))return;
    const label=control.getAttribute('aria-label')||control.labels?.[0]?.textContent||control.textContent||control.placeholder;if(!label?.trim())return;
    const reveal=()=>{foundation.model.openTab({id,label:title});foundation.shell.activate(id);control.scrollIntoView({block:'center'});control.focus();};
@@ -532,10 +536,10 @@ function setupEnhancedWorkspace() {
  const forceLockButton=document.createElement('md-outlined-button');forceLockButton.id='force-lock-button';forceLockButton.textContent=t('Force lock');forceLockButton.onclick=()=>run('Locking drive…',()=>api.forceLock(forceLockOptions()));$('lock-button').after(forceLockButton);
  const fileHost=document.createElement('mfe-search');fileHost.setAttribute('label',t('Search files'));fileHost.setAttribute('scope','drive-files');fileHost.language=preferences.language;const old=$('file-search');old.closest('.search-box').hidden=true;old.closest('.search-box').after(fileHost);fileSearch=fileHost;fileHost.addEventListener('search-change',()=>{old.value=fileHost.query;renderFiles();});
  const pager=document.createElement('div');pager.className='file-page-actions';const more=document.createElement('md-outlined-button');more.id='load-more-files';more.textContent=t('Load more files');more.hidden=true;more.onclick=()=>loadFilePage(true);const retry=document.createElement('md-text-button');retry.textContent=t('Retry loading files');retry.onclick=()=>{filePageRevision=null;loadFilePage();};pager.append(more,retry);$('file-list').closest('.table-scroll').after(pager);
- const operations=document.createElement('section');operations.id='active-operations';operations.setAttribute('aria-label',t('Operations'));operations.setAttribute('aria-live','polite');main.prepend(operations);
+ const operations=document.createElement('section');operations.id='active-operations';operations.setAttribute('aria-label',t('Operations'));operations.setAttribute('aria-live','polite');$('view-drive').prepend(operations);
  const details=addFeatureRoot('details','File details','檔案詳情');const detailContent=document.createElement('div');details.append(detailContent);fileDetails=mountFileDetails(detailContent,{translate:t,services:{listVersions:id=>api.listVersions?api.listVersions(id):api.history({entryId:id}),listActivity:query=>api.listActivity?api.listActivity(query):Promise.reject(new Error('File activity bridge is unavailable.')),previewVersion:id=>api.previewVersion(id),labelVersion:(id,label)=>api.labelVersion(id,label),exportVersion:id=>api.exportVersion(id),restoreVersion:async id=>{if(await confirmAction('Restore this version?','Restoring creates a new current version. Existing history remains encrypted.','Restore as new version'))return api.restoreVersion(id);}}});
  const detailsButton=document.createElement('md-text-button');detailsButton.textContent=t('File details');detailsButton.onclick=()=>{const file=currentFiles().find(f=>f.id===selected);if(file)fileDetails.selectEntry(file);foundation.model.openTab({id:'details',label:'File details'});foundation.shell.activate('details');};document.querySelector('.file-actions').append(detailsButton);
- const settingsSearch=document.createElement('input');settingsSearch.type='search';settingsSearch.id='settings-local-search';settingsSearch.setAttribute('aria-label',t('Search settings'));$('view-settings').children[0].after(settingsSearch);workspaceDisposers.push(attachEnhancedSearch(settingsSearch,$('view-settings')));
+ const settingsSearch=control('input');settingsSearch.type='search';settingsSearch.id='settings-local-search';settingsSearch.setAttribute('aria-label',t('Search settings'));$('view-settings').children[0].after(settingsSearch);workspaceDisposers.push(attachEnhancedSearch(settingsSearch,$('view-settings')));
  const confirmFeature=async({title,message,requiredText})=>{
   if(!requiredText)return confirmAction(title,message||'',title);
   const input=document.createElement('md-outlined-text-field');input.label=`${t('Type to confirm')}: ${requiredText}`;input.autocomplete='off';const container=$('confirm-description');const button=$('confirm-action');container.after(input);button.disabled=true;input.addEventListener('input',()=>{button.disabled=input.value===requiredText?false:true;});
