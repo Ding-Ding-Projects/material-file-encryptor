@@ -25,6 +25,8 @@ Invoke-Checked { dotnet publish src/features/converter/native/ConverterSandbox.c
 Copy-Item -LiteralPath (Join-Path $node 'node.exe') -Destination 'out/converter/node.exe' -Force
 if (Test-Path -LiteralPath (Join-Path $root 'out\converter\media')) { throw 'Obsolete media runtime present. Preserve it outside out/converter before packaging.' }
 Invoke-Checked { node scripts/converter-minimal-component.mjs https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/download/ffmpeg-runtime-9.0.2.1/ffmpeg-9.0.2-minimal-v1-win64.zip out/converter/minimal-media }
+Invoke-Checked { node scripts/converter-archive-runtime.mjs out/converter/archive | Out-Null }
+Copy-Item -LiteralPath docs/features/converter/archive-runtime-manifest.json -Destination out/converter/archive-manifest.json -Force
 $converterManifest = @{
   schemaVersion = 1
   launcherSha256 = (Get-BootstrapDigest 'out/converter/ConverterSandbox.exe').ToLowerInvariant()

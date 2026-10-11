@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createAppearanceImageService} from '../src/main/appearance-image-service.js';
 import {validateFeatureRequest} from '../src/main/validation.js';
-const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jGo8AAAAASUVORK5CYII=','base64');
+const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGBgAAAABQABpfZFQAAAAABJRU5ErkJggg==','base64');
 const dataUrl='data:image/png;base64,'+png.toString('base64');
 function provider(run){return {verifiedOsIsolation:true,verifiedMediaRuntime:true,launch:run};}
 test('image normalization requires verified isolation and retains no input bytes after success',async()=>{
