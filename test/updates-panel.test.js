@@ -1,9 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 class Node{constructor(){this.children=[];this.listeners={};this.attributes={};}append(...nodes){this.children.push(...nodes);}replaceChildren(...nodes){this.children=nodes;}attachShadow(){return this.shadowRoot=new Node();}addEventListener(name,fn){this.listeners[name]=fn;}setAttribute(name,value){this.attributes[name]=value;}remove(){this.removed=true;}}
+Object.defineProperty(Node.prototype,'translate',{get(){return this.attributes.translate!=='no';},set(value){this.attributes.translate=value?'yes':'no';}});
 globalThis.HTMLElement=Node;globalThis.CSSStyleSheet=class{replaceSync(){}};globalThis.customElements={items:new Map(),get(name){return this.items.get(name);},define(name,type){this.items.set(name,type);}};globalThis.document={createElement:name=>{const Type=customElements.get(name)||Node;return new Type();}};
 const {UpdatesPanel,mountUpdates}=await import('../src/renderer/features/updates/index.js');
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
+test('translation callback does not overwrite the native boolean translate property',()=>{
+ const panel=new UpdatesPanel();assert.equal(panel.translate,true);
+ panel.configure({translate:value=>'Localized: '+value});
+ assert.equal(panel.translate,true);assert.equal(panel.heading.textContent,'Localized: Application updates');
+ assert.equal(Object.hasOwn(panel.attributes,'translate'),false);
+});
 test('update panel invokes only explicit allowed actions and keeps Later local',async()=>{
  const calls=[];let callback;const root=new Node();const view=mountUpdates(root,{services:{request:async(action,payload)=>{calls.push({action,payload});return{state:'ready',unsigned:true,currentVersion:'1.0.0',update:{version:'1.1.0',sourceCommit:'abc'}};},subscribe:fn=>{callback=fn;return()=>{callback=null;};}}});await tick();const panel=root.children[0];assert.deepEqual(calls.map(x=>x.action),['status']);assert.equal(panel.buttons.install.disabled,false);
  panel.buttons.later.listeners.click();assert.match(panel.status.textContent,/deferred/);assert.equal(calls.length,1);panel.buttons.install.listeners.click();await tick();assert.deepEqual(calls.map(x=>x.action),['status','install']);view.destroy();assert.equal(callback,null);
