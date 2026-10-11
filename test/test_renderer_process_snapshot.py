@@ -56,6 +56,11 @@ class Fake:
     def exited(self, handle):
         return self.stopped
 
+    def exit_record(self, handle):
+        if not self.stopped: raise native.SnapshotError('Not exited')
+        row = self.observations[handle]
+        return {'pid': row['pid'], 'creationDate': row['creationDate'], 'exitCode': 0}
+
     def observe(self, handle, pid, parent, allow_exited=False):
         if handle is None:
             raise native.SnapshotError('Process disappeared')
@@ -159,6 +164,34 @@ class SnapshotTests(unittest.TestCase):
             marker.unlink()
             with self.assertRaises(FileNotFoundError):
                 backend.verify(state)
+
+    def test_exit_proof_needs_no_post_exit_image_but_rejects_reuse(self):
+        api = Fake({}, {77: identity}); api.stopped = True
+        def unavailable(*args, **kwargs): raise native.SnapshotError('Image unavailable')
+        api.observe = unavailable
+        proof = native.Proof(lifecycle, api)
+        self.assertTrue(proof.absent([identity]))
+        for field, value in [('pid', 99), ('creationDate', '2026-10-09T12:00:00.1234569Z')]:
+            api.observations[77] = {**identity, field: value}
+            with self.assertRaises(native.SnapshotError): proof.absent([identity])
+        for code in (-1, True, None, 0x100000000):
+            with self.assertRaises(native.SnapshotError): native.validate_exit_record(identity, {'pid':77,'creationDate':identity['creationDate'],'exitCode':code})
+        self.assertEqual(native.validate_exit_record(identity, {'pid':77,'creationDate':identity['creationDate'],'exitCode':2})['exitCode'],2)
+
+    def test_exit_record_uses_same_handle_for_all_kernel_queries(self):
+        handles=[]
+        class Kernel:
+            def WaitForSingleObject(self,h,t): handles.append(h); return 0
+            def GetProcessId(self,h): handles.append(h); return 77
+            def GetProcessTimes(self,h,c,e,k,u):
+                handles.append(h); c._obj.dwLowDateTime=123456789; c._obj.dwHighDateTime=0; return True
+            def GetExitCodeProcess(self,h,c): handles.append(h); c._obj.value=2; return True
+        api=native.Native.__new__(native.Native); api.k=Kernel()
+        result=api.exit_record(123)
+        self.assertEqual(result,{'pid':77,'creationDate':native.creation_date(123456789),'exitCode':2})
+        self.assertEqual(handles,[123]*5)
+        api.k.GetExitCodeProcess=lambda *args: False
+        with self.assertRaises(native.SnapshotError): api.exit_record(123)
 
     @unittest.skipUnless(os.name == 'nt', 'Requires actual Windows native process and listener APIs')
     def test_fresh_backend_production_launch_and_owned_listener_seams(self):
