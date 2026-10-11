@@ -1,3 +1,4 @@
+import {CONTROL_SELECTOR} from '../src/shared/surface/controls.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createAccessDocument} from './helpers/local-access-dom.js';
@@ -6,10 +7,10 @@ function fixture({computed={},services={}}={}){
  const doc=createAccessDocument(),create=doc.createElement.bind(doc),definitions=new Map(),Base=create('span').constructor;
  class HTMLElement extends Base{constructor(){super(doc,'mfe-control-guidance');}attachShadow(){this.shadowRoot=create('section');}}
  doc.adoptedStyleSheets=[];doc.documentElement={lang:'en'};doc.defaultView={HTMLElement,Event,CSSStyleSheet:class{replaceSync(){}},customElements:{get:tag=>definitions.get(tag),define:(tag,C)=>definitions.set(tag,C)}};
- doc.createElement=tag=>{const n=tag==='mfe-control-guidance'?new (definitions.get(tag))():create(tag);n.style={};n.before=function(node){node.parentNode=this.parentNode;this.parentNode.childNodes.splice(this.parentNode.childNodes.indexOf(this),0,node);};return n;};
+ doc.createElement=tag=>{const n=tag==='mfe-control-guidance'?new (definitions.get(tag))():create(tag);const matches=n.matches.bind(n);n.matches=selector=>/^[a-z][a-z0-9-]*$/i.test(selector)?n.tagName===selector.toUpperCase():matches(selector);n.style={};if(tag==='mfe-context-menu'){n.close=()=>{n.hidden=true;};n.open=options=>{n.options=options;n.hidden=false;};}n.before=function(node){node.parentNode=this.parentNode;this.parentNode.childNodes.splice(this.parentNode.childNodes.indexOf(this),0,node);};return n;};
  const host=create('section');doc.body.append(host);let current={fontSize:'16px',fontWeight:'400'},locked=false,writes=0,adapter=patch=>{for(const [key,value]of Object.entries(patch))if(value===undefined)delete current[key];else current[key]=value;writes++;return true;};
  const editor=mountTypographyInspector(host,{getCurrent:()=>current,getComputedValue:key=>computed[key],mutate:patch=>adapter(patch),disabled:()=>locked,supports:()=>true,services});
- return{doc,host,editor,field:key=>host.querySelectorAll('md-outlined-text-field').find(n=>n.label===TYPOGRAPHY_FIELDS.find(row=>row[0]===key)[1]),get current(){return current;},get writes(){return writes;},replace:value=>current=value,lock:()=>locked=true,setAdapter:fn=>adapter=fn};
+ return{doc,host,editor,field:key=>[...host.querySelectorAll('md-outlined-text-field'),...host.querySelectorAll('md-outlined-select')].find(n=>n.label===TYPOGRAPHY_FIELDS.find(row=>row[0]===key)[1]),get current(){return current;},get writes(){return writes;},replace:value=>current=value,lock:()=>locked=true,setAdapter:fn=>adapter=fn};
 }
 test('typed parsers reject malformed, nonfinite, out of range and executable values',()=>{
  const field=key=>TYPOGRAPHY_FIELDS.find(row=>row[0]===key);
@@ -52,13 +53,13 @@ for(const [kind,value,expected]of [['inherited','32px','33px'],['inherited','1.5
 
 async function desktopSearchFixture(){
  const fs=await import('node:fs/promises'),{createHash}=await import('node:crypto');
- // These exact consumer bodies are pinned to the independently reviewed a9 source.
+ // These exact consumer bodies are pinned to the reviewed shared-control migration source.
  const extract=async(file,start,end,digest)=>{const source=(await fs.readFile(new URL('../'+file,import.meta.url),'utf8')).replace(/\r\n/g,'\n'),body=source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start))).trim();assert.equal(createHash('sha256').update(body).digest('hex'),digest);return body;};
- const attachBody=await extract('src/renderer/app.js','function attachEnhancedSearch(input,area) {','\nfunction addFeatureRoot','9b3d7e28a4c9282a50af119eefe49ed4eba69c65ce0f4ccb9e253a5af877f7b3');
+ const attachBody=await extract('src/renderer/app.js','function attachEnhancedSearch(input,area) {','\nfunction addFeatureRoot','db19213b0f2425c23184a213fcbca0f8f5b13f9c9ffa13c498f0c78dfb965775');
  const filterBody=await extract('src/shared/surface/search.js','  async filter(rows) {','\n}\nregister','fda30c772d330c969de21a174567f9f4d1628b24973c508221f1e09c92b1513b');
  const filter=Function('return ({'+filterBody+'})')().filter;
  return (input,area)=>{const doc=input.ownerDocument,create=doc.createElement.bind(doc);if(!doc.searchFixtureInstalled){doc.searchFixtureInstalled=true;doc.createElement=tag=>{const node=create(tag),matches=node.matches.bind(node);node.matches=selector=>selector.split(',').some(part=>part.startsWith('.')?(node.className||'').split(/\s+/).includes(part.slice(1)):part==='input:not([type=password])'?node.tagName==='INPUT'&&node.type!=='password':matches(part));if(tag==='mfe-search'){node.query='';node.regex=false;node.generation=0;node.filter=filter;}return node;};for(const node of [area,...area.querySelectorAll('*')]){const matches=node.matches.bind(node);node.matches=selector=>selector.split(',').some(part=>part.startsWith('.')?(node.className||'').split(/\s+/).includes(part.slice(1)):part==='input:not([type=password])'?node.tagName==='INPUT'&&node.type!=='password':matches(part));}}
-  return Function('document','preferences','t','return ('+attachBody+')')(doc,{language:'en'},value=>value)(input,area);};
+  return Function('document','preferences','t','CONTROL_SELECTOR','return ('+attachBody+')')(doc,{language:'en'},value=>value,CONTROL_SELECTOR)(input,area);};
 }
 test('actual desktop adapter searches visible typography rows and clear restores every row',async()=>{
  const attachSearch=await desktopSearchFixture(),f=fixture({services:{attachSearch}});try{const original=f.host.querySelectorAll('md-outlined-text-field').find(node=>node.label==='Search typography controls'),visible=f.host.querySelector('mfe-search'),rows=f.host.querySelectorAll('.appearance-property').filter(row=>row.parentNode.tagName==='MFE-TYPOGRAPHY-INSPECTOR');assert.equal(original.hidden,true);assert.equal(rows.length,18);visible.query='Character spacing';await visible.dispatchEvent({type:'search-change'});assert.equal(rows.filter(row=>!row.hidden).length,1);assert.ok(rows.find(row=>!row.hidden).textContent.includes('Character spacing'));visible.query='';await visible.dispatchEvent({type:'search-change'});assert.equal(rows.filter(row=>!row.hidden).length,18);assert.equal(f.writes,0);}finally{f.editor.destroy();}

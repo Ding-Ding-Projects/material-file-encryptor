@@ -79,3 +79,11 @@ Layer names, preset-name drafts and numeric effect, channel and selection fields
 ## CSS property fields
 
 Non-typography CSS property rows now use registered outlined text fields and the existing settings-change and Clear adapters. The original candidate validator, renderer CSS.supports check, persistence rollback and Reset deletion remain authoritative. Fields bind the exact target, state, group, index and layer, reject stale or locked admission, and permit Retry after their own successful rollback. Owned field mapping replaces native-input-only synchronization. Typography remains the color authority; its skipped color keys made the retired property color branch unreachable. Complete unique above-control guidance for these rows remains unfinished, as do real vendor rendering and full Material Design 3 acceptance.
+
+## Context ownership and authoring layout
+
+Appearance registers actions with the single document-owned overlay. It no longer creates a second context menu or installs a competing root contextmenu listener. A composed event resolves to the owning light-DOM element, retains that target while the menu has focus, and rechecks services.isAllowed(element) before Edit appearance or Lock this element. Missing lock integration disables that action. Shift-right-click retains direct editing; ordinary right-click and Shift+F10 use the shared anchored menu.
+
+The editor presents real Material state tabs, layer controls and eleven expandable task sections: images/groups, selections/masks, channels/effects, decoration presets, layer organization, fonts/typography, size/spacing, edges/elevation, background/blending, advanced properties, and history/presets/transfer. Section expansion persists during the editor session. Search ownership remains with the host regex adapter; nested literal filtering does not override it.
+
+Local consumer checks cover stable targets, access rechecks, asynchronous store rejection, rollback, stale control disposal, image decoding cancellation, typed choices and localized diagnostics. They do not prove visual geometry, top-layer focus, installed voices, native credentials or a shipped build.
