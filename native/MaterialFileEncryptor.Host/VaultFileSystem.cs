@@ -29,6 +29,7 @@ internal sealed class VaultFileSystem : FileSystemBase
     private bool stopping;
     public string? LastError { get; private set; }
     public int ActiveIo { get { lock (gate) return activeIo; } }
+    public int ActiveIoSnapshot => Volatile.Read(ref activeIo);
     public int ActiveHandles { get { lock (gate) return activeHandles; } }
 
     public VaultFileSystem(VaultEngine vault, object gate)
