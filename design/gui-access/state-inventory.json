@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "kind": "design-reference-state-inventory",
+  "sourceBaseline": "6c59f10652fa00f71bcb40eae6073e73e82c0689",
+  "evidenceStatus": "design specification, built capture pending",
+  "geometry": {
+    "viewports": [
+      {
+        "width": 1180,
+        "height": 850
+      },
+      {
+        "width": 880,
+        "height": 650
+      }
+    ],
+    "languages": [
+      "en",
+      "yue",
+      "bilingual"
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "scales": [
+      1,
+      1.25,
+      1.5,
+      2
+    ]
+  },
+  "states": [
+    {
+      "id": "access-profile-locked",
+      "selector": "#access-panel-profile",
+      "expect": "Password field, setup/unlock actions, local-only disclosure, private cache locked status."
+    },
+    {
+      "id": "access-profile-unlocked",
+      "selector": "#access-panel-profile",
+      "expect": "Synthetic profile has authenticated session; cleared password; logout available. Never capture credential values."
+    },
+    {
+      "id": "access-locks-empty",
+      "selector": "#access-panel-locks",
+      "expect": "Scoped search and context-menu creation guidance; no fabricated records."
+    },
+    {
+      "id": "access-lock-wizard",
+      "selector": "[data-access-wizard]",
+      "expect": "Readonly exact target; explicit policy and session choices; only selected factors; consent checkbox; cancel returns origin focus."
+    },
+    {
+      "id": "access-unlock",
+      "selector": "[data-access-unlock]",
+      "expect": "Exact target name, selected factor fields, PIN keypad when applicable; mismatch, waiting, cancel states."
+    },
+    {
+      "id": "access-waiting",
+      "selector": "[data-access-waiting]",
+      "expect": "Waiting-only disclosure and remaining time; challenge correctness never authenticates; timer and camera cleanup independent."
+    },
+    {
+      "id": "access-authenticator-list",
+      "selector": "#access-panel-authenticator",
+      "expect": "Scoped registered search, selected metadata export requiring profile, live records without default samples."
+    },
+    {
+      "id": "access-authenticator-registration",
+      "selector": ".access-registration",
+      "expect": "Explicit Add action expands registration; Material input/select/file primitives; current-code confirmation; cancel hides details and stops camera."
+    },
+    {
+      "id": "access-qr-hidden",
+      "selector": "[data-access-qr-preview]",
+      "expect": "Hidden outside deliberate reveal. Never retain QR, manual secret or generated code pixels in public evidence."
+    },
+    {
+      "id": "access-support",
+      "selector": "#access-panel-support",
+      "expect": "Local-only fixed disclosure, multiline description, scoped search, create/edit/select/export actions."
+    },
+    {
+      "id": "access-confirmation",
+      "selector": "[data-access-confirmation]",
+      "expect": "Both confirmation switches and slider at100 required; early click cannot mutate; cancel during storage restores owned records."
+    }
+  ],
+  "searches": [
+    "access-locks",
+    "access-authenticators",
+    "access-tickets",
+    "access-profile-controls",
+    "access-lock-settings",
+    "access-registration-controls",
+    "access-support-controls",
+    "access-unlock-{targetId}"
+  ],
+  "dropdowns": [
+    "Credential policy",
+    "Unlock session",
+    "Algorithm"
+  ],
+  "textboxes": [
+    "Profile password",
+    "Element identifier (readonly, no clear action)",
+    "PIN",
+    "Password",
+    "Authenticator URI",
+    "Current code",
+    "Unlock minutes (0 means until closing)",
+    "Manual base32 secret",
+    "Issuer",
+    "Account",
+    "Group",
+    "Digits",
+    "Period in seconds",
+    "Category",
+    "Description",
+    "Waiting arithmetic answers"
+  ],
+  "securityRegressions": [
+    "one-use button admission across composed roots",
+    "noncomposed nested shadow changes",
+    "picker preparation does not consume one activation",
+    "pending creation cancellation rolls back only its own revision",
+    "bulk removal rollback after cancellation",
+    "readonly clear cannot mutate",
+    "metadata export excludes credentials"
+  ]
+}
