@@ -9,8 +9,9 @@ export function detectFormat(bytes) {
  if(prefix.subarray(0,4).toString()==='RIFF') return prefix.subarray(8,12).toString()==='WAVE'?'wav':'riff';
  if(prefix.subarray(4,8).toString()==='ftyp') return 'mp4';
  if(prefix.includes(0)) return 'binary';
- try { new TextDecoder('utf-8',{fatal:true}).decode(b); } catch { return 'binary'; }
- const text=b.toString('utf8').replace(/^\uFEFF/,'');
+ try { new TextDecoder('utf-8',{fatal:true}).decode(prefix,{stream:b.length>prefix.length}); } catch { return 'binary'; }
+ const text=prefix.toString('utf8').replace(/^\uFEFF/,'').trimStart();
+ if(text.startsWith('{')||text.startsWith('['))return 'json';
  try { JSON.parse(text); return 'json'; } catch { return 'text'; }
 }
 const entry=(id,category,name,sources,target,extra={})=>({id,category,name,sources,target,bundled:true,lossy:false,metadata:'No embedded metadata is copied unless explicitly supported.',encoding:'UTF-8',limits:LIMITS,sandbox:'Isolated bounded worker; no network or child process APIs.',validator:'Reparse and compare output.',...extra});
