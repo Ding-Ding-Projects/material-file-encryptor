@@ -35,3 +35,9 @@
 ## 工作流程工作清單
 
 手寫總清單列出 windows/windows、windows/promote、capture-evidence/evidence、pages/deploy 同已停用 publisher/explain，重用各工作流程嘅依賴記錄。只有確實已停用嘅 shell echo 工作可以註明額外 bootstrap 不適用。本機檢查會發現實際工作，拒絕遺漏、未知工作、缺少依賴清單或者 bootstrap 標記。Pages 明確安裝固定 Node 同鎖定靜態套件。全新主機安裝驗證仍然獨立等待；畫面工作流程唔會執行本機檢查。
+
+## 首次雲端啟動與有限修正
+
+工作 38140563614 已核實指定靜態產物並完成依賴安裝，但瀏覽器啟動喺記錄身份或者像素之前失敗。保留嘅訊息雜湊唔足以確定實際執行原因。工作流程以 `--no-shell` 安裝完整 Chromium，原本無指定執行檔嘅 headless 啟動卻會由 Playwright 預設選擇 headless-shell。控制器而家明確啟動同一個已核實位元組嘅完整 Chromium，sandbox 仍然啟用。仍須用修正後來源執行新工作。
+
+啟動前會儲存階段同有限選項；啟動被拒絕時只記錄訊息摘要、固定診斷分類，以及有提供時嘅退出碼或 signal，唔上傳原始訊息、私人路徑或端點。本機注入式 wrapper 檢查只證明選項傳遞同拒絕處理，唔構成瀏覽器、像素或視覺驗收證據。
