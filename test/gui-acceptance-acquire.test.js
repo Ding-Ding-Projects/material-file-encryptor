@@ -3,12 +3,20 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import {stateRoutes,acquisitionCapabilities,makeAcquisitionPlan,acquireMatrix,composeAdapters} from '../scripts/gui-acceptance-acquire.mjs';
+import vm from 'node:vm';
+import {stateRoutes,acquisitionCapabilities,makeAcquisitionPlan,acquireMatrix,composeAdapters,settledComposedMotion} from '../scripts/gui-acceptance-acquire.mjs';
 import {bindingFor,matrixFor,tupleKey,sha256} from '../scripts/gui-acceptance.mjs';
 import {chooseVerificationDriveLetter} from '../scripts/preview-runtime-fixture.mjs';
 import {ownedFixturePreparation} from '../scripts/gui-acceptance-baseline.mjs';
 const inventory=JSON.parse(await fs.readFile(new URL('../contracts/gui-states.json',import.meta.url)));
 const launch={cdp:{port:19222,expectedUrl:'file:///synthetic/resources/index.html'}};
+test('motion admission includes animated descendants across an open shadow root',()=>{
+ const target={getClientRects:()=>[{}],getRootNode:()=>({})};const shadowChild={getClientRects:()=>[{}],getRootNode:()=>({host:target})};
+ const animation={effect:{target:shadowChild},playState:'running',pending:false};
+ const context={document:{querySelectorAll:()=>[target],getAnimations:()=>[animation]}};
+ const run=()=>vm.runInNewContext(`(${settledComposedMotion.toString()})('#target')`,context);
+ assert.equal(run(),false);animation.playState='finished';assert.equal(run(),true);animation.pending=true;assert.equal(run(),false);
+});
 test('area composition rejects duplicate ownership and unlisted state adapters',()=>{
  const adapter={prepare:async()=>{},assertState:async()=>{},actions:{}};
  assert.throws(()=>composeAdapters(inventory,{'drive-locked':adapter},{'drive-locked':adapter}),/Duplicate state adapter/);

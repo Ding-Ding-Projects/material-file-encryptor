@@ -5,12 +5,17 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {withCdpConnectionProof} from './cdp-connection-plan.mjs';
-import {layoutExpression,settledMotionExpression,assertMeasurement} from './modern-ui-check.mjs';
+import {layoutExpression,assertMeasurement} from './modern-ui-check.mjs';
 import {matrixFor,tupleKey,validateBinding,sha256,admitRow,verifyFiles} from './gui-acceptance.mjs';
 import {inspectSurface} from './gui-acceptance-components.mjs';
 
 const q=JSON.stringify;
 const poll=(id,expression)=>({id,op:'poll',expression,equals:true,intervalMs:100});
+export function settledComposedMotion(selector){
+ const visible=[...document.querySelectorAll(selector)].filter(node=>node.getClientRects().length>0);if(visible.length!==1||typeof document.getAnimations!=='function')return false;
+ const within=(node,ancestor)=>{for(let current=node;current;current=current.parentElement||current.getRootNode?.().host){if(current===ancestor)return true;}return false;};
+ const target=visible[0];return !document.getAnimations().some(animation=>{const node=animation.effect?.target;return node?.getClientRects().length>0&&(within(node,target)||within(target,node))&&(animation.pending||['running','paused'].includes(animation.playState));});
+}
 // Open shadow roots are part of the production component graph. Only rendered
 // enabled controls are eligible. Calling click is explicitly a DOM activation.
 function deepFind(selector){const found=[];const visit=root=>{for(const element of root.querySelectorAll('*')){if(element.matches(selector))found.push(element);if(element.shadowRoot)visit(element.shadowRoot);}};visit(document);return found.filter(element=>element.getClientRects().length&&!element.closest('[hidden]'));}
@@ -95,7 +100,7 @@ export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot
    // Actions can change the surface. Restore through the adapter and then
    // navigate normally before taking the state-specific capture.
    const restored=await adapter.prepare({tuple,binding,executePlan});assert.equal(restored?.ownedSyntheticFixture,true);assert.equal(restored?.sourceCommit,binding.sourceCommit);await executePlan(setup);await adapter.enter?.({tuple,binding,executePlan,prepared:restored});assert.equal((await adapter.assertState({tuple,executePlan}))?.passed,true);
-   const capturePlan=withCdpConnectionProof({...setup,observeRuntime:true,steps:[poll('state-motion-settled',settledMotionExpression(state.selector)),{id:'state-surface-audit',op:'evaluate',expression:`(${inspectSurface.toString()})(document)`},{id:'state-measure',op:'evaluate',expression:layoutExpression(state.selector)},{id:'state-capture',op:'capture',path:path.join(directory,'capture.png'),overwrite:false}]},'capture');
+   const capturePlan=withCdpConnectionProof({...setup,observeRuntime:true,steps:[poll('state-motion-settled',`(${settledComposedMotion.toString()})(${q(state.selector)})`),{id:'state-surface-audit',op:'evaluate',expression:`(${inspectSurface.toString()})(document)`},{id:'state-measure',op:'evaluate',expression:layoutExpression(state.selector)},{id:'state-capture',op:'capture',path:path.join(directory,'capture.png'),overwrite:false}]},'capture');
    const before=await probeEvidence.observe();const captured=await executePlan(capturePlan);record.raw=captured;await save();
    const measurements=(captured.results||[]).filter(step=>step.id==='state-measure');assert.equal(measurements.length,1);assertMeasurement(measurements[0].value,tuple);
    const audit=captured.results.find(step=>step.id==='state-surface-audit')?.value;assert.ok(audit,'Shadow DOM audit missing');record.surfaceAudit=audit;assert.deepEqual(audit.genericControls,[]);assert.deepEqual(audit.unregisteredControls,[]);assert.deepEqual(audit.clipped,[]);assert.equal(audit.outerFrameScroll,false);
