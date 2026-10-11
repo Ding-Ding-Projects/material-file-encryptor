@@ -1,4 +1,18 @@
-# Preservation boundary, 2026-10-11 UTC
+# Current cloud production and native acceptance, 2026-10-11 UTC
+
+- [x] Pass both exact root entrypoints on GitHub Actions for a82 and b516, with source-bound output and no CI tests or lint.
+- [x] Independently verify normal v1.148.1 downloads, provenance/tag, 761 archive CRC entries, 663 actual Squirrel extracted files, Setup embedding, unsigned status and privacy.
+- [x] Verify actual v1.133.1 installation and version registration, matching all 663 installed files to source 6b.
+- [x] Download the cloud-compiled b516 verifier, pass its local injected self-test and verify actual installer/renderer exclusion.
+- [x] Pass genuine mounted lifecycle, descriptor vetoes, cancellation, authenticated reopen and normal owned teardown for product a82 with verifier b516; preserve the distinct-source receipt.
+- [x] Integrate independently reviewed verifier-only settlement/retention and cloud delivery changes into main.
+- [ ] Push current main integration, verify exact remote source and its separate cloud production verdict.
+- [ ] Complete packaged GUI, installed startup and automatic-update acceptance using genuine downloaded bytes.
+- [ ] Finish full settings/editor/motion/guidance and four-target server-manager workflows with built-surface evidence.
+- [ ] Replace every current screenshot reference, retaining original historical provenance.
+- [ ] Finish complete main integration, normal release, live documentation and preservation-qualified cleanup.
+
+# Earlier preservation boundary, 2026-10-11 UTC
 
 ## Installation and update repair
 
