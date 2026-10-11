@@ -32,7 +32,7 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
   if (!actions[feature]?.includes(action) || !object(payload) || Buffer.byteLength(JSON.stringify(payload)) > limit) throw new Error('Unsupported feature request.');
   if ((feature==='surprise'||feature==='personalization'&&action==='accessibilityState') && (Object.getPrototypeOf(payload)!==Object.prototype&&Object.getPrototypeOf(payload)!==null||Reflect.ownKeys(payload).length!==0)) throw new Error('This read-only request accepts no payload.');
   if(feature==='access'&&ACCESS_HOST_ACTIONS.includes(action)){
-    const inspect=(value,depth=0)=>{if(depth>12)throw Error('Access payload is too deeply nested.');if(value&&typeof value==='object'){if(!Array.isArray(value)&&Object.getPrototypeOf(value)!==Object.prototype||Reflect.ownKeys(value).some(key=>typeof key!=='string'||['__proto__','prototype','constructor'].includes(key)))throw Error('Unsupported access payload.');for(const item of Object.values(value))inspect(item,depth+1);}};
+    const inspect=(value,depth=0)=>{if(depth>12)throw Error('Access payload is too deeply nested.');if(value&&typeof value==='object'){if(Object.getPrototypeOf(value)!==(Array.isArray(value)?Array.prototype:Object.prototype)||Reflect.ownKeys(value).some(key=>typeof key!=='string'||['__proto__','prototype','constructor'].includes(key)||Array.isArray(value)&&key!=='length'&&!/^(?:0|[1-9][0-9]*)$/.test(key)))throw Error('Unsupported access payload.');for(const item of Object.values(value))inspect(item,depth+1);}};
     inspect(payload);validateAccessHostRequest(action,payload);
   }
   if (feature === 'workflow' && WORKFLOW_DESKTOP_ACTIONS.includes(action)) validateDesktopWorkflow(action,payload);
