@@ -47,4 +47,4 @@ Do not return secrets, secret-derived diagnostics, QR contents, one-time codes, 
 
 Focused tests exercise meaningful negative cases: missing capabilities must stop before mutation, wrong state must fail, and absent or inactive controls must not produce success. Parser checks and mocked tests are labeled source-only. Runtime acceptance remains pending the exact packaged candidate.
 
-Inventory additions require owner-supplied ID, selector, fixture, observable, actions, reason and source commit. Existing 74 baseline IDs remain frozen. The current 10 approved history/logo additions bring the total to 84 states and 4,032 tuples. Area code reads the inventory; it does not silently delete or replace requirements.
+Inventory additions require owner-supplied ID, selector, fixture, observable, actions, reason and source commit. Existing 74 baseline IDs remain frozen. Ten approved history/logo additions and three independently privileged access-history additions bring the total to 87 states and 4,176 tuples. Area code reads the inventory; it does not silently delete or replace requirements.
