@@ -4,6 +4,8 @@ Complete the existing installer/updater repair and every applicable app/document
 
 # Current source integration and cloud production, 2026-10-11 UTC
 
+Graceful-only installed observation is now source-admitted through 5d8bb980135cfa1600a360b8b9afeef6e5983032. The entire close promise is memoized across concurrent/repeated callers, including retention/publication faults. Independent actual-wrapper negatives prove one close request, no termination fallback, identical failed outcomes and preserved independent absence failures. Actual installed startup remains pending driver/path/headroom admission; no update or restart occurred. Main d8 cloud run 38121519098 succeeded and normal v1.179.1 binds that exact source with five expected assets and both draft/prerelease flags false. Independent downloads have completed; downloaded-package verification is next and remains separate.
+
 The accepted durable launch observer is integrated from fc866 through preservation tip 56f7ceb922cea0cc7ecd459f17023f09051e09c3. Caller deadlines retain persistent launch ownership and unknown outcomes rather than killing the observer; phase journals are forensic records, not a claimed consumer hash-chain gate. Actual installed startup remains pending. Documentation deployment 38121308257 succeeded for exact acbdf10150e470457e19a4e895c06296b0218954. Independent readback matched all 198 cloud output files (17,687,042 bytes), checked 6,430 internal references with zero missing files/anchors, and proved stable live provenance plus exact repository homepage. Receipt: out/live-acb-20261011/live-content-verification.json. This is live content/asset verification, not rendered feature acceptance.
 
 ## Native verifier preservation
