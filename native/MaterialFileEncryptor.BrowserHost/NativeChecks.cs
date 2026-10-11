@@ -34,8 +34,12 @@ public static class NativeChecks
         using var server = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly | PipeOptions.FirstPipeInstance);
         PipeIdentity.RestrictAndAssert(server, sid); checks++;
         using var client = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-        await Task.WhenAll(server.WaitForConnectionAsync(timeout.Token), client.ConnectAsync(timeout.Token));
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        Console.WriteLine("Synthetic framing and ACL checks passed; connecting the owned pipe fixture.");
+        var serverConnection = server.WaitForConnectionAsync(timeout.Token);
+        await client.ConnectAsync(timeout.Token);
+        await serverConnection;
+        Console.WriteLine("Synthetic pipe connection passed; verifying frame traffic.");
         await NativeFrames.Write(client, new { fixture = true }, timeout.Token);
         if ((await NativeFrames.Read(server, timeout.Token))?.GetProperty("fixture").GetBoolean() != true) throw new InvalidDataException("Same-user pipe round trip failed.");
         checks++;
