@@ -1,3 +1,4 @@
+import {inspectImageAttachment} from './attachments.js';
 const BASE = 'http://127.0.0.1:11434';
 const ROUTES = Object.freeze({ version:['GET','/api/version'], installed:['GET','/api/tags'], running:['GET','/api/ps'], show:['POST','/api/show'], pull:['POST','/api/pull'], delete:['DELETE','/api/delete'], copy:['POST','/api/copy'], chat:['POST','/api/chat'], generate:['POST','/api/generate'] });
 export const LIMITS = Object.freeze({ request: 6 * 1024 * 1024, response: 16 * 1024 * 1024, line: 1024 * 1024, messages: 128, prompt: 65536, images: 4, image: 1024 * 1024 });
@@ -28,6 +29,7 @@ export function validatePayload(action, body) {
     for(const m of out.messages) {
       if(!m || Object.keys(m).some(k=>!['role','content','images'].includes(k)) || !['system','user','assistant'].includes(m.role) || typeof m.content!=='string' || m.content.length>LIMITS.prompt) throw new Error('Invalid chat message.');
       if(m.images && (!Array.isArray(m.images) || m.images.length>LIMITS.images || m.images.some(i=>typeof i!=='string' || i.length>LIMITS.image*4/3+4 || !/^[A-Za-z0-9+/]+={0,2}$/.test(i)))) throw new Error('Invalid or oversized image attachment.');
+      for(const image of m.images||[])inspectImageAttachment(image);
     }
   }
   if(['chat','generate','pull'].includes(action)) out.stream=true;
