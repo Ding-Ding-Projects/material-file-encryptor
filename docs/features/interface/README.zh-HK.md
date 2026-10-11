@@ -33,3 +33,5 @@
 - [本機字型中繼資料同可變軸](font-metadata.zh-HK.md)
 
 - [完整本機隨附字型](bundled-fonts.zh-HK.md)
+
+- [有型別嘅文字排版設定](typography-inspector.zh-HK.md)
