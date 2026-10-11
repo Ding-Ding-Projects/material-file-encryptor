@@ -17,11 +17,11 @@ export function validateInventory(workflows,manifest,readInventory){
  const discovered=new Map();for(const [file,source]of workflows)for(const [job,body]of discoverJobs(source))discovered.set(file+'#'+job,body);
  const listed=manifest.jobs.map(row=>row.workflow+'#'+row.job);if(new Set(listed).size!==listed.length||listed.length!==discovered.size||listed.some(key=>!discovered.has(key)))throw Error('WORKFLOW_JOB_INVENTORY_MISMATCH');
  for(const row of manifest.jobs){const body=discovered.get(row.workflow+'#'+row.job);
-  if(row.bootstrapApplicable===false){if(row.workflow!=='.github/workflows/release-verified-windows.yml'||row.job!=='explain'||!row.reason||row.onlyRun!=="echo 'Preview publication runs once in windows.yml. This retired route never publishes.'"||body.match(/^\s+- run:/gm)?.length!==1||!body.includes('- run: '+row.onlyRun)||/uses:/.test(body))throw Error('INVALID_BOOTSTRAP_NONAPPLICABILITY');continue;}
+  if(row.bootstrapApplicable===false){if(row.workflow!=='.github/workflows/release-verified-windows.yml'||row.job!=='explain'||!row.reason||row.onlyRun!=="echo 'Preview publication runs once in windows.yml. This retired route never publishes.'"||JSON.stringify(body.split(/\r?\n/).map(line=>line.trim()).filter(line=>line&&!line.startsWith('#')))!==JSON.stringify(['explain:','runs-on: ubuntu-24.04','steps:','- run: '+row.onlyRun]))throw Error('INVALID_BOOTSTRAP_NONAPPLICABILITY');continue;}
   if(typeof row.inventory!=='string'||!row.inventory.startsWith('scripts/')&&!row.inventory.startsWith('.github/workflows/')||row.inventory.includes('..'))throw Error('MISSING_DEPENDENCY_INVENTORY');
   const inventory=readInventory(row.inventory);if(inventory.schemaVersion!==1||inventory.workflow!==row.workflow)throw Error('WRONG_DEPENDENCY_INVENTORY');
   const record=row.record==='.'?inventory:row.record.split('.').reduce((value,key)=>value?.[key],inventory);
-  const tools=record?.tools||record?.dependencies;if(!Array.isArray(tools)||!tools.length||!Array.isArray(record?.bootstrapMarkers)||!record.bootstrapMarkers.length)throw Error('MISSING_DEPENDENCY_OR_BOOTSTRAP_RECORD');
+  const tools=record?.tools||record?.dependencies;if(!Array.isArray(tools)||!tools.length||tools.some(tool=>typeof tool==='string'?!tool.trim():!tool||typeof tool.name!=='string'||!tool.name.trim())||!Array.isArray(record?.bootstrapMarkers)||!record.bootstrapMarkers.length)throw Error('MISSING_DEPENDENCY_OR_BOOTSTRAP_RECORD');
   if(row.record==='.'&&inventory.job!==row.job)throw Error('WRONG_JOB_RECORD');
   for(const marker of record.bootstrapMarkers)if(typeof marker!=='string'||!marker.trim()||!body.includes(marker))throw Error('JOB_BOOTSTRAP_MISSING');
  }
@@ -38,6 +38,7 @@ async function main(){
   const noBootstrap=structuredClone(inventories.get(manifest.jobs[0].inventory));noBootstrap.jobs.windows.bootstrapMarkers=[];assert.throws(()=>validateInventory(workflows,manifest,file=>file===manifest.jobs[0].inventory?noBootstrap:read(file)));
   const changed=new Map(workflows);changed.set('.github/workflows/pages.yml',changed.get('.github/workflows/pages.yml').replace('actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020','removed-node-bootstrap'));assert.throws(()=>validateInventory(changed,manifest,read),/JOB_BOOTSTRAP_MISSING/);assert.equal(validateInventory(workflows,manifest,read),count);
   const extra=new Map(workflows);extra.set('.github/workflows/unknown.yml','jobs:\n  extra:\n    runs-on: ubuntu-24.04\n');assert.throws(()=>validateInventory(extra,manifest,read));
+  const retired=new Map(workflows);retired.set('.github/workflows/release-verified-windows.yml',retired.get('.github/workflows/release-verified-windows.yml')+'\n      - name: additional work\n        run: node unexpected.js\n');assert.throws(()=>validateInventory(retired,manifest,read),/INVALID_BOOTSTRAP_NONAPPLICABILITY/);
   console.log('PASS: actual workflow discovery rejects omitted/unknown jobs, absent inventories and removed bootstrap, then accepts restored input.');
  }
  console.log(`PASS: ${count} actual workflow jobs have explicit dependency/bootstrap records or exact retired-job nonapplicability. Fresh-cloud execution remains separate.`);
