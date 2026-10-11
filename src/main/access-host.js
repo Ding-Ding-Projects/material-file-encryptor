@@ -1,3 +1,4 @@
+import {waitingAnswer} from '../renderer/features/access/wait-answer.js';
 import {createAccessChallenges} from './access-challenges.js';
 import {createAccessHistory} from './access-history.js';
 export const ACCESS_HOST_ACTIONS=Object.freeze(['displayNameSet','displayNameRead','localVerify','waitChallenge','waitStatus','waitAnswer','waitCancel','historySetup','historyUnlock','historyLock','historyStatus','historyList','historyExport','historyDiff','historyRestore','historyLabel','historyRetention','historyPrune']);
@@ -5,7 +6,7 @@ const text=(limit,optional=false)=>value=>optional&&value===undefined||typeof va
 const id=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
 const target=value=>typeof value==='string'&&(['profile','history'].includes(value)||/^element:[^\x00-\x1f\x7f]{1,256}$/.test(value));
 const credentials=value=>value&&Object.getPrototypeOf(value)===Object.prototype&&Object.keys(value).every(key=>['password','pin','totp'].includes(key))&&Object.values(value).every(text(4096));
-const answer=value=>Number.isInteger(value)||Array.isArray(value)&&value.length<=128&&value.every(item=>Number.isFinite(item)||item&&Object.getPrototypeOf(item)===Object.prototype&&Object.keys(item).every(key=>['cell','time'].includes(key))&&Number.isInteger(item.cell)&&item.cell>=0&&item.cell<9&&Number.isFinite(item.time)&&item.time>=0&&item.time<=120000);
+const answer=waitingAnswer;
 export function validateAccessHostRequest(action,payload){
  const schemas={displayNameSet:{value:text(160)},displayNameRead:{},localVerify:{target,credentials},waitChallenge:{target},waitStatus:{target},waitAnswer:{target,nonce:text(80),answer},waitCancel:{target},historySetup:{password:text(4096)},historyUnlock:{password:text(4096)},historyLock:{},historyStatus:{},historyList:{query:text(512,true),from:text(40,true),to:text(40,true),action:text(80,true)},historyExport:{},historyDiff:{first:id,second:id},historyRestore:{id},historyLabel:{id,label:text(160)},historyRetention:{days:value=>Number.isInteger(value)&&value>=1&&value<=3650},historyPrune:{}};
  const schema=schemas[action];if(!schema||!payload||Object.getPrototypeOf(payload)!==Object.prototype||Reflect.ownKeys(payload).some(key=>typeof key!=='string'||!Object.hasOwn(schema,key))||Object.entries(schema).some(([key,valid])=>!valid(payload[key])))throw Error('Unsupported access host payload.');return payload;

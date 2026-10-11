@@ -35,3 +35,34 @@ test('unattested history recovery never adopts arbitrary encrypted files',async(
 
 test('restart completes an attested staged record after interruption before the first commit',async()=>{const f=await fixture();let restarted;try{await request(f,'historySetup',{password:'synthetic history'});let started;const ready=new Promise(r=>started=r),original=f.credentials.set;let held=false;f.credentials.set=async(key,value)=>{await original(key,value);if(key==='lock:access-history-pending:v1'&&!held){held=true;started();await new Promise(()=>{});}};void f.service.setCredential('authenticator:sample',{secret:'SYNTHETIC-PENDING'});await ready;f.service.close();assert.equal((await fs.readdir(path.join(f.directory,'access-history','records'))).length,0);restarted=createAccessHost({dataDirectory:f.directory,credentials:f.credentials,getActor:()=> 'trusted-fixture',getSchoolMode:async()=>true,now:()=>100000});await restarted.request('historyUnlock',{password:'synthetic history'});assert.equal((await restarted.request('historyList')).length,1);assert.equal(f.credentials.records.has('lock:access-history-pending:v1'),false);await restarted.setCredential('authenticator:sample',{secret:'SYNTHETIC-LATER'});assert.equal((await restarted.request('historyList')).length,2);}finally{restarted?.close();await f.dispose();}});
 test('staged recovery preserves mismatched bytes instead of overwriting them',async()=>{const f=await fixture();let restarted;try{await request(f,'historySetup',{password:'synthetic history'});let started;const ready=new Promise(r=>started=r),original=f.credentials.set;let held=false;f.credentials.set=async(key,value)=>{await original(key,value);if(key==='lock:access-history-pending:v1'&&!held){held=true;started();await new Promise(()=>{});}};void f.service.setCredential('authenticator:sample',{secret:'SYNTHETIC-PENDING'});await ready;f.service.close();const intent=f.credentials.records.get('lock:access-history-pending:v1'),filename=path.join(f.directory,'access-history',intent.staged);await fs.writeFile(filename,'{"syntheticUnknown":true}');restarted=createAccessHost({dataDirectory:f.directory,credentials:f.credentials,getActor:()=> 'trusted-fixture',now:()=>100000});await assert.rejects(restarted.request('historyUnlock',{password:'synthetic history'}),/integrity check failed/);assert.equal(await fs.readFile(filename,'utf8'),'{"syntheticUnknown":true}');assert.equal(f.credentials.records.has('lock:access-history-pending:v1'),true);}finally{restarted?.close();await f.dispose();}});
+
+test('sparse waiting answers cannot clear the deadline at the host or direct grading boundary',async()=>{
+ const {WaitLadder}=await import('../src/renderer/features/access/locks.js');
+ const f=await fixture();try{
+  await f.credentials.set('lock:access-attempts:v1',{version:1,targets:{profile:{failures:0,level:1,until:130000}}});
+  const challenge=await request(f,'waitChallenge',{target:'profile'}),sparse=Array(10);
+  assert.throws(()=>validateAccessHostRequest('waitAnswer',{target:'profile',nonce:challenge.nonce,answer:sparse}),/Unsupported/);
+  assert.throws(()=>request(f,'waitAnswer',{target:'profile',nonce:challenge.nonce,answer:sparse}),/Unsupported/);
+  assert.equal((await request(f,'waitStatus',{target:'profile'})).until,130000);
+  assert.equal(await f.credentials.get('lock:access-budget:v1'),null);
+  const ladder=new WaitLadder({schoolMode:true,now:()=>100000}),round=ladder.challenge();
+  assert.equal(ladder.answer(round.nonce,Array(10)),false);assert.equal(ladder.skips.length,0);
+  const valid=challenge.question.map(q=>q.a+q.b),result=await request(f,'waitAnswer',{target:'profile',nonce:challenge.nonce,answer:valid});
+  assert.equal(result.won,true);assert.equal(result.ok,false);
+ }finally{await f.dispose();}
+});
+test('waiting answer schema rejects inherited, accessor and decorated indices without reading getters',()=>{
+ let reads=0;const inherited=Array(10),prototype=Object.create(Array.prototype);for(let i=0;i<10;i++)prototype[i]=0;Object.setPrototypeOf(inherited,prototype);
+ const accessor=Array(10).fill(0);Object.defineProperty(accessor,'0',{get(){reads++;return 0;},enumerable:true,configurable:true});
+ const decorated=Array(10).fill(0);decorated.extra=true;
+ for(const answer of [inherited,accessor,decorated,Array(12),[null]])assert.throws(()=>validateAccessHostRequest('waitAnswer',{target:'profile',nonce:'synthetic',answer}),/Unsupported/);
+ assert.equal(reads,0);
+});
+
+test('direct challenge service and timed grading reject sparse arrays independently of host schema',async()=>{
+ const {createAccessChallenges}=await import('../src/main/access-challenges.js'),{WaitLadder}=await import('../src/renderer/features/access/locks.js');
+ const credentials=vault();await credentials.set('lock:access-attempts:v1',{version:1,targets:{profile:{failures:0,level:1,until:130000}}});
+ const service=createAccessChallenges({credentials,getActor:()=> 'synthetic',getSchoolMode:async()=>true,now:()=>100000});
+ try{const challenge=await service.request('waitChallenge',{target:'profile'});await assert.rejects(service.request('waitAnswer',{target:'profile',nonce:challenge.nonce,answer:Array(10)}),/Invalid waiting answer/);assert.equal((await service.request('waitStatus',{target:'profile'})).until,130000);assert.equal(await credentials.get('lock:access-budget:v1'),null);}finally{service.close();}
+ for(const answer of [Array(12),[null],Array(12).fill(0)]){let now=0;const ladder=new WaitLadder({schoolMode:true,now:()=>now});ladder.rung='moles';const challenge=ladder.challenge();now=9000;assert.equal(ladder.answer(challenge.nonce,answer),false);assert.equal(ladder.skips.length,0);}
+});
