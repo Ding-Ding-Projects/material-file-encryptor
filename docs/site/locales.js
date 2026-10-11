@@ -199,9 +199,9 @@ export const cantonese = Object.freeze({
 'Light':'淺色',
 'Dark':'深色',
 'Personal vocabulary':'個人用語',
-'Optionally load a JSON file to replace visible wording locally. Your file stays in this browser tab; it is never uploaded or saved by this site. Links and technical identifiers stay intact.':'你可以載入 JSON 檔案，喺本機替換顯示用語。檔案只會留喺呢個瀏覽器分頁，網站唔會上載或者儲存內容。連結同技術識別碼會保持原樣。',
+'Load a JSON file to change wording locally after unlocking your private profile. Valid wording is saved in this browser when storage is available; otherwise it lasts for this session. Nothing is uploaded. Links and technical identifiers stay intact.':'解鎖私人個人檔案後，可以載入 JSON 檔案替換顯示用語。瀏覽器儲存可用時會保存有效用語，否則只供今次使用。唔會上載任何內容。連結同技術識別碼保持原樣。',
 'View the file format':'查看檔案格式',
-'Up to 200 replacements, 128 KB per file. Source text: 1–120 characters. Replacement text: up to 500 characters.':'最多 200 組替換，每個檔案最多 128 KB。原文長度為 1–120 字元，替換文字最多 500 字元。',
+'256 KiB per file. No separate entry-count limit. Source: 1–160 Unicode code points. Replacement: up to 1,000 Unicode code points. Maximum JSON depth: 8. Legacy version 1 replacement arrays are also accepted.':'每個檔案最多 256 KiB，冇另外限制項目數量。原文為 1–160 個 Unicode 碼點，替換文字最多 1,000 個 Unicode 碼點。JSON 深度最多 8 層。亦接受舊版 version 1 替換陣列。',
 'Choose a vocabulary JSON file':'選擇用語 JSON 檔案',
 'Reset vocabulary':'重設用語',
 'Default wording is active.':'目前使用預設用語。',
@@ -283,10 +283,10 @@ export const cantonese = Object.freeze({
 'Actual Linux Electron application capture showing settings in dark appearance.':'實際 Linux Electron 應用程式截圖，顯示深色外觀設定。',
 'Open the application help screenshot at full size':'以原尺寸開啟應用程式說明截圖',
 'Actual Linux Electron application capture showing the help view.':'實際 Linux Electron 應用程式截圖，顯示說明畫面。',
-'Vocabulary JSON must be no larger than 128 KB.':'用語 JSON 檔案唔可以大過 128 KB。',
+'Vocabulary JSON must be no larger than 256 KiB.':'用語 JSON 檔案唔可以大過 256 KiB。',
 'Choose a valid JSON file.':'請選擇有效嘅 JSON 檔案。',
-'Use version 1 and a replacements array with at most 200 entries.':'請使用版本 1，同最多 200 項嘅 replacements 陣列。',
-'Each replacement needs safe from and to strings, with no extra fields or control characters (from: 1–120 characters; to: up to 500).':'每組替換都需要安全嘅 from 同 to 字串，唔可以有額外欄位或控制字元（from：1–120 字元；to：最多 500 字元）。',
+'Invalid vocabulary JSON. Use schemaVersion 1 with entries, or version 1 with replacements.':'用語 JSON 無效。請使用 schemaVersion 1 配合 entries，或者 version 1 配合 replacements。',
+'Each replacement needs safe from and to strings, with no extra fields or control characters (from: 1–160 Unicode code points; to: up to 1,000).':'每組替換都需要安全嘅 from 同 to 字串，唔可以有額外欄位或控制字元（from：1–160 個 Unicode 碼點；to：最多 1,000 個 Unicode 碼點）。',
 'Duplicate from words are not allowed.':'from 原文唔可以重複。',
 });
 export function localized(text, language = 'en') {
@@ -307,11 +307,11 @@ export function loadMessagePreferences(storage) {
 export function messagePair(kind, amount = 1, count = 0) {
   const tier = Math.min(4, Math.max(0, Math.round(amount) - 1));
   if (kind === 'success') return [
-    [`${count} vocabulary replacements applied in this tab. Nothing was uploaded or saved.`, `已喺呢個分頁套用 ${count} 組用語替換。冇上載或者儲存任何內容。`],
-    [`${count} replacements are ready. Your wording is in place. Nothing uploaded or saved.`, `${count} 組替換準備好喇。你嘅用語已經套用。冇上載或者儲存。`],
-    [`${count} replacements are ready. Your words, locally applied. Nothing uploaded or saved.`, `${count} 組替換準備好喇。用你嘅用語，喺本機套用。冇上載或者儲存。`],
-    [`${count} replacements are in place. A small refresh for the dictionary. Nothing uploaded or saved.`, `${count} 組替換已經就位。幫字典換下新鮮感。冇上載或者儲存。`],
-    [`${count} replacements are in place. The dictionary has changed its outfit. Nothing uploaded or saved.`, `${count} 組替換已經就位。字典換咗件衫喇。冇上載或者儲存。`],
+    [`${count} vocabulary replacements applied in this tab. Nothing was uploaded.`, `已喺呢個分頁套用 ${count} 組用語替換。冇上載任何內容。`],
+    [`${count} replacements are ready. Your wording is in place. Nothing uploaded.`, `${count} 組替換準備好喇。你嘅用語已經套用。冇上載。`],
+    [`${count} replacements are ready. Your words, locally applied. Nothing uploaded.`, `${count} 組替換準備好喇。用你嘅用語，喺本機套用。冇上載。`],
+    [`${count} replacements are in place. A small refresh for the dictionary. Nothing uploaded.`, `${count} 組替換已經就位。幫字典換下新鮮感。冇上載。`],
+    [`${count} replacements are in place. The dictionary has changed its outfit. Nothing uploaded.`, `${count} 組替換已經就位。字典換咗件衫喇。冇上載。`],
   ][tier];
   return [
     ['No guides match that search. Try “password”, “offline”, or “parts”.', '搵唔到符合搜尋嘅指南。試下「密碼」、「離線」或者「分割」。'],
