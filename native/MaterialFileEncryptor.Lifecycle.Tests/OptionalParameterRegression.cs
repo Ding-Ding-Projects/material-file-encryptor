@@ -18,6 +18,9 @@ internal static class OptionalParameterRegression
             throw new Exception("A string was accepted as a numeric pagination value.");
         }
         catch (InvalidOperationException) { }
+        if (TransferOperationRegistry.ClassifyFailure(new IOException("sensitive fixture detail")) != "STORAGE_IO_FAILED"
+            || TransferOperationRegistry.ClassifyFailure(new InvalidOperationException("sensitive fixture detail")) != "INVALID_OPERATION")
+            throw new Exception("Transfer failure diagnostics must use bounded categories, not exception text.");
         Console.WriteLine("PASS nullable pagination parameters retain defaults and reject non-numeric values");
     }
 }

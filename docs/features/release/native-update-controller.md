@@ -54,6 +54,11 @@ Once native Squirrel updating has started, its API supplies no cancellation or r
 
 ## Verification and remaining acceptance
 
+<<<<<<< HEAD
+=======
+The desktop Updates workspace connects status, check, staging and explicit installation to this controller. Its installation lease blocks new workspace mutations and requires the ordinary drive lock to succeed. A final preparation callback closes owned services and the native helper only after the cached package has been verified. Browser-paired controls cannot request native installation. These are source integration facts; installed acceptance remains separate.
+
+>>>>>>> 6964aa2
 `node --test test/update-service.test.js` exercises mocked native APIs and temporary non-executable package fixtures. It covers fixed-source metadata, unchanged package versions, corrupt packages, offline responses, oversized metadata, deferred and busy states, lease requirements, explicit confirmation, restart preparation, native-cache mismatch, concurrent requests, schedule bounds, disposal, late native events, and fresh-instance ready restoration against fresh provenance. Negative cache cases include corruption, missing and malformed records, oversized records, path traversal, unknown fields, and changed releases. These checks prove controller behavior only.
 
 Outstanding acceptance includes a real installed unsigned Squirrel application, real release assets with increasing package versions, end-to-end native cache layout and package naming, application restart into the new version, correct UI and focus behavior in all language modes, busy-work integration, and external failure recovery. There is no tested rollback, native cancellation, or completed update claim.

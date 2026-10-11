@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createCredentialStore, createFeatureServices, readConverterManifest } from '../src/main/feature-services.js';
-import { validateFeatureRequest } from '../src/main/validation.js';
+import { validateFeatureRequest, validateRequest } from '../src/main/validation.js';
 const safeStorage={isEncryptionAvailable:()=>true,encryptString:text=>Buffer.from(text),decryptString:value=>value.toString()};
 async function fixture(t){const directory=await fs.mkdtemp(path.join(os.tmpdir(),'feature-services-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));return directory;}
 test('converter manifests support Windows UTF-8 output without accepting malformed JSON',async t=>{
@@ -58,6 +58,17 @@ test('workflow IPC exposes declared actions without an arbitrary execution route
  assert.equal(validateFeatureRequest('workflow','pickDocument',{}).action,'pickDocument');
  assert.equal(validateFeatureRequest('workflow','cancelDownload',{id:'grant'},{browser:true}).action,'cancelDownload');
  for(const action of ['exec','spawn','constructor','publish'])assert.throws(()=>validateFeatureRequest('workflow',action,{}));
+});
+
+test('performance preferences accept only the two explicit scheduling modes',()=>{
+ for(const performanceMode of ['responsive','throughput'])assert.equal(validateRequest('setPreferences',{performanceMode}).performanceMode,performanceMode);
+ assert.throws(()=>validateRequest('setPreferences',{performanceMode:'realtime'}));
+});
+
+test('browser update requests cannot invoke native installation',()=>{
+ assert.equal(validateFeatureRequest('updates','status',{language:'en'},{browser:true}).action,'status');
+ assert.equal(validateFeatureRequest('updates','install',{}).action,'install');
+ assert.throws(()=>validateFeatureRequest('updates','install',{}, {browser:true}));
 });
 
 

@@ -1,0 +1,35 @@
+import {SurfaceElement,element,register,localized} from '../../../shared/surface/registry.js';
+
+const COPY={
+ title:['Application updates','應用程式更新'],checking:['Checking for updates','正在檢查更新'],available:['Update available','有可用更新'],downloading:['Downloading update','正在下載更新'],ready:['Update staged and ready','更新已暫存，可以安裝'],deferred:['Installation deferred','已延後安裝'],failed:['Update failed','更新失敗'],unavailable:['Updates unavailable','更新暫不可用'],current:['Application is up to date','應用程式已是最新版本'],idle:['Ready to check for updates','可以檢查更新'],confirming:['Waiting for installation confirmation','等待確認安裝'],installing:['Installing update','正在安裝更新'],'restart-requested':['Application restart requested','已要求重新啟動應用程式'],disposed:['Update service stopped','更新服務已停止'],
+ check:['Check for updates','檢查更新'],download:['Download update','下載更新'],install:['Restart to install','重新啟動並安裝'],later:['Later','稍後'],unsigned:['This update is unsigned. Review the source and save your work before installation.','此更新未經簽署。安裝前請核對來源並儲存工作。'],version:['Installed version','已安裝版本'],target:['Available version','可用版本'],source:['Source revision','來源版本'],unknown:['Unavailable','暫不可用'],reason:['Reason','原因'],desktop:['Installation requires the desktop application.','安裝需要桌面應用程式。'],busy:['Finish active work before installing.','請先完成正在進行的工作再安裝。'],rollback:['Rollback is not confirmed as supported.','尚未確認支援還原版本。'],progress:['Download progress','下載進度'],service:['Update service unavailable.','更新服務暫不可用。']
+};
+const BUSY=new Set(['checking','downloading','confirming','installing','restart-requested']);
+export class UpdatesPanel extends SurfaceElement{
+ constructor(){super();this.snapshot={state:'unavailable'};this.language='en';this.translate=value=>value;this.pending=false;this.deferred=false;this.disposed=false;this.request=null;this.generation=0;
+  this.style('.details{display:grid;grid-template-columns:minmax(120px,auto) minmax(0,1fr);gap:6px 16px}.details dd{margin:0;overflow-wrap:anywhere}.warning{padding:12px;border:1px solid var(--md-sys-color-outline,#777);border-radius:12px}.actions{display:flex;gap:8px;flex-wrap:wrap}');
+  this.heading=element('h2');this.status=element('p',{role:'status','aria-live':'polite','aria-atomic':'true'});this.warning=element('p',{class:'warning'});this.details=element('dl',{class:'details'});this.rows={};
+  for(const key of ['version','target','source']){const label=element('dt'),value=element('dd');this.rows[key]={label,value};this.details.append(label,value);}
+  this.reason=element('p');this.limit=element('p');this.rollback=element('p');this.progress=element('md-linear-progress',{indeterminate:true});this.progress.hidden=true;
+  this.buttons={};const actions=element('div',{class:'actions'});for(const key of ['check','download','install','later']){const button=element(key==='install'?'md-filled-button':'md-outlined-button',{type:'button'});button.addEventListener('click',()=>{if(button.disabled)return;if(key==='later'){this.deferred=true;this.render();}else void this.act(key);});this.buttons[key]=button;actions.append(button);}
+  this.shadowRoot.append(this.heading,this.status,this.warning,this.details,this.reason,this.limit,this.rollback,this.progress,actions);this.render();
+ }
+ t(key){const [en,yue]=COPY[key]||[key,key],external=this.translate(en);return external!==en?external:localized({en,yue},this.language);}
+ configure({translate=value=>value,services={},language='en'}={}){this.translate=translate;this.language=language;this.request=services.request;this.stop=services.subscribe?.(event=>this.update(event?.snapshot||event));this.render();if(this.request)void this.act('status');return this;}
+ update(snapshot){if(this.disposed||!snapshot||typeof snapshot!=='object'||typeof snapshot.state!=='string')return;const prior=this.snapshot;this.snapshot={...snapshot};if(snapshot.state!=='ready'||prior.update?.version!==snapshot.update?.version)this.deferred=false;this.render();}
+ setLanguage(language){this.language=language;this.render();}
+ refreshLabels(){this.render();}
+ async act(action){if(this.pending||this.disposed||!this.request||!['status','check','download','install'].includes(action))return;if(action==='install'&&this.buttons.install.disabled)return;const generation=++this.generation;this.pending=true;this.render();try{const result=await this.request(action,{});if(!this.disposed&&generation===this.generation)this.update(result);}catch(error){if(!this.disposed&&generation===this.generation)this.update({...this.snapshot,state:'failed',reason:String(error?.message||this.t('service'))});}finally{if(!this.disposed&&generation===this.generation){this.pending=false;this.render();}}}
+ render(){const s=this.snapshot,state=s.state,unavailable=!this.request||state==='unavailable'||state==='disposed',busy=this.pending||BUSY.has(state),desktop=s.desktopAvailable!==false&&s.canInstall!==false,work=s.busy===true||s.activeWork===true;
+  this.heading.textContent=this.t('title');this.status.textContent=this.t(this.deferred&&state==='ready'?'deferred':COPY[state]?state:'unavailable');this.warning.textContent=this.t('unsigned');this.warning.hidden=s.unsigned!==true&&s.update?.unsigned!==true;
+  for(const [key,row]of Object.entries(this.rows)){row.label.textContent=this.t(key);const value=key==='version'?s.currentVersion:key==='target'?s.update?.version:s.update?.sourceCommit;row.value.textContent=typeof value==='string'&&value?value:this.t('unknown');}
+  this.reason.textContent=s.reason?`${this.t('reason')}: ${String(s.reason)}`:'';this.reason.hidden=!s.reason;this.limit.textContent=!desktop?this.t('desktop'):work?this.t('busy'):'';this.limit.hidden=desktop&&!work;this.rollback.textContent=this.t('rollback');
+  this.progress.hidden=state!=='downloading';this.progress.setAttribute('aria-label',this.t('progress'));const fraction=Number(s.progress);this.progress.indeterminate=!Number.isFinite(fraction)||s.progress==null;if(!this.progress.indeterminate)this.progress.value=Math.max(0,Math.min(1,fraction));
+  for(const [key,button]of Object.entries(this.buttons))button.textContent=this.t(key);
+  this.buttons.check.disabled=unavailable||busy||state==='ready';this.buttons.download.disabled=unavailable||busy||state!=='available';this.buttons.install.disabled=unavailable||busy||!desktop||work||state!=='ready';this.buttons.later.disabled=busy||state!=='ready'||this.deferred;
+ }
+ destroy(){this.disposed=true;this.generation++;this.stop?.();this.remove();}
+}
+register('mfe-updates-panel',UpdatesPanel);
+export function mountUpdates(root,options={}){const panel=element('mfe-updates-panel');root.append(panel);panel.configure(options);return{refresh:()=>panel.act('status'),setLanguage:language=>panel.setLanguage(language),refreshLabels:()=>panel.refreshLabels(),destroy:()=>panel.destroy()};}
+export const mount=mountUpdates;

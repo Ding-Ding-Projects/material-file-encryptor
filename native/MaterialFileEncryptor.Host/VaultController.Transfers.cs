@@ -8,6 +8,8 @@ internal sealed partial class VaultController
     private readonly SemaphoreSlim commandWorker = new(1, 1);
     private readonly object admissionGate = new();
     private int queuedCommands, activeCommands;
+    private int performanceMode;
+    private BackgroundPriorityScope BackgroundPriority()=>new(Volatile.Read(ref performanceMode)==0);
     private long admittedBytes;
     private const long MaximumQueuedBytes = 64L * 1024 * 1024 - 65536;
     private bool forceLocking;
@@ -81,6 +83,7 @@ internal sealed partial class VaultController
     }
     private async Task ImportManagedAsync(string[] paths, CancellationToken cancellation, Action<long, long, int, int> progress)
     {
+        using var bufferBudget=MaterialFileEncryptor.Core.TransferBufferBudget.Reserve(2L*65536,cancellation);
         // One 64 KiB plaintext buffer is owned by the single transfer consumer.
         // No plaintext is queued or written to temporary files.
         byte[] buffer = new byte[65536];
@@ -108,21 +111,23 @@ internal sealed partial class VaultController
                 while ((count = await input.ReadAsync(buffer, cancellation)) != 0)
                 {
                     cancellation.ThrowIfCancellationRequested();
-                    staged.Write(offset, buffer.AsSpan(0, count), cancellation); offset += count;
+                    using(BackgroundPriority())staged.Write(offset, buffer.AsSpan(0, count), cancellation);
+                    offset += count;
                     progress(completedBytes + offset, total, completedFiles, paths.Length);
                 }
                 cancellation.ThrowIfCancellationRequested();
                 // No cancellation check follows atomic install: the file is now
                 // completed even if a concurrent cancellation arrives.
-                staged.Commit(cancellation);
+                using(BackgroundPriority())staged.Commit(cancellation);
                 completedBytes += offset; ++completedFiles;
                 progress(completedBytes, total, completedFiles, paths.Length);
                 var installed = captured.GetInfo(candidate)!;
-                captured.RecordActivity(installed.EntryId, "import", candidate);
+                using(BackgroundPriority())captured.RecordActivity(installed.EntryId, "import", candidate);
             }
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
+            using var priority=BackgroundPriority();
             lock (gate) { if (vault is not null) vault.RecordActivity(vault.VaultId, "cancel", detail: "Managed import cancelled"); }
             throw;
         }
@@ -143,6 +148,8 @@ internal sealed partial class VaultController
     }
     private object ExportCurrentFile(JsonElement args,CancellationToken cancellation,Action<long,long,int,int> progress)
     {
+        using var priority=BackgroundPriority();
+        using var bufferBudget=MaterialFileEncryptor.Core.TransferBufferBudget.Reserve(2L*65536,cancellation);
         string path=RequiredString(args,"path"),destination=Path.GetFullPath(RequiredString(args,"destination"));
         MaterialFileEncryptor.Core.VaultEngine captured;
         MaterialFileEncryptor.Core.VaultEngine.ReadSnapshot snapshot;
@@ -165,7 +172,7 @@ internal sealed partial class VaultController
                     int length=(int)Math.Min(buffer.Length,snapshot.Length-offset);
                     snapshot.PrepareRangeAsync(offset,length,cancellation).GetAwaiter().GetResult();
                     cancellation.ThrowIfCancellationRequested();
-                    int count=snapshot.ReadRange(offset,buffer.AsSpan(0,length));
+                    int count=snapshot.ReadRange(offset,buffer.AsSpan(0,length),cancellation);
                     if(count==0)throw new EndOfStreamException("Snapshot ended before its recorded length.");
                     stream.Write(buffer,0,count);offset+=count;progress(offset,snapshot.Length,0,1);
                 }
@@ -190,6 +197,8 @@ internal sealed partial class VaultController
     }
     private object ExportVersionFile(JsonElement args,CancellationToken cancellation=default)
     {
+        using var priority=BackgroundPriority();
+        using var bufferBudget=MaterialFileEncryptor.Core.TransferBufferBudget.Reserve(2L*65536,cancellation);
         string versionId=RequiredString(args,"versionId"), destination=Path.GetFullPath(RequiredString(args,"destination"));
         MaterialFileEncryptor.Core.VaultEngine captured;
         lock(gate)

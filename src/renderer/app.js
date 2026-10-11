@@ -24,11 +24,12 @@ let driveLetterEdited = false, activeDriveLetter = '';
 let foundation=null,fileDetails=null,fileSearch=null,renderedFilesKey='',pagedFiles=null,fileNextCursor=null,filePageRevision=null,filePageRequest=0;
 const featureMounts=new Map(),featureRoots=new Map(),workspaceDisposers=[];
 const operationNotifications=new Map();
-const canonicalViewLabels={drive:'My drive',offline:'Available offline',history:'History',recycle:'Recycle Bin',settings:'Settings',help:'How it works',details:'File details',converter:'Converter',ollama:'Local models',access:'Local access',personalization:'Personalization',documentation:'Documentation',changelog:'Changelog',status:'Status',workflow:'Documents and downloads'};
+const canonicalViewLabels={drive:'My drive',offline:'Available offline',history:'History',recycle:'Recycle Bin',settings:'Settings',help:'How it works',details:'File details',converter:'Converter',ollama:'Local models',access:'Local access',personalization:'Personalization',documentation:'Documentation',changelog:'Changelog',status:'Status',workflow:'Documents and downloads',updates:'Updates'};
 const localSettings=createSettingsStore({storage:localStorage});
 if(localSettings.provenance==='default')try{localSettings.update({...LOCAL_DEFAULTS,...preferences,vocabulary:undefined},'existing preferences migrated');}catch{}
 let effectiveLocalSettings=localSettings.get();
 const enhancedLabels={'Notification history reset':'通知記錄已重設','Previous notification text was cleared because its original wording could not be verified.':'舊有通知文字已清除，因為無法確認原有用詞。','Export queued. Cancel unfinished work from Operations.':'匯出已加入佇列。可以在操作面板取消未完成工作。','File details':'檔案詳情','Converter':'轉換工具','Local models':'本機模型','Personalization':'個人化','Local access':'本機存取','Documentation':'說明文件','Changelog':'更新記錄','Status':'狀態','Load more files':'載入更多檔案','Retry loading files':'重試載入檔案','Cancel operation':'取消操作','Operations':'操作','Force lock':'強制鎖定','Quit application':'結束程式','Feature unavailable':'功能無法使用','Refresh':'重新整理','Search settings':'搜尋設定'};
+Object.assign(enhancedLabels,{'Transfer responsiveness':'傳輸回應速度','Background work priority':'背景工作優先順序','Responsive mode lowers background encryption and synchronization priority. Throughput mode uses normal priority. Both keep bounded transfer buffers.':'快速回應模式會降低背景加密及同步的優先順序。高吞吐量模式使用正常優先順序。兩種模式都保留傳輸緩衝上限。','Responsive (recommended)':'快速回應（建議）','Throughput':'高吞吐量'});
 const dictionary = new Map();
 document.querySelectorAll('[data-i18n]').forEach(el => dictionary.set(el, el.textContent));
 initializeIcons();
@@ -62,7 +63,7 @@ function applyPreferences() {
  $('history-days')?.setAttribute('aria-label',t('Custom days'));
  clearFields.refresh();
  foundation?.setLanguage(preferences.language);fileSearch?.setLanguage(preferences.language);renderedFilesKey='';
- for(const module of featureMounts.values())module.refresh?.();
+ for(const module of featureMounts.values()){module.setLanguage?.(preferences.language);module.refresh?.();}
  if (state) { render(); changeView(view); }
  if ($('vault-dialog').open) updateDialog();
  privateWordingView.refresh();
@@ -152,6 +153,7 @@ function render() {
  $('offline-count').textContent = state.offlineCount??currentFiles().filter(file => file.offline).length;
  $('startup-setting').checked = state.startup ?? state.preferences?.startup ?? true;
  $('auto-unlock-setting').checked = state.autoUnlock ?? state.preferences?.autoUnlock ?? false;
+ $('performance-mode-setting').value = state.preferences?.performanceMode || state.performanceMode || 'responsive';
  if (!['split-value','split-unit'].includes(document.activeElement?.id)) {
   const size = displayPartSize(state.partSizeBytes || 10 * 1024 ** 2); $('split-value').value = size.value; $('split-unit').value = size.unit;
  }
@@ -366,6 +368,7 @@ listen('sync-button','click',() => run('Syncing encrypted files…',() => api.sy
 listen('split-form','submit',async event => { event.preventDefault(); let bytes; try { bytes = parsePartSize($('split-value').value,$('split-unit').value); } catch(error) { return showError(error); } await run('Applying part size…',() => api.setPartSize(bytes),'Part size saved for new and edited files.'); });
 listen('resplit-button','click',async () => { if (await confirmAction('Re-split all existing files?','Create replacement encrypted parts using the current limit. This can take time. Existing committed data remains until replacement succeeds.','Re-split files')) await run('Re-splitting encrypted files…',() => api.resplit(),'Encrypted parts updated.'); });
 listen('startup-setting','change',event => run('Saving preference…',() => api.setStartup(event.target.checked),'Saved.'));
+listen('performance-mode-setting','change',event => run('Saving preference…',() => api.setPerformanceMode(event.target.value),'Saved.'));
 listen('auto-unlock-setting','change',async event => { const enabled = event.target.checked; if (enabled && !await confirmAction('Automatically unlock this drive?','This Windows user will be able to unlock this drive without its password or key file. A protected drive key will be saved on this device.','Enable automatic unlock')) return render(); await run('Saving preference…',() => api.setAutoUnlock(enabled),'Saved.'); });
 listen('forget-credential','click',() => run('Saving preference…',() => api.forgetSavedCredential(),'Saved credential forgotten.'));
 for (const key of ['theme','language','emoji','funnyEnglish','funnyCantonese']) listen(`${key}-setting`, ['funnyEnglish','funnyCantonese'].includes(key) ? 'input' : 'change',event => {
@@ -531,6 +534,7 @@ function setupEnhancedWorkspace() {
  const featureNotify=message=>foundation.notify({title:'Update',message:String(message),level:'info'});
  const credentialStore={get:key=>featureRequest('access','credentialGet',{key}),set:(key,value)=>featureRequest('access','credentialSet',{key,value}),delete:key=>featureRequest('access','credentialDelete',{key})};const historyCredentialStore={get:key=>credentialStore.get('history:'+key),set:(key,value)=>credentialStore.set('history:'+key,value),delete:key=>credentialStore.delete('history:'+key)};
  const mounts=[
+  mountFeature('updates','Updates','更新',()=>import('./features/updates/index.js'),(module,root)=>module.mountUpdates(root,{translate:t,language:preferences.language,services:{request:(action,payload)=>featureRequest('updates',action,{...payload,language:preferences.language}),subscribe:callback=>api.onFeatureEvent?.('updates',callback)}})),
   mountFeature('workflow','Documents and downloads','文件與下載',()=>import('../shared/surface/workflow-tools.js'),(module,root)=>module.mount(root,{translate:t,services:{storage:localStorage,getLanguage:()=>preferences.language,request:(action,payload)=>featureRequest('workflow',action,payload),subscribe:callback=>api.onFeatureEvent?.('workflow',callback)}})),
   mountFeature('converter','Converter','轉換工具',()=>import('./features/converter/index.js'),(module,root)=>module.mountConverter(root,{translate:t,services:{converter:Object.fromEntries(['catalog','inspect','enqueue','list','control'].map(action=>[action,payload=>featureRequest('converter',action,payload)])),pickSources:()=>featureRequest('converter','pickSources'),pickDestination:payload=>featureRequest('converter','pickDestination',payload),pickDestinationDirectory:()=>featureRequest('converter','pickDestinationDirectory'),confirmOverwrite:()=>confirmAction('Replace output file?','The selected output file will be replaced. Source files remain unchanged.','Replace')}})),
   mountFeature('ollama','Local models','本機模型',()=>import('./features/ollama/index.js'),(module,root)=>module.mountOllama(root,{translate:t,confirm:confirmFeature,services:{ollama:{request:(action,payload)=>featureRequest('ollama',action,payload),subscribe:callback=>api.onFeatureEvent?.('ollama',callback)}}})),

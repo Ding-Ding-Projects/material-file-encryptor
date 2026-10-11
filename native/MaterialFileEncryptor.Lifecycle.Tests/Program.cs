@@ -4,9 +4,12 @@ using MaterialFileEncryptor.Core;
 
 if (args.Length == 2 && args[0] == "--journal-child") { JournalRegression.Child(args[1]); return; }
 if (args.Length == 1 && args[0] == "--optional-numbers") { OptionalParameterRegression.Run(); return; }
+if (args.Length == 1 && args[0] == "--legacy-only") { CoreTransferRegression.Run();CngLegacyRegression.Run();return; }
+if (args.Length == 1 && args[0] == "--priority-only") { BackgroundPriorityRegression.Run();return; }
 
 OptionalParameterRegression.Run();
 CoreTransferRegression.Run();
+CngLegacyRegression.Run();
 JournalRegression.Run();
 await StatusProtocolRegression.Run();
 await BackgroundAdmissionRegression.Run();
