@@ -12,6 +12,7 @@ import {createAccessAdapters} from './gui-acceptance-access.mjs';
 import {createRecordsAdapters} from './gui-acceptance-records.mjs';
 import {createPersonalizationAdapters} from './gui-acceptance-personalization.mjs';
 import {createToolsAdapters} from './gui-acceptance-tools.mjs';
+import {createMountedFoundationFixtures,createKeyboardFoundationFixtures} from './gui-acceptance-native-files.mjs';
 import {createModernProbeEvidence} from './modern-ui-check.mjs';
 import {makeLaunch,modernNativeObservation,createPlanRecorder} from './local-headless-desktop-check.mjs';
 import {withCdpConnectionProof} from './cdp-connection-plan.mjs';
@@ -73,7 +74,8 @@ export async function acquirePackagedBaseline({opened,inventory,buildReceiptPath
   return modernNativeObservation({window,state:current,launch,sourceCommit:target.sourceCommit,launchReceiptSha256:sha256(bytes),processSha256:sha256(await fs.readFile(target.executable)),inspection,profileResolved:await fs.realpath(path.join(opened.runRoot,'profile')),native});
  };
  const prepareOwnedFixture=ownedFixturePreparation({launch,receipt,fixture:opened.fixture});
- const context={launch,receipt,inventory,prepareOwnedFixture,fixtures};
+ const nativeFixtures={...fixtures,foundation:{...createMountedFoundationFixtures({opened}),...createKeyboardFoundationFixtures({opened}),...fixtures.foundation}};
+ const context={launch,receipt,inventory,prepareOwnedFixture,fixtures:nativeFixtures};
  const adapters=createPackagedAdapters(context);
  const createProbeEvidence=({outputRoot})=>createModernProbeEvidence({binding:build,outputRoot,helperPath:cdp,observe,validate:file=>runEvidenceJson(process.execPath,[path.join(skillRoot,'diagnose-built-ui-layout','scripts','validate-layout-probe.mjs'),'--input',file],undefined,env)});
  await fs.mkdir(outputRoot,{recursive:true});

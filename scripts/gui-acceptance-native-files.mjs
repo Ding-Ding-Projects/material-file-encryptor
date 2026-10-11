@@ -52,3 +52,14 @@ export function createMountedFoundationFixtures({opened,io=fs}){
  };
  return {'drive-populated':{prepare,restore},'drive-selected':{prepare,restore}};
 }
+
+export function createKeyboardFoundationFixtures({opened}){
+ assert.equal(opened.connectionOwned,true);
+ return {'drive-search':{'escape-restores-focus':async context=>{
+  assert.equal(context.binding.sourceCommit,opened.target.sourceCommit);assert.equal(opened.page.url(),opened.target.expectedUrl);
+  const before=await opened.page.evaluate(()=>Boolean(document.querySelector('mfe-command-palette')?.dialog?.open));assert.equal(before,true,'Open production palette required');
+  await opened.page.keyboard.press('Escape');
+  await opened.page.waitForFunction(()=>{const p=document.querySelector('mfe-command-palette');return p&&!p.dialog.open&&document.activeElement===p.returnFocus;},undefined,{timeout:10000});
+  return {ownedSyntheticFixture:true,sourceCommit:opened.target.sourceCommit,activated:true,activation:'cdp-key',focusRestored:true};
+ }}};
+}
