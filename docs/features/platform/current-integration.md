@@ -1,43 +1,52 @@
 # Current integration and delivery assessment
 
-This assessment reviews combined source revision `a05831a8b94396a7aaee5ddddf5fd2ac7c6c598c`. It replaces the stale 104-family/208-row description with the existing 105 families and 210 desktop/website rows. The additional server family is preparation-only, not full interactive management.
+This finite assessment is bound to `0f5d2b9f0990f213ee78b3fcc1867f289e24843c`. The original baseline contained 104 families and 208 desktop/website rows. The current manifest contains 105 families and 210 rows; the added server family is preparation-only. Neither baseline is silently relabeled. The prior `a05831a` assessment remains in `assessmentHistory`.
 
 ## Reading the ledger
 
-`contracts/feature-delivery.json` preserves source mappings, historical per-path revision bindings and evidence arrays. Every row retains explicit applicability and adds separate behavior and evidence verdict fields. Source presence is separate from delivered acceptance. Earlier review baselines and candidate identifiers remain historical metadata.
+Every row has explicit applicability, a behavior verdict, current source-reference verification and a separate built-evidence verdict. All mapped source paths exist at this candidate. Path existence and a test filename do not prove behavior or test execution. Historical per-path bindings remain preserved.
 
 | Behavior verdict | Rows |
 | --- | ---: |
-| Implemented, runtime unverified | 60 |
-| Partial | 116 |
+| Implemented, runtime unverified | 63 |
+| Partial | 113 |
 | Missing | 2 |
 | Deferred | 4 |
 | Unknown | 10 |
 | Not applicable | 18 |
 
-Applicability comprises 144 product rows, 48 repository-duty rows, 12 nonapplicable rows and six canonical-only rows. All 192 applicable top-level statuses remain unverified; the 18 excluded statuses are not applicable. Every built-interaction and visual-evidence field remains unverified. No row is promoted to verified delivery. A supporting companion row does not require a duplicate native capability.
+The ledger retains 144 product rows, 48 repository-duty rows and 18 explicitly excluded rows. All 192 applicable delivery statuses remain unverified. A partial verdict can mean incomplete coverage or an unresolved behavioral question; it must not be read as proof that all listed behavior is absent. Supporting companion rows do not demand duplicate native capabilities.
 
-## Corrected source findings
+## Changes established in source
 
-- The stationary workspace, shared Material controls, contextual overlay, open-tab behavior and migrated feature panels are integrated. Complete coverage and the planned 3,552-state GUI matrix remain pending.
-- Desktop startup now integrates a single launch draw, exclusions, transient presentation and the verified public-photo host. Synthetic resolver checks do not prove actual photo display. The desktop-only route does not establish browser startup-photo delivery.
-- Notification narration consumes actual runtime accessibility events and suppresses narration while state is unknown. A runtime boolean proves neither an active screen reader nor audible narration. Browser behavior requires separate acceptance.
-- Schedule adapters, paired companion modules and shared-state events are integrated with explicit capability boundaries. Authenticated providers, restart and timezone behavior remain unverified.
-- Provider text, documentation and changelog use safe rendered Markdown. Final package and live website inventories remain separate acceptance work.
-- Two independent confirmation switches, a full-range slider, final execution, cancellation and focus restoration exist. The former absence claim was stale; every destructive entry point still needs evidence.
-- Appearance source includes drawing, guides, raster-group, smart-object and mesh-warp paths. Complete advanced editing and native decoding are unverified. Additional logo, access and export work remains in flight and is excluded from this fixed baseline.
-- Editor, download-receiver and account/publication source received independent owner review. Actual editor round trips, live authentication/publication, installed extension registration and end-to-end downloads remain pending. New account/publication actions are desktop-only.
-- Update validation, staged readiness, confirmation, idle admission and recovery source exist. Actual installation, installed update and removal remain explicitly deferred. Rollback is not claimed.
-- Server catalog/version selection, preparation, cancellation and license review do not constitute full four-target management, plugins or a running-server acceptance result.
+- Retained logo sources and editable recipes, asynchronous publication protection and effective title preview are integrated in `src/renderer/features/personalization/logo-authoring-store.js` and `logo.js`. Their built interaction remains unverified.
+- `src/shared/local-ux/record-export.js` implements ten record interchange formats. Integrated record consumers exist; exhaustive collection coverage and actual exported-file round trips remain pending.
+- `docs/site/local-adapter.js` uses source/id schedules, bounded immutable requests, session-bound shared settings and explicit browser capability limits. `docs/site/workspace.js` integrates guidance, history and destructive confirmation. Unknown browser assistive-technology state suppresses automatic narration. Desktop-only credentials, image normalization, font metadata and runtime configuration are not fabricated browser services.
+- `src/main/access-integration.js` implements protected actor identity, revision-bound grants, request snapshots and private-history lifetime checks. Its presence does not complete feature dispatch, validation and renderer composition. That thin wiring is pending beyond this fixed candidate.
+- Startup photo resolution, runtime accessibility events, provider Markdown, schedule sources and shared-state routing remain integrated. Actual startup display, voice, authenticated providers and restart/timezone behavior still require evidence.
 
-## Evidence boundaries
+## Residual applicable behavior and capability gaps
 
-Storage maintenance exposes actual progress, current-reference versus history-only parts, queued writers and durable pause/resume. The owner reported passing dense synthetic writes for its current candidate, but final detach timed out and reopen was not reached. This is incomplete mounted-lifecycle proof and is not added to the evidence arrays. Completed packing can still leave writer-blocked files queued; history can retain old parts.
+| Priority | Gap | Exact source or receipt | Next boundary |
+| --- | --- | --- | --- |
+| P1 | Access factory lacks complete dispatch, validation and renderer composition at this baseline. | `src/main/access-integration.js`, `src/main/feature-services.js`, `src/main/validation.js`, `src/renderer/app.js` | Integrate the separately owned thin wiring and focused enforcement checks. Parent reports factory review passed 18/18; later journal repair remains pending after inherited `GIT_DIR` redirection was rejected. |
+| P1 | Additional protected-product OAuth route has no configured public-client metadata. | `src/main/protected-forge-accounts.js`, `src/main/protected-forge-device-transport.js` | Supply reviewed public-client configuration through the owner route. Existing keyring authentication is distinct. No live sign-in claim. |
+| P1 | Native browser host lacks reviewed installation identity and registration. | `src/main/browser-native-host.js`, `scripts/browser-native-registration.mjs` | Complete the owned packaging/registration route before live extension handoff. Source review is not installed operation. |
+| P2 | Server startup supervision, runtime integration, network/resource configuration and lease IPC are unavailable; full four-target management and plugin lifecycle remain absent. | `src/renderer/features/server-manager/index.js` explicitly presents preparation only. | Retain the preparation boundary. No server was started and no license acceptance is claimed. |
+| P2 | Dynamic runner selection is absent from fixed workflow labels. | `.github/workflows/windows.yml` uses `runs-on: windows-2022`. | Owner-scoped workflow follow-up; this documentation pass changes no workflow. |
 
-Historical screenshots, focused tests and source review cannot replace the current GUI matrix. Current recording, design parity, public capture delivery, live homepage, package/release assets and fresh-machine provisioning each require separate receipts.
+Other partial or unknown rows retain their bounded reasons. Exhaustive per-control guidance, palette/search coverage, advanced appearance completeness, collection coverage, README estimate and external operational records have not received a definitive full audit here. They are unresolved review scope, not a fabricated list of confirmed missing implementations.
 
-Status Hub enrollment is unavailable. Owner receipts record task progress and issue handoff, but this pass did not independently read back every release discussion or pin. Project access lacks the required account scope. Unknown external records remain unknown. Dynamic runner selection is missing from the fixed-label configuration; it is not silently marked complete.
+## Evidence and deferred work
 
-## Next boundary
+The current GUI inventory declares 89 states and 4,272 viewport/language/theme/scale tuples. The matrix is pending. The prior `1d3` built candidate exposed title and native-dialog accessible-name defects; source fixes are integrated, but the owner-reported `0f5` build is still running at this assessment. No new built success is inferred.
 
-Integrate independently reviewed owner changes, preserve this baseline when reconciling later updates, and bind the final candidate before production acceptance. Recompute documentation bindings after integration. Add actual evidence only to the corresponding feature and surface. A preparation workflow, synthetic test, build or package publication cannot mark all 210 rows complete.
+The inspected [storage receipt](../../evidence/storage-packing-e06df2a.json) is bound to `e06df2a14643932f5f23289ae4eea2d8e45b3676`. It records 43/43 core checks, a completed synthetic WinFsp workload, authenticated reopen and two successful detachments. It does not declare a separate count of mounted tests. A separate unmounted probe verifies authenticated export and three physical parts of 83,866,588, 83,866,588 and 254,672 bytes under the 83,886,080-byte cap. This receipt supersedes the old detach timeout for that native candidate, not for every later GUI build. History retention and queued writers remain visible semantics.
+
+Real user-drive migration is explicitly deferred and the existing drive remains mounted. Actual installation, installed update and removal are deferred. No user vault, provider download or visible desktop was touched by this assessment. Native synthetic success establishes neither installed GUI acceptance nor historical-object reclamation.
+
+Current recording, reference parity, reviewed public captures, live homepage and article/wiki inventory, release assets and fresh-machine provisioning retain separate evidence boundaries. Status Hub enrollment is unavailable; project account scope and external operational records remain unavailable or unknown. No source-only verdict becomes verified delivery merely because a build or release exists.
+
+## Integration
+
+Reconcile later owner changes semantically, retain this exact source binding, and refresh documentation hashes after integration. Add runtime evidence only to the feature, source and surface it actually covers. Do not rebuild an existing behavior solely because its acceptance evidence is pending.
