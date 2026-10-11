@@ -18,5 +18,28 @@ foreach($mode in @('mismatch','partial','status')) {
   Assert $failed 'Invalid downloads accepted'; Assert (!(Test-Path $file)) 'Invalid cache published'; Assert ($script:calls.Count -eq 2) 'Source retried or skipped'; $receipts=@(Get-ChildItem (Join-Path (Split-Path $file) 'download-evidence') -Filter '*.json'); Assert ($receipts.Count -eq 2) 'Attempt receipts missing'; Assert (@(Get-ChildItem $receipts[0].DirectoryName -Filter '*.bin').Count -eq 2) 'Rejected bytes missing'; Assert (@(Get-ChildItem (Split-Path $file) -Filter '*.tmp').Count -eq 0) 'Temporary not quarantined'
 }
 Assert ($entry.sha512 -ceq $expected) 'Pin mutated'
+foreach ($kind in @('evidence', 'parent', 'cache')) {
+  $file=New-Case ('junction-' + $kind); $dir=Split-Path $file
+  $outside=Join-Path $root ('outside-' + $kind); New-Item -ItemType Directory $outside|Out-Null
+  [IO.File]::WriteAllText((Join-Path $outside 'sentinel.txt'), 'unchanged')
+  if ($kind -eq 'evidence') {
+    [IO.File]::WriteAllBytes($file,$bad)
+    New-Item -ItemType Junction -Path (Join-Path $dir 'download-evidence') -Target $outside|Out-Null
+  } elseif ($kind -eq 'parent') {
+    $link=Join-Path $dir 'linked'; New-Item -ItemType Junction -Path $link -Target $outside|Out-Null
+    $file=Join-Path $link 'sdk.zip'
+  } else {
+    # File symbolic links may need elevation; a junction at the cache leaf still must be rejected.
+    New-Item -ItemType Junction -Path $file -Target $outside|Out-Null
+  }
+  $script:calls=@(); $failed=$false
+  try { Get-Verified $entry $file $transport } catch { $failed=$_.Exception.Message -match 'reparse points' }
+  Assert $failed 'Linked dependency path accepted'
+  Assert ($script:calls.Count -eq 0) 'Linked path reached transport'
+  Assert (@(Get-ChildItem -LiteralPath $outside -Force).Count -eq 1) 'Outside directory changed'
+  Assert ([IO.File]::ReadAllText((Join-Path $outside 'sentinel.txt')) -ceq 'unchanged') 'Outside sentinel changed'
+  if ($kind -eq 'evidence') { Assert ([IO.File]::ReadAllText($file) -ceq 'corrupt fixture') 'Bad cache moved before path rejection' }
+}
+Write-Host 'PASS: three real Windows junction negatives; outside fixtures retained untouched.'
 Write-Host 'PASS: six verified-download scenarios; no network used.'
 Write-Host "Retained synthetic evidence: $root"
