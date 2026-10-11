@@ -1,3 +1,17 @@
+# Preservation boundary, 2026-10-11 UTC
+
+- [x] Preserve the eight task branches and integrated source remotely.
+- [x] Verify managed import, completed-file preservation, standalone cancellation and selected-file history on their recorded runtime candidates.
+- [x] Verify native local-model runtime start and normal owned shutdown on `5230188`.
+- [x] Preserve the final `bc3f481` root build and its exact package hashes.
+- [ ] Complete the PNG decoder diagnosis; current GUI result is a native sandbox startup failure.
+- [ ] Complete remaining layout configurations, physical-scale evidence and localization gaps.
+- [ ] Verify model download, chat, history and export workflows.
+- [ ] Finish every applicable desktop/site delivery contract; all 208 complete-surface rows remain unverified.
+- [ ] Verify the latest hosted release, downloads, final live documentation and any accepted capture promotion.
+- [ ] Actual installation, installed update and removal are deferred by the maintainer.
+- [ ] Preserve ignored evidence and prove all ancestry and archive requirements before any task cleanup.
+
 # Current integrated workspace checklist
 
 - [x] Record current source `1faecd9` and source-bound native receipt `3b9c5b4`, preserving historical evidence.
