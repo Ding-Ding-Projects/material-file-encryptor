@@ -94,3 +94,7 @@ Generated language source, Protobuf and JSON Schema are not supported for these 
 The adapter rejects cycles, sparse arrays, non-finite numbers, unsupported objects, hidden fields and computed accessors. Markup escapes active syntax and HTML prohibits external resources. SQL quotes apostrophes. Table cells contain JSON syntax rather than raw formula-bearing text. Selection is resolved from the currently visible filtered rows immediately before export, with an unlocked-session check after decryption. No bulk destructive removal is added; the existing confirmed retention prune remains the removal workflow.
 
 Runtime capture remains pending the production matrix. Source checks are not visual evidence.
+
+### Isolated logo conversion
+
+Logo decoding and canvas conversion run in a dedicated module worker. The controller allows one active job, caps execution at ten seconds, and terminates the worker on success, failure, cancellation or panel disposal. Input signatures and declared dimensions are checked before decoding; the worker verifies actual dimensions and decodes the final 128 by 128 PNG again. Network entrypoints are disabled inside the worker. This is a worker boundary, not an operating-system process. Focused checks verify controller admission and termination; actual built worker execution remains pending runtime verification. Original editing recipes and complete multi-target previews remain unfinished.
