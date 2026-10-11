@@ -35,7 +35,7 @@ No HTTP API is introduced; a Postman collection is not applicable.
 
 ## Explicit timing guidance inventory
 
-The following 34 handwritten concepts have bilingual explanation records. These 34 concepts mount the reviewed optional guide immediately above their exact fields, use the original change event and await its admitted consumer. A mounted-component test covers guided numeric persistence. Other motion controls, complete documentation-reader integration and genuine browser guidance acceptance remain pending.
+The following 49 handwritten concepts have bilingual explanation records. These 49 concepts mount the reviewed optional guide immediately above their exact fields, use the original change event and await its admitted consumer. A mounted-component test covers guided numeric persistence. Other motion controls, complete documentation-reader integration and genuine browser guidance acceptance remain pending.
 
 ### duration
 
@@ -682,3 +682,290 @@ The native renderer validates attachment ordering and accepted range syntax.
 
 Reset Attachment end to normal if the effect never reaches completion.
 
+
+### keyframe-offset
+
+Keyframe offset
+
+Place this keyframe within one effect iteration.
+
+Empty or a fractional offset from 0 through 1.
+
+0 for a reset frame; new frames are added at 1.
+
+Absolute or relative frame time takes precedence when present.
+
+Use 0.5 for the midpoint of the iteration.
+
+Offsets outside the iteration are rejected before consumers install.
+
+Clear conflicting time fields, then reset the offset.
+
+
+### absolute-keyframe-time
+
+Absolute keyframe time
+
+Locate this keyframe at an exact time within the authored iteration.
+
+Empty or nonnegative fractional milliseconds within the duration.
+
+Empty.
+
+Overrides the offset and resets the reference for following relative frame times.
+
+Use 150 inside a 300 ms iteration for its midpoint.
+
+A time beyond duration is rejected before listener installation.
+
+Clear Absolute keyframe time to return to offset positioning.
+
+
+### relative-keyframe-time
+
+Relative keyframe time
+
+Advance from the most recent explicit or relative keyframe time.
+
+Empty or signed fractional milliseconds producing an in-range time.
+
+Empty.
+
+Accumulates relative timing in authored order without silently sorting the frames.
+
+After an absolute 100 ms frame, use 50 for 150 ms.
+
+The resolved time must stay between the iteration beginning and end.
+
+Clear Relative keyframe time or correct the preceding reference time.
+
+
+### keyframe-value
+
+Keyframe value
+
+Set the selected property value sampled at this frame.
+
+A safe accepted CSS value or computed.
+
+computed for a reset or newly added frame.
+
+Computed samples the real target when playback starts; authored text remains unchanged.
+
+Use translateX(20px) for a transform track.
+
+URLs, declaration breakout and rejected native property values cannot start a preview.
+
+Choose computed or a simple numeric opacity value to isolate invalid CSS.
+
+
+### segment-easing
+
+Segment easing
+
+Shape progress from this keyframe toward the next frame.
+
+A safe renderer-supported timing function.
+
+linear.
+
+Applies per segment in addition to the global effect easing.
+
+Use ease-in for acceleration into the following value.
+
+Native easing syntax may reject unsupported functions without changing the saved model.
+
+Reset Segment easing to linear for this segment only.
+
+
+### keyframe-composition
+
+Keyframe composition
+
+Override composition for this specific keyframe value.
+
+auto, replace, add, or accumulate.
+
+auto.
+
+Auto follows effect composition; explicit modes apply at the native keyframe boundary.
+
+Use replace for a frame that must override the underlying property.
+
+Only the four supported composition names are accepted.
+
+Reset Keyframe composition to auto to inherit effect composition.
+
+
+### hold-segment
+
+Hold segment
+
+Hold this frame value until the segment reaches its ending jump.
+
+true or false.
+
+false.
+
+Uses a one-step jump-end easing for this segment while retaining its authored easing.
+
+Choose true to keep an opacity value constant until the next frame.
+
+Only a Boolean hold value is portable.
+
+Choose false to restore the authored segment easing.
+
+
+### timeline-zoom
+
+Timeline zoom
+
+Scale the width of the timeline ruler without changing motion timing.
+
+A positive finite zoom factor.
+
+1.
+
+Changes the scrollable ruler width within its display budget.
+
+Use 2 for a wider timing ruler.
+
+Zero, negative and nonfinite zoom values are rejected.
+
+Reset Timeline zoom to 1 to restore the ordinary ruler width.
+
+
+### timeline-snapping
+
+Timeline snapping
+
+Round numeric playhead seeking to a chosen interval.
+
+Nonnegative milliseconds; zero disables rounding.
+
+10 milliseconds.
+
+Changes seeking and scrub step precision without rewriting keyframes.
+
+Use 0.5 for half-millisecond document seeking.
+
+Negative or nonfinite snapping values are rejected.
+
+Reset Timeline snapping to 10 or use 0 for free precision.
+
+
+### playback-range-start
+
+Playback range start
+
+Choose the document-time point where preview playback begins or loops.
+
+Nonnegative fractional milliseconds no later than range end.
+
+0 milliseconds.
+
+Seek-on-play and preview looping use this boundary.
+
+Use 200 to preview only a later section of a long effect.
+
+An inverted range is rejected before saving.
+
+Reset Playback range start to 0 to include the beginning.
+
+
+### playback-range-end
+
+Playback range end
+
+Choose the document-time boundary that pauses or loops the preview.
+
+Nonnegative fractional milliseconds at or after range start.
+
+1000 milliseconds.
+
+Stops the preview observer or seeks back to range start when looping.
+
+Use 500 to inspect the first half-second of document motion.
+
+Range end cannot precede range start.
+
+Reset Playback range end to 1000 or extend it beyond the desired section.
+
+
+### preview-frame-rate
+
+Preview frame rate
+
+Set the document-time interval used by previous and next frame commands.
+
+A positive finite frames-per-second value.
+
+60 frames per second.
+
+One step moves 1000 divided by this value milliseconds; it does not change display refresh rate.
+
+Use 24 for approximately 41.67 ms steps.
+
+Native progress timelines reject millisecond frame stepping explicitly.
+
+Reset Preview frame rate to 60 or choose document time before stepping.
+
+
+### loop-preview
+
+Loop preview
+
+Repeat preview playback inside its selected document range.
+
+true or false.
+
+false.
+
+Seeks to range start at range end without modifying authored iteration count.
+
+Enable to inspect the same short timing section repeatedly.
+
+The preview still pauses after its bounded 30-second observation period.
+
+Disable Loop preview or press Stop to leave the loop.
+
+
+### playhead
+
+Playhead
+
+Seek the live native handles to an explicit position.
+
+Document milliseconds; native progress clocks require percentage-capable renderer support.
+
+0.
+
+Numeric document seeking uses the chosen snapping interval; progress seeking uses native percentage values.
+
+Use 150 to inspect a document effect at 150 ms.
+
+A renderer without percentage support reports unavailable progress seeking instead of inventing milliseconds.
+
+Reset Playhead to 0 or choose a document timeline for millisecond inspection.
+
+
+### preview-playback-speed
+
+Preview playback speed
+
+Adjust current native handle playback rates for inspection.
+
+A finite signed numeric rate.
+
+1.
+
+Changes live handles without replacing authored per-track playback rates.
+
+Use 0.25 to inspect a document effect at quarter speed.
+
+Native handle setters validate accepted rates; unavailable native values remain diagnostic.
+
+Reset Preview playback speed to 1 or restart to reapply authored rates.
+
+
+Selected-handle inspection keeps document milliseconds and native progress percentages separate. Changing the selected clock resets the inspection playhead. Document looping does not drive native scroll/view progress; before/after comparison stops its observer.
