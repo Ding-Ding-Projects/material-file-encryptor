@@ -1,4 +1,16 @@
-# Preservation checkpoint, 2026-10-11 UTC
+# Download verification checkpoint, 2026-10-11 01:45 UTC
+
+The objective remains incomplete and the latest verified account allowance is 9%. This continuation made verification progress; it did not begin new product implementation. Actual installation, installed update and removal remain explicitly deferred by the maintainer.
+
+Release `v1.121.1` is normal, non-draft and non-prerelease. Its immutable tag, hosted metadata and downloaded provenance bind `32fd1d4c0ad344b604e81736c9339b93dc70433c`. Delivery run `38102455217` completed successfully in 6 minutes 5 seconds. All five independently downloaded assets match their hosted SHA-256 values and declared provenance, totaling 678,535,288 bytes. The 761-entry full package passed every archive CRC check with the pinned reader in single-threaded mode. The extracted renderer archive passed the privacy inspection with 5,446 inspected entries and zero rejected; this is renderer-archive scope, not a repeated full installed-payload audit. Setup is `NotSigned`. No downloaded application or installer was executed.
+
+Local receipt: `out/release-acceptance-v1.121.1/acceptance.json`. Setup is 338,018,304 bytes, SHA-256 `9d7d167a1e3679bc560cb1ddaa40cf8bb2b147ffd537d6908c85aae50b0e2492`. The full package is 338,108,753 bytes, SHA-256 `53f0d2d0db755b8426128e38450bb35be8eee2c1fbbc54de85c39fca3e6ccf29`. The download verifier, original files and unsuccessful temporary-helper observation remain retained. The published source precedes this documentation-only checkpoint; never attach runtime acceptance to this later documentation commit.
+
+The legacy `prepare-downloaded-release.ps1` requires exactly four assets and cannot ingest the current five-asset manifest unchanged. This continuation used a separately retained, read-only download inspection that validates the actual complete provenance inventory, every hosted hash, source/tag equality, release-feed hash, archive paths/CRC and renderer privacy. Do not silently weaken the legacy verifier or call it passed. Its future compatibility repair remains unperformed.
+
+All earlier implementation gaps remain: native PNG startup diagnosis, remaining transfer/lock races, complete per-surface workflows and localization, physical-scale evidence, model workflows, full final runtime and installer acceptance. The goal remains active, not complete. No cleanup deletion occurred. The preceding goal turn and this continuation both produced new authoritative evidence, so no three-turn no-progress streak exists.
+
+# Earlier preservation checkpoint, 2026-10-11 UTC
 
 The objective remains incomplete. The account reached its verified 10% preservation boundary and subsequently showed 9% remaining. The maintainer explicitly deferred actual installation, installed update and removal; do not reopen that environment question or execute those workflows. All 208 desktop/site feature-delivery rows remain unverified as complete surface contracts.
 

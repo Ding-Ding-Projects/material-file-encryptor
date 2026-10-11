@@ -1,5 +1,7 @@
 # Preservation boundary, 2026-10-11 UTC
 
+- [x] Verify normal `v1.121.1` source/tag/provenance, all five independent downloads, hosted hashes, release feed, 761 archive CRC entries and renderer-archive privacy; keep downloaded execution and installed acceptance unverified.
+- [ ] Update the legacy four-asset download-preparation helper for the current complete provenance inventory without weakening its safety checks.
 - [x] Preserve the eight task branches and integrated source remotely.
 - [x] Verify managed import, completed-file preservation, standalone cancellation and selected-file history on their recorded runtime candidates.
 - [x] Verify native local-model runtime start and normal owned shutdown on `5230188`.

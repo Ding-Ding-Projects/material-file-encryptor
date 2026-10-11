@@ -1,4 +1,14 @@
-# Preservation checkpoint, 2026-10-11 UTC
+# Download verification checkpoint, 2026-10-11 01:45 UTC
+
+Normal release `v1.121.1` binds `32fd1d4c0ad344b604e81736c9339b93dc70433c` through the immutable tag and downloaded provenance. Its delivery run `38102455217` succeeded in 6 minutes 5 seconds. Five independent downloads, 678,535,288 bytes total, match hosted SHA-256 values and provenance. All 761 package archive entries passed decompression/CRC checks. The renderer archive privacy inspection passed with 5,446 entries and zero rejected; Setup is unsigned. No application or installer was executed. Receipt: `out/release-acceptance-v1.121.1/acceptance.json`.
+
+Setup: 338,018,304 bytes, SHA-256 `9d7d167a1e3679bc560cb1ddaa40cf8bb2b147ffd537d6908c85aae50b0e2492`. Full package: 338,108,753 bytes, SHA-256 `53f0d2d0db755b8426128e38450bb35be8eee2c1fbbc54de85c39fca3e6ccf29`. Keep this release bound to its actual source, not this later documentation-only checkpoint.
+
+The old download-preparation helper requires exactly four assets and does not accept the current five-asset inventory unchanged. The separate read-only verifier retained under `out/verify-current-release.ps1` checked the complete actual inventory without running downloaded code. The old helper was not changed or declared passing. Its compatibility repair remains open.
+
+The full feature objective remains incomplete. The verified account allowance remains 9%; only the existing delivery and preservation checks continued. Installation, installed update and removal remain deferred by the maintainer. All earlier runtime, surface, localization, performance and evidence gaps remain. No cleanup deletion occurred.
+
+# Earlier preservation checkpoint, 2026-10-11 UTC
 
 The objective remains incomplete. The account reached its verified 10% preservation boundary and subsequently showed 9% remaining. The maintainer explicitly deferred actual installation, installed update and removal; do not reopen that environment question or execute those workflows. All 208 desktop/site feature-delivery rows remain unverified as complete surface contracts.
 
