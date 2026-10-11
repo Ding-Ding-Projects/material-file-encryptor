@@ -144,9 +144,9 @@ async function forceLockDrive(language = 'en') {
   else throw new Error(text('Force Lock did not confirm that the drive was detached and locked.', '強制鎖定未能確認磁碟已卸載及鎖定。'));
   return result;
 }
-async function request(method, params) {
+async function request(method, params, context) {
   params = validateRequest(method, params);
-  if (method === 'featureRequest') return featureRequest(params.feature,params.action,params.payload);
+  if (method === 'featureRequest') return featureRequest(params.feature,params.action,params.payload,context);
   if (updateInstallLease && !['getState','buildMetadata','operations','windowControl'].includes(method)) throw new Error('The application is preparing an update. Wait for it to finish.');
   if (method === 'getState') return snapshot();
   if (method === 'buildMetadata') return buildMetadata;
@@ -262,9 +262,9 @@ async function updateStatus() {
   const activeWork=await hasActiveWork();
   return {...snapshot,activeWork,desktopAvailable:process.platform==='win32'&&app.isPackaged,canInstall:snapshot.state==='ready'&&!activeWork&&!updateInstallLease};
 }
-async function featureRequest(feature,action,payload) {
+async function featureRequest(feature,action,payload,context) {
   if(feature==='workflow')validateWorkflowAdmission(action,{locked:state.locked,lockVerified:state.lockVerified,quitPending,shuttingDown,updateInstallLease});
-  if(feature!=='updates')return features.request(feature,action,payload);
+  if(feature!=='updates')return features.request(feature,action,payload,context);
   if(Object.keys(payload).some(key=>key!=='language') || (payload.language!==undefined&&!['en','yue','bilingual'].includes(payload.language)))throw new Error('Invalid update options.');
   if(payload.language)updateLanguage=payload.language;
   if(action==='status')return updateStatus();
@@ -356,7 +356,7 @@ else {
     applyStartup(preferences.startup);
     cachedStartupRegistration=startupRegistration();
     try { Object.assign(buildMetadata, JSON.parse(await fs.readFile(path.resolve(directory,'../shared/build-metadata.json'),'utf8'))); } catch { /* Development builds have no invented build date. */ }
-    features=createFeatureServices({accessibilityState:()=>readRuntimeAccessibility(app),dataDirectory:app.getPath('userData'),applicationRoot:path.resolve(directory,'../..'),sandboxDirectory:app.isPackaged?path.join(process.resourcesPath,'converter'):path.resolve('out/converter'),safeStorage,dialog,getWindow:()=>window,openPath,openExternal:url=>shell.openExternal(url),onConverterDiagnostic:record=>console.warn('Converter initialization:',JSON.stringify(record)),emit:(feature,data)=>{if(feature==='workflow')browserHandoff?.observeDownload(data);window?.webContents.send('feature:event',feature,data);}});
+    features=createFeatureServices({accessibilityState:()=>readRuntimeAccessibility(app),dataDirectory:app.getPath('userData'),applicationRoot:path.resolve(directory,'../..'),sandboxDirectory:app.isPackaged?path.join(process.resourcesPath,'converter'):path.resolve('out/converter'),safeStorage,dialog,getWindow:()=>window,getMainFrame:()=>window?.webContents.mainFrame,openPath,openExternal:url=>shell.openExternal(url),onConverterDiagnostic:record=>console.warn('Converter initialization:',JSON.stringify(record)),emit:(feature,data)=>{if(feature==='workflow')browserHandoff?.observeDownload(data);window?.webContents.send('feature:event',feature,data);}});
     app.on('accessibility-support-changed', () => { if(!shuttingDown)window?.webContents.send('feature:event','personalization',{type:'accessibilityState',state:readRuntimeAccessibility(app)}); });
     updates=createUpdateService({app,autoUpdater,dialog,isActiveWork:hasActiveWork,acquireInstallLease:acquireUpdateLease,prepareRestart:prepareUpdateRestart,getLanguage:()=>updateLanguage});
     updates.on('status',()=>{void updateStatus().then(snapshot=>window?.webContents.send('feature:event','updates',{snapshot})).catch(()=>{});});
@@ -373,8 +373,8 @@ else {
       const answer=await dialog.showMessageBox(window,{type:'question',buttons:['Reject · 拒絕','Pair downloads · 配對下載'],defaultId:0,cancelId:0,title:'Pair browser downloads · 配對瀏覽器下載',message:'Allow download proposals from this origin? · 允許此來源提出下載建議？',detail:origin+'\nThis origin allowlist cannot authenticate a manually launched same-user process. Pairing lasts up to 15 minutes and ends when the drive locks. Each download still needs its own destination choice and Start confirmation.\n來源允許清單無法驗證手動啟動嘅同用戶程序。配對最多維持 15 分鐘，磁碟鎖定就撤銷。每次下載仍要獨立選擇目的地同確認開始。'});return answer.response===1;
     }});
     await browserHandoff.initialize();
-    ipcMain.handle('vault:request', async (event, method, params) => { if (!trustedFrame(event, window, rendererURL)) throw new Error('Untrusted request source.'); return request(method, params); });
-    ipcMain.handle('feature:request', async (event, feature, action, params) => { if (!trustedFrame(event, window, rendererURL)) throw new Error('Untrusted request source.'); const request = validateFeatureRequest(feature, action, params); return featureRequest(request.feature, request.action, request.payload); });
+    ipcMain.handle('vault:request', async (event, method, params) => { if (!trustedFrame(event, window, rendererURL)) throw new Error('Untrusted request source.'); return request(method, params,{senderFrame:event.senderFrame}); });
+    ipcMain.handle('feature:request', async (event, feature, action, params) => { if (!trustedFrame(event, window, rendererURL)) throw new Error('Untrusted request source.'); const request = validateFeatureRequest(feature, action, params); return featureRequest(request.feature, request.action, request.payload,{senderFrame:event.senderFrame}); });
     ipcMain.handle('vault:verification-quit', async event => {
       if (!verificationMode || !verificationStartup || !trustedFrame(event, window, rendererURL)) throw new Error('Verification quit is unavailable.');
       const active=helper?await helper.request('operations'):[];

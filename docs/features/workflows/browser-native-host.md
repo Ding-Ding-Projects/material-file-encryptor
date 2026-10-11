@@ -66,6 +66,14 @@ as default. Retry rechecks the same owned process and stream evidence. An unavai
 recovery dialog also retains the process and reports the unverified state. Startup
 failure is not permission to leave an unverified broker behind.
 
+General desktop feature IPC has a separate access context boundary: after the
+main process validates the request frame, it passes the actual `event.senderFrame`
+as the fourth native service argument. The main-owned frame getter returns
+`window.webContents.mainFrame`. Renderer payloads never provide an actor, and
+loopback adapter calls keep their context absent instead of borrowing that frame.
+The access adapter must reject missing context. Native download proposal delivery
+remains its own host-only route and does not invent a renderer access identity.
+
 ## Identity and registration plan
 
 `scripts/browser-native-registration.mjs` accepts a reviewed CRX3 package and a

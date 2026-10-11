@@ -54,6 +54,13 @@ JavaScript 代理將配對同下載建議交畀 `createBrowserDownloadReceiver`�
 恢復對話框不可用時，程序亦會保留並報告未核實狀態。
 啟動失敗唔代表可以遺下未核實代理程序。
 
+一般桌面功能 IPC 有獨立存取 context 界線：主程序核實要求 frame 後，會將真實
+`event.senderFrame` 作為第四個原生服務參數傳送。主程序管理嘅 frame getter
+回傳 `window.webContents.mainFrame`。畫面 payload 唔可以提供 actor，loopback
+adapter 呼叫會保持缺少 context，唔會借用目前畫面 frame。
+存取 adapter 必須拒絕缺少 context 嘅要求。原生下載建議繼續用主機專用路徑，
+唔會捏造畫面存取身分。
+
 ## 身分同登記計劃
 
 `scripts/browser-native-registration.mjs` 接受已審閱嘅 CRX3 套件，以及第 1 版
