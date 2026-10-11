@@ -19,3 +19,9 @@ test('all-view search retains the regex filter path and localizes state labels',
 test('tab strip owns a full grid row and secondary actions wrap independently',()=>{
  let css;WorkspaceShell.prototype.render.call({style:value=>{css=value;}});assert.match(css,/\.bar\{display:grid;grid-template-columns:minmax\(0,1fr\)/);assert.match(css,/\.tabs\{min-width:0;width:100%;overflow-x:auto\}/);assert.match(css,/\.tools\{display:flex;width:100%;gap:4px;flex-wrap:wrap\}/);
 });
+
+test('collapsing discovery renders all open tabs while retaining the query for reopening',async()=>{
+ const {shell}=fixture();shell.search.query='converter';await shell.renderTabs();assert.equal(shell.tabsHost.children[0].children[0].textContent,'Converter · Closed');
+ shell.search.hidden=true;await shell.renderTabs();assert.deepEqual(shell.tabsHost.children[0].children.map(node=>node.textContent),['Home']);assert.equal(shell.search.query,'converter');
+ shell.search.hidden=false;await shell.renderTabs();assert.deepEqual(shell.tabsHost.children[0].children.map(node=>node.textContent),['Converter · Closed']);
+});
