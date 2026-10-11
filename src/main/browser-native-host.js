@@ -1,5 +1,6 @@
 import {spawn} from 'node:child_process';
 import path from 'node:path';
+import fs from 'node:fs/promises';
 import {timingSafeEqual} from 'node:crypto';
 import {createBrowserDownloadReceiver,createNativeMessageDecoder} from './browser-download-receiver.js';
 
@@ -11,6 +12,30 @@ export function validateBrowserHostConfig(config){
  return config.allowedOrigins.slice();
 }
 export function nativeFrame(value){const body=Buffer.from(JSON.stringify(value));if(!body.length||body.length>65536)throw Error('Native message exceeds 64 KiB.');const length=Buffer.alloc(4);length.writeUInt32LE(body.length);return Buffer.concat([length,body]);}
+
+async function readHostConfiguration(filename){
+ const handle=await fs.open(filename,'r');try{const info=await handle.stat();if(!info.isFile()||info.size>8192)throw Error('Browser host configuration exceeds its limit.');const bytes=Buffer.alloc(8193);let offset=0;while(offset<bytes.length){const read=await handle.read(bytes,offset,bytes.length-offset,offset);if(!read.bytesRead)break;offset+=read.bytesRead;}if(offset>8192)throw Error('Browser host configuration exceeds its limit.');const {parseStrictJson}=await import('../shared/personal-vocabulary.js');return parseStrictJson(new TextDecoder('utf-8',{fatal:true}).decode(bytes.subarray(0,offset)));}finally{await handle.close();}
+}
+
+/** Desktop integration uses only bundled configuration, never renderer input. */
+export function createBrowserHandoffLifecycle({hostDirectory,platform=process.platform,verificationMode=false,readConfiguration=readHostConfiguration,createBroker=createBrowserNativeBroker,authorizePair,isUnlocked,canAdmit=()=>true,onProposal}={}){
+ let broker=null,closed=false,starting=null,lastReceipt=null;let state={available:false,configured:false,reason:'NOT_INITIALIZED',installation:'not-performed'};
+ const admitted=()=>!closed&&canAdmit()===true&&isUnlocked()===true;
+ const status=()=>({...state,available:broker?.available===true&&!closed,closeReceipt:lastReceipt});
+ async function initialize(){
+  if(closed)throw Error('Browser handoff lifecycle is closed.');if(starting)return starting;if(broker)return status();
+  starting=(async()=>{
+   if(platform!=='win32'||verificationMode){state={...state,reason:verificationMode?'VERIFICATION_MODE_NATIVE_HANDOFF_DISABLED':'WINDOWS_NATIVE_HOST_REQUIRED'};return status();}
+   let config;try{config=await readConfiguration(path.join(hostDirectory,'browser-host-config.json'));validateBrowserHostConfig(config);}catch{state={...state,reason:'REVIEWED_EXTENSION_IDENTITY_UNAVAILABLE'};return status();}
+   if(closed)return status();
+   state={...state,configured:true,reason:'STARTING'};
+   broker=createBroker({config,hostPath:path.join(hostDirectory,'MaterialFileEncryptor.BrowserHost.exe'),authorizePair:async context=>admitted()&&await authorizePair(context)===true&&admitted(),isUnlocked:admitted,onProposal:item=>{if(!admitted())throw Error('Unlock the desktop before receiving downloads.');return onProposal(item);}});
+   try{await broker.start();state={...state,reason:null};}catch{lastReceipt=await broker.close();state={...state,reason:'NATIVE_BROKER_START_UNVERIFIED'};}
+   if(closed){lastReceipt=await broker.close();state={...state,reason:'CLOSED'};}return status();
+  })();try{return await starting;}finally{starting=null;}
+ }
+ return{initialize,status,observeDownload:event=>broker?.observeDownload(event),revoke(){broker?.revoke();},get pending(){return broker?.pending||0;},async close(){closed=true;broker?.revoke();if(starting)await starting;if(broker)lastReceipt=await broker.close();else lastReceipt={closed:true,processExited:true,stdioClosed:true,pendingRequests:0,pendingResponses:0,verified:true,deadlineMs:0};state={...state,reason:'CLOSED'};return lastReceipt;}};
+}
 
 /** Host-only transport. Its caller origin is an allowlist input, never proof of
  * browser provenance. Every pair still requires approval in the unlocked app. */
@@ -74,7 +99,7 @@ export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnloc
    await Promise.resolve();
    const processExited=[...owners].every(owner=>owner.processExited||owner.spawnFailed),stdioClosed=[...owners].every(owner=>owner.stdioClosed),pendingRequests=active,pendingResponses=jobs.size;
    return{closed:true,processExited,stdioClosed,pendingRequests,pendingResponses,verified:processExited&&stdioClosed&&pendingRequests===0&&pendingResponses===0,deadlineMs:closeTimeoutMs};
-  })();return closing;
+  })();const current=closing;current.then(receipt=>{if(!receipt.verified&&closing===current)closing=null;});return current;
  }
- return{start,receive,observeDownload,revoke,get available(){return ready&&!closed;},close};
+ return{start,receive,observeDownload,revoke,get available(){return ready&&!closed;},get pending(){return active;},close};
 }
