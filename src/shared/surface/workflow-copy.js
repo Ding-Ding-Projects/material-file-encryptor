@@ -50,5 +50,11 @@ export const WORKFLOW_COPY=Object.freeze({
 "Private":"私人",
 "Public":"公開",
 "Account credentials stay in the host credential manager. Add account also renews browser sign-in when account refresh is unavailable.":"帳戶憑證留喺主程式憑證管理器。無法更新帳戶時，可用新增帳戶重新完成瀏覽器登入。",
-"Copy and push includes complete committed history. Review that history and destination visibility before publishing. Fork uses the exact upstream repository.":"複製並推送包括完整已提交歷史。發佈前請檢閱歷史及目的地可見範圍。分叉使用完全相同嘅上游儲存庫。"
+"Copy and push includes complete committed history. Review that history and destination visibility before publishing. Fork uses the exact upstream repository.":"複製並推送包括完整已提交歷史。發佈前請檢閱歷史及目的地可見範圍。分叉使用完全相同嘅上游儲存庫。",
+"Browser download proposals":"瀏覽器下載建議",
+"Awaiting destination review. No transfer has started.":"等待目的地檢閱，尚未開始傳輸。",
+"Review browser download destination":"檢閱瀏覽器下載目的地",
+"Dismiss browser download proposal":"略過瀏覽器下載建議",
+"No browser download proposals.":"冇瀏覽器下載建議。",
+"Browser download proposals are unavailable. Pair the browser with the installed desktop and try again.":"瀏覽器下載建議暫時不可用。請將瀏覽器配對已安裝桌面程式再試。"
 });
