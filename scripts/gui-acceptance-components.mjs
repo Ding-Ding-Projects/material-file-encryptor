@@ -33,6 +33,19 @@ export async function assertMenuBehavior(page,{host='mfe-context-menu',anchor='#
  await capture('menu-action-ready');
  await menu.locator('md-menu-item').waitFor({state:'visible'});await menu.locator('md-menu-item').click();
  await menu.waitFor({state:'hidden'});await page.waitForFunction(()=>window.__acceptanceInvoked.includes('selected'));
+ for(const key of ['Enter',' ']){
+  await page.evaluate(({host,anchor})=>document.querySelector(host).open({anchor:document.querySelector(anchor),items:[{label:'Keyboard action',run:()=>window.__acceptanceInvoked.push('keyboard')}]}),{host,anchor});
+  const item=menu.locator('md-menu-item');await item.waitFor({state:'visible'});await item.focus();
+  const before=await page.evaluate(()=>window.__acceptanceInvoked.length);await page.keyboard.press(key);await menu.waitFor({state:'hidden'});
+  assert.equal(await page.evaluate(()=>window.__acceptanceInvoked.length),before+1,'Keyboard action did not execute exactly once');
+ }
+ await page.evaluate(({host,anchor})=>{const owner=document.querySelector(host);owner.open({anchor:document.querySelector(anchor),items:[{label:'Stale action',run:()=>window.__acceptanceInvoked.push('stale')}]});},{host,anchor});
+ await menu.locator('md-menu-item').waitFor({state:'visible'});
+ await page.evaluate(host=>{const owner=document.querySelector(host),item=owner.itemsHost.querySelector('md-menu-item');owner.close('test-stale');item.click();},host);
+ assert.equal(await page.evaluate(()=>window.__acceptanceInvoked.includes('stale')),false);
+ await page.evaluate(({host,anchor})=>{const target=document.querySelector(anchor);target.addEventListener('mfe-action-request',event=>event.preventDefault(),{once:true});document.querySelector(host).open({anchor:target,target,items:[{label:'Locked action',run:()=>window.__acceptanceInvoked.push('locked')}]});},{host,anchor});
+ await menu.locator('md-menu-item').waitFor({state:'visible'});await menu.locator('md-menu-item').click();await menu.waitFor({state:'hidden'});
+ assert.equal(await page.evaluate(()=>window.__acceptanceInvoked.includes('locked')),false);
  for(const reason of ['outside','resize','removed']){
   await page.evaluate(({host,anchor})=>document.querySelector(host).open({anchor:document.querySelector(anchor),target:document.querySelector(anchor),items:[{label:'Action'}]}),{host,anchor});
   await menu.waitFor({state:'visible'});
@@ -41,7 +54,7 @@ export async function assertMenuBehavior(page,{host='mfe-context-menu',anchor='#
   if(reason==='removed')await page.locator(anchor).evaluate(node=>node.remove());
   await menu.waitFor({state:'hidden'});
  }
- return {scope:'source-fixture',menuFocusPreserved:true,builderPreserved:true,dismissal:['escape','selection','outside','resize','target-removed'],actionEffect:true};
+ return {scope:'source-fixture',menuFocusPreserved:true,builderPreserved:true,dismissal:['escape','selection','outside','resize','target-removed'],actionEffect:true,keyboardExactlyOnce:true,staleItemRejected:true,lockedTargetRejected:true};
 }
 
 export async function runComponentAcceptance({evidenceRoot,runtime={}}) {
@@ -107,7 +120,7 @@ export async function assertPaletteBehavior(page,{capture=async()=>{}}={}) {
  return {scope:'source-fixture',pointerSelection:true,keyboardSelection:true,menuCount:1,escapeScoped:true,focusRestored:true};
 }
 
-export async function assertFilePickerBehavior(page,{host='mfe-file-picker',content='synthetic acceptance data'}={}) {
+export async function assertFilePickerBehavior(page,{host='mfe-file-picker[label="Synthetic acceptance file"]',content='synthetic acceptance data'}={}) {
  const picker=page.locator(host);
  await picker.evaluate(node=>{window.__acceptancePickerChanges=[];node.addEventListener('change',()=>window.__acceptancePickerChanges.push(node.files?.length??-1));});
  const chooser=page.waitForEvent('filechooser');
