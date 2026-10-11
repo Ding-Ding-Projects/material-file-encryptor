@@ -6,6 +6,10 @@ Settings use a bounded version-1 record. English and Cantonese message style lev
 
 ## Host integration
 
+`createTranslator(getSettings, {dictionary, vocabulary})` is also exported for the host's existing renderer. Its ordinary call translates a static source label. Pass `{message:true}` for status, validation, warning or error prose so both independent message-style levels apply. `translate.format(template, values, options)` substitutes values after translating and applying optional private wording, preserving factual values and user content. `translate.message(template, values)` is the message shortcut. `translate.has(source)` and the frozen `translate.dictionary` support coverage checks. An explicit `{language:'en'}` or `{language:'yue'}` supports serialized narration; School mode overrides this to English. Host dictionaries extend the owned static dictionaries without changing source strings or identifiers.
+
+The owned inventory combines `LOCAL_COPY`, `APPEARANCE_COPY` and `ACCESS_COPY`, including validation messages from the owned model modules. Unknown platform errors retain their factual details inside a translated generic message rather than inventing a translation. This is coverage for these modules; it does not establish coverage of unrelated host messages. Real rendered localization, high-scale layout and assistive-technology behavior still require integrated runtime checks.
+
 - `notify(message)` reports a non-blocking notification.
 - `history(record)` receives settings changes without credentials, image bytes or vocabulary payloads. A production host must implement durable protected history; this module does not claim to create a Git history repository itself.
 - `onChange(settings)` receives the effective settings for the application's existing rendering and message paths. Apply the provided language, funny levels, theme, density, font, motion, display name and attention values consistently across those paths.
