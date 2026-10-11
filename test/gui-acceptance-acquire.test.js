@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {stateRoutes,acquisitionCapabilities,makeAcquisitionPlan,acquireMatrix,composeAdapters} from '../scripts/gui-acceptance-acquire.mjs';
-import {bindingFor,matrixFor} from '../scripts/gui-acceptance.mjs';
+import {bindingFor,matrixFor,tupleKey,sha256} from '../scripts/gui-acceptance.mjs';
 import {chooseVerificationDriveLetter} from '../scripts/preview-runtime-fixture.mjs';
 import {ownedFixturePreparation} from '../scripts/gui-acceptance-baseline.mjs';
 const inventory=JSON.parse(await fs.readFile(new URL('../contracts/gui-states.json',import.meta.url)));
@@ -56,4 +56,15 @@ test('missing action adapters fail closed before any packaged acquisition',async
  let calls=0;const result=await acquireMatrix({inventory,binding,launch,receipt:path.resolve('receipt.json'),outputRoot:root,executePlan:async()=>{calls++;},probeEvidence:{},adapters:{},tuples:[matrixFor(inventory)[0]]});
  assert.equal(calls,0);assert.equal(result.results[0].status,'unavailable');assert.equal(result.accepted,false);
  await fs.rmdir(root);
+});
+test('admitted unchanged evidence resumes without acquiring a live capability',async()=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'gui-resume-test-'));
+ try{
+  const binding=bindingFor({sourceCommit:'a'.repeat(40),executableSha256:'b'.repeat(64),resourceSha256:'c'.repeat(64),verifierSha256:'d'.repeat(64),referenceSha256:'e'.repeat(64),inventory});
+  const tuple=matrixFor(inventory)[0],state=inventory.states[0],file={path:'proof.json',sha256:sha256('proof')};await fs.writeFile(path.join(root,file.path),'proof');
+  const row={schemaVersion:1,status:'passed',tuple,binding,route:'cheap-lowlevel-headless',captureKind:'packaged-renderer',scaleProof:'renderer-emulation',capture:file,layout:file,referenceCapture:file,sideBySide:file,visualDiff:file,inspection:{inspected:true,privacyPassed:true,correctState:true,referenceReviewed:true,designParityPassed:true},layoutResult:{outerFrameScroll:false,clipped:[]},primitiveAudit:{genericControls:[],unregisteredControls:[]},motionSettled:true,resourceGraphVerified:true,cspVerified:true,fixtureIdentityVerified:true,stateObservable:state.observable,actions:state.actions.map(id=>({id,activated:true,observablePassed:true,evidencePath:file.path,evidenceSha256:file.sha256}))};
+  const run=()=>acquireMatrix({inventory,binding,launch,receipt:path.resolve('receipt.json'),outputRoot:root,executePlan:()=>{throw Error('Must not acquire');},adapters:{},tuples:[tuple],resume:new Map([[tupleKey(tuple),row]])});
+  assert.equal((await run()).results[0].status,'reused');
+  await fs.writeFile(path.join(root,file.path),'changed');assert.equal((await run()).results[0].status,'unavailable');
+ }finally{await fs.unlink(path.join(root,'proof.json'));await fs.rmdir(root);}
 });

@@ -76,10 +76,10 @@ export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot
  for(const tuple of tuples){
   const key=tupleKey(tuple);assert.deepEqual(tuple,planned.get(key),'Unknown matrix tuple');
   const state=inventory.states.find(item=>item.id===tuple.state),adapter=adapters[state.id];
+  if(resume.has(key)){try{admitRow(resume.get(key),{tuple,state,binding});await verifyFiles(resume.get(key),outputRoot);results.push({key,status:'reused'});continue;}catch{/* Changed or incomplete evidence must be acquired again. */}}
   if(unavailableStates.has(state.id)){results.push({key,status:'unavailable',reason:unavailableStates.get(state.id),notRetried:true});continue;}
   const capabilities=acquisitionCapabilities({states:[state]},adapters)[0];
   if(!capabilities.navigation||!capabilities.fixture||!capabilities.observable||capabilities.missingActions.length){results.push({key,status:'unavailable',capabilities});continue;}
-  if(resume.has(key)){try{admitRow(resume.get(key),{tuple,state,binding});await verifyFiles(resume.get(key),outputRoot);results.push({key,status:'reused'});continue;}catch{/* Changed or incomplete evidence must be acquired again. */}}
   const tupleDirectory=path.join(outputRoot,key.replaceAll('/','-'));await fs.mkdir(tupleDirectory,{recursive:true});
   const directory=await fs.mkdtemp(path.join(tupleDirectory,'attempt-'));
   const record={schemaVersion:1,tuple,binding,scope:'packaged-acquisition',status:'started',physicalDpiVerified:false};
