@@ -1,5 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+// The logic fixture aliases generic selectors to Material controls. Inspect literal
+// tags here so registered compositions pass while native replacements still fail.
+function assertRegisteredControls(root){
+ const native=root.querySelectorAll('*').filter(node=>['INPUT','BUTTON','SELECT','TEXTAREA'].includes(node.tagName));
+ assert.deepEqual(native.map(node=>node.tagName),[],'Generic controls must not replace registered Material controls');
+}
+
 import {createAccessDocument} from './helpers/local-access-dom.js';
 globalThis.HTMLElement=class{};
 const {renderProviderText,createProviderTranscript,PROVIDER_FORMAT_LIMITS}=await import('../src/renderer/features/ollama/provider-content.js');
@@ -14,7 +21,7 @@ test('provider Markdown creates formatting and code without interpreting HTML or
  assert.equal(renderProviderText(host,source).mode,'markdown');assert.equal(host.querySelector('h1').textContent,'Answer');assert.equal(host.querySelector('strong').textContent,'strong');assert.equal(host.querySelectorAll('li').length,2);assert.equal(host.querySelectorAll('table').length,1);assert.equal(host.querySelectorAll('img').length,0);assert.equal(host.querySelectorAll('script').length,0);assert.match(host.textContent,/<img src=x onerror=alert\(1\)>/);assert.match(host.textContent,/Image unavailable/);assert.equal(host.querySelectorAll('a').length,1);assert.equal(host.querySelector('a').href,'https://example.org/read');assert.equal(host.querySelector('a').rel,'noopener noreferrer nofollow');assert.equal(host.querySelector('a').referrerPolicy,'no-referrer');
 });
 test('task markers use disabled registered controls and malformed markup remains data',()=>{
- const {host}=scene();renderProviderText(host,'- [x] Complete\n- [ ] Pending\n\n[unfinished](javascript:');assert.equal(host.querySelectorAll('input').length,0);const boxes=host.querySelectorAll('md-checkbox');assert.equal(boxes.length,2);assert.equal(boxes[0].getAttribute('disabled'),'');assert.match(host.textContent,/unfinished/);
+ const {host}=scene();renderProviderText(host,'- [x] Complete\n- [ ] Pending\n\n[unfinished](javascript:');assertRegisteredControls(host);const boxes=host.querySelectorAll('md-checkbox');assert.equal(boxes.length,2);assert.deepEqual(boxes.map(box=>({disabled:box.disabled,checked:box.checked})),[{disabled:true,checked:true},{disabled:true,checked:false}]);assert.match(host.textContent,/unfinished/);
 });
 test('deep and oversized responses fall back to disclosed complete plain text',()=>{
  const {host}=scene();for(const value of ['<details>\n'.repeat(17)+'content\n'+'</details>\n'.repeat(17),'>'.repeat(17)+' content','x'.repeat(PROVIDER_FORMAT_LIMITS.characters+1),'['.repeat(129)]){assert.equal(renderProviderText(host,value).mode,'plain');assert.equal(host.querySelector('pre').textContent,value);assert.match(host.textContent,/complete response is shown as plain text/);}
@@ -27,4 +34,24 @@ test('early stream events are isolated until native response binds their operati
 });
 test('history replacement, cancellation and disposal invalidate stale stream ownership',()=>{
  const {host}=scene(),time=clock(),transcript=createProviderTranscript(host,time);const first=transcript.begin();transcript.bind(first,'old');transcript.consume({type:'chat',operationId:'old',delta:'old answer'});transcript.setHistory([{role:'user',content:'**literal user**'},{role:'assistant',content:'**saved answer**'}]);time.flush();assert.equal(host.querySelectorAll('strong').length,1);assert.equal(host.querySelector('strong').textContent,'saved answer');assert.match(host.textContent,/\*\*literal user\*\*/);assert.equal(transcript.consume({type:'chat',operationId:'old',delta:'late'}),false);assert.equal(transcript.bind(first,'old'),false);const next=transcript.begin({regenerate:true});transcript.bind(next,'next');transcript.consume({type:'chat',operationId:'next',delta:'partial'});transcript.consume({type:'cancelled',operationId:'next'});assert.match(host.textContent,/Partial text is retained/);assert.match(host.textContent,/partial/);const failed=transcript.begin();transcript.reject(failed);assert.match(host.textContent,/Response did not complete/);transcript.destroy();time.flush();assert.equal(host.children.length,0);assert.equal(transcript.consume({type:'chat',operationId:'next',delta:'late'}),false);
+});
+
+test('literal control assertion accepts registered components and rejects generic replacements',()=>{
+ const {doc,host}=scene();
+ for(const tag of ['md-outlined-text-field','md-checkbox','md-outlined-button','md-outlined-select','mfe-file-picker'])host.append(doc.createElement(tag));
+ assertRegisteredControls(host);
+ for(const tag of ['input','button','select','textarea']){
+  const generic=doc.createElement(tag);host.append(generic);
+  assert.throws(()=>assertRegisteredControls(host),/Generic controls must not replace/);
+  generic.remove();assertRegisteredControls(host);
+ }
+});
+
+test('task marker property assertion rejects an enabled status control',()=>{
+ const {host}=scene();renderProviderText(host,'- [x] Complete\n- [ ] Pending');
+ const boxes=host.querySelectorAll('md-checkbox');
+ const assertDisabled=()=>assert.ok(boxes.every(box=>box.disabled===true),'Task markers must stay disabled');
+ assertDisabled();
+ for(const box of boxes){box.disabled=false;assert.throws(assertDisabled,/Task markers must stay disabled/);box.disabled=true;}
+ assertDisabled();
 });
