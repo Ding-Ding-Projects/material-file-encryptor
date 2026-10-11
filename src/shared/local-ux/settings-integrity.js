@@ -1,0 +1,47 @@
+import {createSettingsStore,validateSettings} from './store.js';
+
+/** Desktop settings share one mutation boundary even when a renderer receives
+ * an existing store. Credentials remain with the privileged host capability. */
+export function createDesktopSettingsIntegrity({storage,isAuthenticated=()=>false,onError=()=>{},verifyCredential,setCredential,writeSharedMode}={}) {
+ let manager=null,historyFlight=Promise.resolve(),verified=false,permit=null;
+ const modeKey=value=>JSON.stringify({enabled:value.enabled===true,name:value.name});
+ const requiresPermission=(before,next)=>modeKey(before)!==modeKey(next)&&(before.enabled||next.enabled);
+ const store=createSettingsStore({storage,onError,history:record=>{
+  if(!isAuthenticated()||!manager?.unlocked)return;
+  const consumer=manager;
+  historyFlight=historyFlight.catch(()=>{}).then(()=>{
+   if(!isAuthenticated()||!consumer.unlocked)throw Error('Unlock the local profile and private history before recording settings history.');
+   return consumer.append(record.action,record.after,{at:record.at});
+  }).catch(error=>onError(error.message));
+ }});
+ const update=store.update.bind(store);
+ store.update=(patch,action)=>{
+  const before=store.get(),next=validateSettings({...before,...patch});
+  if(requiresPermission(before.school,next.school)){
+   const allowed=permit?.before===modeKey(before.school)&&permit?.after===modeKey(next.school);permit=null;
+   if(!allowed)throw Error('Verify and change the shared mode through its control before importing, resetting or restoring a different protected mode state.');
+  }
+  permit=null;
+  if(JSON.stringify(before)===JSON.stringify(next))return before;
+  return update(next,action);
+ };
+ return {store,
+  connectHistory(value){manager=value;},flushHistory:()=>historyFlight,
+  async verifySharedCredential(password){verified=false;permit=null;const result=await verifyCredential?.(password);verified=result===true;return verified;},
+  async setSharedCredential(password){verified=false;permit=null;if(!setCredential)throw Error('Protected mode credential storage is unavailable.');const result=await setCredential(password);if(result===false)throw Error('The mode credential was not stored.');verified=true;return result;},
+  async writeSchool(value){
+   const next=validateSettings({...store.get(),school:value}).school;
+   if(requiresPermission(store.get().school,next)&&!verified)throw Error('Verify the shared mode credential before changing the protected mode.');
+   verified=false;permit=null;
+   if(!writeSharedMode)throw Error('The privileged shared mode adapter is unavailable.');
+   const result=await writeSharedMode(next);if(result===false)throw Error('The shared mode was not changed.');
+   permit=modeKey(store.get().school)===modeKey(next)?null:{before:modeKey(store.get().school),after:modeKey(next)};return result;
+  },
+  // Only trusted host read/subscription callbacks call this method. A public
+  // import or history restore never obtains an authorization through it.
+  fromHost(value){permit=value?{before:modeKey(store.get().school),after:modeKey(validateSettings({...store.get(),school:value}).school)}:null;return value;},
+  destroy(){verified=false;permit=null;manager=null;},
+ };
+}
+
+
