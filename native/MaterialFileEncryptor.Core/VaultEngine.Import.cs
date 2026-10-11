@@ -12,6 +12,7 @@ public sealed partial class VaultEngine
         private readonly string journal;
         private readonly PartWriter writer;
         private readonly byte[] pendingBlock;
+        private readonly IDisposable bufferReservation;
         private int pendingLength;
         private long nextBlock;
         private bool finished;
@@ -20,7 +21,8 @@ public sealed partial class VaultEngine
             this.engine=engine;this.path=path;
             entry=new Entry { ChunkSize=engine.ChunkBytes(engine.partSize),PartSize=engine.partSize,Attributes=32 };
             journal=Path.Combine(engine.cache,"import-"+entry.Id+".mfe");
-            writer=new PartWriter(engine,entry.PartSize);pendingBlock=new byte[entry.ChunkSize];
+            writer=new PartWriter(engine,entry.PartSize);bufferReservation=TransferBufferBudget.Reserve(entry.ChunkSize+65536L);
+            try{pendingBlock=new byte[entry.ChunkSize];}catch{bufferReservation.Dispose();throw;}
         }
         public void Write(long offset,ReadOnlySpan<byte> data,CancellationToken cancellationToken=default)
         {
@@ -77,7 +79,7 @@ public sealed partial class VaultEngine
                     engine.pendingVersions=savedVersions;engine.pendingBinHidden=savedHidden;engine.versionDue=savedDue;
                     throw;
                 }
-                finished=true;writer.Dispose();CryptographicOperations.ZeroMemory(pendingBlock);
+                finished=true;writer.Dispose();CryptographicOperations.ZeroMemory(pendingBlock);bufferReservation.Dispose();
                 try { File.Delete(journal); } catch(IOException) { } catch(UnauthorizedAccessException) { }
 
             }
@@ -88,7 +90,7 @@ public sealed partial class VaultEngine
             {
                 if(finished)return;finished=true;engine.versionDue.Remove(entry.Id);
                 try { writer.Finish(); }
-                finally { writer.Dispose();CryptographicOperations.ZeroMemory(pendingBlock);if(File.Exists(journal))File.Delete(journal); }
+                finally { writer.Dispose();CryptographicOperations.ZeroMemory(pendingBlock);bufferReservation.Dispose();if(File.Exists(journal))File.Delete(journal); }
                 // Completed ciphertext parts remain unreferenced cache garbage.
             }
         }
