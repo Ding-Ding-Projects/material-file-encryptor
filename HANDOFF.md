@@ -1,3 +1,11 @@
+# Preferences source correction and native admission, 2026-10-11 UTC
+
+Independently reviewed candidate ec5b81b9e0f8a2c11c40e1d36c08fdd8c44ee195 restores shared palette/font authority and genuine registered Material tabs. Stable instance-scoped tab/panel associations, optional per-tab guidance, original selection/reset/disposal behavior and shared five-column geometry passed focused mounted and negative checks. The normal merge retains later main documentation and native ancestry. This is source acceptance only; rebuilt current pixels and pure Material Design 3 conformance remain pending.
+
+The single installed observation attempt stopped before launch: fresh physical memory was 752,451,584 bytes against the unchanged 1,610,612,736-byte floor. Source5d8, installed identities and a freshly verified supported Python binding were retained. No startup, updater, Later, capture, closure or deletion verdict was produced. Do not retry without distinct fresh admission.
+
+Next: verify the corrected deployed source and artifact bytes, capture the identical 320x844 English/DPR1 preferences states, inspect actual palette/fonts/tab layout and then extend the required matrix. All 105 features/210 complete-surface rows and original installed lifecycle remain unfinished.
+
 # Native verifier ancestry reconciliation, 2026-10-11 UTC
 
 All four original preserved native verification patches already exist in main under equivalent commits. Four verifier source blobs are identical. Normal merge resolution preserved the exact current build script, and the resolved pre-documentation tree matched main1b93e914a7009063a216c3d0f6aeedf30e5d6bc7 exactly. Historical sourceb516 compiled synthetic settlement/outer-teardown self-tests exited0 from workflow38116846135; verifier README now records that evidence and preserves current installed/native/GUI limits. This adds ancestry and factual documentation, not a new runtime verdict. The lock checkout and ignored originals remain retained.

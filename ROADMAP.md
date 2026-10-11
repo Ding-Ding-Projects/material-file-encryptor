@@ -9,7 +9,8 @@
 
 - [x] Reproduce the reported visible preferences mismatch with normal controls in genuine source-bound capture38142263991.
 - [x] Independently trace missing shared palette/font authority and guidance-expanded tab composition from actual visible measurements.
-- [ ] Integrate reviewed palette/font/registered-tab repair and verify real corrected source-bound pixels.
+- [x] Independently review and integrate palette/font/registered-tab source repair, stable accessible associations, optional per-tab guidance and five-column alignment. Source acceptance only.
+- [ ] Rebuild and verify genuine corrected source-bound pixels and the complete responsive/language/theme/scale matrix.
 - [ ] Complete all language/theme/viewport/scale tuples, full210surface acceptance and installed lifecycle.
 
 # Latest capture and wiki delivery, 2026-10-11 UTC
