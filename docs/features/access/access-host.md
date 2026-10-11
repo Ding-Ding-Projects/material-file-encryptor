@@ -1,31 +1,80 @@
 # Privileged access host integration
 
-The access host implements authoritative password/PIN/TOTP verification, persisted attempt deadlines, one-use waiting challenges and a three-success rolling-hour budget. The renderer cannot nominate its actor, School mode or a new deadline. Winning a waiting challenge only ends waiting; it never authenticates a profile or element.
+The privileged host verifies passwords, PINs and TOTP, persists failed-attempt deadlines, grades one-use waiting challenges and enforces three successful waiting skips per rolling hour. Winning a challenge only ends waiting. It never authenticates a profile, unlocks an element or grants history access.
 
-## Integration contract
+## Production factory and trusted identity
 
-Create one `createAccessHost({dataDirectory, credentials, getActor, getSchoolMode})` per protected host lifetime. `getActor` must derive identity from the verified main-frame sender. `getSchoolMode` must read trusted native shared settings. Never copy either value from a renderer request. Call `validateAccessHostRequest(action, payload)` at the bridge boundary and retain the existing feature/schema validation.
+Create one adapter for the protected main-frame lifetime:
 
-The protected store must provide asynchronous `get`, `set`, `delete`, `list` and `readVersioned(key) and compareAndSetVersioned(key, expectedRevision, replacement)`. Versioned reads return a value and its protected persistent revision. Conditional writes return updated and a new revision, comparing within the store's existing serialization queue. All writers, including same-value writes and deletions, replace that receipt; deleted keys retain a tombstone. Null replacement means deletion. A mismatched revision stops rollback even when another writer restored an identical value. History setup and mutations fail closed when this atomic operation is unavailable.
+```js
+const journal = createAccessMutationHistory({dataDirectory, toolsDirectory});
+const access = createAccessIntegration({
+  dataDirectory,
+  toolsDirectory,
+  credentials,
+  getMainFrame,
+  recordMutation: event => journal.record(event)
+});
+```
 
-Route the exported `ACCESS_HOST_ACTIONS` through `host.request`. Route every renderer authenticator credential set/delete through `host.setCredential` and `host.deleteCredential`; preserve existing credential key allowlists. Reserved `lock:` and `profile:` host records remain inaccessible to renderer credential APIs. Close the host on teardown.
+The adapter exposes `request(senderFrame, action, payload)`, `supports(action)` and `close()`. The trusted main handler validates its request source, then constructs `{senderFrame: event.senderFrame}` as the feature-service context. `getMainFrame` returns the current main-owned frame object. The adapter requires reference identity, derives its own actor identifier and keeps it in asynchronous request context. It rechecks that identity after asynchronous work. A renderer payload cannot nominate an actor or frame.
 
-Supply `services.accessHost(action,payload)` to the access mount. Supply personalization `services.recordDisplayName(value)` using `displayNameSet`, load `displayNameRead` before its initial mount, and apply the restored name from the access mount's `onDisplayNameRestore` callback. A restoration must update the displayed preference without creating a second unintended mutation.
+A loopback or other caller with no verified frame has no actor and is rejected. Never substitute the current frame to make an untrusted request work. Close the adapter and journal during teardown. Closing revokes grants and aborts their owned Git processes.
 
-## Encrypted local history
+## Authoritative mode and executable
 
-History has a separate password and a ten-minute grant bound to the trusted actor. Profile authentication never grants history access. AES-256-GCM snapshots cover authenticator records and the display name. Only ciphertext and nonsensitive action names enter the private application-data Git repository. A protected tail digest detects missing or rolled-back envelopes. Keys stay in operating-system protected storage.
+School mode comes from the native application-data `shared-settings.json` file. Missing initial settings mean disabled; malformed, oversized or symbolic-link settings stop the operation. The renderer cannot override this value or a waiting deadline.
 
-Changes are serialized and use compare-and-set writes. Recording failures restore only the values owned by that operation; a concurrent writer is preserved and the caller receives a recovery error. Successful restore appends a new entry instead of rewriting prior commits. Labels, date/action filtering, redacted comparison/export, retention and confirmed pruning are available in the Material history panel.
+The host uses `createForgeToolResolver(toolsDirectory)` and the trusted package's `forge-executables.json`. Every process invocation verifies the bundled executable's path and actual hash, then checks `git version 2.56.0.windows.2`. It never selects Git from PATH or accepts a renderer-supplied digest. Missing or changed tools stop recording. Packaged executable verification remains separate from a synthetic test executor.
 
-Pruning hides expired entries from the manager. Historical encrypted commits remain, so this does not promise secure erasure or disk-space reclamation. Forgotten history passwords have no recovery or reset route. Before recording an envelope, a protected pending intent binds its exact ciphertext hash, prior tail and relative record identity. An interrupted tail write can recover only that attested committed envelope after checking both Git content and the current file. Recovery preserves the committed record and appends a compensation after an owned rollback. Unattested, altered or missing records stop for explicit local recovery. This is not an atomic transaction across two storage systems.
+## Request and protected-store contract
 
-## Availability and verification
+The adapter routes every action in `ACCESS_HOST_ACTIONS`, plus `credentialGet`, `credentialSet`, `credentialDelete` and `credentialList`. Existing data-folder actions remain with their current handler. Retain outer bridge validation; the adapter additionally calls `validateAccessHostRequest` or its exact credential schema and snapshots validated payloads before queueing them.
 
-A working supported Git executable is required. Missing Git fails before password setup persists. Installer provisioning and production bridge wiring are separate integration requirements; source tests do not establish their availability in a packaged application. Browser-only execution cannot supply this privileged boundary.
+The store supplies `get`, `set`, `delete`, `list`, `readVersioned(key)` and `compareAndSetVersioned(key, expectedRevision, replacement)`. A versioned read returns value and revision. A conditional write compares and writes inside the store queue and returns updated status plus revision. Every successful writer changes the protected persistent receipt, including same-value writes and deletion. Deleted keys keep a revision tombstone; null replacement means deletion. Value comparison alone cannot protect rollback from a later writer that returns to the same value.
 
-Synthetic tests in `test/local-access-host.test.js` exercise real temporary Git recording, encrypted files, redacted export, replay/expiry/actor boundaries, persistent budgets, cancellation, atomic rollback, concurrent changes, missing runtime and independent password expiry. No real vault or user credential is used. Built visual, native sender and packaged integration acceptance remain pending until separately recorded.
+Reserved `lock:` and `profile:` host records are unavailable through renderer credential APIs. The renderer cannot read or replace history keys, pending intents, attempt counters or actor grants.
 
-## Recovery before the first commit
+## Credential writer admission
 
-The encrypted envelope is written and synchronized in the dedicated staging directory before the protected pending intent is stored. That intent binds the staging and final relative paths plus ciphertext hash and prior tail. On restart, a missing commit can be completed only from those attested bytes, whether they are still staged or already at the final path. Unexpected content, symbolic links or missing attested bytes stop recovery without deletion or replacement. Unreferenced staging files are retained, not silently discarded.
+Authenticator changes and display-name changes require the separately authenticated encrypted-history service. Initial profile and element-lock creation do not require a history password. They use create-only versioned writes and await a redacted general-history record before reporting success.
+
+Creation cannot overwrite an existing credential. The current interface authenticates and removes an existing lock before creating a replacement; it does not silently gain a credential-reset endpoint. Removal requires a recent successful verification bound to the actor, target and unchanged record revision, or the same actor's unexpired creation receipt for cancellation of its own creation. A new frame cannot reuse that receipt.
+
+Legacy `history:*` reads and writes require a verified profile. `waitCancel` revokes the matching target grant. History operations retain the same grant identity, generation and expiry through asynchronous reads and recheck them before returning data. If cancellation arrives during a stored write, rollback restores only that write's own revision. Concurrent later writes are preserved and reported for recovery.
+
+The general-history callback receives only `{version, action, target, at}`. Missing recording capability stops profile or element mutation before writing. A recording failure restores the owned credential revision and attempts a redacted rollback record. It never reports a successful mutation when durable recording failed.
+
+## Renderer integration
+
+Supply `services.accessHost(action, payload)` through the production feature bridge. Supply personalization `services.recordDisplayName(value)` using `displayNameSet`, read `displayNameRead` before mounting its initial preference, and apply an authorized restored name through `onDisplayNameRestore`. Restoration must not create a second unintended mutation. Other name-changing routes, including preference reset, need the same authorized recording route.
+
+The history tab appears only when its host adapter is supplied. It has an independent password, explicit setup/unlock/lock controls, full search, date and action filters, labels, comparison, redacted export and confirmed restore/retention/prune operations. Profile authentication never opens history implicitly.
+
+## Encrypted history and ownership
+
+Encrypted history grants last ten minutes and are bound to the trusted actor. AES-256-GCM snapshots contain authenticator records and display name. Only ciphertext and nonsensitive action names enter the local application-data Git repository. Encryption keys and the tail digest stay in operating-system protected storage.
+
+Changes are serialized and use persistent revision receipts. Recording failure restores only values still owned by that operation. Restoration appends a new entry instead of rewriting earlier commits. A later writer's identical value is still a different owned revision and must not be overwritten.
+
+Pruning hides expired entries from the manager. Historical encrypted commits remain, so pruning is neither secure erasure nor disk-space reclamation. Forgotten history passwords currently have no recovery or reset route. This implementation does not claim an atomic transaction across the credential store and Git.
+
+## Interrupted encrypted-record recovery
+
+The encrypted envelope is written and synchronized in a dedicated staging directory before the protected pending intent. That intent binds staging and final relative paths, exact ciphertext hash and prior protected tail.
+
+After interruption, the host may complete a missing commit only from the attested staged or final bytes. It verifies committed content and the current file before advancing the protected tail. A failed tail write can therefore recover the already committed record and append compensation after an owned rollback. Unknown content, symbolic links, changed ownership or missing attested bytes stop recovery without deleting or replacing them. Unreferenced staging files remain retained.
+
+## Redacted bootstrap journal and manager discovery
+
+The bootstrap journal records only version, fixed action, stable target and UTC timestamp. Credential values, factors, actors and arbitrary payloads are rejected. No profile or encrypted-history password is required, allowing initial setup to record its lifecycle.
+
+It serializes operations, synchronizes an immutable pending metadata file, commits the exact final record using verified bundled Git, verifies committed bytes, and only then reports success. Content-bound filenames detect changes. A later call or process instance recovers pending records before accepting new work. Unknown pending files and mismatched bytes stop recovery and remain preserved.
+
+These records live in the local application-data `access-mutations/records` directory, separately from encrypted snapshots. The host-only `list({limit})` method returns at most 1,000 rows in timestamp order. An authenticated manager can discover and merge this inventory through its owning host. The writer adds no unrestricted renderer endpoint or credential-key exception. Manager bridge and display wiring remain explicit integration work. The journal is metadata, not an authentication authority or a replacement for encrypted snapshots.
+
+## Verification and remaining boundaries
+
+`test/local-access-host.test.js` covers protected challenges, persistent budgets, independent history grants, encrypted temporary Git records, revision ownership and interrupted recovery. `test/local-access-integration.test.js` covers trusted-frame admission, reserved keys, native settings, executable tampering, recording failure and cancellation at grant-read, stored-write and returned-read boundaries. `test/local-access-mutation-history.test.js` exercises actual temporary Git commits with a synthetic resolver and executor fixture; it does not claim that the packaged native executable ran.
+
+All fixtures use synthetic data, not a real vault or user credential. Historical intermittent Node WebCrypto disagreement remains unresolved unless separately closed by source-bound runtime evidence. A successful packaged-browser comparison does not establish a main-runtime verdict. Production sender wiring, installed executable availability, manager discovery, built visual acceptance and cryptographic runtime acceptance require their own recorded evidence.
