@@ -8,7 +8,7 @@ const COPY={
 const BUSY=new Set(['checking','downloading','confirming','installing','preparing-restart','restart-requested']);
 const recoveryBlocked=s=>s.admissionBlocked===true||s.recoveryRequired===true||s.state==='preparing-restart'||s.state==='manual-restart-required';
 export class UpdatesPanel extends SurfaceElement{
- constructor(){super();this.snapshot={state:'unavailable'};this.language='en';this.translate=value=>value;this.pending=false;this.deferred=false;this.disposed=false;this.request=null;this.generation=0;
+ constructor(){super();this.snapshot={state:'unavailable'};this.language='en';this.translateText=value=>value;this.pending=false;this.deferred=false;this.disposed=false;this.request=null;this.generation=0;
   this.style('.details{display:grid;grid-template-columns:minmax(120px,auto) minmax(0,1fr);gap:6px 16px}.details dd{margin:0;overflow-wrap:anywhere}.warning{padding:12px;border:1px solid var(--md-sys-color-outline,#777);border-radius:12px}.actions{display:flex;gap:8px;flex-wrap:wrap}');
   this.heading=element('h2');this.status=element('p',{role:'status','aria-live':'polite','aria-atomic':'true'});this.warning=element('p',{class:'warning'});this.details=element('dl',{class:'details'});this.rows={};
   for(const key of ['version','target','source']){const label=element('dt'),value=element('dd');this.rows[key]={label,value};this.details.append(label,value);}
@@ -16,8 +16,8 @@ export class UpdatesPanel extends SurfaceElement{
   this.buttons={};const actions=element('div',{class:'actions'});for(const key of ['check','download','install','later']){const button=element(key==='install'?'md-filled-button':'md-outlined-button',{type:'button'});button.addEventListener('click',()=>{if(button.disabled)return;if(key==='later'){this.deferred=true;this.render();}else void this.act(key);});this.buttons[key]=button;actions.append(button);}
   this.shadowRoot.append(this.heading,this.status,this.warning,this.details,this.reason,this.limit,this.rollback,this.progress,actions);this.render();
  }
- t(key){const [en,yue]=COPY[key]||[key,key],external=this.translate(en);return external!==en?external:localized({en,yue},this.language);}
- configure({translate=value=>value,services={},language='en'}={}){this.translate=translate;this.language=language;this.request=services.request;this.stop=services.subscribe?.(event=>this.update(event?.snapshot||event));this.render();if(this.request)void this.act('status');return this;}
+ t(key){const [en,yue]=COPY[key]||[key,key],external=this.translateText(en);return external!==en?external:localized({en,yue},this.language);}
+ configure({translate=value=>value,services={},language='en'}={}){this.translateText=translate;this.language=language;this.request=services.request;this.stop=services.subscribe?.(event=>this.update(event?.snapshot||event));this.render();if(this.request)void this.act('status');return this;}
  update(snapshot){if(this.disposed||!snapshot||typeof snapshot!=='object'||typeof snapshot.state!=='string')return;const prior=this.snapshot;this.snapshot={...snapshot};if(snapshot.state!=='ready'||prior.update?.version!==snapshot.update?.version)this.deferred=false;this.render();}
  setLanguage(language){this.language=language;this.render();}
  refreshLabels(){this.render();}
