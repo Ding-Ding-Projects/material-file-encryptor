@@ -6,6 +6,7 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {createAccessHost,ACCESS_HOST_ACTIONS,validateAccessHostRequest} from './access-host.js';
 import {createForgeToolResolver} from './forge-transport.js';
+import {accessGitEnvironment} from './access-git-environment.js';
 import {LOCK_POLICIES} from '../renderer/features/access/locks.js';
 import {validateOtp} from '../renderer/features/access/crypto.js';
 
@@ -48,9 +49,9 @@ export function createAccessIntegration({dataDirectory,toolsDirectory,credential
  }
  const host=createAccessHost({dataDirectory,credentials,now,getActor:actor,getSchoolMode:readSchool,executeGit:async(name,args,options)=>{
   actor();if(name!=='git')throw Error('Unsupported access history executable.');
-  const executable=await resolveTool('git');actor();const version=await execute(executable,['--version'],{...options,windowsHide:true,shell:false,timeout:15000,maxBuffer:8192,signal:lifetime.signal});
+  const executable=await resolveTool('git');actor();const env=accessGitEnvironment();const version=await execute(executable,['--version'],{...options,env,windowsHide:true,shell:false,timeout:15000,maxBuffer:8192,signal:lifetime.signal});
   if(version.stdout.trim()!=='git version 2.56.0.windows.2')throw Error('Verified bundled Git version is unavailable.');
-  actor();return execute(executable,args,{...options,windowsHide:true,shell:false,signal:lifetime.signal});
+  actor();return execute(executable,['-c','core.fsmonitor=false','-c','core.attributesFile=/dev/null',...args],{...options,env,windowsHide:true,shell:false,signal:lifetime.signal});
  }});
  async function profileGrant(who){const id=identity(who,'profile'),grant=grants.get(id),epoch=generation(who,'profile');const check=()=>{current(who,'profile',epoch);if(!grant||grants.get(id)!==grant||grant.expires<=now())throw Error('Unlock the local profile before accessing private history.');};check();const record=await credentials.readVersioned('local-profile:v1');check();if(record.revision!==grant.revision){grants.delete(id);throw Error('Unlock the local profile before accessing private history.');}return check;}
  async function privateHistoryMutation(who,action,key,value){const check=await profileGrant(who),before=await credentials.readVersioned(key);check();const written=await credentials.compareAndSetVersioned(key,before.revision,action==='credentialSet'?value:null);if(!written.updated)throw Error('Protected access record changed concurrently.');try{check();return true;}catch(error){const restored=await credentials.compareAndSetVersioned(key,written.revision,before.value);if(!restored.updated)throw Error('Protected access record changed concurrently. Local recovery is required.');throw error;}}
