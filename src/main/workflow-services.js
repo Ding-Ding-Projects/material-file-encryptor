@@ -42,8 +42,8 @@ async function nativeSignature(file){const {inspectAuthenticode}=await import('.
 function responseFor(url,{address,signal}){return new Promise((resolve,reject)=>{const request=https.get(url,{signal,lookup:(_host,_options,done)=>done(null,address.address,address.family)},resolve);request.on('error',reject);});}
 
 /** All filesystem and process actions require opaque grants created by native pickers. */
-export function createWorkflowServices({dataDirectory,dialog,getWindow=()=>null,openExternal,openPath,emit=()=>{},signatureInspector=nativeSignature,lookup=hostname=>dns.lookup(hostname,{all:true}),request=responseFor,spawnEditor=spawn,forgeAccounts,forgeOwners,forgeService,env=process.env}={}){
- const forge=forgeService||createForgeWorkflow({dataDirectory,env,onAuthenticationChallenge:item=>emit('workflow',{type:'forge-authentication',item})});forgeAccounts||=()=>forge.accounts();forgeOwners||=accountId=>forge.owners(accountId);
+export function createWorkflowServices({dataDirectory,toolsDirectory,dialog,getWindow=()=>null,openExternal,openPath,emit=()=>{},signatureInspector=nativeSignature,lookup=hostname=>dns.lookup(hostname,{all:true}),request=responseFor,spawnEditor=spawn,forgeAccounts,forgeOwners,forgeService,env=process.env}={}){
+ const forge=forgeService||createForgeWorkflow({dataDirectory,toolsDirectory,env,onAuthenticationChallenge:item=>emit('workflow',{type:'forge-authentication',item})});forgeAccounts||=()=>forge.accounts();forgeOwners||=accountId=>forge.owners(accountId);
  const documents=new Map(),editors=new Map(),downloads=new Map(),handoffs=new Map(),captures=new Map(),pending=new Set(),writing=new Set();let closed=false,activeDownload=null;
  const picker=async(method,options)=>{if(!dialog?.[method])throw new Error('Native picker unavailable.');const window=getWindow();return window?dialog[method](window,options):dialog[method](options);};
  const operation=async fn=>{if(closed)throw new Error('Workflow service is closed.');const promise=Promise.resolve().then(()=>{if(closed)throw new Error('Workflow service is closed.');return fn();});pending.add(promise);try{return await promise;}finally{pending.delete(promise);}};
