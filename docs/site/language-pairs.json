@@ -19,14 +19,14 @@
     {
       "source": "docs/features/access/README.md",
       "translation": "docs/features/access/README.zh-HK.md",
-      "sourceSha256": "35df266e0e3775a8306b2634eb0b93377285bb1689c44cada9aa043c8784dac1",
+      "sourceSha256": "0a95190a274fa987d9b47cb1f22d4ef0260a336da2ca9d3a1d192ee565b6b748",
       "translationSha256": "69da8a4614ca7e3161474daf9d28072d57f40b20b994f2e99cc97f5d16d01a28"
     },
     {
       "source": "docs/features/access/local-access.md",
       "translation": "docs/features/access/local-access.zh-HK.md",
-      "sourceSha256": "4168bdf93b9cb4af30eaeb1434c96463ac2c920d38ae984f4a669dda1d133345",
-      "translationSha256": "fc5dd2293657a56fc2984b66adc11ab043567e81200892bc50357106a6bae2d0"
+      "sourceSha256": "da05e177d8859e26e6d60b85b613afb0463984acf84cc0006aedb4d9876dc258",
+      "translationSha256": "3716e654c6e75a79796cde7dc3bfe54f642970f30c20a69a3b6ed12700eb2af7"
     },
     {
       "source": "docs/features/access/visitor-local-access.md",
@@ -535,14 +535,14 @@
     {
       "source": "docs/features/workflows/browser-native-host.md",
       "translation": "docs/features/workflows/browser-native-host.zh-HK.md",
-      "sourceSha256": "97c455f25640584a695224fc4815652232ccb097689fef0c092bfa6e65116157",
-      "translationSha256": "8ee4d70fcb4a43d0a8abd94fdbe5b52385c6c05eb04817be2228acbbfa67318a"
+      "sourceSha256": "441515255e593377dc684bdcd2076846e13032afd684fc59422c5eae6be21051",
+      "translationSha256": "b021054ebcff93f1b30273c824607d1d20e834bb5072e8a33d75b0fc9aff3237"
     },
     {
       "source": "docs/features/workflows/forge-publication.md",
       "translation": "docs/features/workflows/forge-publication.zh-HK.md",
-      "sourceSha256": "1142b899dd5e87367eec1dca25a4d220b1b777434c00ddcc63346eed41bf0550",
-      "translationSha256": "089878bf64746be95d9fe3f726d1c96cd4d8f8f6ac6452d19404b287e69eb0b5"
+      "sourceSha256": "10dab1685bc45f8988b97d34cf7559378324576626fc245b2aa80c8e1494d932",
+      "translationSha256": "2db90cc1227bdde5dfe6c4cc4abd77f7b77e60cc945c02dbe494442732066666"
     }
   ]
 }
