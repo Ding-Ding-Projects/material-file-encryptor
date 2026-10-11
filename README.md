@@ -20,6 +20,8 @@ Private-history controls now use registered Material actions, text/password/numb
 
 The appearance editor now uses registered Material action buttons and a registered nonmodal Close action in reviewed source. Original layer/group bindings, locks, awaited operations, rejection and target-focus restoration remain intact. A reviewed capture recipe now targets empty history and original nonmodal appearance controls without entering credentials; actual new-scene acceptance remains pending. State-tab anatomy, typed fields, uploads and other nested controls remain separate unfinished work; this action conversion does not claim complete visual-editor or Material conformance.
 
+Logo Fit/Reset actions also use registered Material buttons in reviewed source. The original callback and guidance promise remain authoritative, and removed controls cannot admit direct actions. Fourteen mounted cases pass, including a regression observed failing before the connection repair. Native upload/focal controls and genuine logo pixels/accessibility remain pending.
+
 ## What you can work on
 
 1. **Create and unlock a drive.** Choose encrypted storage, an encrypted cache and an unlock method, then access files through the Explorer drive. Read [drive integration](docs/features/drive/README.md) and [native storage](docs/features/storage/native-vault.md).

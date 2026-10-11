@@ -27,13 +27,13 @@ export function mountLogoEditor(root,services={}) {
  const box=doc.createElement('section');box.className='appearance-logo';
  const title=doc.createElement('h3');title.textContent=t('Application logo');const input=doc.createElement('input');input.type='file';input.accept='image/png,image/jpeg,image/webp';input.setAttribute('aria-label',t('Choose a local logo'));
  const preview=doc.createElement('img');preview.alt=t('Logo preview');preview.width=preview.height=64;const status=doc.createElement('p');status.setAttribute('role','status');
- const fit=doc.createElement('button');fit.textContent=`${t('Fit')}: ${t('contain')}`;let mode='contain',source;
+ const fit=doc.createElement('md-outlined-button');fit.type='button';fit.textContent=`${t('Fit')}: ${t('contain')}`;let mode='contain',source;
  const x=doc.createElement('input'),y=doc.createElement('input');for(const [control,label]of [[x,'Horizontal focal point'],[y,'Vertical focal point']]){control.type='range';control.min='0';control.max='1';control.step='.01';control.value='.5';control.setAttribute('aria-label',t(label));}
  const publish=async data=>{const accepted=await services.onChange?.(data);if(accepted===false)throw Error('The original control could not complete this action.');preview.src=data;};
  async function update(){if(!source)throw Error('Choose a local logo first.');const epoch=++generation;status.textContent=message('Converting locally…');const result=await convertLogo(source,{fit:mode,x:x.value,y:y.value});if(disposed||epoch!==generation)throw Error('This control is unavailable.');storage?.setItem(key,result.data);await publish(result.data);if(disposed||epoch!==generation)throw Error('This control is unavailable.');status.textContent=message('Converted to 128 × 128 PNG locally. Metadata and color profile are flattened.');return result;}
- const reset=doc.createElement('button');reset.textContent=t('Reset logo');
+ const reset=doc.createElement('md-outlined-button');reset.type='button';reset.textContent=t('Reset logo');
  box.append(title,input,fit,x,y,preview,reset,status);root.append(box);
- const wire=(control,name,action,eventType='click')=>{const binding=bindNestedConsumer(control,action,{eventType,available:()=>!disposed,onError:error=>status.textContent=message(error.message)});bindings.push(binding);guides.push(mountNestedGuidance(control,name,binding,{t,services,instance:name}));};
+ const wire=(control,name,action,eventType='click')=>{const binding=bindNestedConsumer(control,action,{eventType,available:()=>!disposed&&control.isConnected!==false,onError:error=>status.textContent=message(error.message)});bindings.push(binding);guides.push(mountNestedGuidance(control,name,binding,{t,services,instance:name}));};
  wire(input,'logo-file',()=>{source=input.files?.[0];return update();},'change');
  wire(fit,'logo-fit',()=>{mode=mode==='contain'?'cover':'contain';fit.textContent=`${t('Fit')}: ${t(mode)}`;return update();});
  for(const [control,name]of [[x,'logo-x'],[y,'logo-y']])wire(control,name,()=>{const value=Number(control.value);if(!Number.isFinite(value)||value<0||value>1)throw Error('A required value is invalid. Correct the original control before continuing.');return update();},'change');

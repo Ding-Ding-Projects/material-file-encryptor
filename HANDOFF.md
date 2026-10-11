@@ -1,3 +1,8 @@
+# Registered logo actions and detached-control repair, 2026-10-11 UTC
+
+Preserved52906a02a9ce56e9f07f5998fe269538f71e9a7b retainsc327af2 and passed two fresh independent reviews. Fit/Reset logo are registered md-outlined-button withtypebutton; original nested callbacks/promises, false/rejected results and disposal remain intact. Independently reproduced inherited detached-direct action admission is repaired by the logo-local connection check. The old mounted case was red; corrected14nested cases include detachedReset/Fit andeventsdeliveredafterdestroy. This does not cancel effects alreadyadmittedbeforedestruction. Nativefileupload/focalranges remainunchanged, actuallogo pixels/accessibility pending.
+
+Capture31252ed is integrated atd9155b3; ten actualscenes stillneedsource-boundexecution. Nativeobservere1909c8 is reviewed andpreserved, notintegrated/relaunched here. Original5d failure, unknownclosure/profile and allhistoricalevidence remainretained. FullMaterial/105IDs/210rows, fullmatrix andinstalledlifecycle remainunfinished; no deletionqualifies.
 # Source-ready history/appearance capture and retained native observer failure, 2026-10-11 UTC
 
 Preserved31252ed9b235f51fea984267121130776ce490bb passed two independent source reviews. The producer retains six scenes and adds empty locked-history password/action plus nonmodal appearance Close/action through original controls. Unique registered connected component, bounded updateComplete/twoframes/shadowcontent and viewport-intersection prerequisites preserve paintProof:false and diagnostic names; no credential entry/read/action or state injection. Actual ten-scene pixels remain pending.

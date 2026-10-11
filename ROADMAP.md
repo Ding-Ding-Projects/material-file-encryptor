@@ -1,3 +1,6 @@
+- [x] Independently review and integrate registered logo Fit/Reset plus detached-direct lifetime repair, with observed old-red/fixed-green mounted negatives. Source only.
+- [ ] Convert remaining logo upload/focal controls and verify actual logo keyboard/accessibility/pixels.
+
 - [x] Independently review source-only ten-scene capture prerequisites, including empty locked history and original nonmodal appearance actions.
 - [x] Verify exact5e63 complete live delivery:227files/8698references/163articles/fullwiki/About, including new paired history content.
 - [ ] Execute/inspect changed-source history and appearance scenes; repair actual unavailable/occluded states without injection.
