@@ -71,6 +71,7 @@ export function createAccessIntegration({dataDirectory,toolsDirectory,credential
   request(senderFrame,action,payload={}){
    if(closed||!senderFrame||typeof senderFrame!=='object'||senderFrame!==getMainFrame())return Promise.reject(Error('Trusted access actor is unavailable.'));
    if(credentialActions.has(action))validateCredentialRequest(action,payload);else validateAccessHostRequest(action,payload);
+   payload=structuredClone(payload);
    if(!actors.has(senderFrame))actors.set(senderFrame,randomUUID());const who=actors.get(senderFrame);
    return context.run({frame:senderFrame,actor:who},async()=>{
     const response=await (async()=>{actor();
