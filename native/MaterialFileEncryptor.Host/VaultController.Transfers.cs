@@ -158,20 +158,27 @@ internal sealed partial class VaultController
         var value=vault.JournalStatistics;
         return new { appendedBytes=value.AppendedBytes,appendedFrames=value.AppendedFrames,checkpointBytes=value.CheckpointBytes,checkpoints=value.Checkpoints,pendingFrames=value.PendingFrames };
     }
+    private object ForceLockResult(bool locked, bool busy, string code, int activeOperations, int queuedOperations) => new
+    {
+        locked, busy, code, activeOperations, queuedOperations,
+        activeFilesystemIo = fileSystem?.ActiveIoSnapshot ?? 0,
+        activePreparedOperations = Volatile.Read(ref activePreparedOperations),
+        activeSynchronization = Volatile.Read(ref syncFlight)
+    };
     private object ForceLock()
     {
         lock (admissionGate)
         {
             int transfers = operations.Outstanding;
             if (forceLocking || queuedCommands != 0 || activeCommands != 0 || transfers != 0)
-                return new { locked = false, busy = true, code = "operations-active", activeOperations = activeCommands + transfers, queuedOperations = queuedCommands };
-            if (!Monitor.TryEnter(gate)) return new { locked = false, busy = true, code = "crypto-active", activeOperations = 1, queuedOperations = 0 };
+                return ForceLockResult(false, true, "operations-active", activeCommands + transfers, queuedCommands);
+            if (!Monitor.TryEnter(gate)) return ForceLockResult(false, true, "crypto-active", 1, 0);
             try
             {
                 if (activePreparedOperations != 0 || Volatile.Read(ref syncFlight) != 0 || (fileSystem?.ActiveIo ?? 0) != 0)
-                    return new { locked = false, busy = true, code = "crypto-active", activeOperations = activePreparedOperations + (fileSystem?.ActiveIo ?? 0) + Volatile.Read(ref syncFlight), queuedOperations = 0 };
+                    return ForceLockResult(false, true, "crypto-active", activePreparedOperations + (fileSystem?.ActiveIo ?? 0) + Volatile.Read(ref syncFlight), 0);
                 if (fileSystem is not null && !fileSystem.BeginForceUnmount())
-                    return new { locked = false, busy = true, code = "crypto-active", activeOperations = 1, queuedOperations = 0 };
+                    return ForceLockResult(false, true, "crypto-active", 1, 0);
                 forceLocking = true;
             }
             finally { Monitor.Exit(gate); }
@@ -183,7 +190,7 @@ internal sealed partial class VaultController
             FileSystemHostDetach();
             LockEngine();
             Status();
-            return new { locked = true, busy = false, code = "locked", activeOperations = 0, queuedOperations = 0 };
+            return ForceLockResult(true, false, "locked", 0, 0);
         }
         finally { lock (admissionGate) forceLocking = false; }
     }

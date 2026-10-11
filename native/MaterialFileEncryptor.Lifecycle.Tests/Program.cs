@@ -32,6 +32,17 @@ try
     }
     Console.WriteLine("PASS control status returns cached snapshot while encryption is busy");
 
+    Set(controller, "activePreparedOperations", 2);
+    lock (Get(controller, "gate"))
+    {
+        var response = Task.Run(() => Json(Call(controller, "Execute", "forceLock", Json(new { }))));
+        Assert(response.Wait(TimeSpan.FromSeconds(1)), "Force-lock diagnostics waited for controller lock");
+        Assert(response.Result.GetProperty("activePreparedOperations").GetInt32() == 2, "Prepared-work snapshot was missing");
+        Assert(response.Result.GetProperty("activeFilesystemIo").GetInt32() == 0, "Absent filesystem reported active I/O");
+    }
+    Set(controller, "activePreparedOperations", 0);
+    Console.WriteLine("PASS force-lock diagnostics return without waiting for controller lock");
+
     var semaphore = (SemaphoreSlim)Get(controller, "commandWorker");
     await semaphore.WaitAsync();
     var pending = (Task<object?>)Call(controller, "DispatchAsync", "setHistoryRetention", Json(new { days = 7 }))!;
