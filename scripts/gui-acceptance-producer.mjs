@@ -28,14 +28,25 @@ export function createPackagedAdapters(context){
  return composeAdapters(context.inventory,baselineAdapters(context),createFoundationAdapters(context),createAccessAdapters(context),createRecordsAdapters(context),createPersonalizationAdapters(context),createToolsAdapters(context));
 }
 export async function readPackagedBuildBinding(target,buildReceiptPath){
- const bytes=await fs.readFile(buildReceiptPath),build=JSON.parse(bytes);
+ const originalPath=path.resolve(buildReceiptPath),originalBytes=await fs.readFile(originalPath),original=JSON.parse(originalBytes);
+ let bytes=originalBytes,build=original;
+ if(Object.hasOwn(original,'sourceCommitAtCompletion')){
+  assert.equal(original.command,'build.bat /s');assert.equal(original.sourceCommitAtCompletion,target.sourceCommit);
+  assert.equal(original.sourceDirtyAtStart,false);assert.equal(original.sourceDirtyAtCompletion,false);assert.equal(original.exitCode,0);
+  assert.equal(original.nativeHostSha256,target.hashes.nativeHost);
+  build={...original,sourceEndCommit:original.sourceCommitAtCompletion,sourceClean:!original.sourceDirtyAtStart&&!original.sourceDirtyAtCompletion,buildExitCode:original.exitCode,artifactSha256:original.executableSha256,asarSha256:original.archiveSha256,normalization:{derivedReceipt:true,originalPath,originalSha256:sha256(originalBytes)}};
+ }
  assert.equal(build.sourceCommit,target.sourceCommit);assert.equal(build.sourceEndCommit,target.sourceCommit);
  assert.equal(build.sourceClean,true);assert.equal(build.buildExitCode,0);
  assert.equal(build.artifactSha256,target.hashes.executable);assert.equal(build.asarSha256,target.hashes.asar);
  for(const [key,file]of Object.entries(target.files))assert.equal(sha256(await fs.readFile(file)),target.hashes[key]);
+ if(build!==original){
+  buildReceiptPath=originalPath+'.normalized.json';bytes=Buffer.from(JSON.stringify(build,null,2));
+  try{await fs.writeFile(buildReceiptPath,bytes,{flag:'wx'});}catch(error){if(error.code!=='EEXIST')throw error;assert.equal(sha256(await fs.readFile(buildReceiptPath)),sha256(bytes),'Existing normalized build receipt changed');}
+ }
  // A copied immutable package is admissible by the actual build's byte hashes.
  // This does not claim that its new filesystem location was the build output.
- return {sourceCommit:target.sourceCommit,artifactPath:target.executable,artifactSha256:target.hashes.executable,buildReceiptPath:path.resolve(buildReceiptPath),buildReceiptSha256:sha256(bytes),rendererAsarPath:target.files.asar,rendererAsarSha256:target.hashes.asar};
+ return {sourceCommit:target.sourceCommit,artifactPath:target.executable,artifactSha256:target.hashes.executable,buildReceiptPath:path.resolve(buildReceiptPath),buildReceiptSha256:sha256(bytes),originalBuildReceiptPath:originalPath,originalBuildReceiptSha256:sha256(originalBytes),rendererAsarPath:target.files.asar,rendererAsarSha256:target.hashes.asar};
 }
 
 export function runEvidenceJson(executable,args,input,env=process.env){
@@ -67,6 +78,7 @@ export async function acquirePackagedBaseline({opened,inventory,buildReceiptPath
  const executePlan=createPlanRecorder(opened.runRoot,plan=>runEvidenceJson(process.execPath,[cdp,'run'],plan,env));
  const observe=async()=>{
   assert.equal(await packagedVerifierHash(),binding.verifierSha256);
+  assert.equal(sha256(await fs.readFile(build.originalBuildReceiptPath)),build.originalBuildReceiptSha256);
   const window=await runEvidenceJson(python,[lowlevel,'wait-window','--state',receipt,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30'],undefined,env);
   const inspectionPlan=withCdpConnectionProof({version:1,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:30000,steps:[]},'capture');
   const bytes=await fs.readFile(receipt),current=JSON.parse(bytes),inspection=await runEvidenceJson(process.execPath,[cdp,'inspect'],inspectionPlan,env);
