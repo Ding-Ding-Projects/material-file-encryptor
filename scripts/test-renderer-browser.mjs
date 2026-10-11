@@ -79,7 +79,7 @@ export async function proveStableRendererTree(prove,{wait=ms=>new Promise(resolv
  for(let attempt=1;attempt<=3;attempt++){
   try{return await prove();}catch(error){
    const diagnostic=error.lifecycleObservation?.stderr?.trim(),result=error.lifecycleObservation?.result;
-   const transient=result?result.code==='PROCESS_PROOF_FAILED'&&result.error==='Process ancestry changed during inventory.':diagnostic?.endsWith('renderer_snapshot.SnapshotError: Process ancestry changed during inventory.');
+   const transient=result?(result.code==='PROCESS_PROOF_FAILED'&&result.error==='Process ancestry changed during inventory.')||(result.code==='NATIVE_DESCENDANT_MEMBERSHIP_CHANGED'&&result.error==='Native descendant membership changed around renderer target proof.'&&result.evidence?.before?.length>0&&result.evidence?.after?.length>0&&result.evidence?.final?.length>0):diagnostic?.endsWith('renderer_snapshot.SnapshotError: Process ancestry changed during inventory.');
    if(attempt===3||!transient)throw error;
    await wait(200*attempt);
   }
