@@ -1,4 +1,5 @@
 import { parseVocabulary, replaceVocabulary, filterGuides, updateGalleryGroups } from './preferences.js';
+import { createVocabularyStore, emptyVocabulary } from './personal-vocabulary.js';
 import { cantonese, localized, loadMessagePreferences, messagePair } from './locales.js';
 import { previewRelease, renderReleaseDownload } from './release.js';
 
@@ -7,6 +8,21 @@ renderReleaseDownload(document, previewRelease);
 let preferences;
 try { preferences = loadMessagePreferences(localStorage); } catch { preferences = loadMessagePreferences({ getItem: () => null }); }
 let vocabulary = { version: 1, replacements: [] };
+// The owning private-profile controller must authenticate before enabling wording.
+let privateWordingAvailable = false;
+let vocabularyStore = null;
+let pendingVocabularySource = null;
+const vocabularyStorageKey = 'material-file-encryptor.site.vocabulary.v1';
+export function setAuthenticatedLocalSession(authenticated) {
+  privateWordingAvailable = authenticated === true;
+  if (privateWordingAvailable) {
+    vocabularyStore = createVocabularyStore(localStorage, vocabularyStorageKey);
+    const result = pendingVocabularySource === null ? { vocabulary: vocabularyStore.current, persisted: vocabularyStore.persisted } : vocabularyStore.replace(pendingVocabularySource);
+    pendingVocabularySource = null; vocabulary = result.vocabulary;
+    vocabularyState = { kind: vocabulary.replacements.length ? 'success' : 'default', persisted: result.persisted };
+  } else { vocabulary = emptyVocabulary(); vocabularyStore = null; vocabularyState = { kind: pendingVocabularySource === null ? 'locked' : 'pending' }; }
+  renderCopy();
+}
 let vocabularyState = { kind: 'default' };
 const dynamic = '#search-status,#no-results,#vocabulary-status,#success-preview,#search-preview,output';
 const textRecords = [];
@@ -69,7 +85,7 @@ function updateMessages() {
   document.querySelector('#success-preview').textContent = pair('Example message: ', '訊息示例：') + friendly('success', 2);
   document.querySelector('#search-preview').textContent = pair('Example message: ', '訊息示例：') + friendly('search');
   vocabularyStatus.dataset.error = String(vocabularyState.kind === 'error');
-  vocabularyStatus.textContent = vocabularyState.kind === 'success' ? friendly('success', vocabulary.replacements.length)
+  vocabularyStatus.textContent = vocabularyState.kind === 'error' ? localized(vocabularyState.message, preferences.language) : !privateWordingAvailable ? (pendingVocabularySource === null ? 'Private wording is locked. Choose a file to validate it locally, then unlock your private profile to apply it.' : 'File validated locally. Unlock your private profile to apply its wording. Public text remains unchanged.') : vocabularyState.kind === 'success' ? friendly('success', vocabulary.replacements.length) + (vocabularyState.persisted ? ' Saved on this device.' : ' Active for this session only; storage failed.')
     : localized(vocabularyState.kind === 'error' ? vocabularyState.message : 'Default wording is active.', preferences.language);
   updateSearch();
 }
@@ -136,12 +152,13 @@ let uploadVersion = 0;
 vocabularyFile.addEventListener('change', async () => {
   const version = ++uploadVersion; const file = vocabularyFile.files[0]; if (!file) return;
   try {
-    if (file.size > 131072) throw new Error('Vocabulary JSON must be no larger than 128 KB.');
-    const next = parseVocabulary(await file.text()); if (version !== uploadVersion) return;
-    vocabulary = next; vocabularyState = { kind: 'success' }; renderCopy();
+    if (file.size > 256 * 1024) throw new Error('Vocabulary JSON must be no larger than 256 KiB.');
+    const source = await file.text(); const next = parseVocabulary(source); if (version !== uploadVersion) return;
+    if (!privateWordingAvailable) { pendingVocabularySource = source; vocabularyState = { kind: 'pending' }; updateMessages(); return; }
+    const result = vocabularyStore.replace(source); vocabulary = next; vocabularyState = { kind: 'success', persisted: result.persisted }; renderCopy();
   } catch (error) { if (version !== uploadVersion) return; vocabularyState = { kind: 'error', message: error.message }; updateMessages(); }
 });
-document.querySelector('#vocabulary-reset').addEventListener('click', () => { uploadVersion++; vocabulary = { version: 1, replacements: [] }; vocabularyFile.value = ''; vocabularyState = { kind: 'default' }; renderCopy(); });
+document.querySelector('#vocabulary-reset').addEventListener('click', () => { uploadVersion++; pendingVocabularySource = null; vocabulary = emptyVocabulary(); vocabularyFile.value = ''; let persisted = true; try { localStorage.removeItem(vocabularyStorageKey); } catch { persisted = false; } vocabularyStore?.clear(); vocabularyState = persisted ? { kind: 'default' } : { kind: 'error', message: 'Original wording restored for this session. Stored wording could not be removed.' }; renderCopy(); });
 renderCopy(); revealHash();
 
 // Native scrolling stays intact; this only reveals the themed thumb briefly.

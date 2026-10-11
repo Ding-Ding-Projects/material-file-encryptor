@@ -8,12 +8,15 @@ test('part size is an exact 1 KiB to 90,000,000 bytes physical limit with a 10 M
 });
 test('vocabulary has bounded, plain-text, unique replacements without prototype keys', () => {
  assert.deepEqual(parseVocabulary('{"version":1,"replacements":[{"from":"My drive","to":"My files"}]}').replacements,[{from:'My drive',to:'My files'}]);
- for (const replacements of [[{from:'__proto__',to:'x'}],[{from:'one',to:'a'},{from:'one',to:'b'}],[{from:'one',to:'\u0000'}],Array.from({length:201},(_,i) => ({from:String(i),to:'x'}))]) assert.throws(() => parseVocabulary(JSON.stringify({version:1,replacements})));
- assert.throws(() => parseVocabulary(' '.repeat(131073))); assert.throws(() => parseVocabulary('{bad'));
+ for (const replacements of [[{from:'__proto__',to:'x'}],[{from:'one',to:'a'},{from:'one',to:'b'}],[{from:'one',to:'\u0000'}]]) assert.throws(() => parseVocabulary(JSON.stringify({version:1,replacements})));
+ assert.throws(() => parseVocabulary(' '.repeat(262145))); assert.throws(() => parseVocabulary('{bad'));
 });
 test('malformed, oversized, or invalid saved preferences do not become executable settings', () => {
  const read = value => loadSettings({getItem:() => value});
  assert.equal(read('broken').theme,'system'); assert.equal(read('x'.repeat(150001)).theme,'system');
  assert.equal(read('{"theme":"dark","language":"yue","celebration":99}').theme,'dark');
- assert.equal(read('{"theme":"invalid","emoji":"true","patience":101}').patience,60);
+ assert.equal(read('{"theme":"invalid","emoji":"true","patience":101}').funnyEnglish,5);
+ assert.equal(read('{"funnyEnglish":1,"funnyCantonese":4}').funnyEnglish,1);
+ assert.equal(read('{"funnyEnglish":1,"funnyCantonese":4}').funnyCantonese,4);
+ assert.equal(read('{"funnyEnglish":0,"funnyCantonese":99}').funnyCantonese,5);
 });

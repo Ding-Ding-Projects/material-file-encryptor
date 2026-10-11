@@ -1,0 +1,302 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
+import { createHash } from 'node:crypto';
+import * as fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { createUpdateService, UPDATE_PROJECT } from '../src/main/update-service.js';
+
+async function fixture(t, options = {}) {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'update-service-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.mkdir(path.join(root, 'app-1.0.0')); await fs.mkdir(path.join(root, 'packages'));
+  await fs.writeFile(path.join(root, 'Update.exe'), 'test fixture only');
+  const bytes = Buffer.from('test package bytes, never executable');
+  const name = 'MaterialFileEncryptor-1.1.0-full.nupkg';
+  const digest = algorithm => createHash(algorithm).update(bytes).digest('hex');
+  const tag = 'v1.20.1', sha = 'a'.repeat(40);
+  const base = `https://github.com/${UPDATE_PROJECT}/releases/download/${tag}/`;
+  const release = { draft: false, prerelease: false, tag_name: tag,
+    html_url: `https://github.com/${UPDATE_PROJECT}/releases/tag/${tag}`,
+    assets: ['RELEASES', 'build-provenance.json', name].map(n => ({ name: n, size: n === name ? bytes.length : 100, browser_download_url: base + n })) };
+  const provenance = { schemaVersion: 1, unsignedInstaller: true, tag, sourceCommit: sha, packageVersion: '1.1.0',
+    assets: [{ name, bytes: bytes.length, sha256: digest('sha256') }] };
+  const releasesText = `${digest('sha1')} ${name} ${bytes.length}`;
+  provenance.assets.push({ name: 'RELEASES', bytes: Buffer.byteLength(releasesText), sha256: createHash('sha256').update(releasesText).digest('hex') });
+  release.assets.find(a => a.name === 'RELEASES').size = Buffer.byteLength(releasesText);
+  const ref = { ref: `refs/tags/${tag}`, object: { type: 'commit', sha } };
+  const routes = new Map([
+    [`https://api.github.com/repos/${UPDATE_PROJECT}/releases/latest`, () => JSON.stringify(release)],
+    [`https://api.github.com/repos/${UPDATE_PROJECT}/git/ref/tags/${tag}`, () => JSON.stringify(ref)],
+    [base + 'build-provenance.json', () => JSON.stringify(provenance)],
+    [base + 'RELEASES', () => releasesText],
+    [base + name, () => bytes],
+  ]);
+  const requested = [], native = new EventEmitter(), calls = [], dialogs = [];
+  native.setFeedURL = value => calls.push(['feed', value]);
+  native.checkForUpdates = () => { calls.push(['check']); queueMicrotask(() => native.emit('update-downloaded')); };
+  native.quitAndInstall = () => calls.push(['install']);
+  let active = false, leases = 0;
+  const config = { platform: 'win32', argv: [], autoSchedule: false,
+    app: { isPackaged: true, getVersion: () => '1.0.0', getPath: key => key === 'exe' ? path.join(root, 'app-1.0.0', 'MaterialFileEncryptor.exe') : root },
+    autoUpdater: native, dialog: { showMessageBox: async (...args) => { dialogs.push(args); return { response: 0 }; } },
+    isActiveWork: () => active, acquireInstallLease: () => { leases++; return () => leases--; }, prepareRestart: async () => {},
+    fetch: async (url, init) => { requested.push(url); assert.equal(init.redirect, 'manual'); assert.equal(init.credentials, 'omit'); assert.ok(routes.has(url), url); return new Response(routes.get(url)()); }, ...options };
+  const service = createUpdateService(config); t.after(() => service.dispose());
+  return { service, root, name, bytes, release, provenance, ref, routes, requested, native, calls, dialogs, config,
+    setActive: value => active = value, leases: () => leases,
+    stageNative: () => fs.writeFile(path.join(root, 'packages', name), bytes) };
+}
+test('unsupported and unpackaged contexts never fetch or invoke native updater', async t => {
+  const f = await fixture(t, { platform: 'linux' });
+  assert.equal((await f.service.check()).state, 'unavailable'); assert.deepEqual(f.requested, []); assert.deepEqual(f.calls, []);
+});
+test('check validates fixed project release source and real package version', async t => {
+  const f = await fixture(t); const states = []; f.service.on('status', s => states.push(s.state));
+  const result = await f.service.check(); assert.equal(result.state, 'available'); assert.equal(result.update.version, '1.1.0');
+  assert.deepEqual(states, ['checking', 'available']); assert.deepEqual(f.calls, []);
+  const copy = f.service.status(); copy.update.version = 'bad'; assert.equal(f.service.status().update.version, '1.1.0');
+});
+test('same package version remains current despite a newer release tag', async t => {
+  const f = await fixture(t); f.config.app.getVersion = () => '1.1.0';
+  assert.equal((await f.service.check()).state, 'current'); assert.deepEqual(f.calls, []);
+});
+for (const [label, mutate, expected] of [
+  ['foreign asset', f => { f.release.assets[0].browser_download_url = 'https://other.invalid/RELEASES'; }, 'INVALID_RELEASE_ASSET'],
+  ['draft', f => { f.release.draft = true; }, 'INVALID_RELEASE'],
+  ['source mismatch', f => { f.ref.object.sha = 'b'.repeat(40); }, 'SOURCE_COMMIT_MISMATCH'],
+  ['invalid digest', f => { f.provenance.assets[0].sha256 = 'wrong'; }, 'INVALID_PACKAGE_METADATA'],
+  ['modified feed', f => { f.routes.set([...f.routes.keys()].find(k => k.endsWith('/RELEASES')), () => `${'a'.repeat(40)} ../escape.nupkg 1`); }, 'RELEASES_HASH_MISMATCH'],
+]) test(`rejects ${label} before any native operation`, async t => {
+  const f = await fixture(t); mutate(f); const result = await f.service.check(); assert.equal(result.reason, expected); assert.deepEqual(f.calls, []);
+});
+test('offline and oversized metadata fail closed', async t => {
+  const f = await fixture(t, { fetch: async () => { throw new Error('sensitive server error'); } });
+  assert.equal((await f.service.check()).reason, 'UPDATE_OPERATION_FAILED');
+  const g = await fixture(t, { fetch: async () => new Response('x'.repeat(1024 * 1024 + 1)) });
+  assert.equal((await g.service.check()).reason, 'METADATA_TOO_LARGE');
+});
+test('download stages and verifies hashes without invoking native updater', async t => {
+  const f = await fixture(t); await f.service.check(); const result = await f.service.download();
+  assert.equal(result.state, 'ready'); assert.equal(result.stagedHashVerified, true); assert.deepEqual(f.calls, []);
+  assert.equal(result.rollbackSupported, false); assert.equal(result.nativeAcceptance, 'unverified');
+});
+test('corrupt package is removed and cannot become ready', async t => {
+  const f = await fixture(t); await f.service.check();
+  f.routes.set([...f.routes.keys()].find(k => k.endsWith(f.name)), () => Buffer.alloc(f.bytes.length));
+  assert.equal((await f.service.download()).reason, 'PACKAGE_HASH_MISMATCH');
+  assert.deepEqual(await fs.readdir(path.join(f.root, 'update-staging')), []); assert.deepEqual(f.calls, []);
+});
+test('Later and active work defer without native download', async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download(); f.setActive(true);
+  assert.equal((await f.service.installWhenSafe()).reason, 'ACTIVE_WORK'); assert.equal(f.dialogs.length, 0);
+  f.setActive(false); f.config.dialog.showMessageBox = async () => ({ response: 1 });
+  const result = await f.service.installWhenSafe(); assert.equal(result.state, 'ready'); assert.equal(result.deferred, true); assert.deepEqual(f.calls, []);
+});
+test('missing exclusive lease cannot install', async t => {
+  const f = await fixture(t, { acquireInstallLease: undefined }); await f.service.check(); await f.service.download();
+  assert.equal((await f.service.installWhenSafe()).reason, 'INSTALL_LEASE_UNAVAILABLE'); assert.deepEqual(f.calls, []);
+});
+test('explicit confirmation plus idle lease permits verified native restart request only', async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download(); await f.stageNative();
+  assert.equal((await f.service.installWhenSafe()).state, 'restart-requested');
+  assert.deepEqual(f.calls.map(c => c[0]), ['feed', 'check', 'install']); assert.equal(f.leases(), 0);
+  assert.match(f.dialogs[0][0].detail, /unsigned/); assert.equal(f.dialogs[0][0].defaultId, 1);
+  assert.equal(f.native.listenerCount('update-downloaded'), 0);
+});
+test('native cache corruption blocks restart and releases exclusive lease', async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download(); await f.stageNative();
+  await fs.writeFile(path.join(f.root, 'packages', f.name), Buffer.alloc(f.bytes.length));
+  assert.equal((await f.service.installWhenSafe()).reason, 'PACKAGE_HASH_MISMATCH');
+  assert.equal(f.calls.some(c => c[0] === 'install'), false); assert.equal(f.leases(), 0);
+});
+test('concurrent installation requests produce one dialog', async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download(); await f.stageNative();
+  await Promise.all([f.service.installWhenSafe(), f.service.installWhenSafe()]); assert.equal(f.dialogs.length, 1);
+});
+test('schedule is bounded, first-run delay respected, cancellation and disposal clear timers', async t => {
+  const timers = [], cleared = [];
+  const f = await fixture(t, { autoSchedule: true, argv: ['--squirrel-firstrun'], intervalMs: 1,
+    setTimer: (fn, delay) => { const timer = { fn, delay, unref() {} }; timers.push(timer); return timer; }, clearTimer: timer => cleared.push(timer) });
+  assert.equal(timers[0].delay, 10_000); await timers[0].fn();
+  assert.equal(timers.at(-1).delay, 15 * 60_000); f.service.cancelSchedule(); assert.ok(cleared.includes(timers.at(-1)));
+  f.service.dispose(); assert.equal((await f.service.check()).state, 'disposed');
+});
+test('disposal aborts metadata request and does not report a later success', async t => {
+  const f = await fixture(t, { fetch: async (_url, { signal }) => new Promise((_, reject) => signal.addEventListener('abort', () => reject(new Error('aborted')), { once: true })) });
+  const pending = f.service.check(); await new Promise(resolve => setTimeout(resolve, 10)); f.service.dispose();
+  assert.equal((await pending).state, 'disposed'); assert.deepEqual(f.calls, []);
+});
+test('native timeout removes observers and a late event cannot restart', async t => {
+  const timers = [];
+  const f = await fixture(t, { setTimer: (fn, delay) => { const timer = { fn, delay, unref() {} }; timers.push(timer); return timer; }, clearTimer: () => {} });
+  await f.service.check(); await f.service.download(); await f.stageNative();
+  f.native.checkForUpdates = () => {};
+  const pending = f.service.installWhenSafe();
+  while (f.service.status().state !== 'installing' || !timers.some(v => v.delay === 600_000)) await new Promise(resolve => setImmediate(resolve));
+  timers.find(v => v.delay === 600_000).fn();
+  assert.equal((await pending).reason, 'NATIVE_UPDATE_TIMED_OUT'); f.native.emit('update-downloaded');
+  assert.equal(f.calls.some(c => c[0] === 'install'), false); assert.equal(f.leases(), 0);
+});
+test('disposing native observation releases lease without pretending native cancellation', async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download(); f.native.checkForUpdates = () => {};
+  const pending = f.service.installWhenSafe();
+  while (f.native.listenerCount('update-downloaded') === 0) await new Promise(resolve => setImmediate(resolve));
+  f.service.dispose(); assert.equal((await pending).state, 'disposed'); assert.equal(f.leases(), 0);
+  assert.equal(f.native.listenerCount('update-downloaded'), 0); assert.equal(f.calls.some(c => c[0] === 'install'), false);
+});
+test('busy work introduced while confirmation is open prevents native updating', async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download();
+  f.config.dialog.showMessageBox = async () => { f.setActive(true); return { response: 0 }; };
+  assert.equal((await f.service.installWhenSafe()).reason, 'ACTIVE_WORK'); assert.deepEqual(f.calls, []); assert.equal(f.leases(), 0);
+});
+test('bilingual native confirmation retains conservative default and unsigned warning', async t => {
+  const f = await fixture(t, { getLanguage: () => 'bilingual' }); await f.service.check(); await f.service.download(); await f.stageNative();
+  await f.service.installWhenSafe(); const options = f.dialogs[0][0];
+  assert.match(options.detail, /未經簽署/); assert.match(options.detail, /unsigned/); assert.equal(options.cancelId, 1);
+});
+test('foreign release redirect is rejected before any redirected request', async t => {
+  const f = await fixture(t, { fetch: async url => url.endsWith('/latest') ? new Response(null, { status: 302, headers: { location: 'https://other.invalid/feed' } }) : assert.fail(url) });
+  assert.equal((await f.service.check()).reason, 'INVALID_DOWNLOAD_REDIRECT'); assert.deepEqual(f.calls, []);
+});
+test('missing installed updater reports the exact unavailable prerequisite without networking', async t => {
+  const f = await fixture(t); await fs.rm(path.join(f.root, 'Update.exe'));
+  assert.equal((await f.service.check()).reason, 'SQUIRREL_NOT_INSTALLED'); assert.deepEqual(f.requested, []);
+});
+test('restart preparation is awaited after final idle check and before native restart', async t => {
+  const order = [];
+  let completePreparation;
+  const f = await fixture(t, {
+    isActiveWork: () => { order.push('idle'); return false; },
+    prepareRestart: () => { order.push('prepare'); return new Promise(resolve => { completePreparation = resolve; }); },
+  });
+  await f.service.check(); await f.service.download(); await f.stageNative();
+  f.native.quitAndInstall = () => order.push('restart');
+  const pending = f.service.installWhenSafe();
+  while (!completePreparation) await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(order, ['idle', 'idle', 'idle', 'prepare']); assert.equal(f.leases(), 1);
+  completePreparation(); assert.equal((await pending).state, 'restart-requested');
+  assert.deepEqual(order, ['idle', 'idle', 'idle', 'prepare', 'restart']); assert.equal(f.leases(), 0);
+});
+for (const [label, prepareRestart, reason] of [
+  ['missing', undefined, 'RESTART_PREPARATION_REQUIRED'],
+  ['failed', async () => { throw new Error('DURABILITY_CHECK_FAILED'); }, 'DURABILITY_CHECK_FAILED'],
+]) test(`${label} restart preparation prevents native restart and retains recovery lease`, async t => {
+  const f = await fixture(t, { prepareRestart }); await f.service.check(); await f.service.download(); await f.stageNative();
+  assert.equal((await f.service.installWhenSafe()).reason, reason);
+  assert.equal(f.service.status().state, 'manual-restart-required');
+  assert.equal(f.calls.some(call => call[0] === 'install'), false); assert.equal(f.leases(), 1);
+  await f.service.dispose(); assert.equal(f.leases(), 1);
+  await f.service.dispose({ shutdown: true }); assert.equal(f.leases(), 0);
+});
+test('invalid native cache prevents restart preparation', async t => {
+  let prepared = false;
+  const f = await fixture(t, { prepareRestart: async () => { prepared = true; } });
+  await f.service.check(); await f.service.download(); await f.stageNative();
+  await fs.writeFile(path.join(f.root, 'packages', f.name), Buffer.alloc(f.bytes.length));
+  assert.equal((await f.service.installWhenSafe()).reason, 'PACKAGE_HASH_MISMATCH'); assert.equal(prepared, false);
+});
+test('yue selects Cantonese native confirmation', async t => {
+  const f = await fixture(t, { getLanguage: () => 'yue' }); await f.service.check(); await f.service.download(); await f.stageNative();
+  await f.service.installWhenSafe(); assert.equal(f.dialogs[0][0].title, '安裝更新');
+});
+async function reopen(t, f) {
+  f.service.dispose();
+  const next = createUpdateService(f.config);
+  t.after(() => next.dispose());
+  return next;
+}
+test('fresh service restores persisted ready only after fresh metadata and staged hash verification', async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download();
+  const record = JSON.parse(await fs.readFile(path.join(f.root, 'update-staging', 'ready.json'), 'utf8'));
+  assert.equal(record.schemaVersion, 1); assert.equal(path.basename(record.folder), record.folder); assert.equal(record.name, f.name);
+  assert.equal((await fs.readdir(path.join(f.root, 'update-staging'))).some(name => name.endsWith('.tmp')), false);
+  f.requested.length = 0;
+  const next = await reopen(t, f); assert.equal(next.status().state, 'idle');
+  const result = await next.check(); assert.equal(result.state, 'ready'); assert.equal(result.restoredFromCache, true);
+  assert.ok(f.requested.some(url => url.endsWith('/releases/latest'))); assert.ok(f.requested.some(url => url.includes('/git/ref/tags/')));
+  assert.deepEqual(f.calls, []);
+});
+test('corrupt staged package leaves fresh available state and never calls native updater', async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download();
+  const record = JSON.parse(await fs.readFile(path.join(f.root, 'update-staging', 'ready.json'), 'utf8'));
+  await fs.writeFile(path.join(f.root, 'update-staging', record.folder, record.name), Buffer.alloc(f.bytes.length));
+  const next = await reopen(t, f); assert.equal((await next.check()).state, 'available'); assert.deepEqual(f.calls, []);
+});
+test('changed release cannot restore previously staged ready state', async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download();
+  const oldTag = f.release.tag_name, newTag = 'v1.21.1';
+  f.release.tag_name = newTag; f.release.html_url = f.release.html_url.replace(oldTag, newTag);
+  for (const asset of f.release.assets) asset.browser_download_url = asset.browser_download_url.replace(oldTag, newTag);
+  f.provenance.tag = newTag; f.ref.ref = `refs/tags/${newTag}`;
+  for (const [url, body] of [...f.routes]) if (url.includes(oldTag)) { f.routes.delete(url); f.routes.set(url.replace(oldTag, newTag), body); }
+  const next = await reopen(t, f); const result = await next.check();
+  assert.equal(result.state, 'available'); assert.equal(result.update.tag, newTag); assert.deepEqual(f.calls, []);
+});
+for (const kind of ['missing', 'malformed', 'oversized', 'traversal', 'extra-field']) test(`${kind} ready record leaves validated available state intact`, async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download();
+  const filename = path.join(f.root, 'update-staging', 'ready.json');
+  const record = JSON.parse(await fs.readFile(filename, 'utf8'));
+  if (kind === 'missing') await fs.rm(filename);
+  else {
+    if (kind === 'traversal') record.folder = '../escape';
+    if (kind === 'extra-field') record.url = 'https://other.invalid/file';
+    await fs.writeFile(filename, kind === 'malformed' ? '{' : kind === 'oversized' ? 'x'.repeat(4097) : JSON.stringify(record));
+  }
+  const next = await reopen(t, f); assert.equal((await next.check()).state, 'available'); assert.deepEqual(f.calls, []);
+});
+test('offline fresh check cannot install from cached ready metadata', async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download();
+  f.config.fetch = async () => { throw new Error('offline'); };
+  const next = await reopen(t, f); assert.equal((await next.check()).state, 'failed');
+  await next.installWhenSafe(); assert.deepEqual(f.calls, []);
+});
+for (const interruption of ['timeout', 'native-error', 'dispose']) test(`held restart preparation survives ${interruption} without releasing admission`, async t => {
+  const timers = []; let completePreparation;
+  const f = await fixture(t, {
+    prepareRestart: () => new Promise(resolve => { completePreparation = resolve; }),
+    setTimer: (fn, delay) => { const timer = { fn, delay, unref() {} }; timers.push(timer); return timer; }, clearTimer: () => {},
+  });
+  await f.service.check(); await f.service.download(); await f.stageNative();
+  const install = f.service.installWhenSafe();
+  while (!completePreparation) await new Promise(resolve => setImmediate(resolve));
+  assert.equal(f.service.status().state, 'preparing-restart'); assert.equal(f.leases(), 1);
+  assert.equal(f.native.listenerCount('update-downloaded'), 0);
+  let disposal, disposed = false;
+  if (interruption === 'timeout') timers.find(timer => timer.delay === 600_000).fn();
+  if (interruption === 'native-error') f.native.emit('error', new Error('late native error'));
+  if (interruption === 'dispose') disposal = f.service.dispose().then(() => { disposed = true; });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(f.service.status().state, 'preparing-restart'); assert.equal(f.leases(), 1);
+  assert.equal(disposed, false); assert.equal(f.calls.some(call => call[0] === 'install'), false);
+  completePreparation();
+  assert.equal((await install).state, 'restart-requested'); await disposal;
+  assert.equal(f.calls.filter(call => call[0] === 'install').length, 1); assert.equal(f.leases(), 0);
+});
+test('partial host closure requires manual recovery and never silently reopens admission', async t => {
+  let rejectPreparation, hostPartiallyClosed = false;
+  const f = await fixture(t, { prepareRestart: () => {
+    hostPartiallyClosed = true;
+    return new Promise((_resolve, reject) => { rejectPreparation = reject; });
+  } });
+  await f.service.check(); await f.service.download(); await f.stageNative();
+  const install = f.service.installWhenSafe();
+  while (!rejectPreparation) await new Promise(resolve => setImmediate(resolve));
+  const disposal = f.service.dispose();
+  rejectPreparation(new Error('HOST_PARTIALLY_CLOSED'));
+  const result = await install; await disposal;
+  assert.equal(hostPartiallyClosed, true); assert.equal(result.state, 'manual-restart-required');
+  assert.equal(result.reason, 'HOST_PARTIALLY_CLOSED'); assert.equal(result.admissionBlocked, true);
+  assert.equal(f.leases(), 1); assert.equal(f.calls.some(call => call[0] === 'install'), false);
+  assert.equal((await f.service.check()).state, 'manual-restart-required');
+  await f.service.dispose({ shutdown: true }); assert.equal(f.leases(), 0);
+});
+test('native restart exception after preparation retains recovery admission', async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download(); await f.stageNative();
+  f.native.quitAndInstall = () => { throw new Error('NATIVE_RESTART_REQUEST_FAILED'); };
+  const result = await f.service.installWhenSafe();
+  assert.equal(result.state, 'manual-restart-required'); assert.equal(result.reason, 'NATIVE_RESTART_REQUEST_FAILED');
+  assert.equal((await f.service.check()).state, 'manual-restart-required'); assert.equal(f.leases(), 1);
+  await f.service.dispose({ shutdown: true }); assert.equal(f.leases(), 0);
+});

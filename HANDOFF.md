@@ -1,3 +1,17 @@
+# Current integration handoff
+
+The current source baseline is `d1ca1e4`; the source-bound native receipt identifies `3b9c5b4`. Main has not yet been pushed. All 208 desktop/site delivery rows remain `unverified`. Installed execution, native update and removal are explicitly deferred by the maintainer, not completed or waiting for an environment request.
+
+A real 512 MiB import completed and its full mounted SHA-256 matched. A second 2 GiB file was cancelled during work at 1,419,575,296 bytes through **Cancel unfinished work then quit**. After exit, reopening the encrypted fixture showed only the completed 512 MiB file with its exact hash; the cancelled file was absent, and the fixture was locked again. Owned-process absence and hidden-desktop closure passed. Cancellation acknowledgement latency and the final cryptographic block were not instrumented, so these timings remain unverified.
+
+The PNG GUI decoder remains unavailable while the direct provider loaded from the frozen application archive passes. Diagnosis is ongoing; the direct-provider result does not establish the GUI route. The earlier canonical vocabulary upload used 145 real entries and passed 17 mapped DOM checks plus 17 reload checks. A 1,025-entry synthetic file was accepted. No payload network transfer or export occurred.
+
+The broad JavaScript run recorded 586 tests: 564 passed, 2 failed and 20 skipped. Both failures require unavailable Playwright Chromium revision 1248; this is not a green run. The shared-instructions sweep recorded 84 checks: 83 passed, zero failed and one unverified Windows Bash check, with a separate exact Linux pass. These are distinct receipts, not an all-platform green verdict.
+
+Next: complete the PNG GUI diagnosis, preserve source-bound evidence, reconcile final documentation and push main only through the owning integration workflow. Retain deferred installed lifecycle checks as unverified. Preserve all historical records below.
+
+# Historical source-bound handoffs
+
 # Terminal preservation handoff, 2026-10-10
 
 The objective remains incomplete after the account preservation threshold. RRFA1q completed48/48 workspace configurations,32/48 dialog configurations and all13 baseline clear controls. It stopped with CLI_INVALID_RESULT after sequence94, during an independent direct wait-window observation. Raw child stdout, stderr and exit result were not retained; the exact underlying cause is unknown. All403 retained images were inspected:397 planned images have valid probes, three failed-tuple images are unvalidated, and three baselines are separate. Forty-five planned images are absent. Original graceful closure, process absence, hidden desktop closure, startup restoration and synthetic credential retirement passed. No fixture key existed.
@@ -314,3 +328,7 @@ Verification: [source-bound results](docs/features/release/preview-verification.
 ## Gallery pipeline candidate
 
 The gallery pipeline now groups the unchanged 14 historical originals by workflow, projects only approved public metadata and preserves every occurrence of identical image bytes. Two exclusions remain explicit. Twenty-seven focused checks pass, including a synthetic 445-occurrence case and privacy/search rejection regressions. Independent source review is complete with no remaining findings. Rendered acceptance and main integration remain pending. No current runtime original or new publication is claimed. See [the evidence contract](docs/features/desktop/runtime-evidence.md#reviewed-gallery-publication-pipeline).
+
+## Delivery-reference refresh
+
+The current review uses parent baseline `785fdf2` with ready revisions `4ca05780`, `455153bd`, `86c5cec`, `6ac06935` and `5f02f6c`. `contracts/feature-delivery.json` retains 208 unverified rows; 88 rows now carry concrete source mappings for 44 requirements on each surface. All 95 distinct referenced files resolve to an available reviewed commit. Ready source is not automatically described as integrated parent behavior, and no build interaction or screenshot is inferred. See [current integration boundaries](docs/features/platform/current-integration.md) before choosing the next verification step.

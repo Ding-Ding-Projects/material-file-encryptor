@@ -52,7 +52,7 @@ export function pageShell(home,title,body,{depth=0,search=true}={}) {
  const footer=home.match(/<footer class="container site-footer">[\s\S]*?<\/footer>/)[0];
  const dialog=home.match(/<dialog id="preferences-dialog"[\s\S]*?<\/dialog>/)[0];
  const navigation=(header+footer).replace(/href="#([^\"]+)"/g,(_,anchor)=>`href="${prefix}index.html#${anchor}"`);
- const linkedNavigation=navigation.replace(/href="(library|wiki|gallery)\.html"/g,(_,name)=>`href="${prefix}${name}.html"`);
+ const linkedNavigation=navigation.replace(/href="(library|wiki|gallery|workspace)\.html"/g,(_,name)=>`href="${prefix}${name}.html"`);
  const split=linkedNavigation.indexOf('<footer');
  const searchBox=`<div class="search-wrap publication-search" ${search?'':'hidden'}><label for="doc-search">Find in this page</label><div class="search-field"><input id="doc-search" type="search" maxlength="160" autocomplete="off"><button id="search-clear" type="button" aria-label="Clear documentation search" hidden>×</button></div><p id="search-status" class="small" role="status"></p></div>`;
  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>${escapeHtml(title)} · Material File Encryptor</title><meta name="description" content="Complete product documentation and source-bound capture records."><link rel="icon" href="${prefix}favicon.svg"><link rel="stylesheet" href="${prefix}site.css"><script type="module" src="${prefix}site.js"></script></head><body><a class="skip-link" href="#main">Skip to content</a>${linkedNavigation.slice(0,split)}<main id="main" class="container publication"><nav class="publication-nav" aria-label="Documentation navigation"><a href="${prefix}index.html">Home</a><a href="${prefix}library.html">Documentation library</a><a href="${prefix}wiki.html">Wiki</a><a href="${prefix}gallery.html">Capture gallery</a></nav>${searchBox}${body}<p id="no-results" class="no-results" hidden>No entries match this search.</p></main>${linkedNavigation.slice(split)}${dialog}</body></html>`;
@@ -64,7 +64,7 @@ async function markdownFiles(directory) {
 }
 export async function buildDocumentation(root,output,home) {
  const catalog=JSON.parse(await fs.readFile(path.join(root,'docs/site/content-catalog.json'),'utf8'));
- if(catalog.version!==1||!Array.isArray(catalog.articles)||new Set(catalog.articles).size!==catalog.articles.length||catalog.articles.some(file=>!/^docs\/features\/[a-z0-9/-]+\.md$/i.test(file)&&file!=='DESIGN.md'))throw new Error('Invalid documentation catalogue');
+ if(catalog.version!==1||!Array.isArray(catalog.articles)||new Set(catalog.articles).size!==catalog.articles.length||catalog.articles.some(file=>typeof file!=='string'||file.split('/').some(part=>part==='..')||(!/^docs\/features\/[a-z0-9/.-]+\.md$/i.test(file)&&file!=='DESIGN.md')))throw new Error('Invalid documentation catalogue');
  if(!/^[a-f0-9]{40}$/.test(catalog.wiki.sourceCommit)||catalog.wiki.source!==repository+'/wiki'||catalog.wiki.files.some(file=>!/^[-_a-z0-9]+\.md$/i.test(file)))throw new Error('Invalid wiki provenance');
  const actual=(await markdownFiles(path.join(root,'docs/features'))).map(file=>path.relative(root,file).replaceAll('\\','/')).sort();
  const expected=catalog.articles.filter(file=>file.startsWith('docs/features/')).sort();

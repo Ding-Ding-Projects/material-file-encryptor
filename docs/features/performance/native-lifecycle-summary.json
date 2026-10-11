@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "performanceReceiptSha256": "2d0b64de5057edb232f1386a38b4bb216623077eeaa08a761bd0c6e427e91be8",
+  "mountedReceiptSha256": "a009b856002c71c724135dceafa808f8d8325bb051e195c5d29748885ac335eb",
+  "performance": {
+    "schemaVersion": 1,
+    "recordedUtc": "2026-10-10T20:29:11.4953239-04:00",
+    "route": "synthetic-native-helper-protocol",
+    "hostSha256": "8C2F10F9BE848566F5890960AA7A842365724BBADB62EA270E4F77C0CCFDACEB",
+    "idle": {
+      "durationMilliseconds": 60004.3041,
+      "cpuMilliseconds": 453.125,
+      "logicalProcessorCount": 32,
+      "totalMachineCapacityPercent": 0.023598567573421787
+    },
+    "load": {
+      "inputBytes": 268435456,
+      "statusSamples": 30,
+      "runningSamples": 30,
+      "statusP50Milliseconds": 0.4573,
+      "statusP95Milliseconds": 0.7782,
+      "statusMaxMilliseconds": 0.855,
+      "cancelAcknowledgementMilliseconds": 2.3634,
+      "cancelAccepted": true,
+      "terminalState": "cancelled",
+      "cancelToTerminalMilliseconds": 541.3325,
+      "acknowledgementBudgetMilliseconds": 250,
+      "acknowledgementPassed": true,
+      "peakSampledWorkingSetBytes": 65277952,
+      "peakSampledPrivateBytes": 31629312
+    },
+    "memory": {
+      "helperManagedAllocatedBytes": null,
+      "helperManagedAllocatedBytesReason": "External process allocation instrumentation is not enabled. Working-set measurements are actual process samples.",
+      "plaintextImportBufferLimitBytes": 65536,
+      "admittedRequestMetadataBudgetBytes": 67043328,
+      "queueBudgetSource": "VaultController.Transfers.MaximumQueuedBytes; TransferOperationRegistry.Outstanding max64; source contract, not external heap instrumentation"
+    },
+    "core": {
+      "LegacyBytes": 4194304,
+      "AddedCiphertextBytes": 1793,
+      "EditMilliseconds": 27.1303,
+      "AllocatedBytes": 21187824,
+      "DurabilityPassed": true,
+      "AllocationScope": "Current thread: legacy edit plus FlushLocalOnly, excluding fixture creation; native helper allocations unmeasured"
+    },
+    "boundaries": [
+      "Synthetic files only; no mounted drive or user vault.",
+      "CPU percentage is normalized by logical processors and covers this helper only, not whole-computer satisfaction.",
+      "Status acknowledgement is not renderer input latency.",
+      "Core allocation metric is in-process and does not claim helper allocation totals."
+    ]
+  },
+  "mounted": {
+    "sourceCommit": "7e6877556da7aae8426d76d817c95c23fd33e719",
+    "helperSha256": "7ba9bb0c3ba575d32c7bd2688998d8f1f3270ff86dc0dd2a089e1f5b5c73d8a4",
+    "route": "native-helper-protocol-and-win32-mapped-io",
+    "guiUsed": false,
+    "checks": [
+      {
+        "name": "idle-open-handle-force-lock",
+        "verified": true,
+        "locked": true,
+        "driveAbsent": true
+      },
+      {
+        "name": "immediate-reunlock-with-old-idle-handle",
+        "verified": true
+      },
+      {
+        "name": "editor-temporary-save-and-open-handle-rename",
+        "verified": true
+      },
+      {
+        "name": "mapped-write-flush-and-reopen",
+        "verified": true,
+        "verifiedBytes": 4096
+      },
+      {
+        "name": "ordinary-close-retains-partial-file",
+        "verified": true,
+        "retainedBytes": 4096,
+        "semantics": "Close supplies no cancellation intent; written bytes remain."
+      },
+      {
+        "name": "explicit-delete-and-delete-on-close",
+        "verified": true
+      },
+      {
+        "name": "native-copy-progress-cancel",
+        "verified": true,
+        "win32Error": 1235,
+        "callbacks": 2,
+        "transferredBytes": 1048576,
+        "destinationExists": false,
+        "destinationBytes": 0,
+        "comparison": "cancel removes incomplete destination"
+      },
+      {
+        "name": "reference-copy-progress-stop",
+        "verified": true,
+        "win32Error": 1235,
+        "callbacks": 2,
+        "transferredBytes": 1048576,
+        "destinationExists": false,
+        "destinationBytes": 0,
+        "comparison": "measured normal-volume behavior"
+      },
+      {
+        "name": "native-copy-progress-stop",
+        "verified": true,
+        "win32Error": 1235,
+        "callbacks": 2,
+        "transferredBytes": 1048576,
+        "destinationExists": false,
+        "destinationBytes": 0,
+        "comparison": "measured normal-volume behavior"
+      },
+      {
+        "name": "mounted-managed-batch-cancellation",
+        "verified": true,
+        "cancelAcknowledgementMilliseconds": 1.9741,
+        "terminalState": "cancelled",
+        "completedFileRetained": true,
+        "originalDestinationRetained": true,
+        "incompleteFileAbsent": true
+      }
+    ],
+    "teardown": {
+      "mounted": false,
+      "driveAbsent": true,
+      "ownedFixtureRemoved": true
+    },
+    "complete": true
+  },
+  "unresolved": "Concurrent forced-detach mapped-writer native fatal exception remains unresolved; expected-detach classification is unknown. Ordinary success is not proof of full forced-detach safety."
+}
