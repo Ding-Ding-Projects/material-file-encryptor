@@ -25,8 +25,8 @@
     {
       "source": "docs/features/access/access-host.md",
       "translation": "docs/features/access/access-host.zh-HK.md",
-      "sourceSha256": "c45bdf4473774026e6f20dc9ea4260c45c060d6a694aad978ba39b0ec8d9a6bc",
-      "translationSha256": "0ea10f8fb51743e18ce2ccb4f5b38159adc6ba52cf65b026a3e3a22d27d5f499"
+      "sourceSha256": "e79e5382c30524e0515cefb25c7415a11c1af82e8e8aef2dc192e66da8d3d17d",
+      "translationSha256": "f3f0bcb3dec31678d3def989f8da83a17c29f75d415ede9ca53f9e81e0a5264b"
     },
     {
       "source": "docs/features/access/local-access.md",
@@ -181,8 +181,8 @@
     {
       "source": "docs/features/interface/local-personalization.md",
       "translation": "docs/features/interface/local-personalization.zh-HK.md",
-      "sourceSha256": "0f428c5faa05ab60531b1f3e95868dee2d03728f84a380628b32830d60059c25",
-      "translationSha256": "b9292455fb56c7a27a347bb4280fdb5a1e322f5b7781bff510bc08792c67dcd5"
+      "sourceSha256": "24ce4b1419bcc0e9858a020aa14750283c0971878ee49304e86cdcbd4de83627",
+      "translationSha256": "a51b21a71b39f2e40b520a4a2cb4b4846efe7e0d5c10d5966785f8e5a3aa6206"
     },
     {
       "source": "docs/features/interface/local-tools-workspaces.md",
@@ -349,8 +349,8 @@
     {
       "source": "docs/features/platform/current-integration.md",
       "translation": "docs/features/platform/current-integration.zh-HK.md",
-      "sourceSha256": "cf58e95fd8a8679a39649c9864d2ac0f6b5cb9a26891c0939050f9a51c2fe5c3",
-      "translationSha256": "caa3b988a52095cca96b8265acf15f785dcde13a6094b4d212b638c5d8b97898"
+      "sourceSha256": "5a14841e0c8142aa64055e6b82b11bfc7f8c8955f6a55f5d5b920b34715cd81e",
+      "translationSha256": "6becbab7f6502e751d8f1d351ee3bf13cae497ed3649be1653014150fc567e6a"
     },
     {
       "source": "docs/features/platform/documentation-and-status.md",
