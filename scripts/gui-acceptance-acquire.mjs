@@ -81,12 +81,12 @@ export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot
    const probeEvidence=await createProbeEvidence({outputRoot:directory,tuple,binding});
    assert.equal(typeof probeEvidence?.observe,'function');assert.equal(typeof probeEvidence?.persist,'function');
    const prepared=await adapter.prepare({tuple,binding,executePlan});assert.equal(prepared?.ownedSyntheticFixture,true);assert.equal(prepared?.sourceCommit,binding.sourceCommit);record.fixture=prepared;
-   const setup=makeAcquisitionPlan({launch,receipt,tuple,state,outputRoot:directory});await executePlan(setup);
+   const setup=makeAcquisitionPlan({launch,receipt,tuple,state,outputRoot:directory});await executePlan(setup);await adapter.enter?.({tuple,binding,executePlan,prepared});
    const observed=await adapter.assertState({tuple,executePlan});assert.equal(observed?.passed,true);assert.equal(observed?.observable,state.observable);record.state=observed;
    record.actions=[];for(const id of state.actions){const action=await adapter.actions[id]({tuple,executePlan});assert.equal(action?.id,id);assert.equal(action?.activated,true);assert.equal(action?.observablePassed,true);record.actions.push(action);await save();}
    // Actions can change the surface. Restore through the adapter and then
    // navigate normally before taking the state-specific capture.
-   await adapter.prepare({tuple,binding,executePlan});await executePlan(setup);assert.equal((await adapter.assertState({tuple,executePlan}))?.passed,true);
+   const restored=await adapter.prepare({tuple,binding,executePlan});assert.equal(restored?.ownedSyntheticFixture,true);assert.equal(restored?.sourceCommit,binding.sourceCommit);await executePlan(setup);await adapter.enter?.({tuple,binding,executePlan,prepared:restored});assert.equal((await adapter.assertState({tuple,executePlan}))?.passed,true);
    const capturePlan=withCdpConnectionProof({...setup,observeRuntime:true,steps:[poll('state-motion-settled',settledMotionExpression(state.selector)),{id:'state-surface-audit',op:'evaluate',expression:`(${inspectSurface.toString()})(document)`},{id:'state-measure',op:'evaluate',expression:layoutExpression(state.selector)},{id:'state-capture',op:'capture',path:path.join(directory,'capture.png'),overwrite:false}]},'capture');
    const before=await probeEvidence.observe();const captured=await executePlan(capturePlan);record.raw=captured;await save();
    const measurements=(captured.results||[]).filter(step=>step.id==='state-measure');assert.equal(measurements.length,1);assertMeasurement(measurements[0].value,tuple);
@@ -95,7 +95,7 @@ export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot
    const bytes=await fs.readFile(path.join(directory,'capture.png'));record.capture={path:path.relative(outputRoot,path.join(directory,'capture.png')),sha256:sha256(bytes)};
    record.status='captured-awaiting-inspection-and-reference';record.accepted=false;
   }catch(error){record.status='failed';record.reason=error.message;}
-  finally{await save();results.push({key,status:record.status,path:path.join(directory,'acquisition.json')});report(results.at(-1));}
+  finally{try{if(adapter.restore)record.restoration=await adapter.restore({tuple,binding,executePlan});}catch(error){record.status='restoration-failed';record.restorationReason=error.message;}await save();results.push({key,status:record.status,path:path.join(directory,'acquisition.json')});report(results.at(-1));}
  }
  return {schemaVersion:1,binding,results,accepted:false};
 }
