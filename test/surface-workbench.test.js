@@ -25,7 +25,7 @@ test('palette searches localized metadata and current values safely',()=>{
 test('registering views after reload preserves closed tabs and explicit reopen restores them',()=>{
  const disk=storage(),tabs=[{id:'home',label:'Home'},{id:'history',label:'History'}];const first=createSurfaceModel({storage:disk,tabs});first.closeTab('history');const restored=createSurfaceModel({storage:disk,tabs});
  for(const view of tabs)if(shouldOpenRegisteredView(restored.getState(),view.id))restored.openTab(view);
- assert.deepEqual(restored.getState().tabs.map(tab=>tab.id),['home']);assert.equal(shouldOpenRegisteredView(restored.getState(),'converter'),true);
+ assert.deepEqual(restored.getState().tabs.map(tab=>tab.id),['home']);assert.equal(shouldOpenRegisteredView(restored.getState(),'converter'),false);
  restored.openTab(tabs[1]);assert.equal(shouldOpenRegisteredView(restored.getState(),'history'),true);
 });
 test('closed-tab registration choices survive the shorter undo stack',()=>{

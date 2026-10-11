@@ -1,4 +1,4 @@
-import {control} from './controls.js';
+import {control,prepareControl} from './controls.js';
 import {IMAGE_TRANSFORM_SURFACE} from '../../renderer/features/personalization/image-geometry.js';
 import { localized } from './localization.js';
 
@@ -34,7 +34,7 @@ export const text = (en, yue) => ({ en, yue });
 
 export function element(tag, props = {}, children = []) {
   if (['button','input','textarea','select','option','dialog'].includes(tag)) return control(tag,props,children);
-  const node = document.createElement(tag);
+  const node = prepareControl(document.createElement(tag));
   for (const [key, value] of Object.entries(props)) {
     if (key === 'text') node.textContent = value;
     else if (key === 'class') node.className = value;
