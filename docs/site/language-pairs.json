@@ -127,8 +127,8 @@
     {
       "source": "docs/features/interface/README.md",
       "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "2b667e498f7e41f22264abaf9b83e41b72ea020bb773a19d2c3fd61210d4039a",
-      "translationSha256": "ae0bcc0b2edf23cc921a2e35cc9b7051f3fbdb87e64a1c8c6a5507b64a5a3fcc"
+      "sourceSha256": "ca41f0530a820549b0c13492ff8332a5d8dc14c3c69ba87af3620ede1a9327b4",
+      "translationSha256": "d297aef0c4c59b58698f04a4a2389ca6fc01683123efe7d88d5dfdd6d81027ac"
     },
     {
       "source": "docs/features/interface/appearance-editor.md",
@@ -429,6 +429,12 @@
       "translation": "docs/features/interface/bundled-fonts.zh-HK.md",
       "sourceSha256": "cd7fab86a7b23bd5a16009f96d0c3629c7d3938d8c204c1b57cd44a439d941cc",
       "translationSha256": "86dd22edcf3d8f082f296dcea2345a67918e9f49fbe0173597f7352738e0044a"
+    },
+    {
+      "source": "docs/features/interface/workbench-guidance.md",
+      "translation": "docs/features/interface/workbench-guidance.zh-HK.md",
+      "sourceSha256": "f237811ea3b72891b7f86ea6b273fc3f326d3f17e81f2c440d0800ec24d32f80",
+      "translationSha256": "62a9c4289b5b18df449513d9282904fe339ad5094b1815cb6ee5b793bad9b6ba"
     }
   ]
 }

@@ -33,3 +33,5 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 - [Local font metadata and variable axes](font-metadata.md)
 
 - [Complete local bundled fonts](bundled-fonts.md)
+
+- [Optional drawing and state-preview guidance](workbench-guidance.md)

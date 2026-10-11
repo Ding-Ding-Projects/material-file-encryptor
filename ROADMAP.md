@@ -1,3 +1,11 @@
+## Current source integration, 2026-10-11 UTC
+
+- [x] Revamp README and verify exact d2 cloud/package/live documentation delivery.
+- [ ] Optional workbench guidance: source and focused consumers pass; built visual and accessibility acceptance pending.
+- [ ] Typography: preserve reviewed source and repair inherited stepping and visible enhanced-search integration before delivery.
+- [ ] Pure Material Design 3 on every visible surface: mobile preferences diagnosis and full rendered matrix pending.
+- [ ] Complete the original installer/updater and all 210 surface acceptance rows.
+
 # Current continuation, 2026-10-11 UTC
 
 - [x] Verify exact main738 cloud production, normal v1.194.1 classification/source and all five independently downloaded release assets.

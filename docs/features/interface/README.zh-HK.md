@@ -33,3 +33,5 @@
 - [本機字型中繼資料同可變軸](font-metadata.zh-HK.md)
 
 - [完整本機隨附字型](bundled-fonts.zh-HK.md)
+
+- [繪畫同狀態預覽嘅可選指引](workbench-guidance.zh-HK.md)
