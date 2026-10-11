@@ -10,6 +10,10 @@ internal static class CngLegacyRegression
         foreach(int length in new[]{0,1,65535,65536,65537,200003,89999964})CheckLength(length);
         if(VaultEngine.LegacyReadBuffers.ActiveBytes!=0||VaultEngine.LegacyReadBuffers.PeakBytes>VaultEngine.LegacyReadBuffers.LimitBytes)throw new Exception("Legacy buffer accounting leaked or exceeded its bound.");
         if(TransferBufferBudget.Statistics.ActiveReservedBytes!=0)throw new Exception("Shared transfer reservation leaked.");
+        byte[] sensitive=Enumerable.Repeat((byte)123,65536).ToArray();var cleanupReservation=TransferBufferBudget.Reserve(sensitive.Length);bool cleanupFailed=false;
+        try{VaultEngine.StagedImport.DisposeWriterAndBuffer(()=>throw new IOException("Synthetic disposal failure"),sensitive,cleanupReservation);}
+        catch(IOException){cleanupFailed=true;}
+        if(!cleanupFailed||sensitive.Any(value=>value!=0)||TransferBufferBudget.Statistics.ActiveReservedBytes!=0)throw new Exception("Disposal failure skipped buffer cleanup.");
         using(TransferBufferBudget.Reserve(TransferBufferBudget.LimitBytes))
         {
             bool rejected=false;try{using var overflow=TransferBufferBudget.Reserve(1);}catch(IOException){rejected=true;}
