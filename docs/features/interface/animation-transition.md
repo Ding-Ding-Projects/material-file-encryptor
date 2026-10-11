@@ -35,7 +35,7 @@ No HTTP API is introduced; a Postman collection is not applicable.
 
 ## Explicit timing guidance inventory
 
-The following 49 handwritten concepts have bilingual explanation records. These 49 concepts mount the reviewed optional guide immediately above their exact fields, use the original change event and await its admitted consumer. A mounted-component test covers guided numeric persistence. Other motion controls, complete documentation-reader integration and genuine browser guidance acceptance remain pending.
+The following 59 handwritten concepts have bilingual explanation records. These 59 concepts mount the reviewed optional guide immediately above their exact fields, use the original change event and await its admitted consumer. A mounted-component test covers guided numeric persistence. Other motion controls, complete documentation-reader integration and genuine browser guidance acceptance remain pending.
 
 ### duration
 
@@ -969,3 +969,193 @@ Reset Preview playback speed to 1 or restart to reapply authored rates.
 
 
 Selected-handle inspection keeps document milliseconds and native progress percentages separate. Changing the selected clock resets the inspection playhead. Document looping does not drive native scroll/view progress; before/after comparison stops its observer.
+
+### schedule-name
+
+Schedule name
+
+Identify this local motion rule in its own schedule section.
+
+Plain text up to 120 characters.
+
+Motion schedule for a newly added rule.
+
+Changes the rule label without changing its stable identifier or precedence.
+
+Name a daytime preset rule Work motion.
+
+A bounded rule identifier and label are required by the local matcher.
+
+Rename the rule or remove it without deleting its saved preset.
+
+
+### schedule-enabled
+
+Schedule enabled
+
+Choose whether this individual motion schedule participates in clock matching.
+
+true or false.
+
+true for a newly added rule.
+
+Disabled rules are retained but cannot override the authored motion.
+
+Choose false to pause an evening rule without deleting its dates.
+
+The stored enabled state must be a Boolean.
+
+Choose true to re-enable the rule or remove it permanently.
+
+
+### scheduled-preset
+
+Scheduled preset
+
+Choose which saved motion snapshot this local rule activates.
+
+An existing named preset stored in this appearance layer.
+
+The first saved preset when the rule is added.
+
+A matching rule replaces the runtime model while retaining the authored model for restoration.
+
+Choose Quiet for a lower-motion preset during work hours.
+
+Unknown preset names and invalid preset effects are rejected before scheduling.
+
+Save a valid preset or choose another existing name.
+
+
+### schedule-start-time
+
+Schedule start time
+
+Set the inclusive local clock beginning of this motion rule.
+
+Complete 24-hour HH:mm text.
+
+09:00.
+
+A later start than end creates an overnight interval belonging to its starting day.
+
+Use 22:00 with 06:00 ending for an overnight preset.
+
+Incomplete or out-of-range hour/minute text is rejected.
+
+Restore 09:00 or disable the rule while correcting its interval.
+
+
+### schedule-end-time
+
+Schedule end time
+
+Set the exclusive local clock end of this motion rule.
+
+Complete 24-hour HH:mm text.
+
+17:00.
+
+Outside the final matching rule the authored motion returns; equal start/end means the whole day.
+
+Use 17:30 to stop applying a work preset at half past five.
+
+The end boundary is exclusive even when the interval crosses midnight.
+
+Restore 17:00 or inspect the selected timezone.
+
+
+### schedule-first-date
+
+Schedule first date
+
+Limit the earliest calendar date allowed to start this motion schedule.
+
+Empty or YYYY-MM-DD.
+
+Empty, with no first-date restriction.
+
+Date matching uses the rule timezone and overnight starting-day ownership.
+
+Use 2026-10-12 to begin after that local date starts.
+
+The first date cannot follow a supplied last date.
+
+Clear the first date to remove the lower calendar boundary.
+
+
+### schedule-last-date
+
+Schedule last date
+
+Limit the final starting calendar date belonging to this motion schedule.
+
+Empty or YYYY-MM-DD at or after the first date.
+
+Empty, with no last-date restriction.
+
+An overnight interval beginning on the last date may finish the following morning.
+
+Use 2026-10-16 to include rules starting that Friday.
+
+Reversed date boundaries are rejected.
+
+Clear the last date or move it after the first date.
+
+
+### schedule-timezone
+
+Schedule timezone
+
+Choose the timezone used by this rule independent of the host clock display.
+
+A supported IANA timezone name.
+
+The current device timezone when the rule is added.
+
+Matching uses Intl date/time parts; repeated local times match and missing local times do not occur.
+
+Use America/Toronto for a Toronto work-hours preset.
+
+Intl timezone construction must accept the supplied name.
+
+Choose UTC to isolate a timezone rejection or restore the device timezone.
+
+
+### schedule-priority
+
+Schedule priority
+
+Resolve which local motion preset wins when several rules match.
+
+An integer from -1000 through 1000.
+
+0.
+
+Higher priority wins; equal priorities use the lexical rule identifier.
+
+Use 10 for a quiet-hours override above a priority 0 daytime rule.
+
+Fractional or excessive priorities are rejected by the shared schedule validator.
+
+Reset Schedule priority to 0 and disable competing rules to inspect matching.
+
+
+### schedule-weekdays
+
+Schedule weekdays
+
+Choose the local starting weekdays eligible for this motion rule.
+
+A JSON array of distinct integers 0 through 6; Sunday is 0.
+
+Monday through Friday, represented by 1 through 5.
+
+Overnight matching retains the weekday of the interval starting date.
+
+Use [1,3,5] for Monday, Wednesday and Friday.
+
+At least one distinct valid weekday is required.
+
+Restore [1,2,3,4,5] or disable the schedule while editing its weekdays.
+
