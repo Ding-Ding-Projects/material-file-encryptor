@@ -1288,20 +1288,28 @@
       "id": "super-confirmation",
       "surface": "desktop",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/shared/surface/workflow-confirm.js",
+        "src/shared/surface/workflow-model.js"
+      ],
+      "documentation": [
+        "docs/features/surface-foundation/workflow-handoffs.md"
+      ],
+      "localization": [
+        "src/shared/surface/workflow-copy.js"
+      ],
+      "tests": [
+        "test/workflow-confirm.test.js",
+        "test/workflow-model.test.js"
+      ],
       "evidence": [],
       "reason": "Ordinary and typed confirmations exist, but the required two-independent-key plus full-range-slider flow is not established.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
-        "baseline": "37fa47a",
-        "readyCandidates": [
-          "2903fc5"
-        ],
-        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+        "baseline": "e824003bb9747068efe735dda97dee913bb4318b",
+        "readyCandidates": [],
+        "scope": "Integrated source references only. Complete surface behavior, localization, persistence, built interaction and visual acceptance remain unverified."
       },
       "persistence": [],
       "applicability": {
@@ -2031,20 +2039,28 @@
       "id": "external-editor",
       "surface": "desktop",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/main/workflow-services.js",
+        "src/shared/surface/workflow-tools.js"
+      ],
+      "documentation": [
+        "docs/features/surface-foundation/workflow-handoffs.md"
+      ],
+      "localization": [
+        "src/shared/surface/workflow-copy.js"
+      ],
+      "tests": [
+        "test/workflow-services.test.js",
+        "test/workflow-tools.test.js"
+      ],
       "evidence": [],
       "reason": "A complete external-editor selection, launch and safe return workflow is not established.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
-        "baseline": "37fa47a",
-        "readyCandidates": [
-          "2903fc5"
-        ],
-        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+        "baseline": "e824003bb9747068efe735dda97dee913bb4318b",
+        "readyCandidates": [],
+        "scope": "Integrated source references only. Complete surface behavior, localization, persistence, built interaction and visual acceptance remain unverified."
       },
       "persistence": [],
       "applicability": {
@@ -2063,20 +2079,28 @@
       "id": "download-handoff",
       "surface": "desktop",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/main/workflow-services.js",
+        "src/shared/surface/workflow-tools.js"
+      ],
+      "documentation": [
+        "docs/features/surface-foundation/workflow-handoffs.md"
+      ],
+      "localization": [
+        "src/shared/surface/workflow-copy.js"
+      ],
+      "tests": [
+        "test/workflow-services.test.js",
+        "test/workflow-tools.test.js"
+      ],
       "evidence": [],
       "reason": "A complete browser-extension download handoff and native receiver workflow is not established.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
-        "baseline": "37fa47a",
-        "readyCandidates": [
-          "2903fc5"
-        ],
-        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+        "baseline": "e824003bb9747068efe735dda97dee913bb4318b",
+        "readyCandidates": [],
+        "scope": "Integrated source references only. Complete surface behavior, localization, persistence, built interaction and visual acceptance remain unverified."
       },
       "persistence": [],
       "applicability": {
@@ -2095,20 +2119,28 @@
       "id": "forge-publishing",
       "surface": "desktop",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/main/workflow-services.js",
+        "src/shared/surface/workflow-tools.js"
+      ],
+      "documentation": [
+        "docs/features/surface-foundation/workflow-handoffs.md"
+      ],
+      "localization": [
+        "src/shared/surface/workflow-copy.js"
+      ],
+      "tests": [
+        "test/workflow-services.test.js",
+        "test/workflow-tools.test.js"
+      ],
       "evidence": [],
       "reason": "Storage transport is not a complete user-facing forge-publishing workflow; that feature remains unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
-        "baseline": "37fa47a",
-        "readyCandidates": [
-          "2903fc5"
-        ],
-        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+        "baseline": "e824003bb9747068efe735dda97dee913bb4318b",
+        "readyCandidates": [],
+        "scope": "Partial source mapping: prepared handoff, opening and export exist; actual publication execution is not established. No runtime completion is claimed."
       },
       "persistence": [],
       "applicability": {
@@ -3218,22 +3250,36 @@
       "id": "auto-updates",
       "surface": "desktop",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/main/update-service.js",
+        "src/main/restart-preparation.js",
+        "src/renderer/features/updates/index.js",
+        "src/main/main.js"
+      ],
+      "documentation": [
+        "docs/features/release/native-update-controller.md",
+        "docs/features/surface-foundation/updates-panel.md"
+      ],
+      "localization": [
+        "src/renderer/i18n.js"
+      ],
+      "tests": [
+        "test/update-service.test.js",
+        "test/restart-preparation.test.js",
+        "test/updates-panel.test.js"
+      ],
       "evidence": [],
       "reason": "Current Squirrel packaging does not establish the required scheduled update checks, validated feed, ready banner, deferred installation and rollback workflows.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
-        "baseline": "37fa47a",
-        "readyCandidates": [
-          "2903fc5"
-        ],
-        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+        "baseline": "e824003bb9747068efe735dda97dee913bb4318b",
+        "readyCandidates": [],
+        "scope": "Integrated source references only. Complete surface behavior, localization, persistence, built interaction and visual acceptance remain unverified."
       },
-      "persistence": [],
+      "persistence": [
+        "src/main/update-service.js"
+      ],
       "applicability": {
         "kind": "product",
         "applies": true,
@@ -3746,20 +3792,26 @@
       "id": "vocabulary-hash-lock",
       "surface": "desktop",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
+      "implementation": [
+        "scripts/check-vocabulary.mjs",
+        ".githooks/pre-push",
+        "scripts/build.ps1"
+      ],
+      "documentation": [
+        "docs/features/platform/instruction-currency.md"
+      ],
       "localization": [],
-      "tests": [],
+      "tests": [
+        "test/check-vocabulary.test.js"
+      ],
       "evidence": [],
       "reason": "No current runtime-derived private-source currency check or pre-push hook was established in the reviewed source; private dictionary data must never be added here.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
-        "baseline": "37fa47a",
-        "readyCandidates": [
-          "2903fc5"
-        ],
-        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+        "baseline": "e824003bb9747068efe735dda97dee913bb4318b",
+        "readyCandidates": [],
+        "scope": "Integrated source references only. Complete surface behavior, localization, persistence, built interaction and visual acceptance remain unverified."
       },
       "persistence": [],
       "applicability": {
@@ -5538,20 +5590,28 @@
       "id": "super-confirmation",
       "surface": "site",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/shared/surface/workflow-confirm.js",
+        "src/shared/surface/workflow-model.js"
+      ],
+      "documentation": [
+        "docs/features/surface-foundation/workflow-handoffs.md"
+      ],
+      "localization": [
+        "src/shared/surface/workflow-copy.js"
+      ],
+      "tests": [
+        "test/workflow-confirm.test.js",
+        "test/workflow-model.test.js"
+      ],
       "evidence": [],
       "reason": "Ordinary and typed confirmations exist, but the required two-independent-key plus full-range-slider flow is not established.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
-        "baseline": "37fa47a",
-        "readyCandidates": [
-          "2903fc5"
-        ],
-        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+        "baseline": "e824003bb9747068efe735dda97dee913bb4318b",
+        "readyCandidates": [],
+        "scope": "Integrated source references only. Complete surface behavior, localization, persistence, built interaction and visual acceptance remain unverified."
       },
       "persistence": [],
       "applicability": {
@@ -6281,20 +6341,28 @@
       "id": "external-editor",
       "surface": "site",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/main/workflow-services.js",
+        "src/shared/surface/workflow-tools.js"
+      ],
+      "documentation": [
+        "docs/features/surface-foundation/workflow-handoffs.md"
+      ],
+      "localization": [
+        "src/shared/surface/workflow-copy.js"
+      ],
+      "tests": [
+        "test/workflow-services.test.js",
+        "test/workflow-tools.test.js"
+      ],
       "evidence": [],
       "reason": "A complete external-editor selection, launch and safe return workflow is not established.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
-        "baseline": "37fa47a",
-        "readyCandidates": [
-          "2903fc5"
-        ],
-        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+        "baseline": "e824003bb9747068efe735dda97dee913bb4318b",
+        "readyCandidates": [],
+        "scope": "Integrated source references only. Complete surface behavior, localization, persistence, built interaction and visual acceptance remain unverified."
       },
       "persistence": [],
       "applicability": {
@@ -6313,20 +6381,28 @@
       "id": "download-handoff",
       "surface": "site",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/main/workflow-services.js",
+        "src/shared/surface/workflow-tools.js"
+      ],
+      "documentation": [
+        "docs/features/surface-foundation/workflow-handoffs.md"
+      ],
+      "localization": [
+        "src/shared/surface/workflow-copy.js"
+      ],
+      "tests": [
+        "test/workflow-services.test.js",
+        "test/workflow-tools.test.js"
+      ],
       "evidence": [],
       "reason": "A complete browser-extension download handoff and native receiver workflow is not established.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
-        "baseline": "37fa47a",
-        "readyCandidates": [
-          "2903fc5"
-        ],
-        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+        "baseline": "e824003bb9747068efe735dda97dee913bb4318b",
+        "readyCandidates": [],
+        "scope": "Integrated source references only. Complete surface behavior, localization, persistence, built interaction and visual acceptance remain unverified."
       },
       "persistence": [],
       "applicability": {
@@ -6345,20 +6421,28 @@
       "id": "forge-publishing",
       "surface": "site",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/main/workflow-services.js",
+        "src/shared/surface/workflow-tools.js"
+      ],
+      "documentation": [
+        "docs/features/surface-foundation/workflow-handoffs.md"
+      ],
+      "localization": [
+        "src/shared/surface/workflow-copy.js"
+      ],
+      "tests": [
+        "test/workflow-services.test.js",
+        "test/workflow-tools.test.js"
+      ],
       "evidence": [],
       "reason": "Storage transport is not a complete user-facing forge-publishing workflow; that feature remains unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
-        "baseline": "37fa47a",
-        "readyCandidates": [
-          "2903fc5"
-        ],
-        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+        "baseline": "e824003bb9747068efe735dda97dee913bb4318b",
+        "readyCandidates": [],
+        "scope": "Partial source mapping: prepared handoff, opening and export exist; actual publication execution is not established. No runtime completion is claimed."
       },
       "persistence": [],
       "applicability": {
@@ -7468,22 +7552,36 @@
       "id": "auto-updates",
       "surface": "site",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "implementation": [
+        "src/main/update-service.js",
+        "src/main/restart-preparation.js",
+        "src/renderer/features/updates/index.js",
+        "src/main/main.js"
+      ],
+      "documentation": [
+        "docs/features/release/native-update-controller.md",
+        "docs/features/surface-foundation/updates-panel.md"
+      ],
+      "localization": [
+        "src/renderer/i18n.js"
+      ],
+      "tests": [
+        "test/update-service.test.js",
+        "test/restart-preparation.test.js",
+        "test/updates-panel.test.js"
+      ],
       "evidence": [],
       "reason": "Current Squirrel packaging does not establish the required scheduled update checks, validated feed, ready banner, deferred installation and rollback workflows.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
-        "baseline": "37fa47a",
-        "readyCandidates": [
-          "2903fc5"
-        ],
-        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+        "baseline": "e824003bb9747068efe735dda97dee913bb4318b",
+        "readyCandidates": [],
+        "scope": "Integrated source references only. Complete surface behavior, localization, persistence, built interaction and visual acceptance remain unverified."
       },
-      "persistence": [],
+      "persistence": [
+        "src/main/update-service.js"
+      ],
       "applicability": {
         "kind": "product",
         "applies": true,
@@ -7996,20 +8094,26 @@
       "id": "vocabulary-hash-lock",
       "surface": "site",
       "status": "unverified",
-      "implementation": [],
-      "documentation": [],
+      "implementation": [
+        "scripts/check-vocabulary.mjs",
+        ".githooks/pre-push",
+        "scripts/build.ps1"
+      ],
+      "documentation": [
+        "docs/features/platform/instruction-currency.md"
+      ],
       "localization": [],
-      "tests": [],
+      "tests": [
+        "test/check-vocabulary.test.js"
+      ],
       "evidence": [],
       "reason": "No current runtime-derived private-source currency check or pre-push hook was established in the reviewed source; private dictionary data must never be added here.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
-        "baseline": "37fa47a",
-        "readyCandidates": [
-          "2903fc5"
-        ],
-        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+        "baseline": "e824003bb9747068efe735dda97dee913bb4318b",
+        "readyCandidates": [],
+        "scope": "Integrated source references only. Complete surface behavior, localization, persistence, built interaction and visual acceptance remain unverified."
       },
       "persistence": [],
       "applicability": {
@@ -8516,7 +8620,7 @@
     "src/renderer/preferences.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "src/renderer/features/access/profile.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "docs/features/interface/personal-vocabulary.md": "37fa47a209057f08a60f85510f6852ad7f8823c7",
-    "src/renderer/i18n.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
+    "src/renderer/i18n.js": "e824003bb9747068efe735dda97dee913bb4318b",
     "test/personal-vocabulary.test.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "test/private-wording-view.test.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "src/shared/surface/registry.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
@@ -8585,7 +8689,7 @@
     "test/ollama-runtime.test.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "test/ollama-regex.test.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "src/shared/surface/notification-audio.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
-    "src/main/main.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
+    "src/main/main.js": "e824003bb9747068efe735dda97dee913bb4318b",
     "test/notification-audio.test.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "src/features/converter/service.mjs": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "src/features/converter/windows-sandbox.mjs": "37fa47a209057f08a60f85510f6852ad7f8823c7",
@@ -8626,7 +8730,7 @@
     "docs/features/surface-foundation/README.md": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "build.bat": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "build-installer.bat": "37fa47a209057f08a60f85510f6852ad7f8823c7",
-    "scripts/build.ps1": "37fa47a209057f08a60f85510f6852ad7f8823c7",
+    "scripts/build.ps1": "e824003bb9747068efe735dda97dee913bb4318b",
     "docs/features/desktop/README.md": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "README.md": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "test/site-build-entrypoint.test.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
@@ -8651,6 +8755,28 @@
     "docs/features/ollama/README.md": "2903fc50b23913330c30d884618891260adccd09",
     "HANDOFF.md": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "CLOSEOUT_PROMPT.md": "37fa47a209057f08a60f85510f6852ad7f8823c7",
-    "scripts/modern-ui-check.mjs": "37fa47a209057f08a60f85510f6852ad7f8823c7"
+    "scripts/modern-ui-check.mjs": "37fa47a209057f08a60f85510f6852ad7f8823c7",
+    "src/shared/surface/workflow-confirm.js": "e824003bb9747068efe735dda97dee913bb4318b",
+    "src/shared/surface/workflow-model.js": "e824003bb9747068efe735dda97dee913bb4318b",
+    "docs/features/surface-foundation/workflow-handoffs.md": "e824003bb9747068efe735dda97dee913bb4318b",
+    "src/shared/surface/workflow-copy.js": "e824003bb9747068efe735dda97dee913bb4318b",
+    "test/workflow-confirm.test.js": "e824003bb9747068efe735dda97dee913bb4318b",
+    "test/workflow-model.test.js": "e824003bb9747068efe735dda97dee913bb4318b",
+    "src/main/workflow-services.js": "e824003bb9747068efe735dda97dee913bb4318b",
+    "src/shared/surface/workflow-tools.js": "e824003bb9747068efe735dda97dee913bb4318b",
+    "test/workflow-services.test.js": "e824003bb9747068efe735dda97dee913bb4318b",
+    "test/workflow-tools.test.js": "e824003bb9747068efe735dda97dee913bb4318b",
+    "src/main/update-service.js": "e824003bb9747068efe735dda97dee913bb4318b",
+    "src/main/restart-preparation.js": "e824003bb9747068efe735dda97dee913bb4318b",
+    "src/renderer/features/updates/index.js": "e824003bb9747068efe735dda97dee913bb4318b",
+    "docs/features/release/native-update-controller.md": "e824003bb9747068efe735dda97dee913bb4318b",
+    "docs/features/surface-foundation/updates-panel.md": "e824003bb9747068efe735dda97dee913bb4318b",
+    "test/update-service.test.js": "e824003bb9747068efe735dda97dee913bb4318b",
+    "test/restart-preparation.test.js": "e824003bb9747068efe735dda97dee913bb4318b",
+    "test/updates-panel.test.js": "e824003bb9747068efe735dda97dee913bb4318b",
+    "scripts/check-vocabulary.mjs": "e824003bb9747068efe735dda97dee913bb4318b",
+    ".githooks/pre-push": "e824003bb9747068efe735dda97dee913bb4318b",
+    "docs/features/platform/instruction-currency.md": "e824003bb9747068efe735dda97dee913bb4318b",
+    "test/check-vocabulary.test.js": "e824003bb9747068efe735dda97dee913bb4318b"
   }
 }
