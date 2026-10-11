@@ -72,13 +72,15 @@ export function createAccessAdapters({launch,receipt,inventory,prepareOwnedFixtu
   }else if(id==='verify-secret-preview-hidden'){
    await execute(executePlan,id,privacy,true);
   }else if(id==='filter-authenticators'){
+   await execute(executePlan,id+'-before','(()=>{const rows=[...document.querySelectorAll("#access-panel-authenticator [data-entry-id]")].filter(el=>!el.hidden&&el.getClientRects().length);if(!rows.length)throw Error("Nonempty visible authenticator fixture required");window.__accessFilterIds=rows.map(el=>el.dataset.entryId);return true;})()');
    await execute(executePlan,id,'(()=>{const search=document.querySelector("#access-panel-authenticator mfe-search");const el=search?.shadowRoot?.querySelector("md-outlined-text-field");if(!el||el.disabled)throw Error("Authenticator search unavailable");el.value="no-synthetic-match-acceptance";el.dispatchEvent(new Event("input",{bubbles:true,composed:true}));return true;})()');
-   await execute(executePlan,id+'-result','[...document.querySelectorAll("#access-panel-authenticator [data-entry-id]")].every(el=>el.hidden)',true);
+   await execute(executePlan,id+'-result','(()=>{const ids=window.__accessFilterIds,rows=[...document.querySelectorAll("#access-panel-authenticator [data-entry-id]")];return Array.isArray(ids)&&ids.length>0&&ids.every(id=>rows.some(el=>el.dataset.entryId===id&&el.hidden));})()',true);
   }else if(id==='create-ticket'){
+   await execute(executePlan,id+'-before','(()=>{window.__accessTicketIds=[...document.querySelectorAll("[data-ticket-id]")].map(el=>el.dataset.ticketId);return true;})()');
    await execute(executePlan,id+'-category',change('[data-access-field=category]','Synthetic acceptance'));
    await execute(executePlan,id+'-description',change('[data-access-field=description]','Synthetic local support fixture.'));
    await execute(executePlan,id,click(actionSelector('create-local-ticket','#access-panel-support')));
-   await execute(executePlan,id+'-result','[...document.querySelectorAll("[data-ticket-id]")].some(el=>el.textContent.includes("Synthetic local support fixture."))',true);
+   await execute(executePlan,id+'-result','(()=>{const before=window.__accessTicketIds,rows=[...document.querySelectorAll("[data-ticket-id]")],added=rows.filter(el=>!before.includes(el.dataset.ticketId));return rows.length===before.length+1&&added.length===1&&added[0].textContent.includes("Synthetic local support fixture.");})()',true);
   }else if(id==='select-visible'){
    await execute(executePlan,id,click(actionSelector('select-visible','#access-panel-support')));
    await execute(executePlan,id+'-result','(()=>{const rows=[...document.querySelectorAll("[data-ticket-id]")].filter(el=>!el.hidden);return rows.length>0&&rows.every(row=>row.querySelector("md-checkbox")?.checked);})()',true);
