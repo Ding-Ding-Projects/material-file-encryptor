@@ -40,9 +40,21 @@ does not call `mutate`. All admitted changes await that original callback,
 which must retain the editor's validation, permissions, persistence and history.
 The picker does not create a second storage or history path.
 
+Only one metadata scan can run at a time, even with different request identifiers.
+Cancel the active scan or wait for it to finish before starting another. Raw tag
+bytes are validated before decoding. Unicode name records above 2048 bytes and
+cumulative decoded name work above 4 MiB per file are rejected before decoding;
+the name loop yields and checks cancellation every 64 records, including repeated
+references to the same string storage.
+
 The callback receives `fontFamily` and `fontVariationSettings`. The latter uses
 validated axis tags and finite bounded numbers. Selecting a family does not
-guarantee selection of a distinct installed style face; explicit face mapping,
+guarantee selection of a distinct installed style face. The picker rejects
+non-Regular/Normal styles until exact mapping exists, and rejects variable axes
+when more than one catalogue face shares the family. A uniquely mapped regular
+face applies explicit normal style and weight 400 alongside its axis settings.
+This conservative refusal does not prove which face a renderer actually used.
+Explicit face mapping,
 bundled-font merging, full typography controls and rendered evidence remain
 separate pending integration work. The caller owns cancellation and atomicity
 of a mutation already admitted when the picker is destroyed.

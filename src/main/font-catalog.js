@@ -4,15 +4,16 @@ import path from 'node:path';
 const abort=signal=>signal?.throwIfAborted();
 const bounded=(offset,length,size)=>{if(!Number.isSafeInteger(offset)||!Number.isSafeInteger(length)||offset<0||length<0||offset>size-length)throw Error('Font table exceeds file bounds.');};
 const fixed=(buffer,offset)=>buffer.readInt32BE(offset)/65536;
-const tag=(buffer,offset)=>buffer.toString('ascii',offset,offset+4);
+const tag=(buffer,offset)=>{for(let i=offset;i<offset+4;i++)if(buffer[i]<32||buffer[i]>126)throw Error('Invalid raw font tag bytes.');return buffer.toString('ascii',offset,offset+4);};
+const yieldRead=()=>new Promise(resolve=>setImmediate(resolve));
 
 /** Read only directory, naming and variation tables. Resource limits reject an
  * unsupported table explicitly, without truncating the inventory. */
 export async function readFontMetadata(read,size,{signal}={}){
  const bytes=async(offset,length)=>{abort(signal);bounded(offset,length,size);const result=await read(offset,length);if(result.length!==length)throw Error('Font changed or ended during read.');abort(signal);return result;};
  const head=await bytes(0,12);let offsets=[0];
- if(tag(head,0)==='ttcf'){const version=head.readUInt32BE(4);if(![0x10000,0x20000].includes(version))throw Error('Unsupported collection version.');const count=head.readUInt32BE(8);if(!count||count>4096)throw Error('Unsupported collection directory size.');const table=await bytes(12,count*4);offsets=Array.from({length:count},(_,i)=>table.readUInt32BE(i*4));}
- const faces=[];let metadataBytes=0;
+ if(head.subarray(0,4).equals(Buffer.from('ttcf'))){const version=head.readUInt32BE(4);if(![0x10000,0x20000].includes(version))throw Error('Unsupported collection version.');const count=head.readUInt32BE(8);if(!count||count>4096)throw Error('Unsupported collection directory size.');const table=await bytes(12,count*4);offsets=Array.from({length:count},(_,i)=>table.readUInt32BE(i*4));}
+ const faces=[];let metadataBytes=0,decodedBytes=0;
  for(const [faceIndex,offset]of offsets.entries()){
   const header=await bytes(offset,12),signature=header.readUInt32BE(0);if(![0x10000,0x4f54544f,0x74727565].includes(signature))throw Error('Unsupported font outline format.');
   const count=header.readUInt16BE(4);if(!count||count>4096)throw Error('Unsupported font table directory size.');
@@ -24,7 +25,8 @@ export async function readFontMetadata(read,size,{signal}={}){
   const nameCount=names.readUInt16BE(2),strings=names.readUInt16BE(4);bounded(6,nameCount*12,names.length);const nameMap=new Map();
   for(let i=0;i<nameCount;i++){
    const at=6+i*12,platform=names.readUInt16BE(at),encoding=names.readUInt16BE(at+2),language=names.readUInt16BE(at+4),id=names.readUInt16BE(at+6),length=names.readUInt16BE(at+8),start=strings+names.readUInt16BE(at+10);bounded(start,length,names.length);
-   if(![0,3].includes(platform)||(platform===3&&![0,1,10].includes(encoding)))continue;
+   if(i%64===0){await yieldRead();abort(signal);}if(![0,3].includes(platform)||(platform===3&&![0,1,10].includes(encoding)))continue;
+   if(length>2048)throw Error('Unsupported font name length.');decodedBytes+=length;if(decodedBytes>4*1024*1024)throw Error('Unsupported cumulative font name decoding work.');
    if(length%2)throw Error('Invalid Unicode font name.');let value='';for(let n=start;n<start+length;n+=2)value+=String.fromCharCode(names.readUInt16BE(n));value=value.replace(/[\x00-\x1f\x7f]/g,'').trim();
    if(value&&value.length<=1024){const rank=language===0x409?3:platform===0?2:1;if(!nameMap.has(id)||nameMap.get(id).rank<rank)nameMap.set(id,{value,rank});}
   }
@@ -48,6 +50,7 @@ export async function readFontMetadata(read,size,{signal}={}){
 }
 
 export function parseFontBuffer(buffer,options){return readFontMetadata(async(offset,length)=>buffer.subarray(offset,offset+length),buffer.length,options);}
+export function createFontScanAdmission(){const active=new Map();return{async run(id,operation){if(typeof id!=='string'||!/^[a-zA-Z0-9_-]{1,80}$/.test(id))throw Error('Invalid font metadata request.');if(active.size)throw Error('A font metadata scan is already active. Cancel it or wait for completion.');const controller=new AbortController();active.set(id,controller);try{return await operation(controller.signal);}finally{active.delete(id);}},cancel(id){const controller=active.get(id);controller?.abort();return !!controller;},cancelAll(){for(const controller of active.values())controller.abort();}};}
 const inside=(root,candidate)=>{const relative=path.relative(root,candidate);return relative===''||(!relative.startsWith('..'+path.sep)&&relative!=='..'&&!path.isAbsolute(relative));};
 
 /** Standard Windows locations only. No registry traversal, font mutation,

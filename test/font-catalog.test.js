@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseFontBuffer,readFontMetadata,collectInstalledFontMetadata} from '../src/main/font-catalog.js';
-import {validateFontAxes,fontVariationCSS,mountFontPicker} from '../src/renderer/features/personalization/font-picker.js';
+import {parseFontBuffer,readFontMetadata,collectInstalledFontMetadata,createFontScanAdmission} from '../src/main/font-catalog.js';
+import {validateFontAxes,fontVariationCSS,mountFontPicker,validateFontFaceSelection} from '../src/renderer/features/personalization/font-picker.js';
 import path from 'node:path';
 import {validateFeatureRequest} from '../src/main/validation.js';
 
@@ -9,6 +9,25 @@ test('font metadata actions are reachable only through the desktop allowlist',()
  for(const action of ['fontMetadata','cancelFontMetadata']){assert.equal(validateFeatureRequest('personalization',action,{requestId:'font-fixture'}).action,action);assert.throws(()=>validateFeatureRequest('personalization',action,{}, {browser:true}),/Unsupported/);}
  assert.equal(validateFeatureRequest('personalization','listFonts',{}).action,'listFonts');
  assert.throws(()=>validateFeatureRequest('personalization','readFontFile',{}),/Unsupported/);
+});
+
+function repeatedNames(count,length){const source=fixture(),start=6+count*12,name=Buffer.alloc(start+length);name.writeUInt16BE(count,2);name.writeUInt16BE(start,4);for(let i=0;i<count;i++){const at=6+i*12;name.writeUInt16BE(3,at);name.writeUInt16BE(1,at+2);name.writeUInt16BE(0x409,at+4);name.writeUInt16BE(1,at+6);name.writeUInt16BE(length,at+8);}for(let i=start;i<name.length;i+=2)name.writeUInt16BE(65,i);const oldEnd=source.readUInt32BE(36),variation=source.subarray(oldEnd),result=Buffer.concat([source.subarray(0,44),name,variation]);result.writeUInt32BE(name.length,24);result.writeUInt32BE(44+name.length,36);return result;}
+test('raw tags and amplified naming work are rejected before unsafe decoding',async()=>{
+ const bad=fixture();bad[bad.readUInt32BE(36)+16]=0xf7;await assert.rejects(parseFontBuffer(bad),/raw font tag/);
+ await assert.rejects(parseFontBuffer(repeatedNames(1,2050)),/name length/);
+ await assert.rejects(parseFontBuffer(repeatedNames(2049,2048)),/cumulative/);
+ const controller=new AbortController();const operation=parseFontBuffer(repeatedNames(2048,2048),{signal:controller.signal});setImmediate(()=>controller.abort());await assert.rejects(operation,/abort/i);
+});
+test('scan admission bounds distinct identifiers and releases cancelled scans',async()=>{
+ const admission=createFontScanAdmission();let entered=0;const first=admission.run('first',signal=>new Promise((resolve,reject)=>{entered++;signal.addEventListener('abort',()=>reject(signal.reason),{once:true});}));
+ await assert.rejects(admission.run('second',()=>{entered++;}),/already active/);assert.equal(entered,1);assert.equal(admission.cancel('wrong'),false);assert.equal(admission.cancel('first'),true);await assert.rejects(first,/abort/i);assert.equal(await admission.run('second',async()=>42),42);
+});
+test('ambiguous variable families and unmapped style faces cannot mutate appearance',async()=>{
+ const [regular]=await parseFontBuffer(fixture());regular.id='regular';const italic={...regular,id:'italic',style:'Italic'};
+ assert.throws(()=>validateFontFaceSelection(italic,{faces:[regular,italic]}),/exact face mapping/);
+ assert.throws(()=>validateFontFaceSelection(regular,{faces:[regular,italic]}),/ambiguous/);
+ assert.deepEqual(validateFontFaceSelection(regular,{faces:[regular]}),{fontStyle:'normal',fontWeight:'400'});
+ const doc={createElement:tag=>new Node(tag,doc)},host=new Node('host',doc);let writes=0;const picker=mountFontPicker(host,{catalog:{faces:[regular,italic]},mutate:()=>writes++});await assert.rejects(picker.applyFace('italic',{wght:700}),/exact face mapping/);await assert.rejects(picker.applyFace('regular',{wght:700}),/ambiguous/);assert.equal(writes,0);picker.destroy();
 });
 
 function fixture(){

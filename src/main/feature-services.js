@@ -13,7 +13,7 @@ import { REVIEWED_OLLAMA_MANIFESTS, OLLAMA_PUBLISHER_POLICIES } from './ollama-p
 import { createWorkflowServices } from './workflow-services.js';
 import {createAppearanceImageService, APPEARANCE_IMAGE_REQUEST_BYTES} from './appearance-image-service.js';
 import {createOllamaConfiguration} from './ollama-configuration.js';
-import {collectInstalledFontMetadata} from './font-catalog.js';
+import {collectInstalledFontMetadata,createFontScanAdmission} from './font-catalog.js';
 const scrypt=promisify(scryptCallback);
 const executeFile=promisify(execFile);
 const object=value=>value&&typeof value==='object'&&!Array.isArray(value);
@@ -53,7 +53,7 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
  const scheduleAuthorization={};
  const schedules=createScheduleSource({credentials,authorizeCredentialMutation:context=>context?.authorization===scheduleAuthorization});
  const workflows=createWorkflowServices({dataDirectory,dialog,getWindow,openPath,openExternal,emit});
- const fontMetadataRequests=new Map();const cancelFontMetadata=()=>{for(const controller of fontMetadataRequests.values())controller.abort();};
+ const fontMetadataAdmission=createFontScanAdmission();const cancelFontMetadata=()=>fontMetadataAdmission.cancelAll();
  const grants=new Map();let converter,ollama,ollamaPromise,closed=false,exiting=false,sharedCredentialGranted=false,pendingRequests=0;
  const modelEvents=[];let modelSequence=0,modelEventBytes=0,activeOllamaRequests=0;
  const ollamaConfiguration=createOllamaConfiguration({directory:dataDirectory});
@@ -108,9 +108,8 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
    if(action==='dataFolder')return dataDirectory;
   }
   if(feature==='personalization'){
-   if(action==='cancelFontMetadata'){const controller=fontMetadataRequests.get(payload.requestId);controller?.abort();return !!controller;}
-   if(action==='fontMetadata'){const requestId=payload.requestId||randomUUID();if(typeof requestId!=='string'||!/^[a-zA-Z0-9_-]{1,80}$/.test(requestId)||fontMetadataRequests.has(requestId))throw Error('Invalid or active font metadata request.');const controller=new AbortController();fontMetadataRequests.set(requestId,controller);try{return await collectInstalledFontMetadata({signal:controller.signal,onProgress:progress=>emit('personalization',{type:'fontMetadataProgress',requestId,...progress})});}finally{fontMetadataRequests.delete(requestId);}}
-   if(action==='normalizeImage')return imageService.normalize(payload);
+   if(action==='cancelFontMetadata')return fontMetadataAdmission.cancel(payload.requestId);
+   if(action==='fontMetadata'){const requestId=payload.requestId||randomUUID();return fontMetadataAdmission.run(requestId,signal=>collectInstalledFontMetadata({signal,onProgress:progress=>emit('personalization',{type:'fontMetadataProgress',requestId,...progress})}));}
    if(action==='sharedRead'){try{return JSON.parse(await fs.readFile(settingsPath,'utf8'));}catch(e){if(e.code==='ENOENT')return null;throw e;}}
    if(action==='sharedWrite'){const value=plainSettings(payload.value);let previous=null;try{previous=JSON.parse(await fs.readFile(settingsPath,'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}if(previous?.enabled&&!sharedCredentialGranted)throw Error('Verify the existing local credential before changing the active mode.');sharedCredentialGranted=false;await fs.mkdir(dataDirectory,{recursive:true});const temporary=settingsPath+'.'+randomUUID()+'.tmp';try{await fs.writeFile(temporary,encoded(value),{flag:'wx',mode:0o600});await fs.rename(temporary,settingsPath);}finally{await fs.rm(temporary,{force:true});}emit('personalization',{type:'sharedSettings',value});return true;}
    if(action==='setSharedCredential'){if(await credentials.get('shared:mode'))throw Error('A local credential already exists. Use the documented local recovery route to reset it.');if(typeof payload.password!=='string'||payload.password.length<1||payload.password.length>4096)throw Error('Enter a bounded credential.');const salt=randomBytes(32),hash=await scrypt(payload.password,salt,32);await credentials.set('shared:mode',{salt:salt.toString('base64'),hash:hash.toString('base64')});hash.fill(0);return true;}
