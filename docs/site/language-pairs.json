@@ -259,8 +259,8 @@
     {
       "source": "docs/features/release/installer-repair.md",
       "translation": "docs/features/release/installer-repair.zh-HK.md",
-      "sourceSha256": "cab268b33ed6e28f04c23386bcb64de775752813f8afc0f4e94c8efb374570d2",
-      "translationSha256": "574a011a66c95f93e2323b8429bc521c8bb490cf3043d7bb756e676f418522c2"
+      "sourceSha256": "d556d7f950c3611ab715cde22d9e397de58d83032477fd5bca100e7960897952",
+      "translationSha256": "e9cd194bb3c0ddb2e309106101780afe94def4e971c03e1118f9ee8e8a0a8bd5"
     },
     {
       "source": "docs/features/release/native-update-controller.md",

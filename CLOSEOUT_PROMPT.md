@@ -1,3 +1,7 @@
+# Exact wiki snapshot import, 2026-10-11 UTC
+
+Imported both complete Markdown pages directly from wiki source 8b54a9a9c98f674fcb9f278af447475119cbd40e after fast-forward reconciliation to main 6f85edfd6dd36acb0216ab5b8f15001cd69b7a01. The mandatory inventory records raw blob-byte SHA-256 values; narrow LF attributes remain enforced. No source wiki prose was authored or rewritten. This standalone source import does not claim production, deployment, rendered capture, installed update or full feature acceptance. Focused inventory/hash checks are recorded with the import commit. Parent owns independent review, remote preservation and main integration.
+
 # Historical capture presentation correction, 2026-10-11 UTC
 
 Reviewed source units 4031da2, ed01c69, d628cbf, 125f7e0 and dd56c45 are integrated as standalone contributions, preserving their original branch history. The homepage labels its Linux and Windows captures historical, removes four false current ARIA labels and states current rebuilt capture acceptance is pending. Every original image, capture date, hash and provenance file remains unchanged. Fourteen public gallery records remain historical.
