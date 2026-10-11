@@ -31,7 +31,7 @@ Invoke-Checked { dotnet publish native/MaterialFileEncryptor.Host -c Release -r 
 Invoke-Checked { dotnet publish native/MaterialFileEncryptor.MountedLifecycle.Tests -c Release -r win-x64 --self-contained false -o out/verification/mounted-lifecycle }
 Invoke-Checked { dotnet publish native/MaterialFileEncryptor.ServerLease.Verifier -c Release -r win-x64 --self-contained false -o out/verification/server-file-lease }
 $leaseVerifierReceipt = @{ schemaVersion=1; sourceCommit=((& git rev-parse HEAD).Trim()); leaseSourceSha256=(Get-BootstrapDigest 'native/MaterialFileEncryptor.Host/ServerFileLease.cs'); verifierSourceSha256=(Get-BootstrapDigest 'native/MaterialFileEncryptor.ServerLease.Verifier/Program.cs'); verifierDllSha256=(Get-BootstrapDigest 'out/verification/server-file-lease/MaterialFileEncryptor.ServerLease.Verifier.dll'); runtimeVerification='not-run' }
-$leaseVerifierReceipt | ConvertTo-Json | Set-Content -LiteralPath 'out/verification/server-file-lease/source-receipt.json' -Encoding UTF8
+[IO.File]::WriteAllText((Join-Path $root 'out/verification/server-file-lease/source-receipt.json'), ($leaseVerifierReceipt | ConvertTo-Json), [Text.UTF8Encoding]::new($false))
 Invoke-Checked { dotnet publish src/features/converter/native/ConverterSandbox.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o out/converter }
 Copy-Item -LiteralPath (Join-Path $node 'node.exe') -Destination 'out/converter/node.exe' -Force
 if (Test-Path -LiteralPath (Join-Path $root 'out\converter\media')) { throw 'Obsolete media runtime present. Preserve it outside out/converter before packaging.' }
