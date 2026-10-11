@@ -127,8 +127,8 @@
     {
       "source": "docs/features/interface/README.md",
       "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "424260aadd2e9498ea3dfda7d5383f6a2c67ee4da61f65268ef7773ef600e92f",
-      "translationSha256": "e586c04acd402b4604d63be9fa2069ab1f9b155a146e03b2884e221ad491ac69"
+      "sourceSha256": "0d7b2d1a9b8c20e6ae570d494d70c8a68d5c6b26a9334b2aef461406d1009fd3",
+      "translationSha256": "258eb230c24279aebc8fe3b6332dbbf2cc60329d5dac14a5a5184c7ba5d4924f"
     },
     {
       "source": "docs/features/interface/appearance-editor.md",
@@ -483,6 +483,24 @@
       "translation": "docs/features/interface/private-history-controls.zh-HK.md",
       "sourceSha256": "ee83e49cc9342004e1686191e186bdd89655271845e9579dbdb1cf097b91dd6e",
       "translationSha256": "432a23e048cb21a38b0d69f87925590e49dbfb8ade3ea749a3e5e26831f77569"
+    },
+    {
+      "source": "docs/features/interface/gui-redesign.md",
+      "translation": "docs/features/interface/gui-redesign.zh-HK.md",
+      "sourceSha256": "e83719648324ef46382b8f1774b7d2c63703c68976ce761abe0377205c29988b",
+      "translationSha256": "cb5d234b5e994e9dc4b81253cf24f8ea7919fc2821c03980fa298f5f6aa55ac8"
+    },
+    {
+      "source": "docs/features/interface/storage-maintenance.md",
+      "translation": "docs/features/interface/storage-maintenance.zh-HK.md",
+      "sourceSha256": "8fb492e77a024f687428529e9db49c71d7e55b02942d184609ad5e0be4011fe7",
+      "translationSha256": "007052511d849f7eccd0dd894e33d2f2734c317e1714dfc00893e6f2a37c644f"
+    },
+    {
+      "source": "docs/features/interface/startup-photo-host.md",
+      "translation": "docs/features/interface/startup-photo-host.zh-HK.md",
+      "sourceSha256": "3f8163ee6755529cd00f8b18ba5f0710a7ba19ccb9595c93d761b4aa575afca1",
+      "translationSha256": "3b76fca130d573e56580402f75619e0e446fe24853a8a3def8b63c3c2dd3317d"
     }
   ]
 }

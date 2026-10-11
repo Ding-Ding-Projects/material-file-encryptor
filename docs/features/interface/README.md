@@ -47,3 +47,7 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 - [Visitor preferences raw evidence](visitor-capture.md): source-bound manual capture production, sandboxed browser receipts and independent review boundaries.
 
 - [Typed transition properties](transition-properties.md): explicit migration and independent endpoint values.
+
+- [Storage maintenance](storage-maintenance.md)
+- [Verified startup photo host](startup-photo-host.md)
+- [Material workspace redesign](gui-redesign.md)
