@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {launchAdmittedBrowser,launchDiagnostic,hostObservation,openPreferences,sceneName,selectAppearanceTarget,requestedSceneName,observeSharedNavigation,observeCurrentTheme,requestDarkState,chooseOriginalOption,CONVERTED_CONTROL_SCENES,prepareConvertedControlScene} from './capture-visitor-evidence.mjs';
+import {launchAdmittedBrowser,launchDiagnostic,hostObservation,openPreferences,sceneName,selectAppearanceTarget,requestedSceneName,observeSharedNavigation,observeCurrentTheme,requestDarkState,chooseOriginalOption,CONVERTED_CONTROL_SCENES,prepareConvertedControlScene,componentFrameReadiness,currentRegisteredScene,prepareLockedHistory,openAppearanceEvidence} from './capture-visitor-evidence.mjs';
 const admitted='/synthetic/admitted/chrome';let actual;
 const sentinel={kind:'synthetic server'};assert.equal(await launchAdmittedBrowser({async launchServer(options){actual=options;return sentinel;}},admitted),sentinel);
 assert.equal(actual.executablePath,admitted);assert.equal(actual.chromiumSandbox,true);assert.equal(actual.headless,true);assert.equal(actual.timeout,30000);assert.equal(actual.args.some(value=>value.includes('no-sandbox')),false);
@@ -23,3 +23,29 @@ for(const available of [true,false]){let mutated=false,oldReads=0,scrolls=0;cons
 for(const mode of ['material','missing-option','native']){const actions=[];const control={async getAttribute(){return mode==='native'?null:'select';},async scrollIntoViewIfNeeded(){actions.push('scroll');},async click(){actions.push('open');},locator(selector){assert.equal(selector,'md-select-option[value="dark"]');return{async count(){return mode==='missing-option'?0:1;},async click(){actions.push('option-click');}};},async selectOption(value){actions.push('native-'+value);}};if(mode==='missing-option')await assert.rejects(chooseOriginalOption(control,'dark'));else await chooseOriginalOption(control,'dark');assert.deepEqual(actions,mode==='native'?['native-dark']:mode==='material'?['scroll','open','option-click']:['scroll','open']);}console.log('PASS: Material options use visible original control/option clicks and legacy native input remains supported.');
 
 for(const spec of CONVERTED_CONTROL_SCENES){for(const state of ['visible','missing','offscreen','wrong-kind']){const actions=[];const control={async count(){return state==='missing'?0:1;},async scrollIntoViewIfNeeded(){actions.push('control-scroll');},async getAttribute(){return state==='wrong-kind'?'native':spec.kind;},async boundingBox(){return{x:0,y:state==='offscreen'?900:200,width:200,height:44};},async isVisible(){return true;}};const tab={async count(){return 1;},async scrollIntoViewIfNeeded(){actions.push('tab-scroll');},async click(){actions.push('tab-click');}};const host={async count(){return 1;},locator(selector){return selector===spec.selector?control:tab;}};const page={locator(){return host;},viewportSize(){return{width:320,height:844};}};const ready=await prepareConvertedControlScene(page,spec,[]);assert.equal(ready,state==='visible');assert.equal(requestedSceneName(spec.name,true,ready),ready?spec.name:'preferences-diagnostic-'+spec.name);assert.deepEqual(actions.slice(0,2),['tab-scroll','tab-click']);}}console.log('PASS: converted-control scenes require exact current semantic control and viewport intersection; missing/offscreen/wrong-kind are diagnostic.');
+
+const oldRegistry=globalThis.customElements,oldFrame=globalThis.requestAnimationFrame;
+try{
+ globalThis.requestAnimationFrame=callback=>{callback();return 1;};
+ for(const state of ['ready','unregistered','disconnected','no-update','empty-shadow','offscreen']){
+  globalThis.customElements={get(){return state==='unregistered'?undefined:class {};}};
+  const element={localName:'md-outlined-button',isConnected:state!=='disconnected',updateComplete:state==='no-update'?undefined:Promise.resolve(true),shadowRoot:{childElementCount:state==='empty-shadow'?0:1}};
+  const observations=[];let scrolls=0;
+  const control={async count(){return 1;},async evaluate(callback){return callback(element);},async scrollIntoViewIfNeeded(){scrolls++;},async boundingBox(){return{x:0,y:state==='offscreen'?900:20,width:100,height:48};},async isVisible(){return true;},page(){return{viewportSize(){return{width:320,height:844};}};}};
+  assert.equal(await currentRegisteredScene(control,observations,'synthetic-action'),state==='ready');assert.equal(scrolls,1);assert.equal(observations[0].paintProof,false);
+ }
+}finally{globalThis.customElements=oldRegistry;globalThis.requestAnimationFrame=oldFrame;}
+for(const state of ['locked-empty','unlocked','records']){
+ const tab={async count(){return 1;},async scrollIntoViewIfNeeded(){},async click(){}};
+ const history={async count(){return 1;},locator(selector){return selector==='article'?{async count(){return state==='records'?1:0;}}:{async count(){return 1;},async isVisible(){return state==='unlocked';}};}};
+ const page={locator(selector){return selector.includes('.local-ux-history')?history:{async count(){return 1;},locator(){return tab;}};}};
+ const observations=[];assert.equal(await prepareLockedHistory(page,observations),state==='locked-empty');assert.equal(observations[0].credentialActionsPerformed,false);
+}
+for(const state of ['visible','hidden','modal','missing-action','missing-panel']){
+ const actions=[];const tab={async count(){return 1;},async scrollIntoViewIfNeeded(){actions.push('tab-scroll');},async click(){actions.push('tab-click');}};
+ const action={filter(){return this;},async count(){return state==='missing-action'?0:1;},async scrollIntoViewIfNeeded(){actions.push('action-scroll');},async click(){actions.push('action-click');}};
+ const panel={async count(){return state==='missing-panel'?0:1;},async isVisible(){return state!=='hidden';},async getAttribute(){assert.notEqual(state,'missing-panel');return state==='modal'?'true':'false';}};
+ const page={locator(selector){return selector.includes('.appearance-editor')?panel:selector.includes('md-outlined-button')?action:{async count(){return 1;},locator(){return tab;}};}};
+ assert.equal(await openAppearanceEvidence(page,[]),state==='visible');assert.equal(actions.includes('action-click'),state!=='missing-action');
+}
+console.log('PASS: actual registered-component callback observes update completion and frames without paint claims; empty locked history and original nonmodal editor actions reject unavailable prerequisites. No credential values read.');
