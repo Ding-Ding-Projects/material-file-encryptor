@@ -1,5 +1,5 @@
 /** Motion editor copy is part of the shared application and website dictionary. */
-export const MOTION_COPY=Object.freeze({
+export const MOTION_COPY=Object.freeze({'Choose true or false.':'請選擇 true 或 false。','The original control could not complete this action.':'原有控制項未能完成呢個操作。',
  'Animation and Transition':'動畫同過渡','Appearance authoring sections':'外觀編輯分類','Animation tracks and transition rules':'動畫軌道同過渡規則','Animation':'動畫','Transition':'過渡','Search motion controls':'搜尋動作設定',
  'Add animation track':'新增動畫軌道','Add transition rule':'新增過渡規則','Track name':'軌道名稱','Parallel group':'並行群組','After track identifier':'前置軌道識別碼','Enabled':'啟用','Muted':'靜音停用','Solo':'單獨播放','Target scope':'目標範圍','Target state':'目標狀態','Composition':'合成方式','Iteration composition':'重複合成方式','Animated property':'動畫屬性','Sequence offset':'序列偏移','Stagger offset':'交錯偏移',
  'Timing and easing':'時間同緩動','Duration':'持續時間','Start delay':'開始延遲','End delay':'結束延遲','Repeat count':'重複次數','Iteration start':'重複起點','Playback rate':'播放速率','Repeat delay':'重複延遲','Direction':'方向','Fill':'填補模式','Global easing':'整體緩動','Total active time':'總有效時間','Infinite':'無限',
