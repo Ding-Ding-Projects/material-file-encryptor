@@ -2,7 +2,7 @@
 
 ## Current source and verification update
 
-The current reviewed source is `1faecd9`. Main `3f3e97c` was pushed and verified. Deployment `38101869288` passed independent checks for 169 live files, 115 article/wiki documents, 4,662 internal references and the exact repository homepage. These counts describe that deployment before this wiki update. The previously fetched wiki revision was `43f17a1f7cd24f4079409d1127bc1d145b1c97da`; this new section awaits wiki publication and source-revision readback.
+The current reviewed source is `1faecd9`. Main `3f3e97c` was pushed and verified. Deployment `38101869288` passed independent checks for 169 live files, 115 article/wiki documents, 4,662 internal references and the exact repository homepage. These counts describe that deployment before this wiki update. The previously fetched wiki revision was `43f17a1f7cd24f4079409d1127bc1d145b1c97da`; the updated sections are tracked by the exact wiki revision in the documentation catalog; publication and runtime acceptance remain separate.
 
 The exact build and installer entrypoints passed for `3f3e97c`, including unsigned status and archive CRC checks. Installed execution, native update and removal remain explicitly deferred by the maintainer. Four Updates controls ran in the mounted GUI without exceptions; portable installation stayed disabled with `INSTALLED_WINDOWS_SQUIRREL_REQUIRED`. Release workflow `38101869261` failed during component extraction and did not publish a release; repair is in progress.
 
