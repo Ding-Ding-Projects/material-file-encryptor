@@ -82,6 +82,9 @@ test('wiki underscore basename renders the actual continuation snapshot',async()
  assert.ok(html.includes('Wiki CLOSEOUT_PROMPT'));
  }finally{await fs.rm(temp,{recursive:true,force:true});}
 });
+test('source-bound wiki hashes reject edited snapshot content before publication',async()=>{
+ const temp=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-wiki-hash-'));try{await fs.mkdir(path.join(temp,'docs/site/wiki'),{recursive:true});await fs.mkdir(path.join(temp,'docs/features'),{recursive:true});const markdown=await fs.readFile('docs/site/wiki/CLOSEOUT_PROMPT.md','utf8');await fs.writeFile(path.join(temp,'docs/site/wiki/CLOSEOUT_PROMPT.md'),markdown+'\nUnexpected content.\n');await fs.writeFile(path.join(temp,'docs/site/content-catalog.json'),JSON.stringify({...catalog,articles:[],categories:[],wiki:{...catalog.wiki,files:['CLOSEOUT_PROMPT.md']}}));await assert.rejects(buildDocumentation(temp,path.join(temp,'output'),''),/Wiki snapshot content hash differs/);}finally{await fs.rm(temp,{recursive:true,force:true});}
+});
 
 test('wiki basenames reject traversal, separators and unsafe punctuation',async()=>{
  for(const file of ['../CLOSEOUT_PROMPT.md','folder/CLOSEOUT_PROMPT.md','folder\\CLOSEOUT_PROMPT.md','C:closeout.md','closeout?.md','closeout".md','.hidden.md','closeout.md/extra','']){

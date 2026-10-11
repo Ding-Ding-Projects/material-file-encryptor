@@ -71,6 +71,7 @@ export async function buildDocumentation(root,output,home) {
  if(JSON.stringify(actual)!==JSON.stringify(expected))throw new Error('Documentation inventory differs from feature articles');
  const wikiFiles=(await markdownFiles(path.join(root,'docs/site/wiki'))).map(file=>path.basename(file)).sort();
  if(JSON.stringify(wikiFiles)!==JSON.stringify([...catalog.wiki.files].sort()))throw new Error('Wiki snapshot inventory differs');
+ if(catalog.wiki.fileSha256)for(const file of wikiFiles){const expected=catalog.wiki.fileSha256[file],actual=digest(await fs.readFile(path.join(root,'docs/site/wiki',file)));if(!/^[a-f0-9]{64}$/.test(expected)||actual!==expected)throw new Error('Wiki snapshot content hash differs: '+file);}
  const routes=new Map(catalog.articles.map(source=>[source,route(source)]));
  for(const file of wikiFiles)routes.set('docs/site/wiki/'+file,route('wiki/'+file));
  const articles=[];
