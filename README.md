@@ -22,6 +22,8 @@ The appearance editor now uses registered Material action buttons and a register
 
 Logo Fit/Reset actions also use registered Material buttons in reviewed source. The original callback and guidance promise remain authoritative, and removed controls cannot admit direct actions. Fourteen mounted cases pass, including a regression observed failing before the connection repair. Native upload/focal controls and genuine logo pixels/accessibility remain pending.
 
+The native observation tooling now supplies the installed lifecycle parser with a standard bounded-compatible input stream. This repairs the retained observer Input.isatty exception without modifying installed/shared tools or weakening source, ownership or request checks. Actual-reader and journal checks pass; a distinct repaired-source startup/updater observation remains pending.
+
 ## What you can work on
 
 1. **Create and unlock a drive.** Choose encrypted storage, an encrypted cache and an unlock method, then access files through the Explorer drive. Read [drive integration](docs/features/drive/README.md) and [native storage](docs/features/storage/native-vault.md).

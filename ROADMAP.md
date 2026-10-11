@@ -1,3 +1,6 @@
+- [x] Independently review native observer standard-input compatibility and actual bounded installed-reader restoration/invalid-input checks; parent2reader+3journal cases pass. Nonlaunch source proof.
+- [ ] Create fresh repaired-source native plan/admission and observe actual startup/update readiness/graceful closure without old-state reuse.
+
 - [x] Independently review and integrate registered logo Fit/Reset plus detached-direct lifetime repair, with observed old-red/fixed-green mounted negatives. Source only.
 - [ ] Convert remaining logo upload/focal controls and verify actual logo keyboard/accessibility/pixels.
 
