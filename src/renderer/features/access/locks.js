@@ -1,9 +1,12 @@
+import {controlHelperOwner} from '../../../shared/surface/controls.js';
 import {passwordVerifier,verifyPassword,verifyTotp,randomId} from './crypto.js';
 export const LOCK_POLICIES = Object.freeze({pin:['pin'],password:['password'],'pin-password':['pin','password'],'password-totp':['password','totp'],'pin-totp':['pin','totp'],'password-pin-totp':['password','pin','totp']});
 // Resolve the registered public control host, not an implementation node inside its shadow root.
 export function accessControlTarget(event) {
   const path=typeof event?.composedPath==='function'?event.composedPath():[];
-  return path.find(node=>node?.dataset?.materialPrimitive || /^(MD-(?:(?:FILLED|FILLED-TONAL|OUTLINED|TEXT|ICON|FILLED-ICON|OUTLINED-ICON|FILLED-TONAL-ICON)-BUTTON|(?:OUTLINED|FILLED)-(?:TEXT-FIELD|SELECT)|CHECKBOX|RADIO|SWITCH|SLIDER|(?:PRIMARY|SECONDARY)-TAB)|MFE-(?:FILE-PICKER|DATE-FIELD))$/.test(node?.tagName||'')) || event?.target;
+  const helper=path.map(node=>node&&typeof node==='object'?controlHelperOwner(node):null).find(Boolean);if(helper)return helper;
+  const field=path.find(node=>/^(MD-(OUTLINED|FILLED)-(TEXT-FIELD|SELECT)|MFE-(FILE-PICKER|DATE-FIELD))$/.test(node?.tagName||''));
+  return field||path.find(node=>node?.dataset?.materialPrimitive || /^(MD-(?:(?:FILLED|FILLED-TONAL|OUTLINED|TEXT|ICON|FILLED-ICON|OUTLINED-ICON|FILLED-TONAL-ICON)-BUTTON|(?:OUTLINED|FILLED)-(?:TEXT-FIELD|SELECT)|CHECKBOX|RADIO|SWITCH|SLIDER|(?:PRIMARY|SECONDARY)-TAB)|MFE-(?:FILE-PICKER|DATE-FIELD))$/.test(node?.tagName||'')) || event?.target;
 }
 export function accessLockIdentity(element,event) {
   const path=typeof event?.composedPath==='function'?event.composedPath():[element];
