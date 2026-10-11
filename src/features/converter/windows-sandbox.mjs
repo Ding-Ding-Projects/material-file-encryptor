@@ -12,13 +12,14 @@ const codeDirectory=path.dirname(fileURLToPath(import.meta.url));
 async function hash(filename){return createHash('sha256').update(await fs.readFile(filename)).digest('hex');}
 async function packageRoot(name){let root=path.dirname(require.resolve(name));while(root!==path.dirname(root)){try{const manifest=JSON.parse(await fs.readFile(path.join(root,'package.json'),'utf8'));if(manifest.name===name)return root;}catch{}root=path.dirname(root);}throw new Error('Bundled PDF package unavailable.');}
 /** Call only with package-owned executables whose hashes were verified by the build manifest. */
-export async function createWindowsSandboxProvider({launcherPath,launcherSha256,runtimePath,runtimeSha256,launcherCompanionHashes={},mediaRuntime,archiveRuntime}) {
+async function createWindowsSandboxProviderInternal({launcherPath,launcherSha256,runtimePath,runtimeSha256,launcherCompanionHashes={},mediaRuntime,archiveRuntime,onDiagnostic}) {
  if(process.platform!=='win32')throw new Error('AppContainer conversion is supported only on Windows.');
  const companions=[];for(const suffix of ['.dll','.runtimeconfig.json','.deps.json']){const filename=launcherPath.slice(0,-4)+suffix;if(await fs.access(filename).then(()=>true,()=>false)){const expected=launcherCompanionHashes[path.basename(filename)];if(!/^[0-9a-f]{64}$/.test(expected)||await hash(filename)!==expected)throw new Error('Sandbox companion verification failed.');companions.push([filename,expected]);}}
  for(const [filename,expected] of [[launcherPath,launcherSha256],[runtimePath,runtimeSha256]])if(!path.isAbsolute(filename)||!/^[0-9a-f]{64}$/.test(expected)||await hash(filename)!==expected)throw new Error('Sandbox executable verification failed.');
- let media=null,mediaUnavailableReason='Verified bundled FFmpeg 9.0.2 runtime is unavailable.';if(mediaRuntime){try{media=await createMediaLauncher({launcherPath,launcherSha256,launcherCompanionHashes,...mediaRuntime});}catch{mediaUnavailableReason='Bundled media runtime could not pass executable and AppContainer startup verification.';}}
- let archive=null,archiveUnavailableReason='Verified bundled 7-Zip 26.04 runtime is unavailable.';if(archiveRuntime){try{archive=await createArchiveLauncher({launcherPath,launcherSha256,launcherCompanionHashes,...archiveRuntime});}catch{archiveUnavailableReason='Bundled archive runtime did not pass executable and AppContainer startup verification.';}}
- const provider={verifiedOsIsolation:false,verifiedArchiveRuntime:Boolean(archive),archiveUnavailableReason,verifiedMediaRuntime:Boolean(media),verifiedMediaProfile:mediaRuntime?.profile||'default',mediaUnavailableReason,previewMedia:media?.preview,launch({inputs,adapterId,options,timeout=30000}) {
+ const initializationDiagnostics=[];const report=(error,component)=>{const diagnostic=safeConverterDiagnostic(error,component);initializationDiagnostics.push(diagnostic);try{onDiagnostic?.(diagnostic);}catch{}};
+ let media=null,mediaUnavailableReason='Verified bundled FFmpeg 9.0.2 runtime is unavailable.';if(mediaRuntime){try{media=await createMediaLauncher({launcherPath,launcherSha256,launcherCompanionHashes,...mediaRuntime});}catch(error){report(error,'media');mediaUnavailableReason='Bundled media runtime could not pass executable and AppContainer startup verification.';}}
+ let archive=null,archiveUnavailableReason='Verified bundled 7-Zip 26.04 runtime is unavailable.';if(archiveRuntime){try{archive=await createArchiveLauncher({launcherPath,launcherSha256,launcherCompanionHashes,...archiveRuntime});}catch(error){report(error,'archive');archiveUnavailableReason='Bundled archive runtime did not pass executable and AppContainer startup verification.';}}
+ const provider={initializationDiagnostics,verifiedOsIsolation:false,verifiedArchiveRuntime:Boolean(archive),archiveUnavailableReason,verifiedMediaRuntime:Boolean(media),verifiedMediaProfile:mediaRuntime?.profile||'default',mediaUnavailableReason,previewMedia:media?.preview,launch({inputs,adapterId,options,timeout=30000}) {
  if(ARCHIVE_IDS.includes(adapterId)){if(!archive)throw new Error(archiveUnavailableReason);return archive.launch({inputs,adapterId});}
  if(MEDIA_IDS.includes(adapterId)){if(!media)throw new Error('Bundled media runtime verification is missing.');return media.launch({inputs,adapterId,options});}
  let child,staging,stopped=false;const nonce=randomBytes(32).toString('hex');
@@ -34,3 +35,10 @@ export async function createWindowsSandboxProvider({launcherPath,launcherSha256,
  if(probe.outputs.length!==1||probe.outputs[0].bytes.toString()!=='73616e64626f78')throw new Error('Sandbox startup verification failed.');
  provider.verifiedOsIsolation=true;return provider;
 }
+
+export function safeConverterDiagnostic(error,component='provider'){
+ const codes=new Set(['ENOENT','EACCES','EPERM','EINVAL','ENOTDIR','EISDIR','ENOSPC','ETIMEDOUT','ABORT_ERR']);
+ const phases=new Set(['media-probe','media-encode','media-validate','media-initialize']);
+ return Object.freeze({schema:1,component:['provider','media','archive'].includes(component)?component:'provider',phase:phases.has(error?.converterPhase)?error.converterPhase:'initialize',code:codes.has(error?.code)?error.code:'INITIALIZATION_FAILED',errorName:['Error','TypeError','RangeError','SyntaxError'].includes(error?.name)?error.name:'Error'});
+}
+export async function createWindowsSandboxProvider(config){try{return await createWindowsSandboxProviderInternal(config);}catch(error){const diagnostic=safeConverterDiagnostic(error,'provider');error.converterDiagnostic=diagnostic;try{config?.onDiagnostic?.(diagnostic);}catch{}throw error;}}
