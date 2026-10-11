@@ -8,6 +8,8 @@
     "docs/features/access/local-access.md",
     "docs/features/appearance-editor.md",
     "docs/features/converter/README.md",
+    "docs/features/converter/archive-and-data.md",
+    "docs/features/converter/media-plan.md",
     "docs/features/desktop/README.md",
     "docs/features/desktop/owned-exit-handles.md",
     "docs/features/desktop/package-integrity.md",
@@ -23,6 +25,7 @@
     "docs/features/ollama/README.md",
     "docs/features/ollama/local-models.md",
     "docs/features/ollama/local-models.zh-HK.md",
+    "docs/features/ollama/native-host.md",
     "docs/features/ollama/regression-verification.md",
     "docs/features/performance/README.md",
     "docs/features/performance/native-helper.md",
@@ -33,6 +36,8 @@
     "docs/features/release/README.md",
     "docs/features/release/preview-delivery.md",
     "docs/features/release/preview-verification.md",
+    "docs/features/schedules/README.md",
+    "docs/features/schedules/external-sources.md",
     "docs/features/storage/README.md",
     "docs/features/storage/file-history-activity.md",
     "docs/features/storage/git-transport.md",
@@ -41,7 +46,8 @@
     "docs/features/storage/transfer-lifecycle.md",
     "docs/features/surface-foundation/README.md",
     "docs/features/surface-foundation/coverage.md",
-    "docs/features/surface-foundation/integration.md"
+    "docs/features/surface-foundation/integration.md",
+    "docs/features/surface-foundation/layout-and-notifications.md"
   ],
   "categories": [
     "access",

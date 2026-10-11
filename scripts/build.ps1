@@ -18,6 +18,7 @@ Invoke-Checked { node scripts/build-site.mjs }
 Invoke-Checked { dotnet publish native/MaterialFileEncryptor.Host -c Release -r win-x64 --self-contained true -o out/native }
 Invoke-Checked { dotnet publish src/features/converter/native/ConverterSandbox.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o out/converter }
 Copy-Item -LiteralPath (Join-Path $node 'node.exe') -Destination 'out/converter/node.exe' -Force
+Invoke-Checked { node scripts/converter-media-runtime.mjs out/converter/media }
 $converterManifest = @{
   schemaVersion = 1
   launcherSha256 = (Get-BootstrapDigest 'out/converter/ConverterSandbox.exe').ToLowerInvariant()
