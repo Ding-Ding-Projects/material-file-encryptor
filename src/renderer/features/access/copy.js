@@ -1,4 +1,6 @@
 export const ACCESS_COPY = Object.freeze({
+ 'Profile operation was cancelled.':'個人檔案操作已取消。',
+ 'Persistent waiting budget storage is unavailable.':'無法使用持續儲存的等候配額。','Persistent waiting budget is invalid.':'持續儲存的等候配額無效。','Atomic waiting budget storage is unavailable. Wait for the timer instead.':'無法以不可分割操作儲存等候配額，請等待計時結束。','Persistent waiting budget could not be verified.':'未能核實持續儲存的等候配額。',
   'Invalid protected-cache salt.':'受保護快取嘅鹽值無效。',
   'Authenticator registration QR code':'驗證器登記 QR 碼',
   'The verified dish catalog is unavailable. This challenge starts with arithmetic.':'已核實嘅點心目錄暫時未能使用。今次挑戰由算術開始。',

@@ -1,3 +1,4 @@
+import {createWaitBudget} from './wait-budget.js';
 import {LocalProfile} from './profile.js';
 import {LockController,LOCK_POLICIES} from './locks.js';
 import {parseOtpUri,validateOtp,totp,verifyTotp,randomId,passwordVerifier,verifyPassword,deriveCacheKey,seal,unseal} from './crypto.js';
@@ -8,7 +9,8 @@ export * from './locks.js';
 export function mountAccess(container,services={}) {
   const document=container.ownerDocument;const renderedTranslations=new Map(),copyBindings=new Map();const t=(key,fallback,options={})=>{const value=services.translate?.(fallback,options)??services.t?.(key,fallback,options)??fallback;renderedTranslations.set(value,{key,fallback,options});return value;};const translate=(text,message=false)=>{const original=renderedTranslations.get(text);return t(original?.key||text,original?.fallback||text,{...original?.options,message});};const cleanups=[];const waitingClosers=new Set();const entries=new Map();const tickets=[];
   function bindCopy(node,render){const bindings=copyBindings.get(node)||[];bindings.push(render);copyBindings.set(node,bindings);render();}
-  const controller=new LockController({store:services.credentialStore,getDishChallenge:services.getDishChallenge,onBlocked:id=>{services.notify?.(t('access.locked','This element is locked.'));openUnlock(id);}});
+  const waitBudget=services.waitBudget||createWaitBudget({storage:services.storage||globalThis.localStorage,withLock:services.withLocalLock,now:services.now});
+  const controller=new LockController({waitBudget,now:services.now,store:services.credentialStore,getDishChallenge:services.getDishChallenge,onBlocked:id=>{services.notify?.(t('access.locked','This element is locked.'));openUnlock(id);}});
   const root=document.createElement('section');root.className='access-workspace';root.setAttribute('aria-label',t('access.title','Local access'));container.append(root);
   const heading=document.createElement('h2');heading.textContent=t('access.title','Local access');root.append(heading);
   const notice=document.createElement('p');notice.textContent=t('access.disclosure','These local convenience locks do not encrypt files. Reset them by clearing this application’s local data.');root.append(notice);
@@ -20,26 +22,27 @@ export function mountAccess(container,services={}) {
   const profile=document.createElement('fieldset');root.append(profile);const pl=document.createElement('legend');pl.textContent=t('access.profile','Local profile');profile.append(pl);
   const profilePassword=field(t('access.profilePassword','Profile password'),'password',profile);
   const profileStatus=document.createElement('p');profileStatus.setAttribute('role','status');profileStatus.textContent=t('access.profileLocked','Private cache is locked.');profile.append(profileStatus);
-  const profileSession=new LocalProfile({store:services.credentialStore,onAuthenticatedChange:authenticated=>{profileStatus.textContent=authenticated?t('access.profileUnlocked','Private cache is unlocked until logout or application close.'):t('access.profileLocked','Private cache is locked.');services.onAuthenticatedChange?.(authenticated);}});
+  const profileSession=new LocalProfile({waitBudget,now:services.now,getDishChallenge:services.getDishChallenge,store:services.credentialStore,onAuthenticatedChange:authenticated=>{profileStatus.textContent=authenticated?t('access.profileUnlocked','Private cache is unlocked until logout or application close.'):t('access.profileLocked','Private cache is locked.');services.onAuthenticatedChange?.(authenticated);}});
   function endSession(){profileSession.logout();profilePassword.value='';stopCamera();qrPreview.replaceChildren();qrPreview.hidden=true;secret.value='';uri.value='';confirmation.value='';}
-  async function unlockProfile(create=false){const password=profilePassword.value;profilePassword.value='';try{await profileSession.unlock(password,{create});}catch(e){report(e);}}
+  async function unlockProfile(create=false){const password=profilePassword.value;profilePassword.value='';try{await profileSession.unlock(password,{create});}catch(e){report(e);}finally{profileWaitButton.hidden=!profileSession.waiting();}}
   button(t('access.setupProfile','Set up local profile'),()=>unlockProfile(true),profile);
   button(t('access.unlockProfile','Unlock local profile'),()=>unlockProfile(false),profile);
   button(t('access.logout','Log out'),endSession,profile);
+  const profileWaitButton=button(t('access.tryLadder','Try the waiting ladder'),()=>openWaiting('profile',profile,profileSession),profile);profileWaitButton.hidden=true;
   const encryptPrivateCache=(value,identity)=>profileSession.encrypt(value,identity);
   const decryptPrivateCache=(value,identity)=>profileSession.decrypt(value,identity);  const lockList=document.createElement('div');root.append(lockList);
   function refreshLocks(){lockList.replaceChildren();for(const record of controller.list()){const row=document.createElement('div');row.textContent=`${record.id}: ${record.policy}`;button(t('access.unlock','Unlock'),()=>openUnlock(record.id),row);button(t('access.relock','Lock again'),()=>{controller.lock(record.id);output.textContent=t('access.locked','Locked');},row);button(t('access.remove','Remove lock'),()=>openUnlock(record.id,true),row);lockList.append(row);}}
-  function openWaiting(id,parent){
+  function openWaiting(id,parent,owner=controller){
     const panel=document.createElement('fieldset');const legend=document.createElement('legend');legend.textContent=t('access.waitingLadder','Waiting ladder');panel.append(legend);parent.append(panel);
     const disclosure=document.createElement('p');disclosure.textContent=t('access.waitingDisclosure','Winning ends the wait only. Your credentials are still required.');panel.append(disclosure);
     const clock=document.createElement('p');clock.setAttribute('role','status');panel.append(clock);const challengeArea=document.createElement('div');panel.append(challengeArea);let roundTimer=null,closed=false;
-    const clockTimer=setInterval(()=>{if(!panel.isConnected){clearInterval(clockTimer);if(roundTimer)clearInterval(roundTimer);closed=true;return;}clock.textContent=`${t('access.waitRemaining','Wait remaining')}: ${Math.ceil(controller.waiting(id)/1000)} ${t('access.seconds','Seconds')}`;if(!controller.waiting(id)){clearInterval(clockTimer);challengeArea.replaceChildren();clock.textContent=t('access.waitOver','The waiting period is over. Enter your credentials again.');}},250);
-    const stop=()=>{closed=true;clearInterval(clockTimer);if(roundTimer)clearInterval(roundTimer);panel.remove();waitingClosers.delete(stop);};waitingClosers.add(stop);cleanups.push(stop);button(t('access.close','Close'),stop,panel);
-    function next(){
-      if(closed)return;if(roundTimer)clearInterval(roundTimer);challengeArea.replaceChildren();const challenge=controller.challengeWait(id,{schoolMode:Boolean(typeof services.schoolMode==='function'?services.schoolMode():services.schoolMode)});
-      if(!challenge){challengeArea.textContent=t('access.clockOnly','The clock is the only remaining route for this waiting period.');return;}
+    const clockTimer=setInterval(()=>{if(!panel.isConnected){clearInterval(clockTimer);if(roundTimer)clearInterval(roundTimer);closed=true;return;}clock.textContent=`${t('access.waitRemaining','Wait remaining')}: ${Math.ceil(owner.waiting(id)/1000)} ${t('access.seconds','Seconds')}`;if(!owner.waiting(id)){clearInterval(clockTimer);challengeArea.replaceChildren();clock.textContent=t('access.waitOver','The waiting period is over. Enter your credentials again.');}},250);
+    const stop=()=>{if(closed)return;closed=true;owner.cancelWait?.(id);clearInterval(clockTimer);if(roundTimer)clearInterval(roundTimer);panel.remove();waitingClosers.delete(stop);};waitingClosers.add(stop);cleanups.push(stop);button(t('access.close','Close'),stop,panel);
+    async function next(){
+      if(closed)return;if(roundTimer)clearInterval(roundTimer);challengeArea.replaceChildren();const challenge=await (owner.challengeWaitAsync||owner.challengeWait).call(owner,id,{schoolMode:Boolean(typeof services.schoolMode==='function'?services.schoolMode():services.schoolMode)});
+      if(closed)return;if(!challenge){const budgetState=await waitBudget.status();if(closed)return;challengeArea.textContent=budgetState.canConsume?t('access.clockOnly','The clock is the only remaining route for this waiting period.'):t('access.atomicBudgetUnavailable','Atomic waiting budget storage is unavailable. Wait for the timer instead.');return;}
       if(challenge.dishUnavailable){const unavailable=document.createElement('p');unavailable.textContent=t('access.dishUnavailable','The verified dish catalog is unavailable. This challenge starts with arithmetic.');challengeArea.append(unavailable);}
-      const finish=value=>{if(closed)return;const won=controller.answerWait(id,challenge.nonce,value);challengeArea.replaceChildren();if(won){clock.textContent=t('access.waitOver','The waiting period is over. Enter your credentials again.');clearInterval(clockTimer);}else{const text=document.createElement('p');text.textContent=t('access.challengeWrong','Challenge expired or answer did not match.');challengeArea.append(text);button(t('access.nextChallenge','Try the next challenge'),next,challengeArea);}};
+      const finish=async value=>{if(closed)return;let won;try{won=await owner.answerWait(id,challenge.nonce,value);}catch(error){if(!closed)report(error);return;}if(closed)return;challengeArea.replaceChildren();if(won){clock.textContent=t('access.waitOver','The waiting period is over. Enter your credentials again.');clearInterval(clockTimer);}else{const text=document.createElement('p');text.textContent=t('access.challengeWrong','Challenge expired or answer did not match.');challengeArea.append(text);button(t('access.nextChallenge','Try the next challenge'),()=>next().catch(report),challengeArea);}};
       if(challenge.rung==='dish'){const prompt=document.createElement('p');prompt.textContent=translate(challenge.question.prompt);challengeArea.append(prompt);challenge.question.choices.forEach((choice,index)=>button(translate(choice),()=>finish(index),challengeArea));}
       else if(challenge.rung==='sums'){const answers=challenge.question.map(({a,b})=>field(`${a} + ${b} =`,'number',challengeArea));button(t('access.submitAnswers','Submit answers'),()=>finish(answers.map(input=>input.value===''?null:Number(input.value))),challengeArea);}
       else {
@@ -47,7 +50,7 @@ export function mountAccess(container,services={}) {
         const done=button(t('access.finishRound','Finish round'),()=>finish(taps),challengeArea);done.disabled=true;
         roundTimer=setInterval(()=>{const elapsed=Date.now()-started;for(let cell=0;cell<9;cell++){const active=challenge.question.some(mole=>mole.cell===cell&&elapsed>=mole.start&&elapsed<=mole.end);cells[cell].disabled=!active;cells[cell].textContent=`${cell+1}: ${active?t('access.mole','Mole'):t('access.emptyCell','Empty cell')}`;}progress.textContent=`${t('access.roundRemaining','Round remaining')}: ${Math.max(0,Math.ceil((challenge.duration-elapsed)/1000))} ${t('access.seconds','Seconds')}`;if(elapsed>=challenge.duration){clearInterval(roundTimer);done.disabled=false;}},60);
       }
-    }next();
+    }next().catch(report);
   }
   function openUnlock(id,remove=false){const panel=document.createElement('form');bindCopy(panel,()=>panel.setAttribute('aria-label',t('access.unlock','Unlock')+' '+id));const record=controller.describe(id);if(!record)return;
     let closed=false,busy=false;const origin=document.activeElement;

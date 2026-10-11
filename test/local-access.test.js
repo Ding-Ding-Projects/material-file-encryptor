@@ -55,6 +55,7 @@ test('profile logout invalidates an immediately pending correct-password unlock'
   await assert.rejects(pending,/cancelled/);assert.equal(profile.authenticated,false);assert.equal(events.at(-1),false);
   await assert.rejects(profile.encrypt({value:1}),/Unlock/);
   await profile.unlock('profile cancellation sample');assert.equal(profile.authenticated,true);
+  const ciphertext=await profile.encrypt({value:1});const pendingRead=profile.decrypt(ciphertext);profile.logout();await assert.rejects(pendingRead,/cancelled/);
 });
 test('relocking cancels a pending element unlock before it can install a session',async()=>{
   const controller=new LockController();await controller.set('pending','pin',{pin:'2468'});
@@ -107,12 +108,12 @@ test('local waiting challenge clears only deadline and preserves lock and escala
   let now=10000;const controller=new LockController({now:()=>now});await controller.set('protected','pin',{pin:'1234'});
   for(let i=0;i<5;i++)await controller.unlock('protected',{pin:'9999'});
   assert.ok(controller.waiting('protected')>0);const before={...controller.attempts.get('protected')};const challenge=controller.challengeWait('protected',{schoolMode:true});assert.equal(challenge.rung,'sums');
-  assert.equal(controller.answerWait('protected',challenge.nonce,challenge.question.map(({a,b})=>a+b)),true);
+  assert.equal(await controller.answerWait('protected',challenge.nonce,challenge.question.map(({a,b})=>a+b)),true);
   assert.equal(controller.waiting('protected'),0);assert.equal(controller.isLocked('protected'),true);assert.equal(controller.sessions.size,0);assert.equal(controller.attempts.get('protected').level,before.level);assert.equal(controller.attempts.get('protected').failures,before.failures);
-  assert.equal(controller.answerWait('protected',challenge.nonce,[]),false);assert.equal(await controller.unlock('protected',{pin:'1234'}),true);
+  assert.equal(await controller.answerWait('protected',challenge.nonce,[]),false);assert.equal(await controller.unlock('protected',{pin:'1234'}),true);
 });
 test('all fixed access labels and local errors have Cantonese copy',async()=>{
   const source=await readFile(new URL('../src/renderer/features/access/index.js',import.meta.url),'utf8');
   for(const match of source.matchAll(/t\('[^']*','([^']*)'/g))assert.ok(ACCESS_COPY[match[1]],match[1]);
-  for(const name of ['crypto','locks','profile','qr']){const source=await readFile(new URL(`../src/renderer/features/access/${name}.js`,import.meta.url),'utf8');for(const match of source.matchAll(/throw (?:new )?Error\('([^']*)'/g))assert.ok(ACCESS_COPY[match[1]],match[1]);}
+  for(const name of ['crypto','locks','profile','qr','wait-budget']){const source=await readFile(new URL(`../src/renderer/features/access/${name}.js`,import.meta.url),'utf8');for(const match of source.matchAll(/throw (?:new )?Error\('([^']*)'/g))assert.ok(ACCESS_COPY[match[1]],match[1]);}
 });
