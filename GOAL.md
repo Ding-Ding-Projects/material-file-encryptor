@@ -1,8 +1,21 @@
-# Active implementation goal
+# Current completion criteria, 2026-10-11 UTC
+
+The active goal includes the original installer/updater repair and complete feature delivery for the desktop application and documentation website. Historical preview checks below remain source-specific evidence and do not certify the rebuilt current product.
+
+- [ ] Prove pure Material Design 3 across every visible surface, including nested settings, editors, optional guidance, tabs, dialogs and documentation controls, using genuine current captures and interaction evidence. All 105 feature IDs and 210 complete-surface rows remain unverified as complete surfaces.
+- [ ] Diagnose and repair the reported mobile preferences theme, typography and navigation mismatch from actual source-bound pixels and computed styles.
+- [ ] Complete corrective installation/removal, installed startup and automatic update download, ready/Later, restart and continuity acceptance.
+- [ ] Complete full settings, typography and image editors, animation and transition controls, optional unique guidance, and four-target server management.
+- [ ] Replace every current presentation screenshot with an inspected genuine rebuilt capture, retaining historical originals and provenance.
+- [ ] Integrate verified work into main, verify normal release bytes and live documentation, update the wiki, and preserve every unfinished checkout and evidence record before qualified cleanup.
+
+Current source delivery at 7af86621d60b87c6f3c1da8dd9188bccef72154d includes independently reviewed updater ancestry admission, serialized release promotion, image placement and transition endpoints. Normal v1.219.1 at source 94f39313da02394a2236f399853346f1853ea5e2 has independent package and full live-content acceptance, with installed/native/rendered verdicts still unverified. The first raw capture run 38140563614 failed during browser startup before browser identity or screenshots; its exact cause is not established. No insecure launch fallback is permitted.
+
+## Historical preview baseline
 
 Deliver the first Material File Encryptor preview as a real Windows Explorer virtual drive with fixed encrypted chunks, Git history, folder/private GitHub transport, an encrypted offline cache, and recoverable deletion.
 
-## Acceptance criteria
+### Historical source-specific acceptance criteria
 
 - [x] Mount a genuine WinFsp drive and support ordinary file create, read, edit, truncate, rename, replacement save, and deletion.
 - [x] Authenticate encrypted records before returning plaintext; persist only encrypted backing data, metadata, staging, and cache.

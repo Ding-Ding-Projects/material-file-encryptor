@@ -1,3 +1,11 @@
+# Current appearance and capture boundary, 2026-10-11 UTC
+
+- [x] Reconcile GOAL.md historical preview checks with current unfinished completion criteria.
+- [x] Verify normal v1.221.1 exact 7af package, promotion and complete live content.
+- [ ] Integrate independently reviewed explicit Chromium launch binding and inspect a changed-source raw capture. First run 38140563614 failed at startup without pixels.
+- [ ] Repair the preferences visual mismatch and prove pure Material Design 3 on every visible surface.
+- [ ] Complete all 210 surface rows, installed lifecycle and full settings/editors/motion/server workflows.
+
 # Genuine capture route, 2026-10-11 UTC
 
 - [x] Independently review source-bound raw capture production, bounded observations, truthful unknown states, pinned bootstrap and five-job inventory negatives. Source acceptance only.
