@@ -27,7 +27,8 @@ export async function quietInterpreter(python) {
 export async function startQuietObserver({python,workerPath,intentPath,journal,env,spawnImpl=spawn}) {
  if(path.basename(python).toLowerCase()!=='pythonw.exe')throw new Error('GUI observer executable name required.');
  assertGuiExecutable(await fs.readFile(python));
- const stdout=await fs.open(path.join(journal,'stdout.log'),'wx'),stderr=await fs.open(path.join(journal,'stderr.log'),'wx');
+ const stdout=await fs.open(path.join(journal,'stdout.log'),'wx');
+ let stderr;try{stderr=await fs.open(path.join(journal,'stderr.log'),'wx');}catch(error){await stdout.close();throw error;}
  let child;try{child=spawnImpl(python,[workerPath,intentPath],{env,windowsHide:true,detached:false,stdio:['ignore','pipe','pipe']});}catch(error){await stdout.close();await stderr.close();throw error;}
  const errors=[];const drains=[child.stdout,child.stderr].map(async(stream,index)=>{const file=index?stderr:stdout;let count=0;try{for await(const chunk of stream){count+=chunk.length;if(count<=64*1024*1024)await file.writeFile(chunk);else if(!errors.includes('Observer output exceeded bound.'))errors.push('Observer output exceeded bound.');}}catch(error){errors.push(error.message);}finally{await file.close();}});
  let spawnError;const exit=new Promise(resolve=>{child.once('error',error=>{spawnError=error;});child.once('close',async(code,signal)=>{await Promise.all(drains);const result={code,signal,spawnError:spawnError?.message??null,streamErrors:errors};try{await fs.writeFile(path.join(journal,'observer-exit.json'),JSON.stringify(result,null,2),{flag:'wx'});}catch(error){result.streamErrors.push(error.message);}resolve(result);});});
