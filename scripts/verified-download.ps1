@@ -18,6 +18,10 @@ function Get-BootstrapDigest([string]$filename, [string]$algorithm = 'SHA256') {
   finally { $hasher.Dispose(); $stream.Dispose() }
 }
 
+function Copy-BootstrapBody($body, $stream, $cancellationToken) {
+  $null = $body.CopyToAsync($stream, 81920, $cancellationToken).GetAwaiter().GetResult()
+}
+
 function Get-Verified($entry, [string]$file, [scriptblock]$transport = $null) {
   $algorithm = if ($entry.sha512) { 'SHA512' } else { 'SHA256' }
   $expected = if ($entry.sha512) { [string]$entry.sha512 } else { [string]$entry.sha256 }
@@ -99,7 +103,7 @@ function Get-Verified($entry, [string]$file, [scriptblock]$transport = $null) {
             $response.Dispose(); $response = $null; $current = $next
           }
           $status = [int]$response.StatusCode
-          $body = $response.Content.ReadAsStreamAsync().GetAwaiter().GetResult(); $body.CopyToAsync($stream, 81920, $deadline.Token).GetAwaiter().GetResult()
+          $body = $response.Content.ReadAsStreamAsync().GetAwaiter().GetResult(); Copy-BootstrapBody $body $stream $deadline.Token
         } finally { if ($body) { $body.Dispose() }; if ($response) { $response.Dispose() }; $deadline.Dispose(); $client.Dispose(); $handler.Dispose() }
       }
     } catch { $transportFailed = $true }
