@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import {preparePackagedProfile} from '../scripts/test-renderer-browser.mjs';
+import {preparePackagedProfile,proveStableRendererTree} from '../scripts/test-renderer-browser.mjs';
 import {createPackagedFixturePreparation,observeOwnedPackagedFixture} from '../scripts/gui-acceptance-packaged.mjs';
 
 test('packaged profile hook requires fresh ownership and rechecks source bytes',async()=>{
@@ -30,4 +30,10 @@ test('packaged observation refuses unrelated native storage before capture',asyn
  const fixture={storageDir:'owned',cacheDir:'cache',driveLetter:'N:'};
  await assert.rejects(observeOwnedPackagedFixture({evaluate:async()=>({...fixture,storageDir:'other'})},fixture),/identity changed/);
  assert.equal((await observeOwnedPackagedFixture({evaluate:async()=>({...fixture,locked:true,mounted:false})},fixture)).locked,true);
+});
+test('transient child inventory gets at most three full proofs without weakening identity errors',async()=>{
+ let calls=0;const churn=()=>Object.assign(new Error('helper'),{lifecycleObservation:{stderr:'renderer_snapshot.SnapshotError: Process ancestry changed during inventory.'}});
+ assert.equal(await proveStableRendererTree(async()=>{calls++;if(calls<2)throw churn();return 'proved';},{wait:async()=>{}}),'proved');assert.equal(calls,2);
+ calls=0;await assert.rejects(proveStableRendererTree(async()=>{calls++;throw churn();},{wait:async()=>{}}));assert.equal(calls,3);
+ calls=0;await assert.rejects(proveStableRendererTree(async()=>{calls++;throw Object.assign(new Error('identity'),{lifecycleObservation:{stderr:'Process identity changed during inventory.'}});},{wait:async()=>{}}));assert.equal(calls,1);
 });

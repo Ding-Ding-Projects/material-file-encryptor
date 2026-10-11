@@ -39,16 +39,17 @@ export async function probePackagedBrowserPbkdf2(page,{target,maxIterations=100}
 export async function probePackagedAccessibility(page,{target,dialogSelector='#vault-dialog',history=false}={}){
  const binding=await verifyRuntime(page,target);
  const declared=await page.locator(dialogSelector).evaluate(node=>{
-  if(!node.open||!node.getClientRects().length)throw Error('Open production dialog required');
+  if(!node.open)throw Error('Open production dialog required');
   const ids=(node.getAttribute('aria-labelledby')||'').split(/\s+/).filter(Boolean);
-  return {label:node.getAttribute('aria-label')||ids.map(id=>node.ownerDocument.getElementById(id)?.textContent||'').join(' ').trim(),visible:true};
+  const boxes=[];const visit=root=>{for(const element of root.querySelectorAll('*')){if(element.localName==='dialog'||element.getAttribute('role')==='dialog'){const r=element.getBoundingClientRect();boxes.push({tag:element.localName,open:element.open===true,width:r.width,height:r.height});}if(element.shadowRoot)visit(element.shadowRoot);}};if(node.shadowRoot)visit(node.shadowRoot);
+  return {label:node.getAttribute('aria-label')||ids.map(id=>node.ownerDocument.getElementById(id)?.textContent||'').join(' ').trim(),outerDisplay:getComputedStyle(node).display,innerDialogGeometry:boxes};
  });
  assert.ok(declared.label,'Outer dialog has no declared accessible name');
  const session=await page.context().newCDPSession(page);let nodes;
  try{await session.send('Accessibility.enable');({nodes}=await session.send('Accessibility.getFullAXTree'));}finally{await session.detach();}
  const dialogs=nodes.filter(node=>!node.ignored&&['dialog','alertdialog'].includes(node.role?.value)).map(node=>({role:node.role.value,name:node.name?.value||'',backendNodeId:node.backendDOMNodeId}));
  assert.equal(dialogs.length,1,'Expected one open accessible dialog');
- const result={schemaVersion:1,scope:'packaged-accessibility-tree',binding,dialog:{declaredName:declared.label,...dialogs[0],namePresent:Boolean(dialogs[0].name.trim()),nameMatchesDeclared:dialogs[0].name.trim()===declared.label.trim()},historyProbed:false};
+ const result={schemaVersion:1,scope:'packaged-accessibility-tree',binding,dialog:{declaredName:declared.label,outerDisplay:declared.outerDisplay,innerDialogGeometry:declared.innerDialogGeometry,...dialogs[0],namePresent:Boolean(dialogs[0].name.trim()),nameMatchesDeclared:dialogs[0].name.trim()===declared.label.trim()},historyProbed:false};
  // History cannot be probed behind a modal dialog. The caller must use a
  // separate visible-history invocation after ordinary dialog dismissal.
  assert.equal(history,false,'History radio inspection needs its separate visible state');
