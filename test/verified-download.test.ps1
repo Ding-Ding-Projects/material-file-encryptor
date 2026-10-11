@@ -18,6 +18,20 @@ foreach($mode in @('mismatch','partial','status')) {
   Assert $failed 'Invalid downloads accepted'; Assert (!(Test-Path $file)) 'Invalid cache published'; Assert ($script:calls.Count -eq 2) 'Source retried or skipped'; $receipts=@(Get-ChildItem (Join-Path (Split-Path $file) 'download-evidence') -Filter '*.json'); Assert ($receipts.Count -eq 2) 'Attempt receipts missing'; Assert (@(Get-ChildItem $receipts[0].DirectoryName -Filter '*.bin').Count -eq 2) 'Rejected bytes missing'; Assert (@(Get-ChildItem (Split-Path $file) -Filter '*.tmp').Count -eq 0) 'Temporary not quarantined'
 }
 Assert ($entry.sha512 -ceq $expected) 'Pin mutated'
+$file=New-Case 'concurrent-valid-cache'; [IO.File]::WriteAllBytes($file,$bad)
+$script:raceFile=$file; $script:raceArmed=$true; $script:originalDigest=${function:Get-BootstrapDigest}
+function Get-BootstrapDigest([string]$filename,[string]$algorithm='SHA256') {
+  $result=& $script:originalDigest $filename $algorithm
+  if ($script:raceArmed -and $filename -eq $script:raceFile) { $script:raceArmed=$false; [IO.File]::WriteAllBytes($filename,$good) }
+  return $result
+}
+try {
+  $script:calls=@(); Get-Verified $entry $file $transport
+  Assert ((& $script:originalDigest $file 'SHA512') -eq $expected) 'Concurrent valid cache lost'
+  Assert ($script:calls.Count -eq 0) 'Concurrent valid cache caused download'
+  Assert (@(Get-ChildItem (Split-Path $file) -Recurse -Filter '*.json').Count -eq 0) 'Valid cache labeled invalid'
+} finally { Set-Item Function:Get-BootstrapDigest $script:originalDigest }
+Write-Host 'PASS: deterministic valid concurrent cache replacement retained without download.'
 foreach ($kind in @('evidence', 'parent', 'cache')) {
   $file=New-Case ('junction-' + $kind); $dir=Split-Path $file
   $outside=Join-Path $root ('outside-' + $kind); New-Item -ItemType Directory $outside|Out-Null

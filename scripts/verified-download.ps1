@@ -52,7 +52,19 @@ function Get-Verified($entry, [string]$file, [scriptblock]$transport = $null) {
     @{ schemaVersion=1; source=$source; status=$status; length=$length; algorithm=$algorithm; actualDigest=$digest; expectedDigest=$expected; outcome=$outcome; quarantine=$quarantine; recordedAt=[DateTime]::UtcNow.ToString('o') } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $evidence "$id.json") -Encoding UTF8
     if ($quarantine) { [IO.File]::Move($path, (Join-Path $evidence $quarantine)) }
   }
-  if (Test-Path -LiteralPath $file -PathType Leaf) { Save-Rejected $file $null $null 'invalid-cache' }
+  if (Test-Path -LiteralPath $file -PathType Leaf) {
+    # Claim the current entry before revalidation; the earlier digest may describe a replaced file.
+    $claim = Join-Path $parent ('.cache-claim-' + [Guid]::NewGuid().ToString('N') + '.tmp')
+    Assert-BootstrapPath $file
+    Assert-BootstrapPath $claim
+    [IO.File]::Move($file, $claim)
+    if ((Get-BootstrapDigest $claim $algorithm) -eq $expected) {
+      Assert-BootstrapPath $file
+      [IO.File]::Move($claim, $file)
+      return
+    }
+    Save-Rejected $claim $null $null 'invalid-cache'
+  }
   foreach ($source in $sources) {
     $temporary = Join-Path $parent ('.download-' + [Guid]::NewGuid().ToString('N') + '.tmp')
     Assert-BootstrapPath $temporary
