@@ -2,6 +2,7 @@ import { localized } from './localization.js';
 
 export const surfaceRegistry = Object.freeze([
   { tag: 'mfe-color-picker', role: 'region', module: '../../renderer/features/personalization/color-picker.js', primitives: ['md-outlined-text-field','md-text-button','md-slider'] },
+  { tag: 'mfe-server-preparation', role: 'region', module: '../../renderer/features/server-manager/index.js', primitives: ['md-outlined-button','mfe-search','mfe-control-guidance'] },
   { tag: 'mfe-typography-inspector', role: 'region', module: '../../renderer/features/personalization/typography-inspector.js', primitives: ['md-outlined-text-field','md-text-button'] },
   { tag: 'mfe-control-guidance', role: 'region', module: 'control-guidance.js', primitives: ['md-text-button','md-filled-button'] },
   { tag: 'mfe-workspace-shell', role: 'region', module: 'workspace-shell.js', primitives: ['md-tabs','md-primary-tab','md-outlined-button'] },

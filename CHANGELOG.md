@@ -1,3 +1,9 @@
+# Color editor and registered server preparation source, 2026-10-11
+
+- Added Material color controls, bidirectional color representations, explicit gamut checks, atomic palette/history changes and optional guidance.
+- Added official Java server preparation with bounded host-owned metadata/downloads, cancellation and read-only license review. Corrected retained search and concurrent resolution admission. Server execution remains unavailable.
+- 新增色彩編輯同完整色值表示方式；色彩及最近清單一齊保存，失敗會一齊回復。新增官方版本探索同受限準備流程，修正重新顯示時搜尋失效及並行請求超額。未完成真正畫面及安裝驗收，伺服器執行仍不可用。
+
 # Typed typography and workbench guidance, 2026-10-11
 
 Integrated in source `7271108f98e12be41281c0e8e0d5c40a88cd29b3`, delivered as normal `v1.205.1`. Exact-root production passed [run 38131720855](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38131720855). Independent downloaded-package and live-content checks are separate from the source checks below; none proves installed execution or rendered interface acceptance.

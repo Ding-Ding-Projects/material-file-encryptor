@@ -403,8 +403,8 @@
     {
       "source": "docs/features/server-manager/README.md",
       "translation": "docs/features/server-manager/README.zh-HK.md",
-      "sourceSha256": "c7f387f616fda6ebbc461a69cd5a5e88dc747cbdd5b22e676ac877c9e5750a77",
-      "translationSha256": "ce6b42072d14212d46a780c0f5e1a0fddcc54b4eb12d5ad6c84c30a5020d76a5"
+      "sourceSha256": "bf0890a10579a8099db84662b9a9b6440b34a6489a9a657db5cbe27ab4adf947",
+      "translationSha256": "c889ddf9536ee28aff383fae374e45d3e31b0cc21ea7cd5f17c45500bb19f809"
     },
     {
       "source": "docs/features/server-manager/foundation.md",
@@ -447,6 +447,12 @@
       "translation": "docs/features/interface/color-picker.zh-HK.md",
       "sourceSha256": "e0375485d1baa0bb04a48b6c5fc5a5c86cdbb3be1ea53fda198948b9e0791c76",
       "translationSha256": "0f7f74137db97e0d8e0731ccaeea1da2feb74e05f026d6bea1b81525585d5ff9"
+    },
+    {
+      "source": "docs/features/server-manager/preparation.md",
+      "translation": "docs/features/server-manager/preparation.zh-HK.md",
+      "sourceSha256": "40bdf1ca49b622dc80b6a54b759c20d72f3273890911a9e521ff480d9d079554",
+      "translationSha256": "fabdeedfa8c617f8d9a05105b0ac392378eb88675a79d75308811a6b8c0f5e02"
     }
   ]
 }

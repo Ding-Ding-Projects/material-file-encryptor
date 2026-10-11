@@ -1,3 +1,4 @@
+import {createServerManagerHost} from './server-manager-host.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID, scrypt as scryptCallback, timingSafeEqual, randomBytes } from 'node:crypto';
@@ -52,6 +53,7 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
  const credentials=createCredentialStore({directory:dataDirectory,safeStorage});
  const scheduleAuthorization={};
  const schedules=createScheduleSource({credentials,authorizeCredentialMutation:context=>context?.authorization===scheduleAuthorization});
+ const servers=createServerManagerHost({dataDirectory,emit:data=>emit('server-manager',data)});
  const workflows=createWorkflowServices({dataDirectory,dialog,getWindow,openPath,openExternal,emit});
  const fontMetadataAdmission=createFontScanAdmission();const cancelFontMetadata=()=>fontMetadataAdmission.cancelAll();
  const grants=new Map();let converter,ollama,ollamaPromise,closed=false,exiting=false,sharedCredentialGranted=false,pendingRequests=0;
@@ -75,6 +77,7 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
  async function dispatch(feature,action,payload={}){
   ensureOpen();if(typeof feature!=='string'||typeof action!=='string'||!object(payload))throw Error('Invalid feature request.');bounded(payload,feature==='personalization'&&action==='normalizeImage'?APPEARANCE_IMAGE_REQUEST_BYTES:262144);
   if(exiting&&!['status','catalog','models','cart','list','operations','cancel','control','downloads','cancelDownload'].includes(action))throw Error('The application is waiting for active work before quitting.');
+  if(feature==='server-manager'){if(exiting)throw Error('Application is closing.');return servers.dispatch(action,payload);}
   if(feature==='workflow')return workflows.dispatch(action,payload);
   if(feature==='converter'){
    if(action==='pickSources')return Promise.all((await pick(['openFile','multiSelections'],'Choose conversion sources')).map(filename=>grant(filename,'read')));
@@ -131,5 +134,5 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
   throw Error('Unsupported feature action.');
  }
  async function request(...args){pendingRequests++;try{return await dispatch(...args);}finally{pendingRequests--;}}
- return {request,credentials,beginExit(){exiting=true;},endExit(){exiting=false;},async pending(){return pendingRequests+workflows.pending+(converter?await converter.pending():0)+(ollama?.operations().length||0);},async cancelAll(){cancelFontMetadata();workflows.cancelAll();await imageService.cancelAll();await Promise.allSettled([converterPromise,ollamaPromise]);await Promise.all([converter?.cancelAll(),ollama?.cancelAll()]);},async checkpoint(summary,progress){return(await statusPromise).checkpoint(summary,progress);},async close(){closed=true;cancelFontMetadata();await schedules.dispose();await imageService.close();await workflows.close();await Promise.allSettled([converterPromise,ollamaPromise]);await converter?.close();await ollama?.dispose();await(await statusPromise).finish('waiting');grants.clear();}};
+ return {request,credentials,beginExit(){exiting=true;},endExit(){exiting=false;},async pending(){return pendingRequests+servers.pending+workflows.pending+(converter?await converter.pending():0)+(ollama?.operations().length||0);},async cancelAll(){servers.cancelAll();cancelFontMetadata();workflows.cancelAll();await imageService.cancelAll();await Promise.allSettled([converterPromise,ollamaPromise]);await Promise.all([converter?.cancelAll(),ollama?.cancelAll()]);},async checkpoint(summary,progress){return(await statusPromise).checkpoint(summary,progress);},async close(){closed=true;await servers.close();cancelFontMetadata();await schedules.dispose();await imageService.close();await workflows.close();await Promise.allSettled([converterPromise,ollamaPromise]);await converter?.close();await ollama?.dispose();await(await statusPromise).finish('waiting');grants.clear();}};
 }

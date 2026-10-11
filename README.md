@@ -8,6 +8,8 @@
 
 The reviewed [color editor source](docs/features/interface/color-picker.md) now provides bidirectional color entry, explicit gamut checks, palettes, contrast preview and structured rainbow controls through the original appearance history. Focused consumers and independent source review pass; rendered and installed acceptance remain pending.
 
+The [server preparation source](docs/features/server-manager/preparation.md) adds official version discovery, verified bounded downloads, cancellation and read-only license review. Its registered controls and corrected concurrency/search consumers pass focused checks. Execution targets remain unavailable, and preparation has not received real download or rendered acceptance.
+
 ## What you can work on
 
 1. **Create and unlock a drive.** Choose encrypted storage, an encrypted cache and an unlock method, then access files through the Explorer drive. Read [drive integration](docs/features/drive/README.md) and [native storage](docs/features/storage/native-vault.md).

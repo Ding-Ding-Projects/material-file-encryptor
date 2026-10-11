@@ -1,3 +1,19 @@
+# Renderer mount correction, 2026-10-11 UTC
+
+Final integration review found that server source85 placed await inside synchronous setupEnhancedWorkspace, so the whole renderer failed actual node --check. Corrective sourceedc473a4f6a6f2eab43e0746fdb9e0e7ca8d4615 moves the mount into the existing mounts array and retains synchronous setup, allSettled activation and disposal. Independent review confirmed fullmodule parsing and two real queue checks, including deferred success and rejection. This correction is incorporated into the combined candidate before main delivery. Earlier component checks did not prove the complete application parsed.
+
+The complete original objective remains active. Pure Material Design3 is mandatory throughout; real rendered and installed acceptance remain pending. A fresh physicalmemory reading at2026-10-11T10:59:54.8350855Z was947100KiB against1572864KiB required, so no GUI or installer observer launched. Four historical accompaniment records and one interrupted canonical presentation result remain unverified; no unknown event was replayed. All recovery roots and original evidence remain retained.
+
+# Registered server preparation source integration, 2026-10-11 UTC
+
+Reviewed source85f010d060a3e5edcbe042445757dd0ed698b866 adds official Java version discovery, bounded verified preparation into a fresh owned root, progress/cancellation, retained recovery and read-only license review. Paths, URLs, hashes and execution providers remain host-owned; the prepared license file contains eula=false. All four execution targets and license acceptance remain unavailable.
+
+Independent reviews confirmed and repaired retained search after rerender and concurrent metadata admission. Actual-host checks prove a 100-slot pending-plus-retained bound before provider invocation, release on rejection/throw/close, and no excess provider call. Mounted consumers prove search across refresh/language/pagination and stale-filter isolation. The preparation region and exact Material/shared primitive inventory are registered. The source correction passed 24 checks, with independent final refutation dry.
+
+The combined color/server candidate passed 47 consumer checks. A translation check caught a merge omission in an existing server index binding before commit; reconciling all changed bindings against the common baseline restored all three translation checks. Both registered surface rows, full bilingual articles, indexes and publication rows are retained. Pure Material Design 3 rendered acceptance, genuine current captures, native/installed operation and all210 complete surfaces remain pending.
+
+The original goal stays active. No GUI, real server download/start, license consent or cleanup was performed for this unit. All recovery roots and ignored originals remain retained. Next: cloud production through exact root entrypoints, independent release/content verification, and resource-admitted genuine interaction/capture.
+
 # Color editor source integration, 2026-10-11 UTC
 
 Reviewed source ccc2f171bb7443abe7cf5a7c0a6eb739de8c75bd adds a registered Material color picker with bidirectional color representations, explicit gamut rejection, preview and contrast, recent/custom palettes, structured rainbow controls, optional guidance and original appearance mutation/history integration. The author ran 57 focused checks; two independent reviews found no confirmed correctness/security regression, including 2,376 representation round trips and a late sampler result after locking. The merged candidate passed 30 directly affected consumer/translation checks. Source evidence does not establish rendered or installed acceptance.

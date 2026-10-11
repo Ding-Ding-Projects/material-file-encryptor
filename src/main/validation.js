@@ -7,10 +7,25 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
     ollama: [...(!browser?['configureRuntime']:[]),'status','catalog','refreshCatalog','models','show','deleteModel','copyModel','generate','hardware','cart','addToCart','removeFromCart','retryPull','startPulls','cancel','sessions','session','renameSession','deleteSession','exportSession','chat','profiles','preflight','launch','snapshots','restore','events','runtimeInstall','runtimeStart','chooseRuntimeExecutable','registerProfile'],
     documentation: ['catalog','changelog'], status: ['status'],
     personalization: ['sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts',...(!browser?['setScheduleCredential','clearScheduleCredential','normalizeImage','fontMetadata','cancelFontMetadata']:[])],
+    ...(!browser ? { 'server-manager': ['snapshot','refreshCatalogue','versions','resolveVersion','prepare','cancel','reviewLicense'] } : {}),
     ...(!browser ? { access: ['credentialGet','credentialSet','credentialDelete','credentialList','openDataFolder','dataFolder'] } : {}),
   };
   const limit=!browser&&feature==='personalization'&&action==='normalizeImage'?Math.ceil(4*1024*1024*4/3)+256:262144;
   if (!actions[feature]?.includes(action) || !object(payload) || Buffer.byteLength(JSON.stringify(payload)) > limit) throw new Error('Unsupported feature request.');
+  if (feature === 'server-manager') {
+    const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
+    const hash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
+    const schemas = {
+      snapshot: {}, refreshCatalogue: {},
+      versions: { catalogueId: hash, cursor: value => value === undefined || typeof value === 'string' && /^\d{1,5}$/.test(value) },
+      resolveVersion: { catalogueId: hash, versionId: value => typeof value === 'string' && value.length > 0 && value.length <= 128 && !/[\x00-\x1f\x7f]/.test(value) },
+      prepare: { selectionId: uuid }, cancel: { operationId: uuid },
+      reviewLicense: { serverId: value => typeof value === 'string' && value.startsWith('server-') && uuid(value.slice(7)) },
+    };
+    const schema = schemas[action];
+    const prototype = Object.getPrototypeOf(payload);
+    if (prototype !== Object.prototype && prototype !== null || Reflect.ownKeys(payload).some(key => typeof key !== 'string' || !Object.hasOwn(schema, key)) || Object.entries(schema).some(([key, valid]) => !valid(payload[key]))) throw new Error('Unsupported server preparation payload.');
+  }
   return { feature, action, payload };
 }
 export function validateRequest(method, value = {}) {

@@ -1,3 +1,9 @@
+## Server preparation source integration, 2026-10-11 UTC
+
+- [ ] Deliver reviewed registered preparation source and verify built runtime behavior.
+- [ ] Enable all four execution targets only after owned runtime/native lease supervision and actual acceptance.
+- [ ] Complete pure Material Design 3 rendered acceptance for preparation and the color editor.
+
 ## Color source integration, 2026-10-11 UTC
 
 - [ ] Deliver the independently reviewed color foundation through main cloud production and real rendered acceptance.
