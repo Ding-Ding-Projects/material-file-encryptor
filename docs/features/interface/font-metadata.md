@@ -54,6 +54,11 @@ non-Regular/Normal styles until exact mapping exists, and rejects variable axes
 when more than one catalogue face shares the family. A uniquely mapped regular
 face applies explicit normal style and weight 400 alongside its axis settings.
 This conservative refusal does not prove which face a renderer actually used.
+Family ambiguity uses Unicode 17.0.0 Default Caseless Matching with official
+`CaseFolding.txt` C/F records, without normalization or locale tailoring, as
+required by [CSS Fonts localized name matching](https://www.w3.org/TR/css-fonts-4/#localized-name-matching).
+The pinned source, generated mappings, Unicode license and SHA-256 provenance
+are retained under `src/shared/unicode/`. Raw family display/CSS text is retained.
 Explicit face mapping,
 bundled-font merging, full typography controls and rendered evidence remain
 separate pending integration work. The caller owns cancellation and atomicity

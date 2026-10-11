@@ -4,6 +4,18 @@ import {parseFontBuffer,readFontMetadata,collectInstalledFontMetadata,createFont
 import {validateFontAxes,fontVariationCSS,mountFontPicker,validateFontFaceSelection} from '../src/renderer/features/personalization/font-picker.js';
 import path from 'node:path';
 import {validateFeatureRequest} from '../src/main/validation.js';
+import {fontFamilyKey} from '../src/shared/local-ux/font-family-key.js';
+import {CASE_FOLDING} from '../src/shared/unicode/case-folding-17.0.0.js';
+import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+
+test('family identity uses pinned official C/F records without normalization or locale tailoring',async()=>{
+ const base=new URL('../src/shared/unicode/',import.meta.url),source=await readFile(new URL('CaseFolding-17.0.0.txt',base)),license=await readFile(new URL('UNICODE-LICENSE.txt',base)),provenance=JSON.parse(await readFile(new URL('provenance.json',base),'utf8'));
+ assert.equal(createHash('sha256').update(source).digest('hex'),provenance.sourceSha256);assert.equal(createHash('sha256').update(license).digest('hex'),provenance.licenseSha256);
+ const expected={};for(const line of source.toString().split(/\r?\n/)){const match=/^([0-9A-F]+); ([CF]); ([0-9A-F ]+);/.exec(line);if(match)expected[parseInt(match[1],16)]=String.fromCodePoint(...match[3].trim().split(/ +/).map(value=>parseInt(value,16)));}assert.deepEqual(CASE_FOLDING,expected);assert.equal(Object.keys(expected).length,provenance.mappingCount);
+ for(const [a,b]of [['Fixture Variable','fixture variable'],['ÉCOLE','école'],['Straße','STRASSE'],['Σ','ς'],['\u{10400}','\u{10428}']])assert.equal(fontFamilyKey(a),fontFamilyKey(b));
+ assert.notEqual(fontFamilyKey('Å'),fontFamilyKey('A\u030a'));assert.notEqual(fontFamilyKey('I'),fontFamilyKey('ı'));assert.equal(fontFamilyKey('İ'),'i\u0307');
+});
 
 test('font metadata actions are reachable only through the desktop allowlist',()=>{
  for(const action of ['fontMetadata','cancelFontMetadata']){assert.equal(validateFeatureRequest('personalization',action,{requestId:'font-fixture'}).action,action);assert.throws(()=>validateFeatureRequest('personalization',action,{}, {browser:true}),/Unsupported/);}
@@ -30,6 +42,7 @@ test('ambiguous variable families and unmapped style faces cannot mutate appeara
  const doc={createElement:tag=>new Node(tag,doc)},host=new Node('host',doc);let writes=0;const picker=mountFontPicker(host,{catalog:{faces:[regular,italic]},mutate:()=>writes++});await assert.rejects(picker.applyFace('italic',{wght:700}),/exact face mapping/);await assert.rejects(picker.applyFace('regular',{wght:700}),/ambiguous/);assert.equal(writes,0);picker.destroy();
  const caseVariant={...italic,family:regular.family.toLowerCase()},originalFamily=regular.family;
  const casePicker=mountFontPicker(host,{catalog:{faces:[regular,caseVariant]},mutate:()=>writes++});await assert.rejects(casePicker.applyFace('regular',{wght:700}),/ambiguous/);assert.equal(writes,0);assert.equal(regular.family,originalFamily);assert.equal(caseVariant.family,'fixture variable');casePicker.destroy();
+ for(const [family,variant]of [['École','ÉCOLE'],['Straße','STRASSE']]){const first={...regular,family},second={...italic,family:variant};const mounted=mountFontPicker(host,{catalog:{faces:[first,second]},mutate:()=>writes++});await assert.rejects(mounted.applyFace('regular',{wght:700}),/ambiguous/);assert.equal(writes,0);assert.equal(first.family,family);assert.equal(second.family,variant);mounted.destroy();}
 });
 
 function fixture(){

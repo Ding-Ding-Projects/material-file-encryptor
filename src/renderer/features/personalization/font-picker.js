@@ -1,3 +1,4 @@
+import {fontFamilyKey} from '../../../shared/local-ux/font-family-key.js';
 export function validateFontAxes(face,values){
  const result={};for(const axis of face.axes||[]){const value=values[axis.tag]??axis.default;if(typeof value!=='number'||!Number.isFinite(value)||value<axis.min||value>axis.max)throw Error(`Axis ${axis.tag} must be between ${axis.min} and ${axis.max}.`);result[axis.tag]=value;}
  for(const key of Object.keys(values))if(!face.axes.some(axis=>axis.tag===key))throw Error('Unknown font axis.');return result;
@@ -5,7 +6,7 @@ export function validateFontAxes(face,values){
 export function fontVariationCSS(values){return Object.entries(values).map(([key,value])=>{if(!/^[\x20-\x7e]{4}$/.test(key)||/["\\]/.test(key)||!Number.isFinite(value))throw Error('Invalid font variation value.');return `"${key}" ${value}`;}).join(', ')||'normal';}
 export function validateFontFaceSelection(face,catalog){
  if(!/^(regular|normal)$/i.test(face.style||''))throw Error('This font style needs an exact face mapping before it can be applied.');
- const identity=value=>value.replace(/[A-Z]/g,letter=>letter.toLowerCase());
+ const identity=fontFamilyKey;
  if(face.axes?.length&&(catalog?.faces||[]).filter(candidate=>identity(candidate.family)===identity(face.family)).length!==1)throw Error('Variable axes cannot be applied to an ambiguous font family. Choose a uniquely mapped regular face.');
  return {fontStyle:'normal',fontWeight:'400'};
 }

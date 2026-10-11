@@ -43,6 +43,11 @@ SFNT 及 TTC/OTC 檔案會提供 Unicode 家族與樣式名稱、`fvar` 軸及�
 選擇器會拒絕非 Regular/Normal 樣式；同一家族有多個字型時亦會拒絕套用可變軸。
 只有一個明確對應嘅標準字型，會同時套用 normal 樣式、400 字重及軸設定。
 呢個保守拒絕唔代表已證明顯示引擎實際用邊個字型。明確字型對應、
+家族含糊比對使用 Unicode 17.0.0 Default Caseless Matching，採用官方
+`CaseFolding.txt` C/F 記錄，唔作正規化或者語言特定調整，符合
+[CSS Fonts 名稱比對規則](https://www.w3.org/TR/css-fonts-4/#localized-name-matching)。
+固定來源、產生對應、Unicode 授權及 SHA-256 來源記錄保留喺
+`src/shared/unicode/`，原有家族顯示及 CSS 文字保持不變。
 內置字型合併、完整排版控制及實際畫面證據仍然待接駁。選擇器結束時，
 已接納修改嘅取消及原子性仍由呼叫端負責。
 
