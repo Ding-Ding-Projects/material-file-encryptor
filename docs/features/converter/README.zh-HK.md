@@ -41,3 +41,5 @@ pending() 串流讀取完整持久清單，回傳排隊或執行中項目嘅數�
 
 - [XLSX 同 ODS 表格轉換](spreadsheets.md)
 - [7z 同 RAR 讀取、隔離同封裝](archive-runtime.md)
+
+初始化接受可選 `onDiagnostic(record)` 回呼。紀錄只包含有版本嘅結構編號、元件、固定階段、允許清單內嘅錯誤代碼同標準錯誤類別。絕不包含例外訊息、路徑、來源名稱或載荷位元組。可選執行環境失敗保留喺 `provider.initializationDiagnostics`；提供者致命失敗亦會將安全紀錄附加到 `error.converterDiagnostic`，同時保留原始例外供可信本機診斷。獨立或已封裝探測成功，唔代表之前失敗嘅應用實例已恢復。
