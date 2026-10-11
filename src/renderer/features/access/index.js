@@ -4,7 +4,7 @@ import {createAccessNavigation,createAccessSearch,anchorAccessPanel} from './sur
 import {exportAuthenticatorMetadata,diagnoseClockSkew,exportTickets} from './management.js';
 import {createWaitBudget} from './wait-budget.js';
 import {LocalProfile} from './profile.js';
-import {LockController,LOCK_POLICIES,accessLockIdentity} from './locks.js';
+import {LockController,LOCK_POLICIES,accessLockIdentity,accessLockIdentities} from './locks.js';
 import {parseOtpUri,validateOtp,totp,verifyTotp,randomId,passwordVerifier,verifyPassword,deriveCacheKey,seal,unseal} from './crypto.js';
 import {otpUri,qrSvg,decodeQrBlob,decodeQrPixels} from './qr.js';
 export * from './crypto.js';
@@ -167,5 +167,5 @@ export function mountAccess(container,services={}) {
   const visibility=()=>{if(document.hidden)suspendVisualSecrets();};document.addEventListener?.('visibilitychange',visibility);cleanups.push(()=>document.removeEventListener?.('visibilitychange',visibility));
   const Observer=document.defaultView?.MutationObserver;if(Observer){const observer=new Observer(()=>{if(root.closest('[hidden]'))suspendVisualSecrets();});for(let node=root;node;node=node.parentElement)observer.observe(node,{attributes:true,attributeFilter:['hidden']});cleanups.push(()=>observer.disconnect());}
   navigation.activate('profile');refreshLocks();
-  return {controller,isAllowed:target=>!controller.isLocked(accessLockIdentity(target)),refresh,refreshLocks,openUnlock,openLockWizard,loadAuthenticators,encryptPrivateCache,decryptPrivateCache,logout:endSession,get authenticated(){return profileSession.authenticated;},async load(ids){await controller.load(ids);refreshLocks();},guard:(id,callback,...args)=>controller.run(id,callback,...args),guardEvent:(id,event,callback,...args)=>controller.runForEvent(id,event,callback,...args),guardControl:(id,control,callback,...args)=>controller.runControl(id,control,callback,...args),bind(rootNode){const dispose=controller.intercept(rootNode);cleanups.push(dispose);return dispose;},destroy(){endSession();cleanups.forEach(f=>f());copyBindings.clear();entries.clear();root.remove();}};
+  return {controller,isAllowed:target=>accessLockIdentities(target).every(id=>!controller.isLocked(id)),refresh,refreshLocks,openUnlock,openLockWizard,loadAuthenticators,encryptPrivateCache,decryptPrivateCache,logout:endSession,get authenticated(){return profileSession.authenticated;},async load(ids){await controller.load(ids);refreshLocks();},guard:(id,callback,...args)=>controller.run(id,callback,...args),guardEvent:(id,event,callback,...args)=>controller.runForEvent(id,event,callback,...args),guardControl:(id,control,callback,...args)=>controller.runControl(id,control,callback,...args),bind(rootNode){const dispose=controller.intercept(rootNode);cleanups.push(dispose);return dispose;},destroy(){endSession();cleanups.forEach(f=>f());copyBindings.clear();entries.clear();root.remove();}};
 }

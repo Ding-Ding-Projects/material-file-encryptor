@@ -25,3 +25,7 @@ Pruning hides expired entries from the manager. Historical encrypted commits rem
 A working supported Git executable is required. Missing Git fails before password setup persists. Installer provisioning and production bridge wiring are separate integration requirements; source tests do not establish their availability in a packaged application. Browser-only execution cannot supply this privileged boundary.
 
 Synthetic tests in `test/local-access-host.test.js` exercise real temporary Git recording, encrypted files, redacted export, replay/expiry/actor boundaries, persistent budgets, cancellation, atomic rollback, concurrent changes, missing runtime and independent password expiry. No real vault or user credential is used. Built visual, native sender and packaged integration acceptance remain pending until separately recorded.
+
+## Recovery before the first commit
+
+The encrypted envelope is written and synchronized in the dedicated staging directory before the protected pending intent is stored. That intent binds the staging and final relative paths plus ciphertext hash and prior tail. On restart, a missing commit can be completed only from those attested bytes, whether they are still staged or already at the final path. Unexpected content, symbolic links or missing attested bytes stop recovery without deletion or replacement. Unreferenced staging files are retained, not silently discarded.

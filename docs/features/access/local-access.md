@@ -76,3 +76,5 @@ Admission resolves the registered host from the composed event path. The mount l
 Changing access tabs closes waiting challenges. Leaving the authenticator tab, cancelling registration, logout and destruction stop camera tracks and hide registration QR output. Waiting timers stop when their panel disappears or their deadline ends. Logic coverage lives in `test/local-access-surface.test.js` and `test/local-access-activation.test.js`, alongside the existing factor, budget, export and cancellation tests. Built interaction and visual acceptance remain separately recorded by the integration workflow.
 
 See [Privileged access host integration](access-host.md) for atomic storage, separate history authentication and exact production limitations.
+
+Inherited lock admission enumerates every recorded identity across parent and open-shadow ancestry. An unregistered child identity cannot mask a locked ancestor. All inherited locks are checked before any one-activation grant is consumed; each consumed grant has its own short-lived event handoff.

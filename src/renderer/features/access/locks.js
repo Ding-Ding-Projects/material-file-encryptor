@@ -8,12 +8,12 @@ export function accessControlTarget(event) {
   const field=path.find(node=>/^(MD-(OUTLINED|FILLED)-(TEXT-FIELD|SELECT)|MFE-(FILE-PICKER|DATE-FIELD))$/.test(node?.tagName||''));
   return field||path.find(node=>node?.dataset?.materialPrimitive || /^(MD-(?:(?:FILLED|FILLED-TONAL|OUTLINED|TEXT|ICON|FILLED-ICON|OUTLINED-ICON|FILLED-TONAL-ICON)-BUTTON|(?:OUTLINED|FILLED)-(?:TEXT-FIELD|SELECT)|CHECKBOX|RADIO|SWITCH|SLIDER|(?:PRIMARY|SECONDARY)-TAB)|MFE-(?:FILE-PICKER|DATE-FIELD))$/.test(node?.tagName||'')) || event?.target;
 }
-export function accessLockIdentity(element,event) {
-  const path=typeof event?.composedPath==='function'?event.composedPath():[element];
-  for(const node of path){const owner=node?.closest?.('[data-lock-id]');if(owner?.dataset?.lockId)return owner.dataset.lockId;}
-  for(let node=element;node;node=node.getRootNode?.()?.host){const owner=node.closest?.('[data-lock-id]');if(owner?.dataset?.lockId)return owner.dataset.lockId;}
-  return undefined;
+export function accessLockIdentities(element,event) {
+  const result=[],seen=new Set(),path=typeof event?.composedPath==='function'?event.composedPath():[element];
+  for(const start of [element,...path])for(let node=start;node&&!seen.has(node);node=node.parentElement||node.getRootNode?.()?.host){seen.add(node);const id=node.dataset?.lockId;if(id&&!result.includes(id))result.push(id);}
+  return result;
 }
+export function accessLockIdentity(element,event) {return accessLockIdentities(element,event)[0];}
 const isEditableControl=control=>/^(INPUT|SELECT|TEXTAREA|MD-(OUTLINED|FILLED)-(SELECT|TEXT-FIELD)|MD-(CHECKBOX|RADIO|SWITCH|SLIDER)|MFE-(FILE-PICKER|DATE-FIELD))$/.test(control?.tagName||'');
 const isActionControl=control=>/^(BUTTON|MD-(FILLED|FILLED-TONAL|OUTLINED|TEXT|ICON|FILLED-ICON|OUTLINED-ICON|FILLED-TONAL-ICON)-BUTTON|MD-(PRIMARY|SECONDARY)-TAB)$/.test(control?.tagName||'');
 // This controller is an opt-in local convenience lock, not an authorization boundary.
@@ -100,7 +100,7 @@ export class LockController {
     this.attempts.delete(id);this.sessions.set(id,r.duration?this.now()+r.duration*60000:Infinity);return true;
   }
   run(id,callback,...args){if(this.isLocked(id)){this.onBlocked(id);return false;}if(this.records.get(id)?.sessionMode==='once')this.lock(id);return callback(...args);}
-  admitEvent(event,permit){this.eventAdmissions.set(event,permit);queueMicrotask(()=>{if(this.eventAdmissions.get(event)===permit)this.eventAdmissions.delete(event);});}
+  admitEvent(event,permit){let permits=this.eventAdmissions.get(event);if(!permits){permits=new Map();this.eventAdmissions.set(event,permits);queueMicrotask(()=>{if(this.eventAdmissions.get(event)===permits)this.eventAdmissions.delete(event);});}permits.set(permit.id,permit);}
   runControl(id,control,callback,...args){
     if(this.isLocked(id)){this.onBlocked(id);return false;}
     if(this.records.get(id)?.sessionMode!=='once')return callback(...args);
@@ -110,20 +110,26 @@ export class LockController {
     try{return callback(...args);}finally{if(this.controlAdmissions.get(control)===permit)this.controlAdmissions.delete(control);}
   }
   runForEvent(id,event,callback,...args){
-    const admission=event&&this.eventAdmissions.get(event);
-    if(admission?.id===id&&admission.generation===this.generation(id)&&admission.owner==='capture'){this.eventAdmissions.delete(event);return callback(...args);}
+    const admission=event&&this.eventAdmissions.get(event)?.get(id);
+    if(admission?.id===id&&admission.generation===this.generation(id)&&admission.owner==='capture'){this.eventAdmissions.get(event).delete(id);return callback(...args);}
     if(this.isLocked(id)){this.onBlocked(id);return false;}
     if(this.records.get(id)?.sessionMode==='once'){
       if(!event||typeof event!=='object')return this.run(id,callback,...args);
       this.lock(id);const permit={id,owner:'guard',generation:this.generation(id)};this.admitEvent(event,permit);
-      queueMicrotask(()=>{if(this.eventAdmissions.get(event)===permit)this.eventAdmissions.delete(event);});
+      queueMicrotask(()=>{if(this.eventAdmissions.get(event)?.get(id)===permit)this.eventAdmissions.get(event).delete(id);});
     }
     return callback(...args);
   }
   intercept(root,identity=accessLockIdentity){
     const targets=new Map(),observers=new Map(),delivered=new WeakSet();let disposed=false;
-    const handler=(event,listeningRoot)=>{const path=event.composedPath?.()||[];const outermost=path.filter(node=>targets.has(node)).at(-1)||listeningRoot;if(outermost===listeningRoot)delivered.delete(event);else if(delivered.has(event))return;delivered.add(event);const target=accessControlTarget(event);const id=identity(target,event);const controlPermit=this.controlAdmissions.get(target);if(id&&controlPermit?.id===id&&controlPermit.generation===this.generation(id)&&event.isTrusted!==true&&controlPermit.types.delete(event.type)){this.admitEvent(event,{id,owner:'capture',generation:this.generation(id)});return;}const admission=this.eventAdmissions.get(event);if(id&&admission?.id===id&&admission.generation===this.generation(id)&&admission.owner==='guard'){this.eventAdmissions.delete(event);return;}if(id&&this.isLocked(id)){event.preventDefault();event.stopImmediatePropagation();this.onBlocked(id,target);}else if(id&&this.records.get(id)?.sessionMode==='once'&&['click','change','submit','dragstart'].includes(event.type)&&!(event.type==='click'&&isEditableControl(target))){this.lock(id);this.admitEvent(event,{id,owner:'capture',generation:this.generation(id)});}};
-
+    const handler=(event,listeningRoot)=>{const path=event.composedPath?.()||[];const outermost=path.filter(node=>targets.has(node)).at(-1)||listeningRoot;if(outermost===listeningRoot)delivered.delete(event);else if(delivered.has(event))return;delivered.add(event);
+      const target=accessControlTarget(event),ids=(identity===accessLockIdentity?accessLockIdentities(target,event):[identity(target,event)]).filter(id=>id&&this.records.has(id)),controlPermit=this.controlAdmissions.get(target),admissions=this.eventAdmissions.get(event),allowed=new Set();
+      for(const id of ids){if(controlPermit?.id===id&&controlPermit.generation===this.generation(id)&&event.isTrusted!==true&&controlPermit.types.has(event.type))allowed.add(id);const admission=admissions?.get(id);if(admission?.generation===this.generation(id)&&admission.owner==='guard')allowed.add(id);}
+      const blocked=ids.find(id=>!allowed.has(id)&&this.isLocked(id));if(blocked){event.preventDefault();event.stopImmediatePropagation();this.onBlocked(blocked,target);return;}
+      for(const id of ids){if(allowed.has(id)){const admission=admissions?.get(id);if(admission?.owner==='guard')admissions.delete(id);else{controlPermit.types.delete(event.type);this.admitEvent(event,{id,owner:'capture',generation:this.generation(id)});}continue;}
+       if(this.records.get(id)?.sessionMode==='once'&&['click','change','submit','dragstart'].includes(event.type)&&!(event.type==='click'&&isEditableControl(target))){this.lock(id);this.admitEvent(event,{id,owner:'capture',generation:this.generation(id)});}
+      }
+    };
     const events=['mfe-action-request','click','dblclick','pointerdown','keydown','input','change','submit','dragstart'];
     const Observer=root.ownerDocument?.defaultView?.MutationObserver||globalThis.MutationObserver;
     const scan=node=>{if(disposed||!node)return;const nodes=[node,...(node.querySelectorAll?.('*')||[])];for(const element of nodes){if(element.shadowRoot)attach(element.shadowRoot);if(element.updateComplete?.then)element.updateComplete.then(()=>{if(!disposed&&element.isConnected!==false&&element.shadowRoot)attach(element.shadowRoot);}).catch(()=>{});}};
