@@ -8,6 +8,14 @@ import {command,proveStableRendererTree} from './test-renderer-browser.mjs';
 import {inspectPackagedRendererTarget} from './packaged-renderer-runtime.mjs';
 import {sha256} from './gui-acceptance.mjs';
 
+export async function retainMainComparison({comparison,binding,evidenceRoot,attest}){
+ const provisional={schemaVersion:1,scope:'packaged-main-webcrypto',...binding,...comparison,postProofVerified:false,derivedBytesRetained:false,rendererProbed:false};
+ await fs.writeFile(path.join(evidenceRoot,'main-crypto-provisional.json'),JSON.stringify(provisional,null,2),{flag:'wx'});
+ const proof=await attest();
+ const receipt={...provisional,...proof,postProofVerified:true};
+ await fs.writeFile(path.join(evidenceRoot,'main-crypto.json'),JSON.stringify(receipt,null,2),{flag:'wx'});return receipt;
+}
+
 export async function probePackagedMainCrypto({opened,port,evidenceRoot}){
  assert.equal(opened.connectionOwned,true);assert.equal(opened.target.kind,'extracted-packaged-runtime');
  const target=opened.target;await inspectPackagedRendererTarget(target);
@@ -35,8 +43,9 @@ export async function probePackagedMainCrypto({opened,port,evidenceRoot}){
   const response=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});
   if(response.exceptionDetails)throw Error('Main synthetic comparison returned an exception');const result=response.result?.value;
   assert.equal(result?.mainContext,true);assert.ok(Number.isInteger(result.completed)&&result.completed>=1&&result.completed<=100);assert.equal(result.allMatched,result.firstMismatch===null);if(result.allMatched)assert.equal(result.completed,100);else assert.equal(result.completed,result.firstMismatch);
-  const after=await prove({...input,clientPid:process.pid,clientBinding,targetId:before.target.id});assert.deepEqual(after.root,before.root);assert.deepEqual(after.peer,connected.peer);await inspectPackagedRendererTarget(target);
-  const receipt={schemaVersion:1,scope:'packaged-main-webcrypto',sourceCommit:target.sourceCommit,executableSha256:target.hashes.executable,resourceSha256:target.hashes.asar,proofHelperSha256:sha256(await fs.readFile(helper)),referenceRuntime:{node:process.version,executableSha256:sha256(await fs.readFile(process.execPath))},maximumDerivations:100,iterationsPerDerivation:310000,...result,derivedBytesRetained:false,rendererProbed:false,before,connected,after};
-  await fs.mkdir(evidenceRoot,{recursive:true});await fs.writeFile(path.join(evidenceRoot,'main-crypto.json'),JSON.stringify(receipt,null,2),{flag:'wx'});return receipt;
+  const binding={sourceCommit:target.sourceCommit,executableSha256:target.hashes.executable,resourceSha256:target.hashes.asar,proofHelperSha256:sha256(await fs.readFile(helper)),referenceRuntime:{node:process.version,executableSha256:sha256(await fs.readFile(process.execPath))},maximumDerivations:100,iterationsPerDerivation:310000};
+  return await retainMainComparison({comparison:result,binding,evidenceRoot,attest:async()=>{
+   const after=await prove({...input,clientPid:process.pid,clientBinding,targetId:before.target.id});assert.deepEqual(after.root,before.root);assert.deepEqual(after.peer,connected.peer);await inspectPackagedRendererTarget(target);return {before,connected,after};
+  }});
  }finally{reference?.fill(0);socket.close();rejectPending();}
 }
