@@ -67,8 +67,8 @@
     {
       "source": "docs/features/converter/README.md",
       "translation": "docs/features/converter/README.zh-HK.md",
-      "sourceSha256": "adbc5ff2935c7800045e8c3124b568f1ea26fe5cfeeef05a25c93eb0e30b780e",
-      "translationSha256": "423e2a6cb490da5078697eca758a5e8eeb58f3ab73cc9fd34d76cf65dec1f797"
+      "sourceSha256": "cbdc72f2bd2d03cf292f5a6311ed94580720d214c1753149cf77ab2e4e628945",
+      "translationSha256": "63baf82ada2894c2fab24f624860e88faac8bbdbdda5063ed83705c27c9d9bfe"
     },
     {
       "source": "docs/features/converter/archive-and-data.md",

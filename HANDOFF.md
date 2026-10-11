@@ -1,3 +1,9 @@
+## Current interface integration checkpoint, 2026-10-11
+
+The redesigned interface remains under verification on the integration branch. The user explicitly deferred real-data migration while keeping the existing drive mounted. Do not use another letter to create a second vault/cache owner. Installation, installed update and removal remain deferred.
+
+Published main f6990e24 and normal release v1.275.1 contain the separately accepted 80 MiB storage unit. The latest completed interface build is 0f5d2b9; actual startup title and inner create-dialog accessible-name checks passed. New badge and guidance CSP fixes require a fresh build. The 89-state/4272-tuple matrix has zero accepted tuples, and retained diagnostic images are private because machine paths are visible. Main cryptographic comparison, full server management, protected complete reset and other finite-ledger gaps remain unfinished. See CLOSEOUT_PROMPT.md for the exact checkpoint and next verification actions.
+
 # Verified native storage unit, 2026-10-11
 
 ## Verified storage packing update, 2026-10-11

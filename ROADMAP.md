@@ -1,3 +1,14 @@
+## Active redesign acceptance, 2026-10-11
+
+- [x] Independently verify and publish the native 80 MiB storage unit at main f6990e24 and normal release v1.275.1.
+- [ ] Complete the current interface production build and exact installer entrypoint.
+- [ ] Verify badge, guidance CSP, stationary frame, real context-menu actions and registered controls in the rebuilt runtime.
+- [ ] Complete 89 states across 4272 visual tuples, plus separate physical DPI proof.
+- [ ] Complete applicable finite-ledger behavior, including the full interactive server manager and protected complete-reset transaction.
+- [ ] Resolve actual main-runtime cryptographic comparison with exact process ownership evidence.
+- [ ] Real-data migration is deferred by the user while the existing drive remains mounted.
+- [ ] Actual installation, installed update and removal remain deferred.
+
 # Storage packing implementation, 2026-10-11
 
 - [x] Implement 80 MiB defaults, durable snapshot packing, resumable queue and generation-aware pause/resume.
