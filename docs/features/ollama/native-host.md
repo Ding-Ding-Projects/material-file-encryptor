@@ -41,7 +41,7 @@ A main-process-only reviewed manifest has these fields:
 }
 ```
 
-The manifest is trusted configuration supplied by the parent, never a renderer upload or an executable's own claim. It must be derived from reviewed official source provenance and independently verified archive extraction. Merely attaching an official-looking URL does not establish that derivation. No default manifest is provided here.
+The manifest is trusted configuration supplied by the parent, never a renderer upload or an executable's own claim. It must be derived from reviewed official source provenance and independently verified archive extraction. Merely attaching an official-looking URL does not establish that derivation. The constructor defaults remain empty. The separately exported [reviewed release constants](./release-provenance.md) can be supplied explicitly after host integration review.
 
 When selected bytes match a supplied reviewed manifest, the native confirmation displays the exact path, executable digest, source archive digest, version and provenance. Cancel is the default. The executable is rehashed after confirmation, and changed bytes prevent approval. The protected store records approval under `profile:ollama-trust:<manifest identity>`. Every later verification and pre-launch check rereads the file and compares its current hash. Selection alone never approves it. The parent must retain the existing boundary that makes `profile:` records inaccessible to renderer credential reads.
 
