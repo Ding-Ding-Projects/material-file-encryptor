@@ -1,3 +1,12 @@
+# Source integration, 2026-10-11
+
+- Admit automatic update candidates through immutable main ancestry before staging or cached-ready restoration. Create normal branch downloads without default promotion, then serialize verified main promotion separately from builds.
+- Wire typed image fit, crop, focal points and transforms through current-layer locks and the original persistence, rollback/retry and Undo consumers. Preserve historical rendering defaults until explicit fit selection.
+- Add explicit versioned transition-property endpoints, ordered portable rows and a shared preview resolver. Per-property timing, full timelines and rendered interpolation remain unfinished.
+- Require pure Material Design 3 on every visible surface. Source/component evidence does not claim current pixels, installed lifecycle or full feature completion.
+
+更新候選版本先核對主線祖先，分支下載和主線預設發布分開處理。圖片控制沿用原有鎖定、儲存及歷史；轉場屬性保留獨立端點和可攜資料。全部可見介面仍須符合完整 Material Design 3，真實畫面及安裝驗收未完成便不冒認過關。
+
 # Typed keyframe inspector and current-layer locks, 2026-10-11
 
 - Added registered Material keyframe controls with explicit time modes, typed numeric units, strict selected-frame movement and19 optional guidance concepts.

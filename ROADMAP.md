@@ -1,3 +1,10 @@
+# Typed transition source, 2026-10-11 UTC
+
+- [x] Independently review and integrate explicit version 2 transition-property endpoints, portability, original mutation authority and shared preview resolution. Source acceptance only.
+- [ ] Complete per-property timing, full timelines, motion paths and actual interpolation acceptance.
+- [ ] Verify this main integration through cloud production and independent release/documentation readback.
+- [ ] Collect genuine preferences pixels and prove pure Material Design 3 across all 210 complete-surface rows.
+
 # Updater and image integration, 2026-10-11 UTC
 
 - [x] Independently review image source and updater ancestry admission, preserving original persistence, locks and history. Source acceptance only.

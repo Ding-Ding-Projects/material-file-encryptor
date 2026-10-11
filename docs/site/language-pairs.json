@@ -127,8 +127,8 @@
     {
       "source": "docs/features/interface/README.md",
       "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "42167f18a497dda5ff12220ffb42f3f5035a2d287d94e0448500036bb5450e5f",
-      "translationSha256": "e6634a15813015ddf94da2291dcde270ebecace51e75915cb594e0fac6c2d5d0"
+      "sourceSha256": "9656d81d25ffd28dea2554cc98a28b3c1f38a29005d6404b9b36d4370f50f5fb",
+      "translationSha256": "4bf5973348302f4df899f49452e5fb7ae050eb78c5c4e34c5c5a6dbe740e10b4"
     },
     {
       "source": "docs/features/interface/appearance-editor.md",
@@ -471,6 +471,12 @@
       "translation": "docs/features/appearance/image-placement.zh-HK.md",
       "sourceSha256": "2441c4987fb93c38d0df7e78f9e757b05690e1d481b96b4a0c93159f5ff9debf",
       "translationSha256": "1400d6478cc38b4caa81b3c004fca276dbf5a312803569f852074ce0a403cdda"
+    },
+    {
+      "source": "docs/features/interface/transition-properties.md",
+      "translation": "docs/features/interface/transition-properties.zh-HK.md",
+      "sourceSha256": "de370a7ec428993b278550be1708edccbd734ceecffbff5efc853d6accca0a5b",
+      "translationSha256": "3e6b076494ecd680fd30a831719d9960f3435339b66905143ed3c86cd3ac951d"
     }
   ]
 }
