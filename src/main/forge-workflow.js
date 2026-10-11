@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
 import {randomUUID} from 'node:crypto';
+import {AsyncLocalStorage} from 'node:async_hooks';
 
 const loginPattern=/^[A-Za-z0-9][A-Za-z0-9-]{0,38}$/;
 const repoPattern=/^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/;
@@ -19,23 +20,26 @@ export function runForgeCommand(file,args,{cwd,signal,env=process.env,interactiv
 
 /** gh owns account credentials. This service never reads or returns credential values. */
 export function createForgeWorkflow({dataDirectory,execute=runForgeCommand,env=process.env,credentialStorageCheck,onAuthenticationChallenge=()=>{}}={}){
- let closed=false,busy=false;const controllers=new Set(),plans=new Map();
+ let closed=false,busy=false,cancelGeneration=0;const controllers=new Set(),plans=new Map(),operationContext=new AsyncLocalStorage();
+ const publicationUnavailable='Publication is unavailable: the supported GitHub CLI cannot durably bind every command and Git credential lookup to the reviewed account without exposing credentials. No repository was created or uploaded.';
+ function checkCancellation(){const operation=operationContext.getStore();if(closed||operation&&operation.generation!==cancelGeneration)throw new Error('Forge operation cancelled. No further action will start.');}
+ async function checked(promise){checkCancellation();const result=await promise;checkCancellation();return result;}
  const safeEnv={...env};for(const key of Object.keys(safeEnv))if(key.startsWith('GIT_')||['GH_TOKEN','GITHUB_TOKEN','GH_ENTERPRISE_TOKEN','GITHUB_ENTERPRISE_TOKEN'].includes(key))delete safeEnv[key];safeEnv.GH_HOST='github.com';safeEnv.GH_PROMPT_DISABLED='1';safeEnv.GIT_CONFIG_GLOBAL=process.platform==='win32'?'NUL':'/dev/null';safeEnv.GIT_CONFIG_NOSYSTEM='1';safeEnv.GIT_TERMINAL_PROMPT='0';
  const storageCheck=credentialStorageCheck||(async()=>{
   if(process.platform!=='win32')throw new Error('Protected forge credentials require the supported Windows host.');
   const folder=env.GH_CONFIG_DIR||path.join(env.APPDATA||path.join(env.USERPROFILE||'','AppData','Roaming'),'GitHub CLI');
   try{const filename=path.join(folder,'hosts.yml'),stat=await fs.stat(filename);if(stat.size>262144)throw new Error('Forge account configuration exceeds its limit.');const text=await fs.readFile(filename,'utf8');if(/^\s*oauth_token\s*:/m.test(text))throw new Error('Forge credentials must use the operating-system credential store. Sign out and sign in with secure storage.');}catch(error){if(error.code!=='ENOENT')throw error;}
  });
- async function command(file,args,options={}){if(closed)throw new Error('Forge service is closed.');const controller=new AbortController();controllers.add(controller);try{return await execute(file,args,{...options,onAuthenticationChallenge:options.interactive?onAuthenticationChallenge:undefined,signal:controller.signal,env:safeEnv});}finally{controllers.delete(controller);}}
- async function gh(args,options){await storageCheck();const result=await command('gh',args,options);if(result.code!==0)throw new Error('Forge command failed or was cancelled. Retry authentication or inspect the destination.');return result.output;}
- async function serialized(fn){if(busy)throw new Error('Another forge operation is active.');busy=true;try{return await fn();}finally{busy=false;}}
- async function accounts(){await storageCheck();const result=await command('gh',['auth','status','--hostname','github.com']);if(result.code!==0)return[];const rows=[];let current;
+ async function command(file,args,options={}){checkCancellation();const controller=new AbortController();controllers.add(controller);try{checkCancellation();return await checked(execute(file,args,{...options,onAuthenticationChallenge:options.interactive?onAuthenticationChallenge:undefined,signal:controller.signal,env:safeEnv}));}finally{controllers.delete(controller);}}
+ async function gh(args,options){await checked(storageCheck());const result=await command('gh',args,options);if(result.code!==0)throw new Error('Forge command failed or was cancelled. Retry authentication or inspect the destination.');return result.output;}
+ async function serialized(fn){if(busy)throw new Error('Another forge operation is active.');checkCancellation();busy=true;try{return await operationContext.run({generation:cancelGeneration},async()=>{checkCancellation();const result=await fn();checkCancellation();return result;});}finally{busy=false;}}
+ async function accounts(){await checked(storageCheck());const result=await command('gh',['auth','status','--hostname','github.com']);if(result.code!==0)return[];const rows=[];let current;
   for(const line of result.output.split(/\r?\n/)){const match=line.match(/Logged in to github\.com account ([A-Za-z0-9-]+) \(([^)]+)\)/);if(match){if(!validLogin(match[1])||!/keyring|credential/i.test(match[2]))throw new Error('Forge credentials must use the operating-system credential store.');current={id:match[1],label:match[1],active:false};rows.push(current);}if(current&&/Active account: true/.test(line))current.active=true;}
   return rows;
  }
  async function active(accountId){if(!validLogin(accountId))throw new Error('Choose a signed-in account.');const list=await accounts();if(!list.some(row=>row.id===accountId&&row.active))throw new Error('Set the selected account active before continuing.');const viewer=JSON.parse(await gh(['api','user']));if(viewer.login!==accountId)throw new Error('The active account changed. Review the account again.');}
  async function owners(accountId){await active(accountId);const data=JSON.parse(await gh(['api','graphql','-f','query=query { viewer { login organizations(first:100) { nodes { login viewerCanCreateRepositories } } } }']));const viewer=data.data?.viewer;if(viewer?.login!==accountId)throw new Error('The selected account could not be verified.');return[{id:accountId,label:accountId,canFork:true},...(viewer.organizations?.nodes||[]).filter(row=>validLogin(row.login)&&row.viewerCanCreateRepositories===true).map(row=>({id:row.login,label:row.login,canFork:true}))];}
- async function sourceState(folder){const real=await fs.realpath(folder);if(!(await fs.lstat(real)).isDirectory())throw new Error('Choose a repository folder.');const root=await command('git',['-C',real,'rev-parse','--show-toplevel']);if(root.code||path.resolve(root.output.trim())!==real)throw new Error('Choose the repository root.');const status=await command('git',['-C',real,'-c','core.fsmonitor=false','status','--porcelain']);if(status.code||status.output.trim())throw new Error('Save and commit all source changes before publishing.');const head=await command('git',['-C',real,'rev-parse','HEAD']);if(head.code||! /^[a-f0-9]{40,64}$/.test(head.output.trim()))throw new Error('The source revision is unavailable.');return{folder:real,revision:head.output.trim()};}
+ async function sourceState(folder){const real=await checked(fs.realpath(folder));if(!(await checked(fs.lstat(real))).isDirectory())throw new Error('Choose a repository folder.');const root=await command('git',['-C',real,'rev-parse','--show-toplevel']);if(root.code||path.resolve(root.output.trim())!==real)throw new Error('Choose the repository root.');const status=await command('git',['-C',real,'-c','core.fsmonitor=false','status','--porcelain']);if(status.code||status.output.trim())throw new Error('Save and commit all source changes before publishing.');const head=await command('git',['-C',real,'rev-parse','HEAD']);if(head.code||! /^[a-f0-9]{40,64}$/.test(head.output.trim()))throw new Error('The source revision is unavailable.');return{folder:real,revision:head.output.trim()};}
  return{
   accounts,owners,
   signIn:()=>serialized(async()=>{await gh(['auth','login','--hostname','github.com','--git-protocol','https','--web'],{interactive:true});return accounts();}),
@@ -45,24 +49,12 @@ export function createForgeWorkflow({dataDirectory,execute=runForgeCommand,env=p
   prepare:({folder,accountId,ownerId,name,visibility,route,upstream})=>serialized(async()=>{
    if(!validRepo(name)||!validLogin(ownerId)||!['public','private'].includes(visibility)||!['copy-push','fork'].includes(route))throw new Error('Choose a valid destination and publication route.');if(!(await owners(accountId)).some(row=>row.id===ownerId))throw new Error('Choose an available owner.');
    const source=await sourceState(folder);if(route==='fork'&&(typeof upstream!=='string'||upstream.split('/').length!==2||!validLogin(upstream.split('/')[0])||!validRepo(upstream.split('/')[1])))throw new Error('Choose an exact upstream owner/repository.');if(route==='fork'){const original=JSON.parse(await gh(['repo','view',upstream,'--json','isPrivate']));if(original.isPrivate!==(visibility==='private'))throw new Error('A fork must retain the upstream visibility. Choose copy-and-push for another visibility.');}
-   const id=randomUUID(),plan={id,...source,accountId,ownerId,name,visibility,route,upstream:route==='fork'?upstream:null,destination:ownerId+'/'+name,state:'prepared'};plans.set(id,plan);return{id,revision:plan.revision,accountId,ownerId,name,visibility,route,destination:plan.destination,includesCompleteHistory:route==='copy-push',warning:route==='copy-push'?'The complete committed source history will be uploaded. Review it for private information before confirming.':'The provider will fork the selected upstream. Local changes are not uploaded.'};
+   checkCancellation();const id=randomUUID(),plan={id,...source,accountId,ownerId,name,visibility,route,upstream:route==='fork'?upstream:null,destination:ownerId+'/'+name,state:'prepared'};plans.set(id,plan);return{id,revision:plan.revision,accountId,ownerId,name,visibility,route,destination:plan.destination,publicationAvailable:false,unavailableReason:publicationUnavailable,includesCompleteHistory:route==='copy-push',warning:route==='copy-push'?'The complete committed source history would be uploaded. Review it for private information before confirming.':'The provider would fork the selected upstream. Local changes would not be uploaded.'};
   }),
   publish:({id,confirmation})=>serialized(async()=>{
-   const plan=plans.get(id);if(!plan||plan.state!=='prepared'||confirmation!==plan.destination)throw new Error('Confirm the exact prepared destination.');await active(plan.accountId);const source=await sourceState(plan.folder);if(source.revision!==plan.revision)throw new Error('The source changed. Prepare and review publication again.');plan.state='publishing';let staging;
-   try{
-    // A fresh bare clone prevents source-local hooks, credential helpers and URL rewrites from running on push.
-    if(plan.route==='copy-push'){
-     if(!dataDirectory)throw new Error('Publication staging is unavailable.');const parent=path.join(dataDirectory,'publication-staging');await fs.mkdir(parent,{recursive:true,mode:0o700});staging=await fs.mkdtemp(path.join(parent,'publish-'));
-     const cloned=await command('git',['clone','--bare','--no-local','--no-hardlinks','--',plan.folder,staging]);if(cloned.code)throw new Error('Source snapshot could not be prepared.');
-     const created=await gh(['repo','create',plan.destination,'--'+plan.visibility]);
-     const pushed=await command('git',['-C',staging,'-c','core.hooksPath='+path.join(staging,'disabled-hooks'),'-c','credential.helper=','-c','credential.helper=!gh auth git-credential','-c','push.gpgSign=false','-c','protocol.ext.allow=never','push','--no-verify','https://github.com/'+plan.destination+'.git',plan.revision+':refs/heads/main']);if(pushed.code)throw new Error('Destination created, but upload failed. The source is preserved. Review authentication or destination conflicts and prepare again.');void created;
-    }else await gh(['repo','fork',plan.upstream,'--clone=false','--remote=false','--fork-name',plan.name,...(plan.ownerId===plan.accountId?[]:['--org',plan.ownerId])]);
-    const result=JSON.parse(await gh(['repo','view',plan.destination,'--json','nameWithOwner,url,isPrivate,isFork']));if(result.nameWithOwner!==plan.destination||result.isPrivate!==(plan.visibility==='private')||plan.route==='fork'&&result.isFork!==true)throw new Error('Publication exists but its destination properties require review.');
-    if(plan.route==='copy-push'){const proof=await command('git',['-C',staging,'-c','credential.helper=','-c','credential.helper=!gh auth git-credential','ls-remote','https://github.com/'+plan.destination+'.git','refs/heads/main']);if(proof.code||proof.output.split(/\s/)[0]!==plan.revision)throw new Error('Publication upload could not be verified.');}
-    plan.state='completed';return{published:true,route:plan.route,destination:plan.destination,url:result.url,revision:plan.route==='copy-push'?plan.revision:null};
-   }catch(error){plan.state='failed';throw error;}finally{if(staging)await fs.rm(staging,{recursive:true,force:true});}
+   const plan=plans.get(id);if(!plan||plan.state!=='prepared'||confirmation!==plan.destination)throw new Error('Confirm the exact prepared destination.');checkCancellation();throw new Error(publicationUnavailable);
   }),
-  cancel(){for(const controller of controllers)controller.abort();},
-  close(){closed=true;for(const controller of controllers)controller.abort();plans.clear();},
+  cancel(){cancelGeneration++;for(const controller of controllers)controller.abort();},
+  close(){closed=true;cancelGeneration++;for(const controller of controllers)controller.abort();plans.clear();},
  };
 }
