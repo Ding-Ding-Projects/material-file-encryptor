@@ -1,4 +1,5 @@
 export const ollamaCantonese = Object.freeze({
+  'Global completeness unknown':'整體完整性未知',
   'Regex searches run in a disposable worker with a 150 ms deadline, a 128-character pattern limit, and a 4 MiB text limit.':'正規表示式搜尋喺獨立即棄工作程序運行，限時 150 毫秒、模式最多 128 個字元、文字最多 4 MiB。',
   'Searching in an isolated worker.':'正在獨立工作程序搜尋。','The regular expression is invalid.':'正規表示式無效。','Search exceeds the supported expression or text limits.':'搜尋超過模式或文字上限。','Search worker could not run.':'搜尋工作程序無法運行。','Search worker could not start.':'搜尋工作程序無法啟動。','Regular expression exceeded the search deadline. Simplify the pattern.':'正規表示式超過搜尋限時，請簡化模式。',
   'Copy destination':'複製目的標籤','Copy installed model':'複製已安裝模型','Model copy created.':'已建立模型副本。','Delete installed model':'刪除已安裝模型','Delete installed model?':'刪除已安裝模型？','Installed model removed.':'已移除本機模型。','Generate a single response':'產生單次回應',

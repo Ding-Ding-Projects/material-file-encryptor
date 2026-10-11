@@ -31,7 +31,7 @@ test('catalog follows all model and tag pages, retains last complete cache on fa
     'https://ollama.com/library/beta/tags':'<a href="/library/beta:one">beta:one 1GB 2K context window</a>',
   };
   const catalog=new OfficialCatalog({fetchImpl:async u=>response(pages[u]||''),now:()=> '2026-10-10T00:00:00.000Z'});
-  const result=await catalog.refresh();assert.equal(result.complete,true);assert.equal(result.pageCount,5);assert.equal(result.familyCount,2);assert.equal(result.variants.length,3);assert.equal(result.variants.find(v=>v.tag==='alpha:two').sizeBytes,4e9);assert.equal(result.revision.length,64);
+  const result=await catalog.refresh();assert.equal(result.complete,null);assert.equal(result.completeness,'unknown');assert.equal(result.enumerationComplete,true);assert.equal(result.pageCount,5);assert.equal(result.familyCount,2);assert.equal(result.variants.length,3);assert.equal(result.variants.find(v=>v.tag==='alpha:two').sizeBytes,4e9);assert.equal(result.revision.length,64);
   const failed=await new OfficialCatalog({fetchImpl:async()=>{throw new Error('offline');}}).refresh(result);assert.equal(failed.stale,true);assert.equal(failed.variants.length,3);assert.equal(failed.lastSuccessfulRefresh,result.lastSuccessfulRefresh);
   delete pages['https://ollama.com/library/beta/tags'];const lost=await catalog.refresh(result);assert.equal(lost.stale,true);assert.equal(lost.variants.length,3);
 });
@@ -45,10 +45,10 @@ test('context memory comes from architecture metadata rather than model-name gue
   const result=modelEvidence({tag:'any-name',sizeBytes:1000},metadata,2048);assert.equal(result.context.contextBytes,4*16*2*128*2048);assert.equal(result.model.parameterCount,1e9);assert.equal(modelEvidence({tag:'llama-8b'}).context.contextBytes,null);
 });
 test('profile launch uses only verified picker registrations and rolls back failed readiness',async()=>{
-  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'ollama-profile-'));try{let stopped=false;const p=new ProfileManager({verifyExecutable:async()=>true,validateProfile:async p=>p.args.length===1&&p.args[0]==='--version',launcher:async()=>({stop:async()=>{stopped=true;}}),healthCheck:async()=>false});
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'ollama-profile-'));try{let stopped=false;const p=new ProfileManager({ownedRoots:[dir],verifyExecutable:async()=>true,validateProfile:async p=>p.args.length===1&&p.args[0]==='--version',launcher:async()=>({stop:async()=>{stopped=true;}}),healthCheck:async()=>false});
     await assert.rejects(p.registerPicked({id:'bad',name:'Bad',executable:process.execPath,cwd:dir,args:['x;shutdown']}));
     await assert.rejects(p.registerPicked({id:'bad-code',name:'Bad',executable:process.execPath,cwd:dir,args:['-e','process.exit()']}));
-    await p.registerPicked({id:'safe',name:'Safe',executable:process.execPath,cwd:dir,args:['--version']});const result=await p.launch('safe','a:1');assert.equal(result.rolledBack,true);assert.equal(stopped,true);assert.equal(p.snapshots.length,1);assert.equal(p.restore(result.snapshotId).state,'restored');
+    await p.registerPicked({id:'safe',name:'Safe',executable:process.execPath,cwd:dir,args:['--version']});const result=await p.launch('safe','a:1');assert.equal(result.rolledBack,true);assert.equal(stopped,true);assert.equal(p.snapshots.length,1);assert.equal((await p.restore(result.snapshotId)).state,'restored');
   }finally{await fs.rm(dir,{recursive:true,force:true});}
 });
 test('service persists a batch, skips installed models and rejects unverified selections',async()=>{
