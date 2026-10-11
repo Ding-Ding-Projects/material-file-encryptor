@@ -468,8 +468,8 @@ async function mountFeature(id,label,labelYue,loader,mount) {
 function renderOperations() {
  const host=$('active-operations');if(!host)return;const operations=state?.operations||[];const rows=Array.isArray(operations)?operations:Object.values(operations);const signature=JSON.stringify(rows);
  if(host.dataset.signature===signature)return;host.dataset.signature=signature;host.replaceChildren();
- for(const operation of rows){const row=document.createElement('div');row.className='active-operation';const label=document.createElement('span');label.textContent=`${operation.label||operation.type||operation.id}: ${operation.state||operation.status||''}${Number.isFinite(operation.progress)?` · ${operation.progress}%`:''}${operation.error?` · ${operation.error}`:''}`;row.append(label);
- if(!['completed','cancelled','failed'].includes(operation.state||operation.status)&&api?.cancelOperation){const cancel=document.createElement('md-text-button');cancel.textContent=t('Cancel operation');cancel.onclick=()=>api.cancelOperation(operation.id).catch(showError);row.append(cancel);}host.append(row);}
+ for(const operation of rows){const row=document.createElement('div');row.className='active-operation';const label=document.createElement('span');label.textContent=`${operation.label||operation.type||operation.operationId||operation.id}: ${operation.state||operation.status||''}${Number.isFinite(operation.progress)?` · ${operation.progress}%`:''}${operation.error?` · ${operation.error}`:''}`;row.append(label);
+ if(!['completed','cancelled','failed'].includes(operation.state||operation.status)&&api?.cancelOperation){const cancel=document.createElement('md-text-button');cancel.textContent=t('Cancel operation');cancel.onclick=()=>api.cancelOperation(operation.operationId||operation.id).catch(showError);row.append(cancel);}host.append(row);}
 }
 function workspaceCommands() {
  const command=(id,label,run)=>({id,label:{en:label,yue:cantonese[label]||enhancedLabels[label]||label},run});

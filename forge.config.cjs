@@ -4,7 +4,7 @@ module.exports = {
     asar: true,
     executableName: 'MaterialFileEncryptor',
     appBundleId: 'uk.dewhui.material-file-encryptor',
-    extraResource: [path.resolve('out/native'), path.resolve('out/tools'), path.resolve('.cache/driver'), path.resolve('dependencies.json')],
+    extraResource: [path.resolve('out/native'), path.resolve('out/converter'), path.resolve('out/tools'), path.resolve('.cache/driver'), path.resolve('dependencies.json')],
     ignore: [/(?:^|[\\/])\.agent(?:[\\/]|$)/i, /^\/docs/, /^\/test/, /^\/scripts/, /^\/native/, /^\/out/, /^\/\.git/, /^\/\.cache/, /^\/\.github/, /^\/CLOSEOUT_PROMPT\.md/],
   },
   hooks: { postPackage: async (_config, result) => {
