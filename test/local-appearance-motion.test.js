@@ -4,6 +4,9 @@ import {defaultMotion,newMotionTrack,newTransition,validateMotion,compileMotionF
 import {createTargetMotionRuntime,createMotionRegistry} from '../src/renderer/features/personalization/motion-runtime.js';
 import {defaultAppearance,newLayer,validateAppearance} from '../src/renderer/features/personalization/appearance.js';
 import {readFile} from 'node:fs/promises';
+import {mountMotionEditor} from '../src/renderer/features/personalization/motion-editor.js';
+import {createAccessDocument} from './helpers/local-access-dom.js';
+import {newMotionSchedule,resolveMotionSchedule} from '../src/renderer/features/personalization/motion-schedules.js';
 function fixture(){
  const calls=[],statuses=[],styles=new Map(),attrs=new Map();let mutation;
  class Observer{constructor(fn){mutation=fn;}observe(){}disconnect(){this.disconnected=true;}}
@@ -38,9 +41,31 @@ test('reduced motion retains authored data, uses static equivalent and cancels e
 test('registry reuses unchanged targets and cancels replaced or removed consumers',()=>{
  const f=fixture(),m={...defaultMotion(),tracks:[newMotionTrack('track')]},registry=createMotionRegistry(f.options),row={id:'target:normal:0',target:f.target,motion:m};registry.sync([row]);const consumer=registry.get(row.id);registry.sync([row]);assert.equal(registry.get(row.id),consumer);assert.equal(f.calls.length,1);registry.sync([]);assert.ok(f.calls[0].cancelled);registry.destroy();
 });
+test('inactive inherited states and hidden layers cannot retain live target motion',()=>{
+ const f=fixture(),model={...defaultMotion(),tracks:[newMotionTrack('state')]},registry=createMotionRegistry(f.options),row={id:'state',target:f.target,motion:model,active:false};registry.sync([row]);assert.equal(f.calls.length,0);registry.sync([{...row,active:true}]);assert.equal(f.calls.length,1);registry.sync([row]);assert.ok(f.calls[0].cancelled);registry.destroy();
+});
+test('native progress timelines receive percentage seeking and do not pretend frame time is milliseconds',()=>{
+ const f=fixture();f.doc.defaultView.ScrollTimeline=class{constructor(options){this.options=options;}};f.doc.defaultView.CSS.percent=value=>({value,unit:'percent'});const track=newMotionTrack('progress');track.timeline.type='scroll';track.timing.duration='auto';const runtime=createTargetMotionRuntime(f.target,{...f.options,motion:{...defaultMotion(),tracks:[track]}});assert.equal(f.calls.length,1);assert.equal(f.calls[0].options.timeline.options.source,f.target);runtime.playback('seek',25);assert.deepEqual(f.calls[0].currentTime,{value:25,unit:'percent'});assert.equal(runtime.snapshot()[0].timeUnit,'percent');assert.throws(()=>runtime.playback('step',16),/document time/);runtime.destroy();
+});
+test('mounted editor writes numeric settings and keyframes, resets defaults and tears down preview resources',async()=>{
+ const doc=createAccessDocument(),create=doc.createElement.bind(doc),frames=new Map();let frameId=0,searches=0;doc.createElement=tag=>{const n=create(tag);n.style={};return n;};doc.documentElement={lang:'en'};doc.defaultView={getComputedStyle:()=>({length:0}),performance:{now:()=>0},requestAnimationFrame:fn=>{frames.set(++frameId,fn);return frameId;},cancelAnimationFrame:id=>frames.delete(id)};
+ const target=doc.createElement('button'),host=doc.createElement('section');doc.body.append(target,host);let model=defaultMotion(),writes=0;const commands=[];const runtime={playback:(...args)=>commands.push(args),snapshot:()=>[],status:()=>[]};const editor=mountMotionEditor(host,{target,getMotion:()=>model,setMotion:value=>{model=validateMotion(value);writes++;},getRuntime:()=>runtime,attachSearch:()=>{searches++;return()=>{};}});
+ const button=text=>host.querySelectorAll('md-outlined-button').find(n=>n.textContent===text);const field=label=>host.querySelectorAll('md-outlined-text-field').find(n=>n.label===label);
+ await button('Add animation track').click();assert.equal(model.tracks.length,1);let duration=field('Duration');duration.value='125.5';await duration.dispatchEvent({type:'change'});assert.equal(model.tracks[0].timing.duration,125.5);duration=field('Duration');await duration.parentElement.querySelector('md-outlined-button').click();assert.equal(model.tracks[0].timing.duration,300);
+ await button('Add keyframe').click();assert.equal(model.tracks[0].keyframes.length,3);const select=host.querySelectorAll('md-checkbox')[0];select.checked=true;await select.dispatchEvent({type:'change'});await button('Copy keyframes').click();await button('Paste keyframes').click();assert.equal(model.tracks[0].keyframes.length,4);
+ const before=JSON.stringify(model);duration=field('Duration');duration.value='invalid';await duration.dispatchEvent({type:'change'});assert.equal(JSON.stringify(model),before);assert.ok(host.textContent.includes('Invalid motion number.'));
+ await button('Play').click();assert.ok(commands.some(([command])=>command==='play'));assert.equal(frames.size,1);editor.destroy();assert.equal(frames.size,0);assert.equal(commands.at(-1)[0],'stop');assert.ok(searches>0&&writes>0);assert.equal(host.children.length,0);
+});
 test('handwritten capability inventory and actual tab/consumer integration reject removal',async()=>{
  const model=await readFile(new URL('../src/renderer/features/personalization/motion-model.js',import.meta.url),'utf8'),editor=await readFile(new URL('../src/renderer/features/personalization/motion-editor.js',import.meta.url),'utf8'),appearance=await readFile(new URL('../src/renderer/features/personalization/appearance.js',import.meta.url),'utf8');
- const ids=['tracks','keyframes','timing','easing','sequence','timeline','playback','transitions','triggers','reduced-motion','repeat-delay','spring','layer-surface','properties','persistence'];assert.deepEqual(MOTION_CAPABILITIES.map(row=>row[0]),ids);
+ const ids=['tracks','keyframes','timing','easing','sequence','timeline','playback','transitions','triggers','reduced-motion','repeat-delay','spring','layer-surface','properties','persistence','schedules'];assert.deepEqual(MOTION_CAPABILITIES.map(row=>row[0]),ids);
  const required=[['model',model,'compileMotionFrames'],['editor',editor,'Animation and Transition'],['editor',editor,'Keyframe composition'],['appearance',appearance,'mountMotionEditor(motionHost'],['appearance',appearance,'motionRegistry.sync(motionRows)']];const validate=rows=>rows.forEach(([,text,needle])=>assert.ok(text.includes(needle)));validate(required);for(let index=0;index<required.length;index++){const damaged=structuredClone(required);damaged[index][1]=damaged[index][1].replaceAll(damaged[index][2],'');assert.throws(()=>validate(damaged));}
  assert.equal(motionConflicts([newMotionTrack('a'),newMotionTrack('b')]).length,1);
+});
+test('local schedule boundaries change actual consumers and restore authored motion without provider access',()=>{
+ const f=fixture(),base={...defaultMotion(),tracks:[newMotionTrack('base')]},preset={...defaultMotion(),tracks:[newMotionTrack('scheduled')]};preset.tracks[0].timing.duration=900;
+ const rule={...newMotionSchedule('Work','rule'),timezone:'UTC',weekdays:[1],start:'09:00',end:'17:00'};base.unknown={presets:{Work:preset},schedules:[rule]};
+ assert.equal(resolveMotionSchedule(base,new Date('2026-10-12T09:00:00Z')).tracks[0].id,'scheduled');assert.equal(resolveMotionSchedule(base,new Date('2026-10-12T17:00:00Z')).tracks[0].id,'base');
+ const runtime=createTargetMotionRuntime(f.target,{...f.options,motion:base});runtime.refreshSchedules(new Date('2026-10-12T10:00:00Z'));assert.equal(f.calls.at(-1).options.duration,900);const active=f.calls.at(-1);runtime.refreshSchedules(new Date('2026-10-12T18:00:00Z'));assert.ok(active.cancelled);assert.equal(f.calls.at(-1).options.duration,300);assert.equal(runtime.model.tracks[0].id,'base');runtime.destroy();
+ const external=structuredClone(base);external.unknown.schedules[0].source={type:'remote'};assert.throws(()=>validateMotion(external),/local presets only/);
 });

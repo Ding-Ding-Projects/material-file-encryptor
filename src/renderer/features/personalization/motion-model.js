@@ -1,3 +1,4 @@
+import {validateMotionSchedules} from './motion-schedules.js';
 /** Portable motion data contains values, never executable callbacks or URLs. */
 export const MOTION_STATES=Object.freeze(['normal','hover','focus','active','selected','disabled','dragged','invalid','loading','success','warning','error']);
 export const MOTION_EVENTS=Object.freeze(['entry','exit','hover','focus','press','selection','validation','loading','success','warning','error','pointerenter','pointerleave','pointerdown','pointerup','click','focusin','focusout','dragstart','dragend','command','scroll','view']);
@@ -19,6 +20,7 @@ export const MOTION_CAPABILITIES=Object.freeze([
  ['layer-surface','Element tracks render on the target; independent layer tracks require an actual layer node','Cascading CSS layers are not independent rendered nodes'],
  ['properties','Computed renderer property catalog plus custom-property entry','CSS parser acceptance is not interpolation proof'],
  ['persistence','Undo/revisions/presets/style copy/reset and validated versioned portability','Existing appearance mutation and journal'],
+ ['schedules','Local named-preset schedules with dates, overnight windows, timezone, weekdays and priority','Shared local schedule clock matcher'],
 ]);
 const plain=v=>v&&typeof v==='object'&&!Array.isArray(v);
 const text=(v,max=500)=>{if(typeof v!=='string'||v.length>max||/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(v))throw Error('Invalid motion text.');return v;};
@@ -46,7 +48,7 @@ export function validateMotion(input){
  };
  for(const field of['tracks','transitions']){if(!Array.isArray(input[field]||[]))throw Error('Invalid motion list.');out[field]=(input[field]||[]).map(v=>validateTrack(v,field==='transitions'));}
  const ids=new Set();for(const t of [...out.tracks,...out.transitions]){if(ids.has(t.id))throw Error('Duplicate motion track.');ids.add(t.id);}
- out.markers=validateMarkers(input.markers||[]);out.timeline={...out.timeline,...portable(input.timeline||{})};for(const k of['zoom','snap','rangeStart','rangeEnd','fps'])number(out.timeline[k],0);if(out.timeline.zoom<=0||out.timeline.fps<=0||out.timeline.rangeEnd<out.timeline.rangeStart)throw Error('Invalid motion timeline range.');if(typeof out.timeline.loop!=='boolean')throw Error('Invalid motion loop.');resolveMotionSequence(out.tracks);return out;
+ out.markers=validateMarkers(input.markers||[]);out.timeline={...out.timeline,...portable(input.timeline||{})};for(const k of['zoom','snap','rangeStart','rangeEnd','fps'])number(out.timeline[k],0);if(out.timeline.zoom<=0||out.timeline.fps<=0||out.timeline.rangeEnd<out.timeline.rangeStart)throw Error('Invalid motion timeline range.');if(typeof out.timeline.loop!=='boolean')throw Error('Invalid motion loop.');resolveMotionSequence(out.tracks);if(out.unknown.schedules)out.unknown.schedules=validateMotionSchedules(out.unknown.schedules,out.unknown.presets);return out;
 }
 function validateMarkers(values){if(!Array.isArray(values))throw Error('Invalid motion markers.');return values.map(m=>({name:text(m.name,160),time:number(m.time,0)}));}
 export function motionActiveTime(track){const t=track.timing;if(t.duration==='auto')return 0;if(t.iterations==='infinite')return Infinity;return t.duration*t.iterations;}
