@@ -96,8 +96,8 @@ test('preview download copy and current capture labels have complete language ma
 test('message preferences accept only supported locales, booleans, and 1–5 integer levels', async () => {
   const { loadMessagePreferences, messagePair, localized } = await import('../docs/site/locales.js');
   const storage = value => ({ getItem: () => JSON.stringify(value) });
-  assert.deepEqual(loadMessagePreferences(storage({ language: 'yue', emoji: true, successTone: 5, searchTone: 2 })), { language: 'yue', emoji: true, successTone: 5, searchTone: 2 });
-  assert.deepEqual(loadMessagePreferences(storage({ language: 'unknown', emoji: 'yes', successTone: 6, searchTone: 1.5 })), { language: 'en', emoji: false, successTone: 1, searchTone: 1 });
+  assert.deepEqual(loadMessagePreferences(storage({ language: 'yue', emoji: true, funnyEnglish: 5, funnyCantonese: 2 })), { language: 'yue', emoji: true, funnyEnglish: 5, funnyCantonese: 2 });
+  assert.deepEqual(loadMessagePreferences(storage({ language: 'unknown', emoji: 'yes', funnyEnglish: 6, funnyCantonese: 1.5 })), { language: 'en', emoji: false, funnyEnglish: 5, funnyCantonese: 5 });
   assert.equal(loadMessagePreferences({ getItem: () => '{invalid' }).language, 'en');
   for (const kind of ['success', 'search']) {
     const levels = [1, 2, 3, 4, 5].map(level => messagePair(kind, level, 3));

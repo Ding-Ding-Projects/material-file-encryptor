@@ -29,3 +29,9 @@ test('registry keeps the localization export and fallback behavior', () => {
   assert.equal(surface.t('Same', 'Same'), 'Same');
   assert.equal(surface.t('Files'), 'Files');
 });
+
+test('registered surface host honors its own hidden state before and after render',()=>{
+ const originalSheet=globalThis.CSSStyleSheet;
+ let applied='';globalThis.CSSStyleSheet=class{replaceSync(value){applied=value;}};
+ try{const surface=new SurfaceElement();surface.shadowRoot.replaceChildren=()=>{};surface.style();assert.match(applied,/:host\(\[hidden\]\)\{display:none!important\}/);surface.style(':host{display:grid}');assert.match(applied,/:host\(\[hidden\]\)\{display:none!important\}/);assert.ok(surface.shadowRoot.adoptedStyleSheets.length===1);}finally{if(originalSheet===undefined)delete globalThis.CSSStyleSheet;else globalThis.CSSStyleSheet=originalSheet;}
+});

@@ -8,6 +8,8 @@ A Windows Explorer encrypted drive with a native .NET engine, encrypted offline 
 
 The [installation and update repair](docs/features/release/installer-repair.md) addresses incomplete Squirrel extraction and unchanged release package versions. Current-source downloaded installation and real updating remain pending independent acceptance.
 
+Production builds use the existing Windows GitHub Actions workflow whenever supported, invoking exact root `build.bat /s` and `build-installer.bat /s`. It compiles and uploads the mounted verifier separately from the installer, without CI tests or lint. Downloaded normal v1.148.1 (source a82) passed independent package verification and genuine mounted lifecycle checks using the separately cloud-compiled b516 verifier. Earlier v1.133.1 actually installed and registered correctly with all 663 payload files matched. Installed startup, automatic updating, current GUI and complete feature acceptance remain pending. See the [handoff](HANDOFF.md) for exact source boundaries.
+
 ## Build and package
 
 Run `build.bat /s` to produce the Windows application and `build-installer.bat /s` to produce its genuine unsigned Squirrel.Windows installer. Explicit local checks use the repository's verification scripts. Production builds and releases do not imply that current runtime or installed-lifecycle verification passed.

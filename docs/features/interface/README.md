@@ -17,3 +17,17 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 - [本機個人用詞](personal-vocabulary.zh-HK.md)
 - [現代介面同可清除欄位](modern-fields.zh-HK.md)
 - [啟動登記讀取確認](startup-registration.zh-HK.md)
+
+- [Visitor-local website personalization](visitor-personalization.md)
+
+- [Browser workspace role](public-workspace-role.md)
+
+- [Settings completeness and integrity](settings-completeness.md)
+
+- [Animation and Transition source implementation and limits](animation-transition.md)
+
+- [Optional control guidance and unique explanations](settings-guidance.md)
+
+- [Nested appearance control guidance](nested-appearance-guidance.md)
+
+- [Local font metadata and variable axes](font-metadata.md)
