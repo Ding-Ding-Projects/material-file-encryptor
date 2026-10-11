@@ -3,6 +3,10 @@ using System.Text;
 
 internal static class Native
 {
+    [DllImport("user32.dll", EntryPoint = "CreateDesktopW", CharSet = CharSet.Unicode, SetLastError = true)] internal static extern IntPtr CreateDesktop(string name, IntPtr device, IntPtr mode, uint flags, uint access, ref SECURITY_ATTRIBUTES attributes);
+    [DllImport("user32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] internal static extern bool CloseDesktop(IntPtr desktop);
+    [DllImport("user32.dll")] internal static extern IntPtr GetProcessWindowStation();
+    [DllImport("user32.dll", EntryPoint = "GetUserObjectInformationW", CharSet = CharSet.Unicode, SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)] internal static extern bool GetUserObjectInformation(IntPtr handle, int index, StringBuilder value, uint bytes, out uint needed);
     [StructLayout(LayoutKind.Sequential)] internal struct SECURITY_ATTRIBUTES { internal int length; internal IntPtr descriptor; [MarshalAs(UnmanagedType.Bool)] internal bool inherit; }
     [DllImport("kernel32.dll", EntryPoint="CreateFileW", CharSet=CharSet.Unicode, SetLastError=true)] internal static extern IntPtr CreateFile(string path, uint access, uint share, ref SECURITY_ATTRIBUTES attributes, uint creation, uint flags, IntPtr template);
     [StructLayout(LayoutKind.Sequential)] internal struct SECURITY_CAPABILITIES { internal IntPtr AppContainerSid, Capabilities; internal uint CapabilityCount, Reserved; }

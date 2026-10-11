@@ -100,15 +100,30 @@ internal static class Program
         var profile = "mfe.converter." + Guid.NewGuid().ToString("N");
         IntPtr sid = IntPtr.Zero, job = IntPtr.Zero, attributes = IntPtr.Zero, capabilities = IntPtr.Zero, environment = IntPtr.Zero;
         Native.PROCESS_INFORMATION process = default;
-        bool profileCreated = false, timedOut = false, killedForStorage = false, cancelled = false;
+        bool profileCreated = false, timedOut = false, killedForStorage = false, cancelled = false, ownedDesktopClosed = false;
         uint finalExit = 1; string? finalHash = null;
-        IntPtr log = IntPtr.Zero, input = IntPtr.Zero, handles = IntPtr.Zero, childPolicy = IntPtr.Zero;
+        IntPtr log = IntPtr.Zero, input = IntPtr.Zero, handles = IntPtr.Zero, childPolicy = IntPtr.Zero, desktop = IntPtr.Zero;
+        Exception? originalFailure = null;
         try
         {
             var hr = Native.CreateAppContainerProfile(profile, profile, "Isolated local conversion", IntPtr.Zero, 0, out sid);
             Marshal.ThrowExceptionForHR(hr);
             profileCreated = true;
             var appSid = new SecurityIdentifier(sid);
+            // A restricted worker cannot initialize user32 on a caller's desktop
+            // unless its fresh container SID can access that desktop. Give it an
+            // owned desktop instead of modifying the caller's desktop permissions.
+            var station = new StringBuilder(256);
+            Check(Native.GetUserObjectInformation(Native.GetProcessWindowStation(), 2, station, 512, out _));
+            var desktopName = "mfe-converter-" + Guid.NewGuid().ToString("N");
+            Check(Native.ConvertStringSecurityDescriptorToSecurityDescriptor($"D:P(A;;GA;;;{owner.Value})(A;;GA;;;SY)(A;;0xC7;;;{appSid.Value})S:(ML;;NW;;;LW)", 1, out var desktopDescriptor, out _));
+            try
+            {
+                var desktopAttributes = new Native.SECURITY_ATTRIBUTES { length = Marshal.SizeOf<Native.SECURITY_ATTRIBUTES>(), descriptor = desktopDescriptor, inherit = false };
+                desktop = Native.CreateDesktop(desktopName, IntPtr.Zero, IntPtr.Zero, 0, 0x01FF, ref desktopAttributes);
+                Check(desktop != IntPtr.Zero);
+            }
+            finally { Native.LocalFree(desktopDescriptor); }
             SetAcl(root, owner, appSid, false);
             foreach (var path in files.OrderBy(p => p.Length)) SetAcl(path, owner, appSid, path.Equals(work, StringComparison.OrdinalIgnoreCase) || Inside(path, work));
             SetLowIntegrity(work);
@@ -131,6 +146,7 @@ internal static class Program
             Check(Native.UpdateProcThreadAttribute(attributes, 0, (IntPtr)0x20009, capabilities, (nuint)Marshal.SizeOf<Native.SECURITY_CAPABILITIES>(), IntPtr.Zero, IntPtr.Zero));
             var startup = new Native.STARTUPINFOEX();
             startup.StartupInfo.cb = Marshal.SizeOf<Native.STARTUPINFOEX>();
+            startup.StartupInfo.desktop = station + "\\" + desktopName;
             startup.AttributeList = attributes;
             var sa = new Native.SECURITY_ATTRIBUTES { length = Marshal.SizeOf<Native.SECURITY_ATTRIBUTES>(), inherit = true };
             log = Native.CreateFile(Path.Combine(work, "worker.log"), 0x40000000, 3, ref sa, 2, 0x80, IntPtr.Zero);
@@ -188,28 +204,33 @@ internal static class Program
             }
             finalExit = exitCode; finalHash = resultHash;
         }
+        catch (Exception error)
+        {
+            originalFailure = error;
+            throw;
+        }
         finally
         {
-            // Closing the job also kills a suspended worker when setup failed.
-            if (process.hProcess != IntPtr.Zero) Native.TerminateProcess(process.hProcess, 125);
-            if (job != IntPtr.Zero) Native.CloseHandle(job);
-            if (process.hThread != IntPtr.Zero) Native.CloseHandle(process.hThread);
-            if (process.hProcess != IntPtr.Zero) Native.CloseHandle(process.hProcess);
-            if (attributes != IntPtr.Zero) { Native.DeleteProcThreadAttributeList(attributes); Marshal.FreeHGlobal(attributes); }
-            if (capabilities != IntPtr.Zero) Marshal.FreeHGlobal(capabilities);
-            if (environment != IntPtr.Zero) Marshal.FreeHGlobal(environment);
-            if (log != IntPtr.Zero && log != new IntPtr(-1)) Native.CloseHandle(log);
-            if (input != IntPtr.Zero && input != new IntPtr(-1)) Native.CloseHandle(input);
-            if (handles != IntPtr.Zero) Marshal.FreeHGlobal(handles);
-            if (childPolicy != IntPtr.Zero) Marshal.FreeHGlobal(childPolicy);
-            if (sid != IntPtr.Zero) Native.FreeSid(sid);
-            if (profileCreated)
+            // Attempt every release even if an earlier cleanup operation fails.
+            CleanupActions.Run(originalFailure!, new Action[]
             {
-                var cleanup = Native.DeleteAppContainerProfile(profile);
-                Marshal.ThrowExceptionForHR(cleanup);
-            }
+                () => { if (process.hProcess != IntPtr.Zero && Native.WaitForSingleObject(process.hProcess, 0) != 0) { Check(Native.TerminateProcess(process.hProcess, 125)); if (Native.WaitForSingleObject(process.hProcess, 5000) != 0) throw new TimeoutException("Worker exit was not confirmed."); } },
+                () => { if (job != IntPtr.Zero) Check(Native.CloseHandle(job)); },
+                () => { if (process.hThread != IntPtr.Zero) Check(Native.CloseHandle(process.hThread)); },
+                () => { if (process.hProcess != IntPtr.Zero) Check(Native.CloseHandle(process.hProcess)); },
+                () => { if (desktop != IntPtr.Zero) { Check(Native.CloseDesktop(desktop)); ownedDesktopClosed = true; } },
+                () => { if (attributes != IntPtr.Zero) { Native.DeleteProcThreadAttributeList(attributes); Marshal.FreeHGlobal(attributes); } },
+                () => { if (capabilities != IntPtr.Zero) Marshal.FreeHGlobal(capabilities); },
+                () => { if (environment != IntPtr.Zero) Marshal.FreeHGlobal(environment); },
+                () => { if (log != IntPtr.Zero && log != new IntPtr(-1)) Check(Native.CloseHandle(log)); },
+                () => { if (input != IntPtr.Zero && input != new IntPtr(-1)) Check(Native.CloseHandle(input)); },
+                () => { if (handles != IntPtr.Zero) Marshal.FreeHGlobal(handles); },
+                () => { if (childPolicy != IntPtr.Zero) Marshal.FreeHGlobal(childPolicy); },
+                () => { if (sid != IntPtr.Zero) Native.FreeSid(sid); },
+                () => { if (profileCreated) Marshal.ThrowExceptionForHR(Native.DeleteAppContainerProfile(profile)); }
+            });
         }
-        Console.WriteLine(JsonSerializer.Serialize(new { schema = 1, nonce, isolated = true, profile, exitCode = finalExit, timedOut, cancelled, killedForStorage, storageLimitBytes = MemoryLimit, resultSha256 = finalHash, profileDeleted = true, appContainerVerified = true, jobLimitsVerified = true, capabilityCount = 0, memoryBytes = MemoryLimit, timeoutMs = Timeout, activeProcessLimit = 1, networkCapabilities = 0 }));
+        Console.WriteLine(JsonSerializer.Serialize(new { schema = 1, nonce, isolated = true, profile, exitCode = finalExit, timedOut, cancelled, killedForStorage, storageLimitBytes = MemoryLimit, resultSha256 = finalHash, profileDeleted = true, ownedDesktopClosed, appContainerVerified = true, jobLimitsVerified = true, capabilityCount = 0, memoryBytes = MemoryLimit, timeoutMs = Timeout, activeProcessLimit = 1, networkCapabilities = 0 }));
         return timedOut || killedForStorage || cancelled || finalExit != 0 ? 1 : 0;
     }
 
