@@ -4,12 +4,17 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
-import {stateRoutes,acquisitionCapabilities,makeAcquisitionPlan,acquireMatrix,composeAdapters,settledComposedMotion} from '../scripts/gui-acceptance-acquire.mjs';
+import {stateRoutes,acquisitionCapabilities,makeAcquisitionPlan,acquireMatrix,composeAdapters,settledComposedMotion,validateStateObservation} from '../scripts/gui-acceptance-acquire.mjs';
 import {bindingFor,matrixFor,tupleKey,sha256} from '../scripts/gui-acceptance.mjs';
 import {chooseVerificationDriveLetter} from '../scripts/preview-runtime-fixture.mjs';
 import {ownedFixturePreparation} from '../scripts/gui-acceptance-baseline.mjs';
 const inventory=JSON.parse(await fs.readFile(new URL('../contracts/gui-states.json',import.meta.url)));
 const launch={cdp:{port:19222,expectedUrl:'file:///synthetic/resources/index.html'}};
+test('restored capture state requires the exact observable and retained evidence',()=>{
+ const state=inventory.states[0];assert.throws(()=>validateStateObservation({passed:true,observable:'different state',evidence:{observed:true}},state));
+ assert.throws(()=>validateStateObservation({passed:true,observable:state.observable,evidence:{}},state));
+ assert.throws(()=>validateStateObservation({passed:false,observable:state.observable,evidence:{observed:true}},state));
+});
 test('motion admission includes animated descendants across an open shadow root',()=>{
  const target={getClientRects:()=>[{}],getRootNode:()=>({})};const shadowChild={getClientRects:()=>[{}],getRootNode:()=>({host:target})};
  const animation={effect:{target:shadowChild},playState:'running',pending:false};

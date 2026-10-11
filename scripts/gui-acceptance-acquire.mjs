@@ -60,6 +60,10 @@ export function composeAdapters(inventory,...areas){
   assert.equal(typeof adapter?.prepare,'function',`Missing fixture preparation: ${id}`);assert.equal(typeof adapter?.assertState,'function',`Missing state observation: ${id}`);assert.ok(adapter.actions&&typeof adapter.actions==='object');combined[id]=adapter;
  }}return combined;
 }
+export function validateStateObservation(observed,state){
+ assert.equal(observed?.passed,true);assert.equal(observed?.observable,state.observable);
+ assert.ok(observed.evidence&&typeof observed.evidence==='object'&&Object.keys(observed.evidence).length>0,'State observation evidence is required');return observed;
+}
 
 export function makeAcquisitionPlan({launch,receipt,tuple,state,outputRoot}){
  assert.equal(tuple.state,state.id);assert.ok(path.isAbsolute(outputRoot));assert.ok(path.isAbsolute(receipt));assert.ok(launch.cdp.expectedUrl.startsWith('file:'));
@@ -97,11 +101,11 @@ export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot
    assert.equal(typeof probeEvidence?.observe,'function');assert.equal(typeof probeEvidence?.persist,'function');
    const prepared=await adapter.prepare({tuple,binding,executePlan});assert.equal(prepared?.ownedSyntheticFixture,true);assert.equal(prepared?.sourceCommit,binding.sourceCommit);record.fixture=prepared;
    const setup=makeAcquisitionPlan({launch,receipt,tuple,state,outputRoot:directory});await executePlan(setup);await adapter.enter?.({tuple,binding,executePlan,prepared});
-   const observed=await adapter.assertState({tuple,binding,executePlan,prepared});assert.equal(observed?.passed,true);assert.equal(observed?.observable,state.observable);assert.ok(observed.evidence&&typeof observed.evidence==='object','State observation evidence is required');record.state=observed;
+   record.state=validateStateObservation(await adapter.assertState({tuple,binding,executePlan,prepared}),state);
    record.actions=[];for(const id of state.actions){const action=await adapter.actions[id]({tuple,binding,executePlan,prepared});assert.equal(action?.id,id);assert.equal(action?.activated,true);assert.equal(action?.observablePassed,true);assert.ok(action.evidence&&typeof action.evidence==='object','Action evidence is required');const actionName='action-'+record.actions.length+'.json',bytes=Buffer.from(JSON.stringify({...action,schemaVersion:1,tuple,binding},null,2));await fs.writeFile(path.join(directory,actionName),bytes,{flag:'wx'});record.actions.push({...action,evidencePath:path.relative(outputRoot,path.join(directory,actionName)),evidenceSha256:sha256(bytes)});await save();}
    // Actions can change the surface. Restore through the adapter and then
    // navigate normally before taking the state-specific capture.
-   const restored=await adapter.prepare({tuple,binding,executePlan});assert.equal(restored?.ownedSyntheticFixture,true);assert.equal(restored?.sourceCommit,binding.sourceCommit);await executePlan(setup);await adapter.enter?.({tuple,binding,executePlan,prepared:restored});assert.equal((await adapter.assertState({tuple,binding,executePlan,prepared:restored}))?.passed,true);
+   const restored=await adapter.prepare({tuple,binding,executePlan});assert.equal(restored?.ownedSyntheticFixture,true);assert.equal(restored?.sourceCommit,binding.sourceCommit);await executePlan(setup);await adapter.enter?.({tuple,binding,executePlan,prepared:restored});record.captureState=validateStateObservation(await adapter.assertState({tuple,binding,executePlan,prepared:restored}),state);
    const capturePlan=withCdpConnectionProof({...setup,observeRuntime:true,steps:[poll('state-motion-settled',`(${settledComposedMotion.toString()})(${q(state.selector)})`),{id:'state-surface-audit',op:'evaluate',expression:`(${inspectSurface.toString()})(document)`},{id:'state-measure',op:'evaluate',expression:layoutExpression(state.selector)},{id:'state-capture',op:'capture',path:path.join(directory,'capture.png'),overwrite:false}]},'capture');
    const before=await probeEvidence.observe();const captured=await executePlan(capturePlan);record.raw=captured;await save();
    const measurements=(captured.results||[]).filter(step=>step.id==='state-measure');assert.equal(measurements.length,1);assertMeasurement(measurements[0].value,tuple);
