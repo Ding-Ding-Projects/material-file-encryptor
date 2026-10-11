@@ -10,7 +10,7 @@
 - [ ] Complete applicable finite-ledger behavior, including the full interactive server manager and protected complete-reset transaction.
 - [ ] Resolve actual main-runtime cryptographic comparison with exact process ownership evidence.
 - [ ] Real-data migration is deferred by the user while the existing drive remains mounted.
-- [ ] Actual installation, installed update and removal remain deferred.
+- [ ] Initial installation and removal remain deferred. Automatically update the existing installation after an accepted release, preserving mounted work and verifying the installed version.
 
 # Storage packing implementation, 2026-10-11
 

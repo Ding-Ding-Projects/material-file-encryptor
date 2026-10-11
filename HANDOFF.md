@@ -1,10 +1,12 @@
 ## Current interface integration checkpoint, 2026-10-11
 
-The interface remains under verification. The user deferred real-data migration and actual installed lifecycle work, and explicitly requires no visible terminal windows. Main f6990e24 and normal release v1.275.1 retain the separately accepted 80 MiB storage result.
+The interface remains under verification. The user deferred real-data migration, initial installation and removal, and explicitly requires no visible terminal windows. The latest direction authorizes safe automatic updates of the existing installation after accepted releases, with actual version verification. Main f6990e24 and normal release v1.275.1 retain the separately accepted 80 MiB storage result.
 
 Exact production entrypoints passed at dc498289 with 963 validated package entries and 861 matching extracted files. Later stylesheet source528ace6 has independent acceptance and observed two-check red/green proof, but needs a fresh build and measured pixels. The broad dc498289 run had 1294 passing, 20 failing and 24 skipped checks; reviewed fixture fixes passed73 focused checks. The subsequent8000ee5 attempt is unverified because its empty captured log and visible terminal do not establish the child result. A quiet nested-process route is being prepared.
 
 Actual diagnostics established the button reset cause and refuted persistent palette overflow at the settled tuple. Zero of4272 visual tuples are accepted. Main cryptographic comparison, full server management, protected complete reset and other finite-ledger gaps remain unfinished. See CLOSEOUT_PROMPT.md and docs/evidence/gui-production-dc498289.json for current evidence boundaries. Historical records below retain their original scope.
+
+Restored allowance and resumed preservation, 2026-10-11: the original acceptance 1a6853c, personalization 30077fe, foundation 1553a1b, paired-workspace d84ec96 and scheduled-settings dc63f45 tips now have exact remote-head proof. Two subsequent quiet-console admissions stopped before any echo or ConPTY child; their supervisors and hidden desktops were proved absent. Explicit Default-desktop inventories observed transient terminals, so the pre-permit observer path needs repair before another launch. The latest user direction authorizes automatic updates of the matching existing installation after a verified release reaches its intended update channel, preserving active work and requiring actual installed-version readback. Initial installation and removal remain deferred; current M: ownership and real-data migration remain unchanged.
 
 # Verified native storage unit, 2026-10-11
 
