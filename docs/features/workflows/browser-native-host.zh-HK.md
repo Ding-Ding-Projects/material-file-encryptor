@@ -48,6 +48,12 @@ JavaScript 代理將配對同下載建議交畀 `createBrowserDownloadReceiver`�
 離開、更新準備同驗證退出會先等到已核實關閉收據，先完成服務關閉。
 `getState` 包含真實 `browserDownloadHandoff` 狀態同最後關閉收據。
 
+啟動失敗處理器會喺 `app.exit(1)` 前使用相同已核實關閉界線。
+收據未核實時，桌面程式保持運行、記錄需要恢復狀態，並提供原生「保持運行／
+重試關閉」選項，預設保持運行。重試會重新核對同一自行管理程序同串流證據。
+恢復對話框不可用時，程序亦會保留並報告未核實狀態。
+啟動失敗唔代表可以遺下未核實代理程序。
+
 ## 身分同登記計劃
 
 `scripts/browser-native-registration.mjs` 接受已審閱嘅 CRX3 套件，以及第 1 版

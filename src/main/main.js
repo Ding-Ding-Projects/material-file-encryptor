@@ -85,6 +85,20 @@ const nativeState = value => ({ ...value, driver: { ...value.driver, checking: f
 const snapshot = () => ({ ...state, operation, build: buildMetadata, browserDownloadHandoff:browserHandoff?.status()||{available:false,configured:false,reason:'NOT_INITIALIZED',installation:'not-performed'},startupRegistration: cachedStartupRegistration, defaults: { cacheDir: preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache'), driveLetter: preferences.driveLetter }, preferences: { ...preferences }, cacheDir: state.cacheDir || preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache') });
 function publish() { if(state.locked||state.lockVerified===false)browserHandoff?.revoke();updateTray(); if (window && !window.isDestroyed()) window.webContents.send('vault:state', snapshot()); }
 async function closeBrowserHandoff(){const receipt=await browserHandoff?.close();if(receipt&&receipt.verified!==true)throw new Error('Native browser handoff exit is unverified. Resolve pending pairing approval and retry Quit.');return receipt;}
+async function handleStartupFailure(){
+  try{await closeBrowserHandoff();app.exit(1);return{exited:true};}
+  catch{
+    state={...state,recoveryRequired:true,sync:{...state.sync,error:'Startup failed and native browser handoff exit is unverified. The application remains running. Resolve pending pairing approval, then retry shutdown.'}};
+    if(window&&!window.isDestroyed()){
+      try{
+        showWindow();publish();
+        const answer=await dialog.showMessageBox(window,{type:'error',buttons:['Keep running · 保持運行','Retry shutdown · 重試關閉'],defaultId:0,cancelId:0,title:'Startup shutdown is unverified · 啟動失敗後關閉未核實',message:'The owned native browser process has not confirmed safe exit. · 自行管理嘅瀏覽器原生程序未確認安全離開。',detail:'The desktop remains running. Resolve any pending pairing approval and choose Retry shutdown to check the same process and stream evidence again. No unrelated process will be terminated.\n桌面程式會保持運行。請先處理未完成配對同意，再選擇重試關閉，重新核對同一程序同串流證據。唔會終止無關程序。'});
+        if(answer.response===1)return handleStartupFailure();
+      }catch{console.error('Startup recovery surface is unavailable; the application remains running with unverified native shutdown.');}
+    }else console.error('Startup shutdown is unverified; the application remains running for recovery.');
+    return{exited:false,reason:'NATIVE_HANDOFF_EXIT_UNVERIFIED'};
+  }
+}
 async function savePreferences() { await fs.mkdir(app.getPath('userData'), { recursive: true }); await fs.writeFile(configPath(), JSON.stringify(preferences), { mode: 0o600 }); }
 async function backend(method, params = {}) {
   if (!helper) throw new Error('The mounted drive is available on Windows.');
@@ -383,7 +397,7 @@ else {
       try { await backend('statusSummary'); await backend('setPerformanceMode', { mode: preferences.performanceMode }); if(interruptedSession){state.recoveryRequired=true;state.sync.error='An interrupted session was detected. Recovery starts locked; unlock explicitly to review encrypted records.';publish();} if (!interruptedSession && preferences.autoUnlock && preferences.storageDir) { await backend('autoUnlock', { storageDir: preferences.storageDir, cacheDir: preferences.cacheDir, driveLetter: preferences.driveLetter, transport: preferences.transport, remoteRepository: preferences.remoteRepository }); await backend('setHistoryRetention', { days: preferences.historyRetentionDays }); await backend('mount', { driveLetter: preferences.driveLetter }); } } catch (error) { state.driver.checking = false; state.sync.error = error.message; publish(); }
     } else { state.driver.checking = false; state.driver.error = 'Windows and WinFsp are required to mount a drive.'; publish(); }
     await handleExplorerCopy(process.argv);
-  }).catch(async () => {await browserHandoff?.close();app.exit(1);});
+  }).catch(handleStartupFailure);
   app.on('before-quit', event => { if (!shuttingDown && !testMode) { event.preventDefault(); void quit(); } });
   app.on('window-all-closed', async () => { if (testMode) {await closeBrowserHandoff();verificationStartup?.restore(); shuttingDown = true; helper?.dispose(); app.quit(); } });
 }
