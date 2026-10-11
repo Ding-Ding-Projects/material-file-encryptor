@@ -1,6 +1,10 @@
 # Preservation checkpoint, 2026-10-11 UTC
 
-The objective remains incomplete. The account reached its verified 10% preservation boundary. The maintainer explicitly deferred actual installation, installed update and removal; do not reopen that environment question or execute those workflows. All 208 desktop/site feature-delivery rows remain unverified as complete surface contracts.
+The objective remains incomplete. The account reached its verified 10% preservation boundary and subsequently showed 9% remaining. The maintainer explicitly deferred actual installation, installed update and removal; do not reopen that environment question or execute those workflows. All 208 desktop/site feature-delivery rows remain unverified as complete surface contracts.
+
+Final preservation readback verified main `d8e34d72d4f56cbfb4c417dcfc8b8b269e5b0657` before this follow-up record, all eight task branches, and wiki `2a549f3abb46ae7610ba88d3c6f29489c7c04792`. The 49 private announcement originals were retained and separately copied with matching SHA-256 values to an owner-only backup; their combined size is 81,983,197 bytes. The corrected private inventory is `out/announcement-preservation-v2.json`. No worktree, branch, fixture or original evidence was deleted.
+
+Release `v1.109.1` is a normal release from isolated storage branch source `2c743a4b78a30185d7b745f67de96ac879e36fec`, not final main. Its four assets and source classification were read back, but downloads and installed execution were not verified. Main delivery runs `38102176741` and `38102321558` were still in progress at the final observation. Do not equate the isolated release with complete product acceptance.
 
 Latest frozen runtime: `bc3f481ebd0b946d4f4071de09cb038e6dc3afd1`, built through `build.bat /s`, with 6,194 package privacy entries and zero rejected. Its numeric sandbox-diagnostic change passed six focused tests, but this final frozen candidate has not been run. Receipt: `.test-output/package-ready-bc3f481.json`. Main was last verified remotely at `52301884fa73fb1bcea4712c0d2e7a32caf251b2` before this checkpoint commit. The eight task branches are also preserved remotely; their isolated source builds are not complete product acceptance.
 

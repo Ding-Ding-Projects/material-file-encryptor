@@ -4,6 +4,8 @@
 - [x] Verify managed import, completed-file preservation, standalone cancellation and selected-file history on their recorded runtime candidates.
 - [x] Verify native local-model runtime start and normal owned shutdown on `5230188`.
 - [x] Preserve the final `bc3f481` root build and its exact package hashes.
+- [x] Preserve all 49 private announcement originals with a separate owner-only, SHA-256-verified backup; retain source histories and every incomplete fixture.
+- [x] Read back normal isolated-storage release `v1.109.1`, with its four assets and distinct source recorded; do not treat it as final-main acceptance.
 - [ ] Complete the PNG decoder diagnosis; current GUI result is a native sandbox startup failure.
 - [ ] Complete remaining layout configurations, physical-scale evidence and localization gaps.
 - [ ] Verify model download, chat, history and export workflows.
