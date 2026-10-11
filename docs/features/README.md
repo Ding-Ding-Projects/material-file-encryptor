@@ -17,6 +17,8 @@
 - [Local personal vocabulary](interface/personal-vocabulary.md)
 - [Access, authenticator and support desk](access/local-access.md)
 - [Local file converter](converter/README.md)
+- [Reviewed minimal media component](converter/minimal-component.md)
+- [External schedule sources](schedules/external-sources.md)
 - [Local model suite](ollama/README.md)
 - [Offline documentation, changelog, status and delivery inventory](platform/documentation-and-status.md)
 - [Modern surfaces and clearable fields](interface/modern-fields.md)
@@ -28,6 +30,8 @@
 - [Desktop packaging and verification](desktop/README.md)
 - [Preview verification and delivery](release/preview-verification.md)
 - [Current integration status](platform/current-integration.md)
+- [Native update controller and recovery boundary](release/native-update-controller.md)
+- [Desktop update workspace](surface-foundation/updates-panel.md)
 - [Interface design](../../DESIGN.md)
 
 Each article distinguishes source implementation, focused checks, host integration and actual runtime acceptance. The feature delivery inventory keeps all 208 desktop/site rows unverified until their complete evidence exists. Historical captures and releases retain their original source boundaries.

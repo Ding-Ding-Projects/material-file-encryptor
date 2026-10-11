@@ -1,11 +1,17 @@
 # Current integration and verification status
 
-This applicability review uses parent baseline `37fa47a` and ready runtime-provenance source `2903fc5`. Earlier source reviews are retained in the table below. A ready revision is not evidence that the parent has integrated it, that packaging includes it, or that its runtime behavior passed. All 208 desktop/site delivery rows remain `unverified`.
+The current source review uses integrated baseline `b5b3096`. The applicability mapping was originally reviewed at `37fa47a`; that older inventory scope remains distinct from newer implementation changes. Earlier source reviews are retained below. Integration does not prove downloaded packaging, installed behavior, complete interface acceptance, or release delivery. All 208 desktop/site delivery rows remain `unverified`.
 
 ## Reviewed source sets
 
 | Revision | Source change | Integration boundary |
 | --- | --- | --- |
+| `b5b3096` | Minimal media component packaging and versioned update candidate | Integrated source; full application package and installed update acceptance remain separate |
+| `a8dc69b`, `92d0827` | Source-built minimal media runtime, component manifest and hardened bootstrap | Six isolated format conversions and source/component checks are recorded in the component article; no whole-application acceptance is inferred |
+| `0cdfdbc`, `34447cc`, `49a3adc` | Non-abandonable update preparation, retained recovery marker and readable blocked recovery state | Integrated source and focused regression coverage; no real installer or restart verdict |
+| `6964aa2` | Responsive scheduling and desktop update controls | Integrated host wiring, not installed lifecycle evidence |
+| `ed06efe`, `6e5d49f` | Streaming Windows CNG legacy authentication and bounded background-thread priority | Native source changes with their own focused checks; earlier benchmark figures are not automatically refreshed |
+| `5c4fb99`, `98b327e` | Incremental display wording and desktop document/download handoffs | Integrated source; complete language and external-workflow acceptance remains unverified |
 | `37fa47a` | Bundled verified media runtime and refreshed documentation inventory | Source packaging changes only; final runtime acceptance remains unverified |
 | `2903fc5` | Windows local-model release provenance and verification helper | Ready provenance source, not proof of installation or model execution |
 | `785fdf2` | Parent baseline keeps translated display wording out of persisted notification and tab records | Canonical-storage repair is source evidence, not a completed private-data or language runtime audit |
@@ -17,14 +23,16 @@ This applicability review uses parent baseline `37fa47a` and ready runtime-prove
 
 ## Existing implemented modules
 
-- Native storage has format 3 authenticated blocks, journal records, managed transfer operations, cancellation, revision paging, file history and encrypted activity. The source-bound ordinary mounted checks and adverse concurrent-detach result retain their separate meanings.
+- Native storage has format 3 authenticated blocks, journal records, managed transfer operations, cancellation, revision paging, file history and encrypted activity. Integrated changes add streaming CNG legacy authentication, bounded transfer-buffer cleanup and scoped background-thread priority. The source-bound ordinary mounted checks and adverse concurrent-detach result retain their separate meanings; later code does not retroactively validate an earlier receipt.
 - Shared workspace modules provide tabs/groups, scoped worker-based regular-expression search, palette controls, notifications and registered Material components. The ready source adds panel geometry and actionable notifications.
 - Personalization modules provide language/style settings, narration, schedules, attention modes, local encrypted settings history, appearance layers and logo conversion. An external schedule remains unavailable without a paired trusted provider.
 - Local access modules provide local profiles, element lock policies, authenticators, recovery waiting and support records. The ready source adds one-activation sessions and selected-record management. These convenience controls do not replace file encryption or protect against control of the renderer.
-- The converter provides a persistent bounded queue, a limited adapter set and an operating-system sandbox contract. Unsupported adapters remain unavailable.
+- The converter provides a persistent bounded queue, a limited adapter set and an operating-system sandbox contract. The source-built minimal media component adds the reviewed PNG/JPEG/WAV/FLAC/MP3/MP4 profile, fixed native commands and hash-pinned source/runtime manifests. Its own isolated acceptance and package hashes are described in the [component article](../converter/minimal-component.md). Unsupported adapters remain unavailable.
 - Local model modules provide catalog/cache, model inventory, pull cart, local chat and profile contracts. The ready source adds guided runtime recovery and native recipes.
 - Documentation modules provide the local article/wiki catalogue, safe Markdown, local images, internal routes, worker search, changelog filters and export. Their isolated-browser fixture is not proof of final package or site delivery.
 - Status uses the official client adapter and a redacted snapshot. Configuration is not authenticated delivery, and no complete live status interaction is claimed here.
+- Desktop document and download handoffs are wired through the host lifecycle. Their full workflow and browser-paired acceptance remains unverified.
+- The [update controller](../release/native-update-controller.md) and [desktop update workspace](../surface-foundation/updates-panel.md) are integrated. Fixed-source metadata checks, durable staged readiness, explicit confirmation, idle admission and terminal recovery states exist in source. Final preparation preserves the interrupted-session marker until services close, and partial teardown keeps admission blocked. No native rollback, installed update, or completed restart is claimed.
 
 ## How to read the delivery inventory
 
@@ -41,9 +49,9 @@ The unmapped rows are retained explicitly. An empty mapping means this review di
 - Advanced appearance capabilities still lack complete freehand drawing, independent raster groups, embedded smart objects, mesh warp, guides and verified isolated image decoding.
 - Cross-application shared settings, authenticated external schedule providers and complete native settings-history integration remain incomplete or unverified.
 - Waiting challenges remain local convenience behavior. Authoritative service-side challenge enforcement, all recovery flows and the complete production access matrix are not established.
-- Conversion support is limited to available adapters; general image, media, archive and spreadsheet conversion remains unavailable without bundled implementations and proof.
+- Conversion support is limited to available adapters and the reviewed minimal media profile. Broader formats, arbitrary codecs and full installed-package conversion acceptance remain unavailable or unverified.
 - Local runtime recovery/profile recipes need final host wiring and verification. Real installation, model download, chat, hardware-fit and persisted profile behavior are not inferred from source fixtures.
-- Universal external-editor handoff, browser download handoff and forge-publishing workflows have no complete mapped delivery proof in this review.
+- External-editor and browser-download handoffs have integrated source wiring, but universal workflow coverage and installed acceptance remain unverified. Forge-publishing workflows have no complete mapped delivery proof in this review.
 - Full live Status Hub registration, questions/replies, terminal delivery, notification bridge, panic destinations and display endpoints remain unverified or unavailable.
 - New release, downloaded installation, automatic updates, complete documentation deployment and exact homepage readback require separate current evidence. Historical records remain historical.
 - Concurrent forced detach with a mapped writer remains unresolved. Ten passing ordinary mounted checks do not prove full force-lock safety.
@@ -52,7 +60,7 @@ The unmapped rows are retained explicitly. An empty mapping means this review di
 
 The [native lifecycle/performance article](../performance/native-lifecycle-performance.md) preserves exact receipt hashes, helper/source bindings, measured CPU/status/cancellation values, ten ordinary checks and the unresolved adverse probe. The earlier [helper status measurement](../performance/native-helper.md) retains its unknown packaged-source binding.
 
-Integrate the selected ready revisions, freeze the final candidate, then run the smallest relevant checks and source-bound production interactions. Add actual evidence only to the corresponding surface and requirement. Preserve unsupported features and failed or incomplete results instead of marking the entire inventory complete from a passing subset.
+Freeze the integrated candidate, then run the smallest relevant checks and source-bound production interactions. The current documentation repair adds the two minimal-media articles to the explicit publication inventory and includes the schedule category. Local staging is separate from a live deployment and homepage readback. Add actual evidence only to the corresponding surface and requirement. Preserve unsupported features and failed or incomplete results instead of marking the entire inventory complete from a passing subset.
 
 ## Applicability review
 
@@ -64,6 +72,6 @@ The six canonical-only rows cover the instruction repository's prompt banner, si
 
 Existing root build/installer entrypoints, pinned bootstrap, release workflow/publisher, article/wiki inventory, homepage wiring, roadmap and handoff now have concrete file references. A fixed runner label does not satisfy dynamic runner-selection proof. The unsigned Squirrel output does not require a newly invented signing step. No public HTTP API is introduced by this product; category indexes record why Postman collections are not applicable, while use of external service APIs remains documented.
 
-Remaining unmapped applicable requirements have specific reasons: the two-key/full-slider confirmation, complete free-workflow audit, external-editor handoff, extension-download handoff, forge-publishing workflow, automatic-update lifecycle, private-source currency lock, current discussion records, linked project state and operational-skill verification are not established here. Repository tracking duties remain obligations even when their remote records were not queried.
+Remaining unmapped applicable requirements have specific reasons: the two-key/full-slider confirmation, complete free-workflow audit, universal external-editor and extension-download acceptance, forge-publishing workflow, installed automatic-update lifecycle, private-source currency lock, current discussion records, linked project state and operational-skill verification are not established here. Integrated handoff/update code does not fill these evidence gaps by itself. Repository tracking duties remain obligations even when their remote records were not queried.
 
 The inventory validator now requires the explicit applicability kind, exact applies/directSurface semantics, nonempty bounded reasons and declared scope, bounded persistence arrays and per-path commit references. A separate repository-aware verifier resolves each recorded path to a Git blob with per-command and total deadlines. Without repository access it returns unverified, not a successful source-existence claim. Negative tests cover omitted scope, blank reasons, wrong scope, invented exemptions, unsafe paths, missing references and actual absent Git objects. The current 208 rows remain unverified regardless of structural or reference-check success.
