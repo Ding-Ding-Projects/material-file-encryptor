@@ -1,6 +1,30 @@
 import assert from 'node:assert/strict';
 import {withCdpConnectionProof} from './cdp-connection-plan.mjs';
 
+export function ownedFixturePreparation({launch,receipt,fixture}){
+ assert.ok(fixture.prepared===true);assert.ok(fixture.root&&fixture.storageDir&&fixture.cacheDir);assert.match(fixture.driveLetter,/^[D-Z]:$/);assert.notEqual(fixture.driveLetter,'M:');
+ const plan=steps=>withCdpConnectionProof({version:1,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:30000,steps},'control');
+ const observe=async executePlan=>{
+  const response=await executePlan(plan([
+   {id:'fixture-status-start',op:'evaluate',expression:"window.__guiAcceptanceStatus={done:false};window.drive.status().then(value=>{window.__guiAcceptanceStatus={done:true,value:{storageDir:value.storageDir,cacheDir:value.cacheDir,driveLetter:value.driveLetter,locked:value.locked,mounted:value.mounted,operation:value.operation}}},()=>{window.__guiAcceptanceStatus={done:true,failed:true}});true"},
+   {id:'fixture-status-ready',op:'poll',expression:'window.__guiAcceptanceStatus.done',equals:true,intervalMs:100},
+   {id:'fixture-status-read',op:'evaluate',expression:'window.__guiAcceptanceStatus'}
+  ]));assert.equal(response.ok,true);const observed=response.results.at(-1).value;assert.equal(observed.done,true);assert.notEqual(observed.failed,true);
+  for(const key of ['storageDir','cacheDir','driveLetter'])assert.equal(observed.value[key],fixture[key],'Native fixture identity changed');return observed.value;
+ };
+ return async({requiredDriveState,binding,executePlan})=>{
+  const before=await observe(executePlan);
+  // Close an earlier owned dialog through its ordinary cancel control. No DOM
+  // replacement or direct dialog-state assignment is used for restoration.
+  const cancel=await executePlan(plan([{id:'fixture-cancel-dialog',op:'evaluate',expression:"(()=>{const dialog=document.querySelector('#vault-dialog');if(dialog?.open){const cancel=document.querySelector('#dialog-cancel');if(!cancel||cancel.disabled)throw Error('Dialog cannot be cancelled');cancel.click();}return !dialog?.open;})()"}]));assert.equal(cancel.ok,true);
+  if(requiredDriveState==='locked'&&!before.locked){
+   const locked=await executePlan(plan([{id:'fixture-lock',op:'evaluate',expression:"(()=>{const button=document.querySelector('#lock-button');if(!button||button.disabled)throw Error('Owned drive cannot be locked');button.click();return true;})()"},{id:'fixture-lock-ready',op:'poll',expression:"document.querySelector('#vault-badge').dataset.state==='locked'",equals:true,intervalMs:100}]));assert.equal(locked.ok,true);
+  }
+  const after=await observe(executePlan);if(requiredDriveState==='locked'){assert.equal(after.locked,true);assert.equal(after.mounted,false);}assert.ok(after.operation==null,'Owned fixture still has an active operation');
+  return {ownedSyntheticFixture:true,sourceCommit:binding.sourceCommit,fixtureRoot:fixture.root,before,after};
+ };
+}
+
 // Native fixture ownership is established by the existing launch producer.
 // This adapter never creates a replacement window.drive or edits renderer DOM.
 export function baselineAdapters({launch,receipt,prepareOwnedFixture,inventory}){
