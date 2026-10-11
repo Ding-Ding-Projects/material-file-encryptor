@@ -1,11 +1,13 @@
 # Current integration and verification status
 
-This source review uses parent baseline `785fdf2` and the ready source revisions listed below. A ready revision is not evidence that the parent has integrated it, that packaging includes it, or that its runtime behavior passed. All 208 desktop/site delivery rows remain `unverified`.
+This applicability review uses parent baseline `37fa47a` and ready runtime-provenance source `2903fc5`. Earlier source reviews are retained in the table below. A ready revision is not evidence that the parent has integrated it, that packaging includes it, or that its runtime behavior passed. All 208 desktop/site delivery rows remain `unverified`.
 
 ## Reviewed source sets
 
 | Revision | Source change | Integration boundary |
 | --- | --- | --- |
+| `37fa47a` | Bundled verified media runtime and refreshed documentation inventory | Source packaging changes only; final runtime acceptance remains unverified |
+| `2903fc5` | Windows local-model release provenance and verification helper | Ready provenance source, not proof of installation or model execution |
 | `785fdf2` | Parent baseline keeps translated display wording out of persisted notification and tab records | Canonical-storage repair is source evidence, not a completed private-data or language runtime audit |
 | `4ca05780` | Persistent panel move/resize/reset, notification progress and recovery actions, selected notification operations, opt-in local audio and transient control restoration | Ready source and deterministic fixtures; production host registration, callback behavior and geometry remain unverified |
 | `455153bd` | Disconnected search cancellation and stale palette-result handling | Ready lifecycle repair; full browser/desktop interaction remains unverified |
@@ -26,7 +28,7 @@ This source review uses parent baseline `785fdf2` and the ready source revisions
 
 ## How to read the delivery inventory
 
-`contracts/feature-delivery.json` has 104 stable IDs for desktop and site independently. Its 88 mapped rows identify partial source work for 44 requirements on each surface. Each referenced path is associated with an available reviewed commit in `referenceSources`. Ready revisions are stated in the review metadata rather than silently described as parent code.
+`contracts/feature-delivery.json` has 104 stable IDs for desktop and site independently. Its 168 mapped rows identify product implementation or repository-support source work. Mapped rows do not imply completeness. Each referenced path is associated with an available reviewed commit in `referenceSources`. Ready revisions are stated in the review metadata rather than silently described as parent code.
 
 `implementation`, `documentation`, `localization`, `tests` and `persistence` are source pointers. A localization path does not certify complete translated copy; a persistence path does not certify every restart flow; a focused-test path does not say the suite was rerun during this inventory pass. Every `evidence` array remains empty, and every `builtInteraction` and `visualEvidence` value remains `unverified`. Nothing in this update marks a requirement complete.
 
@@ -51,3 +53,17 @@ The unmapped rows are retained explicitly. An empty mapping means this review di
 The [native lifecycle/performance article](../performance/native-lifecycle-performance.md) preserves exact receipt hashes, helper/source bindings, measured CPU/status/cancellation values, ten ordinary checks and the unresolved adverse probe. The earlier [helper status measurement](../performance/native-helper.md) retains its unknown packaged-source binding.
 
 Integrate the selected ready revisions, freeze the final candidate, then run the smallest relevant checks and source-bound production interactions. Add actual evidence only to the corresponding surface and requirement. Preserve unsupported features and failed or incomplete results instead of marking the entire inventory complete from a passing subset.
+
+## Applicability review
+
+The 208 rows now state both applicability and verification status. There are 142 product rows, 48 repository-duty rows, 12 explicitly nonapplicable rows and six canonical-only rows. All 208 verification states remain unverified; nonapplicability is a scope finding, not a passing runtime result. Each row includes its reason.
+
+Product requirements remain applicable when incomplete. Where the canonical entry names only an installed application or only the companion website, the other surface records a supporting role instead of inventing a duplicate UI. Repository duties such as build entrypoints, dependency acquisition, packaging, releases, source documentation and task records support both surfaces; they do not require a corresponding UI button.
+
+The six canonical-only rows cover the instruction repository's prompt banner, single-file editions and project-memory profile. They do not belong in this product. The twelve nonapplicable rows cover the two Roblox/game requirements, three requirements explicitly scoped to the Status Hub server itself, and the encrypted public builder reserved for private repositories. This repository was verified public during the review. Its applicable client status integration remains separate and unverified.
+
+Existing root build/installer entrypoints, pinned bootstrap, release workflow/publisher, article/wiki inventory, homepage wiring, roadmap and handoff now have concrete file references. A fixed runner label does not satisfy dynamic runner-selection proof. The unsigned Squirrel output does not require a newly invented signing step. No public HTTP API is introduced by this product; category indexes record why Postman collections are not applicable, while use of external service APIs remains documented.
+
+Remaining unmapped applicable requirements have specific reasons: the two-key/full-slider confirmation, complete free-workflow audit, external-editor handoff, extension-download handoff, forge-publishing workflow, automatic-update lifecycle, private-source currency lock, current discussion records, linked project state and operational-skill verification are not established here. Repository tracking duties remain obligations even when their remote records were not queried.
+
+The new applicability and persistence metadata is currently supplementary. The existing validator does not yet require those fields or reject a missing scope reason. The parent should extend its schema/negative regressions to require one recognized applicability kind, a boolean applies/directSurface pair, a nonempty reason, and resolvable referenceSources for every listed path. No validator or test source was modified by this documentation-only pass.
