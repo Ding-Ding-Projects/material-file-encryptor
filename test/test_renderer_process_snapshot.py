@@ -66,6 +66,44 @@ class Fake:
 
 
 class SnapshotTests(unittest.TestCase):
+    def test_target_fetch_and_connect_races_reject_matching_url(self):
+        client = {**identity, 'pid':99, 'parentPid':1, 'executablePath':'C:/owned/client.exe'}
+        api = Fake(rows={77:1,99:1},observations={77:identity,99:client})
+        state = {'process':identity,'cdp':{'port':49150,'expectedUrl':'http://127.0.0.1:49151/'}}
+        backend = SimpleNamespace(path='fixture',read=lambda path:('fixture',state),tree=lambda root:[identity],proof=native.Proof(lifecycle,api))
+        payload = json.dumps([{'id':'fixture','type':'page','url':state['cdp']['expectedUrl'],'webSocketDebuggerUrl':'ws://127.0.0.1:49150/devtools/page/fixture'}]).encode()
+        changed = False
+        def inventory(*args, **kwargs):
+            owner = 999 if changed else 77
+            return SimpleNamespace(stdout=f'TCP 127.0.0.1:49150 0.0.0.0:0 LISTENING {owner}\nTCP 127.0.0.1:49160 127.0.0.1:49150 ESTABLISHED 99\nTCP 127.0.0.1:49150 127.0.0.1:49160 ESTABLISHED {owner}')
+        def race_fetch(endpoint):
+            nonlocal changed
+            changed = True
+            return payload
+        with self.assertRaises(native.SnapshotError):
+            native.prove_renderer_target(backend,run=inventory,fetch=race_fetch)
+        changed = False
+        self.assertTrue(native.prove_renderer_target(backend,run=inventory,fetch=lambda endpoint:payload)['client_ok'])
+        # A successful earlier URL proof cannot authorize a later connection
+        # whose listener changed before the actual client binding check.
+        changed = True
+        with self.assertRaises(native.SnapshotError):
+            native.prove_renderer_target(backend,run=inventory,fetch=lambda endpoint:payload,client_pid=99,target_id='fixture')
+        changed = False
+        result = native.prove_renderer_target(backend,run=inventory,fetch=lambda endpoint:payload,client_pid=99,target_id='fixture')
+        self.assertEqual(result['establishedPeerPair']['serverPid'],77)
+        self.assertEqual(result['clientIdentity'],client)
+        with self.assertRaises(native.SnapshotError):
+            native.prove_renderer_target(backend,run=inventory,fetch=lambda endpoint:payload,client_pid=99,target_id='different')
+        def extra_peer(*args, **kwargs):
+            return SimpleNamespace(stdout=inventory().stdout+'\nTCP 127.0.0.1:49161 127.0.0.1:49150 ESTABLISHED 99')
+        with self.assertRaises(native.SnapshotError):
+            native.prove_renderer_target(backend,run=extra_peer,fetch=lambda endpoint:payload,client_pid=99,target_id='fixture')
+        def unrelated_reverse_peer(*args, **kwargs):
+            return SimpleNamespace(stdout=inventory().stdout.replace('127.0.0.1:49160 ESTABLISHED 77','127.0.0.1:49160 ESTABLISHED 999'))
+        with self.assertRaises(native.SnapshotError):
+            native.prove_renderer_target(backend,run=unrelated_reverse_peer,fetch=lambda endpoint:payload,client_pid=99,target_id='fixture')
+
     def test_backend_marker_mismatch_missing_and_old_receipts_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'lifecycle.json'
@@ -105,9 +143,9 @@ port=int(sys.argv[1])
 class Handler(http.server.BaseHTTPRequestHandler):
  def log_message(self,*args): pass
  def do_GET(self):
-  body=json.dumps([{'type':'page','url':'http://127.0.0.1:49151/','webSocketDebuggerUrl':'ws://127.0.0.1:'+str(port)+'/devtools/page/fixture'}]).encode()
+  body=json.dumps([{'id':'fixture','type':'page','url':'http://127.0.0.1:49151/','webSocketDebuggerUrl':'ws://127.0.0.1:'+str(port)+'/devtools/page/fixture'}]).encode()
   self.send_response(200);self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
-server=http.server.HTTPServer(('127.0.0.1',port),Handler)
+server=http.server.ThreadingHTTPServer(('127.0.0.1',port),Handler)
 threading.Thread(target=server.serve_forever,daemon=True).start()
 print('ready',flush=True)
 sys.stdin.buffer.read(1)
@@ -144,6 +182,10 @@ server.shutdown();server.server_close()
                 target = native.prove_renderer_target(backend)
                 self.assertEqual(target['listenerOwnerPid'], process.pid)
                 self.assertEqual(target['exactUrl'], expected_url)
+                with socket.create_connection(('127.0.0.1',port),timeout=5):
+                    connected = native.prove_renderer_target(backend,client_pid=os.getpid(),target_id='fixture')
+                    self.assertEqual(connected['clientIdentity']['pid'],os.getpid())
+                    self.assertEqual(connected['establishedPeerPair']['serverPid'],process.pid)
                 bad_run = lambda *args, **kwargs: SimpleNamespace(stdout=f'TCP 127.0.0.1:{port} 0.0.0.0:0 LISTENING 1')
                 with self.assertRaises(native.SnapshotError):
                     native.prove_renderer_target(backend,run=bad_run)
@@ -153,7 +195,7 @@ server.shutdown();server.server_close()
                 reread = load('fresh_second_lifecycle', Path(local.__file__))
                 second = native.RendererNativeBackend(reread,state_path,'a'*40,reread.__file__).install()
                 self.assertEqual(reread._read_state(state_path)[1]['process'],state['process'])
-                self.assertEqual(second.tree(state['process'])[0],state['process'])
+                self.assertEqual(next(item for item in second.tree(state['process']) if item['pid']==state['pid']),state['process'])
             finally:
                 if process:
                     process.stdin.close()

@@ -322,7 +322,7 @@ class RendererNativeBackend:
         return self
 
 
-def prove_renderer_target(backend, run=None, fetch=None):
+def prove_renderer_target(backend, run=None, fetch=None, client_pid=None, target_id=None):
     """Exact loopback listener and page proof for this renderer-only backend."""
     _, state = backend.read(backend.path)
     cdp = state['cdp']
@@ -330,36 +330,76 @@ def prove_renderer_target(backend, run=None, fetch=None):
         raise SnapshotError('Renderer target proof requires a recorded CDP binding.')
     before = backend.tree(state['process'])
     run = run or subprocess.run
-    output = run(['netstat.exe', '-ano', '-p', 'tcp'], capture_output=True, text=True, timeout=10, check=True, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0)).stdout
-    if len(output.encode('utf-8')) > 2_097_152:
-        raise SnapshotError('Listener inventory exceeds bound.')
-    selected = []
     address = f"127.0.0.1:{cdp['port']}"
-    for line in output.splitlines():
-        parts = line.split()
-        if len(parts) == 5 and parts[0] == 'TCP' and parts[1] == address and parts[3] == 'LISTENING':
-            selected.append(int(parts[4]))
-    if len(selected) != 1 or selected[0] not in {item['pid'] for item in before}:
-        raise SnapshotError('Exact loopback listener lacks one native tree owner.')
+    def observe_tcp(tree):
+        output = run(['netstat.exe', '-ano', '-p', 'tcp'], capture_output=True, text=True, timeout=10, check=True, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0)).stdout
+        if len(output.encode('utf-8')) > 2_097_152:
+            raise SnapshotError('Listener inventory exceeds bound.')
+        rows = [line.split() for line in output.splitlines()]
+        rows = [parts for parts in rows if len(parts) == 5 and parts[0] == 'TCP']
+        selected = [int(parts[4]) for parts in rows if parts[1] == address and parts[3] == 'LISTENING']
+        if len(selected) != 1 or selected[0] not in {item['pid'] for item in tree}:
+            raise SnapshotError('Exact loopback listener lacks one native tree owner.')
+        pair = None
+        if client_pid is not None:
+            clients = [parts for parts in rows if parts[1].startswith('127.0.0.1:') and parts[2] == address and parts[3] == 'ESTABLISHED' and int(parts[4]) == client_pid]
+            if len(clients) != 1:
+                raise SnapshotError('Connected client lacks one exact established loopback peer.')
+            local = clients[0][1]
+            peers = [parts for parts in rows if parts[1] == address and parts[2] == local and parts[3] == 'ESTABLISHED' and int(parts[4]) == selected[0]]
+            if len(peers) != 1:
+                raise SnapshotError('Established client peer lacks the exact native listener owner.')
+            pair = {'clientAddress': local, 'serverAddress': address, 'clientPid': client_pid, 'serverPid': selected[0]}
+        return selected[0], pair
+    client_before = None
+    client_handles = ExitStack()
+    if client_pid is not None:
+        client_handles.enter_context(backend.proof.api.handle(client_pid))
+        try:
+            client_before = backend.proof.identity(client_pid)
+        except BaseException:
+            client_handles.close()
+            raise
     endpoint = f"http://{address}/json/list"
-    if fetch is None:
-        with urlopen(endpoint, timeout=5) as response:
-            data = response.read(65537)
-    else:
-        data = fetch(endpoint)
-    if len(data) > 65536:
-        raise SnapshotError('Renderer target response exceeds bound.')
-    targets = json.loads(data)
-    if not isinstance(targets, list) or len(targets) != 1 or not isinstance(targets[0], dict):
-        raise SnapshotError('Renderer target inventory is not exactly one page.')
-    target = targets[0]
-    websocket = urlparse(target.get('webSocketDebuggerUrl', ''))
-    if target.get('type') != 'page' or target.get('url') != cdp['expectedUrl'] or websocket.scheme != 'ws' or websocket.hostname != '127.0.0.1' or websocket.port != cdp['port'] or websocket.username or websocket.password or not websocket.path.startswith('/devtools/page/'):
-        raise SnapshotError('Renderer target does not match the exact loopback binding.')
-    after = backend.tree(state['process'])
-    if sorted(before, key=lambda item: item['pid']) != sorted(after, key=lambda item: item['pid']):
-        raise SnapshotError('Native ancestry changed around renderer target proof.')
-    return {'ok': True, 'client_ok': True, 'backend': 'native-v1', 'listenerOwnerPid': selected[0], 'listenerAddress': address, 'targetCount': 1, 'exactUrl': cdp['expectedUrl'], 'nativeProcesses': after}
+    try:
+        owner_before, pair_before = observe_tcp(before)
+        server_before = next(item for item in before if item['pid'] == owner_before)
+        server_handle = client_handles.enter_context(backend.proof.api.handle(owner_before))
+        held_server_before = backend.proof.api.observe(server_handle, owner_before, server_before['parentPid'])
+        if held_server_before != server_before:
+            raise SnapshotError('Listener process changed before held-handle proof.')
+        if fetch is None:
+            with urlopen(endpoint, timeout=5) as response:
+                data = response.read(65537)
+        else:
+            data = fetch(endpoint)
+        if len(data) > 65536:
+            raise SnapshotError('Renderer target response exceeds bound.')
+        targets = json.loads(data)
+        if not isinstance(targets, list) or len(targets) != 1 or not isinstance(targets[0], dict):
+            raise SnapshotError('Renderer target inventory is not exactly one page.')
+        target = targets[0]
+        websocket = urlparse(target.get('webSocketDebuggerUrl', ''))
+        if target.get('type') != 'page' or target.get('url') != cdp['expectedUrl'] or websocket.scheme != 'ws' or websocket.hostname != '127.0.0.1' or websocket.port != cdp['port'] or websocket.username or websocket.password or not websocket.path.startswith('/devtools/page/'):
+            raise SnapshotError('Renderer target does not match the exact loopback binding.')
+        if client_pid is not None and (not target_id or target.get('id') != target_id or websocket.path != '/devtools/page/' + target_id):
+            raise SnapshotError('Connected renderer target identity differs from the actual CDP session.')
+        after = backend.tree(state['process'])
+        if sorted(before, key=lambda item: item['pid']) != sorted(after, key=lambda item: item['pid']):
+            raise SnapshotError('Native ancestry changed around renderer target proof.')
+        owner_after, pair_after = observe_tcp(after)
+        if owner_before != owner_after or pair_before != pair_after:
+            raise SnapshotError('Listener or established peer changed around target proof.')
+        final_tree = backend.tree(state['process'])
+        if sorted(after, key=lambda item: item['pid']) != sorted(final_tree, key=lambda item: item['pid']):
+            raise SnapshotError('Native ancestry changed after final listener proof.')
+        if client_pid is not None and backend.proof.identity(client_pid) != client_before:
+            raise SnapshotError('Connected client identity changed around target proof.')
+        if backend.proof.api.observe(server_handle, owner_before, server_before['parentPid']) != held_server_before:
+            raise SnapshotError('Listener process changed around held-handle proof.')
+        return {'ok': True, 'client_ok': True, 'backend': 'native-v1', 'listenerOwnerPid': owner_after, 'listenerAddress': address, 'targetCount': 1, 'targetId': target.get('id'), 'exactUrl': cdp['expectedUrl'], 'nativeProcesses': final_tree, 'clientIdentity': client_before, 'establishedPeerPair': pair_after}
+    finally:
+        client_handles.close()
 
 
 def supplemental_precision_bridge(lifecycle, receipt_path, api=None, filtered_identity=None):

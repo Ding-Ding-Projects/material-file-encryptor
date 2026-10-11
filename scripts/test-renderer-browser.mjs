@@ -57,6 +57,16 @@ export function requireClosureProof(result) {
  if(result?.recordedProcessesAbsent!==true||result?.desktopClosed!==true)throw new Error('Renderer closure lacks explicit process and desktop absence proof.');
  return true;
 }
+export async function verifyConnectedRenderer(browser,{expectedUrl,targetId},prove) {
+ const session=await browser.newBrowserCDPSession();
+ try {
+  const {targetInfos}=await session.send('Target.getTargets');
+  if(!Array.isArray(targetInfos)||targetInfos.length!==1||targetInfos[0].type!=='page'||targetInfos[0].url!==expectedUrl||targetInfos[0].targetId!==targetId)throw new Error('Connected renderer target inventory changed.');
+ } finally {await session.detach();}
+ const result=await prove({clientPid:process.pid,targetId});
+ if(result?.client_ok!==true||result.clientIdentity?.pid!==process.pid||result.establishedPeerPair?.clientPid!==process.pid||result.exactUrl!==expectedUrl||result.targetId!==targetId)throw new Error('Connected renderer lacks exact client peer ownership proof.');
+ return result;
+}
 export async function retainClosureAttempt(destination,state,observation) {
  await fs.mkdir(destination,{recursive:true});
  const attempt=await fs.mkdtemp(path.join(destination,'attempt-'));
@@ -143,10 +153,11 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot}={}) {
   if(!headlessShell)await lifecycleCommand([adapter,'wait-window','--state',state,'--title-pattern','.*','--class-pattern','^Chrome_WidgetWin_1$','--timeout','10']);
   const endpoint=`http://127.0.0.1:${port}`;const deadline=Date.now()+15000;
   let targets;
-  while(Date.now()<deadline){try{targets=await (await fetch(`${endpoint}/json/list`,{signal:AbortSignal.timeout(1000)})).json();break;}catch{await new Promise(resolve=>setTimeout(resolve,100));}}
+  while(Date.now()<deadline){try{targets=await (await fetch(`${endpoint}/json/list`,{signal:AbortSignal.timeout(1000),headers:{Connection:'close'}})).json();break;}catch{await new Promise(resolve=>setTimeout(resolve,100));}}
   if(!Array.isArray(targets)||targets.length!==1||targets[0].type!=='page'||targets[0].url!==expectedUrl||!targets[0].webSocketDebuggerUrl?.startsWith(`ws://127.0.0.1:${port}/`))throw new Error('Renderer fixture CDP isolation proof failed.');
   if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await lifecycleCommand([adapter,'prove-cdp',state]);
   browser=await chromium.connectOverCDP(endpoint);
+  if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await verifyConnectedRenderer(browser,{expectedUrl,targetId:targets[0].id},input=>lifecycleCommand([adapter,'prove-cdp',state],input));
   const page=browser.contexts()[0].pages()[0];
   if(!page||browser.contexts()[0].pages().length!==1)throw new Error('Renderer fixture page inventory changed.');
   return {page,close};

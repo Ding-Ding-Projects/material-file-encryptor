@@ -114,7 +114,20 @@ elif backend_name == 'cim':
 if len(sys.argv) == 3 and sys.argv[1] == 'prove-cdp':
     if native_backend is None:
         raise SystemExit('Native renderer target proof requires its explicit backend.')
-    print(json.dumps(snapshot_module.prove_renderer_target(native_backend)))
+    request = module._read_json_source(None, allow_empty=True)
+    if set(request) - {'clientPid', 'targetId'}:
+        raise SystemExit('Unexpected connected renderer proof fields.')
+    client_pid = request.get('clientPid')
+    target_id = request.get('targetId')
+    if client_pid is not None:
+        if type(client_pid) is not int or not 0 < client_pid <= 0xFFFFFFFF:
+            raise SystemExit('Connected renderer client PID is invalid.')
+        if not isinstance(target_id, str) or not re.fullmatch('[A-Za-z0-9._-]{1,128}', target_id):
+            raise SystemExit('Connected renderer target identity is invalid.')
+        actual_parent = native_backend.proof.identity(os.getpid())['parentPid']
+        if client_pid != actual_parent:
+            raise SystemExit('Connected renderer client is not the actual adapter parent.')
+    print(json.dumps(snapshot_module.prove_renderer_target(native_backend, client_pid=client_pid, target_id=target_id)))
     raise SystemExit(0)
 if len(sys.argv) == 3 and sys.argv[1] in ['prepare-exit', 'confirm-exit']:
     state_path, state = module._read_state(sys.argv[2])
