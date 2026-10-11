@@ -1,3 +1,10 @@
+# Typed keyframe inspector and current-layer locks, 2026-10-11
+
+- Added registered Material keyframe controls with explicit time modes, typed numeric units, strict selected-frame movement and19 optional guidance concepts.
+- Corrected layer Lock after a rejected motion save: actions now resolve the current row, so history cannot record an ornamental lock on a detached layer.
+- 65 focused motion/translation/color/typography checks pass. Real rendering, full motion authoring and installed acceptance remain pending.
+- 新增清楚時間模式及數值單位嘅關鍵影格編輯。儲存失敗後鎖定會搵返目前圖層，唔再鎖住舊影子。65項 focused checks通過，真正畫面、完整動畫編輯及安裝驗收仍未完成。
+
 # Color editor and registered server preparation source, 2026-10-11
 
 - Added Material color controls, bidirectional color representations, explicit gamut checks, atomic palette/history changes and optional guidance.

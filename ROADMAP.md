@@ -1,3 +1,10 @@
+## Verified color/server delivery and typed motion, 2026-10-11 UTC
+
+- [x] Deliver source9fa as normalv1.212.1 with independently downloaded package and complete live-content acceptance.
+- [ ] Deliver reviewed typed-motion source through main cloud production and genuine rendered acceptance.
+- [ ] Complete and wire the typed image crop/fit/focal inspector through original history and locks.
+- [ ] Prove pure Material Design3 on all210 complete-surface rows with real built interaction and captures.
+
 ## Server preparation source integration, 2026-10-11 UTC
 
 - [ ] Deliver reviewed registered preparation source and verify built runtime behavior.

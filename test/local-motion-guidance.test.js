@@ -10,5 +10,5 @@ test('handwritten motion explanations preserve unique concepts and bilingual ope
  assert.equal(motionGuidanceDescriptor('Duration','layer:frame:duration').id,'motion:layer:frame:duration');assert.equal(motionGuidanceDescriptor('Unregistered', 'unknown'),null);
 });
 test('each preserved timing concept reaches an exact anchor in both complete articles',async()=>{
- for(const file of['animation-transition.md','animation-transition.zh-HK.md']){const text=await readFile(new URL('../docs/features/interface/'+file,import.meta.url),'utf8');for(const row of MOTION_GUIDANCE)assert.ok(text.includes('### '+row.concept+'\n'));}
+ for(const file of['animation-transition.md','animation-transition.zh-HK.md']){const raw=await readFile(new URL('../docs/features/interface/'+file,import.meta.url),'utf8'),text=raw.replace(/\r\n?/g,'\n');assert.equal(text,text.replaceAll('\n','\r\n').replace(/\r\n?/g,'\n'));for(const row of MOTION_GUIDANCE)assert.ok(text.includes('### '+row.concept+'\n'));}
 });

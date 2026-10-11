@@ -39,3 +39,5 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 - [Optional drawing and state-preview guidance](workbench-guidance.md)
 
 - [Typed color picker](color-picker.md): representations, palettes, rainbow and capability boundaries.
+
+- [Typed keyframe inspector](motion-keyframes.md): precise timing, values and reversible editing.

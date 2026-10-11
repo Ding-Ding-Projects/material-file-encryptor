@@ -2,13 +2,15 @@
 
 **An encrypted drive for Windows Explorer, with local recovery and an encrypted offline cache.** Work through a mounted drive while the application stores encrypted file data and metadata in your chosen storage folder. A native .NET engine and WinFsp adapter handle the drive; the desktop workspace brings transfers, recovery, settings and documentation together.
 
-[Download Windows x64 installer · v1.205.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/download/v1.205.1/MaterialFileEncryptor-Setup.exe) · [Read the documentation](https://ding-ding-projects.github.io/material-file-encryptor/) · [Release and provenance](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.205.1) · [中文文件](docs/features/README.zh-HK.md)
+[Download Windows x64 installer · v1.212.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/download/v1.212.1/MaterialFileEncryptor-Setup.exe) · [Read the documentation](https://ding-ding-projects.github.io/material-file-encryptor/) · [Release and provenance](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.212.1) · [中文文件](docs/features/README.zh-HK.md)
 
 > **Development status:** the current package and documentation delivery are independently verified. Installed startup, real updating, restart continuity and current rebuilt interface acceptance are unfinished. The complete delivery inventory contains **105 feature IDs and 210 desktop/website rows**, all still unverified as complete surfaces. Source components and focused checks are not full product acceptance. The interface target is Material Design 3 throughout; implementation is partial and complete visual conformance is not yet verified.
 
 The reviewed [color editor source](docs/features/interface/color-picker.md) now provides bidirectional color entry, explicit gamut checks, palettes, contrast preview and structured rainbow controls through the original appearance history. Focused consumers and independent source review pass; rendered and installed acceptance remain pending.
 
 The [server preparation source](docs/features/server-manager/preparation.md) adds official version discovery, verified bounded downloads, cancellation and read-only license review. Its registered controls and corrected concurrency/search consumers pass focused checks. Execution targets remain unavailable, and preparation has not received real download or rendered acceptance.
+
+The reviewed [typed keyframe inspector](docs/features/interface/motion-keyframes.md) adds explicit offset/absolute/relative time, numeric units, selection and strict group movement. Its current-layer and layer-lock handling survives storage rollback; direct and guided edits share the original mutation and history route. Source checks pass; full timeline/transition/path authoring and rendered acceptance remain unfinished.
 
 ## What you can work on
 
@@ -21,14 +23,14 @@ The repository also contains local conversion, local-model and server-management
 
 ## Current verification at a glance
 
-Delivery below is bound to source [`7271108f98e12be41281c0e8e0d5c40a88cd29b3`](https://github.com/Ding-Ding-Projects/material-file-encryptor/commit/7271108f98e12be41281c0e8e0d5c40a88cd29b3), not whatever a moving branch contains later.
+Delivery below is bound to source [`9fa84a9d6ee7fed62cceeb8bb7660fe8e78f6cc9`](https://github.com/Ding-Ding-Projects/material-file-encryptor/commit/9fa84a9d6ee7fed62cceeb8bb7660fe8e78f6cc9), not whatever a moving branch contains later.
 
 | Area | Verified result | Boundary |
 |---|---|---|
-| Production and release | Both exact root entrypoints passed [run 38131720855](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38131720855); normal **v1.205.1**, exact source and five assets verified | A release is not installed execution |
+| Production and release | Both exact root entrypoints passed [run 38134711184](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38134711184); normal **v1.212.1**, exact source and five assets verified | A release is not installed execution |
 | Downloaded package | All five hosted assets match size/hash/provenance/feed; 763 CRC/decompression entries, 664 actual Squirrel payload files and exact Setup embedding passed | Setup was inspected, not executed |
-| Unsigned delivery and privacy | Setup, application and native host are unsigned; 6,249 privacy entries have zero rejected paths, including 5,498 ASAR entries; verification-only payloads are absent | Unsigned publisher warnings remain expected |
-| Live documentation | [Deployment 38131805527](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38131805527): 213 files, 59,942,993 bytes and 7,084 internal references verified, no missing files/anchors; provenance and About homepage match | Content delivery is not browser interaction or rendered font proof |
+| Unsigned delivery and privacy | Setup, application and native host are unsigned; 6,258 privacy entries have zero rejected paths, including 5,507 ASAR entries; verification-only payloads are absent | Unsigned publisher warnings remain expected |
+| Live documentation | [Deployment 38134711122](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38134711122): 217 files, 60,183,001 bytes and 7,416 internal references verified, no missing files/anchors; provenance and About homepage match | Content delivery is not browser interaction or rendered font proof |
 | Native sharing lease | Separate immutable source `66b21b8` passed eight actual compiled synthetic boundaries | Product IPC, provider availability and full server management remain pending |
 | Installed lifecycle and current UI | **Unfinished**: automatic startup/download/ready/Later, real installed update, restart continuity, current captures and complete-surface acceptance | Historical results retain their original sources |
 
