@@ -41,7 +41,7 @@ async function fixture(t, options = {}) {
   const config = { platform: 'win32', argv: [], autoSchedule: false,
     app: { isPackaged: true, getVersion: () => '1.0.0', getPath: key => key === 'exe' ? path.join(root, 'app-1.0.0', 'MaterialFileEncryptor.exe') : root },
     autoUpdater: native, dialog: { showMessageBox: async (...args) => { dialogs.push(args); return { response: 0 }; } },
-    isActiveWork: () => active, acquireInstallLease: () => { leases++; return () => leases--; },
+    isActiveWork: () => active, acquireInstallLease: () => { leases++; return () => leases--; }, prepareRestart: async () => {},
     fetch: async (url, init) => { requested.push(url); assert.equal(init.redirect, 'manual'); assert.equal(init.credentials, 'omit'); assert.ok(routes.has(url), url); return new Response(routes.get(url)()); }, ...options };
   const service = createUpdateService(config); t.after(() => service.dispose());
   return { service, root, name, bytes, release, provenance, ref, routes, requested, native, calls, dialogs, config,
@@ -163,4 +163,38 @@ test('foreign release redirect is rejected before any redirected request', async
 test('missing installed updater reports the exact unavailable prerequisite without networking', async t => {
   const f = await fixture(t); await fs.rm(path.join(f.root, 'Update.exe'));
   assert.equal((await f.service.check()).reason, 'SQUIRREL_NOT_INSTALLED'); assert.deepEqual(f.requested, []);
+});
+test('restart preparation is awaited after final idle check and before native restart', async t => {
+  const order = [];
+  let completePreparation;
+  const f = await fixture(t, {
+    isActiveWork: () => { order.push('idle'); return false; },
+    prepareRestart: () => { order.push('prepare'); return new Promise(resolve => { completePreparation = resolve; }); },
+  });
+  await f.service.check(); await f.service.download(); await f.stageNative();
+  f.native.quitAndInstall = () => order.push('restart');
+  const pending = f.service.installWhenSafe();
+  while (!completePreparation) await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(order, ['idle', 'idle', 'idle', 'prepare']); assert.equal(f.leases(), 1);
+  completePreparation(); assert.equal((await pending).state, 'restart-requested');
+  assert.deepEqual(order, ['idle', 'idle', 'idle', 'prepare', 'restart']); assert.equal(f.leases(), 0);
+});
+for (const [label, prepareRestart, reason] of [
+  ['missing', undefined, 'RESTART_PREPARATION_REQUIRED'],
+  ['failed', async () => { throw new Error('DURABILITY_CHECK_FAILED'); }, 'DURABILITY_CHECK_FAILED'],
+]) test(`${label} restart preparation prevents native restart and releases lease`, async t => {
+  const f = await fixture(t, { prepareRestart }); await f.service.check(); await f.service.download(); await f.stageNative();
+  assert.equal((await f.service.installWhenSafe()).reason, reason);
+  assert.equal(f.calls.some(call => call[0] === 'install'), false); assert.equal(f.leases(), 0);
+});
+test('invalid native cache prevents restart preparation', async t => {
+  let prepared = false;
+  const f = await fixture(t, { prepareRestart: async () => { prepared = true; } });
+  await f.service.check(); await f.service.download(); await f.stageNative();
+  await fs.writeFile(path.join(f.root, 'packages', f.name), Buffer.alloc(f.bytes.length));
+  assert.equal((await f.service.installWhenSafe()).reason, 'PACKAGE_HASH_MISMATCH'); assert.equal(prepared, false);
+});
+test('yue selects Cantonese native confirmation', async t => {
+  const f = await fixture(t, { getLanguage: () => 'yue' }); await f.service.check(); await f.service.download(); await f.stageNative();
+  await f.service.installWhenSafe(); assert.equal(f.dialogs[0][0].title, '安裝更新');
 });
