@@ -1,3 +1,4 @@
+import {control as materialControl} from '../../../shared/surface/controls.js';
 import {bindNestedConsumer,mountNestedGuidance} from './nested-guidance-mount.js';
 import {appearanceTranslator} from './appearance-copy.js';
 export const LOGO_LIMITS = Object.freeze({bytes:4*1024*1024,pixels:16000000,dimension:8192});
@@ -25,10 +26,10 @@ export function mountLogoEditor(root,services={}) {
  const doc=root.ownerDocument,t=appearanceTranslator(services.translate),message=source=>t(source,{message:true});
  const storage=services.storage||globalThis.localStorage,key='m4e.logo.private.v1',bindings=[],guides=[];let disposed=false,generation=0;
  const box=doc.createElement('section');box.className='appearance-logo';
- const title=doc.createElement('h3');title.textContent=t('Application logo');const input=doc.createElement('input');input.type='file';input.accept='image/png,image/jpeg,image/webp';input.setAttribute('aria-label',t('Choose a local logo'));
+ const title=doc.createElement('h3');title.textContent=t('Application logo');const input=materialControl('input',{type:'file'},[],doc);input.accept='image/png,image/jpeg,image/webp';input.setAttribute('aria-label',t('Choose a local logo'));
  const preview=doc.createElement('img');preview.alt=t('Logo preview');preview.width=preview.height=64;const status=doc.createElement('p');status.setAttribute('role','status');
  const fit=doc.createElement('md-outlined-button');fit.type='button';fit.textContent=`${t('Fit')}: ${t('contain')}`;let mode='contain',source;
- const x=doc.createElement('input'),y=doc.createElement('input');for(const [control,label]of [[x,'Horizontal focal point'],[y,'Vertical focal point']]){control.type='range';control.min='0';control.max='1';control.step='.01';control.value='.5';control.setAttribute('aria-label',t(label));}
+ const x=materialControl('input',{type:'range'},[],doc),y=materialControl('input',{type:'range'},[],doc);for(const [control,label]of [[x,'Horizontal focal point'],[y,'Vertical focal point']]){control.type='range';control.min='0';control.max='1';control.step='.01';control.value='.5';control.setAttribute('aria-label',t(label));}
  const publish=async data=>{const accepted=await services.onChange?.(data);if(accepted===false)throw Error('The original control could not complete this action.');preview.src=data;};
  async function update(){if(!source)throw Error('Choose a local logo first.');const epoch=++generation;status.textContent=message('Converting locally…');const result=await convertLogo(source,{fit:mode,x:x.value,y:y.value});if(disposed||epoch!==generation)throw Error('This control is unavailable.');storage?.setItem(key,result.data);await publish(result.data);if(disposed||epoch!==generation)throw Error('This control is unavailable.');status.textContent=message('Converted to 128 × 128 PNG locally. Metadata and color profile are flattened.');return result;}
  const reset=doc.createElement('md-outlined-button');reset.type='button';reset.textContent=t('Reset logo');
