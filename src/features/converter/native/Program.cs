@@ -73,8 +73,10 @@ internal static class Program
         var runtime = ExactPath(m.GetProperty("runtime").GetString()!);
         if (!Inside(runtime, payload) || !File.Exists(runtime)) throw new ArgumentException("Runtime must be staged within payload.");
         MediaCommand? media = m.TryGetProperty("media", out var mediaOptions) ? MediaCommand.Create(mediaOptions, runtime, work) : null;
+        ArchiveCommand? archive = m.TryGetProperty("archive", out var archiveOptions) ? ArchiveCommand.Create(archiveOptions, runtime, work) : null;
+        if (media is not null && archive is not null) throw new ArgumentException("Only one runtime mode is supported.");
         string[] commandArguments;
-        if (media is null)
+        if (media is null && archive is null)
         {
             var worker = ExactPath(m.GetProperty("worker").GetString()!);
             if (!Inside(worker, payload) || !File.Exists(worker)) throw new ArgumentException("Worker must be staged within payload.");
@@ -82,7 +84,7 @@ internal static class Program
             var request = ExactPath(Path.Combine(work, "request.json"));
             commandArguments = ["--preserve-symlinks", "--preserve-symlinks-main", worker, "--request", request, "--result", Path.Combine(work, "result.json"), "--nonce", nonce];
         }
-        else commandArguments = media.Arguments;
+        else commandArguments = archive?.Arguments ?? media!.Arguments;
         var result = Path.Combine(work, "result.json");
         if (File.Exists(result) || Directory.Exists(result)) throw new ArgumentException("Result must not already exist.");
         var owner = WindowsIdentity.GetCurrent().User ?? throw new InvalidOperationException("Current user SID is unavailable.");
@@ -158,7 +160,7 @@ internal static class Program
             uint wait;
             while ((wait = Native.WaitForSingleObject(process.hProcess, 100)) == 258)
             {
-                killedForStorage = StorageExceeded(work) || media?.LimitsExceeded() == true;
+                killedForStorage = StorageExceeded(work) || media?.LimitsExceeded() == true || archive?.LimitsExceeded() == true;
                 timedOut = timer.ElapsedMilliseconds >= Timeout;
                 cancelled = File.Exists(Path.Combine(work, "cancel.signal"));
                 if (killedForStorage || timedOut || cancelled)
@@ -169,13 +171,14 @@ internal static class Program
                 }
             }
             if (wait != 0 && wait != 258) throw new Win32Exception(Marshal.GetLastWin32Error());
-            killedForStorage |= StorageExceeded(work) || media?.LimitsExceeded() == true;
+            killedForStorage |= StorageExceeded(work) || media?.LimitsExceeded() == true || archive?.LimitsExceeded() == true;
             Check(Native.GetExitCodeProcess(process.hProcess, out var exitCode));
             if (log != IntPtr.Zero && log != new IntPtr(-1)) { Native.CloseHandle(log); log = IntPtr.Zero; }
             string? resultHash = null;
             if (!timedOut && !killedForStorage && !cancelled && exitCode == 0)
             {
                 media?.WriteResult(nonce);
+                archive?.WriteResult(nonce);
                 ExactPath(result);
                 if (new FileInfo(result).Length > 96 * 1024 * 1024) throw new InvalidDataException("Result exceeds the size limit.");
                 var resultBytes = File.ReadAllBytes(result);
