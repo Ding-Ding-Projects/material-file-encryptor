@@ -36,3 +36,5 @@ See [Archive and structured-data adapters](archive-and-data.md) for enabled ZIP/
 
 - [XLSX and ODS table conversion](spreadsheets.md)
 - [7z and RAR reading, isolation and packaging](archive-runtime.md)
+
+Initialization accepts an optional `onDiagnostic(record)` callback. Records contain only a versioned schema number, component, fixed phase, allowlisted error code and standard error class. They never contain exception messages, paths, source names or payload bytes. Optional runtime failures remain in `provider.initializationDiagnostics`; a fatal provider failure also attaches the safe record to `error.converterDiagnostic` while preserving the original exception for trusted local diagnosis. A successful standalone or packaged probe does not prove a previously failed application instance has recovered.
