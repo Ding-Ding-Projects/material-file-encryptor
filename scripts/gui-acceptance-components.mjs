@@ -64,12 +64,17 @@ export async function runComponentAcceptance({evidenceRoot,runtime={}}) {
  const csp=index.match(/<meta http-equiv="Content-Security-Policy"[^>]+>/)?.[0];assert.ok(csp,'Production CSP missing');
  const html=`<!doctype html><html><head><meta charset="utf-8">${csp}<script type="module" src="/acceptance-components.js"></script></head><body><md-outlined-button id="acceptance-anchor">Actions</md-outlined-button><md-outlined-button id="palette-anchor">Commands</md-outlined-button><form id="acceptance-form"><md-outlined-select label="Fixture choices"><md-select-option value="alpha"><span slot="headline">Alpha</span></md-select-option><md-select-option value="beta"><span slot="headline">Beta</span></md-select-option></md-outlined-select></form><mfe-command-palette></mfe-command-palette><mfe-file-picker label="Synthetic acceptance file"></mfe-file-picker></body></html>`;
  const script="import '/shared/surface/material.js';import '/shared/surface/context-menu.js';import '/shared/surface/command-palette.js';import '/shared/surface/controls.js';import {getContextOverlay} from '/shared/surface/overlay.js';getContextOverlay();window.acceptanceReady=true;";
- const server=createServer((request,response)=>{if(request.url==='/'){response.setHeader('Content-Type','text/html');response.end(html);}else if(request.url==='/acceptance-components.js'){response.setHeader('Content-Type','text/javascript');response.end(script);}else void serveRendererFixture(request,response);});
+ const resources=new Map();
+ const server=createServer((request,response)=>{
+  const end=response.end.bind(response);response.end=(bytes,...rest)=>{if(bytes!==undefined&&response.statusCode===200)resources.set(request.url,{path:request.url,sha256:createHash('sha256').update(bytes).digest('hex')});return end(bytes,...rest);};
+  if(request.url==='/'){response.setHeader('Content-Type','text/html');response.end(html);}else if(request.url==='/acceptance-components.js'){response.setHeader('Content-Type','text/javascript');response.end(script);}else void serveRendererFixture(request,response);
+ });
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  const url=`http://127.0.0.1:${server.address().port}/`;
  let browser,primaryError,closure;const result={schemaVersion:1,scope:'source-fixture',packagedAcceptance:false,nativeDriveAcceptance:false,browserErrors:[],failedResources:[],captures:[]};
  try{
   browser=await openRendererBrowser(url,{evidenceRoot:path.join(evidenceRoot,'lifecycle'),runtime});
+  if(browser.statePath){const bytes=await fs.readFile(browser.statePath+'.native-v1.json');const source=JSON.parse(bytes);result.sourceCommit=source.sourceCommit;result.nativeProvenanceSha256=createHash('sha256').update(bytes).digest('hex');}
   const page=browser.page;await page.setViewportSize({width:1180,height:850});
   const errors=result.browserErrors;page.on('pageerror',error=>errors.push(error.message));
   page.on('response',response=>{if(response.status()>=400&&response.url().startsWith(url))result.failedResources.push({path:new URL(response.url()).pathname,status:response.status()});});
@@ -85,6 +90,7 @@ export async function runComponentAcceptance({evidenceRoot,runtime={}}) {
  finally{
   if(browser){try{closure=await browser.close();result.closure=closure;}catch(error){result.closureFailure=error.message;result.passed=false;primaryError??=error;}}
   await new Promise(resolve=>server.close(resolve));
+  result.resourceGraph=[...resources.values()].sort((a,b)=>a.path.localeCompare(b.path));
   await fs.writeFile(path.join(evidenceRoot,'components.json'),JSON.stringify(result,null,2)+'\n');
  }
  if(primaryError)throw primaryError;return result;
@@ -123,6 +129,7 @@ export async function assertPaletteBehavior(page,{capture=async()=>{}}={}) {
 
 export async function assertFilePickerBehavior(page,{host='mfe-file-picker[label="Synthetic acceptance file"]',content='synthetic acceptance data'}={}) {
  const picker=page.locator(host);
+ assert.equal(await picker.locator('input').evaluate(node=>node.type),'file','File-picker native type differs from its declared component');
  await picker.evaluate(node=>{window.__acceptancePickerChanges=[];node.addEventListener('change',()=>window.__acceptancePickerChanges.push(node.files?.length??-1));});
  const chooser=page.waitForEvent('filechooser');
  await picker.locator('md-outlined-button').click();
@@ -130,7 +137,7 @@ export async function assertFilePickerBehavior(page,{host='mfe-file-picker[label
  await page.waitForFunction(()=>window.__acceptancePickerChanges.length===1);
  assert.equal(await picker.evaluate(node=>node.files?.length),1,'Chosen file was not retained');
  assert.deepEqual(await page.evaluate(()=>window.__acceptancePickerChanges),[1],'One user selection must emit one change');
- return {scope:'source-fixture',nativeChooserOpened:true,selectionRetained:true,changeCount:1};
+ return {scope:'source-fixture',browserFileChooserObserved:true,nativePickerPixelsVerified:false,selectionRetained:true,changeCount:1};
 }
 
 // Traverses open shadow roots, but does not misclassify private native internals
