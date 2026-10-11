@@ -99,6 +99,21 @@ function mountedPath(relative = '') {
   return path.win32.join(state.driveLetter.replace(/:$/, '') + ':\\', relative);
 }
 async function openPath(filename) { const error = await shell.openPath(filename); if (error) throw new Error(error); }
+async function forceLockDrive(language = 'en') {
+  const text = (en, yue) => language === 'yue' ? yue : language === 'bilingual' ? `${en} · ${yue}` : en;
+  const title = text('Force Lock', '強制鎖定');
+  const answer = await dialog.showMessageBox(window, {
+    type: 'warning', buttons: [text('Keep running', '繼續運行'), title], defaultId: 0, cancelId: 0, title,
+    message: text('Lock this drive after all files and mapped views are released?', '所有檔案及記憶體映射釋放後，鎖定呢個磁碟？'),
+    detail: text('Save and close open files and release mapped views first. Retained file handles, mapped views, active or queued transfers, and filesystem activity prevent locking and leave the drive mounted. Finish or cancel transfers, then retry. Other applications may retain plaintext they already read.', '請先儲存並關閉開啟的檔案，以及釋放記憶體映射。仍被持有的檔案控制代碼、記憶體映射、執行中或排隊傳輸，以及檔案系統活動都會阻止鎖定，磁碟會保持掛載。請完成或取消傳輸後再試。其他程式可能仍保留之前讀取的明文。'),
+  });
+  if (answer.response !== 1) return {cancelled: true};
+  const result = await helper.request('forceLock');
+  if (result.locked) { state = nativeState(await helper.request('statusSummary')); publish(); }
+  else if (result.busy) throw new Error(text('Force Lock is busy. Close retained file handles and mapped views, and finish or cancel active or queued transfers. Filesystem activity must finish before locking. The drive remains mounted; retry after these resources are released.', '強制鎖定忙碌中。請關閉仍被持有的檔案控制代碼及記憶體映射，並完成或取消執行中或排隊傳輸。檔案系統活動亦須先完成。磁碟會保持掛載，資源釋放後請再試。'));
+  else throw new Error(text('Force Lock did not confirm that the drive was detached and locked.', '強制鎖定未能確認磁碟已卸載及鎖定。'));
+  return result;
+}
 async function request(method, params) {
   params = validateRequest(method, params);
   if (method === 'featureRequest') return featureRequest(params.feature,params.action,params.payload);
@@ -111,15 +126,7 @@ async function request(method, params) {
     if (!helper) throw new Error('Unlock a Windows vault to browse its history.');
     return helper.request(method, params);
   }
-  if (method === 'forceLock') {
-    const answer = await dialog.showMessageBox(window, {type:'warning',buttons:['Keep running','Force Lock'],defaultId:0,cancelId:0,title:'Force Lock',message:'Disconnect idle open files and lock this drive?',detail:'Save and close open files first. Encryption, decryption, queued work and pending content prevent Force Lock. Forced disconnection invalidates open handles and mapped views. Changes still buffered by another application may be lost, and later access may report an error or terminate that application. Other applications may retain plaintext they already read.'});
-    if (answer.response !== 1) return {cancelled:true};
-    const result = await helper.request('forceLock');
-    if (result.locked) { state = nativeState(await helper.request('statusSummary')); publish(); }
-    else if (result.busy) throw new Error('Force Lock could not start because encryption, decryption or pending content is active. Try again after the operation finishes.');
-    else throw new Error('Force Lock did not confirm that the drive was detached and locked.');
-    return result;
-  }
+  if (method === 'forceLock') return forceLockDrive(params.language);
   if (method === 'exportText') {
     const picked=await dialog.showSaveDialog(window,{title:'Export original records',defaultPath:params.name});
     if(picked.canceled)return null;

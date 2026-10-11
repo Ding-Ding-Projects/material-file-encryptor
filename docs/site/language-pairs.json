@@ -307,8 +307,8 @@
     {
       "source": "docs/features/storage/transfer-lifecycle.md",
       "translation": "docs/features/storage/transfer-lifecycle.zh-HK.md",
-      "sourceSha256": "e0b0afdcac0904349ac598323027d6810a211ce5954d04f8196d26c7cb05e761",
-      "translationSha256": "14ee80eaf302fb0bda1c8fbaea5530617c11aebdec4ada66717cfb9420f50be2"
+      "sourceSha256": "b8dd28e2150e5fe202e48c50467480e4957ce1796cc27545ca58e6c5da404a84",
+      "translationSha256": "1dd92d96eb9e107a51c5564b70e7bc717837b7d18d4cbd10aadd2485235c6e58"
     },
     {
       "source": "docs/features/surface-foundation/coverage.md",
