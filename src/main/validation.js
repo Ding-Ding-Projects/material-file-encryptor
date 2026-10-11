@@ -21,12 +21,14 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
     updates: ['status','check','download',...(!browser?['install']:[])],
     ollama: [...(!browser?['configureRuntime']:[]),'status','catalog','refreshCatalog','models','show','deleteModel','copyModel','generate','hardware','cart','addToCart','removeFromCart','retryPull','startPulls','cancel','sessions','session','renameSession','deleteSession','exportSession','chat','profiles','preflight','launch','snapshots','restore','events','runtimeInstall','runtimeStart','chooseRuntimeExecutable','registerProfile'],
     documentation: ['catalog','changelog'], status: ['status'],
-    personalization: ['sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts',...(!browser?['setScheduleCredential','clearScheduleCredential','normalizeImage','fontMetadata','cancelFontMetadata']:[])],
+    ...(!browser ? {surprise:['resolvePublishedDish']} : {}),
+    personalization: [...(!browser?['accessibilityState']:[]),'sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts',...(!browser?['setScheduleCredential','clearScheduleCredential','normalizeImage','fontMetadata','cancelFontMetadata']:[])],
     ...(!browser ? { 'server-manager': ['snapshot','refreshCatalogue','versions','resolveVersion','prepare','cancel','reviewLicense'] } : {}),
     ...(!browser ? { access: ['credentialGet','credentialSet','credentialDelete','credentialList','openDataFolder','dataFolder'] } : {}),
   };
   const limit=!browser&&feature==='personalization'&&action==='normalizeImage'?Math.ceil(4*1024*1024*4/3)+256:262144;
   if (!actions[feature]?.includes(action) || !object(payload) || Buffer.byteLength(JSON.stringify(payload)) > limit) throw new Error('Unsupported feature request.');
+  if ((feature==='surprise'||feature==='personalization'&&action==='accessibilityState') && (Object.getPrototypeOf(payload)!==Object.prototype&&Object.getPrototypeOf(payload)!==null||Reflect.ownKeys(payload).length!==0)) throw new Error('This read-only request accepts no payload.');
   if (feature === 'workflow' && WORKFLOW_DESKTOP_ACTIONS.includes(action)) validateDesktopWorkflow(action,payload);
   if (feature === 'server-manager') {
     const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
