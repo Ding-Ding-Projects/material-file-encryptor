@@ -66,8 +66,8 @@ export async function openPackagedRendererTarget(expected,{evidenceRoot,runtime=
  await fs.mkdir(destination,{recursive:true});
  const receiptPath=path.join(destination,'packaged-runtime-binding.json');
  try {await fs.writeFile(receiptPath,JSON.stringify(receipt,null,2),{flag:'wx'});}catch(error){await opened.close();throw error;}
- let closed=false;
- const close=async()=>{
+ let closed=false,closePromise;
+ const closeOnce=async()=>{
   if(closed)return receipt;
   const errors=[];
   try{await revalidate();}catch(error){errors.push(error);}
@@ -82,5 +82,6 @@ export async function openPackagedRendererTarget(expected,{evidenceRoot,runtime=
   if(errors.length)throw new AggregateError(errors,'Packaged runtime binding or closure failed.');
   return receipt;
  };
+ const close=()=>gracefulOnly?(closePromise ||= closeOnce()):closeOnce();
  return {...opened,close,target,receiptPath,receipt};
 }

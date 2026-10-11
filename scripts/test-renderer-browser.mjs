@@ -143,7 +143,8 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
   const receipt=await retainClosureAttempt(destination,state,{version:3,runRoot,closure:{...closureObservation},connectionOwned,launchAttempted,launchPending,profileRetained:true,retentionReason:'Profiles and ownership evidence retained; filesystem deletion is disabled.',outcomes});
   retainedEvidence={runRoot,...receipt,profileRetained:true,closure:{...closureObservation}};
  };
- const close=async()=>{
+ let closePromise;
+ const closeOnce=async()=>{
   if(closed){if(closeAttemptError)throw closeAttemptError;return retainedEvidence;}
   if(gracefulOnly)closed=true;
   let primaryError,closureError;
@@ -185,6 +186,7 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
   closed=true;
   return retainedEvidence;
  };
+ const close=()=>gracefulOnly?(closePromise ||= closeOnce()):closeOnce();
  try {
   await lifecycleCommand([adapter,'preflight','--require','launch_on_headless_desktop','--require','list_headless_windows','--require','kill_process','--require','close_headless_desktop']);
   if(packagedTarget)await packagedTarget.revalidate();

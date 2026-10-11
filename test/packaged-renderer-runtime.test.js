@@ -6,6 +6,7 @@ import os from 'node:os';
 import {createHash} from 'node:crypto';
 import * as asar from '@electron/asar';
 import {inspectPackagedRendererTarget,openPackagedRendererTarget} from '../scripts/packaged-renderer-runtime.mjs';
+import {openRendererBrowser} from '../scripts/test-renderer-browser.mjs';
 
 async function fixture(){
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-packaged-binding-unit-'));
@@ -78,7 +79,7 @@ test('graceful-only packaged closure never invokes cleanup on unknown, absent or
   else {
    opened=await openPackagedRendererTarget(expected,{evidenceRoot:path.join(root,'evidence'),runtime,gracefulOnly:true});
    await assert.rejects(opened.close());
-   assert.equal((await opened.close()).bindingAndClosurePassed,false);
+   await assert.rejects(opened.close());
    const retained=JSON.parse(await fs.readFile(path.join(root,'evidence/packaged-runtime-final.json')));assert.equal(retained.bindingAndClosurePassed,false);
   }
   assert.equal(events.some(value=>value.operation==='cleanup'),false);
@@ -98,6 +99,30 @@ test('graceful-only ordinary successful closure still requires strict absence fl
  const opened=await openPackagedRendererTarget(expected,{evidenceRoot:path.join(root,'evidence'),runtime:runtimeFixture(target,events),gracefulOnly:true});
  const result=await opened.close();assert.equal(result.bindingAndClosurePassed,true);assert.equal(result.gracefulOnly,true);
  assert.equal(events.some(value=>value.operation==='cleanup'),false);assert.equal(events.filter(value=>value==='Browser.close').length,1);
+});
+
+test('actual graceful-only wrapper memoizes concurrent and repeated evidence-retention failures',{skip:process.platform!=='win32'},async()=>{
+ for(const failedAbsence of [false,true]){
+  const {root,expected}=await fixture(),events=[];const target=await inspectPackagedRendererTarget(expected);
+  const evidenceRoot=path.join(root,'blocked-evidence');
+  const opened=await openRendererBrowser(target.expectedUrl,{evidenceRoot,gracefulOnly:true,packagedTarget:{...target,revalidate:async()=>{}},runtime:{...runtimeFixture(target,events,{failedAbsence}),sourceCommit:'a'.repeat(40)}});
+  await fs.writeFile(evidenceRoot,'owned fixture blocks retention');
+  const first=opened.close(),second=opened.close();assert.equal(first,second);
+  const results=await Promise.allSettled([first,second]);assert.equal(results[0].status,'rejected');assert.equal(results[1].status,'rejected');assert.equal(results[0].reason,results[1].reason);
+  assert.match(results[0].reason.message,/evidence retention failed/);
+  assert.equal(opened.close(),first);await assert.rejects(opened.close(),error=>error===results[0].reason);
+  assert.equal(events.filter(value=>value==='Browser.close').length,1);assert.equal(events.some(value=>value.operation==='cleanup'),false);
+  assert.equal(events.some(value=>value.args?.includes('--allow-saved-pid-kill')),false);
+  if(failedAbsence)assert.ok(results[0].reason.errors.some(error=>error.message.includes('execution remains unverified')));
+ }
+});
+
+test('packaged graceful-only wrapper shares the entire failed close promise',{skip:process.platform!=='win32'},async()=>{
+ const {root,expected}=await fixture(),events=[];const target=await inspectPackagedRendererTarget(expected);
+ const opened=await openPackagedRendererTarget(expected,{evidenceRoot:path.join(root,'evidence'),gracefulOnly:true,runtime:runtimeFixture(target,events,{failedAbsence:true})});
+ const first=opened.close(),second=opened.close();assert.equal(first,second);
+ const result=await Promise.allSettled([first,second]);assert.equal(result[0].status,'rejected');assert.equal(result[0].reason,result[1].reason);
+ assert.equal(opened.close(),first);assert.equal(events.filter(value=>value==='Browser.close').length,1);
 });
 
 test('changed packaged bytes cannot become acceptance and owned closure still runs',{skip:process.platform!=='win32'},async()=>{
