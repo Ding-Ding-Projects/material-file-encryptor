@@ -27,3 +27,11 @@ Bulk management, clock-skew diagnostics, encrypted mutation-history host integra
 ## Verification
 
 `node --test test/local-access.test.js` verifies every published RFC 6238 vector for all three algorithms and six/eight digits, salted verifiers, authenticated-cache identity mismatch, large-cache conversion and bounds, all six policies, independent sessions, expiry, ladder nonce/budget behavior, and a complete local QR encode/decode round trip preserving registration parameters. These tests verify the component logic, not complete host integration, physical-camera behavior or a built visual surface.
+
+## Protected record format 2
+
+Password verifiers and encryption keys use distinct, versioned purpose prefixes in their PBKDF2 salt inputs. A persisted verifier is never reused as an AES key. Format-2 encrypted records also bind their version and record identity as AES-GCM associated data.
+
+Legacy format-1 password verifiers remain usable for password verification, but format-1 encrypted records are explicitly rejected. Those records used a derivation whose encryption key equalled the persisted verifier. They cannot be made retrospectively confidential. The application does not silently decrypt, upgrade, or describe them as protected: retain a copy if needed, reset the affected local record and re-import from a trusted original through an explicit user action. New ciphertext created after a legacy password check uses the separated format-2 derivation.
+
+Creating a lock for an existing target is rejected, including a target found only in the persistent store and concurrent creation attempts. The existing lock must be authenticated and removed before a replacement is created. Logout and destruction invalidate pending profile unlock operations; late password derivations cannot restore an authenticated session.

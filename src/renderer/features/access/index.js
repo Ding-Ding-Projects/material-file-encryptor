@@ -1,3 +1,4 @@
+import {LocalProfile} from './profile.js';
 import {LockController,LOCK_POLICIES} from './locks.js';
 import {parseOtpUri,validateOtp,totp,verifyTotp,randomId,passwordVerifier,verifyPassword,deriveCacheKey,seal,unseal} from './crypto.js';
 import {otpUri,qrSvg,decodeQrBlob,decodeQrPixels} from './qr.js';
@@ -15,27 +16,17 @@ export function mountAccess(container,services={}) {
   function keypad(input,parent){const pad=document.createElement('div');pad.setAttribute('role','group');pad.setAttribute('aria-label',t('access.keypad','PIN keypad'));for(const digit of '1234567890')button(digit,()=>{input.value+=digit;input.dispatchEvent(new Event('input',{bubbles:true}));input.focus();},pad);button(t('access.backspace','Backspace'),()=>{input.value=input.value.slice(0,-1);input.focus();},pad);parent.append(pad);return pad;}
   const output=document.createElement('p');output.setAttribute('role','status');root.append(output);
   const report=error=>{output.textContent=error?.message||String(error);};
-  let privateKey=null;let profileRecord=null;let profileFailures=0;let profileWaitUntil=0;let profileLevel=0;
   const profile=document.createElement('fieldset');root.append(profile);const pl=document.createElement('legend');pl.textContent=t('access.profile','Local profile');profile.append(pl);
   const profilePassword=field(t('access.profilePassword','Profile password'),'password',profile);
   const profileStatus=document.createElement('p');profileStatus.setAttribute('role','status');profileStatus.textContent=t('access.profileLocked','Private cache is locked.');profile.append(profileStatus);
-  function endSession(){privateKey=null;profilePassword.value='';stopCamera();qrPreview.replaceChildren();qrPreview.hidden=true;secret.value='';uri.value='';confirmation.value='';profileStatus.textContent=t('access.profileLocked','Private cache is locked.');services.onAuthenticatedChange?.(false);}
-  async function unlockProfile(create=false){
-    try {
-      if(Date.now()<profileWaitUntil)throw new Error(t('access.wait','Wait before trying another profile password.'));
-      if(!services.credentialStore)throw new Error(t('access.vault','The local credential vault is unavailable.'));
-      profileRecord=await services.credentialStore.get('local-profile:v1');
-      if(create){if(profileRecord)throw new Error(t('access.profileExists','A local profile already exists. Unlock it instead.'));profileRecord=await passwordVerifier(profilePassword.value);await services.credentialStore.set('local-profile:v1',profileRecord);}
-      if(!profileRecord||!await verifyPassword(profilePassword.value,profileRecord)){if(++profileFailures>=5){profileLevel++;profileWaitUntil=Date.now()+Math.min(3600000,30000*2**(profileLevel-1));profileFailures=0;}throw new Error(t('access.mismatch','The password did not match.'));}
-      const candidate=await deriveCacheKey(profilePassword.value,profileRecord.salt);profilePassword.value='';privateKey=candidate;profileFailures=0;profileLevel=0;profileStatus.textContent=t('access.profileUnlocked','Private cache is unlocked until logout or application close.');services.onAuthenticatedChange?.(true);
-    }catch(e){profilePassword.value='';report(e);}
-  }
+  const profileSession=new LocalProfile({store:services.credentialStore,onAuthenticatedChange:authenticated=>{profileStatus.textContent=authenticated?t('access.profileUnlocked','Private cache is unlocked until logout or application close.'):t('access.profileLocked','Private cache is locked.');services.onAuthenticatedChange?.(authenticated);}});
+  function endSession(){profileSession.logout();profilePassword.value='';stopCamera();qrPreview.replaceChildren();qrPreview.hidden=true;secret.value='';uri.value='';confirmation.value='';}
+  async function unlockProfile(create=false){const password=profilePassword.value;profilePassword.value='';try{await profileSession.unlock(password,{create});}catch(e){report(e);}}
   button(t('access.setupProfile','Set up local profile'),()=>unlockProfile(true),profile);
   button(t('access.unlockProfile','Unlock local profile'),()=>unlockProfile(false),profile);
   button(t('access.logout','Log out'),endSession,profile);
-  async function encryptPrivateCache(value,identity='personal-vocabulary'){if(!privateKey)throw new Error('Unlock the local profile first.');return seal(value,privateKey,identity);}
-  async function decryptPrivateCache(value,identity='personal-vocabulary'){if(!privateKey)throw new Error('Unlock the local profile first.');return unseal(value,privateKey,identity);}
-  const lockList=document.createElement('div');root.append(lockList);
+  const encryptPrivateCache=(value,identity)=>profileSession.encrypt(value,identity);
+  const decryptPrivateCache=(value,identity)=>profileSession.decrypt(value,identity);  const lockList=document.createElement('div');root.append(lockList);
   function refreshLocks(){lockList.replaceChildren();for(const record of controller.list()){const row=document.createElement('div');row.textContent=`${record.id}: ${record.policy}`;button(t('access.unlock','Unlock'),()=>openUnlock(record.id),row);button(t('access.relock','Lock again'),()=>{controller.lock(record.id);output.textContent=t('access.locked','Locked');},row);button(t('access.remove','Remove lock'),()=>openUnlock(record.id,true),row);lockList.append(row);}}
   function openUnlock(id,remove=false){const panel=document.createElement('form');panel.setAttribute('aria-label',t('access.unlock','Unlock')+' '+id);const record=controller.describe(id);if(!record)return;
     const fields={};for(const factor of LOCK_POLICIES[record.policy])fields[factor]=field(factor,factor==='totp'?'text':'password',panel);
@@ -93,5 +84,5 @@ export function mountAccess(container,services={}) {
   button(t('access.ticket','Create local ticket'),()=>{if(tickets.length>=100&&!editingTicket){report(t('access.ticketLimit','Remove a local ticket before creating another (limit 100).'));return;}const ticket={id:randomId(),category:category.value.slice(0,100),description:description.value.slice(0,2000),status:'Created locally',stage:0};if(editingTicket){editingTicket.category=ticket.category;editingTicket.description=ticket.description;editingTicket=null;}else tickets.push(ticket);saveTickets();renderTickets();description.value='';},support);
   const path=document.createElement('p');path.textContent=services.dataPath||t('access.pathUnavailable','Application data folder unavailable.');support.append(path);button(t('access.openFolder','Open application data folder'),async()=>{try{if(!services.openDataFolder)throw new Error(t('access.pathUnavailable','Application data folder unavailable.'));await services.openDataFolder();}catch(e){report(e);}},support);
   const timer=setInterval(()=>refreshCodes().catch(report),1000);cleanups.push(()=>clearInterval(timer));
-  return {controller,refreshLocks,openUnlock,openLockWizard,loadAuthenticators,encryptPrivateCache,decryptPrivateCache,logout:endSession,get authenticated(){return !!privateKey;},async load(ids){await controller.load(ids);refreshLocks();},guard:(id,callback,...args)=>controller.run(id,callback,...args),bind(rootNode){const dispose=controller.intercept(rootNode);cleanups.push(dispose);return dispose;},destroy(){endSession();cleanups.forEach(f=>f());entries.clear();root.remove();}};
+  return {controller,refreshLocks,openUnlock,openLockWizard,loadAuthenticators,encryptPrivateCache,decryptPrivateCache,logout:endSession,get authenticated(){return profileSession.authenticated;},async load(ids){await controller.load(ids);refreshLocks();},guard:(id,callback,...args)=>controller.run(id,callback,...args),bind(rootNode){const dispose=controller.intercept(rootNode);cleanups.push(dispose);return dispose;},destroy(){endSession();cleanups.forEach(f=>f());entries.clear();root.remove();}};
 }

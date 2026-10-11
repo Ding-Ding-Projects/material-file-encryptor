@@ -2,18 +2,20 @@ const utf8 = new TextEncoder();
 const bytes = value => Uint8Array.from(atob(value), c => c.charCodeAt(0));
 const base64 = value => {const input=new Uint8Array(value);let binary='';for(let start=0;start<input.length;start+=8192)binary+=String.fromCharCode(...input.subarray(start,start+8192));return btoa(binary);};
 export const randomId = () => crypto.randomUUID();
+function purposeSalt(salt,purpose){const prefix=utf8.encode(`material-file-encryptor:${purpose}:v2\0`),result=new Uint8Array(prefix.length+salt.length);result.set(prefix);result.set(salt,prefix.length);return result;}
 export async function passwordVerifier(value, iterations = 310000) {
   if (typeof value !== 'string' || !value.length) throw new Error('A credential is required.');
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const key = await crypto.subtle.importKey('raw', utf8.encode(value), 'PBKDF2', false, ['deriveBits']);
-  const hash = await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt,iterations},key,256);
-  return {version:1,iterations,salt:base64(salt),hash:base64(hash)};
+  const hash = await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:purposeSalt(salt,'password-verifier'),iterations},key,256);
+  return {version:2,purpose:'password-verifier',iterations,salt:base64(salt),hash:base64(hash)};
 }
 export async function verifyPassword(value, record) {
-  if (!record || record.version !== 1 || record.iterations < 100000 || record.iterations > 2000000) return false;
+  if (!record || ![1,2].includes(record.version) || record.version===2&&record.purpose!=='password-verifier' || !Number.isInteger(record.iterations) || record.iterations < 100000 || record.iterations > 2000000) return false;
   try {
     const key = await crypto.subtle.importKey('raw',utf8.encode(value),'PBKDF2',false,['deriveBits']);
-    const actual = new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:bytes(record.salt),iterations:record.iterations},key,256));
+    const salt=bytes(record.salt);if(salt.length!==16)return false;
+    const actual = new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:record.version===1?salt:purposeSalt(salt,'password-verifier'),iterations:record.iterations},key,256));
     const expected = bytes(record.hash); let difference = actual.length ^ expected.length;
     for (let i=0;i<actual.length;i++) difference |= actual[i] ^ expected[i];
     return difference === 0;
@@ -22,18 +24,20 @@ export async function verifyPassword(value, record) {
 export async function createSessionKey() { return crypto.subtle.generateKey({name:'AES-GCM',length:256},false,['encrypt','decrypt']); }
 export async function deriveCacheKey(password,salt) {
   const material=await crypto.subtle.importKey('raw',utf8.encode(password),'PBKDF2',false,['deriveKey']);
-  return crypto.subtle.deriveKey({name:'PBKDF2',hash:'SHA-256',salt:bytes(salt),iterations:310000},material,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+  const rawSalt=bytes(salt);if(rawSalt.length!==16)throw Error('Invalid protected-cache salt.');
+  return crypto.subtle.deriveKey({name:'PBKDF2',hash:'SHA-256',salt:purposeSalt(rawSalt,'protected-cache-key'),iterations:310000},material,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
 }
 export async function seal(value,key,identity) {
   const plain=utf8.encode(JSON.stringify(value));if(plain.byteLength>1048576)throw new Error('Protected record exceeds the 1 MiB limit.');
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ciphertext = await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:utf8.encode(identity)},key,plain);
-  return {version:1,iv:base64(iv),ciphertext:base64(ciphertext)};
+  const ciphertext = await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:utf8.encode(`protected-record:v2:${identity}`)},key,plain);
+  return {version:2,iv:base64(iv),ciphertext:base64(ciphertext)};
 }
 export async function unseal(record,key,identity) {
-  if (record?.version !== 1) throw new Error('Unsupported protected record.');
+  if (record?.version === 1) throw new Error('Legacy protected data used an exposed key derivation and is not treated as secure. Automatic migration is unavailable; reset or explicitly re-import from a trusted original.');
+  if (record?.version !== 2) throw new Error('Unsupported protected record.');
   if(typeof record.ciphertext!=='string'||record.ciphertext.length>22369624||typeof record.iv!=='string'||record.iv.length!==16)throw new Error('Protected record exceeds its limits.');
-  const plain = await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(record.iv),additionalData:utf8.encode(identity)},key,bytes(record.ciphertext));
+  const plain = await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(record.iv),additionalData:utf8.encode(`protected-record:v2:${identity}`)},key,bytes(record.ciphertext));
   return JSON.parse(new TextDecoder().decode(plain));
 }
 export function decodeBase32(value) {
