@@ -1,3 +1,15 @@
+# Verified cloud release and live delivery, 2026-10-11 UTC
+
+Both exact Windows root entrypoints passed on GitHub Actions for main e3b0fc1 (run 38123676422, normal v1.187.1) and main 6f85edfd6dd36acb0216ab5b8f15001cd69b7a01 (run 38123945653, normal v1.190.1). Both immutable tags point directly to their intended source, both draft/prerelease flags are false, and all five expected assets are present.
+
+Independent downloaded v1.190.1 acceptance passed: all five hosted/provenance hashes and sizes, feed SHA-1/size, all 763 archive CRC entries, all 664 actual Squirrel extracted files, Setup embedding and unsigned targets. Privacy inspected 6,242 entries with zero rejected; the actual ASAR has 5,491 entries and excludes the mounted verifier and out/verification. Executable SHA-256 4d9b66443ef530a40c509a55014faf4052c76dc3d454bd6c6089c3e0be218f50, native host 3de2fef396d8dda3689363be3030b653a77a8aafac6d599fb5a8f3e20ab0a77e, ASAR cb28f6b917d64df44a87586f013eed57fbd26b600c3efd79a6877da56fa6edee. Candidate source 6f is separate from immutable verifier checkout 91af93d; all six verifier inputs are blob-identical to 6f, with exact runtime-code hashes retained. Receipt: lock-safety worktree ignored out/release-acceptance-v1.190.1/acceptance.json. No product execution, installed update or current UI acceptance is claimed.
+
+Exact 6f documentation deployment 38123945673 passed and independently matched all 207 cloud files, 59,590,965 bytes and 6,596 internal references, with zero missing files/anchors, stable source and exact stored homepage. Receipt: out/live-6f85edf-20261011/live-content-verification.json. Historical screenshot labels and pending-current wording are live; original images and provenance remain unchanged.
+
+Full wiki 8b54a9a9c98f674fcb9f278af447475119cbd40e is imported through independently checked 91af93d with both raw LF Markdown pages and exact source/hash inventory. The two changed installer-repair language hashes are refreshed; the actual two-page continuation fixture retains complete inventory/hash checks. Eleven focused publication/translation/route checks passed. Current complete-surface rows remain 210 unverified.
+
+A separate native server file-lease primitive and compile-only verifier unit is in review on the server branch. IPC, trusted ownership/runtime approval and a usable provider remain unavailable. No server, installer or GUI launch occurred. All eight worktrees, failed receipts, profiles and ignored image variants remain retained; archive and cleanup qualification are incomplete.
+
 # Historical capture presentation correction, 2026-10-11 UTC
 
 Reviewed source units 4031da2, ed01c69, d628cbf, 125f7e0 and dd56c45 are integrated as standalone contributions, preserving their original branch history. The homepage labels its Linux and Windows captures historical, removes four false current ARIA labels and states current rebuilt capture acceptance is pending. Every original image, capture date, hash and provenance file remains unchanged. Fourteen public gallery records remain historical.

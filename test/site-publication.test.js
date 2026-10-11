@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import {createHash} from 'node:crypto';
 import {buildDocumentation,buildGallery,galleryRecords,projectGalleryRecord,groupGalleryRecords,renderGallery,validateGalleryReview,pageShell,renderMarkdown,route} from '../docs/site/publication.mjs';
 const root=process.cwd();
 const catalog=JSON.parse(await fs.readFile('docs/site/content-catalog.json','utf8'));
@@ -72,13 +73,15 @@ test('wiki underscore basename renders the actual continuation snapshot',async()
  await fs.mkdir(path.join(temp,'docs/site/wiki'),{recursive:true});
  await fs.mkdir(path.join(temp,'docs/features'),{recursive:true});
  const markdown=await fs.readFile('docs/site/wiki/CLOSEOUT_PROMPT.md','utf8');
- await fs.writeFile(path.join(temp,'docs/site/wiki/CLOSEOUT_PROMPT.md'),markdown);
- await fs.writeFile(path.join(temp,'docs/site/content-catalog.json'),JSON.stringify({...catalog,articles:[],categories:[],wiki:{...catalog.wiki,files:['CLOSEOUT_PROMPT.md'],fileSha256:{'CLOSEOUT_PROMPT.md':catalog.wiki.fileSha256['CLOSEOUT_PROMPT.md']}}}));
+ assert.deepEqual([...catalog.wiki.files].sort(),['CLOSEOUT_PROMPT.md','Home.md']);
+ assert.deepEqual(Object.keys(catalog.wiki.fileSha256).sort(),catalog.wiki.files.slice().sort());
+ for(const file of catalog.wiki.files){const bytes=await fs.readFile('docs/site/wiki/'+file);assert.equal(createHash('sha256').update(bytes).digest('hex'),catalog.wiki.fileSha256[file]);await fs.writeFile(path.join(temp,'docs/site/wiki',file),bytes);}
+ await fs.writeFile(path.join(temp,'docs/site/content-catalog.json'),JSON.stringify({...catalog,articles:[],categories:[]}));
  const output=path.join(temp,'output');
  const articles=await buildDocumentation(temp,output,await fs.readFile('docs/site/index.html','utf8'));
- assert.equal(articles.length,1);assert.equal(articles[0].markdown,markdown);
+ assert.equal(articles.length,2);assert.equal(articles.find(article=>article.source==='docs/site/wiki/CLOSEOUT_PROMPT.md')?.markdown,markdown);
  const html=await fs.readFile(path.join(output,'articles/wiki--CLOSEOUT_PROMPT.html'),'utf8');
- assert.ok(html.includes('Wiki continuation handoff'));
+ assert.ok(html.includes('Material File Encryptor continuation'));
  assert.ok(html.includes('Wiki CLOSEOUT_PROMPT'));
  }finally{await fs.rm(temp,{recursive:true,force:true});}
 });

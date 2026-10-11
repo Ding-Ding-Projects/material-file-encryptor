@@ -4,7 +4,8 @@
 - [x] Pass genuine mounted lifecycle against exact f8 product bytes with the separately cloud-compiled b516 verifier; retain exact source-specific receipt and normal process/drive/fixture absence proof.
 - [x] Independently review and integrate f020 documentation/motion/guidance/server/font foundations, with 105 canonical IDs, 210 acceptance rows and 160 public routes.
 - [x] Verify main acbdf10 push and exact deployed documentation provenance, all 198 files, 6,430 internal references and repository homepage.
-- [ ] Verify current main cloud production and its normal release independently; 617320a stopped at SDK digest verification, 0222da9 stopped at Framework void-result output pollution, corrected source awaits cloud acceptance.
+- [x] Verify corrected main 6f cloud production and independently downloaded normal v1.190.1 : 763 CRC entries, 664 actual files, unsigned Setup embedding and zero of 6,242 privacy entries rejected.
+- [ ] Verify each subsequent integration against its own cloud source and package; earlier failures remain historical.
 - [x] Reproduce and independently refute actual Framework Task success-stream pollution at 3aa6eb6, including real portable activation output shape.
 - [x] Independently refute bounded download cache/replacement/junction recovery at 42ccd93; production HTTPS delivery remains separate.
 - [x] Verify exact 617320a live content: 207 files and 6,594 internal references, with stable source and exact homepage.
@@ -17,7 +18,8 @@
 - [ ] Prove installed automatic download, ready/Later behavior, active-work refusal and native update/restart without real-profile access.
 - [ ] Complete every app/site/settings/editor/motion/guidance/server feature and its genuine built-surface evidence; all 210 complete-surface rows remain unverified.
 - [x] Correct historical homepage labels and accessible names without changing original images/provenance; independently refute thirteen presentation mutations, with 17/17 focused integration checks.
-- [ ] Verify deployed historical-label correction and replace every current presentation screenshot from accepted current captures, preserving historical originals.
+- [x] Independently verify deployed 6f historical-label correction, 207 files and 6,596 internal references, with stable source/homepage.
+- [ ] Replace every current presentation screenshot from accepted current captures, preserving historical originals.
 - [ ] Finish source/default-branch delivery, release/live verification, complete preservation archive and qualified cleanup.
 
 # Current cloud production and native acceptance, 2026-10-11 UTC
