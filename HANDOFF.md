@@ -1,3 +1,9 @@
+# Separate workspace initial-font route, 2026-10-11 UTC
+
+Exact127e live verification passed225files/60706878bytes/8471references/full161articles/wiki0375/About. The complete180HTML font inventory found179 local links, with workspace.html alone missing. The independently reviewed one-line workspace entry correction now references the same existing local stylesheet before its module, with unchanged CSP/staging. Updated live180/180 proof and current font decoding remain pending.
+
+Genuine current127e capture38146793433 is separately running against its admitted static ZIP94010934b446c560f6abc42736454f5c2dc3748915ea74604ba9c415606c7f43; it cannot certify this later workspace correction. Shared field-adapter implementation proceeds in its isolated owned branch and remains unmerged.
+
 # Generated-route font linkage, 2026-10-11 UTC
 
 Reviewed candidate6c914f0a863c3f43a94ef9d518e8a91851d3b2cf extends the local stylesheet link to generated library/wiki/gallery/article/category shells. Every actual current caller uses depth0 or1; bounded0..8 URL resolution and missing/external-link negatives passed. Local staged fonts, source/privacy/wiki projections and CSP are unchanged. Initial linkage now covers home, desktop and generated documentation shells at source level.

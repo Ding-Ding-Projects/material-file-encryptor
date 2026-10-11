@@ -1,3 +1,7 @@
+- [x] Verify exact127e complete live delivery and discover the separate workspace entry missing from179/180 font links.
+- [x] Independently review the workspace local font-link source correction.
+- [ ] Verify updated180/180 live linkage, current compact-caption/font pixels and actual font decoding/glyph identity.
+
 - [x] Integrate reviewed concise localized navigation-caption source, preserving full accessible names.
 - [x] Independently review declarative local font linkage for website home and desktop initial entries. Source only.
 - [x] Independently review and integrate generated article/category/wiki initial font linkage with actual route-output negatives. Source only.
