@@ -72,10 +72,11 @@ export function makeAcquisitionPlan({launch,receipt,tuple,state,outputRoot}){
 // Missing adapters stop before acquisition instead of producing misleading PNGs.
 export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot,executePlan,createProbeEvidence,adapters,tuples=matrixFor(inventory),resume=new Map(),report=()=>{}}){
  validateBinding(binding,inventory);assert.ok(path.isAbsolute(outputRoot));
- const planned=new Map(matrixFor(inventory).map(tuple=>[tupleKey(tuple),tuple]));const results=[];
+ const planned=new Map(matrixFor(inventory).map(tuple=>[tupleKey(tuple),tuple]));const results=[],unavailableStates=new Map();
  for(const tuple of tuples){
   const key=tupleKey(tuple);assert.deepEqual(tuple,planned.get(key),'Unknown matrix tuple');
   const state=inventory.states.find(item=>item.id===tuple.state),adapter=adapters[state.id];
+  if(unavailableStates.has(state.id)){results.push({key,status:'unavailable',reason:unavailableStates.get(state.id),notRetried:true});continue;}
   const capabilities=acquisitionCapabilities({states:[state]},adapters)[0];
   if(!capabilities.navigation||!capabilities.fixture||!capabilities.observable||capabilities.missingActions.length){results.push({key,status:'unavailable',capabilities});continue;}
   if(resume.has(key)){try{admitRow(resume.get(key),{tuple,state,binding});await verifyFiles(resume.get(key),outputRoot);results.push({key,status:'reused'});continue;}catch{/* Changed or incomplete evidence must be acquired again. */}}
@@ -101,7 +102,7 @@ export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot
    const after=await probeEvidence.observe();assert.equal(await probeEvidence.persist({before,after,plan:capturePlan,result:captured,measurements,tuple}),1);
    const bytes=await fs.readFile(path.join(directory,'capture.png'));record.capture={path:path.relative(outputRoot,path.join(directory,'capture.png')),sha256:sha256(bytes)};
    record.status='captured-awaiting-inspection-and-reference';record.accepted=false;
-  }catch(error){record.status='failed';record.reason=error.message;}
+  }catch(error){record.status='failed';record.reason=error.message;if(String(error.message).startsWith('CAPABILITY_UNAVAILABLE:')){record.status='unavailable';unavailableStates.set(state.id,error.message);}}
   finally{try{if(adapter.restore)record.restoration=await adapter.restore({tuple,binding,executePlan});}catch(error){record.status='restoration-failed';record.restorationReason=error.message;}await save();results.push({key,status:record.status,path:path.join(directory,'acquisition.json')});report(results.at(-1));}
  }
  return {schemaVersion:1,binding,results,accepted:false};
