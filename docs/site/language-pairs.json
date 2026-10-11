@@ -5,22 +5,28 @@
   "normalization": "UTF-8 with LF line endings",
   "pairs": [
     {
+      "source": "docs/features/README.md",
+      "translation": "docs/features/README.zh-HK.md",
+      "sourceSha256": "239a39fc723ed4b409af3797cc8d7ef790289ec672f8faf824697d92e16300c4",
+      "translationSha256": "60ac3ed84a9f7520e547993e9e9b636376175237f27c5e76f4a082bed04cefe5"
+    },
+    {
       "source": "docs/features/access-local.md",
       "translation": "docs/features/access-local.zh-HK.md",
       "sourceSha256": "a1f09a0fef43802ac8e3125fa6e76d1b550ae377f291c7851162864e68e218fa",
       "translationSha256": "c5d4cace30a8077335c01e1dbade8f0c55faddfebc9012776478ebaffdd1a11a"
     },
     {
-      "source": "docs/features/access/local-access.md",
-      "translation": "docs/features/access/local-access.zh-HK.md",
-      "sourceSha256": "4168bdf93b9cb4af30eaeb1434c96463ac2c920d38ae984f4a669dda1d133345",
-      "translationSha256": "fc5dd2293657a56fc2984b66adc11ab043567e81200892bc50357106a6bae2d0"
-    },
-    {
       "source": "docs/features/access/README.md",
       "translation": "docs/features/access/README.zh-HK.md",
       "sourceSha256": "35df266e0e3775a8306b2634eb0b93377285bb1689c44cada9aa043c8784dac1",
       "translationSha256": "69da8a4614ca7e3161474daf9d28072d57f40b20b994f2e99cc97f5d16d01a28"
+    },
+    {
+      "source": "docs/features/access/local-access.md",
+      "translation": "docs/features/access/local-access.zh-HK.md",
+      "sourceSha256": "4168bdf93b9cb4af30eaeb1434c96463ac2c920d38ae984f4a669dda1d133345",
+      "translationSha256": "fc5dd2293657a56fc2984b66adc11ab043567e81200892bc50357106a6bae2d0"
     },
     {
       "source": "docs/features/access/visitor-local-access.md",
@@ -35,6 +41,12 @@
       "translationSha256": "feef96635bf197a333c3bc64ecba8929d591d9378bdfbf0a618db86f744ab9c7"
     },
     {
+      "source": "docs/features/appearance/README.md",
+      "translation": "docs/features/appearance/README.zh-HK.md",
+      "sourceSha256": "c0300662cc7fdd983b1388bedbd1f46de9816d94fdb3241acd81525a44949eed",
+      "translationSha256": "ff2fa474794cc360c0c2b66608f54580e87bb58006c029259954b5243e9c3b30"
+    },
+    {
       "source": "docs/features/appearance/image-placement.md",
       "translation": "docs/features/appearance/image-placement.zh-HK.md",
       "sourceSha256": "2441c4987fb93c38d0df7e78f9e757b05690e1d481b96b4a0c93159f5ff9debf",
@@ -47,10 +59,10 @@
       "translationSha256": "badf1330c0b1730ab173eb1dfc4a401ed45e585a30715d9ef0e7951a40f1b59d"
     },
     {
-      "source": "docs/features/appearance/README.md",
-      "translation": "docs/features/appearance/README.zh-HK.md",
-      "sourceSha256": "c0300662cc7fdd983b1388bedbd1f46de9816d94fdb3241acd81525a44949eed",
-      "translationSha256": "ff2fa474794cc360c0c2b66608f54580e87bb58006c029259954b5243e9c3b30"
+      "source": "docs/features/converter/README.md",
+      "translation": "docs/features/converter/README.zh-HK.md",
+      "sourceSha256": "adbc5ff2935c7800045e8c3124b568f1ea26fe5cfeeef05a25c93eb0e30b780e",
+      "translationSha256": "423e2a6cb490da5078697eca758a5e8eeb58f3ab73cc9fd34d76cf65dec1f797"
     },
     {
       "source": "docs/features/converter/archive-and-data.md",
@@ -83,16 +95,16 @@
       "translationSha256": "73080461689a59b1899dd81f6d9d07b36f582765135c7b853724be642423aca7"
     },
     {
-      "source": "docs/features/converter/README.md",
-      "translation": "docs/features/converter/README.zh-HK.md",
-      "sourceSha256": "adbc5ff2935c7800045e8c3124b568f1ea26fe5cfeeef05a25c93eb0e30b780e",
-      "translationSha256": "423e2a6cb490da5078697eca758a5e8eeb58f3ab73cc9fd34d76cf65dec1f797"
-    },
-    {
       "source": "docs/features/converter/spreadsheets.md",
       "translation": "docs/features/converter/spreadsheets.zh-HK.md",
       "sourceSha256": "90722a4a615423e601ef128a2e42d71e291f17b6bc312bf4391261cf655899d1",
       "translationSha256": "f0954e10ac243de68fd2a710082848e67ce16df7b7bd32106585da620dfbe557"
+    },
+    {
+      "source": "docs/features/desktop/README.md",
+      "translation": "docs/features/desktop/README.zh-HK.md",
+      "sourceSha256": "7285fc26d034aa8e451e35deaa98737d41b77eaf072493060e5db93b9e61bccd",
+      "translationSha256": "b57684d54cd55079035695a18f8da59840d49304c0c339d18f1fc0641b36f573"
     },
     {
       "source": "docs/features/desktop/owned-exit-handles.md",
@@ -107,12 +119,6 @@
       "translationSha256": "2106a4b4e19fe414b86cd42989372587560a359bdd823f2090ac388f83e76d06"
     },
     {
-      "source": "docs/features/desktop/README.md",
-      "translation": "docs/features/desktop/README.zh-HK.md",
-      "sourceSha256": "7285fc26d034aa8e451e35deaa98737d41b77eaf072493060e5db93b9e61bccd",
-      "translationSha256": "b57684d54cd55079035695a18f8da59840d49304c0c339d18f1fc0641b36f573"
-    },
-    {
       "source": "docs/features/desktop/runtime-evidence.md",
       "translation": "docs/features/desktop/runtime-evidence.zh-HK.md",
       "sourceSha256": "71124b19eedc3718549b9ffbc8620b4abb2c12712d2c931cedc0bb9a2ac20a06",
@@ -123,6 +129,12 @@
       "translation": "docs/features/drive/README.zh-HK.md",
       "sourceSha256": "1788fa2997b0a4fb0ffed2fe8f784ac615a39628a498fbd9a0031c88db1dced0",
       "translationSha256": "10016a8d600c196166f9b047db2ea773c6dfac9d7033f6a0b8d2670f0ae7a63d"
+    },
+    {
+      "source": "docs/features/interface/README.md",
+      "translation": "docs/features/interface/README.zh-HK.md",
+      "sourceSha256": "bd050160bc3d4d3f7b4ebaa1ef6fb593e35e44a9d0049bc2fea94b82aa5b4f8b",
+      "translationSha256": "6c8ee2ed496c203db4b8f163e57201e17417f6d420fd84be6303f44633d05119"
     },
     {
       "source": "docs/features/interface/animation-transition.md",
@@ -203,12 +215,6 @@
       "translationSha256": "7c87c7752fbb5880ad775981afdd5b284cbb1b704c34ea53f7247376c40859e9"
     },
     {
-      "source": "docs/features/interface/README.md",
-      "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "bd050160bc3d4d3f7b4ebaa1ef6fb593e35e44a9d0049bc2fea94b82aa5b4f8b",
-      "translationSha256": "6c8ee2ed496c203db4b8f163e57201e17417f6d420fd84be6303f44633d05119"
-    },
-    {
       "source": "docs/features/interface/settings-completeness.md",
       "translation": "docs/features/interface/settings-completeness.zh-HK.md",
       "sourceSha256": "3169607dc50cb06d1a6430f8167162e7992f6ea1af3a1a39cf80cd0b54e5fde6",
@@ -263,6 +269,12 @@
       "translationSha256": "259ba86717f3a1e0391eaf2b0e205ccfd8345442d34b13f6be97a626b8bbd359"
     },
     {
+      "source": "docs/features/ollama/README.md",
+      "translation": "docs/features/ollama/README.zh-HK.md",
+      "sourceSha256": "9248073388314dafb347042334c49059a1505a962a4fe83f6d5e40ed7e600fda",
+      "translationSha256": "cd02152e2464a4e7550b37d5da9b63e83d5476b254a5fdcc93959a05318bda2d"
+    },
+    {
       "source": "docs/features/ollama/local-models.md",
       "translation": "docs/features/ollama/local-models.zh-HK.md",
       "sourceSha256": "ac481b43c9fbae3e4bde96a891add27273eeb71c5f1b8188a5bc6c1e3418b063",
@@ -273,12 +285,6 @@
       "translation": "docs/features/ollama/native-host.zh-HK.md",
       "sourceSha256": "2d5f2a62adfadaa7e05012f413068142d26c2e5ef5248d0a6f716ed80619410c",
       "translationSha256": "8a21ddad1fcb5ab730e22e9b66e88539915bcfeeb0dfbd8a81d4a0682229960b"
-    },
-    {
-      "source": "docs/features/ollama/README.md",
-      "translation": "docs/features/ollama/README.zh-HK.md",
-      "sourceSha256": "9248073388314dafb347042334c49059a1505a962a4fe83f6d5e40ed7e600fda",
-      "translationSha256": "cd02152e2464a4e7550b37d5da9b63e83d5476b254a5fdcc93959a05318bda2d"
     },
     {
       "source": "docs/features/ollama/regression-verification.md",
@@ -293,6 +299,12 @@
       "translationSha256": "6f9f5729364ef82acb642181ddeb7a4559f23d979b7854ba838337aa9f834361"
     },
     {
+      "source": "docs/features/performance/README.md",
+      "translation": "docs/features/performance/README.zh-HK.md",
+      "sourceSha256": "b56659bcc271e38194074a5332b2c55916adc6a8dc269e249e6c26d856739ed9",
+      "translationSha256": "b1a09d47f04cafab73243b60099b51ba60ce3786bae365fbf2f6469f1887ee92"
+    },
+    {
       "source": "docs/features/performance/native-helper.md",
       "translation": "docs/features/performance/native-helper.zh-HK.md",
       "sourceSha256": "41a0bc86b0ba283292067c831b66f76879ac96443ae71a48d43475fa411a9940",
@@ -305,10 +317,10 @@
       "translationSha256": "808a5f7caeb0ca00e4f06b86c771aee6bf7726b67a6addd494062a4a1bad5f13"
     },
     {
-      "source": "docs/features/performance/README.md",
-      "translation": "docs/features/performance/README.zh-HK.md",
-      "sourceSha256": "b56659bcc271e38194074a5332b2c55916adc6a8dc269e249e6c26d856739ed9",
-      "translationSha256": "b1a09d47f04cafab73243b60099b51ba60ce3786bae365fbf2f6469f1887ee92"
+      "source": "docs/features/platform/README.md",
+      "translation": "docs/features/platform/README.zh-HK.md",
+      "sourceSha256": "893a14790a76f43bdeaff76443e3f2d947aea2b6eda08b22a63b680169481d06",
+      "translationSha256": "3b00cdfa324161c388b7769db510db8b927a8c425c4c63a5740f1e14dc127211"
     },
     {
       "source": "docs/features/platform/current-integration.md",
@@ -341,16 +353,10 @@
       "translationSha256": "69ba0fc3852e80950e42c97c43e214970429918e62579796a4a0753ae1f33560"
     },
     {
-      "source": "docs/features/platform/README.md",
-      "translation": "docs/features/platform/README.zh-HK.md",
-      "sourceSha256": "893a14790a76f43bdeaff76443e3f2d947aea2b6eda08b22a63b680169481d06",
-      "translationSha256": "3b00cdfa324161c388b7769db510db8b927a8c425c4c63a5740f1e14dc127211"
-    },
-    {
-      "source": "docs/features/README.md",
-      "translation": "docs/features/README.zh-HK.md",
-      "sourceSha256": "239a39fc723ed4b409af3797cc8d7ef790289ec672f8faf824697d92e16300c4",
-      "translationSha256": "60ac3ed84a9f7520e547993e9e9b636376175237f27c5e76f4a082bed04cefe5"
+      "source": "docs/features/release/README.md",
+      "translation": "docs/features/release/README.zh-HK.md",
+      "sourceSha256": "30d2806993e8733540f5d0eb142b22923b5c1f3271336e50a5c2f559d332d139",
+      "translationSha256": "d426fac748cfd82d9e278135dedcd23939e7d4eb76b4753b95ed772ca636a6c6"
     },
     {
       "source": "docs/features/release/installer-repair.md",
@@ -377,10 +383,16 @@
       "translationSha256": "50796531646dfd63f374681f8e160a959e5c67cee89e3fe10e01bdd17c8eff44"
     },
     {
-      "source": "docs/features/release/README.md",
-      "translation": "docs/features/release/README.zh-HK.md",
-      "sourceSha256": "30d2806993e8733540f5d0eb142b22923b5c1f3271336e50a5c2f559d332d139",
-      "translationSha256": "d426fac748cfd82d9e278135dedcd23939e7d4eb76b4753b95ed772ca636a6c6"
+      "source": "docs/features/schedules/README.md",
+      "translation": "docs/features/schedules/README.zh-HK.md",
+      "sourceSha256": "ddb818ff41b9f0d1de8af4b4c155176cef19be6af398c74f48809ea44a102778",
+      "translationSha256": "74acd1c15bacbe9da3eaa90445ed2370fc2ffb2d5f7c477059bc6070f03b277a"
+    },
+    {
+      "source": "docs/features/schedules/customization.md",
+      "translation": "docs/features/schedules/customization.zh-HK.md",
+      "sourceSha256": "3d3d1b1f2389cd808c4ea2997c79720d02fda1c2380d68510741d7b28a443973",
+      "translationSha256": "8253dbda4b3f210bd1f2c1db8444917a8841491b451b0a86ef2d05ff05a6e29c"
     },
     {
       "source": "docs/features/schedules/external-sources.md",
@@ -389,10 +401,10 @@
       "translationSha256": "8dbdd530c3dc827b032fcddfa21d4689eccc161df1a157611c302723ac3cc5b2"
     },
     {
-      "source": "docs/features/schedules/README.md",
-      "translation": "docs/features/schedules/README.zh-HK.md",
-      "sourceSha256": "ddb818ff41b9f0d1de8af4b4c155176cef19be6af398c74f48809ea44a102778",
-      "translationSha256": "74acd1c15bacbe9da3eaa90445ed2370fc2ffb2d5f7c477059bc6070f03b277a"
+      "source": "docs/features/server-manager/README.md",
+      "translation": "docs/features/server-manager/README.zh-HK.md",
+      "sourceSha256": "bf0890a10579a8099db84662b9a9b6440b34a6489a9a657db5cbe27ab4adf947",
+      "translationSha256": "c889ddf9536ee28aff383fae374e45d3e31b0cc21ea7cd5f17c45500bb19f809"
     },
     {
       "source": "docs/features/server-manager/foundation.md",
@@ -413,10 +425,10 @@
       "translationSha256": "fabdeedfa8c617f8d9a05105b0ac392378eb88675a79d75308811a6b8c0f5e02"
     },
     {
-      "source": "docs/features/server-manager/README.md",
-      "translation": "docs/features/server-manager/README.zh-HK.md",
-      "sourceSha256": "bf0890a10579a8099db84662b9a9b6440b34a6489a9a657db5cbe27ab4adf947",
-      "translationSha256": "c889ddf9536ee28aff383fae374e45d3e31b0cc21ea7cd5f17c45500bb19f809"
+      "source": "docs/features/storage/README.md",
+      "translation": "docs/features/storage/README.zh-HK.md",
+      "sourceSha256": "e2cde5fce20e098424c7c3b3c7134ed15e3706e06ba94cf9976701db055dedb3",
+      "translationSha256": "810bc15bdfbf43ae5cb8244c84a3c874df5d7f80a92eda4bc6d1299d10c454fa"
     },
     {
       "source": "docs/features/storage/file-history-activity.md",
@@ -449,16 +461,16 @@
       "translationSha256": "3c359434a67e4698ca12a3c3f5be8992799a04f8aa49433f03d340f7162feb95"
     },
     {
-      "source": "docs/features/storage/README.md",
-      "translation": "docs/features/storage/README.zh-HK.md",
-      "sourceSha256": "e2cde5fce20e098424c7c3b3c7134ed15e3706e06ba94cf9976701db055dedb3",
-      "translationSha256": "810bc15bdfbf43ae5cb8244c84a3c874df5d7f80a92eda4bc6d1299d10c454fa"
-    },
-    {
       "source": "docs/features/storage/transfer-lifecycle.md",
       "translation": "docs/features/storage/transfer-lifecycle.zh-HK.md",
       "sourceSha256": "b8dd28e2150e5fe202e48c50467480e4957ce1796cc27545ca58e6c5da404a84",
       "translationSha256": "1dd92d96eb9e107a51c5564b70e7bc717837b7d18d4cbd10aadd2485235c6e58"
+    },
+    {
+      "source": "docs/features/surface-foundation/README.md",
+      "translation": "docs/features/surface-foundation/README.zh-HK.md",
+      "sourceSha256": "be25b2b071927fdd6837810278a2608a34bce59b5dfc8315329202779f54b7f7",
+      "translationSha256": "b88d90c73f067f2b4ad6fab49fd101076db067851c1553ff6895cabd29893b77"
     },
     {
       "source": "docs/features/surface-foundation/coverage.md",
@@ -477,12 +489,6 @@
       "translation": "docs/features/surface-foundation/layout-and-notifications.zh-HK.md",
       "sourceSha256": "92f340f46c7603e51d171e86c783b2882e517e00a773b22c3256abb38ec26349",
       "translationSha256": "a2b2e9bd6d63130fc57d08898c39ec41351c0f945cd396dc4fcd2f7e6778d300"
-    },
-    {
-      "source": "docs/features/surface-foundation/README.md",
-      "translation": "docs/features/surface-foundation/README.zh-HK.md",
-      "sourceSha256": "be25b2b071927fdd6837810278a2608a34bce59b5dfc8315329202779f54b7f7",
-      "translationSha256": "b88d90c73f067f2b4ad6fab49fd101076db067851c1553ff6895cabd29893b77"
     },
     {
       "source": "docs/features/surface-foundation/updates-panel.md",

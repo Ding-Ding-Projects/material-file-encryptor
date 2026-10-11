@@ -6,7 +6,7 @@
 
 外觀及標誌使用 `{ "version": 1, "reference": "local-snapshot-id" }`，選取由所屬編輯器在本機登記及驗證的快照。參照不含圖片位元組、檔名、路徑或憑證。完整外觀快照保留編輯器支援的元素狀態、圖層、字體、顏色、圖片、動態、色盤及繼承設定。自訂標誌留在私人本機快照登記冊。外部來源可以選取已知本機參照，不能注入新圖片或外觀快照。遺失參照會回報套用失敗，並在可還原時清除原有暫時覆寫。
 
-`createScheduledCustomizationController` 接收 `getBaseSettings`、`applySettings`、`appearance`、`logo` 及 `onError`。快照配接器提供 `resolve(reference)`、`applyTransient(snapshot)` 及 `clearTransient()`。`update(overrides)` 逐個消費者回報 applied、restored、base、failed 或 restore-failed。`dispose()` 停止接收新工作，等目前套用完成後還原原本設定。`applySettings` 只可暫時套用有效偏好，不能覆寫使用者已儲存的原本值。外觀及標誌亦不能因暫時套用而寫入原本狀態或歷史。消費者回傳 false 或拋出錯誤不算成功。
+`createScheduledCustomizationController({getBaseSettings, applySettings, appearance, logo, onError})` 接收所屬設定及快照配接器。快照配接器提供 `resolve(reference)`、`applyTransient(snapshot)` 及 `clearTransient()`。`update(overrides)` 逐個消費者回報 applied、restored、base、failed 或 restore-failed。`dispose()` 停止接收新工作，等目前套用完成後還原原本設定。`applySettings` 只可暫時套用有效偏好，不能覆寫使用者已儲存的原本值。外觀及標誌亦不能因暫時套用而寫入原本狀態或歷史。消費者回傳 false 或拋出錯誤不算成功。
 
 每一天用 `[0,1,2,3,4,5,6]`，亦可選不重複的指定星期。日期包含開始日及結束日，限制的是時段開始的日子。時間以指定 IANA 時區計算，包含開始、不包含結束。跨午夜規則屬於開始的星期及日期；開始與結束相同代表整個選定日。夏令時間重複的鐘面時間兩次都會符合，跳過的鐘面時間不會出現。優先次序由低至高，再按識別碼字典次序；每個屬性最後符合的數值勝出。空規則或空外部設定不覆寫任何值。時段結束後原本偏好恢復。
 
