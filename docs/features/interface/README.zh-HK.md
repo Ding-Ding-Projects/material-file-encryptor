@@ -21,3 +21,5 @@
 - [訪客本機網站個人化](visitor-personalization.zh-HK.md)
 
 - [瀏覽器工作區角色](public-workspace-role.zh-HK.md)
+
+- [設定完整性同一致性](settings-completeness.zh-HK.md)

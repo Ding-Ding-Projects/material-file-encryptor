@@ -21,3 +21,5 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 - [Visitor-local website personalization](visitor-personalization.md)
 
 - [Browser workspace role](public-workspace-role.md)
+
+- [Settings completeness and integrity](settings-completeness.md)
