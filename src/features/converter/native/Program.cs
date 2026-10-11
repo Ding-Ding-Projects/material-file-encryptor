@@ -71,10 +71,18 @@ internal static class Program
         var payload = ExactPath(Path.Combine(root, "payload"));
         var work = ExactPath(Path.Combine(root, "work"));
         var runtime = ExactPath(m.GetProperty("runtime").GetString()!);
-        var worker = ExactPath(m.GetProperty("worker").GetString()!);
-        if (!Inside(runtime, payload) || !Inside(worker, payload) || !File.Exists(runtime) || !File.Exists(worker)) throw new ArgumentException("Runtime and worker must be staged within payload.");
-        if (!Path.GetFileName(runtime).Equals("node.exe", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Only the staged Node runtime is supported.");
-        var request = ExactPath(Path.Combine(work, "request.json"));
+        if (!Inside(runtime, payload) || !File.Exists(runtime)) throw new ArgumentException("Runtime must be staged within payload.");
+        MediaCommand? media = m.TryGetProperty("media", out var mediaOptions) ? MediaCommand.Create(mediaOptions, runtime, work) : null;
+        string[] commandArguments;
+        if (media is null)
+        {
+            var worker = ExactPath(m.GetProperty("worker").GetString()!);
+            if (!Inside(worker, payload) || !File.Exists(worker)) throw new ArgumentException("Worker must be staged within payload.");
+            if (!Path.GetFileName(runtime).Equals("node.exe", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Only the staged Node runtime is supported.");
+            var request = ExactPath(Path.Combine(work, "request.json"));
+            commandArguments = ["--preserve-symlinks", "--preserve-symlinks-main", worker, "--request", request, "--result", Path.Combine(work, "result.json"), "--nonce", nonce];
+        }
+        else commandArguments = media.Arguments;
         var result = Path.Combine(work, "result.json");
         if (File.Exists(result) || Directory.Exists(result)) throw new ArgumentException("Result must not already exist.");
         var owner = WindowsIdentity.GetCurrent().User ?? throw new InvalidOperationException("Current user SID is unavailable.");
@@ -141,7 +149,7 @@ internal static class Program
             foreach (var name in new[] { "USERPROFILE", "LOCALAPPDATA", "APPDATA", "SystemDrive", "HOMEDRIVE", "HOMEPATH" })
                 if (Environment.GetEnvironmentVariable(name) is string value) env[name] = value;
             environment = Marshal.StringToHGlobalUni(string.Join('\0', env.Select(kv => kv.Key + "=" + kv.Value)) + "\0\0");
-            var command = new StringBuilder(string.Join(' ', new[] { runtime, "--preserve-symlinks", "--preserve-symlinks-main", worker, "--request", request, "--result", result, "--nonce", nonce }.Select(Quote)));
+            var command = new StringBuilder(string.Join(' ', new[] { runtime }.Concat(commandArguments).Select(Quote)));
             Check(Native.CreateProcess(runtime, command, IntPtr.Zero, IntPtr.Zero, true, 0x00080000 | 0x00000004 | 0x08000000 | 0x00000400, environment, work, ref startup, out process));
             Check(Native.AssignProcessToJobObject(job, process.hProcess));
             VerifyToken(process.hProcess, appSid);
@@ -150,7 +158,7 @@ internal static class Program
             uint wait;
             while ((wait = Native.WaitForSingleObject(process.hProcess, 100)) == 258)
             {
-                killedForStorage = StorageExceeded(work);
+                killedForStorage = StorageExceeded(work) || media?.LimitsExceeded() == true;
                 timedOut = timer.ElapsedMilliseconds >= Timeout;
                 cancelled = File.Exists(Path.Combine(work, "cancel.signal"));
                 if (killedForStorage || timedOut || cancelled)
@@ -161,11 +169,13 @@ internal static class Program
                 }
             }
             if (wait != 0 && wait != 258) throw new Win32Exception(Marshal.GetLastWin32Error());
-            killedForStorage |= StorageExceeded(work);
+            killedForStorage |= StorageExceeded(work) || media?.LimitsExceeded() == true;
             Check(Native.GetExitCodeProcess(process.hProcess, out var exitCode));
+            if (log != IntPtr.Zero && log != new IntPtr(-1)) { Native.CloseHandle(log); log = IntPtr.Zero; }
             string? resultHash = null;
             if (!timedOut && !killedForStorage && !cancelled && exitCode == 0)
             {
+                media?.WriteResult(nonce);
                 ExactPath(result);
                 if (new FileInfo(result).Length > 96 * 1024 * 1024) throw new InvalidDataException("Result exceeds the size limit.");
                 var resultBytes = File.ReadAllBytes(result);

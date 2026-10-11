@@ -1,3 +1,4 @@
+import {createMediaLauncher, MEDIA_IDS} from './media.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
@@ -10,11 +11,13 @@ const codeDirectory=path.dirname(fileURLToPath(import.meta.url));
 async function hash(filename){return createHash('sha256').update(await fs.readFile(filename)).digest('hex');}
 async function packageRoot(name){let root=path.dirname(require.resolve(name));while(root!==path.dirname(root)){try{const manifest=JSON.parse(await fs.readFile(path.join(root,'package.json'),'utf8'));if(manifest.name===name)return root;}catch{}root=path.dirname(root);}throw new Error('Bundled PDF package unavailable.');}
 /** Call only with package-owned executables whose hashes were verified by the build manifest. */
-export async function createWindowsSandboxProvider({launcherPath,launcherSha256,runtimePath,runtimeSha256,launcherCompanionHashes={}}) {
+export async function createWindowsSandboxProvider({launcherPath,launcherSha256,runtimePath,runtimeSha256,launcherCompanionHashes={},mediaRuntime}) {
  if(process.platform!=='win32')throw new Error('AppContainer conversion is supported only on Windows.');
  const companions=[];for(const suffix of ['.dll','.runtimeconfig.json','.deps.json']){const filename=launcherPath.slice(0,-4)+suffix;if(await fs.access(filename).then(()=>true,()=>false)){const expected=launcherCompanionHashes[path.basename(filename)];if(!/^[0-9a-f]{64}$/.test(expected)||await hash(filename)!==expected)throw new Error('Sandbox companion verification failed.');companions.push([filename,expected]);}}
  for(const [filename,expected] of [[launcherPath,launcherSha256],[runtimePath,runtimeSha256]])if(!path.isAbsolute(filename)||!/^[0-9a-f]{64}$/.test(expected)||await hash(filename)!==expected)throw new Error('Sandbox executable verification failed.');
- const provider={verifiedOsIsolation:false,launch({inputs,adapterId,options,timeout=30000}) {
+ let media=null,mediaUnavailableReason='Verified bundled FFmpeg 9.0.2 runtime is unavailable.';if(mediaRuntime){try{media=await createMediaLauncher({launcherPath,launcherSha256,launcherCompanionHashes,...mediaRuntime});}catch{mediaUnavailableReason='Bundled media runtime could not pass executable and AppContainer startup verification.';}}
+ const provider={verifiedOsIsolation:false,verifiedMediaRuntime:Boolean(media),mediaUnavailableReason,previewMedia:media?.preview,launch({inputs,adapterId,options,timeout=30000}) {
+ if(MEDIA_IDS.includes(adapterId)){if(!media)throw new Error('Bundled media runtime verification is missing.');return media.launch({inputs,adapterId,options});}
  let child,staging,stopped=false;const nonce=randomBytes(32).toString('hex');
  const result=(async()=>{try{if((await Promise.all(companions.map(async([p,h])=>await hash(p)===h))).some(ok=>!ok)||await hash(launcherPath)!==launcherSha256||await hash(runtimePath)!==runtimeSha256)throw new Error('Sandbox executable changed.');if(!Array.isArray(inputs)||inputs.reduce((n,b)=>n+b.length,0)>64*1024*1024)throw new Error('Input limit exceeded.');if(JSON.stringify(options||{}).length>65536)throw new Error('Options limit exceeded.');const capacity=await fs.statfs(os.tmpdir());if(Number(capacity.bavail)*Number(capacity.bsize)<384*1024*1024)throw new Error('Insufficient temporary capacity for isolated conversion.');staging=await fs.mkdtemp(path.join(os.tmpdir(),'converter-isolated-'));const payload=path.join(staging,'payload'),work=path.join(staging,'work');await fs.mkdir(path.join(payload,'code'),{recursive:true});await fs.mkdir(work);await fs.copyFile(runtimePath,path.join(payload,'node.exe'));await fs.copyFile(path.join(codeDirectory,'os-worker.mjs'),path.join(payload,'worker.mjs'));for(const name of ['registry.mjs','pdf.mjs','archive.mjs','data.mjs','convert.mjs'])await fs.copyFile(path.join(codeDirectory,name),path.join(payload,'code',name));
  if(adapterId.startsWith('pdf-'))for(const name of ['pdf-lib','@pdf-lib/standard-fonts','@pdf-lib/upng','pako','tslib'])await fs.cp(await packageRoot(name),path.join(payload,'node_modules',name),{recursive:true,dereference:true});
