@@ -1,4 +1,4 @@
-/** Registering an available destination must not undo a persisted tab closure. */
+/** Only destinations already saved as open belong in the workspace strip. */
 export function shouldOpenRegisteredView(state,id) {
-  return !(state.closedTabIds??state.closedTabs.map(tab=>tab.id)).includes(id);
+  return (state.tabs ?? []).some(tab => tab.id === id);
 }

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "classification": "design-only",
+  "baseCommit": "6c59f10652fa00f71bcb40eae6073e73e82c0689",
+  "reference": "design/gui-redesign/reference.html",
+  "routeTemplate": "reference.html?screen={screen}&state={state}&theme={theme}&lang={language}&width={width}&height={height}&scale={scale}",
+  "verificationStatus": "unverified",
+  "productionDeterministicRoute": null,
+  "rawReferenceCapture": null,
+  "rawProductionCapture": null,
+  "sideBySide": null,
+  "visualDiff": null,
+  "primitiveAudit": "planned in README.md; integrated candidate audit pending",
+  "intentionalDeviation": null,
+  "tuples": {
+    "viewports": [{"width": 1180, "height": 850}, {"width": 880, "height": 650}],
+    "themes": ["light", "dark"],
+    "languages": ["en", "yue", "bilingual"],
+    "scales": [1, 1.25, 1.5, 2]
+  },
+  "states": [
+    {"id": "drive-locked", "screen": "drive", "state": "locked"},
+    {"id": "drive-empty", "screen": "drive", "state": "empty"},
+    {"id": "drive-populated", "screen": "drive", "state": "populated"},
+    {"id": "drive-selected", "screen": "drive", "state": "selected"},
+    {"id": "drive-busy", "screen": "drive", "state": "busy"},
+    {"id": "drive-error", "screen": "drive", "state": "error"},
+    {"id": "drive-overflow", "screen": "drive", "state": "overflow"},
+    {"id": "drive-search", "screen": "drive", "state": "search"},
+    {"id": "drive-notifications", "screen": "drive", "state": "notifications"},
+    {"id": "offline-populated", "screen": "offline", "state": "populated"},
+    {"id": "history-populated", "screen": "history", "state": "populated"},
+    {"id": "recycle-selected", "screen": "recycle", "state": "selected"},
+    {"id": "tools-default", "screen": "tools", "state": "default"},
+    {"id": "settings-default", "screen": "settings", "state": "default"},
+    {"id": "help-default", "screen": "help", "state": "default"}
+  ]
+}
