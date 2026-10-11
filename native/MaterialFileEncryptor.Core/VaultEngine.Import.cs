@@ -16,6 +16,11 @@ public sealed partial class VaultEngine
         private int pendingLength;
         private long nextBlock;
         private bool finished;
+        internal static void DisposeWriterAndBuffer(Action disposeWriter,byte[] buffer,IDisposable reservation)
+        {
+            try{disposeWriter();}
+            finally{CryptographicOperations.ZeroMemory(buffer);reservation.Dispose();}
+        }
         internal StagedImport(VaultEngine engine,string path)
         {
             this.engine=engine;this.path=path;
@@ -79,7 +84,7 @@ public sealed partial class VaultEngine
                     engine.pendingVersions=savedVersions;engine.pendingBinHidden=savedHidden;engine.versionDue=savedDue;
                     throw;
                 }
-                finished=true;writer.Dispose();CryptographicOperations.ZeroMemory(pendingBlock);bufferReservation.Dispose();
+                finished=true;DisposeWriterAndBuffer(writer.Dispose,pendingBlock,bufferReservation);
                 try { File.Delete(journal); } catch(IOException) { } catch(UnauthorizedAccessException) { }
 
             }
@@ -90,7 +95,7 @@ public sealed partial class VaultEngine
             {
                 if(finished)return;finished=true;engine.versionDue.Remove(entry.Id);
                 try { writer.Finish(); }
-                finally { writer.Dispose();CryptographicOperations.ZeroMemory(pendingBlock);bufferReservation.Dispose();if(File.Exists(journal))File.Delete(journal); }
+                finally { try{DisposeWriterAndBuffer(writer.Dispose,pendingBlock,bufferReservation);}finally{if(File.Exists(journal))File.Delete(journal);} }
                 // Completed ciphertext parts remain unreferenced cache garbage.
             }
         }
