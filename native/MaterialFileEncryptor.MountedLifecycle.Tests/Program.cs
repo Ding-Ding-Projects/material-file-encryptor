@@ -12,7 +12,9 @@ if(args.Length==4&&args[0]=="--mapped-writer-child"){MappedWriter.Run(args[1],ar
 
 if(args.Length is <4 or >5)throw new ArgumentException("Supply package root, private output JSON, exact source commit, expected helper SHA-256 from the production receipt and optional --ordinary-only.");
 bool ordinaryOnly=args.Length==5&&args[4]=="--ordinary-only";
-if(args.Length==5&&!ordinaryOnly)throw new ArgumentException("Unknown verification mode.");
+bool packingWorkload=args.Length==5&&args[4]=="--packing";
+PackingWorkload.Result? packedResult=null;Task? packingIo=null;
+if(args.Length==5&&!ordinaryOnly&&!packingWorkload)throw new ArgumentException("Unknown verification mode.");
 string package=Path.GetFullPath(args[0]),output=Path.GetFullPath(args[1]),sourceCommit=args[2];
 if(sourceCommit.Length!=40||!sourceCommit.All(Uri.IsHexDigit))throw new ArgumentException("A full source commit is required.");
 string executable=Path.Combine(package,"resources","native","MaterialFileEncryptor.Host.exe");
@@ -33,7 +35,7 @@ async Task Mount()
 {
     var status=await helper!.Call("status",new{});
     var available=status.GetProperty("availableDriveLetters").EnumerateArray().Select(value=>value.GetString()!).ToArray();
-    drive=available.LastOrDefault()??throw new InvalidOperationException("No unused drive letter is available.");
+    drive=available.Where(value=>!value.TrimEnd('\\').Equals("M:",StringComparison.OrdinalIgnoreCase)).LastOrDefault()??throw new InvalidOperationException("No unused drive letter is available.");
     Require(!DriveInfo.GetDrives().Any(value=>value.Name.StartsWith(drive,StringComparison.OrdinalIgnoreCase)),"Selected drive became occupied.");
     var result=await helper.Call("mount",new{driveLetter=drive});Require(result.GetProperty("mounted").GetBoolean(),"Synthetic mount did not complete.");mounted=true;
 }
@@ -65,6 +67,7 @@ try
         checks.Add(new{name="idle-open-handle-force-lock-busy",verified=true,locked});
     }
     OrdinaryOperations.Run(root,mountedRoot,checks);
+    if(packingWorkload)packedResult=await PackingWorkload.Run(mountedRoot,helper.ProcessId,(method,value)=>helper.Call(method,value),checks,PersistProgress,task=>packingIo=task);
     File.WriteAllText(Path.Combine(mountedRoot,"prior.bin"),"existing destination stays intact");
     string small=Path.Combine(root,"completed.txt"),large=Path.Combine(root,"prior.bin");File.WriteAllText(small,"completed batch item");
     using(var stream=File.Create(large)){byte[] block=new byte[65536];RandomNumberGenerator.Fill(block);for(int i=0;i<4096;i++)stream.Write(block);CryptographicOperations.ZeroMemory(block);}
@@ -147,6 +150,7 @@ try
     await Unlock();await Mount();mountedRoot=drive+"\\";
     Require(File.ReadAllBytes(Path.Combine(mountedRoot,"idle.bin")).SequenceEqual(new byte[]{1,2,3,4}),"Authenticated reopen lost idle bytes.");
     if(!ordinaryOnly)MappedWriter.Verify(Path.Combine(mountedRoot,"mapped.bin"));
+    if(packedResult!=null){PackingWorkload.VerifyReopened(mountedRoot,packedResult);checks.Add(new{name="packing-authenticated-mounted-reopen",verified=true,packedResult.Length,packedResult.Sha256});}
     checks.Add(new{name="authenticated-reopen-after-all-views-release",verified=true});
     if(mounted)await SettleDetach("after-authenticated-reopen");
     Require(!mounted,"Reopened synthetic mount did not detach.");finished=ordinaryOnly||exactOverlap;
@@ -162,7 +166,7 @@ finally
         try { await PersistProgress(); } catch(Exception error) { teardownFailed=true;checks.Add(new{name="pre-teardown-receipt-error",verified=false,type=error.GetType().Name}); }
         if(helper!=null)
         {
-            helperDisposition=await MountedTeardown.Run(writerExitEstablished,()=>protocolOutcomeUnknown||helper.OutcomeUnknown,async()=>{
+            helperDisposition=await MountedTeardown.Run(writerExitEstablished,()=>protocolOutcomeUnknown||helper.OutcomeUnknown||packingIo is {IsCompleted:false},async()=>{
                 if(mounted){var locked=await helper.Call("forceLock",new{});checks.Add(new{name="teardown-force-lock-response",response=locked});mounted=!locked.GetProperty("locked").GetBoolean();}
             },async()=>{
                 var helperStop=await helper.Stop();
@@ -184,13 +188,13 @@ finally
         try{helperSha256=Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(executable)));}catch(Exception error){complete=false;checks.Add(new{name="helper-hash-error",verified=false,type=error.GetType().Name});}
         using var runnerIdentity=Process.GetCurrentProcess();
         var runner=new{pid=runnerIdentity.Id,startedUtc=runnerIdentity.StartTime.ToUniversalTime(),executable=runnerIdentity.MainModule?.FileName};
-        var report=new{schemaVersion=1,runner,sourceCommit,helperSha256,admittedHelperSha256,route="native-helper-protocol-and-win32-mapped-io",guiUsed=false,originalException,checks,teardown=new{mounted,mountState=(protocolOutcomeUnknown||helper?.OutcomeUnknown==true)?"unknown":"last-confirmed",driveAbsent,protocolOutcomeUnknown=protocolOutcomeUnknown||helper?.OutcomeUnknown==true,helperDisposition,ownedFixtureRemoved=cleanup,helperId=helper?.ProcessId,helperStartedUtc=helper?.StartedUtc,helperExecutable=executable,runnerHoldRequired=helperDisposition?.Retained==true,recoveryDisposition=helperDisposition?.Retained==true?"Retain runner, helper, original pipes and fixture for separately reviewed exact-owned recovery; no further detach, stop or deletion.":null,writerId,writerStartedUtc,writerExitEstablished,writerStop},complete};
+        var report=new{schemaVersion=1,runner,sourceCommit,helperSha256,admittedHelperSha256,route="native-helper-protocol-and-win32-mapped-io",guiUsed=false,originalException,checks,teardown=new{mounted,mountState=(protocolOutcomeUnknown||helper?.OutcomeUnknown==true)?"unknown":"last-confirmed",driveAbsent,protocolOutcomeUnknown=protocolOutcomeUnknown||helper?.OutcomeUnknown==true,packingIoOutcomeUnknown=packingIo is {IsCompleted:false},helperDisposition,ownedFixtureRemoved=cleanup,helperId=helper?.ProcessId,helperStartedUtc=helper?.StartedUtc,helperExecutable=executable,runnerHoldRequired=helperDisposition?.Retained==true,recoveryDisposition=helperDisposition?.Retained==true?"Retain runner, helper, original pipes and fixture for separately reviewed exact-owned recovery; no further detach, stop or deletion.":null,writerId,writerStartedUtc,writerExitEstablished,writerStop},complete};
         string reportJson=JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true});
         try{await File.WriteAllTextAsync(output,reportJson);}finally{
             SafeDiagnostics.Write(()=>Console.WriteLine(reportJson));Environment.ExitCode=complete?0:2;
         }
     }
-    },()=>helper is not null&&(protocolOutcomeUnknown||helper.OutcomeUnknown||!writerExitEstablished||helperDisposition?.Retained==true),async()=>{
+    },()=>helper is not null&&(protocolOutcomeUnknown||helper.OutcomeUnknown||packingIo is {IsCompleted:false}||!writerExitEstablished||helperDisposition?.Retained==true),async()=>{
         var retainedHelper=helper!;int holdReceipt=0;
         await RetainedRunnerHold.RunOwned(retainedHelper.OwnedExit,()=>retainedHelper.OriginalOutcome,async(state,response)=>{
             using var identity=Process.GetCurrentProcess();

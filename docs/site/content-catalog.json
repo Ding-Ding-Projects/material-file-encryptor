@@ -136,6 +136,8 @@
     "docs/features/release/preview-verification.zh-HK.md",
     "docs/features/schedules/README.md",
     "docs/features/schedules/README.zh-HK.md",
+    "docs/features/schedules/customization.md",
+    "docs/features/schedules/customization.zh-HK.md",
     "docs/features/schedules/external-sources.md",
     "docs/features/schedules/external-sources.zh-HK.md",
     "docs/features/schedules/customization.md",
@@ -173,7 +175,13 @@
     "docs/features/surface-foundation/updates-panel.md",
     "docs/features/surface-foundation/updates-panel.zh-HK.md",
     "docs/features/surface-foundation/workflow-handoffs.md",
-    "docs/features/surface-foundation/workflow-handoffs.zh-HK.md"
+    "docs/features/surface-foundation/workflow-handoffs.zh-HK.md",
+    "docs/features/workflows/README.md",
+    "docs/features/workflows/README.zh-HK.md",
+    "docs/features/workflows/browser-download-handoff.md",
+    "docs/features/workflows/browser-download-handoff.zh-HK.md",
+    "docs/features/workflows/forge-publication.md",
+    "docs/features/workflows/forge-publication.zh-HK.md"
   ],
   "categories": [
     "access",
@@ -189,7 +197,8 @@
     "schedules",
     "server-manager",
     "storage",
-    "surface-foundation"
+    "surface-foundation",
+    "workflows"
   ],
   "wiki": {
     "status": "available",

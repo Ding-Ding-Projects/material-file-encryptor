@@ -14,6 +14,8 @@ This boundary is based on the [GitHub CLI 2.102.0 selected secure-store command]
 
 The product uses only absolute bundled executables from a build-produced hash receipt. It verifies the pinned versions, exact relative paths, regular-file identity and SHA-256 before invocation. The Git helper quotes its verified path with POSIX shell quoting rather than relying on `PATH`. Both tools must be present and unchanged; missing or modified tools fail closed. Copy-and-push creates a temporary bare clone, uploads the exact reviewed revision to `main`, and requires destination-property readback plus exact revision proof. It never force-pushes, rewrites history or changes the source branch.
 
+The coordinated receipt contract is schemaVersion 1, with exact gh/bin/gh.exe and git/cmd/git.exe paths, pinned versions and SHA-256 fields. The legacy schema key and unknown schema versions are rejected. The actual producer receipt from build-source commit 9b6024f2ad09063feae7ef545a9aae9523dc1d8d is retained as a test fixture; it proves format binding without claiming installed acceptance.
+
 Cancellation persists across filesystem, credential and command awaits. A cancelled in-flight provider command may still have changed the destination. Results distinguish confirmed completed actions from attempted actions and require destination review whenever a mutation may have begun. Temporary snapshots are removed, while a created destination remains preserved for review. No automatic deletion claims to roll back publication.
 
 Private capture buffers are cleared and child-environment references released at operation end. JavaScript string storage and operating-system process environments do not provide guaranteed physical erasure, and a sufficiently privileged process inspector may inspect a running child environment. This is an explicit transport limitation, not a claim of hardware-backed isolation. Development tests use synthetic capture adapters; no current user's credential was read or an authentication/publication command executed.
@@ -25,3 +27,7 @@ The account mutation and publication actions are desktop-only. Browser adapters 
 ## Verification
 
 `test/forge-workflow.test.js` and `test/forge-transport.test.js` use synthetic command responses, fake credential subprocesses and disposable folders. They verify selected-account binding across external account switches, missing selected-keyring refusal, cancellation before mutation and during capture, partial mutation results, capture-error redaction, helper path quoting, bundle hashes, exact confirmation and revision proof. These tests do not publish a repository or use an existing user's account. Live account, protected-store, publication and installed package acceptance remain unverified until separately performed.
+
+## Protected enrollment availability
+
+Add account currently fails before invoking CLI login because that route can fall back to plaintext storage. Account refresh is also unavailable. Existing accounts already in operating-system protected storage remain supported for account-bound publication. A guaranteed protected enrollment transaction is separate unfinished work; no live login or current credential command was executed during development.

@@ -27,3 +27,9 @@ Streaming uses one 60 ms render timer for the active response, preserves partial
 Formatting is bounded to 262,144 characters, 2,048 lines, 8,192 characters per line, 16 nested structures and 128 opening link brackets per line. Content beyond those formatting limits is disclosed and shown in full as literal text, rather than silently truncated or recursively parsed. These presentation bounds do not relax the native service response limits.
 
 Adversarial component coverage includes source HTML, executable and credential-bearing URLs, remote images, code fences, tables, task markers, deep nesting, oversized content, early events, split deltas, cancellation, disposal, and delayed saved-session reads. Synthetic checks do not establish real model execution or built visual acceptance.
+
+## Live language changes
+
+Converter and local-model workspaces refresh their existing label text, tabs, field labels, options, accessible descriptions, helper searches, status copy and static help in place. Language changes do not remount controls, clear selected source IDs or unsaved conversion options, erase chat/system/name drafts, replace the private attachment picker, or reset an active response. Search queries, selected options and panel selection survive. Cached runtime status can be relabelled without starting a new runtime request. Rebuilt lists discard obsolete label bindings. The server preparation surface already preserves its query and selected state through its existing language method.
+
+Two focused regressions were observed failing against the prior source and passing after repair for English, Cantonese and bilingual changes. They use the real control factory and synthetic services, with no model download or provider request. Built language and display-scale acceptance remains separate.

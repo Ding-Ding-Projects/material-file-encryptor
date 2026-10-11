@@ -43,6 +43,15 @@ if (!(Test-PortableTree (Join-Path $tools "git-$($manifest.git.version).zip") (J
 $toolOutput = Join-Path $root 'out\tools'
 if (Test-Path -LiteralPath $toolOutput) { Move-Item -LiteralPath $toolOutput -Destination (Join-Path $tools ('bundle.previous-' + [Guid]::NewGuid().ToString('N'))) }
 Move-Item -LiteralPath $toolStage -Destination $toolOutput
+# Bind runtime executables to the verified pinned bundle copied above.
+$forgeExecutables = @{ schemaVersion = 1 }
+foreach ($name in @('git', 'gh')) {
+  $relative = if ($name -eq 'git') { 'git/cmd/git.exe' } else { 'gh/bin/gh.exe' }
+  $executable = Join-Path $toolOutput $relative
+  if (!(Test-Path -LiteralPath $executable -PathType Leaf)) { throw "Verified runtime executable is missing: $name" }
+  $forgeExecutables[$name] = @{ relativePath = $relative; version = $manifest.$name.version; sha256 = (Get-BootstrapDigest $executable).ToLowerInvariant() }
+}
+[IO.File]::WriteAllText((Join-Path $toolOutput 'forge-executables.json'), ($forgeExecutables | ConvertTo-Json -Depth 4), [Text.UTF8Encoding]::new($false))
 Invoke-Checked { npm.cmd ci }
 Invoke-Checked { node scripts/stage-font-outputs.mjs }
 Invoke-Checked { node scripts/build-workspace.mjs }

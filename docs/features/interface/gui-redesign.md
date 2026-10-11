@@ -29,3 +29,13 @@ Opt-in narration receives canonical notification and operation changes through t
 ## Startup presentation
 
 After initial status and update state are known, an eligible returning launch makes one ten-percent draw through the shared startup helper. School mode, first launch, active work, failures, update activity and quiet attention settings suppress it. The host resolves the approved public catalogue and returns verified bounded image bytes; the renderer performs no image network request. State is checked again after resolution. A dismissible card shows the bilingual dish name for at most five seconds without moving focus, and is removed when the application becomes busy or quiet. Missing metadata or images leave the normal workspace unchanged.
+
+## Account and publication workspace
+
+The document workspace supports account discovery, browser sign-in, activation, sign-out and explicit refresh. Unsupported account refresh explains the host limitation and offers Add account for browser renewal. Authentication challenges appear only in a temporary surface and clear after completion or cancellation; they are not sent to history, narration, logs or exports.
+
+Select a native project-folder grant and an active account, then choose an available owner, repository name, visibility and supported copy/push or fork route. The host prepares a captured review containing identity, owner, name, visibility, route and source revision. Copy/push includes complete committed history and the review says so explicitly. Fork requires the exact upstream owner/repository. Type the exact destination owner/name, then complete the shared two-key and slider confirmation. Changed inputs invalidate the review. No publication runs before final approval.
+
+Cancellation uses the host operation controller. Published, cancelled and failed results preserve completed and attempted actions and identify any external state requiring review. There is no automatic retry after a partial result.
+
+The browser extension popup uses local bundled Material controls and the shared regular-expression search. It can read pairing status, request pairing and disconnect. Only a proposed public HTTPS URL and suggested filename reach the desktop. Native destination review and Start download remain explicit desktop steps. Source packaging does not establish extension installation, native-host registration, authentication or live publication acceptance.

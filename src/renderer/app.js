@@ -1,7 +1,7 @@
 import {createStartupSurprise} from '../shared/local-ux/surprise.js';
 import {createStartupPresentation} from './features/shell/startup-surprise.js';
 import {createNotificationNarration} from './features/shell/notification-narration.js';
-import {control,prepareControl,controlKind,CONTROL_SELECTOR} from '../shared/surface/controls.js';
+import {control,prepareControl,controlKind,CONTROL_SELECTOR,setControlLanguage} from '../shared/surface/controls.js';
 import {resolveGuidanceArticle} from '../shared/surface/control-guidance.js';
 import { installClearFields } from './clear-fields.js';
 import { deletedDescendantCandidates } from './recycle-selection.js';
@@ -15,6 +15,7 @@ import { mountFileDetails } from './features/file-details/index.js';
 import { createTranslator } from '../shared/local-ux/language.js';
 import { DEFAULTS as LOCAL_DEFAULTS } from '../shared/local-ux/store.js';
 import {createDesktopSettingsIntegrity,createSettingsConfirmationLifetime} from '../shared/local-ux/settings-integrity.js';
+import {createHistorySelection} from './features/shell/history-selection.js';
 import {createPrivateHistory} from '../shared/local-ux/history.js';
 import {requestSuperConfirmation} from '../shared/surface/workflow-confirm.js';
 import { createPrivateWordingView } from '../shared/surface/private-wording-view.js';
@@ -29,7 +30,7 @@ let vocabularyUploadVersion = 0;
 let state = null, selected = null, view = 'drive', busy = false, dialogMode = 'create', snackbarTimer;
 let archiveRows = {history:[],recycle:[]}, archiveRequests={history:0,recycle:0};
 const archiveRenders={history:0,recycle:0};
-const recycledSelection=new Set(); let historySearch, recycleSearch;
+const recycledSelection=new Set(); let historySearch, recycleSearch, historySelection;let historyRetentionDraft=false;
 let driveLetterEdited = false, activeDriveLetter = '';
 let foundation=null,fileDetails=null,fileSearch=null,renderedFilesKey='',pagedFiles=null,fileNextCursor=null,filePageRevision=null,filePageRequest=0;
 const featureMounts=new Map(),featureRoots=new Map(),workspaceDisposers=[];
@@ -52,7 +53,7 @@ const narrationEvents=createNotificationNarration({getNarrator:()=>featureMounts
 function forceLockOptions(){return {language:effectiveLocalSettings.school.enabled?'en':preferences.language};}
 const enhancedLabels={'Notification history reset':'通知記錄已重設','Previous notification text was cleared because its original wording could not be verified.':'舊有通知文字已清除，因為無法確認原有用詞。','Export queued. Cancel unfinished work from Operations.':'匯出已加入佇列。可以在操作面板取消未完成工作。','File details':'檔案詳情','Converter':'轉換工具','Local models':'本機模型','Personalization':'個人化','Local access':'本機存取','Documentation':'說明文件','Changelog':'更新記錄','Status':'狀態','Load more files':'載入更多檔案','Retry loading files':'重試載入檔案','Cancel operation':'取消操作','Operations':'操作','Force lock':'強制鎖定','Quit application':'結束程式','Feature unavailable':'功能無法使用','Refresh':'重新整理','Search settings':'搜尋設定'};
 Object.assign(enhancedLabels,{'Transfer responsiveness':'傳輸回應速度','Background work priority':'背景工作優先順序','Responsive mode lowers background encryption and synchronization priority. Throughput mode uses normal priority. Both keep bounded transfer buffers.':'快速回應模式會降低背景加密及同步的優先順序。高吞吐量模式使用正常優先順序。兩種模式都保留傳輸緩衝上限。','Responsive (recommended)':'快速回應（建議）','Throughput':'高吞吐量'});
-Object.assign(enhancedLabels,{'Private history unavailable':'私人歷史無法使用','Unlock the local profile before accessing private history.':'存取私人歷史前，請先解鎖本機設定檔。','Reset website or application preferences':'重設網站或程式偏好設定','All local appearance, language, attention and schedule preferences':'所有本機外觀、語言、注意力及排程偏好設定'});
+Object.assign(enhancedLabels,{'Selected version':'已選版本','Version ID':'版本識別碼','Entry ID':'項目識別碼','Selecting a version does not restore it.':'選取版本唔會還原檔案。','The selected version is outside the current filter.':'已選版本唔喺目前篩選結果內。','Private history unavailable':'私人歷史無法使用','Unlock the local profile before accessing private history.':'存取私人歷史前，請先解鎖本機設定檔。','Reset website or application preferences':'重設網站或程式偏好設定','All local appearance, language, attention and schedule preferences':'所有本機外觀、語言、注意力及排程偏好設定'});
 const dictionary = new Map();
 document.querySelectorAll('[data-i18n]').forEach(el => dictionary.set(el, el.textContent));
 initializeIcons();
@@ -75,7 +76,7 @@ const colorQuery = window.matchMedia('(prefers-color-scheme: dark)');
 function applyPreferences() {
  narrationEvents.changed();
  document.documentElement.dataset.theme = preferences.theme === 'system' ? colorQuery.matches ? 'dark' : 'light' : preferences.theme;
- document.documentElement.lang = preferences.language === 'yue' ? 'yue-Hant' : 'en';
+ document.documentElement.lang = preferences.language === 'yue' ? 'yue-Hant' : 'en';setControlLanguage(document,preferences.language);
  for (const [el, source] of dictionary) el.textContent = t(source);
  for (const el of document.querySelectorAll('[data-view]')) { const label = t(({drive:'My drive',offline:'Available offline',history:'History',recycle:'Recycle Bin',settings:'Settings',help:'How it works'})[el.dataset.view]); el.setAttribute('aria-label',label); el.title = label; }
  $('file-search').placeholder = t('Search files');
@@ -83,11 +84,11 @@ function applyPreferences() {
  $('theme-setting').value = preferences.theme; $('language-setting').value = preferences.language; $('emoji-setting').checked = preferences.emoji;
  for (const key of ['funnyEnglish','funnyCantonese']) { $(`${key}-setting`).value = preferences[key]; $(`${key}-output`).textContent = preferences[key]; $(`${key}-setting`).style.setProperty('--range-progress', `${(preferences[key]-1)*25}%`); }
  $('vocabulary-summary').textContent = preferences.language === 'yue' ? `${preferences.vocabulary.replacements.length} 個替換詞已啟用（${vocabularyPersisted ? '已儲存喺呢部裝置' : '只限今次使用，儲存失敗'}）。` : `${preferences.vocabulary.replacements.length} label replacements active (${vocabularyPersisted ? 'saved on this device' : 'this session only; saving failed'}).`;
- historySearch?.refresh(); recycleSearch?.refresh();
+ historySearch?.refresh(); recycleSearch?.refresh();historySelection?.refresh();
  $('history-retention')?.setAttribute('aria-label',t('Show history'));
  $('history-days')?.setAttribute('aria-label',t('Custom days'));
  clearFields.refresh();
- foundation?.setLanguage(preferences.language);fileSearch?.setLanguage(preferences.language);renderedFilesKey='';
+ foundation?.setLanguage(preferences.language);fileSearch?.setLanguage(preferences.language);fileDetails?.setLanguage?.(preferences.language);renderedFilesKey='';
  for(const module of featureMounts.values()){module.setLanguage?.(preferences.language);module.refresh?.();}
  if (state) { render(); changeView(view); }
  if ($('vault-dialog').open) updateDialog();
@@ -131,6 +132,7 @@ function mountState() {
  return state.locked ? 'Locked' : state.mounted ? 'Mounted' : 'Unlocked · not mounted';
 }
 function renderAvailability() {
+ historySelection?.refresh();
  $('upgrade-vault').hidden = state?.locked !== false || state?.storageFormat !== 1; $('upgrade-vault').disabled=busy;
  const unlocked = state && !state.locked, mounted = unlocked && state.mounted;
  const file = currentFiles().find(file => file.id === selected);
@@ -160,7 +162,7 @@ function renderAvailability() {
 function currentFiles(){return pagedFiles??state?.files??[];}
 function render() {
  if (!state) return;
- if(state.locked) {filePageRequest++;pagedFiles=null;filePageRevision=null;selected=null;fileDetails?.selectEntry(null);for(const kind of ['history','recycle']) {archiveRequests[kind]++;archiveRenders[kind]++;archiveRows[kind]=[];$(kind+'-list').replaceChildren();setArchiveMessage(kind,'Unlock a drive to view its history and recycle bin.');}recycledSelection.clear();}
+ if(state.locked) {historySelection?.clear();filePageRequest++;pagedFiles=null;filePageRevision=null;selected=null;fileDetails?.selectEntry(null);for(const kind of ['history','recycle']) {archiveRequests[kind]++;archiveRenders[kind]++;archiveRows[kind]=[];$(kind+'-list').replaceChildren();setArchiveMessage(kind,'Unlock a drive to view its history and recycle bin.');}recycledSelection.clear();}
  const status = mountState(); setText('vault-badge',status); $('vault-badge').dataset.state = state.mounted ? 'mounted' : 'locked';
  $('locked-state').hidden = !state.locked; $('drive-content').hidden = state.locked; $('lock-button').hidden = state.locked;
  $('driver-notice').hidden = state.driver?.checking || state.driver?.available !== false;
@@ -428,13 +430,14 @@ else {
 
 function initializeArchive() {
  const button=(id,text,handler)=>{const el=control('button');el.id=id;el.type='button';el.className='button outlined';el.textContent=t(text);dictionary.set(el,text);el.onclick=handler;return el;};
+ historySelection=createHistorySelection({host:$('view-history'),translate:t,formatDate,formatBytes,isBusy:()=>busy||!state||state.locked||$('view-history').dataset.archiveState!=='ready',onRestore:restoreHistoryVersion});
  const retentionLabel=document.createTextNode(t('Show history'));dictionary.set(retentionLabel,'Show history');
  $('history-actions').append(button('save-version','Save version now',()=>archiveMutation('history',()=>api.saveVersion())),retentionLabel);
  const retention=control('select');retention.id='history-retention';retention.setAttribute('aria-label',t('Show history'));
  for(const [value,text] of [['forever','Forever'],['30','Last 30 days'],['90','Last 90 days'],['custom','Custom days']]) {const option=control('option');option.value=value;option.textContent=t(text);dictionary.set(option,text);retention.append(option);}
  const days=control('input');days.id='history-days';days.type='number';days.min='1';days.max='36500';days.value='365';days.hidden=true;days.setAttribute('aria-label',t('Custom days'));
- retention.onchange=()=>{days.hidden=retention.value!=='custom';};
- $('history-actions').append(retention,days,button('history-retention-apply','Apply',()=>{const value=retention.value==='forever'?null:retention.value==='custom'?Number(days.value):Number(retention.value);if(value!==null&&(!Number.isInteger(value)||value<1||value>36500))return showError(t('Enter 1 to 36500 days.'));archiveMutation('history',()=>api.setHistoryRetention(value));}));
+ retention.onchange=()=>{historyRetentionDraft=true;days.hidden=retention.value!=='custom';};days.onchange=()=>{historyRetentionDraft=true;};
+ $('history-actions').append(retention,days,button('history-retention-apply','Apply',()=>{const value=retention.value==='forever'?null:retention.value==='custom'?Number(days.value):Number(retention.value);if(value!==null&&(!Number.isInteger(value)||value<1||value>36500))return showError(t('Enter 1 to 36500 days.'));archiveMutation('history',async()=>{const result=await api.setHistoryRetention(value);historyRetentionDraft=false;return result;});}));
  $('recycle-actions').append(button('select-recycled','Select all visible',()=>{for(const el of $('recycle-list').querySelectorAll('md-checkbox:not([disabled])')) {el.checked=true;recycledSelection.add(el.value);}renderAvailability();}),button('restore-recycled','Restore selected',()=>restoreRecycledSelection()),button('empty-recycle','Empty Recycle Bin',async()=>{if(await confirmAction('Empty Recycle Bin?','Deleted entries will disappear from the bin. Version history is retained. This does not promise to free storage space.','Empty Recycle Bin'))archiveMutation('recycle',()=>api.emptyRecycleBin());}));
  historySearch=createScopedSearch($('history-search-host'),t,()=>renderArchive('history'));recycleSearch=createScopedSearch($('recycle-search-host'),t,()=>renderArchive('recycle'));
  $('transport-mode').onchange=()=>{$('private-git-fields').hidden=$('transport-mode').value!=='privateGit';};
@@ -443,22 +446,32 @@ async function archiveMutation(kind,task) {const result=await run('Working…',t
 async function loadArchive(kind) {
  const surface=$('view-'+kind);
  const request=++archiveRequests[kind]; archiveRows[kind]=[];$(kind+'-list').replaceChildren();
- surface.dataset.archiveRequest=String(request);surface.dataset.archiveState='loading';surface.setAttribute('aria-busy','true');
+ surface.dataset.archiveRequest=String(request);surface.dataset.archiveState='loading';surface.setAttribute('aria-busy','true');if(kind==='history')historySelection.refresh();
  if(!state || state.locked) {setArchiveMessage(kind,'Unlock a drive to view its history and recycle bin.');surface.dataset.archiveState='locked';surface.dataset.archiveCompletedRequest=String(request);surface.setAttribute('aria-busy','false');return;}
  setArchiveMessage(kind,'Loading…');
- try {const rows=await (kind==='history'?api.history():api.recycled());if(request!==archiveRequests[kind])return;if(!Array.isArray(rows))throw new Error(t('History is unavailable.'));archiveRows[kind]=rows;await renderArchive(kind);
+ try {const rows=await (kind==='history'?api.history():api.recycled());if(request!==archiveRequests[kind])return;if(!Array.isArray(rows))throw new Error(t('History is unavailable.'));archiveRows[kind]=rows;if(kind==='history')historySelection.setRecords(rows);await renderArchive(kind);
  if(request!==archiveRequests[kind])return;
- const value=state.preferences?.historyRetentionDays ?? state.history?.retentionDays ?? null; if(kind==='history') {$('history-retention').value=value===null?'forever':[30,90].includes(value)?String(value):'custom';$('history-days').hidden=$('history-retention').value!=='custom';if(value!==null)$('history-days').value=value;}
- surface.dataset.archiveCompletedRequest=String(request);surface.dataset.archiveState='ready';surface.setAttribute('aria-busy','false');}
+ const value=state.preferences?.historyRetentionDays ?? state.history?.retentionDays ?? null; if(kind==='history'&&!historyRetentionDraft) {$('history-retention').value=value===null?'forever':[30,90].includes(value)?String(value):'custom';$('history-days').hidden=$('history-retention').value!=='custom';if(value!==null)$('history-days').value=value;}
+ surface.dataset.archiveCompletedRequest=String(request);surface.dataset.archiveState='ready';surface.setAttribute('aria-busy','false');if(kind==='history')historySelection.refresh();}
  catch(error){if(request===archiveRequests[kind]){surface.dataset.archiveState='error';surface.setAttribute('aria-busy','false');setArchiveMessage(kind,'History is unavailable.');showError(error);}}
 }
 async function renderArchive(kind) {
  const generation=++archiveRenders[kind];$('view-'+kind).dataset.archiveRender=String(generation);const rows=await (kind==='history'?historySearch:recycleSearch).filter(archiveRows[kind]);if(generation!==archiveRenders[kind])return;const fragment=document.createDocumentFragment();
+ if(kind==='history')historySelection.beginRows(rows);
  for(const version of rows) {const row=document.createElement('tr');const cell=text=>{const el=document.createElement('td');el.textContent=text;row.append(el);return el;};
- const selection=cell('');if(kind==='recycle'){const check=control('input',{type:'checkbox'});check.type='checkbox';check.value=version.id;check.checked=recycledSelection.has(version.id);check.disabled=!version.isAvailable;check.setAttribute('aria-label',t('Select')+' '+version.path);check.onchange=()=>{check.checked?recycledSelection.add(version.id):recycledSelection.delete(version.id);renderAvailability();};selection.append(check);}
+ const selection=cell('');if(kind==='history')historySelection.bindRow(row,version,selection);if(kind==='recycle'){const check=control('input',{type:'checkbox'});check.type='checkbox';check.value=version.id;check.checked=recycledSelection.has(version.id);check.disabled=!version.isAvailable;check.setAttribute('aria-label',t('Select')+' '+version.path);check.onchange=()=>{check.checked?recycledSelection.add(version.id):recycledSelection.delete(version.id);renderAvailability();};selection.append(check);}
  cell(version.path);cell(formatDate(version.timestampUtc));cell(version.isDirectory?t('Folder'):formatBytes(version.length));cell(t(version.isAvailable?'Available':'Encrypted data unavailable'));const actions=cell('');
- if(kind==='history'){const restore=control('button');restore.className='button small';restore.textContent=t('Restore as new version');restore.disabled=busy||!version.isAvailable;restore.dataset.archiveRestore='true';restore.dataset.versionId=version.id;restore.dataset.available=String(version.isAvailable);restore.onclick=async()=>{if(await confirmAction('Restore this version?','Restoring creates a new current version. Existing history remains encrypted.','Restore as new version'))archiveMutation('history',()=>api.restoreVersion(version.id));};actions.append(restore);}fragment.append(row);}
- $(kind+'-list').replaceChildren(fragment);setArchiveMessage(kind,rows.length?'':'No matching entries.');renderAvailability();$('view-'+kind).dataset.archiveRendered=String(generation);
+ if(kind==='history'){const restore=control('button');restore.className='button small';restore.textContent=t('Restore as new version');restore.disabled=busy||!version.isAvailable;restore.dataset.archiveRestore='true';restore.dataset.versionId=version.id;restore.dataset.available=String(version.isAvailable);restore.onclick=()=>restoreHistoryVersion(version.id);actions.append(restore);}fragment.append(row);}
+ $(kind+'-list').replaceChildren(fragment);if(kind==='history')historySelection.refresh();setArchiveMessage(kind,rows.length?'':'No matching entries.');renderAvailability();$('view-'+kind).dataset.archiveRendered=String(generation);
+}
+
+async function restoreHistoryVersion(id) {
+ const permitted=()=>!busy&&state&&!state.locked&&archiveRows.history.some(row=>row.id===id&&row.isAvailable);
+ if(!permitted())return;
+ if(await confirmAction('Restore this version?','Restoring creates a new current version. Existing history remains encrypted.','Restore as new version')) {
+  if(!permitted())return;
+  return archiveMutation('history',()=>api.restoreVersion(id));
+ }
 }
 
 async function restoreRecycledSelection() {
@@ -562,7 +575,7 @@ function setupEnhancedWorkspace() {
  const fileHost=document.createElement('mfe-search');fileHost.setAttribute('label',t('Search files'));fileHost.setAttribute('scope','drive-files');fileHost.language=preferences.language;const old=$('file-search');old.closest('.search-box').hidden=true;old.closest('.search-box').after(fileHost);fileSearch=fileHost;fileHost.addEventListener('search-change',()=>{old.value=fileHost.query;renderFiles();});
  const pager=document.createElement('div');pager.className='file-page-actions';const more=document.createElement('md-outlined-button');more.id='load-more-files';more.textContent=t('Load more files');more.hidden=true;more.onclick=()=>loadFilePage(true);const retry=document.createElement('md-text-button');retry.textContent=t('Retry loading files');retry.onclick=()=>{filePageRevision=null;loadFilePage();};pager.append(more,retry);$('file-list').closest('.table-scroll').after(pager);
  const operations=document.createElement('section');operations.id='active-operations';operations.setAttribute('aria-label',t('Operations'));operations.setAttribute('aria-live','polite');$('view-drive').prepend(operations);
- const details=addFeatureRoot('details','File details','檔案詳情');const detailContent=document.createElement('div');details.append(detailContent);fileDetails=mountFileDetails(detailContent,{translate:t,services:{listVersions:id=>api.listVersions?api.listVersions(id):api.history({entryId:id}),listActivity:query=>api.listActivity?api.listActivity(query):Promise.reject(new Error('File activity bridge is unavailable.')),previewVersion:id=>api.previewVersion(id),labelVersion:(id,label)=>api.labelVersion(id,label),exportVersion:id=>api.exportVersion(id),restoreVersion:async id=>{if(await confirmAction('Restore this version?','Restoring creates a new current version. Existing history remains encrypted.','Restore as new version'))return api.restoreVersion(id);}}});
+ const details=addFeatureRoot('details','File details','檔案詳情');const detailContent=document.createElement('div');details.append(detailContent);fileDetails=mountFileDetails(detailContent,{translate:t,language:preferences.language,services:{listVersions:id=>api.listVersions?api.listVersions(id):api.history({entryId:id}),listActivity:query=>api.listActivity?api.listActivity(query):Promise.reject(new Error('File activity bridge is unavailable.')),previewVersion:id=>api.previewVersion(id),labelVersion:(id,label)=>api.labelVersion(id,label),exportVersion:id=>api.exportVersion(id),restoreVersion:async id=>{if(await confirmAction('Restore this version?','Restoring creates a new current version. Existing history remains encrypted.','Restore as new version'))return api.restoreVersion(id);}}});
  const detailsButton=document.createElement('md-text-button');detailsButton.textContent=t('File details');detailsButton.onclick=()=>{const file=currentFiles().find(f=>f.id===selected);if(file)fileDetails.selectEntry(file);foundation.model.openTab({id:'details',label:'File details'});foundation.shell.activate('details');};document.querySelector('.file-actions').append(detailsButton);
  const settingsSearch=control('input');settingsSearch.type='search';settingsSearch.id='settings-local-search';settingsSearch.setAttribute('aria-label',t('Search settings'));$('view-settings').children[0].after(settingsSearch);workspaceDisposers.push(attachEnhancedSearch(settingsSearch,$('view-settings')));
  const confirmFeature=async({title,message,requiredText})=>{
@@ -582,7 +595,7 @@ function setupEnhancedWorkspace() {
   mountFeature('access','Local access','本機存取',()=>import('./features/access/index.js'),async(module,root)=>{const access=module.mountAccess(root,{credentialStore,getLanguage:()=>preferences.language,translate:(source,options)=>t(source,options),schoolMode:()=>effectiveLocalSettings.school.enabled,onAuthenticatedChange:()=>{if(!featureMounts.get('access')?.authenticated){confirmationLifetime.cancel();settingsPrivateHistory.lock();}queueMicrotask(applyPreferences);},notify:featureNotify,dataPath:await featureRequest('access','dataFolder'),openDataFolder:()=>featureRequest('access','openDataFolder')});const keys=await featureRequest('access','credentialList',{prefix:'element-lock:'});await access.load((Array.isArray(keys)?keys:keys.keys||[]).map(key=>key.replace(/^element-lock:/,'')));access.bind(document.body);return access;}),
   mountFeature('personalization','Personalization','個人化',()=>import('./features/personalization/index.js'),(module,root)=>module.mountPersonalization(root,{store:localSettings,storage:localStorage,surfaceRoot:document.documentElement,isScreenReaderActive:()=>screenReaderActive!==false,onNarrationError:()=>narrationEvents.unavailable(),onLogoChange:value=>foundation.setLogo(value),isAllowed:target=>featureMounts.get('access')?.isAllowed?.(target)===true,onError:error=>featureNotify({title:t('Feature unavailable'),message:error?.message||String(error),level:'warning'}),attachSearch:attachEnhancedSearch,notify:featureNotify,onLock:target=>{const access=featureMounts.get('access');if(!access){featureNotify({title:t('Feature unavailable'),message:t('Local access is still loading. Open Settings, then Local access, and retry the lock action.'),level:'warning'});return;}foundation.model.openTab({id:'access',label:'Local access'});foundation.shell.activate('access');access.openLockWizard(ensureLockId(target),target);},historyCredentialStore,historyManager:settingsPrivateHistory,guidanceHelpBase:'../../docs/features/interface/settings-guidance.md',openGuidanceHelp:async descriptor=>{const catalog=await featureRequest('documentation','catalog');const row=resolveGuidanceArticle(catalog,descriptor,{language:preferences.language,restricted:effectiveLocalSettings.school.enabled});const reader=featureMounts.get('documentation');if(!row||!reader)throw Error('Guidance documentation is unavailable.');foundation.model.openTab({id:'documentation',label:'Documentation'});foundation.shell.activate('documentation');if(!reader.open(row.id,descriptor.concept))throw Error('Guidance documentation is unavailable.');},registerCommands:value=>foundation.registerCommands(value),confirmDestructive:confirmSettingsDestructive,resetSettings:async()=>{const signal=confirmationLifetime.signal,validate=()=>confirmationLifetime.validate(signal);validate();const result=await requestSuperConfirmation(document.body,{action:t('Reset website or application preferences'),affected:t('All local appearance, language, attention and schedule preferences'),translate:t,signal,confirmationOnly:true,validateConfirmation:validate});if(result.confirmed){validate();localSettings.reset();}},normalizeImage:payload=>featureRequest('personalization','normalizeImage',payload),bundledFontBaseURL:new URL('./fonts/',import.meta.url).href,listFonts:()=>featureRequest('personalization','listFonts'),fontMetadata:payload=>featureRequest('personalization','fontMetadata',payload),cancelFontMetadata:payload=>featureRequest('personalization','cancelFontMetadata',payload),subscribeFontMetadata:callback=>api.onFeatureEvent?.('personalization',callback),verifySharedCredential:settingsIntegrity.verifySharedCredential,setSharedCredential:settingsIntegrity.setSharedCredential,fetchScheduleSource:(source,options)=>featureRequest('personalization','fetchScheduleSource',{source,id:options.id}),setScheduleCredential:(rule,token)=>featureRequest('personalization','setScheduleCredential',{id:rule.id,source:rule.source,token}),clearScheduleCredential:rule=>featureRequest('personalization','clearScheduleCredential',{id:rule.id,source:rule.source}),vocabulary:{isAuthenticated:()=>false,replace:value=>value},sharedSettings:{read:async()=>settingsIntegrity.fromHost(await featureRequest('personalization','sharedRead')),write:settingsIntegrity.writeSchool,subscribe:callback=>api.onFeatureEvent?.('personalization',event=>{if(event.type==='sharedSettings')callback(settingsIntegrity.fromHost(event.value));})},onChange:value=>{const visualChanged=JSON.stringify(effectiveLocalSettings)!==JSON.stringify(value);effectiveLocalSettings=value;let changed=false;for(const key of ['language','theme','emoji','funnyEnglish','funnyCantonese'])if(value[key]!==undefined&&preferences[key]!==value[key]){preferences[key]=value[key];changed=true;}if(changed)savePreferences();if(visualChanged)applyPreferences();}})),
   mountFeature('documentation','Documentation','說明文件',()=>import('./features/documentation/index.js'),async(module,root)=>module.mountDocumentation(root,{translate:t,catalog:await featureRequest('documentation','catalog'),onExport:exportText})),
-  mountFeature('changelog','Changelog','更新記錄',()=>import('./features/documentation/changelog.js'),async(module,root)=>module.mountChangelog(root,{translate:t,entries:await featureRequest('documentation','changelog'),onExport:exportText})),
+  mountFeature('changelog','Changelog','更新記錄',()=>import('./features/documentation/changelog.js'),async(module,root)=>module.mountChangelog(root,{translate:t,language:preferences.language,entries:await featureRequest('documentation','changelog'),onExport:exportText})),
  mountFeature('server-manager','Server preparation','伺服器準備',()=>import('./features/server-manager/index.js'),(module,root)=>module.mountServerPreparation(root,{request:(action,payload)=>featureRequest('server-manager',action,payload),subscribe:callback=>api.onFeatureEvent('server-manager',callback),subscribeLanguage:callback=>localSettings.subscribe(callback),getLanguage:()=>preferences.language,registerCommands:value=>foundation.registerCommands(value),guidanceHelpBase:'../../docs/features/server-manager/preparation.md',openGuidanceHelp:async descriptor=>{const catalog=await featureRequest('documentation','catalog');const row=resolveGuidanceArticle(catalog,descriptor,{language:preferences.language,restricted:effectiveLocalSettings.school.enabled});const reader=featureMounts.get('documentation');if(!row||!reader)throw Error('Guidance documentation is unavailable.');foundation.model.openTab({id:'documentation',label:'Documentation'});foundation.shell.activate('documentation');if(!reader.open(row.id,descriptor.concept))throw Error('Guidance documentation is unavailable.');}})),
   mountFeature('storage','Storage maintenance','儲存維護',()=>import('./features/storage-maintenance/index.js'),(module,root)=>module.mountStorageMaintenance(root,{translate:t,language:preferences.language,services:{storageDiagnostics:()=>api.storageDiagnostics(),startPacking:payload=>api.startPacking(payload),operations:()=>api.operations(),cancelOperation:id=>api.cancelOperation(id)}})),
   mountFeature('status','Status','狀態',()=>import('./features/status/index.js'),(module,root)=>module.mountStatus(root,{translate:t,getStatus:()=>featureRequest('status','status')}))

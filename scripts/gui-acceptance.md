@@ -1,6 +1,6 @@
 # GUI acceptance
 
-`contracts/gui-states.json` is a hand-written state inventory. Every state requires two viewports (1180×850 and 880×650), three languages, two themes and four renderer scales. The current 74 states produce 3,552 tuples. An inventory row is a requirement, not a completion claim.
+`contracts/gui-states.json` is a hand-written state inventory. Every state requires two viewports (1180×850 and 880×650), three languages, two themes and four renderer scales. The current 87 states produce 4,176 tuples. An inventory row is a requirement, not a completion claim.
 
 Run `node scripts/gui-acceptance.mjs inventory` to validate and print the current count. The focused admission regressions are `node --test test/gui-acceptance.test.js test/gui-acceptance-target.test.js`.
 
@@ -23,3 +23,41 @@ Native display-scale evidence is independent. Supply one real receipt for each s
 `resumeManifests` emits one manifest per state, each with 48 phases, for the installed `resume-verification-run` ledger. This remains within its 128-phase limit. Each phase fingerprints its tuple, state contract, executable, resources, reference, verifier and evidence directory. Use the shared ledger's `init`, `record`, `status` and `resume` operations. Reacquire live process identities for every fresh execution; saved PIDs, window handles, ports and CDP targets are never resumable evidence.
 
 The audit CLI accepts `node scripts/gui-acceptance.mjs audit <run.json>`, where the JSON contains `binding`, `rows`, `root` and `physicalDpi`. Exit 0 means all declared evidence was admitted; exit 2 means required evidence remains pending. The validator verifies declarations and bytes. It cannot independently prove human inspection or that a producer truthfully reported its route, so retain original acquisition receipts and independent review.
+## Packaged acquisition producer
+
+`gui-acceptance-acquire.mjs` builds deterministic production navigation plans for all 87 inventoried states and 4,176 tuples. `acquireMatrix` accepts the existing exact-owned packaged launch, proof-bound `executePlan`, and `createModernProbeEvidence` adapter. It retains raw results before validation, validates native bookends and version-1 layout receipts, hashes the original PNG, and leaves each capture awaiting independent inspection and reference comparison. A captured row is never automatically an accepted row. Renderer emulation does not prove physical display scaling.
+
+`gui-acceptance-baseline.mjs` supplies five initial state adapters: settings, locked-drive create/unlock/cancel, password-dialog edit/clear/cancel, local-model Help, and attention toggles with restoration. These adapters use the actual mounted production UI. Their plans are source-checked only until a pinned packaged candidate executes them. `ownedFixturePreparation` reads native storage/cache/drive identity before mutation and uses real cancel/lock controls. The fixture producer excludes `M:` unconditionally and fails when no other valid drive letter exists.
+
+The caller supplies `createProbeEvidence({outputRoot, tuple, binding})`, returning `createModernProbeEvidence` configured with that exact attempt directory. This prevents same-named probe receipts from colliding across tuples. A minimal integration is:
+
+```js
+const prepareOwnedFixture = ownedFixturePreparation({launch, receipt, fixture});
+const adapters = baselineAdapters({launch, receipt, prepareOwnedFixture, inventory});
+const acquisition = await acquireMatrix({
+  inventory, binding, launch, receipt, outputRoot, executePlan, adapters,
+  createProbeEvidence: ({outputRoot}) => createModernProbeEvidence({
+    binding: nativeProbeBinding, observe, validate, outputRoot, helperPath
+  })
+});
+```
+
+The initial five adapters leave 82 states with explicit missing action/setup capabilities. Ten history/logo additions and three access-history additions retain their owner source revision and reason, while an independent test freezes the original 74 IDs.
+
+The remaining finite acquisition capabilities are:
+
+| State family | Required supported setup |
+| --- | --- |
+| Drive populated, selected, offline, history, recycle, busy and error | Import tiny owned synthetic files through the native engine, create actual versions and deleted records, retain the exact fixture identity. Use an observed operation for busy state and an intentionally invalid owned operation for an error. Never inject status objects. |
+| Menus, palette, notifications and appearance | Real pointer/keyboard plans and exact target identity, plus action-specific observable assertions. DOM click navigation alone does not prove native pointer or keyboard behavior. |
+| Converter four stages | Owned source text and output directory through supported pickers, an installed enabled converter, real queue and cancellation. Record unavailable converter capability instead of inventing a catalogue. |
+| Model store, cart, chat, profiles, help | Configure a bounded loopback synthetic provider through the supported endpoint setting, only if the shipped bridge supports it. Label provider fixture observations explicitly; no real-model claim or download. |
+| Server preparation and progress | Supported catalogue/cache inputs and owned local server files. A local fixture server must satisfy the normal transport and integrity checks. Never suppress license or download validation. |
+| Storage busy, running, paused, unavailable, invalid size | Genuine owned packing queue and writer state through the native service. Completed-row fixtures from source component tests cannot establish these packaged states. |
+| Access profile, locks, authenticators, support, waiting and confirmation | Owned synthetic credential profile via the protected production adapter, actual wrong-factor attempts and cancellation. Secret/QR/code pixels must be cleared or hidden before capture. |
+| Personalization language, appearance, attention, narration, history | Actual persisted settings, synthetic image and protected history identity; installed voices independently observed, absent voices remain unavailable. |
+| Scheduled narrator, attention, appearance and logo | Actual clock-relative schedules through production controls. Record the observed wall clock, timezone, activation and restoration. No replacement Date or timer freezing. |
+| File details and preview | Real synthetic version records, safe text preview, label and restore operations against the owned native fixture. |
+
+`acquisitionCapabilities` reports missing setup, observable and every action adapter per state. Missing capabilities stop that state before capture, while the full inventory remains unchanged. Resume revalidates complete admission and rehashes all files; a caller-supplied success flag cannot skip acquisition. Interrupted or failed capture directories are retained and require a new attempt directory rather than overwriting their evidence.
+

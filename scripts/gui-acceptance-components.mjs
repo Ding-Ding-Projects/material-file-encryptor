@@ -58,7 +58,52 @@ export async function assertMenuBehavior(page,{host='mfe-context-menu',anchor='#
  return {scope:'source-fixture',menuFocusPreserved:true,builderPreserved:true,dismissal:['escape','selection','outside','resize','target-removed'],actionEffect:true,keyboardExactlyOnce:true,staleItemRejected:true,lockedTargetRejected:true};
 }
 
-export async function runComponentAcceptance({evidenceRoot,runtime={}}) {
+export async function assertMenuKeyboardNavigation(page,{capture=async()=>{}}={}){
+ const menu=page.locator('mfe-context-menu');
+ await page.evaluate(()=>{const anchor=document.querySelector('#palette-anchor');document.querySelector('mfe-context-menu').open({anchor,target:anchor,items:[{label:'First action'},{label:'Last action'}]});});
+ await menu.locator('md-menu-item').last().waitFor({state:'visible'});
+ const input=menu.locator('mfe-search md-outlined-text-field').first().locator('input');await input.focus();
+ await page.keyboard.type('action');await page.keyboard.press('ArrowLeft');
+ assert.equal(await input.evaluate(node=>node.getRootNode().activeElement===node&&node.selectionStart===5),true,'ArrowLeft was intercepted outside the editable input');
+ await input.fill('');await page.waitForFunction(()=>document.querySelector('mfe-context-menu').itemsHost.querySelectorAll('md-menu-item').length===2);
+ await page.keyboard.press('ArrowUp');
+ assert.equal(await menu.locator('md-menu-item').last().evaluate(node=>node.getRootNode().activeElement===node),true,'ArrowUp from search did not focus the last action');
+ await input.focus();
+ const builderButton=menu.locator('mfe-search md-outlined-button').first();let reachedBuilder=false;
+ for(let index=0;index<5;index++){
+  await page.keyboard.press('Tab');assert.equal(await menu.isVisible(),true,'Tab closed the menu before focus exited');
+  reachedBuilder=await builderButton.evaluate(node=>node.getRootNode().activeElement===node);if(reachedBuilder)break;
+ }
+ assert.equal(reachedBuilder,true,'Regex builder is not reachable by Tab from query');
+ await page.keyboard.press('Enter');const builder=menu.locator('mfe-search .builder');await builder.waitFor({state:'visible'});
+ await page.keyboard.press('Tab');assert.equal(await menu.isVisible(),true,'Tab into builder closed the menu');
+ await page.keyboard.press('Shift+Tab');assert.equal(await menu.isVisible(),true,'Reverse Tab inside menu closed it');
+ await capture('menu-keyboard-builder');
+ let exited=false;
+ for(let index=0;index<100;index++){await page.keyboard.press('Tab');if(!await menu.isVisible()){exited=true;break;}}
+ assert.equal(exited,true,'Tab could not exit the menu');
+ assert.equal(await page.evaluate(()=>{let node=document.activeElement;while(node?.shadowRoot?.activeElement)node=node.shadowRoot.activeElement;for(let current=node;current;current=current.parentElement||current.getRootNode?.().host)if(current.localName==='mfe-context-menu')return false;return Boolean(node);}),true,'Menu dismissal left focus inside the closed menu');
+ return {scope:'source-fixture',route:'browser-keyboard',arrowLeftRetained:true,arrowUpLast:true,queryToBuilderTab:true,reverseTabWithinMenu:true,tabExitDismissed:true,outsideFocus:true};
+}
+
+export async function assertControlLanguageBehavior(page){
+ await page.evaluate(async()=>{const {prepareControl}=await import('/shared/surface/controls.js');const field=prepareControl(document.createElement('md-outlined-text-field'));field.id='acceptance-language-field';field.label='Synthetic field';field.value='Retained synthetic value';document.body.append(field);});
+ const field=page.locator('#acceptance-language-field'),input=field.locator('input');await input.waitFor({state:'visible'});await input.focus();
+ await page.evaluate(()=>{const field=document.querySelector('#acceptance-language-field');window.__acceptanceLanguageInput=field.shadowRoot.querySelector('input');});
+ const observed=[];
+ for(const language of ['en','yue','bilingual']){
+  const value=await page.evaluate(async language=>{const {setControlLanguage}=await import('/shared/surface/controls.js');if(typeof setControlLanguage!=='function')throw Error('Control language capability unavailable');setControlLanguage(document,language);const field=document.querySelector('#acceptance-language-field'),input=field.shadowRoot.querySelector('input');return {language,clear:field.querySelector('[slot=trailing-icon]').getAttribute('aria-label'),choice:document.querySelector('[data-choice-search]').getAttribute('aria-label'),picker:document.querySelector('mfe-file-picker[label="Synthetic acceptance file"]').button.textContent,value:field.value,sameInput:input===window.__acceptanceLanguageInput,focused:input.getRootNode().activeElement===input};},language);
+  assert.equal(value.value,'Retained synthetic value');assert.equal(value.sameInput,true);assert.equal(value.focused,true);
+  if(language!=='yue'){assert.match(value.clear,/Clear field:/);assert.match(value.choice,/Search choices:/);assert.match(value.picker,/Choose/);}
+  if(language!=='en'){assert.match(value.clear,/清除欄位/);assert.match(value.choice,/搜尋選項/);assert.match(value.picker,/選擇/);}
+  observed.push(value);
+ }
+ await page.evaluate(async()=>{const {setControlLanguage}=await import('/shared/surface/controls.js');setControlLanguage(document,'en');document.querySelector('#acceptance-language-field').remove();});
+ return {scope:'source-fixture',languageLabelsObserved:true,valuesPreserved:true,inputIdentityPreserved:true,focusPreserved:true,observed};
+}
+
+export async function runComponentAcceptance({evidenceRoot,runtime={},checks=['menu','menuKeyboardNavigation','choiceSearch','palette','filePicker','controlLanguage']}) {
+ const knownChecks=['menu','menuKeyboardNavigation','choiceSearch','palette','filePicker','controlLanguage'];assert.ok(checks.length>0&&new Set(checks).size===checks.length&&checks.every(check=>knownChecks.includes(check)));
  assert.ok(path.isAbsolute(evidenceRoot));await fs.mkdir(evidenceRoot,{recursive:true});
  const index=await fs.readFile(new URL('../src/renderer/index.html',import.meta.url),'utf8');
  const csp=index.match(/<meta http-equiv="Content-Security-Policy"[^>]+>/)?.[0];assert.ok(csp,'Production CSP missing');
@@ -71,7 +116,7 @@ export async function runComponentAcceptance({evidenceRoot,runtime={}}) {
  });
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  const url=`http://127.0.0.1:${server.address().port}/`;
- let browser,primaryError,closure;const result={schemaVersion:1,scope:'source-fixture',packagedAcceptance:false,nativeDriveAcceptance:false,browserErrors:[],failedResources:[],captures:[]};
+ let browser,primaryError,closure;const result={schemaVersion:1,scope:'source-fixture',requestedChecks:checks,completeComponentSuite:checks.length===knownChecks.length,packagedAcceptance:false,nativeDriveAcceptance:false,browserErrors:[],failedResources:[],captures:[]};
  try{
   browser=await openRendererBrowser(url,{evidenceRoot:path.join(evidenceRoot,'lifecycle'),runtime});
   if(browser.statePath){const bytes=await fs.readFile(browser.statePath+'.native-v1.json');const source=JSON.parse(bytes);result.sourceCommit=source.sourceCommit;result.nativeProvenanceSha256=createHash('sha256').update(bytes).digest('hex');}
@@ -80,10 +125,12 @@ export async function runComponentAcceptance({evidenceRoot,runtime={}}) {
   page.on('response',response=>{if(response.status()>=400&&response.url().startsWith(url))result.failedResources.push({path:new URL(response.url()).pathname,status:response.status()});});
   await page.goto(url);await page.waitForFunction(()=>window.acceptanceReady&&customElements.get('md-menu')&&customElements.get('md-outlined-text-field'));
   const capture=async name=>{const file=path.join(evidenceRoot,name+'.png'),startedAt=new Date().toISOString();const bytes=await page.screenshot({path:file});result.captures.push({path:file,sha256:createHash('sha256').update(bytes).digest('hex'),startedAt,capturedAt:new Date().toISOString(),scope:'source-fixture',inspected:false});};
-  result.menu=await assertMenuBehavior(page,{capture});
-  result.choiceSearch=await assertChoiceSearchBehavior(page,{capture});
-  result.palette=await assertPaletteBehavior(page,{capture});
-  result.filePicker=await assertFilePickerBehavior(page);
+  if(checks.includes('menu'))result.menu=await assertMenuBehavior(page,{capture});
+  if(checks.includes('menuKeyboardNavigation'))result.menuKeyboardNavigation=await assertMenuKeyboardNavigation(page,{capture});
+  if(checks.includes('choiceSearch'))result.choiceSearch=await assertChoiceSearchBehavior(page,{capture});
+  if(checks.includes('palette'))result.palette=await assertPaletteBehavior(page,{capture});
+  if(checks.includes('filePicker'))result.filePicker=await assertFilePickerBehavior(page);
+  if(checks.includes('controlLanguage'))result.controlLanguage=await assertControlLanguageBehavior(page);
   assert.deepEqual(errors,[],'Production component graph emitted browser errors');result.browserErrors=errors;
   result.passed=true;
  }catch(error){primaryError=error;result.passed=false;result.failure=error.message;if(browser)try{result.menuDiagnostic=await browser.page.evaluate(()=>({stage:window.__acceptanceStage,events:window.__acceptanceMenuEvents||[],invoked:window.__acceptanceInvoked||[],menuHidden:document.querySelector('mfe-context-menu')?.hidden}));}catch{}}
@@ -129,7 +176,7 @@ export async function assertPaletteBehavior(page,{capture=async()=>{}}={}) {
 
 export async function assertFilePickerBehavior(page,{host='mfe-file-picker[label="Synthetic acceptance file"]',content='synthetic acceptance data'}={}) {
  const picker=page.locator(host);
- assert.equal(await picker.locator('input').evaluate(node=>node.type),'file','File-picker native type differs from its declared component');
+ assert.equal(await picker.evaluate(node=>node.shadowRoot.querySelector('input').type),'file','File-picker native type differs from its declared component');
  await picker.evaluate(node=>{window.__acceptancePickerChanges=[];node.addEventListener('change',()=>window.__acceptancePickerChanges.push(node.files?.length??-1));});
  const chooser=page.waitForEvent('filechooser');
  await picker.locator('md-outlined-button').click();

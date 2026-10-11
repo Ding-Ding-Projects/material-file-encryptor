@@ -1,3 +1,10 @@
+# Storage packing implementation, 2026-10-11
+
+- [x] Implement 80 MiB defaults, durable snapshot packing, resumable queue and generation-aware pause/resume.
+- [x] Verify bounded history batches, authenticated content, concurrent mounted writers, reopen and normal teardown on synthetic data.
+- [ ] Migrate the explicitly requested existing drive after active copying and conflicting ownership end normally.
+- [ ] Complete the separate GUI, documentation, package/release and installed-lifecycle acceptance boundaries recorded in the active plan. Actual installation, installed update and removal remain deferred.
+
 # Final source preservation, 2026-10-11 UTC
 
 - [x] Preserve exact property repair0e7b717 on its owning branch with remote proof; two source reviews and focused mounted regressions pass.

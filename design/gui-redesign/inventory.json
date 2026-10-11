@@ -29,7 +29,7 @@
     {"id": "drive-search", "screen": "drive", "state": "search"},
     {"id": "drive-notifications", "screen": "drive", "state": "notifications"},
     {"id": "offline-populated", "screen": "offline", "state": "populated"},
-    {"id": "history-populated", "screen": "history", "state": "populated"},
+    {"id":"history-populated","screen":"history","state":"populated","selectionContract":{"control":"md-radio[data-history-select]","row":"tr[data-history-version][aria-selected=\"true\"]","details":"[data-history-details][data-version-id]","restore":"[data-history-restore-selected]","keyboard":["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Home","End","Enter","Space"],"selectionMutatesFiles":false,"persistence":"Version identity survives filtering and language changes; lock or record removal clears it.","detailsFields":["id","entryId","path","timestampUtc","length","isDirectory","isAvailable"],"verification":"Source-only interaction checks; built capture pending."}},
     {"id": "recycle-selected", "screen": "recycle", "state": "selected"},
     {"id": "tools-default", "screen": "tools", "state": "default"},
     {"id": "settings-default", "screen": "settings", "state": "default"},

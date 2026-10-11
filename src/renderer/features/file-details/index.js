@@ -1,4 +1,4 @@
-import { control, connectSelectSearch } from '../../../shared/surface/controls.js';
+import { control, connectSelectSearch, setControlLanguage } from '../../../shared/surface/controls.js';
 import { filterVersions, compareText, selectedVersions } from './model.js';
 import { createVersionSearch } from './version-search.js';
 
@@ -7,7 +7,7 @@ export function mountFileDetails(root, { services, translate = value => value, l
  let entry = null, tab = 'versions', versions = [], visibleVersions = [], activity = [], cursor = null, generation = 0, destroyed = false, busy = false;
  const versionSearch = createVersionSearch();
  const chosen = new Set(), filters = { from: '', to: '', pattern: '', action: '' };
- const doc = root.ownerDocument;
+ const doc = root.ownerDocument;const labelFields=[];setControlLanguage(root,language);
  const element = (tag, text, attributes = {}) => {
   const node = control(tag, attributes, [], doc); if (text != null) node.textContent = translate(text);
   for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, value);
@@ -22,7 +22,7 @@ export function mountFileDetails(root, { services, translate = value => value, l
  const controls = element('div', null, { class: 'file-details-filters' });
  function input(label, type, key) {
   const wrapper = element('label', label), field = element('input', null, { type, label: translate(label), 'aria-label': translate(label) });
-  field.addEventListener('change', () => { filters[key] = field.value; void refresh(); }); wrapper.append(field); controls.append(wrapper); return field;
+  labelFields.push({field,label,wrapper});field.addEventListener('change', () => { filters[key] = field.value; void refresh(); }); wrapper.append(field); controls.append(wrapper); return field;
  }
  input('From date (UTC)', 'date', 'from'); input('Through date (UTC)', 'date', 'to');
  input('Regular expression', 'search', 'pattern').maxLength = 256;
@@ -111,5 +111,5 @@ export function mountFileDetails(root, { services, translate = value => value, l
  versionTab.addEventListener('click', () => { tab = 'versions'; preview.textContent = ''; render(); void refresh(); });
  activityTab.addEventListener('click', () => { tab = 'activity'; preview.textContent = ''; render(); void refresh(); });
  more.addEventListener('click', () => void refresh(true)); render();
- return { selectEntry(value) { generation++; versionSearch.cancel(); entry = value; chosen.clear(); versions = []; visibleVersions = []; activity = []; cursor = null; preview.textContent = ''; render(); return refresh(); }, refresh, destroy() { destroyed = true; generation++; versionSearch.cancel(); selectSearch?.(); root.replaceChildren(); } };
+ return { setLanguage(value){language=value;versionTab.textContent=translate('Versions');activityTab.textContent=translate('Activity');more.textContent=translate('Load more activity');for(const {field,label,wrapper} of labelFields){field.label=translate(label);field.setAttribute('aria-label',translate(label));if(wrapper.firstChild?.nodeType===3)wrapper.firstChild.nodeValue=translate(label);}action.setAttribute('aria-label',translate('Activity type'));setControlLanguage(root,language);}, selectEntry(value) { generation++; versionSearch.cancel(); entry = value; chosen.clear(); versions = []; visibleVersions = []; activity = []; cursor = null; preview.textContent = ''; render(); return refresh(); }, refresh, destroy() { destroyed = true; generation++; versionSearch.cancel(); selectSearch?.(); root.replaceChildren(); } };
 }

@@ -77,15 +77,16 @@ internal sealed partial class VaultController
             return operations.StartWithPhases(path==null?[]:[path],"packing",async(_,cancellation,progress,phase)=>
             {
                 lock(gate){if(!ReferenceEquals(vault,captured))throw new InvalidOperationException("The vault changed.");++activePreparedOperations;}
+                long? packingGeneration=null;
                 try
                 {
                     phase("packing");
-                    await captured.PackAsync(path,cap,cancellation,new PackingProgress(value=>progress(value.BytesCompleted,value.TotalBytes,value.CompletedFiles,value.TotalFiles))).ConfigureAwait(false);
+                    packingGeneration=await captured.PackAsync(path,cap,cancellation,new PackingProgress(value=>progress(value.BytesCompleted,value.TotalBytes,value.CompletedFiles,value.TotalFiles))).ConfigureAwait(false);
                     cancellation.ThrowIfCancellationRequested();phase("publication");
                     await captured.FlushAsync(cancellation).ConfigureAwait(false);
                     if(captured.Status.PendingCommits!=0)throw new IOException("Encrypted source publication remains pending.");
                 }
-                catch(OperationCanceledException){captured.PausePacking();throw;}
+                catch(OperationCanceledException){if(packingGeneration.HasValue)captured.PausePacking(packingGeneration.Value);throw;}
                 finally{lock(gate)--activePreparedOperations;}
             });
         }
