@@ -1,3 +1,10 @@
+# Confirmed preferences presentation repair, 2026-10-11 UTC
+
+- [x] Reproduce the reported visible preferences mismatch with normal controls in genuine source-bound capture38142263991.
+- [x] Independently trace missing shared palette/font authority and guidance-expanded tab composition from actual visible measurements.
+- [ ] Integrate reviewed palette/font/registered-tab repair and verify real corrected source-bound pixels.
+- [ ] Complete all language/theme/viewport/scale tuples, full210surface acceptance and installed lifecycle.
+
 # Latest capture and wiki delivery, 2026-10-11 UTC
 
 - [x] Integrate independently reviewed explicit full-Chromium binding into main4cd and pass focused launch/inventory/translation checks.
