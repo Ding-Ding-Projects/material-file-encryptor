@@ -21,7 +21,9 @@ internal sealed partial class VaultController
     // registered synchronously, before a force-lock can inspect pending work.
     public Task<object?> DispatchAsync(string method, JsonElement args)
     {
-        if (method is "status" or "operations" or "cancelOperation" or "forceLock")
+        if (method == "status") return Task.FromResult<object?>(Volatile.Read(ref cachedStatus) ?? new { busy = true });
+        if (method == "forceLock") return Task.Run(() => Execute(method,args));
+        if (method is "operations" or "cancelOperation")
             return Task.FromResult(Execute(method, args));
         long requestBytes = args.ValueKind == JsonValueKind.Undefined ? 0 : System.Text.Encoding.UTF8.GetByteCount(args.GetRawText());
         lock (admissionGate)
@@ -95,9 +97,66 @@ internal sealed partial class VaultController
                 staged.Commit(cancellation);
                 completedBytes += offset; ++completedFiles;
                 progress(completedBytes, total, completedFiles, paths.Length);
+                var installed = captured.GetInfo(candidate)!;
+                captured.RecordActivity(installed.EntryId, "import", candidate);
             }
         }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+            lock (gate) { if (vault is not null) vault.RecordActivity(vault.VaultId, "cancel", detail: "Managed import cancelled"); }
+            throw;
+        }
         finally { System.Security.Cryptography.CryptographicOperations.ZeroMemory(buffer); }
+    }
+    private object StartExport(JsonElement args)
+    {
+        JsonElement capturedArgs=args.Clone();
+        lock(admissionGate)
+        {
+            if(forceLocking)throw new InvalidOperationException("The vault is locking.");
+            return operations.Start([RequiredString(args,"destination")],(_,cancellation,progress)=>Task.Run(()=>
+            { ExportVersionFile(capturedArgs,cancellation);progress(0,0,1,1); },cancellation));
+        }
+    }
+    private object ExportVersionFile(JsonElement args,CancellationToken cancellation=default)
+    {
+        string versionId=RequiredString(args,"versionId"), destination=Path.GetFullPath(RequiredString(args,"destination"));
+        MaterialFileEncryptor.Core.VaultEngine captured;
+        lock(gate)
+        {
+            captured=Engine;
+            if(IsWithin(destination,storageDir!)||IsWithin(destination,cacheDir!))throw new ArgumentException("Export outside encrypted storage and cache folders.");
+            ++activePreparedOperations;
+        }
+        string temporary=destination+"."+Guid.NewGuid().ToString("N")+".tmp";
+        try
+        {
+            captured.PrepareVersionsAsync([versionId],cancellationToken:cancellation).GetAwaiter().GetResult();
+            using(var stream=new FileStream(temporary,FileMode.CreateNew,FileAccess.Write,FileShare.None,65536,FileOptions.WriteThrough))
+            { captured.ExportVersion(versionId,stream,cancellation);stream.Flush(true); }
+            cancellation.ThrowIfCancellationRequested();
+            File.Move(temporary,destination,true);
+            var selected=captured.ListVersions().Single(version=>version.Id==versionId);
+            captured.RecordActivity(selected.EntryId,"export",selected.Path,versionId);
+            return new { exported=true };
+        }
+        finally
+        {
+            try { if(File.Exists(temporary))File.Delete(temporary); }
+            finally { lock(gate)--activePreparedOperations; }
+        }
+    }
+    private static object ActivityPage(MaterialFileEncryptor.Core.VaultActivityPage page) => new
+    {
+        items = page.Items.Select(item => new { id=item.Id,entryId=item.EntryId,action=item.Action,timestampUtc=item.TimestampUtc,path=item.Path,versionId=item.VersionId,detail=item.Detail }).ToArray(),
+        nextCursor = page.NextCursor
+    };
+    private static object PreviewInfo(MaterialFileEncryptor.Core.VaultVersionPreview value) => new { versionId=value.VersionId,text=value.Text,length=value.Length };
+    private object? JournalInfo()
+    {
+        if(vault is null)return null;
+        var value=vault.JournalStatistics;
+        return new { appendedBytes=value.AppendedBytes,appendedFrames=value.AppendedFrames,checkpointBytes=value.CheckpointBytes,checkpoints=value.Checkpoints };
     }
     private object ForceLock()
     {

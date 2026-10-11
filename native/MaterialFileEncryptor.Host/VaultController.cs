@@ -99,7 +99,7 @@ internal sealed partial class VaultController : IDisposable
             }
             var snapshot = new
             {
-                locked = vault is null, mounted = host is not null, unmountBusy, driveLetter, storageDir, cacheDir, files, revision = vault?.Revision ?? -1, operations = operations.Snapshot(),
+                locked = vault is null, mounted = host is not null, unmountBusy, driveLetter, storageDir, cacheDir, files, revision = vault?.Revision ?? -1, filesRevision = vault?.Revision ?? -1, operations = operations.Snapshot(),
                 partSizeBytes = vault?.PartSizeBytes ?? 10L * 1024 * 1024, lastOfflineRelease, mountDiagnostic = MountDiagnostic(),
                 sync = new { running = syncing, lastSync, error = fileSystem?.LastError ?? syncError ?? (vault?.Status.LastError is null ? null : "Encrypted storage synchronization needs attention."), pendingCommits = vault?.Status.PendingCommits ?? 0, sourceAvailable = vault?.Status.IsSourceAvailable ?? false },
                 driver = new
@@ -116,7 +116,7 @@ internal sealed partial class VaultController : IDisposable
                 },
                 autoUnlock = identity is not null && SavedCredentialStore.Exists(identity),
                 history = new { versionCount = cachedVersionCount, recycledCount = cachedRecycledCount, pendingVersionCount = vault?.PendingVersionCount ?? 0, retentionDays = historyRetentionDays, gitAvailable = historyStore is not null },
-                storageFormat = vault?.StorageFormat,
+                storageFormat = vault?.StorageFormat, journal = JournalInfo(),
                 transport = new { mode = transportMode, remoteRepository, available = vault is not null && (transportMode == "privateGit" ? transportAvailable : vault.Status.IsSourceAvailable), pendingSynchronization = vault is not null && transportMode == "privateGit" && (pendingPrivatePublication || historyPending || vault.Status.PendingCommits > 0 || vault.PendingVersionCount > 0), lastError = syncError },
                 availableDriveLetters = FreeDriveLetters()
             };
@@ -145,12 +145,14 @@ internal sealed partial class VaultController : IDisposable
         if (method == "cancelOperation") return operations.Cancel(RequiredString(args, "operationId"));
         if (method == "forceLock") return ForceLock();
         if (method == "startImport") return StartImport(args);
+        if (method == "exportVersion") return ExportVersionFile(args);
+        if (method == "startExport") return StartExport(args);
         if (method == "listFiles") return ListFiles(args);
         // Dispatcher stop waits for callbacks. It must run outside the callback gate.
         if (method is "lock" or "unmount") { Unmount(); if (method == "lock") LockEngine(); return Status(); }
         if (method == "sync") { SyncIfUnlocked(); return Status(); }
         if (method == "importFiles") { Import(args); SyncIfUnlocked(); return Status(); }
-        if (method is "restoreVersion" or "restoreDeleted" or "keepOffline" or "resplit") return ExecutePrepared(method, args);
+        if (method is "restoreVersion" or "restoreDeleted" or "keepOffline" or "resplit" or "previewVersion") return ExecutePrepared(method, args);
         if (method == "copyUpgrade")
         {
             Unmount();
@@ -174,6 +176,14 @@ internal sealed partial class VaultController : IDisposable
                     int? retention = args.ValueKind == JsonValueKind.Object && args.TryGetProperty("retentionDays", out var days) && days.ValueKind != JsonValueKind.Null ? days.GetInt32() : historyRetentionDays;
                     return Engine.ListVersions(OptionalString(args, "entryId"), retention).Select(VersionInfo).ToArray();
                 case "listDeleted": return Engine.ListDeleted().Select(VersionInfo).ToArray();
+                case "listActivity": return ActivityPage(Engine.ListActivity(new VaultActivityQuery(
+                    EntryId: OptionalString(args,"entryId"), Action: OptionalString(args,"action"),
+                    FromUtc: (OptionalString(args,"fromUtc") ?? OptionalString(args,"from")) is string from ? DateTimeOffset.Parse(from, System.Globalization.CultureInfo.InvariantCulture) : null,
+                    ToUtc: (OptionalString(args,"toUtc") ?? OptionalString(args,"to")) is string to ? DateTimeOffset.Parse(to, System.Globalization.CultureInfo.InvariantCulture) : null,
+                    Pattern: OptionalString(args,"pattern"), Cursor: OptionalString(args,"cursor"), Limit: checked((int)(OptionalLong(args,"limit") ?? 100)))));
+                case "previewVersion": return PreviewInfo(Engine.PreviewVersion(RequiredString(args,"versionId")));
+                case "listVersionLabels": return Engine.ListVersionLabels(RequiredString(args,"entryId"));
+                case "labelVersion": Engine.LabelVersion(RequiredString(args,"versionId"), RequiredString(args,"label")); break;
                 case "saveVersion": Engine.SaveVersionAsync(OptionalString(args, "path")).GetAwaiter().GetResult(); break;
                 case "emptyRecycleBin": Engine.EmptyRecycleBinAsync().GetAwaiter().GetResult(); break;
                 case "setHistoryRetention":
@@ -216,6 +226,7 @@ internal sealed partial class VaultController : IDisposable
                 // preparation authenticates immutable refs and revalidates state.
                 switch (method)
                 {
+                    case "previewVersion": captured.PrepareVersionsAsync([RequiredString(args, "versionId")]).GetAwaiter().GetResult(); break;
                     case "restoreVersion": captured.PrepareVersionsAsync([RequiredString(args, "versionId")]).GetAwaiter().GetResult(); break;
                     case "restoreDeleted": captured.PrepareVersionsAsync(ids, deleted: true).GetAwaiter().GetResult(); break;
                     case "keepOffline": captured.PreparePinnedAsync(path!).GetAwaiter().GetResult(); break;
@@ -229,6 +240,7 @@ internal sealed partial class VaultController : IDisposable
                     {
                         switch (method)
                         {
+                            case "previewVersion": return PreviewInfo(captured.PreviewVersion(RequiredString(args, "versionId")));
                             case "restoreVersion": captured.RestoreVersionAsync(RequiredString(args, "versionId")).GetAwaiter().GetResult(); break;
                             case "restoreDeleted": captured.RestoreDeletedAsync(ids).GetAwaiter().GetResult(); break;
                             case "keepOffline": captured.SetPinnedAsync(path!, true).GetAwaiter().GetResult(); break;
@@ -458,6 +470,7 @@ internal sealed partial class VaultController : IDisposable
         VaultEngine? capturedEngine = null;
         IVaultTransport? capturedTransport = null;
         long generation = 0;
+        bool hadSyncWork = false;
         using var cancellation = new CancellationTokenSource();
         try
         {
@@ -465,6 +478,7 @@ internal sealed partial class VaultController : IDisposable
             {
                 if (vault is null || activePreparedOperations != 0) return;
                 capturedEngine = vault; capturedTransport = transport; generation = engineGeneration;
+                hadSyncWork = capturedEngine.Status.PendingCommits > 0 || pendingPrivatePublication;
                 syncing = true; syncCancellation = cancellation;
                 nextSyncAttempt = DateTimeOffset.UtcNow.AddSeconds(15);
                 fileSystem?.RecoverPending();
@@ -472,6 +486,7 @@ internal sealed partial class VaultController : IDisposable
                 capturedEngine.FlushLocalOnly();
             }
             capturedEngine.FlushAsync(cancellation.Token).GetAwaiter().GetResult();
+            if (hadSyncWork) capturedEngine.RecordActivity(capturedEngine.VaultId, "sync", detail: "Encrypted synchronization started");
             RecordHistory(cancellation.Token);
             // Only the captured transport is used during network waits. No WinFsp
             // callback gate or engine lifetime is held across either network pass.
@@ -483,6 +498,7 @@ internal sealed partial class VaultController : IDisposable
                 publishAgain = transportMode == "privateGit";
             }
             capturedEngine.SyncAsync(cancellation.Token).GetAwaiter().GetResult();
+            capturedEngine.SynchronizeActivity();
             RecordHistory(cancellation.Token);
             if (publishAgain) SynchronizeTransport(capturedTransport, cancellation.Token);
             lock (gate)

@@ -41,13 +41,16 @@ public sealed partial class VaultEngine : IDisposable
         if (File.Exists(cachedConfig) && VaultCrypto.Deserialize<Config>(VaultCrypto.ReadBounded(cachedConfig,65536)).VaultId != config.VaultId) throw new InvalidDataException("Cache belongs to another vault.");
         VaultCrypto.AtomicWrite(cachedConfig, VaultCrypto.Serialize(config));
         var journalPath = Path.Combine(cache,"journal.mfe");
+        long checkpointSequence=0;string checkpointDigest="";
         if (File.Exists(journalPath))
         {
             var journal = ReadMetadata<Journal>(journalPath, "journal", "");
+            checkpointSequence=journal.LogSequence;checkpointDigest=journal.LogDigest;
             ValidateEntries(journal.Entries); ValidateEntries(journal.Baseline); ValidateStoredPartSize(journal.PartSize);
             entries = new(journal.Entries, StringComparer.OrdinalIgnoreCase); baseline = new(journal.Baseline,StringComparer.OrdinalIgnoreCase);
             pending = journal.Pending; known = journal.Known; heads = journal.Heads; pinned = journal.Pinned; partSize = journal.PartSize; versionDue=journal.VersionDue; pendingVersions=journal.PendingVersions; hiddenBin=journal.HiddenBin;
         }
+        ReplayJournal(checkpointSequence,checkpointDigest);
         sourceAvailable = Directory.Exists(source);
     }
     private static bool IsWithin(string child, string parent) => child.Equals(parent,StringComparison.OrdinalIgnoreCase) || child.StartsWith(parent.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase);
@@ -113,8 +116,8 @@ public sealed partial class VaultEngine : IDisposable
     public long Revision { get { lock(gate) return revision; } }
     private static Entry Clone(Entry entry) => new() { Id=entry.Id,Version=entry.Version,Directory=entry.Directory,Length=entry.Length,ChunkSize=entry.ChunkSize,PartSize=entry.PartSize,Created=entry.Created,Modified=entry.Modified,Attributes=entry.Attributes,Records=new(entry.Records),Overlays=new(entry.Overlays),OverlaySize=entry.OverlaySize,BaseLength=entry.BaseLength };
     private static Dictionary<string,Entry> CloneEntries(Dictionary<string,Entry> source) => source.ToDictionary(p=>p.Key,p=>Clone(p.Value),StringComparer.OrdinalIgnoreCase);
-    private void SaveJournal() { revision++; WriteMetadata(Path.Combine(cache,"journal.mfe"),new Journal { PartSize=partSize,Entries=entries,Baseline=baseline,Pending=pending,Known=known,Heads=heads,Pinned=pinned,VersionDue=versionDue,PendingVersions=pendingVersions,HiddenBin=hiddenBin },"journal",""); }
-    public void FlushLocalOnly() { lock(gate) { Check(); FlushLocal(); } }
+    private void SaveJournal() => SaveJournalCheckpoint();
+    public void FlushLocalOnly() { lock(gate) { Check(); AppendJournal(); } }
     private void ValidateStoredPartSize(long bytes) { if(config.Format==1) { if(bytes<1024||bytes>1073741824)throw new InvalidDataException("Invalid legacy part cap."); } else ValidatePartSize(bytes); }
     private void ValidateEntries(Dictionary<string,Entry> collection)
     {
@@ -153,7 +156,7 @@ public sealed partial class VaultEngine : IDisposable
     private void EnsureParent(string path) { var parent=VaultPath.Parent(path); if(parent!="" && !Find(parent).Directory) throw new DirectoryNotFoundException("Parent is not a directory."); }
     private void CreateEntry(string path,bool directory)
     {
-        lock(gate) { Check(); path=VaultPath.Normalize(path); if(path=="" || entries.ContainsKey(path)) throw new IOException("Entry already exists."); EnsureParent(path); entries.Add(path,new Entry { Directory=directory,ChunkSize=ChunkBytes(partSize),PartSize=partSize,Attributes=directory?16u:32u }); revision++; }
+        lock(gate) { Check(); path=VaultPath.Normalize(path); if(path=="" || entries.ContainsKey(path)) throw new IOException("Entry already exists."); EnsureParent(path); entries.Add(path,new Entry { Directory=directory,ChunkSize=ChunkBytes(partSize),PartSize=partSize,Attributes=directory?16u:32u }); revision++; journalMutations.Add(new JournalMutation { Kind="create",Path=path,Metadata=MetadataOnly(entries[path]) }); }
     }
     public void CreateFile(string path) => CreateEntry(path,false);
     public void CreateDirectory(string path) => CreateEntry(path,true);
@@ -283,7 +286,7 @@ public sealed partial class VaultEngine : IDisposable
         }
         var replacements=new Dictionary<long,RecordRef>(); using var writer=new PartWriter(this); var consumed=0;
         while(consumed<data.Length) { var index=offset/e.ChunkSize; var within=(int)(offset%e.ChunkSize); var take=Math.Min(data.Length-consumed,e.ChunkSize-within); var chunk=ReadChunk(e,index); try { var incomingBytes=data.Slice(consumed,take); if(!incomingBytes.SequenceEqual(chunk.AsSpan(within,take))) { incomingBytes.CopyTo(chunk.AsSpan(within)); replacements[index]=writer.Add(chunk); } } finally { CryptographicOperations.ZeroMemory(chunk); } offset+=take; consumed+=take; }
-        writer.Finish(); foreach(var pair in replacements)e.Records[pair.Key]=pair.Value; e.Length=Math.Max(e.Length,offset); Touch(e); MarkDue(e);
+        writer.Finish(); foreach(var pair in replacements)e.Records[pair.Key]=pair.Value; e.Length=Math.Max(e.Length,offset); Touch(e); MarkDue(e); TrackEntry(e,replacements);
     }
     private void WriteOverlay(Entry e,long offset,ReadOnlySpan<byte> data)
     {
@@ -297,7 +300,7 @@ public sealed partial class VaultEngine : IDisposable
             offset+=take;consumed+=take;
         }
         writer.Finish();foreach(var replacement in replacements)e.Overlays[replacement.Key]=replacement.Value;
-        e.Length=Math.Max(e.Length,offset);Touch(e);MarkDue(e);
+        e.Length=Math.Max(e.Length,offset);Touch(e);MarkDue(e);TrackEntry(e,replacements,true);
     }
 
     private void Touch(Entry e) { revision++; e.Version=Guid.NewGuid().ToString("N"); e.Modified=DateTimeOffset.UtcNow; }
@@ -316,23 +319,25 @@ public sealed partial class VaultEngine : IDisposable
             if(length%e.OverlaySize!=0) { var block=new byte[e.OverlaySize];try {Read(e,last*e.OverlaySize,block);block.AsSpan((int)(length%e.OverlaySize)).Clear();using var writer=new PartWriter(this);e.Overlays[last]=writer.Add(block);writer.Finish();}finally{CryptographicOperations.ZeroMemory(block);} }
         }
         e.Length=length; Touch(e); MarkDue(e);
+        var changed=new Dictionary<long,RecordRef>();if(e.OverlaySize>0&&length%e.OverlaySize!=0&&e.Overlays.TryGetValue(length/e.OverlaySize,out var tail))changed[length/e.OverlaySize]=tail;
+        TrackEntry(e,changed,true,e.OverlaySize>0?length/e.OverlaySize+(length%e.OverlaySize==0?0:1):null);
     }
 
     public void SetLength(string path,long length) { lock(gate) { Check(); Resize(Find(VaultPath.Normalize(path)),length); } }
     public void SetLengthById(string id,long length) { lock(gate) { Check(); Resize(FindId(id),length); } }
     public void SetBasicInfo(string path,uint? attributes=null,DateTimeOffset? createdUtc=null,DateTimeOffset? modifiedUtc=null)
     {
-        lock(gate) { Check(); var e=Find(VaultPath.Normalize(path)); if(attributes.HasValue)e.Attributes=attributes.Value; if(createdUtc.HasValue)e.Created=createdUtc.Value; if(modifiedUtc.HasValue)e.Modified=modifiedUtc.Value; e.Version=Guid.NewGuid().ToString("N"); revision++; }
+        lock(gate) { Check(); var e=Find(VaultPath.Normalize(path)); if(attributes.HasValue)e.Attributes=attributes.Value; if(createdUtc.HasValue)e.Created=createdUtc.Value; if(modifiedUtc.HasValue)e.Modified=modifiedUtc.Value; e.Version=Guid.NewGuid().ToString("N"); revision++; TrackEntry(e); }
     }
     public void SetBasicInfoById(string id,uint? attributes=null,DateTimeOffset? createdUtc=null,DateTimeOffset? modifiedUtc=null)
     {
-        lock(gate) { Check(); var e=FindId(id); if(attributes.HasValue)e.Attributes=attributes.Value; if(createdUtc.HasValue)e.Created=createdUtc.Value; if(modifiedUtc.HasValue)e.Modified=modifiedUtc.Value; e.Version=Guid.NewGuid().ToString("N"); revision++; }
+        lock(gate) { Check(); var e=FindId(id); if(attributes.HasValue)e.Attributes=attributes.Value; if(createdUtc.HasValue)e.Created=createdUtc.Value; if(modifiedUtc.HasValue)e.Modified=modifiedUtc.Value; e.Version=Guid.NewGuid().ToString("N"); revision++; TrackEntry(e); }
     }
     public void DeleteById(string id,bool recursive=false)
     {
         lock(gate) { Check(); if(id==config.VaultId)throw new IOException("Cannot delete root."); var path=entries.FirstOrDefault(p=>p.Value.Id==id).Key; if(path!=null)Delete(path,recursive);else FindId(id); }
     }
-    private void Remove(string path,string? deletionBatch=null) { var e=Find(path); CaptureVersion(path,e,true,deletionBatch); versionDue.Remove(e.Id); if(open.ContainsKey(e.Id))orphans[e.Id]=e; entries.Remove(path); revision++; }
+    private void Remove(string path,string? deletionBatch=null) { var e=Find(path); CaptureVersion(path,e,true,deletionBatch); versionDue.Remove(e.Id); if(open.ContainsKey(e.Id))orphans[e.Id]=e; entries.Remove(path); revision++; journalMutations.Add(new JournalMutation { Kind="delete",Path=path,Id=e.Id,Version=pendingVersions.LastOrDefault() }); }
     public void Delete(string path,bool recursive=false)
     {
         lock(gate) { Check(); path=VaultPath.Normalize(path); if(path=="")throw new IOException("Cannot delete root."); var e=Find(path); var children=entries.Keys.Where(p=>p.StartsWith(path+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); if(e.Directory && children.Length>0 && !recursive)throw new IOException("Directory is not empty."); var deletionBatch=Guid.NewGuid().ToString("N"); foreach(var child in children)Remove(child,deletionBatch); Remove(path,deletionBatch); }
@@ -343,9 +348,9 @@ public sealed partial class VaultEngine : IDisposable
         {
             Check(); oldPath=VaultPath.Normalize(oldPath); newPath=VaultPath.Normalize(newPath); if(oldPath=="" || newPath=="")throw new IOException("Cannot rename root."); var value=Find(oldPath); EnsureParent(newPath);
             if(value.Directory && newPath.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase))throw new IOException("Cannot move a directory into itself.");
-            if(oldPath.Equals(newPath,StringComparison.OrdinalIgnoreCase)) { var changes=entries.Where(p=>p.Key.Equals(oldPath,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); foreach(var item in changes)entries.Remove(item.Key); foreach(var item in changes)entries[newPath+item.Key[oldPath.Length..]]=item.Value; revision++; return; }
+            if(oldPath.Equals(newPath,StringComparison.OrdinalIgnoreCase)) { var changes=entries.Where(p=>p.Key.Equals(oldPath,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); foreach(var item in changes)entries.Remove(item.Key); foreach(var item in changes)entries[newPath+item.Key[oldPath.Length..]]=item.Value; revision++; journalMutations.Add(new JournalMutation { Kind="rename",Path=oldPath,Destination=newPath,Id=value.Id }); return; }
             if(entries.TryGetValue(newPath,out var existing)) { if(!replace || existing.Directory!=value.Directory || existing.Directory && entries.Keys.Any(p=>p.StartsWith(newPath+"/",StringComparison.OrdinalIgnoreCase)))throw new IOException("Destination already exists or cannot be replaced."); Remove(newPath); }
-            var moved=entries.Where(p=>p.Key.Equals(oldPath,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); foreach(var item in moved)entries.Remove(item.Key); foreach(var item in moved)entries[newPath+item.Key[oldPath.Length..]]=item.Value; revision++;
+            var moved=entries.Where(p=>p.Key.Equals(oldPath,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); foreach(var item in moved)entries.Remove(item.Key); foreach(var item in moved)entries[newPath+item.Key[oldPath.Length..]]=item.Value; revision++; journalMutations.Add(new JournalMutation { Kind="rename",Path=oldPath,Destination=newPath,Id=value.Id });
         }
     }
     private sealed class OpenLease(VaultEngine engine,string id) : IDisposable { private bool closed; public void Dispose() { lock(engine.gate) { if(closed)return; closed=true; if(engine.open.TryGetValue(id,out var count)) { if(count==1) {engine.open.Remove(id);if(engine.orphans.Remove(id)&&!engine.entries.Values.Any(entry=>entry.Id==id))engine.versionDue.Remove(id);}else engine.open[id]=count-1; } } } }

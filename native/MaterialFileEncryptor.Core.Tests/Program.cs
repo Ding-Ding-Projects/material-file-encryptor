@@ -6,6 +6,7 @@ if (args.Length > 0 && args[0] == "--native-child-trace") { await NativeChildTra
 if (args.Length == 2 && args[0] == "--native-trace-child") { await NativeChildTraceTests.ChildAsync(args[1]); return 0; }
 
 var cases = new (string,Action)[] {
+    ("encrypted activity snapshots, paging, tamper refusal and upgrade",ActivityTests.Run),
     ("hydration runs outside core and callback locks before atomic mutation",HydrationConcurrency),
     ("independent earlier deletion requires explicit selection",ExplicitDescendants),
     ("separate filesystem child deletions restore with original directory identity",SeparateDeletes),

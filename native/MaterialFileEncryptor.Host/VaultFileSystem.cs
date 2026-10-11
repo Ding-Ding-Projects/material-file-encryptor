@@ -277,6 +277,7 @@ internal sealed class VaultFileSystem : FileSystemBase
                 if (constrained && start >= (ulong)entry.Length) { completedInfo = ToInfo(entry); return STATUS_SUCCESS; }
                 int count = checked((int)(constrained ? Math.Min((ulong)length, (ulong)entry.Length - start) : length));
                 vault.WriteRangeById(id, checked((long)start), new ReadOnlySpan<byte>((void*)buffer, count));
+                if (count != 0) vault.RecordActivity(id, "edit", entry.Path);
                 Durable(); completed = (uint)count; completedInfo = ToInfo(vault.GetInfoById(id)); return STATUS_SUCCESS;
             });
         transferred = completed; info = completedInfo; return result;
@@ -339,7 +340,9 @@ internal sealed class VaultFileSystem : FileSystemBase
                 if (!replace) return STATUS_OBJECT_NAME_COLLISION;
                 if (target.IsDirectory) return STATUS_ACCESS_DENIED;
             }
-            vault.Rename(source, destination, replace); Durable(); return STATUS_SUCCESS;
+            vault.Rename(source, destination, replace);
+            vault.RecordActivity(((Node)node).Id, "rename", destination);
+            Durable(); return STATUS_SUCCESS;
         }
     }
     public override void Cleanup(object node, object desc, string name, uint flags)

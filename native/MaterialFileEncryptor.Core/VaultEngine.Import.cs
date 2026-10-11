@@ -59,10 +59,27 @@ public sealed partial class VaultEngine
                 if(engine.entries.ContainsKey(path))throw new IOException("Import destination already exists.");
                 if(pendingLength>0) { entry.Records[nextBlock++]=writer.Add(pendingBlock.AsSpan(0,pendingLength));CryptographicOperations.ZeroMemory(pendingBlock);pendingLength=0; }
                 writer.Finish();
+                var savedBaseline=engine.baseline;
+                var savedPending=new HashSet<string>(engine.pending);
+                var savedKnown=new HashSet<string>(engine.known);
+                var savedHeads=new HashSet<string>(engine.heads);
+                var savedVersions=new List<StoredVersion>(engine.pendingVersions);
+                var savedHidden=new HashSet<string>(engine.pendingBinHidden);
+                var savedDue=new Dictionary<string,DateTimeOffset>(engine.versionDue);
                 engine.entries.Add(path,entry);engine.MarkDue(entry);
                 try { engine.FlushLocal(); }
-                catch { engine.entries.Remove(path);throw; }
-                finished=true;writer.Dispose();CryptographicOperations.ZeroMemory(pendingBlock);File.Delete(journal);
+                catch
+                {
+                    // A failed checkpoint must not leave a prepared commit eligible
+                    // for a later synchronization that silently installs this file.
+                    engine.entries.Remove(path);engine.baseline=savedBaseline;
+                    engine.pending=savedPending;engine.known=savedKnown;engine.heads=savedHeads;
+                    engine.pendingVersions=savedVersions;engine.pendingBinHidden=savedHidden;engine.versionDue=savedDue;
+                    throw;
+                }
+                finished=true;writer.Dispose();CryptographicOperations.ZeroMemory(pendingBlock);
+                try { File.Delete(journal); } catch(IOException) { } catch(UnauthorizedAccessException) { }
+
             }
         }
         public void Dispose()

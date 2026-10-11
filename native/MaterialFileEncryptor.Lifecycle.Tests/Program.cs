@@ -2,7 +2,10 @@ using System.Reflection;
 using System.Text.Json;
 using MaterialFileEncryptor.Core;
 
+if (args.Length == 2 && args[0] == "--journal-child") { JournalRegression.Child(args[1]); return; }
+
 CoreTransferRegression.Run();
+JournalRegression.Run();
 
 var type = Assembly.Load("MaterialFileEncryptor.Host").GetType("MaterialFileEncryptor.Host.VaultController", true)!;
 object Make() => Activator.CreateInstance(type)!;
@@ -19,6 +22,16 @@ var engine = VaultEngine.Create(new VaultOptions { StorageRoot = Path.Combine(ro
 Set(controller, "vault", engine); Set(controller, "storageDir", engine.StorageRoot); Set(controller, "cacheDir", engine.CacheRoot);
 try
 {
+    Call(controller, "Status");
+    object engineGate = typeof(VaultEngine).GetField("gate", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(engine)!;
+    lock (engineGate)
+    {
+        var statusRead = Task.Factory.StartNew(() => (Task<object?>)Call(controller, "DispatchAsync", "status", Json(new { }))!);
+        Assert(statusRead.Wait(TimeSpan.FromSeconds(1)), "Status reader waited for the crypto lock");
+        Assert(statusRead.Result.IsCompleted, "Status result waited for the crypto lock");
+    }
+    Console.WriteLine("PASS control status returns cached snapshot while encryption is busy");
+
     var semaphore = (SemaphoreSlim)Get(controller, "commandWorker");
     await semaphore.WaitAsync();
     var pending = (Task<object?>)Call(controller, "DispatchAsync", "setHistoryRetention", Json(new { days = 7 }))!;
@@ -61,6 +74,19 @@ try
     cancel = Json(Call(controller, "Execute", "cancelOperation", Json(new { operationId = id })));
     Assert(!cancel.GetProperty("accepted").GetBoolean() && cancel.GetProperty("state").GetString() == "completed", "Late cancel relabelled completed file");
     Console.WriteLine("PASS completed import remains completed after late cancellation");
+
+    engine.CreateFile("preview.txt"); engine.WriteRange("preview.txt",0,System.Text.Encoding.UTF8.GetBytes("hello version"));
+    await engine.SaveVersionAsync("preview.txt");
+    var version = engine.ListVersions(engine.GetInfo("preview.txt")!.EntryId).First();
+    var preview = Json(Call(controller,"Execute","previewVersion",Json(new { versionId=version.Id })));
+    Assert(preview.GetProperty("text").GetString()=="hello version","Version preview protocol changed text");
+    Call(controller,"Execute","labelVersion",Json(new { versionId=version.Id,label="Saved text" }));
+    string export = Path.Combine(root,"export.txt"); File.WriteAllText(export,"previous destination");
+    Call(controller,"Execute","exportVersion",Json(new { versionId=version.Id,destination=export }));
+    Assert(File.ReadAllText(export)=="hello version","Exported version differs from selected snapshot");
+    var activity = Json(Call(controller,"Execute","listActivity",Json(new { entryId=version.EntryId,limit=100 })));
+    Assert(activity.GetProperty("items").EnumerateArray().Any(item=>item.GetProperty("action").GetString()=="export"),"Export activity missing from protocol");
+    Console.WriteLine("PASS selected preview, label, atomic export and camel-case activity protocol");
 
     engine.CreateFile("second.bin");
     var page = Json(Call(controller, "Execute", "listFiles", Json(new { limit = 1 })));

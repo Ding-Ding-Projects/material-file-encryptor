@@ -66,6 +66,23 @@ internal static class CoreTransferRegression
                 using (var discarded = engine.BeginImport("discarded.bin")) { discarded.Write(0, content.AsSpan(0, 32)); }
                 Assert(engine.GetInfo("discarded.bin") is null, "Disposed stage became visible");
 
+                using (var failedStage = engine.BeginImport("failed.bin"))
+                {
+                    failedStage.Write(0, new byte[] { 1, 2, 3 });
+                    string checkpointPath = Path.Combine(options.CacheRoot, "journal.mfe");
+                    string savedCheckpointPath = checkpointPath + ".saved";
+                    File.Move(checkpointPath, savedCheckpointPath);
+                    Directory.CreateDirectory(checkpointPath);
+                    bool failed = false;
+                    try { failedStage.Commit(); } catch (Exception error) when (error is IOException or UnauthorizedAccessException) { failed = true; }
+                    finally { Directory.Delete(checkpointPath); File.Move(savedCheckpointPath, checkpointPath); }
+                    Assert(failed && engine.GetInfo("failed.bin") is null, "Failed import remained live");
+                }
+                engine.FlushAsync().GetAwaiter().GetResult();
+                using (var replicaCredentials = VaultCredentials.Password("block regression fixture only"))
+                using (var replica = VaultEngine.Open(new VaultOptions { StorageRoot = options.StorageRoot, CacheRoot = Path.Combine(root,"replica") }, replicaCredentials))
+                    Assert(replica.GetInfo("failed.bin") is null, "Failed import was later published");
+
                 // Build an actual authenticated v2 record independently of the new
                 // writer. This prevents a new-writer round trip masking old-reader regressions.
                 byte[] legacy = RandomNumberGenerator.GetBytes(200000), blob = new byte[200036], key = engine.ExportMasterKey();

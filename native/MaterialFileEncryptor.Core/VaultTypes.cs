@@ -76,6 +76,8 @@ internal sealed class Commit
 }
 internal sealed class Journal
 {
+    public long LogSequence { get; set; }
+    public string LogDigest { get; set; } = "";
     public long PartSize { get; set; }
     public Dictionary<string, DateTimeOffset> VersionDue { get; set; } = [];
     public List<StoredVersion> PendingVersions { get; set; } = [];
@@ -86,4 +88,19 @@ internal sealed class Journal
     public HashSet<string> Known { get; set; } = [];
     public HashSet<string> Heads { get; set; } = [];
     public HashSet<string> Pinned { get; set; } = [];
+}
+
+public sealed record VaultJournalStatistics(long AppendedBytes, long AppendedFrames, long CheckpointBytes, long Checkpoints);
+internal sealed class JournalMutation
+{
+    public string Kind { get; set; } = "";
+    public string Id { get; set; } = "";
+    public string Path { get; set; } = "";
+    public string Destination { get; set; } = "";
+    public Entry? Metadata { get; set; }
+    public Dictionary<long,RecordRef> Records { get; set; } = [];
+    public bool Overlay { get; set; }
+    public long? TruncateOverlayAt { get; set; }
+    public StoredVersion? Version { get; set; }
+    public DateTimeOffset? Due { get; set; }
 }

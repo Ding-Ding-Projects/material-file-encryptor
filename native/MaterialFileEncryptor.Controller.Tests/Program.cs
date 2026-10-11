@@ -267,6 +267,8 @@ static class Regression
                 while(DateTimeOffset.UtcNow<until)
                 {
                     var status=JsonSerializer.SerializeToElement(Call(controller,"Status"));
+                    if(!status.GetProperty("sync").GetProperty("running").GetBoolean() && status.GetProperty("sync").GetProperty("error").ValueKind!=JsonValueKind.Null)
+                        throw new Exception("Background synchronization failed: "+status.GetProperty("sync").GetProperty("error").GetString());
                     if(!status.GetProperty("sync").GetProperty("running").GetBoolean() && !(bool)ControllerType.GetField("historyPending",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(controller)!)
                     {
                         Assert(status.GetProperty("sync").GetProperty("error").ValueKind==JsonValueKind.Null,"Background restore synchronization reported an error");

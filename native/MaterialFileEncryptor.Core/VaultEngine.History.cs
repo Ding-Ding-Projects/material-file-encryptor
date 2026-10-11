@@ -15,7 +15,7 @@ public sealed partial class VaultEngine
     public Func<string,CancellationToken,Task>? HydrateEncryptedFileAsync { get; set; }
     public IReadOnlyList<string> GetEncryptedSnapshotPaths()
     {
-        lock(gate) { Check(); return known.Select(id=>"commits/"+id+".mfe").Concat(known.SelectMany(id=>Parts(ReadMetadata<Commit>(ObjectPath(cache,"commits",id),"commit",id))).Distinct().Select(id=>"parts/"+id+".mfe")).Prepend("vault.json").ToArray(); }
+        lock(gate) { Check(); return known.Select(id=>"commits/"+id+".mfe").Concat(known.SelectMany(id=>Parts(ReadMetadata<Commit>(ObjectPath(cache,"commits",id),"commit",id))).Distinct().Select(id=>"parts/"+id+".mfe")).Prepend("vault.json").Concat(GetEncryptedActivitySnapshotPaths()).ToArray(); }
     }
     private void MarkDue(Entry e)
     {
@@ -71,7 +71,7 @@ public sealed partial class VaultEngine
         // A deleted entry's identity remains owned by its open handles until the
         // last lease closes. Reusing it would redirect those handles to this restore.
         if(orphans.ContainsKey(restored.Id)||entries.Any(p=>!p.Key.Equals(path,StringComparison.OrdinalIgnoreCase)&&p.Value.Id==restored.Id))restored.Id=Guid.NewGuid().ToString("N");
-        Touch(restored);entries[path]=restored;versionDue.Remove(restored.Id);CaptureVersion(path,restored,false);return path;
+        Touch(restored);entries[path]=restored;versionDue.Remove(restored.Id);CaptureVersion(path,restored,false);RecordActivity(restored.Id,"restore",path,version.Id);return path;
     }
     public Task RestoreVersionAsync(string versionId,CancellationToken cancellationToken=default)
     {
@@ -105,12 +105,34 @@ public sealed partial class VaultEngine
                 }
                 foreach(var pair in entries)target.entries[pair.Key]=ConvertEntry(pair.Value);
                 foreach(var version in AllVersions()){var copy=new StoredVersion {Id=version.Id,Path=version.Path,Value=ConvertEntry(version.Value),Timestamp=version.Timestamp,Deleted=version.Deleted,DeletionBatch=version.DeletionBatch,Ancestors=new(version.Ancestors)};target.pendingVersions.Add(copy);}
-                target.hiddenBin.UnionWith(hiddenBin);target.pendingBinHidden.UnionWith(hiddenBin);target.FlushLocal();target.Publish(cancellationToken);
+                target.hiddenBin.UnionWith(hiddenBin);target.pendingBinHidden.UnionWith(hiddenBin);CopyActivityTo(target);target.FlushLocal();target.Publish(cancellationToken);
                 if(target.pending.Count!=0)throw new IOException("Upgrade destination could not be published.");
                 foreach(var id in target.known){var commit=target.ReadMetadata<Commit>(target.ObjectPath(target.source,"commits",id),"commit",id);target.VerifyComplete(commit);foreach(var part in target.Parts(commit))target.VerifyPart(target.ObjectPath(target.source,"parts",part),part);}
                 target.SaveJournal();return Task.FromResult(target);
             }
             catch{target.Dispose();throw;}
+        }
+    }
+
+    public void ExportVersion(string versionId,Stream destination,CancellationToken cancellationToken=default)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        lock(gate)
+        {
+            Check();ValidateId(versionId);
+            var version=AllVersions().SingleOrDefault(v=>v.Id==versionId)??throw new FileNotFoundException("Version not found.");
+            if(version.Value.Directory)throw new IOException("Choose a file version to export.");
+            var buffer=new byte[65536];
+            try
+            {
+                for(long offset=0;offset<version.Value.Length;)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    int count=Read(version.Value,offset,buffer.AsSpan(0,(int)Math.Min(buffer.Length,version.Value.Length-offset)));
+                    destination.Write(buffer,0,count);offset+=count;
+                }
+            }
+            finally { CryptographicOperations.ZeroMemory(buffer); }
         }
     }
 

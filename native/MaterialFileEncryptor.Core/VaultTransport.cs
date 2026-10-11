@@ -119,7 +119,7 @@ public sealed class PrivateGitHubVaultTransport : IVaultTransport
         }
         if (await history.HeadAsync(ct) == null) return;
         available = new(tree.Keys, StringComparer.Ordinal);
-        foreach (var path in tree.Keys.Where(p => p == "vault.json" || p.StartsWith("commits/", StringComparison.Ordinal))) await EnsureFileAsync(path, ct);
+        foreach (var path in tree.Keys.Where(p => p == "vault.json" || p.StartsWith("commits/", StringComparison.Ordinal) || p.StartsWith("activity/", StringComparison.Ordinal))) await EnsureFileAsync(path, ct);
         await ValidatePrivate(ct); await ValidateDestinations(ct);
         await PublishBoundedAsync(ct);
     }

@@ -77,7 +77,7 @@ internal static class Program
                         else Send(new { id = responseId, error = SafeError(task.Exception?.GetBaseException() ?? new InvalidOperationException("Request cancelled.")) });
                     }, TaskScheduler.Default));
                 }
-                catch (Exception error) { Send(new { id, error = SafeError(error) }); Send(new { @event = "status", status = controller.Status() }); }
+                catch (Exception error) { Send(new { id, error = SafeError(error) }); }
             }
         }
         finally
