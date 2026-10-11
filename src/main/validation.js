@@ -20,7 +20,7 @@ export function validateRequest(method, value = {}) {
     return validateFeatureRequest(value.feature, value.action, value.payload, { browser: true });
   }
   const schemas = {
-    getState: {}, buildMetadata: {}, browserPairing: {}, mount: { driveLetter: 'drive?' }, unmount: {}, chooseFiles: {}, chooseExport: { name: 'path' }, importSelected: { paths: 'paths' }, startImport: { paths: 'paths' }, operations: {}, cancelOperation: { operationId: 'path' }, forceLock: {}, quit: {}, listFiles: { cursor: 'nonnegative?', limit: 'page?', revision: 'nonnegative?' }, listVersionLabels: { entryId: 'path' }, listActivity: { entryId: 'path?', cursor: 'path?', limit: 'page?', action: 'short?', from: 'short?', to: 'short?', fromUtc:'short?',toUtc:'short?',pattern:'short?' }, previewVersion: { versionId: 'path' }, labelVersion: { versionId: 'path', label: 'short' }, exportVersion: { versionId: 'path' }, exportText: { name: 'filename', mime: 'mime', content: 'text' }, fileAction: { id: 'path', action: 'fileAction', destination: 'path?' }, resplitAll: {}, createVault: { storageDir: 'path', cacheDir: 'path', driveLetter: 'drive', password: 'password?', keyFilePath: 'path?', partSizeBytes: 'size', transport: 'transport?', remoteRepository: 'repository?', autoUnlock: 'boolean?' },
+    getState: {}, buildMetadata: {}, browserPairing: {}, mount: { driveLetter: 'drive?' }, unmount: {}, chooseFiles: {}, chooseExport: { name: 'path' }, importSelected: { paths: 'paths' }, startImport: { paths: 'paths' }, operations: {}, cancelOperation: { operationId: 'path' }, forceLock: { language: 'language?' }, quit: {}, listFiles: { cursor: 'nonnegative?', limit: 'page?', revision: 'nonnegative?' }, listVersionLabels: { entryId: 'path' }, listActivity: { entryId: 'path?', cursor: 'path?', limit: 'page?', action: 'short?', from: 'short?', to: 'short?', fromUtc:'short?',toUtc:'short?',pattern:'short?' }, previewVersion: { versionId: 'path' }, labelVersion: { versionId: 'path', label: 'short' }, exportVersion: { versionId: 'path' }, exportText: { name: 'filename', mime: 'mime', content: 'text' }, fileAction: { id: 'path', action: 'fileAction', destination: 'path?' }, resplitAll: {}, createVault: { storageDir: 'path', cacheDir: 'path', driveLetter: 'drive', password: 'password?', keyFilePath: 'path?', partSizeBytes: 'size', transport: 'transport?', remoteRepository: 'repository?', autoUnlock: 'boolean?' },
     unlockVault: { storageDir: 'path', cacheDir: 'path', driveLetter: 'drive', password: 'password?', keyFilePath: 'path?', transport: 'transport?', remoteRepository: 'repository?', autoUnlock: 'boolean?' },
     lockVault: {}, selectFolder: { kind: 'kind' }, selectKeyFile: {}, createKeyFile: { storageDir: 'path?', cacheDir: 'path?' },
     importFiles: {}, openExplorer: {}, openFile: { path: 'relative' }, exportFile: { path: 'relative' },
@@ -36,7 +36,8 @@ export function validateRequest(method, value = {}) {
     const optional = specification.endsWith('?'); const type = specification.replace('?', ''); const item = value[key];
     if ((item === undefined || item === null) && optional) continue;
     let valid = false;
-    if (type === 'days') valid = item === null || Number.isSafeInteger(item) && item >= 1 && item <= 36500;
+    if (type === 'language') valid = ['en','yue','bilingual'].includes(item);
+    else if (type === 'days') valid = item === null || Number.isSafeInteger(item) && item >= 1 && item <= 36500;
     else if (type === 'nonnegative') valid = Number.isSafeInteger(item) && item >= 0;
     else if (type === 'page') valid = Number.isSafeInteger(item) && item >= 1 && item <= 1000;
     else if (type === 'short') valid = typeof item === 'string' && [...item].length <= 256 && !item.includes('\0');

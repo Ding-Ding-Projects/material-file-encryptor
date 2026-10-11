@@ -1,5 +1,6 @@
 param([Parameter(Mandatory)][string]$ArtifactDirectory, [Parameter(Mandatory)][string]$VendorDirectory)
 $ErrorActionPreference = 'Stop'
+. "$PSScriptRoot/squirrel-file-hash.ps1"
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 Add-Type -AssemblyName System.IO.Compression
 $output = [IO.Path]::GetFullPath($ArtifactDirectory)
@@ -14,7 +15,7 @@ foreach ($file in Get-ChildItem -LiteralPath $output -File) { Copy-Item -Literal
 . "$PSScriptRoot/squirrel-zip.ps1"
 $corrected = Join-Path $stage $packages[0].Name
 ConvertTo-SquirrelZip $packages[0].FullName $corrected
-$sha1 = (Get-FileHash -LiteralPath $corrected -Algorithm SHA1).Hash.ToLowerInvariant()
+$sha1 = (Get-SquirrelFileHash -LiteralPath $corrected -Algorithm SHA1).Hash.ToLowerInvariant()
 $bytes = (Get-Item -LiteralPath $corrected).Length
 [IO.File]::WriteAllText((Join-Path $output 'RELEASES'), "$sha1 $($packages[0].Name) $bytes`n", [Text.UTF8Encoding]::new($false))
 # Releasify accepts existing full packages without rewriting them, and assembles

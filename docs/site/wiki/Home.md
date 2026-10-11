@@ -1,5 +1,14 @@
 # Material File Encryptor wiki
 
+## Installation and current feature continuation
+
+Main a1b53a99b5af634bd60b0831a9bcf5835ebf3449 contains the supported .NET recompression repair, genuine Squirrel extraction comparison and a separate Setup embedded-payload verifier. The original downloaded installer omitted 585 of 663 payload files despite returning zero. The new regression rejects its stored nested ZIP form and accepts the shared production rewrite. Bare Setup and unsafe archive paths are rejected.
+
+The maintainer resumed actual installation, installed updating and removal, and expanded scope to the current product checklist. Earlier deferrals below are historical. Corrective downloaded installation and a real update remain pending. PNG GUI normalization, active mapped-writer force-lock safety, local-model workflows and complete current surface evidence remain unfinished. Source integration, local checks, hosted production and installed runtime are separate verdicts.
+
+目前已恢復真正安裝、更新同移除驗證，亦要完成現有功能清單。新壓縮流程同獨立 Setup 內容核對已加入主線，但唔代表已安裝執行通過。以下較舊嘅延期及驗證紀錄保留原本來源，唔會代替今次驗收。
+
+
 ## Current source and verification update
 
 The current reviewed source is `1faecd9`. Main `3f3e97c` was pushed and verified. Deployment `38101869288` passed independent checks for 169 live files, 115 article/wiki documents, 4,662 internal references and the exact repository homepage. These counts describe that deployment before this wiki update. The previously fetched wiki revision was `43f17a1f7cd24f4079409d1127bc1d145b1c97da`; the updated sections are tracked by the exact wiki revision in the documentation catalog; publication and runtime acceptance remain separate.
