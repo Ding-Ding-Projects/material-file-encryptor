@@ -281,7 +281,9 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
         cfg = launcher.parent.parent / 'pyvenv.cfg'
         values = dict(line.split(' = ', 1) for line in cfg.read_text().splitlines() if ' = ' in line)
         base = configured_base_interpreter(values, launcher, sys._base_executable)
-        configuration = {'launcher': str(launcher), 'base': str(base), 'node': str(node), 'files': {str(p): digest(p) for p in [launcher, base, cfg, node]}, 'command': subprocess.list2cmdline([os.environ['MFE_LOWLEVEL_PYTHON'], *sys.argv]), 'selfPid': os.getpid()}
+        # CPython's Windows venv redirector replaces argv[0] with a quoted
+        # base executable. The intermediate launcher retains the original.
+        configuration = {'launcher': str(launcher), 'base': str(base), 'node': str(node), 'files': {str(p): digest(p) for p in [launcher, base, cfg, node]}, 'command': subprocess.list2cmdline([os.environ['MFE_LOWLEVEL_PYTHON'], *sys.argv]), 'baseCommand': '"' + str(base) + '" ' + subprocess.list2cmdline(sys.argv), 'selfPid': os.getpid()}
     rows, chain = api.inventory(), []
     current = configuration['selfPid']
     with ExitStack() as stack:
@@ -299,7 +301,7 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
             raise Error('Client is not a direct parent or one supported launcher ancestor.')
         if len(chain) not in (2, 3) or chain[-1][0]['pid'] != client_pid or chain[-1][0]['executablePath'] != configuration['node']:
             raise Error('Actual Node client ancestry differs.')
-        if chain[0][0]['executablePath'] != configuration['base'] or chain[0][1] != configuration['command']:
+        if chain[0][0]['executablePath'] != configuration['base'] or chain[0][1] != configuration.get('baseCommand', configuration['command']):
             raise Error('Actual Python execution image or command differs.')
         if len(chain) == 3 and (chain[1][0]['executablePath'] != configuration['launcher'] or chain[1][1] != configuration['command']):
             raise Error('Intermediate Python launcher image or command differs.')

@@ -171,6 +171,11 @@ class Tests(unittest.TestCase):
         own_direct={**own,'parentPid':80}
         with recovery.owning_client(80,api=Fake(rows={77:80,80:1},observations={77:own_direct,80:node}),binding=binding,configuration=configuration) as (_,chain): self.assertEqual(len(chain),2)
         with self.assertRaises(recovery.Error), recovery.owning_client(999,api=api,binding=binding,configuration=configuration): pass
+        redirected = {**configuration, 'baseCommand':'"C:/base/python.exe" exact arguments'}
+        class RedirectedCommand(Commands):
+            def command(self,handle): return redirected['baseCommand'] if handle==77 else super().command(handle)
+        with recovery.owning_client(80,api=api,binding=RedirectedCommand(),configuration=redirected): pass
+        with self.assertRaises(recovery.Error), recovery.owning_client(80,api=api,binding=binding,configuration=redirected): pass
 
 
 if __name__ == '__main__':
