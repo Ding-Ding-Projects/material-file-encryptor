@@ -81,6 +81,7 @@ internal sealed partial class VaultController
     }
     private async Task ImportManagedAsync(string[] paths, CancellationToken cancellation, Action<long, long, int, int> progress)
     {
+        using var bufferBudget=MaterialFileEncryptor.Core.TransferBufferBudget.Reserve(2L*65536,cancellation);
         // One 64 KiB plaintext buffer is owned by the single transfer consumer.
         // No plaintext is queued or written to temporary files.
         byte[] buffer = new byte[65536];
@@ -143,6 +144,7 @@ internal sealed partial class VaultController
     }
     private object ExportCurrentFile(JsonElement args,CancellationToken cancellation,Action<long,long,int,int> progress)
     {
+        using var bufferBudget=MaterialFileEncryptor.Core.TransferBufferBudget.Reserve(2L*65536,cancellation);
         string path=RequiredString(args,"path"),destination=Path.GetFullPath(RequiredString(args,"destination"));
         MaterialFileEncryptor.Core.VaultEngine captured;
         MaterialFileEncryptor.Core.VaultEngine.ReadSnapshot snapshot;
@@ -165,7 +167,7 @@ internal sealed partial class VaultController
                     int length=(int)Math.Min(buffer.Length,snapshot.Length-offset);
                     snapshot.PrepareRangeAsync(offset,length,cancellation).GetAwaiter().GetResult();
                     cancellation.ThrowIfCancellationRequested();
-                    int count=snapshot.ReadRange(offset,buffer.AsSpan(0,length));
+                    int count=snapshot.ReadRange(offset,buffer.AsSpan(0,length),cancellation);
                     if(count==0)throw new EndOfStreamException("Snapshot ended before its recorded length.");
                     stream.Write(buffer,0,count);offset+=count;progress(offset,snapshot.Length,0,1);
                 }
@@ -190,6 +192,7 @@ internal sealed partial class VaultController
     }
     private object ExportVersionFile(JsonElement args,CancellationToken cancellation=default)
     {
+        using var bufferBudget=MaterialFileEncryptor.Core.TransferBufferBudget.Reserve(2L*65536,cancellation);
         string versionId=RequiredString(args,"versionId"), destination=Path.GetFullPath(RequiredString(args,"destination"));
         MaterialFileEncryptor.Core.VaultEngine captured;
         lock(gate)

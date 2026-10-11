@@ -122,7 +122,7 @@ internal sealed partial class VaultController : IDisposable
                 },
                 autoUnlock = cachedAutoUnlock,
                 history = new { versionCount = cachedVersionCount, recycledCount = cachedRecycledCount, pendingVersionCount = vault?.PendingVersionCount ?? 0, retentionDays = historyRetentionDays, gitAvailable = historyStore is not null },
-                storageFormat = vault?.StorageFormat, journal = JournalInfo(),
+                storageFormat = vault?.StorageFormat, journal = JournalInfo(), transferBuffers = TransferBufferBudget.Statistics,
                 transport = new { mode = transportMode, remoteRepository, available = vault is not null && (transportMode == "privateGit" ? transportAvailable : vault.Status.IsSourceAvailable), pendingSynchronization = vault is not null && transportMode == "privateGit" && (pendingPrivatePublication || historyPending || vault.Status.PendingCommits > 0 || vault.JournalStatistics.PendingFrames > 0 || vault.PendingVersionCount > 0), lastError = syncError },
                 availableDriveLetters = cachedDriveLetters
             };
@@ -493,6 +493,7 @@ internal sealed partial class VaultController : IDisposable
         using var cancellation = new CancellationTokenSource();
         try
         {
+            using var bufferBudget=TransferBufferBudget.Reserve(4L*65536,cancellation.Token);
             lock (gate)
             {
                 if (vault is null || activePreparedOperations != 0) return;

@@ -28,8 +28,8 @@ public sealed partial class VaultEngine
         {
             var entry=GetEntry();return new[]{(identity,entry,RangeRecords(entry,offset,Math.Min(length,Math.Max(0,entry.Length-offset))))};
         },cancellationToken);
-        public int ReadRange(long offset,Span<byte> destination)
-        {lock(engine.gate){engine.Check();return engine.Read(GetEntry(),offset,destination);}}
+        public int ReadRange(long offset,Span<byte> destination,CancellationToken cancellationToken=default)
+        {lock(engine.gate){engine.Check();return engine.Read(GetEntry(),offset,destination,cancellationToken);}}
         public void Dispose(){lock(engine.gate)engine.readSnapshots.Remove(identity);}
     }
 }
