@@ -133,8 +133,8 @@
     {
       "source": "docs/features/interface/README.md",
       "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "bd050160bc3d4d3f7b4ebaa1ef6fb593e35e44a9d0049bc2fea94b82aa5b4f8b",
-      "translationSha256": "6c8ee2ed496c203db4b8f163e57201e17417f6d420fd84be6303f44633d05119"
+      "sourceSha256": "ab543fd37e70013b647a395904e4add7371a1d688fdcdc833a6341074a8780a1",
+      "translationSha256": "15086f6dac3d865b96d41928beb6ddde786de48272aa2de91278e53466c32919"
     },
     {
       "source": "docs/features/interface/animation-transition.md",
@@ -177,6 +177,12 @@
       "translation": "docs/features/interface/local-personalization.zh-HK.md",
       "sourceSha256": "4e930f55d871ff670d87fb969e8badd7b2ca9502ca003d1ef3cb6bc39123788a",
       "translationSha256": "e5e43ad9d086c4c9deb1e494b53194a178d1f5b32f29e12b710c9a73255df103"
+    },
+    {
+      "source": "docs/features/interface/local-tools-workspaces.md",
+      "translation": "docs/features/interface/local-tools-workspaces.zh-HK.md",
+      "sourceSha256": "e6071818d96b7ce109e16cbaa245d013e258f70896802d92a0d130bd05436d7a",
+      "translationSha256": "a65808cd0932c37402c991fa381bc1751a6bdadc49029282d17675ed24665287"
     },
     {
       "source": "docs/features/interface/modern-fields.md",

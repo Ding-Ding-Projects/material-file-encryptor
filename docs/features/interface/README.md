@@ -49,3 +49,4 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 - [Typed transition properties](transition-properties.md): explicit migration and independent endpoint values.
 
 - [Workspace shell, shared controls, notification narration and startup presentation](gui-redesign.md)
+- [Local tools workspaces](local-tools-workspaces.md)

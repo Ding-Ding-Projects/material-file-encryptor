@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 
 // Independent required inventory: adding an article requires explicit review here.
 const REQUIRED = [
+  'interface/local-tools-workspaces',
   'schedules/customization',
   'README', 'access-local', 'appearance-editor', 'local-personalization',
   'access/README', 'access/local-access', 'access/visitor-local-access', 'appearance/README', 'appearance/image-placement', 'appearance/raster-workflows',
