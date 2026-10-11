@@ -16,7 +16,11 @@ function Publish-BrowserHost {
     schemaVersion=1; sourceCommit=((& git rev-parse HEAD).Trim()); sourceTree=((& git rev-parse 'HEAD^{tree}').Trim())
     projectSha256=(Get-BootstrapDigest 'native/MaterialFileEncryptor.BrowserHost/MaterialFileEncryptor.BrowserHost.csproj')
     hostSourceSha256=(Get-BootstrapDigest 'native/MaterialFileEncryptor.BrowserHost/Program.cs')
+    nativeChecksSha256=(Get-BootstrapDigest 'native/MaterialFileEncryptor.BrowserHost/NativeChecks.cs')
     executableSha256=(Get-BootstrapDigest 'out/browser-host/MaterialFileEncryptor.BrowserHost.exe')
+    assemblySha256=(Get-BootstrapDigest 'out/browser-host/MaterialFileEncryptor.BrowserHost.dll')
+    runtimeConfigSha256=(Get-BootstrapDigest 'out/browser-host/MaterialFileEncryptor.BrowserHost.runtimeconfig.json')
+    dependenciesSha256=(Get-BootstrapDigest 'out/browser-host/MaterialFileEncryptor.BrowserHost.deps.json')
     runtimeVerification='not-run'; installation='not-performed'; registryMutation='not-performed'
   }
   New-Item -ItemType Directory -Force out/evidence | Out-Null

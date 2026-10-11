@@ -88,3 +88,12 @@ including actual ACL readback and round-trip traffic. These fixtures do not touc
 a real vault, a mounted drive, browser profile, registry entry, or installation.
 Installed-browser behavior and the visible three-surface presentation require
 separate real installed evidence before they can be claimed verified.
+
+The focused transport continuation passed the exact production entrypoint and
+10 native synthetic checks. The JavaScript suite passed 10 tests with no skips
+when supplied `MFE_BROWSER_HOST_EXE` from that build. Its compiled-host test copies
+the built host into a fresh owned fixture directory, adds only a generated synthetic
+configuration, launches both real relay processes hidden, verifies explicit
+pairing, proposal, pending/active/completion status and replay rejection, then
+closes its owned processes and removes the fixture. These are transport and
+protocol results, not installed-browser or visible desktop acceptance evidence.
