@@ -34,6 +34,8 @@ internal static class Program
             return driver.GetProperty("available").GetBoolean() ? 0 : 1;
         }
         using var cancellation = new CancellationTokenSource();
+        controller.Status();
+        object previousSummary=controller.StatusSummary();
         Task background = Task.Run(async () =>
         {
             using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
@@ -41,13 +43,16 @@ internal static class Program
             {
                 while (await timer.WaitForNextTickAsync(cancellation.Token))
                 {
-                    try { controller.TickIfUnlocked(); Send(new { @event = "status", status = controller.Status() }); }
-                    catch { try { Send(new { @event = "status", status = controller.Status() }); } catch { } }
+                    try { controller.TickIfUnlocked();controller.Status(); } catch { }
+                    object summary=controller.StatusSummary();
+                    if(!ReferenceEquals(summary,previousSummary))
+                    {previousSummary=summary;Send(new { @event = "status", status = summary });}
                 }
             }
             catch (OperationCanceledException) { }
         });
-        Send(new { @event = "status", status = controller.Status() });
+        Send(new { @event = "status", status = previousSummary });
+        var requests = new List<Task>();
         try
         {
             string? line;
@@ -65,15 +70,23 @@ internal static class Program
                     }
                     string method = request.RootElement.GetProperty("method").GetString() ?? throw new ArgumentException();
                     JsonElement parameters = request.RootElement.TryGetProperty("params", out var supplied) ? supplied : default;
-                    object? result = controller.Execute(method, parameters);
-                    Send(new { id, result });
-                    Send(new { @event = "status", status = controller.Status() });
+                    JsonElement? responseId = id;
+                    // Clone before disposing the parsed request. Dispatch registers
+                    // admission immediately but never blocks the stdin reader.
+                    Task<object?> pending = controller.DispatchAsync(method, parameters.ValueKind == JsonValueKind.Undefined ? default : parameters.Clone());
+                    requests.RemoveAll(task => task.IsCompleted);
+                    requests.Add(pending.ContinueWith(task =>
+                    {
+                        if (task.IsCompletedSuccessfully) Send(new { id = responseId, result = task.Result });
+                        else Send(new { id = responseId, error = SafeError(task.Exception?.GetBaseException() ?? new InvalidOperationException("Request cancelled.")) });
+                    }, TaskScheduler.Default));
                 }
-                catch (Exception error) { Send(new { id, error = SafeError(error) }); Send(new { @event = "status", status = controller.Status() }); }
+                catch (Exception error) { Send(new { id, error = SafeError(error) }); }
             }
         }
         finally
         {
+            await Task.WhenAll(requests);
             cancellation.Cancel(); await background;
             // EOF is an orderly parent shutdown. Preserve a busy mount until its
             // application handles close; successful writes are already journaled.

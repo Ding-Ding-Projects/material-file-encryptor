@@ -40,13 +40,28 @@ internal static class VaultCrypto
         if (stream.Length > maximum || stream.Length > int.MaxValue) throw new InvalidDataException("Object exceeds permitted size.");
         var bytes = new byte[(int)stream.Length]; stream.ReadExactly(bytes); return bytes;
     }
-    internal static void AtomicWrite(string path, ReadOnlySpan<byte> bytes)
+    internal static void AtomicWrite(string path, ReadOnlySpan<byte> bytes,Action<StorageOperationStage>? before=null)
     {
-        ValidatePhysicalPath(path);
-        Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path)!);
+        var stage=StorageOperationStage.MetadataTempCreate;bool failed=false;
         var temp = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
-        try { using (var stream = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough)) { stream.Write(bytes); stream.Flush(true); } File.Move(temp, path, true); }
-        finally { if (File.Exists(temp)) File.Delete(temp); }
+        try
+        {
+            before?.Invoke(stage);ValidatePhysicalPath(path);Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path)!);
+            using(var stream=new FileStream(temp,FileMode.CreateNew,FileAccess.Write,FileShare.None,4096,FileOptions.WriteThrough))
+            {
+                stage=StorageOperationStage.MetadataWrite;before?.Invoke(stage);stream.Write(bytes);
+                stage=StorageOperationStage.MetadataFlush;before?.Invoke(stage);stream.Flush(true);
+            }
+            stage=StorageOperationStage.MetadataReplace;before?.Invoke(stage);AtomicMetadataReplacement.Replace(temp,path);
+        }
+        catch(Exception error) when(error is IOException or UnauthorizedAccessException)
+        {failed=true;throw new StorageOperationException(stage,error);}
+        finally
+        {
+            try{before?.Invoke(StorageOperationStage.MetadataCleanup);if(File.Exists(temp))File.Delete(temp);}
+            catch(Exception error) when(error is IOException or UnauthorizedAccessException)
+            {if(!failed)throw new StorageOperationException(StorageOperationStage.MetadataCleanup,error);}
+        }
     }
     internal static void ValidatePhysicalPath(string path)
     {

@@ -1,6 +1,6 @@
 {
   "name": "material-file-encryptor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Encrypted storage mounted as a Windows drive with WinFsp.",
   "private": true,
   "type": "module",
@@ -27,6 +27,8 @@
   },
   "license": "GPL-3.0-only",
   "dependencies": {
-    "electron-squirrel-startup": "1.0.1"
+    "@material/web": "2.5.0",
+    "electron-squirrel-startup": "1.0.1",
+    "pdf-lib": "1.17.1"
   }
 }

@@ -14,7 +14,7 @@ function fixture() {
   if (!elements.has(id)) elements.set(id, {value: '', setCustomValidity(value) { this.validationMessage = value; }, querySelectorAll: () => []});
   return elements.get(id);
  };
- const context = vm.createContext({$, document: {querySelectorAll: () => []}, t: value => value, api: {}, selected: null, busy: false, dialogMode: 'upgrade', recycledSelection: new Set(), state: {locked: false, mounted: true, storageFormat: 1, driveLetter: 'M:', availableDriveLetters: ['N:'], driver: {checking: false}}});
+ const context = vm.createContext({$, document: {querySelectorAll: () => []}, t: value => value, api: {}, pagedFiles: null, selected: null, busy: false, dialogMode: 'upgrade', recycledSelection: new Set(), state: {locked: false, mounted: true, storageFormat: 1, driveLetter: 'M:', availableDriveLetters: ['N:'], driver: {checking: false}}});
  vm.runInContext(normalize + '\n' + render, context);
  return {context, check(letter, enabled, valid = enabled) {
   $('drive-letter').value = letter;

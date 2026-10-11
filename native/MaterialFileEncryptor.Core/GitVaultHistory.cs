@@ -108,7 +108,7 @@ public sealed class GitVaultHistory
     public static string ValidateRelativePath(string relativePath)
     {
         if (relativePath == "vault.json") return relativePath;
-        if (!Regex.IsMatch(relativePath, @"\A(?:parts|commits)/[a-fA-F0-9]{32}(?:[a-fA-F0-9]{32})?\.mfe\z", RegexOptions.CultureInvariant)) throw new ArgumentException("Invalid encrypted storage path.");
+        if (!Regex.IsMatch(relativePath, @"\A(?:parts|commits|activity)/[a-fA-F0-9]{32}(?:[a-fA-F0-9]{32})?\.mfe\z", RegexOptions.CultureInvariant)) throw new ArgumentException("Invalid encrypted storage path.");
         return relativePath;
     }
     internal async Task<VaultProcessResult> Git(CancellationToken ct, params string[] args)

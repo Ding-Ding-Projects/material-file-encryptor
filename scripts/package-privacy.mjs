@@ -1,10 +1,11 @@
-import { lstat, readdir, readFile } from 'node:fs/promises';
+import { lstat, readdir } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { listPackage, statFile, extractFile, uncache } from '@electron/asar';
 
-export const isPrivateEntry = name => /(?:^|[\\/])\.agent(?:[\\/]|$)/i.test(name);
+export const isPrivateEntry = name => /(?:^|[\\/])(?:\.agent|\.test-output)(?:[\\/]|$)/i.test(name);
 
 // Never reflect rejected paths, archive metadata or exception messages in diagnostics.
 export async function inspectPackage(root) {
@@ -25,9 +26,8 @@ export async function inspectPackage(root) {
     if (!(await lstat(root)).isDirectory()) throw new Error('PACKAGE_PRIVACY_INPUT_REQUIRED');
     await visit(root);
     const archive = path.join(root, 'resources', 'app.asar');
-    if (!(await lstat(archive)).isFile()) throw new Error('PACKAGE_PRIVACY_ARCHIVE_REQUIRED');
-    const bytes = await readFile(archive);
-    if (!bytes.length) throw new Error('PACKAGE_PRIVACY_ARCHIVE_REQUIRED');
+    const archiveInfo = await lstat(archive);
+    if (!archiveInfo.isFile() || archiveInfo.size === 0) throw new Error('PACKAGE_PRIVACY_ARCHIVE_REQUIRED');
     uncache(archive);
     const names = listPackage(archive);
     if (!names.length) throw new Error('PACKAGE_PRIVACY_ARCHIVE_REQUIRED');
@@ -43,7 +43,9 @@ export async function inspectPackage(root) {
       }
     }
     if (rejected) return { code: 'PACKAGE_PRIVACY_REJECTED', entries, rejected };
-    return { code: 'PACKAGE_PRIVACY_OK', entries, rejected, archiveSha256: createHash('sha256').update(bytes).digest('hex') };
+    const digest = createHash('sha256');
+    for await (const chunk of createReadStream(archive, { highWaterMark: 64 * 1024 })) digest.update(chunk);
+    return { code: 'PACKAGE_PRIVACY_OK', entries, rejected, archiveSha256: digest.digest('hex') };
   } catch {
     return { code: 'PACKAGE_PRIVACY_UNREADABLE', entries, rejected };
   }

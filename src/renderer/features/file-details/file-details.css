@@ -1,0 +1,7 @@
+.file-details { min-width:0; padding:16px; }
+.file-details h2,.file-details p,.file-details label { overflow-wrap:anywhere; }
+.file-details-filters,.file-details-actions,.file-details [role=tablist] { display:flex; flex-wrap:wrap; gap:8px; margin-block:8px; }
+.file-details-filters label { display:flex; flex-direction:column; min-width:0; }
+.file-details input,.file-details select { max-width:100%; box-sizing:border-box; }
+.file-details-row { padding-block:12px; border-bottom:1px solid var(--outline-variant,#888); }
+.file-details-preview { white-space:pre-wrap; overflow-wrap:anywhere; max-height:360px; overflow:auto; }
