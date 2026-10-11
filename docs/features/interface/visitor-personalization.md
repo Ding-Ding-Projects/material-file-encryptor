@@ -24,3 +24,11 @@ Mode enabled-state changes require a one-use authorization from successful crede
 
 - [Local personalization](local-personalization.md)
 - [Personal vocabulary](personal-vocabulary.md)
+
+## Shared preferences palette, typography and navigation
+
+The website projects its existing palette roles into shared Material Design 3 surface, text, outline and action roles, so shared preferences follow the same light/dark authority as their enclosing dialog. Material plain and brand typography follow the selected local font family, then the bundled MFE Noto Sans Regular and MFE Noto Sans CJK HK families, then sans-serif. Guidance shadow content uses that same authority. No remote font service or vendor patch is introduced.
+
+Settings navigation uses registered md-tabs and md-primary-tab components. Selecting a tab retains the original settings store, protected mode, reset cancellation and history behavior. Arrow keys, Home and End navigate the tabs. Simple navigation no longer mounts a separate wizard before every tab; the current section retains an accessible expandable explanation with its authoritative article. Complex setting guidance remains optional above its original target.
+
+Historical captures from the earlier static source diagnose the original mismatch only. Source/component checks do not establish current rendered conformance. Fresh built captures must cover normal and minimum viewport, light/dark, English/Cantonese/bilingual, and 100/125/150/200 percent scale before visual acceptance.

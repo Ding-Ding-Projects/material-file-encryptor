@@ -1,0 +1,8 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const read=file=>fs.readFileSync(new URL('../'+file,import.meta.url),'utf8');
+const roles={primary:'primary','on-primary':'on-primary','primary-container':'primary-container','on-primary-container':'on-primary-container',surface:'surface','surface-container':'surface-container','on-surface':'on-surface','on-surface-variant':'muted',outline:'outline','outline-variant':'line',error:'error'};
+function assertProjection(css){for(const [role,authority]of Object.entries(roles))assert.ok(css.includes('--md-sys-color-'+role+':var(--'+authority+')'),role+' uses the existing palette authority');}
+test('website shared palette projects existing roles and rejects missing surface or text authority',()=>{const css=read('docs/site/site.css');assertProjection(css);for(const role of ['surface','on-surface'])assert.throws(()=>assertProjection(css.replace('--md-sys-color-'+role+':var(--'+roles[role]+')','--removed-role:none')));});
+test('shared Material typography uses selected authority and actual bundled families',()=>{for(const file of ['docs/site/site.css','src/renderer/modern.css','src/shared/surface/control-guidance.js']){const source=read(file);assert.ok(source.includes('--md-ref-typeface-plain:var(--local-ux-font,"MFE Noto Sans Regular","MFE Noto Sans CJK HK",sans-serif)'));assert.ok(source.includes('--md-ref-typeface-brand:'));}const consumer=read('src/renderer/features/personalization/index.js');assert.ok(consumer.includes("${effective.fontFamily}, 'MFE Noto Sans Regular', 'MFE Noto Sans CJK HK', sans-serif"));assert.equal(consumer.includes('Noto Sans CJK TC'),false);});

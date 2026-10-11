@@ -8,3 +8,5 @@
 [data-low-stimulation=true] *,[data-motion=reduced] *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 @media(prefers-reduced-motion:reduce){.local-ux *{animation:none!important;transition:none!important}}
 @media(max-width:640px){.local-ux-field{grid-template-columns:minmax(0,1fr)}.local-ux-field details,.local-ux-field small{grid-column:auto}.local-ux{padding:.5rem}}
+
+.local-ux md-tabs{display:block;max-width:100%;min-width:0;overflow-x:auto;--md-primary-tab-container-height:48px}.local-ux md-primary-tab{flex:none;min-width:max-content}.local-ux md-tabs[role=tablist]{flex-wrap:nowrap;padding-bottom:0;gap:0;border-bottom:0}
