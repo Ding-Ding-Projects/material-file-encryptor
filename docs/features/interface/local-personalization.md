@@ -49,3 +49,13 @@ Personal wording is projected onto eligible display text and accessibility attri
 `refresh()` retains the small-document synchronous result and returns `{ projected: false, reason: 'pending' }` while more slices remain. Integrations requiring a completed display can await `whenSettled()`. Revoking activation or destroying the view cancels outstanding work and restores only tracked modified display values immediately. A replacement exception restores earlier writes and settles with `replacement-failed`. Canonical application data, inputs, code blocks, exports, and network requests are not rewritten. The projection is incremental, so a partially completed active pass can temporarily show both canonical and personalized display text; it is not an atomic whole-document paint.
 
 Focused verification covers a synthetic document exceeding 42,000 nodes, bounded scheduling, changed-subtree updates, shadow-root removal, cancellation, restoration, and rollback after a later-slice exception. This does not by itself establish native runtime or installer acceptance.
+
+## Material control migration
+
+The five destinations retain their existing setting stores and protected host adapters. Text and search fields use outlined Material fields; finite choices use outlined selects with adjacent searchable actions and the shared regex builder. Checkbox and range settings use Material checkbox and slider controls. Date, time and file inputs use registered compositions containing actual platform pickers behind Material fields and buttons. The control kind is chosen before construction.
+
+Accent entry retains a typed field and offers the existing color workbench in an expandable section. Only a solid accent is accepted. Motion and typography choices use finite selects where a closed set exists; editable CSS property names and easing values retain free text with shared anchored suggestions. Invalid drafts, blocked controls, disconnected controls and rejected asynchronous stores do not authorize another mutation path.
+
+The host supplies onLogoChange(dataUrlOrNull) to apply the normalized local logo to the application identity and restore its saved value at startup. The module itself owns conversion, local storage and editor preview. School-mode sharing, narration voices and external schedule requests retain their real host boundaries. Model checks do not establish those external capabilities.
+
+The reference and state inventory are under design/gui-personalization/. Built-surface verification belongs to the integrated evidence, not that design reference.
