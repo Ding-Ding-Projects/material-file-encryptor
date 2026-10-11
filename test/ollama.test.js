@@ -62,7 +62,8 @@ test('service streams chat, stores history, rejects attachments and confirms del
   const fetchImpl=async u=>{if(u.endsWith('/api/tags'))return response({models:[{name:'alpha:1',size:123}]});if(u.endsWith('/api/ps'))return response({models:[]});if(u.endsWith('/api/show'))return response({capabilities:['completion']});if(u.endsWith('/api/chat'))return response('{"message":{"content":"Local answer"}}\n{"done":true}\n');return response({version:'test'});};
   const service=createOllamaService({dataDir:dir,fetchImpl});try{
     await service.request('models');
-    await assert.rejects(service.request('chat',{model:'alpha:1',prompt:'hello',images:['aGVsbG8=']}),/vision/);
+    const png=Buffer.alloc(33);Buffer.from([137,80,78,71,13,10,26,10]).copy(png);png.writeUInt32BE(13,8);png.write('IHDR',12);png.writeUInt32BE(1,16);png.writeUInt32BE(1,20);
+    await assert.rejects(service.request('chat',{model:'alpha:1',prompt:'hello',images:[png.toString('base64')]}),/vision/);
     await assert.rejects(service.request('chat',{model:'alpha:1',prompt:'hello',images:['not base64']}),/attachment/);
     const chunks=[];const finished=new Promise(resolve=>service.subscribe(e=>{if(e.type==='chat')chunks.push(e.delta);if(e.type==='complete')resolve(e);}));
     await service.request('chat',{model:'alpha:1',prompt:'hello',options:{temperature:0.7}});const event=await finished;assert.deepEqual(chunks,['Local answer']);
