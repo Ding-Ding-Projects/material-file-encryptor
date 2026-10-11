@@ -50,12 +50,12 @@ export function sanitizeConverterDiagnostic(record){const safe={schema:1,compone
 
 export function converterUnavailableError(record){const safe=sanitizeConverterDiagnostic(record);const fields=['launcherExitCode','workerExitCode','nativeError','nativeHresult'].filter(key=>Object.hasOwn(safe,key)).map(key=>key+'='+safe[key]);return new Error(`Isolated image decoding unavailable: ${safe.component}/${safe.phase}/${safe.code}${fields.length?' ['+fields.join(', ')+']':''}.`);}
 
-export function createFeatureServices({dataDirectory,applicationRoot,sandboxDirectory,safeStorage,dialog,getWindow,openPath,openExternal,emit=()=>{},sandboxProvider,onConverterDiagnostic=()=>{},accessibilityState=()=>({known:false,enabled:false,source:'runtime'})}){
+export function createFeatureServices({dataDirectory,applicationRoot,toolsDirectory=applicationRoot?.endsWith('.asar')?path.join(path.dirname(applicationRoot),'tools'):path.join(applicationRoot||'','out','tools'),sandboxDirectory,safeStorage,dialog,getWindow,openPath,openExternal,emit=()=>{},sandboxProvider,onConverterDiagnostic=()=>{},accessibilityState=()=>({known:false,enabled:false,source:'runtime'})}){
  const credentials=createCredentialStore({directory:dataDirectory,safeStorage});
  const scheduleAuthorization={};
  const schedules=createScheduleSource({credentials,authorizeCredentialMutation:context=>context?.authorization===scheduleAuthorization});
  const servers=createServerManagerHost({dataDirectory,emit:data=>emit('server-manager',data)});
- const workflows=createWorkflowServices({dataDirectory,dialog,getWindow,openPath,openExternal,emit});
+ const workflows=createWorkflowServices({dataDirectory,toolsDirectory,dialog,getWindow,openPath,openExternal,emit});
  const startupPhotos=createStartupPhotoService({dataDirectory});
  const fontMetadataAdmission=createFontScanAdmission();const cancelFontMetadata=()=>fontMetadataAdmission.cancelAll();
  const grants=new Map();let converter,ollama,ollamaPromise,closed=false,exiting=false,sharedCredentialGranted=false,pendingRequests=0;
