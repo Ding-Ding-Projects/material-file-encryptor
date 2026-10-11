@@ -11,3 +11,5 @@ Server preparation remains preparation only. Version selection is a contained li
 This document describes implemented source, not built visual verification. Integrated-build captures, minimum-view and scale checks belong to the integration acceptance pass. No existing capture is relabelled as proof of this redesign.
 
 Provider-answer state: the local chat transcript now renders bounded safe Markdown inside `.ollama-message-content`. The same source renderer is consumed read-only from the documentation module. Test empty, pending, partial, complete, cancelled, failed, saved-history and stale-read states. Provider links and images follow the restricted content boundary described in the article. Metadata JSON remains literal.
+
+Language refresh acceptance: retain exact control identity, field values, selected source IDs, checkbox states, picker identity, active panel, chat drafts, search query and streamed-response ownership across English, Cantonese and bilingual changes. Static labels and helpers update in place through setLanguage/refreshLabels. Synthetic regressions were red before the repair and green afterward; built matrix proof is still pending.

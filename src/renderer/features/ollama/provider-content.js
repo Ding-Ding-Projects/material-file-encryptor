@@ -91,5 +91,5 @@ export function createProviderTranscript(host,{translate=s=>s,delay=60,setTimer=
  function reject(ticket){if(!alive||!active||ticket!==generation)return;messages[active.index].state='error';remember(active.operationId);active=null;stopTimer();host.setAttribute('aria-busy','false');paint();}
  function setHistory(history=[]){if(!alive)return;invalidate();streamSessionId=null;messages=history.filter(message=>['user','assistant','system'].includes(message?.role)&&typeof message.content==='string').map(message=>({role:message.role,content:message.content}));paint();}
  paint();
- return{begin,bind,consume,reject,setHistory,clear(){setHistory([]);},destroy(){if(!alive)return;invalidate();alive=false;messages=[];host.replaceChildren();},get generation(){return generation;},get running(){return !!active;},get sessionId(){return streamSessionId;}};
+ return{begin,bind,consume,reject,setHistory,refreshLabels(){if(alive)paint();},clear(){setHistory([]);},destroy(){if(!alive)return;invalidate();alive=false;messages=[];host.replaceChildren();},get generation(){return generation;},get running(){return !!active;},get sessionId(){return streamSessionId;}};
 }
