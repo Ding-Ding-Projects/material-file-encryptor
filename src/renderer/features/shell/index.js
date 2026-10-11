@@ -13,7 +13,7 @@ import {captureSurfaceState,restoreSurfaceState} from '../../../shared/surface/t
 import {shouldOpenRegisteredView} from '../../../shared/surface/view-registration.js';
 
 /** Mounts reusable chrome without mutating host content or acquiring host capabilities. */
-export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport,renderText=value=>value,onNotificationAction}={}) {
+export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport,renderText=value=>value,onNotificationAction,navigationHost}={}) {
   if(!(host instanceof HTMLElement))throw new TypeError('A host element is required');
   tabs=[...tabs];
   const model=createSurfaceModel({storage,storageKey:'mfe.surface.tabs.v1',tabs:tabs.slice(0,1).map(tab=>({...tab,label:localized(tab.label,'en')}))});
@@ -42,7 +42,7 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
     const sheet=new CSSStyleSheet();sheet.replaceSync(':host{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}');toolbar.shadowRoot.adoptedStyleSheets=[sheet];
     toolbar.shadowRoot.replaceChildren(element('md-outlined-button',{text:localized(text('Commands · Ctrl+Shift+F','指令 · Ctrl+Shift+F'),activeLanguage),onclick:()=>palette.open()}),element('md-outlined-button',{text:localized(text('Notifications','通知'),activeLanguage),onclick:()=>{notifications.hidden=!notifications.hidden;}}));
   };
-  host.insertBefore(shell,before);host.append(live);document.body.append(palette);configure();frame=mountNavigationFrame({host,shell,build,toolbar,notifications,labels,language:activeLanguage,onActivate:id=>shell.activate(id),onCommands:()=>palette.open(),onNotifications:()=>{notifications.hidden=!notifications.hidden;}});frame.setActive(model.getState().activeTabId);
+  host.insertBefore(shell,before);host.append(live);document.body.append(palette);configure();frame=mountNavigationFrame({navigationHost,host,shell,build,toolbar,notifications,labels,language:activeLanguage,onActivate:id=>shell.activate(id),onCommands:()=>palette.open(),onNotifications:()=>{notifications.hidden=!notifications.hidden;}});frame.setActive(model.getState().activeTabId);
   const keydown=event=>{
     if(!(event.ctrlKey||event.metaKey))return;
     if(event.shiftKey&&event.key.toLowerCase()==='f'){event.preventDefault();palette.open();}
