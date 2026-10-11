@@ -1,7 +1,7 @@
 internal static class MountedTeardown
 {
     internal sealed record Disposition(bool Retained,string Reason,string[] Errors);
-    internal static async Task<Disposition> Run(bool writerReleased,Func<bool> unknownOutcome,Func<Task> detach,Func<Task> stop)
+    internal static async Task<Disposition> Run(bool writerReleased,Func<bool> unknownOutcome,Func<Task> detach,Func<Task<bool>> stop)
     {
         if(!writerReleased)return new(true,"writer-exit-unknown",Array.Empty<string>());
         if(unknownOutcome())return new(true,"protocol-outcome-unknown",Array.Empty<string>());
@@ -9,17 +9,32 @@ internal static class MountedTeardown
         try{await detach();}catch(Exception error){errors.Add("detach:"+error.GetType().Name+": "+error.Message);}
         // A timeout during teardown is just as uncertain as one during settlement.
         if(unknownOutcome())return new(true,"protocol-outcome-unknown",errors.ToArray());
-        try{await stop();}catch(Exception error){errors.Add("stop:"+error.GetType().Name+": "+error.Message);}
-        return new(false,"owned-stop-attempted",errors.ToArray());
+        try
+        {
+            if(!await stop())return new(true,"owned-stop-exit-unestablished",errors.ToArray());
+        }
+        catch(Exception error)
+        {
+            errors.Add("stop:"+error.GetType().Name+": "+error.Message);
+            return new(true,"owned-stop-exit-unestablished",errors.ToArray());
+        }
+        return new(false,"owned-helper-exit-established",errors.ToArray());
     }
     internal static async Task SelfTest()
     {
-        foreach(string scenario in new[]{"known","settlement-timeout","teardown-timeout","writer-unknown"})
+        foreach(string scenario in new[]{"known","settlement-timeout","teardown-timeout","writer-unknown","stop-unestablished","stop-error"})
         {
             bool unknown=scenario=="settlement-timeout";int detaches=0,stops=0;
-            var result=await Run(scenario!="writer-unknown",()=>unknown,()=>{detaches++;if(scenario=="teardown-timeout"){unknown=true;throw new TimeoutException("injected in-flight detach");}return Task.CompletedTask;},()=>{stops++;return Task.CompletedTask;});
+            var result=await Run(scenario!="writer-unknown",()=>unknown,()=>{detaches++;if(scenario=="teardown-timeout"){unknown=true;throw new TimeoutException("injected in-flight detach");}return Task.CompletedTask;},()=>{stops++;if(scenario=="stop-error")throw new IOException("injected owned stop failure");return Task.FromResult(scenario!="stop-unestablished");});
             bool retained=scenario!="known";
-            if(result.Retained!=retained||stops!=(retained?0:1)||detaches!=(scenario is "known" or "teardown-timeout"?1:0))throw new Exception("Outer teardown admitted an unsafe retry or stop: "+scenario);
+            if(result.Retained!=retained||stops!=(scenario is "known" or "stop-unestablished" or "stop-error"?1:0)||detaches!=(scenario is "known" or "teardown-timeout" or "stop-unestablished" or "stop-error"?1:0))throw new Exception("Outer teardown admitted an unsafe retry or stop: "+scenario);
+            if(scenario is "stop-unestablished" or "stop-error")
+            {
+                var actualExit=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);bool holding=false;
+                var ownership=RetentionOwnership.Run(()=>Task.CompletedTask,()=>result.Retained,async()=>{holding=true;await actualExit.Task;});
+                if(!holding||ownership.IsCompleted)throw new Exception("Failed stop did not enter unconditional ownership hold.");
+                actualExit.SetResult();await ownership;
+            }
         }
         var exit=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);var states=new List<string>();
         var hold=RetainedRunnerHold.Run(exit.Task,null,(state,response)=>{states.Add(state);return Task.CompletedTask;},Task.CompletedTask);

@@ -168,6 +168,7 @@ finally
                 var helperStop=await helper.Stop();
                 if(!helperStop.ExitEstablished||helperStop.Errors.Length!=0)teardownFailed=true;
                 checks.Add(new{name="helper-stop",verified=helperStop.ExitEstablished&&helperStop.Errors.Length==0,helperStop});
+                return helperStop.ExitEstablished;
             });
             if(helperDisposition.Retained||helperDisposition.Errors.Length!=0)teardownFailed=true;
             checks.Add(new{name="helper-disposition",verified=!helperDisposition.Retained,helperDisposition,writerId,writerStartedUtc});

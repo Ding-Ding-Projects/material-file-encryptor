@@ -61,3 +61,7 @@ The installer does not include this tool: Forge ignores the whole `out` source d
 After downloading the exact source-bound workflow artifact, run its managed assembly with the matching .NET 8 runtime and `--settlement-self-test` for the injected settlement/outer-ownership checks. This executes the compiled test binary without a local compiler, helper launch or mount. A real mounted run still requires the reviewed packaged helper, exact production hash, fresh evidence path and independent authorization.
 
 The reporting-exception correction and cloud-delivery addition were preserved without a local compilation because physical memory pressure prevented that verification route. Their newly added throwing-writer/record regressions remain unrun until the source-bound cloud output is available. Earlier passing self-test receipts apply only to their earlier source revisions.
+
+### Failed bounded stop also retains pipes
+
+The shared teardown executor consumes the bounded stop's actual `ExitEstablished` result. A false result or a thrown stop leaves disposition `owned-stop-exit-unestablished`, requires the unconditional runner hold, and issues no additional request. A stop attempt alone is not exit proof. The injected executor cases include both a false stop result and a thrown stop, each requiring retention after exactly one stop attempt. These new cases remain uncompiled and unrun pending the source-bound cloud build.
