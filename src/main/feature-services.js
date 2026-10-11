@@ -37,6 +37,7 @@ export function createCredentialStore({directory,safeStorage}){
  return {
   async get(key){check(key);available();await chain;const data=await read();if(!Object.hasOwn(data,key))return null;return JSON.parse(safeStorage.decryptString(Buffer.from(data[key],'base64')));},
   set(key,value){check(key);available();bounded(value);return mutate(async()=>{const data=await read();data[key]=safeStorage.encryptString(encoded(value)).toString('base64');await write(data);});},
+  compareAndSet(key,expected,replacement){check(key);available();bounded(expected);bounded(replacement);const expectedText=encoded(expected),replacementText=encoded(replacement);return mutate(async()=>{available();const data=await read();const current=Object.hasOwn(data,key)?safeStorage.decryptString(Buffer.from(data[key],'base64')):'null';if(encoded(JSON.parse(current))!==expectedText)return false;if(replacementText==='null')delete data[key];else data[key]=safeStorage.encryptString(replacementText).toString('base64');await write(data);return true;});},
   delete(key){check(key);return mutate(async()=>{const data=await read();delete data[key];await write(data);});},
   async list(prefix){if(typeof prefix!=='string'||!keyPattern.test(prefix+'x'))throw Error('Invalid protected record prefix.');await chain;return Object.keys(await read()).filter(key=>key.startsWith(prefix));}
  };
