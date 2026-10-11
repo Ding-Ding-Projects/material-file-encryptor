@@ -1,13 +1,15 @@
+// Custom element registration is deliberately omitted by this logic-only fixture.
+globalThis.HTMLElement ??= class {};
 // Minimal DOM for exercising actual access rendering and refresh callbacks in Node.
 // This fixture makes no claim about browser layout or assistive-technology behavior.
 class Node {
- constructor(document,tag=null,text=''){this.ownerDocument=document;this.tagName=tag?.toUpperCase();this.nodeType=tag?1:3;this.nodeValue=text;this.childNodes=[];this.parentNode=null;this.attributes=new Map();this.dataset={};this.listeners=new Map();this._value=undefined;}
+ constructor(document,tag=null,text=''){this.ownerDocument=document;this.localName=tag;this.type='';this.disabled=false;this.checked=false;this.readOnly=false;this.ownerDocument=document;this.tagName=tag?.toUpperCase();this.nodeType=tag?1:3;this.nodeValue=text;this.childNodes=[];this.parentNode=null;this.attributes=new Map();this.dataset={};this.listeners=new Map();this._value=undefined;}
  get parentElement(){return this.parentNode?.nodeType===1?this.parentNode:null;}
  get children(){return this.childNodes.filter(n=>n.nodeType===1);}
  get isConnected(){return this===this.ownerDocument.body||!!this.parentNode?.isConnected;}
  get textContent(){return this.nodeType===3?this.nodeValue:this.childNodes.map(n=>n.textContent).join('');}
  set textContent(value){if(this.nodeType===3){this.nodeValue=String(value);return;}this.replaceChildren();if(value!=='')this.append(this.ownerDocument.createTextNode(String(value)));}
- get value(){return this._value??(this.tagName==='SELECT'?this.children[0]?.value||'':'');}
+ get value(){return this._value??(['SELECT','MD-OUTLINED-SELECT'].includes(this.tagName)?this.children[0]?.value||'':'');}
  set value(value){this._value=String(value);}
  append(...nodes){for(let node of nodes){if(typeof node==='string')node=this.ownerDocument.createTextNode(node);node.remove();node.parentNode=this;this.childNodes.push(node);}}
  after(...nodes){const parent=this.parentNode;if(!parent)return;const additions=nodes.map(node=>typeof node==='string'?this.ownerDocument.createTextNode(node):node);let next=parent.childNodes[parent.childNodes.indexOf(this)+1];while(next&&additions.includes(next))next=parent.childNodes[parent.childNodes.indexOf(next)+1];for(const node of additions)node.remove();const index=next?parent.childNodes.indexOf(next):parent.childNodes.length;parent.childNodes.splice(index,0,...additions);for(const node of additions)node.parentNode=parent;}
@@ -22,7 +24,7 @@ class Node {
  click(){return this.dispatchEvent({type:'click',target:this,preventDefault(){},stopImmediatePropagation(){}});}
  focus(){this.ownerDocument.activeElement=this;}
  scrollIntoView(){}
- matches(selector){if(selector==='*')return this.nodeType===1;if(selector.startsWith('[')){const match=/^\[([^=\]]+)(?:="([^"]*)")?\]$/.exec(selector);if(!match)return false;const name=match[1],value=name.startsWith('data-')?this.dataset[name.slice(5).replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]:this.getAttribute(name);return value!==undefined&&value!==null&&(match[2]===undefined||String(value)===match[2]);}return this.tagName===selector.toUpperCase();}
+ matches(selector){if(selector==='*')return this.nodeType===1;if(selector.startsWith('[')){const match=/^\[([^=\]]+)(?:="([^"]*)")?\]$/.exec(selector);if(!match)return false;const name=match[1],value=name.startsWith('data-')?this.dataset[name.slice(5).replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]:this.getAttribute(name);return value!==undefined&&value!==null&&(match[2]===undefined||String(value)===match[2]);}const semantic={button:['MD-TEXT-BUTTON','MD-FILLED-BUTTON','MD-OUTLINED-BUTTON'],input:['MD-OUTLINED-TEXT-FIELD','MD-CHECKBOX','MD-RADIO','MFE-FILE-PICKER'],select:['MD-OUTLINED-SELECT'],option:['MD-SELECT-OPTION']};return this.tagName===selector.toUpperCase()||semantic[selector]?.includes(this.tagName)||false;}
  querySelectorAll(selector){return this.children.flatMap(child=>[...(child.matches(selector)?[child]:[]),...child.querySelectorAll(selector)]);}
  querySelector(selector){return this.querySelectorAll(selector)[0]||null;}
  closest(selector){return this.matches(selector)?this:this.parentElement?.closest(selector)||null;}
