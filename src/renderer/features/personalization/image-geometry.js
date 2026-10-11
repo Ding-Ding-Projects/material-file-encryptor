@@ -1,3 +1,4 @@
+export const IMAGE_TRANSFORM_SURFACE=Object.freeze({tag:'mfe-image-transform-inspector',role:'region',module:'../../renderer/features/personalization/image-transform-inspector.js',primitives:Object.freeze(['md-outlined-text-field','md-outlined-button','mfe-control-guidance'])});
 /** Geometry only. No pixels, network, storage or target mutation. */
 export const IMAGE_FITS=Object.freeze(['contain','cover','stretch']);
 export function validateImagePlacement(value={}){

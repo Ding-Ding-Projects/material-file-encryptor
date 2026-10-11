@@ -1,10 +1,10 @@
 # Image placement integration handoff
 
-Baseline: `9fa84a9d6ee7fed62cceeb8bb7660fe8e78f6cc9`. This unit is not wired into the appearance editor. No rendered acceptance is claimed.
+Baseline: `9fa84a9d6ee7fed62cceeb8bb7660fe8e78f6cc9`. The unit is now wired into the appearance editor, using a dedicated captured image-location resolver and render-generation checks. No rendered acceptance is claimed.
 
-## Parent-owned caller integration
+## Implemented caller integration
 
-`appearance.js` remains owned by the motion integration lane and is unchanged here. After that lane is preserved, import `mountImageTransformInspector` and replace only its legacy image-transform fieldset. Resolve the selected layer through the existing `currentFontLayer()` helper (or a renamed equivalent with identical captured target/state/group/index semantics). Never retain `selected` across persistence rollback.
+After the reviewed motion baseline was preserved and merged, `appearance.js` replaced only its legacy image-transform fieldset with `mountImageTransformInspector`. Resolve the selected layer through the existing `currentFontLayer()` helper (or a renamed equivalent with identical captured target/state/group/index semantics). Never retain `selected` across persistence rollback.
 
 ```js
 const host = doc.createElement('section');
@@ -42,4 +42,4 @@ Pass the effective preference language, not only `documentElement.lang`, so bili
 
 ## Acceptance still required
 
-Add actual mounted appearance integration checks for storage rollback/retry, current layer replacement, lock changes, original history counts and language remount. Then build through root entrypoints and inspect genuine package-bound captures at supported sizes/scales/languages/themes. No source-only result proves those pixels. Complete image editing, safe areas, general formats and pixel-complete history/export remain unfinished.
+Actual mounted appearance integration checks now cover storage rollback/retry, current layer replacement, lock changes, original history counts and language remount. The effective-language callback comes from the personalization closure, preserving School/schedule precedence. Next build through root entrypoints and inspect genuine package-bound captures at supported sizes/scales/languages/themes. No source-only result proves those pixels. Complete image editing, safe areas, general formats and pixel-complete history/export remain unfinished.

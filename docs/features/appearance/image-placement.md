@@ -2,7 +2,7 @@
 
 ## Delivery state
 
-This source unit provides a registered Material Design 3 inspector and shared geometry. It is not wired into the appearance editor yet. Parent integration must replace the legacy image-transform controls with the caller adapter in `design/image-placement/HANDOFF.md`. No rendered, installed or pixel acceptance is claimed.
+This source unit provides a registered Material Design 3 inspector and shared geometry, now wired into the original appearance editor. Its caller resolves the current target/state/group/layer after rollback and invalidates old controls on render, navigation, close and disposal. No rendered, installed or pixel acceptance is claimed. Integration details remain in `design/image-placement/HANDOFF.md`.
 
 ## Placement model
 
@@ -14,7 +14,7 @@ Existing models without `fit` retain live containment and raster stretching. The
 
 ## Controls and original actions
 
-Crop, focal point, translation, scale, rotation, skew, opacity and blend are drafts. Apply validates the entire draft, then invokes the original mutation exactly once. Empty, malformed and out-of-range values cannot save. Reset invokes the supplied original reset action. Current-layer resolution, locks, undo/history, persistence and rollback remain the caller's responsibilities. No second settings store is created.
+Crop, focal point, translation, scale, rotation, skew, opacity and blend are drafts. Apply validates the entire draft, then invokes the original mutation exactly once. Empty, malformed and out-of-range values cannot save. Reset invokes the supplied original reset action. The integrated caller owns current-layer resolution, locks, undo/history, persistence and rollback. No second settings store is created.
 
 Pending operations block overlapping actions. Disposal removes listeners, guidance and search ownership. The caller must reject any stale or locked target before mutation. Search uses the host adapter, including its regular-expression builder; it is visibly unavailable without that adapter. English, Cantonese and bilingual labels and optional guidance are available. Language changes require caller remounting, preserving the original editor's lifecycle.
 
@@ -24,7 +24,7 @@ Only already normalized local PNG sources reach the existing renderers. No uploa
 
 ## Verification
 
-Focused tests exercise crop/fit/focal arithmetic, legacy defaults, invalid values, the actual SVG and worker consumers, one original mutation, rejected-save retry, lock/disposal and pending operation exclusion. These are source/component checks, not browser layout or accessibility acceptance.
+Focused tests exercise crop/fit/focal arithmetic, legacy defaults, invalid values, the actual SVG and worker consumers, one original mutation, rejected-save retry, lock/disposal and pending operation exclusion. Actual appearance-caller checks also cover persisted fit/focal values, storage rollback/retry, original Undo, locked/stale controls, effective language and School-mode precedence. These are source/component checks, not browser layout or accessibility acceptance.
 
 <a id="crop0"></a>
 ### crop0

@@ -1,11 +1,10 @@
-import {surfaceRegistry} from '../../../shared/surface/registry.js';
 import {validateImageTransform} from './image-layers.js';
-import {IMAGE_FITS} from './image-geometry.js';
+import {IMAGE_FITS,IMAGE_TRANSFORM_SURFACE} from './image-geometry.js';
 import {imageTransformTranslator,imagePlacementGuidance} from './image-transform-copy.js';
 import {bindNestedConsumer} from './nested-guidance-mount.js';
 import {mountControlGuidance} from '../../../shared/surface/control-guidance.js';
 export const IMAGE_TRANSFORM_FIELDS=Object.freeze([['crop0','Crop left',0,100],['crop1','Crop top',0,100],['crop2','Crop width',0,100],['crop3','Crop height',0,100],['focalX','Focal X',0,100],['focalY','Focal Y',0,100],['x','Image X',-200,200],['y','Image Y',-200,200],['scaleX','Scale X',.01,10],['scaleY','Scale Y',.01,10],['rotate','Rotation',-360,360],['skewX','Skew X',-80,80],['skewY','Skew Y',-80,80],['opacity','Opacity',0,1]]);
-export function registerImageTransformInspector(view,registry=surfaceRegistry){const row=registry.find(row=>row.tag==='mfe-image-transform-inspector');if(!row||row.role!=='region'||row.module!=='../../renderer/features/personalization/image-transform-inspector.js'||!['md-outlined-text-field','md-outlined-button','mfe-control-guidance'].every(tag=>row.primitives.includes(tag)))throw Error('Image placement registration is incomplete.');if(!view.customElements.get(row.tag))view.customElements.define(row.tag,class extends view.HTMLElement{});}
+export function registerImageTransformInspector(view,registry=[IMAGE_TRANSFORM_SURFACE]){const row=registry.find(row=>row.tag==='mfe-image-transform-inspector');if(!row||row.role!=='region'||row.module!=='../../renderer/features/personalization/image-transform-inspector.js'||!['md-outlined-text-field','md-outlined-button','mfe-control-guidance'].every(tag=>row.primitives.includes(tag)))throw Error('Image placement registration is incomplete.');if(!view.customElements.get(row.tag))view.customElements.define(row.tag,class extends view.HTMLElement{});}
 /** Caller owns current layer, permission, persistence and history. */
 export function mountImageTransformInspector(host,{getCurrent,mutate,reset,disabled=()=>false,getLanguage,translate,services={}}={}){
  if(typeof getCurrent!=='function'||typeof mutate!=='function')throw Error('Original image placement consumers are required.');const doc=host.ownerDocument;registerImageTransformInspector(doc.defaultView);const t=imageTransformTranslator(getLanguage,translate),root=doc.createElement('mfe-image-transform-inspector'),owned=[],controls=[],fields=new Map();let alive=true,busy=false,fit,blend;

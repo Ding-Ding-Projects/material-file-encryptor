@@ -5,4 +5,4 @@
 
 呢啲係本機編輯工作流程，冇 HTTP API，唔適用 Postman collection。
 
-- [具型別圖像擺位基礎（等待呼叫端整合）](image-placement.zh-HK.md)
+- [具型別圖像擺位原始碼流程](image-placement.zh-HK.md)
