@@ -24,3 +24,10 @@ test('panel keyboard and pointer controls change layout and reset without rebuil
   assert.equal(panel.children[0],existing);reset.listeners.click();assert.equal(layout.model.get(),null);assert.equal(panel.style.width,undefined);layout.destroy();assert.equal(panel.controls.removed,true);
  }finally{if(oldSheet===undefined)delete globalThis.CSSStyleSheet;else globalThis.CSSStyleSheet=oldSheet;}
 });
+
+test('an optional view without a distinct panel does not abort workspace initialization',()=>{
+ const result=mountPanelLayout(null,{id:'offline'});
+ assert.equal(result.available,false);
+ assert.equal(result.reason,'Panel element unavailable');
+ assert.doesNotThrow(()=>{result.setLanguage('yue');result.reset();result.destroy();});
+});

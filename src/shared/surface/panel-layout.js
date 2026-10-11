@@ -13,6 +13,7 @@ export function createPanelLayoutModel({storage,key,bounds=()=>({width:1200,heig
 /** Adds explicit pointer and keyboard layout controls without moving panel content. */
 export function mountPanelLayout(panel,{id,storage,language='en'}={}){
  if(!id)throw new TypeError('A stable panel id is required.');
+ if(!panel?.ownerDocument?.defaultView||!panel.style)return{available:false,reason:'Panel element unavailable',model:null,setLanguage(){},reset(){},destroy(){}};
  const doc=panel.ownerDocument,win=doc.defaultView;
  const original={width:panel.style.width,height:panel.style.height,transform:panel.style.transform,overflow:panel.style.overflow};
  const bounds=()=>({width:Math.max(1,panel.parentElement?.clientWidth||win.innerWidth),height:Math.max(1,win.innerHeight-32)});
@@ -35,5 +36,5 @@ export function mountPanelLayout(panel,{id,storage,language='en'}={}){
  }
  buttons[2].addEventListener('click',()=>{model.reset();apply();});
  const resize=()=>apply();win.addEventListener('resize',resize);setLanguage(language);apply();
- return{model,setLanguage,reset(){model.reset();apply();},destroy(){pointer=null;win.removeEventListener('resize',resize);controls.remove();Object.assign(panel.style,original);}};
+ return{available:true,model,setLanguage,reset(){model.reset();apply();},destroy(){pointer=null;win.removeEventListener('resize',resize);controls.remove();Object.assign(panel.style,original);}};
 }
