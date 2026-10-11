@@ -6,7 +6,7 @@
 - [x] Verify the shared .NET recompression helper against the actual extractor and inspect original Setup's embedded package, updater and feed separately from installed acceptance.
 - [x] Repair publication inventory omissions for the new bilingual installer article.
 - [x] Complete the Deflate-writer regression and both exact root production entrypoints on 11268c2, with all 663 actual Squirrel payload files matched and source-bound preserved outputs.
-- [x] Enforce a 10,000-entry personal-wording file limit in both schemas, verify inclusive acceptance and rejection, and correct visible help and paired documentation.
+- [x] Restore the current dynamic personal-wording inventory contract with no entry-count ceiling; verify both schemas accept 10,001 valid entries within byte/depth/string limits, and correct the temporary stale-rule cap.
 - [x] Repair publisher JSON compatibility and verify normal v1.133.1 source/tag, five attached assets and successful run 38113069082; independent download and installed acceptance remain pending.
 - [x] Verify real ASAR version/source matching and mismatch rejection in child Windows PowerShell, with framework digests independent of the Utility hash command.
 - [ ] Repair missing public home/article controls directly, including language-specific tone, regex search, tabs, palette, settings and per-route contract enforcement; verify the deployed result.

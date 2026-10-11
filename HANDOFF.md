@@ -1,5 +1,7 @@
 # Current corrective production continuation
 
+Contract correction: the current canonical source requires dynamic personal-wording inventories without a minimum, exact or maximum count. The temporary 10,000-entry limit in 58dc443 came from a stale installed instruction copy and is removed in this checkpoint. Both schemas again accept every valid entry within the documented byte/depth/string bounds. A regression explicitly accepts 10,001 valid entries in each schema. Previous entry-count claims below are historical and superseded.
+
 Update, 2026-10-11: both exact root entrypoints passed on 11268c21079d8771d5feb713b4fb8ef4ca9a0213. Actual Squirrel extraction matched all 663 payload files; archive CRC, package privacy (6,194 entries, zero rejected) and Setup embedding passed. The complete output was copied with hashes verified to out/installer-repair/local-package-11268c2. Installed acceptance is separate and pending.
 
 The publisher's Windows PowerShell JSON compatibility repair is integrated and pushed at 6b259a3263ff9cb995885e6b2f92117d2b998a08. Release run 38113069082 succeeded; normal release v1.133.1 has both draft/prerelease flags false, its immutable tag matches that source and five expected assets are attached. Independent download has started, without an installed-success claim.
