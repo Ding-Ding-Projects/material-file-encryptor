@@ -68,7 +68,12 @@ module._connect = lambda endpoint, timeout: DirectClient(timeout)
 def recorded_tree_absent(tree):
     snapshot = module._powershell_json(r'''
 $all = @(Get-CimInstance Win32_Process | ForEach-Object {
-    [pscustomobject]@{ pid = [int]$_.ProcessId; creationDate = [string]$_.CreationDate; executablePath = [string]$_.ExecutablePath }
+    [pscustomobject]@{
+        pid = [int]$_.ProcessId
+        parentPid = [int]$_.ParentProcessId
+        creationDate = if ($null -eq $_.CreationDate) { $null } else { $_.CreationDate.ToUniversalTime().ToString('o', [Globalization.CultureInfo]::InvariantCulture) }
+        executablePath = [string]$_.ExecutablePath
+    }
 })
 ConvertTo-Json -InputObject $all -Compress -Depth 4
 ''', {})
