@@ -4,6 +4,8 @@ import {passwordVerifier,verifyPassword,createSessionKey,deriveCacheKey,seal,uns
 import {LockController,LOCK_POLICIES,WaitLadder} from '../src/renderer/features/access/locks.js';
 import {LocalProfile} from '../src/renderer/features/access/profile.js';
 import {otpUri,qrPixels,qrSvg,decodeQrPixels} from '../src/renderer/features/access/qr.js';
+import {ACCESS_COPY} from '../src/renderer/features/access/copy.js';
+import {readFile} from 'node:fs/promises';
 const base32 = value => {let bits=0,acc=0,out='';for(const byte of new TextEncoder().encode(value)){acc=(acc<<8)|byte;bits+=8;while(bits>=5){bits-=5;out+='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'[(acc>>bits)&31];}}if(bits)out+='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'[(acc<<(5-bits))&31];return out;};
 test('local QR encoder and decoder round-trip registration parameters without a network',()=>{
   const entry={secret:'JBSWY3DPEHPK3PXP',issuer:'Example account',account:'sample@example.test',algorithm:'SHA512',digits:8,period:45};
@@ -78,7 +80,25 @@ test('every lock policy checks all factors, stays independent, and expires',asyn
   c.lock('pin');let called=false;assert.equal(c.run('pin',()=>called=true),false);assert.equal(called,false);assert.equal(c.isLocked('password'),false);now+=61000;assert.equal(c.isLocked('password'),true);
 });
 test('ladder consumes nonce, budgets three skips and cannot authenticate',()=>{
-  let now=1000;const ladder=new WaitLadder({now:()=>now});
+  let now=1000;const ladder=new WaitLadder({now:()=>now,getDishChallenge:()=>({catalogSource:'https://github.com/Ding-Ding-Projects/dim-sum-photos',choices:['Steamed bun','Dumpling','Rice roll','Egg tart'],prompt:'Choose the dumpling',answer:1})});
   for(let i=0;i<3;i++){const q=ladder.challenge();assert.equal(ladder.answer(q.nonce,1),true);assert.equal(ladder.answer(q.nonce,1),false);}assert.equal(ladder.challenge(),null);now+=3600001;assert.ok(ladder.challenge());assert.equal('sessions' in ladder,false);
   const school=new WaitLadder({schoolMode:true,now:()=>now});assert.equal(school.challenge().rung,'sums');school.answer(school.pending.nonce,[]);assert.equal(school.challenge().rung,'moles');const nonce=school.pending.nonce;assert.equal(school.answer(nonce,[]),false);assert.equal(school.rung,'clock');
+});
+test('missing dish catalog starts arithmetic honestly and School mode omits dish disclosure',()=>{
+  const normal=new WaitLadder().challenge();assert.equal(normal.rung,'sums');assert.equal(normal.dishUnavailable,true);
+  const school=new WaitLadder({schoolMode:true}).challenge();assert.equal(school.rung,'sums');assert.equal(school.dishUnavailable,false);
+  const unverified=new WaitLadder({getDishChallenge:()=>({choices:['a','b','c','d'],prompt:'fixture',answer:1})}).challenge();assert.equal(unverified.rung,'sums');assert.equal(unverified.dishUnavailable,true);
+});
+test('local waiting challenge clears only deadline and preserves lock and escalation',async()=>{
+  let now=10000;const controller=new LockController({now:()=>now});await controller.set('protected','pin',{pin:'1234'});
+  for(let i=0;i<5;i++)await controller.unlock('protected',{pin:'9999'});
+  assert.ok(controller.waiting('protected')>0);const before={...controller.attempts.get('protected')};const challenge=controller.challengeWait('protected',{schoolMode:true});assert.equal(challenge.rung,'sums');
+  assert.equal(controller.answerWait('protected',challenge.nonce,challenge.question.map(({a,b})=>a+b)),true);
+  assert.equal(controller.waiting('protected'),0);assert.equal(controller.isLocked('protected'),true);assert.equal(controller.sessions.size,0);assert.equal(controller.attempts.get('protected').level,before.level);assert.equal(controller.attempts.get('protected').failures,before.failures);
+  assert.equal(controller.answerWait('protected',challenge.nonce,[]),false);assert.equal(await controller.unlock('protected',{pin:'1234'}),true);
+});
+test('all fixed access labels and local errors have Cantonese copy',async()=>{
+  const source=await readFile(new URL('../src/renderer/features/access/index.js',import.meta.url),'utf8');
+  for(const match of source.matchAll(/t\('[^']*','([^']*)'/g))assert.ok(ACCESS_COPY[match[1]],match[1]);
+  for(const name of ['crypto','locks','profile','qr']){const source=await readFile(new URL(`../src/renderer/features/access/${name}.js`,import.meta.url),'utf8');for(const match of source.matchAll(/throw (?:new )?Error\('([^']*)'/g))assert.ok(ACCESS_COPY[match[1]],match[1]);}
 });
