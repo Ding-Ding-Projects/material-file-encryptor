@@ -63,18 +63,83 @@ export function parseVocabulary(source) {
   return Object.freeze({ version: 1, replacements: Object.freeze(replacements.map(entry => Object.freeze({ ...entry }))) });
 }
 const matchers = new WeakMap();
-export function replaceVocabulary(text, vocabulary) {
-  let replace = matchers.get(vocabulary);
-  if (!replace) {
-    const entries = [...vocabulary.replacements].sort((a, b) => b.from.length - a.from.length);
-    const values = new Map(entries.map(entry => [entry.from, entry.to]));
-    const escape = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const pattern = entries.length ? new RegExp(entries.map(entry => escape(entry.from)).join('|'), 'gu') : null;
-    replace = value => pattern ? value.replace(pattern, match => values.get(match)) : value;
-    matchers.set(vocabulary, replace);
+export const RENDER_LIMITS = Object.freeze({ inputCodeUnits: 65536, outputCodeUnits: 262144, trieSteps: 1000000 });
+function compiledTrie(vocabulary) {
+  let root = matchers.get(vocabulary);
+  if (root) return root;
+  root = { children: new Map() };
+  for (const { from, to } of vocabulary.replacements) {
+    let node = root;
+    for (const character of from) {
+      if (!node.children.has(character)) node.children.set(character, { children: new Map() });
+      node = node.children.get(character);
+    }
+    node.replacement = to;
   }
+  matchers.set(vocabulary, root);
+  return root;
+}
+function protectedParts(text) {
+  const parts = [];
+  let position = 0, plainStart = 0;
+  while (position < text.length) {
+    if (/\s/u.test(text[position])) { position++; continue; }
+    const start = position;
+    let quote = null;
+    while (position < text.length) {
+      const character = text[position];
+      if (quote) { if (character === quote) quote = null; position++; continue; }
+      if ((character === '"' || character === "'" || character === '\x60') && (position === start || text[position - 1] === '=')) { quote = character; position++; continue; }
+      if (/\s/u.test(character)) break;
+      position++;
+    }
+    const token = text.slice(start, position);
+    const factualToken = token.replace(/^[([{"']+/u, '').replace(/[)\]}"',.;:!?]+$/u, '');
+    if (/[\\/]/u.test(token) || token.startsWith('--') || token.startsWith('\x60') || /\.(?:exe|json|js|dll|txt|md)\b/u.test(token) || /^[+-]?\d+(?:[.,]\d+)*(?:%|KiB|MiB|GiB|KB|MB|GB|bytes)?$/u.test(factualToken) || /^(?:KiB|MiB|GiB|KB|MB|GB|bytes)$/u.test(factualToken)) {
+      parts.push(text.slice(plainStart, start), token); plainStart = position;
+    }
+  }
+  parts.push(text.slice(plainStart));
+  return parts;
+}
+export function replaceVocabulary(text, vocabulary) {
+  const original = String(text);
+  if (original.length > RENDER_LIMITS.inputCodeUnits) return original;
+  const root = compiledTrie(vocabulary);
+  const output = [];
+  let outputLength = 0, steps = 0;
+  const append = value => {
+    outputLength += value.length;
+    if (outputLength > RENDER_LIMITS.outputCodeUnits) return false;
+    output.push(value); return true;
+  };
   // Protect factual values and technical examples even within a display label.
-  return String(text).split(/("[^"\r\n]*[\\/][^"\r\n]*"|'[^'\r\n]*[\\/][^'\r\n]*'|https?:\/\/[^\s]+|(?:[A-Za-z]:[\\/]|\/)[^\s]+|`[^`]*`|--[\w-]+(?:=(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s]+))?|(?:\.?\.?[\\/]|[\p{L}\p{N}\p{M}_.-]+[\\/])[^\s]+|\b[\w.-]+\.(?:exe|json|js|dll|txt|md)\b|\b\d+(?:[.,]\d+)*(?:\s*(?:KiB|MiB|GiB|KB|MB|GB|bytes|%))?)/gu).map((part, index) => index % 2 ? part : replace(part)).join('');
+  const parts = protectedParts(original);
+  for (let partIndex = 0; partIndex < parts.length; partIndex++) {
+    const part = parts[partIndex];
+    if (partIndex % 2) { if (!append(part)) return original; continue; }
+    let position = 0;
+    while (position < part.length) {
+      let node = root, cursor = position, end = position, replacement;
+      while (cursor < part.length) {
+        if (++steps > RENDER_LIMITS.trieSteps) return original;
+        const character = String.fromCodePoint(part.codePointAt(cursor));
+        node = node.children.get(character);
+        if (!node) break;
+        cursor += character.length;
+        if (Object.hasOwn(node, 'replacement')) { replacement = node.replacement; end = cursor; }
+      }
+      if (replacement !== undefined) {
+        if (!append(replacement)) return original;
+        position = end;
+      } else {
+        const character = String.fromCodePoint(part.codePointAt(position));
+        if (!append(character)) return original;
+        position += character.length;
+      }
+    }
+  }
+  return output.join('');
 }
 export const serializeVocabulary = vocabulary => JSON.stringify({ schemaVersion: 1, entries: Object.fromEntries(vocabulary.replacements.map(({from,to}) => [from,to])) });
 export const emptyVocabulary = () => parseVocabulary('{"schemaVersion":1,"entries":{}}');
