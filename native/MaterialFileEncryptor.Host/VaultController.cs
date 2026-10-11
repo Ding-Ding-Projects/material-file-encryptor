@@ -485,7 +485,7 @@ internal sealed partial class VaultController : IDisposable
     }
     public void SyncIfUnlocked()
     {
-        if (Interlocked.CompareExchange(ref syncFlight, 1, 0) != 0) return;
+        if (!TryBeginBackgroundWork()) return;
         VaultEngine? capturedEngine = null;
         IVaultTransport? capturedTransport = null;
         long generation = 0;
@@ -542,18 +542,26 @@ internal sealed partial class VaultController : IDisposable
         finally
         {
             lock (gate) { if (ReferenceEquals(syncCancellation, cancellation)) { syncCancellation = null; syncing = false; } }
-            Interlocked.Exchange(ref syncFlight, 0);
+            EndBackgroundWork();
         }
     }
     public void TickIfUnlocked()
     {
-        lock (gate)
+        if(!TryBeginBackgroundWork())return;
+        bool synchronize=false;
+        try
         {
-            if (vault is null || activePreparedOperations != 0) return;
-            Engine.SaveDueVersionsAsync(DateTimeOffset.UtcNow).GetAwaiter().GetResult();
-            if (DateTimeOffset.UtcNow < nextSyncAttempt || Volatile.Read(ref syncFlight) != 0) return;
+            lock (gate)
+            {
+                if (vault is null || activePreparedOperations != 0) return;
+                Engine.SaveDueVersionsAsync(DateTimeOffset.UtcNow).GetAwaiter().GetResult();
+                synchronize=DateTimeOffset.UtcNow>=nextSyncAttempt;
+            }
         }
-        _ = Task.Run(() => { try { SyncIfUnlocked(); } catch { /* Status retains the safe synchronization error. */ } });
+        finally{EndBackgroundWork();}
+        // The queued worker must acquire admission again. Force lock may win
+        // after the timer releases its reservation and before the task starts.
+        if(synchronize)_ = Task.Run(() => { try { SyncIfUnlocked(); } catch { /* Status retains the safe synchronization error. */ } });
     }
     private static object VersionInfo(VaultVersionInfo version) => new
     {

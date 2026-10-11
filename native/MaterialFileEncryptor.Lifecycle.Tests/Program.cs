@@ -7,6 +7,7 @@ if (args.Length == 2 && args[0] == "--journal-child") { JournalRegression.Child(
 CoreTransferRegression.Run();
 JournalRegression.Run();
 await StatusProtocolRegression.Run();
+await BackgroundAdmissionRegression.Run();
 
 var type = Assembly.Load("MaterialFileEncryptor.Host").GetType("MaterialFileEncryptor.Host.VaultController", true)!;
 object Make() => Activator.CreateInstance(type)!;
