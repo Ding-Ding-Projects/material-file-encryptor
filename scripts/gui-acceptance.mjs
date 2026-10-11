@@ -34,6 +34,9 @@ export function bindingFor({sourceCommit,executableSha256,resourceSha256,verifie
  validateInventory(inventory);
  return {sourceCommit,executableSha256,resourceSha256,verifierSha256,referenceSha256,inventorySha256:digest(inventory)};
 }
+export function validateBinding(binding,inventory) {
+ const expected=bindingFor({...binding,inventory});assert.deepEqual(binding,expected,'Complete exact candidate binding required');return binding;
+}
 export function admitRow(row,{tuple,state,binding}) {
  assert.equal(row.schemaVersion,1);assert.equal(row.status,'passed');assert.deepEqual(row.tuple,tuple);assert.deepEqual(row.binding,binding);
  assert.equal(row.route,'cheap-lowlevel-headless');assert.equal(row.captureKind,'packaged-renderer');
@@ -61,14 +64,26 @@ export async function verifyFiles(row,root) {
  return true;
 }
 export async function auditRun({inventory,binding,rows,root,physicalDpi}) {
- validateInventory(inventory);assert.equal(binding.inventorySha256,digest(inventory));
+ validateInventory(inventory);validateBinding(binding,inventory);
  const byKey=new Map();for(const row of rows){const key=tupleKey(row.tuple);assert.ok(!byKey.has(key),'Duplicate evidence row');byKey.set(key,row);}
  const planned=matrixFor(inventory),keys=new Set(planned.map(tupleKey));for(const key of byKey.keys())assert.ok(keys.has(key),'Unknown evidence tuple');
  const pending=[],reusable=[];
  for(const tuple of planned){const key=tupleKey(tuple),row=byKey.get(key);if(!row){pending.push({key,reason:'No evidence'});continue;}
   try{admitRow(row,{tuple,state:inventory.states.find(state=>state.id===tuple.state),binding});await verifyFiles(row,root);reusable.push(key);}catch(error){pending.push({key,reason:error.message});}
  }
- const dpiPassed=physicalDpi?.kind==='native-display-scale'&&axes.scales.every(scale=>physicalDpi.rows?.some(row=>row.scale===scale&&row.verified===true&&hashPattern.test(row.receiptSha256||'')));
+ let dpiPassed=false;
+ try{
+  assert.equal(physicalDpi?.kind,'native-display-scale');assert.deepEqual(physicalDpi.binding,binding);
+  assert.equal(physicalDpi.rows.length,axes.scales.length);
+  for(const scale of axes.scales){
+   const matches=physicalDpi.rows.filter(row=>row.scale===scale);assert.equal(matches.length,1);
+   const row=matches[0];assert.equal(row.verified,true);assert.ok(hashPattern.test(row.receiptSha256||''));assert.ok(typeof row.receiptPath==='string'&&!path.isAbsolute(row.receiptPath));
+   const base=await fs.realpath(root),file=await fs.realpath(path.resolve(base,row.receiptPath));assert.ok(file.startsWith(base+path.sep));
+   const bytes=await fs.readFile(file);assert.equal(sha256(bytes),row.receiptSha256);
+   const receipt=JSON.parse(bytes);assert.equal(receipt.kind,'native-display-scale');assert.equal(receipt.scale,scale);assert.deepEqual(receipt.binding,binding);assert.equal(receipt.verified,true);
+  }
+  dpiPassed=true;
+ }catch{}
  return {schemaVersion:1,expected:planned.length,reusable:reusable.length,pending,rendererMatrixPassed:pending.length===0,physicalDpiPassed:dpiPassed,passed:pending.length===0&&dpiPassed,reusableKeys:reusable};
 }
 // A separate ledger per state stays below the shared ledger's 128-phase bound.
