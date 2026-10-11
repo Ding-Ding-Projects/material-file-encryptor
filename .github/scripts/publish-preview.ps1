@@ -89,9 +89,8 @@ $download=Join-Path $env:RUNNER_TEMP ('preview-readback-'+[Guid]::NewGuid().ToSt
 New-Item -ItemType Directory $download | Out-Null
 $null=Gh @('release','download',$tag,'--repo',$repo,'--dir',$download)
 foreach ($asset in $assets) { Assert ((Digest (Join-Path $download (Split-Path $asset -Leaf))) -eq (Digest $asset)) 'DOWNLOADED_ASSET_MISMATCH' }
-$channelJson = & node scripts/release-channel.mjs $repo $releaseId $env:GITHUB_REF $source
-Assert ($LASTEXITCODE -eq 0) 'RELEASE_CHANNEL_VERIFICATION_FAILED'
-$channel = $channelJson | ConvertFrom-Json
+$channel = @{channel='download-only';promoted=$false;reason='awaiting-serialized-promotion'}
+@{schemaVersion=1;tag=$tag;sourceCommit=$source;releaseId="$releaseId";assets=@($assets | ForEach-Object { @{name=(Split-Path $_ -Leaf);bytes=(Get-Item $_).Length;sha256=Digest $_} })} | ConvertTo-Json -Depth 5 | Set-Content "$output/promotion-input.json" -Encoding utf8
 @{tag=$tag;sourceCommit=$source;url=$published.url;downloadHashesVerified=$true;channel=$channel;verifiedAtUtc=[DateTime]::UtcNow.ToString('o')} | ConvertTo-Json -Depth 5 | Set-Content "$output/publication-receipt.json" -Encoding utf8
 
 $workflowCompletedUtc=[DateTimeOffset]::UtcNow

@@ -10,6 +10,8 @@ The updater separately pins current main to an immutable commit and compares the
 
 Focused tests cover task-branch provider exclusion, stale completion, exact-main promotion, unavailable proof, and actual controller rejection before package availability or download. These source tests do not establish installed automatic-update or restart acceptance.
 
+Promotion runs in a separate main-only job after the build job succeeds. Its fixed repository-wide concurrency group uses `cancel-in-progress: false`; builds remain parallel. The job receives a small source-bound manifest from its own build, verifies the normal release identity, exact tag, asset inventory, byte counts, and every downloaded SHA-256 again, then checks current main immediately before promotion. Queued stale jobs preserve latest. Serialization prevents older promotion jobs from overwriting newer promotion jobs; the source read and API request still do not constitute a compare-and-swap transaction.
+
 ## API and host integration
 
 Create the service with `createUpdateService({ app, autoUpdater, dialog, fetch, isActiveWork, acquireInstallLease, prepareRestart, getLanguage })`. The first three objects are the native main-process APIs. `fetch` defaults to the built-in implementation and is injectable for tests. No new dependency is required.
