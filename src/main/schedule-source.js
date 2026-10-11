@@ -1,3 +1,4 @@
+import {validateSettingValues} from '../shared/local-ux/schedules.js';
 import {lookup as dnsLookup} from 'node:dns/promises';
 import https from 'node:https';
 import http from 'node:http';
@@ -17,18 +18,6 @@ export function isPublicAddress(address){
   if(first<0x2000||first>0x3fff)return false;
   const second=parseInt(address.split(':')[1]||'0',16);
   return !(first===0x2002||(first===0x2001&&(second<=0x1ff||second===0xdb8)));
-}
-function validateSettings(values){
-  if(!object(values)||Object.keys(values).length>12)fail('Invalid schedule settings.');
-  const enums={language:['en','yue','bilingual'],theme:['system','light','dark'],density:['compact','comfortable','spacious'],motion:['system','full','reduced']};
-  for(const [key,value]of Object.entries(values)){
-    if(enums[key]){if(!enums[key].includes(value))fail('Invalid scheduled setting value.');}
-    else if(['funnyEnglish','funnyCantonese','fontScale','fontWeight'].includes(key)){const [min,max]=key==='fontScale'?[.75,2]:key==='fontWeight'?[100,900]:[1,5];if(typeof value!=='number'||!Number.isFinite(value)||value<min||value>max)fail('Invalid scheduled numeric value.');}
-    else if(key==='emoji'){if(typeof value!=='boolean')fail('Invalid scheduled boolean.');}
-    else if(['seed','fontFamily','displayName'].includes(key)){if(typeof value!=='string'||value.length>160||/[\x00-\x1f\x7f]/.test(value)||(key==='seed'&&!/^#[0-9a-f]{6}$/i.test(value)))fail('Invalid scheduled text.');}
-    else fail('Unsupported schedule setting.');
-  }
-  return structuredClone(values);
 }
 function boundedJson(text){
   let value;try{value=JSON.parse(text);}catch{fail('Schedule source returned malformed JSON.');}
@@ -101,7 +90,7 @@ export function createScheduleSource({credentials,lookup=dnsLookup,request,allow
       const pin=await abortable(resolve(target),combined);if(combined.aborted)fail('Schedule source request cancelled.');
       let token;if(source.type==='home-assistant'){const stored=await abortable(credentials?.get('schedule:'+id),combined);if(!object(stored)||stored.origin!==target.url.origin)fail('A protected Home Assistant credential bound to this origin is required.');token=stored.token;if(typeof token!=='string'||!token||token.length>8192||/[\r\n]/.test(token))fail('A protected Home Assistant credential is required.');}
       const data=await load(target,pin,token,combined),checkedAt=new Date(now()).toISOString(),provenance={transport:target.url.protocol.slice(0,-1),host:target.host,sourceHash:identity,checkedAt};
-      if(source.type==='api'){if(!object(data)||Object.keys(data).some(k=>!['version','settings'].includes(k))||data.version!==1)fail('Expected a version 1 schedule settings response.');return {version:1,settings:validateSettings(data.settings),checkedAt,provenance};}
+      if(source.type==='api'){if(!object(data)||Object.keys(data).some(k=>!['version','settings'].includes(k))||![1,2].includes(data.version))fail('Expected a version 1 schedule settings response.');return {version:data.version,settings:validateSettingValues(data.settings),checkedAt,provenance};}
       if(!object(data)||data.entity_id!==target.entity||!['on','off'].includes(data.state))fail('Home Assistant returned an invalid boolean entity state.');
       return {state:data.state,active:data.state==='on',checkedAt,provenance};
     })().finally(()=>active.delete(key));

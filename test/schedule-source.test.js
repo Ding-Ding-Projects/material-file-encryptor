@@ -35,7 +35,7 @@ test('loopback development accepts only exact literal addresses and remains opt-
   }
 });
 test('redirects, oversized bodies, encodings and invalid schemas fail closed',async()=>{
-  const cases=[transport({}, {status:302}),transport('x'.repeat(32769)),transport({}, {headers:{'content-encoding':'gzip'}}),transport({version:2,settings:{theme:'dark'}}),transport({version:1,settings:{theme:'invented'}}),transport({version:1,settings:{credentials:'no'}}),transport('{"version":1,"version":1,"settings":{}}')];
+  const cases=[transport({}, {status:302}),transport('x'.repeat(32769)),transport({}, {headers:{'content-encoding':'gzip'}}),transport({version:3,settings:{theme:'dark'}}),transport({version:1,settings:{theme:'invented'}}),transport({version:1,settings:{credentials:'no'}}),transport('{"version":1,"version":1,"settings":{}}')];
   for(const request of cases){const source=createScheduleSource({lookup,request});await assert.rejects(source.fetch({type:'api',url:'https://schedule.example'},{id:'one'}));await source.dispose();}
 });
 test('Home Assistant reads protected credential and returns only boolean state plus safe provenance',async()=>{
@@ -63,4 +63,11 @@ test('protected Home Assistant credentials cannot follow a source to another ori
 test('refresh throttling and timeout bound asynchronous requests',async()=>{
   const source=createScheduleSource({lookup,request:transport({version:1,settings:{}}),minInterval:1000});const config={type:'api',url:'https://schedule.example'};await source.fetch(config,{id:'one'});await assert.rejects(source.fetch(config,{id:'one'}),/rate limited/);await source.dispose();
   const stalled=createScheduleSource({lookup,request:transport({}, {hang:true}),timeout:100});await assert.rejects(stalled.fetch(config,{id:'one'}),/timed out|cancelled/);await stalled.dispose();
+});
+
+
+test('version 2 external settings share nested validation and local snapshot references',async()=>{
+ const settings={narrator:{rate:1.5,language:'both'},attention:{focus:true},appearance:{version:1,reference:'evening-style'},logo:{version:1,reference:'evening-logo'}};
+ const source=createScheduleSource({lookup,request:transport({version:2,settings})});const result=await source.fetch({type:'api',url:'https://schedule.example'},{id:'nested'});assert.equal(result.version,2);assert.deepEqual(result.settings,settings);assert.ok(result.provenance);await source.dispose();
+ for(const values of [{narrator:{rate:9}},{attention:{enabled:true}},{logo:{version:1,reference:'x',data:'private'}},{school:{enabled:false}}]){const invalid=createScheduleSource({lookup,request:transport({version:2,settings:values})});await assert.rejects(invalid.fetch({type:'api',url:'https://schedule.example'},{id:'invalid'}));await invalid.dispose();}
 });
