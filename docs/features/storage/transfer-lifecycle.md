@@ -77,3 +77,11 @@ The optional lifecycle test modes `--large-import-only`, `--large-managed-only`,
 and `--large-background-only` exercise synthetic 512 MiB imports with a 10 MiB
 part cap. They distinguish core staging, managed source reads, and periodic
 controller work. They do not substitute for a packaged mounted-drive run.
+
+For trusted storage exceptions, operation diagnostics also include `storageStage`:
+`part-create`, `part-write`, `part-flush`, `part-finish-rename`, `part-cleanup`,
+`metadata-temp-create`, `metadata-write`, `metadata-flush`, `metadata-replace`, or
+`metadata-cleanup`. These fixed values identify the storage action; they do not
+expose a path or the operating-system message. A cleanup failure after a failed
+atomic metadata write preserves the original write exception and leaves the
+existing destination unchanged.
