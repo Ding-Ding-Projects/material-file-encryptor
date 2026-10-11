@@ -1,3 +1,7 @@
+# Native sharing lease and cloud delivery continuation, 2026-10-11
+
+Added an explicitly admitted native sharing lease and separately delivered verification DLL. Independent review corrected junction child lifetime, PowerShell receipt encoding and expected-source admission. The first admitted cloud DLL execution passed eight synthetic boundaries; trusted product IPC and a usable provider remain pending. Production uses exact root entrypoints on GitHub Actions. Main 10bfb081 normal v1.192.1 publication and live content are verified separately from complete v1.190.1 downloaded package acceptance. Wiki sections now use validated source names, preserving distinct anchors when page titles match. Current installed updating and full interface acceptance remain unfinished.
+
 # Installation and update repair continuation
 
 Replaced the blocked compiled archive adapter with supported .NET streaming recompression, verified the real Squirrel extractor against an incompressible nested archive, and added exact Setup embedded-package inspection. Updated the bilingual publication inventory. Current corrective installation, real updating and full-product acceptance remain pending.

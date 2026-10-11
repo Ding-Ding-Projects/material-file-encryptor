@@ -5,6 +5,9 @@
 - [x] Independently review and integrate f020 documentation/motion/guidance/server/font foundations, with 105 canonical IDs, 210 acceptance rows and 160 public routes.
 - [x] Verify main acbdf10 push and exact deployed documentation provenance, all 198 files, 6,430 internal references and repository homepage.
 - [x] Verify corrected main 6f cloud production and independently downloaded normal v1.190.1 : 763 CRC entries, 664 actual files, unsigned Setup embedding and zero of 6,242 privacy entries rejected.
+- [x] Verify main 10bfb081 cloud run 38124909972, normal v1.192.1 publication metadata and exact live delivery of 207 files / 6,596 internal references.
+- [x] Independently review native sharing lease 66b21b8, pass both exact cloud entrypoints and execute its admitted DLL across eight synthetic boundaries.
+- [ ] Finish trusted server IPC/runtime admission and usable provider integration; full four-target management remains incomplete.
 - [ ] Verify each subsequent integration against its own cloud source and package; earlier failures remain historical.
 - [x] Reproduce and independently refute actual Framework Task success-stream pollution at 3aa6eb6, including real portable activation output shape.
 - [x] Independently refute bounded download cache/replacement/junction recovery at 42ccd93; production HTTPS delivery remains separate.

@@ -1,3 +1,29 @@
+# Cloud production and bounded native lease acceptance, 2026-10-11 UTC
+
+Final integrated documentation checks passed 21/21 with zero skipped. Native admission/serialization checks passed 2/2 and package privacy consumers passed 4/4. The actual compiled native case passed separately for immutable 66b21b8; a combined source run explicitly skipped that case without its admitted DLL environment. These are distinct receipts, not a claim that this integration has already passed cloud or installed acceptance.
+
+The wiki aggregate now derives page section and nested fragment identities from validated source basenames, so matching page titles cannot collide. A real two-page regression was observed failing before repair; the final renderer review is dry. Source checks are separate from the new integration cloud and rendered acceptance.
+
+Production builds use GitHub Actions exact root build.bat /s and build-installer.bat /s, without CI tests or lint. Main 10bfb0813961b58f2f1d38c77e98bb23e87cc55a passed run 38124909972 and produced normal v1.192.1. Its direct source tag, both false draft/prerelease flags and all five expected assets are verified. Independently downloaded provenance and RELEASES agree with source, version and run. This is publication metadata proof; complete independent package acceptance remains specifically v1.190.1 at 6f85edfd.
+
+Exact 10bfb081 live documentation passed independent cloud-to-live comparison: all 207 files, 59,589,948 bytes and 6,596 internal references, zero missing files/anchors, stable provenance and exact stored About homepage. Historical screenshots remain historical. No current rebuilt capture is promoted.
+
+Native sharing-lease source 66b21b892276e4509a9389a37dc554d4eca46e00 passed both exact root entrypoints in run 38125667681 and produced normal v1.193.1 with its direct source tag and five assets. Two independent source review lenses are dry after child-free junction, BOM-free receipt and expected-source admission corrections. Four actual package privacy consumer checks passed. Original history and rejected fixture outputs are retained.
+
+The separately downloaded verifier DLL was independently admitted before its first normal execution. DLL SHA-256 783280a99479810ffe940e7f3929c8da4ca551ebfe20de2869d8dfbc3e2c8f79; pinned .NET host SHA-256 111da7b604cd196b49167cfeecdaef4034b58cc7de71a91cbf9e162c9e8b0931. Actual cloud source hashes match explicitly recorded CRLF projections of immutable LF source blobs. Actual compiled consumer passed 1/1 with normal exit and eight synthetic boundaries: held files/ancestors, retained unknown ownership, idempotent release, partial-acquisition release, existing writers, runtime root, junction rejection and preexisting mapping admission rejection on this host. All fixtures and source-specific receipts remain retained.
+
+This is a sharing primitive, not a usable server provider. Trusted host IPC admission, runtime approval, ownership retention across IPC and full four-target server management remain pending. The mapping result on this host does not establish general immutable-byte protection. Product runtimeAcceptance remains not-run and ipcIntegration remains pending.
+
+The current main integration contains this verified bounded unit, both complete wiki pages and factual records. Its own cloud production, release, downloaded package and live verdicts remain pending a new source-bound run. Earlier results are never relabelled as evidence for this integration.
+
+Installed automatic startup/download/ready/Later remains unrun. The latest observed free physical memory was 964,448 KiB against the unchanged 1,572,864 KiB launch requirement. Native restart continuity and the stopped shell probe remain separate unresolved boundaries; no execution-policy override or alternate probe retry is authorized. Full settings, image/typography editors, animation, guidance, current captures and all 210 complete-surface acceptance rows remain unfinished.
+
+All eight worktrees, unmerged branches, unknown-outcome profiles, historical captures and ignored announcement variants remain retained. A previous profile deletion was automatically rejected as blocked by policy; no alternative deletion is attempted. Full archive, ownership and ancestry qualification remain incomplete, so no deletion is claimed. Status Hub authentication and Projects remain unavailable as previously recorded.
+
+The main checkout owns integration; immutable native observer source 5d8bb980 remains pinned. Server 66b21b8, docs 91af93dc, runtime 3aa6eb6, installer dd56c45, lock b516d3e and PNG fd259295 remain recoverable. Public issue 3 and rolling Discussion 2 carry source-specific milestones. The active goal remains unfinished. Continue the existing verification queue, preserve coherent work by the 95% goal boundary and start no new lane or external operation after 90%.
+
+Earlier sections below retain their original observation dates, sources and pending states. They are historical records.
+
 # Verified cloud release and live delivery, 2026-10-11 UTC
 
 Both exact Windows root entrypoints passed on GitHub Actions for main e3b0fc1 (run 38123676422, normal v1.187.1) and main 6f85edfd6dd36acb0216ab5b8f15001cd69b7a01 (run 38123945653, normal v1.190.1). Both immutable tags point directly to their intended source, both draft/prerelease flags are false, and all five expected assets are present.

@@ -29,3 +29,7 @@
 `validateFeatureDelivery(manifest, exists?)` 係離線結構檢查，強制獨立必要 ID 清單、每個 ID 恰好一個桌面同網站列、聲明範圍語義、有長度限制而非空原因、安全而有上限路徑陣列（包括持久化），同每條參照路徑嘅完整提交 ID。實作缺失絕不構成範圍豁免。可選存在性回呼可以檢查本機檔案；冇回呼唔代表已檢查 Git 物件。
 
 `verifyFeatureDeliveryReferences(manifest, { repositoryPath, timeoutMs, totalTimeoutMs })` 另外用 Git CLI 要求每個記錄提交／路徑解析為 blob。每條命令最多十秒，整次最多六十秒。冇儲存庫存取或者總期限屆滿，回傳 `referenceVerification: unverified`；記錄檔案缺失則回傳 `failed`。離線套件應用結構驗證，同保留呢個來源存在性未驗證邊界。淺層複製可能要先取得所記錄審閱提交，先可以通過儲存庫感知檢查。兩種結果都唔證明已建置行為或者視覺證據。
+
+## Wiki頁面識別
+
+整合wiki用每頁已驗證來源檔案嘅基本名稱建立章節識別，包括 `wiki-Home` 同 `wiki-CLOSEOUT_PROMPT`。內層標題ID同同頁片段連結使用同一個頁面前綴。兩頁完整內容可以同名，而唔會衝突或遺失內容。原始Markdown標題同原始位元組來源雜湊保持不變。回歸測試實際產生兩頁同名標題，核對獨立ID、每個本地片段目標，以及兩個完整標題都仍然存在。

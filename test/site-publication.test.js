@@ -81,8 +81,23 @@ test('wiki underscore basename renders the actual continuation snapshot',async()
  const articles=await buildDocumentation(temp,output,await fs.readFile('docs/site/index.html','utf8'));
  assert.equal(articles.length,2);assert.equal(articles.find(article=>article.source==='docs/site/wiki/CLOSEOUT_PROMPT.md')?.markdown,markdown);
  const html=await fs.readFile(path.join(output,'articles/wiki--CLOSEOUT_PROMPT.html'),'utf8');
- assert.ok(html.includes('Material File Encryptor continuation'));
+ assert.ok(html.includes('Cloud production and bounded native lease acceptance'));
  assert.ok(html.includes('Wiki CLOSEOUT_PROMPT'));
+ }finally{await fs.rm(temp,{recursive:true,force:true});}
+});
+test('wiki pages with matching titles retain distinct section and fragment identities',async()=>{
+ const temp=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-wiki-titles-'));
+ try{
+ await fs.mkdir(path.join(temp,'docs/site/wiki'),{recursive:true});await fs.mkdir(path.join(temp,'docs/features'),{recursive:true});
+ const markdown='# Shared heading\n\n[Jump](#shared-heading)\n';const bytes=Buffer.from(markdown);
+ const files=['CLOSEOUT_PROMPT.md','Home.md'];const fileSha256={};
+ for(const file of files){await fs.writeFile(path.join(temp,'docs/site/wiki',file),bytes);fileSha256[file]=createHash('sha256').update(bytes).digest('hex');}
+ await fs.writeFile(path.join(temp,'docs/site/content-catalog.json'),JSON.stringify({...catalog,articles:[],categories:[],wiki:{...catalog.wiki,files,fileSha256}}));
+ const output=path.join(temp,'output');await buildDocumentation(temp,output,await fs.readFile('docs/site/index.html','utf8'));
+ const html=await fs.readFile(path.join(output,'wiki.html'),'utf8');const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]);
+ assert.equal(ids.length,new Set(ids).size);assert.ok(ids.includes('wiki-Home'));assert.ok(ids.includes('wiki-CLOSEOUT_PROMPT'));
+ for(const [,fragment] of html.matchAll(/href="#([^"]+)"/g))assert.ok(ids.includes(fragment),fragment);
+ assert.equal([...html.matchAll(/<h2 id="wiki-(?:Home|CLOSEOUT_PROMPT)-shared-heading">Shared heading<a class="heading-link"/g)].length,2);
  }finally{await fs.rm(temp,{recursive:true,force:true});}
 });
 test('source-bound wiki hashes reject edited snapshot content before publication',async()=>{

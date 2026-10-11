@@ -118,6 +118,8 @@
     "docs/features/server-manager/README.zh-HK.md",
     "docs/features/server-manager/foundation.md",
     "docs/features/server-manager/foundation.zh-HK.md",
+    "docs/features/server-manager/native-file-lease.md",
+    "docs/features/server-manager/native-file-lease.zh-HK.md",
     "docs/features/storage/README.md",
     "docs/features/storage/README.zh-HK.md",
     "docs/features/storage/file-history-activity.md",
@@ -162,15 +164,15 @@
   "wiki": {
     "status": "available",
     "source": "https://github.com/Ding-Ding-Projects/material-file-encryptor/wiki",
-    "sourceCommit": "8b54a9a9c98f674fcb9f278af447475119cbd40e",
+    "sourceCommit": "03afffe1d8d13a750ae954a0f26720e11fe2e8a9",
     "files": [
       "CLOSEOUT_PROMPT.md",
       "Home.md"
     ],
     "previousBoundary": "An earlier attempt returned Repository not found. A subsequent Git CLI read succeeded; this snapshot contains every Markdown page in that fetched revision.",
     "fileSha256": {
-      "CLOSEOUT_PROMPT.md": "e82054f8f6e44edc792839fdd1ae6686b3e4c506de8eba6f7573711a455415d9",
-      "Home.md": "6cc077f9cb89541101aec721d056538cffe520279930715b4a25f1ee3d079e4e"
+      "CLOSEOUT_PROMPT.md": "738a4a6598b147f4b93062df3f826d15a24a8937aa8376565d79f1e6639b96fa",
+      "Home.md": "66cd00019ce726d68ea20d9e6d880ce9aed2965010fa13690addcd3c567d1b76"
     }
   },
   "excluded": [
