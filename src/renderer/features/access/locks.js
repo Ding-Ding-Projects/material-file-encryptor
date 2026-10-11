@@ -4,7 +4,7 @@ export const LOCK_POLICIES = Object.freeze({pin:['pin'],password:['password'],'p
 export class LockController {
   constructor({store,now=Date.now,onBlocked=()=>{},getDishChallenge,waitBudget}={}) { this.store=store;this.now=now;this.onBlocked=onBlocked;this.records=new Map();this.sessions=new Map();this.attempts=new Map();this.creating=new Set();this.generations=new Map();this.removing=new Set();this.waitLadder=new WaitLadder({now,getDishChallenge,budget:waitBudget});this.waitTarget=null; }
   async load(ids=[]) { if(!this.store) return; for(const id of ids){const record=await this.store.get(`element-lock:${id}`);if(record)this.records.set(id,record);} }
-  async set(id,policy,credentials,duration=0) {
+  async set(id,policy,credentials,duration=0,sessionMode='timed') {
     if(!id||!LOCK_POLICIES[policy])throw new Error('Select a valid lock policy.');
     if(this.creating.has(id)||this.records.has(id))throw new Error('This element already has a lock. Unlock and remove that lock before creating a replacement.');
     this.creating.add(id);
@@ -15,12 +15,13 @@ export class LockController {
       if(factor==='totp') {if(!credentials.totp || !await verifyTotp(credentials.totp,credentials.code,this.now()))throw new Error('Confirm the authenticator code first.');factors.totp=structuredClone(credentials.totp);}
       else {if(factor==='pin'&&!/^\d{4,12}$/.test(credentials.pin))throw new Error('Use a PIN of 4 to 12 digits.');factors[factor]=await passwordVerifier(credentials[factor]);}
     }
-    const record={version:1,id,policy,factors,duration:Math.max(0,Math.min(Number(duration)||0,1440)),revision:randomId()};
+    if(!['timed','once'].includes(sessionMode))throw new Error('Select a valid unlock session.');
+    const record={version:1,id,policy,factors,sessionMode,duration:Math.max(0,Math.min(Number(duration)||0,1440)),revision:randomId()};
     if(this.store)await this.store.set(`element-lock:${id}`,record);
     this.records.set(id,record);this.sessions.delete(id);return this.describe(id);
     } finally { this.creating.delete(id); }
   }
-  describe(id) {const r=this.records.get(id);return r?{id,policy:r.policy,duration:r.duration,locked:this.isLocked(id)}:null;}
+  describe(id) {const r=this.records.get(id);return r?{id,policy:r.policy,duration:r.duration,sessionMode:r.sessionMode||'timed',locked:this.isLocked(id)}:null;}
   list(){return [...this.records.keys()].map(id=>this.describe(id));}
   isLocked(id){if(!this.records.has(id))return false;const until=this.sessions.get(id);return until===undefined||until<=this.now();}
   generation(id){return this.generations.get(id)||0;}
@@ -78,9 +79,9 @@ export class LockController {
     if(!valid){a.failures++;if(a.failures>=5){a.level++;a.until=this.now()+Math.min(3600000,30000*2**(a.level-1));a.failures=0;}this.attempts.set(id,a);return false;}
     this.attempts.delete(id);this.sessions.set(id,r.duration?this.now()+r.duration*60000:Infinity);return true;
   }
-  run(id,callback,...args){if(this.isLocked(id)){this.onBlocked(id);return false;}return callback(...args);}
+  run(id,callback,...args){if(this.isLocked(id)){this.onBlocked(id);return false;}if(this.records.get(id)?.sessionMode==='once')this.lock(id);return callback(...args);}
   intercept(root,identity=element=>element.closest('[data-lock-id]')?.dataset.lockId){
-    const handler=event=>{const id=identity(event.target);if(id&&this.isLocked(id)){event.preventDefault();event.stopImmediatePropagation();this.onBlocked(id,event.target);}};
+    const handler=event=>{const id=identity(event.target);if(id&&this.isLocked(id)){event.preventDefault();event.stopImmediatePropagation();this.onBlocked(id,event.target);}else if(id&&this.records.get(id)?.sessionMode==='once'&&['click','change','submit','dragstart'].includes(event.type)){this.lock(id);}};
     const events=['click','dblclick','pointerdown','keydown','input','change','submit','dragstart'];events.forEach(name=>root.addEventListener(name,handler,true));
     return ()=>events.forEach(name=>root.removeEventListener(name,handler,true));
   }
