@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "workflow": ".github/workflows/windows.yml",
+  "freshEnvironmentVerification": "unverified until an actual hosted cache-miss receipt is retained",
+  "jobs": {
+    "windows": {
+      "tools": [
+        "Windows PowerShell 5.1",
+        "cmd.exe",
+        "Git",
+        "GitHub CLI",
+        "Node.js",
+        "npm",
+        "pinned .NET SDK",
+        "7-Zip",
+        "NuGet",
+        "WinFsp packaging files"
+      ],
+      "versions": "dependencies.json and scripts/bootstrap.ps1; host shells supplied by windows-2022",
+      "bootstrapMarkers": [
+        "run: build.bat /s",
+        "run: build-installer.bat /s",
+        ". ./scripts/bootstrap.ps1"
+      ],
+      "route": "Root build entrypoints bootstrap verified pinned portable tools; driver installation is not requested by this workflow."
+    },
+    "promote": {
+      "tools": [
+        "Windows PowerShell >=5.1",
+        "Git",
+        "GitHub CLI",
+        "Node.js"
+      ],
+      "versions": "dependencies.json; PowerShell version checked by bootstrap-promotion.ps1",
+      "bootstrapMarkers": [
+        ". ./.github/scripts/bootstrap-promotion.ps1"
+      ],
+      "route": "RuntimeToolsOnly verifies complete pinned portable Git and GitHub CLI; Activate-PortableTool verifies pinned Node archive and complete extraction. No .NET SDK, archive executable, NuGet, WinFsp, or application build is needed."
+    }
+  }
+}

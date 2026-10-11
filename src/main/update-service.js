@@ -175,6 +175,15 @@ export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl
         /^[a-f0-9]{40}$/.test(provenance.sourceCommit) && VERSION.test(provenance.packageVersion) && Array.isArray(provenance.assets) && provenance.assets.length <= 100, 'INVALID_PROVENANCE');
       const ref = await metadata(`${API}/git/ref/tags/${release.tag_name}`, signal);
       assert(ref.ref === `refs/tags/${release.tag_name}` && ref.object?.type === 'commit' && ref.object.sha === provenance.sourceCommit, 'SOURCE_COMMIT_MISMATCH');
+      const main = await metadata(`${API}/git/ref/heads/main`, signal);
+      assert(main.ref === 'refs/heads/main' && main.object?.type === 'commit' && /^[a-f0-9]{40}$/.test(main.object.sha), 'INVALID_UPDATE_CHANNEL_PROOF');
+      // Page two omits changed-file patches, while retaining comparison summary metadata.
+      const proof = await metadata(`${API}/compare/${provenance.sourceCommit}...${main.object.sha}?per_page=1&page=2`, signal);
+      assert(proof.base_commit?.sha === provenance.sourceCommit && proof.merge_base_commit?.sha === provenance.sourceCommit &&
+        proof.behind_by === 0 && Number.isSafeInteger(proof.ahead_by) && Number.isSafeInteger(proof.total_commits) &&
+        proof.total_commits === proof.ahead_by && Array.isArray(proof.commits) && proof.commits.length <= 1 && !Object.hasOwn(proof, 'files') &&
+        ((proof.status === 'identical' && proof.ahead_by === 0 && main.object.sha === provenance.sourceCommit) ||
+         (proof.status === 'ahead' && proof.ahead_by > 0 && main.object.sha !== provenance.sourceCommit)), 'UPDATE_SOURCE_NOT_ON_MAIN');
       const releasesText = await metadata(base + 'RELEASES', signal, false, true);
       const releasesRecord = provenance.assets.filter(a => a.name === 'RELEASES');
       assert(releasesRecord.length === 1 && releasesRecord[0].bytes === Buffer.byteLength(releasesText) &&

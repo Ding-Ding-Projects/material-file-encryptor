@@ -2,6 +2,16 @@
 
 `src/main/update-service.js` implements a main-process controller with desktop source integration. No installed application, installer, release, or operating-system restart was exercised while developing this module. Native acceptance remains unverified.
 
+## Default release channel
+
+Every branch may publish a normal downloadable release. Publication initially sets `latest=false`. Only a workflow for `refs/heads/main` may promote a release, after published assets, tag identity, and downloaded hashes have passed verification. Immediately before promotion, `scripts/release-channel.mjs` reads current main and requires its exact source commit to equal the release source. A superseded main run or another branch leaves latest unchanged. The publication receipt records the channel decision and checked main source when available. GitHub provides no conditional compare-and-swap promotion API, so this check does not claim an atomic transaction across a concurrent main advance.
+
+The updater separately pins current main to an immutable commit and compares the release source against that commit. Only an identical source or an ancestor of pinned main is eligible. A newer semantic version from a divergent or unmerged branch is rejected before feed or package transfer. Missing, inconsistent, oversized, or unavailable ancestry metadata fails closed. The comparison requests `per_page=1&page=2`, because GitHub includes changed-file patches only on the first page; the existing 1 MiB metadata limit remains unchanged. See the [official comparison API contract](https://docs.github.com/en/rest/commits/commits#compare-two-commits).
+
+Focused tests cover task-branch provider exclusion, stale completion, exact-main promotion, unavailable proof, and actual controller rejection before package availability or download. These source tests do not establish installed automatic-update or restart acceptance.
+
+Promotion runs in a separate main-only job after the build job succeeds. Its fixed repository-wide concurrency group uses `cancel-in-progress: false`; builds remain parallel. The job receives a small source-bound manifest from its own build, verifies the normal release identity, exact tag, asset inventory, byte counts, and every downloaded SHA-256 again, then checks current main immediately before promotion. Queued stale jobs preserve latest. Serialization prevents older promotion jobs from overwriting newer promotion jobs; the source read and API request still do not constitute a compare-and-swap transaction.
+
 ## API and host integration
 
 Create the service with `createUpdateService({ app, autoUpdater, dialog, fetch, isActiveWork, acquireInstallLease, prepareRestart, getLanguage })`. The first three objects are the native main-process APIs. `fetch` defaults to the built-in implementation and is injectable for tests. No new dependency is required.
