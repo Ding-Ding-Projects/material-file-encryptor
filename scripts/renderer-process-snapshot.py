@@ -51,6 +51,8 @@ class Native:
             'Process32FirstW': ([W.HANDLE, ctypes.POINTER(ENTRY)], W.BOOL),
             'Process32NextW': ([W.HANDLE, ctypes.POINTER(ENTRY)], W.BOOL),
             'OpenProcess': ([W.DWORD, W.BOOL, W.DWORD], W.HANDLE),
+            'GetProcessId': ([W.HANDLE], W.DWORD),
+            'GetExitCodeProcess': ([W.HANDLE, ctypes.POINTER(W.DWORD)], W.BOOL),
             'GetProcessTimes': ([W.HANDLE] + [ctypes.POINTER(W.FILETIME)] * 4, W.BOOL),
             'QueryFullProcessImageNameW': ([W.HANDLE, W.DWORD, W.LPWSTR, ctypes.POINTER(W.DWORD)], W.BOOL),
             'WaitForSingleObject': ([W.HANDLE, W.DWORD], W.DWORD),
@@ -106,6 +108,20 @@ class Native:
             raise SnapshotError('Process liveness is unavailable.')
         return result == 0
 
+    def exit_record(self, handle):
+        if handle is None or not self.exited(handle):
+            raise SnapshotError('Held process has not signaled exit.')
+        pid = self.k.GetProcessId(handle)
+        if not pid:
+            raise SnapshotError('Held process ID is unavailable.')
+        created, ended, kernel, user = (W.FILETIME() for _ in range(4))
+        if not self.k.GetProcessTimes(handle, ctypes.byref(created), ctypes.byref(ended), ctypes.byref(kernel), ctypes.byref(user)):
+            raise SnapshotError('Held process creation time is unavailable.')
+        code = W.DWORD()
+        if not self.k.GetExitCodeProcess(handle, ctypes.byref(code)) or not self.exited(handle):
+            raise SnapshotError('Held process exit result is unavailable.')
+        return {'pid': int(pid), 'creationDate': creation_date((created.dwHighDateTime << 32) | created.dwLowDateTime), 'exitCode': int(code.value)}
+
     def observe(self, handle, pid, parent, allow_exited=False):
         if handle is None:
             raise SnapshotError('Selected process disappeared during proof.')
@@ -120,6 +136,16 @@ class Native:
         if self.exited(handle) and not allow_exited:
             raise SnapshotError('Process exited during identity observation.')
         return {'pid': pid, 'parentPid': parent, 'creationDate': creation_date((created.dwHighDateTime << 32) | created.dwLowDateTime), 'executablePath': path.value}
+
+
+def validate_exit_record(expected, record):
+    if not isinstance(record, dict) or set(record) != {'pid', 'creationDate', 'exitCode'}:
+        raise SnapshotError('Held exit record is incomplete.')
+    if record['pid'] != expected['pid'] or record['creationDate'] != expected['creationDate']:
+        raise SnapshotError('Held process execution identity changed.')
+    if type(record['exitCode']) is not int or not 0 <= record['exitCode'] <= 0xFFFFFFFF:
+        raise SnapshotError('Held process exit status is invalid.')
+    return record
 
 
 def descendants(rows, root):
@@ -209,12 +235,17 @@ class Proof:
                 exited = self.api.exited(handle)
                 if pid not in rows and not exited:
                     raise SnapshotError('Running process appeared during absence proof.')
-                current = self.api.observe(handle, pid, rows.get(pid, expected['parentPid']), allow_exited=True)
-                if not self.lifecycle._same_process(expected, current) or current['parentPid'] != expected['parentPid']:
-                    raise SnapshotError('Recorded process identity changed.')
-                if not exited:
+                if exited:
+                    record = validate_exit_record(expected, self.api.exit_record(handle))
+                    if pid in rows and rows[pid] != expected['parentPid']:
+                        raise SnapshotError('Recorded process parent identity changed.')
+                    verdicts.append({'pid': pid, 'verdict': 'exited-object-observed', 'exitCode': record['exitCode'], 'identityBasis': 'recorded-image-and-parent-plus-current-kernel-pid-and-creation'})
+                else:
+                    current = self.api.observe(handle, pid, rows[pid])
+                    if not self.lifecycle._same_process(expected, current) or current['parentPid'] != expected['parentPid']:
+                        raise SnapshotError('Recorded process identity changed.')
                     present = True
-                verdicts.append({'pid': pid, 'verdict': 'exited-object-observed' if exited else 'execution-present'})
+                    verdicts.append({'pid': pid, 'verdict': 'execution-present'})
         self.last_absence = {
             'recordedProcessesExited': not present,
             'recordedExecutionVerdicts': verdicts,
