@@ -1,7 +1,8 @@
 # Local font metadata and variable axes
 
 This source foundation reads local font metadata and supplies a separate typed
-axis picker. It is not yet mounted in the appearance editor. No native or browser
+axis picker. The source appearance workflow now mounts it through the original
+validated mutation, persistence and history path. No native or browser
 interaction acceptance is claimed.
 
 ## Local inventory
@@ -29,8 +30,10 @@ relative file identity and collection index, without an absolute host path.
 `personalization.fontMetadata` accepts an optional `requestId`. The matching
 `personalization.cancelFontMetadata` aborts that request. Progress events use
 `fontMetadataProgress` and include the request identity and outcome counts.
-The existing `listFonts` family-name result remains unchanged. Desktop action
-allowlisting and the actual editor mount must be integrated before exposure.
+The existing `listFonts` family-name result remains unchanged. Desktop source
+action allowlisting and editor service hooks are wired. Admission through the
+shipped native backend remains unverified and a rejected bridge request is shown
+as unavailable, never replaced with an invented installed inventory.
 
 `mountFontPicker` accepts a catalogue, `getCurrent`, `mutate`, `translate`,
 `attachSearch`, `registerHelp` and `disabled`. It offers searchable face names,
@@ -76,3 +79,21 @@ the provider with SHA-256
 Subsequent relative-identity and resource-bound changes are fixture-verified, not relabelled as
 part of that earlier probe. No font installation, raw-byte export, GUI drive or
 build occurred.
+
+## Appearance workflow source integration
+
+The actual appearance editor offers metadata discovery, matching request progress
+and cancellation, searchable face selection, numeric axes and named instances.
+Layer edit locks and the original validated mutation remain authoritative. Each
+accepted font edit creates one original appearance change; out-of-range drafts,
+explicit false results and rejected saves cannot become successful selection.
+Reopening the editor restores a uniquely mapped regular family and saved axes
+from its persisted properties after metadata becomes available again.
+
+This browser workflow does not request installed-device inventory. Declared
+bundled descriptors can be supplied, but the current mount has no staged bundled
+font bytes and explicitly reports that boundary. A CSS fallback family name is
+not proof of a bundled asset. Bundled staging, renderer asset validation, exact
+non-Regular face mapping, full typography depth, native bridge acceptance and
+replacement screenshots remain pending. Component fixtures prove source
+consumers and teardown, not rendered font identity or production acceptance.

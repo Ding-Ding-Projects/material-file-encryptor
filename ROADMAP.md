@@ -4,7 +4,8 @@
 - [x] Pass genuine mounted lifecycle against exact f8 product bytes with the separately cloud-compiled b516 verifier; retain exact source-specific receipt and normal process/drive/fixture absence proof.
 - [x] Independently review and integrate f020 documentation/motion/guidance/server/font foundations, with 105 canonical IDs, 210 acceptance rows and 160 public routes.
 - [ ] Verify this integration's main push, cloud production, normal release and actual live documentation assets/routes/homepage.
-- [ ] Repair and independently verify installed-font mount rollback/subscription recovery and cached bundled-font cancellation; integrate build/site hooks after acceptance.
+- [x] Repair and independently refute installed-font mount rollback/subscription recovery and cached bundled-font cancellation; source acceptance only.
+- [ ] Integrate and verify bundled-font build/site hooks, actual face forwarding and rendered controls.
 - [ ] Verify persistent launch observer on the intended installed candidate and the restart isolation selector before any actual native update.
 - [ ] Prove installed automatic download, ready/Later behavior, active-work refusal and native update/restart without real-profile access.
 - [ ] Complete every app/site/settings/editor/motion/guidance/server feature and its genuine built-surface evidence; all 210 complete-surface rows remain unverified.
