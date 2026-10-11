@@ -16,7 +16,7 @@ The examined host has GCC 13.2.0 (MinGW-W64 x86_64-ucrt-posix-seh, r8), GNU Make
 node scripts/converter-minimal-runtime.mjs <build-directory> <bash.exe> <gcc-directory> <mingw32-make.exe>
 ```
 
-The script downloads only the two pinned source archives, verifies both hashes before executing configure, builds zlib's static target with its supplied `win32/Makefile.gcc`, then configures and builds FFmpeg and FFprobe. The exact configure argument inventory is exported from the script and checked by `test/converter-minimal-recipe.test.js`. A local receipt records the resulting executable hashes. The build is bounded to four compilation jobs and a 30-minute parent deadline.
+The script downloads only the two pinned source archives, verifies both hashes before executing configure, builds zlib's static target with its supplied `win32/Makefile.gcc`, then configures and builds FFmpeg and FFprobe. The exact configure argument inventory is exported from the script and checked by `test/converter-minimal-recipe.test.js`. A local receipt records the resulting executable hashes. The build is bounded to two compilation jobs and a 30-minute parent deadline.
 
 ## Intended capabilities
 
