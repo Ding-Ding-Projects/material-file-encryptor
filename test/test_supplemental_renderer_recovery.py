@@ -175,6 +175,11 @@ class Tests(unittest.TestCase):
         class WrongCommand(Commands):
             def command(self,handle): return 'unrelated command' if handle==79 else super().command(handle)
         with self.assertRaises(recovery.Error), recovery.owning_client(80,client,api=api,binding=WrongCommand(),configuration=configuration): pass
+        with self.assertRaises(recovery.Error) as captured:
+            with recovery.owning_client(80,client,api=api,binding=WrongCommand(),configuration=configuration): pass
+        self.assertEqual(captured.exception.launcherDiagnostic['actualCommand'], 'unrelated command')
+        self.assertTrue(captured.exception.launcherDiagnostic['imageMatches'])
+        self.assertFalse(captured.exception.launcherDiagnostic['commandMatches'])
         changed={**client,'clientIdentity':{**node,'creationDate':'2026-10-09T12:00:00.1234559Z'}}
         with self.assertRaises(recovery.Error), recovery.owning_client(80,changed,api=api,binding=binding,configuration=configuration): pass
         own_direct={**own,'parentPid':80}

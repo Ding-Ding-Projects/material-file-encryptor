@@ -308,7 +308,20 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
         if chain[0][0]['executablePath'] != configuration['base'] or chain[0][1] != configuration.get('baseCommand', configuration['command']):
             raise Error('Actual Python execution image or command differs.')
         if len(chain) == 3 and (chain[1][0]['executablePath'] != configuration['launcher'] or chain[1][1] != configuration['command']):
-            raise Error('Intermediate Python launcher image or command differs.')
+            error = Error('Intermediate Python launcher image or command differs.')
+            actual_identity, actual_command, _ = chain[1]
+            # Diagnostics concern only the selected direct interpreter ancestor.
+            # Preserve rejection; never search other process command lines.
+            error.launcherDiagnostic = {
+                'expectedImage': configuration['launcher'],
+                'actualIdentity': actual_identity,
+                'imageMatches': actual_identity['executablePath'] == configuration['launcher'],
+                'commandMatches': actual_command == configuration['command'],
+                'expectedCommand': configuration['command'] if len(configuration['command']) <= 4096 else None,
+                'actualCommand': actual_command if actual_identity['executablePath'] == configuration['launcher'] and len(actual_command) <= 4096 else None,
+                'actualCommandRetained': actual_identity['executablePath'] == configuration['launcher'] and len(actual_command) <= 4096,
+            }
+            raise error
         if any(chain[i][0]['creationDate'] < chain[i+1][0]['creationDate'] for i in range(len(chain)-1)):
             raise Error('Client launcher creation ancestry differs.')
         observed = {'clientIdentity': chain[-1][0], 'clientCommand': chain[-1][1], 'routeFiles': configuration['files']}
