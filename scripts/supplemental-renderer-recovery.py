@@ -252,6 +252,23 @@ class Recovery:
             time.sleep(0.2)
 
 
+def configured_base_interpreter(values, launcher, actual_base):
+    """Resolve stdlib or uv venv metadata against this executing interpreter."""
+    home = Path(values.get('home', ''))
+    if not home.is_absolute() or launcher.parent.name.lower() != 'scripts' or values.get('include-system-site-packages') != 'false':
+        raise Error('Supported isolated Python launcher configuration is required.')
+    executable = values.get('executable')
+    if executable:
+        base = Path(executable)
+    elif values.get('implementation') == 'CPython' and values.get('uv'):
+        base = home / 'python.exe'
+    else:
+        raise Error('Base interpreter metadata is unavailable.')
+    if not base.is_absolute() or base.parent != home or base != Path(actual_base):
+        raise Error('Configured base interpreter differs from the executing interpreter.')
+    return base
+
+
 @contextmanager
 def owning_client(client_pid, expected=None, api=None, binding=None, configuration=None):
     """Hold exact self/optional venv launcher/Node identities across proof."""
@@ -263,9 +280,7 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
         node = Path(os.environ['MFE_RENDERER_NODE_EXECUTABLE'])
         cfg = launcher.parent.parent / 'pyvenv.cfg'
         values = dict(line.split(' = ', 1) for line in cfg.read_text().splitlines() if ' = ' in line)
-        base = Path(values['executable'])
-        if launcher.parent.name.lower() != 'scripts' or values.get('include-system-site-packages') != 'false' or Path(values.get('home', '')) != base.parent:
-            raise Error('Supported isolated Python launcher configuration is required.')
+        base = configured_base_interpreter(values, launcher, sys._base_executable)
         configuration = {'launcher': str(launcher), 'base': str(base), 'node': str(node), 'files': {str(p): digest(p) for p in [launcher, base, cfg, node]}, 'command': subprocess.list2cmdline([os.environ['MFE_LOWLEVEL_PYTHON'], *sys.argv]), 'selfPid': os.getpid()}
     rows, chain = api.inventory(), []
     current = configuration['selfPid']
