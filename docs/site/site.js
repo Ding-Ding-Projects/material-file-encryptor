@@ -153,8 +153,9 @@ vocabularyFile.addEventListener('change', async () => {
   const version = ++uploadVersion; const file = vocabularyFile.files[0]; if (!file) return;
   try {
     if (file.size > 256 * 1024) throw new Error('Vocabulary JSON must be no larger than 256 KiB.');
-    const next = parseVocabulary(await file.text()); if (version !== uploadVersion) return;
-    vocabulary = next; vocabularyState = { kind: 'success' }; renderCopy();
+    const source = await file.text(); const next = parseVocabulary(source); if (version !== uploadVersion) return;
+    if (!privateWordingAvailable) { pendingVocabularySource = source; vocabularyState = { kind: 'pending' }; updateMessages(); return; }
+    const result = vocabularyStore.replace(source); vocabulary = next; vocabularyState = { kind: 'success', persisted: result.persisted }; renderCopy();
   } catch (error) { if (version !== uploadVersion) return; vocabularyState = { kind: 'error', message: error.message }; updateMessages(); }
 });
 document.querySelector('#vocabulary-reset').addEventListener('click', () => { uploadVersion++; pendingVocabularySource = null; vocabulary = emptyVocabulary(); vocabularyFile.value = ''; let persisted = true; try { localStorage.removeItem(vocabularyStorageKey); } catch { persisted = false; } vocabularyStore?.clear(); vocabularyState = persisted ? { kind: 'default' } : { kind: 'error', message: 'Original wording restored for this session. Stored wording could not be removed.' }; renderCopy(); });

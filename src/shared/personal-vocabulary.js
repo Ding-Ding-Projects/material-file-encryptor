@@ -74,7 +74,7 @@ export function replaceVocabulary(text, vocabulary) {
     matchers.set(vocabulary, replace);
   }
   // Protect factual values and technical examples even within a display label.
-  return String(text).split(/(https?:\/\/[^\s]+|(?:[A-Za-z]:[\\/]|\/)[^\s]+|`[^`]*`|--[\w-]+|\b[\w.-]+\.(?:exe|json|js|dll|txt|md)\b|\b\d+(?:[.,]\d+)*(?:\s*(?:KiB|MiB|GiB|KB|MB|GB|bytes|%))?)/gu).map((part, index) => index % 2 ? part : replace(part)).join('');
+  return String(text).split(/(https?:\/\/[^\s]+|(?:[A-Za-z]:[\\/]|\/)[^\s]+|`[^`]*`|--[\w-]+(?:=(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s]+))?|(?:\.?\.?[\\/]|[\w.-]+[\\/])[^\s]+|\b[\w.-]+\.(?:exe|json|js|dll|txt|md)\b|\b\d+(?:[.,]\d+)*(?:\s*(?:KiB|MiB|GiB|KB|MB|GB|bytes|%))?)/gu).map((part, index) => index % 2 ? part : replace(part)).join('');
 }
 export const serializeVocabulary = vocabulary => JSON.stringify({ schemaVersion: 1, entries: Object.fromEntries(vocabulary.replacements.map(({from,to}) => [from,to])) });
 export const emptyVocabulary = () => parseVocabulary('{"schemaVersion":1,"entries":{}}');
