@@ -68,3 +68,41 @@ test('visitor reset uses the real two-key slider confirmation and preserves unre
     assert.equal(api.authenticated,false);assert.equal(await api.credentialStore.get('local-profile:v1'),null);assert.equal(storage.getItem('unrelated'),'preserve');
   }finally{api.destroy();globalThis.document=originalDocument;}
 });
+test('delayed cross-tab storage events cannot admit writes or cache encryption under a removed or replaced profile',async()=>{
+  const storage=memory();const doc=createAccessDocument(),aRoot=doc.createElement('main'),bRoot=doc.createElement('main');doc.body.append(aRoot,bRoot);
+  let chain=Promise.resolve();const withLock=(_name,run)=>{const next=chain.then(run);chain=next.catch(()=>{});return next;};
+  const a=mountVisitorAccess(aRoot,{storage,withLock,eventTarget:null,confirmDestructive:async options=>{await options.run({});return {confirmed:true};}});
+  const b=mountVisitorAccess(bRoot,{storage,withLock,eventTarget:null});
+  try{
+    aRoot.querySelectorAll('input')[0].value='synthetic first profile';await click(aRoot,'Set up local profile');
+    bRoot.querySelectorAll('input')[0].value='synthetic first profile';await click(bRoot,'Unlock local profile');assert.equal(b.authenticated,true);
+    await b.credentialStore.set('authenticator:positive',{secret:'synthetic first secret'});
+    const cache=await b.encryptPrivateCache({wording:'synthetic private cache'},'visitor-wording:v1');assert.deepEqual(await b.decryptPrivateCache(cache,'visitor-wording:v1'),{wording:'synthetic private cache'});
+    await click(aRoot,'Reset visitor records');assert.equal(b.authenticated,true,'No storage event has reached the stale tab');
+    await assert.rejects(b.credentialStore.set('authenticator:stale',{secret:'must not recreate'}),/changed/);await assert.rejects(b.encryptPrivateCache({},'visitor-wording:v1'),/changed/);
+    assert.ok(![...storage.data.keys()].some(key=>key.endsWith('authenticator:stale')));
+    aRoot.querySelectorAll('input')[0].value='synthetic replacement profile';await click(aRoot,'Set up local profile');
+    await assert.rejects(b.credentialStore.set('authenticator:stale',{secret:'must not cross profiles'}),/changed/);
+    await a.credentialStore.set('authenticator:new',{secret:'synthetic replacement secret'});assert.deepEqual(await a.credentialStore.get('authenticator:new'),{secret:'synthetic replacement secret'});
+    b.lock();await assert.rejects(b.decryptPrivateCache(cache,'visitor-wording:v1'),/Unlock/);
+  }finally{a.destroy();b.destroy();}
+});
+test('failed reset keeps its error and rebuilds a usable locked profile after emergency exit',async()=>{
+  for(const failure of ['Web Locks unavailable','Storage reset unavailable']){
+    const doc=createAccessDocument(),root=doc.createElement('main');doc.body.append(root);doc.addEventListener=()=>{};doc.removeEventListener=()=>{};const create=doc.createElement.bind(doc);doc.createElement=tag=>{const node=create(tag);node.show=()=>{};return node;};
+    const originalDocument=globalThis.document;globalThis.document=doc;
+    const storage=memory(),remove=storage.removeItem,notices=[];let failing=false;
+    storage.removeItem=key=>{if(failing&&failure.startsWith('Storage'))throw Error(failure);remove(key);};
+    const withLock=(_name,run)=>{if(failing&&failure.startsWith('Web'))throw Error(failure);return run();};
+    const api=mountVisitorAccess(root,{storage,withLock,eventTarget:null,notify:message=>notices.push(message)});
+    try{
+      root.querySelectorAll('input')[0].value='synthetic reset fixture';await click(root,'Set up local profile');failing=true;
+      const resetting=click(root,'Reset visitor records'),dialog=root.querySelector('md-dialog');
+      for(const key of dialog.querySelectorAll('md-switch')){key.selected=true;await key.dispatchEvent({type:'change'});}
+      const slider=dialog.querySelector('md-slider');slider.value=100;await slider.dispatchEvent({type:'input'});await dialog.querySelector('md-filled-button').click();
+      assert.ok(dialog.textContent.includes(failure));await dialog.querySelector('md-text-button').click();await resetting;
+      assert.equal(api.authenticated,false);assert.ok(root.querySelectorAll('input').length>0);assert.ok(notices.includes(failure));
+      failing=false;root.querySelectorAll('input')[0].value='synthetic reset fixture';await click(root,'Unlock local profile');assert.equal(api.authenticated,true);
+    }finally{failing=false;api.destroy();globalThis.document=originalDocument;}
+  }
+});

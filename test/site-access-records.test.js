@@ -9,7 +9,7 @@ function fixture(storage=memory()){
   let profile;
   const session={get authenticated(){return profile.authenticated;},encryptPrivateCache:(v,id)=>profile.encrypt(v,id),decryptPrivateCache:(v,id)=>profile.decrypt(v,id)};
   const records=createVisitorRecords({storage,profile:()=>session,withLock:(_name,run)=>run()});
-  profile=new LocalProfile({store:records});return {storage,records,profile};
+  profile=new LocalProfile({store:records.authenticationStore});return {storage,records,profile,session};
 }
 test('browser credential records encrypt real authenticator data and remain locked across reload',async()=>{
   const f=fixture();await f.profile.unlock('synthetic profile fixture',{create:true});
@@ -59,4 +59,12 @@ test('missing browser write lock support never falls back to plaintext storage',
     const verifier={version:2,purpose:'password-verifier',iterations:310000,salt:'A'.repeat(24),hash:'A'.repeat(44)};
     await assert.rejects(records.set('local-profile:v1',verifier),/Web Locks/);assert.equal(storage.length,0);
   }finally{if(original)Object.defineProperty(globalThis,'navigator',original);else delete globalThis.navigator;}
+});
+test('a profile removed during asynchronous sealing cannot leave newly encrypted orphan records',async()=>{
+  const f=fixture();await f.profile.unlock('synthetic seal fixture',{create:true});
+  let ready,release;const started=new Promise(resolve=>{ready=resolve;}),blocked=new Promise(resolve=>{release=resolve;});
+  const original=f.session.encryptPrivateCache;f.session.encryptPrivateCache=async(...args)=>{const encrypted=await original(...args);ready();await blocked;return encrypted;};
+  const pending=f.records.set('authenticator:pending',{secret:'must not remain after reset'});await started;
+  f.storage.removeItem(VISITOR_ACCESS_PREFIX+'local-profile:v1');release();await assert.rejects(pending,/changed/);
+  assert.equal(f.storage.getItem(VISITOR_ACCESS_PREFIX+'authenticator:pending'),null);f.profile.logout();
 });

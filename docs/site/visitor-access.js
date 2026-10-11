@@ -29,7 +29,7 @@ export function mountVisitorAccess(container,{storage=globalThis.localStorage,fo
   const translate=source=>{if(source==='Resolved: open the application data folder to reset local data')source='Resolved locally: use Reset visitor records or clear this website’s browser storage to start over.';const yue=COPY[source]||ACCESS_COPY[source]||LOCAL_COPY[source]||WORKFLOW_COPY[source]||source;const mode=schoolMode()?'en':language;return mode==='yue'?yue:mode==='bilingual'&&yue!==source?`${source} · ${yue}`:source;};
   function bind(node,source){ownBindings.set(node,source);node.textContent=translate(source);return node;}
   const records=createVisitorRecords({storage,withLock,profile:()=>access});
-  const requireAuthenticated=()=>{if(!authenticated)throw Error('Unlock the local profile first.');};
+  const requireAuthenticated=()=>{if(!authenticated)throw Error('Unlock the local profile first.');records.assertSession();};
   const historyStorage={getItem:key=>storage.getItem(HISTORY_PREFIX+key),setItem:(key,value)=>{requireAuthenticated();storage.setItem(HISTORY_PREFIX+key,value);},removeItem:key=>{requireAuthenticated();storage.removeItem(HISTORY_PREFIX+key);}};
   const historyCredentialStore={get:()=>records.get('history:verifier'),set:(_id,value)=>records.set('history:verifier',value)};
   const historyManager=createPrivateHistory({storage:historyStorage,credentialStore:historyCredentialStore});
@@ -44,10 +44,11 @@ export function mountVisitorAccess(container,{storage=globalThis.localStorage,fo
     const heading=bind(doc.createElement('h2'),'Visitor local access');root.append(heading);
     for(const copy of Object.keys(COPY).slice(1,5)){const note=bind(doc.createElement('p'),copy);root.append(note);}
     const host=doc.createElement('div');root.append(host);
-    access=mountAccess(host,{storage:sessionStorage,credentialStore:records,waitBudget:createWaitBudget({storage:waitStorage,withLock,now:Date.now}),schoolMode,translate:source=>translate(source),notify,
+    access=mountAccess(host,{storage:sessionStorage,credentialStore:records.authenticationStore,waitBudget:createWaitBudget({storage:waitStorage,withLock,now:Date.now}),schoolMode,translate:source=>translate(source),notify,
       onAuthenticatedChange(value){
         if(rebuilding||destroyed)return;
         if(!value){endAuthentication();queueMicrotask(rebuild);return;}
+        try{records.assertSession();}catch(error){endAuthentication();queueMicrotask(rebuild);notify(error.message);return;}
         authenticated=true;const current=++generation;onAuthentication(true);onHistoryAccess({authenticated:true,historyManager,historyCredentialStore});
         for(const fieldset of host.querySelectorAll('fieldset'))if(fieldset.dataset.visitorHidden==='true'){fieldset.hidden=false;delete fieldset.dataset.visitorHidden;}
         queueMicrotask(async()=>{try{await access.loadAuthenticators();if(current!==generation||!authenticated)return;await access.load(records.ids('element-lock:').map(id=>id.slice('element-lock:'.length)));access.bind(foundation?.shell||container);}catch{if(current===generation)notify(translate('Local protected records could not be loaded. Lock the profile and review browser storage.'));}});
@@ -59,13 +60,13 @@ export function mountVisitorAccess(container,{storage=globalThis.localStorage,fo
     const fieldsets=host.querySelectorAll('fieldset');for(const fieldset of Array.from(fieldsets).slice(1))if(!fieldset.hidden){fieldset.hidden=true;fieldset.dataset.visitorHidden='true';}
     const reset=bind(doc.createElement('button'),'Reset visitor records');reset.type='button';root.append(reset);
     reset.addEventListener('click',async()=>{
-      if(reset.disabled)return;reset.disabled=true;let resetPerformed=false;
+      if(reset.disabled)return;reset.disabled=true;let resetPerformed=false,accessDestroyed=false,resetError=null;
       const confirm=confirmDestructive||((options)=>requestSuperConfirmation(root,options));
       try{await confirm({action:'Reset visitor records',affected:translate('Local profile, authenticator secrets, locks, and private history in this browser'),translate,signal:abort.signal,run:async({signal}={})=>{
-        if(signal?.aborted)return;endAuthentication();rebuilding=true;access?.destroy();access=null;rebuilding=false;
-        await records.resetOwned({confirmed:true});const keys=[];for(let i=0;i<storage.length;i++){const key=storage.key(i);if(key?.startsWith(HISTORY_PREFIX))keys.push(key);}keys.forEach(key=>storage.removeItem(key));
+        if(signal?.aborted)return;endAuthentication();rebuilding=true;access?.destroy();access=null;accessDestroyed=true;rebuilding=false;
+        try{await records.resetOwned({confirmed:true});const keys=[];for(let i=0;i<storage.length;i++){const key=storage.key(i);if(key?.startsWith(HISTORY_PREFIX))keys.push(key);}keys.forEach(key=>storage.removeItem(key));}catch(error){resetError=error;throw error;}
         resetPerformed=true;
-      }});}finally{if(resetPerformed&&!destroyed){rebuild();notify(translate('Local records reset. Register a new profile to continue.'));}else reset.disabled=false;}
+      }});}finally{if(!destroyed&&(resetPerformed||accessDestroyed)){rebuild();if(resetPerformed)notify(translate('Local records reset. Register a new profile to continue.'));else if(resetError)notify(resetError.message);}else reset.disabled=false;}
     });
     rebuilding=false;
   }
@@ -75,6 +76,7 @@ export function mountVisitorAccess(container,{storage=globalThis.localStorage,fo
   rebuild();onAuthentication(false);
   const credentialCapabilities={async setSharedCredential(password){if(!authenticated)throw Error('Unlock the local profile first.');await records.set('profile:shared-mode',await passwordVerifier(password));},async verifySharedCredential(password){if(!authenticated)throw Error('Unlock the local profile first.');const verifier=await records.get('profile:shared-mode');return verifier?verifyPassword(password,verifier):false;}};
   return {get authenticated(){return authenticated;},credentialStore:records,historyCredentialStore,historyManager,credentialCapabilities,
+    encryptPrivateCache:async(value,purpose)=>{requireAuthenticated();return records.encryptPrivateCache(value,purpose);},decryptPrivateCache:async(value,purpose)=>{requireAuthenticated();return records.decryptPrivateCache(value,purpose);},
     lock(){endAuthentication();rebuild();},refresh(){for(const [node,source]of ownBindings)node.textContent=translate(source);access?.refresh();},setLanguage(value){if(!['en','yue','bilingual'].includes(value))throw Error('Unsupported visitor language.');language=value;for(const [node,source]of ownBindings)node.textContent=translate(source);access?.refresh();},
     openLockWizard:(id,origin)=>{if(!authenticated)throw Error('Unlock the local profile first.');access.openLockWizard(id,origin);},
     bind:node=>access.bind(node),guard:(...args)=>{if(!authenticated)throw Error('Unlock the local profile first.');return access.guard(...args);},guardControl:(...args)=>{if(!authenticated)throw Error('Unlock the local profile first.');return access.guardControl(...args);},guardEvent:(...args)=>{if(!authenticated)throw Error('Unlock the local profile first.');return access.guardEvent(...args);},
