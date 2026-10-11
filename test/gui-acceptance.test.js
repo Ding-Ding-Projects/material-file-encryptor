@@ -34,7 +34,8 @@ test('generic controls, inactive actions, undismissable menus, outer scroll and 
 test('resumable manifests have bounded per-state phases and no live identities or deletion targets',()=>{const manifests=resumeManifests({inventory,sourceRoot:process.cwd(),sourceCommit:binding.sourceCommit,runRoot:path.join(os.tmpdir(),'gui-acceptance-example'),executable:'app.exe',resource:'app.asar',reference:'reference.html',verifier:'gui-acceptance.mjs'});assert.equal(manifests.length,84);assert.ok(manifests.every(m=>m.phases.length===48&&m.cleanup.length===0));assert.doesNotMatch(JSON.stringify(manifests),/"(?:pid|hwnd|port|targetId)":/);});
 test('resume hashes bytes, reports missing tuples, and never promotes emulation to physical DPI',async()=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-gui-admission-'));try{
-  await fs.writeFile(path.join(root,'proof.json'),'proof');let result=await auditRun({inventory,binding,rows:[row()],root});assert.equal(result.reusable,1);assert.equal(result.pending.length,3551);assert.equal(result.passed,false);assert.equal(result.physicalDpiPassed,false);
+  await fs.writeFile(path.join(root,'proof.json'),'proof');let result=await auditRun({inventory,binding,rows:[row()],root});assert.equal(result.reusable,1);assert.equal(result.pending.length,4031);assert.equal(result.passed,false);assert.equal(result.physicalDpiPassed,false);
   await fs.writeFile(path.join(root,'proof.json'),'changed');result=await auditRun({inventory,binding,rows:[row()],root});assert.equal(result.reusable,0);assert.match(result.pending[0].reason,/Evidence bytes changed/);
  }finally{await fs.rm(root,{recursive:true,force:true});}
 });
+
