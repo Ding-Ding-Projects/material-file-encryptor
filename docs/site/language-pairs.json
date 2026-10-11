@@ -7,8 +7,8 @@
     {
       "source": "docs/features/README.md",
       "translation": "docs/features/README.zh-HK.md",
-      "sourceSha256": "239a39fc723ed4b409af3797cc8d7ef790289ec672f8faf824697d92e16300c4",
-      "translationSha256": "60ac3ed84a9f7520e547993e9e9b636376175237f27c5e76f4a082bed04cefe5"
+      "sourceSha256": "bc44a1d5017039ac8e81ee92877963c3f094a43c4c17739758800b58ab8c729b",
+      "translationSha256": "02bf8ce59c9d2ec300f9f65cd02289355fa14acdd01f993c6a2ca4b16ff69ec8"
     },
     {
       "source": "docs/features/access-local.md",
@@ -519,6 +519,24 @@
       "translation": "docs/features/surface-foundation/workflow-handoffs.zh-HK.md",
       "sourceSha256": "58632154ff0f930e23a51cdb290286808bf065e3612e9e84c95ca2b5a033325f",
       "translationSha256": "d930599e600a9acb7e916d5db8cf61675a9f36722692a33841399a945e11e2fc"
+    },
+    {
+      "source": "docs/features/workflows/README.md",
+      "translation": "docs/features/workflows/README.zh-HK.md",
+      "sourceSha256": "929795d0383463a8e3b05e5f48fb89dae945af1767fce14619265998b6b19dd2",
+      "translationSha256": "97f5534266016e1f8742d7939c44a8e7ea601b0dd9ac5add2ed3ec9fc46ac094"
+    },
+    {
+      "source": "docs/features/workflows/browser-download-handoff.md",
+      "translation": "docs/features/workflows/browser-download-handoff.zh-HK.md",
+      "sourceSha256": "09ade15e2893dc5c6de811e1ef799ec5c947be5a2f55777f18174fde37f6fdff",
+      "translationSha256": "ec7245d6fc58e94c78f4e97fc5c2d39be21d3974897cb5328450208c9bcee443"
+    },
+    {
+      "source": "docs/features/workflows/forge-publication.md",
+      "translation": "docs/features/workflows/forge-publication.zh-HK.md",
+      "sourceSha256": "3b6a20208fc85189e4320e4a30c9f2052a384e286d49961080211c93ce219321",
+      "translationSha256": "caccbaa471385b24f9216093188b59fe81838829b9a583e72d3227c93f14d707"
     }
   ]
 }

@@ -2,6 +2,8 @@
 
 ## 儲存同磁碟
 
+- [帳戶發布同瀏覽器下载交接](workflows/README.zh-HK.md)
+
 - [加密儲存同離線快取](storage/native-vault.md)
 - [歷史同資源回收筒](storage/history-and-recycle-bin.md)
 - [所選檔案版本同加密活動](storage/file-history-activity.md)
