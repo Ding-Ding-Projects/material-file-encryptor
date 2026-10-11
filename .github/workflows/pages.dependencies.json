@@ -9,15 +9,20 @@
         "npm",
         "esbuild",
         "locked browser packages",
-        "verified bundled fonts"
+        "verified bundled fonts",
+        "GitHub CLI",
+        "POSIX shell (bash)"
       ],
-      "versions": "Node.js 24.19.0 from dependencies.json; npm bundled with that runtime; package-lock.json; esbuild@0.25.11 in scripts/build-site-workspace.mjs; pinned font manifest",
+      "versions": "Node.js 24.19.0 from dependencies.json; npm bundled with that runtime; package-lock.json; esbuild@0.25.11 in scripts/build-site-workspace.mjs; pinned font manifest; GitHub CLI 2.102.0 from dependencies.json; bash supplied by ubuntu-24.04",
       "bootstrapMarkers": [
         "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
         "npm ci --ignore-scripts --no-audit --no-fund",
-        "node scripts/build-site.mjs"
+        "node scripts/build-site.mjs",
+        "gh release download v2.102.0",
+        "sha256sum --check --ignore-missing gh_2.102.0_checksums.txt",
+        "actualVersion=$(gh --version | head -1)"
       ],
-      "route": "Pinned Node setup and locked package installation; the existing static stager obtains exact esbuild and hash-verified bundled fonts. No tests or lint."
+      "route": "Pinned Node setup and locked package installation; the existing static stager obtains exact esbuild and hash-verified bundled fonts. No tests or lint. Reuse exact supported GitHub CLI or obtain the pinned official Linux release with published SHA-256 verification; read its version back in the next step. The hosted shell executes the bootstrap and homepage API calls."
     }
   }
 }

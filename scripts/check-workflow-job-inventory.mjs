@@ -3,6 +3,14 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
+// Independent handwritten tool inventory. New jobs need an explicit review here too.
+const REQUIRED_TOOLS={
+ '.github/workflows/windows.yml#windows':['Windows PowerShell 5.1','cmd.exe','Git','GitHub CLI','Node.js','npm','pinned .NET SDK','7-Zip','NuGet','WinFsp packaging files'],
+ '.github/workflows/windows.yml#promote':['Windows PowerShell >=5.1','Git','GitHub CLI','Node.js'],
+ '.github/workflows/capture-evidence.yml#evidence':['Node.js','Python','GitHub CLI','project packages','Playwright','Chromium','Linux browser shared libraries'],
+ '.github/workflows/pages.yml#deploy':['Node.js','npm','GitHub CLI','POSIX shell (bash)','esbuild','locked browser packages','verified bundled fonts'],
+};
+
 // Deliberately bounded workflow syntax. Unsupported job syntax fails closed.
 export function discoverJobs(source){
  const lines=source.split(/\r?\n/),starts=lines.flatMap((line,index)=>/^jobs:\s*(?:#.*)?$/.test(line)?[index]:[]);
@@ -22,6 +30,7 @@ export function validateInventory(workflows,manifest,readInventory){
   const inventory=readInventory(row.inventory);if(inventory.schemaVersion!==1||inventory.workflow!==row.workflow)throw Error('WRONG_DEPENDENCY_INVENTORY');
   const record=row.record==='.'?inventory:row.record.split('.').reduce((value,key)=>value?.[key],inventory);
   const tools=record?.tools||record?.dependencies;if(!Array.isArray(tools)||!tools.length||tools.some(tool=>typeof tool==='string'?!tool.trim():!tool||typeof tool.name!=='string'||!tool.name.trim())||!Array.isArray(record?.bootstrapMarkers)||!record.bootstrapMarkers.length)throw Error('MISSING_DEPENDENCY_OR_BOOTSTRAP_RECORD');
+  const required=REQUIRED_TOOLS[row.workflow+'#'+row.job],names=tools.map(tool=>typeof tool==='string'?tool:tool.name);if(!required||required.some(name=>!names.includes(name)))throw Error('REQUIRED_JOB_TOOL_MISSING');
   if(row.record==='.'&&inventory.job!==row.job)throw Error('WRONG_JOB_RECORD');
   for(const marker of record.bootstrapMarkers)if(typeof marker!=='string'||!marker.trim()||!body.includes(marker))throw Error('JOB_BOOTSTRAP_MISSING');
  }
@@ -39,6 +48,9 @@ async function main(){
   const changed=new Map(workflows);changed.set('.github/workflows/pages.yml',changed.get('.github/workflows/pages.yml').replace('actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020','removed-node-bootstrap'));assert.throws(()=>validateInventory(changed,manifest,read),/JOB_BOOTSTRAP_MISSING/);assert.equal(validateInventory(workflows,manifest,read),count);
   const extra=new Map(workflows);extra.set('.github/workflows/unknown.yml','jobs:\n  extra:\n    runs-on: ubuntu-24.04\n');assert.throws(()=>validateInventory(extra,manifest,read));
   const retired=new Map(workflows);retired.set('.github/workflows/release-verified-windows.yml',retired.get('.github/workflows/release-verified-windows.yml')+'\n      - name: additional work\n        run: node unexpected.js\n');assert.throws(()=>validateInventory(retired,manifest,read),/INVALID_BOOTSTRAP_NONAPPLICABILITY/);
+  for(const tool of ['GitHub CLI','POSIX shell (bash)']){const missingTool=structuredClone(inventories.get('.github/workflows/pages.dependencies.json'));missingTool.jobs.deploy.tools=missingTool.jobs.deploy.tools.filter(name=>name!==tool);assert.throws(()=>validateInventory(workflows,manifest,file=>file==='.github/workflows/pages.dependencies.json'?missingTool:read(file)),/REQUIRED_JOB_TOOL_MISSING/);}
+  assert.equal(validateInventory(workflows,manifest,read),count);
+  console.log('PASS: handwritten Pages tool requirements reject omitted GitHub CLI and shell, then accept restored inventories.');
   console.log('PASS: actual workflow discovery rejects omitted/unknown jobs, absent inventories and removed bootstrap, then accepts restored input.');
  }
  console.log(`PASS: ${count} actual workflow jobs have explicit dependency/bootstrap records or exact retired-job nonapplicability. Fresh-cloud execution remains separate.`);

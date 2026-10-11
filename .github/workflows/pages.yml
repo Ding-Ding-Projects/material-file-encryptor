@@ -26,6 +26,28 @@ jobs:
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Bootstrap pinned GitHub CLI
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || github.token }}
+        run: |
+          set -euo pipefail
+          if ! command -v gh >/dev/null; then sudo apt-get update && sudo apt-get install -y gh; fi
+          if ! gh --version | head -1 | grep -F 'gh version 2.102.0 '; then
+            mkdir -p "$RUNNER_TEMP/visitor-gh"
+            gh release download v2.102.0 --repo cli/cli --dir "$RUNNER_TEMP/visitor-gh" --pattern 'gh_2.102.0_linux_amd64.tar.gz' --pattern 'gh_2.102.0_checksums.txt'
+            (cd "$RUNNER_TEMP/visitor-gh" && sha256sum --check --ignore-missing gh_2.102.0_checksums.txt)
+            tar -xzf "$RUNNER_TEMP/visitor-gh/gh_2.102.0_linux_amd64.tar.gz" -C "$RUNNER_TEMP/visitor-gh"
+            echo "$RUNNER_TEMP/visitor-gh/gh_2.102.0_linux_amd64/bin" >> "$GITHUB_PATH"
+          fi
+      - name: Read back supported GitHub CLI
+        run: |
+          set -euo pipefail
+          actualVersion=$(gh --version | head -1)
+          if [[ "$actualVersion" != "gh version 2.102.0 "* ]]; then
+            echo 'Pinned GitHub CLI is unavailable after bootstrap.' >&2
+            exit 1
+          fi
+          printf '%s\n' "$actualVersion"
       - name: Stage site and shared images
         run: node scripts/build-site.mjs
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
