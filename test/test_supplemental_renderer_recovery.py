@@ -108,6 +108,19 @@ class Tests(unittest.TestCase):
         Path(self.request['originals']['outcome']['path']).write_text('{}')
         with self.assertRaises(recovery.Error):
             recovery.Recovery.from_receipt(lifecycle, self.receipt, proof=self.proof, binding=self.binding, source='b' * 40)
+    def test_closure_requires_process_port_and_exact_desktop_absence(self):
+        b = self.backend(); admitted = b.prepare(run=self.run_tcp, fetch=self.fetch)
+        tree = admitted['after']['nativeProcesses']
+        no_ports = lambda *a, **k: SimpleNamespace(stdout='')
+        missing = lambda name: (None, 2)
+        self.assertFalse(b.confirm_exit(tree, timeout=0, run=no_ports, desktop_observer=missing)['resourcesAbsent'])
+        self.api.observations = {}; self.api.rows = {}
+        self.assertTrue(b.confirm_exit(tree, timeout=0, run=no_ports, desktop_observer=missing)['resourcesAbsent'])
+        for desktop in [lambda name: (123, None), lambda name: (None, 5)]:
+            self.assertFalse(b.confirm_exit(tree, timeout=0, run=no_ports, desktop_observer=desktop)['resourcesAbsent'])
+        self.assertFalse(b.confirm_exit(tree, timeout=0, run=self.run_tcp, desktop_observer=missing)['resourcesAbsent'])
+        with self.assertRaises(lifecycle.ClientFailure):
+            b.confirm_exit([{**tree[0], 'pid': 999}], timeout=0, run=no_ports, desktop_observer=missing)
     @unittest.skipUnless(os.name == 'nt', 'Native command observation requires Windows')
     def test_actual_held_self_command_bookends(self):
         api = recovery.snapshot.Native()

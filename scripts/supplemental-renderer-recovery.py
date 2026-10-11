@@ -10,6 +10,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import time
 
 
 def load(name, path):
@@ -196,7 +197,7 @@ class Recovery:
         return receipt
 
     @classmethod
-    def from_receipt(cls, lifecycle, receipt_path, **kwargs):
+    def from_receipt(cls, lifecycle, receipt_path, observe=True, **kwargs):
         data = Path(receipt_path).read_bytes()
         if len(data) > 262144:
             raise Error('Supplemental recovery receipt exceeds bound.')
@@ -206,8 +207,48 @@ class Recovery:
         backend = cls(lifecycle, receipt['request'], receipt_path, **kwargs)
         if receipt['sourceHashes'] != backend.source_hashes or receipt['kind'] != backend.request['kind'] or receipt['version'] != 1:
             raise Error('Supplemental recovery source binding differs.')
-        backend.observe()
+        if observe:
+            backend.observe()
+        else:
+            backend.files()
         return backend
+
+    def confirm_exit(self, tree, timeout=15, run=None, desktop_observer=None):
+        """Observe only; never terminate a process or close a desktop."""
+        self.lifecycle._validate_process_tree(self.request['root'], tree)
+        original = json.loads(self.path.read_bytes())['after']['nativeProcesses']
+        if sorted(tree, key=lambda p: p['pid']) != sorted(original, key=lambda p: p['pid']):
+            raise Error('Closure snapshot differs from the admitted native tree.')
+        deadline = time.monotonic() + timeout
+        last = {'resourcesAbsent': False}
+        def listeners_now():
+            result = (run or subprocess.run)(['netstat.exe', '-ano', '-p', 'tcp'], capture_output=True, text=True, check=True, timeout=5, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+            if len(result.stdout) > 2097152:
+                raise Error('Closure listener inventory exceeds bound.')
+            rows = [line.split() for line in result.stdout.splitlines()]
+            return [row for row in rows if len(row) == 5 and row[0] == 'TCP' and row[3] == 'LISTENING' and row[1].rsplit(':', 1)[-1] == str(self.request['port'])]
+        while True:
+            self.files()
+            exited = self.proof.absent(tree)
+            listeners = listeners_now()
+            if desktop_observer:
+                handle, error = desktop_observer(self.request['desktop'])
+            else:
+                user = ctypes.WinDLL('user32', use_last_error=True)
+                user.OpenDesktopW.argtypes, user.OpenDesktopW.restype = [W.LPCWSTR, W.DWORD, W.BOOL, W.DWORD], W.HANDLE
+                user.CloseDesktop.argtypes = [W.HANDLE]
+                handle = user.OpenDesktopW(self.request['desktop'], 0, False, 0x41)
+                error = ctypes.get_last_error() if not handle else None
+                if handle and not user.CloseDesktop(handle):
+                    raise Error('Closure desktop observation handle closure failed.')
+            after_listeners = listeners_now()
+            exited = self.proof.absent(tree) and exited
+            self.files()
+            last = {'observedAt': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'), 'recordedProcessesExited': exited, 'processVerdicts': self.proof.last_absence, 'selectedPortAbsent': not listeners and not after_listeners, 'selectedPortListenerCount': max(len(listeners), len(after_listeners)), 'desktopAbsent': not handle and error == 2, 'desktopOpenError': error, 'originalResourcesAbsent': False}
+            last['resourcesAbsent'] = exited and last['selectedPortAbsent'] and last['desktopAbsent']
+            if last['resourcesAbsent'] or time.monotonic() >= deadline:
+                return last
+            time.sleep(0.2)
 
 
 def main():
@@ -216,16 +257,27 @@ def main():
     if operation == 'prepare':
         request = json.load(sys.stdin)
         result = Recovery(lifecycle, request, receipt).prepare()
-    elif operation == 'prove-connected':
+    elif operation in ('prove-connected', 'prepare-close'):
         request = json.load(sys.stdin)
         if set(request) != {'clientPid', 'targetId'} or request['clientPid'] != os.getppid():
             raise Error('Recovery requires the actual owning client PID.')
         backend = Recovery.from_receipt(lifecycle, receipt)
         result = snapshot.prove_renderer_target(backend, client_pid=request['clientPid'], target_id=request['targetId'])
-        backend.observe()
+        observation = backend.observe()
+        if operation == 'prepare-close':
+            admitted = json.loads(Path(receipt).read_bytes())['after']['nativeProcesses']
+            if sorted(admitted, key=lambda p: p['pid']) != sorted(observation['nativeProcesses'], key=lambda p: p['pid']):
+                raise Error('Native tree changed since supplemental admission.')
+            result['exitProcesses'] = observation['nativeProcesses']
+            result['exitObservedAt'] = observation['observedAt']
+    elif operation == 'confirm-exit':
+        request = json.load(sys.stdin)
+        if set(request) != {'exitProcesses'}:
+            raise Error('Exact recorded closure snapshot is required.')
+        result = Recovery.from_receipt(lifecycle, receipt, observe=False).confirm_exit(request['exitProcesses'])
     else:
         raise Error('Unsupported supplemental recovery operation.')
-    print(json.dumps({'ok': True, 'client_ok': True, **(result if operation == 'prove-connected' else {'recovery': result})}))
+    print(json.dumps({'ok': True, 'client_ok': True, **({'recovery': result} if operation == 'prepare' else result)}))
 
 
 if __name__ == '__main__':
