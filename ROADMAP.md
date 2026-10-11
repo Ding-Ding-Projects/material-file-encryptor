@@ -1,3 +1,7 @@
+- [x] Independently review shared genuine Material select/slider source, supported option initialization, numeric precision and noncancelable late-lock negatives. Source only.
+- [x] Verify exact940 raw capture hashes and complete cloud closure, while retaining its missing textfield/checkbox pixel coverage.
+- [ ] Execute and inspect new exact-control scenes, actual select menu/slider keyboard/accessibility and full responsive matrix.
+
 - [x] Independently review and integrate supported shared semantic text/password/URL/number/checkbox adapters, preserving original callbacks, clear rollback and secret-help privacy. Source only.
 - [x] Inspect genuine source127e English320x844 navigation captions and Appearance light/dark pixels with independently verified raw hashes and complete cloud closure.
 - [ ] Verify real component labels, keyboard/validity/focus behavior and current adapter pixels.
@@ -13,7 +17,7 @@
 
 - [x] Independently review genuine registered shared action buttons and original-operation/lifetime consumers. Source acceptance only.
 - [x] Verify genuine source2f59 Appearance light-to-dark interaction and palette tuple.
-- [ ] Repair navigation caption truncation and inspect fresh actual pixels.
+- [x] Repair navigation caption truncation and inspect genuine127e and940 English320x844 pixels. Other languages/scales remain pending.
 - [ ] Complete initial font registration/decoding, native field/select/public-shell conversion and full pure Material Design 3 matrix.
 
 - [x] Independently validate corrected-source raw capture integrity while recording its missed requested scene.

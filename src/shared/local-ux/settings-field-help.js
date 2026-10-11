@@ -61,7 +61,7 @@ export const DRAFT_FIELDS=new Set(['Schedule name','Start date','End date','Star
 /** Preserve typed defaults. Read offered choices, never the user's secret value. */
 export function fieldPresentation({control,label,defaultValue,source='default',t=value=>String(value)}={}){
  const semanticKind=control.dataset?.settingsKind||control.type;
- const choices=semanticKind==='select-one'||control.tagName?.toLowerCase()==='select'?[...control.children].map(option=>({value:option.value,label:option.textContent})):[];
+ const choices=semanticKind==='select'||semanticKind==='select-one'||control.tagName?.toLowerCase()==='select'?[...control.children].map(option=>({value:option.value,label:option.dataset?.settingsLabel||option.textContent})):[];
  const show=value=>choices.find(option=>option.value===String(value))?.label??(value===''?t('Empty'):typeof value==='boolean'?t(value?'On':'Off'):String(value));
  const publicDefault=semanticKind==='password'?'':defaultValue;const defaultText=semanticKind==='password'?t('Secret input, never shown in help'):show(publicDefault),kinds={checkbox:'On or off',range:'Numeric value',number:'Numeric value',date:'Calendar date',time:'Local clock time',url:'HTTPS address',password:'Secret input, never shown in help'};
  let options=choices.length?`${t('Available choices')}: ${choices.map(option=>`${option.label} [${option.value}]`).join(', ')}`:t(kinds[semanticKind]||'Text');
