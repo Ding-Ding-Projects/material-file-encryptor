@@ -97,12 +97,18 @@ internal sealed partial class VaultController : IDisposable
                 cachedRecycledCount = vault?.ListDeleted().Count ?? 0;
                 cachedHistoryRevision = revision;
             }
+            if(refreshEnvironment||cachedEnvironmentIdentity!=identity||!ReferenceEquals(cachedEnvironmentHost,host))
+            {
+                cachedAutoUnlock=identity is not null&&SavedCredentialStore.Exists(identity);
+                cachedMountDiagnostic=MountDiagnostic();
+                cachedDriveLetters=FreeDriveLetters();cachedEnvironmentIdentity=identity;cachedEnvironmentHost=host;refreshEnvironment=false;
+            }
             var snapshot = new
             {
-                locked = vault is null, mounted = host is not null, unmountBusy, driveLetter, storageDir, cacheDir, files, revision = vault?.Revision ?? -1, filesRevision = vault?.Revision ?? -1, operations = operations.Snapshot(),
-                partSizeBytes = vault?.PartSizeBytes ?? 10L * 1024 * 1024, lastOfflineRelease, mountDiagnostic = MountDiagnostic(),
+                locked = vault is null, mounted = host is not null, unmountBusy, driveLetter, storageDir, cacheDir, files, revision = vault?.Revision ?? -1, filesRevision = vault?.Revision ?? -1, historyRevision = revision, operations = operations.Snapshot(),
+                partSizeBytes = vault?.PartSizeBytes ?? 10L * 1024 * 1024, lastOfflineRelease, mountDiagnostic = cachedMountDiagnostic,
                 sync = new { running = syncing, lastSync, error = fileSystem?.LastError ?? syncError ?? (vault?.Status.LastError is null ? null : "Encrypted storage synchronization needs attention."), pendingCommits = vault?.Status.PendingCommits ?? 0, pendingLocalFrames = vault?.JournalStatistics.PendingFrames ?? 0, sourceAvailable = vault?.Status.IsSourceAvailable ?? false },
-                driver = new
+                driver = cachedDriver ??= new
                 {
                     available = driverAvailable, error = driverError,
                     diagnostic = new
@@ -114,13 +120,14 @@ internal sealed partial class VaultController : IDisposable
                         bindingVersion = FileVersionInfo.GetVersionInfo(typeof(FileSystemHost).Assembly.Location).FileVersion
                     }
                 },
-                autoUnlock = identity is not null && SavedCredentialStore.Exists(identity),
+                autoUnlock = cachedAutoUnlock,
                 history = new { versionCount = cachedVersionCount, recycledCount = cachedRecycledCount, pendingVersionCount = vault?.PendingVersionCount ?? 0, retentionDays = historyRetentionDays, gitAvailable = historyStore is not null },
                 storageFormat = vault?.StorageFormat, journal = JournalInfo(),
                 transport = new { mode = transportMode, remoteRepository, available = vault is not null && (transportMode == "privateGit" ? transportAvailable : vault.Status.IsSourceAvailable), pendingSynchronization = vault is not null && transportMode == "privateGit" && (pendingPrivatePublication || historyPending || vault.Status.PendingCommits > 0 || vault.JournalStatistics.PendingFrames > 0 || vault.PendingVersionCount > 0), lastError = syncError },
-                availableDriveLetters = FreeDriveLetters()
+                availableDriveLetters = cachedDriveLetters
             };
             Volatile.Write(ref cachedStatus, snapshot);
+            CacheSummary(snapshot);
             return snapshot;
         }
         finally { Monitor.Exit(gate); }
@@ -148,6 +155,16 @@ internal sealed partial class VaultController : IDisposable
         if (method == "exportVersion") return ExportVersionFile(args);
         if (method == "startExport") return StartExport(args);
         if (method == "listFiles") return ListFiles(args);
+        if (method == "statusSummary") return StatusSummary();
+        if (method == "getFile")
+        {
+            lock(gate)
+            {
+                var entry=Engine.GetInfoById(RequiredString(args,"entryId"));
+                if(entry.IsDirectory||entry.Path.Length==0)throw new FileNotFoundException("Selected file no longer exists.");
+                return new {id=entry.EntryId,path=entry.Path,size=entry.Length,modified=entry.ModifiedUtc,partCount=entry.PartCount,partSizeBytes=entry.PartSizeBytes,offline=entry.IsPinned};
+            }
+        }
         // Dispatcher stop waits for callbacks. It must run outside the callback gate.
         if (method is "lock" or "unmount") { Unmount(); if (method == "lock") LockEngine(); return Status(); }
         if (method == "sync") { SyncIfUnlocked(); return Status(); }
@@ -439,12 +456,14 @@ internal sealed partial class VaultController : IDisposable
     }
     private void SaveCredential()
     {
+        refreshEnvironment=true;
         byte[] key = Engine.ExportMasterKey();
         try { SavedCredentialStore.Save(Engine.VaultId, key); }
         finally { CryptographicOperations.ZeroMemory(key); }
     }
     private void Forget(JsonElement args)
     {
+        refreshEnvironment=true;
         string id = identity ?? SavedCredentialStore.ReadVaultIdentity(RequiredString(args, "storageDir"), RequiredString(args, "cacheDir"));
         SavedCredentialStore.Forget(id);
     }

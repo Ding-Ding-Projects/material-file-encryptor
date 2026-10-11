@@ -6,6 +6,7 @@ if (args.Length == 2 && args[0] == "--journal-child") { JournalRegression.Child(
 
 CoreTransferRegression.Run();
 JournalRegression.Run();
+await StatusProtocolRegression.Run();
 
 var type = Assembly.Load("MaterialFileEncryptor.Host").GetType("MaterialFileEncryptor.Host.VaultController", true)!;
 object Make() => Activator.CreateInstance(type)!;
@@ -29,8 +30,15 @@ try
         var statusRead = Task.Factory.StartNew(() => (Task<object?>)Call(controller, "DispatchAsync", "status", Json(new { }))!);
         Assert(statusRead.Wait(TimeSpan.FromSeconds(1)), "Status reader waited for the crypto lock");
         Assert(statusRead.Result.IsCompleted, "Status result waited for the crypto lock");
+        var summaryRead=Task.Factory.StartNew(()=>(Task<object?>)Call(controller,"DispatchAsync","statusSummary",Json(new{}))!);
+        Assert(summaryRead.Wait(TimeSpan.FromSeconds(1))&&summaryRead.Result.IsCompleted,"Summary waited for the crypto lock");
     }
     Console.WriteLine("PASS control status returns cached snapshot while encryption is busy");
+    var summaryBefore=Call(controller,"StatusSummary");
+    Call(controller,"Status");
+    Assert(ReferenceEquals(summaryBefore,Call(controller,"StatusSummary")),"Unchanged summary created an idle event");
+    Assert(!Json(summaryBefore).TryGetProperty("files",out _),"Summary contains full file inventory");
+    Console.WriteLine("PASS compact unchanged status snapshot is retained");
 
     Set(controller, "activePreparedOperations", 2);
     lock (Get(controller, "gate"))
@@ -148,6 +156,9 @@ try
     var page = Json(Call(controller, "Execute", "listFiles", Json(new { limit = 1 })));
     Assert(page.GetProperty("items").GetArrayLength() == 1 && page.GetProperty("nextCursor").GetInt32() == 1, "File page was not bounded");
     long revision = page.GetProperty("revision").GetInt64(); engine.CreateFile("third.bin");
+    string stableId=engine.GetInfo("third.bin")!.EntryId;engine.Rename("third.bin","renamed-third.bin");
+    var selected=Json(Call(controller,"Execute","getFile",Json(new{entryId=stableId})));
+    Assert(selected.GetProperty("path").GetString()=="renamed-third.bin","ID lookup did not resolve current path");
     page = Json(Call(controller, "Execute", "listFiles", Json(new { limit = 1, cursor = 1, revision })));
     Assert(page.GetProperty("resetRequired").GetBoolean(), "Changed revision did not invalidate file cursor");
     var result = Json(Call(controller, "Execute", "forceLock", Json(new { })));

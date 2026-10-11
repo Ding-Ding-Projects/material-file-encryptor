@@ -12,6 +12,14 @@ internal sealed partial class VaultController
     private const long MaximumQueuedBytes = 64L * 1024 * 1024 - 65536;
     private bool forceLocking;
     private object? cachedStatus;
+    private object? cachedStatusSummary;
+    private string? summarySignature;
+    private object? cachedDriver;
+    private object? cachedMountDiagnostic;
+    private string[]? cachedDriveLetters;
+    private string? cachedEnvironmentIdentity;
+    private Fsp.FileSystemHost? cachedEnvironmentHost;
+    private bool cachedAutoUnlock, refreshEnvironment=true;
     private long cachedFileRevision = -1;
     private List<object> cachedFiles = new();
     private long cachedHistoryRevision = -1;
@@ -22,6 +30,7 @@ internal sealed partial class VaultController
     public Task<object?> DispatchAsync(string method, JsonElement args)
     {
         if (method == "status") return Task.FromResult<object?>(Volatile.Read(ref cachedStatus) ?? new { busy = true });
+        if (method == "statusSummary") return Task.FromResult<object?>(StatusSummary());
         if (method == "forceLock") return Task.Run(() => Execute(method,args));
         if (method is "operations" or "cancelOperation")
             return Task.FromResult(Execute(method, args));
@@ -40,6 +49,17 @@ internal sealed partial class VaultController
             try { return Execute(method, args); }
             finally { lock (admissionGate) { --activeCommands; admittedBytes -= requestBytes; } commandWorker.Release(); }
         });
+    }
+    public object StatusSummary()=>Volatile.Read(ref cachedStatusSummary)??new {busy=true};
+    private void CacheSummary(object snapshot)
+    {
+        var summary=snapshot.GetType().GetProperties().Where(property=>property.Name!="files")
+            .ToDictionary(property=>property.Name,property=>property.GetValue(snapshot));
+        summary["fileCount"]=cachedFiles.Count;
+        string signature=JsonSerializer.Serialize(summary);
+        if(signature==summarySignature)return;
+        summarySignature=signature;
+        Volatile.Write(ref cachedStatusSummary,summary);
     }
     private object StartImport(JsonElement args)
     {
