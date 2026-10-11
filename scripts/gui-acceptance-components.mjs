@@ -47,10 +47,11 @@ export async function assertMenuBehavior(page,{host='mfe-context-menu',anchor='#
  await menu.locator('md-menu-item').waitFor({state:'visible'});await menu.locator('md-menu-item').click();await menu.waitFor({state:'hidden'});
  assert.equal(await page.evaluate(()=>window.__acceptanceInvoked.includes('locked')),false);
  for(const reason of ['outside','resize','removed']){
+  await page.evaluate(reason=>{window.__acceptanceStage=reason;},reason);
   await page.evaluate(({host,anchor})=>document.querySelector(host).open({anchor:document.querySelector(anchor),target:document.querySelector(anchor),items:[{label:'Action'}]}),{host,anchor});
   await menu.waitFor({state:'visible'});
   if(reason==='outside')await page.locator('body').click({position:{x:2,y:2}});
-  if(reason==='resize'){const size=page.viewportSize();await page.setViewportSize({width:size.width+1,height:size.height});await page.setViewportSize(size);}
+  if(reason==='resize'){const size=page.viewportSize();await page.setViewportSize({width:size.width+1,height:size.height});await menu.waitFor({state:'hidden'});await page.setViewportSize(size);await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));}
   if(reason==='removed')await page.locator(anchor).evaluate(node=>node.remove());
   await menu.waitFor({state:'hidden'});
  }
@@ -80,7 +81,7 @@ export async function runComponentAcceptance({evidenceRoot,runtime={}}) {
   result.filePicker=await assertFilePickerBehavior(page);
   assert.deepEqual(errors,[],'Production component graph emitted browser errors');result.browserErrors=errors;
   result.passed=true;
- }catch(error){primaryError=error;result.passed=false;result.failure=error.message;if(browser)try{result.menuDiagnostic=await browser.page.evaluate(()=>({events:window.__acceptanceMenuEvents||[],invoked:window.__acceptanceInvoked||[],menuHidden:document.querySelector('mfe-context-menu')?.hidden}));}catch{}}
+ }catch(error){primaryError=error;result.passed=false;result.failure=error.message;if(browser)try{result.menuDiagnostic=await browser.page.evaluate(()=>({stage:window.__acceptanceStage,events:window.__acceptanceMenuEvents||[],invoked:window.__acceptanceInvoked||[],menuHidden:document.querySelector('mfe-context-menu')?.hidden}));}catch{}}
  finally{
   if(browser){try{closure=await browser.close();result.closure=closure;}catch(error){result.closureFailure=error.message;result.passed=false;primaryError??=error;}}
   await new Promise(resolve=>server.close(resolve));
