@@ -994,6 +994,54 @@
         "reason": "Implemented logo authoring controls within the agreed appearance family",
         "sourceCommit": "8d4f903acda2f9e374cd5ca1e3859790be29431b"
       }
+    },
+    {
+      "id": "access-history-locked",
+      "owner": "access",
+      "selector": "[data-access-history]",
+      "fixture": "Synthetic configured host history locked with cleared password",
+      "observable": "Independent history password and no visible record workspace",
+      "actions": [
+        "unlock-history",
+        "cancel-history-unlock"
+      ],
+      "addition": {
+        "reason": "Implemented independently privileged host history and challenge flows within the agreed access family",
+        "sourceCommit": "ba83867bcdc7a497a04953e25acac0f569baa627"
+      }
+    },
+    {
+      "id": "access-history-unlocked",
+      "owner": "access",
+      "selector": "#access-panel-history",
+      "fixture": "Two synthetic encrypted mutations with independently unlocked history",
+      "observable": "Redacted rows, filter, label, comparison, export and two-key restoration",
+      "actions": [
+        "label-entry",
+        "compare-entries",
+        "export-redacted-history",
+        "restore-entry",
+        "lock-history"
+      ],
+      "addition": {
+        "reason": "Implemented independently privileged host history and challenge flows within the agreed access family",
+        "sourceCommit": "ba83867bcdc7a497a04953e25acac0f569baa627"
+      }
+    },
+    {
+      "id": "access-history-waiting",
+      "owner": "access",
+      "selector": "[data-access-history-action=\"try-the-waiting-ladder\"]",
+      "fixture": "Five wrong synthetic history attempts through the production host",
+      "observable": "Deadline action with cleared password and no history grant",
+      "actions": [
+        "open-history-wait",
+        "cancel-history-wait"
+      ],
+      "addition": {
+        "reason": "Implemented independently privileged host history and challenge flows within the agreed access family",
+        "sourceCommit": "ba83867bcdc7a497a04953e25acac0f569baa627"
+      }
     }
   ]
 }

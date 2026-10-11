@@ -30,6 +30,7 @@ function navigate(steps,view,id){
 }
 
 export const stateRoutes=Object.freeze({
+ ...Object.fromEntries(['locked','unlocked','waiting'].map(name=>['access-history-'+name,{view:'access',tab:'#access-tab-history'}])),
  ...Object.fromEntries(['bulk-all','bulk-invert','bulk-range','export-selected','export-filtered','export-format'].map(name=>['p-history-'+name,{view:'personalization',tab:'#view-personalization md-primary-tab[id$="-tab-history"]'}])),
  ...Object.fromEntries(['preset','crop','safe-area','background'].map(name=>['p-logo-'+name,{view:'personalization',tab:'#view-personalization md-primary-tab[id$="-tab-appearance"]'}])),
  'drive-locked':{view:'drive'},'drive-empty':{view:'drive'},'drive-populated':{view:'drive'},'drive-selected':{view:'drive'},'drive-busy':{view:'drive'},'drive-error':{view:'drive'},
