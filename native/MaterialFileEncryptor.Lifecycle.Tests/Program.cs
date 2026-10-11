@@ -3,7 +3,9 @@ using System.Text.Json;
 using MaterialFileEncryptor.Core;
 
 if (args.Length == 2 && args[0] == "--journal-child") { JournalRegression.Child(args[1]); return; }
+if (args.Length == 1 && args[0] == "--optional-numbers") { OptionalParameterRegression.Run(); return; }
 
+OptionalParameterRegression.Run();
 CoreTransferRegression.Run();
 JournalRegression.Run();
 await StatusProtocolRegression.Run();

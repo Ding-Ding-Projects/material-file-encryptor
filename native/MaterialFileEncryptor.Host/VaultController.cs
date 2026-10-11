@@ -616,6 +616,6 @@ internal sealed partial class VaultController : IDisposable
     private static string? OptionalString(JsonElement args, string name) => args.ValueKind == JsonValueKind.Object && args.TryGetProperty(name, out var value) && value.ValueKind != JsonValueKind.Null ? value.GetString() : null;
     private static bool OptionalBool(JsonElement args, string name) => args.ValueKind == JsonValueKind.Object && args.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.True;
     private static long RequiredLong(JsonElement args, string name) => OptionalLong(args, name) ?? throw new ArgumentException("A required number is missing.");
-    private static long? OptionalLong(JsonElement args, string name) => args.ValueKind == JsonValueKind.Object && args.TryGetProperty(name, out var value) ? value.GetInt64() : null;
+    internal static long? OptionalLong(JsonElement args, string name) => args.ValueKind == JsonValueKind.Object && args.TryGetProperty(name, out var value) && value.ValueKind != JsonValueKind.Null ? value.GetInt64() : null;
     public void Dispose() { Unmount(); LockEngine(); }
 }
