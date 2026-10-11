@@ -2,6 +2,8 @@
 
 ## Storage and drive
 
+- [Account publication and browser download handoff](workflows/README.md)
+
 - [Encrypted storage and offline cache](storage/native-vault.md)
 - [History and Recycle Bin](storage/history-and-recycle-bin.md)
 - [Selected-file versions and encrypted activity](storage/file-history-activity.md)
