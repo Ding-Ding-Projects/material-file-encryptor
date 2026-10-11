@@ -52,7 +52,7 @@ internal static class VaultCrypto
                 stage=StorageOperationStage.MetadataWrite;before?.Invoke(stage);stream.Write(bytes);
                 stage=StorageOperationStage.MetadataFlush;before?.Invoke(stage);stream.Flush(true);
             }
-            stage=StorageOperationStage.MetadataReplace;before?.Invoke(stage);File.Move(temp,path,true);
+            stage=StorageOperationStage.MetadataReplace;before?.Invoke(stage);AtomicMetadataReplacement.Replace(temp,path);
         }
         catch(Exception error) when(error is IOException or UnauthorizedAccessException)
         {failed=true;throw new StorageOperationException(stage,error);}

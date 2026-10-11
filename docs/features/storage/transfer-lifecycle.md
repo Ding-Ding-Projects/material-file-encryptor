@@ -72,3 +72,11 @@ For trusted storage exceptions, operation diagnostics also include `storageStage
 expose a path or the operating-system message. A cleanup failure after a failed
 atomic metadata write preserves the original write exception and leaves the
 existing destination unchanged.
+
+Atomic metadata replacement retries only a confirmed Windows sharing conflict.
+Sharing/lock violations qualify directly; access denied qualifies only when a
+separate delete-access probe reports sharing/lock violation on the old or new
+file. Read-only attributes and permanent access denial do not qualify. The
+replacement keeps the same durably flushed temporary file, with at most ten
+15 ms waits. Exhaustion retains the first exception and the prior destination.
+The control reader remains independent while the current block settles.
