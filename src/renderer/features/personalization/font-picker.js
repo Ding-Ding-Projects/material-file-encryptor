@@ -5,7 +5,8 @@ export function validateFontAxes(face,values){
 export function fontVariationCSS(values){return Object.entries(values).map(([key,value])=>{if(!/^[\x20-\x7e]{4}$/.test(key)||/["\\]/.test(key)||!Number.isFinite(value))throw Error('Invalid font variation value.');return `"${key}" ${value}`;}).join(', ')||'normal';}
 export function validateFontFaceSelection(face,catalog){
  if(!/^(regular|normal)$/i.test(face.style||''))throw Error('This font style needs an exact face mapping before it can be applied.');
- if(face.axes?.length&&(catalog?.faces||[]).filter(candidate=>candidate.family===face.family).length!==1)throw Error('Variable axes cannot be applied to an ambiguous font family. Choose a uniquely mapped regular face.');
+ const identity=value=>value.replace(/[A-Z]/g,letter=>letter.toLowerCase());
+ if(face.axes?.length&&(catalog?.faces||[]).filter(candidate=>identity(candidate.family)===identity(face.family)).length!==1)throw Error('Variable axes cannot be applied to an ambiguous font family. Choose a uniquely mapped regular face.');
  return {fontStyle:'normal',fontWeight:'400'};
 }
 export const FONT_PICKER_COPY={

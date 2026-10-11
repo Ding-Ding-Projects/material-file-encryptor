@@ -28,6 +28,8 @@ test('ambiguous variable families and unmapped style faces cannot mutate appeara
  assert.throws(()=>validateFontFaceSelection(regular,{faces:[regular,italic]}),/ambiguous/);
  assert.deepEqual(validateFontFaceSelection(regular,{faces:[regular]}),{fontStyle:'normal',fontWeight:'400'});
  const doc={createElement:tag=>new Node(tag,doc)},host=new Node('host',doc);let writes=0;const picker=mountFontPicker(host,{catalog:{faces:[regular,italic]},mutate:()=>writes++});await assert.rejects(picker.applyFace('italic',{wght:700}),/exact face mapping/);await assert.rejects(picker.applyFace('regular',{wght:700}),/ambiguous/);assert.equal(writes,0);picker.destroy();
+ const caseVariant={...italic,family:regular.family.toLowerCase()},originalFamily=regular.family;
+ const casePicker=mountFontPicker(host,{catalog:{faces:[regular,caseVariant]},mutate:()=>writes++});await assert.rejects(casePicker.applyFace('regular',{wght:700}),/ambiguous/);assert.equal(writes,0);assert.equal(regular.family,originalFamily);assert.equal(caseVariant.family,'fixture variable');casePicker.destroy();
 });
 
 function fixture(){
