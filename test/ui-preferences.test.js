@@ -15,5 +15,8 @@ test('malformed, oversized, or invalid saved preferences do not become executabl
  const read = value => loadSettings({getItem:() => value});
  assert.equal(read('broken').theme,'system'); assert.equal(read('x'.repeat(150001)).theme,'system');
  assert.equal(read('{"theme":"dark","language":"yue","celebration":99}').theme,'dark');
- assert.equal(read('{"theme":"invalid","emoji":"true","patience":101}').patience,60);
+ assert.equal(read('{"theme":"invalid","emoji":"true","patience":101}').funnyEnglish,5);
+ assert.equal(read('{"funnyEnglish":1,"funnyCantonese":4}').funnyEnglish,1);
+ assert.equal(read('{"funnyEnglish":1,"funnyCantonese":4}').funnyCantonese,4);
+ assert.equal(read('{"funnyEnglish":0,"funnyCantonese":99}').funnyCantonese,5);
 });

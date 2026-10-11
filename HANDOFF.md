@@ -1,3 +1,15 @@
+# Current integration handoff - 2026-10-11 UTC
+
+Objective: finish the integrated encrypted-drive workspace without substituting module tests or old release captures for current production verification. The documentation pass read parent commit `3b145cc99ed5e711ace55998fd07533d199b0227` and observed active feature-bridge changes; it did not edit those source files.
+
+Implemented source modules and their explicit limits are summarized in [current integration status](docs/features/platform/current-integration.md). All 208 feature-delivery rows remain unverified. Six focused documentation checks and an isolated-browser interaction check have passed in the documentation lane; they do not prove the final production package.
+
+This pass categorizes local access, personalization and appearance articles, refreshes category indexes and the full site catalogue, records a new unreleased changelog entry and preserves historical project records below. The native helper measurement records 105 status requests across five processes, binary hashes, UTC time and source-binding uncertainty. No vault, mount, import/export, GUI, model download, installer or publication action was performed for that measurement.
+
+Next owner: integration coordinator. Incorporate only the sanitized final diff from the documentation lane, not its unpublished historical commits. Preserve other active work. Build the final immutable candidate, complete source-bound runtime/installation/deployment evidence and update proof rows only when each surface's entire requirement is met. No current release or live status delivery is claimed.
+
+# Historical source-bound handoffs
+
 # Terminal preservation handoff, 2026-10-10
 
 The objective remains incomplete after the account preservation threshold. RRFA1q completed48/48 workspace configurations,32/48 dialog configurations and all13 baseline clear controls. It stopped with CLI_INVALID_RESULT after sequence94, during an independent direct wait-window observation. Raw child stdout, stderr and exit result were not retained; the exact underlying cause is unknown. All403 retained images were inspected:397 planned images have valid probes, three failed-tuple images are unvalidated, and three baselines are separate. Forty-five planned images are absent. Original graceful closure, process absence, hidden desktop closure, startup restoration and synthetic credential retirement passed. No fixture key existed.

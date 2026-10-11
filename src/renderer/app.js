@@ -7,6 +7,8 @@ import { icon, initializeIcons } from './icons.js';
 import { cantonese } from './i18n.js';
 import { mountSurfaceFoundation } from './features/shell/index.js';
 import { mountFileDetails } from './features/file-details/index.js';
+import { createTranslator } from '../shared/local-ux/language.js';
+import { createSettingsStore, DEFAULTS as LOCAL_DEFAULTS } from '../shared/local-ux/store.js';
 const $ = id => document.getElementById(id);
 const api = window.drive;
 let preferences = loadSettings(localStorage);
@@ -19,6 +21,9 @@ const recycledSelection=new Set(); let historySearch, recycleSearch;
 let driveLetterEdited = false, activeDriveLetter = '';
 let foundation=null,fileDetails=null,fileSearch=null,renderedFilesKey='',pagedFiles=null,fileNextCursor=null,filePageRevision=null,filePageRequest=0;
 const featureMounts=new Map(),featureRoots=new Map(),workspaceDisposers=[];
+const localSettings=createSettingsStore({storage:localStorage});
+if(localSettings.provenance==='default')try{localSettings.update({...LOCAL_DEFAULTS,...preferences,vocabulary:undefined},'existing preferences migrated');}catch{}
+let effectiveLocalSettings=localSettings.get();
 const enhancedLabels={'File details':'檔案詳情','Converter':'轉換工具','Local models':'本機模型','Personalization':'個人化','Local access':'本機存取','Documentation':'說明文件','Changelog':'更新記錄','Status':'狀態','Load more files':'載入更多檔案','Retry loading files':'重試載入檔案','Cancel operation':'取消操作','Operations':'操作','Force lock':'強制鎖定','Quit application':'結束程式','Feature unavailable':'功能無法使用','Refresh':'重新整理','Search settings':'搜尋設定'};
 const dictionary = new Map();
 document.querySelectorAll('[data-i18n]').forEach(el => dictionary.set(el, el.textContent));
@@ -32,11 +37,8 @@ document.addEventListener('scroll', event => {
  scrollTimers.set(surface, setTimeout(() => { surface.classList.remove('is-scrolling'); scrollTimers.delete(surface); }, 900));
 }, {capture:true,passive:true});
 document.querySelector('main').prepend($('operation'), $('main-error'));
-function t(source) {
- const translated=cantonese[source]||enhancedLabels[source];
- let value = preferences.language === 'yue' ? translated || source : preferences.language === 'bilingual' && translated ? `${source} · ${translated}` : source;
- return replaceVocabulary(value, preferences.vocabulary);
-}
+const translateWorkspace=createTranslator(()=>({...effectiveLocalSettings,...preferences,school:effectiveLocalSettings.school}),{dictionary:{...cantonese,...enhancedLabels},vocabulary:{isAuthenticated:()=>featureMounts.get('access')?.authenticated===true,replace:value=>replaceVocabulary(value,preferences.vocabulary)}});
+function t(source,options) { return translateWorkspace(source,options); }
 function setText(id, source) { $(id).textContent = t(source); }
 function savePreferences() { try { localStorage.setItem('material-drive.preferences.v1', JSON.stringify({...preferences, vocabulary: JSON.parse(serializeVocabulary(preferences.vocabulary))})); return true; } catch { showError('Your device could not save these preferences.'); return false; } }
 const clearFields = installClearFields(document.body, t);
@@ -49,7 +51,7 @@ function applyPreferences() {
  $('file-search').placeholder = t('Search files');
  $('file-search').setAttribute('aria-label',t('Search files'));
  $('theme-setting').value = preferences.theme; $('language-setting').value = preferences.language; $('emoji-setting').checked = preferences.emoji;
- for (const key of ['celebration','patience']) { $(`${key}-setting`).value = preferences[key]; $(`${key}-output`).textContent = preferences[key]; $(`${key}-setting`).style.setProperty('--range-progress', `${preferences[key]}%`); }
+ for (const key of ['funnyEnglish','funnyCantonese']) { $(`${key}-setting`).value = preferences[key]; $(`${key}-output`).textContent = preferences[key]; $(`${key}-setting`).style.setProperty('--range-progress', `${(preferences[key]-1)*25}%`); }
  $('vocabulary-summary').textContent = preferences.language === 'yue' ? `${preferences.vocabulary.replacements.length} 個替換詞已啟用（${vocabularyPersisted ? '已儲存喺呢部裝置' : '只限今次使用，儲存失敗'}）。` : `${preferences.vocabulary.replacements.length} label replacements active (${vocabularyPersisted ? 'saved on this device' : 'this session only; saving failed'}).`;
  historySearch?.refresh(); recycleSearch?.refresh();
  $('history-days')?.setAttribute('aria-label',t('Custom days'));
@@ -62,15 +64,15 @@ function applyPreferences() {
 colorQuery.addEventListener('change', applyPreferences);
 function showError(error, inDialog = false) {
  const message = error instanceof Error ? error.message : String(error || 'The operation could not be completed.');
- const target = $(inDialog ? 'dialog-error' : 'main-error-text'); target.textContent = message;
+ const target = $(inDialog ? 'dialog-error' : 'main-error-text'); target.textContent = t(message,{message:true});
  $(inDialog ? 'dialog-error' : 'main-error').hidden = false;
  if (!inDialog) $('main-error').scrollIntoView({block:'nearest'});
  if(!inDialog)foundation?.notify({title:'Operation could not complete',message,level:'error'});
 }
 function toast(source, values = {}) {
  clearTimeout(snackbarTimer);
- const message = t(source).replace(/\{(\w+)\}/g, (placeholder, key) => Object.hasOwn(values, key) ? String(values[key]) : placeholder);
- $('snackbar').textContent = `${message}${preferences.celebration >= 75 ? ` ${t('All set!')}` : ''}`;
+ const message = t(source,{message:true,values});
+ $('snackbar').textContent = message;
  $('snackbar').hidden = false;
  snackbarTimer = setTimeout(() => { $('snackbar').hidden = true; }, 5500);
  foundation?.notify({title:'Update',message,level:'success'});
@@ -79,7 +81,7 @@ function operation(label) {
  label = ({ saveVersion:'Saving a version…', restoreVersion:'Restoring a version…', restoreDeleted:'Restoring deleted entries…', emptyRecycleBin:'Emptying the Recycle Bin…', upgrading:'Creating and verifying an upgraded copy…' })[label] || label;
  label = ({ importing:'Importing files…', resplit:'Re-splitting encrypted files…', syncing:'Syncing encrypted files…', sync:'Syncing encrypted files…', setPartSize:'Applying part size…', unmounting:'Locking drive…', mounting:'Mounting drive…', locking:'Locking drive…', keepOffline:'Keeping encrypted parts offline…', releaseOffline:'Removing offline copy…', creating:'Mounting drive…', unlocking:'Mounting drive…' })[label] || label;
  $('operation').hidden = !label;
- if (label) $('operation-text').textContent = `${t(label)}${preferences.patience >= 70 ? ` ${t('Please keep the app open.')}` : ''}`;
+ if (label) $('operation-text').textContent = t(label,{message:true});
 }
 async function refresh() { state = await api.status(); render(); }
 async function run(label, task, success, inDialog = false) {
@@ -358,8 +360,9 @@ listen('resplit-button','click',async () => { if (await confirmAction('Re-split 
 listen('startup-setting','change',event => run('Saving preference…',() => api.setStartup(event.target.checked),'Saved.'));
 listen('auto-unlock-setting','change',async event => { const enabled = event.target.checked; if (enabled && !await confirmAction('Automatically unlock this drive?','This Windows user will be able to unlock this drive without its password or key file. A protected drive key will be saved on this device.','Enable automatic unlock')) return render(); await run('Saving preference…',() => api.setAutoUnlock(enabled),'Saved.'); });
 listen('forget-credential','click',() => run('Saving preference…',() => api.forgetSavedCredential(),'Saved credential forgotten.'));
-for (const key of ['theme','language','emoji','celebration','patience']) listen(`${key}-setting`, ['celebration','patience'].includes(key) ? 'input' : 'change',event => {
- preferences[key] = key === 'emoji' ? event.target.checked : ['celebration','patience'].includes(key) ? Number(event.target.value) : event.target.value;
+for (const key of ['theme','language','emoji','funnyEnglish','funnyCantonese']) listen(`${key}-setting`, ['funnyEnglish','funnyCantonese'].includes(key) ? 'input' : 'change',event => {
+ preferences[key] = key === 'emoji' ? event.target.checked : ['funnyEnglish','funnyCantonese'].includes(key) ? Number(event.target.value) : event.target.value;
+ localSettings.update({[key]:preferences[key]},'preference changed');
  savePreferences(); applyPreferences();
 });
 listen('vocabulary-label','keydown',event => { if (['Enter',' '].includes(event.key)) { event.preventDefault(); $('vocabulary-file').click(); } });
@@ -474,8 +477,8 @@ function renderOperations() {
 function workspaceCommands() {
  const command=(id,label,run)=>({id,label:{en:label,yue:cantonese[label]||enhancedLabels[label]||label},run});
  const commands=[command('vault:create','Create a drive',()=>openVaultDialog('create')),command('vault:unlock','Unlock existing drive',()=>openVaultDialog('unlock')),command('vault:lock','Lock drive',()=>$('lock-button').click()),command('vault:import','Import files',importFiles),command('vault:sync','Sync now',()=>$('sync-button').click()),command('file:open','Open',openSelected),command('file:export','Export copy',()=>$('export-button').click()),command('file:offline','Keep offline',()=>$('offline-button').click()),command('file:release','Remove offline copy',()=>$('release-button').click()),command('history:save','Save version now',()=>$('save-version').click()),command('settings:vocabulary','Your vocabulary',()=>{foundation.shell.activate('settings');$('vocabulary-label').focus();})];
- for(const key of ['theme','language','emoji','celebration','patience']){const field=$(`${key}-setting`);const label=field.getAttribute('aria-label')||key;commands.push({id:`settings:${key}`,label:{en:label,yue:cantonese[label]||label},description:{en:'Application preferences',yue:'程式偏好設定'},group:{en:'Settings',yue:'設定'},control:{type:field.tagName==='SELECT'?'select':field.type==='checkbox'?'switch':'range',min:Number(field.min)||0,max:Number(field.max)||100,options:field.tagName==='SELECT'?[...field.options].map(option=>({value:option.value,label:{en:option.textContent,yue:cantonese[option.textContent]||option.textContent}})):undefined,get:()=>preferences[key],set:value=>{preferences[key]=value;savePreferences();applyPreferences();}},reveal:()=>{foundation.shell.activate('settings');field.scrollIntoView({block:'center'});field.focus();}});}
- commands.push({id:'vault:force-lock',label:{en:'Force lock',yue:'強制鎖定'},disabled:!api?.forceLock,run:async()=>{if(await confirmAction('Force lock this drive?','Open files may have unfinished writes. Close other applications first.','Force lock'))await run('Locking drive…',()=>api.forceLock());}},{id:'application:quit',label:{en:'Quit application',yue:'結束程式'},run:()=>api.quit?api.quit():api.windowControl('close')});
+ for(const key of ['theme','language','emoji','funnyEnglish','funnyCantonese']){const field=$(`${key}-setting`);const label=field.getAttribute('aria-label')||key;commands.push({id:`settings:${key}`,label:{en:label,yue:cantonese[label]||label},description:{en:'Application preferences',yue:'程式偏好設定'},group:{en:'Settings',yue:'設定'},control:{type:field.tagName==='SELECT'?'select':field.type==='checkbox'?'switch':'range',min:Number(field.min)||0,max:Number(field.max)||100,options:field.tagName==='SELECT'?[...field.options].map(option=>({value:option.value,label:{en:option.textContent,yue:cantonese[option.textContent]||option.textContent}})):undefined,get:()=>preferences[key],set:value=>{preferences[key]=value;savePreferences();applyPreferences();}},reveal:()=>{foundation.shell.activate('settings');field.scrollIntoView({block:'center'});field.focus();}});}
+ commands.push({id:'vault:force-lock',label:{en:'Force lock',yue:'強制鎖定'},disabled:!api?.forceLock,run:()=>run('Locking drive…',()=>api.forceLock())},{id:'application:quit',label:{en:'Quit application',yue:'結束程式'},run:()=>api.quit?api.quit():api.windowControl('close')});
  return commands;
 }
 function refreshPaletteInventory() {
@@ -500,6 +503,7 @@ function ensureLockId(element){if(element.dataset.lockId)return element.dataset.
 function setupEnhancedWorkspace() {
  const main=document.querySelector('main');foundation=mountSurfaceFoundation({host:main,before:main.firstChild,storage:localStorage,language:preferences.language,tabs:[{id:'drive',label:'My drive',labelYue:'我的磁碟'},{id:'offline',label:'Available offline',labelYue:'可離線使用'},{id:'history',label:'History',labelYue:'歷史記錄'},{id:'recycle',label:'Recycle Bin',labelYue:'資源回收筒'},{id:'settings',label:'Settings',labelYue:'設定'},{id:'help',label:'How it works',labelYue:'使用方法'}],onActivate:changeView,commands:workspaceCommands(),onExport:exportText});
  const openPalette=foundation.palette.open.bind(foundation.palette);foundation.palette.open=()=>{refreshPaletteInventory();openPalette();};const originalChangeButtons=[...document.querySelectorAll('[data-view]')];for(const button of originalChangeButtons)button.addEventListener('click',()=>{foundation.model.openTab({id:button.dataset.view,label:button.textContent});foundation.shell.activate(button.dataset.view);});
+ const forceLockButton=document.createElement('md-outlined-button');forceLockButton.id='force-lock-button';forceLockButton.textContent=t('Force lock');forceLockButton.onclick=()=>run('Locking drive…',()=>api.forceLock());$('lock-button').after(forceLockButton);
  const fileHost=document.createElement('mfe-search');fileHost.setAttribute('label',t('Search files'));fileHost.setAttribute('scope','drive-files');fileHost.language=preferences.language;const old=$('file-search');old.closest('.search-box').hidden=true;old.closest('.search-box').after(fileHost);fileSearch=fileHost;fileHost.addEventListener('search-change',()=>{old.value=fileHost.query;renderFiles();});
  const pager=document.createElement('div');pager.className='file-page-actions';const more=document.createElement('md-outlined-button');more.id='load-more-files';more.textContent=t('Load more files');more.hidden=true;more.onclick=()=>loadFilePage(true);const retry=document.createElement('md-text-button');retry.textContent=t('Retry loading files');retry.onclick=()=>{filePageRevision=null;loadFilePage();};pager.append(more,retry);$('file-list').closest('.table-scroll').after(pager);
  const operations=document.createElement('section');operations.id='active-operations';operations.setAttribute('aria-label',t('Operations'));operations.setAttribute('aria-live','polite');main.prepend(operations);
@@ -516,14 +520,14 @@ function setupEnhancedWorkspace() {
  const mounts=[
   mountFeature('converter','Converter','轉換工具',()=>import('./features/converter/index.js'),(module,root)=>module.mountConverter(root,{translate:t,services:{converter:Object.fromEntries(['catalog','inspect','enqueue','list','control'].map(action=>[action,payload=>featureRequest('converter',action,payload)])),pickSources:()=>featureRequest('converter','pickSources'),pickDestination:payload=>featureRequest('converter','pickDestination',payload),pickDestinationDirectory:()=>featureRequest('converter','pickDestinationDirectory'),confirmOverwrite:()=>confirmAction('Replace output file?','The selected output file will be replaced. Source files remain unchanged.','Replace')}})),
   mountFeature('ollama','Local models','本機模型',()=>import('./features/ollama/index.js'),(module,root)=>module.mountOllama(root,{translate:t,confirm:confirmFeature,services:{ollama:{request:(action,payload)=>featureRequest('ollama',action,payload),subscribe:callback=>api.onFeatureEvent?.('ollama',callback)}}})),
-  mountFeature('access','Local access','本機存取',()=>import('./features/access/index.js'),async(module,root)=>{const access=module.mountAccess(root,{credentialStore,t:(key,fallback)=>fallback,notify:featureNotify,dataPath:await featureRequest('access','dataFolder'),openDataFolder:()=>featureRequest('access','openDataFolder')});const keys=await featureRequest('access','credentialList',{prefix:'element-lock:'});await access.load((Array.isArray(keys)?keys:keys.keys||[]).map(key=>key.replace(/^element-lock:/,'')));access.bind(document.body);return access;}),
-  mountFeature('personalization','Personalization','個人化',()=>import('./features/personalization/index.js'),(module,root)=>module.mountPersonalization(root,{storage:localStorage,surfaceRoot:document.documentElement,attachSearch:attachEnhancedSearch,notify:featureNotify,onLock:target=>{const access=featureMounts.get('access');if(!access)throw Error('Local access is not ready.');foundation.model.openTab({id:'access',label:'Local access'});foundation.shell.activate('access');access.openLockWizard(ensureLockId(target),target);},historyCredentialStore,listFonts:()=>featureRequest('personalization','listFonts'),verifySharedCredential:value=>featureRequest('personalization','verifySharedCredential',{password:value}),setSharedCredential:value=>featureRequest('personalization','setSharedCredential',{password:value}),fetchScheduleSource:rule=>featureRequest('personalization','fetchScheduleSource',{rule}),vocabulary:{isAuthenticated:()=>featureMounts.get('access')?.authenticated===true,replace:value=>replaceVocabulary(value,preferences.vocabulary)},sharedSettings:{read:()=>featureRequest('personalization','sharedRead'),write:value=>featureRequest('personalization','sharedWrite',{value}),subscribe:callback=>api.onFeatureEvent?.('personalization',event=>{if(event.type==='sharedSettings')callback(event.value);})},onChange:value=>{let changed=false;for(const key of ['language','theme'])if(value[key]&&preferences[key]!==value[key]){preferences[key]=value[key];changed=true;}if(changed){savePreferences();applyPreferences();}}})),
+  mountFeature('access','Local access','本機存取',()=>import('./features/access/index.js'),async(module,root)=>{const access=module.mountAccess(root,{credentialStore,translate:(source,options)=>t(source,options),schoolMode:()=>effectiveLocalSettings.school.enabled,onAuthenticatedChange:()=>queueMicrotask(applyPreferences),notify:featureNotify,dataPath:await featureRequest('access','dataFolder'),openDataFolder:()=>featureRequest('access','openDataFolder')});const keys=await featureRequest('access','credentialList',{prefix:'element-lock:'});await access.load((Array.isArray(keys)?keys:keys.keys||[]).map(key=>key.replace(/^element-lock:/,'')));access.bind(document.body);return access;}),
+  mountFeature('personalization','Personalization','個人化',()=>import('./features/personalization/index.js'),(module,root)=>module.mountPersonalization(root,{store:localSettings,storage:localStorage,surfaceRoot:document.documentElement,attachSearch:attachEnhancedSearch,notify:featureNotify,onLock:target=>{const access=featureMounts.get('access');if(!access)throw Error('Local access is not ready.');foundation.model.openTab({id:'access',label:'Local access'});foundation.shell.activate('access');access.openLockWizard(ensureLockId(target),target);},historyCredentialStore,listFonts:()=>featureRequest('personalization','listFonts'),verifySharedCredential:value=>featureRequest('personalization','verifySharedCredential',{password:value}),setSharedCredential:value=>featureRequest('personalization','setSharedCredential',{password:value}),fetchScheduleSource:rule=>featureRequest('personalization','fetchScheduleSource',{rule}),vocabulary:{isAuthenticated:()=>featureMounts.get('access')?.authenticated===true,replace:value=>replaceVocabulary(value,preferences.vocabulary)},sharedSettings:{read:()=>featureRequest('personalization','sharedRead'),write:value=>featureRequest('personalization','sharedWrite',{value}),subscribe:callback=>api.onFeatureEvent?.('personalization',event=>{if(event.type==='sharedSettings')callback(event.value);})},onChange:value=>{effectiveLocalSettings=value;let changed=false;for(const key of ['language','theme','emoji','funnyEnglish','funnyCantonese'])if(value[key]!==undefined&&preferences[key]!==value[key]){preferences[key]=value[key];changed=true;}if(changed)savePreferences();applyPreferences();}})),
   mountFeature('documentation','Documentation','說明文件',()=>import('./features/documentation/index.js'),async(module,root)=>module.mountDocumentation(root,{translate:t,catalog:await featureRequest('documentation','catalog'),onExport:exportText})),
   mountFeature('changelog','Changelog','更新記錄',()=>import('./features/documentation/changelog.js'),async(module,root)=>module.mountChangelog(root,{translate:t,entries:await featureRequest('documentation','changelog'),onExport:exportText})),
   mountFeature('status','Status','狀態',()=>import('./features/status/index.js'),(module,root)=>module.mountStatus(root,{translate:t,getStatus:()=>featureRequest('status','status')}))
  ];
  Promise.allSettled(mounts).then(()=>{foundation.shell.activate(view);refreshPaletteInventory();});
- foundation.registerCommands([{id:'vault:force-lock',label:{en:'Force lock',yue:'強制鎖定'},run:async()=>{if(await confirmAction('Force lock this drive?','Open files may have unfinished writes. Close other applications first.','Force lock'))await run('Locking drive…',()=>api.forceLock());}},{id:'application:quit',label:{en:'Quit application',yue:'結束程式'},run:()=>api.quit?api.quit():api.windowControl('close')}]);
+ foundation.registerCommands([{id:'vault:force-lock',label:{en:'Force lock',yue:'強制鎖定'},run:()=>run('Locking drive…',()=>api.forceLock())},{id:'application:quit',label:{en:'Quit application',yue:'結束程式'},run:()=>api.quit?api.quit():api.windowControl('close')}]);
  const paletteShortcut=event=>{if((event.ctrlKey||event.metaKey)&&event.shiftKey&&event.key.toLowerCase()==='f')refreshPaletteInventory();};document.addEventListener('keydown',paletteShortcut,true);workspaceDisposers.push(()=>document.removeEventListener('keydown',paletteShortcut,true));
  window.addEventListener('beforeunload',()=>{fileDetails?.destroy();foundation?.destroy();for(const module of featureMounts.values())module.destroy?.();for(const dispose of workspaceDisposers)dispose();},{once:true});
 }
