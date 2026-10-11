@@ -178,7 +178,7 @@ function render() {
  $('cache-path').textContent = state.cacheDir || ''; $('cache-path').title = state.cacheDir || '';
  const letter = state.driveLetter?.replace(/[:\\]+$/,'');
  $('mounted-path').textContent = state.mounted && letter ? `${letter}:\\` : t('Not mounted');
- $('offline-count').textContent = state.offlineCount??currentFiles().filter(file => file.offline).length;
+ foundation?.setOfflineCount(state.offlineCount??currentFiles().filter(file => file.offline).length);
  $('startup-setting').checked = state.startup ?? state.preferences?.startup ?? true;
  $('auto-unlock-setting').checked = state.autoUnlock ?? state.preferences?.autoUnlock ?? false;
  $('performance-mode-setting').value = state.preferences?.performanceMode || state.performanceMode || 'responsive';
