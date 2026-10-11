@@ -42,7 +42,16 @@ internal static class HistoryBatchTests
             Require(await history.RecordSnapshotAsync(paths.Append(extra))!=null,"Cancelled history did not resume.");
             Console.WriteLine("History batch evidence: 131 paths, 3 hash children, bounded index children, unchanged/collision/cancellation/malformed-output checks.");
         }
-        finally{Directory.Delete(root,true);}
+        finally
+        {
+            string ownedRoot=Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar;
+            foreach(var file in Directory.GetFiles(root,"*",SearchOption.AllDirectories))
+            {
+                if(!Path.GetFullPath(file).StartsWith(ownedRoot,StringComparison.OrdinalIgnoreCase))throw new IOException("Fixture cleanup escaped its owned root.");
+                File.SetAttributes(file,File.GetAttributes(file)&~FileAttributes.ReadOnly);
+            }
+            Directory.Delete(root,true);
+        }
     }
     private sealed class CountingRunner:IVaultProcessRunner
     {
