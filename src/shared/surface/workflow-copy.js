@@ -57,4 +57,13 @@ export const WORKFLOW_COPY=Object.freeze({
 "Dismiss browser download proposal":"略過瀏覽器下載建議",
 "No browser download proposals.":"冇瀏覽器下載建議。",
 "Browser download proposals are unavailable. Pair the browser with the installed desktop and try again.":"瀏覽器下載建議暫時不可用。請將瀏覽器配對已安裝桌面程式再試。"
+,
+"GitHub CLI keyring":"GitHub CLI 憑證庫",
+"Protected product account":"受保護產品帳戶",
+"Account identity unavailable":"帳戶身分無法取得",
+"Account source":"帳戶來源",
+"Credential revision":"憑證版本",
+"No CLI revision receipt":"CLI 冇提供版本憑據",
+"The host did not provide a complete account identity. Refresh accounts or update the desktop host before using this account.":"主程式未提供完整帳戶身分。請重新整理帳戶或更新桌面主程式，再使用此帳戶。",
+"Account credentials stay in the host credential manager. Sign-in availability is determined by the host; unavailable authorization metadata must be configured by the application maintainer.":"帳戶憑證留喺主程式憑證管理器。登入是否可用由主程式決定；欠缺授權資料時，須由程式維護者設定。"
 });
