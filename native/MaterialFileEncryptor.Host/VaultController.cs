@@ -101,7 +101,7 @@ internal sealed partial class VaultController : IDisposable
             {
                 locked = vault is null, mounted = host is not null, unmountBusy, driveLetter, storageDir, cacheDir, files, revision = vault?.Revision ?? -1, filesRevision = vault?.Revision ?? -1, operations = operations.Snapshot(),
                 partSizeBytes = vault?.PartSizeBytes ?? 10L * 1024 * 1024, lastOfflineRelease, mountDiagnostic = MountDiagnostic(),
-                sync = new { running = syncing, lastSync, error = fileSystem?.LastError ?? syncError ?? (vault?.Status.LastError is null ? null : "Encrypted storage synchronization needs attention."), pendingCommits = vault?.Status.PendingCommits ?? 0, sourceAvailable = vault?.Status.IsSourceAvailable ?? false },
+                sync = new { running = syncing, lastSync, error = fileSystem?.LastError ?? syncError ?? (vault?.Status.LastError is null ? null : "Encrypted storage synchronization needs attention."), pendingCommits = vault?.Status.PendingCommits ?? 0, pendingLocalFrames = vault?.JournalStatistics.PendingFrames ?? 0, sourceAvailable = vault?.Status.IsSourceAvailable ?? false },
                 driver = new
                 {
                     available = driverAvailable, error = driverError,
@@ -117,7 +117,7 @@ internal sealed partial class VaultController : IDisposable
                 autoUnlock = identity is not null && SavedCredentialStore.Exists(identity),
                 history = new { versionCount = cachedVersionCount, recycledCount = cachedRecycledCount, pendingVersionCount = vault?.PendingVersionCount ?? 0, retentionDays = historyRetentionDays, gitAvailable = historyStore is not null },
                 storageFormat = vault?.StorageFormat, journal = JournalInfo(),
-                transport = new { mode = transportMode, remoteRepository, available = vault is not null && (transportMode == "privateGit" ? transportAvailable : vault.Status.IsSourceAvailable), pendingSynchronization = vault is not null && transportMode == "privateGit" && (pendingPrivatePublication || historyPending || vault.Status.PendingCommits > 0 || vault.PendingVersionCount > 0), lastError = syncError },
+                transport = new { mode = transportMode, remoteRepository, available = vault is not null && (transportMode == "privateGit" ? transportAvailable : vault.Status.IsSourceAvailable), pendingSynchronization = vault is not null && transportMode == "privateGit" && (pendingPrivatePublication || historyPending || vault.Status.PendingCommits > 0 || vault.JournalStatistics.PendingFrames > 0 || vault.PendingVersionCount > 0), lastError = syncError },
                 availableDriveLetters = FreeDriveLetters()
             };
             Volatile.Write(ref cachedStatus, snapshot);
@@ -478,7 +478,7 @@ internal sealed partial class VaultController : IDisposable
             {
                 if (vault is null || activePreparedOperations != 0) return;
                 capturedEngine = vault; capturedTransport = transport; generation = engineGeneration;
-                hadSyncWork = capturedEngine.Status.PendingCommits > 0 || pendingPrivatePublication;
+                hadSyncWork = capturedEngine.Status.PendingCommits > 0 || capturedEngine.JournalStatistics.PendingFrames > 0 || pendingPrivatePublication;
                 syncing = true; syncCancellation = cancellation;
                 nextSyncAttempt = DateTimeOffset.UtcNow.AddSeconds(15);
                 fileSystem?.RecoverPending();

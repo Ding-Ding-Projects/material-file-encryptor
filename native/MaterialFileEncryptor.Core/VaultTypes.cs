@@ -90,7 +90,7 @@ internal sealed class Journal
     public HashSet<string> Pinned { get; set; } = [];
 }
 
-public sealed record VaultJournalStatistics(long AppendedBytes, long AppendedFrames, long CheckpointBytes, long Checkpoints);
+public sealed record VaultJournalStatistics(long AppendedBytes, long AppendedFrames, long CheckpointBytes, long Checkpoints, long PendingFrames);
 internal sealed class JournalMutation
 {
     public string Kind { get; set; } = "";
