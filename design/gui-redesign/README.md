@@ -70,3 +70,7 @@ The full required cross-product is 15 states × 2 viewports × 2 themes × 3 lan
 No tests, application launches or screenshots were performed in this design-only lane. No reference capture, production capture, comparison or diff has been accepted. No intentional visual deviation is approved by this document. A dedicated packaged reference viewer, exact production fixture routes, complete registered-component audit, accessibility verification and source-bound parity receipts remain the release coordinator's work.
 
 For every accepted tuple record the exact source commit, built executable and packaged-resource hashes, reference hash, screen/state, logical viewport, scale route, language/theme, fixture provenance, raw capture paths, comparison path, diff path, inspector verdict and any explicit deviation approval. Never substitute these illustrations for runtime evidence or describe them as screenshots of the application.
+
+## Account and publication extension
+
+The deterministic publication-reference.html and publication-inventory.json cover captured review, unavailable host, transient authentication, publishing, partial result and cancellation states. They use synthetic identities and are design references only. The extension popup source defines a separate bounded connection workspace: status, pairing, disconnect and source/destination review disclosures. The local bundled Material controls require packaged extension verification; these references do not prove installation, authentication or publication.
