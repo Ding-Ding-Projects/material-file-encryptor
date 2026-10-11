@@ -69,3 +69,9 @@ test('School command filtering survives a language refresh and BFCache retains c
  for(const label of ['Find in this page','Search website preferences'])assert.notEqual(localized(label,'yue'),label);
  assert.ok(source.includes('yue:cantonese[label]||label'));
 });
+
+test('home section tabs use bilingual labels and preference palette values bind live controls',async()=>{
+ const source=await readFile(new URL('../docs/site/site-foundation.js',import.meta.url),'utf8');
+ for(const label of ["overview:text('Overview','概覽')","documentation:text('Documentation','文件')","download:text('Release downloads','版本下載')"])assert.ok(source.includes(label));
+ for(const part of ["type:'range'","type:'switch'","type:'select'","control.dispatchEvent(new Event('input'","control.dispatchEvent(new Event('change'","control:binding"])assert.ok(source.includes(part));
+});

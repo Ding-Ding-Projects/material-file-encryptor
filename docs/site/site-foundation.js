@@ -20,13 +20,14 @@ export function mountSiteFoundation({document,storage,getPreferences,onPreferenc
  const current=document.title.split(' · ')[0];
  const sections=[...main.children].filter(node=>node.matches('section[id],div.surface-band[id]'));
  const home=location.pathname.endsWith('/index.html')||location.pathname.endsWith('/');
- const views=home?sections.map(node=>({id:node.id,label:node.querySelector('h1,h2')?.textContent?.replace(/\s+/g,' ').trim()||node.id,root:node})):[];
+ const sectionLabels={overview:text('Overview','概覽'),workflow:text('How it works','使用方法'),offline:text('Offline access','離線存取'),security:text('Security','保安'),screenshots:text('Capture gallery','畫面紀錄集'),documentation:text('Documentation','文件'),faq:text('Questions','常見問題'),download:text('Release downloads','版本下載')};
+ const views=home?sections.map(node=>({id:node.id,label:sectionLabels[node.id]||text(node.id,node.id),root:node})):[];
  const tabs=views.length?views.map(({id,label})=>({id,label})): [{id:'document',label:current}];
  const local=scopedStorage(storage,location.pathname);
  const activate=id=>{if(views.length)for(const view of views)view.root.hidden=view.id!==id;};
  const download=({name,mime,content})=>{const url=URL.createObjectURL(new Blob([content],{type:mime}));const a=element('a',{href:url,download:name});a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
  const foundation=mountSurfaceFoundation({host,before:role,storage:local,language:language(),tabs,onActivate:activate,onExport:download});
- const openSection=id=>{if(!views.some(view=>view.id===id))return;foundation.model.openTab({id,label:views.find(view=>view.id===id).label});foundation.shell.activate(id);};
+ const openSection=id=>{if(!views.some(view=>view.id===id))return;foundation.model.openTab({id,label:localized(views.find(view=>view.id===id).label,'en')});foundation.shell.activate(id);};
  activate(foundation.model.getState().activeTabId);
  const commands=routeNames.map(([route,en,yue])=>({id:'route:'+route,label:text(en,yue),description:text('Read this documentation page','閱讀此說明頁面'),run:()=>location.assign(new URL(route,base))}));
  commands.push({id:'preferences',label:text('Website preferences','網站偏好設定'),run:onPreferences});
@@ -35,7 +36,8 @@ export function mountSiteFoundation({document,storage,getPreferences,onPreferenc
   if(!control.id)continue;
   const caption=document.querySelector(`label[for="${control.id}"]`)?.cloneNode(true);caption?.querySelectorAll('output').forEach(node=>node.remove());
   const label=(caption?.textContent||control.getAttribute('aria-label')||control.textContent||control.id).trim();
-  commands.push({id:'setting:'+control.id,label:{en:label,yue:cantonese[label]||label},description:text('Website preference','網站偏好設定'),reveal:()=>{onPreferences();control.focus();control.scrollIntoView({block:'center'});},run:()=>{onPreferences();control.focus();}});
+  const binding=control.matches('input[type=range]')?{type:'range',min:Number(control.min),max:Number(control.max),get:()=>Number(control.value),set:value=>{control.value=String(value);control.dispatchEvent(new Event('input',{bubbles:true}));}}:control.matches('input[type=checkbox]')?{type:'switch',get:()=>control.checked,set:value=>{control.checked=value;control.dispatchEvent(new Event('change',{bubbles:true}));}}:control.matches('select')?{type:'select',get:()=>control.value,options:[...control.options].map(option=>({value:option.value,label:text(option.textContent,cantonese[option.textContent]||option.textContent)})),set:value=>{control.value=value;control.dispatchEvent(new Event('change',{bubbles:true}));}}:undefined;
+  commands.push({id:'setting:'+control.id,control:binding,label:{en:label,yue:cantonese[label]||label},description:text('Website preference','網站偏好設定'),reveal:()=>{onPreferences();control.focus();control.scrollIntoView({block:'center'});},run:()=>{onPreferences();control.focus();}});
  }
  foundation.registerCommands(commands);
  const oldSearch=document.querySelector('#doc-search'), oldRow=oldSearch?.closest('.search-field');
@@ -53,7 +55,7 @@ export function mountSiteFoundation({document,storage,getPreferences,onPreferenc
  // Results teleport to controls; do not hide unmatched labels or detach their descriptions.
  const results=element('div',{class:'site-setting-results',role:'status'});settingsSearch.after(results);
  let settings=commands.filter(command=>command.id.startsWith('setting:'));
- settingsSearch.addEventListener('search-change',async()=>{const rows=await settingsSearch.filter(settings.map(command=>({id:command.id,text:command.label.en})));if(!rows)return;results.replaceChildren(...rows.map(row=>{const command=settings.find(item=>item.id===row.id);return element('md-text-button',{text:command.label.en,onclick:command.reveal});}));});
+ settingsSearch.addEventListener('search-change',async()=>{const rows=await settingsSearch.filter(settings.map(command=>({id:command.id,text:command.label.en})));if(!rows)return;results.replaceChildren(...rows.map(row=>{const command=settings.find(item=>item.id===row.id);return element('md-text-button',{text:localized(command.label,language()),onclick:command.reveal});}));});
  const changed=event=>{if(!event.target.closest('#preferences-dialog'))return;foundation.notify({title:language()==='yue'?'偏好設定已更改':'Preference changed',message:language()==='yue'?'此頁面已套用目前選擇。':'This page now uses the current selection.',level:'info'});};
  dialog.addEventListener('change',changed);
  const visibleCommands=()=>commands.filter(command=>!schoolEnabled||!command.id.startsWith('setting:')||command.id==='setting:theme-select');
