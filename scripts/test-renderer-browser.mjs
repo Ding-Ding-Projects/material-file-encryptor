@@ -53,6 +53,21 @@ export async function serveRendererFixture(request,response,{sourceRoot=fileURLT
   response.end(bytes);
  }catch {response.writeHead(404).end();}
 }
+export function requireClosureProof(result) {
+ if(result?.recordedProcessesAbsent!==true||result?.desktopClosed!==true)throw new Error('Renderer closure lacks explicit process and desktop absence proof.');
+ return true;
+}
+export async function retainClosureAttempt(destination,state,observation) {
+ await fs.mkdir(destination,{recursive:true});
+ const attempt=await fs.mkdtemp(path.join(destination,'attempt-'));
+ const stateBytes=await fs.readFile(state).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
+ const statePath=path.join(attempt,'lifecycle.original.json');
+ const outcomePath=path.join(attempt,'helper-outcomes.normalized.json');
+ const outcomeBytes=Buffer.from(JSON.stringify({...observation,stateAvailable:!!stateBytes},null,2),'utf8');
+ if(stateBytes)await fs.writeFile(statePath,stateBytes,{flag:'wx'});
+ await fs.writeFile(outcomePath,outcomeBytes,{flag:'wx'});
+ return {statePath:stateBytes?statePath:null,outcomePath,outcomeSha256:createHash('sha256').update(outcomeBytes).digest('hex')};
+}
 async function freePort(){const server=net.createServer();await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});const port=server.address().port;await new Promise(resolve=>server.close(resolve));return port;}
 
 export async function openRendererBrowser(expectedUrl,{evidenceRoot}={}) {
@@ -84,14 +99,8 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot}={}) {
  const lifecycleCommand=(args,input)=>command(python,args,input,env,outcome=>outcomes.push(outcome));
  const retainEvidence=async()=>{
   const destination=evidenceRoot||path.join(runRoot,'evidence');
-  await fs.mkdir(destination,{recursive:true});
-  const stateBytes=await fs.readFile(state).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
-  const outcomeBytes=Buffer.from(JSON.stringify({version:2,runRoot,closure:closureObservation,launchAttempted,profileRetained:true,retentionReason:'Profiles and ownership evidence retained; filesystem deletion is disabled.',stateAvailable:!!stateBytes,outcomes},null,2),'utf8');
-  const statePath=path.join(destination,'lifecycle.original.json');
-  const outcomePath=path.join(destination,'helper-outcomes.normalized.json');
-  if(stateBytes)await fs.writeFile(statePath,stateBytes);
-  await fs.writeFile(outcomePath,outcomeBytes);
-  retainedEvidence={runRoot,statePath:stateBytes?statePath:null,outcomePath,outcomeSha256:createHash('sha256').update(outcomeBytes).digest('hex'),profileRetained:true};
+  const receipt=await retainClosureAttempt(destination,state,{version:3,runRoot,closure:{...closureObservation},launchAttempted,profileRetained:true,retentionReason:'Profiles and ownership evidence retained; filesystem deletion is disabled.',outcomes});
+  retainedEvidence={runRoot,...receipt,profileRetained:true,closure:{...closureObservation}};
  };
  const close=async()=>{
   if(closed)return retainedEvidence;
@@ -103,19 +112,20 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot}={}) {
      await lifecycleCommand([adapter,'prepare-exit',state]);
      const session=await browser.newBrowserCDPSession();
      await Promise.race([session.send('Browser.close').catch(()=>{}),new Promise(resolve=>setTimeout(resolve,3000))]);
-     await lifecycleCommand([adapter,'confirm-exit',state]);
+     requireClosureProof(await lifecycleCommand([adapter,'confirm-exit',state]));
      closureObservation.normalClose='confirmed';closureObservation.resourcesAbsent=true;
-    } else {const result=await lifecycleCommand([adapter,'cleanup','--state',state,'--allow-saved-pid-kill','--timeout','20']);closureObservation.fallback='helper completed';closureObservation.resourcesAbsent=result.recordedProcessesAbsent===true&&result.desktopClosed===true;}
+    } else {const result=await lifecycleCommand([adapter,'cleanup','--state',state,'--allow-saved-pid-kill','--timeout','20']);requireClosureProof(result);closureObservation.fallback='confirmed';closureObservation.resourcesAbsent=true;}
    }
   } catch(error) {
    primaryError=error;closureObservation.normalClose='failed or ownership unavailable';
-   if(launchAttempted && await fs.access(state).then(()=>true,()=>false))try {const result=await lifecycleCommand([adapter,'cleanup','--state',state,'--allow-saved-pid-kill','--timeout','20']);closureObservation.fallback='helper completed';closureObservation.resourcesAbsent=result.recordedProcessesAbsent===true&&result.desktopClosed===true;}catch(error){closureError=error;closureObservation.fallback='failed';}
+   if(launchAttempted && await fs.access(state).then(()=>true,()=>false))try {const result=await lifecycleCommand([adapter,'cleanup','--state',state,'--allow-saved-pid-kill','--timeout','20']);requireClosureProof(result);closureObservation.fallback='confirmed';closureObservation.resourcesAbsent=true;}catch(error){closureError=error;closureObservation.fallback='failed';}
   }
   // Preserve ownership evidence even when launch failed before a state receipt.
   try {await retainEvidence();}catch(error){
    throw new AggregateError([primaryError,closureError,error].filter(Boolean),'Renderer lifecycle evidence retention failed.');
   }
   if(primaryError||closureError)throw new AggregateError([primaryError,closureError].filter(Boolean),'Renderer lifecycle closure failed.');
+  if(launchAttempted&&!closureObservation.resourcesAbsent)throw new Error('Renderer closure remains unverified.');
   closed=true;
   return retainedEvidence;
  };
