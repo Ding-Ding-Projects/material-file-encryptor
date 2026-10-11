@@ -29,4 +29,4 @@ interface DriveBridge {
 }
 declare global {interface Window {drive:DriveBridge}}
 
-interface StorageDiagnostics {targetPartSizeBytes:number;pendingPackingFiles:number;activeWriters:number;packingRunning:boolean;packingError:string|null;currentReferencedParts:number;currentReferencedBytes:number;historicalOnlyParts:number;historicalOnlyBytes:number;temporaryFiles:number;temporaryBytes:number}
+interface StorageDiagnostics {targetPartSizeBytes:number;pendingPackingFiles:number;activeWriters:number;packingRunning:boolean;packingPaused:boolean;packingError:string|null;currentReferencedParts:number;currentReferencedBytes:number;historicalOnlyParts:number;historicalOnlyBytes:number;temporaryFiles:number;temporaryBytes:number}

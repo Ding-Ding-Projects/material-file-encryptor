@@ -4,7 +4,7 @@ Open Storage maintenance from the workspace navigation after unlocking a drive. 
 
 The physical part target is entered in MiB. The default 80 MiB is exactly 83,886,080 bytes. The maximum is 90,000,000 bytes. Pack current files queues a cancellable native operation and saves the requested target. Active writers may delay packing; close or finish writing those files before expecting the queue to drain. Existing file contents and historical references remain subject to the engine's durability rules.
 
-Each packing row reports its state, phase and transferred bytes. A total that is not yet known uses indeterminate progress. Cancellation requests cancellation of that operation, rather than claiming immediate rollback. Refresh again to observe its terminal result.
+Each packing row reports its state, phase and transferred bytes. A total that is not yet known uses indeterminate progress. Cancel and pause queued packing requests cancellation of that operation and durably pauses queued packing. Queued files remain retained, including after restart. Resume packing starts a new request and clears the pause; it does not imply rollback or discarded file data. Refresh again to observe its terminal result.
 
 Current-reference and history-only counts are deliberately separate. Historical versions can continue to retain older parts after packing. Packing does not pad short parts, rewrite all history or guarantee that total storage immediately decreases. The panel provides no history deletion or garbage-collection shortcut.
 
