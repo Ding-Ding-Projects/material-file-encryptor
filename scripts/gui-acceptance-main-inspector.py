@@ -11,6 +11,11 @@ from contextlib import ExitStack
 from urllib.request import urlopen
 from urllib.parse import urlparse
 
+class AdmissionError(ValueError):
+    def __init__(self, message, evidence):
+        super().__init__(message)
+        self.evidence = evidence
+
 def load(name, path):
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
@@ -97,8 +102,15 @@ def prove(request):
             return validate_target(json.loads(data), request['port'], request.get('targetId'))
         first = target()
         after = backend.tree(root)
-        if sorted(before, key=lambda row: row['pid']) != sorted(after, key=lambda row: row['pid']) or tcp() != peer or target() != first:
-            raise ValueError('Main inspector ownership changed around admission.')
+        final_peer, final_target = tcp(), target()
+        evidence = {'before': before, 'after': after, 'peerBefore': peer, 'peerAfter': final_peer, 'targetBefore': first, 'targetAfter': final_target}
+        if final_peer != peer or final_target != first:
+            raise AdmissionError('Main inspector peer or target changed around admission.', evidence)
+        if sorted(before, key=lambda row: row['pid']) != sorted(after, key=lambda row: row['pid']):
+            old, new = {row['pid']: row for row in before}, {row['pid']: row for row in after}
+            if any(old[pid] != new[pid] for pid in old.keys() & new.keys()):
+                raise AdmissionError('Main inspector process identity changed around admission.', evidence)
+            raise AdmissionError('Process ancestry changed during inventory.', evidence)
         if backend.proof.api.observe(handle, root['pid'], root['parentPid']) != root:
             raise ValueError('Main root identity changed around admission.')
     return {'ok': True, 'client_ok': True, 'scope': 'packaged-main-inspector', 'root': root, 'target': first, 'peer': peer, 'nativeProcesses': after}
@@ -107,5 +119,5 @@ if __name__ == '__main__':
     try:
         print(json.dumps(prove(json.load(sys.stdin))))
     except Exception as error:
-        print(json.dumps({'ok': False, 'client_ok': False, 'code': 'PROCESS_PROOF_FAILED' if str(error) == 'Process ancestry changed during inventory.' else 'MAIN_INSPECTOR_ADMISSION_FAILED', 'error': str(error)}))
+        print(json.dumps({'ok': False, 'client_ok': False, 'code': 'PROCESS_PROOF_FAILED' if str(error) == 'Process ancestry changed during inventory.' else 'MAIN_INSPECTOR_ADMISSION_FAILED', 'error': str(error), 'evidence': getattr(error, 'evidence', None)}))
         sys.exit(1)
