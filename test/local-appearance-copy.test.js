@@ -6,7 +6,7 @@ import {PROPERTIES,STATES} from '../src/renderer/features/personalization/appear
 
 test('appearance static controls and diagnostics all have real Cantonese copy',()=>{
  const required=new Set([...Object.keys(PROPERTIES),...STATES]);
- for(const name of ['appearance','color','logo']){
+ for(const name of ['appearance','color','logo','appearance-workbench']){
   const source=readFileSync(new URL(`../src/renderer/features/personalization/${name}.js`,import.meta.url),'utf8');
   for(const match of source.matchAll(/(?:new (?:TypeError|Error)|\bt|\bmessage|\bbutton)\('([^']+)'/g))required.add(match[1]);
  }
