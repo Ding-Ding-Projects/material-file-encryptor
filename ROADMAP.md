@@ -1,3 +1,9 @@
+## Verified unit delivery, 2026-10-11 UTC
+
+- [x] Deliver typed typography and optional workbench guidance source 727 as normal v1.205.1 with independent package and live-content acceptance.
+- [ ] Complete rendered Material Design 3, installed lifecycle, current captures and the full 210-surface inventory.
+- [ ] Complete and independently verify the color-picker and owned local server-preparation source units.
+
 ## Current source integration, 2026-10-11 UTC
 
 - [x] Revamp README and verify exact d2 cloud/package/live documentation delivery.
