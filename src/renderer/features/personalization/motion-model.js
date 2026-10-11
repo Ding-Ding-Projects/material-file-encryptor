@@ -32,7 +32,8 @@ function portable(v){const scan=(node,depth=0)=>{if(depth>20)throw Error('Motion
 export function defaultMotion(){return{version:1,tracks:[],transitions:[],markers:[],timeline:{zoom:1,snap:10,rangeStart:0,rangeEnd:1000,fps:60,loop:false},unknown:{}};}
 export function newMotionTrack(id=crypto.randomUUID()){return{id,name:'Animation',enabled:true,muted:false,solo:false,group:'',property:'opacity',scope:'element',state:'normal',keyframes:[{offset:0,value:'0',easing:'linear',composite:'auto'},{offset:1,value:'1',easing:'linear',composite:'auto'}],composition:'replace',iterationComposite:'replace',timing:{...MOTION_TIMING},trigger:{kind:'entry',from:'any',to:'normal',threshold:0,debounce:0,retrigger:'restart',cancelOnExit:true,priority:0},offset:0,after:'',stagger:0,timeline:{type:'document',source:'target',axis:'block',inset:'auto',rangeStart:'normal',rangeEnd:'normal'},markers:[],unknown:{}};}
 export function newTransition(id=crypto.randomUUID()){return{...newMotionTrack(id),name:'Transition',properties:['opacity'],from:'computed',to:'1',behavior:'normal',keyframes:[]};}
-export function validateMotion(input){
+export function validateMotion(input,depth=0){
+ if(depth>8)throw Error('Motion preset nesting exceeds bounds.');
  if(!plain(input)||input.version!==1)throw Error('Unsupported motion version.');portable(input);if(new TextEncoder().encode(JSON.stringify(input)).length>524288)throw Error('Motion data exceeds its byte budget.');
  const out={...defaultMotion(),unknown:{...portable(input.unknown||{})}};
  for(const[k,v]of Object.entries(input))if(!Object.hasOwn(out,k))out.unknown[k]=portable(v);
@@ -48,7 +49,7 @@ export function validateMotion(input){
  };
  for(const field of['tracks','transitions']){if(!Array.isArray(input[field]||[]))throw Error('Invalid motion list.');out[field]=(input[field]||[]).map(v=>validateTrack(v,field==='transitions'));}
  const ids=new Set();for(const t of [...out.tracks,...out.transitions]){if(ids.has(t.id))throw Error('Duplicate motion track.');ids.add(t.id);}
- out.markers=validateMarkers(input.markers||[]);out.timeline={...out.timeline,...portable(input.timeline||{})};for(const k of['zoom','snap','rangeStart','rangeEnd','fps'])number(out.timeline[k],0);if(out.timeline.zoom<=0||out.timeline.fps<=0||out.timeline.rangeEnd<out.timeline.rangeStart)throw Error('Invalid motion timeline range.');if(typeof out.timeline.loop!=='boolean')throw Error('Invalid motion loop.');resolveMotionSequence(out.tracks);if(out.unknown.schedules)out.unknown.schedules=validateMotionSchedules(out.unknown.schedules,out.unknown.presets);return out;
+ out.markers=validateMarkers(input.markers||[]);out.timeline={...out.timeline,...portable(input.timeline||{})};for(const k of['zoom','snap','rangeStart','rangeEnd','fps'])number(out.timeline[k],0);if(out.timeline.zoom<=0||out.timeline.fps<=0||out.timeline.rangeEnd<out.timeline.rangeStart)throw Error('Invalid motion timeline range.');if(typeof out.timeline.loop!=='boolean')throw Error('Invalid motion loop.');resolveMotionSequence(out.tracks);if(out.unknown.presets){if(!plain(out.unknown.presets))throw Error('Invalid motion presets.');for(const[name,preset]of Object.entries(out.unknown.presets)){text(name,160);out.unknown.presets[name]=validateMotion(preset,depth+1);}}if(out.unknown.schedules)out.unknown.schedules=validateMotionSchedules(out.unknown.schedules,out.unknown.presets);return out;
 }
 function validateMarkers(values){if(!Array.isArray(values))throw Error('Invalid motion markers.');return values.map(m=>({name:text(m.name,160),time:number(m.time,0)}));}
 export function motionActiveTime(track){const t=track.timing;if(t.duration==='auto')return 0;if(t.iterations==='infinite')return Infinity;return t.duration*t.iterations;}
