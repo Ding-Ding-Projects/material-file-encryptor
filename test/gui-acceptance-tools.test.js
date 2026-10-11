@@ -20,6 +20,7 @@ function setup(){
  fixtures.converter.cancelOwnedOperation=fixtures.server.cancelOwnedOperation=async({activate})=>{await activate();return{completed:true};};
  fixtures.ollama.approvedProvider=async()=>({approved:true,noOutboundNetwork:true});fixtures.server.approvedCatalogue=async({phase,activate})=>{if(phase==='refresh'){await activate();return{completed:true};}return{approved:true,noOutboundNetwork:true};};
  fixtures.ollama.attachmentPicker=async({activate})=>{await activate();return{completed:true,ownedSyntheticImage:true};};fixtures.ollama.profilePicker=async({activate})=>{await activate();return{completed:true,profileId:'owned-profile'};};
+ for(const area of Object.values(fixtures))for(const [name,producer]of Object.entries(area))area[name]=async(...args)=>({ownedSyntheticFixture:true,sourceCommit,...await producer(...args)});
  const prepareOwnedFixture=async()=>{calls.push('ownership');return{ownedSyntheticFixture:true,sourceCommit};};
  const plans=[];const executePlan=async plan=>{plans.push(plan);return{ok:true,results:plan.steps.map(step=>({id:step.id,value:step.id.endsWith('-read')?{done:true,value:step.id.includes('native-adapter')?{id:'json-pretty',enabled:true}:step.id.includes('native-model')?{present:true,installed:true}:{version:'synthetic-version',licenseAccepted:false}}:step.op==='poll'||step.id.endsWith('-start')||step.id.includes('drafts')?true:{activation:'dom-click',count:1}}))};};
  const adapters=createToolsAdapters({launch,receipt,inventory,prepareOwnedFixture,fixtures});
@@ -30,12 +31,12 @@ test('each absent capability fails before ownership or producer mutation',async(
  for(const [id,names]of Object.entries(TOOLS_CAPABILITIES))for(const name of names){const state=setup(),[area,key]=name.split('.');delete state.fixtures[area][key];const adapters=createToolsAdapters({launch,receipt,inventory,prepareOwnedFixture:state.prepareOwnedFixture,fixtures:state.fixtures});await assert.rejects(adapters[id].prepare(state.context(id)),error=>error.message==='CAPABILITY_UNAVAILABLE: '+name);assert.deepEqual(state.calls,[],name);assert.deepEqual(state.plans,[],name);}
 });
 test('native readback rejects an optimistic fixture whose real adapter is unavailable',async()=>{const state=setup(),context=state.context('converter-source');context.executePlan=async plan=>({ok:true,results:plan.steps.map(step=>({id:step.id,value:step.id.endsWith('-read')?{done:true,value:{enabled:false}}:true}))});await assert.rejects(state.adapters['converter-source'].prepare(context),/Native observable failed/);});
-test('unapproved external provider stops before model fixture preparation',async()=>{const state=setup();state.fixtures.ollama.approvedProvider=async()=>({approved:true,noOutboundNetwork:false});await assert.rejects(state.adapters['ollama-chat'].prepare(state.context('ollama-chat')),/isolated from external/);assert.deepEqual(state.calls,['ownership']);});
+test('unapproved external provider stops before model fixture preparation',async()=>{const state=setup();state.fixtures.ollama.approvedProvider=async()=>({ownedSyntheticFixture:true,sourceCommit,approved:true,noOutboundNetwork:false});await assert.rejects(state.adapters['ollama-chat'].prepare(state.context('ollama-chat')),/isolated from external/);assert.deepEqual(state.calls,['ownership']);});
 test('wrong visible state cannot pass from a successful transport envelope',async()=>{const state=setup(),context=state.context('converter-source');await state.adapters['converter-source'].prepare(context);context.executePlan=async plan=>({ok:true,results:plan.steps.map(step=>({id:step.id,value:false}))});await assert.rejects(state.adapters['converter-source'].assertState(context),/Observable failed/);});
 test('absent and disabled actual controls do not produce action success',async()=>{
  for(const disabled of [null,true]){const state=setup(),context=state.context('converter-source');await state.adapters['converter-source'].prepare(context);context.executePlan=async plan=>{const node=disabled===null?null:{isConnected:true,disabled,getClientRects:()=>[{}],closest:()=>null,matches:()=>true,getAttribute:()=>null,click(){throw Error('Disabled action must not run');}};const document={querySelectorAll:()=>node?[node]:[],querySelector:()=>({querySelectorAll:()=>node?[node]:[]})};return{ok:true,results:plan.steps.map(step=>({id:step.id,value:vm.runInNewContext(step.expression,{document,window:{}})}))};};await assert.rejects(state.adapters['converter-source'].actions['choose-source'](context),disabled===null?/Expected one visible action/:/Inactive action/);}
 });
-test('picker producer cannot report success without activating its production control',async()=>{const state=setup(),context=state.context('converter-source');state.fixtures.converter.sourcePicker=async()=>({completed:true});await state.adapters['converter-source'].prepare(context);await assert.rejects(state.adapters['converter-source'].actions['choose-source'](context),/did not activate production picker/);});
+test('picker producer cannot report success without activating its production control',async()=>{const state=setup(),context=state.context('converter-source');state.fixtures.converter.sourcePicker=async()=>({ownedSyntheticFixture:true,sourceCommit,completed:true});await state.adapters['converter-source'].prepare(context);await assert.rejects(state.adapters['converter-source'].actions['choose-source'](context),/did not activate production picker/);});
 test('pending destination is cancelled before restoration and unproven restoration fails',async()=>{
  const state=setup(),context=state.context('converter-options'),adapter=state.adapters['converter-options'];await adapter.prepare(context);await assert.rejects(adapter.actions.enqueue(context),/Destination selection must precede/);await adapter.actions['choose-destination'](context);await adapter.restore(context);assert.ok(state.calls.indexOf('destination.cancel')<state.calls.indexOf('converter.restore'));
  const other=setup(),ctx=other.context('converter-source');await other.adapters['converter-source'].prepare(ctx);other.fixtures.converter.restore=async()=>({restored:true,draftsPreserved:false,operationsSettled:true});await assert.rejects(other.adapters['converter-source'].restore(ctx));
@@ -48,4 +49,43 @@ test('active queue and preparation states reject stale terminal native records',
   context.executePlan=async plan=>({ok:true,results:plan.steps.map(step=>({id:step.id,value:step.id.endsWith('-read')?{done:true,value:native}:true}))});
   await assert.rejects(state.adapters[id].assertState(context),/Native observable failed/);
  }
+});
+
+test('later producer receipts reject stale source and missing ownership before reliance',async()=>{
+ const cases=[
+  ['converter-source','sourcePicker','choose-source'],
+  ['converter-options','destinationPicker','choose-destination'],
+  ['converter-queue','cancelOwnedOperation','cancel-queued-operation'],
+  ['ollama-chat','attachmentPicker','choose-synthetic-attachment'],
+  ['ollama-profiles','profilePicker','save-profile']
+ ];
+ for(const [id,name,action]of cases)for(const invalid of [{sourceCommit:'b'.repeat(40)},{ownedSyntheticFixture:false}]){
+  const state=setup(),context=state.context(id);await state.adapters[id].prepare(context);
+  const area=id.startsWith('converter')?'converter':'ollama',producer=state.fixtures[area][name];
+  state.fixtures[area][name]=async args=>({...await producer(args),...invalid});
+  await assert.rejects(state.adapters[id].actions[action](context),/Producer receipt/);
+ }
+});
+test('destination observe commit and cancel each reject stale producer receipts',async()=>{
+ for(const phase of ['observe','commit','cancel']){
+  const state=setup(),context=state.context('converter-options'),adapter=state.adapters['converter-options'];await adapter.prepare(context);
+  const producer=state.fixtures.converter.destinationPicker;
+  state.fixtures.converter.destinationPicker=async args=>({...await producer(args),...(args.phase===phase?{sourceCommit:'b'.repeat(40)}:{})});
+  if(phase==='observe')await assert.rejects(adapter.actions['choose-destination'](context),/Producer receipt/);
+  else{await adapter.actions['choose-destination'](context);await assert.rejects(phase==='commit'?adapter.actions.enqueue(context):adapter.restore(context),/Producer receipt/);}
+ }
+});
+test('restore rejects stale ownership and source before draft mutation',async()=>{
+ for(const invalid of [{sourceCommit:'b'.repeat(40)},{ownedSyntheticFixture:false}]){
+  const state=setup(),context=state.context('converter-source'),adapter=state.adapters['converter-source'];await adapter.prepare(context);
+  const producer=state.fixtures.converter.restore;state.fixtures.converter.restore=async args=>({...await producer(args),...invalid});
+  const before=state.plans.length;await assert.rejects(adapter.restore(context),/Producer receipt/);assert.equal(state.plans.length,before);
+ }
+});
+test('catalogue refresh and provider admission reject stale receipts',async()=>{
+ const state=setup(),context=state.context('server-prepare'),adapter=state.adapters['server-prepare'];await adapter.prepare(context);
+ const producer=state.fixtures.server.approvedCatalogue;state.fixtures.server.approvedCatalogue=async args=>({...await producer(args),sourceCommit:'b'.repeat(40)});
+ await assert.rejects(adapter.enter(context),/Producer receipt/);
+ const other=setup();other.fixtures.ollama.approvedProvider=async()=>({ownedSyntheticFixture:true,sourceCommit:'b'.repeat(40),approved:true,noOutboundNetwork:true});
+ await assert.rejects(other.adapters['ollama-chat'].prepare(other.context('ollama-chat')),/Producer receipt/);assert.deepEqual(other.calls,['ownership']);
 });
