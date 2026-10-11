@@ -23,11 +23,26 @@ Native display-scale evidence is independent. Supply one real receipt for each s
 `resumeManifests` emits one manifest per state, each with 48 phases, for the installed `resume-verification-run` ledger. This remains within its 128-phase limit. Each phase fingerprints its tuple, state contract, executable, resources, reference, verifier and evidence directory. Use the shared ledger's `init`, `record`, `status` and `resume` operations. Reacquire live process identities for every fresh execution; saved PIDs, window handles, ports and CDP targets are never resumable evidence.
 
 The audit CLI accepts `node scripts/gui-acceptance.mjs audit <run.json>`, where the JSON contains `binding`, `rows`, `root` and `physicalDpi`. Exit 0 means all declared evidence was admitted; exit 2 means required evidence remains pending. The validator verifies declarations and bytes. It cannot independently prove human inspection or that a producer truthfully reported its route, so retain original acquisition receipts and independent review.
-# Packaged acquisition producer
+## Packaged acquisition producer
 
 `gui-acceptance-acquire.mjs` builds deterministic production navigation plans for all 84 inventoried states and 4,032 tuples. `acquireMatrix` accepts the existing exact-owned packaged launch, proof-bound `executePlan`, and `createModernProbeEvidence` adapter. It retains raw results before validation, validates native bookends and version-1 layout receipts, hashes the original PNG, and leaves each capture awaiting independent inspection and reference comparison. A captured row is never automatically an accepted row. Renderer emulation does not prove physical display scaling.
 
-`gui-acceptance-baseline.mjs` supplies initial action adapters for settings, locked-drive create/unlock/cancel, and password-dialog edit/clear/cancel. These adapters use the actual mounted production UI. Their plans are source-checked only until a pinned packaged candidate executes them. The caller must supply `prepareOwnedFixture`, proving the source and exact synthetic fixture through the native bridge. The fixture producer now excludes `M:` unconditionally and fails when no other valid drive letter exists.
+`gui-acceptance-baseline.mjs` supplies five initial state adapters: settings, locked-drive create/unlock/cancel, password-dialog edit/clear/cancel, local-model Help, and attention toggles with restoration. These adapters use the actual mounted production UI. Their plans are source-checked only until a pinned packaged candidate executes them. `ownedFixturePreparation` reads native storage/cache/drive identity before mutation and uses real cancel/lock controls. The fixture producer excludes `M:` unconditionally and fails when no other valid drive letter exists.
+
+The caller supplies `createProbeEvidence({outputRoot, tuple, binding})`, returning `createModernProbeEvidence` configured with that exact attempt directory. This prevents same-named probe receipts from colliding across tuples. A minimal integration is:
+
+```js
+const prepareOwnedFixture = ownedFixturePreparation({launch, receipt, fixture});
+const adapters = baselineAdapters({launch, receipt, prepareOwnedFixture, inventory});
+const acquisition = await acquireMatrix({
+  inventory, binding, launch, receipt, outputRoot, executePlan, adapters,
+  createProbeEvidence: ({outputRoot}) => createModernProbeEvidence({
+    binding: nativeProbeBinding, observe, validate, outputRoot, helperPath
+  })
+});
+```
+
+The initial five adapters leave 79 states with explicit missing action/setup capabilities. The ten approved history/logo additions retain their owner source revision and reason, while an independent test freezes the original 74 IDs.
 
 The remaining finite acquisition capabilities are:
 

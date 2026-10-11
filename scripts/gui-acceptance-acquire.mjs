@@ -63,7 +63,7 @@ export function makeAcquisitionPlan({launch,receipt,tuple,state,outputRoot}){
 // Each state adapter prepares only an explicitly owned native fixture, observes
 // the mounted production state, and exercises its individually named actions.
 // Missing adapters stop before acquisition instead of producing misleading PNGs.
-export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot,executePlan,probeEvidence,adapters,tuples=matrixFor(inventory),resume=new Map(),report=()=>{}}){
+export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot,executePlan,createProbeEvidence,adapters,tuples=matrixFor(inventory),resume=new Map(),report=()=>{}}){
  validateBinding(binding,inventory);assert.ok(path.isAbsolute(outputRoot));
  const planned=new Map(matrixFor(inventory).map(tuple=>[tupleKey(tuple),tuple]));const results=[];
  for(const tuple of tuples){
@@ -77,6 +77,9 @@ export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot
   const record={schemaVersion:1,tuple,binding,scope:'packaged-acquisition',status:'started',physicalDpiVerified:false};
   const save=()=>fs.writeFile(path.join(directory,'acquisition.json'),JSON.stringify(record,null,2));await save();report({key,status:'started'});
   try{
+   assert.equal(typeof createProbeEvidence,'function','A per-attempt native probe factory is required');
+   const probeEvidence=await createProbeEvidence({outputRoot:directory,tuple,binding});
+   assert.equal(typeof probeEvidence?.observe,'function');assert.equal(typeof probeEvidence?.persist,'function');
    const prepared=await adapter.prepare({tuple,binding,executePlan});assert.equal(prepared?.ownedSyntheticFixture,true);assert.equal(prepared?.sourceCommit,binding.sourceCommit);record.fixture=prepared;
    const setup=makeAcquisitionPlan({launch,receipt,tuple,state,outputRoot:directory});await executePlan(setup);
    const observed=await adapter.assertState({tuple,executePlan});assert.equal(observed?.passed,true);assert.equal(observed?.observable,state.observable);record.state=observed;
