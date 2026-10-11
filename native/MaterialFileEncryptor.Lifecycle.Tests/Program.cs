@@ -2,6 +2,8 @@ using System.Reflection;
 using System.Text.Json;
 using MaterialFileEncryptor.Core;
 
+if (args.Length == 1 && args[0] == "--retained-handles-only") { RetainedHandleRegression.Run(); return; }
+
 if (args.Length == 2 && args[0] == "--import-crash-child") { ImportJournalRegression.CrashChild(args[1]);return; }
 if (args.Length == 2 && args[0] == "--journal-child") { JournalRegression.Child(args[1]); return; }
 if (args.Length == 1 && args[0] == "--optional-numbers") { OptionalParameterRegression.Run(); return; }
@@ -13,6 +15,7 @@ if (args.Length == 1 && args[0] == "--large-managed-only") { await LargeManagedI
 if (args.Length == 1 && args[0] == "--large-import-only") { LargeImportRegression.Run();return; }
 
 OptionalParameterRegression.Run();
+RetainedHandleRegression.Run();
 CoreTransferRegression.Run();
 CngLegacyRegression.Run();
 JournalRegression.Run();

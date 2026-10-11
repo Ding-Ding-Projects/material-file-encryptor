@@ -4,13 +4,18 @@ using System.IO.MemoryMappedFiles;
 using System.Security.Cryptography;
 using System.Text.Json;
 
-if(args.Length is <3 or >4)throw new ArgumentException("Supply package root, output JSON, exact source commit and optional --ordinary-only.");
-bool ordinaryOnly=args.Length==4&&args[3]=="--ordinary-only";
-if(args.Length==4&&!ordinaryOnly)throw new ArgumentException("Unknown verification mode.");
+if(args.Length==1&&args[0]=="--teardown-self-test"){await BoundedProcessStop.SelfTest();await ChildDiagnostics.SelfTest();HelperAdmission.SelfTest();return;}
+
+if(args.Length==4&&args[0]=="--mapped-writer-child"){MappedWriter.Run(args[1],args[2],args[3]);return;}
+
+if(args.Length is <4 or >5)throw new ArgumentException("Supply package root, private output JSON, exact source commit, expected helper SHA-256 from the production receipt and optional --ordinary-only.");
+bool ordinaryOnly=args.Length==5&&args[4]=="--ordinary-only";
+if(args.Length==5&&!ordinaryOnly)throw new ArgumentException("Unknown verification mode.");
 string package=Path.GetFullPath(args[0]),output=Path.GetFullPath(args[1]),sourceCommit=args[2];
 if(sourceCommit.Length!=40||!sourceCommit.All(Uri.IsHexDigit))throw new ArgumentException("A full source commit is required.");
 string executable=Path.Combine(package,"resources","native","MaterialFileEncryptor.Host.exe");
 if(!File.Exists(executable))throw new FileNotFoundException("Packaged native helper is missing.");
+string admittedHelperSha256=HelperAdmission.Verify(executable,args[3]);
 string root=Path.Combine(Path.GetTempPath(),"mfe-mounted-lifecycle-"+Guid.NewGuid().ToString("N"));
 string storage=Path.Combine(root,"storage"),cache=Path.Combine(root,"cache");Directory.CreateDirectory(root);
 string historyName=Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(storage.ToUpperInvariant()+"|folder|"))).ToLowerInvariant();
@@ -18,7 +23,8 @@ string history=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.
 if(Directory.Exists(history))throw new InvalidOperationException("Synthetic history destination already exists.");
 Directory.CreateDirectory(Path.GetDirectoryName(output)!);await File.WriteAllTextAsync(output+".fixture.json",JsonSerializer.Serialize(new{root,storage,cache,history,executable},new JsonSerializerOptions{WriteIndented=true}));
 string password=Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-var checks=new List<object>();string? drive=null;bool mounted=false,finished=false,cleanup=false;MountedHelper? helper=null;
+var checks=new List<object>();string? drive=null;bool mounted=false,finished=false,cleanup=false;MountedHelper? helper=null;bool writerExitEstablished=true;int? writerId=null;DateTime? writerStartedUtc=null;ProcessStopResult? writerStop=null;string? originalException=null;
+async Task PersistProgress()=>await File.WriteAllTextAsync(output+".progress.json",JsonSerializer.Serialize(new{sourceCommit,checks,originalException,writerId,writerStartedUtc,writerExitEstablished,writerStop},new JsonSerializerOptions{WriteIndented=true}));
 void Require(bool condition,string message){if(!condition)throw new InvalidOperationException(message);}
 async Task Mount()
 {
@@ -31,7 +37,7 @@ async Task Mount()
 async Task Unlock()=>await helper!.Call("unlock",new{storageDir=storage,cacheDir=cache,password,partSizeBytes=1048576});
 try
 {
-    helper=new MountedHelper(executable);
+    helper=new MountedHelper(executable,admittedHelperSha256);
     var status=await helper.Call("status",new{});Require(status.GetProperty("driver").GetProperty("available").GetBoolean(),"WinFsp is unavailable.");
     await helper.Call("create",new{storageDir=storage,cacheDir=cache,password,partSizeBytes=1048576});await Mount();
     string mountedRoot=drive+"\\";
@@ -39,12 +45,9 @@ try
     using(var idle=new FileStream(idleFile,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete))
     {
         var result=await helper.Call("forceLock",new{});bool locked=result.GetProperty("locked").GetBoolean();
-        Require(locked&&!result.GetProperty("busy").GetBoolean(),"Idle open handle prevented force lock.");mounted=false;
-        Require(!Directory.Exists(mountedRoot),"Owned drive remained visible after force lock.");
-        checks.Add(new{name="idle-open-handle-force-lock",verified=true,locked,driveAbsent=true});
-        await Unlock();await Mount();mountedRoot=drive+"\\";
-        Require(File.ReadAllBytes(Path.Combine(mountedRoot,"idle.bin")).SequenceEqual(new byte[]{1,2,3,4}),"Immediate unlock lost durable bytes.");
-        checks.Add(new{name="immediate-reunlock-with-old-idle-handle",verified=true});
+        Require(!locked&&result.GetProperty("busy").GetBoolean(),"Retained idle handle did not veto force lock.");
+        Require(Directory.Exists(mountedRoot),"Busy force lock detached the owned drive.");
+        checks.Add(new{name="idle-open-handle-force-lock-busy",verified=true,locked});
     }
     OrdinaryOperations.Run(root,mountedRoot,checks);
     File.WriteAllText(Path.Combine(mountedRoot,"prior.bin"),"existing destination stays intact");
@@ -77,51 +80,108 @@ try
     {
     string mappedFile=Path.Combine(mountedRoot,"mapped.bin");
     using(var seed=new FileStream(mappedFile,FileMode.CreateNew,FileAccess.Write,FileShare.ReadWrite)){seed.SetLength(64L*1024*1024);seed.Flush(true);}
-    bool concurrentBusy=false;JsonElement last=default;Exception? writerFailure=null;
-    using(var file=new FileStream(mappedFile,FileMode.Open,FileAccess.ReadWrite,FileShare.ReadWrite|FileShare.Delete))
-    using(var mapping=MemoryMappedFile.CreateFromFile(file,null,0,MemoryMappedFileAccess.ReadWrite,HandleInheritability.None,true))
-    using(var view=mapping.CreateViewAccessor())
-    using(var stop=new CancellationTokenSource())
+    string ready=Path.Combine(root,"writer.ready"),stop=Path.Combine(root,"writer.stop");
+    var writerStart=new ProcessStartInfo(Environment.ProcessPath!){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true};
+    if(Path.GetFileNameWithoutExtension(Environment.ProcessPath!).Equals("dotnet",StringComparison.OrdinalIgnoreCase))writerStart.ArgumentList.Add(typeof(MappedWriter).Assembly.Location);
+    foreach(string arg in new[]{"--mapped-writer-child",mappedFile,ready,stop})writerStart.ArgumentList.Add(arg);
+    using(var writer=Process.Start(writerStart)!)
     {
-        var started=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var writer=Task.Run(()=>{try{byte[] block=new byte[65536];RandomNumberGenerator.Fill(block);started.TrySetResult();while(!stop.IsCancellationRequested){for(long offset=0;offset<64L*1024*1024&&!stop.IsCancellationRequested;offset+=block.Length)view.WriteArray(offset,block,0,block.Length);view.Flush();}CryptographicOperations.ZeroMemory(block);}catch(Exception error){writerFailure=error;}});
-        await started.Task;await Task.Delay(25);
-        for(int attempt=0;attempt<3&&!exactOverlap;attempt++)
+        writerExitEstablished=false;writerId=writer.Id;writerStartedUtc=writer.StartTime.ToUniversalTime();
+        var writerStdout=new ChildDiagnostics(writer.StandardOutput);var writerStderr=new ChildDiagnostics(writer.StandardError);
+        try
         {
-            last=await helper.Call("forceLock",new{});
-            bool busy=last.TryGetProperty("busy",out var flag)&&flag.GetBoolean();concurrentBusy|=busy;
-            exactOverlap=busy&&last.TryGetProperty("activeFilesystemIo",out var active)&&active.GetInt32()>0;
-            if(last.GetProperty("locked").GetBoolean()){mounted=false;break;}
-            await Task.Delay(10);
+            var readyWait=Stopwatch.StartNew();
+            while(!File.Exists(ready)&&!writer.HasExited&&readyWait.Elapsed<TimeSpan.FromSeconds(15))await Task.Delay(10);
+            Require(File.Exists(ready)&&!writer.HasExited,"Mapped writer did not become ready.");
+            bool busyObserved=false;
+            for(int attempt=0;attempt<3;attempt++)
+            {
+                var response=await helper.Call("forceLock",new{});
+                checks.Add(new{name="mapped-force-lock-response",attempt,response});
+                await PersistProgress();
+                bool locked=response.GetProperty("locked").GetBoolean();
+                if(locked)mounted=false;
+                checks.Add(new{name="retained-mapped-descriptor-force-lock",attempt,verified=!locked&&response.GetProperty("busy").GetBoolean(),locked,code=response.GetProperty("code").GetString(),activeFilesystemIo=response.GetProperty("activeFilesystemIo").GetInt32()});
+                await PersistProgress();
+                Require(!locked&&response.GetProperty("busy").GetBoolean(),"Force lock detached a retained mapped descriptor.");
+                busyObserved=true;
+            }
+            exactOverlap=busyObserved;
         }
-        stop.Cancel();await writer.WaitAsync(TimeSpan.FromSeconds(10));
+        catch(Exception error)
+        {
+            originalException=error.GetType().Name+": "+error.Message;
+            try { await PersistProgress(); } catch(Exception receiptError) { checks.Add(new{name="progress-write-error",verified=false,type=receiptError.GetType().Name}); }
+            throw;
+        }
+        finally
+        {
+            writerStop=await BoundedProcessStop.Run(writer,()=>File.WriteAllText(stop,"stop"));
+            var stdout=await writerStdout.Finish(TimeSpan.FromSeconds(5));var stderr=await writerStderr.Finish(TimeSpan.FromSeconds(5));
+            if(stdout.drainTimedOut||stderr.drainTimedOut||stdout.readError is not null||stderr.readError is not null)writerStop=writerStop with{Errors=writerStop.Errors.Append("child-diagnostic-drain-incomplete").ToArray()};
+            writerExitEstablished=writerStop.ExitEstablished;
+            checks.Add(new{name="mapped-writer-child-exit",verified=writerExitEstablished&&writer.ExitCode==0&&writerStop.Errors.Length==0&&!stdout.drainTimedOut&&!stderr.drainTimedOut&&stdout.readError is null&&stderr.readError is null,writerId,writerStartedUtc,writerStop,stdout,stderr,exitCode=writerExitEstablished?(int?)writer.ExitCode:null,exitCodeHex=writerExitEstablished?"0x"+unchecked((uint)writer.ExitCode).ToString("X8"):null,viewsReleased=writerExitEstablished&&writer.ExitCode==0});
+        }
+        Require(writerExitEstablished&&writerStop!.Errors.Length==0,"Mapped writer teardown did not complete normally; fixture retained.");
+        Require(writer.ExitCode==0,"Mapped writer exited abnormally; mapped persistence is unverified.");
     }
-    checks.Add(new{name="active-mapped-io-force-lock",verified=exactOverlap,concurrentBusyObserved=concurrentBusy,exactActiveIoOverlap=exactOverlap,verdict=exactOverlap?"passed":"unverified",reason=exactOverlap?null:"No response proved a nonzero activeFilesystemIo counter while mapped I/O was active.",writerFailure=writerFailure?.GetType().Name});
+    Require(exactOverlap,"No retained mapping force-lock busy response was observed.");
     }
     if(mounted){for(int attempt=0;attempt<10;attempt++){var result=await helper.Call("forceLock",new{});if(result.GetProperty("locked").GetBoolean()){mounted=false;break;}await Task.Delay(100);}}
-    Require(!mounted,"Owned mount did not detach after workload stopped.");finished=ordinaryOnly||exactOverlap;
+    Require(!mounted,"Owned mount did not detach after workload stopped.");
+    await Unlock();await Mount();mountedRoot=drive+"\\";
+    Require(File.ReadAllBytes(Path.Combine(mountedRoot,"idle.bin")).SequenceEqual(new byte[]{1,2,3,4}),"Authenticated reopen lost idle bytes.");
+    if(!ordinaryOnly)MappedWriter.Verify(Path.Combine(mountedRoot,"mapped.bin"));
+    checks.Add(new{name="authenticated-reopen-after-all-views-release",verified=true});
+    for(int attempt=0;attempt<10&&mounted;attempt++){var result=await helper.Call("forceLock",new{});mounted=!result.GetProperty("locked").GetBoolean();if(mounted)await Task.Delay(100);}
+    Require(!mounted,"Reopened synthetic mount did not detach.");finished=ordinaryOnly||exactOverlap;
 }
-catch(Exception error){checks.Add(new{name="run-error",verified=false,type=error.GetType().Name,message=error.Message});}
+catch(Exception error){originalException??=error.GetType().Name+": "+error.Message;checks.Add(new{name="run-error",verified=false,type=error.GetType().Name,message=error.Message});}
 finally
 {
     password="";
-    if(helper!=null)
+    bool driveAbsent=false;bool teardownFailed=false;
+    try
     {
-        try{if(mounted){var locked=await helper.Call("forceLock",new{});mounted=!locked.GetProperty("locked").GetBoolean();}}catch{}
-        await helper.DisposeAsync();
+        try { await PersistProgress(); } catch(Exception error) { teardownFailed=true;checks.Add(new{name="pre-teardown-receipt-error",verified=false,type=error.GetType().Name}); }
+        if(helper!=null&&writerExitEstablished)
+        {
+            try{if(mounted){var locked=await helper.Call("forceLock",new{});checks.Add(new{name="teardown-force-lock-response",response=locked});mounted=!locked.GetProperty("locked").GetBoolean();}}
+            catch(Exception error){teardownFailed=true;checks.Add(new{name="helper-force-lock-error",verified=false,type=error.GetType().Name});}
+            var helperStop=await helper.Stop();
+            if(!helperStop.ExitEstablished||helperStop.Errors.Length!=0)teardownFailed=true;
+            checks.Add(new{name="helper-stop",verified=helperStop.ExitEstablished&&helperStop.Errors.Length==0,helperStop});
+        }
+        else if(helper!=null){teardownFailed=true;checks.Add(new{name="helper-retained-for-live-or-unknown-writer",verified=false,writerId,writerStartedUtc});}
+        driveAbsent=drive is null||!Directory.Exists(drive+"\\");
+        if(writerExitEstablished&&!teardownFailed&&!mounted&&driveAbsent){FixtureCleanup.DeleteOwned(root);FixtureCleanup.DeleteOwned(history);cleanup=!Directory.Exists(root)&&!Directory.Exists(history);}
     }
-    bool driveAbsent=drive is null||!Directory.Exists(drive+"\\");
-    if(!mounted&&driveAbsent){FixtureCleanup.DeleteOwned(root);FixtureCleanup.DeleteOwned(history);cleanup=!Directory.Exists(root)&&!Directory.Exists(history);}
-    var report=new{schemaVersion=1,sourceCommit,helperSha256=Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(executable))),route="native-helper-protocol-and-win32-mapped-io",guiUsed=false,checks,teardown=new{mounted,driveAbsent,ownedFixtureRemoved=cleanup},complete=finished&&cleanup};
-    await File.WriteAllTextAsync(output,JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true}));
-    Console.WriteLine(JsonSerializer.Serialize(report));
-    Environment.ExitCode=finished&&cleanup?0:2;
+    catch(Exception error){teardownFailed=true;checks.Add(new{name="teardown-error",verified=false,type=error.GetType().Name,message=error.Message});}
+    finally
+    {
+        bool complete=finished&&cleanup&&!teardownFailed&&writerExitEstablished;
+        string? helperSha256=null;
+        try{helperSha256=Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(executable)));}catch(Exception error){complete=false;checks.Add(new{name="helper-hash-error",verified=false,type=error.GetType().Name});}
+        var report=new{schemaVersion=1,sourceCommit,helperSha256,admittedHelperSha256,route="native-helper-protocol-and-win32-mapped-io",guiUsed=false,originalException,checks,teardown=new{mounted,driveAbsent,ownedFixtureRemoved=cleanup,helperId=helper?.ProcessId,helperStartedUtc=helper?.StartedUtc,writerId,writerStartedUtc,writerExitEstablished,writerStop},complete};
+        string reportJson=JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true});
+        try{await File.WriteAllTextAsync(output,reportJson);}finally{Console.WriteLine(reportJson);Environment.ExitCode=complete?0:2;}
+    }
 }
 
 sealed class MountedHelper:IAsyncDisposable
 {
     readonly Process process;readonly ConcurrentDictionary<long,TaskCompletionSource<JsonElement>> pending=new();readonly Task reader;long sequence;
-    internal MountedHelper(string executable){process=Process.Start(new ProcessStartInfo(executable){UseShellExecute=false,CreateNoWindow=true,RedirectStandardInput=true,RedirectStandardOutput=true,RedirectStandardError=true})!;_=process.StandardError.ReadToEndAsync();reader=Task.Run(async()=>{string? line;while((line=await process.StandardOutput.ReadLineAsync())!=null){using var document=JsonDocument.Parse(line);if(!document.RootElement.TryGetProperty("id",out var id)||id.ValueKind!=JsonValueKind.Number)continue;if(pending.TryRemove(id.GetInt64(),out var completion)){if(document.RootElement.TryGetProperty("error",out var error))completion.TrySetException(new IOException(error.GetString()));else completion.TrySetResult(document.RootElement.GetProperty("result").Clone());}}});}
+    internal int ProcessId { get; private set; }
+    internal DateTime StartedUtc { get; private set; }
+    internal MountedHelper(string executable,string expectedSha256){HelperAdmission.Verify(executable,expectedSha256);process=Process.Start(new ProcessStartInfo(executable){UseShellExecute=false,CreateNoWindow=true,RedirectStandardInput=true,RedirectStandardOutput=true,RedirectStandardError=true})!;ProcessId=process.Id;StartedUtc=process.StartTime.ToUniversalTime();_=process.StandardError.ReadToEndAsync();reader=Task.Run(async()=>{string? line;while((line=await process.StandardOutput.ReadLineAsync())!=null){using var document=JsonDocument.Parse(line);if(!document.RootElement.TryGetProperty("id",out var id)||id.ValueKind!=JsonValueKind.Number)continue;if(pending.TryRemove(id.GetInt64(),out var completion)){if(document.RootElement.TryGetProperty("error",out var error))completion.TrySetException(new IOException(error.GetString()));else completion.TrySetResult(document.RootElement.GetProperty("result").Clone());}}});}
     internal async Task<JsonElement> Call(string method,object parameters){long id=Interlocked.Increment(ref sequence);var completion=new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);pending[id]=completion;await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(new{id,method,@params=parameters}));await process.StandardInput.FlushAsync();return await completion.Task.WaitAsync(TimeSpan.FromSeconds(20));}
-    public async ValueTask DisposeAsync(){process.StandardInput.Close();using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(15));try{await process.WaitForExitAsync(timeout.Token);}catch(OperationCanceledException){if(!process.HasExited)process.Kill(true);await process.WaitForExitAsync();}await reader;process.Dispose();}
+    internal async Task<ProcessStopResult> Stop()
+    {
+        var result=await BoundedProcessStop.Run(process,()=>process.StandardInput.Close());
+        if(!result.ExitEstablished)return result;
+        try{await reader.WaitAsync(TimeSpan.FromSeconds(5));}
+        catch(Exception error){result=result with{Errors=result.Errors.Append("reader:"+error.GetType().Name).ToArray()};}
+        process.Dispose();return result;
+    }
+    public async ValueTask DisposeAsync(){await Stop();}
 }

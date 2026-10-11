@@ -46,3 +46,7 @@ The ten-check count includes the two idle-handle checks separately. The receipt 
 ## Unresolved forced-detach boundary
 
 A separate concurrent forced-detach probe with an active mapped writer produced a native fatal exception. Whether this was an expected mapped-writer detach outcome is **unknown**. Its classification remains unresolved. The ten ordinary passes neither erase that result nor prove complete force-lock safety for concurrent mapped writes. No full lifecycle, release, installer or GUI acceptance is claimed here.
+
+## Retained descriptor safety revision
+
+Force lock now remains busy while any filesystem descriptor or callback is active. Cleanup does not release a descriptor retained by a mapped view; Close does. An idle open handle therefore also vetoes forced detachment. The mounted runner isolates its mapped writer in a child process, joins it after releasing all views, and requires authenticated reopen with matching bytes before success. Historical receipts above describe their original builds and do not verify this revision. New packaged mounted verification remains pending.

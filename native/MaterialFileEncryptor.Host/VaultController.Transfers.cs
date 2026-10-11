@@ -280,7 +280,7 @@ internal sealed partial class VaultController
                 if (activePreparedOperations != 0 || Volatile.Read(ref syncFlight) != 0 || (fileSystem?.ActiveIo ?? 0) != 0)
                     return ForceLockResult(false, true, "crypto-active", activePreparedOperations + (fileSystem?.ActiveIo ?? 0) + Volatile.Read(ref syncFlight), 0);
                 if (fileSystem is not null && !fileSystem.BeginForceUnmount())
-                    return ForceLockResult(false, true, "crypto-active", 1, 0);
+                    return ForceLockResult(false, true, "filesystem-handles-active", fileSystem.ActiveHandles, 0);
                 forceLocking = true;
             }
             finally { Monitor.Exit(gate); }
