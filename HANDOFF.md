@@ -1,3 +1,11 @@
+# Registered action buttons and genuine Appearance tuple, 2026-10-11 UTC
+
+Candidatebc859f2d40efb7ccd80ce7547b28c2a56e41b3ea uses genuine registered md-outlined-button actions with original callbacks/promises/guidance. Independent vendor and mounted-consumer reviews passed, including disabled/read-only/disconnected/disposed queued-action rejection, deferred original credential completion, reset cancellation and schedule validation. This is source acceptance only; new action pixels remain pending. Native fields/selects and the public shell remain separate unfinished work.
+
+Genuine run38145393537, producere93 and exact static2f59, now establishes the bounded navigation and Appearance System-to-Dark interaction tuple with current-control observation, source/ZIP/PNG hashes, sandbox/single-target bookends and complete cloud closure. Actual light/dark pixels follow the outer dialog palette. Navigation reveals unintended guidance-caption ellipses inside the fully visible136px first cell, independently confirmed separately from intended horizontal scrolling. Correction and fresh pixels are pending. FontFaceSet remains empty and decoding unproved; exact static source has a shipped but unimported font stylesheet and asynchronous loader, whose pending/rejected state remains indistinguishable.
+
+Full pure Material Design 3, all105/210 complete-surface rows, complete matrix and original installed lifecycle remain unfinished. Preserve all original captures and ignored evidence.
+
 # Corrected-source capture limitation, 2026-10-11 UTC
 
 Normal v1.232.1/source2f59 independently passed five downloaded assets,763 CRC/decompression entries,664 actual Squirrel payload files, exact Setup embedding,5520 ASAR entries,6271 privacy entries with zero rejected paths, unsigned targets and immutable helper/source/config bookends. Run38144574559 and actual exact-current-main promotion succeeded. README now points to this verified version and its225-file/8288-reference live delivery. Installed and rendered acceptance remain separate.

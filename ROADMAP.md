@@ -1,3 +1,8 @@
+- [x] Independently review genuine registered shared action buttons and original-operation/lifetime consumers. Source acceptance only.
+- [x] Verify genuine source2f59 Appearance light-to-dark interaction and palette tuple.
+- [ ] Repair navigation caption truncation and inspect fresh actual pixels.
+- [ ] Complete initial font registration/decoding, native field/select/public-shell conversion and full pure Material Design 3 matrix.
+
 - [x] Independently validate corrected-source raw capture integrity while recording its missed requested scene.
 - [x] Review stable-target, separate-navigation and post-rerender current-control capture mechanics. Source only.
 - [ ] Run the corrected producer against exact2f59 static bytes and inspect actual navigation/Appearance/dark pixels.
