@@ -60,7 +60,7 @@ export function baselineAdapters({launch,receipt,prepareOwnedFixture,inventory})
   'create-password':make('create-password',dialogOpen+"&&document.querySelector('#password-input').type==='password'",{
    // Nonsecret path field deliberately avoids retaining credential input.
    'edit-field':action('edit-field',[field('edit-storage','#storage-input','Synthetic acceptance location')],"document.querySelector('#storage-input').value==='Synthetic acceptance location'"),
-   'clear-field':action('clear-field',[click('clear-storage','.clearable-field:has(#storage-input) > .field-clear')],"document.querySelector('#storage-input').value===''") ,
+   'clear-field':action('clear-field',[click('clear-storage','#storage-input > md-icon-button[slot="trailing-icon"]')],"document.querySelector('#storage-input').value===''") ,
    'cancel-dialog':action('cancel-dialog',[click('cancel-dialog','#dialog-cancel')],dialogClosed)
   })
  };
