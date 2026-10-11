@@ -397,8 +397,8 @@
     {
       "source": "docs/features/interface/nested-appearance-guidance.md",
       "translation": "docs/features/interface/nested-appearance-guidance.zh-HK.md",
-      "sourceSha256": "8e63c4ee2b74dc78f8295002f604565137d77a01e42757efd04b8136ded3fff0",
-      "translationSha256": "096fe7244d4d8592082de4b4b45c0de3ec8d1e4f31ef35a614eb627a9c1a6623"
+      "sourceSha256": "beeba2c3c4f6855cf63db5f4f8b562b5f5cf444d96c55c6311e3a2cd83a61188",
+      "translationSha256": "0bfe54fa323d69f57cd94e0bc53fcd9281256ddfe951d0a9289b0d064254e2fd"
     },
     {
       "source": "docs/features/server-manager/README.md",

@@ -213,3 +213,7 @@ Recovery: Choose the original local image again to recreate a custom logo; reset
 ## Failure, security and verification
 
 Blocked, disabled, removed and unadmitted controls cannot execute a guided action. Consumer rejection, storage failure and invalid images remain failures rather than wizard success. Logos are converted locally to flattened PNG without network reads. Editor disposal cancels guidance and removes listeners. Source consumer tests do not prove browser, installed or visual acceptance.
+
+## Logo action control conversion
+
+Fit and Reset logo use the registered Material outlined-button primitive with explicit button type. Their original event-owned callbacks and guidance promises remain unchanged, including explicit false and rejected completion, disabled or canceled admission, and disposal. The file picker, upload presentation, focal sliders and raster processing are outside this conversion and remain separate acceptance work. Mounted consumer checks cover constructor completeness and unsuccessful admission; real vendor rendering, keyboard behavior and complete Material Design 3 conformance remain unverified.
