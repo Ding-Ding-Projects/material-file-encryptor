@@ -9,6 +9,7 @@ import {acquireMatrix,composeAdapters} from './gui-acceptance-acquire.mjs';
 import {baselineAdapters,ownedFixturePreparation} from './gui-acceptance-baseline.mjs';
 import {createFoundationAdapters} from './gui-acceptance-foundation.mjs';
 import {createAccessAdapters} from './gui-acceptance-access.mjs';
+import {createAccessFixtures} from './gui-acceptance-access-fixtures.mjs';
 import {createRecordsAdapters} from './gui-acceptance-records.mjs';
 import {createPersonalizationAdapters} from './gui-acceptance-personalization.mjs';
 import {createToolsAdapters} from './gui-acceptance-tools.mjs';
@@ -24,6 +25,18 @@ export async function packagedVerifierHash(root=scriptRoot){
  const hashes=[];for(const name of names)hashes.push({name,sha256:sha256(await fs.readFile(path.join(root,name)))});
  return sha256(JSON.stringify(hashes));
 }
+// Delay access admission until an access state is requested. Baseline capture
+// must not initialize, configure, or even inspect an unrelated access profile.
+export function createPackagedAccessFixture({opened,fixtures={}}){
+ if(Object.hasOwn(fixtures,'access'))return fixtures.access;
+ let provider;
+ const get=()=>{
+  if(!provider){try{provider=createAccessFixtures({opened});}catch(error){throw new Error('CAPABILITY_UNAVAILABLE: access requires a verified owned packaged session',{cause:error});}}
+  return provider;
+ };
+ return Object.fromEntries(['assertCapabilities','prepare','beforeAction','perform','observe','restore'].map(method=>[method,(...args)=>get()[method](...args)]));
+}
+
 export function createPackagedAdapters(context){
  return composeAdapters(context.inventory,baselineAdapters(context),createFoundationAdapters(context),createAccessAdapters(context),createRecordsAdapters(context),createPersonalizationAdapters(context),createToolsAdapters(context));
 }
@@ -86,7 +99,7 @@ export async function acquirePackagedBaseline({opened,inventory,buildReceiptPath
   return modernNativeObservation({window,state:current,launch,sourceCommit:target.sourceCommit,launchReceiptSha256:sha256(bytes),processSha256:sha256(await fs.readFile(target.executable)),inspection,profileResolved:await fs.realpath(path.join(opened.runRoot,'profile')),native});
  };
  const prepareOwnedFixture=ownedFixturePreparation({launch,receipt,fixture:opened.fixture});
- const nativeFixtures={...fixtures,foundation:{...createMountedFoundationFixtures({opened}),...createKeyboardFoundationFixtures({opened}),...fixtures.foundation}};
+ const nativeFixtures={...fixtures,access:createPackagedAccessFixture({opened,fixtures}),foundation:{...createMountedFoundationFixtures({opened}),...createKeyboardFoundationFixtures({opened}),...fixtures.foundation}};
  const context={launch,receipt,inventory,prepareOwnedFixture,fixtures:nativeFixtures};
  const adapters=createPackagedAdapters(context);
  const createProbeEvidence=({outputRoot})=>createModernProbeEvidence({binding:build,outputRoot,helperPath:cdp,observe,validate:file=>runEvidenceJson(process.execPath,[path.join(skillRoot,'diagnose-built-ui-layout','scripts','validate-layout-probe.mjs'),'--input',file],undefined,env)});
