@@ -32,10 +32,10 @@ export function createCredentialStore({directory,safeStorage}){
  async function read(){try{const info=await fs.stat(filename);if(info.size>4*1024*1024)throw Error('Protected record store exceeds its limit.');const data=JSON.parse(await fs.readFile(filename,'utf8'));if(!object(data))throw Error('Invalid protected record store.');return data;}catch(e){if(e.code==='ENOENT')return {};throw e;}}
  function available(){if(!safeStorage?.isEncryptionAvailable())throw Error('Operating-system protected storage is unavailable.');}
  function check(key){if(typeof key!=='string'||!keyPattern.test(key))throw Error('Invalid protected record identifier.');}
- async function write(data){await fs.mkdir(directory,{recursive:true});const temporary=filename+'.'+randomUUID()+'.tmp';try{await fs.writeFile(temporary,encoded(data),{mode:0o600,flag:'wx'});await fs.rename(temporary,filename);}finally{await fs.rm(temporary,{force:true});}}
+ async function write(data){const text=encoded(data);if(Buffer.byteLength(text)>4*1024*1024)throw Error('Protected record store exceeds its limit.');await fs.mkdir(directory,{recursive:true});const temporary=filename+'.'+randomUUID()+'.tmp';try{await fs.writeFile(temporary,text,{mode:0o600,flag:'wx'});await fs.rename(temporary,filename);}finally{await fs.rm(temporary,{force:true});}}
  const revisionKey="__protected_record_revisions_v1";
  function revisions(data){if(!Object.hasOwn(data,revisionKey))return {};const value=JSON.parse(safeStorage.decryptString(Buffer.from(data[revisionKey],"base64")));if(!object(value)||Object.entries(value).some(([key,revision])=>!keyPattern.test(key)||typeof revision!=="string"||!/^[a-f0-9-]{36}$/.test(revision)))throw Error("Invalid protected revision index.");return value;}
- function advanceRevision(data,key){const index=revisions(data),revision=randomUUID();index[key]=revision;data[revisionKey]=safeStorage.encryptString(encoded(index)).toString("base64");return revision;}
+ function advanceRevision(data,key){const index=revisions(data),revision=randomUUID();index[key]=revision;bounded(index,1024*1024);data[revisionKey]=safeStorage.encryptString(encoded(index)).toString("base64");return revision;}
  function mutate(action){const next=chain.catch(()=>{}).then(action);chain=next;return next;}
  return {
   async get(key){check(key);available();await chain;const data=await read();if(!Object.hasOwn(data,key))return null;return JSON.parse(safeStorage.decryptString(Buffer.from(data[key],'base64')));},
