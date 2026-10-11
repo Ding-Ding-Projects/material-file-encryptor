@@ -124,8 +124,10 @@ export function assertGalleryPresentation(home,records,{intendedSource=INTENDED_
  for(const record of records)if(!record.historical&&(record.sourceCommit!==intendedSource||!record.promotionReceiptSha256))throw Error('Current capture does not match intended UI source');
  for(const section of home.matchAll(/<section\b[^>]*>[\s\S]*?<\/section>/g)){
   if(!section[0].includes('src="images/captures/'))continue;
-  const headings=[...section[0].matchAll(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/g)].map(row=>row[0]);
-  headings.push(...[...section[0].matchAll(/<p\b[^>]*class="[^"]*\beyebrow\b[^"]*"[^>]*>[\s\S]*?<\/p>/g)].map(row=>row[0]));
+  for(const tag of section[0].matchAll(/<(?:h[1-6]|p|figcaption)\b[^>]*>/gi))canonicalPresentationAttributes(tag[0]);
+  const headings=[...section[0].matchAll(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/gi)].map(row=>row[0]);
+  headings.push(...[...section[0].matchAll(/<p\b[^>]*class="[^"]*\beyebrow\b[^"]*"[^>]*>[\s\S]*?<\/p>/gi)].map(row=>row[0]));
+  for(const heading of headings)canonicalPresentationAttributes(heading.match(/^<[^>]*>/)[0]);
   for(const figure of section[0].matchAll(/<figure\b([^>]*)>([\s\S]*?)<\/figure>/g)){
    const image=figure[2].match(/<img\b[^>]*src="(images\/captures\/[^\"]+)"/);if(!image)continue;
    presented++;
@@ -136,7 +138,9 @@ export function assertGalleryPresentation(home,records,{intendedSource=INTENDED_
    const role=figure[1].match(/data-gallery-role="(historical|current)"/)?.[1];
    if(role!==(record.historical?'historical':'current'))throw Error('Presentation capture role differs from gallery');
    const labels=[...figure[2].matchAll(/aria-label="([^"]+)"/g)].map(row=>row[1]);
-   const caption=figure[2].match(/<figcaption\b[^>]*>([\s\S]*?)<\/figcaption>/)?.[1]||'';
+   const captionMatch=figure[2].match(/<figcaption\b[^>]*>([\s\S]*?)<\/figcaption>/i);
+   if(captionMatch)canonicalPresentationAttributes(captionMatch[0].match(/^<[^>]*>/)[0]);
+   const caption=captionMatch?.[1]||'';
    const accessible=[imageAttributes.alt||'',...relatedAttributes.flatMap(attributes=>[attributes.title||'',attributes['aria-label']||''])];
    if(record.historical&&[...headings,...labels,...accessible,caption].some(text=>/current/i.test(presentationMeaning(text))))throw Error('Historical capture has a current presentation label');
   }

@@ -12,7 +12,10 @@ test('alternate serialization and decoded accessibility claims cannot evade hist
  home.replace('Historical packaged Windows interface · source','Curr&#101;nt packaged Windows interface · source'),
  home.replace('alt="Actual packaged Windows History view','alt="Cu&#114rent packaged Windows History view'),
  home.replace('Historical packaged Windows interface · source','Cur<strong>rent</strong> packaged Windows interface · source'),
- home.replace('aria-label="Open the historical History capture','title="Current rebuilt interface" aria-label="Open the historical History capture')
+ home.replace('aria-label="Open the historical History capture','title="Current rebuilt interface" aria-label="Open the historical History capture'),
+ home.replace('<h2 id="screenshots-heading">Historical interface captures.</h2>','<H2 id="screenshots-heading">Current interface captures.</H2>'),
+ home.replace('<figcaption><strong>History</strong>','<FIGCAPTION>Current interface<strong>History</strong>'),
+ home.replace('<p class="eyebrow">Historical Windows interface captures</p>','<P CLASS="EYEBROW">Current Windows evidence</P>')
  ];
  for(const [index,damaged]of cases.entries()){assert.notEqual(damaged,home);assert.throws(()=>assertGalleryPresentation(damaged,records),/Historical|Noncanonical|absent|outside|Unsupported/,String(index));}
  assert.equal(assertGalleryPresentation(home,records),true);
