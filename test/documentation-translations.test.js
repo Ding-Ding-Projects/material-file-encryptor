@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 // Independent required inventory: adding an article requires explicit review here.
 const REQUIRED = [
   'README', 'access-local', 'appearance-editor', 'local-personalization',
-  'access/README', 'access/local-access', 'access/visitor-local-access', 'appearance/README', 'appearance/raster-workflows',
+  'access/README', 'access/local-access', 'access/visitor-local-access', 'appearance/README', 'appearance/image-placement', 'appearance/raster-workflows',
   'converter/README', 'converter/spreadsheets', 'converter/archive-runtime', 'converter/archive-and-data', 'converter/media-plan', 'converter/minimal-component', 'converter/minimal-runtime',
   'desktop/README', 'desktop/owned-exit-handles', 'desktop/package-integrity', 'desktop/runtime-evidence', 'drive/README',
   'interface/README', 'interface/motion-keyframes', 'interface/color-picker', 'interface/typography-inspector', 'interface/animation-transition', 'interface/public-workspace-role', 'interface/settings-completeness', 'interface/settings-guidance', 'interface/nested-appearance-guidance', 'interface/font-metadata', 'interface/bundled-fonts', 'interface/workbench-guidance', 'interface/appearance-editor', 'interface/local-personalization', 'interface/modern-fields', 'interface/personal-vocabulary', 'interface/startup-registration', 'interface/visitor-personalization',
