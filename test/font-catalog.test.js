@@ -78,6 +78,7 @@ test('typed picker validates actual drafts and delegates exactly once to the ori
  await assert.rejects(picker.applyFace('fixture',{wght:901}),/between/);assert.equal(writes,1);
  const input=host.querySelectorAll('input').find(node=>node.type==='number');input.value='950';const apply=host.querySelectorAll('button').find(node=>node.textContent==='Apply axis values');apply.click();await new Promise(resolve=>setTimeout(resolve,0));assert.equal(writes,1);
  const reset=host.querySelectorAll('button').find(node=>node.textContent==='Reset axes to defaults');reset.click();await new Promise(resolve=>setTimeout(resolve,0));assert.equal(writes,2);assert.equal(changes[1].fontVariationSettings,'"wght" 400');
+ const failed=mountFontPicker(host,{catalog:{faces:[face]},mutate:()=>false});await assert.rejects(failed.applyFace('fixture'),/could not complete/);assert.equal(failed.getSelection(),null);failed.destroy();
  locked=true;await assert.rejects(picker.applyFace('fixture',{}),/unavailable/);picker.destroy();await assert.rejects(picker.applyFace('fixture',{}),/unavailable/);assert.equal(writes,2);
  assert.throws(()=>validateFontAxes(face,{xxxx:1}),/Unknown/);assert.throws(()=>fontVariationCSS({'bad"':3}),/Invalid/);
 });

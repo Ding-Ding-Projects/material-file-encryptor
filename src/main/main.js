@@ -1,3 +1,5 @@
+import { selectVerificationRestartContext } from './verification-restart-context.js';
+import { readFileSync } from 'node:fs';
 import squirrelStartup from 'electron-squirrel-startup';
 import { app, autoUpdater, BrowserWindow, dialog, ipcMain, Menu, nativeImage, safeStorage, shell, Tray } from 'electron';
 import { randomBytes, createHash } from 'node:crypto';
@@ -17,12 +19,23 @@ const directory = path.dirname(fileURLToPath(import.meta.url));
 const rendererPath = path.resolve(directory, '../renderer/index.html');
 const rendererURL = pathToFileURL(rendererPath).href;
 const testMode = !app.isPackaged && process.argv.includes('--desktop-check');
-const verificationProfile = process.argv.find(argument => argument.startsWith('--verification-profile='))?.slice('--verification-profile='.length);
+const restartContext = selectVerificationRestartContext({ executable: process.execPath, packaged: app.isPackaged, version: app.getVersion(), readBuildMetadata: () => JSON.parse(readFileSync(path.resolve(directory, '../shared/build-metadata.json'), 'utf8')) });
+if (restartContext) {
+  const declaredProfile = process.argv.find(argument => argument.startsWith('--verification-profile='))?.slice('--verification-profile='.length);
+  if (declaredProfile && declaredProfile !== restartContext.profile) throw new Error('Verification profile does not match restart context.');
+  if (app.commandLine.hasSwitch('remote-debugging-pipe')) throw new Error('Verification debugging transport does not match restart context.');
+  const declaredPort = app.commandLine.getSwitchValue('remote-debugging-port');
+  const declaredHost = app.commandLine.getSwitchValue('remote-debugging-address');
+  if ((declaredPort && declaredPort !== String(restartContext.debugPort)) || (declaredHost && declaredHost !== restartContext.debugHost)) throw new Error('Verification debugging does not match restart context.');
+  app.commandLine.appendSwitch('remote-debugging-address', restartContext.debugHost);
+  app.commandLine.appendSwitch('remote-debugging-port', String(restartContext.debugPort));
+}
+const verificationProfile = restartContext?.profile || process.argv.find(argument => argument.startsWith('--verification-profile='))?.slice('--verification-profile='.length);
 if (verificationProfile) {
-  if (!process.argv.includes('--desktop-check') || !path.isAbsolute(verificationProfile)) throw new Error('Verification requires an explicit absolute profile directory and desktop-check mode.');
+  if ((!restartContext && !process.argv.includes('--desktop-check')) || !path.isAbsolute(verificationProfile)) throw new Error('Verification requires an explicit absolute profile directory and desktop-check mode.');
   app.setPath('userData', verificationProfile);
 } else if (testMode) app.setPath('userData', path.resolve('out/desktop-profile'));
-const verificationMode = Boolean(verificationProfile && process.argv.includes('--desktop-check'));
+const verificationMode = Boolean(restartContext || verificationProfile && process.argv.includes('--desktop-check'));
 function startupReadbackOptions(executable) {
   // The pinned Windows runtime parses the lookup path as a command line.
   // Quote only the getter input so spaces remain part of the executable path.
