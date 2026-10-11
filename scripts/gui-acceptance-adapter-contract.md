@@ -18,7 +18,7 @@ Each state adapter implements:
     // Optional: ordinary UI actions after shared navigation selects the view/tab.
     // Open the required editor, disclosure, prompt or other state here.
   },
-  async assertState({tuple, executePlan}) {
+  async assertState({tuple, binding, executePlan, prepared}) {
     // Independent read-only observations. Throw on a mismatch.
     return {passed: true, observable: /* exact inventory observable */, evidence};
   },
