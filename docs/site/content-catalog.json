@@ -27,6 +27,7 @@
     "docs/features/ollama/local-models.zh-HK.md",
     "docs/features/ollama/native-host.md",
     "docs/features/ollama/regression-verification.md",
+    "docs/features/ollama/release-provenance.md",
     "docs/features/performance/README.md",
     "docs/features/performance/native-helper.md",
     "docs/features/performance/native-lifecycle-performance.md",
