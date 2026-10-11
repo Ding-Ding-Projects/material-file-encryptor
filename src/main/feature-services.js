@@ -6,11 +6,14 @@ import { execFile } from 'node:child_process';
 import { createStatusHubClient } from '../status-hub/status-hub-client.mjs';
 import { collectWorktrees } from '../status-hub/worktree-inventory.mjs';
 import { createApplicationStatus } from '../features/documentation/status-service.mjs';
+import { createScheduleSource } from './schedule-source.js';
+import { createNativeOllamaHost } from './ollama-host.js';
+import { createRuntimeController } from '../features/ollama/runtime.js';
 const scrypt=promisify(scryptCallback);
 const executeFile=promisify(execFile);
 const object=value=>value&&typeof value==='object'&&!Array.isArray(value);
 const encoded=value=>JSON.stringify(value);
-const keyPattern=/^(?:(?:profile:|lock:|authenticator:|history:|shared:|grant:)[a-zA-Z0-9:_.-]{1,160}|element-lock:[^\x00-\x1f\x7f]{1,256}|local-profile:v1)$/;
+const keyPattern=/^(?:(?:profile:|lock:|authenticator:|history:|shared:|grant:|schedule:)[a-zA-Z0-9:_.-]{1,160}|element-lock:[^\x00-\x1f\x7f]{1,256}|local-profile:v1)$/;
 const rendererCredentialKey=key=>typeof key==='string'&&/^(?:local-profile:v1|element-lock:|authenticator:|history:)/.test(key)&&keyPattern.test(key);
 const secretKey=/^(?:password|pin|secret|token|credential|credentials|vocabulary|replacements|entries)$/i;
 function bounded(value,limit=262144){const text=encoded(value);if(typeof text!=='string'||Buffer.byteLength(text)>limit)throw Error('Request exceeds its size limit.');function visit(v,depth){if(depth>12)throw Error('Request is too deeply nested.');if(object(v)){for(const[k,item]of Object.entries(v)){if(['__proto__','prototype','constructor'].includes(k))throw Error('Invalid record key.');visit(item,depth+1);}}else if(Array.isArray(v)){for(const item of v)visit(item,depth+1);}}visit(value,0);return value;}
@@ -36,8 +39,10 @@ export async function readConverterManifest(filename) {
  return JSON.parse((await fs.readFile(filename,'utf8')).replace(/^\uFEFF/,''));
 }
 
-export function createFeatureServices({dataDirectory,applicationRoot,sandboxDirectory,safeStorage,dialog,getWindow,openPath,emit=()=>{},sandboxProvider}){
+export function createFeatureServices({dataDirectory,applicationRoot,sandboxDirectory,safeStorage,dialog,getWindow,openPath,openExternal,emit=()=>{},sandboxProvider}){
  const credentials=createCredentialStore({directory:dataDirectory,safeStorage});
+ const scheduleAuthorization={};
+ const schedules=createScheduleSource({credentials,authorizeCredentialMutation:context=>context?.authorization===scheduleAuthorization});
  const grants=new Map();let converter,ollama,ollamaPromise,closed=false,exiting=false,sharedCredentialGranted=false,pendingRequests=0;
  const modelEvents=[];let modelSequence=0,modelEventBytes=0;
  function modelEvent(data){const item={sequence:++modelSequence,data};const bytes=Buffer.byteLength(JSON.stringify(item));if(bytes<=524288){modelEvents.push({item,bytes});modelEventBytes+=bytes;}while(modelEvents.length>128||modelEventBytes>524288){modelEventBytes-=modelEvents.shift().bytes;}emit('ollama',data);}
@@ -48,7 +53,7 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
  const ensureOpen=()=>{if(closed)throw Error('Application is closing.');};
  let converterPromise;
  async function converterService(){if(!converterPromise)converterPromise=(async()=>{let provider=sandboxProvider;if(!provider&&sandboxDirectory){try{const manifest=await readConverterManifest(path.join(sandboxDirectory,'manifest.json'));const{createWindowsSandboxProvider}=await import('../features/converter/windows-sandbox.mjs');provider=await createWindowsSandboxProvider({launcherPath:path.join(sandboxDirectory,'ConverterSandbox.exe'),launcherSha256:manifest.launcherSha256,runtimePath:path.join(sandboxDirectory,'node.exe'),runtimeSha256:manifest.runtimeSha256,launcherCompanionHashes:manifest.launcherCompanionHashes});}catch{provider=null;}}const{createConverterService}=await import('../features/converter/service.mjs');converter=createConverterService({stateDirectory:path.join(dataDirectory,'conversion-queue'),resolveGrant,bundledProof:{pdfLib:true},sandboxProvider:provider});void converter.run();return converter;})();return converterPromise;}
- async function ollamaService(){if(!ollamaPromise)ollamaPromise=(async()=>{const{createOllamaService}=await import('../features/ollama/service.js');const{createNativeHardwareProbe}=await import('../features/ollama/native-hardware.js');ollama=createOllamaService({dataDir:path.join(dataDirectory,'local-models'),hardwareProbe:createNativeHardwareProbe()});ollama.subscribe(modelEvent);return ollama;})();return ollamaPromise;}
+ async function ollamaService(){if(!ollamaPromise)ollamaPromise=(async()=>{const{createOllamaService}=await import('../features/ollama/service.js');const{createNativeHardwareProbe}=await import('../features/ollama/native-hardware.js');const host=createNativeOllamaHost({dialog,getWindow,openExternal,credentials,dataDirectory});await host.initialize();ollama=createOllamaService({dataDir:path.join(dataDirectory,'local-models'),hardwareProbe:createNativeHardwareProbe(),...host.serviceOptions,runtimeController:createRuntimeController(host.runtimeOptions)});ollama.subscribe(modelEvent);return ollama;})();return ollamaPromise;}
  async function pick(properties,title){const result=await dialog.showOpenDialog(getWindow(),{title,properties});return result.canceled?[]:result.filePaths;}
  async function dispatch(feature,action,payload={}){
   ensureOpen();if(typeof feature!=='string'||typeof action!=='string'||!object(payload))throw Error('Invalid feature request.');bounded(payload);
@@ -84,10 +89,20 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
    if(action==='setSharedCredential'){if(await credentials.get('shared:mode'))throw Error('A local credential already exists. Use the documented local recovery route to reset it.');if(typeof payload.password!=='string'||payload.password.length<1||payload.password.length>4096)throw Error('Enter a bounded credential.');const salt=randomBytes(32),hash=await scrypt(payload.password,salt,32);await credentials.set('shared:mode',{salt:salt.toString('base64'),hash:hash.toString('base64')});hash.fill(0);return true;}
    if(action==='verifySharedCredential'){const value=await credentials.get('shared:mode');if(!value||typeof payload.password!=='string'||payload.password.length>4096)return false;const actual=await scrypt(payload.password,Buffer.from(value.salt,'base64'),32);try{const expected=Buffer.from(value.hash,'base64');sharedCredentialGranted=expected.length===actual.length&&timingSafeEqual(actual,expected);return sharedCredentialGranted;}finally{actual.fill(0);}}
    if(action==='listFonts'){if(process.platform!=='win32')throw Error('Native font enumeration is unavailable on this platform.');const result=await executeFile('powershell.exe',['-NoLogo','-NoProfile','-NonInteractive','-Command','Add-Type -AssemblyName System.Drawing; @((New-Object System.Drawing.Text.InstalledFontCollection).Families | ForEach-Object { $_.Name } | Sort-Object -Unique) | ConvertTo-Json -Compress'],{windowsHide:true,timeout:10000,maxBuffer:1024*1024});const names=JSON.parse(result.stdout.replace(/^\uFEFF/,''));if(!Array.isArray(names)||names.some(name=>typeof name!=='string'||name.length>256))throw Error('Invalid native font inventory.');return names;}
-   if(action==='fetchScheduleSource')throw Error('No external schedule source has been paired. Configure an authenticated provider before enabling this schedule.');
+   if(action==='fetchScheduleSource')return schedules.fetch(payload.source,{id:payload.id});
+   if(action==='setScheduleCredential'||action==='clearScheduleCredential'){
+    if(typeof payload.id!=='string'||!/^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$/.test(payload.id))throw Error('Choose a saved schedule.');
+    const source=payload.source;
+    if(!object(source)||source.type!=='home-assistant'||typeof source.url!=='string')throw Error('Choose a Home Assistant schedule.');
+    let origin;try{origin=new URL(source.url).origin;}catch{throw Error('Enter a valid Home Assistant origin.');}
+    const answer=await dialog.showMessageBox(getWindow(),{type:'warning',buttons:['Cancel',action==='setScheduleCredential'?'Store credential':'Clear credential'],defaultId:0,cancelId:0,title:'Home Assistant credential',message:action==='setScheduleCredential'?'Store this credential for the selected schedule?':'Clear this schedule credential?',detail:'Schedule: '+payload.id+'\nOrigin: '+origin+'\nThe credential is kept in operating-system protected storage and is never returned to the page.'});
+    if(answer.response!==1)return {cancelled:true};
+    const context={authorization:scheduleAuthorization,source};
+    return action==='setScheduleCredential'?schedules.registerToken(payload.id,payload.token,context):schedules.deleteToken(payload.id,context);
+   }
   }
   throw Error('Unsupported feature action.');
  }
  async function request(...args){pendingRequests++;try{return await dispatch(...args);}finally{pendingRequests--;}}
- return {request,credentials,beginExit(){exiting=true;},endExit(){exiting=false;},async pending(){return pendingRequests+(converter?await converter.pending():0)+(ollama?.operations().length||0);},async cancelAll(){await Promise.allSettled([converterPromise,ollamaPromise]);await Promise.all([converter?.cancelAll(),ollama?.cancelAll()]);},async checkpoint(summary,progress){return(await statusPromise).checkpoint(summary,progress);},async close(){closed=true;await Promise.allSettled([converterPromise,ollamaPromise]);await converter?.close();await ollama?.dispose();await(await statusPromise).finish('waiting');grants.clear();}};
+ return {request,credentials,beginExit(){exiting=true;},endExit(){exiting=false;},async pending(){return pendingRequests+(converter?await converter.pending():0)+(ollama?.operations().length||0);},async cancelAll(){await Promise.allSettled([converterPromise,ollamaPromise]);await Promise.all([converter?.cancelAll(),ollama?.cancelAll()]);},async checkpoint(summary,progress){return(await statusPromise).checkpoint(summary,progress);},async close(){closed=true;await schedules.dispose();await Promise.allSettled([converterPromise,ollamaPromise]);await converter?.close();await ollama?.dispose();await(await statusPromise).finish('waiting');grants.clear();}};
 }

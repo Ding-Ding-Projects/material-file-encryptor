@@ -37,3 +37,17 @@ test('desktop feature allowlist keeps protected records unavailable to browser r
  assert.throws(()=>validateFeatureRequest('converter','constructor',{}));
  assert.throws(()=>validateFeatureRequest('ollama','exec',{}));
 });
+
+
+test('schedule credentials require native confirmation and remain inaccessible to renderer records',async t=>{
+ const directory=await fixture(t);let approve=false,calls=0;
+ const services=createFeatureServices({dataDirectory:directory,applicationRoot:directory,safeStorage,dialog:{showMessageBox:async()=>{calls++;return {response:approve?1:0};}},getWindow:()=>null,openPath:async()=>{}});
+ const source={type:'home-assistant',url:'https://example.com',entity:'input_boolean.work'};
+ assert.deepEqual(await services.request('personalization','setScheduleCredential',{id:'test',source,token:'synthetic-value'}),{cancelled:true});
+ assert.equal(await services.credentials.get('schedule:test'),null);
+ approve=true;assert.equal((await services.request('personalization','setScheduleCredential',{id:'test',source,token:'synthetic-value'})).stored,true);
+ assert.equal((await services.credentials.get('schedule:test')).origin,'https://example.com');
+ for(const action of ['credentialGet','credentialSet','credentialDelete'])await assert.rejects(services.request('access',action,{key:'schedule:test',value:{}}),/reserved/);
+ for(const action of ['setScheduleCredential','clearScheduleCredential'])assert.throws(()=>validateFeatureRequest('personalization',action,{}, {browser:true}));
+ assert.equal((await services.request('personalization','clearScheduleCredential',{id:'test',source})).deleted,true);assert.equal(await services.credentials.get('schedule:test'),null);assert.equal(calls,3);await services.close();
+});

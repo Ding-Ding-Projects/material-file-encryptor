@@ -109,7 +109,7 @@ async function request(method, params) {
     return helper.request(method, params);
   }
   if (method === 'forceLock') {
-    const answer = await dialog.showMessageBox(window, {type:'warning',buttons:['Keep running','Force Lock'],defaultId:0,cancelId:0,title:'Force Lock',message:'Disconnect idle open files and lock this drive?',detail:'Encryption, decryption, queued work and pending content prevent Force Lock. Other applications may retain plaintext they already read.'});
+    const answer = await dialog.showMessageBox(window, {type:'warning',buttons:['Keep running','Force Lock'],defaultId:0,cancelId:0,title:'Force Lock',message:'Disconnect idle open files and lock this drive?',detail:'Save and close open files first. Encryption, decryption, queued work and pending content prevent Force Lock. Forced disconnection invalidates open handles and mapped views. Changes still buffered by another application may be lost, and later access may report an error or terminate that application. Other applications may retain plaintext they already read.'});
     if (answer.response !== 1) return {cancelled:true};
     const result = await helper.request('forceLock');
     if (result.locked) { state = nativeState(await helper.request('statusSummary')); publish(); }
@@ -261,7 +261,7 @@ else {
     applyStartup(preferences.startup);
     cachedStartupRegistration=startupRegistration();
     try { Object.assign(buildMetadata, JSON.parse(await fs.readFile(path.resolve(directory,'../shared/build-metadata.json'),'utf8'))); } catch { /* Development builds have no invented build date. */ }
-    features=createFeatureServices({dataDirectory:app.getPath('userData'),applicationRoot:path.resolve(directory,'../..'),sandboxDirectory:app.isPackaged?path.join(process.resourcesPath,'converter'):path.resolve('out/converter'),safeStorage,dialog,getWindow:()=>window,openPath,emit:(feature,data)=>window?.webContents.send('feature:event',feature,data)});
+    features=createFeatureServices({dataDirectory:app.getPath('userData'),applicationRoot:path.resolve(directory,'../..'),sandboxDirectory:app.isPackaged?path.join(process.resourcesPath,'converter'):path.resolve('out/converter'),safeStorage,dialog,getWindow:()=>window,openPath,openExternal:url=>shell.openExternal(url),emit:(feature,data)=>window?.webContents.send('feature:event',feature,data)});
     localAdapter=createLocalAdapter({isAuthenticated:()=>!state.locked&&state.lockVerified!==false,authorizePair:async({origin})=>(await dialog.showMessageBox(window,{type:'question',buttons:['Reject','Pair browser'],defaultId:0,cancelId:0,title:'Pair browser tools',message:'Allow this browser to use local tools?',detail:origin+' will be able to operate approved workflows until the drive locks or the session expires.'})).response===1,dispatch:request});
     window = new BrowserWindow({ width: 1180, height: 850, minWidth: 880, minHeight: 650, frame: false, show: false, backgroundColor: '#f7f9f8', webPreferences: { preload: path.join(directory, 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false, webSecurity: true } });
     window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
