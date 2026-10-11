@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {Readable,PassThrough} from 'node:stream';
-import {createWorkflowServices,isPublicAddress} from '../src/main/workflow-services.js';
+import {createWorkflowServices,isPublicAddress,hashEditorFile} from '../src/main/workflow-services.js';
 async function fixture(options={}){
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'workflow-test-')),choices=[];
  const service=createWorkflowServices({dataDirectory:root,dialog:{showOpenDialog:async()=>({canceled:false,filePaths:[choices.shift()]}),showSaveDialog:async()=>({canceled:false,filePath:choices.shift()})},...options});
@@ -48,4 +48,23 @@ test('editor opening uses a signed, unchanged executable and fixed argument list
 
 test('close cancels a pending DNS lookup without waiting for it to resolve',async()=>{
  const f=await fixture({lookup:()=>new Promise(()=>{})});try{f.choices.push(path.join(f.root,'pending.bin'));const item=await f.service.dispatch('prepareDownload',{url:'https://public.example/file'});await f.service.dispatch('startDownload',{id:item.id});await f.service.close();assert.equal(f.service.pending,0);}finally{await f.close();}
+});
+
+test('IPv6 policy is identical for compressed, expanded, uppercase and padded addresses',()=>{
+ for(const values of [
+  ['2001:db8::1','2001:0db8::1','2001:0DB8:0000:0000:0000:0000:0000:0001'],
+  ['2001:0:1234::1','2001:0000:1234::1','2001:0000:1234:0000:0000:0000:0000:0001'],
+  ['2001:20::1','2001:0020::1','2001:0020:0000:0000:0000:0000:0000:0001'],
+  ['2002:7f00:1::1','2002:7F00:0001:0000:0000:0000:0000:0001']
+ ])for(const value of values)assert.equal(isPublicAddress(value),false,value);
+ for(const value of ['2606:4700:4700::1111','2606:4700:4700:0000:0000:0000:0000:1111'])assert.equal(isPublicAddress(value),true,value);
+});
+test('editor hashing uses bounded reads and detects a mutation during hashing',async()=>{
+ const f=await fixture();const originalOpen=fs.open;try{
+  const target=path.join(f.root,'Code.exe');await fs.writeFile(target,Buffer.alloc(200000,42));let largest=0;
+  fs.open=async(...args)=>{const handle=await originalOpen(...args),read=handle.read.bind(handle);handle.read=async(buffer,...rest)=>{largest=Math.max(largest,buffer.length);return read(buffer,...rest);};return handle;};
+  assert.match(await hashEditorFile(target),/^[a-f0-9]{64}$/);assert.equal(largest,65536);
+  fs.open=async(...args)=>{const handle=await originalOpen(...args),read=handle.read.bind(handle);let changed=false;handle.read=async(...readArgs)=>{const result=await read(...readArgs);if(!changed){changed=true;await fs.appendFile(target,'changed');}return result;};return handle;};
+  await assert.rejects(hashEditorFile(target),/changed/);
+ }finally{fs.open=originalOpen;await f.close();}
 });
