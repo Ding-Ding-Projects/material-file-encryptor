@@ -81,6 +81,24 @@ test('visible browser pairing authenticates only after real loopback readback an
   addressInput.value=f.adapter.address;codeInput.value=f.adapter.pairingCode().code;
   await form.events.submit({preventDefault(){}});
   assert.deepEqual(changes,[false,true]);assert.equal(codeInput.value,'');
-  assert.deepEqual(await browser.featureRequest('getState'),{ok:true});
+  assert.deepEqual(await browser.featureRequest('featureRequest',{feature:'status',action:'status',payload:{}}),{ok:true});
+  const pairedFetch=globalThis.fetch;let rejectedRequests=0;
+  globalThis.fetch=(...args)=>{rejectedRequests++;return pairedFetch(...args);};
+  try {for(const action of ['getState','openExplorer','sync','lockVault','importSelected','fileAction'])await assert.rejects(browser.featureRequest(action,{}),/documentation workspace/);assert.equal(rejectedRequests,0);}
+  finally {globalThis.fetch=pairedFetch;}
+
   f.lock();assert.deepEqual(await browser.status(),{authenticated:false});assert.deepEqual(changes,[false,true,false]);
+});
+
+
+test('public companion rejects primary drive and unsupported feature calls before any network',async()=>{
+ const nodes=[],document={createElement:tag=>{const node={tag,children:[],append(...children){this.children.push(...children);},setAttribute(){},addEventListener(){},remove(){}};nodes.push(node);return node;},defaultView:{addEventListener(){},removeEventListener(){}}};
+ const adapter=mountLocalAdapter({ownerDocument:document,append(){}});let requests=0;const originalFetch=globalThis.fetch;globalThis.fetch=()=>{requests++;throw Error('unexpected network');};
+ try {
+  for(const action of ['getState','mount','unmount','openExplorer','sync','lockVault','chooseFiles','importSelected','fileAction','listFiles','restoreVersion','emptyRecycleBin'])await assert.rejects(adapter.featureRequest(action,{}),/documentation workspace/);
+  for(const feature of ['workflow','updates','access','documentation','__proto__'])await assert.rejects(adapter.featureRequest('featureRequest',{feature,action:'status',payload:{}}),/documentation workspace/);
+  await assert.rejects(adapter.featureRequest('featureRequest',{feature:'converter',action:'notAnAction',payload:{}}),/documentation workspace/);
+  await assert.rejects(adapter.featureRequest('featureRequest',{feature:'status',action:'status',payload:{},extra:true}),/documentation workspace/);
+  assert.equal(requests,0);
+ } finally {globalThis.fetch=originalFetch;adapter.dispose();}
 });
