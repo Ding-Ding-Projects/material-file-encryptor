@@ -1,9 +1,12 @@
+import {controlHelperOwner} from '../../../shared/surface/controls.js';
 import {passwordVerifier,verifyPassword,verifyTotp,randomId} from './crypto.js';
 export const LOCK_POLICIES = Object.freeze({pin:['pin'],password:['password'],'pin-password':['pin','password'],'password-totp':['password','totp'],'pin-totp':['pin','totp'],'password-pin-totp':['password','pin','totp']});
 // Resolve the registered public control host, not an implementation node inside its shadow root.
 export function accessControlTarget(event) {
   const path=typeof event?.composedPath==='function'?event.composedPath():[];
-  return path.find(node=>node?.dataset?.materialPrimitive || /^(MD-(?:(?:FILLED|FILLED-TONAL|OUTLINED|TEXT|ICON|FILLED-ICON|OUTLINED-ICON|FILLED-TONAL-ICON)-BUTTON|(?:OUTLINED|FILLED)-(?:TEXT-FIELD|SELECT)|CHECKBOX|RADIO|SWITCH|SLIDER|(?:PRIMARY|SECONDARY)-TAB)|MFE-(?:FILE-PICKER|DATE-FIELD))$/.test(node?.tagName||'')) || event?.target;
+  const helper=path.map(node=>node&&typeof node==='object'?controlHelperOwner(node):null).find(Boolean);if(helper)return helper;
+  const field=path.find(node=>/^(MD-(OUTLINED|FILLED)-(TEXT-FIELD|SELECT)|MFE-(FILE-PICKER|DATE-FIELD))$/.test(node?.tagName||''));
+  return field||path.find(node=>node?.dataset?.materialPrimitive || /^(MD-(?:(?:FILLED|FILLED-TONAL|OUTLINED|TEXT|ICON|FILLED-ICON|OUTLINED-ICON|FILLED-TONAL-ICON)-BUTTON|(?:OUTLINED|FILLED)-(?:TEXT-FIELD|SELECT)|CHECKBOX|RADIO|SWITCH|SLIDER|(?:PRIMARY|SECONDARY)-TAB)|MFE-(?:FILE-PICKER|DATE-FIELD))$/.test(node?.tagName||'')) || event?.target;
 }
 export function accessLockIdentity(element,event) {
   const path=typeof event?.composedPath==='function'?event.composedPath():[element];
@@ -15,7 +18,7 @@ const isEditableControl=control=>/^(INPUT|SELECT|TEXTAREA|MD-(OUTLINED|FILLED)-(
 const isActionControl=control=>/^(BUTTON|MD-(FILLED|FILLED-TONAL|OUTLINED|TEXT|ICON|FILLED-ICON|OUTLINED-ICON|FILLED-TONAL-ICON)-BUTTON|MD-(PRIMARY|SECONDARY)-TAB)$/.test(control?.tagName||'');
 // This controller is an opt-in local convenience lock, not an authorization boundary.
 export class LockController {
-  constructor({store,now=Date.now,onBlocked=()=>{},getDishChallenge,waitBudget}={}) { this.store=store;this.now=now;this.onBlocked=onBlocked;this.records=new Map();this.sessions=new Map();this.attempts=new Map();this.creating=new Set();this.generations=new Map();this.removing=new Set();this.waitLadder=new WaitLadder({now,getDishChallenge,budget:waitBudget});this.waitTarget=null;this.eventAdmissions=new WeakMap();this.controlAdmissions=new WeakMap(); }
+  constructor({store,now=Date.now,onBlocked=()=>{},getDishChallenge,waitBudget,host}={}) { this.host=host;this.store=store;this.now=now;this.onBlocked=onBlocked;this.records=new Map();this.sessions=new Map();this.attempts=new Map();this.creating=new Set();this.generations=new Map();this.removing=new Set();this.waitLadder=new WaitLadder({now,getDishChallenge,budget:waitBudget});this.waitTarget=null;this.eventAdmissions=new WeakMap();this.controlAdmissions=new WeakMap(); }
   async load(ids=[]) { if(!this.store) return; for(const id of ids){const record=await this.store.get(`element-lock:${id}`);if(record)this.records.set(id,record);} }
   async set(id,policy,credentials,duration=0,sessionMode='timed') {
     if(!id||!LOCK_POLICIES[policy])throw new Error('Select a valid lock policy.');
@@ -41,11 +44,11 @@ export class LockController {
   isLocked(id){if(!this.records.has(id))return false;const until=this.sessions.get(id);return until===undefined||until<=this.now();}
   generation(id){return this.generations.get(id)||0;}
   bumpGeneration(id){this.generations.set(id,this.generation(id)+1);return this.generation(id);}
-  cancel(id){this.bumpGeneration(id);this.sessions.delete(id);return this.generation(id);}
+  cancel(id){this.host?.('waitCancel',{target:'element:'+id}).catch(()=>{});this.bumpGeneration(id);this.sessions.delete(id);return this.generation(id);}
   lock(id){this.cancel(id);}
   waiting(id){return Math.max(0,(this.attempts.get(id)?.until||0)-this.now());}
   cancelWait(id){this.cancel(id);this.waitLadder.pending=null;}
-  async challengeWaitAsync(id,options={}){const generation=this.generation(id);if(this.waitLadder.budget){const state=await this.waitLadder.budget.status();if(!state.canConsume||state.remaining===0)return null;}if(this.generation(id)!==generation)return null;return this.challengeWait(id,options);}
+  async challengeWaitAsync(id,options={}){const generation=this.generation(id);if(this.host){const challenge=await this.host('waitChallenge',{target:'element:'+id});return this.generation(id)===generation?challenge:null;}if(this.waitLadder.budget){const state=await this.waitLadder.budget.status();if(!state.canConsume||state.remaining===0)return null;}if(this.generation(id)!==generation)return null;return this.challengeWait(id,options);}
   challengeWait(id,{schoolMode=false}={}){
     if(!this.waiting(id))return null;
     const identity=`${id}:${this.attempts.get(id).until}`;
@@ -55,8 +58,9 @@ export class LockController {
     return this.waitLadder.challenge();
   }
   async answerWait(id,nonce,answer){
-    const attempt=this.attempts.get(id);if(!attempt||!this.waiting(id)||this.waitTarget!==`${id}:${attempt.until}`)return false;
+    const attempt=this.attempts.get(id);if(!attempt||!this.waiting(id)||!this.host&&this.waitTarget!==`${id}:${attempt.until}`)return false;
     const generation=this.generation(id),deadline=attempt.until;
+    if(this.host){const result=await this.host('waitAnswer',{target:'element:'+id,nonce,answer});if(this.generation(id)!==generation||this.attempts.get(id)!==attempt||attempt.until!==deadline)return false;if(result.won===true)attempt.until=result.until;return result.won===true;}
     if(!await this.waitLadder.answerAsync(nonce,answer))return false;
     if(this.generation(id)!==generation||this.attempts.get(id)!==attempt||attempt.until!==deadline)return false;
     // Only the deadline changes: no credential, failure count, escalation or session changes.
@@ -88,6 +92,7 @@ export class LockController {
     if(this.removing.has(id))return false;
     const generation=this.cancel(id);
     const a=this.attempts.get(id)||{failures:0,until:0,level:0};if(a.until>this.now())return false;
+    if(this.host){const result=await this.host('localVerify',{target:'element:'+id,credentials});if(this.generation(id)!==generation||this.records.get(id)!==r)return false;this.attempts.set(id,{failures:result.failures,level:result.level,until:result.until});if(result.ok!==true)return false;this.attempts.delete(id);this.sessions.set(id,r.duration?this.now()+r.duration*60000:Infinity);return true;}
     let valid=true;
     for(const f of LOCK_POLICIES[r.policy]){valid=(f==='totp'?await verifyTotp(r.factors.totp,credentials.totp,this.now()):await verifyPassword(credentials[f]||'',r.factors[f]))&&valid;if(this.generation(id)!==generation||this.records.get(id)!==r)return false;}
     if(this.generation(id)!==generation||this.records.get(id)!==r)return false;

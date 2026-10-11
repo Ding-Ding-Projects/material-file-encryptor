@@ -85,6 +85,21 @@
       "id": "access-confirmation",
       "selector": "[data-access-confirmation]",
       "expect": "Both confirmation switches and slider at100 required; early click cannot mutate; cancel during storage restores owned records."
+    },
+    {
+      "id": "access-history-locked",
+      "selector": "[data-access-history]",
+      "expect": "Independent cleared password and setup/unlock controls; history rows absent; no inherited profile grant."
+    },
+    {
+      "id": "access-history-unlocked",
+      "selector": "[data-access-history] section",
+      "expect": "Synthetic redacted entries, date/action/full-regex filters, selection, labels, compare/export and two-key restore/retention/prune."
+    },
+    {
+      "id": "access-history-waiting",
+      "selector": "[data-access-history-action=\"try-the-waiting-ladder\"]",
+      "expect": "Wrong attempts use host deadline; successful one-use challenge never grants history authentication."
     }
   ],
   "searches": [
@@ -95,7 +110,8 @@
     "access-lock-settings",
     "access-registration-controls",
     "access-support-controls",
-    "access-unlock-{targetId}"
+    "access-unlock-{targetId}",
+    "access-protected-history"
   ],
   "dropdowns": [
     "Credential policy",
@@ -127,6 +143,12 @@
     "pending creation cancellation rolls back only its own revision",
     "bulk removal rollback after cancellation",
     "readonly clear cannot mutate",
-    "metadata export excludes credentials"
+    "metadata export excludes credentials",
+    "host actor and target binding",
+    "persistent host attempts and three-use budget",
+    "encrypted Git records and protected tail",
+    "independent expiring history grant",
+    "atomic own-version rollback preserves concurrent writer",
+    "missing Git leaves history unconfigured"
   ]
 }

@@ -8,3 +8,6 @@ These are local convenience and credential-storage workflows. They do not add a 
 - [本機個人檔案、元素鎖定、驗證器同支援台（廣東話全文）](local-access.zh-HK.md)
 
 - [Visitor-local encrypted profiles and access](visitor-local-access.md)
+
+- [Privileged host challenges and encrypted mutation history](access-host.md)
+- [特權存取主機同加密修改歷史](access-host.zh-HK.md)
