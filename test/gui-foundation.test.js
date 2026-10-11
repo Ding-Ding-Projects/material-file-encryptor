@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 globalThis.HTMLElement=class{};const definitions=new Map();globalThis.customElements={get:id=>definitions.get(id),define:(id,value)=>definitions.set(id,value)};
-class Host{constructor(tag){this.localName=tag;this.dataset={};this.children=[];this.listeners={};this.attributes={};}append(...nodes){this.children.push(...nodes);}setAttribute(key,value){this.attributes[key]=value;}addEventListener(key,fn){this.listeners[key]=fn;}}
+class Host{constructor(tag){this.localName=tag;this.type=/^md-.*button$/.test(tag)?'submit':'text';this.dataset={};this.children=[];this.listeners={};this.attributes={};}append(...nodes){this.children.push(...nodes);}setAttribute(key,value){this.attributes[key]=value;}getAttribute(key){return this.attributes[key]??null;}addEventListener(key,fn){this.listeners[key]=fn;}}
 const doc={createElement:tag=>new Host(tag)};
 const {control,prepareControl}=await import('../src/shared/surface/controls.js');
 const {ContextMenu}=await import('../src/shared/surface/context-menu.js');
@@ -21,3 +21,6 @@ test('filtering never detaches the focused search composition',async()=>{const p
 test('palette classification follows registered control semantics',async()=>{const {controlKind}=await import('../src/shared/surface/controls.js');for(const [tag,expected]of [['md-outlined-select','select'],['md-switch','switch'],['md-checkbox','checkbox'],['md-slider','range'],['md-filled-button','button']])assert.equal(controlKind({localName:tag}),expected);});
 
 test('paired navigation exposes registered connection and groups without desktop-only destinations',async()=>{const {navigationDestinations}=await import('../src/renderer/features/shell/navigation.js');const ids=navigationDestinations(new Map([['connection','Connection'],['documentation','Documentation'],['personalization','Personalization'],['converter','Converter']])).map(row=>row[0]);assert.deepEqual(ids,['connection','tools','settings','help']);assert.ok(!ids.includes('drive'));});
+
+test('ordinary action construction cannot submit a containing form',()=>{let submissions=0;const click=node=>{if(node.type==='submit')submissions++;};const helper=control('button',{},[],doc);click(helper);assert.equal(submissions,0);const submit=control('button',{type:'submit'},[],doc);click(submit);assert.equal(submissions,1);});
+test('choice-search helper explicitly opts out of containing form submission',async()=>{const {connectSelectSearch}=await import('../src/shared/surface/controls.js');let helper;const select={parentNode:{},ownerDocument:doc,label:'Drive',disabled:false,hidden:false,after(node){helper=node;},getAttribute(){return null;}};connectSelectSearch(select);assert.equal(helper.localName,'md-icon-button');assert.equal(helper.type,'button');});

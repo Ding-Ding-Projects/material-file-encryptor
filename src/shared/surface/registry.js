@@ -35,6 +35,7 @@ export const text = (en, yue) => ({ en, yue });
 export function element(tag, props = {}, children = []) {
   if (['button','input','textarea','select','option','dialog'].includes(tag)) return control(tag,props,children);
   const node = prepareControl(document.createElement(tag));
+  if (/^md-.*button$/.test(tag) && !Object.hasOwn(props,'type')) node.type='button';
   for (const [key, value] of Object.entries(props)) {
     if (key === 'text') node.textContent = value;
     else if (key === 'class') node.className = value;
