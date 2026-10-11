@@ -9,3 +9,5 @@ Server preparation remains preparation only. Version selection is a contained li
 ## Evidence boundary
 
 This document describes implemented source, not built visual verification. Integrated-build captures, minimum-view and scale checks belong to the integration acceptance pass. No existing capture is relabelled as proof of this redesign.
+
+Provider-answer state: the local chat transcript now renders bounded safe Markdown inside `.ollama-message-content`. The same source renderer is consumed read-only from the documentation module. Test empty, pending, partial, complete, cancelled, failed, saved-history and stale-read states. Provider links and images follow the restricted content boundary described in the article. Metadata JSON remains literal.
