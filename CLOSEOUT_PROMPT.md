@@ -1,3 +1,17 @@
+# Current continuation status
+
+The current source baseline is `d1ca1e4`; the source-bound native receipt identifies `3b9c5b4`. Main has not yet been pushed. All 208 desktop/site delivery rows remain `unverified`. Installed execution, native update and removal are explicitly deferred by the maintainer, not completed or waiting for an environment request.
+
+A real 512 MiB import completed and its full mounted SHA-256 matched. A second 2 GiB file was cancelled during work at 1,419,575,296 bytes through **Cancel unfinished work then quit**. After exit, reopening the encrypted fixture showed only the completed 512 MiB file with its exact hash; the cancelled file was absent, and the fixture was locked again. Owned-process absence and hidden-desktop closure passed. Cancellation acknowledgement latency and the final cryptographic block were not instrumented, so these timings remain unverified.
+
+The PNG GUI decoder remains unavailable while the direct provider loaded from the frozen application archive passes. Diagnosis is ongoing; the direct-provider result does not establish the GUI route. The earlier canonical vocabulary upload used 145 real entries and passed 17 mapped DOM checks plus 17 reload checks. A 1,025-entry synthetic file was accepted. No payload network transfer or export occurred.
+
+The broad JavaScript run recorded 586 tests: 564 passed, 2 failed and 20 skipped. Both failures require unavailable Playwright Chromium revision 1248; this is not a green run. The shared-instructions sweep recorded 84 checks: 83 passed, zero failed and one unverified Windows Bash check, with a separate exact Linux pass. These are distinct receipts, not an all-platform green verdict.
+
+Continue the existing objective without replacing historical evidence. The integration owner controls main and publication. Do not execute installed update or removal while the explicit deferral remains in force.
+
+# Historical continuation record
+
 # Material File Encryptor continuation
 
 The verified-preview objective remains unfinished. Preserve all original evidence, quarantined packages, profiles, source histories and unrelated work. The latest integrated product source before this handoff is dff280d05f498211e5105387a4e52aac66578861. Its release and documentation delivery workflows succeeded. Exact live verification matched53 files,19 articles including two wiki pages,14 historical originals and two exclusions,824 valid internal references and the exact About homepage.
