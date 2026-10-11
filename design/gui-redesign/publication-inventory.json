@@ -55,7 +55,29 @@
     "late-authentication-event",
     "cancel-during-confirmation",
     "cancel-during-publication",
-    "partial-external-result"
+    "partial-external-result",
+    "same-login-different-provider",
+    "missing-account-identity",
+    "changed-credential-revision"
   ],
-  "runtimeEvidence": null
+  "runtimeEvidence": null,
+  "accountIdentity": {
+    "sourceKinds": [
+      "gh-keyring",
+      "protected-product"
+    ],
+    "credentialRevision": {
+      "gh-keyring": null,
+      "protected-product": "UUID receipt"
+    },
+    "requiredActions": [
+      "owners",
+      "setActiveAccount",
+      "signOutAccount",
+      "refreshAccount",
+      "preparePublication",
+      "publishPublication"
+    ],
+    "missingMetadata": "Selected-account actions unavailable; refresh accounts or update host. No provider inferred."
+  }
 }

@@ -39,3 +39,9 @@ Select a native project-folder grant and an active account, then choose an avail
 Cancellation uses the host operation controller. Published, cancelled and failed results preserve completed and attempted actions and identify any external state requiring review. There is no automatic retry after a partial result.
 
 The browser extension popup uses local bundled Material controls and the shared regular-expression search. It can read pairing status, request pairing and disconnect. Only a proposed public HTTPS URL and suggested filename reach the desktop. Native destination review and Start download remain explicit desktop steps. Source packaging does not establish extension installation, native-host registration, authentication or live publication acceptance.
+
+### Publication account identity
+
+Accounts with the same login remain distinct when one comes from the GitHub CLI keyring and the other from the protected product account store. Every selected-account action carries the host-provided source kind and credential revision. CLI accounts explicitly have no revision receipt; protected accounts require a UUID receipt. Missing metadata disables activation, sign-out, access refresh and review preparation, with an instruction to refresh accounts or update the host. The interface never infers a provider.
+
+The captured publication review displays its provider and credential revision. Preparation rejects a returned identity that differs from the selected account, and publication sends the exact captured fields. A refreshed account identity invalidates the old review. Sign-in availability remains host-controlled and requires reviewed project authorization metadata; opening this surface never starts authentication.
