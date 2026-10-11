@@ -1,3 +1,15 @@
+# Current corrective production continuation
+
+The current request also explicitly requires repairing the public website contracts. A source audit confirmed that the home and generated article shells omit the shared controls exposed separately by the browser workspace. Incorrect message-category sliders, missing regex builders and public-shell navigation/settings gaps are implementation defects, not just absent evidence. An isolated documentation lane owns the direct public-surface repair. Live inspection and per-route acceptance remain pending.
+
+The shared compression helper reproduced all 663 original package payload files through the genuine Squirrel extractor, with version/source checks. Actual receipt: out/installer-repair/actual-recompression-a1b53a9.json. Root build a1b53a9 passed; local root installer production stopped on unavailable Get-FileHash, and hosted run 38111213871 stopped on an archive path separator mismatch after Setup embedding and CRC passed. The verifier now uses framework hashes and native archive paths. Both exact entrypoints must pass on the corrected candidate; installed acceptance remains pending.
+
+The original task-created partial installation was copied with all 83 hashes verified, then official hidden uninstall returned zero, exact processes were absent and desktop closure passed. Only the strictly verified updater/.dead residue remains. This is removal evidence for the broken original, not corrective installation evidence.
+
+The missing a90fd99 localization contribution is merged with its fixture adapted to the current translator; five focused checks passed. Conservative retained-handle force-lock safety and bounded native diagnostics are merged through ef7c5b1; current UI copy and native mounted acceptance remain pending. PNG repair is preserved at fd259295: its root build and six native isolation cases passed, but Application Control blocked the candidate GUI before process creation with error 4551 and matching CodeIntegrity events 3033/3077. No security change or alternate execution route was attempted. Historical branch reconciliation identified a missing mapped-writer diagnostic and retired broad-runtime source-closure evidence that require explicit semantic preservation before cleanup. No deletion occurred.
+
+The child Windows PowerShell compatibility regression now uses a real ASAR fixture, verifies expected version/source, rejects each mismatch, and proves SHA-1/SHA-256 using fixed known digests while the Utility hash command is unavailable. The shared extraction and unsafe-path regressions also pass. Receipt: out/installer-repair/extraction-compatibility-regression.log. Both root production entrypoints still need the corrected candidate.
+
 # Download verification checkpoint, 2026-10-11 01:45 UTC
 
 ## Installation repair continuation
