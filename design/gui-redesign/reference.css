@@ -1,0 +1,2 @@
+@import url('../../src/renderer/fonts/fonts.css');
+:root{font-family:'Segoe UI Variable','Segoe UI',sans-serif;color-scheme:light dark}*{box-sizing:border-box}body{margin:0;background:#80877c}#reference{width:max-content}svg{display:block;font-family:'Segoe UI Variable','Segoe UI',sans-serif}text{dominant-baseline:middle}text.secondary{font-size:12px}text.heading{font-size:26px;font-weight:600}text.label{font-size:14px;font-weight:600}text.body{font-size:14px}text.micro{font-size:11px}.geometry{vector-effect:non-scaling-stroke}

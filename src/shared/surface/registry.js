@@ -1,3 +1,4 @@
+import {control} from './controls.js';
 import {IMAGE_TRANSFORM_SURFACE} from '../../renderer/features/personalization/image-geometry.js';
 import { localized } from './localization.js';
 
@@ -12,7 +13,7 @@ export const surfaceRegistry = Object.freeze([
   { tag: 'mfe-workspace-shell', role: 'region', module: 'workspace-shell.js', primitives: ['md-tabs','md-primary-tab','md-outlined-button'] },
   { tag: 'mfe-search', role: 'search', module: 'search.js', primitives: ['md-outlined-text-field','md-outlined-button','md-switch'] },
   { tag: 'mfe-command-palette', role: 'dialog', module: 'command-palette.js', primitives: ['md-dialog','md-text-button','md-switch','md-slider','md-outlined-text-field'] },
-  { tag: 'mfe-context-menu', role: 'menu', module: 'context-menu.js', primitives: ['md-text-button'] },
+  { tag: 'mfe-context-menu', role: 'menu', module: 'context-menu.js', primitives: ['md-menu','md-menu-item','mfe-search'] },
   { tag: 'mfe-notification-center', role: 'region', module: 'notification-center.js', primitives: ['md-outlined-button','md-text-button','md-switch'] },
   { tag: 'mfe-build-provenance', role: 'status', module: 'provenance.js', primitives: [] }
   ,{ tag: 'mfe-group-manager', role: 'dialog', module: 'group-manager.js', primitives: ['md-dialog','md-outlined-text-field','md-switch'] }
@@ -27,6 +28,7 @@ export { localized };
 export const text = (en, yue) => ({ en, yue });
 
 export function element(tag, props = {}, children = []) {
+  if (['button','input','textarea','select','option','dialog'].includes(tag)) return control(tag,props,children);
   const node = document.createElement(tag);
   for (const [key, value] of Object.entries(props)) {
     if (key === 'text') node.textContent = value;
