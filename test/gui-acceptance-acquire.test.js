@@ -6,12 +6,20 @@ import path from 'node:path';
 import {stateRoutes,acquisitionCapabilities,makeAcquisitionPlan,acquireMatrix} from '../scripts/gui-acceptance-acquire.mjs';
 import {bindingFor,matrixFor} from '../scripts/gui-acceptance.mjs';
 import {chooseVerificationDriveLetter} from '../scripts/preview-runtime-fixture.mjs';
+import {ownedFixturePreparation} from '../scripts/gui-acceptance-baseline.mjs';
 const inventory=JSON.parse(await fs.readFile(new URL('../contracts/gui-states.json',import.meta.url)));
 const launch={cdp:{port:19222,expectedUrl:'file:///synthetic/resources/index.html'}};
 test('native verification never chooses reserved M drive even when available',()=>{
  assert.equal(chooseVerificationDriveLetter(['M:','N:']),'N:');
  assert.throws(()=>chooseVerificationDriveLetter(['M:']));
  assert.throws(()=>chooseVerificationDriveLetter(['C:','m:','M:']));
+});
+test('native preparation stops before UI mutation when another drive identity appears',async()=>{
+ const fixture={prepared:true,root:'owned',storageDir:'owned/storage',cacheDir:'owned/cache',driveLetter:'N:'};
+ const prepare=ownedFixturePreparation({launch,receipt:path.resolve('receipt.json'),fixture});let calls=0;
+ await assert.rejects(prepare({requiredDriveState:'locked',binding:{sourceCommit:'a'.repeat(40)},executePlan:async()=>{calls++;return {ok:true,results:[{value:{done:true,value:{...fixture,storageDir:'unrelated/storage',locked:false}}}]};}}),/Native fixture identity changed/);
+ assert.equal(calls,1);
+ assert.throws(()=>ownedFixturePreparation({launch,receipt:path.resolve('receipt.json'),fixture:{...fixture,driveLetter:'M:'}}));
 });
 test('every inventoried state has an explicit production navigation route',()=>{
  assert.deepEqual(Object.keys(stateRoutes).sort(),inventory.states.map(state=>state.id).sort());
