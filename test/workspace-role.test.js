@@ -32,7 +32,8 @@ test('workspace emergency exit and owner abort do not grant approval',async()=>{
  const host=new Node(),controller=new AbortController();const pending=confirmWorkspaceAction(host,{title:'Replace',message:'output'},{requestConfirmation:requestSuperConfirmation,signal:controller.signal});controller.abort();assert.equal(await pending,false);assert.equal(host.children[0].removed,true);
 });
 test('companion keeps actual authorized tool and preference actions',()=>{
- for(const [feature,action]of [['personalization','sharedRead'],['personalization','fetchScheduleSource'],['status','status'],['converter','enqueue'],['converter','pickSources'],['ollama','chat'],['ollama','deleteModel'],['ollama','events']])assert.doesNotThrow(()=>assertCompanionRequest('featureRequest',{feature,action,payload:{}}));
+ for(const [feature,action]of [['personalization','sharedRead'],['personalization','fetchScheduleSource'],['status','status'],['converter','enqueue'],['converter','pickSources'],['ollama','chat'],['ollama','deleteModel'],['ollama','events']])assert.doesNotThrow(()=>assertCompanionRequest('featureRequest',{feature,action,payload:action==='fetchScheduleSource'?{source:{type:'home-assistant',url:'https://example.test',entity:'input_boolean.theme'},id:'theme'}:{}}));
+ assert.throws(()=>assertCompanionRequest('featureRequest',{feature:'personalization',action:'fetchScheduleSource',payload:{rule:{}}}));
 });
 test('public workspace contains no primary drive view or dispatch and retains cached-page controls',()=>{
  for(const forbidden of ["['files','Files']",'function refreshFiles','function renderFiles',...['getState','openExplorer','sync','lockVault','chooseFiles','importSelected','fileAction'].map(action=>"native('"+action+"'")])assert.equal(source.includes(forbidden),false,forbidden);
