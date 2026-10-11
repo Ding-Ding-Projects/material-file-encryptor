@@ -1,0 +1,17 @@
+# Local file converter
+
+The converter runs offline and writes a new user-approved output. Its eight-category catalog displays unavailable adapters with explicit reasons. Included runtime adapters format JSON, normalize UTF-8 text, and encode exact bytes as Base64 or hexadecimal. PDF support requires the packaged `pdf-lib` 1.17.1 proof supplied by the main process; installing a tool on PATH never enables an adapter.
+
+## Workflow and integration
+
+`createConverterService({stateDirectory, resolveGrant, bundledProof})` is main-process-only. `resolveGrant(id, mode)` resolves an opaque, user-approved source or destination capability. Do not pass renderer paths or accept arbitrary IDs. Expose only catalog, inspect, enqueue, list, and control through validated IPC. On startup call run, and on exit close. `mountConverter(root,{services,translate})` expects those methods under services.converter plus pickSources, pickDestination, and confirmOverwrite.
+
+Each queue item has at most 32 sources, a 64 MiB total input budget, 128 MiB output budget and 30-second worker timeout. The queue itself has no total item limit: separate durable records are streamed from disk and history is paged in groups of at most 50. One item runs at a time. Interrupted running records become paused, requiring explicit resume and source revalidation. Grants must survive restart securely or resumed work fails safely. JSON formatting, metadata changes, and text normalization may change representation as disclosed by each adapter. Preview text is limited to 2 KiB.
+
+Workers disable network and child-process entrypoints, constrain the JavaScript heap, and receive only bounded byte buffers, not source paths. This is defense in depth, not an operating-system security boundary against a compromised runtime. The main process retains file authority. Output staging uses same-directory temporary files and a no-replace hard link unless replacement was explicitly confirmed. Source paths are compared before every write. A split operation can leave earlier complete outputs if publication of a later output fails, but no partial file is exposed. Source data is never modified.
+
+The PDF adapter documents its exact operations and rejects opaque encrypted or signed documents. Output bytes are reopened and validated before publication. Unsupported image, audio, video, archive and spreadsheet transcoding remains visibly disabled until bundled adapters and package evidence exist.
+
+## Verification
+
+Run `node --test test/converter-*.test.js`. These checks cover actual byte conversion and PDF operations. Packaged UI, keyboard, localized copy, filesystem capability persistence, and OS isolation require integration verification before a release claim.

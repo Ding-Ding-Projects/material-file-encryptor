@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {catalog,detectFormat,convertBuiltin} from '../src/features/converter/registry.mjs';
+test('catalog fails closed without packaged PDF proof and covers eight categories',()=>{const rows=catalog();assert.equal(new Set(rows.map(x=>x.category)).size,8);assert.ok(rows.filter(x=>x.id.startsWith('pdf-')).every(x=>!x.enabled));assert.ok(rows.filter(x=>!x.enabled).every(x=>x.disabledReason));});
+test('detector uses bytes and rejects invalid utf8 as binary',()=>{assert.equal(detectFormat(Buffer.from('%PDF-1.7')),'pdf');assert.equal(detectFormat(Buffer.from('{"a":1}')),'json');assert.equal(detectFormat(Buffer.from([0xff,0xff])),'binary');});
+test('binary encoders round trip without changing input',()=>{const source=Buffer.from([0,1,255]);for(const id of ['base64','hex']){const out=convertBuiltin(id,source).outputs[0].bytes;assert.deepEqual(Buffer.from(out.toString(),id==='hex'?'hex':'base64'),source);}assert.deepEqual(source,Buffer.from([0,1,255]));});
+test('JSON formatting reopens and text conversion normalizes explicitly',()=>{assert.deepEqual(JSON.parse(convertBuiltin('json-format',Buffer.from('{"a":1}')).outputs[0].bytes),{a:1});assert.equal(convertBuiltin('text-utf8',Buffer.from('a\r\nb')).outputs[0].bytes.toString(),'a\nb');});
