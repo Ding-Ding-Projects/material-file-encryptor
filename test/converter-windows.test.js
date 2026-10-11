@@ -33,3 +33,10 @@ test('native provider resolves registered profile folders with no profile enviro
  assert.equal(result.status,0,result.stderr);
  assert.deepEqual(JSON.parse(result.stdout),{ready:true});
 });
+
+
+test('native provider converts both workbook formats with isolated round trips',{skip:!available},async()=>{
+ const provider=await createWindowsSandboxProvider({launcherPath:executable,launcherCompanionHashes:await companions(),launcherSha256:await hash(executable),runtimePath:process.execPath,runtimeSha256:await hash(process.execPath)});
+ const source=Buffer.from(JSON.stringify([['name','value'],['test','0012']]));
+ for(const format of ['xlsx','ods']){const result=await provider.launch({inputs:[source],adapterId:'json-to-'+format,options:{}}).result;const decoded=await provider.launch({inputs:[result.outputs[0].bytes],adapterId:format+'-to-json',options:{}}).result;assert.deepEqual(JSON.parse(decoded.outputs[0].bytes),JSON.parse(source));}
+});
