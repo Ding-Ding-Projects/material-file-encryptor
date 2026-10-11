@@ -1,3 +1,4 @@
+import {RECORD_EXPORT_COPY} from './record-export-copy.js';
 import {SCHEDULE_CUSTOMIZATION_COPY} from './schedule-customization-copy.js';
 import {control as materialControl,connectSelectSearch} from '../../../shared/surface/controls.js';
 import {mountColorPicker} from './color-picker.js';
@@ -27,7 +28,7 @@ export function mountPersonalization(container,services={}){
  const localHistory=services.historyManager||createPrivateHistory({storage:services.storage||win.localStorage,credentialStore:services.historyCredentialStore});
  const recordChange=record=>{services.history?.(record);if(localHistory.unlocked)localHistory.append(record.action,record.after||{}, {at:record.at}).catch(e=>notify(e.message));};
  const store=services.store||createSettingsStore({storage:services.storage||win.localStorage,history:recordChange,onError:e=>notify(e.message)});
- const t=createTranslator(()=>effective||store.get(),{vocabulary:services.vocabulary,dictionary:{...SCHEDULE_CUSTOMIZATION_COPY,...PERSONALIZATION_GUI_COPY,...GUIDANCE_COPY,...SETTINGS_GUIDANCE_COPY,...SETTINGS_RESET_COPY,...services.dictionary}});translate=t;
+ const t=createTranslator(()=>effective||store.get(),{vocabulary:services.vocabulary,dictionary:{...RECORD_EXPORT_COPY,...SCHEDULE_CUSTOMIZATION_COPY,...PERSONALIZATION_GUI_COPY,...GUIDANCE_COPY,...SETTINGS_GUIDANCE_COPY,...SETTINGS_RESET_COPY,...services.dictionary}});translate=t;
  const resetWorkflow=services.resetSettings?null:createSettingsResetWorkflow({store,host:container,requestConfirmation:services.requestSuperConfirmation||((...args)=>import('../../../shared/surface/workflow-confirm.js').then(module=>module.requestSuperConfirmation(...args))),translate:t,isAuthenticated:services.isAuthenticated,eventTarget:win});
  const external=createExternalScheduleResolver({fetchSource:services.fetchScheduleSource,onError:(e,r)=>services.notify?.(t.format('{label}: {message}',{label:r.label,message:t(e.message)},{message:true}))});
  const narrator=createNarrator({getSettings:()=>effective.narrator,synthesis:win.speechSynthesis,Utterance:win.SpeechSynthesisUtterance,isScreenReaderActive:services.isScreenReaderActive,onError:services.onNarrationError,onVoices:()=>{if(!destroyed&&active==='language')render();}});
