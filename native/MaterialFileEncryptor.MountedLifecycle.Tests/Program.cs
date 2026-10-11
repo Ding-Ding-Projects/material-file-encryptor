@@ -4,17 +4,18 @@ using System.IO.MemoryMappedFiles;
 using System.Security.Cryptography;
 using System.Text.Json;
 
-if(args.Length==1&&args[0]=="--teardown-self-test"){await BoundedProcessStop.SelfTest();return;}
+if(args.Length==1&&args[0]=="--teardown-self-test"){await BoundedProcessStop.SelfTest();await ChildDiagnostics.SelfTest();HelperAdmission.SelfTest();return;}
 
 if(args.Length==4&&args[0]=="--mapped-writer-child"){MappedWriter.Run(args[1],args[2],args[3]);return;}
 
-if(args.Length is <3 or >4)throw new ArgumentException("Supply package root, output JSON, exact source commit and optional --ordinary-only.");
-bool ordinaryOnly=args.Length==4&&args[3]=="--ordinary-only";
-if(args.Length==4&&!ordinaryOnly)throw new ArgumentException("Unknown verification mode.");
+if(args.Length is <4 or >5)throw new ArgumentException("Supply package root, private output JSON, exact source commit, expected helper SHA-256 from the production receipt and optional --ordinary-only.");
+bool ordinaryOnly=args.Length==5&&args[4]=="--ordinary-only";
+if(args.Length==5&&!ordinaryOnly)throw new ArgumentException("Unknown verification mode.");
 string package=Path.GetFullPath(args[0]),output=Path.GetFullPath(args[1]),sourceCommit=args[2];
 if(sourceCommit.Length!=40||!sourceCommit.All(Uri.IsHexDigit))throw new ArgumentException("A full source commit is required.");
 string executable=Path.Combine(package,"resources","native","MaterialFileEncryptor.Host.exe");
 if(!File.Exists(executable))throw new FileNotFoundException("Packaged native helper is missing.");
+string admittedHelperSha256=HelperAdmission.Verify(executable,args[3]);
 string root=Path.Combine(Path.GetTempPath(),"mfe-mounted-lifecycle-"+Guid.NewGuid().ToString("N"));
 string storage=Path.Combine(root,"storage"),cache=Path.Combine(root,"cache");Directory.CreateDirectory(root);
 string historyName=Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(storage.ToUpperInvariant()+"|folder|"))).ToLowerInvariant();
@@ -36,7 +37,7 @@ async Task Mount()
 async Task Unlock()=>await helper!.Call("unlock",new{storageDir=storage,cacheDir=cache,password,partSizeBytes=1048576});
 try
 {
-    helper=new MountedHelper(executable);
+    helper=new MountedHelper(executable,admittedHelperSha256);
     var status=await helper.Call("status",new{});Require(status.GetProperty("driver").GetProperty("available").GetBoolean(),"WinFsp is unavailable.");
     await helper.Call("create",new{storageDir=storage,cacheDir=cache,password,partSizeBytes=1048576});await Mount();
     string mountedRoot=drive+"\\";
@@ -80,12 +81,13 @@ try
     string mappedFile=Path.Combine(mountedRoot,"mapped.bin");
     using(var seed=new FileStream(mappedFile,FileMode.CreateNew,FileAccess.Write,FileShare.ReadWrite)){seed.SetLength(64L*1024*1024);seed.Flush(true);}
     string ready=Path.Combine(root,"writer.ready"),stop=Path.Combine(root,"writer.stop");
-    var writerStart=new ProcessStartInfo(Environment.ProcessPath!){UseShellExecute=false,CreateNoWindow=true};
+    var writerStart=new ProcessStartInfo(Environment.ProcessPath!){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true};
     if(Path.GetFileNameWithoutExtension(Environment.ProcessPath!).Equals("dotnet",StringComparison.OrdinalIgnoreCase))writerStart.ArgumentList.Add(typeof(MappedWriter).Assembly.Location);
     foreach(string arg in new[]{"--mapped-writer-child",mappedFile,ready,stop})writerStart.ArgumentList.Add(arg);
     using(var writer=Process.Start(writerStart)!)
     {
         writerExitEstablished=false;writerId=writer.Id;writerStartedUtc=writer.StartTime.ToUniversalTime();
+        var writerStdout=new ChildDiagnostics(writer.StandardOutput);var writerStderr=new ChildDiagnostics(writer.StandardError);
         try
         {
             var readyWait=Stopwatch.StartNew();
@@ -115,8 +117,10 @@ try
         finally
         {
             writerStop=await BoundedProcessStop.Run(writer,()=>File.WriteAllText(stop,"stop"));
+            var stdout=await writerStdout.Finish(TimeSpan.FromSeconds(5));var stderr=await writerStderr.Finish(TimeSpan.FromSeconds(5));
+            if(stdout.drainTimedOut||stderr.drainTimedOut||stdout.readError is not null||stderr.readError is not null)writerStop=writerStop with{Errors=writerStop.Errors.Append("child-diagnostic-drain-incomplete").ToArray()};
             writerExitEstablished=writerStop.ExitEstablished;
-            checks.Add(new{name="mapped-writer-child-exit",verified=writerExitEstablished&&writer.ExitCode==0&&writerStop.Errors.Length==0,writerId,writerStartedUtc,writerStop,exitCode=writerExitEstablished?(int?)writer.ExitCode:null,viewsReleased=writerExitEstablished&&writer.ExitCode==0});
+            checks.Add(new{name="mapped-writer-child-exit",verified=writerExitEstablished&&writer.ExitCode==0&&writerStop.Errors.Length==0&&!stdout.drainTimedOut&&!stderr.drainTimedOut&&stdout.readError is null&&stderr.readError is null,writerId,writerStartedUtc,writerStop,stdout,stderr,exitCode=writerExitEstablished?(int?)writer.ExitCode:null,exitCodeHex=writerExitEstablished?"0x"+unchecked((uint)writer.ExitCode).ToString("X8"):null,viewsReleased=writerExitEstablished&&writer.ExitCode==0});
         }
         Require(writerExitEstablished&&writerStop!.Errors.Length==0,"Mapped writer teardown did not complete normally; fixture retained.");
         Require(writer.ExitCode==0,"Mapped writer exited abnormally; mapped persistence is unverified.");
@@ -158,7 +162,7 @@ finally
         bool complete=finished&&cleanup&&!teardownFailed&&writerExitEstablished;
         string? helperSha256=null;
         try{helperSha256=Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(executable)));}catch(Exception error){complete=false;checks.Add(new{name="helper-hash-error",verified=false,type=error.GetType().Name});}
-        var report=new{schemaVersion=1,sourceCommit,helperSha256,route="native-helper-protocol-and-win32-mapped-io",guiUsed=false,originalException,checks,teardown=new{mounted,driveAbsent,ownedFixtureRemoved=cleanup,helperId=helper?.ProcessId,helperStartedUtc=helper?.StartedUtc,writerId,writerStartedUtc,writerExitEstablished,writerStop},complete};
+        var report=new{schemaVersion=1,sourceCommit,helperSha256,admittedHelperSha256,route="native-helper-protocol-and-win32-mapped-io",guiUsed=false,originalException,checks,teardown=new{mounted,driveAbsent,ownedFixtureRemoved=cleanup,helperId=helper?.ProcessId,helperStartedUtc=helper?.StartedUtc,writerId,writerStartedUtc,writerExitEstablished,writerStop},complete};
         string reportJson=JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true});
         try{await File.WriteAllTextAsync(output,reportJson);}finally{Console.WriteLine(reportJson);Environment.ExitCode=complete?0:2;}
     }
@@ -169,7 +173,7 @@ sealed class MountedHelper:IAsyncDisposable
     readonly Process process;readonly ConcurrentDictionary<long,TaskCompletionSource<JsonElement>> pending=new();readonly Task reader;long sequence;
     internal int ProcessId { get; private set; }
     internal DateTime StartedUtc { get; private set; }
-    internal MountedHelper(string executable){process=Process.Start(new ProcessStartInfo(executable){UseShellExecute=false,CreateNoWindow=true,RedirectStandardInput=true,RedirectStandardOutput=true,RedirectStandardError=true})!;ProcessId=process.Id;StartedUtc=process.StartTime.ToUniversalTime();_=process.StandardError.ReadToEndAsync();reader=Task.Run(async()=>{string? line;while((line=await process.StandardOutput.ReadLineAsync())!=null){using var document=JsonDocument.Parse(line);if(!document.RootElement.TryGetProperty("id",out var id)||id.ValueKind!=JsonValueKind.Number)continue;if(pending.TryRemove(id.GetInt64(),out var completion)){if(document.RootElement.TryGetProperty("error",out var error))completion.TrySetException(new IOException(error.GetString()));else completion.TrySetResult(document.RootElement.GetProperty("result").Clone());}}});}
+    internal MountedHelper(string executable,string expectedSha256){HelperAdmission.Verify(executable,expectedSha256);process=Process.Start(new ProcessStartInfo(executable){UseShellExecute=false,CreateNoWindow=true,RedirectStandardInput=true,RedirectStandardOutput=true,RedirectStandardError=true})!;ProcessId=process.Id;StartedUtc=process.StartTime.ToUniversalTime();_=process.StandardError.ReadToEndAsync();reader=Task.Run(async()=>{string? line;while((line=await process.StandardOutput.ReadLineAsync())!=null){using var document=JsonDocument.Parse(line);if(!document.RootElement.TryGetProperty("id",out var id)||id.ValueKind!=JsonValueKind.Number)continue;if(pending.TryRemove(id.GetInt64(),out var completion)){if(document.RootElement.TryGetProperty("error",out var error))completion.TrySetException(new IOException(error.GetString()));else completion.TrySetResult(document.RootElement.GetProperty("result").Clone());}}});}
     internal async Task<JsonElement> Call(string method,object parameters){long id=Interlocked.Increment(ref sequence);var completion=new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);pending[id]=completion;await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(new{id,method,@params=parameters}));await process.StandardInput.FlushAsync();return await completion.Task.WaitAsync(TimeSpan.FromSeconds(20));}
     internal async Task<ProcessStopResult> Stop()
     {
