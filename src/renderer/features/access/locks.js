@@ -1,5 +1,18 @@
 import {passwordVerifier,verifyPassword,verifyTotp,randomId} from './crypto.js';
 export const LOCK_POLICIES = Object.freeze({pin:['pin'],password:['password'],'pin-password':['pin','password'],'password-totp':['password','totp'],'pin-totp':['pin','totp'],'password-pin-totp':['password','pin','totp']});
+// Resolve the registered public control host, not an implementation node inside its shadow root.
+export function accessControlTarget(event) {
+  const path=typeof event?.composedPath==='function'?event.composedPath():[];
+  return path.find(node=>node?.dataset?.materialPrimitive || /^(MD-(?:(?:FILLED|FILLED-TONAL|OUTLINED|TEXT|ICON|FILLED-ICON|OUTLINED-ICON|FILLED-TONAL-ICON)-BUTTON|(?:OUTLINED|FILLED)-(?:TEXT-FIELD|SELECT)|CHECKBOX|RADIO|SWITCH|SLIDER|(?:PRIMARY|SECONDARY)-TAB)|MFE-(?:FILE-PICKER|DATE-FIELD))$/.test(node?.tagName||'')) || event?.target;
+}
+export function accessLockIdentity(element,event) {
+  const path=typeof event?.composedPath==='function'?event.composedPath():[element];
+  for(const node of path){const owner=node?.closest?.('[data-lock-id]');if(owner?.dataset?.lockId)return owner.dataset.lockId;}
+  for(let node=element;node;node=node.getRootNode?.()?.host){const owner=node.closest?.('[data-lock-id]');if(owner?.dataset?.lockId)return owner.dataset.lockId;}
+  return undefined;
+}
+const isEditableControl=control=>/^(INPUT|SELECT|TEXTAREA|MD-(OUTLINED|FILLED)-(SELECT|TEXT-FIELD)|MD-(CHECKBOX|RADIO|SWITCH|SLIDER)|MFE-(FILE-PICKER|DATE-FIELD))$/.test(control?.tagName||'');
+const isActionControl=control=>/^(BUTTON|MD-(FILLED|FILLED-TONAL|OUTLINED|TEXT|ICON|FILLED-ICON|OUTLINED-ICON|FILLED-TONAL-ICON)-BUTTON|MD-(PRIMARY|SECONDARY)-TAB)$/.test(control?.tagName||'');
 // This controller is an opt-in local convenience lock, not an authorization boundary.
 export class LockController {
   constructor({store,now=Date.now,onBlocked=()=>{},getDishChallenge,waitBudget}={}) { this.store=store;this.now=now;this.onBlocked=onBlocked;this.records=new Map();this.sessions=new Map();this.attempts=new Map();this.creating=new Set();this.generations=new Map();this.removing=new Set();this.waitLadder=new WaitLadder({now,getDishChallenge,budget:waitBudget});this.waitTarget=null;this.eventAdmissions=new WeakMap();this.controlAdmissions=new WeakMap(); }
@@ -8,16 +21,18 @@ export class LockController {
     if(!id||!LOCK_POLICIES[policy])throw new Error('Select a valid lock policy.');
     if(this.creating.has(id)||this.records.has(id))throw new Error('This element already has a lock. Unlock and remove that lock before creating a replacement.');
     this.creating.add(id);
+    const generation=this.generation(id);const current=()=>{if(this.generation(id)!==generation)throw new Error('Lock creation was cancelled.');};
     try {
     if(this.store&&await this.store.get(`element-lock:${id}`))throw new Error('This element already has a lock. Unlock and remove that lock before creating a replacement.');
-    const factors={};
+    current();const factors={};
     for(const factor of LOCK_POLICIES[policy]) {
       if(factor==='totp') {if(!credentials.totp || !await verifyTotp(credentials.totp,credentials.code,this.now()))throw new Error('Confirm the authenticator code first.');factors.totp=structuredClone(credentials.totp);}
       else {if(factor==='pin'&&!/^\d{4,12}$/.test(credentials.pin))throw new Error('Use a PIN of 4 to 12 digits.');factors[factor]=await passwordVerifier(credentials[factor]);}
     }
-    if(!['timed','once'].includes(sessionMode))throw new Error('Select a valid unlock session.');
+    current();if(!['timed','once'].includes(sessionMode))throw new Error('Select a valid unlock session.');
     const record={version:1,id,policy,factors,sessionMode,duration:Math.max(0,Math.min(Number(duration)||0,1440)),revision:randomId()};
-    if(this.store)await this.store.set(`element-lock:${id}`,record);
+    if(this.store){await this.store.set(`element-lock:${id}`,record);if(this.generation(id)!==generation){const saved=await this.store.get(`element-lock:${id}`);if(saved?.revision===record.revision)await this.store.delete(`element-lock:${id}`);}}
+    current();
     this.records.set(id,record);this.sessions.delete(id);return this.describe(id);
     } finally { this.creating.delete(id); }
   }
@@ -85,7 +100,7 @@ export class LockController {
     if(this.isLocked(id)){this.onBlocked(id);return false;}
     if(this.records.get(id)?.sessionMode!=='once')return callback(...args);
     this.lock(id);
-    const types=new Set(control.tagName==='BUTTON'?['click']:['input','change']);
+    const types=new Set(isActionControl(control)?['mfe-action-request','click']:['mfe-action-request','input','change']);
     const permit={id,types,generation:this.generation(id)};this.controlAdmissions.set(control,permit);
     try{return callback(...args);}finally{if(this.controlAdmissions.get(control)===permit)this.controlAdmissions.delete(control);}
   }
@@ -100,10 +115,17 @@ export class LockController {
     }
     return callback(...args);
   }
-  intercept(root,identity=element=>element.closest('[data-lock-id]')?.dataset.lockId){
-    const handler=event=>{const id=identity(event.target);const controlPermit=this.controlAdmissions.get(event.target);if(id&&controlPermit?.id===id&&controlPermit.generation===this.generation(id)&&event.isTrusted!==true&&controlPermit.types.delete(event.type)){this.admitEvent(event,{id,owner:'capture',generation:this.generation(id)});return;}const admission=this.eventAdmissions.get(event);if(id&&admission?.id===id&&admission.generation===this.generation(id)&&admission.owner==='guard'){this.eventAdmissions.delete(event);return;}if(id&&this.isLocked(id)){event.preventDefault();event.stopImmediatePropagation();this.onBlocked(id,event.target);}else if(id&&this.records.get(id)?.sessionMode==='once'&&['click','change','submit','dragstart'].includes(event.type)){this.lock(id);this.admitEvent(event,{id,owner:'capture',generation:this.generation(id)});}};
-    const events=['click','dblclick','pointerdown','keydown','input','change','submit','dragstart'];events.forEach(name=>root.addEventListener(name,handler,true));
-    return ()=>events.forEach(name=>root.removeEventListener(name,handler,true));
+  intercept(root,identity=accessLockIdentity){
+    const targets=new Map(),observers=new Map(),delivered=new WeakSet();let disposed=false;
+    const handler=(event,listeningRoot)=>{const path=event.composedPath?.()||[];const outermost=path.filter(node=>targets.has(node)).at(-1)||listeningRoot;if(outermost===listeningRoot)delivered.delete(event);else if(delivered.has(event))return;delivered.add(event);const target=accessControlTarget(event);const id=identity(target,event);const controlPermit=this.controlAdmissions.get(target);if(id&&controlPermit?.id===id&&controlPermit.generation===this.generation(id)&&event.isTrusted!==true&&controlPermit.types.delete(event.type)){this.admitEvent(event,{id,owner:'capture',generation:this.generation(id)});return;}const admission=this.eventAdmissions.get(event);if(id&&admission?.id===id&&admission.generation===this.generation(id)&&admission.owner==='guard'){this.eventAdmissions.delete(event);return;}if(id&&this.isLocked(id)){event.preventDefault();event.stopImmediatePropagation();this.onBlocked(id,target);}else if(id&&this.records.get(id)?.sessionMode==='once'&&['click','change','submit','dragstart'].includes(event.type)&&!(event.type==='click'&&isEditableControl(target))){this.lock(id);this.admitEvent(event,{id,owner:'capture',generation:this.generation(id)});}};
+
+    const events=['mfe-action-request','click','dblclick','pointerdown','keydown','input','change','submit','dragstart'];
+    const Observer=root.ownerDocument?.defaultView?.MutationObserver||globalThis.MutationObserver;
+    const scan=node=>{if(disposed||!node)return;const nodes=[node,...(node.querySelectorAll?.('*')||[])];for(const element of nodes){if(element.shadowRoot)attach(element.shadowRoot);if(element.updateComplete?.then)element.updateComplete.then(()=>{if(!disposed&&element.isConnected!==false&&element.shadowRoot)attach(element.shadowRoot);}).catch(()=>{});}};
+    const detach=node=>{for(const element of [node,...(node.querySelectorAll?.('*')||[])])if(element.shadowRoot){detach(element.shadowRoot);const listener=targets.get(element.shadowRoot);if(listener)for(const name of events)element.shadowRoot.removeEventListener(name,listener,true);observers.get(element.shadowRoot)?.disconnect();observers.delete(element.shadowRoot);targets.delete(element.shadowRoot);}};
+    const attach=target=>{if(disposed||targets.has(target))return;const listener=event=>handler(event,target);targets.set(target,listener);for(const name of events)target.addEventListener(name,listener,true);if(Observer){const observer=new Observer(records=>{for(const record of records){for(const node of record.removedNodes||[])if(node.isConnected===false)detach(node);for(const node of record.addedNodes||[])scan(node);}});observer.observe(target,{childList:true,subtree:true});observers.set(target,observer);}scan(target);};
+    attach(root);
+    return ()=>{disposed=true;for(const [target,listener]of targets)for(const name of events)target.removeEventListener(name,listener,true);for(const observer of observers.values())observer.disconnect();observers.clear();targets.clear();};
   }
 }
 export class WaitLadder {
