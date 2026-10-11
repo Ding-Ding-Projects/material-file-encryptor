@@ -164,15 +164,15 @@
   "wiki": {
     "status": "available",
     "source": "https://github.com/Ding-Ding-Projects/material-file-encryptor/wiki",
-    "sourceCommit": "03afffe1d8d13a750ae954a0f26720e11fe2e8a9",
+    "sourceCommit": "7c9a1ace31d2c5994bb20f5784233427e085a701",
     "files": [
       "CLOSEOUT_PROMPT.md",
       "Home.md"
     ],
     "previousBoundary": "An earlier attempt returned Repository not found. A subsequent Git CLI read succeeded; this snapshot contains every Markdown page in that fetched revision.",
     "fileSha256": {
-      "CLOSEOUT_PROMPT.md": "738a4a6598b147f4b93062df3f826d15a24a8937aa8376565d79f1e6639b96fa",
-      "Home.md": "66cd00019ce726d68ea20d9e6d880ce9aed2965010fa13690addcd3c567d1b76"
+      "CLOSEOUT_PROMPT.md": "1fb747d7bf35d5005aee31d2ca9f1c6c5608937c6d9819a4c1e5dbbc71f8f1fc",
+      "Home.md": "025b50c98c6a39f84a434afefdc9d67c9f129a62a729e3f27b25f0c90525512c"
     }
   },
   "excluded": [

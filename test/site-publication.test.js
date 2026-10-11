@@ -81,7 +81,7 @@ test('wiki underscore basename renders the actual continuation snapshot',async()
  const articles=await buildDocumentation(temp,output,await fs.readFile('docs/site/index.html','utf8'));
  assert.equal(articles.length,2);assert.equal(articles.find(article=>article.source==='docs/site/wiki/CLOSEOUT_PROMPT.md')?.markdown,markdown);
  const html=await fs.readFile(path.join(output,'articles/wiki--CLOSEOUT_PROMPT.html'),'utf8');
- assert.ok(html.includes('Cloud production and bounded native lease acceptance'));
+ assert.ok(html.includes('Current verified delivery and preservation'));
  assert.ok(html.includes('Wiki CLOSEOUT_PROMPT'));
  }finally{await fs.rm(temp,{recursive:true,force:true});}
 });

@@ -1,26 +1,83 @@
 # Material File Encryptor
 
-A Windows Explorer encrypted drive with a native .NET engine, encrypted offline cache, version recovery and a desktop workspace. The current source adds managed transfer/activity workflows, tabs and search, local access and personalization, conversion and local-model tools, offline documentation, changelog and status modules.
+**An encrypted drive for Windows Explorer, with local recovery and an encrypted offline cache.** Work through a mounted drive while the application stores encrypted file data and metadata in your chosen storage folder. A native .NET engine and WinFsp adapter handle the drive; the desktop workspace brings transfers, recovery, settings and documentation together.
 
-**Current state:** source integration is in progress. The complete feature inventory has 210 desktop/site rows and all remain unverified. Existing historical release, runtime and capture results retain their original source boundaries. They do not establish acceptance of this combined source.
+[Download Windows x64 installer · v1.194.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/download/v1.194.1/MaterialFileEncryptor-Setup.exe) · [Read the documentation](https://ding-ding-projects.github.io/material-file-encryptor/) · [Release and provenance](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.194.1) · [中文文件](docs/features/README.zh-HK.md)
 
-[Current integration and limits](docs/features/platform/current-integration.md) · [Feature documentation](docs/features/README.md) · [Roadmap](ROADMAP.md) · [Handoff](HANDOFF.md) · [Changelog](CHANGELOG.md)
+> **Development status:** the current package and documentation delivery are independently verified. Installed startup, real updating, restart continuity and current rebuilt interface acceptance are unfinished. The complete delivery inventory contains **105 feature IDs and 210 desktop/website rows**, all still unverified as complete surfaces. Source components and focused checks are not full product acceptance. The interface target is Material Design 3 throughout; implementation is partial and complete visual conformance is not yet verified.
 
-The [installation and update repair](docs/features/release/installer-repair.md) addresses incomplete Squirrel extraction and unchanged release package versions. Current-source downloaded installation and real updating remain pending independent acceptance.
+## What you can work on
 
-Production builds use Windows GitHub Actions with exact root `build.bat /s` and `build-installer.bat /s`, without CI tests or lint. Main `10bfb081` passed run `38124909972` and produced normal `v1.192.1`; its source tag, flags and five assets are verified. Complete independent downloaded package acceptance remains `v1.190.1` at exact `6f85edf`: 763 CRC entries, 664 actual Squirrel files, Setup embedding, unsigned targets and privacy. Live `10bfb081` documentation matched 207 files and 6,596 internal references. The separately cloud-compiled native sharing lease at `66b21b8` passed eight synthetic boundaries on its first admitted DLL execution, while product IPC and provider availability remain pending. Installed updating, current GUI, rendered fonts and all 210 complete-surface acceptance rows remain unverified. See the [handoff](HANDOFF.md) for source-specific evidence and limits.
+1. **Create and unlock a drive.** Choose encrypted storage, an encrypted cache and an unlock method, then access files through the Explorer drive. Read [drive integration](docs/features/drive/README.md) and [native storage](docs/features/storage/native-vault.md).
+2. **Keep useful files available offline.** Pin encrypted data, inspect transfer activity and use explicit lifecycle actions. See [transfers and safe lifecycle](docs/features/storage/transfer-lifecycle.md).
+3. **Recover earlier work.** Browse selected-file versions, encrypted activity, History and the Recycle Bin. See [history and recovery](docs/features/storage/history-and-recycle-bin.md).
+4. **Adapt the workspace.** Explore tabs, search, notifications, local access, appearance, typography and motion authoring. Their [source and acceptance limits](docs/features/platform/current-integration.md) remain explicit.
 
-## Build and package
+The repository also contains local conversion, local-model and server-management foundations. Provider availability and host integration differ by capability; a documented component is not a promise that an unavailable workflow runs. The [complete feature library](docs/features/README.md) is the authoritative starting point.
 
-Run `build.bat /s` to produce the Windows application and `build-installer.bat /s` to produce its genuine unsigned Squirrel.Windows installer. Explicit local checks use the repository's verification scripts. Production builds and releases do not imply that current runtime or installed-lifecycle verification passed.
+## Current verification at a glance
 
-## Current workflows
+Delivery below is bound to source [`738b22c8174cb88cd2fdd6802e7beb97e5f695e2`](https://github.com/Ding-Ding-Projects/material-file-encryptor/commit/738b22c8174cb88cd2fdd6802e7beb97e5f695e2), not whatever a moving branch contains later.
 
-- [Managed transfer, journal and safe lifecycle](docs/features/storage/transfer-lifecycle.md), [file versions and activity](docs/features/storage/file-history-activity.md).
-- [Workspace tabs, search, palette and notifications](docs/features/surface-foundation/README.md).
-- [Personalization](docs/features/interface/local-personalization.md), [appearance](docs/features/interface/appearance-editor.md), and [local access](docs/features/access/local-access.md).
-- [Local converter](docs/features/converter/README.md) and [local model suite](docs/features/ollama/README.md), with unsupported or unconfigured capabilities stated explicitly.
-- [Documentation, changelog and status](docs/features/platform/documentation-and-status.md).
+| Area | Verified result | Boundary |
+|---|---|---|
+| Production and release | Both exact root entrypoints passed [run 38127125436](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38127125436); normal **v1.194.1**, exact source and five assets verified | A release is not installed execution |
+| Downloaded package | All five hosted assets match size/hash/provenance/feed; 763 CRC/decompression entries, 664 actual Squirrel payload files and exact Setup embedding passed | Setup was inspected, not executed |
+| Unsigned delivery and privacy | Setup, application and native host are unsigned; 6,242 privacy entries have zero rejected paths, including 5,491 ASAR entries; verification-only payloads are absent | Unsigned publisher warnings remain expected |
+| Live documentation | [Deployment 38127125454](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38127125454): 209 files, 59,646,363 bytes and 6,666 internal references verified, no missing files/anchors; provenance and About homepage match | Content delivery is not browser interaction or rendered font proof |
+| Native sharing lease | Separate immutable source `66b21b8` passed eight actual compiled synthetic boundaries | Product IPC, provider availability and full server management remain pending |
+| Installed lifecycle and current UI | **Unfinished**: automatic startup/download/ready/Later, real installed update, restart continuity, current captures and complete-surface acceptance | Historical results retain their original sources |
+
+Read the [handoff](HANDOFF.md), [roadmap](ROADMAP.md), [changelog](CHANGELOG.md) and [installation/update repair](docs/features/release/installer-repair.md) before relying on a capability. The [latest release list](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases) may contain later candidates; the table above describes this exact verified version.
+
+## Security and storage boundaries
+
+- Keep unlock credentials and backups outside encrypted storage and the cache. Losing every unlock credential loses access.
+- Offline pins retain ciphertext. Files decrypt when accessed through the mounted drive.
+- Copying a file outside that drive intentionally creates plaintext. Other applications and Windows may create temporary files, thumbnails or paging data.
+- Windows startup and automatic unlock are separate settings. Optional automatic unlock uses current-user DPAPI protection, which does not protect an already unlocked Windows session.
+- Encrypted chunks default to 10 MiB, with a 90,000,000-byte maximum including framing. New or edited files use the selected limit; changing existing parts requires the explicit resplit workflow.
+
+See [storage documentation](docs/features/storage/README.md) for configuration, recovery and failure modes.
+
+## Build and package on Windows
+
+Windows 10/11 x64 is the delivery target. From the repository root, use the actual entrypoints:
+
+```bat
+build.bat /s
+build-installer.bat /s
+```
+
+The first builds the application; the second produces the genuine **unsigned Squirrel.Windows installer**. Production uses GitHub Actions with these same entrypoints and does not run tests or lint. Build success, package checks, installed execution and interface verification are separate results.
+
+The [bootstrap](scripts/bootstrap.ps1) prepares verified user-scoped tools from [pinned dependencies](dependencies.json), reuses valid caches and retains rejected download bytes with diagnostic receipts. The .NET SDK pin remains fixed; fallback sources are explicitly declared official HTTPS endpoints. Bundled fonts and media use their pinned staging routes, not runtime CDNs. Explorer mounting requires the genuine WinFsp driver and its normal elevation flow. Fresh-machine bootstrap certification remains pending; do not disable host security or substitute a successful helper for a failed root entrypoint.
+
+Run explicit local verification separately through [scripts/verify-local.ps1](scripts/verify-local.ps1). See [desktop build and verification](docs/features/desktop/README.md), [release documentation](docs/features/release/README.md) and [agent/contributor instructions](AGENTS.md) for scope, dependency and evidence requirements.
+
+## Documentation map
+
+Every category contains detailed articles with behavior, configuration, failure modes, security and verification boundaries. The deployed [documentation library](https://ding-ding-projects.github.io/material-file-encryptor/library.html) and [complete wiki snapshot](https://ding-ding-projects.github.io/material-file-encryptor/wiki.html) are available without leaving the documentation website.
+
+| Category | Start here |
+|---|---|
+| Storage, encrypted cache, history and transfers | [Storage](docs/features/storage/README.md) · [Explorer drive](docs/features/drive/README.md) |
+| Tabs, search, palette, notifications and update workspace | [Shared workspace surfaces](docs/features/surface-foundation/README.md) |
+| Language, accessibility, settings and contextual guidance | [Interface](docs/features/interface/README.md) · [Settings completeness](docs/features/interface/settings-completeness.md) · [Guidance](docs/features/interface/settings-guidance.md) |
+| Appearance, logo, fonts and animation | [Appearance](docs/features/appearance/README.md) · [Appearance editor](docs/features/interface/appearance-editor.md) · [Fonts](docs/features/interface/font-metadata.md) · [Bundled fonts](docs/features/interface/bundled-fonts.md) · [Motion authoring](docs/features/interface/animation-transition.md) |
+| Local profiles, credentials and protected history | [Access](docs/features/access/README.md) |
+| Local conversion and capability limits | [Converter](docs/features/converter/README.md) |
+| Local models and tools | [Local model suite](docs/features/ollama/README.md) |
+| Schedules and external sources | [Schedules](docs/features/schedules/README.md) |
+| Minecraft server management and provider boundaries | [Server manager](docs/features/server-manager/README.md) |
+| Offline documentation, status and feature delivery | [Platform](docs/features/platform/README.md) |
+| Packaging, updater and verification | [Release](docs/features/release/README.md) · [Desktop](docs/features/desktop/README.md) · [Performance measurements](docs/features/performance/README.md) |
+
+## Historical interface preview
+
+![Historical packaged Windows History interface from source 1e16dea8, showing a retained synthetic version and restore action.](docs/images/captures/preview/history-preview.png)
+
+This genuine reviewed capture belongs to historical source **`1e16dea8`**. Its [original provenance](docs/images/captures/preview/inventory.json) and [reviewed gallery inventory](docs/site/gallery-review.json) retain the exact source, image hash and recorded scope. It is **not** the current rebuilt interface. Replacement captures remain pending actual build-bound inspection. The [published historical gallery](https://ding-ding-projects.github.io/material-file-encryptor/gallery.html) preserves original records and their limitations.
 
 ## Bounded native measurements
 
