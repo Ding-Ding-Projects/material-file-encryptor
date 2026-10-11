@@ -1,5 +1,7 @@
 # Release documentation
 
+- [Installer extraction and update version repair](installer-repair.md)
+
 - [Native update controller and pending integration](native-update-controller.md)
 
 - [Synthetic direct-child timing diagnostics](preview-verification.md#synthetic-direct-child-timing-diagnostics)

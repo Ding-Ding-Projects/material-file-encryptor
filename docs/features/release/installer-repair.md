@@ -1,0 +1,13 @@
+# Installer extraction and update version repair
+
+The independently downloaded v1.122.1 Setup returned zero and registered version 0.2.0, but its Squirrel extractor omitted 585 of 663 payload files. The first missing content was the embedded FFmpeg corresponding-source ZIP, created at zero bytes. Later files, including the V8 snapshot, were absent. Installed launch recorded `Error loading V8 startup snapshot file`; no Start-menu shortcut was created. Archive CRC success did not detect this forward-reader compatibility problem.
+
+The exact shipped updater reproduces the problem with a small stored nested ZIP followed by a required file. Explicit Deflate compression preserves both. `scripts/SquirrelArchiveWriter.cs` forwards Squirrel's archive-tool arguments to the pinned writer and adds `-mm=Deflate` for ZIP creation. It does not change the installer framework or extract product files as an installation substitute.
+
+`scripts/squirrel-payload-check.ps1` uses the updater's actual extraction method and compares every payload file's length and SHA-256 with the package. Production also validates the package's specification, embedded application version and embedded source metadata. The negative regression must reject the broken stored archive and accept the corrected archive. Its extraction directories are retained for diagnostics. A passing extraction check remains separate from installed launch, update and removal acceptance.
+
+Automatic releases previously changed their tags while every Squirrel package stayed at version 0.2.0. Installed clients correctly considered those packages current. Production now derives package version `1.<workflow run number>.<attempt>` before both root build entrypoints, stamps the manifest and lockfile consistently, and checks the actual uploaded package against that identity. Release selection uses the host's semantic-version selection rather than forcing every completing run to latest. Package downloads have a separate 15-minute deadline; metadata retains its 30-second deadline. Hash, size, redirect and explicit restart protections remain enforced.
+
+Use `build.bat /s` and `build-installer.bat /s`. The latter compiles the small archive adapter with the operating system's .NET Framework compiler. No elevation is required for that step. Fresh-machine bootstrap certification, corrective downloaded installation and a real installed update remain pending until recorded separately.
+
+Local checks: `node --test test/release-version.test.js test/update-service.test.js` and `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-squirrel-extraction.ps1`. CI produces packages and performs deterministic package validation; it runs no tests or lint.

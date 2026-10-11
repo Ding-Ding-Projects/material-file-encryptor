@@ -12,10 +12,14 @@ Require ($release.draft -is [bool] -and $release.prerelease -is [bool]) 'RELEASE
 $sourcePackageText = & git -C $target show "${ExpectedSource}:package.json"
 Require ($LASTEXITCODE -eq 0) 'PAYLOAD_SOURCE_NOT_AVAILABLE'
 $sourcePackage = $sourcePackageText | ConvertFrom-Json
-Require ($provenance.packageVersion -eq $sourcePackage.version) 'SOURCE_PACKAGE_VERSION_MISMATCH'
+& git -C $target cat-file -e "${ExpectedSource}:scripts/release-version.mjs" 2>$null
+$stampedVersion = $LASTEXITCODE -eq 0
+$expectedVersion = if ($stampedVersion) { $Tag.Substring(1) } else { $sourcePackage.version }
+Require ($provenance.packageVersion -eq $expectedVersion) 'SOURCE_PACKAGE_VERSION_MISMATCH'
+$sourcePackage.version = $expectedVersion
 Require (!$release.draft -and !$release.prerelease -and $release.target_commitish -eq $ExpectedSource -and $release.tag_name -eq $Tag -and $provenance.tag -eq $Tag -and $provenance.sourceCommit -eq $ExpectedSource) 'RELEASE_IDENTITY_MISMATCH'
 $expected=@($provenance.assets.name)+@('build-provenance.json')
-Require ($expected.Count -eq 4 -and @($expected | Sort-Object -Unique).Count -eq 4 -and 'MaterialFileEncryptor-Setup.exe' -cin $expected -and 'RELEASES' -cin $expected -and "MaterialFileEncryptor-$($sourcePackage.version)-full.nupkg" -cin $expected) 'EXPECTED_RELEASE_ASSETS_REQUIRED'
+Require ($expected.Count -ge 4 -and $expected.Count -le 20 -and @($expected | Sort-Object -Unique).Count -eq $expected.Count -and 'MaterialFileEncryptor-Setup.exe' -cin $expected -and 'RELEASES' -cin $expected -and "MaterialFileEncryptor-$($sourcePackage.version)-full.nupkg" -cin $expected) 'EXPECTED_RELEASE_ASSETS_REQUIRED'
 Require ($expected.Count -eq @($release.assets).Count) 'RELEASE_ASSET_COUNT_MISMATCH'
 $verified=@()
 foreach($name in $expected){
@@ -54,5 +58,5 @@ try{foreach($entry in $zip.Entries){
 }}finally{$zip.Dispose()}
 Require (Test-Path -LiteralPath (Join-Path $payload 'MaterialFileEncryptor.exe')) 'APPLICATION_PAYLOAD_MISSING'
 Require (Test-Path -LiteralPath (Join-Path $payload 'resources/app.asar')) 'ASAR_PAYLOAD_MISSING'
-@{version=1;sourceCommit=$ExpectedSource;verifierCommit=(& git -C $target rev-parse HEAD).Trim();tag=$Tag;preparedAtUtc=[DateTime]::UtcNow.ToString('o');buildProvenanceSha256=Digest (Join-Path $download 'build-provenance.json');assets=$verified;extractedEntries=$extracted.Count;files=$extracted;runtimeVerification='pending';installerVerification='pending'}|ConvertTo-Json -Depth 8|Set-Content -Encoding utf8 (Join-Path $evidence 'download-preparation.json')
+@{version=1;sourceCommit=$ExpectedSource;verifierCommit=(& git -C $target rev-parse HEAD).Trim();packageVersion=$expectedVersion;tag=$Tag;preparedAtUtc=[DateTime]::UtcNow.ToString('o');buildProvenanceSha256=Digest (Join-Path $download 'build-provenance.json');assets=$verified;extractedEntries=$extracted.Count;files=$extracted;runtimeVerification='pending';installerVerification='pending'}|ConvertTo-Json -Depth 8|Set-Content -Encoding utf8 (Join-Path $evidence 'download-preparation.json')
 Write-Host ('Verified '+$verified.Count+' downloaded assets and extracted '+$extracted.Count+' real payload files. Runtime and installation remain pending.')

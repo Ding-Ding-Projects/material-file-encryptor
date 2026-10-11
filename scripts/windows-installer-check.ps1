@@ -134,7 +134,7 @@ try {
         $preparation = Get-Content -LiteralPath $DownloadPreparationPath -Raw | ConvertFrom-Json
         Assert-Check ($preparation.sourceCommit -eq $sourceCommit -and $preparation.verifierCommit -eq $verifierCommit) 'DOWNLOADED_SOURCE_MISMATCH'
         $receipt.downloadPreparationSha256 = File-Digest $DownloadPreparationPath
-        Assert-Check (@($preparation.assets).Count -eq 4 -and @($preparation.files).Count -gt 5) 'DOWNLOADED_MANIFEST_INVALID'
+        Assert-Check (@($preparation.assets).Count -ge 4 -and @($preparation.assets).Count -le 20 -and @($preparation.files).Count -gt 5) 'DOWNLOADED_MANIFEST_INVALID'
         foreach ($asset in $preparation.assets) {
             if ($asset.name -eq 'build-provenance.json') { continue }
             Assert-Check ($asset.name -match '^[A-Za-z0-9_.-]+$' -and !$asset.name.Contains('..')) 'DOWNLOADED_ASSET_NAME_INVALID'
@@ -205,7 +205,12 @@ try {
         $sourceText = & git -C $root show "${sourceCommit}:package.json"
         Assert-Check ($LASTEXITCODE -eq 0) 'PAYLOAD_SOURCE_NOT_AVAILABLE'
         $payloadPackage = $sourceText | ConvertFrom-Json
-        Assert-Check ($payloadPackage.version -eq $sourcePackage.version) 'SOURCE_PACKAGE_VERSION_MISMATCH'
+        & git -C $root cat-file -e "${sourceCommit}:scripts/release-version.mjs" 2>$null
+        $stampedVersion = $LASTEXITCODE -eq 0
+        if ($stampedVersion) {
+            Assert-Check ($preparation.tag -match '^v[0-9]+\.[0-9]+\.[0-9]+$' -and $preparation.packageVersion -eq $preparation.tag.Substring(1)) 'SOURCE_PACKAGE_VERSION_MISMATCH'
+            $payloadPackage.version = $preparation.packageVersion
+        } else { Assert-Check ($payloadPackage.version -eq $sourcePackage.version) 'SOURCE_PACKAGE_VERSION_MISMATCH' }
         $sourcePackage = $payloadPackage
     }
     Assert-Check ($nuspec.package.metadata.id -eq 'MaterialFileEncryptor' -and $nuspec.package.metadata.version -eq $sourcePackage.version) 'PACKAGE_ID_OR_VERSION_MISMATCH'

@@ -10,6 +10,10 @@ Assert (![string]::IsNullOrWhiteSpace($workflowStarted)) 'WORKFLOW_START_UNAVAIL
 $workflowStartedUtc=[DateTimeOffset]::Parse($workflowStarted).ToUniversalTime()
 Assert ($env:GITHUB_RUN_NUMBER -match '^[1-9][0-9]*$' -and $env:GITHUB_RUN_ATTEMPT -match '^[1-9][0-9]*$') 'INVALID_RUN_IDENTITY'
 $tag="v1.$($env:GITHUB_RUN_NUMBER).$($env:GITHUB_RUN_ATTEMPT)"
+$packageVersion=$tag.Substring(1)
+Assert ((Get-Content package.json -Raw | ConvertFrom-Json).version -eq $packageVersion) 'RELEASE_PACKAGE_VERSION_MISMATCH'
+$lock=Get-Content package-lock.json -Raw | ConvertFrom-Json
+Assert ($lock.version -eq $packageVersion -and $lock.packages.PSObject.Properties[''].Value.version -eq $packageVersion) 'RELEASE_LOCK_VERSION_MISMATCH'
 $output='release-output'; New-Item -ItemType Directory -Force $output | Out-Null
 $directory='out/make/squirrel.windows/x64'
 $setup=Join-Path $directory 'MaterialFileEncryptor-Setup.exe'; $releases=Join-Path $directory 'RELEASES'
@@ -17,6 +21,9 @@ Assert ((Test-Path $setup) -and (Test-Path $releases)) 'INSTALLER_ASSETS_MISSING
 Assert ((Get-AuthenticodeSignature $setup).Status -eq 'NotSigned') 'EXPECTED_UNSIGNED_SETUP'
 $packages=@(Get-ChildItem $directory -Filter '*.nupkg' -File)
 Assert (@($packages | Where-Object Name -Like '*-full.nupkg').Count -eq 1) 'EXPECTED_ONE_FULL_PACKAGE'
+Assert (@($packages | Where-Object Name -CEQ "MaterialFileEncryptor-$packageVersion-full.nupkg").Count -eq 1) 'RELEASE_PACKAGE_NAME_MISMATCH'
+$fullPackage=@($packages | Where-Object Name -Like '*-full.nupkg')[0]
+& scripts/squirrel-payload-check.ps1 -Package $fullPackage.FullName -Updater 'node_modules/electron-winstaller/vendor/Squirrel.exe' -ExpectedVersion $packageVersion -ExpectedSource $source
 $indexed=@{}
 foreach ($line in Get-Content $releases) {
  if (!$line.Trim()) { continue }
@@ -62,13 +69,15 @@ Downloadable photo: ``$($imageEntry.file)`` (Classic Har Gow / 蝦餃), from the
 "@
 $notes | Set-Content "$output/release-notes.md" -Encoding utf8
 $assets+=@("$output/build-provenance.json")
-@{tag=$tag;sourceCommit=$source;isDraft=$false;isPrerelease=$false;latest=$true;overwriteAllowed=$false;assets=@($assets | ForEach-Object {Split-Path $_ -Leaf})} | ConvertTo-Json -Depth 5 | Set-Content "$output/release-plan.json" -Encoding utf8
+@{tag=$tag;sourceCommit=$source;isDraft=$false;isPrerelease=$false;latest='semantic-version';overwriteAllowed=$false;assets=@($assets | ForEach-Object {Split-Path $_ -Leaf})} | ConvertTo-Json -Depth 5 | Set-Content "$output/release-plan.json" -Encoding utf8
 if ($PrepareOnly) { return }
 $refs=(Gh @('api',"repos/$repo/git/matching-refs/tags/$tag")) | ConvertFrom-Json
 Assert (@($refs | Where-Object ref -eq "refs/tags/$tag").Count -eq 0) 'TAG_ALREADY_EXISTS'
 $existing=@(Gh @('api','--paginate',"repos/$repo/releases?per_page=100",'--jq','.[].tag_name'))
 Assert ($existing -notcontains $tag) 'RELEASE_ALREADY_EXISTS'
-$null=Gh (@('release','create',$tag,'--repo',$repo,'--target',$source,'--latest=true','--title',"Material File Encryptor $tag",'--notes-file',"$output/release-notes.md")+$assets)
+$null=Gh (@('release','create',$tag,'--repo',$repo,'--target',$source,'--latest=false','--title',"Material File Encryptor $tag",'--notes-file',"$output/release-notes.md")+$assets)
+$releaseId=Gh @('api',"repos/$repo/releases/tags/$tag",'--jq','.id')
+$null=Gh @('api','--method','PATCH',"repos/$repo/releases/$releaseId",'-f','make_latest=legacy')
 $published=(Gh @('release','view',$tag,'--repo',$repo,'--json','isDraft,isPrerelease,assets,url')) | ConvertFrom-Json
 Assert (!$published.isDraft -and !$published.isPrerelease) 'PUBLICATION_INCOMPLETE'
 Assert (@($published.assets).Count -eq $assets.Count) 'PUBLISHED_ASSET_SET_MISMATCH'

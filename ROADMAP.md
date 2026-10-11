@@ -1,5 +1,12 @@
 # Preservation boundary, 2026-10-11 UTC
 
+## Installation and update repair
+
+- [x] Reproduce incomplete extraction from independently downloaded v1.122.1 and identify the stored nested ZIP boundary with the exact Squirrel extractor.
+- [ ] Complete the Deflate-writer regression and both exact root production entrypoints.
+- [ ] Publish version-coherent corrective packages and independently verify downloaded installation, installed launch and a real update.
+- [ ] Complete preservation, verified archive and ownership-qualified branch/worktree cleanup.
+
 - [x] Verify normal `v1.121.1` source/tag/provenance, all five independent downloads, hosted hashes, release feed, 761 archive CRC entries and renderer-archive privacy; keep downloaded execution and installed acceptance unverified.
 - [ ] Update the legacy four-asset download-preparation helper for the current complete provenance inventory without weakening its safety checks.
 - [x] Preserve the eight task branches and integrated source remotely.

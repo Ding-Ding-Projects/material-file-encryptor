@@ -9,6 +9,10 @@ if (!(Test-Path Env:PRIVATE_INSTRUCTIONS_SOURCE)) {
   if ($LASTEXITCODE -eq 0 -and ![string]::IsNullOrWhiteSpace($instructionSource)) { $env:PRIVATE_INSTRUCTIONS_SOURCE = $instructionSource }
 }
 Invoke-Checked { node scripts/check-vocabulary.mjs }
+if ($env:GITHUB_ACTIONS -eq 'true') {
+  # Every producer in one run uses the same Squirrel and application version.
+  Invoke-Checked { node scripts/release-version.mjs }
+}
 $toolStage = Join-Path $root ('out\tools.stage-' + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force $toolStage | Out-Null
 Copy-Item -LiteralPath $env:MFE_GIT_TOOL_ROOT -Destination (Join-Path $toolStage 'git') -Recurse
@@ -49,12 +53,18 @@ if ($Installer) {
   # Keep Squirrel's supported vendor layout with pinned archive and NuGet tools.
   $vendorStage = Join-Path $root ('out\squirrel-vendor-' + [Guid]::NewGuid().ToString('N'))
   Copy-Item -LiteralPath (Join-Path $root 'node_modules\electron-winstaller\vendor') -Destination $vendorStage -Recurse
-  Copy-Item -LiteralPath $env:MFE_ARCHIVE_EXECUTABLE -Destination (Join-Path $vendorStage '7z.exe') -Force
-  if ((Get-BootstrapDigest (Join-Path $vendorStage '7z.exe')) -ne $manifest.sevenZip.executableSha256) { throw 'Staged archive writer mismatch.' }
+  Copy-Item -LiteralPath $env:MFE_ARCHIVE_EXECUTABLE -Destination (Join-Path $vendorStage '7za-real.exe') -Force
+  if ((Get-BootstrapDigest (Join-Path $vendorStage '7za-real.exe')) -ne $manifest.sevenZip.executableSha256) { throw 'Staged archive writer mismatch.' }
+  $compiler = Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
+  if (!(Test-Path -LiteralPath $compiler)) { throw 'WINDOWS_FRAMEWORK_COMPILER_REQUIRED' }
+  Invoke-Checked { & $compiler /nologo /target:exe ("/out:" + (Join-Path $vendorStage '7z.exe')) "$PSScriptRoot\SquirrelArchiveWriter.cs" }
   Copy-Item -LiteralPath $env:MFE_NUGET_EXECUTABLE -Destination (Join-Path $vendorStage 'nuget.exe') -Force
   if ((Get-BootstrapDigest (Join-Path $vendorStage 'nuget.exe')) -ne $manifest.nuget.sha256) { throw 'Staged NuGet mismatch.' }
   $env:MFE_SQUIRREL_VENDOR_DIRECTORY = $vendorStage
   try { Invoke-Checked { npm.cmd run make -- --platform=win32 --arch=x64 --from-package } }
   finally { Remove-Item Env:MFE_SQUIRREL_VENDOR_DIRECTORY -ErrorAction SilentlyContinue }
   & "$PSScriptRoot\package-integrity.ps1"
+  foreach ($fullPackage in Get-ChildItem 'out/make/squirrel.windows/x64' -Filter '*-full.nupkg' -File) {
+    & "$PSScriptRoot\squirrel-payload-check.ps1" -Package $fullPackage.FullName -Updater (Join-Path $vendorStage 'Squirrel.exe') -ExpectedVersion ((Get-Content package.json -Raw | ConvertFrom-Json).version) -ExpectedSource ((& git rev-parse HEAD).Trim()) -ReceiptPath 'out/evidence/squirrel-extraction.json'
+  }
 }

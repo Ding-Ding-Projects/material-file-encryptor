@@ -1,5 +1,11 @@
 # Download verification checkpoint, 2026-10-11 01:45 UTC
 
+## Installation repair continuation
+
+The current user has resumed installation and installed-update work. Downloaded v1.122.1 Setup returned zero and registered 0.2.0, but omitted 585 of 663 payload files, left its nested FFmpeg source ZIP at zero bytes and failed installed launch with a missing V8 startup snapshot. A minimal fixture using the shipped Squirrel extractor reproduces the omission; explicit Deflate preserves the nested ZIP and following file. Original process-query timeout and installation evidence remain retained.
+
+The current repair adds a pinned archive-writer adapter and actual-Squirrel all-file extraction comparison. It also stamps unique release package versions before production, checks internal uploaded package identity, permits the current complete provenance asset inventory and separates the large-download deadline from metadata lookup. New regression verification, both root builds, corrective release download, actual installation/update and safe cleanup remain pending. No current installed success or cleanup deletion is claimed.
+
 Normal release `v1.121.1` binds `32fd1d4c0ad344b604e81736c9339b93dc70433c` through the immutable tag and downloaded provenance. Its delivery run `38102455217` succeeded in 6 minutes 5 seconds. Five independent downloads, 678,535,288 bytes total, match hosted SHA-256 values and provenance. All 761 package archive entries passed decompression/CRC checks. The renderer archive privacy inspection passed with 5,446 entries and zero rejected; Setup is unsigned. No application or installer was executed. Receipt: `out/release-acceptance-v1.121.1/acceptance.json`.
 
 Setup: 338,018,304 bytes, SHA-256 `9d7d167a1e3679bc560cb1ddaa40cf8bb2b147ffd537d6908c85aae50b0e2492`. Full package: 338,108,753 bytes, SHA-256 `53f0d2d0db755b8426128e38450bb35be8eee2c1fbbc54de85c39fca3e6ccf29`. Keep this release bound to its actual source, not this later documentation-only checkpoint.

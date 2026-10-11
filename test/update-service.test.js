@@ -62,6 +62,33 @@ test('same package version remains current despite a newer release tag', async t
   const f = await fixture(t); f.config.app.getVersion = () => '1.1.0';
   assert.equal((await f.service.check()).state, 'current'); assert.deepEqual(f.calls, []);
 });
+
+test('package transfer survives the metadata deadline and uses its own bounded deadline', async t => {
+  const timers = new Set();
+  let f, release, entered;
+  const started = new Promise(resolve => { entered = resolve; });
+  f = await fixture(t, { requestTimeoutMs: 10, downloadTimeoutMs: 100,
+    setTimer: (fn, delay) => { const timer = { fn, delay }; timers.add(timer); return timer; },
+    clearTimer: timer => timers.delete(timer),
+    fetch: async (url, init) => {
+      if (url.endsWith('.nupkg')) return new Promise((resolve, reject) => {
+        if (init.signal.aborted) { reject(new Error('ABORTED')); return; }
+        release = () => resolve(new Response(f.bytes));
+        init.signal.addEventListener('abort', () => reject(new Error('ABORTED')), { once: true });
+        entered();
+      });
+      return new Response(f.routes.get(url)());
+    } });
+  await f.service.check();
+  const download = f.service.download();
+  await started;
+  for (const timer of [...timers]) if (timer.delay <= 20) timer.fn();
+  assert.equal(f.service.status().state, 'downloading');
+  assert.ok([...timers].some(timer => timer.delay === 100));
+  assert.ok(![...timers].some(timer => timer.delay === 10));
+  release();
+  assert.equal((await download).state, 'ready');
+});
 for (const [label, mutate, expected] of [
   ['foreign asset', f => { f.release.assets[0].browser_download_url = 'https://other.invalid/RELEASES'; }, 'INVALID_RELEASE_ASSET'],
   ['draft', f => { f.release.draft = true; }, 'INVALID_RELEASE'],

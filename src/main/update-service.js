@@ -39,7 +39,7 @@ export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl
   acquireInstallLease, prepareRestart = async () => { throw new Error('RESTART_PREPARATION_REQUIRED'); },
   getLanguage = () => 'en', clock = () => Date.now(), setTimer = setTimeout, clearTimer = clearTimeout,
   intervalMs = 4 * 60 * 60 * 1000, autoSchedule = true,
-  requestTimeoutMs = 30_000, nativeTimeoutMs = 10 * 60 * 1000,
+  requestTimeoutMs = 30_000, downloadTimeoutMs = 15 * 60 * 1000, nativeTimeoutMs = 10 * 60 * 1000,
 } = {}) {
   const events = new EventEmitter();
   let state = { state: 'unavailable', reason: 'NOT_INITIALIZED', enabled: true,
@@ -139,12 +139,12 @@ export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl
     if (!json) return text;
     try { return JSON.parse(text); } catch { throw new Error('INVALID_METADATA'); }
   }
-  async function transaction(work) {
+  async function transaction(work, timeoutMs = requestTimeoutMs) {
     if (disposed) return status();
     if (pending) return pending;
     operation = new AbortController();
     const current = operation;
-    const timeout = setTimer(() => current.abort(), requestTimeoutMs); timeout?.unref?.();
+    const timeout = setTimer(() => current.abort(), timeoutMs); timeout?.unref?.();
     pending = (async () => {
       try { await work(current.signal); }
       catch (error) { if (!disposed) failure(current.signal.aborted ? new Error('UPDATE_CANCELLED_OR_TIMED_OUT') : error); }
@@ -227,7 +227,7 @@ export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl
         staged = filename;
       } catch (error) { await handle.close().catch(() => {}); await fs.rm(folder, { recursive: true, force: true }); throw error; }
       publish({ state: 'ready', reason: null, deferred: false, stagedHashVerified: true, restoredFromCache: false });
-    });
+    }, downloadTimeoutMs);
   }
   async function installWhenSafe(parentWindow) {
     if (disposed || state.state !== 'ready' || pending || !staged) return status();
