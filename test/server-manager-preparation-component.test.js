@@ -1,5 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+// The logic fixture aliases generic selectors to Material controls. Inspect literal
+// tags here so registered compositions pass while native replacements still fail.
+function assertRegisteredControls(root){
+ const native=root.querySelectorAll('*').filter(node=>['INPUT','BUTTON','SELECT','TEXTAREA'].includes(node.tagName));
+ assert.deepEqual(native.map(node=>node.tagName),[],'Generic controls must not replace registered Material controls');
+}
+
 import {createAccessDocument} from './helpers/local-access-dom.js';
 const previousHTMLElement=globalThis.HTMLElement;globalThis.HTMLElement=class{};
 const {mountServerPreparation,registerServerPreparation}=await import('../src/renderer/features/server-manager/index.js');
@@ -19,7 +26,7 @@ function backend(){const calls=[];let state={catalogue:{state:'unavailable',sour
 async function select(host){button(host,'Refresh official versions').click();await flush();button(host,'Choose version').click();await flush();}
 
 test('mounted preparation uses original host IDs, registered controls and optional above-target guidance',async()=>{
- const {host}=scene(),service=backend();const module=mountServerPreparation(host,service);await flush();assert.equal(host.querySelectorAll('input').length,0);assert.equal(host.querySelectorAll('button').length,0);const refresh=button(host,'Refresh official versions'),guidance=refresh.parentNode.children[refresh.parentNode.children.indexOf(refresh)-1];assert.equal(guidance.tagName,'MFE-CONTROL-GUIDANCE');assert.equal(guidance.shadowRoot.children.at(-1).hidden,true);
+ const {host}=scene(),service=backend();const module=mountServerPreparation(host,service);await flush();assertRegisteredControls(host);const refresh=button(host,'Refresh official versions'),guidance=refresh.parentNode.children[refresh.parentNode.children.indexOf(refresh)-1];assert.equal(guidance.tagName,'MFE-CONTROL-GUIDANCE');assert.equal(guidance.shadowRoot.children.at(-1).hidden,true);
  await select(host);button(host,'Prepare verified server files').click();await flush();assert.deepEqual(service.calls.find(row=>row.action==='prepare').payload,{selectionId:'selection'});assert.deepEqual(service.calls.find(row=>row.action==='resolveVersion').payload,{catalogueId,versionId:'fixture'});assert.match(host.textContent,/eula=false/);assert.match(host.textContent,/Verified SHA-256/);button(host,'Review server license').click();await flush();assert.equal(host.querySelector('a').href,'https://www.minecraft.net/en-us/eula');assert.equal(service.calls.some(row=>['start','acceptLicense'].includes(row.action)),false);module.destroy();
 });
 test('search clear preserves read-only query and changes only the actual query consumer',async()=>{
@@ -42,4 +49,15 @@ test('retained query is reapplied after refresh, language and pagination renders
 });
 test('preparation registration admits its exact component inventory and rejects omission',async()=>{
  const {doc,host}=scene();const {surfaceRegistry}=await import('../src/shared/surface/registry.js');registerServerPreparation(doc.defaultView);assert.ok(doc.defaultView.customElements.get('mfe-server-preparation'));assert.throws(()=>registerServerPreparation(doc.defaultView,surfaceRegistry.filter(row=>row.tag!=='mfe-server-preparation')),/incomplete/);const changed=surfaceRegistry.map(row=>row.tag==='mfe-server-preparation'?{...row,primitives:['md-outlined-button']}:row);assert.throws(()=>registerServerPreparation(doc.defaultView,changed),/incomplete/);const module=mountServerPreparation(host,backend());await flush();assert.equal(host.querySelector('mfe-server-preparation').getAttribute('role'),'region');module.destroy();
+});
+
+test('literal control assertion accepts registered components and rejects generic replacements',()=>{
+ const {doc,host}=scene();
+ for(const tag of ['md-outlined-text-field','md-checkbox','md-outlined-button','md-outlined-select','mfe-file-picker'])host.append(doc.createElement(tag));
+ assertRegisteredControls(host);
+ for(const tag of ['input','button','select','textarea']){
+  const generic=doc.createElement(tag);host.append(generic);
+  assert.throws(()=>assertRegisteredControls(host),/Generic controls must not replace/);
+  generic.remove();assertRegisteredControls(host);
+ }
 });
