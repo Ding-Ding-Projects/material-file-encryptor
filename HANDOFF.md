@@ -1,3 +1,13 @@
+# Verified native storage unit, 2026-10-11
+
+## Verified storage packing update, 2026-10-11
+
+The native engine now defaults to an 80 MiB physical part cap (83,886,080 bytes) and packs durable mounted writes after the final writable handle closes. Immutable snapshot packing, generation-aware cancellation and bounded history publication preserve concurrent writes and recovery.
+
+The exact production source `e06df2a14643932f5f23289ae4eea2d8e45b3676` passed `build.bat /s`, 43 native core checks and the complete synthetic mounted lifecycle, including authenticated reopen. A separate measured probe produced 83,866,588-, 83,866,588- and 254,672-byte parts. See [physical packing and measured evidence](docs/features/storage/physical-packing.md).
+
+Real existing-data migration, the complete GUI redesign, the full visual matrix and actual installed lifecycle remain pending. This storage result does not certify those separate outcomes.
+
 # Final preservation source unit, 2026-10-11 UTC
 
 Reviewed source 0e7b7178e32760bf44136f8f7920adbb0e1508c2 is included in this integration. It retains 8d83230 and corrects the independently reproduced sibling-field rollback defect. CSS property fields use registered outlined controls and the original change/Clear/Reset, validation and persistence authority. Shared mutate renews only the still-owned cohort after successful synchronous rollback; unrelated replacement and persistence faults do not renew. Two fresh review lenses are dry. The focused source suite passed16/16, independent sibling/typography/Reset probes passed, and parent ran the decisive mounted property consumer1/1. Unique per-property guidance, vendor keyboard/accessibility and real pixels remain unfinished.

@@ -6,6 +6,14 @@
 
 > **Development status:** independently downloaded package bytes pass verification. Installed startup, automatic updating, restart continuity and the current rebuilt interface remain unfinished. The complete inventory contains **105 feature IDs and 210 desktop/website rows**; no complete-surface acceptance is claimed.
 
+## Verified storage packing update, 2026-10-11
+
+The native engine now defaults to an 80 MiB physical part cap (83,886,080 bytes) and packs durable mounted writes after the final writable handle closes. Immutable snapshot packing, generation-aware cancellation and bounded history publication preserve concurrent writes and recovery.
+
+The exact production source `e06df2a14643932f5f23289ae4eea2d8e45b3676` passed `build.bat /s`, 43 native core checks and the complete synthetic mounted lifecycle, including authenticated reopen. A separate measured probe produced 83,866,588-, 83,866,588- and 254,672-byte parts. See [physical packing and measured evidence](docs/features/storage/physical-packing.md).
+
+Real existing-data migration, the complete GUI redesign, the full visual matrix and actual installed lifecycle remain pending. This storage result does not certify those separate outcomes.
+
 ## Pure Material Design 3 throughout
 
 The requirement applies to the desktop workspace, documentation website, settings and every nested editor. Registered buttons, text fields, selectors, sliders, checkboxes and tabs are being integrated with the original validation, locks, persistence and cancellation behavior. Source conversions alone do not establish keyboard, accessibility or visual conformance.
