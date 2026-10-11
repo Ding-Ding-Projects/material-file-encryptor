@@ -73,6 +73,8 @@ It serializes operations, synchronizes an immutable pending metadata file, commi
 
 These records live in the local application-data `access-mutations/records` directory, separately from encrypted snapshots. The host-only `list({limit})` method returns at most 1,000 rows in timestamp order. An authenticated manager can discover and merge this inventory through its owning host. The writer adds no unrestricted renderer endpoint or credential-key exception. Manager bridge and display wiring remain explicit integration work. The journal is metadata, not an authentication authority or a replacement for encrypted snapshots.
 
+Every journal command and its executable-version check receive an isolated process environment. Inherited Git routing, index, object, configuration, template, helper and trace variables are removed. Global and system configuration are disabled, interactive prompts and filesystem monitoring are disabled, and external attributes are excluded. The normal operating-system launch environment is retained. This prevents a parent process from redirecting the journal into a different repository or trace file.
+
 ## Verification and remaining boundaries
 
 `test/local-access-host.test.js` covers protected challenges, persistent budgets, independent history grants, encrypted temporary Git records, revision ownership and interrupted recovery. `test/local-access-integration.test.js` covers trusted-frame admission, reserved keys, native settings, executable tampering, recording failure and cancellation at grant-read, stored-write and returned-read boundaries. `test/local-access-mutation-history.test.js` exercises actual temporary Git commits with a synthetic resolver and executor fixture; it does not claim that the packaged native executable ran.

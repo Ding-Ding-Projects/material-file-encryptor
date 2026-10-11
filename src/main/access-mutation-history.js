@@ -7,6 +7,14 @@ import {createForgeToolResolver} from './forge-transport.js';
 
 const executeFile=promisify(execFile),actions=new Set(['access-credential-created','access-credential-removed','access-credential-rolled-back']);
 const filenamePattern=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}-[a-f0-9]{64}\.json$/;
+
+function journalEnvironment(){
+ // Preserve the operating-system launch environment while removing every
+ // inherited Git control, including routing, config injection and trace sinks.
+ const environment=Object.fromEntries(Object.entries(process.env).filter(([key])=>!/^GIT_/i.test(key)&&!/^SSH_ASKPASS$/i.test(key)));
+ const empty='/dev/null';
+ return {...environment,GIT_TERMINAL_PROMPT:'0',GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_SYSTEM:empty,GIT_CONFIG_GLOBAL:empty,GIT_CONFIG_COUNT:'0',GIT_ATTR_NOSYSTEM:'1'};
+}
 export function validateAccessMutationEvent(value){
  if(!value||Object.getPrototypeOf(value)!==Object.prototype||Reflect.ownKeys(value).length!==4||!['version','action','target','at'].every(key=>Object.hasOwn(value,key))||value.version!==1||!actions.has(value.action)||typeof value.target!=='string'||!(value.target==='profile'||/^element:[^\x00-\x1f\x7f]{1,256}$/.test(value.target))||typeof value.at!=='string'||!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(value.at)||!Number.isFinite(Date.parse(value.at))||new Date(value.at).toISOString()!==value.at)throw Error('Invalid redacted access mutation event.');
  return {version:1,action:value.action,target:value.target,at:value.at};
@@ -21,7 +29,7 @@ export function createAccessMutationHistory({dataDirectory,toolsDirectory,execut
  const directory=path.join(dataDirectory,'access-mutations'),records=path.join(directory,'records'),pending=path.join(directory,'pending'),resolveTool=createForgeToolResolver(toolsDirectory),lifetime=new AbortController();let closed=false,initialized=false,chain=Promise.resolve();
  const open=()=>{if(closed)throw Error('Local mutation history is closed.');};
  const serial=operation=>{const result=chain.catch(()=>{}).then(async()=>{open();return operation();});chain=result;return result;};
- const git=async args=>{open();const executable=await resolveTool('git');open();const options={cwd:directory,windowsHide:true,shell:false,signal:lifetime.signal,timeout:15000,maxBuffer:1024*1024};const version=await execute(executable,['--version'],options);open();if(version.stdout.trim()!=='git version 2.56.0.windows.2')throw Error('Verified bundled Git version is unavailable.');const result=await execute(executable,['-c','core.hooksPath='+(process.platform==='win32'?'NUL':'/dev/null'),'-c','commit.gpgsign=false','-c','user.name=Material File Encryptor','-c','user.email=local@material-file-encryptor.invalid',...args],options);open();return result;};
+ const git=async args=>{open();const executable=await resolveTool('git');open();const options={cwd:directory,env:journalEnvironment(),windowsHide:true,shell:false,signal:lifetime.signal,timeout:15000,maxBuffer:1024*1024};const version=await execute(executable,['--version'],options);open();if(version.stdout.trim()!=='git version 2.56.0.windows.2')throw Error('Verified bundled Git version is unavailable.');const result=await execute(executable,['-c','core.fsmonitor=false','-c','core.attributesFile=/dev/null','-c','core.hooksPath='+(process.platform==='win32'?'NUL':'/dev/null'),'-c','commit.gpgsign=false','-c','user.name=Material File Encryptor','-c','user.email=local@material-file-encryptor.invalid',...args],options);open();return result;};
  async function ensureDirectory(folder){await fs.mkdir(folder,{recursive:true,mode:0o700});const info=await fs.lstat(folder);if(!info.isDirectory()||info.isSymbolicLink())throw Error('Local mutation history storage is invalid.');}
  async function readEvent(file){const info=await fs.lstat(file);if(!info.isFile()||info.isSymbolicLink()||info.size>16384)throw Error('Local mutation history record is invalid.');const bytes=await fs.readFile(file,'utf8');if(!filenamePattern.test(path.basename(file))||createHash('sha256').update(bytes).digest('hex')!==path.basename(file).slice(37,101))throw Error('Local mutation history record integrity check failed.');let event;try{event=validateAccessMutationEvent(JSON.parse(bytes));}catch{throw Error('Local mutation history record is invalid.');}return {bytes,event};}
  async function commitPending(name){
