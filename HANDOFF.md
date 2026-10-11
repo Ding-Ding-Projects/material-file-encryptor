@@ -8,6 +8,8 @@ The following preservation commit `28c587cd5993c6401dff8c744ba0f23dfb9702f3` was
 
 Release `v1.109.1` was read back as a normal release from isolated storage source `2c743a4b78a30185d7b745f67de96ac879e36fec`, with four assets. It is not final main and has not been independently downloaded or installed. Main delivery runs `38102176741` and `38102321558` remained in progress at the final observation.
 
+At 2026-10-11 01:37:19 UTC, normal release `v1.116.1` was read back with five assets. Its tag and downloaded provenance bind integrated source `52301884fa73fb1bcea4712c0d2e7a32caf251b2`. Only provenance and the release feed were downloaded. Setup, full package, downloaded runtime and installed workflows remain unverified. Delivery run `38102176741` and preservation-source run `38102423130` were still in progress, so no final green verdict is claimed.
+
 Latest frozen runtime: `bc3f481ebd0b946d4f4071de09cb038e6dc3afd1`, built through `build.bat /s`, with 6,194 package privacy entries and zero rejected. Its numeric sandbox-diagnostic change passed six focused tests, but this final frozen candidate has not been run. Receipt: `.test-output/package-ready-bc3f481.json`. Main was last verified remotely at `52301884fa73fb1bcea4712c0d2e7a32caf251b2` before this checkpoint commit. The eight task branches are also preserved remotely; their isolated source builds are not complete product acceptance.
 
 Verified runtime evidence is source-specific:
