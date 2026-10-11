@@ -1,3 +1,16 @@
+// Public companion mediation is restricted before any network request.
+export const COMPANION_FEATURE_ACTIONS = Object.freeze({
+ personalization: Object.freeze(['sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts']),
+ status: Object.freeze(['status']),
+ converter: Object.freeze(['catalog','inspect','enqueue','list','control','pickSources','pickDestination','pickDestinationDirectory']),
+ ollama: Object.freeze(['status','catalog','refreshCatalog','models','show','deleteModel','copyModel','generate','hardware','cart','addToCart','removeFromCart','retryPull','startPulls','cancel','sessions','session','renameSession','deleteSession','exportSession','chat','profiles','preflight','launch','snapshots','restore','events','runtimeInstall','runtimeStart','chooseRuntimeExecutable','registerProfile']),
+});
+export function assertCompanionRequest(action, params) {
+ const object=value=>value&&typeof value==='object'&&!Array.isArray(value);
+ if(action!=='featureRequest'||!object(params)||Object.keys(params).some(key=>!['feature','action','payload'].includes(key))||
+    !Object.hasOwn(COMPANION_FEATURE_ACTIONS,params.feature)||!COMPANION_FEATURE_ACTIONS[params.feature].includes(params.action)||
+    !object(params.payload)) throw Error('This documentation workspace supports preferences, status and local tools only. Use the installed application for encrypted-drive operations.');
+}
 // A paired, local-only connection. Credentials are never placed in browser storage.
 export function mountLocalAdapter(root, { onAuthenticatedChange = () => {}, translate = value => value } = {}) {
   const document = root.ownerDocument;
@@ -76,6 +89,7 @@ export function mountLocalAdapter(root, { onAuthenticatedChange = () => {}, tran
   return {
     status: readStatus,
     async featureRequest(action, params = {}) {
+      try { assertCompanionRequest(action, params); } catch(error) { throw new Error(translate(error.message)); }
       const status = await readStatus();
       if (!status.authenticated || !status.actions.includes(action)) throw new Error('Connect and unlock the desktop before using this action.');
       const current = generation;

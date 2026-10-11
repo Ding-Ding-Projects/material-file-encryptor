@@ -7,6 +7,11 @@ import { createCredentialStore, createFeatureServices, readConverterManifest } f
 import { validateFeatureRequest, validateRequest } from '../src/main/validation.js';
 const safeStorage={isEncryptionAvailable:()=>true,encryptString:text=>Buffer.from(text),decryptString:value=>value.toString()};
 async function fixture(t){const directory=await fs.mkdtemp(path.join(os.tmpdir(),'feature-services-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));return directory;}
+test('personalization image dispatch reaches the existing image validator',async t=>{
+ const directory=await fixture(t),services=createFeatureServices({dataDirectory:directory,applicationRoot:directory,safeStorage,dialog:{},getWindow:()=>null,openPath:async()=>{}});
+ try{await assert.rejects(services.request('personalization','normalizeImage',{dataUrl:'not an image'}),/Choose a static PNG no larger than 4 MiB\./);}
+ finally{await services.close();}
+});
 test('converter manifests support Windows UTF-8 output without accepting malformed JSON',async t=>{
  const directory=await fixture(t),filename=path.join(directory,'manifest.json');
  const manifest={schemaVersion:1,launcherSha256:'a'.repeat(64),runtimeSha256:'b'.repeat(64),launcherCompanionHashes:{}};

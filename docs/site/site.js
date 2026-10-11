@@ -1,27 +1,61 @@
+import { mountSiteFoundation } from './site-foundation.js';
 import { parseVocabulary, replaceVocabulary, filterGuides, updateGalleryGroups } from './preferences.js';
-import { createVocabularyStore, emptyVocabulary } from './personal-vocabulary.js';
-import { cantonese, localized, loadMessagePreferences, messagePair } from './locales.js';
+import { emptyVocabulary, serializeVocabulary } from './personal-vocabulary.js';
+import { cantonese, localized, loadMessagePreferences, effectiveMessagePair } from './locales.js';
 import { previewRelease, renderReleaseDownload } from './release.js';
 
 renderReleaseDownload(document, previewRelease);
 
+let siteStorage;try{siteStorage=window.localStorage;}catch{siteStorage={getItem:()=>null,setItem:()=>{throw Error('Browser storage unavailable');},removeItem:()=>{throw Error('Browser storage unavailable');}};}
 let preferences;
-try { preferences = loadMessagePreferences(localStorage); } catch { preferences = loadMessagePreferences({ getItem: () => null }); }
+try { preferences = loadMessagePreferences(siteStorage); } catch { preferences = loadMessagePreferences({ getItem: () => null }); }
 let vocabulary = { version: 1, replacements: [] };
 // The owning private-profile controller must authenticate before enabling wording.
 let privateWordingAvailable = false;
-let vocabularyStore = null;
+let privateCacheAccess = null, wordingGeneration = 0, authenticationGeneration = 0;
+let vocabularyClearFlight = Promise.resolve();
 let pendingVocabularySource = null;
-const vocabularyStorageKey = 'material-file-encryptor.site.vocabulary.v1';
-export function setAuthenticatedLocalSession(authenticated) {
-  privateWordingAvailable = authenticated === true;
-  if (privateWordingAvailable) {
-    vocabularyStore = createVocabularyStore(localStorage, vocabularyStorageKey);
-    const result = pendingVocabularySource === null ? { vocabulary: vocabularyStore.current, persisted: vocabularyStore.persisted } : vocabularyStore.replace(pendingVocabularySource);
-    pendingVocabularySource = null; vocabulary = result.vocabulary;
-    vocabularyState = { kind: vocabulary.replacements.length ? 'success' : 'default', persisted: result.persisted };
-  } else { vocabulary = emptyVocabulary(); vocabularyStore = null; vocabularyState = { kind: pendingVocabularySource === null ? 'locked' : 'pending' }; }
-  renderCopy();
+const vocabularyStorageKey = 'material-file-encryptor.visitor.private-wording.v1';
+// Retire the previous plaintext cache. Authentication never trusts its contents.
+try{siteStorage.removeItem('material-file-encryptor.site.vocabulary.v1');}catch{}
+async function replacePrivateVocabulary(source) {
+ const next=parseVocabulary(source),access=privateCacheAccess,ticket=++wordingGeneration;
+ if(!privateWordingAvailable||!access?.authenticated||typeof access.encryptPrivateCache!=='function')throw Error('Unlock your private profile before applying local wording.');
+ if(!globalThis.navigator?.locks?.request)throw Error('Protected local storage requires browser Web Locks support.');
+ let persisted=true;
+ await globalThis.navigator.locks.request('material-file-encryptor.visitor.access.write',async()=>{
+  const envelope=await access.encryptPrivateCache(serializeVocabulary(next),'public-site-personal-vocabulary');
+  if(ticket!==wordingGeneration||!access.authenticated||schoolEnabled)throw Error('Authentication changed. Original wording remains active.');
+  access.credentialStore.assertSession();
+  try{siteStorage.setItem(vocabularyStorageKey,JSON.stringify(envelope));}catch{persisted=false;}
+  access.credentialStore.assertSession();
+ });
+ if(ticket!==wordingGeneration||!access.authenticated||schoolEnabled)throw Error('Authentication changed. Original wording remains active.');
+ pendingVocabularySource=null;vocabulary=next;vocabularyState={kind:'success',persisted};
+}
+async function clearPrivateVocabulary() {
+ const ticket=++wordingGeneration;
+ pendingVocabularySource=null;vocabulary=emptyVocabulary();vocabularyState={kind:'default'};renderCopy();
+ const clear=async()=>{
+  if(!globalThis.navigator?.locks?.request)throw Error('Protected local storage requires browser Web Locks support.');
+  await globalThis.navigator.locks.request('material-file-encryptor.visitor.access.write',()=>siteStorage.removeItem(vocabularyStorageKey));
+ };
+ vocabularyClearFlight=clear();
+ try{await vocabularyClearFlight;}catch{if(ticket===wordingGeneration)vocabularyState={kind:'error',message:'Original wording restored for this session. Stored wording could not be removed.'};}
+ if(ticket===wordingGeneration)renderCopy();
+}
+export async function setAuthenticatedLocalSession(authenticated,access) {
+ const session=++authenticationGeneration;let ticket=++wordingGeneration;privateCacheAccess=access;
+ privateWordingAvailable=authenticated===true&&access?.authenticated===true&&!schoolEnabled;
+ vocabulary=emptyVocabulary();
+ if(!privateWordingAvailable){vocabularyState={kind:pendingVocabularySource===null?'locked':'pending'};renderCopy();return;}
+ try{
+  await vocabularyClearFlight.catch(()=>{});
+  if(session!==authenticationGeneration||ticket!==wordingGeneration||!access.authenticated)return;
+  if(pendingVocabularySource!==null){const source=pendingVocabularySource;ticket=wordingGeneration+1;await replacePrivateVocabulary(source);if(pendingVocabularySource===source)pendingVocabularySource=null;}
+  else {const raw=siteStorage.getItem(vocabularyStorageKey);if(raw){const clear=await access.decryptPrivateCache(JSON.parse(raw),'public-site-personal-vocabulary');if(ticket!==wordingGeneration||!access.authenticated)return;vocabulary=parseVocabulary(clear);vocabularyState={kind:'success',persisted:true};}else vocabularyState={kind:'default'};}
+ }catch{if(session!==authenticationGeneration||ticket!==wordingGeneration)return;vocabulary=emptyVocabulary();vocabularyState={kind:'error',message:'Saved private wording could not be unlocked. Original wording remains active.'};}
+ if(access.authenticated&&!schoolEnabled)renderCopy();
 }
 let vocabularyState = { kind: 'default' };
 const dynamic = '#search-status,#no-results,#vocabulary-status,#success-preview,#search-preview,output';
@@ -42,6 +76,7 @@ for (const element of document.querySelectorAll('[aria-label],[alt],[title],[pla
   for (const name of ['aria-label', 'alt', 'title', 'placeholder']) if (element.hasAttribute(name)) attributes.push({ element, name, original: element.getAttribute(name) });
 }
 const originalTitle = document.title;
+const activeLanguage = () => schoolEnabled ? 'en' : preferences.language;
 const menu = document.querySelector('#navigation');
 const menuToggle = document.querySelector('#menu-toggle');
 const dialog = document.querySelector('#preferences-dialog');
@@ -57,15 +92,17 @@ const emojiToggle = document.querySelector('#emoji-toggle');
 const successTone = document.querySelector('#success-tone');
 const searchTone = document.querySelector('#search-tone');
 
-const pair = (en, yue) => preferences.language === 'yue' ? yue : preferences.language === 'bilingual' ? `${en} / ${yue}` : en;
+const pair = (en, yue) => (!schoolEnabled && preferences.language === 'yue') ? yue : (!schoolEnabled && preferences.language === 'bilingual') ? `${en} / ${yue}` : en;
 function friendly(kind, count = 0) {
-  const [en, yue] = messagePair(kind, preferences[kind === 'success' ? 'successTone' : 'searchTone'], count);
-  return `${preferences.emoji ? kind === 'success' ? '✅ ' : '🔎 ' : ''}${pair(en, yue)}`;
+  const [en,yue] = effectiveMessagePair({...preferences,school:{enabled:schoolEnabled}},kind,count);
+  return `${(!schoolEnabled && preferences.emoji) ? kind === 'success' ? '✅ ' : '🔎 ' : ''}${pair(en, yue)}`;
 }
 function savePreferences() {
-  try { localStorage.setItem('material-file-encryptor.site.messages', JSON.stringify(preferences)); } catch { /* Preferences remain usable in this tab. */ }
+  try { siteStorage.setItem('material-file-encryptor.site.messages', JSON.stringify(preferences)); } catch { /* Preferences remain usable in this tab. */ }
 }
+let enhancedSearch = null;
 function updateSearch() {
+  if (enhancedSearch) { if(search.value!==enhancedSearch.query)enhancedSearch.setQuery(search.value); enhancedSearch.refresh(); return; }
   const guides = guideElements.map(element => ({ id: element.id, text: `${guideEnglish.get(element)} ${element.textContent}` }));
   const matched = new Set(filterGuides(guides, search.value).map(guide => guide.id));
   guideElements.forEach(element => { element.hidden = !matched.has(element.id); });
@@ -78,29 +115,31 @@ function updateSearch() {
     : pair(`${guides.length} entries. Search stays in your browser.`, `${guides.length} 項內容。搜尋只喺你嘅瀏覽器進行。`);
 }
 function updateMessages() {
-  successTone.style.setProperty('--range-progress', `${(preferences.successTone - 1) * 25}%`);
-  searchTone.style.setProperty('--range-progress', `${(preferences.searchTone - 1) * 25}%`);
-  document.querySelector('#success-tone-value').textContent = `${preferences.successTone} / 5`;
-  document.querySelector('#search-tone-value').textContent = `${preferences.searchTone} / 5`;
+  successTone.style.setProperty('--range-progress', `${(preferences.funnyEnglish - 1) * 25}%`);
+  searchTone.style.setProperty('--range-progress', `${(preferences.funnyCantonese - 1) * 25}%`);
+  document.querySelector('#success-tone-value').textContent = `${preferences.funnyEnglish} / 5`;
+  document.querySelector('#search-tone-value').textContent = `${preferences.funnyCantonese} / 5`;
   document.querySelector('#success-preview').textContent = pair('Example message: ', '訊息示例：') + friendly('success', 2);
   document.querySelector('#search-preview').textContent = pair('Example message: ', '訊息示例：') + friendly('search');
   vocabularyStatus.dataset.error = String(vocabularyState.kind === 'error');
-  vocabularyStatus.textContent = vocabularyState.kind === 'error' ? localized(vocabularyState.message, preferences.language) : !privateWordingAvailable ? (pendingVocabularySource === null ? 'Private wording is locked. Choose a file to validate it locally, then unlock your private profile to apply it.' : 'File validated locally. Unlock your private profile to apply its wording. Public text remains unchanged.') : vocabularyState.kind === 'success' ? friendly('success', vocabulary.replacements.length) + (vocabularyState.persisted ? ' Saved on this device.' : ' Active for this session only; storage failed.')
-    : localized(vocabularyState.kind === 'error' ? vocabularyState.message : 'Default wording is active.', preferences.language);
+  vocabularyStatus.textContent = vocabularyState.kind === 'error' ? localized(vocabularyState.message, activeLanguage()) : !privateWordingAvailable ? localized(pendingVocabularySource === null ? 'Private wording is locked. Choose a file to validate it locally, then unlock your private profile to apply it.' : 'File validated locally. Unlock your private profile to apply its wording. Public text remains unchanged.',activeLanguage()) : vocabularyState.kind === 'success' ? friendly('success', vocabulary.replacements.length) + localized(vocabularyState.persisted ? ' Saved on this device.' : ' Active for this session only; storage failed.',activeLanguage())
+    : localized(vocabularyState.kind === 'error' ? vocabularyState.message : 'Default wording is active.', activeLanguage());
   updateSearch();
 }
+let schoolEnabled = false;
+let siteDisplayName='Material File Encryptor';
 function renderCopy() {
-  document.documentElement.lang = preferences.language === 'yue' ? 'yue-Hant-HK' : 'en';
-  document.documentElement.dataset.language = preferences.language;
-  document.title = localized(originalTitle, preferences.language);
+  document.documentElement.lang = (!schoolEnabled && preferences.language === 'yue') ? 'yue-Hant-HK' : 'en';
+  document.documentElement.dataset.language = schoolEnabled?'en':preferences.language;
+  document.title = localized(originalTitle, schoolEnabled?'en':preferences.language);
   for (const record of textRecords) {
     record.secondary?.remove(); record.secondary = null;
     const translated = cantonese[record.key];
     const replace = text => record.vocabulary ? replaceVocabulary(text, vocabulary) : text;
     const leading = record.original.match(/^\s*/u)[0];
     const trailing = record.original.match(/\s*$/u)[0];
-    record.node.textContent = leading + replace(preferences.language === 'yue' && translated ? translated : record.key) + trailing;
-    if (preferences.language === 'bilingual' && translated) {
+    record.node.textContent = leading + replace((!schoolEnabled && preferences.language === 'yue') && translated ? translated : record.key) + trailing;
+    if ((!schoolEnabled && preferences.language === 'bilingual') && translated) {
       if (record.node.parentElement.tagName === 'OPTION') record.node.textContent = localized(record.key, 'bilingual');
       else {
         const translation = document.createElement('span'); translation.lang = 'yue-Hant-HK'; translation.className = 'translation';
@@ -108,10 +147,11 @@ function renderCopy() {
       }
     }
   }
-  for (const record of attributes) record.element.setAttribute(record.name, localized(record.original, preferences.language));
+  for (const record of attributes) record.element.setAttribute(record.name, localized(record.original, schoolEnabled?'en':preferences.language));
   menuToggle.setAttribute('aria-label', localized(menu.classList.contains('is-open') ? 'Close navigation' : 'Open navigation', preferences.language));
+  if(siteDisplayName!=='Material File Encryptor'){for(const node of document.querySelectorAll('.brand span,.footer-brand'))node.textContent=siteDisplayName;document.title=siteDisplayName+' · '+localized('Documentation library',activeLanguage());}
   updateMessages();
-  window.dispatchEvent(new CustomEvent('site-language', { detail: { language: preferences.language } }));
+  window.dispatchEvent(new CustomEvent('site-language', { detail: { language: schoolEnabled ? 'en' : preferences.language } }));
 }
 function closeMenu() {
   menu.classList.remove('is-open'); menuToggle.setAttribute('aria-expanded', 'false');
@@ -133,13 +173,13 @@ function applyTheme(theme) {
   if (theme === 'system') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = theme;
   themeSelect.value = theme;
 }
-try { applyTheme(localStorage.getItem('material-file-encryptor.site.theme') || 'system'); } catch { applyTheme('system'); }
-themeSelect.addEventListener('change', () => { applyTheme(themeSelect.value); try { localStorage.setItem('material-file-encryptor.site.theme', themeSelect.value); } catch {} });
+try { applyTheme(siteStorage.getItem('material-file-encryptor.site.theme') || 'system'); } catch { applyTheme('system'); }
+themeSelect.addEventListener('change', () => { applyTheme(themeSelect.value); try { siteStorage.setItem('material-file-encryptor.site.theme', themeSelect.value); } catch {} });
 languageSelect.value = preferences.language; emojiToggle.checked = preferences.emoji;
-successTone.value = preferences.successTone; searchTone.value = preferences.searchTone;
+successTone.value = preferences.funnyEnglish; searchTone.value = preferences.funnyCantonese;
 languageSelect.addEventListener('change', () => { preferences.language = languageSelect.value; savePreferences(); renderCopy(); });
 emojiToggle.addEventListener('change', () => { preferences.emoji = emojiToggle.checked; savePreferences(); updateMessages(); });
-for (const [input, key] of [[successTone, 'successTone'], [searchTone, 'searchTone']]) input.addEventListener('input', () => { preferences[key] = Number(input.value); savePreferences(); updateMessages(); });
+for (const [input, key] of [[successTone, 'funnyEnglish'], [searchTone, 'funnyCantonese']]) input.addEventListener('input', () => { preferences[key] = Number(input.value); savePreferences(); updateMessages(); });
 search.addEventListener('input', updateSearch);
 searchClear.addEventListener('click', () => { search.value = ''; updateSearch(); search.focus(); });
 function revealHash() {
@@ -155,10 +195,12 @@ vocabularyFile.addEventListener('change', async () => {
     if (file.size > 256 * 1024) throw new Error('Vocabulary JSON must be no larger than 256 KiB.');
     const source = await file.text(); const next = parseVocabulary(source); if (version !== uploadVersion) return;
     if (!privateWordingAvailable) { pendingVocabularySource = source; vocabularyState = { kind: 'pending' }; updateMessages(); return; }
-    const result = vocabularyStore.replace(source); vocabulary = next; vocabularyState = { kind: 'success', persisted: result.persisted }; renderCopy();
+    await replacePrivateVocabulary(source);if(version===uploadVersion)renderCopy();
   } catch (error) { if (version !== uploadVersion) return; vocabularyState = { kind: 'error', message: error.message }; updateMessages(); }
 });
-document.querySelector('#vocabulary-reset').addEventListener('click', () => { uploadVersion++; pendingVocabularySource = null; vocabulary = emptyVocabulary(); vocabularyFile.value = ''; let persisted = true; try { localStorage.removeItem(vocabularyStorageKey); } catch { persisted = false; } vocabularyStore?.clear(); vocabularyState = persisted ? { kind: 'default' } : { kind: 'error', message: 'Original wording restored for this session. Stored wording could not be removed.' }; renderCopy(); });
+document.querySelector('#vocabulary-reset').addEventListener('click', () => { uploadVersion++; vocabularyFile.value = ''; clearPrivateVocabulary(); });
+const foundation = mountSiteFoundation({document, storage:siteStorage, getPreferences:()=>preferences, onPreferences:()=>dialog.showModal(), onSearch:control=>{enhancedSearch=control;}, onSchool:enabled=>{schoolEnabled=enabled;if(enabled){wordingGeneration++;privateWordingAvailable=false;vocabulary=emptyVocabulary();}renderCopy();},onAuthentication:setAuthenticatedLocalSession,onCanonicalSettings:value=>{siteDisplayName=value.displayName;preferences={...preferences,language:value.language,funnyEnglish:value.funnyEnglish,funnyCantonese:value.funnyCantonese,emoji:value.emoji};schoolEnabled=value.school.enabled;languageSelect.value=value.language;emojiToggle.checked=value.emoji;successTone.value=value.funnyEnglish;searchTone.value=value.funnyCantonese;renderCopy();if(!schoolEnabled&&privateCacheAccess?.authenticated&&!privateWordingAvailable)setAuthenticatedLocalSession(true,privateCacheAccess);}});
+for(const [id,key] of [['english-tone-reset','funnyEnglish'],['cantonese-tone-reset','funnyCantonese']]) document.getElementById(id)?.addEventListener('click',()=>{preferences[key]=5;(key==='funnyEnglish'?successTone:searchTone).value=5;savePreferences();updateMessages();});
 renderCopy(); revealHash();
 
 // Native scrolling stays intact; this only reveals the themed thumb briefly.

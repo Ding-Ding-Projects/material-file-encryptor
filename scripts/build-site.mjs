@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
 import {buildDocumentation,buildGallery} from '../docs/site/publication.mjs';
 import { buildDocumentationCatalog } from '../src/features/documentation/catalog.mjs';
@@ -24,6 +25,10 @@ export async function stageSite(root=process.cwd(),destination=path.join(root,'o
  }
  await fs.writeFile(path.join(temporary,'workspace-catalog.json'),JSON.stringify(await buildDocumentationCatalog(root)));
  await stageWorkspace(root,temporary);
+ const {version}=JSON.parse(await fs.readFile(path.join(root,'package.json'),'utf8'));
+ const sourceCommit=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();
+ const builtAt=new Date().toISOString();
+ await fs.writeFile(path.join(temporary,'site-provenance.json'),JSON.stringify({schemaVersion:1,version,builtAt,sourceCommit,sourceDirty:!!execFileSync('git',['status','--porcelain'],{cwd:root,encoding:'utf8'}).trim()},null,2)+'\n');
  // Preserve any prior stage rather than discarding unique verification evidence.
  let preservedPrevious=null;
  try{await fs.lstat(target);preservedPrevious=path.join(parent,'.site-previous-'+randomUUID());await fs.rename(target,preservedPrevious);}catch(error){if(error.code!=='ENOENT')throw error;}
