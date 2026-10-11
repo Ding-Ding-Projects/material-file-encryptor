@@ -127,8 +127,8 @@
     {
       "source": "docs/features/interface/README.md",
       "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "fdc23eab7adbed6f7ac4e0d6aa4ef7a907c5f549358d100f7242c4952dc46a2f",
-      "translationSha256": "42e4f159c6c68488ed3d0740fe0473fa8a749cf96e67027e8cd565d9d751c111"
+      "sourceSha256": "ffed109e9fc80c928ff0d0ae1b8fed555fbbc33749184e1181663a66fb4bc851",
+      "translationSha256": "4015da9658757a5100e76a94628c77f3aef0b2fd1cf61da3198a7225969fdfbc"
     },
     {
       "source": "docs/features/interface/appearance-editor.md",
@@ -393,6 +393,12 @@
       "translation": "docs/features/interface/settings-guidance.zh-HK.md",
       "sourceSha256": "acda42e5df3c0379750921e4f849ee8948692fac96b8d9b0648639465dfc3283",
       "translationSha256": "8aa61ba6efbe146b7167d89637fdca4109304b4d9e99f824b5ab1d2b49e60c23"
+    },
+    {
+      "source": "docs/features/interface/nested-appearance-guidance.md",
+      "translation": "docs/features/interface/nested-appearance-guidance.zh-HK.md",
+      "sourceSha256": "8e63c4ee2b74dc78f8295002f604565137d77a01e42757efd04b8136ded3fff0",
+      "translationSha256": "096fe7244d4d8592082de4b4b45c0de3ec8d1e4f31ef35a614eb627a9c1a6623"
     }
   ]
 }

@@ -27,3 +27,5 @@
 - [動畫同過渡來源實作及限制](animation-transition.zh-HK.md)
 
 - [選用控制導引同獨立說明](settings-guidance.zh-HK.md)
+
+- [巢狀外觀控制項指引](nested-appearance-guidance.zh-HK.md)
