@@ -7,7 +7,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { NativeClient } from './native-client.js';
-import { validateRequest, validateFeatureRequest, trustedFrame } from './validation.js';
+import { validateRequest, validateFeatureRequest, validateWorkflowAdmission, trustedFrame } from './validation.js';
 import { parseVocabulary, MAX_VOCABULARY_BYTES } from '../shared/personal-vocabulary.js';
 import { createFeatureServices } from './feature-services.js';
 import { createLocalAdapter } from './local-adapter.js';
@@ -246,6 +246,7 @@ async function updateStatus() {
   return {...snapshot,activeWork,desktopAvailable:process.platform==='win32'&&app.isPackaged,canInstall:snapshot.state==='ready'&&!activeWork&&!updateInstallLease};
 }
 async function featureRequest(feature,action,payload) {
+  if(feature==='workflow')validateWorkflowAdmission(action,{locked:state.locked,lockVerified:state.lockVerified,quitPending,shuttingDown,updateInstallLease});
   if(feature!=='updates')return features.request(feature,action,payload);
   if(Object.keys(payload).some(key=>key!=='language') || (payload.language!==undefined&&!['en','yue','bilingual'].includes(payload.language)))throw new Error('Invalid update options.');
   if(payload.language)updateLanguage=payload.language;
