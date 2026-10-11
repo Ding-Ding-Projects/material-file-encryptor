@@ -18,11 +18,15 @@ Without that callback, one dedicated module worker performs each normalization/c
 
 Worker isolation is not a separate operating-system process or a hard process-memory quota. Native decoder security still depends on Chromium. Packaged AppContainer host-callback verification and genuine rendered-image inspection remain required before making a stronger isolation claim. PNG header inspection is not CRC validation; successful decoder normalization supplies a fresh PNG.
 
+Each editor admits one active image operation, including custom host callbacks. The worker module separately admits at most one active worker in its renderer realm. Excess calls are rejected as busy immediately; no background queue grows behind the UI. Closing the editor aborts the active signal. Canvas backing stores are reset after each layer, child composite, unwarped source, and final output, with a final sweep on failure. These bounds do not include undocumented browser decoder allocations.
+
 ## Durable local revisions
 
 Every successful appearance save appends a separate revision record to local storage before notifying the host or applying the new appearance. An ordered index links each revision to its predecessor. Existing records are never rewritten. The revision panel reloads these records and restores a selected snapshot as a new revision. Image bytes are recursively omitted, including embedded sources, so restoring a revision cannot restore local pixels. The UI discloses this limitation.
 
 The local journal is redacted browser storage, not an encrypted archive or a Git repository. The existing password-protected host history remains separate. It is capped at 2000 records and 2 MiB per revision; reaching a bound rejects a new save. No silent pruning occurs. Failed journal writes restore the previous model and undo/redo stacks. If storage also rejects rollback, the editor reports recovery required and blocks further saves; `getPersistenceStatus()` exposes that state. Export the current style and reload before editing again.
+
+Undo and redo together are capped at 16 MiB of UTF-8 snapshot data in addition to the existing entry-count cap. Oldest snapshots are evicted while retaining the nearest bounded revision. Models themselves are limited to 8 MiB of UTF-8 JSON. Revision reads are paginated to at most twenty records and 8 MiB per page. A failed index publication removes only that operation's newly created record; removal failure reports recovery required. Existing revisions and unrelated storage keys are not deleted.
 
 ## Verification status
 
