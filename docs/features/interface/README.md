@@ -1,5 +1,7 @@
 # Interface
 
+- [Private history controls](private-history-controls.md)
+
 - [Language, narration, schedules and attention modes](local-personalization.md)
 - [Element appearance and logo customization](appearance-editor.md)
 - [Local personal vocabulary](personal-vocabulary.md)
