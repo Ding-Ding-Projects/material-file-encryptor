@@ -78,7 +78,7 @@ export function mountSiteFoundation({document,storage,getPreferences,onPreferenc
  const accessHost=element('section',{'data-visitor-access':''}),personalizationHost=element('section',{'data-visitor-personalization':''});content.append(accessHost,personalizationHost);
  let visitorAccess=null,visitorPersonalization=null;
  visitorAccess=mountVisitorAccess(accessHost,{storage,foundation,language:language(),schoolMode:()=>schoolEnabled,
-  onAuthentication:authenticated=>Promise.resolve(onAuthentication(authenticated,visitorAccess)).catch(()=>foundation.notify({title:localized('Website preferences',language()),message:localized('Default wording is active.',language()),level:'warning'})),
+  onAuthentication:authenticated=>{visitorPersonalization?.onAuthentication?.(authenticated);return Promise.resolve(onAuthentication(authenticated,visitorAccess)).catch(()=>foundation.notify({title:localized('Website preferences',language()),message:localized('Default wording is active.',language()),level:'warning'}));},
   notify:message=>foundation.notify({title:localized('Website preferences',language()),message,level:'warning'})});
  const hadVisitorSettings=(()=>{try{return storage.getItem(VISITOR_PREFIX+'material-file-encryptor.local-ux.v1')!==null;}catch{return false;}})();
  const prior={...getPreferences()};
