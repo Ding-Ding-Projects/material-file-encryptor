@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "e06df2a14643932f5f23289ae4eea2d8e45b3676",
+  "build": {
+    "command": "build.bat /s",
+    "exitCode": 0,
+    "nativeHelperSha256": "e37ce91297a12308d422f64b882bbaa9574d750aa3d47fbfa2811512d672c3af",
+    "mountedVerifierSha256": "3fb877b3750a1e193580173a7fa8d164bc74e41ab3e8176067cf706db8f23143",
+    "packageArchiveSha256": "f5363067715408ab1f384bec38bc3e8db9357790d17a2ea4240c4385b0b328c8",
+    "packagePrivacy": {
+      "entries": 6273,
+      "rejected": 0
+    }
+  },
+  "scope": {
+    "syntheticOnly": true,
+    "userVaultAccessed": false,
+    "installationPerformed": false,
+    "mountedRoute": "packaged-native-helper-and-WinFsp",
+    "additionalProbeRoute": "unmounted-synthetic-helper-import-packing-authenticated-export",
+    "productionMigrationVerified": false
+  },
+  "mounted": {
+    "exitCode": 0,
+    "complete": true,
+    "logicalBytes": 167895616,
+    "physicalCapBytes": 83886080,
+    "currentPartCount": 3,
+    "writeRequestBytes": [
+      65536,
+      1048576
+    ],
+    "plaintextSha256": "0BFB35A1F43C4A06403A7BC845E1D1B6A8D55088918931CA548E2DB6D734BE60",
+    "authenticatedReopen": true,
+    "twoWritableDescriptorsVerified": true,
+    "firstCloseRetainedSecondWriter": true,
+    "retainedMappedWriterVerified": true,
+    "latencies": [
+      {
+        "phase": "packing",
+        "statusMilliseconds": 0.2705,
+        "ioMilliseconds": 12.5979
+      },
+      {
+        "phase": "publication",
+        "statusMilliseconds": 0.2172,
+        "ioMilliseconds": 14.0371
+      }
+    ],
+    "memory": {
+      "peakObservedHelperPrivateBytes": 78237696,
+      "helperPeakWorkingSetBytes": 117022720,
+      "transferReservationPeakBytes": 852292,
+      "transferReservationLimitBytes": 67108864,
+      "semantics": "Private bytes are sampled during this workload. Working-set peak belongs to the helper process. Transfer reservation excludes caller buffers, metadata and child processes. These are measurements, not a universal process-memory bound."
+    },
+    "detachments": [
+      {
+        "phase": "after-workload",
+        "deadlineMilliseconds": 60000,
+        "elapsedMilliseconds": 26.8498,
+        "attempts": 1,
+        "outcome": "detached"
+      },
+      {
+        "phase": "after-authenticated-reopen",
+        "deadlineMilliseconds": 60000,
+        "elapsedMilliseconds": 11.471,
+        "attempts": 1,
+        "outcome": "detached"
+      }
+    ],
+    "teardown": {
+      "mappedWriterNormalExit": true,
+      "helperNormalExit": true,
+      "forcedTerminationUsed": false,
+      "driveAbsent": true,
+      "fixtureRemoved": true,
+      "unknownProtocolOutcome": false,
+      "unknownPackingIoOutcome": false
+    }
+  },
+  "physicalPartProbe": {
+    "schemaVersion": 1,
+    "sourceCommit": "e06df2a14643932f5f23289ae4eea2d8e45b3676",
+    "helperSha256": "e37ce91297a12308d422f64b882bbaa9574d750aa3d47fbfa2811512d672c3af",
+    "route": "unmounted-synthetic-helper-import-packing-authenticated-export",
+    "logicalBytes": 167895616,
+    "requestedCapBytes": 83886080,
+    "currentPartBytes": [
+      83866588,
+      83866588,
+      254672
+    ],
+    "capRemaindersBytes": [
+      19492,
+      19492,
+      83631408
+    ],
+    "currentReferencedBytes": 167987848,
+    "currentPartCount": 3,
+    "priorPartCount": 171,
+    "expectedSha256": "4af23f0cbe2c2b15762df1381f430e1fff026ce509f80966d3178bfacaf964eb",
+    "authenticatedExportSha256": "4af23f0cbe2c2b15762df1381f430e1fff026ce509f80966d3178bfacaf964eb",
+    "helperNormalExit": true,
+    "noMountRequested": true,
+    "fixtureRemoved": true,
+    "historyRemoved": true,
+    "measurement": "A separate unmounted fixture imports one dense file at a 1 MiB cap, then packs it at 80 MiB. Newly generated physical objects are measured after completed packing; their count and total match current-entry diagnostics. An authenticated export verifies logical bytes. This is not a per-part capture from the earlier mounted fixture."
+  },
+  "coreChecks": {
+    "passed": 43,
+    "total": 43,
+    "exitCode": 0,
+    "densePhysicalBytes": 167987848,
+    "priorDensePartCount": 1361,
+    "retainedManagedBytesDelta": 2103416,
+    "retainedManagedMeasurement": "GC.GetTotalMemory(true) after minus before packing, not peak allocation or total process memory.",
+    "historyBatchFixturePaths": 131,
+    "historyHashChildren": 3,
+    "historyIndexBatchMaximumEntries": 64,
+    "cancellationGenerationRegression": true
+  },
+  "documentationChecks": {
+    "passed": 3,
+    "total": 3
+  },
+  "historicalFailure": {
+    "sourceCommit": "1fd35813046592c166fcd262520d35ecaf9f0c2f",
+    "overallComplete": false,
+    "reason": "Final detach exceeded its unchanged 60000 ms settlement deadline while synchronization remained active.",
+    "elapsedMilliseconds": 60012.7436,
+    "attempts": 116,
+    "successfulSubchecks": [
+      "dense packing",
+      "unrelated mounted I/O and status",
+      "mapped writer release"
+    ],
+    "authenticatedReopenReached": false,
+    "preserved": true
+  },
+  "limitations": [
+    "Synthetic native acceptance does not establish a user-vault migration or installed application workflow.",
+    "No GUI capture, installation, update or removal was performed.",
+    "No claim of source-object garbage collection or reduced historical storage.",
+    "History process amplification was source-confirmed; exact attribution of all prior elapsed time was not measured."
+  ]
+}
