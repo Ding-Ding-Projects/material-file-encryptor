@@ -60,8 +60,8 @@ internal static class StorageStageRegression
                 }
                 using(var held=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read))
                 {
-                    var release=Task.Run(async()=>{await Task.Delay(45);held.Dispose();});
-                    AtomicMetadataReplacement.Replace(temporary,path);release.GetAwaiter().GetResult();
+                    var release=new Thread(()=>{Thread.Sleep(45);held.Dispose();});release.Start();
+                    AtomicMetadataReplacement.Replace(temporary,path);release.Join();
                 }
                 if(!File.ReadAllBytes(path).SequenceEqual(replacement))throw new Exception("Released reader did not allow atomic replacement.");
                 File.WriteAllBytes(path,original);File.SetAttributes(path,FileAttributes.ReadOnly);
