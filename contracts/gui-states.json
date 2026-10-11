@@ -1,0 +1,684 @@
+{
+  "schemaVersion": 1,
+  "scope": "Integrated desktop GUI. Declared states are pending until their full matrix is admitted. Source fixtures never establish packaged acceptance.",
+  "axes": {
+    "viewports": [
+      {
+        "width": 1180,
+        "height": 850
+      },
+      {
+        "width": 880,
+        "height": 650
+      }
+    ],
+    "languages": [
+      "en",
+      "yue",
+      "bilingual"
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "scales": [
+      1,
+      1.25,
+      1.5,
+      2
+    ]
+  },
+  "states": [
+    {
+      "id": "drive-locked",
+      "owner": "foundation",
+      "selector": "#locked-state",
+      "fixture": "locked synthetic drive",
+      "observable": "Locked state and create/unlock controls visible",
+      "actions": [
+        "open-create",
+        "cancel-create",
+        "open-unlock",
+        "cancel-unlock"
+      ]
+    },
+    {
+      "id": "drive-empty",
+      "owner": "foundation",
+      "selector": "#empty-files",
+      "fixture": "mounted empty synthetic drive",
+      "observable": "Empty file state visible",
+      "actions": [
+        "open-import",
+        "cancel-import"
+      ]
+    },
+    {
+      "id": "drive-populated",
+      "owner": "foundation",
+      "selector": "#file-list",
+      "fixture": "mounted synthetic drive with two files",
+      "observable": "Two real file rows",
+      "actions": [
+        "select-file",
+        "clear-selection"
+      ]
+    },
+    {
+      "id": "drive-selected",
+      "owner": "foundation",
+      "selector": ".selection-toolbar",
+      "fixture": "selected synthetic file",
+      "observable": "Selected-file actions enabled",
+      "actions": [
+        "keep-offline",
+        "remove-offline"
+      ]
+    },
+    {
+      "id": "drive-busy",
+      "owner": "foundation",
+      "selector": "#operation",
+      "fixture": "bounded synthetic operation",
+      "observable": "Operation phase and progress visible",
+      "actions": [
+        "observe-completion"
+      ]
+    },
+    {
+      "id": "drive-error",
+      "owner": "foundation",
+      "selector": "#main-error",
+      "fixture": "bounded synthetic operation error",
+      "observable": "Actionable error visible",
+      "actions": [
+        "dismiss-error"
+      ]
+    },
+    {
+      "id": "drive-overflow",
+      "owner": "foundation",
+      "selector": "mfe-context-menu",
+      "fixture": "selected synthetic file context menu",
+      "observable": "Exactly one visible menu",
+      "actions": [
+        "filter-preserves-focus",
+        "select-action",
+        "escape",
+        "outside-click",
+        "resize",
+        "target-removal"
+      ]
+    },
+    {
+      "id": "drive-search",
+      "owner": "foundation",
+      "selector": "mfe-command-palette",
+      "fixture": "command palette open",
+      "observable": "Search results and inline settings visible",
+      "actions": [
+        "type-query",
+        "choose-theme",
+        "choose-language",
+        "escape-restores-focus"
+      ]
+    },
+    {
+      "id": "drive-notifications",
+      "owner": "foundation",
+      "selector": "mfe-notification-center",
+      "fixture": "synthetic informational and actionable events",
+      "observable": "Retained notification rows",
+      "actions": [
+        "open-action",
+        "dismiss-notification"
+      ]
+    },
+    {
+      "id": "offline-populated",
+      "owner": "foundation",
+      "selector": "#view-drive",
+      "fixture": "synthetic pinned file and offline navigation",
+      "observable": "Offline file collection visible",
+      "actions": [
+        "select-offline-file",
+        "release-offline-copy"
+      ]
+    },
+    {
+      "id": "history-populated",
+      "owner": "records",
+      "selector": "#view-history",
+      "fixture": "synthetic history with two versions",
+      "observable": "Version rows visible",
+      "actions": [
+        "filter-versions",
+        "select-version"
+      ]
+    },
+    {
+      "id": "recycle-selected",
+      "owner": "records",
+      "selector": "#view-recycle",
+      "fixture": "selected synthetic deleted entry",
+      "observable": "Selected deleted entry visible",
+      "actions": [
+        "restore-entry"
+      ]
+    },
+    {
+      "id": "tools-default",
+      "owner": "tools",
+      "selector": "mfe-workspace-shell",
+      "fixture": "tools navigation open",
+      "observable": "Tools navigation and selected panel visible",
+      "actions": [
+        "switch-tool"
+      ]
+    },
+    {
+      "id": "settings-default",
+      "owner": "foundation",
+      "selector": "#view-settings",
+      "fixture": "default synthetic settings",
+      "observable": "Settings controls visible",
+      "actions": [
+        "change-theme",
+        "change-language"
+      ]
+    },
+    {
+      "id": "help-default",
+      "owner": "records",
+      "selector": "#view-help",
+      "fixture": "local bundled help",
+      "observable": "Readable help and navigation",
+      "actions": [
+        "open-article",
+        "return-index"
+      ]
+    },
+    {
+      "id": "create-password",
+      "owner": "foundation",
+      "selector": "#vault-dialog",
+      "fixture": "synthetic create dialog",
+      "observable": "Password creation fields visible",
+      "actions": [
+        "edit-field",
+        "clear-field",
+        "cancel-dialog"
+      ]
+    },
+    {
+      "id": "create-key-file",
+      "owner": "access",
+      "selector": "#key-fields",
+      "fixture": "synthetic key-file create dialog",
+      "observable": "Key-file mode and picker visible",
+      "actions": [
+        "open-picker",
+        "select-synthetic-file",
+        "cancel-dialog"
+      ]
+    },
+    {
+      "id": "create-private-repository",
+      "owner": "access",
+      "selector": "#private-git-fields",
+      "fixture": "synthetic private transport create dialog",
+      "observable": "Private transport fields visible",
+      "actions": [
+        "edit-transport",
+        "cancel-dialog"
+      ]
+    },
+    {
+      "id": "converter-source",
+      "owner": "tools",
+      "selector": "#converter-panel-0",
+      "fixture": "synthetic converter source picker",
+      "observable": "Source file rows",
+      "actions": [
+        "choose-source"
+      ]
+    },
+    {
+      "id": "converter-formats",
+      "owner": "tools",
+      "selector": "#converter-panel-1",
+      "fixture": "one enabled synthetic converter adapter",
+      "observable": "Category and format selection",
+      "actions": [
+        "select-adapter"
+      ]
+    },
+    {
+      "id": "converter-options",
+      "owner": "tools",
+      "selector": "#converter-panel-2",
+      "fixture": "selected synthetic converter adapter",
+      "observable": "Typed conversion options",
+      "actions": [
+        "choose-destination",
+        "enqueue"
+      ]
+    },
+    {
+      "id": "converter-queue",
+      "owner": "tools",
+      "selector": "#converter-panel-3",
+      "fixture": "synthetic queued conversion",
+      "observable": "Queue and result history",
+      "actions": [
+        "cancel-queued-operation"
+      ]
+    },
+    {
+      "id": "ollama-model-store",
+      "owner": "tools",
+      "selector": "#ollama-panel-1",
+      "fixture": "synthetic disconnected runtime and model catalogue",
+      "observable": "Honest runtime availability and model list",
+      "actions": [
+        "filter-models",
+        "select-model"
+      ]
+    },
+    {
+      "id": "ollama-pull-cart",
+      "owner": "tools",
+      "selector": "#ollama-panel-2",
+      "fixture": "synthetic pull cart",
+      "observable": "Cart rows and progress",
+      "actions": [
+        "remove-cart-item"
+      ]
+    },
+    {
+      "id": "ollama-chat",
+      "owner": "tools",
+      "selector": "#ollama-panel-3",
+      "fixture": "synthetic local chat",
+      "observable": "Conversation and attachment control",
+      "actions": [
+        "choose-synthetic-attachment"
+      ]
+    },
+    {
+      "id": "ollama-profiles",
+      "owner": "tools",
+      "selector": "#ollama-panel-4",
+      "fixture": "synthetic profiles",
+      "observable": "Profile editor",
+      "actions": [
+        "save-profile",
+        "reload-profile"
+      ]
+    },
+    {
+      "id": "ollama-help",
+      "owner": "tools",
+      "selector": "#ollama-panel-5",
+      "fixture": "bundled runtime help",
+      "observable": "Runtime help content",
+      "actions": [
+        "open-runtime-disclosure"
+      ]
+    },
+    {
+      "id": "server-prepare",
+      "owner": "tools",
+      "selector": ".server-preparation",
+      "fixture": "synthetic catalogue and version resolver without downloads",
+      "observable": "Version selection and preparation destination",
+      "actions": [
+        "filter-versions",
+        "select-version",
+        "review-license"
+      ]
+    },
+    {
+      "id": "server-progress",
+      "owner": "tools",
+      "selector": ".server-operation",
+      "fixture": "synthetic preparation progress with eula=false",
+      "observable": "Preparation progress with no server start",
+      "actions": [
+        "cancel-preparation"
+      ]
+    },
+    {
+      "id": "p-language",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "synthetic base language preferences",
+      "observable": "Language and two independent playfulness controls",
+      "actions": [
+        "change-language",
+        "change-english-playfulness",
+        "change-cantonese-playfulness",
+        "reload-preferences"
+      ]
+    },
+    {
+      "id": "p-school-enabled",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "synthetic protected mode credential adapter",
+      "observable": "English-only mode while base preferences retained",
+      "actions": [
+        "enable-mode",
+        "unlock-mode",
+        "restore-base-language"
+      ]
+    },
+    {
+      "id": "p-narrator",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "synthetic installed-voice adapter",
+      "observable": "Independent voice choices and effective voice status",
+      "actions": [
+        "select-voice",
+        "test-narration",
+        "disable-narration"
+      ]
+    },
+    {
+      "id": "p-appearance",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "appearance preferences",
+      "observable": "Appearance controls and local logo picker",
+      "actions": [
+        "select-synthetic-logo",
+        "change-focal-point",
+        "reset-logo"
+      ]
+    },
+    {
+      "id": "p-schedules-draft",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "local schedule draft without external endpoints",
+      "observable": "Schedule controls and native date/time composition",
+      "actions": [
+        "add-schedule",
+        "reload-schedule"
+      ]
+    },
+    {
+      "id": "p-attention",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "local attention preferences",
+      "observable": "Attention controls and live root attributes",
+      "actions": [
+        "toggle-focus",
+        "toggle-low-stimulation",
+        "toggle-one-thing"
+      ]
+    },
+    {
+      "id": "p-history-locked",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "synthetic protected history locked",
+      "observable": "History locked state",
+      "actions": [
+        "begin-unlock",
+        "cancel-unlock"
+      ]
+    },
+    {
+      "id": "p-history-unlocked",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "synthetic authenticated history",
+      "observable": "Private local version rows",
+      "actions": [
+        "select-version",
+        "restore-version",
+        "relock-history"
+      ]
+    },
+    {
+      "id": "appearance-context-pointer",
+      "owner": "personalization",
+      "selector": "mfe-context-menu",
+      "fixture": "pointer context on actual nested Material input",
+      "observable": "Captured outer Material target and one menu",
+      "actions": [
+        "edit-captured-target",
+        "lock-captured-target"
+      ]
+    },
+    {
+      "id": "appearance-context-keyboard",
+      "owner": "personalization",
+      "selector": "mfe-context-menu",
+      "fixture": "keyboard context on actual nested Material input",
+      "observable": "Captured outer Material target and one menu",
+      "actions": [
+        "keyboard-open",
+        "escape-restores-focus"
+      ]
+    },
+    {
+      "id": "appearance-edit-normal",
+      "owner": "personalization",
+      "selector": ".appearance-editor",
+      "fixture": "normal appearance target",
+      "observable": "Appearance editor and state tabs",
+      "actions": [
+        "set-opacity",
+        "verify-live-opacity",
+        "reload-opacity"
+      ]
+    },
+    {
+      "id": "appearance-edit-layer-locked",
+      "owner": "personalization",
+      "selector": ".appearance-editor",
+      "fixture": "locked appearance layer",
+      "observable": "Disabled immutable layer controls",
+      "actions": [
+        "attempt-edit-no-mutation"
+      ]
+    },
+    {
+      "id": "appearance-edit-image",
+      "owner": "personalization",
+      "selector": ".appearance-editor",
+      "fixture": "synthetic local image layer",
+      "observable": "Image layer editor",
+      "actions": [
+        "change-image-placement",
+        "reset-image-placement"
+      ]
+    },
+    {
+      "id": "appearance-motion-track",
+      "owner": "personalization",
+      "selector": ".appearance-motion",
+      "fixture": "synthetic motion track",
+      "observable": "Finite typed motion track controls",
+      "actions": [
+        "add-track",
+        "edit-track",
+        "remove-track"
+      ]
+    },
+    {
+      "id": "appearance-motion-transition",
+      "owner": "personalization",
+      "selector": ".appearance-motion",
+      "fixture": "synthetic transition rule",
+      "observable": "Finite typed transition controls",
+      "actions": [
+        "add-rule",
+        "edit-rule",
+        "remove-rule"
+      ]
+    },
+    {
+      "id": "appearance-history-rollback",
+      "owner": "personalization",
+      "selector": ".appearance-editor",
+      "fixture": "two synthetic appearance snapshots",
+      "observable": "Appearance history and rollback",
+      "actions": [
+        "rollback",
+        "reload-rollback"
+      ]
+    },
+    {
+      "id": "storage-busy",
+      "owner": "records",
+      "selector": "mfe-storage-maintenance",
+      "fixture": "completed operation row with pendingPackingFiles=2 and activeWriters=1",
+      "observable": "Busy explanation remains despite completed operation row",
+      "actions": [
+        "refresh-diagnostics"
+      ]
+    },
+    {
+      "id": "storage-running",
+      "owner": "records",
+      "selector": "mfe-storage-maintenance",
+      "fixture": "synthetic running packing operation",
+      "observable": "Packing progress and cancellation",
+      "actions": [
+        "cancel-packing",
+        "observe-cancelling"
+      ]
+    },
+    {
+      "id": "storage-unavailable",
+      "owner": "records",
+      "selector": "mfe-storage-maintenance",
+      "fixture": "synthetic unavailable diagnostics",
+      "observable": "Honest unavailable state",
+      "actions": [
+        "retry-diagnostics"
+      ]
+    },
+    {
+      "id": "storage-invalid-size",
+      "owner": "records",
+      "selector": "mfe-storage-maintenance",
+      "fixture": "synthetic invalid 86 MiB target",
+      "observable": "Bounded validation without request mutation",
+      "actions": [
+        "submit-invalid-size"
+      ]
+    },
+    {
+      "id": "file-details-versions",
+      "owner": "records",
+      "selector": ".file-details",
+      "fixture": "synthetic file with versions",
+      "observable": "Version list and filters",
+      "actions": [
+        "filter-versions",
+        "label-version",
+        "restore-version"
+      ]
+    },
+    {
+      "id": "file-details-preview",
+      "owner": "records",
+      "selector": ".file-details-preview",
+      "fixture": "bounded synthetic text preview",
+      "observable": "Safe version preview",
+      "actions": [
+        "open-preview",
+        "close-preview"
+      ]
+    },
+    {
+      "id": "access-profile",
+      "owner": "access",
+      "selector": "#access-panel-profile",
+      "fixture": "synthetic profile signed out",
+      "observable": "Local profile fields",
+      "actions": [
+        "set-up-local-profile",
+        "unlock-local-profile",
+        "log-out"
+      ]
+    },
+    {
+      "id": "access-locks",
+      "owner": "access",
+      "selector": "#access-panel-locks",
+      "fixture": "synthetic element lock",
+      "observable": "Lock policy and session controls",
+      "actions": [
+        "open-target-wizard",
+        "cancel-target-wizard",
+        "save-target-lock"
+      ]
+    },
+    {
+      "id": "access-once",
+      "owner": "access",
+      "selector": "#access-panel-locks",
+      "fixture": "synthetic one-activation lock",
+      "observable": "Editable picker consumes selection only",
+      "actions": [
+        "open-picker-without-consumption",
+        "choose-once",
+        "second-change-denied"
+      ]
+    },
+    {
+      "id": "access-authenticators",
+      "owner": "access",
+      "selector": "#access-panel-authenticator",
+      "fixture": "synthetic redacted authenticator inventory",
+      "observable": "No secret code or QR pixels",
+      "actions": [
+        "filter-authenticators",
+        "open-registration",
+        "cancel-registration"
+      ]
+    },
+    {
+      "id": "access-support",
+      "owner": "access",
+      "selector": "#access-panel-support",
+      "fixture": "synthetic local support tickets",
+      "observable": "Ticket rows and bounded editor",
+      "actions": [
+        "create-ticket",
+        "select-visible",
+        "export-selected"
+      ]
+    },
+    {
+      "id": "access-removal",
+      "owner": "access",
+      "selector": "#access-panel-support",
+      "fixture": "selected synthetic support tickets",
+      "observable": "Two switches and full slider required",
+      "actions": [
+        "reject-early-confirm",
+        "cancel-delete",
+        "confirm-delete"
+      ]
+    },
+    {
+      "id": "access-waiting",
+      "owner": "access",
+      "selector": ".access-workspace",
+      "fixture": "synthetic waiting ladder with credential fields cleared",
+      "observable": "Waiting and cancellation state",
+      "actions": [
+        "cancel-wait",
+        "logout-clears-wait"
+      ]
+    }
+  ]
+}
