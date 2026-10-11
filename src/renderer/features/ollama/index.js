@@ -1,8 +1,10 @@
+import { createRegexFilter } from './regex.js';
 /** Local-only UI. The host supplies an authenticated request and event bridge. */
 export function mountOllama(root,{services,translate=(s)=>s,confirm:confirmAction=async()=>false}={}) {
   const bridge=services?.ollama;if(!root||!bridge?.request)throw new Error('The authenticated local model bridge is required.');
   const t=translate, request=(action,p={})=>bridge.request(action,p);
   let models=[],cart=[],catalog={},sessions=[],profiles=[],hardware=null,selected=null,operation=null,sessionId=null,disposed=false;
+  const regexFilter=createRegexFilter();let searchRevision=0;
   const elements={};const section=document.createElement('section');section.className='ollama-suite';section.setAttribute('aria-label',t('Local models'));root.append(section);
   const style=document.createElement('style');style.textContent='.ollama-suite{display:grid;gap:16px;min-width:0}.ollama-suite nav,.ollama-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.ollama-suite input,.ollama-suite select,.ollama-suite textarea{max-width:100%;box-sizing:border-box}.ollama-suite textarea{width:100%;min-height:90px}.ollama-suite button{min-height:40px}.ollama-suite article{padding:16px;border:1px solid currentColor;border-radius:16px;min-width:0}.ollama-suite [hidden]{display:none!important}.ollama-list{display:grid;gap:8px;max-height:420px;overflow:auto}.ollama-model{text-align:start;width:100%;white-space:normal;overflow-wrap:anywhere}.ollama-output{white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto}.ollama-suite label{display:grid;gap:4px;min-width:0}.ollama-suite .ollama-status{overflow-wrap:anywhere}.ollama-suite pre{white-space:pre-wrap;overflow-wrap:anywhere}';section.append(style);
   const el=(tag,text,parent=section)=>{const e=document.createElement(tag);if(text)e.textContent=t(text);parent.append(e);return e;};
@@ -29,16 +31,25 @@ export function mountOllama(root,{services,translate=(s)=>s,confirm:confirmActio
   const regexDetails=el('details',null,panels['Model Store']);el('summary','Regular expression builder',regexDetails);
   const regexMode=select('Search mode',[['plain','Plain text'],['regex','Regular expression']],regexDetails);
   const anchor=select('Match location',[['any','Anywhere'],['start','Starts with'],['exact','Exact match']],regexDetails);
-  el('p','Regex mode is limited to 128 characters. Nested repetitions, groups, alternation, and backreferences are not accepted.',regexDetails);
+  el('p','Regex searches run in a disposable worker with a 150 ms deadline, a 128-character pattern limit, and a 4 MiB text limit.',regexDetails);
   const list=el('div',null,panels['Model Store']);list.className='ollama-list';
   const detail=el('div',null,panels['Model Store']);
-  function renderModels(){
-    let query=search.value.toLowerCase(),matcher=null;
-    if(regexMode.value==='regex'&&query){if(query.length>128||/[()|\\{}]/.test(query)||/(?:[+*?]){2}/.test(query))throw new Error(t('Use a simple bounded regular expression without groups or backreferences.'));matcher=new RegExp((anchor.value==='any'?'':'^')+query+(anchor.value==='exact'?'$':''),'i');}
-    const filtered=models.filter(m=>{const text=[m.tag,m.family,m.variant,m.quantization,m.description].join(' ');return (!query||(matcher?matcher.test(text):text.toLowerCase().includes(query)))&&(installedFilter.value==='all'||(installedFilter.value==='available'?!m.installed:m[installedFilter.value]))&&(capability.value==='all'||m.capabilities?.includes(capability.value))&&(fitFilter.value==='all'||(m.fit?.verdict||'Unknown')===fitFilter.value)&&(!familyFilter.value||m.family?.toLowerCase().includes(familyFilter.value.toLowerCase()))&&(!quantFilter.value||m.quantization?.toLowerCase().includes(quantFilter.value.toLowerCase()))});
+  async function renderModels(){
+    const revision=++searchRevision;regexFilter.cancel();
+    const query=search.value.toLowerCase();
+    let filtered=models.filter(m=>(installedFilter.value==='all'||(installedFilter.value==='available'?!m.installed:m[installedFilter.value]))&&(capability.value==='all'||m.capabilities?.includes(capability.value))&&(fitFilter.value==='all'||(m.fit?.verdict||'Unknown')===fitFilter.value)&&(!familyFilter.value||m.family?.toLowerCase().includes(familyFilter.value.toLowerCase()))&&(!quantFilter.value||m.quantization?.toLowerCase().includes(quantFilter.value.toLowerCase())));
+    const text=m=>[m.tag,m.family,m.variant,m.quantization,m.description].join(' ');
+    if(query&&regexMode.value==='regex'){
+      // Do not leave rows from a previous query actionable while an expression
+      // is pending, invalid or timed out.
+      list.replaceChildren();status.textContent=t('Searching in an isolated worker.');
+      try {const matches=await regexFilter.filter(query,filtered.map(text),anchor.value);if(disposed||revision!==searchRevision)return;filtered=matches.map(i=>filtered[i]);}
+      catch(error){if(!disposed&&revision===searchRevision){list.replaceChildren();status.textContent=t(error.message);}return;}
+    }else if(query)filtered=filtered.filter(m=>text(m).toLowerCase().includes(query));
+    if(disposed||revision!==searchRevision)return;
     filtered.sort(sort.value==='size'?(a,b)=>(a.sizeBytes??Infinity)-(b.sizeBytes??Infinity):(a,b)=>a.tag.localeCompare(b.tag));list.replaceChildren();
     el('p',`${filtered.length} ${t('matching variants')}`,list);
-    for(const m of filtered.slice(0,200)){const b=button(`${m.tag} · ${m.installed?t('Installed'):t('Available')} · ${m.fit?.verdict||t('Unknown')} · ${m.sizeBytes?formatBytes(m.sizeBytes):t('Size unknown')}`,list,()=>showModel(m));b.className='ollama-model';}
+    for(const m of filtered.slice(0,200)){const b=button(`${m.tag} � ${m.installed?t('Installed'):t('Available')} � ${m.fit?.verdict||t('Unknown')} � ${m.sizeBytes?formatBytes(m.sizeBytes):t('Size unknown')}`,list,()=>showModel(m));b.className='ollama-model';}
     if(filtered.length>200)el('p','Refine the search to show more variants. All variants are included in filtering.',list);
   }
   for(const control of [search,installedFilter,capability,fitFilter,sort,familyFilter,quantFilter,regexMode,anchor])control.addEventListener('input',()=>safe(renderModels));
@@ -78,6 +89,6 @@ export function mountOllama(root,{services,translate=(s)=>s,confirm:confirmActio
   async function refresh(){const results=await Promise.all([request('models'),request('catalog'),request('profiles'),request('cart')]);if(disposed)return;models=results[0].models;catalog=results[1];profiles=results[2];cart=results[3];summary.textContent=catalog.lastSuccessfulRefresh?`${t('Last successful refresh')}: ${catalog.lastSuccessfulRefresh} · ${catalog.familyCount} ${t('families')} · ${catalog.variants.length} ${t('variants')} · ${catalog.pageCount} ${t('pages')} · ${catalog.stale?t('Stale'):t('Verified refresh')}`:t('No complete official catalog has been stored. Refresh the official catalog to discover models.');modelSelect.replaceChildren();for(const m of models.filter(m=>m.installed)){const o=el('option',m.tag,modelSelect);o.value=m.tag;}profileSelect.replaceChildren();for(const p of profiles){const o=el('option',p.name,profileSelect);o.value=p.id;}renderModels();renderCart();await refreshSessions();}
   const unsubscribe=bridge.subscribe?.(event=>{if(disposed)return;if(event.type==='chat'){sessionId=event.sessionId;output.textContent+=event.delta;}if(event.type==='generate')output.textContent+=event.delta;if(event.type==='pull'){const i=cart.findIndex(c=>c.model===event.item.model);if(i>=0)cart[i]=event.item;else cart.push(event.item);renderCart();}if(['complete','error','cancelled'].includes(event.type)){operation=null;status.textContent=event.message||t('Operation finished. Review its outcome.');safe(refresh);}if(event.type==='catalog'){catalog=event.catalog;safe(refresh);}});
   safe(refresh);
-  return {refresh,destroy(){disposed=true;unsubscribe?.();section.remove();}};
+  return {refresh,destroy(){disposed=true;searchRevision++;regexFilter.dispose();unsubscribe?.();section.remove();}};
 }
 function formatBytes(n){if(!Number.isFinite(n))return 'Unknown';if(n<1024)return `${n} B`;const unit=Math.min(Math.floor(Math.log(n)/Math.log(1024)),4);return `${(n/1024**unit).toFixed(1)} ${['B','KiB','MiB','GiB','TiB'][unit]}`;}

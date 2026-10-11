@@ -4,7 +4,7 @@ import os from 'node:os';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {OllamaClient,modelName,options} from '../src/features/ollama/client.js';
-import {OfficialCatalog,reconcile} from '../src/features/ollama/catalog.js';
+import {OfficialCatalog,reconcile,parsePage} from '../src/features/ollama/catalog.js';
 import {assessFit,modelEvidence} from '../src/features/ollama/hardware.js';
 import {ProfileManager} from '../src/features/ollama/profiles.js';
 import {createOllamaService,redactChat} from '../src/features/ollama/service.js';
@@ -85,4 +85,20 @@ test('guided model mutations refuse arbitrary destinations and generation stream
     const events=[];const finished=new Promise(resolve=>service.subscribe(e=>{events.push(e);if(e.type==='complete')resolve();}));await service.request('generate',{model:'alpha:1',prompt:'hi'});await finished;assert.equal(events.find(e=>e.type==='generate').delta,'answer');
     await service.request('deleteModel',{model:'alpha:local-copy',confirmation:'alpha:local-copy'});assert.equal(installed.length,1);assert.ok(calls.every(u=>u.startsWith('http://127.0.0.1:11434/')));
   }finally{await service.dispose();await fs.rm(dir,{recursive:true,force:true});}
+});
+test('concurrent first reads and mutations wait for saved state before observing or persisting it',async()=>{
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'ollama-load-race-'));
+  const saved={version:1,catalog:{complete:true,variants:[{tag:'saved:1'}],lastSuccessfulRefresh:'2026-10-10T00:00:00Z'},cart:[{model:'saved:1',state:'queued'}],sessions:[{id:'saved-session',name:'Saved',model:'saved:1',messages:[]}]};
+  await fs.writeFile(path.join(dir,'ollama-state.json'),JSON.stringify(saved));
+  const service=createOllamaService({dataDir:dir,fetchImpl:async()=>response({models:[]})});
+  try {
+    const [catalog,cart,sessions]=await Promise.all([service.request('catalog'),service.request('cart'),service.request('sessions'),service.request('removeFromCart',{model:'absent:1'})]);
+    assert.equal(catalog.variants[0].tag,'saved:1');assert.equal(cart[0].model,'saved:1');assert.equal(sessions[0].id,'saved-session');
+    const persisted=JSON.parse(await fs.readFile(path.join(dir,'ollama-state.json'),'utf8'));assert.equal(persisted.cart[0].model,'saved:1');assert.equal(persisted.sessions[0].id,'saved-session');
+  }finally{await service.dispose();await fs.rm(dir,{recursive:true,force:true});}
+});
+test('unknown tag metadata never borrows size or context from its neighbor',()=>{
+  const html='<a href="/library/alpha:unknown">alpha:unknown</a><a href="/library/alpha:known">alpha:known 4GB 8K context window</a>';
+  const result=parsePage(html,'https://ollama.com/library/alpha/tags','alpha');
+  assert.equal(result.tags[0].sizeBytes,null);assert.equal(result.tags[0].contextLength,null);assert.equal(result.tags[1].sizeBytes,4e9);assert.equal(result.tags[1].contextLength,8000);
 });

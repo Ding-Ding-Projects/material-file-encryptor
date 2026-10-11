@@ -14,7 +14,9 @@ export function parsePage(html, url, family=null) {
   const tags=[]; const seen=new Set();
   for(const m of html.matchAll(/<a\b[^>]*href=["'](\/library\/([^"'?]+:[^"'?]+))["'][^>]*>([\s\S]*?)<\/a>/g)) {
     const tag=decode(m[2]);if(family && !tag.startsWith(family+':'))continue;if(seen.has(tag))continue;seen.add(tag);
-    const fragment=plain(html.slice(m.index,Math.min(html.length,m.index+2800)));
+    // Only metadata inside this tag's anchor belongs to this variant. Adjacent
+    // variants may have values even when this one deliberately omits them.
+    const fragment=plain(m[3]);
     const size=fragment.match(/\b(\d+(?:\.\d+)?)\s*(KB|MB|GB|TB)\b/i), context=fragment.match(/\b(\d+(?:\.\d+)?)\s*([KM]?)\s+context/i);
     tags.push({tag,family:tag.split(':')[0],variant:tag.split(':')[1],sizeBytes:size?Number(size[1])*({KB:1e3,MB:1e6,GB:1e9,TB:1e12}[size[2].toUpperCase()]):null,contextLength:context?Number(context[1])*({K:1000,M:1e6,'':1}[context[2].toUpperCase()]):null,description:plain(m[3]),capabilities:[],quantization:null,parameterCount:null,source:ORIGIN+m[1]});
   }
