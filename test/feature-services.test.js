@@ -38,6 +38,28 @@ test('desktop feature allowlist keeps protected records unavailable to browser r
  assert.throws(()=>validateFeatureRequest('ollama','exec',{}));
 });
 
+test('workflow bridge observes native picker work and shutdown admission',async t=>{
+ const directory=await fixture(t);let release;
+ const selecting=new Promise(resolve=>{release=resolve;});
+ const services=createFeatureServices({dataDirectory:directory,applicationRoot:directory,safeStorage,dialog:{showOpenDialog:()=>selecting},getWindow:()=>null,openPath:async()=>{}});
+ const request=services.request('workflow','pickDocument',{});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.ok(await services.pending()>0);
+ services.beginExit();
+ await assert.rejects(services.request('workflow','createDocument',{text:''}),/waiting/);
+ assert.deepEqual(await services.request('workflow','downloads',{}),[]);
+ release({canceled:true,filePaths:[]});
+ assert.equal(await request,null);assert.equal(await services.pending(),0);
+ await services.cancelAll();await services.close();
+ await assert.rejects(services.request('workflow','documents',{}),/closing/);
+});
+
+test('workflow IPC exposes declared actions without an arbitrary execution route',()=>{
+ assert.equal(validateFeatureRequest('workflow','pickDocument',{}).action,'pickDocument');
+ assert.equal(validateFeatureRequest('workflow','cancelDownload',{id:'grant'},{browser:true}).action,'cancelDownload');
+ for(const action of ['exec','spawn','constructor','publish'])assert.throws(()=>validateFeatureRequest('workflow',action,{}));
+});
+
 
 test('schedule credentials require native confirmation and remain inaccessible to renderer records',async t=>{
  const directory=await fixture(t);let approve=false,calls=0;

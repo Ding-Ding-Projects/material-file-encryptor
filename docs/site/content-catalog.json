@@ -48,7 +48,8 @@
     "docs/features/surface-foundation/README.md",
     "docs/features/surface-foundation/coverage.md",
     "docs/features/surface-foundation/integration.md",
-    "docs/features/surface-foundation/layout-and-notifications.md"
+    "docs/features/surface-foundation/layout-and-notifications.md",
+    "docs/features/surface-foundation/workflow-handoffs.md"
   ],
   "categories": [
     "access",

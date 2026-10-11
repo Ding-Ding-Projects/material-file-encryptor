@@ -10,6 +10,7 @@ import { createScheduleSource } from './schedule-source.js';
 import { createNativeOllamaHost } from './ollama-host.js';
 import { createRuntimeController } from '../features/ollama/runtime.js';
 import { REVIEWED_OLLAMA_MANIFESTS, OLLAMA_PUBLISHER_POLICIES } from './ollama-provenance.js';
+import { createWorkflowServices } from './workflow-services.js';
 const scrypt=promisify(scryptCallback);
 const executeFile=promisify(execFile);
 const object=value=>value&&typeof value==='object'&&!Array.isArray(value);
@@ -44,6 +45,7 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
  const credentials=createCredentialStore({directory:dataDirectory,safeStorage});
  const scheduleAuthorization={};
  const schedules=createScheduleSource({credentials,authorizeCredentialMutation:context=>context?.authorization===scheduleAuthorization});
+ const workflows=createWorkflowServices({dataDirectory,dialog,getWindow,openPath,openExternal,emit});
  const grants=new Map();let converter,ollama,ollamaPromise,closed=false,exiting=false,sharedCredentialGranted=false,pendingRequests=0;
  const modelEvents=[];let modelSequence=0,modelEventBytes=0;
  function modelEvent(data){const item={sequence:++modelSequence,data};const bytes=Buffer.byteLength(JSON.stringify(item));if(bytes<=524288){modelEvents.push({item,bytes});modelEventBytes+=bytes;}while(modelEvents.length>128||modelEventBytes>524288){modelEventBytes-=modelEvents.shift().bytes;}emit('ollama',data);}
@@ -58,7 +60,8 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
  async function pick(properties,title){const result=await dialog.showOpenDialog(getWindow(),{title,properties});return result.canceled?[]:result.filePaths;}
  async function dispatch(feature,action,payload={}){
   ensureOpen();if(typeof feature!=='string'||typeof action!=='string'||!object(payload))throw Error('Invalid feature request.');bounded(payload);
-  if(exiting&&!['status','catalog','models','cart','list','operations','cancel','control'].includes(action))throw Error('The application is waiting for active work before quitting.');
+  if(exiting&&!['status','catalog','models','cart','list','operations','cancel','control','downloads','cancelDownload'].includes(action))throw Error('The application is waiting for active work before quitting.');
+  if(feature==='workflow')return workflows.dispatch(action,payload);
   if(feature==='converter'){
    if(action==='pickSources')return Promise.all((await pick(['openFile','multiSelections'],'Choose conversion sources')).map(filename=>grant(filename,'read')));
    if(action==='pickDestinationDirectory'){const chosen=await pick(['openDirectory','createDirectory'],'Choose conversion output folder');return chosen[0]?grant(chosen[0],'directory'):null;}
@@ -105,5 +108,5 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
   throw Error('Unsupported feature action.');
  }
  async function request(...args){pendingRequests++;try{return await dispatch(...args);}finally{pendingRequests--;}}
- return {request,credentials,beginExit(){exiting=true;},endExit(){exiting=false;},async pending(){return pendingRequests+(converter?await converter.pending():0)+(ollama?.operations().length||0);},async cancelAll(){await Promise.allSettled([converterPromise,ollamaPromise]);await Promise.all([converter?.cancelAll(),ollama?.cancelAll()]);},async checkpoint(summary,progress){return(await statusPromise).checkpoint(summary,progress);},async close(){closed=true;await schedules.dispose();await Promise.allSettled([converterPromise,ollamaPromise]);await converter?.close();await ollama?.dispose();await(await statusPromise).finish('waiting');grants.clear();}};
+ return {request,credentials,beginExit(){exiting=true;},endExit(){exiting=false;},async pending(){return pendingRequests+workflows.pending+(converter?await converter.pending():0)+(ollama?.operations().length||0);},async cancelAll(){workflows.cancelAll();await Promise.allSettled([converterPromise,ollamaPromise]);await Promise.all([converter?.cancelAll(),ollama?.cancelAll()]);},async checkpoint(summary,progress){return(await statusPromise).checkpoint(summary,progress);},async close(){closed=true;await schedules.dispose();await workflows.close();await Promise.allSettled([converterPromise,ollamaPromise]);await converter?.close();await ollama?.dispose();await(await statusPromise).finish('waiting');grants.clear();}};
 }
