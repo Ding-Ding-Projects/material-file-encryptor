@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import * as fs from 'node:fs/promises';
 import path from 'node:path';
@@ -12,6 +12,7 @@ const MAX_PACKAGE = 1500 * 1024 * 1024;
 const VERSION = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 const TAG = /^v[0-9]+\.[0-9]+\.[0-9]+$/;
 const PACKAGE = /^MaterialFileEncryptor-([0-9]+\.[0-9]+\.[0-9]+)-(full|delta)\.nupkg$/i;
+const READY_KEYS = ['schemaVersion', 'folder', 'name', 'tag', 'sourceCommit', 'version', 'sha256', 'sha1', 'bytes'];
 function assert(value, code) { if (!value) throw new Error(code); }
 function compare(a, b) {
   assert(VERSION.test(a) && VERSION.test(b), 'INVALID_PACKAGE_VERSION');
@@ -49,6 +50,47 @@ export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl
   const publish = (patch) => { state = { ...state, ...patch }; events.emit('status', status()); return status(); };
   const failure = (error) => publish({ state: 'failed', reason: /^[A-Z_]+$/.test(error?.message) ? error.message : 'UPDATE_OPERATION_FAILED' });
   const cancelSchedule = () => { if (timer !== undefined) clearTimer(timer); timer = undefined; };
+  const stagingRoot = () => path.join(app.getPath('userData'), 'update-staging');
+  async function saveReadyRecord(folder, update) {
+    const record = { schemaVersion: 1, folder: path.basename(folder) };
+    for (const key of READY_KEYS.slice(2)) record[key] = update[key];
+    const temporary = path.join(stagingRoot(), `ready-${randomUUID()}.tmp`);
+    try {
+      const file = await fs.open(temporary, 'wx', 0o600);
+      try { await file.writeFile(JSON.stringify(record)); await file.sync(); } finally { await file.close(); }
+      await fs.rename(temporary, path.join(stagingRoot(), 'ready.json'));
+    } finally { await fs.rm(temporary, { force: true }).catch(() => {}); }
+  }
+  async function restoreReadyRecord(update, signal) {
+    // Cached fields only identify a file. Fresh remote metadata remains authoritative.
+    try {
+      const recordPath = path.join(stagingRoot(), 'ready.json');
+      const info = await fs.lstat(recordPath);
+      if (!info.isFile() || info.isSymbolicLink() || info.size > 4096) return false;
+      const handle = await fs.open(recordPath, 'r');
+      let buffer;
+      try {
+        buffer = Buffer.alloc(4097);
+        const read = await handle.read(buffer, 0, buffer.length, 0);
+        if (read.bytesRead > 4096) return false;
+        buffer = buffer.subarray(0, read.bytesRead);
+      } finally { await handle.close(); }
+      const record = JSON.parse(buffer.toString('utf8'));
+      if (!record || typeof record !== 'object' || Array.isArray(record) ||
+          Object.keys(record).length !== READY_KEYS.length || !READY_KEYS.every(key => Object.hasOwn(record, key)) ||
+          record.schemaVersion !== 1 || typeof record.folder !== 'string' || !/^package-[A-Za-z0-9_-]{1,80}$/.test(record.folder) ||
+          typeof record.name !== 'string' || !PACKAGE.test(record.name) ||
+          !READY_KEYS.slice(2).every(key => record[key] === update[key])) return false;
+      const folder = path.join(stagingRoot(), record.folder);
+      const directory = await fs.lstat(folder);
+      if (!directory.isDirectory() || directory.isSymbolicLink()) return false;
+      const filename = path.join(folder, record.name);
+      await hashFile(filename, update, signal);
+      if (signal.aborted || disposed) return false;
+      staged = filename;
+      return true;
+    } catch { return false; }
+  }
   const root = (() => {
     if (platform !== 'win32' || !app?.isPackaged || argv.some(a => /^--squirrel-(install|updated|uninstall|obsolete)$/.test(a))) return null;
     const exe = app.getPath('exe');
@@ -155,13 +197,15 @@ export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl
       publish({ state: 'available', reason: null, currentVersion, checkedAt: clock(), update: {
         version: candidate.version, tag: candidate.tag, sourceCommit: candidate.sourceCommit, releaseUrl: candidate.releaseUrl,
         bytes: candidate.bytes, unsigned: true } });
+      if (await restoreReadyRecord(candidate, signal))
+        publish({ state: 'ready', reason: null, deferred: false, stagedHashVerified: true, restoredFromCache: true });
     });
   }
   async function download() {
     if (!candidate || state.state !== 'available' || disposed) return status();
     return transaction(async signal => {
       publish({ state: 'downloading', reason: null });
-      const directory = path.join(app.getPath('userData'), 'update-staging');
+      const directory = stagingRoot();
       await fs.mkdir(directory, { recursive: true });
       const folder = await fs.mkdtemp(path.join(directory, 'package-'));
       const filename = path.join(folder, candidate.name);
@@ -175,9 +219,10 @@ export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl
         }
         await handle.close();
         await hashFile(filename, candidate, signal);
+        await saveReadyRecord(folder, candidate);
         staged = filename;
       } catch (error) { await handle.close().catch(() => {}); await fs.rm(folder, { recursive: true, force: true }); throw error; }
-      publish({ state: 'ready', reason: null, deferred: false, stagedHashVerified: true });
+      publish({ state: 'ready', reason: null, deferred: false, stagedHashVerified: true, restoredFromCache: false });
     });
   }
   async function installWhenSafe(parentWindow) {

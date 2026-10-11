@@ -4,7 +4,7 @@
 
 ## API and host integration
 
-Create the service with `createUpdateService({ app, autoUpdater, dialog, fetch, isActiveWork, acquireInstallLease, getLanguage })`. The first three objects are the native main-process APIs. `fetch` defaults to the built-in implementation and is injectable for tests. No new dependency is required.
+Create the service with `createUpdateService({ app, autoUpdater, dialog, fetch, isActiveWork, acquireInstallLease, prepareRestart, getLanguage })`. The first three objects are the native main-process APIs. `fetch` defaults to the built-in implementation and is injectable for tests. No new dependency is required.
 
 The controller exposes:
 
@@ -20,13 +20,23 @@ The controller exposes:
 
 The host must supply `isActiveWork`, covering unsaved edits, mounted-drive activity, exports, imports, conversions, and other work that must survive. Its conservative default is busy. The host must also supply `acquireInstallLease`, which atomically refuses when busy or returns a release function and prevents new work until released. A simple busy check cannot replace this lease. Missing lease support prevents installation.
 
-The native confirmation supports `en`, `zh-HK`, and `bilingual` through `getLanguage()`. It defaults to the safe Later button. The host must present the persistent ready banner, manual check action, exact version and release link, localized state/reason descriptions, unsigned warning, Later action, and originating-window focus behavior. These renderer integrations are outstanding and are not implemented by this module.
+The host must supply `prepareRestart()` to lock storage, verify durability, retire owned helpers, and prepare its normal application shutdown path. It is awaited after native-cache verification and the last busy check, before requesting native restart. Its default throws `RESTART_PREPARATION_REQUIRED`; preparation failures prevent the restart request, with no forced-quit fallback.
+
+The native confirmation supports `en`, `yue`, `zh-HK`, and `bilingual` through `getLanguage()`. It defaults to the safe Later button. The host must present the persistent ready banner, manual check action, exact version and release link, localized state/reason descriptions, unsigned warning, Later action, and originating-window focus behavior. These renderer integrations are outstanding and are not implemented by this module.
 
 ## State and timing
 
 States include unavailable, idle, checking, current, available, downloading, ready, confirming, installing, restart-requested, failed, and disposed. Later preserves ready state. Active work preserves the staged package and reports `ACTIVE_WORK`. A native restart request is not proof of a successful update.
 
-Checks are enabled by default on a packaged Windows installation with the expected executable inside an `app-x.y.z` directory and a sibling real `Update.exe`. Unsupported and unpackaged contexts never request metadata. Startup runs immediately, except first-run Squirrel startup waits ten seconds for its installation lock. Background intervals are clamped between fifteen minutes and twenty-four hours, with a four-hour default. HTTP operations have a thirty-second deadline; native observation has a ten-minute deadline. Metadata is limited to 1 MiB and a package to 1,500 MiB. Successful staging is retained for later consent; failed staging is removed. Cross-session cache retention and age-based cleanup are not implemented.
+Checks are enabled by default on a packaged Windows installation with the expected executable inside an `app-x.y.z` directory and a sibling real `Update.exe`. Unsupported and unpackaged contexts never request metadata. Startup runs immediately, except first-run Squirrel startup waits ten seconds for its installation lock. Background intervals are clamped between fifteen minutes and twenty-four hours, with a four-hour default. HTTP operations have a thirty-second deadline; native observation has a ten-minute deadline. Metadata is limited to 1 MiB and a package to 1,500 MiB. Successful staging is retained for later consent; failed staging is removed. Age-based cache cleanup is not implemented.
+
+## Durable ready state
+
+Successful staging atomically writes `update-staging/ready.json` under the application's own data directory, after package hash verification. The small versioned record contains only the relative staging-folder basename, package basename, version, tag, source commit, size, and hashes. The temporary record is exclusively created, flushed, closed, and renamed into place. No absolute path, arbitrary URL, command, credential, or installation instruction is stored.
+
+A fresh service starts idle. Its next startup or manual check first validates the current fixed remote release and provenance, then reads at most 4 KiB of the ready record. The exact schema, relative basenames, directory type, current metadata equality, package size, SHA-256, and SHA-1 must all pass before ready state is restored. The status snapshot then reports `restoredFromCache: true`. Cached metadata never authorizes installation by itself. Offline metadata cannot restore ready, and a changed release cannot reuse a stale record.
+
+A missing, malformed, oversized, mismatched, or corrupt record leaves the freshly validated available/current state intact. It does not cause an automatic installation, cancellation, or resumed native transaction. A later explicit download can replace the record. Orphaned cache folders are retained; this module does not delete unrelated or previous-session folders while checking readiness.
 
 ## Fixed release and integrity boundary
 
@@ -44,6 +54,6 @@ Once native Squirrel updating has started, its API supplies no cancellation or r
 
 ## Verification and remaining acceptance
 
-`node --test test/update-service.test.js` exercises mocked native APIs and temporary non-executable package fixtures. It covers fixed-source metadata, unchanged package versions, corrupt packages, offline responses, oversized metadata, deferred and busy states, lease requirements, explicit confirmation, native-cache mismatch, concurrent requests, schedule bounds, disposal, and late native events. These checks prove controller behavior only.
+`node --test test/update-service.test.js` exercises mocked native APIs and temporary non-executable package fixtures. It covers fixed-source metadata, unchanged package versions, corrupt packages, offline responses, oversized metadata, deferred and busy states, lease requirements, explicit confirmation, restart preparation, native-cache mismatch, concurrent requests, schedule bounds, disposal, late native events, and fresh-instance ready restoration against fresh provenance. Negative cache cases include corruption, missing and malformed records, oversized records, path traversal, unknown fields, and changed releases. These checks prove controller behavior only.
 
 Outstanding acceptance includes a real installed unsigned Squirrel application, real release assets with increasing package versions, end-to-end native cache layout and package naming, application restart into the new version, correct UI and focus behavior in all language modes, busy-work integration, and external failure recovery. There is no tested rollback, native cancellation, or completed update claim.

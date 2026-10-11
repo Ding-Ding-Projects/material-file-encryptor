@@ -198,3 +198,54 @@ test('yue selects Cantonese native confirmation', async t => {
   const f = await fixture(t, { getLanguage: () => 'yue' }); await f.service.check(); await f.service.download(); await f.stageNative();
   await f.service.installWhenSafe(); assert.equal(f.dialogs[0][0].title, '安裝更新');
 });
+async function reopen(t, f) {
+  f.service.dispose();
+  const next = createUpdateService(f.config);
+  t.after(() => next.dispose());
+  return next;
+}
+test('fresh service restores persisted ready only after fresh metadata and staged hash verification', async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download();
+  const record = JSON.parse(await fs.readFile(path.join(f.root, 'update-staging', 'ready.json'), 'utf8'));
+  assert.equal(record.schemaVersion, 1); assert.equal(path.basename(record.folder), record.folder); assert.equal(record.name, f.name);
+  assert.equal((await fs.readdir(path.join(f.root, 'update-staging'))).some(name => name.endsWith('.tmp')), false);
+  f.requested.length = 0;
+  const next = await reopen(t, f); assert.equal(next.status().state, 'idle');
+  const result = await next.check(); assert.equal(result.state, 'ready'); assert.equal(result.restoredFromCache, true);
+  assert.ok(f.requested.some(url => url.endsWith('/releases/latest'))); assert.ok(f.requested.some(url => url.includes('/git/ref/tags/')));
+  assert.deepEqual(f.calls, []);
+});
+test('corrupt staged package leaves fresh available state and never calls native updater', async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download();
+  const record = JSON.parse(await fs.readFile(path.join(f.root, 'update-staging', 'ready.json'), 'utf8'));
+  await fs.writeFile(path.join(f.root, 'update-staging', record.folder, record.name), Buffer.alloc(f.bytes.length));
+  const next = await reopen(t, f); assert.equal((await next.check()).state, 'available'); assert.deepEqual(f.calls, []);
+});
+test('changed release cannot restore previously staged ready state', async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download();
+  const oldTag = f.release.tag_name, newTag = 'v1.21.1';
+  f.release.tag_name = newTag; f.release.html_url = f.release.html_url.replace(oldTag, newTag);
+  for (const asset of f.release.assets) asset.browser_download_url = asset.browser_download_url.replace(oldTag, newTag);
+  f.provenance.tag = newTag; f.ref.ref = `refs/tags/${newTag}`;
+  for (const [url, body] of [...f.routes]) if (url.includes(oldTag)) { f.routes.delete(url); f.routes.set(url.replace(oldTag, newTag), body); }
+  const next = await reopen(t, f); const result = await next.check();
+  assert.equal(result.state, 'available'); assert.equal(result.update.tag, newTag); assert.deepEqual(f.calls, []);
+});
+for (const kind of ['missing', 'malformed', 'oversized', 'traversal', 'extra-field']) test(`${kind} ready record leaves validated available state intact`, async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download();
+  const filename = path.join(f.root, 'update-staging', 'ready.json');
+  const record = JSON.parse(await fs.readFile(filename, 'utf8'));
+  if (kind === 'missing') await fs.rm(filename);
+  else {
+    if (kind === 'traversal') record.folder = '../escape';
+    if (kind === 'extra-field') record.url = 'https://other.invalid/file';
+    await fs.writeFile(filename, kind === 'malformed' ? '{' : kind === 'oversized' ? 'x'.repeat(4097) : JSON.stringify(record));
+  }
+  const next = await reopen(t, f); assert.equal((await next.check()).state, 'available'); assert.deepEqual(f.calls, []);
+});
+test('offline fresh check cannot install from cached ready metadata', async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download();
+  f.config.fetch = async () => { throw new Error('offline'); };
+  const next = await reopen(t, f); assert.equal((await next.check()).state, 'failed');
+  await next.installWhenSafe(); assert.deepEqual(f.calls, []);
+});
