@@ -47,8 +47,10 @@ export async function accessObservation({ticketKey}){
  const rowIds=[...root.querySelectorAll('[data-ticket-id]')].map(el=>el.dataset.ticketId);
  const panel=root.querySelector('[data-access-confirmation]');
  const privateEmpty=[...root.querySelectorAll('[type=password],[data-access-field=current-code],[data-access-history-field=history-password]')].every(el=>!el.value);
+ const registrationFields=['authenticator-uri','manual-base32-secret','current-code','issuer','account','group'].map(name=>root.querySelector('.access-registration [data-access-field=\"'+name+'\"]'));
+ const registrationFieldsPresent=registrationFields.every(Boolean),registrationFieldsEmpty=registrationFieldsPresent&&registrationFields.every(el=>!el.value),registrationFieldsPopulated=registrationFieldsPresent&&registrationFields.every(el=>Boolean(el.value));
  const privacySafe=privateEmpty&&[...root.querySelectorAll('[data-access-qr-preview]')].every(el=>el.hidden&&el.childElementCount===0)&&[...root.querySelectorAll('video')].every(el=>el.hidden&&!el.srcObject)&&[...root.querySelectorAll('[data-entry-id] output,[data-entry-id] [data-next]')].every(el=>!el.getClientRects().length);
- return {configured,profileGrant,wait:{failures:wait.failures,level:wait.level,until:wait.until},tickets,rowIds,privacySafe,confirmation:Boolean(panel),confirmDisabled:panel?.querySelector('[data-access-action=confirm]')?.disabled===true,registrationOpen:root.querySelector('.access-registration')?.hidden===false,waiting:!!root.querySelector('[data-access-waiting]'),unlocks:root.querySelectorAll('[data-access-unlock]').length,authenticatorCount:root.querySelectorAll('[data-entry-id]').length,lockCount:root.querySelectorAll('[data-lock-record]').length};
+ return {registrationFieldsEmpty,registrationFieldsPopulated,configured,profileGrant,wait:{failures:wait.failures,level:wait.level,until:wait.until},tickets,rowIds,privacySafe,confirmation:Boolean(panel),confirmDisabled:panel?.querySelector('[data-access-action=confirm]')?.disabled===true,registrationOpen:root.querySelector('.access-registration')?.hidden===false,waiting:!!root.querySelector('[data-access-waiting]'),unlocks:root.querySelectorAll('[data-access-unlock]').length,authenticatorCount:root.querySelectorAll('[data-entry-id]').length,lockCount:root.querySelectorAll('[data-lock-record]').length};
 }
 
 export function createAccessFixtures({opened,io=fs}){
@@ -58,7 +60,7 @@ export function createAccessFixtures({opened,io=fs}){
  assert.equal(fixture.prepared,true);assert.notEqual(fixture.driveLetter,'M:');
  assert.match(target.sourceCommit,/^[a-f0-9]{40}$/);
  const session={runRoot:path.resolve(opened.runRoot),statePath:path.resolve(opened.statePath),profile:path.join(path.resolve(opened.runRoot),'profile'),receiptPath:path.resolve(opened.receiptPath)};
- let admitted=false,configured=false,activeState=null,expectedTicket=null,receiptHash=null,initialNative=null,lifecycleIdentity=null,profileCreationAttempted=false;
+ let admitted=false,configured=false,activeState=null,expectedTicket=null,receiptHash=null,initialNative=null,lifecycleIdentity=null,profileCreationAttempted=false,registrationAction=null;
  const proof=extra=>({ownedSyntheticFixture:true,sourceCommit:target.sourceCommit,productionApi:true,...extra});
  const validateState=state=>{if(!Object.hasOwn(supported,state))unsupported(state);};
  async function identity(context){
@@ -141,6 +143,24 @@ export function createAccessFixtures({opened,io=fs}){
    if(['access-authenticator-registration','access-qr-hidden'].includes(context.state)){await tab('authenticator');if(context.state==='access-authenticator-registration')await action('add-authenticator','#access-panel-authenticator');}
    return proof({sessionBound:true,profileRetained:configured});
   },
+  async beforeAction(context){
+   validateState(context.state);await identity(context);assert.equal(activeState,context.state);assert.equal(admitted,true);
+   if(context.state!=='access-authenticator-registration')return;
+   registrationAction=null;
+   if(context.action==='open-registration'){
+    await tab('authenticator');const before=await read();safe(before);
+    if(before.registrationOpen)await action('cancel-editing','.access-registration');
+    const closed=await settled(value=>!value.registrationOpen&&value.registrationFieldsEmpty&&value.privacySafe,'registration closed before Add');safe(closed);
+    registrationAction={action:context.action,closedBefore:true};
+   }else if(context.action==='cancel-registration-clears-private-fields'){
+    const before=await read();safe(before);assert.equal(before.registrationOpen,true,'Open registration required before population');
+    // These public synthetic strings are only field input. No Save, QR reveal,
+    // camera start, credential-store write, or capture occurs during this step.
+    for(const [name,value] of [['authenticator-uri','synthetic-acceptance-uri'],['manual-base32-secret','SYNTHETICFIXTURE'],['current-code','000000'],['issuer','Synthetic issuer'],['account','Synthetic account'],['group','Synthetic group']])await control('.access-registration [data-access-field="'+name+'"]','value',value);
+    const populated=await read();assert.equal(populated.registrationOpen,true);assert.equal(populated.registrationFieldsPopulated,true,'All registration fields must be populated before Cancel');assert.equal(populated.privacySafe,false,'Sensitive-field precondition was not exercised');
+    registrationAction={action:context.action,populatedBefore:true};
+   }
+  },
   async perform(context){
    validateState(context.state);await identity(context);assert.equal(activeState,context.state);const name=context.action;
    if(name==='begin-unlock'){
@@ -164,8 +184,8 @@ export function createAccessFixtures({opened,io=fs}){
    if(context.action==='reject-early-confirm'){assert.equal(value.tickets.length,1);assert.equal(value.confirmation,true);assert.equal(value.confirmDisabled,true);}
    if(['logout','log-out','cancel-unlock'].includes(context.action))assert.equal(value.profileGrant,false);
    if(context.action==='cancel-delete'){assert.equal(value.confirmation,false);assert.equal(value.tickets.length,1);}
-   if(context.action==='cancel-registration-clears-private-fields')assert.equal(value.registrationOpen,false);
-   if(context.action==='open-registration')assert.equal(value.registrationOpen,true);
+   if(context.action==='cancel-registration-clears-private-fields'){assert.equal(registrationAction?.action,context.action,'Registration action preparation missing');assert.equal(registrationAction.populatedBefore,true);assert.equal(value.registrationOpen,false);assert.equal(value.registrationFieldsEmpty,true,'Cancel did not clear every registration field');registrationAction=null;}
+   if(context.action==='open-registration'){assert.equal(registrationAction?.action,context.action,'Registration action preparation missing');assert.equal(registrationAction.closedBefore,true);assert.equal(value.registrationOpen,true,'Add did not open closed registration');registrationAction=null;}
    if(context.action==='confirm-delete'){assert.equal(value.tickets.length,0);assert.equal(value.rowIds.length,0);assert.equal(value.confirmation,false);expectedTicket=null;}
    return {passed:true,privacySafe:true,sessionBound:true,durableReadback:true};
   },

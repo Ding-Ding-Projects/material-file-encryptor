@@ -11,19 +11,20 @@ function fixture(overrides={}){
  const target={kind:'extracted-packaged-runtime',sourceCommit,executable,expectedUrl:'file:///synthetic-owned-package/index.html',files:{executable},hashes:{executable:sha256('package')}};
  const native={storageDir:path.join(runRoot,'storage'),cacheDir:path.join(runRoot,'cache'),driveLetter:'Q:',mounted:true,locked:false,operation:null};
  const state={configured:false,profileGrant:false,wait:{failures:0,level:0,until:0},tickets:[],rowIds:[],privacySafe:true,confirmation:false,confirmDisabled:false,registrationOpen:false,waiting:false,unlocks:0,authenticatorCount:0,lockCount:0,...overrides};
+ const fields=Object.fromEntries(['authenticator-uri','manual-base32-secret','current-code','issuer','account','group'].map(key=>[key,''])),mutations={noAdd:false,noClear:false};
  const calls=[];let password='',tab='profile',category='',description='',editing=false,dataFolder=path.join(runRoot,'profile'),packageBytes='package';
  const opened={connectionOwned:true,runRoot,statePath:path.join(runRoot,'lifecycle.json'),receiptPath:path.join(runRoot,'package-receipt.json'),target,fixture:{prepared:true,...native}};
  opened.receipt={launched:true,connectionOwned:true,runRoot,statePath:opened.statePath,target};
  const lifecycle={created:true,runRoot,process:{executablePath:executable}};
  const io={realpath:async p=>p,lstat:async p=>({isDirectory:()=>[runRoot,path.join(runRoot,'profile')].includes(p),isFile:()=>![runRoot,path.join(runRoot,'profile')].includes(p),isSymbolicLink:()=>false}),readFile:async p=>Buffer.from(p===executable?packageBytes:JSON.stringify(p===opened.statePath?lifecycle:opened.receipt))};
  opened.page={url:()=>target.expectedUrl,evaluate:async(fn,arg)=>{
-  if(fn===accessObservation)return structuredClone(state);
-  if(fn===accessControl){calls.push(arg);if(arg.operation==='value'){if(arg.selector.includes('category'))category=arg.value;else if(arg.selector.includes('description'))description=arg.value;else password=arg.value;return true;}if(arg.selector.startsWith('#access-tab-')){tab=arg.selector.slice(12);return true;}
+  if(fn===accessObservation){const values=Object.values(fields);return structuredClone({...state,registrationFieldsEmpty:values.every(value=>!value),registrationFieldsPopulated:values.every(Boolean),privacySafe:state.privacySafe&&['authenticator-uri','manual-base32-secret','current-code'].every(key=>!fields[key])});}
+  if(fn===accessControl){calls.push(arg);if(arg.operation==='value'){const registrationField=Object.keys(fields).find(key=>arg.selector.includes('[data-access-field=\"'+key+'\"]'));if(registrationField)fields[registrationField]=arg.value;else if(arg.selector.includes('category'))category=arg.value;else if(arg.selector.includes('description'))description=arg.value;else password=arg.value;return true;}if(arg.selector.startsWith('#access-tab-')){tab=arg.selector.slice(12);return true;}
    if(arg.selector.includes('set-up-local-profile')){assert.equal(state.configured,false);state.configured=true;state.profileGrant=true;state.privacySafe=true;}
    else if(arg.selector.includes('unlock-local-profile')){if(password==='Acceptance fixture only 2026!'){state.profileGrant=true;state.wait={failures:0,level:0,until:0};}else {state.profileGrant=false;state.wait.failures++;}password='';}
    else if(arg.selector.includes('log-out')){state.profileGrant=false;state.waiting=false;}
-   else if(arg.selector.includes('add-authenticator'))state.registrationOpen=true;
-   else if(arg.selector.includes('cancel-editing'))state.registrationOpen=false;
+   else if(arg.selector.includes('add-authenticator')){if(!mutations.noAdd)state.registrationOpen=true;}
+   else if(arg.selector.includes('cancel-editing')){state.registrationOpen=false;if(!mutations.noClear)for(const key of Object.keys(fields))fields[key]='';}
    else if(arg.selector.includes('create-local-ticket')){if(editing){state.tickets[0].description=description;editing=false;}else{state.tickets=[{id:'synthetic-ticket-1',category,description,stage:0}];state.rowIds=['synthetic-ticket-1'];}}
    else if(arg.selector.includes('data-access-action=\"edit\"'))editing=true;
    else if(arg.selector.includes('select-visible')){}
@@ -39,7 +40,7 @@ function fixture(overrides={}){
   throw Error('Unexpected page expression');
  }};
  const provider=createAccessFixtures({opened,io}),context={binding:{sourceCommit},state:'access-profile-locked',phase:'prepare'};
- return {provider,context,state,calls,opened,native,lifecycle,io,setFolder:v=>dataFolder=v,setBytes:v=>packageBytes=v};
+ return {provider,context,state,calls,opened,native,lifecycle,io,fields,mutations,setFolder:v=>dataFolder=v,setBytes:v=>packageBytes=v};
 }
 async function enter(f,state='access-profile-locked'){await f.provider.prepare({...f.context,state,phase:'prepare'});await f.provider.prepare({...f.context,state,phase:'enter'});}
 test('unsupported states and actions fail before touching a native fixture',async()=>{
@@ -74,3 +75,10 @@ test('confirmation preparation creates then edits one durable identity and resto
 test('early-confirm evidence requires the original durable ticket to remain',async()=>{const f=fixture();await enter(f,'access-confirmation');f.state.tickets=[];f.state.rowIds=[];await assert.rejects(f.provider.observe({...f.context,state:'access-confirmation',action:'reject-early-confirm'}));});
 
 test('live process identity drift stops the same-url session',async()=>{const f=fixture();await enter(f);f.lifecycle.process.pid=991;await assert.rejects(f.provider.observe({...f.context,action:'state'}),/lifecycle process changed/);});
+
+async function registrationAction(f,action){const context={...f.context,state:'access-authenticator-registration',action};await f.provider.beforeAction(context);const selector=action==='open-registration'?'#access-panel-authenticator [data-access-action="add-authenticator"]':'.access-registration [data-access-action="cancel-editing"]';await f.opened.page.evaluate(accessControl,{selector,operation:'click'});return f.provider.observe(context);}
+test('registration Add proves a closed to open transition',async()=>{const f=fixture();await enter(f,'access-authenticator-registration');const result=await registrationAction(f,'open-registration');assert.equal(result.passed,true);const controls=f.calls.map(row=>row.selector);const cancel=controls.findIndex(value=>value.includes('cancel-editing'));assert.ok(cancel>=0);assert.ok(controls.slice(cancel+1).some(value=>value.includes('add-authenticator')));});
+test('no-op Add cannot reuse the panel opened by preparation',async()=>{const f=fixture();await enter(f,'access-authenticator-registration');f.mutations.noAdd=true;await assert.rejects(registrationAction(f,'open-registration'),/Add did not open/);assert.equal(f.state.registrationOpen,false);});
+test('registration Cancel proves populated to empty without returning values',async()=>{const f=fixture();await enter(f,'access-authenticator-registration');const context={...f.context,state:'access-authenticator-registration',action:'cancel-registration-clears-private-fields'};await f.provider.beforeAction(context);assert.ok(Object.values(f.fields).every(Boolean));const observed=await f.opened.page.evaluate(accessObservation,{});assert.equal(observed.registrationFieldsPopulated,true);assert.equal(observed.privacySafe,false);assert.equal(JSON.stringify(observed).includes('SYNTHETICFIXTURE'),false);await f.opened.page.evaluate(accessControl,{selector:'.access-registration [data-access-action="cancel-editing"]',operation:'click'});const result=await f.provider.observe(context);assert.equal(result.passed,true);assert.ok(Object.values(f.fields).every(value=>!value));assert.equal(f.state.registrationOpen,false);});
+test('Cancel with its clearing loop removed fails despite hiding the panel',async()=>{const f=fixture();await enter(f,'access-authenticator-registration');f.mutations.noClear=true;await assert.rejects(registrationAction(f,'cancel-registration-clears-private-fields'),/Private output remains visible/);assert.equal(f.state.registrationOpen,false);assert.ok(Object.values(f.fields).every(Boolean));});
+test('registration results require a matching consumed preparation',async()=>{const f=fixture();await enter(f,'access-authenticator-registration');await assert.rejects(f.provider.observe({...f.context,state:'access-authenticator-registration',action:'open-registration'}),/preparation missing/);await registrationAction(f,'open-registration');await assert.rejects(f.provider.observe({...f.context,state:'access-authenticator-registration',action:'open-registration'}),/preparation missing/);});

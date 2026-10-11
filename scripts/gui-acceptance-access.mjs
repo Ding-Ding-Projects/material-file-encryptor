@@ -36,6 +36,7 @@ export function createAccessAdapters({launch,receipt,inventory,prepareOwnedFixtu
  };
  async function perform(state,id,context){
   const {executePlan,binding}=context;
+  await access().beforeAction?.({...context,state:state.id,action:id});
   if(protectedActions.has(id)||(id==='cancel-unlock'&&state.id.includes('profile'))){
    if(['open-picker','select-synthetic-file'].includes(id))capability('nativePicker');
    const result=await access().perform({...context,state:state.id,action:id,nativePicker:fixtures.nativePicker});proof(result,binding);
