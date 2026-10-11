@@ -6,9 +6,9 @@ import {PROPERTIES,STATES} from '../src/renderer/features/personalization/appear
 
 test('appearance static controls and diagnostics all have real Cantonese copy',()=>{
  const required=new Set([...Object.keys(PROPERTIES),...STATES,'Image','x','y','scaleX','scaleY','rotate','skewX','skewY','Crop left','Crop top','Crop width','Crop height','multiply','screen','overlay','darken','lighten','difference']);
- for(const name of ['appearance','color','logo','appearance-workbench','image-source','image-layers']){
+ for(const name of ['appearance','color','logo','appearance-workbench','image-source','image-layers','appearance-raster','appearance-raster-worker','appearance-journal']){
   const source=readFileSync(new URL(`../src/renderer/features/personalization/${name}.js`,import.meta.url),'utf8');
-  for(const match of source.matchAll(/(?:new (?:TypeError|Error)|\bt|\bmessage|\bbutton)\('([^']+)'/g))required.add(match[1]);
+  for(const match of source.matchAll(/(?:new (?:TypeError|Error)|\bError|\bt|\bmessage|\bbutton)\('([^']+)'/g))required.add(match[1]);
  }
  assert.deepEqual(APPEARANCE_COPY_KEYS,Object.keys(APPEARANCE_COPY));
  for(const key of required){assert.ok(Object.hasOwn(APPEARANCE_COPY,key),`Missing copy: ${key}`);assert.match(APPEARANCE_COPY[key],/[\u3400-\u9fff]/u,`Untranslated copy: ${key}`);assert.notEqual(APPEARANCE_COPY[key],key);}
