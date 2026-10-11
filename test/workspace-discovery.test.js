@@ -25,3 +25,10 @@ test('collapsing discovery renders all open tabs while retaining the query for r
  shell.search.hidden=true;await shell.renderTabs();assert.deepEqual(shell.tabsHost.children[0].children.map(node=>node.textContent),['Home']);assert.equal(shell.search.query,'converter');
  shell.search.hidden=false;await shell.renderTabs();assert.deepEqual(shell.tabsHost.children[0].children.map(node=>node.textContent),['Converter · Closed']);
 });
+
+test('hidden regex search does not evaluate or expose collapsed inactive group tabs',async()=>{
+ const {shell,model}=fixture();model.openTab({id:'notes',label:'Notes'});model.createGroup({id:'work',label:'Work'});model.groupTab('notes','work');model.collapseGroup('work',true);model.activateTab('home');
+ shell.labels.set('notes',{en:'Notes',yue:'筆記'});shell.search.hidden=true;shell.search.query='notes';shell.search.regex=true;let evaluations=0;shell.search.evaluate=async()=>{evaluations++;return{matches:['notes']};};
+ await shell.renderTabs();assert.equal(evaluations,0);assert.deepEqual(shell.tabsHost.children[0].children.map(node=>node.textContent),['Home']);assert.equal(shell.search.query,'notes');assert.equal(shell.search.regex,true);
+ shell.search.hidden=false;await shell.renderTabs();assert.equal(evaluations,1);assert.deepEqual(shell.tabsHost.children[0].children.map(node=>node.textContent),['Notes · Open']);
+});
