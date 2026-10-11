@@ -71,3 +71,7 @@ The returned appearance and logo adapters expose resolve, registerSnapshot, list
 ## History export
 
 Unlocked history supports individual selection, Shift ranges, all filtered records, inversion and clear. Export selected records or the currently visible filtered result; comparison still requires exactly two entries. Ten text formats preserve complete redacted metadata with an explicit omission manifest. Snapshots, credentials, vocabulary and image pixels remain excluded. See the [format matrix](../../../design/gui-personalization/record-export-matrix.md) for exact representations and exclusions.
+
+## Logo authoring
+
+The appearance tab offers local lock/key presets, local upload, contain/cover, focal points, numeric crop bounds, a safe area and the shared static background color workbench. The conversion notice precedes applying any output. Rejected application preserves the saved mark; rejected storage restores the prior display. Editing recipes remain session drafts; the normalized PNG and local schedule snapshots persist. See the [state inventory](../../../design/gui-personalization/logo-authoring-states.md) for decoder isolation and other remaining requirements.
