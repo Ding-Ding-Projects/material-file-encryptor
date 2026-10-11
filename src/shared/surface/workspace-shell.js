@@ -1,39 +1,72 @@
 import { SurfaceElement, element, register, localized, text } from './registry.js';
-import './search.js';
-import './provenance.js';
 import './context-menu.js';
 import './group-manager.js';
 export class WorkspaceShell extends SurfaceElement {
   connectedCallback(){this.render();}
   configure({model,language,labels,onActivate,onContext}){Object.assign(this,{model,language,labels,onActivate,onContext});this.render();}
-  render(){const previous=this.search,searchState=previous?{query:previous.query,regex:previous.regex,flags:previous.flags,hidden:previous.hidden}:null;this.style(`.bar{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}.tabs{min-width:0;width:100%;overflow-x:auto}md-tabs{min-width:max-content}.tools{display:flex;width:100%;gap:4px;flex-wrap:wrap}.groups{display:flex;gap:4px;flex-wrap:wrap}.status{font-size:12px}mfe-search{margin-top:8px} .heading{font-size:14px;margin:0} .search-row{margin-bottom:8px}`);
+  render(){
+    const offset=this.tabsHost?.scrollLeft||0;
+    this.style(`.bar{display:flex;align-items:center;gap:2px;min-width:0}.tabs{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}md-tabs{min-width:max-content}md-primary-tab{max-width:240px} .tab-name{display:block;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}md-text-button{flex:none;min-width:40px}.all{max-width:120px}`);
     if(!this.model)return;
-    this.search=element('mfe-search',{label:this.t('Find all views','搜尋所有檢視')});this.search.language=this.language;if(searchState)Object.assign(this.search,searchState);
-    this.tabsHost=element('div',{class:'tabs'});this.groupsHost=element('div',{class:'groups'});this.selected??=new Set();
+    this.selected??=new Set();
+    this.tabsHost=element('div',{class:'tabs'});
     this.manager=element('mfe-group-manager');this.manager.model=this.model;this.manager.language=this.language;this.manager.changed=()=>this.renderTabs();
-    const restore=element('md-outlined-button',{text:this.t('Restore closed tab','還原已關閉分頁'),disabled:!this.model.getState().closedTabs.length,onclick:()=>{const id=this.model.restoreTab();if(id)this.activate(id);}});
-    const find=element('md-text-button',{text:this.t('Find all views','搜尋所有檢視'),'aria-expanded':String(searchState?.hidden===false),onclick:()=>{this.search.hidden=!this.search.hidden;find.setAttribute('aria-expanded',String(!this.search.hidden));if(!this.search.hidden)this.search.input.focus();this.renderTabs();}});
-    this.search.hidden=searchState?.hidden??true;
-    const manage=element('md-outlined-button',{text:this.t('Manage groups','管理群組'),onclick:()=>this.manager.open()});
-    const bulk=element('md-text-button',{text:this.t('Close selected tabs','關閉所選分頁'),onclick:()=>{this.model.closeTabs([...this.selected]);this.selected.clear();this.onActivate?.(this.model.getState().activeTabId);this.render();}});
-    this.shadowRoot.append(element('div',{class:'bar'},[this.tabsHost,element('div',{class:'tools'},[find,restore,manage,bulk])]),this.groupsHost,this.search,this.manager);
-    this.search.addEventListener('search-change',()=>this.renderTabs());this.renderTabs();
+    this.previous=element('md-text-button',{text:'‹','aria-label':this.t('Scroll workspace tabs left','向左捲動工作區分頁'),title:this.t('Scroll workspace tabs left','向左捲動工作區分頁'),onclick:()=>this.scrollTabs(-1)});
+    this.next=element('md-text-button',{text:'›','aria-label':this.t('Scroll workspace tabs right','向右捲動工作區分頁'),title:this.t('Scroll workspace tabs right','向右捲動工作區分頁'),onclick:()=>this.scrollTabs(1)});
+    this.allTabs=element('md-text-button',{class:'all',text:this.t('All tabs','所有分頁'),'aria-label':this.t('Search all open and available tabs','搜尋所有已開啟及可用分頁'),'aria-haspopup':'menu',onclick:event=>this.openAllTabs(event.currentTarget,event)});
+    this.tabsHost.addEventListener('scroll',()=>this.updateOverflow());
+    this.shadowRoot.append(element('div',{class:'bar'},[this.previous,this.tabsHost,this.next,this.allTabs]),this.manager);
+    this.renderTabs();this.tabsHost.scrollLeft=offset;
+    this.resizeObserver?.disconnect();if(typeof ResizeObserver!=='undefined'){this.resizeObserver=new ResizeObserver(()=>this.updateOverflow());this.resizeObserver.observe(this.tabsHost);}
   }
+  disconnectedCallback(){this.resizeObserver?.disconnect();}
   label(tab){return localized(this.labels?.get(tab.id)||tab.label,this.language);}
-  activate(id){if(this.model.activateTab(id)){this.onActivate?.(id);this.render();}}
+  activate(id){
+    const state=this.model.getState();
+    if(!state.tabs.some(tab=>tab.id===id)){
+      const saved=state.closedTabs.find(tab=>tab.id===id),label=this.labels?.get(id)||saved?.label;
+      if(!label||!this.model.openTab({...saved,id,label:localized(label,'en')}))return false;
+    }
+    if(!this.model.activateTab(id))return false;
+    this.onActivate?.(id);this.render();return true;
+  }
   viewRows(state,all=false){
     const open=new Map(state.tabs.map(tab=>[tab.id,tab]));
-    const rows=all?[...new Set([...open.keys(),...(this.labels?.keys()||[])])].map(id=>open.get(id)||state.closedTabs.find(tab=>tab.id===id)||{id,label:this.labels.get(id),group:'',pinned:false}):state.tabs;
-    return rows.map(tab=>({...tab,closed:!open.has(tab.id),text:`${this.label(tab)} ${state.groups.find(g=>g.id===tab.group)?.label||tab.group||''} ${all?(open.has(tab.id)?this.t('Open','已開啟'):this.t('Closed','已關閉')):''}`}));
+    const rows=all?[...new Set([...open.keys(),...state.closedTabs.map(tab=>tab.id),...(this.labels?.keys()||[])])].map(id=>open.get(id)||state.closedTabs.find(tab=>tab.id===id)||{id,label:this.labels.get(id),group:'',pinned:false}):state.tabs;
+    return rows.map(tab=>({...tab,closed:!open.has(tab.id),text:this.label(tab)}));
   }
-  activateView(tab){if(tab.closed&&!this.model.openTab({...tab,label:localized(this.labels?.get(tab.id)||tab.label,'en')}))return;this.pendingFocusId=tab.id;this.activate(tab.id);}
-  async renderTabs(){const version=this.renderVersion=(this.renderVersion||0)+1,state=this.model.getState(),all=!this.search.hidden,candidates=this.viewRows(state,all),rows=all?await this.search.filter(candidates):candidates;if(!rows||version!==this.renderVersion)return;const tabs=element('md-tabs',{'aria-label':this.t('Workspace tabs','工作區分頁')});
-    for(const tab of rows){if(!all&&state.groups.find(g=>g.id===tab.group)?.collapsed&&tab.id!==state.activeTabId)continue;const label=`${this.selected.has(tab.id)?'✓ ':''}${tab.pinned?'● ':''}${this.label(tab)}${all?` · ${tab.closed?this.t('Closed','已關閉'):this.t('Open','已開啟')}`:''}`;const node=element('md-primary-tab',{text:label,active:tab.id===state.activeTabId,'aria-label':label});node.addEventListener('click',e=>{if(!tab.closed&&(e.ctrlKey||e.metaKey)){if(this.selected.has(tab.id))this.selected.delete(tab.id);else this.selected.add(tab.id);this.renderTabs();}else this.activateView(tab);});node.addEventListener('contextmenu',e=>{if(tab.closed)return;e.preventDefault();this.openTabMenu(tab,node);});node.addEventListener('keydown',e=>{if(!tab.closed&&((e.shiftKey&&e.key==='F10')||e.key==='ContextMenu')){e.preventDefault();this.openTabMenu(tab,node);}});if(this.pendingFocusId===tab.id){this.pendingFocusNode=node;}tabs.append(node);}
-    this.tabsHost.replaceChildren(tabs);if(this.pendingFocusNode){this.pendingFocusNode.focus();this.pendingFocusNode=null;this.pendingFocusId=null;}this.groupsHost.replaceChildren();const active=state.tabs.find(x=>x.id===state.activeTabId);if(active)this.groupsHost.append(element('md-text-button',{text:this.t('Tab actions','分頁操作'),onclick:e=>this.openTabMenu(active,e.currentTarget)}));
-    for(const group of state.groups)this.groupsHost.append(element('md-text-button',{text:`${group.collapsed?'▸':'▾'} ${group.label}`,'aria-expanded':String(!group.collapsed),onclick:()=>{this.model.collapseGroup(group.id,!group.collapsed);this.renderTabs();}}));
-    if(!rows.length)this.tabsHost.append(element('p',{role:'status',text:this.t('No matching views','沒有相符檢視')}));
+  activateView(tab){this.pendingFocusId=tab.id;return this.activate(tab.id);}
+  scrollTabs(direction){this.tabsHost.scrollBy({left:direction*Math.max(120,this.tabsHost.clientWidth*.75),behavior:'auto'});this.updateOverflow();}
+  updateOverflow(){if(!this.tabsHost)return;const max=this.tabsHost.scrollWidth-this.tabsHost.clientWidth;if(this.previous)this.previous.disabled=this.tabsHost.scrollLeft<=1;if(this.next)this.next.disabled=this.tabsHost.scrollLeft>=max-1;}
+  renderTabs(){
+    if(!this.model||!this.tabsHost)return;
+    const state=this.model.getState(),offset=this.tabsHost.scrollLeft;
+    const tabs=element('md-tabs',{'aria-label':this.t('Open workspace tabs','已開啟工作區分頁')});
+    for(const tab of this.viewRows(state)){
+      if(state.groups.find(group=>group.id===tab.group)?.collapsed&&tab.id!==state.activeTabId)continue;
+      const label=this.label(tab),name=element('span',{class:'tab-name',text:`${tab.pinned?'● ':''}${this.selected.has(tab.id)?'✓ ':''}${label}`});
+      const node=element('md-primary-tab',{active:tab.id===state.activeTabId,'aria-label':label,title:label},[name]);
+      node.setAttribute('data-tab-id',tab.id);
+      node.addEventListener('click',event=>{if(event.ctrlKey||event.metaKey){if(this.selected.has(tab.id))this.selected.delete(tab.id);else this.selected.add(tab.id);this.renderTabs();}else this.activateView(tab);});
+      node.addEventListener('contextmenu',event=>{event.preventDefault();this.openTabMenu(tab,node,event);});
+      node.addEventListener('keydown',event=>{if((event.shiftKey&&event.key==='F10')||event.key==='ContextMenu'){event.preventDefault();this.openTabMenu(tab,node,event);}});
+      tabs.append(node);
+    }
+    this.tabsHost.replaceChildren(tabs);this.tabsHost.scrollLeft=offset;
+    if(this.pendingFocusId){const node=[...tabs.children].find(tab=>tab.dataset?.tabId===this.pendingFocusId);node?.focus();node?.scrollIntoView?.({block:'nearest',inline:'nearest'});this.pendingFocusId=null;}
+    this.updateOverflow();
   }
-  openTabMenu(tab,anchor){this.onContext?.({anchor,language:this.language,items:[
+  openAllTabs(anchor,event){
+    const state=this.model.getState();
+    this.onContext?.({anchor,event,target:this,language:this.language,items:[
+      ...this.viewRows(state,true).map(tab=>({label:text(`${localized(this.labels?.get(tab.id)||tab.label,'en')} · ${tab.closed?'Closed':'Open'}`,`${localized(this.labels?.get(tab.id)||tab.label,'yue')} · ${tab.closed?'已關閉':'已開啟'}`),run:()=>this.activateView(tab)})),
+      {label:text('Restore closed tab','還原已關閉分頁'),disabled:!state.closedTabs.length,run:()=>{const id=this.model.restoreTab();if(id)this.activate(id);}},
+      {label:text('Manage groups','管理群組'),run:()=>this.manager.open()},
+      {label:text('Close selected tabs','關閉所選分頁'),disabled:!this.selected.size,run:()=>{this.model.closeTabs([...this.selected]);this.selected.clear();this.onActivate?.(this.model.getState().activeTabId);this.render();}},
+      ...state.groups.map(group=>({label:text(`${group.collapsed?'Expand':'Collapse'} group: ${group.label}`,`${group.collapsed?'展開':'收合'}群組：${group.label}`),run:()=>{this.model.collapseGroup(group.id,!group.collapsed);this.renderTabs();}}))
+    ]});
+  }
+  openTabMenu(tab,anchor,event){this.onContext?.({anchor,event,target:tab,language:this.language,items:[
     {label:tab.pinned?text('Unpin tab','取消固定分頁'):text('Pin tab','固定分頁'),run:()=>{this.model.pinTab(tab.id,!tab.pinned);this.render();}},
     {label:text('Close tab','關閉分頁'),shortcut:tab.id===this.model.getState().activeTabId?'Control+w':undefined,disabled:tab.pinned||this.model.getState().tabs.length<2,run:()=>{this.model.closeTab(tab.id);this.onActivate?.(this.model.getState().activeTabId);this.render();}},
     {label:text('Restore closed tab','還原已關閉分頁'),shortcut:'Control+Shift+t',disabled:!this.model.getState().closedTabs.length,run:()=>{const id=this.model.restoreTab();if(id)this.activate(id);}},
