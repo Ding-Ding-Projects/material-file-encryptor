@@ -83,6 +83,25 @@ export async function hostObservation(read=filename=>fs.readFile(filename,'utf8'
  return observation;
 }
 
+export async function openPreferences(page,observations){
+ const dialog=page.locator('#preferences-dialog');
+ const note=(action,performed,reason)=>observations.push({action,performed,...(reason?{reason}:{})});
+ try{
+  const navigation=page.locator('#navigation');
+  if(await navigation.count()===1&&!await navigation.isVisible()){
+   const menu=page.locator('#menu-toggle');
+   if(await menu.count()!==1||!await menu.isVisible()){note('open-navigation',false,'menu-control-unavailable');return false;}
+   await menu.click({timeout:5000});note('open-navigation',true);
+  }
+  const opener=page.locator('#preferences-open');
+  if(await opener.count()!==1||!await opener.isVisible()){note('open-preferences',false,'preferences-control-unavailable');return false;}
+  await opener.click({timeout:5000});note('open-preferences',true);
+  await dialog.waitFor({state:'visible',timeout:5000});
+  const open=await dialog.isVisible();note('observe-preferences-dialog',open,open?undefined:'dialog-not-visible');return open;
+ }catch{note('preferences-interaction',false,'bounded-control-interaction-failed');return false;}
+}
+export function sceneName(requested,dialogOpen){return dialogOpen?requested:'home-diagnostic-'+requested;}
+
 export async function capture(){
  if(process.platform!=='linux'||process.getuid?.()===0)throw Error('NONROOT_LINUX_SANDBOX_HOST_REQUIRED');
  const runRoot=path.resolve('out/visitor-capture'),root=path.join(runRoot,'static'),out=path.join(runRoot,'evidence');
@@ -105,10 +124,10 @@ export async function capture(){
   const network=await installNetworkBoundary(context,receipt,origin);
   page=await context.newPage();network.attachPage(page);page.setDefaultTimeout(5000);const consoleRecorder=cappedRecorder(receipt.console,200);receipt.consoleRecording=consoleRecorder.state;page.on('console',message=>consoleRecorder.record({type:message.type(),textSha256:digest(message.text())}));page.on('pageerror',error=>consoleRecorder.record({type:'pageerror',textSha256:digest(error.message)}));
   async function targets(phase){const pages=context.pages();receipt.targets.push({phase,count:pages.length,urls:pages.map(item=>item.url().startsWith(origin+'/')?item.url():'<unexpected-target>')});if(pages.length!==1||pages[0]!==page||page.url()!==url)throw Error('OWNED_TARGET_IDENTITY_MISMATCH');}
-  await page.goto(url,{waitUntil:'domcontentloaded',timeout:15000});await targets('initial');const opener=page.locator('#preferences-open');receipt.observations.push({action:'open-preferences',matchedCount:await opener.count()});try{if(await opener.count()===1)await opener.click();}catch{receipt.observations.push({action:'open-preferences',performed:false});}await page.waitForTimeout(150);await targets('before-capture');
-  async function record(name){const raw=await page.screenshot({type:'png',fullPage:false,animations:'allow'});await fs.writeFile(path.join(out,name+'.png'),raw);const data=await measurements(page);await fs.writeFile(path.join(out,name+'.json'),JSON.stringify(data,null,2)+'\n');receipt.captures.push({name,pngSha256:digest(raw),bytes:raw.length,width:raw.readUInt32BE(16),height:raw.readUInt32BE(20),measurementSha256:digest(JSON.stringify(data,null,2)+'\n'),capturedAtUtc:new Date().toISOString()});await save();}
-  await record('preferences-initial');const appearance=page.locator('[data-visitor-personalization] [role="tab"]').filter({hasText:/^Appearance$/});receipt.observations.push({action:'appearance-tab',matchedCount:await appearance.count()});if(await appearance.count()===1){try{await appearance.click();const theme=page.locator('[data-visitor-personalization] #local-ux-theme');receipt.observations.push({action:'theme-select',matchedCount:await theme.count()});if(await theme.count()===1){await theme.selectOption('dark');await page.waitForTimeout(150);}}catch{receipt.observations.push({action:'request-dark',performed:false});}}
-  await targets('dark-capture');await record('preferences-after-dark-request');await targets('final');remember(await ownedTree(processHandle.pid));await verifyStatic(root,input);receipt.productionInputBookendPassed=true;receipt.productionCompleted=true;
+  await page.goto(url,{waitUntil:'domcontentloaded',timeout:15000});await targets('initial');const dialogOpen=await openPreferences(page,receipt.observations);receipt.requestedScene='visitor-preferences';receipt.preferencesDialogOpen=dialogOpen;await targets('before-capture');
+  async function record(requested){const actualDialogOpen=await page.locator('#preferences-dialog').isVisible();const name=sceneName(requested,actualDialogOpen);const raw=await page.screenshot({type:'png',fullPage:false,animations:'allow'});await fs.writeFile(path.join(out,name+'.png'),raw);const data=await measurements(page);await fs.writeFile(path.join(out,name+'.json'),JSON.stringify(data,null,2)+'\n');receipt.captures.push({name,requestedScene:requested,actualDialogOpen,pngSha256:digest(raw),bytes:raw.length,width:raw.readUInt32BE(16),height:raw.readUInt32BE(20),measurementSha256:digest(JSON.stringify(data,null,2)+'\n'),capturedAtUtc:new Date().toISOString()});await save();}
+  await record('preferences-initial');const appearance=page.locator('[data-visitor-personalization] [role="tab"]').filter({hasText:/^Appearance$/});receipt.observations.push({action:'appearance-tab',matchedCount:await appearance.count()});if(dialogOpen&&await appearance.count()===1){try{await appearance.click();const theme=page.locator('[data-visitor-personalization] #local-ux-theme');receipt.observations.push({action:'theme-select',matchedCount:await theme.count()});if(await theme.count()===1){await theme.selectOption('dark',{timeout:5000});receipt.observations.push({action:'request-dark',performed:true});await page.waitForTimeout(150);}else{receipt.observations.push({action:'request-dark',performed:false,reason:'theme-control-unavailable'});}}catch{receipt.observations.push({action:'request-dark',performed:false,reason:'bounded-control-interaction-failed'});}}
+  if(!dialogOpen)receipt.observations.push({action:'request-dark',performed:false,reason:'preferences-dialog-not-open'});await targets('dark-capture');await record('preferences-after-dark-request');await targets('final');remember(await ownedTree(processHandle.pid));await verifyStatic(root,input);receipt.productionInputBookendPassed=true;receipt.productionCompleted=true;
  }catch(error){receipt.productionCompleted=false;receipt.productionError={name:error.name,messageSha256:digest(String(error.message)),reason:/sandbox/i.test(String(error.message))?'sandbox-unavailable':/timeout/i.test(String(error.message))?'bounded-operation-timeout':'production-operation-incomplete'};throw error;}
  finally{
   if(treeTimer)clearInterval(treeTimer);try{await bounded(treeFlight,2000,'TREE_OBSERVATION_TIMEOUT');}catch{treeReasons.add('tree-observation-incomplete');}receipt.closure.attempted=true;const failures=[];try{if(context)await bounded(context.close(),10000,'CONTEXT_CLOSE_TIMEOUT');}catch{failures.push('context-close');}try{if(browserServer)await bounded(browserServer.close(),15000,'BROWSER_CLOSE_TIMEOUT');}catch{failures.push('browser-close');}try{if(browser)await bounded(browser.close(),5000,'TRANSPORT_CLOSE_TIMEOUT');}catch{failures.push('transport-close');}

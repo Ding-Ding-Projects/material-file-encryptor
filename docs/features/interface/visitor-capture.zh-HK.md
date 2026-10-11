@@ -47,3 +47,9 @@
 工作 38141498203 使用來源 4cd6b8b2547d9a18fe34e71484d5ecc7132e4022，喺瀏覽器身份建立前記錄 sandbox-rejection 模式同 SIGABRT，冇產生 PNG。底層 namespace 原因仍未證實。專用畫面工作改用受支援 hosted Ubuntu 22.04，保留同一個已核實 Chromium 執行檔、非 root 執行、sandbox、獨立設定檔同靜態輸入。呢個係更換受支援主機路線，唔代表已修好 Ubuntu 24.04 原因。唔會修改 AppArmor、sysctl 或 confinement 設定。
 
 記錄會唯讀觀察平台、kernel、發行版 ID／版本同三項 user-namespace 設定。缺少設定標示 unavailable；讀取失敗保留 unknown 同有限錯誤碼。新執行同視覺驗收仍然等待。官方參考：[Playwright 支援平台](https://playwright.dev/docs/intro) 同 [Chromium namespace 限制](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md)。
+
+## 窄畫面導覽與實際場景身份
+
+工作 38141849878 已啟動瀏覽器並記錄關閉，但兩張 PNG 都係首頁：窄畫面導覽隱藏咗偏好設定按鈕，偏好設定同主題操作都未執行。呢啲畫面唔構成偏好設定驗收。控制器而家喺導覽關閉時按正常可見選單控制，再按正常偏好設定按鈕，最多等五秒確認對話框可見。唔會強制點擊、注入對話框狀態或者注入主題。
+
+只有觀察到對話框已開，先可以操作 Appearance／主題。每張畫面記錄要求場景同實際對話框可見狀態；冇開對話框嘅畫面用 home-diagnostic 檔名。有界操作失敗保留固定分類。計算出嚟嘅文件主題先係觀察結果，唔會由要求 dark 選項推斷成功。新畫面同外部視覺檢閱仍然等待。
