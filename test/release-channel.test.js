@@ -62,3 +62,20 @@ test('actual PowerShell promotion script parses and rejects task refs before any
   if (/running scripts is disabled/.test(result.stderr)) { t.skip('Host execution policy prevents the actual script dependency; admission execution unverified'); return; }
   assert.equal(result.status, 0, result.stderr); assert.match(result.stdout, /TASK_REF_REJECTED_BEFORE_PROVIDER/);
 });
+
+test('promotion command helper resolves the actual executable despite its case-insensitive function name', { skip: process.platform !== 'win32' }, () => {
+  const command = `
+    $tokens=$null; $errors=$null
+    $ast=[Management.Automation.Language.Parser]::ParseFile((Join-Path (Get-Location) '.github/scripts/promote-release.ps1'),[ref]$tokens,[ref]$errors)
+    $function=$ast.Find({param($n) $n -is [Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'Gh'},$true).Extent.Text
+    function Assert([bool]$value,[string]$code) { if (!$value) { throw $code } }
+    . ([scriptblock]::Create($function))
+    $result=Gh -Arguments @('--version')
+    if (($result -join ' ') -notmatch '^gh version ') { throw 'EXECUTABLE_NOT_OBSERVED' }
+    if ((Get-Command gh).CommandType -ne 'Function') { throw 'NEGATIVE_RESOLUTION_NOT_OBSERVED' }
+    if ((Get-Command gh.exe -CommandType Application).CommandType -ne 'Application') { throw 'APPLICATION_RESOLUTION_MISSING' }
+    'ACTUAL_EXECUTABLE_RESOLVED_FUNCTION_COLLISION_PROVED'
+  `;
+  const result=spawnSync('powershell.exe',['-NoProfile','-NonInteractive','-Command',command],{encoding:'utf8',windowsHide:true,timeout:30000});
+  assert.equal(result.status,0,result.stderr); assert.match(result.stdout,/ACTUAL_EXECUTABLE_RESOLVED_FUNCTION_COLLISION_PROVED/);
+});

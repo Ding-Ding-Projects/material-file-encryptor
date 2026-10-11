@@ -2,7 +2,8 @@ $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/../../scripts/squirrel-file-hash.ps1"
 function Assert([bool]$value, [string]$code) { if (!$value) { throw $code } }
 function Gh([string[]]$Arguments) {
-  $result = & gh @Arguments
+  [Management.Automation.ApplicationInfo]$nativeGh = Get-Command gh.exe -CommandType Application -ErrorAction Stop | Select-Object -First 1
+  $result = & $nativeGh.Source @Arguments
   Assert ($LASTEXITCODE -eq 0) 'PROMOTION_GITHUB_OPERATION_FAILED'
   return $result
 }
