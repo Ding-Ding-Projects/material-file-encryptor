@@ -1,0 +1,9 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mediaSummary,validateMediaOutput} from '../src/features/converter/media.mjs';
+import {catalog,detectFormat} from '../src/features/converter/registry.mjs';
+const image=(codec='png')=>({streams:[{codec_type:'video',codec_name:codec,width:32,height:16}],format:{format_name:'png_pipe'}});
+test('media catalog requires explicit runtime proof and detects audio headers',()=>{assert.equal(catalog().filter(x=>x.id.startsWith('image-')).every(x=>!x.enabled),true);assert.equal(catalog({media:true}).find(x=>x.id==='video-mp4').enabled,true);assert.equal(detectFormat(Buffer.from('fLaCabc')),'flac');assert.equal(detectFormat(Buffer.from('ID3abc')),'mp3');});
+test('media output validates codec and exact geometry',()=>{const before=mediaSummary(image(),'image-png');validateMediaOutput(before,mediaSummary(image(),'image-png'),'image-png');assert.throws(()=>validateMediaOutput(before,mediaSummary(image('mjpeg'),'image-png'),'image-png'),/codec/);assert.throws(()=>validateMediaOutput(before,{...before,width:31},'image-png'),/geometry/);});
+test('media refuses oversized, rotated, animated and foreign streams',()=>{for(const change of [{width:5000},{tags:{rotate:'90'}},{nb_frames:'2'}]){const probe=image();Object.assign(probe.streams[0],change);assert.throws(()=>mediaSummary(probe,'image-png'));}const probe=image();probe.streams.push({codec_type:'attachment'});assert.throws(()=>mediaSummary(probe,'image-png'));});
+test('media audio validates duration channels and sampling',()=>{const p={streams:[{codec_type:'audio',codec_name:'flac',channels:2,sample_rate:'48000'}],format:{duration:'20'}};const summary=mediaSummary(p,'audio-flac');assert.equal(summary.duration,20);assert.throws(()=>mediaSummary({...p,format:{duration:'601'}},'audio-flac'));assert.throws(()=>validateMediaOutput(summary,{...summary,duration:19},'audio-flac'),/duration/);});

@@ -1,61 +1,37 @@
-# Offline image, audio and video integration plan
+# Offline image, audio and video conversion
 
-Status: planned, not enabled. No executable has been downloaded or accepted as part of this plan. Existing unavailable catalog entries remain unavailable until the complete package, isolation and runtime checks pass.
+The converter implements six fixed operations: PNG, JPEG, WAV (16-bit PCM), FLAC, MP3 (192 kbps), and MP4 (H.264 CRF 23 with AAC 128 kbps). Media remains disabled unless the optional packaged runtime passes executable hashes and an actual AppContainer source-probe, conversion, output-probe and full-decode startup check. No executable is discovered on PATH and no download occurs while converting.
 
-## Source and package ownership
+## Accepted runtime and provenance
 
-The first media implementation can use one minimal static FFmpeg build for PNG/JPEG images, WAV/FLAC/AAC audio, and MPEG-4/AAC MP4 video. Pin **FFmpeg 9.0.2** from its official signed source release, not a moving executable URL. The [official download page](https://ffmpeg.org/download.html) lists that release and its signature procedure; it explicitly states that the project distributes source, while linked Windows binaries are third-party builds. Its published release key fingerprint is `FCF986EA15E6E293A5644F10B4322F04D67658D8`.
+FFmpeg 9.0.2 is pinned to the release essentials archive distributed by Gyan, a Windows binary provider linked by the [official FFmpeg download page](https://ffmpeg.org/download.html). The [publisher page](https://www.gyan.dev/ffmpeg/builds/) identifies source revision `946fcce07b`, version 9.0.2 and GPLv3 licensing. Its [published archive checksum](https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-9.0.2-essentials_build.zip.sha256) is checked before extraction. The binaries are **not Authenticode signed**. This acceptance is based on the explicitly reviewed publisher, HTTPS and pinned archive/executable hashes, not a claim of an upstream binary signature or reproducible build.
 
-The parent build owns source acquisition, signature verification, SHA-256 pinning, the reproducible toolchain/build recipe, license notices, packaging, and the final executable hashes. Do not enable a format from a developer installation or PATH. Build only the named encoders/decoders/muxers/demuxers/protocols, with network and external-program integrations disabled. Keep a machine-readable exact codec inventory from the accepted binary. Optional GPL components or additional codec libraries require their own version, source, license and hash entries before use.
+| File | SHA-256 |
+| --- | --- |
+| ffmpeg-9.0.2-essentials_build.zip | `60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba` |
+| ffmpeg.exe | `3256173f3f8bffd7df12227c68adf68025edb1832273a9530688a7bb1ed8edec` |
+| ffprobe.exe | `f0d36ecbbdd3bcfac3efa078c96c7271c2e68b3810595552ac3b7f17e9a65c52` |
 
-A second image-specific phase may use **ImageMagick 7.1.2-33** from the [official distribution](https://imagemagick.org/download/) when features beyond the initial PNG/JPEG route are needed. Its exact source/signature and dependency inventory must be reviewed independently. A strict [security policy](https://imagemagick.org/security-policy/) must deny delegates and every coder except the selected formats. This second tool is unnecessary for the first image implementation and must not be downloaded merely because it appears in this plan.
+The GPLv3 project includes the distribution's LICENSE and README. Release packaging must also satisfy corresponding-source distribution obligations for FFmpeg and its linked components. The provider's source revision alone is not a complete corresponding-source bundle. This implementation does not claim that release obligation is already satisfied.
 
-Example source-manifest entry, deliberately incomplete until source verification:
+## Parent build integration
 
-```json
-{
-  "id": "ffmpeg",
-  "version": "9.0.2",
-  "sourceUrl": "https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz",
-  "signatureUrl": "https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz.asc",
-  "signingKeyFingerprint": "FCF986EA15E6E293A5644F10B4322F04D67658D8",
-  "sourceSha256": null,
-  "buildRecipeSha256": null,
-  "binarySha256": null,
-  "enabled": false,
-  "state": "awaiting-source-verification-and-local-build"
-}
-```
+Run `node scripts/converter-media-runtime.mjs <resources/converter/media>` during the existing root build. The helper uses a bounded build-time download, verifies the archive and both executables, and copies only `ffmpeg.exe`, `ffprobe.exe`, `LICENSE`, `README.txt`, and `manifest.json`. Its returned object contains `version`, `ffmpegPath`, `ffmpegSha256`, `ffprobePath`, and `ffprobeSha256`. Paths are package-relative at final binding, so resolve them against the actual resource directory instead of saving build-machine paths into a public manifest.
 
-Null hashes are not accepted by runtime code. The packaging step replaces them only with verified values, includes every required binary/library, and emits the immutable package manifest.
+Pass those four executable fields as `mediaRuntime` to `createWindowsSandboxProvider`, alongside the existing launcher and Node fields. Package the new `media.mjs` beside `windows-sandbox.mjs`; it executes in the trusted host and is not copied into the Node worker payload. Rebuild the native launcher with `MediaCommand.cs`. The parent owns root build scripts, application service binding and release compliance. The converter owns no alternate application entrypoint.
 
-## Converter-owned implementation
+A missing or invalid optional media runtime disables only media adapters. Existing PDF, ZIP and data adapters retain their normal independently verified isolation path. The public catalog carries an explicit startup-verification reason.
 
-1. Add a native launcher mode for an explicitly identified and hash-verified media executable. Preserve the current Node mode. The trusted parent chooses one fixed argument template from an adapter ID; renderer values never become arbitrary arguments or shell commands.
-2. Stage the executable and approved libraries read-only. Stage selected bytes under fixed input names. Run one executable per fresh AppContainer and one-process job; do not permit Node to spawn FFmpeg inside its current job. Preserve zero network capabilities, token/job readback, memory/deadline/storage bounds, cancellation, profile deletion, and nonce-bound receipts.
-3. Use a separate bounded FFprobe invocation to inspect dimensions, stream count, frame count, duration, sample rate and channels. Reject unsupported streams, playlists, external references, excessive dimensions/duration, and malformed metadata. The [protocol documentation](https://ffmpeg.org/ffmpeg-protocols.html) defines `protocol_whitelist`; explicitly allow only `file,pipe`, never the default protocol set. Build-time network disabling and AppContainer network denial remain additional boundaries.
-4. Initially cap still images at 8 megapixels and one frame, audio at two channels/48 kHz/10 minutes, and video at 1920x1080/30 fps/60 seconds. Use the existing 256 MiB memory and 30-second process deadline initially; larger limits require measured evidence and an explicit adapter contract. Input/output byte limits remain enforced independently.
-5. Execute only fixed conversion templates. Example PNG target arguments: `-nostdin -hide_banner -loglevel error -protocol_whitelist file,pipe -i input.bin -map 0:v:0 -frames:v 1 -pix_fmt rgb24 output.png`. Paths are fixed staged names and options are bounded enumerations. Audio/video templates explicitly select streams, codecs, sample formats and muxers. Disable unselected streams and metadata rather than relying on automatic selection.
-6. Reopen every output in a fresh isolated probe and verify its signature, streams, dimensions, duration, frame/channel limits and requested codec. Decode a bounded sample where applicable. Only then return output bytes to the existing atomic publisher.
-7. Expose previews and exact disclosures before enqueue: JPEG quality and transparency loss; image metadata/profile removal; animation reduction; audio resampling/bit-depth or channel changes; video frame-rate/resolution changes; codec loss and unsupported subtitles/attachments. Require explicit confirmation for each lossy path.
+## Execution and validation
 
-Runtime-manifest shape after verification:
+The host accepts only the six registered operation identifiers. The native launcher chooses a fixed command, fixed staged filenames and the exact staged executable name. It retains the zero-capability AppContainer, one-process job, 256 MiB memory bound, 30-second deadline per operation, cancellation signal, authenticated nonce/result hash, and profile cleanup. Protocols are restricted to `file,pipe`; user arguments, arbitrary paths and process spawning are unavailable.
 
-```json
-{
-  "adapterId": "image-png",
-  "tool": "ffmpeg",
-  "toolVersion": "9.0.2",
-  "executable": "media/ffmpeg.exe",
-  "executableSha256": "VERIFIED_SHA256_REQUIRED",
-  "companions": [],
-  "argumentTemplate": "image-to-png-v1",
-  "protocols": ["file", "pipe"],
-  "limits": { "inputBytes": 67108864, "outputBytes": 134217728, "pixels": 8000000, "frames": 1, "milliseconds": 30000, "memoryBytes": 268435456 },
-  "enabled": false
-}
-```
+Every conversion performs four isolated operations: probe source, encode, probe output, decode output. The host rejects extra streams, unsupported image demuxers, animation, rotation metadata, dimension/layout changes, incorrect output codecs and duration drift. Images are limited to 8 megapixels and 4096 pixels per edge. Audio accepts one or two channels at 8–48 kHz for at most 10 minutes. Video accepts even dimensions up to 1920 by 1080 for at most 60 seconds. Input and media output each stay at or below 64 MiB. Sampled log/output storage limits supplement the job's hard memory and process limits; they are not a filesystem quota.
 
-## Acceptance before enabling
+Source inspection presents actual probe metadata before submission. Each adapter requires explicit acknowledgement of metadata removal and encoding loss. JPEG discards transparency; WAV reduces to 16-bit PCM; MP3 and H.264/AAC are lossy. No resizing, rotation, sample-rate conversion or channel remix is silently requested. The queue retains source hashes, existing overwrite confirmation and complete-output atomic publication. Cancelling between stages prevents the next stage and publication. Cancelling an active media preview is included in the quit barrier.
 
-Verify the exact packaged binary offline with PATH empty; reject a missing/changed executable or library hash; exercise valid and malformed fixtures for every enabled pair; test network/external-reference rejection, timeout, cancellation, memory and expansion bounds; verify source immutability and destination rollback; inspect the actual UI previews, disclosures and queue outcomes. Disabled entries are not completed implementations.
+## Verification
+
+`test/converter-media.test.js` checks metadata bounds, codec/layout comparisons and the unavailable-runtime catalog. `test/converter-media-windows.test.js` uses `CONVERTER_MEDIA_TEST_ROOT` pointing at the verified directory containing both binaries; it generates disposable synthetic fixtures, exercises all six operations through the actual provider, and checks cancellation. Native `media-command.tests.ps1` checks fixed command and receipt contracts; `media-smoke.ps1` exercises actual AppContainer media and denied external references. No user media or visible desktop is needed.
+
+Additional formats, arbitrary FFmpeg arguments, hardware encoders, streaming, subtitles, animated images, resizing and editing are outside this implementation. They remain unimplemented rather than being advertised as completed adapters.
