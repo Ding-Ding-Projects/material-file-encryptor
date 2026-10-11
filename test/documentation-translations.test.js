@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 
 // Independent required inventory: adding an article requires explicit review here.
 const REQUIRED = [
-  'workflows/README', 'workflows/forge-publication', 'workflows/browser-download-handoff',
+  'workflows/README', 'workflows/forge-publication', 'workflows/browser-download-handoff', 'workflows/browser-native-host',
   'interface/storage-maintenance', 'interface/startup-photo-host',
   'interface/local-tools-workspaces',
   'schedules/customization',

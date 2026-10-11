@@ -523,14 +523,20 @@
     {
       "source": "docs/features/workflows/README.md",
       "translation": "docs/features/workflows/README.zh-HK.md",
-      "sourceSha256": "929795d0383463a8e3b05e5f48fb89dae945af1767fce14619265998b6b19dd2",
-      "translationSha256": "97f5534266016e1f8742d7939c44a8e7ea601b0dd9ac5add2ed3ec9fc46ac094"
+      "sourceSha256": "c912e267bed8dd3a09d88fca5be30e1c9d857503081d1ba845740f7e508a0888",
+      "translationSha256": "73b40f3fcfecda3b9762e1e081cb08300b218899049f678cd44e0e963f3b3b67"
     },
     {
       "source": "docs/features/workflows/browser-download-handoff.md",
       "translation": "docs/features/workflows/browser-download-handoff.zh-HK.md",
       "sourceSha256": "5325357524f7c2fe3c410a2e9d0405b094d2abc91da0e5d27448bddc1e48d2df",
       "translationSha256": "c4a3815522811c941240e6d166628aeae9e5ee9526ed9d904177f7742de95ba4"
+    },
+    {
+      "source": "docs/features/workflows/browser-native-host.md",
+      "translation": "docs/features/workflows/browser-native-host.zh-HK.md",
+      "sourceSha256": "97c455f25640584a695224fc4815652232ccb097689fef0c092bfa6e65116157",
+      "translationSha256": "8ee4d70fcb4a43d0a8abd94fdbe5b52385c6c05eb04817be2228acbbfa67318a"
     },
     {
       "source": "docs/features/workflows/forge-publication.md",
