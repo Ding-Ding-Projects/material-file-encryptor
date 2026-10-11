@@ -7,6 +7,7 @@ import path from 'node:path';
 import {withCdpConnectionProof} from './cdp-connection-plan.mjs';
 import {layoutExpression,settledMotionExpression,assertMeasurement} from './modern-ui-check.mjs';
 import {matrixFor,tupleKey,validateBinding,sha256,admitRow,verifyFiles} from './gui-acceptance.mjs';
+import {inspectSurface} from './gui-acceptance-components.mjs';
 
 const q=JSON.stringify;
 const poll=(id,expression)=>({id,op:'poll',expression,equals:true,intervalMs:100});
@@ -53,7 +54,7 @@ export function makeAcquisitionPlan({launch,receipt,tuple,state,outputRoot}){
  for(const [field,value]of [['theme',tuple.theme],['language',tuple.language]])steps.push({id:id+'-'+field,op:'evaluate',expression:`(()=>{const node=document.querySelector(${q('#'+field+'-setting')});if(!node||node.disabled)throw Error('Setting unavailable');node.value=${q(value)};node.dispatchEvent(new Event('change',{bubbles:true}));return true;})()`});
  steps.push(poll(id+'-tuple',`innerWidth===${tuple.width}&&innerHeight===${tuple.height}&&Math.abs(devicePixelRatio-${tuple.scale})<0.01&&document.documentElement.dataset.theme===${q(tuple.theme)}&&document.querySelector('#language-setting').value===${q(tuple.language)}`));
  navigate(steps,route.view,id+'-state');if(route.tab)steps.push(activate(id+'-tab',route.tab));
- if(route.dialog){steps.push(activate(id+'-create','#create-button'),poll(id+'-dialog',"document.querySelector('#vault-dialog').open"));if(route.dialog==='keyFile')steps.push(activate(id+'-key-mode','.credential-selector label:has(input[value="keyFile"])'));if(route.dialog==='privateGit')steps.push({id:id+'-transport',op:'evaluate',expression:"(()=>{const node=document.querySelector('#transport-mode');node.value='privateGit';node.dispatchEvent(new Event('change',{bubbles:true}));return true;})()"});}
+ if(route.dialog){steps.push(activate(id+'-create','#create-button'),poll(id+'-dialog',"document.querySelector('#vault-dialog').open"));if(route.dialog==='keyFile')steps.push(activate(id+'-key-mode','.credential-selector md-radio[value="keyFile"]'));if(route.dialog==='privateGit')steps.push({id:id+'-transport',op:'evaluate',expression:"(()=>{const node=document.querySelector('#transport-mode');node.value='privateGit';node.dispatchEvent(new Event('change',{bubbles:true}));return true;})()"});}
  return withCdpConnectionProof({version:1,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:90000,steps},'control');
 }
 
@@ -81,9 +82,10 @@ export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot
    // Actions can change the surface. Restore through the adapter and then
    // navigate normally before taking the state-specific capture.
    await adapter.prepare({tuple,binding,executePlan});await executePlan(setup);assert.equal((await adapter.assertState({tuple,executePlan}))?.passed,true);
-   const capturePlan=withCdpConnectionProof({...setup,observeRuntime:true,steps:[poll('state-motion-settled',settledMotionExpression(state.selector)),{id:'state-measure',op:'evaluate',expression:layoutExpression(state.selector)},{id:'state-capture',op:'capture',path:path.join(directory,'capture.png'),overwrite:false}]},'capture');
+   const capturePlan=withCdpConnectionProof({...setup,observeRuntime:true,steps:[poll('state-motion-settled',settledMotionExpression(state.selector)),{id:'state-surface-audit',op:'evaluate',expression:`(${inspectSurface.toString()})(document)`},{id:'state-measure',op:'evaluate',expression:layoutExpression(state.selector)},{id:'state-capture',op:'capture',path:path.join(directory,'capture.png'),overwrite:false}]},'capture');
    const before=await probeEvidence.observe();const captured=await executePlan(capturePlan);record.raw=captured;await save();
    const measurements=(captured.results||[]).filter(step=>step.id==='state-measure');assert.equal(measurements.length,1);assertMeasurement(measurements[0].value,tuple);
+   const audit=captured.results.find(step=>step.id==='state-surface-audit')?.value;assert.ok(audit,'Shadow DOM audit missing');record.surfaceAudit=audit;assert.deepEqual(audit.genericControls,[]);assert.deepEqual(audit.unregisteredControls,[]);assert.deepEqual(audit.clipped,[]);assert.equal(audit.outerFrameScroll,false);
    const after=await probeEvidence.observe();assert.equal(await probeEvidence.persist({before,after,plan:capturePlan,result:captured,measurements,tuple}),1);
    const bytes=await fs.readFile(path.join(directory,'capture.png'));record.capture={path:path.relative(outputRoot,path.join(directory,'capture.png')),sha256:sha256(bytes)};
    record.status='captured-awaiting-inspection-and-reference';record.accepted=false;
