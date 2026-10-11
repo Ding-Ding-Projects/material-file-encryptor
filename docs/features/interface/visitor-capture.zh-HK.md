@@ -41,3 +41,9 @@
 工作 38140563614 已核實指定靜態產物並完成依賴安裝，但瀏覽器啟動喺記錄身份或者像素之前失敗。保留嘅訊息雜湊唔足以確定實際執行原因。工作流程以 `--no-shell` 安裝完整 Chromium，原本無指定執行檔嘅 headless 啟動卻會由 Playwright 預設選擇 headless-shell。控制器而家明確啟動同一個已核實位元組嘅完整 Chromium，sandbox 仍然啟用。仍須用修正後來源執行新工作。
 
 啟動前會儲存階段同有限選項；啟動被拒絕時只記錄訊息摘要、固定診斷分類，以及有提供時嘅退出碼或 signal，唔上傳原始訊息、私人路徑或端點。本機注入式 wrapper 檢查只證明選項傳遞同拒絕處理，唔構成瀏覽器、像素或視覺驗收證據。
+
+## 第二次啟動後嘅受支援主機路線
+
+工作 38141498203 使用來源 4cd6b8b2547d9a18fe34e71484d5ecc7132e4022，喺瀏覽器身份建立前記錄 sandbox-rejection 模式同 SIGABRT，冇產生 PNG。底層 namespace 原因仍未證實。專用畫面工作改用受支援 hosted Ubuntu 22.04，保留同一個已核實 Chromium 執行檔、非 root 執行、sandbox、獨立設定檔同靜態輸入。呢個係更換受支援主機路線，唔代表已修好 Ubuntu 24.04 原因。唔會修改 AppArmor、sysctl 或 confinement 設定。
+
+記錄會唯讀觀察平台、kernel、發行版 ID／版本同三項 user-namespace 設定。缺少設定標示 unavailable；讀取失敗保留 unknown 同有限錯誤碼。新執行同視覺驗收仍然等待。官方參考：[Playwright 支援平台](https://playwright.dev/docs/intro) 同 [Chromium namespace 限制](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md)。

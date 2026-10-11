@@ -75,13 +75,21 @@ export async function launchAdmittedBrowser(chromium,executable){
  return chromium.launchServer({executablePath:executable,headless:true,chromiumSandbox:true,timeout:30000,args:['--disable-extensions','--disable-sync','--no-first-run']});
 }
 
+export async function hostObservation(read=filename=>fs.readFile(filename,'utf8'),platform=os.platform(),kernel=os.release()){
+ const code=error=>['ENOENT','EACCES','EIO','EPERM'].includes(error?.code)?error.code:'OTHER';
+ const observation={platform,kernel,distribution:{state:'unknown'},userNamespaces:{}};
+ try{const text=await read('/etc/os-release');const fields={};for(const line of text.split('\n')){const split=line.indexOf('=');const name=line.slice(0,split);if(!['ID','VERSION_ID'].includes(name))continue;const value=line.slice(split+1).replace(/^"|"$/g,'');if(/^[a-zA-Z0-9._-]{1,64}$/.test(value))fields[name]=value;}observation.distribution={state:'observed',...fields};}catch(error){observation.distribution={state:'unknown',code:code(error)};}
+ for(const [name,filename]of [['apparmorRestrictUnprivilegedUserns','/proc/sys/kernel/apparmor_restrict_unprivileged_userns'],['unprivilegedUsernsClone','/proc/sys/kernel/unprivileged_userns_clone'],['maxUserNamespaces','/proc/sys/user/max_user_namespaces']]){try{const value=(await read(filename)).trim();observation.userNamespaces[name]=/^\d{1,16}$/.test(value)?{state:'observed',value}:{state:'unknown',code:'INVALID_VALUE'};}catch(error){observation.userNamespaces[name]={state:error?.code==='ENOENT'?'unavailable':'unknown',code:code(error)};}}
+ return observation;
+}
+
 export async function capture(){
  if(process.platform!=='linux'||process.getuid?.()===0)throw Error('NONROOT_LINUX_SANDBOX_HOST_REQUIRED');
  const runRoot=path.resolve('out/visitor-capture'),root=path.join(runRoot,'static'),out=path.join(runRoot,'evidence');
  const input=JSON.parse(await fs.readFile(path.join(out,'production-input.json'),'utf8'));
  if(input.sourceCommit!==process.env.CAPTURE_SOURCE)throw Error('SOURCE_INPUT_MISMATCH');await verifyStatic(root,input);
  const {stdout:packages}=await promisify(execFile)('dpkg-query',['--show','--showformat=${binary:Package}\t${Version}\n'],{maxBuffer:1024*1024,timeout:10000});await fs.writeFile(path.join(out,'cloud-os-packages.txt'),packages);
- const receipt={schemaVersion:1,startedAtUtc:new Date().toISOString(),route:'cloud-linux-playwright',sourceCommit:input.sourceCommit,producerCommit:process.env.GITHUB_SHA,artifactSha256:input.artifactSha256,node:{version:process.version,executableSha256:digest(await fs.readFile(process.execPath))},acceptanceEvaluated:false,viewport:{width:320,height:844,scale:1,evidenceKind:'emulated-mobile'},networkBoundary:'Only static loopback HTTP is served. External HTTP requests and all WebSockets are blocked. This is a browser routing boundary, not an operating-system network sandbox.',observations:[],captures:[],console:[],network:[],targets:[],closure:{attempted:false,observedProcessesGone:false,serverClosed:false,profileDisposition:'unobserved'}};
+ const receipt={schemaVersion:1,startedAtUtc:new Date().toISOString(),route:'cloud-linux-playwright',sourceCommit:input.sourceCommit,producerCommit:process.env.GITHUB_SHA,artifactSha256:input.artifactSha256,node:{version:process.version,executableSha256:digest(await fs.readFile(process.execPath))},host:await hostObservation(),acceptanceEvaluated:false,viewport:{width:320,height:844,scale:1,evidenceKind:'emulated-mobile'},networkBoundary:'Only static loopback HTTP is served. External HTTP requests and all WebSockets are blocked. This is a browser routing boundary, not an operating-system network sandbox.',observations:[],captures:[],console:[],network:[],targets:[],closure:{attempted:false,observedProcessesGone:false,serverClosed:false,profileDisposition:'unobserved'}};
  let server,browserServer,browser,context,page,profile,identities=[],treeTimer,treeFlight=Promise.resolve(),treeBusy=false;const treeReasons=new Set();const remember=tree=>{for(const reason of tree.reasons)treeReasons.add(reason);for(const row of tree.identities)if(!identities.some(old=>old.pid===row.pid&&old.startTicks===row.startTicks)){if(identities.length>=100){treeReasons.add('observed-tree-limit');continue;}identities.push(row);}};
  const save=()=>fs.writeFile(path.join(out,'capture-receipt.json'),JSON.stringify(receipt,null,2)+'\n');
  try{
