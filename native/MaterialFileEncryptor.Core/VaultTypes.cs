@@ -32,11 +32,14 @@ internal sealed class Entry
     public DateTimeOffset Modified { get; set; } = DateTimeOffset.UtcNow;
     public uint Attributes { get; set; }
     public Dictionary<long, RecordRef> Records { get; set; } = [];
+    public Dictionary<long, RecordRef> Overlays { get; set; } = [];
+    public int OverlaySize { get; set; }
+    public long? BaseLength { get; set; }
 }
-internal sealed record RecordRef(string Part, long Offset, int PlainLength, int RecordLength);
+internal sealed record RecordRef(string Part, long Offset, int PlainLength, int RecordLength, int Encoding = 0);
 internal sealed class Config
 {
-    public int Format { get; set; } = 2;
+    public int Format { get; set; } = 3;
     public string VaultId { get; set; } = Guid.NewGuid().ToString("N");
     public string Kind { get; set; } = "";
     public int Iterations { get; set; } = 600000;

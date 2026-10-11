@@ -31,7 +31,9 @@ static class Regression
             var data=RandomNumberGenerator.GetBytes(bytes); var original=Path.Combine(root,"input.bin"); File.WriteAllBytes(original,data);
             Call(controller,"Execute","importFiles",JsonSerializer.SerializeToElement(new { paths=new[]{original} }));
             var actual=new byte[bytes]; Assert(engine.ReadRange("input.bin",0,actual)==bytes && data.SequenceEqual(actual),"Imported bytes changed");
-            var expected=(bytes+(cap-36)-1)/(cap-36);
+            var payload = Math.Min(65536, cap - 36);
+            var perPart = (cap / (payload + 36)) * payload;
+            var expected=(bytes+perPart-1)/perPart;
             Assert(Directory.GetFiles(Path.Combine(root,"cache","parts"),"*.mfe").LongLength==expected,"Import rewrote encryption records repeatedly");
             Console.WriteLine($"PASS import exact bytes and record count at {cap} byte cap");
         }
@@ -231,9 +233,11 @@ static class Regression
             };
             object?[] overwriteArgs={remoteNode,remoteHandle,32U,true,0UL,null};
             Assert((int)Invoke("Overwrite",overwriteArgs)! == 0,"Prepared overwrite failed after part-cap change");
-            Assert(overwriteFetches>0,"Overwrite fixture did not retrieve missing old payload");
+            Assert(overwriteFetches==0,"Truncate-to-zero unnecessarily retrieved discarded payload");
             var overwritten=engine.GetInfo("remote.bin")!;
             Assert(overwritten.Length==0&&overwritten.Attributes==32U,"Overwrite did not atomically truncate and set attributes");
+            engine.SetLength("remote.bin", 4096);
+            Assert(Read(remoteNode!,remoteHandle!,4096).All(value=>value==0),"Truncated remote payload returned after growth");
             Console.WriteLine("PASS actual filesystem hydration allows status/cached callback, retains busy handle, retrieves only requested chunk, missing write unchanged, prepared overwrite after cap change");
         }
         finally

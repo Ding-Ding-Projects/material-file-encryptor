@@ -17,6 +17,7 @@
     "docs/features/storage/git-transport.md",
     "docs/features/storage/history-and-recycle-bin.md",
     "docs/features/storage/native-vault.md",
+    "docs/features/storage/transfer-lifecycle.md",
     "DESIGN.md"
   ],
   "categories": [
