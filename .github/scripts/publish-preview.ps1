@@ -71,7 +71,7 @@ Downloadable photo: ``$($imageEntry.file)`` (Classic Har Gow / 蝦餃), from the
 "@
 $notes | Set-Content "$output/release-notes.md" -Encoding utf8
 $assets+=@("$output/build-provenance.json")
-@{tag=$tag;sourceCommit=$source;isDraft=$false;isPrerelease=$false;latest='semantic-version';overwriteAllowed=$false;assets=@($assets | ForEach-Object {Split-Path $_ -Leaf})} | ConvertTo-Json -Depth 5 | Set-Content "$output/release-plan.json" -Encoding utf8
+@{tag=$tag;sourceCommit=$source;isDraft=$false;isPrerelease=$false;latest='false-until-verified-current-main';overwriteAllowed=$false;assets=@($assets | ForEach-Object {Split-Path $_ -Leaf})} | ConvertTo-Json -Depth 5 | Set-Content "$output/release-plan.json" -Encoding utf8
 if ($PrepareOnly) { return }
 $refs=(Gh @('api',"repos/$repo/git/matching-refs/tags/$tag")) | ConvertFrom-Json
 Assert (@($refs | Where-Object ref -eq "refs/tags/$tag").Count -eq 0) 'TAG_ALREADY_EXISTS'
@@ -79,7 +79,6 @@ $existing=@(Gh @('api','--paginate',"repos/$repo/releases?per_page=100",'--jq','
 Assert ($existing -notcontains $tag) 'RELEASE_ALREADY_EXISTS'
 $null=Gh (@('release','create',$tag,'--repo',$repo,'--target',$source,'--latest=false','--title',"Material File Encryptor $tag",'--notes-file',"$output/release-notes.md")+$assets)
 $releaseId=Gh @('api',"repos/$repo/releases/tags/$tag",'--jq','.id')
-$null=Gh @('api','--method','PATCH',"repos/$repo/releases/$releaseId",'-f','make_latest=legacy')
 $published=(Gh @('release','view',$tag,'--repo',$repo,'--json','isDraft,isPrerelease,assets,url')) | ConvertFrom-Json
 Assert (!$published.isDraft -and !$published.isPrerelease) 'PUBLICATION_INCOMPLETE'
 Assert (@($published.assets).Count -eq $assets.Count) 'PUBLISHED_ASSET_SET_MISMATCH'
@@ -90,7 +89,10 @@ $download=Join-Path $env:RUNNER_TEMP ('preview-readback-'+[Guid]::NewGuid().ToSt
 New-Item -ItemType Directory $download | Out-Null
 $null=Gh @('release','download',$tag,'--repo',$repo,'--dir',$download)
 foreach ($asset in $assets) { Assert ((Digest (Join-Path $download (Split-Path $asset -Leaf))) -eq (Digest $asset)) 'DOWNLOADED_ASSET_MISMATCH' }
-@{tag=$tag;sourceCommit=$source;url=$published.url;downloadHashesVerified=$true;verifiedAtUtc=[DateTime]::UtcNow.ToString('o')} | ConvertTo-Json | Set-Content "$output/publication-receipt.json" -Encoding utf8
+$channelJson = & node scripts/release-channel.mjs $repo $releaseId $env:GITHUB_REF $source
+Assert ($LASTEXITCODE -eq 0) 'RELEASE_CHANNEL_VERIFICATION_FAILED'
+$channel = $channelJson | ConvertFrom-Json
+@{tag=$tag;sourceCommit=$source;url=$published.url;downloadHashesVerified=$true;channel=$channel;verifiedAtUtc=[DateTime]::UtcNow.ToString('o')} | ConvertTo-Json -Depth 5 | Set-Content "$output/publication-receipt.json" -Encoding utf8
 
 $workflowCompletedUtc=[DateTimeOffset]::UtcNow
 $workflowDuration=$workflowCompletedUtc-$workflowStartedUtc

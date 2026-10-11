@@ -26,9 +26,13 @@ async function fixture(t, options = {}) {
   provenance.assets.push({ name: 'RELEASES', bytes: Buffer.byteLength(releasesText), sha256: createHash('sha256').update(releasesText).digest('hex') });
   release.assets.find(a => a.name === 'RELEASES').size = Buffer.byteLength(releasesText);
   const ref = { ref: `refs/tags/${tag}`, object: { type: 'commit', sha } };
+  const main = { ref: 'refs/heads/main', object: { type: 'commit', sha } };
+  const proof = { status: 'identical', ahead_by: 0, behind_by: 0, total_commits: 0, base_commit: { sha }, merge_base_commit: { sha }, commits: [] };
   const routes = new Map([
     [`https://api.github.com/repos/${UPDATE_PROJECT}/releases/latest`, () => JSON.stringify(release)],
     [`https://api.github.com/repos/${UPDATE_PROJECT}/git/ref/tags/${tag}`, () => JSON.stringify(ref)],
+    [`https://api.github.com/repos/${UPDATE_PROJECT}/git/ref/heads/main`, () => JSON.stringify(main)],
+    [`https://api.github.com/repos/${UPDATE_PROJECT}/compare/${sha}...${sha}?per_page=1&page=2`, () => JSON.stringify(proof)],
     [base + 'build-provenance.json', () => JSON.stringify(provenance)],
     [base + 'RELEASES', () => releasesText],
     [base + name, () => bytes],
@@ -44,10 +48,35 @@ async function fixture(t, options = {}) {
     isActiveWork: () => active, acquireInstallLease: () => { leases++; return () => leases--; }, prepareRestart: async () => {},
     fetch: async (url, init) => { requested.push(url); assert.equal(init.redirect, 'manual'); assert.equal(init.credentials, 'omit'); assert.ok(routes.has(url), url); return new Response(routes.get(url)()); }, ...options };
   const service = createUpdateService(config); t.after(() => service.dispose());
-  return { service, root, name, bytes, release, provenance, ref, routes, requested, native, calls, dialogs, config,
+  return { service, root, name, bytes, release, provenance, ref, main, proof, routes, requested, native, calls, dialogs, config,
     setActive: value => active = value, leases: () => leases,
     stageNative: () => fs.writeFile(path.join(root, 'packages', name), bytes) };
 }
+
+for (const kind of ['behind', 'diverged', 'missing', 'files', 'wrong-base']) test(`default channel rejects ${kind} proof before package availability or transfer`, async t => {
+  const f = await fixture(t);
+  if (kind === 'missing') delete f.proof.merge_base_commit;
+  else if (kind === 'files') f.proof.files = [];
+  else if (kind === 'wrong-base') f.proof.base_commit.sha = 'b'.repeat(40);
+  else { f.proof.status = kind; f.proof.behind_by = 1; }
+  assert.equal((await f.service.check()).reason, 'UPDATE_SOURCE_NOT_ON_MAIN');
+  await f.service.download();
+  assert.ok(!f.requested.some(url => url.endsWith('.nupkg') || url.endsWith('/RELEASES')));
+  assert.deepEqual(f.calls, []);
+});
+
+test('immutable main comparison admits an older main ancestor without reading file patches', async t => {
+  const f = await fixture(t); const head = 'c'.repeat(40);
+  f.main.object.sha = head; Object.assign(f.proof, { status: 'ahead', ahead_by: 5, total_commits: 5 });
+  f.routes.set(`https://api.github.com/repos/${UPDATE_PROJECT}/compare/${f.provenance.sourceCommit}...${head}?per_page=1&page=2`, () => JSON.stringify(f.proof));
+  assert.equal((await f.service.check()).state, 'available');
+});
+
+test('unavailable main proof fails closed before package transfer', async t => {
+  const f = await fixture(t); f.routes.set(`https://api.github.com/repos/${UPDATE_PROJECT}/git/ref/heads/main`, () => { throw new Error('offline'); });
+  assert.equal((await f.service.check()).reason, 'UPDATE_OPERATION_FAILED');
+  assert.ok(!f.requested.some(url => url.endsWith('.nupkg')));
+});
 test('unsupported and unpackaged contexts never fetch or invoke native updater', async t => {
   const f = await fixture(t, { platform: 'linux' });
   assert.equal((await f.service.check()).state, 'unavailable'); assert.deepEqual(f.requested, []); assert.deepEqual(f.calls, []);

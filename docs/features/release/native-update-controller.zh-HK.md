@@ -4,6 +4,16 @@
 
 `src/main/update-service.js` 實作主程序控制器，並有桌面來源整合。開發呢個模組期間冇測試已安裝應用程式、安裝程式、版本發佈或作業系統重新啟動。原生接納仍未驗證。
 
+<a id="default-release-channel"></a>
+
+## 預設發佈渠道
+
+每條分支都可以發佈正常、可下載嘅版本。發佈時先設定 `latest=false`。只有 `refs/heads/main` 嘅工作流程，先可以喺已發佈資產、標籤身份同下載雜湊全部驗證通過之後提升版本。提升之前，`scripts/release-channel.mjs` 會即時讀取目前 main，要求其來源提交同發佈來源完全相同。已被取代嘅 main 執行或其他分支會保留原本 latest。發佈紀錄會記低渠道決定，同埋可取得時已檢查嘅 main 來源。GitHub 冇提供條件式 compare-and-swap 提升 API，所以呢個檢查唔會聲稱可以同時涵蓋 main 推進嘅原子交易。
+
+更新控制器會另外將目前 main 固定成不可變嘅提交，再比較發佈來源。只有完全相同或屬於固定 main 祖先嘅來源先符合資格。即使語意版本較高，未合併或已分歧分支嘅來源都會喺下載更新清單或套件之前被拒絕。缺失、不一致、過大或無法取得嘅祖先證明都會停止更新。比較要求使用 `per_page=1&page=2`，因為 GitHub 只會喺第一頁傳回檔案差異；原有 1 MiB 中繼資料上限維持不變。詳見[官方比較 API 合約](https://docs.github.com/en/rest/commits/commits#compare-two-commits)。
+
+針對性測試涵蓋其他分支唔會呼叫提升服務、過時執行、目前 main 提升、證明不可用，以及實際控制器喺提供更新或下載套件之前拒絕不合資格來源。呢啲來源測試唔代表已驗證安裝後自動更新或重新啟動。
+
 <a id="api-and-host-integration"></a>
 
 ## API 與主機整合
