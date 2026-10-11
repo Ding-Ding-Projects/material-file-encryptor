@@ -45,7 +45,11 @@ export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl
   let state = { state: 'unavailable', reason: 'NOT_INITIALIZED', enabled: true,
     unsigned: true, rollbackSupported: false, nativeAcceptance: 'unverified' };
   let disposed = false, timer, pending, operation, releaseLease, candidate, staged;
-  let nativeCleanup, cancelNativeObservation;
+  let nativeCleanup, cancelNativeObservation, preparationTask;
+  let recoveryRequired = false;
+  // Late native errors must not become uncaught EventEmitter errors during teardown.
+  const nativeErrorSink = () => {};
+  autoUpdater?.on('error', nativeErrorSink);
   const status = () => structuredClone(state);
   const publish = (patch) => { state = { ...state, ...patch }; events.emit('status', status()); return status(); };
   const failure = (error) => publish({ state: 'failed', reason: /^[A-Z_]+$/.test(error?.message) ? error.message : 'UPDATE_OPERATION_FAILED' });
@@ -150,7 +154,7 @@ export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl
     return pending;
   }
   async function check() {
-    if (!root || disposed || ['ready', 'confirming', 'installing', 'restart-requested', 'downloading'].includes(state.state)) return status();
+    if (!root || disposed || ['ready', 'confirming', 'installing', 'preparing-restart', 'manual-restart-required', 'restart-requested', 'downloading'].includes(state.state)) return status();
     return transaction(async signal => {
       publish({ state: 'checking', reason: null });
       const updater = await fs.lstat(path.win32.join(root, 'Update.exe')).catch(() => null);
@@ -255,8 +259,8 @@ export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl
       publish({ state: 'installing', reason: null }); cancelSchedule();
       // Native Squirrel can apply at next launch, so it starts only after consent.
       await new Promise((resolve, reject) => {
-        let finished = false, verifying = false;
-        const finish = error => { if (finished) return; finished = true; nativeCleanup(); cancelNativeObservation = undefined; error ? reject(error) : resolve(); };
+        let finished = false, verifying = false, committed = false;
+        const finish = error => { if (finished) return; finished = true; nativeCleanup?.(); cancelNativeObservation = undefined; error ? reject(error) : resolve(); };
         cancelNativeObservation = () => finish(new Error('NATIVE_UPDATE_OBSERVATION_CANCELLED'));
         const onError = () => finish(new Error('NATIVE_UPDATE_FAILED'));
         const onNone = () => finish(new Error('NATIVE_UPDATE_NOT_AVAILABLE'));
@@ -267,12 +271,27 @@ export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl
             await hashFile(path.win32.join(root, 'packages', candidate.name), candidate);
             assert(!disposed && !(await isActiveWork()), 'ACTIVE_WORK');
             if (finished || disposed) return;
-            await prepareRestart();
-            if (finished || disposed) return;
-            autoUpdater.quitAndInstall(); finish();
+            // From this point teardown cannot be abandoned by observation or disposal.
+            committed = true;
+            nativeCleanup(); cancelNativeObservation = undefined;
+            publish({ state: 'preparing-restart', reason: null, admissionBlocked: true });
+            preparationTask = (async () => {
+              try {
+                await prepareRestart();
+                autoUpdater.quitAndInstall();
+              } catch (error) {
+                recoveryRequired = true;
+                publish({ state: 'manual-restart-required',
+                  reason: /^[A-Z_]+$/.test(error?.message) ? error.message : 'RESTART_PREPARATION_FAILED',
+                  admissionBlocked: true, recoveryRequired: true });
+                throw error;
+              }
+            })();
+            await preparationTask;
+            finish();
           } catch (error) { finish(error); }
         };
-        const timeout = setTimer(() => finish(new Error('NATIVE_UPDATE_TIMED_OUT')), nativeTimeoutMs); timeout?.unref?.();
+        const timeout = setTimer(() => { if (!committed) finish(new Error('NATIVE_UPDATE_TIMED_OUT')); }, nativeTimeoutMs); timeout?.unref?.();
         nativeCleanup = () => {
           clearTimer(timeout); autoUpdater.removeListener('error', onError);
           autoUpdater.removeListener('update-not-available', onNone); autoUpdater.removeListener('update-downloaded', onDownloaded);
@@ -283,14 +302,21 @@ export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl
         catch { finish(new Error('NATIVE_UPDATE_FAILED')); }
       });
       return publish({ state: 'restart-requested', reason: null });
-    } catch (error) { if (!disposed) failure(error); return status(); }
-    finally { releaseLease?.(); releaseLease = undefined; }
+    } catch (error) { if (!disposed && !recoveryRequired) failure(error); return status(); }
+    finally { if (!recoveryRequired) { releaseLease?.(); releaseLease = undefined; } }
   }
-  function dispose() {
+  async function dispose({ shutdown = false } = {}) {
     disposed = true; cancelSchedule(); operation?.abort();
     // Native Squirrel exposes no cancellation or rollback API once started.
-    publish({ state: 'disposed', reason: null });
-    cancelNativeObservation?.();
+    if (preparationTask) {
+      await preparationTask.catch(() => {});
+      if (recoveryRequired && shutdown) { releaseLease?.(); releaseLease = undefined; }
+    } else {
+      publish({ state: 'disposed', reason: null });
+      cancelNativeObservation?.();
+    }
+    autoUpdater?.removeListener('error', nativeErrorSink);
+    return status();
   }
   if (root) { publish({ state: 'idle', reason: null }); schedule(argv.includes('--squirrel-firstrun') ? 10_000 : 0); }
   else publish({ state: 'unavailable', reason: 'INSTALLED_WINDOWS_SQUIRREL_REQUIRED' });

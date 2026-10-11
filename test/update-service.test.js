@@ -182,10 +182,13 @@ test('restart preparation is awaited after final idle check and before native re
 for (const [label, prepareRestart, reason] of [
   ['missing', undefined, 'RESTART_PREPARATION_REQUIRED'],
   ['failed', async () => { throw new Error('DURABILITY_CHECK_FAILED'); }, 'DURABILITY_CHECK_FAILED'],
-]) test(`${label} restart preparation prevents native restart and releases lease`, async t => {
+]) test(`${label} restart preparation prevents native restart and retains recovery lease`, async t => {
   const f = await fixture(t, { prepareRestart }); await f.service.check(); await f.service.download(); await f.stageNative();
   assert.equal((await f.service.installWhenSafe()).reason, reason);
-  assert.equal(f.calls.some(call => call[0] === 'install'), false); assert.equal(f.leases(), 0);
+  assert.equal(f.service.status().state, 'manual-restart-required');
+  assert.equal(f.calls.some(call => call[0] === 'install'), false); assert.equal(f.leases(), 1);
+  await f.service.dispose(); assert.equal(f.leases(), 1);
+  await f.service.dispose({ shutdown: true }); assert.equal(f.leases(), 0);
 });
 test('invalid native cache prevents restart preparation', async t => {
   let prepared = false;
@@ -248,4 +251,52 @@ test('offline fresh check cannot install from cached ready metadata', async t =>
   f.config.fetch = async () => { throw new Error('offline'); };
   const next = await reopen(t, f); assert.equal((await next.check()).state, 'failed');
   await next.installWhenSafe(); assert.deepEqual(f.calls, []);
+});
+for (const interruption of ['timeout', 'native-error', 'dispose']) test(`held restart preparation survives ${interruption} without releasing admission`, async t => {
+  const timers = []; let completePreparation;
+  const f = await fixture(t, {
+    prepareRestart: () => new Promise(resolve => { completePreparation = resolve; }),
+    setTimer: (fn, delay) => { const timer = { fn, delay, unref() {} }; timers.push(timer); return timer; }, clearTimer: () => {},
+  });
+  await f.service.check(); await f.service.download(); await f.stageNative();
+  const install = f.service.installWhenSafe();
+  while (!completePreparation) await new Promise(resolve => setImmediate(resolve));
+  assert.equal(f.service.status().state, 'preparing-restart'); assert.equal(f.leases(), 1);
+  assert.equal(f.native.listenerCount('update-downloaded'), 0);
+  let disposal, disposed = false;
+  if (interruption === 'timeout') timers.find(timer => timer.delay === 600_000).fn();
+  if (interruption === 'native-error') f.native.emit('error', new Error('late native error'));
+  if (interruption === 'dispose') disposal = f.service.dispose().then(() => { disposed = true; });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(f.service.status().state, 'preparing-restart'); assert.equal(f.leases(), 1);
+  assert.equal(disposed, false); assert.equal(f.calls.some(call => call[0] === 'install'), false);
+  completePreparation();
+  assert.equal((await install).state, 'restart-requested'); await disposal;
+  assert.equal(f.calls.filter(call => call[0] === 'install').length, 1); assert.equal(f.leases(), 0);
+});
+test('partial host closure requires manual recovery and never silently reopens admission', async t => {
+  let rejectPreparation, hostPartiallyClosed = false;
+  const f = await fixture(t, { prepareRestart: () => {
+    hostPartiallyClosed = true;
+    return new Promise((_resolve, reject) => { rejectPreparation = reject; });
+  } });
+  await f.service.check(); await f.service.download(); await f.stageNative();
+  const install = f.service.installWhenSafe();
+  while (!rejectPreparation) await new Promise(resolve => setImmediate(resolve));
+  const disposal = f.service.dispose();
+  rejectPreparation(new Error('HOST_PARTIALLY_CLOSED'));
+  const result = await install; await disposal;
+  assert.equal(hostPartiallyClosed, true); assert.equal(result.state, 'manual-restart-required');
+  assert.equal(result.reason, 'HOST_PARTIALLY_CLOSED'); assert.equal(result.admissionBlocked, true);
+  assert.equal(f.leases(), 1); assert.equal(f.calls.some(call => call[0] === 'install'), false);
+  assert.equal((await f.service.check()).state, 'manual-restart-required');
+  await f.service.dispose({ shutdown: true }); assert.equal(f.leases(), 0);
+});
+test('native restart exception after preparation retains recovery admission', async t => {
+  const f = await fixture(t); await f.service.check(); await f.service.download(); await f.stageNative();
+  f.native.quitAndInstall = () => { throw new Error('NATIVE_RESTART_REQUEST_FAILED'); };
+  const result = await f.service.installWhenSafe();
+  assert.equal(result.state, 'manual-restart-required'); assert.equal(result.reason, 'NATIVE_RESTART_REQUEST_FAILED');
+  assert.equal((await f.service.check()).state, 'manual-restart-required'); assert.equal(f.leases(), 1);
+  await f.service.dispose({ shutdown: true }); assert.equal(f.leases(), 0);
 });
