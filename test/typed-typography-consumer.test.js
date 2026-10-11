@@ -2,13 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createAccessDocument} from './helpers/local-access-dom.js';
 import {mountTypographyInspector,TYPOGRAPHY_FIELDS,validateTypographyValue,assertTypographyRegistration} from '../src/renderer/features/personalization/typography-inspector.js';
-function fixture(){
+function fixture({computed={}}={}){
  const doc=createAccessDocument(),create=doc.createElement.bind(doc),definitions=new Map(),Base=create('span').constructor;
  class HTMLElement extends Base{constructor(){super(doc,'mfe-control-guidance');}attachShadow(){this.shadowRoot=create('section');}}
  doc.adoptedStyleSheets=[];doc.documentElement={lang:'en'};doc.defaultView={HTMLElement,Event,CSSStyleSheet:class{replaceSync(){}},customElements:{get:tag=>definitions.get(tag),define:(tag,C)=>definitions.set(tag,C)}};
  doc.createElement=tag=>{const n=tag==='mfe-control-guidance'?new (definitions.get(tag))():create(tag);n.style={};n.before=function(node){node.parentNode=this.parentNode;this.parentNode.childNodes.splice(this.parentNode.childNodes.indexOf(this),0,node);};return n;};
  const host=create('section');doc.body.append(host);let current={fontSize:'16px',fontWeight:'400'},locked=false,writes=0,adapter=patch=>{for(const [key,value]of Object.entries(patch))if(value===undefined)delete current[key];else current[key]=value;writes++;return true;};
- const editor=mountTypographyInspector(host,{getCurrent:()=>current,mutate:patch=>adapter(patch),disabled:()=>locked,supports:()=>true});
+ const editor=mountTypographyInspector(host,{getCurrent:()=>current,getComputedValue:key=>computed[key],mutate:patch=>adapter(patch),disabled:()=>locked,supports:()=>true});
  return{doc,host,editor,field:key=>host.querySelectorAll('md-outlined-text-field').find(n=>n.label===TYPOGRAPHY_FIELDS.find(row=>row[0]===key)[1]),get current(){return current;},get writes(){return writes;},replace:value=>current=value,lock:()=>locked=true,setAdapter:fn=>adapter=fn};
 }
 test('typed parsers reject malformed, nonfinite, out of range and executable values',()=>{
@@ -47,3 +47,5 @@ test('actual appearance integration saves one typed action and rolls rejected st
 test('Material font picker guidance validates the real axis draft and applies the original consumer once',async()=>{
  const {mountFontPicker}=await import('../src/renderer/features/personalization/font-picker.js');const f=fixture();f.editor.destroy();const face={id:'typed-face',family:'Fixture',style:'Regular',axes:[{tag:'wght',name:'Weight',min:100,default:400,max:900}],instances:[]};let writes=0;const picker=mountFontPicker(f.host,{catalog:{faces:[face]},mutate:()=>writes++});try{await picker.applyFace(face.id);assert.equal(writes,1);const axis=()=>f.host.querySelectorAll('md-outlined-text-field').find(node=>node.label==='Weight (wght)');axis().value='901';let guide=axis().parentNode.children[axis().parentNode.children.indexOf(axis())-1],panel=guide.shadowRoot.children.at(-1);await guide.shadowRoot.children[1].click();for(let n=0;n<2;n++)await panel.querySelector('md-filled-button').click();assert.equal(writes,1);assert.equal(axis().error,true);axis().value='700';await axis().dispatchEvent({type:'change'});const apply=f.host.querySelectorAll('md-text-button').find(node=>node.textContent==='Apply axis values');await apply.click();assert.equal(writes,2);assert.equal(picker.getSelection().axes.wght,700);assert.equal(f.host.querySelectorAll('input').length,0);assert.equal(f.host.querySelectorAll('button').length,0);}finally{picker.destroy();}
 });
+
+for(const [kind,value,expected]of [['inherited','32px','33px'],['inherited','1.5em','1.6em'],['inherited','2rem','2.1rem'],['explicit','1.5em','1.6em'],['explicit','2rem','2.1rem']])test('actual font-size step preserves '+kind+' '+value,async()=>{const f=fixture({computed:{fontSize:value}});try{f.replace(kind==='inherited'?{}:{fontSize:value});f.editor.refresh();assert.equal(f.field('fontSize').value,value);const step=f.host.querySelectorAll('md-text-button').find(node=>node.textContent==='Increase font size');await step.click();assert.equal(f.current.fontSize,expected);assert.equal(f.field('fontSize').value,expected);assert.equal(f.writes,1);}finally{f.editor.destroy();}});
