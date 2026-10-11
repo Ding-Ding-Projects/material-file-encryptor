@@ -60,6 +60,11 @@ test('cancelled validation cannot repaint a newly opened guidance invocation',as
  const pending=new Promise(resolve=>release=resolve);const module=mountControlGuidance(target,{descriptor:settingsGuidance('Reset'),validate:()=>pending,run:()=>runs++});module.open();const panel=module.host.shadowRoot.children.at(-1);panel.querySelector('md-filled-button').click();
  module.open();const heading=panel.children[0].textContent;release();await new Promise(resolve=>setTimeout(resolve,0));assert.equal(panel.children[0].textContent,heading);assert.equal(panel.children[2].textContent,'');assert.equal(runs,0);module.destroy();
 });
+test('Back retains focus and disposed validation cannot focus a same-id replacement',async()=>{
+ const {doc,root}=dom(),target=doc.createElement('button');target.id='shared-target';root.append(target);doc.getElementById=id=>root.children.find(node=>node.id===id);
+ const module=mountControlGuidance(target,{descriptor:settingsGuidance('Reset')});module.open();const panel=module.host.shadowRoot.children.at(-1);panel.querySelector('md-filled-button').click();await new Promise(resolve=>setTimeout(resolve,0));const back=panel.children[3];back.focus();back.click();assert.notEqual(doc.activeElement,back);assert.equal(doc.activeElement,panel.querySelector('md-filled-button'));module.destroy();
+ let release;const pending=new Promise(resolve=>release=resolve);const old=mountControlGuidance(target,{descriptor:settingsGuidance('Reset'),validate:()=>pending});old.open();old.host.shadowRoot.children.at(-1).querySelector('md-filled-button').click();old.destroy();target.remove();const replacement=doc.createElement('button');replacement.id='shared-target';root.append(replacement);const fresh=mountControlGuidance(replacement,{descriptor:settingsGuidance('Reset')});fresh.open();const expected=doc.activeElement;release();await new Promise(resolve=>setTimeout(resolve,0));assert.equal(doc.activeElement,expected);assert.notEqual(doc.activeElement,replacement);fresh.destroy();
+});
 
 test('actual personalization mounts every settings tab including all weekday guidance targets',async()=>{
  const {doc,root}=dom(),prototype=Object.getPrototypeOf(root),styles=new WeakMap();
