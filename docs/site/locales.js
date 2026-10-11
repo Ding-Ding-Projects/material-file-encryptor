@@ -193,6 +193,11 @@ export const cantonese = Object.freeze({
 'Documentation':'文件',
 'FAQ':'常見問題',
 'Website preferences':'網站偏好設定',
+'English playfulness':'英文趣味程度',
+'Cantonese playfulness':'廣東話趣味程度',
+'Reset English playfulness':'重設英文趣味程度',
+'Reset Cantonese playfulness':'重設廣東話趣味程度',
+'Both languages default to level 5. Playfulness styles all messages, including errors and warnings, without changing facts. Reset either language at any time.':'兩種語言預設為第 5 級。趣味程度會調整所有訊息，包括錯誤同警告，但唔會改變事實。你隨時可以重設任何一種語言。',
 'These settings change this website in your browser.':'呢啲設定只會改變你瀏覽器入面嘅網站。',
 'Appearance':'外觀',
 'Use device setting':'跟隨裝置設定',
@@ -265,6 +270,11 @@ export const cantonese = Object.freeze({
 'Close navigation':'關閉導覽',
 'Main navigation':'主要導覽',
 'Website preferences':'網站偏好設定',
+'English playfulness':'英文趣味程度',
+'Cantonese playfulness':'廣東話趣味程度',
+'Reset English playfulness':'重設英文趣味程度',
+'Reset Cantonese playfulness':'重設廣東話趣味程度',
+'Both languages default to level 5. Playfulness styles all messages, including errors and warnings, without changing facts. Reset either language at any time.':'兩種語言預設為第 5 級。趣味程度會調整所有訊息，包括錯誤同警告，但唔會改變事實。你隨時可以重設任何一種語言。',
 'Conceptual file flow':'檔案流程概念圖',
 'Project principles':'項目原則',
 'Open the conceptual drive workflow diagram at full size':'以原尺寸開啟磁碟流程概念圖',
@@ -295,12 +305,12 @@ export function localized(text, language = 'en') {
   return language === 'yue' ? translated : `${text} / ${translated}`;
 }
 export function loadMessagePreferences(storage) {
-  const result = { language: 'en', emoji: false, successTone: 1, searchTone: 1 };
+  const result = { language: 'en', emoji: false, funnyEnglish: 5, funnyCantonese: 5 };
   try {
     const value = JSON.parse(storage.getItem('material-file-encryptor.site.messages') || '{}');
     if (['en', 'yue', 'bilingual'].includes(value.language)) result.language = value.language;
     if (typeof value.emoji === 'boolean') result.emoji = value.emoji;
-    for (const key of ['successTone', 'searchTone']) if (Number.isInteger(value[key]) && value[key] >= 1 && value[key] <= 5) result[key] = value[key];
+    for (const key of ['funnyEnglish', 'funnyCantonese']) if (Number.isInteger(value[key]) && value[key] >= 1 && value[key] <= 5) result[key] = value[key];
   } catch { /* Missing or malformed local preferences leave safe defaults. */ }
   return result;
 }
@@ -320,4 +330,11 @@ export function messagePair(kind, amount = 1, count = 0) {
     ['No guide has answered that search. Give “offline” or “parts” a turn.', '未有指南回應呢個搜尋。俾「離線」或者「分割」試下。'],
     ['The guides are playing hide-and-seek. Try “password”, “offline”, or “parts”.', '指南玩緊捉迷藏。試下「密碼」、「離線」或者「分割」。'],
   ][tier];
+}
+
+export function effectiveMessagePair(settings,kind,count=0) {
+ const serious=settings.school?.enabled===true;
+ const [en]=messagePair(kind,serious?1:settings.funnyEnglish,count);
+ const [,yue]=messagePair(kind,serious?1:settings.funnyCantonese,count);
+ return [en,yue];
 }

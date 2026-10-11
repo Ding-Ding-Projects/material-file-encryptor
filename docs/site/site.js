@@ -1,6 +1,7 @@
+import { mountSiteFoundation } from './site-foundation.js';
 import { parseVocabulary, replaceVocabulary, filterGuides, updateGalleryGroups } from './preferences.js';
 import { createVocabularyStore, emptyVocabulary } from './personal-vocabulary.js';
-import { cantonese, localized, loadMessagePreferences, messagePair } from './locales.js';
+import { cantonese, localized, loadMessagePreferences, effectiveMessagePair } from './locales.js';
 import { previewRelease, renderReleaseDownload } from './release.js';
 
 renderReleaseDownload(document, previewRelease);
@@ -57,15 +58,17 @@ const emojiToggle = document.querySelector('#emoji-toggle');
 const successTone = document.querySelector('#success-tone');
 const searchTone = document.querySelector('#search-tone');
 
-const pair = (en, yue) => preferences.language === 'yue' ? yue : preferences.language === 'bilingual' ? `${en} / ${yue}` : en;
+const pair = (en, yue) => (!schoolEnabled && preferences.language === 'yue') ? yue : (!schoolEnabled && preferences.language === 'bilingual') ? `${en} / ${yue}` : en;
 function friendly(kind, count = 0) {
-  const [en, yue] = messagePair(kind, preferences[kind === 'success' ? 'successTone' : 'searchTone'], count);
-  return `${preferences.emoji ? kind === 'success' ? '✅ ' : '🔎 ' : ''}${pair(en, yue)}`;
+  const [en,yue] = effectiveMessagePair({...preferences,school:{enabled:schoolEnabled}},kind,count);
+  return `${(!schoolEnabled && preferences.emoji) ? kind === 'success' ? '✅ ' : '🔎 ' : ''}${pair(en, yue)}`;
 }
 function savePreferences() {
   try { localStorage.setItem('material-file-encryptor.site.messages', JSON.stringify(preferences)); } catch { /* Preferences remain usable in this tab. */ }
 }
+let enhancedSearch = null;
 function updateSearch() {
+  if (enhancedSearch) { if(search.value!==enhancedSearch.query)enhancedSearch.setQuery(search.value); enhancedSearch.refresh(); return; }
   const guides = guideElements.map(element => ({ id: element.id, text: `${guideEnglish.get(element)} ${element.textContent}` }));
   const matched = new Set(filterGuides(guides, search.value).map(guide => guide.id));
   guideElements.forEach(element => { element.hidden = !matched.has(element.id); });
@@ -78,10 +81,10 @@ function updateSearch() {
     : pair(`${guides.length} entries. Search stays in your browser.`, `${guides.length} 項內容。搜尋只喺你嘅瀏覽器進行。`);
 }
 function updateMessages() {
-  successTone.style.setProperty('--range-progress', `${(preferences.successTone - 1) * 25}%`);
-  searchTone.style.setProperty('--range-progress', `${(preferences.searchTone - 1) * 25}%`);
-  document.querySelector('#success-tone-value').textContent = `${preferences.successTone} / 5`;
-  document.querySelector('#search-tone-value').textContent = `${preferences.searchTone} / 5`;
+  successTone.style.setProperty('--range-progress', `${(preferences.funnyEnglish - 1) * 25}%`);
+  searchTone.style.setProperty('--range-progress', `${(preferences.funnyCantonese - 1) * 25}%`);
+  document.querySelector('#success-tone-value').textContent = `${preferences.funnyEnglish} / 5`;
+  document.querySelector('#search-tone-value').textContent = `${preferences.funnyCantonese} / 5`;
   document.querySelector('#success-preview').textContent = pair('Example message: ', '訊息示例：') + friendly('success', 2);
   document.querySelector('#search-preview').textContent = pair('Example message: ', '訊息示例：') + friendly('search');
   vocabularyStatus.dataset.error = String(vocabularyState.kind === 'error');
@@ -89,18 +92,19 @@ function updateMessages() {
     : localized(vocabularyState.kind === 'error' ? vocabularyState.message : 'Default wording is active.', preferences.language);
   updateSearch();
 }
+let schoolEnabled = false;
 function renderCopy() {
-  document.documentElement.lang = preferences.language === 'yue' ? 'yue-Hant-HK' : 'en';
-  document.documentElement.dataset.language = preferences.language;
-  document.title = localized(originalTitle, preferences.language);
+  document.documentElement.lang = (!schoolEnabled && preferences.language === 'yue') ? 'yue-Hant-HK' : 'en';
+  document.documentElement.dataset.language = schoolEnabled?'en':preferences.language;
+  document.title = localized(originalTitle, schoolEnabled?'en':preferences.language);
   for (const record of textRecords) {
     record.secondary?.remove(); record.secondary = null;
     const translated = cantonese[record.key];
     const replace = text => record.vocabulary ? replaceVocabulary(text, vocabulary) : text;
     const leading = record.original.match(/^\s*/u)[0];
     const trailing = record.original.match(/\s*$/u)[0];
-    record.node.textContent = leading + replace(preferences.language === 'yue' && translated ? translated : record.key) + trailing;
-    if (preferences.language === 'bilingual' && translated) {
+    record.node.textContent = leading + replace((!schoolEnabled && preferences.language === 'yue') && translated ? translated : record.key) + trailing;
+    if ((!schoolEnabled && preferences.language === 'bilingual') && translated) {
       if (record.node.parentElement.tagName === 'OPTION') record.node.textContent = localized(record.key, 'bilingual');
       else {
         const translation = document.createElement('span'); translation.lang = 'yue-Hant-HK'; translation.className = 'translation';
@@ -108,10 +112,10 @@ function renderCopy() {
       }
     }
   }
-  for (const record of attributes) record.element.setAttribute(record.name, localized(record.original, preferences.language));
+  for (const record of attributes) record.element.setAttribute(record.name, localized(record.original, schoolEnabled?'en':preferences.language));
   menuToggle.setAttribute('aria-label', localized(menu.classList.contains('is-open') ? 'Close navigation' : 'Open navigation', preferences.language));
   updateMessages();
-  window.dispatchEvent(new CustomEvent('site-language', { detail: { language: preferences.language } }));
+  window.dispatchEvent(new CustomEvent('site-language', { detail: { language: schoolEnabled ? 'en' : preferences.language } }));
 }
 function closeMenu() {
   menu.classList.remove('is-open'); menuToggle.setAttribute('aria-expanded', 'false');
@@ -136,10 +140,10 @@ function applyTheme(theme) {
 try { applyTheme(localStorage.getItem('material-file-encryptor.site.theme') || 'system'); } catch { applyTheme('system'); }
 themeSelect.addEventListener('change', () => { applyTheme(themeSelect.value); try { localStorage.setItem('material-file-encryptor.site.theme', themeSelect.value); } catch {} });
 languageSelect.value = preferences.language; emojiToggle.checked = preferences.emoji;
-successTone.value = preferences.successTone; searchTone.value = preferences.searchTone;
+successTone.value = preferences.funnyEnglish; searchTone.value = preferences.funnyCantonese;
 languageSelect.addEventListener('change', () => { preferences.language = languageSelect.value; savePreferences(); renderCopy(); });
 emojiToggle.addEventListener('change', () => { preferences.emoji = emojiToggle.checked; savePreferences(); updateMessages(); });
-for (const [input, key] of [[successTone, 'successTone'], [searchTone, 'searchTone']]) input.addEventListener('input', () => { preferences[key] = Number(input.value); savePreferences(); updateMessages(); });
+for (const [input, key] of [[successTone, 'funnyEnglish'], [searchTone, 'funnyCantonese']]) input.addEventListener('input', () => { preferences[key] = Number(input.value); savePreferences(); updateMessages(); });
 search.addEventListener('input', updateSearch);
 searchClear.addEventListener('click', () => { search.value = ''; updateSearch(); search.focus(); });
 function revealHash() {
@@ -159,6 +163,8 @@ vocabularyFile.addEventListener('change', async () => {
   } catch (error) { if (version !== uploadVersion) return; vocabularyState = { kind: 'error', message: error.message }; updateMessages(); }
 });
 document.querySelector('#vocabulary-reset').addEventListener('click', () => { uploadVersion++; pendingVocabularySource = null; vocabulary = emptyVocabulary(); vocabularyFile.value = ''; let persisted = true; try { localStorage.removeItem(vocabularyStorageKey); } catch { persisted = false; } vocabularyStore?.clear(); vocabularyState = persisted ? { kind: 'default' } : { kind: 'error', message: 'Original wording restored for this session. Stored wording could not be removed.' }; renderCopy(); });
+const foundation = mountSiteFoundation({document, storage:localStorage, getPreferences:()=>preferences, onPreferences:()=>dialog.showModal(), onSearch:control=>{enhancedSearch=control;}, onSchool:enabled=>{schoolEnabled=enabled; if(enabled){privateWordingAvailable=false;vocabulary=emptyVocabulary();} renderCopy();}});
+for(const [id,key] of [['english-tone-reset','funnyEnglish'],['cantonese-tone-reset','funnyCantonese']]) document.getElementById(id)?.addEventListener('click',()=>{preferences[key]=5;(key==='funnyEnglish'?successTone:searchTone).value=5;savePreferences();updateMessages();});
 renderCopy(); revealHash();
 
 // Native scrolling stays intact; this only reveals the themed thumb briefly.

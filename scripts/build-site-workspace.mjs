@@ -22,7 +22,7 @@ export async function stageWorkspace(root=process.cwd(),destination=path.join(ro
   const target=path.join(cache,relative);await fs.mkdir(path.dirname(target),{recursive:true});await fs.writeFile(target,bytes);
  }
  await clone('src/renderer');await clone('src/shared');
- for(const file of ['workspace.js','local-adapter.js','personal-vocabulary.js'])await clone(path.join('docs/site',file));
+ for(const file of ['workspace.js','site-foundation.js','local-adapter.js','personal-vocabulary.js'])await clone(path.join('docs/site',file));
  const required=['src/renderer/features/ollama/index.js','src/renderer/features/converter/index.js','src/renderer/features/personalization/index.js','src/renderer/features/access/index.js','src/renderer/features/documentation/index.js'];
  for(const file of required)await fs.access(path.join(cache,file));
  const workers=new Map();
@@ -44,6 +44,7 @@ export async function stageWorkspace(root=process.cwd(),destination=path.join(ro
   if(result.status!==0)throw Error(`Workspace bundle failed with exit code ${result.status??'unavailable'}.`);
  };
  build('docs/site/workspace.js','workspace.js');
+ build('docs/site/site-foundation.js','site-foundation.js');
  for(const [entry,output]of workers)build(entry,output);
  let css=await fs.readFile(path.join(root,'docs/site/workspace.css'),'utf8');
  for(const relative of ['src/renderer/features/access/access.css','src/renderer/features/personalization/personalization.css','src/renderer/features/personalization/appearance.css','src/renderer/features/ollama/ollama.css']){
