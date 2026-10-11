@@ -3,7 +3,7 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { parseStrictJson } from '../shared/personal-vocabulary.js';
 import { validateRequest } from './validation.js';
 
-export const LOCAL_ADAPTER_ACTIONS = Object.freeze(['getState', 'mount', 'unmount', 'chooseFiles', 'chooseExport', 'importSelected', 'fileAction', 'lockVault', 'openExplorer', 'openFile', 'exportFile', 'keepOffline', 'releaseOffline', 'setPartSize', 'resplit', 'sync', 'listVersions', 'saveVersion', 'restoreVersion', 'listDeleted', 'restoreDeleted', 'emptyRecycleBin', 'setPreferences']);
+export const LOCAL_ADAPTER_ACTIONS = Object.freeze(['featureRequest','startImport','operations','cancelOperation','listFiles','listActivity','previewVersion','labelVersion','exportVersion','getState', 'mount', 'unmount', 'chooseFiles', 'chooseExport', 'importSelected', 'fileAction', 'lockVault', 'openExplorer', 'openFile', 'exportFile', 'keepOffline', 'releaseOffline', 'setPartSize', 'resplit', 'sync', 'listVersions', 'saveVersion', 'restoreVersion', 'listDeleted', 'restoreDeleted', 'emptyRecycleBin', 'setPreferences']);
 const trustedOrigin = 'https://ding-ding-projects.github.io';
 const equal = (left, right) => {
   if (typeof left !== 'string' || typeof right !== 'string') return false;

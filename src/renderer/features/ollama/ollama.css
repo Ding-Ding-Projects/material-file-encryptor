@@ -1,0 +1,14 @@
+.ollama-suite{display:grid;gap:16px;min-width:0}
+.ollama-suite nav,.ollama-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ollama-suite input,.ollama-suite select,.ollama-suite textarea{max-width:100%;box-sizing:border-box}
+.ollama-suite textarea{width:100%;min-height:90px}
+.ollama-suite button{min-height:40px}
+.ollama-suite article{padding:16px;border:1px solid currentColor;border-radius:16px;min-width:0}
+.ollama-suite [hidden]{display:none!important}
+.ollama-list{display:grid;gap:8px;max-height:420px;overflow:auto}
+.ollama-model{text-align:start;width:100%;white-space:normal;overflow-wrap:anywhere}
+.ollama-output{white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto}
+.ollama-suite label{display:grid;gap:4px;min-width:0}
+.ollama-suite .ollama-status{overflow-wrap:anywhere}
+.ollama-suite pre{white-space:pre-wrap;overflow-wrap:anywhere}
+

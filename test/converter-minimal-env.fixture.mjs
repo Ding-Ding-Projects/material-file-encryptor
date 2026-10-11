@@ -1,0 +1,11 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { createHash } from 'node:crypto';
+import { createWindowsSandboxProvider } from '../src/features/converter/windows-sandbox.mjs';
+const launcherPath=path.resolve('src/features/converter/native/bin/Release/net8.0-windows/ConverterSandbox.exe');
+const hash=async p=>createHash('sha256').update(await fs.readFile(p)).digest('hex');
+const launcherCompanionHashes=Object.fromEntries(await Promise.all(['.dll','.runtimeconfig.json','.deps.json'].map(async suffix=>{const p=launcherPath.slice(0,-4)+suffix;return [path.basename(p),await hash(p)];})));
+for(const key of ['USERPROFILE','LOCALAPPDATA','APPDATA','HOMEDRIVE','HOMEPATH'])delete process.env[key];
+if(['USERPROFILE','LOCALAPPDATA','APPDATA','HOMEDRIVE','HOMEPATH'].some(key=>process.env[key]))throw new Error('The regression requires an empty profile environment.');
+const provider=await createWindowsSandboxProvider({launcherPath,launcherSha256:await hash(launcherPath),launcherCompanionHashes,runtimePath:process.execPath,runtimeSha256:await hash(process.execPath)});
+process.stdout.write(JSON.stringify({ready:provider.verifiedOsIsolation}));

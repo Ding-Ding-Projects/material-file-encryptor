@@ -47,15 +47,6 @@ test('replacement failures fail closed to canonical copy',()=>{
  assert.equal(f.label.children[0].nodeValue,'Canonical label');projection.destroy();
 });
 
-test('budget overflow atomically restores every prior projection',()=>{
- const f=fixture();const projection=createPrivateWordingView({root:f.root,maxNodes:12,isActive:()=>true,replace:value=>value.replaceAll('Canonical','Synthetic')});
- assert.equal(f.label.children[0].nodeValue,'Synthetic label');
- for(let i=0;i<20;i++)f.root.append(f.make('span','Canonical additional'));
- assert.deepEqual(projection.refresh(),{projected:false,reason:'node-budget'});
- assert.equal(f.label.children[0].nodeValue,'Canonical label');assert.equal(f.shadowLabel.children[0].nodeValue,'Canonical shadow');
- assert.ok(f.root.children.filter(node=>node.tag==='span').every(node=>node.children[0].nodeValue==='Canonical additional'));
- projection.destroy();
-});
 test('rapid wording and authentication changes restore the latest canonical text',async()=>{
  const f=fixture();let active=true,marker='Synthetic';const projection=createPrivateWordingView({root:f.root,isActive:()=>active,replace:value=>value.replaceAll('Canonical',marker)});
  marker='Alternate';projection.refresh();assert.equal(f.label.children[0].nodeValue,'Alternate label');
@@ -63,4 +54,43 @@ test('rapid wording and authentication changes restore the latest canonical text
  assert.equal(f.label.children[0].nodeValue,'Canonical translated label');
  active=true;projection.refresh();assert.equal(f.label.children[0].nodeValue,'Alternate translated label');
  active=false;projection.refresh();assert.equal(f.label.children[0].nodeValue,'Canonical translated label');projection.destroy();
+});
+
+
+test('documents above the former total ceiling finish in bounded scheduled slices',async()=>{
+ const f=fixture(),tasks=[];let calls=0;
+ for(let i=0;i<21000;i++)f.root.append(f.make('span','Canonical row'));
+ const projection=createPrivateWordingView({root:f.root,maxNodes:97,scheduleTask:fn=>{tasks.push(fn);return fn;},cancelTask:fn=>{const i=tasks.indexOf(fn);if(i>=0)tasks.splice(i,1);},isActive:()=>true,replace:value=>{calls++;return value.replaceAll('Canonical','Synthetic');}});
+ assert.ok(calls<=97);assert.equal(tasks.length,1);
+ let slices=0;while(tasks.length){const before=calls;tasks.shift()();assert.ok(calls-before<=97);assert.ok(tasks.length<=1);slices++;}
+ assert.ok(slices>200);assert.deepEqual(await projection.whenSettled(),{projected:true,reason:'active'});
+ assert.equal(f.root.children.at(-1).children[0].nodeValue,'Synthetic row');
+ projection.destroy();assert.equal(f.root.children.at(-1).children[0].nodeValue,'Canonical row');
+});
+
+test('revocation and destruction cancel pending slices and restore prior writes',async()=>{
+ for(const destroy of [false,true]){
+  const f=fixture(),tasks=[];let active=true;
+  const projection=createPrivateWordingView({root:f.root,maxNodes:3,scheduleTask:fn=>{tasks.push(fn);return fn;},cancelTask:fn=>{const i=tasks.indexOf(fn);if(i>=0)tasks.splice(i,1);},isActive:()=>active,replace:value=>value.replaceAll('Canonical','Synthetic')});
+  const completion=projection.whenSettled();assert.ok(tasks.length);
+  if(destroy)projection.destroy();else{active=false;projection.refresh();}
+  assert.equal(tasks.length,0);assert.equal(f.label.children[0].nodeValue,'Canonical label');assert.equal(f.label.getAttribute('aria-label'),'Canonical label');
+  await completion;projection.destroy();
+ }
+});
+
+test('a later-slice replacement exception rolls back earlier slices',async()=>{
+ const f=fixture(),tasks=[];let count=0;
+ const projection=createPrivateWordingView({root:f.root,maxNodes:2,scheduleTask:fn=>{tasks.push(fn);return fn;},isActive:()=>true,replace:value=>{if(++count===3)throw Error('Synthetic exception');return value.replaceAll('Canonical','Synthetic');}});
+ while(tasks.length)tasks.shift()();
+ assert.deepEqual(await projection.whenSettled(),{projected:false,reason:'replacement-failed'});
+ assert.equal(f.label.children[0].nodeValue,'Canonical label');assert.equal(f.label.getAttribute('aria-label'),'Canonical label');projection.destroy();
+});
+
+test('recorded text mutations only revisit the changed subtree',async()=>{
+ const f=fixture();let calls=0;
+ const projection=createPrivateWordingView({root:f.root,isActive:()=>true,replace:value=>{calls++;return value.replaceAll('Canonical','Synthetic');}});
+ const before=calls;f.label.children[0].nodeValue='Canonical updated';
+ f.observers[0].callback([{type:'characterData',target:f.label.children[0]}]);await Promise.resolve();
+ assert.equal(calls-before,1);assert.equal(f.label.children[0].nodeValue,'Synthetic updated');projection.destroy();
 });

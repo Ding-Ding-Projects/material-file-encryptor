@@ -3,9 +3,11 @@ import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
 import {buildDocumentation,buildGallery} from '../docs/site/publication.mjs';
+import { buildDocumentationCatalog } from '../src/features/documentation/catalog.mjs';
+import { stageWorkspace } from './build-site-workspace.mjs';
 
 // Publish only reviewed browser assets. Source snapshots and raw receipts stay outside output.
-const staticAssets=['index.html','site.css','site.js','preferences.js','locales.js','release.js','explainer.js','favicon.svg'];
+const staticAssets=['index.html','site.css','site.js','preferences.js','personal-vocabulary.js','local-adapter.js','locales.js','release.js','explainer.js','favicon.svg'];
 const illustrationAssets=['images/drive-workflow.png','images/offline-workflow.png'];
 export async function stageSite(root=process.cwd(),destination=path.join(root,'out/site')) {
  const target=path.resolve(destination),parent=path.dirname(target);
@@ -20,6 +22,8 @@ export async function stageSite(root=process.cwd(),destination=path.join(root,'o
  for(const file of [...illustrationAssets,...images.map(image=>image.path)]){
  const output=path.join(temporary,file);await fs.mkdir(path.dirname(output),{recursive:true});await fs.copyFile(path.join(root,'docs',file),output);
  }
+ await fs.writeFile(path.join(temporary,'workspace-catalog.json'),JSON.stringify(await buildDocumentationCatalog(root)));
+ await stageWorkspace(root,temporary);
  // Preserve any prior stage rather than discarding unique verification evidence.
  let preservedPrevious=null;
  try{await fs.lstat(target);preservedPrevious=path.join(parent,'.site-previous-'+randomUUID());await fs.rename(target,preservedPrevious);}catch(error){if(error.code!=='ENOENT')throw error;}

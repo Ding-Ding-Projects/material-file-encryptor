@@ -1,3 +1,34 @@
+# Material File Encryptor
+
+A Windows Explorer encrypted drive with a native .NET engine, encrypted offline cache, version recovery and a desktop workspace. The current source adds managed transfer/activity workflows, tabs and search, local access and personalization, conversion and local-model tools, offline documentation, changelog and status modules.
+
+**Current state:** source integration is in progress. The complete feature inventory has 208 desktop/site rows and all remain unverified. Existing historical release, runtime and capture results retain their original source boundaries. They do not establish acceptance of this combined source.
+
+[Current integration and limits](docs/features/platform/current-integration.md) · [Feature documentation](docs/features/README.md) · [Roadmap](ROADMAP.md) · [Handoff](HANDOFF.md) · [Changelog](CHANGELOG.md)
+
+## Build and package
+
+Run `build.bat /s` to produce the Windows application and `build-installer.bat /s` to produce its genuine unsigned Squirrel.Windows installer. Explicit local checks use the repository's verification scripts. Production builds and releases do not imply that current runtime or installed-lifecycle verification passed.
+
+## Current workflows
+
+- [Managed transfer, journal and safe lifecycle](docs/features/storage/transfer-lifecycle.md), [file versions and activity](docs/features/storage/file-history-activity.md).
+- [Workspace tabs, search, palette and notifications](docs/features/surface-foundation/README.md).
+- [Personalization](docs/features/interface/local-personalization.md), [appearance](docs/features/interface/appearance-editor.md), and [local access](docs/features/access/local-access.md).
+- [Local converter](docs/features/converter/README.md) and [local model suite](docs/features/ollama/README.md), with unsupported or unconfigured capabilities stated explicitly.
+- [Documentation, changelog and status](docs/features/platform/documentation-and-status.md).
+
+## Bounded native measurements
+
+Five initial helper status requests measured 91.678–185.398 ms. One hundred sequential warm status requests measured a 0.167 ms median. These are helper-only JSONL round trips against existing packaged bytes with unverified source binding, not encryption throughput or GUI latency. [All samples, hashes and limits](docs/features/performance/native-helper.md).
+
+## Historical source-bound evidence
+
+The retained record below includes earlier releases, screenshots and incomplete verification. Its source identifiers and limitations remain historical; no result below is promoted to the current integration.
+
+<details>
+<summary>Open retained historical project record</summary>
+
 # Preservation handoff, 2026-10-10 UTC
 
 Recorded at 2026-10-10T17:21:07.853617+00:00. Verified account allowance is 10% remaining, the inclusive preservation threshold. The wider goal remains unfinished. No new implementation, build or runtime launch is authorized by this preservation record.
@@ -136,3 +167,5 @@ Local verification covers the encrypted engine, range I/O, recovery, conflicts, 
 ## Gallery pipeline candidate
 
 The gallery pipeline now groups the unchanged 14 historical originals by workflow, projects only approved public metadata and preserves every occurrence of identical image bytes. Two exclusions remain explicit. Twenty-seven focused checks pass, including a synthetic 445-occurrence case and privacy/search rejection regressions. Independent source review is complete with no remaining findings. Rendered acceptance and main integration remain pending. No current runtime original or new publication is claimed. See [the evidence contract](docs/features/desktop/runtime-evidence.md#reviewed-gallery-publication-pipeline).
+
+</details>

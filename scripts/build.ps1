@@ -13,8 +13,23 @@ $toolOutput = Join-Path $root 'out\tools'
 if (Test-Path -LiteralPath $toolOutput) { Move-Item -LiteralPath $toolOutput -Destination (Join-Path $tools ('bundle.previous-' + [Guid]::NewGuid().ToString('N'))) }
 Move-Item -LiteralPath $toolStage -Destination $toolOutput
 Invoke-Checked { npm.cmd ci }
+Invoke-Checked { node scripts/build-workspace.mjs }
 Invoke-Checked { node scripts/build-site.mjs }
 Invoke-Checked { dotnet publish native/MaterialFileEncryptor.Host -c Release -r win-x64 --self-contained true -o out/native }
+Invoke-Checked { dotnet publish src/features/converter/native/ConverterSandbox.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o out/converter }
+Copy-Item -LiteralPath (Join-Path $node 'node.exe') -Destination 'out/converter/node.exe' -Force
+Invoke-Checked { node scripts/converter-media-runtime.mjs out/converter/media }
+$converterManifest = @{
+  schemaVersion = 1
+  launcherSha256 = (Get-BootstrapDigest 'out/converter/ConverterSandbox.exe').ToLowerInvariant()
+  runtimeSha256 = (Get-BootstrapDigest 'out/converter/node.exe').ToLowerInvariant()
+  launcherCompanionHashes = @{}
+}
+foreach ($companion in @('ConverterSandbox.dll', 'ConverterSandbox.runtimeconfig.json', 'ConverterSandbox.deps.json')) {
+  $companionPath = Join-Path 'out/converter' $companion
+  if (Test-Path -LiteralPath $companionPath) { $converterManifest.launcherCompanionHashes[$companion] = (Get-BootstrapDigest $companionPath).ToLowerInvariant() }
+}
+[IO.File]::WriteAllText((Join-Path $root 'out/converter/manifest.json'), ($converterManifest | ConvertTo-Json -Depth 4), [Text.UTF8Encoding]::new($false))
 Invoke-Checked { dotnet build native/MaterialFileEncryptor.Core.Tests -c Release }
 New-Item -ItemType Directory -Force out/native/notices | Out-Null
 Copy-Item native/vendor/WinFsp/License.txt out/native/notices/WinFsp-License.txt

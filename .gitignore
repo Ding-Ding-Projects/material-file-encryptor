@@ -8,3 +8,5 @@ coverage/
 **/bin/
 **/obj/
 **/__pycache__/
+/src/shared/build-metadata.json
+/src/shared/documentation-catalog.json

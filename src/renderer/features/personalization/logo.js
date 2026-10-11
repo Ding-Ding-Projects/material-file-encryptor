@@ -1,3 +1,4 @@
+import {appearanceTranslator} from './appearance-copy.js';
 export const LOGO_LIMITS = Object.freeze({bytes:4*1024*1024,pixels:16000000,dimension:8192});
 export function inspectLogoBytes(buffer) {
  const b=new Uint8Array(buffer); if(b.length>LOGO_LIMITS.bytes)throw new Error('Image exceeds 4 MiB.');
@@ -20,14 +21,15 @@ export async function convertLogo(file,options={}) {
  }finally{bitmap.close();}
 }
 export function mountLogoEditor(root,services={}) {
+ const t=appearanceTranslator(services.translate),message=source=>t(source,{message:true});
  const storage=services.storage||globalThis.localStorage,key='m4e.logo.private.v1';const box=document.createElement('section');box.className='appearance-logo';
- const title=document.createElement('h3');title.textContent='Application logo';const input=document.createElement('input');input.type='file';input.accept='image/png,image/jpeg,image/webp';input.setAttribute('aria-label','Choose a local logo');
- const preview=document.createElement('img');preview.alt='Logo preview';preview.width=preview.height=64;const status=document.createElement('p');status.setAttribute('role','status');
- const fit=document.createElement('button');fit.textContent='Fit: contain';let mode='contain',source;fit.onclick=()=>{mode=mode==='contain'?'cover':'contain';fit.textContent=`Fit: ${mode}`;if(source)update();};
- const x=document.createElement('input'),y=document.createElement('input');for(const [control,label]of [[x,'Horizontal focal point'],[y,'Vertical focal point']]){control.type='range';control.min='0';control.max='1';control.step='.01';control.value='.5';control.setAttribute('aria-label',label);control.onchange=()=>source&&update();}
+ const title=document.createElement('h3');title.textContent=t('Application logo');const input=document.createElement('input');input.type='file';input.accept='image/png,image/jpeg,image/webp';input.setAttribute('aria-label',t('Choose a local logo'));
+ const preview=document.createElement('img');preview.alt=t('Logo preview');preview.width=preview.height=64;const status=document.createElement('p');status.setAttribute('role','status');
+ const fit=document.createElement('button');fit.textContent=`${t('Fit')}: ${t('contain')}`;let mode='contain',source;fit.onclick=()=>{mode=mode==='contain'?'cover':'contain';fit.textContent=`${t('Fit')}: ${t(mode)}`;if(source)update();};
+ const x=document.createElement('input'),y=document.createElement('input');for(const [control,label]of [[x,'Horizontal focal point'],[y,'Vertical focal point']]){control.type='range';control.min='0';control.max='1';control.step='.01';control.value='.5';control.setAttribute('aria-label',t(label));control.onchange=()=>source&&update();}
  const publish=data=>{preview.src=data;services.onChange?.(data);};
- async function update(){status.textContent='Converting locally…';try{const result=await convertLogo(source,{fit:mode,x:x.value,y:y.value});storage?.setItem(key,result.data);publish(result.data);status.textContent='Converted to 128 × 128 PNG locally. Metadata and color profile are flattened.';}catch(error){status.textContent=error.message;}}
- input.onchange=()=>{source=input.files?.[0];if(source)update();};const reset=document.createElement('button');reset.textContent='Reset logo';reset.onclick=()=>{storage?.removeItem(key);preview.removeAttribute('src');source=undefined;input.value='';services.onChange?.(null);status.textContent='Original logo restored.';};
- try{const saved=storage?.getItem(key);if(saved?.startsWith('data:image/png;base64,')&&saved.length<LOGO_LIMITS.bytes*2)publish(saved);}catch{status.textContent='Saved logo unavailable.';}
+ async function update(){status.textContent=message('Converting locally…');try{const result=await convertLogo(source,{fit:mode,x:x.value,y:y.value});storage?.setItem(key,result.data);publish(result.data);status.textContent=message('Converted to 128 × 128 PNG locally. Metadata and color profile are flattened.');}catch(error){status.textContent=message(error.message);}}
+ input.onchange=()=>{source=input.files?.[0];if(source)update();};const reset=document.createElement('button');reset.textContent=t('Reset logo');reset.onclick=()=>{storage?.removeItem(key);preview.removeAttribute('src');source=undefined;input.value='';services.onChange?.(null);status.textContent=message('Original logo restored.');};
+ try{const saved=storage?.getItem(key);if(saved?.startsWith('data:image/png;base64,')&&saved.length<LOGO_LIMITS.bytes*2)publish(saved);}catch{status.textContent=message('Saved logo unavailable.');}
  box.append(title,input,fit,x,y,preview,reset,status);root.append(box);return{destroy:()=>box.remove(),reset:()=>reset.click()};
 }

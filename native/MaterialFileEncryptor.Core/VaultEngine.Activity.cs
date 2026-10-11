@@ -110,7 +110,7 @@ public sealed partial class VaultEngine
             var item = new VaultActivity(Guid.NewGuid().ToString("N"), entryId, action, DateTimeOffset.UtcNow, path, versionId, detail);
             var folder = Path.Combine(cache, "activity"); VaultCrypto.ValidatePhysicalPath(folder); Directory.CreateDirectory(folder);
             WriteMetadata(ObjectPath(cache, "activity", item.Id), item, "activity", item.Id);
-            SynchronizeActivity();
+            HistoryChanged?.Invoke();
             return item;
         }
     }

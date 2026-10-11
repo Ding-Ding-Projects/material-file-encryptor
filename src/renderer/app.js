@@ -7,6 +7,11 @@ import { icon, initializeIcons } from './icons.js';
 import { cantonese } from './i18n.js';
 import { mountSurfaceFoundation } from './features/shell/index.js';
 import { mountFileDetails } from './features/file-details/index.js';
+import { createTranslator } from '../shared/local-ux/language.js';
+import { createSettingsStore, DEFAULTS as LOCAL_DEFAULTS } from '../shared/local-ux/store.js';
+import { createPrivateWordingView } from '../shared/surface/private-wording-view.js';
+import { operationNotification } from './operation-notifications.js';
+import { onPageDiscard } from './page-lifecycle.js';
 const $ = id => document.getElementById(id);
 const api = window.drive;
 let preferences = loadSettings(localStorage);
@@ -19,7 +24,13 @@ const recycledSelection=new Set(); let historySearch, recycleSearch;
 let driveLetterEdited = false, activeDriveLetter = '';
 let foundation=null,fileDetails=null,fileSearch=null,renderedFilesKey='',pagedFiles=null,fileNextCursor=null,filePageRevision=null,filePageRequest=0;
 const featureMounts=new Map(),featureRoots=new Map(),workspaceDisposers=[];
-const enhancedLabels={'File details':'檔案詳情','Converter':'轉換工具','Local models':'本機模型','Personalization':'個人化','Local access':'本機存取','Documentation':'說明文件','Changelog':'更新記錄','Status':'狀態','Load more files':'載入更多檔案','Retry loading files':'重試載入檔案','Cancel operation':'取消操作','Operations':'操作','Force lock':'強制鎖定','Quit application':'結束程式','Feature unavailable':'功能無法使用','Refresh':'重新整理','Search settings':'搜尋設定'};
+const operationNotifications=new Map();
+const canonicalViewLabels={drive:'My drive',offline:'Available offline',history:'History',recycle:'Recycle Bin',settings:'Settings',help:'How it works',details:'File details',converter:'Converter',ollama:'Local models',access:'Local access',personalization:'Personalization',documentation:'Documentation',changelog:'Changelog',status:'Status',workflow:'Documents and downloads',updates:'Updates'};
+const localSettings=createSettingsStore({storage:localStorage});
+if(localSettings.provenance==='default')try{localSettings.update({...LOCAL_DEFAULTS,...preferences,vocabulary:undefined},'existing preferences migrated');}catch{}
+let effectiveLocalSettings=localSettings.get();
+const enhancedLabels={'Notification history reset':'通知記錄已重設','Previous notification text was cleared because its original wording could not be verified.':'舊有通知文字已清除，因為無法確認原有用詞。','Export queued. Cancel unfinished work from Operations.':'匯出已加入佇列。可以在操作面板取消未完成工作。','File details':'檔案詳情','Converter':'轉換工具','Local models':'本機模型','Personalization':'個人化','Local access':'本機存取','Documentation':'說明文件','Changelog':'更新記錄','Status':'狀態','Load more files':'載入更多檔案','Retry loading files':'重試載入檔案','Cancel operation':'取消操作','Operations':'操作','Force lock':'強制鎖定','Quit application':'結束程式','Feature unavailable':'功能無法使用','Refresh':'重新整理','Search settings':'搜尋設定'};
+Object.assign(enhancedLabels,{'Transfer responsiveness':'傳輸回應速度','Background work priority':'背景工作優先順序','Responsive mode lowers background encryption and synchronization priority. Throughput mode uses normal priority. Both keep bounded transfer buffers.':'快速回應模式會降低背景加密及同步的優先順序。高吞吐量模式使用正常優先順序。兩種模式都保留傳輸緩衝上限。','Responsive (recommended)':'快速回應（建議）','Throughput':'高吞吐量'});
 const dictionary = new Map();
 document.querySelectorAll('[data-i18n]').forEach(el => dictionary.set(el, el.textContent));
 initializeIcons();
@@ -32,11 +43,9 @@ document.addEventListener('scroll', event => {
  scrollTimers.set(surface, setTimeout(() => { surface.classList.remove('is-scrolling'); scrollTimers.delete(surface); }, 900));
 }, {capture:true,passive:true});
 document.querySelector('main').prepend($('operation'), $('main-error'));
-function t(source) {
- const translated=cantonese[source]||enhancedLabels[source];
- let value = preferences.language === 'yue' ? translated || source : preferences.language === 'bilingual' && translated ? `${source} · ${translated}` : source;
- return replaceVocabulary(value, preferences.vocabulary);
-}
+const translateWorkspace=createTranslator(()=>({...effectiveLocalSettings,...preferences,school:effectiveLocalSettings.school}),{dictionary:{...cantonese,...enhancedLabels}});
+function t(source,options) { return translateWorkspace(source,options); }
+const privateWordingView=createPrivateWordingView({root:document.body,replace:value=>replaceVocabulary(value,preferences.vocabulary),isActive:()=>featureMounts.get('access')?.authenticated===true&&!effectiveLocalSettings.school.enabled});
 function setText(id, source) { $(id).textContent = t(source); }
 function savePreferences() { try { localStorage.setItem('material-drive.preferences.v1', JSON.stringify({...preferences, vocabulary: JSON.parse(serializeVocabulary(preferences.vocabulary))})); return true; } catch { showError('Your device could not save these preferences.'); return false; } }
 const clearFields = installClearFields(document.body, t);
@@ -49,37 +58,39 @@ function applyPreferences() {
  $('file-search').placeholder = t('Search files');
  $('file-search').setAttribute('aria-label',t('Search files'));
  $('theme-setting').value = preferences.theme; $('language-setting').value = preferences.language; $('emoji-setting').checked = preferences.emoji;
- for (const key of ['celebration','patience']) { $(`${key}-setting`).value = preferences[key]; $(`${key}-output`).textContent = preferences[key]; $(`${key}-setting`).style.setProperty('--range-progress', `${preferences[key]}%`); }
+ for (const key of ['funnyEnglish','funnyCantonese']) { $(`${key}-setting`).value = preferences[key]; $(`${key}-output`).textContent = preferences[key]; $(`${key}-setting`).style.setProperty('--range-progress', `${(preferences[key]-1)*25}%`); }
  $('vocabulary-summary').textContent = preferences.language === 'yue' ? `${preferences.vocabulary.replacements.length} 個替換詞已啟用（${vocabularyPersisted ? '已儲存喺呢部裝置' : '只限今次使用，儲存失敗'}）。` : `${preferences.vocabulary.replacements.length} label replacements active (${vocabularyPersisted ? 'saved on this device' : 'this session only; saving failed'}).`;
  historySearch?.refresh(); recycleSearch?.refresh();
  $('history-days')?.setAttribute('aria-label',t('Custom days'));
  clearFields.refresh();
  foundation?.setLanguage(preferences.language);fileSearch?.setLanguage(preferences.language);renderedFilesKey='';
- for(const module of featureMounts.values())module.refresh?.();
+ for(const module of featureMounts.values()){module.setLanguage?.(preferences.language);module.refresh?.();}
  if (state) { render(); changeView(view); }
  if ($('vault-dialog').open) updateDialog();
+ privateWordingView.refresh();
 }
 colorQuery.addEventListener('change', applyPreferences);
 function showError(error, inDialog = false) {
  const message = error instanceof Error ? error.message : String(error || 'The operation could not be completed.');
- const target = $(inDialog ? 'dialog-error' : 'main-error-text'); target.textContent = message;
+ const target = $(inDialog ? 'dialog-error' : 'main-error-text'); target.textContent = t(message,{message:true});
  $(inDialog ? 'dialog-error' : 'main-error').hidden = false;
  if (!inDialog) $('main-error').scrollIntoView({block:'nearest'});
  if(!inDialog)foundation?.notify({title:'Operation could not complete',message,level:'error'});
 }
 function toast(source, values = {}) {
  clearTimeout(snackbarTimer);
- const message = t(source).replace(/\{(\w+)\}/g, (placeholder, key) => Object.hasOwn(values, key) ? String(values[key]) : placeholder);
- $('snackbar').textContent = `${message}${preferences.celebration >= 75 ? ` ${t('All set!')}` : ''}`;
+ const message = t(source,{message:true,values});
+ $('snackbar').textContent = message;
  $('snackbar').hidden = false;
  snackbarTimer = setTimeout(() => { $('snackbar').hidden = true; }, 5500);
- foundation?.notify({title:'Update',message,level:'success'});
+ const original=String(source).replace(/\{([a-zA-Z][a-zA-Z0-9_]*)\}/g,(match,key)=>Object.hasOwn(values,key)?String(values[key]):match);
+ foundation?.notify({title:'Update',message:original,level:'success'});
 }
 function operation(label) {
  label = ({ saveVersion:'Saving a version…', restoreVersion:'Restoring a version…', restoreDeleted:'Restoring deleted entries…', emptyRecycleBin:'Emptying the Recycle Bin…', upgrading:'Creating and verifying an upgraded copy…' })[label] || label;
  label = ({ importing:'Importing files…', resplit:'Re-splitting encrypted files…', syncing:'Syncing encrypted files…', sync:'Syncing encrypted files…', setPartSize:'Applying part size…', unmounting:'Locking drive…', mounting:'Mounting drive…', locking:'Locking drive…', keepOffline:'Keeping encrypted parts offline…', releaseOffline:'Removing offline copy…', creating:'Mounting drive…', unlocking:'Mounting drive…' })[label] || label;
  $('operation').hidden = !label;
- if (label) $('operation-text').textContent = `${t(label)}${preferences.patience >= 70 ? ` ${t('Please keep the app open.')}` : ''}`;
+ if (label) $('operation-text').textContent = t(label,{message:true});
 }
 async function refresh() { state = await api.status(); render(); }
 async function run(label, task, success, inDialog = false) {
@@ -101,6 +112,7 @@ function renderAvailability() {
  const file = currentFiles().find(file => file.id === selected);
  for (const id of ['create-button','unlock-button']) $(id).disabled = busy || !api || !state;
  $('lock-button').disabled = busy; $('mount-button').disabled = busy || !unlocked || state?.driver?.available === false; $('explorer-button').disabled = busy || !mounted;
+ if($('force-lock-button')){ $('force-lock-button').hidden=!unlocked; $('force-lock-button').disabled=busy||!api?.forceLock; $('force-lock-button').textContent=t('Force lock'); }
  for (const id of ['import-button','empty-import-button','sync-button','split-apply','resplit-button']) $(id).disabled = busy || !unlocked;
  $('open-button').disabled = busy || !mounted || !file;
  $('export-button').disabled = busy || !mounted || !file;
@@ -142,6 +154,7 @@ function render() {
  $('offline-count').textContent = state.offlineCount??currentFiles().filter(file => file.offline).length;
  $('startup-setting').checked = state.startup ?? state.preferences?.startup ?? true;
  $('auto-unlock-setting').checked = state.autoUnlock ?? state.preferences?.autoUnlock ?? false;
+ $('performance-mode-setting').value = state.preferences?.performanceMode || state.performanceMode || 'responsive';
  if (!['split-value','split-unit'].includes(document.activeElement?.id)) {
   const size = displayPartSize(state.partSizeBytes || 10 * 1024 ** 2); $('split-value').value = size.value; $('split-unit').value = size.unit;
  }
@@ -335,7 +348,7 @@ listen('export-button','click',async () => {
  const file = currentFiles().find(file => file.id === selected); if (!file) return;
  if (!await confirmAction('Export a decrypted copy?','The destination will contain an ordinary readable file. Choose a location you trust.','Continue')) return;
  const destination = await api.chooseExport(file.path.split(/[\\/]/).at(-1));
- if (destination) await run('Exporting copy…',() => api.exportFile({id:file.id,destination}),'Copy exported.');
+ if (destination) await run('Exporting copy…',() => api.exportFile({id:file.id,destination}),'Export queued. Cancel unfinished work from Operations.');
 });
 listen('offline-button','click',() => run('Keeping encrypted parts offline…',() => api.keepOffline(selected),'Offline copy retained.'));
 listen('release-button','click',async () => {
@@ -356,10 +369,12 @@ listen('sync-button','click',() => run('Syncing encrypted files…',() => api.sy
 listen('split-form','submit',async event => { event.preventDefault(); let bytes; try { bytes = parsePartSize($('split-value').value,$('split-unit').value); } catch(error) { return showError(error); } await run('Applying part size…',() => api.setPartSize(bytes),'Part size saved for new and edited files.'); });
 listen('resplit-button','click',async () => { if (await confirmAction('Re-split all existing files?','Create replacement encrypted parts using the current limit. This can take time. Existing committed data remains until replacement succeeds.','Re-split files')) await run('Re-splitting encrypted files…',() => api.resplit(),'Encrypted parts updated.'); });
 listen('startup-setting','change',event => run('Saving preference…',() => api.setStartup(event.target.checked),'Saved.'));
+listen('performance-mode-setting','change',event => run('Saving preference…',() => api.setPerformanceMode(event.target.value),'Saved.'));
 listen('auto-unlock-setting','change',async event => { const enabled = event.target.checked; if (enabled && !await confirmAction('Automatically unlock this drive?','This Windows user will be able to unlock this drive without its password or key file. A protected drive key will be saved on this device.','Enable automatic unlock')) return render(); await run('Saving preference…',() => api.setAutoUnlock(enabled),'Saved.'); });
 listen('forget-credential','click',() => run('Saving preference…',() => api.forgetSavedCredential(),'Saved credential forgotten.'));
-for (const key of ['theme','language','emoji','celebration','patience']) listen(`${key}-setting`, ['celebration','patience'].includes(key) ? 'input' : 'change',event => {
- preferences[key] = key === 'emoji' ? event.target.checked : ['celebration','patience'].includes(key) ? Number(event.target.value) : event.target.value;
+for (const key of ['theme','language','emoji','funnyEnglish','funnyCantonese']) listen(`${key}-setting`, ['funnyEnglish','funnyCantonese'].includes(key) ? 'input' : 'change',event => {
+ preferences[key] = key === 'emoji' ? event.target.checked : ['funnyEnglish','funnyCantonese'].includes(key) ? Number(event.target.value) : event.target.value;
+ localSettings.update({[key]:preferences[key]},'preference changed');
  savePreferences(); applyPreferences();
 });
 listen('vocabulary-label','keydown',event => { if (['Enter',' '].includes(event.key)) { event.preventDefault(); $('vocabulary-file').click(); } });
@@ -380,7 +395,7 @@ setupEnhancedWorkspace();
 applyPreferences(); renderAvailability();
 if (!api) { setText('vault-badge','Not mounted'); showError('The desktop bridge is unavailable. Open this interface through Material File Encryptor.'); }
 else {
- const unsubscribe = api.onStatus(next => { state = next; render(); }); window.addEventListener('beforeunload',() => unsubscribe?.(),{once:true});
+ const unsubscribe = api.onStatus(next => { state = next; render(); }); onPageDiscard(window,() => unsubscribe?.());
  refresh().catch(error => showError(error));
 }
 
@@ -458,31 +473,32 @@ function attachEnhancedSearch(input,area) {
 }
 function addFeatureRoot(id,label,labelYue) {
  const root=document.createElement('section');root.id=`view-${id}`;root.className='view enhanced-feature-view';root.hidden=true;root.setAttribute('aria-label',label);document.querySelector('main').append(root);featureRoots.set(id,root);
- foundation.registerViews([{id,label:{en:label,yue:labelYue},root}]);return root;
+ foundation.model.registerCanonicalTab(id,label);foundation.registerViews([{id,label:{en:label,yue:labelYue},root}]);return root;
 }
 async function mountFeature(id,label,labelYue,loader,mount) {
  const root=addFeatureRoot(id,label,labelYue);
- const load=async()=>{root.replaceChildren();try{const module=await loader();for(const href of ({personalization:['./features/personalization/personalization.css','./features/personalization/appearance.css'],access:['./features/access/access.css'],ollama:['./features/ollama/ollama.css']}[id]||[])){if(!document.querySelector('link[data-feature-style=\"'+href+'\"]')){const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.dataset.featureStyle=href;document.head.append(link);}}const instance=await mount(module,root);featureMounts.set(id,instance);}catch(error){const message=document.createElement('p');message.setAttribute('role','status');message.textContent=`${t('Feature unavailable')}: ${error.message}`;const retry=document.createElement('md-outlined-button');retry.textContent=t('Refresh');retry.onclick=load;root.append(message,retry);}};
+ const content=document.createElement('div');content.className='feature-content';root.append(content);
+ const load=async()=>{content.replaceChildren();try{const module=await loader();for(const href of ({personalization:['./features/personalization/personalization.css','./features/personalization/appearance.css'],access:['./features/access/access.css'],ollama:['./features/ollama/ollama.css']}[id]||[])){if(!document.querySelector('link[data-feature-style=\"'+href+'\"]')){const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.dataset.featureStyle=href;document.head.append(link);}}const instance=await mount(module,content);featureMounts.set(id,instance);}catch(error){const message=document.createElement('p');message.setAttribute('role','status');message.textContent=`${t('Feature unavailable')}: ${error.message}`;const retry=document.createElement('md-outlined-button');retry.textContent=t('Refresh');retry.onclick=load;content.append(message,retry);}};
  await load();
 }
 function renderOperations() {
  const host=$('active-operations');if(!host)return;const operations=state?.operations||[];const rows=Array.isArray(operations)?operations:Object.values(operations);const signature=JSON.stringify(rows);
  if(host.dataset.signature===signature)return;host.dataset.signature=signature;host.replaceChildren();
- for(const operation of rows){const row=document.createElement('div');row.className='active-operation';const label=document.createElement('span');label.textContent=`${operation.label||operation.type||operation.id}: ${operation.state||operation.status||''}${Number.isFinite(operation.progress)?` · ${operation.progress}%`:''}${operation.error?` · ${operation.error}`:''}`;row.append(label);
- if(!['completed','cancelled','failed'].includes(operation.state||operation.status)&&api?.cancelOperation){const cancel=document.createElement('md-text-button');cancel.textContent=t('Cancel operation');cancel.onclick=()=>api.cancelOperation(operation.id).catch(showError);row.append(cancel);}host.append(row);}
+ for(const operation of rows){const id=operation.operationId||operation.id,known=operationNotifications.has(id);const notification=operationNotification(operation,{known});if(notification&&foundation){if(known)foundation.updateNotification(operationNotifications.get(id),notification);else operationNotifications.set(id,foundation.notify(notification));}const row=document.createElement('div');row.className='active-operation';const label=document.createElement('span');label.textContent=`${operation.label||operation.type||operation.operationId||operation.id}: ${operation.state||operation.status||''}${Number.isFinite(operation.progress)?` · ${operation.progress}%`:''}${operation.error?` · ${operation.error}`:''}`;row.append(label);
+ if(!['completed','cancelled','failed'].includes(operation.state||operation.status)&&api?.cancelOperation){const cancel=document.createElement('md-text-button');cancel.textContent=t('Cancel operation');cancel.onclick=()=>api.cancelOperation(operation.operationId||operation.id).catch(showError);row.append(cancel);}host.append(row);}for(const id of operationNotifications.keys())if(!rows.some(row=>(row.operationId||row.id)===id))operationNotifications.delete(id);
 }
 function workspaceCommands() {
  const command=(id,label,run)=>({id,label:{en:label,yue:cantonese[label]||enhancedLabels[label]||label},run});
  const commands=[command('vault:create','Create a drive',()=>openVaultDialog('create')),command('vault:unlock','Unlock existing drive',()=>openVaultDialog('unlock')),command('vault:lock','Lock drive',()=>$('lock-button').click()),command('vault:import','Import files',importFiles),command('vault:sync','Sync now',()=>$('sync-button').click()),command('file:open','Open',openSelected),command('file:export','Export copy',()=>$('export-button').click()),command('file:offline','Keep offline',()=>$('offline-button').click()),command('file:release','Remove offline copy',()=>$('release-button').click()),command('history:save','Save version now',()=>$('save-version').click()),command('settings:vocabulary','Your vocabulary',()=>{foundation.shell.activate('settings');$('vocabulary-label').focus();})];
- for(const key of ['theme','language','emoji','celebration','patience']){const field=$(`${key}-setting`);const label=field.getAttribute('aria-label')||key;commands.push({id:`settings:${key}`,label:{en:label,yue:cantonese[label]||label},description:{en:'Application preferences',yue:'程式偏好設定'},group:{en:'Settings',yue:'設定'},control:{type:field.tagName==='SELECT'?'select':field.type==='checkbox'?'switch':'range',min:Number(field.min)||0,max:Number(field.max)||100,options:field.tagName==='SELECT'?[...field.options].map(option=>({value:option.value,label:{en:option.textContent,yue:cantonese[option.textContent]||option.textContent}})):undefined,get:()=>preferences[key],set:value=>{preferences[key]=value;savePreferences();applyPreferences();}},reveal:()=>{foundation.shell.activate('settings');field.scrollIntoView({block:'center'});field.focus();}});}
- commands.push({id:'vault:force-lock',label:{en:'Force lock',yue:'強制鎖定'},disabled:!api?.forceLock,run:async()=>{if(await confirmAction('Force lock this drive?','Open files may have unfinished writes. Close other applications first.','Force lock'))await run('Locking drive…',()=>api.forceLock());}},{id:'application:quit',label:{en:'Quit application',yue:'結束程式'},run:()=>api.quit?api.quit():api.windowControl('close')});
+ for(const key of ['theme','language','emoji','funnyEnglish','funnyCantonese']){const field=$(`${key}-setting`);const label=field.getAttribute('aria-label')||key;commands.push({id:`settings:${key}`,label:{en:label,yue:cantonese[label]||label},description:{en:'Application preferences',yue:'程式偏好設定'},group:{en:'Settings',yue:'設定'},control:{type:field.tagName==='SELECT'?'select':field.type==='checkbox'?'switch':'range',min:Number(field.min)||0,max:Number(field.max)||100,options:field.tagName==='SELECT'?[...field.options].map(option=>({value:option.value,label:{en:option.textContent,yue:cantonese[option.textContent]||option.textContent}})):undefined,get:()=>preferences[key],set:value=>{preferences[key]=value;savePreferences();applyPreferences();}},reveal:()=>{foundation.shell.activate('settings');field.scrollIntoView({block:'center'});field.focus();}});}
+ commands.push({id:'vault:force-lock',label:{en:'Force lock',yue:'強制鎖定'},disabled:!api?.forceLock,run:()=>run('Locking drive…',()=>api.forceLock())},{id:'application:quit',label:{en:'Quit application',yue:'結束程式'},run:()=>api.quit?api.quit():api.windowControl('close')});
  return commands;
 }
 function refreshPaletteInventory() {
  if(!foundation)return;
  const commands=workspaceCommands();
  for(const root of document.querySelectorAll('main > .view')){
-  const id=root.id.replace(/^view-/,'');const title=root.getAttribute('aria-label')||root.querySelector('h1,h2')?.textContent||id;
+  const id=root.id.replace(/^view-/,'');const title=canonicalViewLabels[id]||id;
   commands.push({id:`destination:${id}`,label:title,run:()=>{foundation.model.openTab({id,label:title});foundation.shell.activate(id);}});
   [...root.querySelectorAll('button,input,select,textarea')].forEach((control,index)=>{
    if(control.type==='password'||control.type==='file'||control.type==='hidden'||control.hidden||control.closest('dialog:not([open])'))return;
@@ -495,15 +511,20 @@ function refreshPaletteInventory() {
  }
  foundation.palette.setCommands(commands);
 }
-function guardControl(control,action){const access=featureMounts.get('access');return access?access.guard(ensureLockId(control),action):action();}
+function guardControl(control,action){const access=featureMounts.get('access');return access?access.guardControl(ensureLockId(control),control,action):action();}
 function ensureLockId(element){if(element.dataset.lockId)return element.dataset.lockId;const parts=[];for(let node=element;node&&node!==document.body;node=node.parentElement){parts.unshift(node.id?`id:${node.id}`:`${node.tagName.toLowerCase()}:${[...node.parentElement.children].indexOf(node)}`);if(node.id)break;}const id=parts.join('/').slice(0,180);element.dataset.lockId=id;return id;}
 function setupEnhancedWorkspace() {
- const main=document.querySelector('main');foundation=mountSurfaceFoundation({host:main,before:main.firstChild,storage:localStorage,language:preferences.language,tabs:[{id:'drive',label:'My drive',labelYue:'我的磁碟'},{id:'offline',label:'Available offline',labelYue:'可離線使用'},{id:'history',label:'History',labelYue:'歷史記錄'},{id:'recycle',label:'Recycle Bin',labelYue:'資源回收筒'},{id:'settings',label:'Settings',labelYue:'設定'},{id:'help',label:'How it works',labelYue:'使用方法'}],onActivate:changeView,commands:workspaceCommands(),onExport:exportText});
- const openPalette=foundation.palette.open.bind(foundation.palette);foundation.palette.open=()=>{refreshPaletteInventory();openPalette();};const originalChangeButtons=[...document.querySelectorAll('[data-view]')];for(const button of originalChangeButtons)button.addEventListener('click',()=>{foundation.model.openTab({id:button.dataset.view,label:button.textContent});foundation.shell.activate(button.dataset.view);});
+ const main=document.querySelector('main');foundation=mountSurfaceFoundation({host:main,before:main.firstChild,storage:localStorage,language:preferences.language,tabs:[{id:'drive',label:'My drive',labelYue:'我的磁碟'},{id:'offline',label:'Available offline',labelYue:'可離線使用'},{id:'history',label:'History',labelYue:'歷史記錄'},{id:'recycle',label:'Recycle Bin',labelYue:'資源回收筒'},{id:'settings',label:'Settings',labelYue:'設定'},{id:'help',label:'How it works',labelYue:'使用方法'}],onActivate:changeView,commands:workspaceCommands(),onExport:exportText,renderText:t,onNotificationAction:async action=>{if(action==='retry-files'){filePageRevision=null;return loadFilePage();}if(action.startsWith('cancel-operation:'))return api.cancelOperation(action.slice('cancel-operation:'.length));if(action==='open-operations'){foundation.shell.activate('drive');$('active-operations').scrollIntoView({block:'center'});return;}throw Error('This recovery action is no longer available.');}});
+ // Offline filtering reuses the drive panel and its persisted layout.
+ for(const id of ['drive','history','recycle','settings','help'])foundation.registerPanel(id,$(`view-${id}`));
+ for(const [id,label]of Object.entries(canonicalViewLabels))foundation.model.registerCanonicalTab(id,label);
+ if(foundation.model.getState().droppedLegacyNotifications)foundation.notify({title:'Notification history reset',message:'Previous notification text was cleared because its original wording could not be verified.',level:'info'});
+ const openPalette=foundation.palette.open.bind(foundation.palette);foundation.palette.open=()=>{refreshPaletteInventory();openPalette();};const originalChangeButtons=[...document.querySelectorAll('[data-view]')];for(const button of originalChangeButtons)button.addEventListener('click',()=>{foundation.model.openTab({id:button.dataset.view,label:canonicalViewLabels[button.dataset.view]||button.dataset.view});foundation.shell.activate(button.dataset.view);});
+ const forceLockButton=document.createElement('md-outlined-button');forceLockButton.id='force-lock-button';forceLockButton.textContent=t('Force lock');forceLockButton.onclick=()=>run('Locking drive…',()=>api.forceLock());$('lock-button').after(forceLockButton);
  const fileHost=document.createElement('mfe-search');fileHost.setAttribute('label',t('Search files'));fileHost.setAttribute('scope','drive-files');fileHost.language=preferences.language;const old=$('file-search');old.closest('.search-box').hidden=true;old.closest('.search-box').after(fileHost);fileSearch=fileHost;fileHost.addEventListener('search-change',()=>{old.value=fileHost.query;renderFiles();});
  const pager=document.createElement('div');pager.className='file-page-actions';const more=document.createElement('md-outlined-button');more.id='load-more-files';more.textContent=t('Load more files');more.hidden=true;more.onclick=()=>loadFilePage(true);const retry=document.createElement('md-text-button');retry.textContent=t('Retry loading files');retry.onclick=()=>{filePageRevision=null;loadFilePage();};pager.append(more,retry);$('file-list').closest('.table-scroll').after(pager);
  const operations=document.createElement('section');operations.id='active-operations';operations.setAttribute('aria-label',t('Operations'));operations.setAttribute('aria-live','polite');main.prepend(operations);
- const details=addFeatureRoot('details','File details','檔案詳情');fileDetails=mountFileDetails(details,{translate:t,services:{listVersions:id=>api.listVersions?api.listVersions(id):api.history({entryId:id}),listActivity:query=>api.listActivity?api.listActivity(query):Promise.reject(new Error('File activity bridge is unavailable.')),previewVersion:id=>api.previewVersion(id),labelVersion:(id,label)=>api.labelVersion(id,label),exportVersion:id=>api.exportVersion(id),restoreVersion:async id=>{if(await confirmAction('Restore this version?','Restoring creates a new current version. Existing history remains encrypted.','Restore as new version'))return api.restoreVersion(id);}}});
+ const details=addFeatureRoot('details','File details','檔案詳情');const detailContent=document.createElement('div');details.append(detailContent);fileDetails=mountFileDetails(detailContent,{translate:t,services:{listVersions:id=>api.listVersions?api.listVersions(id):api.history({entryId:id}),listActivity:query=>api.listActivity?api.listActivity(query):Promise.reject(new Error('File activity bridge is unavailable.')),previewVersion:id=>api.previewVersion(id),labelVersion:(id,label)=>api.labelVersion(id,label),exportVersion:id=>api.exportVersion(id),restoreVersion:async id=>{if(await confirmAction('Restore this version?','Restoring creates a new current version. Existing history remains encrypted.','Restore as new version'))return api.restoreVersion(id);}}});
  const detailsButton=document.createElement('md-text-button');detailsButton.textContent=t('File details');detailsButton.onclick=()=>{const file=currentFiles().find(f=>f.id===selected);if(file)fileDetails.selectEntry(file);foundation.model.openTab({id:'details',label:'File details'});foundation.shell.activate('details');};document.querySelector('.file-actions').append(detailsButton);
  const settingsSearch=document.createElement('input');settingsSearch.type='search';settingsSearch.id='settings-local-search';settingsSearch.setAttribute('aria-label',t('Search settings'));$('view-settings').children[0].after(settingsSearch);workspaceDisposers.push(attachEnhancedSearch(settingsSearch,$('view-settings')));
  const confirmFeature=async({title,message,requiredText})=>{
@@ -514,16 +535,18 @@ function setupEnhancedWorkspace() {
  const featureNotify=message=>foundation.notify({title:'Update',message:String(message),level:'info'});
  const credentialStore={get:key=>featureRequest('access','credentialGet',{key}),set:(key,value)=>featureRequest('access','credentialSet',{key,value}),delete:key=>featureRequest('access','credentialDelete',{key})};const historyCredentialStore={get:key=>credentialStore.get('history:'+key),set:(key,value)=>credentialStore.set('history:'+key,value),delete:key=>credentialStore.delete('history:'+key)};
  const mounts=[
+  mountFeature('updates','Updates','更新',()=>import('./features/updates/index.js'),(module,root)=>module.mountUpdates(root,{translate:t,language:preferences.language,services:{request:(action,payload)=>featureRequest('updates',action,{...payload,language:preferences.language}),subscribe:callback=>api.onFeatureEvent?.('updates',callback)}})),
+  mountFeature('workflow','Documents and downloads','文件與下載',()=>import('../shared/surface/workflow-tools.js'),(module,root)=>module.mount(root,{translate:t,services:{storage:localStorage,getLanguage:()=>preferences.language,request:(action,payload)=>featureRequest('workflow',action,payload),subscribe:callback=>api.onFeatureEvent?.('workflow',callback)}})),
   mountFeature('converter','Converter','轉換工具',()=>import('./features/converter/index.js'),(module,root)=>module.mountConverter(root,{translate:t,services:{converter:Object.fromEntries(['catalog','inspect','enqueue','list','control'].map(action=>[action,payload=>featureRequest('converter',action,payload)])),pickSources:()=>featureRequest('converter','pickSources'),pickDestination:payload=>featureRequest('converter','pickDestination',payload),pickDestinationDirectory:()=>featureRequest('converter','pickDestinationDirectory'),confirmOverwrite:()=>confirmAction('Replace output file?','The selected output file will be replaced. Source files remain unchanged.','Replace')}})),
   mountFeature('ollama','Local models','本機模型',()=>import('./features/ollama/index.js'),(module,root)=>module.mountOllama(root,{translate:t,confirm:confirmFeature,services:{ollama:{request:(action,payload)=>featureRequest('ollama',action,payload),subscribe:callback=>api.onFeatureEvent?.('ollama',callback)}}})),
-  mountFeature('access','Local access','本機存取',()=>import('./features/access/index.js'),async(module,root)=>{const access=module.mountAccess(root,{credentialStore,t:(key,fallback)=>fallback,notify:featureNotify,dataPath:await featureRequest('access','dataFolder'),openDataFolder:()=>featureRequest('access','openDataFolder')});const keys=await featureRequest('access','credentialList',{prefix:'element-lock:'});await access.load((Array.isArray(keys)?keys:keys.keys||[]).map(key=>key.replace(/^element-lock:/,'')));access.bind(document.body);return access;}),
-  mountFeature('personalization','Personalization','個人化',()=>import('./features/personalization/index.js'),(module,root)=>module.mountPersonalization(root,{storage:localStorage,surfaceRoot:document.documentElement,attachSearch:attachEnhancedSearch,notify:featureNotify,onLock:target=>{const access=featureMounts.get('access');if(!access)throw Error('Local access is not ready.');foundation.model.openTab({id:'access',label:'Local access'});foundation.shell.activate('access');access.openLockWizard(ensureLockId(target),target);},historyCredentialStore,listFonts:()=>featureRequest('personalization','listFonts'),verifySharedCredential:value=>featureRequest('personalization','verifySharedCredential',{password:value}),setSharedCredential:value=>featureRequest('personalization','setSharedCredential',{password:value}),fetchScheduleSource:rule=>featureRequest('personalization','fetchScheduleSource',{rule}),vocabulary:{isAuthenticated:()=>featureMounts.get('access')?.authenticated===true,replace:value=>replaceVocabulary(value,preferences.vocabulary)},sharedSettings:{read:()=>featureRequest('personalization','sharedRead'),write:value=>featureRequest('personalization','sharedWrite',{value}),subscribe:callback=>api.onFeatureEvent?.('personalization',callback)},onChange:value=>{let changed=false;for(const key of ['language','theme'])if(value[key]&&preferences[key]!==value[key]){preferences[key]=value[key];changed=true;}if(changed){savePreferences();applyPreferences();}}})),
+  mountFeature('access','Local access','本機存取',()=>import('./features/access/index.js'),async(module,root)=>{const access=module.mountAccess(root,{credentialStore,translate:(source,options)=>t(source,options),schoolMode:()=>effectiveLocalSettings.school.enabled,onAuthenticatedChange:()=>queueMicrotask(applyPreferences),notify:featureNotify,dataPath:await featureRequest('access','dataFolder'),openDataFolder:()=>featureRequest('access','openDataFolder')});const keys=await featureRequest('access','credentialList',{prefix:'element-lock:'});await access.load((Array.isArray(keys)?keys:keys.keys||[]).map(key=>key.replace(/^element-lock:/,'')));access.bind(document.body);return access;}),
+  mountFeature('personalization','Personalization','個人化',()=>import('./features/personalization/index.js'),(module,root)=>module.mountPersonalization(root,{store:localSettings,storage:localStorage,surfaceRoot:document.documentElement,attachSearch:attachEnhancedSearch,notify:featureNotify,onLock:target=>{const access=featureMounts.get('access');if(!access)throw Error('Local access is not ready.');foundation.model.openTab({id:'access',label:'Local access'});foundation.shell.activate('access');access.openLockWizard(ensureLockId(target),target);},historyCredentialStore,listFonts:()=>featureRequest('personalization','listFonts'),verifySharedCredential:value=>featureRequest('personalization','verifySharedCredential',{password:value}),setSharedCredential:value=>featureRequest('personalization','setSharedCredential',{password:value}),fetchScheduleSource:(source,options)=>featureRequest('personalization','fetchScheduleSource',{source,id:options.id}),setScheduleCredential:(rule,token)=>featureRequest('personalization','setScheduleCredential',{id:rule.id,source:rule.source,token}),clearScheduleCredential:rule=>featureRequest('personalization','clearScheduleCredential',{id:rule.id,source:rule.source}),vocabulary:{isAuthenticated:()=>false,replace:value=>value},sharedSettings:{read:()=>featureRequest('personalization','sharedRead'),write:value=>featureRequest('personalization','sharedWrite',{value}),subscribe:callback=>api.onFeatureEvent?.('personalization',event=>{if(event.type==='sharedSettings')callback(event.value);})},onChange:value=>{const visualChanged=JSON.stringify(effectiveLocalSettings)!==JSON.stringify(value);effectiveLocalSettings=value;let changed=false;for(const key of ['language','theme','emoji','funnyEnglish','funnyCantonese'])if(value[key]!==undefined&&preferences[key]!==value[key]){preferences[key]=value[key];changed=true;}if(changed)savePreferences();if(visualChanged)applyPreferences();}})),
   mountFeature('documentation','Documentation','說明文件',()=>import('./features/documentation/index.js'),async(module,root)=>module.mountDocumentation(root,{translate:t,catalog:await featureRequest('documentation','catalog'),onExport:exportText})),
   mountFeature('changelog','Changelog','更新記錄',()=>import('./features/documentation/changelog.js'),async(module,root)=>module.mountChangelog(root,{translate:t,entries:await featureRequest('documentation','changelog'),onExport:exportText})),
   mountFeature('status','Status','狀態',()=>import('./features/status/index.js'),(module,root)=>module.mountStatus(root,{translate:t,getStatus:()=>featureRequest('status','status')}))
  ];
  Promise.allSettled(mounts).then(()=>{foundation.shell.activate(view);refreshPaletteInventory();});
- foundation.registerCommands([{id:'vault:force-lock',label:{en:'Force lock',yue:'強制鎖定'},run:async()=>{if(await confirmAction('Force lock this drive?','Open files may have unfinished writes. Close other applications first.','Force lock'))await run('Locking drive…',()=>api.forceLock());}},{id:'application:quit',label:{en:'Quit application',yue:'結束程式'},run:()=>api.quit?api.quit():api.windowControl('close')}]);
+ foundation.registerCommands([{id:'vault:force-lock',label:{en:'Force lock',yue:'強制鎖定'},run:()=>run('Locking drive…',()=>api.forceLock())},{id:'application:quit',label:{en:'Quit application',yue:'結束程式'},run:()=>api.quit?api.quit():api.windowControl('close')}]);
  const paletteShortcut=event=>{if((event.ctrlKey||event.metaKey)&&event.shiftKey&&event.key.toLowerCase()==='f')refreshPaletteInventory();};document.addEventListener('keydown',paletteShortcut,true);workspaceDisposers.push(()=>document.removeEventListener('keydown',paletteShortcut,true));
- window.addEventListener('beforeunload',()=>{fileDetails?.destroy();foundation?.destroy();for(const module of featureMounts.values())module.destroy?.();for(const dispose of workspaceDisposers)dispose();},{once:true});
+ onPageDiscard(window,()=>{privateWordingView.destroy();fileDetails?.destroy();foundation?.destroy();for(const module of featureMounts.values())module.destroy?.();for(const dispose of workspaceDisposers)dispose();});
 }
