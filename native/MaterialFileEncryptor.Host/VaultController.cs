@@ -9,7 +9,7 @@ using System.Text.Json;
 
 namespace MaterialFileEncryptor.Host;
 
-internal sealed class VaultController : IDisposable
+internal sealed partial class VaultController : IDisposable
 {
     private readonly object gate = new();
     private VaultEngine? vault;
@@ -85,13 +85,21 @@ internal sealed class VaultController : IDisposable
     private VaultEngine Engine => vault ?? throw new InvalidOperationException("Unlock the vault first.");
     public object Status()
     {
-        lock (gate)
+        if (!Monitor.TryEnter(gate)) return Volatile.Read(ref cachedStatus) ?? new { busy = true };
+        try
         {
-            var files = new List<object>();
-            if (vault is not null) CollectFiles("", files);
-            return new
+            RefreshFiles();
+            var files = cachedFiles;
+            long revision = Volatile.Read(ref historyRevision);
+            if (revision != cachedHistoryRevision)
             {
-                locked = vault is null, mounted = host is not null, unmountBusy, driveLetter, storageDir, cacheDir, files,
+                cachedVersionCount = vault?.ListVersions().Count ?? 0;
+                cachedRecycledCount = vault?.ListDeleted().Count ?? 0;
+                cachedHistoryRevision = revision;
+            }
+            var snapshot = new
+            {
+                locked = vault is null, mounted = host is not null, unmountBusy, driveLetter, storageDir, cacheDir, files, revision = vault?.Revision ?? -1, filesRevision = vault?.Revision ?? -1, operations = operations.Snapshot(),
                 partSizeBytes = vault?.PartSizeBytes ?? 10L * 1024 * 1024, lastOfflineRelease, mountDiagnostic = MountDiagnostic(),
                 sync = new { running = syncing, lastSync, error = fileSystem?.LastError ?? syncError ?? (vault?.Status.LastError is null ? null : "Encrypted storage synchronization needs attention."), pendingCommits = vault?.Status.PendingCommits ?? 0, sourceAvailable = vault?.Status.IsSourceAvailable ?? false },
                 driver = new
@@ -107,12 +115,15 @@ internal sealed class VaultController : IDisposable
                     }
                 },
                 autoUnlock = identity is not null && SavedCredentialStore.Exists(identity),
-                history = new { versionCount = vault?.ListVersions().Count ?? 0, recycledCount = vault?.ListDeleted().Count ?? 0, pendingVersionCount = vault?.PendingVersionCount ?? 0, retentionDays = historyRetentionDays, gitAvailable = historyStore is not null },
-                storageFormat = vault?.StorageFormat,
+                history = new { versionCount = cachedVersionCount, recycledCount = cachedRecycledCount, pendingVersionCount = vault?.PendingVersionCount ?? 0, retentionDays = historyRetentionDays, gitAvailable = historyStore is not null },
+                storageFormat = vault?.StorageFormat, journal = JournalInfo(),
                 transport = new { mode = transportMode, remoteRepository, available = vault is not null && (transportMode == "privateGit" ? transportAvailable : vault.Status.IsSourceAvailable), pendingSynchronization = vault is not null && transportMode == "privateGit" && (pendingPrivatePublication || historyPending || vault.Status.PendingCommits > 0 || vault.PendingVersionCount > 0), lastError = syncError },
                 availableDriveLetters = FreeDriveLetters()
             };
+            Volatile.Write(ref cachedStatus, snapshot);
+            return snapshot;
         }
+        finally { Monitor.Exit(gate); }
     }
     private void CollectFiles(string parent, List<object> output)
     {
@@ -130,11 +141,18 @@ internal sealed class VaultController : IDisposable
     }
     public object? Execute(string method, JsonElement args)
     {
+        if (method == "operations") return operations.Snapshot();
+        if (method == "cancelOperation") return operations.Cancel(RequiredString(args, "operationId"));
+        if (method == "forceLock") return ForceLock();
+        if (method == "startImport") return StartImport(args);
+        if (method == "exportVersion") return ExportVersionFile(args);
+        if (method == "startExport") return StartExport(args);
+        if (method == "listFiles") return ListFiles(args);
         // Dispatcher stop waits for callbacks. It must run outside the callback gate.
         if (method is "lock" or "unmount") { Unmount(); if (method == "lock") LockEngine(); return Status(); }
         if (method == "sync") { SyncIfUnlocked(); return Status(); }
-        if (method == "importFiles") { lock (gate) Import(args); SyncIfUnlocked(); return Status(); }
-        if (method is "restoreVersion" or "restoreDeleted" or "keepOffline" or "resplit") return ExecutePrepared(method, args);
+        if (method == "importFiles") { Import(args); SyncIfUnlocked(); return Status(); }
+        if (method is "restoreVersion" or "restoreDeleted" or "keepOffline" or "resplit" or "previewVersion") return ExecutePrepared(method, args);
         if (method == "copyUpgrade")
         {
             Unmount();
@@ -158,6 +176,14 @@ internal sealed class VaultController : IDisposable
                     int? retention = args.ValueKind == JsonValueKind.Object && args.TryGetProperty("retentionDays", out var days) && days.ValueKind != JsonValueKind.Null ? days.GetInt32() : historyRetentionDays;
                     return Engine.ListVersions(OptionalString(args, "entryId"), retention).Select(VersionInfo).ToArray();
                 case "listDeleted": return Engine.ListDeleted().Select(VersionInfo).ToArray();
+                case "listActivity": return ActivityPage(Engine.ListActivity(new VaultActivityQuery(
+                    EntryId: OptionalString(args,"entryId"), Action: OptionalString(args,"action"),
+                    FromUtc: (OptionalString(args,"fromUtc") ?? OptionalString(args,"from")) is string from ? DateTimeOffset.Parse(from, System.Globalization.CultureInfo.InvariantCulture) : null,
+                    ToUtc: (OptionalString(args,"toUtc") ?? OptionalString(args,"to")) is string to ? DateTimeOffset.Parse(to, System.Globalization.CultureInfo.InvariantCulture) : null,
+                    Pattern: OptionalString(args,"pattern"), Cursor: OptionalString(args,"cursor"), Limit: checked((int)(OptionalLong(args,"limit") ?? 100)))));
+                case "previewVersion": return PreviewInfo(Engine.PreviewVersion(RequiredString(args,"versionId")));
+                case "listVersionLabels": return Engine.ListVersionLabels(RequiredString(args,"entryId"));
+                case "labelVersion": Engine.LabelVersion(RequiredString(args,"versionId"), RequiredString(args,"label")); break;
                 case "saveVersion": Engine.SaveVersionAsync(OptionalString(args, "path")).GetAwaiter().GetResult(); break;
                 case "emptyRecycleBin": Engine.EmptyRecycleBinAsync().GetAwaiter().GetResult(); break;
                 case "setHistoryRetention":
@@ -200,6 +226,7 @@ internal sealed class VaultController : IDisposable
                 // preparation authenticates immutable refs and revalidates state.
                 switch (method)
                 {
+                    case "previewVersion": captured.PrepareVersionsAsync([RequiredString(args, "versionId")]).GetAwaiter().GetResult(); break;
                     case "restoreVersion": captured.PrepareVersionsAsync([RequiredString(args, "versionId")]).GetAwaiter().GetResult(); break;
                     case "restoreDeleted": captured.PrepareVersionsAsync(ids, deleted: true).GetAwaiter().GetResult(); break;
                     case "keepOffline": captured.PreparePinnedAsync(path!).GetAwaiter().GetResult(); break;
@@ -213,6 +240,7 @@ internal sealed class VaultController : IDisposable
                     {
                         switch (method)
                         {
+                            case "previewVersion": return PreviewInfo(captured.PreviewVersion(RequiredString(args, "versionId")));
                             case "restoreVersion": captured.RestoreVersionAsync(RequiredString(args, "versionId")).GetAwaiter().GetResult(); break;
                             case "restoreDeleted": captured.RestoreDeletedAsync(ids).GetAwaiter().GetResult(); break;
                             case "keepOffline": captured.SetPinnedAsync(path!, true).GetAwaiter().GetResult(); break;
@@ -301,6 +329,7 @@ internal sealed class VaultController : IDisposable
             using (credential) opened = create ? VaultEngine.Create(options, credential) : VaultEngine.Open(options, credential);
         }
         engineGeneration++;
+        cachedFileRevision = -2; cachedHistoryRevision = -2;
         vault = opened; storageDir = options.StorageRoot; cacheDir = options.CacheRoot; identity = opened.VaultId; driveLetter = chosenDrive;
         transportMode = selectedTransport; remoteRepository = OptionalString(args, "remoteRepository");
         transportAvailable = connected; pendingPrivatePublication = selectedTransport == "privateGit";
@@ -395,6 +424,7 @@ internal sealed class VaultController : IDisposable
         lock (gate)
         {
             if (host is not null) throw new InvalidOperationException("Unmount the drive before locking.");
+            if (operations.Outstanding != 0) throw new InvalidOperationException("A transfer is active. Cancel it or wait before locking.");
             if (activePreparedOperations > (completingPreparedOperation ? 1 : 0)) throw new InvalidOperationException("A vault operation is retrieving content. Wait before locking.");
             if (vault is null) return;
             vault.SaveDueVersionsAsync(DateTimeOffset.MaxValue).GetAwaiter().GetResult();
@@ -404,7 +434,7 @@ internal sealed class VaultController : IDisposable
             engineGeneration++; syncCancellation?.Cancel();
             // The durable journal is sufficient for reopen/retry. Never start a
             // subprocess from the callback gate, including during lock/disposal.
-            vault.Dispose(); vault = null; syncError = null; historyStore = null; transport = null;
+            vault.Dispose(); vault = null; cachedHistoryRevision = -2; syncError = null; historyStore = null; transport = null;
         }
     }
     private void SaveCredential()
@@ -420,31 +450,19 @@ internal sealed class VaultController : IDisposable
     }
     private void Import(JsonElement args)
     {
-        if (!args.TryGetProperty("paths", out var paths) || paths.ValueKind != JsonValueKind.Array) throw new ArgumentException("Select files to import.");
-        foreach (var pathElement in paths.EnumerateArray())
+        string[] paths;
+        lock (gate)
         {
-            string sourcePath = System.IO.Path.GetFullPath(pathElement.GetString() ?? throw new ArgumentException("Invalid import path."));
-            if (IsWithin(sourcePath, storageDir!) || IsWithin(sourcePath, cacheDir!)) throw new ArgumentException("Choose an original file outside the encrypted storage and cache folders.");
-            string name = VaultPath.Normalize(System.IO.Path.GetFileName(sourcePath));
-            string candidate = name;
-            for (int suffix = 2; Engine.GetInfo(candidate) is not null; suffix++) candidate = System.IO.Path.GetFileNameWithoutExtension(name) + " (" + suffix + ")" + System.IO.Path.GetExtension(name);
-            using var input = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, FileOptions.SequentialScan);
-            // Fill one complete encryption record before writing it. A short stream
-            // read must not turn a large record into repeated full-record rewrites.
-            int payloadBytes = checked((int)(Engine.PartSizeBytes - 36));
-            if (Engine.StorageFormat == 1) payloadBytes = Math.Min(65536, payloadBytes);
-            byte[] buffer = new byte[payloadBytes];
-            Engine.CreateFile(candidate);
-            try
-            {
-                long offset = 0; int count;
-                while ((count = input.ReadAtLeast(buffer, buffer.Length, throwOnEndOfStream: false)) != 0) { Engine.WriteRange(candidate, offset, buffer.AsSpan(0, count)); offset += count; }
-                Engine.SetBasicInfo(candidate, null, File.GetCreationTimeUtc(sourcePath), File.GetLastWriteTimeUtc(sourcePath));
-                Engine.FlushAsync().GetAwaiter().GetResult();
-            }
-            catch { Engine.Delete(candidate); Engine.FlushAsync().GetAwaiter().GetResult(); throw; }
-            finally { CryptographicOperations.ZeroMemory(buffer); }
+            _ = Engine;
+            if (!args.TryGetProperty("paths", out var selected) || selected.ValueKind != JsonValueKind.Array || selected.GetArrayLength() is < 1 or > 1000)
+                throw new ArgumentException("Select between one and 1000 files to import.");
+            paths = selected.EnumerateArray().Select(value => System.IO.Path.GetFullPath(value.GetString() ?? throw new ArgumentException("Invalid import path."))).ToArray();
+            foreach (string path in paths)
+                if (IsWithin(path, storageDir!) || IsWithin(path, cacheDir!)) throw new ArgumentException("Choose files outside the vault folders.");
+            ++activePreparedOperations;
         }
+        try { ImportManagedAsync(paths, CancellationToken.None, (_, _, _, _) => { }).GetAwaiter().GetResult(); }
+        finally { lock (gate) --activePreparedOperations; }
     }
     public void SyncIfUnlocked()
     {
@@ -452,6 +470,7 @@ internal sealed class VaultController : IDisposable
         VaultEngine? capturedEngine = null;
         IVaultTransport? capturedTransport = null;
         long generation = 0;
+        bool hadSyncWork = false;
         using var cancellation = new CancellationTokenSource();
         try
         {
@@ -459,12 +478,15 @@ internal sealed class VaultController : IDisposable
             {
                 if (vault is null || activePreparedOperations != 0) return;
                 capturedEngine = vault; capturedTransport = transport; generation = engineGeneration;
+                hadSyncWork = capturedEngine.Status.PendingCommits > 0 || pendingPrivatePublication;
                 syncing = true; syncCancellation = cancellation;
                 nextSyncAttempt = DateTimeOffset.UtcNow.AddSeconds(15);
                 fileSystem?.RecoverPending();
                 // Local journal/object publication and history remain serialized.
-                capturedEngine.FlushAsync().GetAwaiter().GetResult();
+                capturedEngine.FlushLocalOnly();
             }
+            capturedEngine.FlushAsync(cancellation.Token).GetAwaiter().GetResult();
+            if (hadSyncWork) capturedEngine.RecordActivity(capturedEngine.VaultId, "sync", detail: "Encrypted synchronization started");
             RecordHistory(cancellation.Token);
             // Only the captured transport is used during network waits. No WinFsp
             // callback gate or engine lifetime is held across either network pass.
@@ -473,9 +495,10 @@ internal sealed class VaultController : IDisposable
             lock (gate)
             {
                 if (generation != engineGeneration || !ReferenceEquals(vault, capturedEngine)) return;
-                capturedEngine.SyncAsync().GetAwaiter().GetResult();
                 publishAgain = transportMode == "privateGit";
             }
+            capturedEngine.SyncAsync(cancellation.Token).GetAwaiter().GetResult();
+            capturedEngine.SynchronizeActivity();
             RecordHistory(cancellation.Token);
             if (publishAgain) SynchronizeTransport(capturedTransport, cancellation.Token);
             lock (gate)

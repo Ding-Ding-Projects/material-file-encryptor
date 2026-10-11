@@ -28,6 +28,7 @@ internal sealed class VaultFileSystem : FileSystemBase
     private readonly string cacheVolumeRoot;
     private bool stopping;
     public string? LastError { get; private set; }
+    public int ActiveIo { get { lock (gate) return activeIo; } }
     public int ActiveHandles { get { lock (gate) return activeHandles; } }
 
     public VaultFileSystem(VaultEngine vault, object gate)
@@ -79,6 +80,15 @@ internal sealed class VaultFileSystem : FileSystemBase
             return true;
         }
     }
+    public bool BeginForceUnmount()
+    {
+        lock (gate)
+        {
+            if (activeIo != 0) return false;
+            stopping = true;
+            return true;
+        }
+    }
     public void CancelUnmount() { lock (gate) stopping = false; }
     public void RecoverPending()
     {
@@ -93,7 +103,7 @@ internal sealed class VaultFileSystem : FileSystemBase
             pendingDeletes.Clear();
         }
     }
-    private void Durable() { vault.FlushAsync().GetAwaiter().GetResult(); LastError = null; }
+    private void Durable() { vault.FlushLocalOnly(); LastError = null; }
     private static string PathOf(string name) => VaultPath.Normalize(name);
     private VaultEntryInfo Info(object node) => vault.GetInfoById(((Node)node).Id) ?? throw new FileNotFoundException();
     private Node NodeFor(VaultEntryInfo info)
@@ -148,6 +158,7 @@ internal sealed class VaultFileSystem : FileSystemBase
     {
         lock (gate)
         {
+            if (stopping) { attributes = 0; return STATUS_DEVICE_NOT_READY; }
             var info = vault.GetInfo(PathOf(name));
             attributes = info is null ? 0 : ToInfo(info).FileAttributes;
             if (info is null) return STATUS_OBJECT_NAME_NOT_FOUND;
@@ -266,17 +277,18 @@ internal sealed class VaultFileSystem : FileSystemBase
                 if (constrained && start >= (ulong)entry.Length) { completedInfo = ToInfo(entry); return STATUS_SUCCESS; }
                 int count = checked((int)(constrained ? Math.Min((ulong)length, (ulong)entry.Length - start) : length));
                 vault.WriteRangeById(id, checked((long)start), new ReadOnlySpan<byte>((void*)buffer, count));
+                if (count != 0) vault.RecordActivity(id, "edit", entry.Path);
                 Durable(); completed = (uint)count; completedInfo = ToInfo(vault.GetInfoById(id)); return STATUS_SUCCESS;
             });
         transferred = completed; info = completedInfo; return result;
     }
     public override int Flush(object node, object desc, out FsInfo info)
     {
-        lock (gate) { Durable(); info = node is null ? default : ToInfo(Info(node)); return STATUS_SUCCESS; }
+        lock (gate) { info = default; if (stopping) return STATUS_DEVICE_NOT_READY; Durable(); info = node is null ? default : ToInfo(Info(node)); return STATUS_SUCCESS; }
     }
     public override int GetFileInfo(object node, object desc, out FsInfo info)
     {
-        lock (gate) { info = ToInfo(Info(node)); return STATUS_SUCCESS; }
+        lock (gate) { info = default; if (stopping) return STATUS_DEVICE_NOT_READY; info = ToInfo(Info(node)); return STATUS_SUCCESS; }
     }
     public override int SetFileSize(object node, object desc, ulong size, bool allocation, out FsInfo info)
     {
@@ -295,6 +307,8 @@ internal sealed class VaultFileSystem : FileSystemBase
     {
         lock (gate)
         {
+            info = default;
+            if (stopping) return STATUS_DEVICE_NOT_READY;
             var entry = Info(node);
             vault.SetBasicInfoById(entry.EntryId, attributes == uint.MaxValue ? null : attributes,
                 creation == 0 ? null : new DateTimeOffset(DateTime.FromFileTimeUtc(checked((long)creation))),
@@ -306,6 +320,7 @@ internal sealed class VaultFileSystem : FileSystemBase
     {
         lock (gate)
         {
+            if (stopping) return STATUS_DEVICE_NOT_READY;
             var entry = Info(node);
             if (entry.Path.Length == 0) return STATUS_ACCESS_DENIED;
             if (entry.IsDirectory && vault.Enumerate(entry.Path).Count != 0) return STATUS_DIRECTORY_NOT_EMPTY;
@@ -316,6 +331,7 @@ internal sealed class VaultFileSystem : FileSystemBase
     {
         lock (gate)
         {
+            if (stopping) return STATUS_DEVICE_NOT_READY;
             string source = Info(node).Path, destination = PathOf(newName);
             if (source.Length == 0) return STATUS_ACCESS_DENIED;
             var target = vault.GetInfo(destination);
@@ -324,7 +340,9 @@ internal sealed class VaultFileSystem : FileSystemBase
                 if (!replace) return STATUS_OBJECT_NAME_COLLISION;
                 if (target.IsDirectory) return STATUS_ACCESS_DENIED;
             }
-            vault.Rename(source, destination, replace); Durable(); return STATUS_SUCCESS;
+            vault.Rename(source, destination, replace);
+            vault.RecordActivity(((Node)node).Id, "rename", destination);
+            Durable(); return STATUS_SUCCESS;
         }
     }
     public override void Cleanup(object node, object desc, string name, uint flags)
@@ -333,7 +351,7 @@ internal sealed class VaultFileSystem : FileSystemBase
         {
             try
             {
-                if ((flags & CleanupDelete) != 0) { string id = ((Node)node).Id; pendingDeletes.Add(id); vault.DeleteById(id); Durable(); pendingDeletes.Remove(id); }
+                if (!stopping && (flags & CleanupDelete) != 0) { string id = ((Node)node).Id; pendingDeletes.Add(id); vault.DeleteById(id); Durable(); pendingDeletes.Remove(id); }
             }
             catch { LastError = "A file cleanup could not be saved. Keep the drive unlocked and retry sync."; }
             // Close retains the descriptor lease for outstanding mapped views.
@@ -355,6 +373,7 @@ internal sealed class VaultFileSystem : FileSystemBase
     {
         lock (gate)
         {
+            if (stopping) { name = null!; info = default; return false; }
             if (context is not IEnumerator<VaultEntryInfo> iterator)
             {
                 var parent = Info(node);
@@ -371,6 +390,7 @@ internal sealed class VaultFileSystem : FileSystemBase
     {
         lock (gate)
         {
+            if (stopping) { normalizedName = null!; info = default; return STATUS_DEVICE_NOT_READY; }
             var parent = Info(node);
             if (parent.Path.Length == 0 && parent.EntryId != vault.VaultId) { normalizedName = null!; info = default; return STATUS_OBJECT_NAME_NOT_FOUND; }
             var entry = vault.GetInfo(parent.Path.Length == 0 ? PathOf(name) : parent.Path + "/" + PathOf(name));
