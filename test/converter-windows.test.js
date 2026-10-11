@@ -23,3 +23,10 @@ test('native provider rejects executable hash mismatch',{skip:!available},async(
 test('native provider rejects omitted companion hashes',{skip:!available},async()=>{
  await assert.rejects(createWindowsSandboxProvider({launcherPath:executable,launcherSha256:await hash(executable),runtimePath:process.execPath,runtimeSha256:await hash(process.execPath)}),/companion verification/);
 });
+
+test('native provider resolves registered profile folders with no profile environment',{skip:!available},async()=>{
+ const {spawnSync}=await import('node:child_process');
+ const result=spawnSync(process.execPath,[path.resolve('test/converter-minimal-env.fixture.mjs')],{cwd:process.cwd(),env:{SystemRoot:process.env.SystemRoot,WINDIR:process.env.WINDIR,TEMP:process.env.TEMP,TMP:process.env.TMP},encoding:'utf8',timeout:30000,windowsHide:true});
+ assert.equal(result.status,0,result.stderr);
+ assert.deepEqual(JSON.parse(result.stdout),{ready:true});
+});
