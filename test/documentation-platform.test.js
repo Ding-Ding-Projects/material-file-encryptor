@@ -53,7 +53,14 @@ test('renderer URL allowlist rejects unsafe and uncatalogued targets', () => {
 test('required inventory rejects omission and each missing proof dimension', async () => {
   const manifest = JSON.parse(await readFile(new URL('../contracts/feature-delivery.json', import.meta.url)));
   assert.deepEqual(validateFeatureDelivery(manifest), []);
-  assert.ok(manifest.features.every(row => row.status === 'unverified' && row.builtInteraction === 'unverified' && row.visualEvidence === 'unverified' && row.evidence.length === 0));
+  for (const row of manifest.features) {
+    const scope = expectedFeatureApplicability(row.id, row.surface);
+    assert.equal(row.status, scope.applies ? 'unverified' : 'not-applicable');
+    assert.equal(row.builtInteraction, 'unverified'); assert.equal(row.visualEvidence, 'unverified');
+    for (const evidence of row.evidence) assert.match(manifest.referenceSources[evidence], /^[a-f0-9]{40}$/);
+  }
+  const premature = structuredClone(manifest); premature.features.find(row => row.applicability.applies).status = 'implemented';
+  assert.ok(validateFeatureDelivery(premature).some(error => error.includes('verified built')));
   const omitted = structuredClone(manifest); omitted.features.shift();
   assert.ok(validateFeatureDelivery(omitted).length);
   for (const field of ['implementation', 'documentation', 'localization', 'tests', 'evidence']) {

@@ -1,35 +1,39 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { parseVocabulary, emptyVocabulary, createVocabularyStore, replaceVocabulary } from '../src/shared/personal-vocabulary.js';
+import { parseVocabulary, emptyVocabulary, serializeVocabulary, replaceVocabulary } from '../src/shared/personal-vocabulary.js';
+import {createAccessDocument} from './helpers/local-access-dom.js';
+const {mountVisitorAccess}=await import('../docs/site/visitor-access.js');
 const source = path => readFileSync(new URL(path, import.meta.url), 'utf8');
 const file = text => ({ size: text.length, text: async () => text });
 const words = replacement => JSON.stringify({ schemaVersion: 1, entries: { folder: replacement } });
-test('actual site upload callback stays locked and persists authenticated replacements', async () => {
-  const script = source('../docs/site/site.js');
-  const callbackSource = script.slice(script.indexOf('let uploadVersion = 0;'), script.indexOf('renderCopy(); revealHash();'));
-  const handlers = {}, storage = new Map();
-  const localStorage = { getItem: key => storage.get(key), setItem: (key,value) => storage.set(key,value), removeItem: key => storage.delete(key) };
-  const input = { files: [], value: '', addEventListener: (event,handler) => { handlers.upload = handler; } };
-  let renders = 0;
-  const run = new Function('parseVocabulary','emptyVocabulary','localStorage','vocabularyFile','document','renderCopy','updateMessages', `
-    let privateWordingAvailable=false, pendingVocabularySource=null, vocabulary=emptyVocabulary(), vocabularyState={}, vocabularyStore=null;
+test('actual site upload callback keeps locked wording pending and encrypts authenticated replacements', async () => {
+  const script=source('../docs/site/site.js');
+  const callbacks=script.slice(script.indexOf('let uploadVersion = 0;'),script.indexOf('const foundation = mountSiteFoundation'));
+  const persistence=script.slice(script.indexOf('async function replacePrivateVocabulary'),script.indexOf('export async function setAuthenticatedLocalSession'));
+  assert.ok(callbacks.includes("#vocabulary-reset"));assert.ok(persistence.includes('access.credentialStore.assertSession()'));
+  const handlers={},storage=new Map(),localStorage={getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,value),removeItem:key=>storage.delete(key)};
+  const doc=createAccessDocument(),root=doc.createElement('main');doc.body.append(root);
+  const access=mountVisitorAccess(root,{storage:localStorage,withLock:(_name,run)=>run(),eventTarget:null});
+  const input={files:[],value:'',addEventListener:(_event,handler)=>{handlers.upload=handler;}};
+  let renders=0;
+  const run=new Function('parseVocabulary','serializeVocabulary','emptyVocabulary','siteStorage','vocabularyFile','document','renderCopy','updateMessages','globalThis',`
+    let privateWordingAvailable=false,pendingVocabularySource=null,vocabulary=emptyVocabulary(),vocabularyState={},privateCacheAccess=null,wordingGeneration=0,schoolEnabled=false,vocabularyClearFlight=Promise.resolve();
     const vocabularyStorageKey='test';
-    ${callbackSource}
-    return { state:()=>({vocabulary,vocabularyState,pendingVocabularySource}), unlock:store=>{privateWordingAvailable=true;vocabularyStore=store;} };
+    ${persistence}
+    ${callbacks}
+    return {state:()=>({vocabulary,vocabularyState,pendingVocabularySource}),unlock:access=>{privateWordingAvailable=true;privateCacheAccess=access;},settle:()=>vocabularyClearFlight};
   `);
-  const state = run(parseVocabulary,emptyVocabulary,localStorage,input,{querySelector:()=>({addEventListener:(event,handler)=>{handlers.reset=handler;}})},()=>renders++,()=>{});
-  input.files=[file(words('cabinet'))]; await handlers.upload();
-  assert.equal(state.state().vocabulary.replacements.length,0);
-  assert.equal(state.state().pendingVocabularySource,words('cabinet'));
-  assert.equal(renders,0); assert.equal(storage.size,0);
-  state.unlock(createVocabularyStore(localStorage,'test'));
-  input.files=[file(words('drawer'))]; await handlers.upload();
-  assert.equal(replaceVocabulary('folder',state.state().vocabulary),'drawer');
-  assert.equal(parseVocabulary(storage.get('test')).replacements[0].to,'drawer');
-  input.files=[file('{broken')]; await handlers.upload();
-  assert.equal(replaceVocabulary('folder',state.state().vocabulary),'drawer');
-  handlers.reset(); assert.equal(storage.size,0); assert.equal(state.state().pendingVocabularySource,null);
+  const state=run(parseVocabulary,serializeVocabulary,emptyVocabulary,localStorage,input,{querySelector:()=>({addEventListener:(_event,handler)=>{handlers.reset=handler;}})},()=>renders++,()=>{},{navigator:{locks:{request:(_name,run)=>run()}}});
+  try{
+    input.files=[file(words('cabinet'))];await handlers.upload();assert.equal(state.state().vocabulary.replacements.length,0);assert.equal(state.state().pendingVocabularySource,words('cabinet'));assert.equal(renders,0);assert.equal(storage.size,0);
+    root.querySelectorAll('input')[0].value='synthetic vocabulary profile';await root.querySelectorAll('button').find(node=>node.textContent==='Set up local profile').click();assert.equal(access.authenticated,true);state.unlock(access);
+    input.files=[file(words('drawer'))];await handlers.upload();assert.equal(replaceVocabulary('folder',state.state().vocabulary),'drawer');assert.ok(!storage.get('test').includes('drawer'));
+    const clear=await access.decryptPrivateCache(JSON.parse(storage.get('test')),'public-site-personal-vocabulary');assert.equal(parseVocabulary(clear).replacements[0].to,'drawer');
+    input.files=[file('{broken')];await handlers.upload();assert.equal(replaceVocabulary('folder',state.state().vocabulary),'drawer');
+    access.lock();input.files=[file(words('must not apply'))];await handlers.upload();assert.equal(replaceVocabulary('folder',state.state().vocabulary),'drawer');assert.equal(state.state().vocabularyState.kind,'error');
+    handlers.reset();await state.settle();assert.equal(storage.has('test'),false);assert.equal(state.state().pendingVocabularySource,null);assert.equal(state.state().vocabulary.replacements.length,0);
+  }finally{access.destroy();}
 });
 test('actual desktop callback suppresses stale failures and removes failed-write cache', async () => {
   const script=source('../src/renderer/app.js');
