@@ -3,6 +3,7 @@ import {IMAGE_TRANSFORM_SURFACE} from '../../renderer/features/personalization/i
 import { localized } from './localization.js';
 
 export const surfaceRegistry = Object.freeze([
+  { tag: 'mfe-startup-surprise', role: 'region', module: '../../renderer/features/shell/startup-surprise.js', primitives: ['md-text-button'] },
   { tag: 'mfe-navigation-rail', role: 'navigation', module: '../../renderer/features/shell/navigation.js', primitives: ['md-text-button','md-filled-tonal-button'] },
   { tag: 'mfe-top-bar', role: 'banner', module: '../../renderer/features/shell/navigation.js', primitives: ['md-icon-button','md-outlined-button'] },
   { tag: 'mfe-date-field', role: 'group', module: 'controls.js', primitives: ['md-outlined-text-field','md-outlined-button'], nativeInternals: ['input[type=date]','input[type=time]','input[type=datetime-local]'] },
