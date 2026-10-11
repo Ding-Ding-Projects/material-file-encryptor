@@ -1,14 +1,15 @@
+import { control, connectSelectSearch } from '../../../shared/surface/controls.js';
 import { filterVersions, compareText, selectedVersions } from './model.js';
 import { createVersionSearch } from './version-search.js';
 
-export function mountFileDetails(root, { services, translate = value => value } = {}) {
+export function mountFileDetails(root, { services, translate = value => value, language = 'en' } = {}) {
  if (!root || !services) throw new TypeError('File details requires a root and services.');
  let entry = null, tab = 'versions', versions = [], visibleVersions = [], activity = [], cursor = null, generation = 0, destroyed = false, busy = false;
  const versionSearch = createVersionSearch();
  const chosen = new Set(), filters = { from: '', to: '', pattern: '', action: '' };
  const doc = root.ownerDocument;
  const element = (tag, text, attributes = {}) => {
-  const node = doc.createElement(tag); if (text != null) node.textContent = translate(text);
+  const node = control(tag, attributes, [], doc); if (text != null) node.textContent = translate(text);
   for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, value);
   return node;
  };
@@ -20,13 +21,14 @@ export function mountFileDetails(root, { services, translate = value => value } 
  tabs.append(versionTab, activityTab);
  const controls = element('div', null, { class: 'file-details-filters' });
  function input(label, type, key) {
-  const wrapper = element('label', label), field = element('input', null, { type });
+  const wrapper = element('label', label), field = element('input', null, { type, label: translate(label), 'aria-label': translate(label) });
   field.addEventListener('change', () => { filters[key] = field.value; void refresh(); }); wrapper.append(field); controls.append(wrapper); return field;
  }
  input('From date (UTC)', 'date', 'from'); input('Through date (UTC)', 'date', 'to');
  input('Regular expression', 'search', 'pattern').maxLength = 256;
  const action = element('select', null, { 'aria-label': translate('Activity type') });
  for (const type of ['', 'import', 'edit', 'rename', 'restore', 'cancel', 'sync', 'delete', 'create', 'export', 'label']) action.append(element('option', type || 'All activity', { value: type }));
+ const selectSearch = connectSelectSearch(action, {language});
  action.addEventListener('change', () => { filters.action = action.value; void refresh(); }); controls.append(action);
  const toolbar = element('div', null, { class: 'file-details-actions' });
  const status = element('p', '', { role: 'status', 'aria-live': 'polite' });
@@ -54,6 +56,7 @@ export function mountFileDetails(root, { services, translate = value => value } 
  function render() {
   if (destroyed) return;
   title.textContent = entry ? `${translate('File details')}: ${entry.path || entry.name || entry.entryId}` : translate('Select a file');
+  versionTab.tabIndex = tab === 'versions' ? 0 : -1; activityTab.tabIndex = tab === 'activity' ? 0 : -1;
   versionTab.setAttribute('aria-selected', String(tab === 'versions')); activityTab.setAttribute('aria-selected', String(tab === 'activity'));
   action.hidden = tab !== 'activity'; toolbar.replaceChildren(); list.replaceChildren();
   more.hidden = tab !== 'activity' || !cursor; more.disabled = busy;
@@ -104,8 +107,9 @@ export function mountFileDetails(root, { services, translate = value => value } 
    status.textContent = ''; render();
   } catch (error) { if (request === generation && !destroyed) fail(error); }
  }
+ tabs.addEventListener('keydown', event => { if (!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return; event.preventDefault(); const target = event.key === 'Home' ? versionTab : event.key === 'End' ? activityTab : tab === 'versions' ? activityTab : versionTab; target.click(); target.focus(); });
  versionTab.addEventListener('click', () => { tab = 'versions'; preview.textContent = ''; render(); void refresh(); });
  activityTab.addEventListener('click', () => { tab = 'activity'; preview.textContent = ''; render(); void refresh(); });
  more.addEventListener('click', () => void refresh(true)); render();
- return { selectEntry(value) { generation++; versionSearch.cancel(); entry = value; chosen.clear(); versions = []; visibleVersions = []; activity = []; cursor = null; preview.textContent = ''; render(); return refresh(); }, refresh, destroy() { destroyed = true; generation++; versionSearch.cancel(); root.replaceChildren(); } };
+ return { selectEntry(value) { generation++; versionSearch.cancel(); entry = value; chosen.clear(); versions = []; visibleVersions = []; activity = []; cursor = null; preview.textContent = ''; render(); return refresh(); }, refresh, destroy() { destroyed = true; generation++; versionSearch.cancel(); selectSearch?.(); root.replaceChildren(); } };
 }

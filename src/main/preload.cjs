@@ -13,6 +13,7 @@ const api = {
   generateKeyFile: (options = {}) => invoke('createKeyFile', Object.fromEntries(Object.entries(options).filter(([, value]) => value !== ''))),
   importFiles: paths => invoke('importSelected', { paths }),
   startImport: paths => invoke('startImport', { paths }), operations: () => invoke('operations'), cancelOperation: operationId => invoke('cancelOperation', {operationId}),
+  storageDiagnostics: () => invoke('storageDiagnostics'), startPacking: (options = {}) => invoke('startPacking', options),
   forceLock: (options={}) => invoke('forceLock',options), quit: () => invoke('quit'), listFiles: (options={}) => invoke('listFiles',options),
   listActivity: (options={}) => invoke('listActivity',options), previewVersion: versionId => invoke('previewVersion',{versionId}), labelVersion:(versionId,label)=>invoke('labelVersion',{versionId,label}), exportVersion:versionId=>invoke('exportVersion',{versionId}), exportText:options=>invoke('exportText',options),
   open: id => invoke('fileAction', { id, action: 'open' }), openExplorer: () => invoke('openExplorer'),

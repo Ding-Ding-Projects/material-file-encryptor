@@ -13,6 +13,8 @@ export interface DriveState {
 }
 export type VaultOptions = { storageDir: string; cacheDir: string; driveLetter: string; transport?: 'folder' | 'privateGit'; remoteRepository?: string; autoUnlock?: boolean } & ({ password: string; keyFilePath?: never } | { password?: never; keyFilePath: string });
 export interface DriveBridge {
+  storageDiagnostics(): Promise<StorageDiagnostics>;
+  startPacking(options?: {path?: string; partSizeBytes?: number}): Promise<{operationId: string}>;
   status(): Promise<DriveState>; create(options: VaultOptions & { partSizeBytes: number }): Promise<DriveState>;
   upgrade(options: VaultOptions & { partSizeBytes: number }): Promise<DriveState>;
   unlock(options: VaultOptions): Promise<DriveState>; lock(): Promise<DriveState>;
@@ -34,3 +36,5 @@ export interface DriveBridge {
   onStatus(callback: (state: DriveState) => void): () => void;
 }
 declare global { interface Window { drive: DriveBridge } }
+
+interface StorageDiagnostics {targetPartSizeBytes:number;pendingPackingFiles:number;activeWriters:number;packingRunning:boolean;packingError:string|null;currentReferencedParts:number;currentReferencedBytes:number;historicalOnlyParts:number;historicalOnlyBytes:number;temporaryFiles:number;temporaryBytes:number}
