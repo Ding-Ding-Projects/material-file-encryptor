@@ -75,6 +75,15 @@ export async function verifyConnectedRenderer(browser,{expectedUrl,targetId},pro
  if(result?.client_ok!==true||result.clientIdentity?.pid!==process.pid||result.establishedPeerPair?.clientPid!==process.pid||result.exactUrl!==expectedUrl||result.targetId!==targetId)throw new Error('Connected renderer lacks exact client peer ownership proof.');
  return result;
 }
+export async function proveStableRendererTree(prove,{wait=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}) {
+ for(let attempt=1;attempt<=3;attempt++){
+  try{return await prove();}catch(error){
+   const diagnostic=error.lifecycleObservation?.stderr?.trim();
+   if(attempt===3||!diagnostic?.endsWith('renderer_snapshot.SnapshotError: Process ancestry changed during inventory.'))throw error;
+   await wait(200*attempt);
+  }
+ }
+}
 export async function createRendererCdpTransport(endpoint,{fetchImpl=fetch,WebSocketImpl=WebSocket}={}) {
  const response=await fetchImpl(`${endpoint}/json/version`,{signal:AbortSignal.timeout(3000),headers:{Connection:'close'}});
  const text=await response.text();
@@ -233,7 +242,7 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
   if(clientBinding?.clientIdentity?.pid!==process.pid)throw new Error('Fresh renderer client ancestry binding is unavailable.');
   cdpTransport=await (runtime.createTransport||createRendererCdpTransport)(endpoint);
   browser=await chromium.connectOverCDP(cdpTransport.transport);
-  if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await verifyConnectedRenderer(browser,{expectedUrl,targetId:targets[0].id},input=>lifecycleCommand([adapter,'prove-cdp',state],{...input,clientBinding}));
+  if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await verifyConnectedRenderer(browser,{expectedUrl,targetId:targets[0].id},input=>proveStableRendererTree(()=>lifecycleCommand([adapter,'prove-cdp',state],{...input,clientBinding})));
   connectionOwned=true;
   const page=browser.contexts()[0].pages()[0];
   if(!page||browser.contexts()[0].pages().length!==1)throw new Error('Renderer fixture page inventory changed.');
