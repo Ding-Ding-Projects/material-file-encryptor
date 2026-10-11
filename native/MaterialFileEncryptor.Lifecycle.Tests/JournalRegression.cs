@@ -15,6 +15,7 @@ internal static class JournalRegression
         engine.CreateDirectory("folder"); engine.CreateFile("folder/original");
         byte[] block = new byte[65536];
         for (int index = 0; index < 64; ++index) { Array.Fill(block, (byte)index); engine.WriteRange("folder/original", index * 65536L, block); engine.FlushLocalOnly(); }
+        Assert(engine.JournalStatistics.PendingFrames > 0,"Accepted local frames were not exposed as pending");
         engine.Rename("folder/original", "folder/renamed"); engine.FlushLocalOnly();
         engine.SetLength("folder/renamed", 65537); engine.SetLength("folder/renamed", 131072); engine.FlushLocalOnly();
         engine.WriteRange("folder/renamed", 100000, new byte[] { 77 }); engine.FlushLocalOnly();
@@ -44,6 +45,7 @@ internal static class JournalRegression
             byte[] originalLog = File.ReadAllBytes(log), originalCheckpoint = File.ReadAllBytes(Path.Combine(root, "cache", "journal.mfe"));
             using (var credential = Credentials()) using (var reopened = VaultEngine.Open(Options(root), credential))
             {
+                Assert(reopened.JournalStatistics.PendingFrames == 0,"Replayed checkpoint still reported pending frames");
                 Assert(reopened.GetInfo("folder/original") is null && reopened.GetInfo("removed") is null, "Mutation replay lost rename/delete");
                 Assert(reopened.GetInfo("folder/renamed")?.Length == 131072, "Mutation replay lost length");
                 byte[] data = new byte[131072]; reopened.ReadRange("folder/renamed", 0, data);

@@ -156,7 +156,7 @@ internal sealed partial class VaultController
     {
         if(vault is null)return null;
         var value=vault.JournalStatistics;
-        return new { appendedBytes=value.AppendedBytes,appendedFrames=value.AppendedFrames,checkpointBytes=value.CheckpointBytes,checkpoints=value.Checkpoints };
+        return new { appendedBytes=value.AppendedBytes,appendedFrames=value.AppendedFrames,checkpointBytes=value.CheckpointBytes,checkpoints=value.Checkpoints,pendingFrames=value.PendingFrames };
     }
     private object ForceLock()
     {
@@ -182,6 +182,7 @@ internal sealed partial class VaultController
             // either admissionGate or the filesystem callback gate.
             FileSystemHostDetach();
             LockEngine();
+            Status();
             return new { locked = true, busy = false, code = "locked", activeOperations = 0, queuedOperations = 0 };
         }
         finally { lock (admissionGate) forceLocking = false; }

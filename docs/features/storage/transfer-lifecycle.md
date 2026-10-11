@@ -28,7 +28,7 @@ An orderly parent EOF waits for admitted requests and refuses to dispose an engi
 
 ## Incremental journal and activity
 
-Accepted filesystem mutations append sequence-numbered encrypted records to a local journal. Each record authenticates its length, sequence, and predecessor digest. Acknowledgement follows a durable flush. Regular synchronization compacts these records into a checkpoint and immutable publication commits; the durable checkpoint records its high-water mark before old log data is retired. Startup ignores only an incomplete terminal record and rejects complete-record authentication or chain failures. `journal` status counters report appended bytes and frames separately from checkpoint bytes and count.
+Accepted filesystem mutations append sequence-numbered encrypted records to a local journal. Each record authenticates its length, sequence, and predecessor digest. Acknowledgement follows a durable flush. Regular synchronization compacts these records into a checkpoint and immutable publication commits; the durable checkpoint records its high-water mark before old log data is retired. Startup ignores only an incomplete terminal record and rejects complete-record authentication or chain failures. `journal` status counters report appended bytes and frames separately from checkpoint bytes and count. `journal.pendingFrames` and `sync.pendingLocalFrames` report accepted local mutations awaiting checkpoint/publication work.
 
 Status requests return an immutable cached snapshot directly from the input loop. Snapshot refresh occurs outside that reader, so a large encryption operation cannot prevent a later cancellation request from being read. Invalid requests also cannot force a blocking status refresh.
 

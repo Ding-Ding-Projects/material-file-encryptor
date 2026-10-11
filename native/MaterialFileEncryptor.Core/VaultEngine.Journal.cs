@@ -7,10 +7,10 @@ public sealed partial class VaultEngine
 {
     private const int LogHeaderSize=80;
     private readonly List<JournalMutation> journalMutations=[];
-    private long logSequence,logLength,appendedBytes,appendedFrames,checkpointBytes,checkpointCount;
+    private long logSequence,logLength,appendedBytes,appendedFrames,checkpointBytes,checkpointCount,checkpointHighWater;
     private byte[] logDigest=new byte[32];
     private string LogPath => Path.Combine(cache,"journal.log.mfe");
-    public VaultJournalStatistics JournalStatistics { get { lock(gate)return new(appendedBytes,appendedFrames,checkpointBytes,checkpointCount); } }
+    public VaultJournalStatistics JournalStatistics { get { lock(gate)return new(appendedBytes,appendedFrames,checkpointBytes,checkpointCount,Math.Max(0,logSequence-checkpointHighWater)+journalMutations.Count); } }
     private static Entry MetadataOnly(Entry entry) => new() { Id=entry.Id,Version=entry.Version,Directory=entry.Directory,Length=entry.Length,ChunkSize=entry.ChunkSize,PartSize=entry.PartSize,Created=entry.Created,Modified=entry.Modified,Attributes=entry.Attributes,OverlaySize=entry.OverlaySize,BaseLength=entry.BaseLength };
     private void TrackEntry(Entry entry,Dictionary<long,RecordRef>? records=null,bool overlay=false,long? truncate=null)
     {
@@ -50,7 +50,7 @@ public sealed partial class VaultEngine
     }
     private void ReplayJournal(long checkpointSequence,string checkpointDigest)
     {
-        logSequence=checkpointSequence;
+        logSequence=checkpointSequence;checkpointHighWater=checkpointSequence;
         logDigest=checkpointDigest.Length==0?new byte[32]:Convert.FromHexString(checkpointDigest);
         if(logSequence<0||logDigest.Length!=32)throw new InvalidDataException("Invalid local journal checkpoint.");
         if(!File.Exists(LogPath))return;
@@ -122,7 +122,7 @@ public sealed partial class VaultEngine
         revision++;
         var path=Path.Combine(cache,"journal.mfe");
         WriteMetadata(path,new Journal { LogSequence=logSequence,LogDigest=Convert.ToHexString(logDigest),PartSize=partSize,Entries=entries,Baseline=baseline,Pending=pending,Known=known,Heads=heads,Pinned=pinned,VersionDue=versionDue,PendingVersions=pendingVersions,HiddenBin=hiddenBin },"journal","");
-        checkpointBytes+=new FileInfo(path).Length;checkpointCount++;
+        checkpointBytes+=new FileInfo(path).Length;checkpointCount++;checkpointHighWater=logSequence;
         journalMutations.Clear();
         // The durable checkpoint is authoritative before the obsolete prefix is removed.
         try { VaultCrypto.AtomicWrite(LogPath,ReadOnlySpan<byte>.Empty);logLength=0; }
