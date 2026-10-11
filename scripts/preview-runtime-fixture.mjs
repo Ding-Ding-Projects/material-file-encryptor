@@ -10,6 +10,11 @@ import {NativeClient} from '../src/main/native-client.js';
 import {runModernPhase} from './modern-ui-check.mjs';
 
 export function fixturePreferences(fixture) {return {startup:false,autoUnlock:true,storageDir:fixture.storageDir,cacheDir:fixture.cacheDir,driveLetter:fixture.driveLetter,transport:'folder',historyRetentionDays:null};}
+export function chooseVerificationDriveLetter(available) {
+ assert.ok(Array.isArray(available),'Native drive inventory is required.');
+ const letter=available.find(value=>typeof value==='string'&&/^[D-Z]:$/.test(value)&&value!=='M:');
+ assert.ok(letter,'No unreserved verification drive letter is available.');return letter;
+}
 async function disposeNative(client) {
  const child=client.child;if(!child)return;
  const stopped=new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Owned native fixture helper did not exit.')),15000);child.once('exit',()=>{clearTimeout(timer);resolve();});});client.dispose();await stopped;
@@ -19,7 +24,7 @@ export async function prepareRuntimeFixture({executable,profile,createClient=exe
  const root=await fs.mkdtemp(path.join(documents,'MaterialFileEncryptor-Verification-'));
  const fixture={version:1,root,storageDir:path.join(root,'storage'),cacheDir:path.join(root,'cache'),nativeExecutable:path.join(path.dirname(executable),'resources','native','MaterialFileEncryptor.Host.exe'),prepared:false};
  await fs.mkdir(fixture.storageDir);await fs.mkdir(fixture.cacheDir);const client=createClient(fixture.nativeExecutable);let password=randomBytes(32).toString('base64url');
- try {const state=await client.request('status');assert.equal(state.driver.available,true,'WinFsp is required for a mounted fixture.');fixture.driveLetter=state.availableDriveLetters.includes('M:')?'M:':state.availableDriveLetters[0];assert.match(fixture.driveLetter||'',/^[D-Z]:$/);
+ try {const state=await client.request('status');assert.equal(state.driver.available,true,'WinFsp is required for a mounted fixture.');fixture.driveLetter=chooseVerificationDriveLetter(state.availableDriveLetters);
   await client.request('create',{...fixturePreferences(fixture),password,partSizeBytes:10485760});password=undefined;
   const locked=await client.request('lock');assert.equal(locked.locked,true);assert.equal(locked.mounted,false);
   await fs.mkdir(profile,{recursive:true});await fs.writeFile(path.join(profile,'preferences.json'),JSON.stringify(fixturePreferences(fixture)),{flag:'wx',mode:0o600});fixture.prepared=true;
