@@ -36,6 +36,15 @@ test('catalog follows all model and tag pages, retains last complete cache on fa
   delete pages['https://ollama.com/library/beta/tags'];const lost=await catalog.refresh(result);assert.equal(lost.stale,true);assert.equal(lost.variants.length,3);
 });
 test('installed and running tags remain visible beyond catalog',()=>{const r=reconcile({variants:[{tag:'a:1'}]},[{name:'b:2',size:123}],[{name:'c:3'}]);assert.equal(r.length,3);assert.equal(r.find(v=>v.tag==='b:2').installed,true);assert.equal(r.find(v=>v.tag==='c:3').running,true);});
+
+test('family description and capabilities do not overwrite variant evidence',async()=>{
+  const pages={'https://ollama.com/library':'<a href="/library/alpha"><p>Family summary</p><span>vision</span></a>','https://ollama.com/library/alpha/tags':'<a href="/library/alpha:text">Text variant 2GB 4K context window</a>'};
+  const result=await new OfficialCatalog({fetchImpl:async url=>response(pages[url])}).refresh();
+  assert.equal(result.stale,false);const variant=result.variants[0];
+  assert.equal(variant.description,'Text variant 2GB 4K context window');
+  assert.equal(variant.familyDescription,'Family summary');assert.deepEqual(variant.familyCapabilities,['vision']);
+  assert.deepEqual(variant.capabilities,[]);assert.equal(result.complete,null);
+});
 test('fit verdicts derive from explicit evidence and unknowns remain unknown',()=>{
   const model={sizeBytes:100,parameterCount:'1B',quantization:'Q4',contextLength:2048};const h={freeDiskBytes:1000,availableRamBytes:1000,vramBytes:1000,backendSupported:true};
   assert.equal(assessFit(model,h).verdict,'Unknown');assert.equal(assessFit(model,h,{contextBytes:100,contextLength:2048}).verdict,'Runs well');assert.equal(assessFit(model,{...h,backendSupported:false},{contextBytes:100,contextLength:2048}).verdict,'Runs with limits');assert.equal(assessFit(model,{...h,freeDiskBytes:50}).verdict,'Unlikely');assert.equal(assessFit({tag:'massive-999b'},h).verdict,'Unknown');
