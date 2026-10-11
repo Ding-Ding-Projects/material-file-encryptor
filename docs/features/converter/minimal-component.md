@@ -25,12 +25,12 @@ The source build links zlib and uses operating-system Media Foundation/D3D11 int
 
 ## Publication and fresh-machine bootstrap
 
-Publication is parent-owned and has not occurred. Use a reviewed immutable component tag, a normal non-prerelease release, and `--latest=false` so the component does not replace the application's latest release. Upload the reviewed outer archive and optionally the same standalone source archive. Read back names, sizes and hashes before considering publication complete.
+The reviewed component is published at [ffmpeg-runtime-9.0.2.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/ffmpeg-runtime-9.0.2.1), a normal non-prerelease release that does not replace the latest application release. Its tag resolves to integration commit `92d082797c63dc8b9928ef51badb645bab3bc9ac`. All six downloaded assets matched their local publication sources, including both archives, three metadata inventories and the bundled catalog photo. The component's frozen manifest records its build-time publication state; this article records the subsequent publication.
 
 Once published, call:
 
 ```text
-node scripts/converter-minimal-component.mjs <immutable-GitHub-release-asset-URL> <resources/converter/media>
+node scripts/converter-minimal-component.mjs <immutable-GitHub-release-asset-URL> <resources/converter/minimal-media>
 ```
 
 The helper downloads only the pinned 19.5 MB archive, checks its complete SHA-256 before extraction, verifies all ten file hashes and sizes, and returns `profile`, `ffmpegPath`, `ffmpegSha256`, `ffprobePath`, and `ffprobeSha256`. Pass this object as `mediaRuntime` to the existing provider. A matching cache requires all ten files to validate. There is no compiler requirement for this route and no network operation during conversion.

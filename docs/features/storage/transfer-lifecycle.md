@@ -64,3 +64,24 @@ Focused tests include independent 90,000,000-byte format 1 and 2 records, one-by
 The helper defaults to `responsive` performance mode. Synchronous managed-import staging, export, timer maintenance and synchronization run at below-normal thread priority on Windows. Each scope restores the calling thread's prior priority in `finally`; asynchronous reads occur outside the import scopes. Process priority, the control reader and foreground filesystem callbacks are unchanged.
 
 `setPerformanceMode` accepts `{ "mode": "responsive" }` or `{ "mode": "throughput" }`. Throughput mode leaves the existing thread priority unchanged. `status` and `statusSummary` report `performanceMode`. Settings exposes this choice under Transfer responsiveness, persists it locally, and reapplies it when starting the helper. Scheduling priority is a responsiveness hint, not a throughput or latency guarantee.
+
+Managed import failures expose an optional `errorPhase` alongside the redacted
+`errorCode`. Its fixed values are `metadata`, `source-open`, `source-read`,
+`staging-begin`, `staging-write`, `install`, and `activity`. Exception text, paths,
+and stack traces are not included. A failure recording activity after installation
+retains the completed file and its completed-file counter. The phase identifies
+the operation in progress, including disposal during unwinding, rather than
+claiming a lower-level operating-system cause.
+
+The optional lifecycle test modes `--large-import-only`, `--large-managed-only`,
+and `--large-background-only` exercise synthetic 512 MiB imports with a 10 MiB
+part cap. They distinguish core staging, managed source reads, and periodic
+controller work. They do not substitute for a packaged mounted-drive run.
+
+For trusted storage exceptions, operation diagnostics also include `storageStage`:
+`part-create`, `part-write`, `part-flush`, `part-finish-rename`, `part-cleanup`,
+`metadata-temp-create`, `metadata-write`, `metadata-flush`, `metadata-replace`, or
+`metadata-cleanup`. These fixed values identify the storage action; they do not
+expose a path or the operating-system message. A cleanup failure after a failed
+atomic metadata write preserves the original write exception and leaves the
+existing destination unchanged.

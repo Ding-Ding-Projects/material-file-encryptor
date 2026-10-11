@@ -10,7 +10,7 @@ const start=source.indexOf('async function request('),end=source.indexOf('\nfunc
 assert.ok(start>=0&&end>start);
 function fixture(){
  const calls=[];
- const context=vm.createContext({validateRequest,path,quitPending:false,shuttingDown:false,
+ const context=vm.createContext({validateRequest,path,quitPending:false,shuttingDown:false,updateInstallLease:false,
   state:{files:[{id:'file-1',path:'folder/document.txt'}],storageDir:'C:\\vault',cacheDir:'C:\\cache'},
   selectedExports:new Set(['C:\\output\\document.txt']),window:{},
   mountedPath:()=> 'M:\\',safeDestination:async value=>value,
@@ -45,4 +45,10 @@ test('export admission requires a chosen destination and rechecks pending quit',
  context.safeDestination=async value=>{context.quitPending=true;return value;};
  await assert.rejects(context.invoke('fileAction',{id:'file-1',action:'export',destination:'C:\\output\\document.txt'}),/waiting to quit/);
  assert.equal(calls.filter(call=>call.method==='startExport').length,0);
+});
+
+test('update admission blocks exports before any native operation starts',async()=>{
+ const {context,calls}=fixture();context.updateInstallLease=true;
+ await assert.rejects(context.invoke('fileAction',{id:'file-1',action:'export',destination:'C:\\output\\document.txt'}),/preparing an update/);
+ assert.equal(calls.length,0);
 });

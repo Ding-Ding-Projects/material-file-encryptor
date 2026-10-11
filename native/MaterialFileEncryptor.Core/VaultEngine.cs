@@ -300,16 +300,17 @@ public sealed partial class VaultEngine : IDisposable
             if(stream==null || stream.Position+plain.Length+VaultCrypto.Overhead>cap)
             {
                 Finish();id=Guid.NewGuid().ToString("N");final=engine.ObjectPath(engine.cache,"parts",id);temporary=final+".tmp";
-                stream=new FileStream(temporary,FileMode.CreateNew,FileAccess.Write,FileShare.None,65536,FileOptions.WriteThrough);
+                StorageOperationException.Run(StorageOperationStage.PartCreate,()=>stream=new FileStream(temporary,FileMode.CreateNew,FileAccess.Write,FileShare.None,65536,FileOptions.WriteThrough));
             }
-            var offset=stream.Position;var blob=VaultCrypto.Seal(plain,engine.key,engine.Domain("block",id+":"+offset));stream.Write(blob);
+            var offset=stream!.Position;var blob=VaultCrypto.Seal(plain,engine.key,engine.Domain("block",id+":"+offset));StorageOperationException.Run(StorageOperationStage.PartWrite,()=>stream.Write(blob));
             return new(id,offset,plain.Length,blob.Length,3);
         }
-        internal void FlushDurable() => stream?.Flush(true);
+        internal void FlushDurable() => StorageOperationException.Run(StorageOperationStage.PartFlush,()=>stream?.Flush(true));
         internal void Finish()
         {
             if(stream==null)return;
-            stream.Flush(true);stream.Dispose();stream=null;File.Move(temporary!,final!,false);temporary=null;
+            FlushDurable();StorageOperationException.Run(StorageOperationStage.PartCleanup,()=>stream.Dispose());stream=null;
+            StorageOperationException.Run(StorageOperationStage.PartFinishRename,()=>File.Move(temporary!,final!,false));temporary=null;
         }
         public void Dispose() { stream?.Dispose();if(temporary!=null&&File.Exists(temporary))File.Delete(temporary); }
     }

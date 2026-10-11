@@ -23,3 +23,11 @@ Material Designer was considered first. The available tool inventory exposed no 
 Use the product's documented normal and minimum viewport. Cover English, Cantonese and bilingual, light/dark, and 100%, 125%, 150%, 200% display scales. Each capture must bind source commit and packaged artifact hash. Evaluate keyboard-only and touch menu access, focus restoration, reduced motion, reader labels, long labels, clipping, local worker loading under the production CSP, and host callback behavior. None of this runtime matrix has been claimed as passed by this source-only lane.
 
 The implementation destinations and remaining deviations are listed in `docs/features/surface-foundation/coverage.md`. Preserve this file as design intent and replace its pending evidence only with actual built-artifact receipts.
+
+## Full-width navigation and discovery
+
+The workspace tab strip occupies its own full-width grid row. Tab search, restoration, group management and selected-tab actions wrap on the following row, so their intrinsic width does not squeeze the navigation strip. Tabs retain their Material keyboard behavior and horizontal scrolling; no fixed view count or label truncation is introduced.
+
+The existing **Find all views** control expands the existing search and includes every registered view, including closed views. Results explicitly identify open or closed state. Activating a closed result reopens it through the tab model and activates it. Dynamic registration supplies the same trusted label map used by the workspace and command palette. Query, regex settings and expanded search state survive shell reconstruction; keyboard focus returns to the selected result. Group collapse remains effective in normal navigation but cannot hide a matching discovery result.
+
+Focused model/DOM tests verify closed-view discovery and persistent reopening, dynamic registration, localized state labels and the existing expression-filter path. The full-width layout still requires the next source-bound built capture at normal and minimum viewports; these source checks are not visual evidence.
