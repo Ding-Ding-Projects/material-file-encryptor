@@ -36,4 +36,6 @@ test('transient child inventory gets at most three full proofs without weakening
  assert.equal(await proveStableRendererTree(async()=>{calls++;if(calls<2)throw churn();return 'proved';},{wait:async()=>{}}),'proved');assert.equal(calls,2);
  calls=0;await assert.rejects(proveStableRendererTree(async()=>{calls++;throw churn();},{wait:async()=>{}}));assert.equal(calls,3);
  calls=0;await assert.rejects(proveStableRendererTree(async()=>{calls++;throw Object.assign(new Error('identity'),{lifecycleObservation:{stderr:'Process identity changed during inventory.'}});},{wait:async()=>{}}));assert.equal(calls,1);
+ calls=0;assert.equal(await proveStableRendererTree(async()=>{calls++;if(calls===1)throw Object.assign(new Error('window'),{lifecycleObservation:{result:{code:'PROCESS_PROOF_FAILED',error:'Process ancestry changed during inventory.'}}});return 'proved';},{wait:async()=>{}}),'proved');assert.equal(calls,2);
+ calls=0;await assert.rejects(proveStableRendererTree(async()=>{calls++;throw Object.assign(new Error('identity'),{lifecycleObservation:{result:{code:'PROCESS_IDENTITY_CHANGED',error:'Process ancestry changed during inventory.'}}});},{wait:async()=>{}}));assert.equal(calls,1);
 });

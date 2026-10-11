@@ -78,8 +78,9 @@ export async function verifyConnectedRenderer(browser,{expectedUrl,targetId},pro
 export async function proveStableRendererTree(prove,{wait=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}) {
  for(let attempt=1;attempt<=3;attempt++){
   try{return await prove();}catch(error){
-   const diagnostic=error.lifecycleObservation?.stderr?.trim();
-   if(attempt===3||!diagnostic?.endsWith('renderer_snapshot.SnapshotError: Process ancestry changed during inventory.'))throw error;
+   const diagnostic=error.lifecycleObservation?.stderr?.trim(),result=error.lifecycleObservation?.result;
+   const transient=result?result.code==='PROCESS_PROOF_FAILED'&&result.error==='Process ancestry changed during inventory.':diagnostic?.endsWith('renderer_snapshot.SnapshotError: Process ancestry changed during inventory.');
+   if(attempt===3||!transient)throw error;
    await wait(200*attempt);
   }
  }
@@ -225,7 +226,7 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
   await lifecycleCommand([adapter,'launch','--state',state],{executable,arguments:launchArguments,runRoot,outputRoot:path.join(runRoot,'output'),cdp:{port,expectedUrl}});
   // Headless shell has no HWND. Its PID/creation-time/executable receipt and
   // exact CDP target prove ownership, not native pixels or keyboard delivery.
-  if(!headlessShell)windowObservation=await lifecycleCommand([adapter,'wait-window','--state',state,'--title-pattern','.*','--class-pattern','^Chrome_WidgetWin_1$','--timeout','10']);
+  if(!headlessShell)windowObservation=await proveStableRendererTree(()=>lifecycleCommand([adapter,'wait-window','--state',state,'--title-pattern','.*','--class-pattern','^Chrome_WidgetWin_1$','--timeout','10']));
   const endpoint=`http://127.0.0.1:${port}`;const deadline=Date.now()+15000;
   let targets;
   while(Date.now()<deadline){
