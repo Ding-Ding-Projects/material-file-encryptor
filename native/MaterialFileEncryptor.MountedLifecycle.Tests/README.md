@@ -60,8 +60,15 @@ The installer does not include this tool: Forge ignores the whole `out` source d
 
 After downloading the exact source-bound workflow artifact, run its managed assembly with the matching .NET 8 runtime and `--settlement-self-test` for the injected settlement/outer-ownership checks. This executes the compiled test binary without a local compiler, helper launch or mount. A real mounted run still requires the reviewed packaged helper, exact production hash, fresh evidence path and independent authorization.
 
-The reporting-exception correction and cloud-delivery addition were preserved without a local compilation because physical memory pressure prevented that verification route. Their newly added throwing-writer/record regressions remain unrun until the source-bound cloud output is available. Earlier passing self-test receipts apply only to their earlier source revisions.
+The reporting-exception correction and cloud-delivery addition were initially preserved without local compilation because physical memory pressure prevented that route. The source-bound historical compiled result below supersedes that initial unrun state; it does not establish a current mounted run.
 
 ### Failed bounded stop also retains pipes
 
-The shared teardown executor consumes the bounded stop's actual `ExitEstablished` result. A false result or a thrown stop leaves disposition `owned-stop-exit-unestablished`, requires the unconditional runner hold, and issues no additional request. A stop attempt alone is not exit proof. The injected executor cases include both a false stop result and a thrown stop, each requiring retention after exactly one stop attempt. These new cases remain uncompiled and unrun pending the source-bound cloud build.
+The shared teardown executor consumes the bounded stop's actual `ExitEstablished` result. A false result or a thrown stop leaves disposition `owned-stop-exit-unestablished`, requires the unconditional runner hold, and issues no additional request. A stop attempt alone is not exit proof. The injected executor cases include both a false stop result and a thrown stop, each requiring retention after exactly one stop attempt. These cases were initially uncompiled and unrun; the exact historical compiled synthetic result below now supplies that bounded evidence.
+
+
+## Historical compiled synthetic acceptance
+
+Source `b516d3e3b8eb4a20f210a555d9be8263dc1b9bf8` was compiled and delivered by [workflow38116846135](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38116846135), artifact11694395806. The downloaded `MaterialFileEncryptor.MountedLifecycle.Tests.dll` had SHA-256 `c44228b3e37bef7d50bd6a6dac86a5c980b8491942425142a1f0da706f5e5447`. Its `--settlement-self-test` execution on .NET8.0.31 exited0 at2026-10-11T06:15:38.516819Z, with explicit settlement and outer teardown self-test success. This exercised compiled synthetic paths without launching a helper or mounting a drive.
+
+Before this documentation correction, current main already contained equivalent versions of the four preserved patches and all four contributed verifier blobs matched the preserved source exactly. Executable source remains unchanged. An ancestry-preserving integration retains main's later build and workflow additions. Historical product-mounted receipts remain bound to their own sources; this result does not certify current installed startup, corrective installation, real updating/restart or current native/GUI acceptance.

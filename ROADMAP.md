@@ -1,3 +1,10 @@
+# Preserved native contribution integration, 2026-10-11 UTC
+
+- [x] Independently prove all four preserved verifier patches already have exact equivalent source in main.
+- [x] Resolve ancestry merge without changing the implementation tree or newer build/workflow additions.
+- [x] Correct historical compiled synthetic evidence in verifier documentation.
+- [ ] Complete current installed/native/GUI acceptance and current full preservation before qualified cleanup.
+
 # Confirmed preferences presentation repair, 2026-10-11 UTC
 
 - [x] Reproduce the reported visible preferences mismatch with normal controls in genuine source-bound capture38142263991.
