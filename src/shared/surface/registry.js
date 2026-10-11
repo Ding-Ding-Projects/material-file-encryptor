@@ -39,6 +39,7 @@ export class SurfaceElement extends HTMLElement {
     const sheet = new CSSStyleSheet();
     sheet.replaceSync(`
       :host{display:block;color:var(--md-sys-color-on-surface,#202124);font:400 14px/1.5 var(--mfe-font,system-ui,sans-serif);min-width:0}
+      :host([hidden]){display:none!important}
       *{box-sizing:border-box} [hidden]{display:none!important} :focus-visible{outline:3px solid var(--md-sys-color-primary,#5466a8);outline-offset:3px}
       md-outlined-button,md-filled-button,md-text-button{min-height:40px;max-width:100%;--md-sys-typescale-label-large-font:var(--mfe-font,system-ui)}
       md-outlined-text-field{width:100%;min-width:0} .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.grow{flex:1;min-width:120px}
