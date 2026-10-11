@@ -6,8 +6,9 @@ import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 const release=JSON.parse(await fs.readFile(new URL('../docs/features/converter/minimal-component-release.json',import.meta.url),'utf8'));
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
-export async function runBounded(executable,args,{timeoutMs=30000}={}){
- await new Promise((resolve,reject)=>{const child=spawn(executable,args,{windowsHide:true,stdio:'ignore'});let timedOut=false;const timer=setTimeout(()=>{timedOut=true;child.kill();},timeoutMs);child.once('error',error=>{clearTimeout(timer);reject(error);});child.once('exit',code=>{clearTimeout(timer);if(timedOut)reject(new Error('Component extraction timed out.'));else if(code!==0)reject(new Error('Component subprocess failed.'));else resolve();});});
+export async function runBounded(executable,args,{timeoutMs=30000,stage='component-subprocess'}={}){
+ if(!['component-subprocess','destination-reparse-check','minimal-archive-extract','archive-package-extract'].includes(stage))throw new Error('Invalid component subprocess stage.');
+ await new Promise((resolve,reject)=>{const child=spawn(executable,args,{windowsHide:true,stdio:'ignore'});let timedOut=false;const failure=(code,exitCode=null,signal=null)=>Object.assign(new Error(`Component subprocess failed: ${stage}/${code} (exit ${exitCode===null?'none':exitCode}).`),{code,stage,exitCode,signal:['SIGTERM','SIGKILL','SIGABRT'].includes(signal)?signal:null});const timer=setTimeout(()=>{timedOut=true;child.kill();},timeoutMs);child.once('error',error=>{clearTimeout(timer);reject(failure(['ENOENT','EACCES','EPERM'].includes(error.code)?error.code:'SPAWN_FAILED'));});child.once('exit',(code,signal)=>{clearTimeout(timer);if(timedOut){const error=failure('ETIMEDOUT',code,signal);error.message='Component extraction timed out: '+stage+'.';reject(error);}else if(code!==0)reject(failure('SUBPROCESS_FAILED',code,signal));else resolve();});});
 }
 export async function assertUnlinkedPath(target){
  const absolute=path.resolve(target);const ancestors=[];let cursor=absolute;
@@ -15,7 +16,7 @@ export async function assertUnlinkedPath(target){
  if(process.platform==='win32'){
   const literals=ancestors.map(p=>"'"+p.replaceAll("'","''")+"'").join(',');
   const script=`$ErrorActionPreference='Stop'; foreach ($p in @(${literals})) { if (((Get-Item -LiteralPath $p -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { exit 9 } }`;
-  await runBounded(path.join(process.env.SystemRoot,'System32/WindowsPowerShell/v1.0/powershell.exe'),['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(script,'utf16le').toString('base64')],{timeoutMs:10000});
+  await runBounded(path.join(process.env.SystemRoot,'System32/WindowsPowerShell/v1.0/powershell.exe'),['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(script,'utf16le').toString('base64')],{timeoutMs:10000,stage:'destination-reparse-check'});
  }
  return absolute;
 }
@@ -59,7 +60,7 @@ export async function prepareMinimalComponent(url,destination){
  await assertUnlinkedPath(destination);
  let exists=false;try{await fs.lstat(destination);exists=true;}catch(error){if(error.code!=='ENOENT')throw error;}if(exists)return await validateMinimalRuntime(destination);
  const scratch=await fs.mkdtemp(path.join(os.tmpdir(),'converter-component-'));
- try{const response=await fetch(url,{signal:AbortSignal.timeout(120000)});if(!response.ok||!response.body)throw new Error('Component download unavailable.');const chunks=[];let bytes=0;for await(const chunk of response.body){bytes+=chunk.length;if(bytes>release.bytes)throw new Error('Component download exceeds expected length.');chunks.push(chunk);}const buffer=Buffer.concat(chunks);if(bytes!==release.bytes||hash(buffer)!==release.sha256)throw new Error('Component archive verification failed.');validateArchiveEntries(buffer);const archive=path.join(scratch,release.asset);await fs.writeFile(archive,buffer);const extracted=path.join(scratch,'runtime');await fs.mkdir(extracted);await runBounded(path.join(process.env.SystemRoot,'System32/tar.exe'),['-xf',archive,'-C',extracted]);await validateMinimalRuntime(extracted);return await publishMinimalRuntime(extracted,destination);
+ try{const response=await fetch(url,{signal:AbortSignal.timeout(120000)});if(!response.ok||!response.body)throw new Error('Component download unavailable.');const chunks=[];let bytes=0;for await(const chunk of response.body){bytes+=chunk.length;if(bytes>release.bytes)throw new Error('Component download exceeds expected length.');chunks.push(chunk);}const buffer=Buffer.concat(chunks);if(bytes!==release.bytes||hash(buffer)!==release.sha256)throw new Error('Component archive verification failed.');validateArchiveEntries(buffer);const archive=path.join(scratch,release.asset);await fs.writeFile(archive,buffer);const extracted=path.join(scratch,'runtime');await fs.mkdir(extracted);await runBounded(path.join(process.env.SystemRoot,'System32/tar.exe'),['-xf',archive,'-C',extracted],{stage:'minimal-archive-extract'});await validateMinimalRuntime(extracted);return await publishMinimalRuntime(extracted,destination);
  }finally{await fs.rm(scratch,{recursive:true,force:true,maxRetries:3}).catch(()=>{});}
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){if(process.argv.length!==4)throw new Error('Usage: node scripts/converter-minimal-component.mjs <immutable-release-asset-url> <destination>');console.log(JSON.stringify(await prepareMinimalComponent(process.argv[2],process.argv[3])));}
