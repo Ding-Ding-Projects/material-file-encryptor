@@ -1,6 +1,7 @@
 param([Parameter(Mandatory)][string]$Package, [Parameter(Mandatory)][string]$Updater,
   [string]$ExpectedVersion, [string]$ExpectedSource, [string]$ReceiptPath)
 $ErrorActionPreference = 'Stop'
+. "$PSScriptRoot/squirrel-file-hash.ps1"
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $packagePath = [IO.Path]::GetFullPath($Package)
 # Validate all paths before allowing the native extractor to write any entry.
@@ -35,7 +36,7 @@ try {
     if (!(Test-Path -LiteralPath $file -PathType Leaf) -or (Get-Item -LiteralPath $file).Length -ne $entry.Length) { throw "SQUIRREL_EXTRACTED_FILE_MISMATCH: $relative" }
     $stream = $entry.Open(); $hash = [Security.Cryptography.SHA256]::Create()
     try { $expectedHash = ([BitConverter]::ToString($hash.ComputeHash($stream))).Replace('-','') } finally { $stream.Dispose(); $hash.Dispose() }
-    if ((Get-FileHash -LiteralPath $file).Hash -ne $expectedHash) { throw "SQUIRREL_EXTRACTED_HASH_MISMATCH: $relative" }
+    if ((Get-SquirrelFileHash -LiteralPath $file).Hash -ne $expectedHash) { throw "SQUIRREL_EXTRACTED_HASH_MISMATCH: $relative" }
     $matched++
   }
   if ($ExpectedVersion) {
@@ -45,13 +46,13 @@ try {
     try { [xml]$xml = $reader.ReadToEnd() } finally { $reader.Dispose() }
     if ($xml.package.metadata.version -ne $ExpectedVersion) { throw 'PACKAGE_SPEC_VERSION_MISMATCH' }
     $asar = Join-Path $payload 'resources/app.asar'
-    $inspect = & node -e "const a=require('@electron/asar'); const p=process.argv[1]; const read=n=>JSON.parse(a.extractFile(p,n)); console.log(JSON.stringify({manifest:read('package.json'),build:read('src/shared/build-metadata.json')}))" $asar
+    $inspect = & node -e "const a=require('@electron/asar'); const p=process.argv[1]; const read=n=>JSON.parse(a.extractFile(p,n)); console.log(JSON.stringify({manifest:read('package.json'),build:read(require('node:path').join('src','shared','build-metadata.json'))}))" $asar
     if ($LASTEXITCODE -ne 0) { throw 'PACKAGE_MANIFEST_UNREADABLE' }
     $embedded = $inspect | ConvertFrom-Json
     if ($embedded.manifest.version -ne $ExpectedVersion -or $embedded.build.version -ne $ExpectedVersion -or ($ExpectedSource -and $embedded.build.sourceCommit -ne $ExpectedSource)) { throw 'PACKAGE_VERSION_OR_SOURCE_MISMATCH' }
   }
 } finally { $zip.Dispose() }
 if ($matched -eq 0) { throw 'EMPTY_PACKAGE_PAYLOAD' }
-$receipt = @{schemaVersion=1; packageSha256=(Get-FileHash $Package).Hash.ToLowerInvariant(); updaterSha256=(Get-FileHash $Updater).Hash.ToLowerInvariant(); matchedFiles=$matched; passed=$true; installedLifecycleVerified=$false; retainedExtraction=$scratch}
+$receipt = @{schemaVersion=1; packageSha256=(Get-SquirrelFileHash $Package).Hash.ToLowerInvariant(); updaterSha256=(Get-SquirrelFileHash $Updater).Hash.ToLowerInvariant(); matchedFiles=$matched; passed=$true; installedLifecycleVerified=$false; retainedExtraction=$scratch}
 if ($ReceiptPath) { $receipt | ConvertTo-Json | Set-Content -LiteralPath $ReceiptPath -Encoding UTF8 }
 Write-Host "Squirrel extractor matched all $matched payload files. Installed lifecycle remains separate."

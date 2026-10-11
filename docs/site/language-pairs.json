@@ -133,8 +133,8 @@
     {
       "source": "docs/features/interface/personal-vocabulary.md",
       "translation": "docs/features/interface/personal-vocabulary.zh-HK.md",
-      "sourceSha256": "e7a1d0862daed3d8fcc846a01860d6384d749cbaca847558ac90e3168328e851",
-      "translationSha256": "e77ed9145b828b9fe55f2d11d3e22d5b6ff28081404450dc6f9f28774656a288"
+      "sourceSha256": "96b12291269f9e0be5ca9c391adbcb18b6ab91aa9b28b34ad72f07919385d536",
+      "translationSha256": "b7a271fef73cd5022496bb0dee0346723ae94d623bace3a0e92421ffbaaa9104"
     },
     {
       "source": "docs/features/interface/README.md",
@@ -307,8 +307,8 @@
     {
       "source": "docs/features/storage/transfer-lifecycle.md",
       "translation": "docs/features/storage/transfer-lifecycle.zh-HK.md",
-      "sourceSha256": "e0b0afdcac0904349ac598323027d6810a211ce5954d04f8196d26c7cb05e761",
-      "translationSha256": "14ee80eaf302fb0bda1c8fbaea5530617c11aebdec4ada66717cfb9420f50be2"
+      "sourceSha256": "b8dd28e2150e5fe202e48c50467480e4957ce1796cc27545ca58e6c5da404a84",
+      "translationSha256": "1dd92d96eb9e107a51c5564b70e7bc717837b7d18d4cbd10aadd2485235c6e58"
     },
     {
       "source": "docs/features/surface-foundation/coverage.md",

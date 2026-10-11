@@ -1,6 +1,7 @@
 param([Parameter(Mandatory)][string]$Setup, [Parameter(Mandatory)][string]$Package,
   [Parameter(Mandatory)][string]$Updater, [string]$Background, [string]$ReceiptPath)
 $ErrorActionPreference = 'Stop'
+. "$PSScriptRoot/squirrel-file-hash.ps1"
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $setupPath = [IO.Path]::GetFullPath($Setup)
 $stream = [IO.File]::OpenRead($setupPath)
@@ -101,17 +102,17 @@ try {
     $entries[$entry.FullName] = $entry
   }
   if ($entries.Count -ne $expectedNames.Count) { throw 'SETUP_PAYLOAD_INCOMPLETE' }
-  $packageHash = (Get-FileHash -LiteralPath $Package -Algorithm SHA256).Hash.ToLowerInvariant()
+  $packageHash = (Get-SquirrelFileHash -LiteralPath $Package -Algorithm SHA256).Hash.ToLowerInvariant()
   if ($entries[$packageName].Length -ne (Get-Item -LiteralPath $Package).Length -or (Get-EntryDigest $entries[$packageName] 'SHA256') -ne $packageHash) { throw 'SETUP_EMBEDDED_PACKAGE_MISMATCH' }
-  $updaterHash = (Get-FileHash -LiteralPath $Updater -Algorithm SHA256).Hash.ToLowerInvariant()
+  $updaterHash = (Get-SquirrelFileHash -LiteralPath $Updater -Algorithm SHA256).Hash.ToLowerInvariant()
   if ($entries['Update.exe'].Length -ne (Get-Item -LiteralPath $Updater).Length -or (Get-EntryDigest $entries['Update.exe'] 'SHA256') -ne $updaterHash) { throw 'SETUP_EMBEDDED_UPDATER_MISMATCH' }
-  if ($Background -and ($entries['background.gif'].Length -ne (Get-Item -LiteralPath $Background).Length -or (Get-EntryDigest $entries['background.gif'] 'SHA256') -ne (Get-FileHash -LiteralPath $Background).Hash.ToLowerInvariant())) { throw 'SETUP_EMBEDDED_BACKGROUND_MISMATCH' }
+  if ($Background -and ($entries['background.gif'].Length -ne (Get-Item -LiteralPath $Background).Length -or (Get-EntryDigest $entries['background.gif'] 'SHA256') -ne (Get-SquirrelFileHash -LiteralPath $Background).Hash.ToLowerInvariant())) { throw 'SETUP_EMBEDDED_BACKGROUND_MISMATCH' }
   if ($entries['RELEASES'].Length -gt 4096) { throw 'SETUP_RELEASES_TOO_LARGE' }
   $textReader = [IO.StreamReader]::new($entries['RELEASES'].Open())
   try { $release = $textReader.ReadToEnd().Trim() } finally { $textReader.Dispose() }
   $fields = $release -split '\s+'
   if ($fields.Count -ne 3 -or $fields[0] -notmatch '^[a-fA-F0-9]{40}$' -or $fields[1] -cne $packageName -or $fields[2] -cne [string]$entries[$packageName].Length -or $fields[0].ToLowerInvariant() -ne (Get-EntryDigest $entries[$packageName] 'SHA1')) { throw 'SETUP_EMBEDDED_RELEASES_MISMATCH' }
 } finally { $zip.Dispose() }
-$receipt = @{schemaVersion=1; setupSha256=(Get-FileHash -LiteralPath $Setup).Hash.ToLowerInvariant(); embeddedZipSha256=(Get-FileHash -LiteralPath $embeddedPath).Hash.ToLowerInvariant(); packageSha256=$packageHash; updaterSha256=$updaterHash; passed=$true; installedLifecycleVerified=$false; route='pe-resource-data-131-1033'; retainedPayload=$embeddedPath}
+$receipt = @{schemaVersion=1; setupSha256=(Get-SquirrelFileHash -LiteralPath $Setup).Hash.ToLowerInvariant(); embeddedZipSha256=(Get-SquirrelFileHash -LiteralPath $embeddedPath).Hash.ToLowerInvariant(); packageSha256=$packageHash; updaterSha256=$updaterHash; passed=$true; installedLifecycleVerified=$false; route='pe-resource-data-131-1033'; retainedPayload=$embeddedPath}
 if ($ReceiptPath) { New-Item -ItemType Directory -Force (Split-Path ([IO.Path]::GetFullPath($ReceiptPath)) -Parent) | Out-Null; $receipt | ConvertTo-Json | Set-Content -LiteralPath $ReceiptPath -Encoding UTF8 }
 Write-Host 'Setup embeds the exact full package, release feed and updater. Installed lifecycle remains separate.'

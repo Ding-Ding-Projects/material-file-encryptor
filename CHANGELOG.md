@@ -2,6 +2,8 @@
 
 Replaced the blocked compiled archive adapter with supported .NET streaming recompression, verified the real Squirrel extractor against an incompressible nested archive, and added exact Setup embedded-package inspection. Updated the bilingual publication inventory. Current corrective installation, real updating and full-product acceptance remain pending.
 
+The verifier now uses native ASAR paths and framework digests in child Windows PowerShell. A real archive fixture rejects mismatched version and source metadata and verifies fixed SHA-1/SHA-256 values without relying on the unavailable hash command. Retained-handle force-lock safety and missing history localization are integrated; their current packaged acceptance remains separate.
+
 # Changelog
 
 ## Integrated feature workspace - 2026-10-11
