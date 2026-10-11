@@ -60,7 +60,7 @@ test('all four target boundaries remain unavailable and omitted target/proof mut
   const changed=structuredClone(rows);changed[2].requiredProofs=[];assert.throws(()=>assertTargetInventory(changed),/proof/);
   const fake=structuredClone(rows);fake[0].available=true;assert.throws(()=>assertTargetInventory(fake),/misrepresented/);
 });
-test('actual configuration mount uses typed controls and cannot report an unconfirmed write as applied',async()=>{
+function mountFixture({mountBinding=binding,onChange}={}) {
   class Element {
     constructor(tag){this.tag=tag;this.children=[];this.events={};this.attributes={};this.ownerDocument=document;}
     append(...children){this.children.push(...children);}
@@ -70,10 +70,32 @@ test('actual configuration mount uses typed controls and cannot report an unconf
     get options(){return this.children;}
   }
   const document={createElement:tag=>new Element(tag)};
-  const root=new Element('root');let receipt;
-  const mounted=mountConfigurationControls(root,{descriptors:[descriptor('enabled','boolean')],binding,values:{enabled:false},translate:key=>key,onChange:async input=>{receipt=input;return {applied:false};}});
+  const root=new Element('root');
+  const mounted=mountConfigurationControls(root,{descriptors:[descriptor('enabled','boolean')],binding:mountBinding,values:{enabled:false},translate:key=>key,onChange});
   const section=root.children[0],row=section.children[0],control=row.children[0].children[0],status=row.children[2];
+  return {mounted,section,control,status};
+}
+test('actual configuration mount uses typed controls and cannot report an unconfirmed write as applied',async()=>{
+  let receipt;
+  const {mounted,section,control,status}=mountFixture({onChange:async input=>{receipt=input;return {applied:false};}});
   assert.equal(control.type,'checkbox');assert.equal(control.attributes.role,'switch');control.checked=true;await control.events.change();
+  assert.equal(control.checked,false);
   assert.equal(status.textContent,'server.configuration.notApplied');assert.equal(receipt.id,'enabled');assert.equal(receipt.signal.aborted,false);
   mounted.destroy();assert.equal(receipt.signal.aborted,true);assert.equal(section.removed,true);
+});
+test('rejected and throwing writes restore the last confirmed value rather than an attempted value',async()=>{
+  for(const reject of [async()=>({applied:false}),async()=>{throw new Error('Write rejected');}]) {
+    let calls=0;
+    const {mounted,control}=mountFixture({onChange:async()=>++calls===1?{applied:true}:reject()});
+    control.checked=true;await control.events.change();assert.equal(control.checked,true);
+    control.checked=false;await control.events.change();assert.equal(control.checked,true);
+    mounted.destroy();
+  }
+});
+test('configuration submissions retain validated mount identity despite external and callback mutations',async()=>{
+  const mutableBinding=structuredClone(binding);const submissions=[];
+  const {mounted,control}=mountFixture({mountBinding:mutableBinding,onChange:async input=>{submissions.push(structuredClone(input.binding));input.binding.version='callback-change';return {applied:true};}});
+  mutableBinding.version='externally-changed';mutableBinding.distributionSha256='b'.repeat(64);
+  control.checked=true;await control.events.change();control.checked=false;await control.events.change();
+  assert.deepEqual(submissions,[binding,binding]);mounted.destroy();
 });
