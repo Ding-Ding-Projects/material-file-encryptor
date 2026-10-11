@@ -25,6 +25,7 @@ export async function quietInterpreter(python) {
  return {launcher,base,hashes};
 }
 export async function startQuietObserver({python,workerPath,intentPath,journal,env,spawnImpl=spawn}) {
+ if(env.MFE_LOWLEVEL_PYTHON!==python)throw new Error('Interpreter launch and identity binding differ.');
  if(path.basename(python).toLowerCase()!=='pythonw.exe')throw new Error('GUI observer executable name required.');
  assertGuiExecutable(await fs.readFile(python));
  const stdout=await fs.open(path.join(journal,'stdout.log'),'wx');
