@@ -1,111 +1,75 @@
 # Material File Encryptor
 
-Pure Material Design 3 remains the interface requirement for the desktop workspace, documentation website, settings and nested editors. The reviewed typed appearance unit converts number fields, layer names and preset drafts to registered outlined text fields while preserving range rejection, current-layer ownership and storage rollback. This source conversion does not complete optional guidance, Clear actions, vendor keyboard behavior or rendered conformance. Specialized property, color, mesh, path and file controls remain unfinished.
+**An encrypted drive for Windows Explorer, with local recovery and an encrypted offline cache.** A native .NET engine and WinFsp adapter handle the mounted drive. The desktop workspace brings encrypted storage, transfers, recovery, settings and documentation together.
 
-**An encrypted drive for Windows Explorer, with local recovery and an encrypted offline cache.** Work through a mounted drive while the application stores encrypted file data and metadata in your chosen storage folder. A native .NET engine and WinFsp adapter handle the drive; the desktop workspace brings transfers, recovery, settings and documentation together.
+[Download Windows x64 installer · v1.259.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/download/v1.259.1/MaterialFileEncryptor-Setup.exe) · [Documentation](https://ding-ding-projects.github.io/material-file-encryptor/) · [Release and provenance](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.259.1) · [中文文件](docs/features/README.zh-HK.md)
 
-[Download Windows x64 installer · v1.259.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/download/v1.259.1/MaterialFileEncryptor-Setup.exe) · [Read the documentation](https://ding-ding-projects.github.io/material-file-encryptor/) · [Release and provenance](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.259.1) · [中文文件](docs/features/README.zh-HK.md)
+> **Development status:** independently downloaded package bytes pass verification. Installed startup, automatic updating, restart continuity and the current rebuilt interface remain unfinished. The complete inventory contains **105 feature IDs and 210 desktop/website rows**; no complete-surface acceptance is claimed.
 
-> **Development status:** the current package and documentation delivery are independently verified. Installed startup, real updating, restart continuity and current rebuilt interface acceptance are unfinished. The complete delivery inventory contains **105 feature IDs and 210 desktop/website rows**, all still unverified as complete surfaces. Source components and focused checks are not full product acceptance. The interface target is Material Design 3 throughout; implementation is partial and complete visual conformance is not yet verified.
+## Pure Material Design 3 throughout
 
-The reviewed [color editor source](docs/features/interface/color-picker.md) now provides bidirectional color entry, explicit gamut checks, palettes, contrast preview and structured rainbow controls through the original appearance history. Focused consumers and independent source review pass; rendered and installed acceptance remain pending.
+The requirement applies to the desktop workspace, documentation website, settings and every nested editor. Registered buttons, text fields, selectors, sliders, checkboxes and tabs are being integrated with the original validation, locks, persistence and cancellation behavior. Source conversions alone do not establish keyboard, accessibility or visual conformance.
 
-The [server preparation source](docs/features/server-manager/preparation.md) adds official version discovery, verified bounded downloads, cancellation and read-only license review. Its registered controls and corrected concurrency/search consumers pass focused checks. Execution targets remain unavailable, and preparation has not received real download or rendered acceptance.
+Reviewed source includes shared settings controls, private-history controls, appearance actions, logo actions and appearance number/name/preset fields. Unique contextual guidance and Clear actions remain incomplete in parts of the editors. Specialized property, mesh, path, file, date/time and other remaining controls need complete workflows and actual rendered verification. Full Photoshop-grade editing, motion authoring and the complete feature inventory remain unfinished.
 
-The reviewed [typed keyframe inspector](docs/features/interface/motion-keyframes.md) adds explicit offset/absolute/relative time, numeric units, selection and strict group movement. Its current-layer and layer-lock handling survives storage rollback; direct and guided edits share the original mutation and history route. Source checks pass; full timeline/transition/path authoring and rendered acceptance remain unfinished.
+## Core workflows
 
-The reviewed [image-placement controls](docs/features/appearance/image-placement.md) use explicit fit, crop and focal geometry with current-layer persistence, retry, locks and Undo. The [transition-property editor](docs/features/interface/transition-properties.md) retains independent endpoints through explicit versioned migration. These are source-verified workflows; full compositor pixels, per-property timing and complete rendered editing remain unfinished.
+| Workflow | Documentation and boundaries |
+|---|---|
+| Create and unlock an encrypted Explorer drive | [Drive integration](docs/features/drive/README.md) · [Native storage](docs/features/storage/native-vault.md) |
+| Keep encrypted data available offline | [Cache, transfers and safe lifecycle](docs/features/storage/transfer-lifecycle.md) |
+| Recover versions and deleted files | [History and Recycle Bin](docs/features/storage/history-and-recycle-bin.md) |
+| Customize the workspace | [Settings](docs/features/interface/settings-completeness.md) · [Contextual guidance](docs/features/interface/settings-guidance.md) · [Appearance editor](docs/features/interface/appearance-editor.md) |
+| Edit colors, typography and motion | [Colors](docs/features/interface/color-picker.md) · [Fonts](docs/features/interface/font-metadata.md) · [Animation and transitions](docs/features/interface/animation-transition.md) |
+| Inspect additional capability foundations | [Local conversion](docs/features/converter/README.md) · [Local models](docs/features/ollama/README.md) · [Server management](docs/features/server-manager/README.md) |
 
-The shared preferences source projects existing palette and font settings into registered Material tabs and preserves optional guidance, accessible associations and cancellation. Genuine source-bound Appearance capture now demonstrates light-to-dark palette application. The shared action factory also uses genuine registered Material buttons and preserves original awaited operations, with focused lifetime checks. Navigation guidance now has concise localized visible captions with full accessible names; genuine source127e English320x844 pixels now show complete Guide/Explain captions and Appearance light/dark behavior, with verified raw hashes and complete owned closure. Website home and desktop initial entries also load existing local font declarations, with asynchronous metadata validation preserved. Generated library/wiki/gallery/article/category routes carry the same local font linkage through their source template; the separate browser workspace entry now has the corresponding source correction after a179/180 live-link inventory exposed its omission. The complete corrected archive has180/180 local font links, and newer live workspace/font bytes match it; full newer-source live inventory and decoding remain pending. The shared field adapter now uses registered Material text/password/URL/number/checkbox controls, preserving original awaited changes, cancellation, clear rollback and secret-help privacy through independently reviewed source checks. Its rendered accessibility and pixels remain pending. Shared selectors and sliders now also use registered components in independently reviewed source, with original choices, bounds and awaited operations preserved. Genuine source6d016f7 six-scene evidence now reaches outlined selectors, the font-family field, sliders and checkboxes, with independently matched raw hashes and complete owned cloud closure. It exposed a narrow reset-caption ellipsis; genuine source0df identical-tuple recapture now shows the complete reset caption across two lines with verified normal/wrap/clip styles and matching label dimensions. Keyboard/accessibility and the wider matrix remain pending. Date/time/color/file/search, public controls and nested editors still need conversion. Three bundled font declarations are registered in the historical127e capture but remain unloaded, so decoding is unproved. Complete Material Design 3 acceptance remains unfinished.
+Provider availability and host integration vary by capability. A documented component does not establish that its complete workflow runs. Read the [current handoff](HANDOFF.md), [checklist roadmap](ROADMAP.md) and [feature library](docs/features/README.md) for unfinished work.
 
-Private-history controls now use registered Material actions, text/password/number fields and selection checkboxes in independently reviewed source. The two-record comparison keeps visible selection and unique current identities aligned, and delayed results cannot cross lock/refresh or selection changes, including selecting away and back. Ten mounted checks pass with observed negative regressions. These are source-consumer results; actual history pixels, keyboard/accessibility, native dates/search remain pending. Exact5e63 complete live delivery verifies the new paired history article within163completearticles and8698working internal references.
+## What is actually verified
 
-The appearance editor now uses registered Material action buttons and a registered nonmodal Close action in reviewed source. Original layer/group bindings, locks, awaited operations, rejection and target-focus restoration remain intact. A reviewed capture recipe now targets empty history and original nonmodal appearance controls without entering credentials; actual new-scene acceptance remains pending. State-tab anatomy, typed fields, uploads and other nested controls remain separate unfinished work; this action conversion does not claim complete visual-editor or Material conformance.
-
-Logo Fit/Reset actions also use registered Material buttons in reviewed source. The original callback and guidance promise remain authoritative, and removed controls cannot admit direct actions. Fourteen mounted cases pass, including a regression observed failing before the connection repair. Native upload/focal controls and genuine logo pixels/accessibility remain pending.
-
-The native observation tooling now supplies the installed lifecycle parser with a standard bounded-compatible input stream. This repairs the retained observer Input.isatty exception without modifying installed/shared tools or weakening source, ownership or request checks. Actual-reader and journal checks pass; a distinct repaired-source startup/updater observation remains pending.
-
-## What you can work on
-
-1. **Create and unlock a drive.** Choose encrypted storage, an encrypted cache and an unlock method, then access files through the Explorer drive. Read [drive integration](docs/features/drive/README.md) and [native storage](docs/features/storage/native-vault.md).
-2. **Keep useful files available offline.** Pin encrypted data, inspect transfer activity and use explicit lifecycle actions. See [transfers and safe lifecycle](docs/features/storage/transfer-lifecycle.md).
-3. **Recover earlier work.** Browse selected-file versions, encrypted activity, History and the Recycle Bin. See [history and recovery](docs/features/storage/history-and-recycle-bin.md).
-4. **Adapt the workspace.** Explore tabs, search, notifications, local access, appearance, typography and motion authoring. Their [source and acceptance limits](docs/features/platform/current-integration.md) remain explicit.
-
-The repository also contains local conversion, local-model and server-management foundations. Provider availability and host integration differ by capability; a documented component is not a promise that an unavailable workflow runs. The [complete feature library](docs/features/README.md) is the authoritative starting point.
-
-## Current verification at a glance
-
-Delivery below is bound to source [`2f59f45763501a112e77b46e3e1915e0fef81b37`](https://github.com/Ding-Ding-Projects/material-file-encryptor/commit/2f59f45763501a112e77b46e3e1915e0fef81b37), not whatever a moving branch contains later.
-
-| Area | Verified result | Boundary |
+| Area | Source-bound result | Acceptance limit |
 |---|---|---|
-| Production and release | Both exact root entrypoints passed [run 38144574559](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38144574559); normal **v1.232.1**, exact source and five assets verified | A release is not installed execution |
-| Downloaded package | All five hosted assets match size/hash/provenance/feed; 763 CRC/decompression entries, 664 actual Squirrel payload files and exact Setup embedding passed | Setup was inspected, not executed |
-| Unsigned delivery and privacy | Setup, application and native host are unsigned; 6,271 privacy entries have zero rejected paths, including 5,520 ASAR entries; verification-only payloads are absent | Unsigned publisher warnings remain expected |
-| Live documentation | [Deployment 38144574509](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38144574509): 225 files, 60,678,334 bytes and 8,288 internal references verified, no missing files/anchors; provenance and About homepage match | Content delivery is not browser interaction or rendered font proof |
-| Native sharing lease | Separate immutable source `66b21b8` passed eight actual compiled synthetic boundaries | Product IPC, provider availability and full server management remain pending |
-| Installed lifecycle and current UI | **Unfinished**: automatic startup/download/ready/Later, real installed update, restart continuity, current captures and complete-surface acceptance | Historical results retain their original sources |
+| Corrective release | Normal **v1.259.1**, exact source **68ca7f15**, five expected assets; [production 38150790817](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38150790817) completed both root entrypoints and promotion | A published release is not installed execution |
+| Independent downloaded bytes | All five asset hashes/sizes match; every archive entry passed CRC/decompression; all **664** extracted Squirrel payload files match; Setup embeds the exact package, feed and updater | Setup was inspected, not executed in this verification |
+| Source, privacy and signatures | **202** tracked source files bind to 68ca; **6,272** privacy entries have zero rejected; Setup, desktop executable and native host are unsigned | Unknown-publisher warnings remain expected |
+| Complete documentation inventory | Exact **5e63d670** delivery passed **227 files**, **163 articles**, complete wiki content and **8,698** internal references, with the stored homepage verified | Later source changes need separate delivery checks |
+| Genuine narrow interface capture | Exact **68ca7f15**, English **320 × 844**, DPR **1**, [capture 38151495786](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38151495786): seven scenes reached, three unsuccessful; raw integrity and recorded owned closure passed | History action count was not one; exact count was unrecorded. Appearance Close/action were not reached. Full accessibility, occlusion and the wider matrix remain pending |
+| Installed startup and updating | Repaired observer preparation passes; the last fresh resource admission remained below its unchanged floor | No repaired-source launch, ready/Later, actual update or restart acceptance |
 
-Read the [handoff](HANDOFF.md), [roadmap](ROADMAP.md), [changelog](CHANGELOG.md) and [installation/update repair](docs/features/release/installer-repair.md) before relying on a capability. The [latest release list](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases) may contain later candidates; the table above describes this exact verified version.
+The [release list](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases) can contain newer candidates. The table and download above describe the independently checked **v1.259.1** bytes. Newer source integration does not inherit its package or interface verdict.
 
-## Security and storage boundaries
+## Security and storage
 
 - Keep unlock credentials and backups outside encrypted storage and the cache. Losing every unlock credential loses access.
-- Offline pins retain ciphertext. Files decrypt when accessed through the mounted drive.
-- Copying a file outside that drive intentionally creates plaintext. Other applications and Windows may create temporary files, thumbnails or paging data.
-- Windows startup and automatic unlock are separate settings. Optional automatic unlock uses current-user DPAPI protection, which does not protect an already unlocked Windows session.
-- Encrypted chunks default to 10 MiB, with a 90,000,000-byte maximum including framing. New or edited files use the selected limit; changing existing parts requires the explicit resplit workflow.
+- Offline pins retain ciphertext; files decrypt when accessed through the mounted drive.
+- Copying a file outside the mounted drive intentionally creates plaintext. Other applications and Windows may create temporary files, thumbnails or paging data.
+- Windows startup and automatic unlock are separate controls. Optional automatic unlock uses current-user DPAPI protection; an already unlocked Windows session remains outside that protection.
+- Encrypted chunks default to **10 MiB**, with a **90,000,000-byte** maximum including framing. New or edited files use the selected limit; changing existing parts requires explicit resplitting.
 
-See [storage documentation](docs/features/storage/README.md) for configuration, recovery and failure modes.
+See [storage configuration, recovery and failure modes](docs/features/storage/README.md).
 
-## Build and package on Windows
+## Build and package
 
-Windows 10/11 x64 is the delivery target. From the repository root, use the actual entrypoints:
+Windows 10/11 x64 is the delivery target. Use the actual root entrypoints:
 
 ```bat
 build.bat /s
 build-installer.bat /s
 ```
 
-The first builds the application; the second produces the genuine **unsigned Squirrel.Windows installer**. Production uses GitHub Actions with these same entrypoints and does not run tests or lint. Build success, package checks, installed execution and interface verification are separate results.
+The first builds the application; the second produces the genuine unsigned Squirrel.Windows installer. Production uses these same entrypoints in GitHub Actions without tests or lint. Run explicit local verification separately through [verify-local.ps1](scripts/verify-local.ps1).
 
-The [bootstrap](scripts/bootstrap.ps1) prepares verified user-scoped tools from [pinned dependencies](dependencies.json), reuses valid caches and retains rejected download bytes with diagnostic receipts. The .NET SDK pin remains fixed; fallback sources are explicitly declared official HTTPS endpoints. Bundled fonts and media use their pinned staging routes, not runtime CDNs. Explorer mounting requires the genuine WinFsp driver and its normal elevation flow. Fresh-machine bootstrap certification remains pending; do not disable host security or substitute a successful helper for a failed root entrypoint.
+[Bootstrap](scripts/bootstrap.ps1) prepares verified user-scoped tools from [pinned dependencies](dependencies.json), reuses valid caches and preserves download diagnostics. Explorer mounting requires the genuine WinFsp driver and its normal elevation flow. Fresh-machine certification remains unfinished. See [desktop build and verification](docs/features/desktop/README.md) and [release documentation](docs/features/release/README.md).
 
-Run explicit local verification separately through [scripts/verify-local.ps1](scripts/verify-local.ps1). See [desktop build and verification](docs/features/desktop/README.md), [release documentation](docs/features/release/README.md) and [agent/contributor instructions](AGENTS.md) for scope, dependency and evidence requirements.
+## Documentation and historical evidence
 
-## Documentation map
+The deployed [article library](https://ding-ding-projects.github.io/material-file-encryptor/library.html) and [complete wiki snapshot](https://ding-ding-projects.github.io/material-file-encryptor/wiki.html) include their content directly in the documentation website. Start with [all feature categories](docs/features/README.md), [project goal](GOAL.md), [roadmap](ROADMAP.md), [handoff](HANDOFF.md) and [changelog](CHANGELOG.md).
 
-Every category contains detailed articles with behavior, configuration, failure modes, security and verification boundaries. The deployed [documentation library](https://ding-ding-projects.github.io/material-file-encryptor/library.html) and [complete wiki snapshot](https://ding-ding-projects.github.io/material-file-encryptor/wiki.html) are available without leaving the documentation website.
+![Historical packaged History interface from source 1e16dea8, showing a retained synthetic version and restore action.](docs/images/captures/preview/history-preview.png)
 
-| Category | Start here |
-|---|---|
-| Storage, encrypted cache, history and transfers | [Storage](docs/features/storage/README.md) · [Explorer drive](docs/features/drive/README.md) |
-| Tabs, search, palette, notifications and update workspace | [Shared workspace surfaces](docs/features/surface-foundation/README.md) |
-| Language, accessibility, settings and contextual guidance | [Interface](docs/features/interface/README.md) · [Settings completeness](docs/features/interface/settings-completeness.md) · [Guidance](docs/features/interface/settings-guidance.md) |
-| Appearance, logo, fonts and animation | [Appearance](docs/features/appearance/README.md) · [Appearance editor](docs/features/interface/appearance-editor.md) · [Fonts](docs/features/interface/font-metadata.md) · [Bundled fonts](docs/features/interface/bundled-fonts.md) · [Motion authoring](docs/features/interface/animation-transition.md) |
-| Local profiles, credentials and protected history | [Access](docs/features/access/README.md) |
-| Local conversion and capability limits | [Converter](docs/features/converter/README.md) |
-| Local models and tools | [Local model suite](docs/features/ollama/README.md) |
-| Schedules and external sources | [Schedules](docs/features/schedules/README.md) |
-| Minecraft server management and provider boundaries | [Server manager](docs/features/server-manager/README.md) |
-| Offline documentation, status and feature delivery | [Platform](docs/features/platform/README.md) |
-| Packaging, updater and verification | [Release](docs/features/release/README.md) · [Desktop](docs/features/desktop/README.md) · [Performance measurements](docs/features/performance/README.md) |
+This genuine capture belongs to historical source **1e16dea8**. Its [original provenance](docs/images/captures/preview/inventory.json) and [reviewed gallery inventory](docs/site/gallery-review.json) retain the source, image hash and original scope. It does not show the current rebuilt interface. Current replacement images await source-bound acceptance and promotion; the [historical gallery](https://ding-ding-projects.github.io/material-file-encryptor/gallery.html) remains labelled accordingly.
 
-## Historical interface preview
-
-![Historical packaged Windows History interface from source 1e16dea8, showing a retained synthetic version and restore action.](docs/images/captures/preview/history-preview.png)
-
-This genuine reviewed capture belongs to historical source **`1e16dea8`**. Its [original provenance](docs/images/captures/preview/inventory.json) and [reviewed gallery inventory](docs/site/gallery-review.json) retain the exact source, image hash and recorded scope. It is **not** the current rebuilt interface. Replacement captures remain pending actual build-bound inspection. The [published historical gallery](https://ding-ding-projects.github.io/material-file-encryptor/gallery.html) preserves original records and their limitations.
-
-## Bounded native measurements
-
-Five initial helper status requests measured 91.678–185.398 ms. One hundred sequential warm status requests measured a 0.167 ms median. These are helper-only JSONL round trips against existing packaged bytes with unverified source binding, not encryption throughput or GUI latency. [All samples, hashes and limits](docs/features/performance/native-helper.md).
-
-## Historical source-bound evidence
-
-The retained record below includes earlier releases, screenshots and incomplete verification. Its source identifiers and limitations remain historical; no result below is promoted to the current integration.
+Earlier source-bound records follow unchanged. Their versions, images and incomplete verdicts remain historical.
 
 <details>
 <summary>Open retained historical project record</summary>

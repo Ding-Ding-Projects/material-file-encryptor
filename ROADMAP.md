@@ -1,3 +1,11 @@
+# Preservation closeout, 2026-10-11 UTC
+
+- [x] Rewrite README opening with independently accepted v1.259.1, exact evidence boundaries and retained historical records; all 31 local references exist.
+- [ ] Finish atomic property/capture source review and preserve every coherent owning branch; do not integrate incomplete work.
+- [ ] Verify final main remote proof, source archive and separate ignored-image preservation before processing any deletion candidate.
+- [ ] Complete the one reviewed public capture-gallery lane, or record its exact publication blocker.
+- [ ] Resume full pure Material Design 3, unique guidance/Clear, complete editor/motion, 105-ID/210-row and installed lifecycle acceptance after this user-requested closeout. The full goal is not complete.
+
 - [x] Independently review native observer standard-input compatibility and actual bounded installed-reader restoration/invalid-input checks; parent2reader+3journal cases pass. Nonlaunch source proof.
 - [ ] Create fresh repaired-source native plan/admission and observe actual startup/update readiness/graceful closure without old-state reuse.
 
