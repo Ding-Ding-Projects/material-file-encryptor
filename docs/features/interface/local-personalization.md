@@ -67,3 +67,7 @@ Appearance and logo schedules use versioned local references. Capture current ap
 The schedule value editor offers typed narration and attention controls. Appearance and logo values use a saved-reference picker with the shared regex search. Remove local snapshot requires the destructive confirmation workflow and refuses references used by any saved schedule.
 
 The returned appearance and logo adapters expose resolve, registerSnapshot, listSnapshots, removeSnapshot, applyTransient and clearTransient. Applying or clearing a schedule does not write the base appearance record, logo record, undo history or revision journal. Editing the base during an override preserves that new base for restoration. Logo snapshots accept only a normalized static 128 by 128 PNG or an explicit original-logo value. The appearance validator continues to reject external resources and unsafe declarations.
+
+## History export
+
+Unlocked history supports individual selection, Shift ranges, all filtered records, inversion and clear. Export selected records or the currently visible filtered result; comparison still requires exactly two entries. Ten text formats preserve complete redacted metadata with an explicit omission manifest. Snapshots, credentials, vocabulary and image pixels remain excluded. See the [format matrix](../../../design/gui-personalization/record-export-matrix.md) for exact representations and exclusions.
