@@ -86,6 +86,51 @@ try
     Assert(!cancel.GetProperty("accepted").GetBoolean() && cancel.GetProperty("state").GetString() == "completed", "Late cancel relabelled completed file");
     Console.WriteLine("PASS completed import remains completed after late cancellation");
 
+    engine.CreateFile("snapshot.bin");
+    byte[] snapshotBytes=Enumerable.Range(0,131072).Select(i=>(byte)(i%251)).ToArray();
+    engine.WriteRange("snapshot.bin",0,snapshotBytes);await engine.FlushAsync();
+    using(var snapshot=engine.AcquireReadSnapshot("snapshot.bin"))
+    {
+        Assert(engine.EvictEntryCache("snapshot.bin")==0,"Active snapshot allowed ciphertext eviction");
+        engine.WriteRange("snapshot.bin",0,new byte[65536]);engine.Delete("snapshot.bin");
+        engine.EvictCache(long.MaxValue);
+        byte[] actual=new byte[snapshotBytes.Length];
+        for(int offset=0;offset<actual.Length;offset+=65536)
+        {await snapshot.PrepareRangeAsync(offset,65536);Assert(snapshot.ReadRange(offset,actual.AsSpan(offset,65536))==65536,"Snapshot returned short data");}
+        Assert(actual.SequenceEqual(snapshotBytes),"Concurrent edit/delete changed snapshot content");
+    }
+    Console.WriteLine("PASS immutable read snapshot survives edit, delete and cache eviction");
+
+    string exportCurrent=Path.Combine(root,"current-export.bin");File.WriteAllText(exportCurrent,"previous export");
+    int versionsBeforeExport=engine.ListVersions().Count;
+    using(var stopExport=new CancellationTokenSource())
+    {
+        Action<long,long,int,int> cancelProgress=(bytes,total,complete,count)=>{if(bytes>0)stopExport.Cancel();};
+        bool cancelled=false;
+        try{Call(controller,"ExportCurrentFile",Json(new{path="example.bin",destination=exportCurrent}),stopExport.Token,cancelProgress);}
+        catch(TargetInvocationException error) when(error.InnerException is OperationCanceledException){cancelled=true;}
+        Assert(cancelled&&File.ReadAllText(exportCurrent)=="previous export","Cancelled export replaced destination");
+        Assert(!Directory.EnumerateFiles(root,"current-export.bin.*.tmp").Any(),"Cancelled export retained temporary plaintext");
+    }
+    Assert(engine.ListVersions().Count==versionsBeforeExport,"Current export created an unsolicited version");
+    Assert(engine.ListActivity(new(Limit:100)).Items.Any(item=>item.Action=="cancel"&&item.Detail=="Managed export cancelled"),"Cancelled export activity was not retained");
+    start=Json(Call(controller,"Execute","startExport",Json(new{path="example.bin",destination=exportCurrent})));
+    id=start.GetProperty("operationId").GetString()!;
+    for(int attempt=0;attempt<500;attempt++)
+    {
+        var rows=Json(Call(controller,"Execute","operations",Json(new{})));
+        state=rows.EnumerateArray().Single(row=>row.GetProperty("operationId").GetString()==id).GetProperty("state").GetString();
+        if(state is "completed" or "failed")break;await Task.Delay(10);
+    }
+    Assert(state=="completed"&&File.ReadAllBytes(exportCurrent).SequenceEqual(File.ReadAllBytes(file)),"Current export content differs");
+    cancel=Json(Call(controller,"Execute","cancelOperation",Json(new{operationId=id})));
+    Assert(!cancel.GetProperty("accepted").GetBoolean()&&cancel.GetProperty("state").GetString()=="completed","Late export cancel changed installed result");
+    bool invalid=false;
+    try{Call(controller,"Execute","startExport",Json(new{path="example.bin",versionId="invalid",destination=exportCurrent}));}
+    catch(TargetInvocationException error) when(error.InnerException is ArgumentException){invalid=true;}
+    Assert(invalid,"Ambiguous export selection was accepted");
+    Console.WriteLine("PASS managed current export cancellation, atomic install, selection validation and late cancellation");
+
     engine.CreateFile("preview.txt"); engine.WriteRange("preview.txt",0,System.Text.Encoding.UTF8.GetBytes("hello version"));
     await engine.SaveVersionAsync("preview.txt");
     var version = engine.ListVersions(engine.GetInfo("preview.txt")!.EntryId).First();
