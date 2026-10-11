@@ -103,6 +103,7 @@ function renderAvailability() {
  const file = currentFiles().find(file => file.id === selected);
  for (const id of ['create-button','unlock-button']) $(id).disabled = busy || !api || !state;
  $('lock-button').disabled = busy; $('mount-button').disabled = busy || !unlocked || state?.driver?.available === false; $('explorer-button').disabled = busy || !mounted;
+ if($('force-lock-button')){ $('force-lock-button').hidden=!unlocked; $('force-lock-button').disabled=busy||!api?.forceLock; $('force-lock-button').textContent=t('Force lock'); }
  for (const id of ['import-button','empty-import-button','sync-button','split-apply','resplit-button']) $(id).disabled = busy || !unlocked;
  $('open-button').disabled = busy || !mounted || !file;
  $('export-button').disabled = busy || !mounted || !file;

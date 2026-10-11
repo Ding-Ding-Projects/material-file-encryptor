@@ -20,13 +20,13 @@ Invoke-Checked { dotnet publish src/features/converter/native/ConverterSandbox.c
 Copy-Item -LiteralPath (Join-Path $node 'node.exe') -Destination 'out/converter/node.exe' -Force
 $converterManifest = @{
   schemaVersion = 1
-  launcherSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath 'out/converter/ConverterSandbox.exe').Hash.ToLowerInvariant()
-  runtimeSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath 'out/converter/node.exe').Hash.ToLowerInvariant()
+  launcherSha256 = (Get-BootstrapDigest 'out/converter/ConverterSandbox.exe').ToLowerInvariant()
+  runtimeSha256 = (Get-BootstrapDigest 'out/converter/node.exe').ToLowerInvariant()
   launcherCompanionHashes = @{}
 }
 foreach ($companion in @('ConverterSandbox.dll', 'ConverterSandbox.runtimeconfig.json', 'ConverterSandbox.deps.json')) {
   $companionPath = Join-Path 'out/converter' $companion
-  if (Test-Path -LiteralPath $companionPath) { $converterManifest.launcherCompanionHashes[$companion] = (Get-FileHash -Algorithm SHA256 -LiteralPath $companionPath).Hash.ToLowerInvariant() }
+  if (Test-Path -LiteralPath $companionPath) { $converterManifest.launcherCompanionHashes[$companion] = (Get-BootstrapDigest $companionPath).ToLowerInvariant() }
 }
 $converterManifest | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath 'out/converter/manifest.json' -Encoding utf8
 Invoke-Checked { dotnet build native/MaterialFileEncryptor.Core.Tests -c Release }

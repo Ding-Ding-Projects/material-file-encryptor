@@ -35,6 +35,8 @@ export function createCredentialStore({directory,safeStorage}){
 export function createFeatureServices({dataDirectory,applicationRoot,sandboxDirectory,safeStorage,dialog,getWindow,openPath,emit=()=>{},sandboxProvider}){
  const credentials=createCredentialStore({directory:dataDirectory,safeStorage});
  const grants=new Map();let converter,ollama,ollamaPromise,closed=false,exiting=false,sharedCredentialGranted=false,pendingRequests=0;
+ const modelEvents=[];let modelSequence=0,modelEventBytes=0;
+ function modelEvent(data){const item={sequence:++modelSequence,data};const bytes=Buffer.byteLength(JSON.stringify(item));if(bytes<=524288){modelEvents.push({item,bytes});modelEventBytes+=bytes;}while(modelEvents.length>128||modelEventBytes>524288){modelEventBytes-=modelEvents.shift().bytes;}emit('ollama',data);}
  const statusPromise=createApplicationStatus({createClient:createStatusHubClient,clientOptions:{sessionId:'material-file-encryptor-'+randomUUID(),title:'Material File Encryptor',repository:'Ding-Ding-Projects/material-file-encryptor',branch:'main',machine:process.platform+' desktop',exitHooks:false},collectWorktrees,repoPath:applicationRoot});
  const settingsPath=path.join(dataDirectory,'shared-settings.json');
  const grant=async(filename,mode)=>{const id=randomUUID();const value={filename,mode,parent:await fs.realpath(path.dirname(filename))};grants.set(id,value);await credentials.set('grant:'+id,value);return id;};
@@ -42,7 +44,7 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
  const ensureOpen=()=>{if(closed)throw Error('Application is closing.');};
  let converterPromise;
  async function converterService(){if(!converterPromise)converterPromise=(async()=>{let provider=sandboxProvider;if(!provider&&sandboxDirectory){try{const manifest=JSON.parse(await fs.readFile(path.join(sandboxDirectory,'manifest.json'),'utf8'));const{createWindowsSandboxProvider}=await import('../features/converter/windows-sandbox.mjs');provider=await createWindowsSandboxProvider({launcherPath:path.join(sandboxDirectory,'ConverterSandbox.exe'),launcherSha256:manifest.launcherSha256,runtimePath:path.join(sandboxDirectory,'node.exe'),runtimeSha256:manifest.runtimeSha256,launcherCompanionHashes:manifest.launcherCompanionHashes});}catch{provider=null;}}const{createConverterService}=await import('../features/converter/service.mjs');converter=createConverterService({stateDirectory:path.join(dataDirectory,'conversion-queue'),resolveGrant,bundledProof:{pdfLib:true},sandboxProvider:provider});void converter.run();return converter;})();return converterPromise;}
- async function ollamaService(){if(!ollamaPromise)ollamaPromise=(async()=>{const{createOllamaService}=await import('../features/ollama/service.js');ollama=createOllamaService({dataDir:path.join(dataDirectory,'local-models')});ollama.subscribe(data=>emit('ollama',data));return ollama;})();return ollamaPromise;}
+ async function ollamaService(){if(!ollamaPromise)ollamaPromise=(async()=>{const{createOllamaService}=await import('../features/ollama/service.js');const{createNativeHardwareProbe}=await import('../features/ollama/native-hardware.js');ollama=createOllamaService({dataDir:path.join(dataDirectory,'local-models'),hardwareProbe:createNativeHardwareProbe()});ollama.subscribe(modelEvent);return ollama;})();return ollamaPromise;}
  async function pick(properties,title){const result=await dialog.showOpenDialog(getWindow(),{title,properties});return result.canceled?[]:result.filePaths;}
  async function dispatch(feature,action,payload={}){
   ensureOpen();if(typeof feature!=='string'||typeof action!=='string'||!object(payload))throw Error('Invalid feature request.');bounded(payload);
@@ -53,7 +55,10 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
    if(action==='pickDestination'){const result=await dialog.showSaveDialog(getWindow(),{title:'Save converted file',defaultPath:'converted.'+(typeof payload.extension==='string'&&/^[a-z0-9]{1,12}$/.test(payload.extension)?payload.extension:'dat')});return result.canceled?null:grant(result.filePath,'write');}
    if(!['catalog','inspect','enqueue','list','control'].includes(action))throw Error('Unsupported conversion action.');const service=await converterService();return service[action](payload);
   }
-  if(feature==='ollama')return(await ollamaService()).request(action,payload);
+  if(feature==='ollama'){
+   if(action==='events'){const after=payload.after??0;if(!Number.isSafeInteger(after)||after<0)throw Error('Invalid event cursor.');const events=modelEvents.filter(({item})=>item.sequence>after).map(({item})=>item);return{events,cursor:modelSequence,gap:after>modelSequence||events.length!==modelSequence-after};}
+   return(await ollamaService()).request(action,payload);
+  }
   if(feature==='documentation'){
    if(!['catalog','changelog'].includes(action))throw Error('Unsupported documentation action.');
    const file=path.join(applicationRoot,'src/shared/documentation-catalog.json');const catalog=JSON.parse(await fs.readFile(file,'utf8'));return action==='catalog'?catalog:catalog.changelog||[];
