@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "acquisition": "Existing local tools, inspected read-only. No toolchain installation or download was performed.",
+  "tools": [
+    {"file": "gcc.exe", "version": "13.2.0 MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders, r8", "sha256": "34a92e71f6814bd936135d0bd82b80b63daaf445791bba4a6bba93075235e8a4"},
+    {"file": "mingw32-make.exe", "version": "GNU Make 4.4.1", "sha256": "53a931682f2b25e2e0baec25a1cc41599c559f317f20956a71b9ef80734439b2"},
+    {"file": "bash.exe", "source": "Existing Git for Windows installation", "sha256": "5490d0da5e7cf9d92068cc48fcc590f2bcf8564add8ff91c3b5fe541eb2d72e3"}
+  ],
+  "headers": {"mingwW64ReportedVersion": "11.0.1", "state": "alpha"},
+  "buildConcurrency": 2,
+  "priority": "BelowNormal",
+  "scope": "These hashes identify the inspected compiler executables; they are not a claim of a complete toolchain archive or bit-identical rebuild."
+}

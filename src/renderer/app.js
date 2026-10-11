@@ -11,6 +11,7 @@ import { createTranslator } from '../shared/local-ux/language.js';
 import { createSettingsStore, DEFAULTS as LOCAL_DEFAULTS } from '../shared/local-ux/store.js';
 import { createPrivateWordingView } from '../shared/surface/private-wording-view.js';
 import { operationNotification } from './operation-notifications.js';
+import { onPageDiscard } from './page-lifecycle.js';
 const $ = id => document.getElementById(id);
 const api = window.drive;
 let preferences = loadSettings(localStorage);
@@ -394,7 +395,7 @@ setupEnhancedWorkspace();
 applyPreferences(); renderAvailability();
 if (!api) { setText('vault-badge','Not mounted'); showError('The desktop bridge is unavailable. Open this interface through Material File Encryptor.'); }
 else {
- const unsubscribe = api.onStatus(next => { state = next; render(); }); window.addEventListener('beforeunload',() => unsubscribe?.(),{once:true});
+ const unsubscribe = api.onStatus(next => { state = next; render(); }); onPageDiscard(window,() => unsubscribe?.());
  refresh().catch(error => showError(error));
 }
 
@@ -547,5 +548,5 @@ function setupEnhancedWorkspace() {
  Promise.allSettled(mounts).then(()=>{foundation.shell.activate(view);refreshPaletteInventory();});
  foundation.registerCommands([{id:'vault:force-lock',label:{en:'Force lock',yue:'強制鎖定'},run:()=>run('Locking drive…',()=>api.forceLock())},{id:'application:quit',label:{en:'Quit application',yue:'結束程式'},run:()=>api.quit?api.quit():api.windowControl('close')}]);
  const paletteShortcut=event=>{if((event.ctrlKey||event.metaKey)&&event.shiftKey&&event.key.toLowerCase()==='f')refreshPaletteInventory();};document.addEventListener('keydown',paletteShortcut,true);workspaceDisposers.push(()=>document.removeEventListener('keydown',paletteShortcut,true));
- window.addEventListener('beforeunload',()=>{privateWordingView.destroy();fileDetails?.destroy();foundation?.destroy();for(const module of featureMounts.values())module.destroy?.();for(const dispose of workspaceDisposers)dispose();},{once:true});
+ onPageDiscard(window,()=>{privateWordingView.destroy();fileDetails?.destroy();foundation?.destroy();for(const module of featureMounts.values())module.destroy?.();for(const dispose of workspaceDisposers)dispose();});
 }

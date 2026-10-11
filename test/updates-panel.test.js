@@ -18,3 +18,20 @@ test('locale refresh preserves snapshot and deferral without resubmitting action
 test('pending requests block duplicate actions and late results cannot restore disposed panel',async()=>{
  let finish,calls=0;const panel=new UpdatesPanel();panel.request=()=>{calls++;return new Promise(resolve=>{finish=resolve;});};panel.update({state:'ready'});const pending=panel.act('install');panel.buttons.install.listeners.click();assert.equal(calls,1);panel.destroy();finish({state:'restart-requested'});await pending;assert.equal(panel.snapshot.state,'ready');
 });
+
+test('restart preparation and manual recovery block actions with localized instructions',async()=>{
+ const panel=new UpdatesPanel();let calls=0;panel.request=async()=>{calls++;return{};};
+ for(const snapshot of [{state:'preparing-restart'},{state:'manual-restart-required'},{state:'available',admissionBlocked:true},{state:'ready',recoveryRequired:true}]){
+  panel.update(snapshot);for(const button of Object.values(panel.buttons))assert.equal(button.disabled,true);
+  for(const action of ['check','download','install'])await panel.act(action);assert.equal(calls,0);
+ }
+ panel.update({state:'manual-restart-required'});assert.match(panel.status.textContent,/Manual application restart/);assert.match(panel.limit.textContent,/Exit the application manually/);
+ panel.setLanguage('yue');assert.equal(panel.status.textContent,'需要手動重新啟動應用程式');assert.match(panel.limit.textContent,/手動退出/);
+ panel.setLanguage('bilingual');assert.match(panel.limit.textContent,/Exit the application manually/);assert.match(panel.limit.textContent,/手動退出/);
+ panel.update({state:'preparing-restart'});assert.match(panel.limit.textContent,/Wait for it to close/);
+});
+test('busy desktop and install capability do not imply missing desktop application',()=>{
+ const panel=new UpdatesPanel();panel.request=async()=>({});panel.update({state:'ready',desktopAvailable:true,canInstall:false,activeWork:true});assert.equal(panel.limit.textContent,'Finish active work before installing.');
+ panel.update({state:'ready',desktopAvailable:true,canInstall:false});assert.equal(panel.limit.textContent,'Installation is not available in the current state.');
+ panel.update({state:'ready',desktopAvailable:false});assert.equal(panel.limit.textContent,'Installation requires the desktop application.');
+});

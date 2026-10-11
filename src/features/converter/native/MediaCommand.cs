@@ -13,7 +13,14 @@ internal sealed class MediaCommand
 
     internal static MediaCommand Create(JsonElement media, string runtime, string work)
     {
-        if (media.ValueKind != JsonValueKind.Object || media.EnumerateObject().Any(p => p.Name != "operation")) throw new ArgumentException("Only a fixed media operation may be supplied.");
+        if (media.ValueKind != JsonValueKind.Object || media.EnumerateObject().Any(p => p.Name != "operation" && p.Name != "profile")) throw new ArgumentException("Only a fixed media operation and profile may be supplied.");
+        string profile = "default";
+        if (media.TryGetProperty("profile", out var profileValue))
+        {
+            if (profileValue.ValueKind != JsonValueKind.String) throw new ArgumentException("Media profile must be a supported name.");
+            profile = profileValue.GetString()!;
+        }
+        if (profile is not ("default" or "minimal-v1")) throw new ArgumentException("Unsupported media profile.");
         var operation = media.GetProperty("operation").GetString();
         var probe = operation == "probe";
         var expected = probe ? "ffprobe.exe" : "ffmpeg.exe";
@@ -32,8 +39,13 @@ internal sealed class MediaCommand
             case "image-jpeg": arguments.AddRange(["-map", "0:v:0", "-frames:v", "1", "-c:v", "mjpeg", "-q:v", "2", "-f", "image2", "-update", "1"]); extension = "jpg"; break;
             case "audio-wav": arguments.AddRange(["-map", "0:a:0", "-vn", "-c:a", "pcm_s16le", "-f", "wav"]); extension = "wav"; break;
             case "audio-flac": arguments.AddRange(["-map", "0:a:0", "-vn", "-c:a", "flac", "-f", "flac"]); extension = "flac"; break;
-            case "audio-mp3": arguments.AddRange(["-map", "0:a:0", "-vn", "-c:a", "libmp3lame", "-b:a", "192k", "-f", "mp3"]); extension = "mp3"; break;
-            case "video-mp4": arguments.AddRange(["-map", "0:v:0", "-map", "0:a:0?", "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", "-f", "mp4"]); extension = "mp4"; break;
+            case "audio-mp3": arguments.AddRange(["-map", "0:a:0", "-vn", "-c:a", profile == "minimal-v1" ? "mp3_mf" : "libmp3lame", "-b:a", "192k", "-f", "mp3"]); extension = "mp3"; break;
+            case "video-mp4":
+                arguments.AddRange(["-map", "0:v:0", "-map", "0:a:0?"]);
+                if (profile == "minimal-v1") arguments.AddRange(["-c:v", "mpeg4", "-q:v", "3"]);
+                else arguments.AddRange(["-c:v", "libx264", "-preset", "veryfast", "-crf", "23"]);
+                arguments.AddRange(["-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", "-f", "mp4"]);
+                extension = "mp4"; break;
             case "validate": arguments.AddRange(["-map", "0:v?", "-map", "0:a?", "-f", "null", "-"]); extension = null; break;
             default: throw new ArgumentException("Unsupported media operation.");
         }

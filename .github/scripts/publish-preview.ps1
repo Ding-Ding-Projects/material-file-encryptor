@@ -36,7 +36,13 @@ $catalogRelease=(Gh @('release','view',$imageEntry.sourceReleaseTag,'--repo',$im
 $catalogAsset=@($catalogRelease.assets | Where-Object name -eq $imageEntry.file)
 Assert (!$catalogRelease.isDraft -and $catalogAsset.Count -eq 1 -and $catalogAsset[0].size -eq $imageEntry.bytes -and $catalogAsset[0].url -match '^https://github.com/') 'PUBLIC_CATALOG_IMAGE_REQUIRED'
 $imageUrl=$catalogAsset[0].url
-$assets=@($setup,$releases)+@($packages.FullName)
+$imagePath=Join-Path 'docs/release-assets' $imageEntry.file
+Assert ((Test-Path -LiteralPath $imagePath) -and (Get-Item -LiteralPath $imagePath).Length -eq $imageEntry.bytes -and (Digest $imagePath) -eq $imageEntry.sha256) 'BUNDLED_CATALOG_IMAGE_MISMATCH'
+Add-Type -AssemblyName System.Drawing
+$decodedImage=[Drawing.Image]::FromFile((Resolve-Path -LiteralPath $imagePath).Path)
+try { Assert ($decodedImage.Width -eq $imageEntry.width -and $decodedImage.Height -eq $imageEntry.height) 'BUNDLED_CATALOG_IMAGE_DIMENSIONS' }
+finally { $decodedImage.Dispose() }
+$assets=@($setup,$releases)+@($packages.FullName)+@($imagePath)
 $receipt=[ordered]@{schemaVersion=1; sourceCommit=$source; tag=$tag; packageVersion=(Get-Content package.json -Raw | ConvertFrom-Json).version; runId=$env:GITHUB_RUN_ID; runAttempt=$env:GITHUB_RUN_ATTEMPT; workflowUrl=$workflowUrl; workflowStartedAtUtc=$workflowStartedUtc.ToString('o'); buildStartedAtUtc=$env:BUILD_STARTED_AT; packagingCompletedAtUtc=[DateTime]::UtcNow.ToString('o'); testsRunInCI=$false; runtimeVerification='pending independent local receipt'; unsignedInstaller=$true; assets=@($assets | ForEach-Object { @{name=(Split-Path $_ -Leaf); bytes=(Get-Item $_).Length; sha256=Digest $_} })}
 $receipt | ConvertTo-Json -Depth 8 | Set-Content "$output/build-provenance.json" -Encoding utf8
 $notes=@"
@@ -49,6 +55,8 @@ Build and packaging only. CI runs no tests, lint, GUI checks, installation, or u
 Workflow run: $workflowUrl
 
 Build started UTC: $($receipt.buildStartedAtUtc). Packaging completed UTC: $($receipt.packagingCompletedAtUtc).
+
+Downloadable photo: ``$($imageEntry.file)`` (Classic Har Gow / 蝦餃), from the bundled verified catalog.
 
 ![Classic Har Gow 蝦餃]($imageUrl)
 "@

@@ -11,6 +11,7 @@ import { createFeatureServices } from './feature-services.js';
 import { createLocalAdapter } from './local-adapter.js';
 import { explorerCopyPath, registerExplorerCommand } from './explorer-command.js';
 import { createUpdateService } from './update-service.js';
+import { createRestartPreparation } from './restart-preparation.js';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const rendererPath = path.resolve(directory, '../renderer/index.html');
@@ -210,6 +211,7 @@ async function handleExplorerCopy(argumentsList){
 }
 const activeTransfers = () => (state.operations || []).filter(item => ['queued','running','cancelling'].includes(item.state));
 async function hasActiveWork() {
+  if (restartPreparation.started) return false;
   const active=helper?await helper.request('operations'):[];
   return Boolean(operation || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
 }
@@ -241,11 +243,15 @@ async function acquireUpdateLease() {
     return release;
   } catch(error) {release();throw error;}
 }
-async function prepareUpdateRestart() {
-  if(!updateInstallLease||!state.locked||state.lockVerified===false||await hasActiveWork())throw new Error('The application is not ready to restart safely.');
-  await localAdapter?.close();await features?.close();verificationStartup?.restore();
-  await fs.rm(sessionMarkerPath(),{force:true});helper?.dispose();shuttingDown=true;
-}
+const restartPreparation=createRestartPreparation({
+  verify:async()=>{if(!updateInstallLease||!state.locked||state.lockVerified===false||await hasActiveWork())throw new Error('The application is not ready to restart safely.');},
+  preflight:async()=>{verificationStartup?.restore();},
+  closeServices:async()=>{await localAdapter?.close();await features?.close();},
+  clearMarker:()=>fs.rm(sessionMarkerPath(),{force:true}),
+  disposeHelper:async()=>{helper?.dispose();},
+  prepared:()=>{shuttingDown=true;}
+});
+async function prepareUpdateRestart() { await restartPreparation.run(); }
 function updateTray() {
   if (!tray) return;
   const active = activeTransfers();
@@ -259,6 +265,11 @@ function updateTray() {
   ]));
 }
 async function quit() {
+  if (updateInstallLease && updates?.status().state==='manual-restart-required') {
+    try { await prepareUpdateRestart(); await updates.dispose({shutdown:true}); setImmediate(()=>app.quit()); }
+    catch { showWindow(); await dialog.showMessageBox(window,{type:'error',title:'Exit is not complete',message:'Safe shutdown could not finish. Work remains blocked. Retry Quit after the storage or service problem is resolved.'}); }
+    return;
+  }
   if (quitPending || shuttingDown) return;
   quitPending=true;
   try {
@@ -308,7 +319,7 @@ else {
     localAdapter=createLocalAdapter({isAuthenticated:()=>!state.locked&&state.lockVerified!==false,authorizePair:async({origin})=>(await dialog.showMessageBox(window,{type:'question',buttons:['Reject','Pair browser'],defaultId:0,cancelId:0,title:'Pair browser tools',message:'Allow this browser to use local tools?',detail:origin+' will be able to operate approved workflows until the drive locks or the session expires.'})).response===1,dispatch:request});
     window = new BrowserWindow({ width: 1180, height: 850, minWidth: 880, minHeight: 650, frame: false, show: false, backgroundColor: '#f7f9f8', webPreferences: { preload: path.join(directory, 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false, webSecurity: true } });
     window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-    window.webContents.on('will-navigate', event => event.preventDefault());
+    window.webContents.on('will-navigate', (event, url) => { if(url!==rendererURL)event.preventDefault(); });
     window.webContents.on('will-attach-webview', event => event.preventDefault());
     let rendererRecoveries=0;
     window.webContents.on('render-process-gone',()=>{if(!shuttingDown&&rendererRecoveries++<3)void window.loadFile(rendererPath);});

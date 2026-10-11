@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "status": "locally-verified",
+  "ffmpeg": {
+    "version": "9.0.2",
+    "url": "https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz",
+    "sha256": "8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e",
+    "signatureUrl": "https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz.asc",
+    "signingKeyUrl": "https://ffmpeg.org/ffmpeg-devel.asc",
+    "signingFingerprint": "FCF986EA15E6E293A5644F10B4322F04D67658D8",
+    "license": "LGPL-2.1-or-later without GPL components enabled"
+  },
+  "zlib": {
+    "version": "1.3.2",
+    "url": "https://zlib.net/zlib-1.3.2.tar.gz",
+    "sha256": "bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16",
+    "license": "Zlib"
+  },
+  "intendedEncoders": [
+    "png",
+    "mjpeg",
+    "flac",
+    "pcm_s16le",
+    "aac",
+    "mpeg4",
+    "mp3_mf",
+    "wrapped_avframe"
+  ],
+  "externalLibraryClosure": [
+    "zlib"
+  ],
+  "systemInterfaces": [
+    "Windows Media Foundation",
+    "Windows D3D11",
+    "Windows UCRT"
+  ],
+  "network": "disabled at configure time",
+  "protocols": [
+    "file",
+    "pipe"
+  ],
+  "buildTools": {
+    "gcc": "13.2.0 MinGW-W64 x86_64-ucrt-posix-seh r8",
+    "make": "4.4.1",
+    "shell": "Git Bash",
+    "concurrency": 2,
+    "priority": "below-normal"
+  },
+  "published": false,
+  "profile": "minimal-v1",
+  "runtimeNotices": [
+    {
+      "name": "GCC-RUNTIME-EXCEPTION.txt",
+      "url": "https://raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-13.2.0/COPYING.RUNTIME",
+      "sha256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74"
+    },
+    {
+      "name": "COPYING.MinGW-w64-runtime.txt",
+      "url": "https://raw.githubusercontent.com/mingw-w64/mingw-w64/v11.0.1/COPYING.MinGW-w64-runtime/COPYING.MinGW-w64-runtime.txt",
+      "sha256": "e9b2dc02451ea29092a1f25fa0f3c07207ed421f1807dffb0c4e6dce69dee7bd"
+    }
+  ],
+  "verifiedCandidate": {
+    "ffmpegSha256": "3afaeabe603e0a869f782621b8ef3877c98db8832dac756fd4518af9cfc2b8a3",
+    "ffprobeSha256": "6f02e4e18eb928ff48d8fdad2840d8419a1868931cbdf0da6d1da8f8a59987a4",
+    "formats": [
+      "png",
+      "jpeg",
+      "wav",
+      "flac",
+      "mp3",
+      "mp4"
+    ],
+    "validation": "All six formats encoded, probed and decoded within actual AppContainer; cancellation passed.",
+    "binaryPathScan": "No user build path found"
+  }
+}
