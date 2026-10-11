@@ -60,16 +60,17 @@ export const DRAFT_FIELDS=new Set(['Schedule name','Start date','End date','Star
 
 /** Preserve typed defaults. Read offered choices, never the user's secret value. */
 export function fieldPresentation({control,label,defaultValue,source='default',t=value=>String(value)}={}){
- const choices=control.type==='select-one'||control.tagName?.toLowerCase()==='select'?[...control.children].map(option=>({value:option.value,label:option.textContent})):[];
+ const semanticKind=control.dataset?.settingsKind||control.type;
+ const choices=semanticKind==='select-one'||control.tagName?.toLowerCase()==='select'?[...control.children].map(option=>({value:option.value,label:option.textContent})):[];
  const show=value=>choices.find(option=>option.value===String(value))?.label??(value===''?t('Empty'):typeof value==='boolean'?t(value?'On':'Off'):String(value));
- const defaultText=show(defaultValue),kinds={checkbox:'On or off',range:'Numeric value',number:'Numeric value',date:'Calendar date',time:'Local clock time',url:'HTTPS address',password:'Secret input, never shown in help'};
- let options=choices.length?`${t('Available choices')}: ${choices.map(option=>`${option.label} [${option.value}]`).join(', ')}`:t(kinds[control.type]||'Text');
+ const publicDefault=semanticKind==='password'?'':defaultValue;const defaultText=semanticKind==='password'?t('Secret input, never shown in help'):show(publicDefault),kinds={checkbox:'On or off',range:'Numeric value',number:'Numeric value',date:'Calendar date',time:'Local clock time',url:'HTTPS address',password:'Secret input, never shown in help'};
+ let options=choices.length?`${t('Available choices')}: ${choices.map(option=>`${option.label} [${option.value}]`).join(', ')}`:t(kinds[semanticKind]||'Text');
  if(label==='Value'){
   const setting=control.dataset?.guidanceSetting||'theme',domains={theme:['system','light','dark'],density:['compact','comfortable','spacious'],motion:['system','full','reduced'],language:['en','yue','bilingual'],emoji:[false,true],funnyEnglish:[1,2,3,4,5],funnyCantonese:[1,2,3,4,5],fontScale:[0.75,2],fontWeight:[100,900]};
   const domain=domains[setting];options=`${setting}: ${typeof defaultValue==='number'?t('Numeric value'):typeof defaultValue==='boolean'?t('On or off'):t('Text')}${domain?' ['+domain.join(', ')+']':''}`;
  }
- if(['range','number'].includes(control.type))options+=['min','max','step'].filter(key=>control[key]!==undefined&&control[key]!=='').map(key=>` ${key}: ${control[key]}`).join(',');
- return {default:defaultText,defaultValue,options,provenance:`${t(source==='draft'?'Unsaved input draft':source==='saved'?'Stored preference record':'Compiled settings default')}. ${t('Suggested default')}: ${defaultText}`};
+ if(['range','number'].includes(semanticKind))options+=['min','max','step'].filter(key=>control[key]!==undefined&&control[key]!=='').map(key=>` ${key}: ${control[key]}`).join(',');
+ return {default:defaultText,defaultValue:publicDefault,options,provenance:`${t(source==='draft'?'Unsaved input draft':source==='saved'?'Stored preference record':'Compiled settings default')}. ${t('Suggested default')}: ${defaultText}`};
 }
 export function parseScheduleDraftValue(setting,text){
  if(!Object.hasOwn(DEFAULTS,setting))throw Error('Choose a supported scheduled setting.');

@@ -991,6 +991,12 @@ Include Saturday as a starting day for this schedule.
 
 The shared personalization action factory renders registered md-outlined-button controls, using the same callbacks and optional guidance as the direct actions. It retains the original asynchronous consumer promise, so guidance waits for completion and reports its rejection rather than inventing success. Disabled, read-only, detached and disposed controls cannot admit a new action; admission is rechecked before the queued consumer executes. Existing reset confirmation cancellation, schedule validation, storage and file-picker authority remain unchanged.
 
-This conversion covers action buttons only. Native fields/selects and other surfaces remain separate work. Component checks exercise deferred completion, disabled and detached controls, reset cancellation and schedule validation. Current built screenshots and visual Material Design 3 acceptance remain pending.
+This conversion covers action buttons only. Other field kinds and surfaces remain separate work. Component checks exercise deferred completion, disabled and detached controls, reset cancellation and schedule validation. Current built screenshots and visual Material Design 3 acceptance remain pending.
 
 Navigation guidance uses the explicit compactLabels option: visible captions are Guide and Explain (localized in Cantonese and bilingual mode), while accessible names retain the complete action and exact target. Ordinary setting guidance keeps its existing captions. Unique authored descriptions, optional operations and column alignment remain unchanged. Corrected narrow pixels still require fresh capture.
+
+## Semantic Material field adapter
+
+The shared factory uses registered md-outlined-text-field for text, password, URL and number, and md-checkbox for checkbox values. Text fields own their component label without a duplicated visible label; checkboxes retain an associated visible label. An explicit semantic-kind inventory leaves select, date, time, range, color, file and search native and unfinished in this slice. Date/time are not passed as unsupported Material text-field types.
+
+The adapter keeps the original change-owned consumer promise. Direct and guided changes share that consumer, recheck disabled/read-only/lifetime admission before execution, honor cancellation, and preserve original rejection. Clear uses the original event and awaited promise, rolls back rejection and restores focus. Semantic help describes checkbox and password correctly without reading secret values; password default/help output is redacted. Existing reset, schedules, storage and file picker authority remain unchanged. Actual component accessibility, validation rendering and pixels still require genuine built verification.

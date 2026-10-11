@@ -1,3 +1,9 @@
+# Shared semantic fields and inspected navigation, 2026-10-11 UTC
+
+Reviewed candidate eccb415b2bd2a7c87c1df48b4bd0e3014a5e566e converts shared text/password/URL/number/checkbox fields to registered Material components. Two independent source/vendor and lifetime/privacy reviews were dry; 18 focused checks passed, with independent late read-only/disconnect/disposal/host-unavailable cases rejecting before the original callback. Clear rollback/focus, original asynchronous callbacks and password-help redaction remain intact. Actual component accessibility, validity and pixels remain pending. Select/date/time/range/color/file/search, public shell and nested editors remain unfinished. Pure Material Design 3 applies to every visible surface.
+
+Genuine source127e capture38146793433 now passes the bounded English320x844 navigation captions and Appearance light/dark interaction. All three PNGs and measurement hashes match the independently downloaded archive, with sandbox/single-target identity and complete owned closure. Three local font declarations are registered but all unloaded; decoding/glyph identity remains unproved. These captures precede the6fb workspace link correction and this adapter. No current adapter or full-matrix acceptance is claimed.
+
 # Separate workspace initial-font route, 2026-10-11 UTC
 
 Exact127e live verification passed225files/60706878bytes/8471references/full161articles/wiki0375/About. The complete180HTML font inventory found179 local links, with workspace.html alone missing. The independently reviewed one-line workspace entry correction now references the same existing local stylesheet before its module, with unchanged CSP/staging. Updated live180/180 proof and current font decoding remain pending.

@@ -1,3 +1,7 @@
+- [x] Independently review and integrate supported shared semantic text/password/URL/number/checkbox adapters, preserving original callbacks, clear rollback and secret-help privacy. Source only.
+- [x] Inspect genuine source127e English320x844 navigation captions and Appearance light/dark pixels with independently verified raw hashes and complete cloud closure.
+- [ ] Verify real component labels, keyboard/validity/focus behavior and current adapter pixels.
+- [ ] Convert remaining select/range/date/time/color/file/search, public shell and nested editor controls to genuine registered Material components.
 - [x] Verify exact127e complete live delivery and discover the separate workspace entry missing from179/180 font links.
 - [x] Independently review the workspace local font-link source correction.
 - [ ] Verify updated180/180 live linkage, current compact-caption/font pixels and actual font decoding/glyph identity.
