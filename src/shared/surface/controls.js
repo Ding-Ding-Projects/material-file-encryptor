@@ -36,15 +36,17 @@ export function control(tag, props = {}, children = [], doc = document) {
     else if(key in node)node[key]=value;
     else if(value!==false&&value!==undefined&&value!==null)node.setAttribute(key,value===true?'':value);
   }
+  if(tag==='option'&&children.length===0&&props.text!==undefined){node.textContent='';const headline=doc.createElement('span');headline.slot='headline';headline.textContent=props.text;node.append(headline);}
   if(tag==='textarea')node.type='textarea';
   if(tag==='input'&&!['checkbox','radio','range','file'].includes(type))node.type=type==='search'?'search':type;
-  node.append(...children);
+  if(tag==='option'&&children.length){const headline=doc.createElement('span');headline.slot='headline';headline.append(...children);node.append(headline);}else node.append(...children);
+  if(mapped==='md-outlined-select')queueMicrotask(()=>{if(node.isConnected)connectSelectSearch(node);});
   return node;
 }
-class PlatformField extends HTMLElement {
-  static observedAttributes=['label','aria-label','disabled','required','value','type','min','max','step','accept','multiple'];
+class PlatformField extends (globalThis.HTMLElement||class{}) {
+  static observedAttributes=['label','aria-label','disabled','required','value','type','min','max','step','accept','multiple','readonly','picker-label'];
   constructor(){super();this.attachShadow({mode:'open'});this.pending={};}
-  connectedCallback(){if(this.input)return;const sheet=new CSSStyleSheet();sheet.replaceSync(':host{display:inline-flex;min-width:0;max-width:100%;align-items:center;gap:8px}:host([hidden]){display:none!important}md-outlined-text-field{min-width:0;flex:1}input{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden}md-outlined-button{min-height:44px}');this.shadowRoot.adoptedStyleSheets=[sheet];this.input=nativeCreate('input');this.input.tabIndex=-1;this.input.type=this.localName==='mfe-file-picker'?'file':this.getAttribute('type')||'date';this.field=nativeCreate('md-outlined-text-field');this.field.readOnly=true;this.button=nativeCreate('md-outlined-button');this.button.addEventListener('click',()=>this.showPicker());this.shadowRoot.append(this.field,this.button,this.input);for(const name of this.constructor.observedAttributes)this.attributeChangedCallback(name,null,this.getAttribute(name));for(const [name,value]of Object.entries(this.pending))this[name]=value;this.pending={};for(const name of ['input','change'])this.input.addEventListener(name,event=>{event.stopPropagation();this.sync();this.dispatchEvent(new Event(name,{bubbles:true,composed:true}));});this.sync();}
+  connectedCallback(){if(this.input)return;const sheet=new CSSStyleSheet();sheet.replaceSync(':host{display:inline-flex;min-width:0;max-width:100%;align-items:center;gap:8px}:host([hidden]){display:none!important}md-outlined-text-field{min-width:0;flex:1}input{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden}md-outlined-button{min-height:44px}');this.shadowRoot.adoptedStyleSheets=[sheet];this.input=nativeCreate('input');this.input.tabIndex=-1;this.input.type=this.localName==='mfe-file-picker'?'file':this.getAttribute('type')||'date';this.field=nativeCreate('md-outlined-text-field');this.field.readOnly=true;this.button=nativeCreate('md-outlined-button');this.button.addEventListener('click',()=>this.showPicker());this.shadowRoot.append(this.field,this.button,this.input);for(const name of this.constructor.observedAttributes)this.attributeChangedCallback(name,null,this.getAttribute(name));for(const [name,value]of Object.entries(this.pending))this[name]=value;this.pending={};if(this.customValidity)this.input.setCustomValidity(this.customValidity);for(const name of ['input','change'])this.input.addEventListener(name,event=>{event.stopPropagation();this.sync();this.dispatchEvent(new Event(name,{bubbles:true,composed:true}));});this.sync();}
   attributeChangedCallback(name,old,value){if(!this.input)return;if(['disabled','required','multiple'].includes(name))this.input[name]=value!==null;else if(value!==null)this.input.setAttribute(name,value);else this.input.removeAttribute(name);this.sync();}
   sync(){if(!this.input)return;const label=this.getAttribute('label')||this.getAttribute('aria-label')||(this.localName==='mfe-file-picker'?'Choose file':'Date or time');this.field.label=label;this.field.value=this.input.type==='file'?[...this.input.files].map(file=>file.name).join(', '):this.input.value;this.field.disabled=this.button.disabled=this.input.disabled;this.button.textContent=this.getAttribute('picker-label')||'Choose';this.button.setAttribute('aria-label',label);}
   get value(){return this.input?.value??this.pending.value??'';} set value(value){if(this.input){this.input.value=value;this.sync();}else this.pending.value=value;}
@@ -54,10 +56,12 @@ class PlatformField extends HTMLElement {
   get type(){return this.getAttribute('type')||'date';} set type(value){this.setAttribute('type',value);}
   get validity(){return this.input?.validity;} get validationMessage(){return this.input?.validationMessage??'';}
   checkValidity(){return this.input?.checkValidity()??true;} reportValidity(){const valid=this.checkValidity();if(!valid){this.field.error=true;this.field.errorText=this.validationMessage;this.focus();}return valid;}
-  setCustomValidity(value){this.input?.setCustomValidity(value);} focus(){this.button?.focus();} click(){this.showPicker();}
+  setCustomValidity(value){this.customValidity=String(value);this.input?.setCustomValidity(this.customValidity);} focus(){this.button?.focus();} click(){this.showPicker();}
   showPicker(){if(this.disabled)return;try{this.input.showPicker();}catch{this.input.click();}}
 }
-class MaterialDialog extends HTMLElement {
+for(const key of ['accept','min','max','step','label','picker-label'])Object.defineProperty(PlatformField.prototype,key,{get(){return this.getAttribute(key)||'';},set(value){if(value===undefined||value===null)this.removeAttribute(key);else this.setAttribute(key,String(value));}});
+for(const key of ['multiple','readOnly'])Object.defineProperty(PlatformField.prototype,key,{get(){return this.hasAttribute(key.toLowerCase());},set(value){this.toggleAttribute(key.toLowerCase(),!!value);if(this.input)this.input[key]=!!value;}});
+class MaterialDialog extends (globalThis.HTMLElement||class{}) {
   constructor(){super();this.attachShadow({mode:'open'});this.dialog=nativeCreate('md-dialog');this.dialog.append(nativeCreate('slot'));this.dialog.firstChild.slot='content';const sheet=new CSSStyleSheet();sheet.replaceSync('md-dialog{max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);--md-dialog-container-shape:28px;--md-dialog-container-color:var(--md-sys-color-surface)}');this.shadowRoot.adoptedStyleSheets=[sheet];this.shadowRoot.append(this.dialog);this.returnValue='';this.dialog.addEventListener('closed',()=>{this.removeAttribute('open');this.dispatchEvent(new Event('close'));});this.dialog.addEventListener('cancel',event=>{const cancel=new Event('cancel',{cancelable:true});if(!this.dispatchEvent(cancel))event.preventDefault();});this.addEventListener('submit',event=>{if(event.target?.getAttribute('method')==='dialog'){event.preventDefault();this.close(event.submitter?.value||'');}});}
   get open(){return this.hasAttribute('open');} showModal(){this.setAttribute('open','');this.dialog.open=true;} show(){this.showModal();} close(value=this.returnValue){this.returnValue=value;this.dialog.close();}
 }
@@ -76,6 +80,17 @@ export function upgradeControls(root) {
     if(next.localName==='md-outlined-select')next.value=props.value;
   }
 }
+export function requestControlAdmission(target){return target.dispatchEvent(new CustomEvent('mfe-action-request',{bubbles:true,composed:true,cancelable:true,detail:{target}}));}
+const selectSearchOwners=new WeakMap();
+/** Adjacent choice search uses the shared menu and its full regex workbench. */
 export function connectSelectSearch(select,{language='en'}={}) {
-  let search;const open=()=>{if(search)return;search=nativeCreate('mfe-search');search.language=language;search.setAttribute('label',language==='yue'?'篩選選項':'Filter choices');search.slot='headline';select.prepend(search);search.addEventListener('search-change',async()=>{const options=[...select.querySelectorAll('md-select-option')],rows=await search.filter(options.map((option,id)=>({id:String(id),text:option.textContent})));if(rows)for(const [id,option]of options.entries())option.hidden=!rows.some(row=>row.id===String(id));});};select.addEventListener('opening',open);return()=>{select.removeEventListener('opening',open);search?.remove();};
+  if(selectSearchOwners.has(select))return selectSearchOwners.get(select);
+  if(!select.parentNode)return()=>{};
+  const button=select.ownerDocument.createElement('md-icon-button');button.setAttribute('data-choice-search','');button.textContent='⌕';const label=select.label||select.getAttribute('aria-label')||'Choices';button.setAttribute('aria-label',(language==='yue'?'搜尋選項：':'Search choices: ')+label);button.title=button.getAttribute('aria-label');
+  const open=async event=>{if(select.disabled||!requestControlAdmission(select))return;const {openContextMenu}=await import('./overlay.js');if(!select.isConnected)return;const options=[...select.querySelectorAll('md-select-option')];openContextMenu({anchor:button,event,target:select,language,items:options.map(option=>({id:option.value,label:option.textContent,disabled:option.disabled,run:()=>{if(select.disabled||!select.isConnected||option.disabled||!requestControlAdmission(select))return;select.value=option.value;select.dispatchEvent(new Event('input',{bubbles:true,composed:true}));select.dispatchEvent(new Event('change',{bubbles:true,composed:true}));select.focus();}}))});};
+  button.addEventListener('click',open);select.after(button);const dispose=()=>{button.removeEventListener('click',open);button.remove();selectSearchOwners.delete(select);};selectSearchOwners.set(select,dispose);return dispose;
+}
+if(typeof document!=='undefined'&&typeof MutationObserver!=='undefined'){
+  const mount=()=>{if(!document.body)return;const scan=node=>{if(node.localName==='md-outlined-select')connectSelectSearch(node);for(const select of node.querySelectorAll?.('md-outlined-select')||[])connectSelectSearch(select);};scan(document.body);const observer=new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes)if(node.nodeType===1)scan(node);});observer.observe(document.body,{subtree:true,childList:true});};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else queueMicrotask(mount);
 }
