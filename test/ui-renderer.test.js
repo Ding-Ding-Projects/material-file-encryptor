@@ -7,7 +7,7 @@ import os from 'node:os';
 import {createHash} from 'node:crypto';
 import {matrix,makeClearPlan,layoutExpression} from '../scripts/modern-ui-check.mjs';
 import { fileURLToPath } from 'node:url';
-import { openRendererBrowser } from '../scripts/test-renderer-browser.mjs';
+import { openRendererBrowser, serveRendererFixture } from '../scripts/test-renderer-browser.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../src/renderer');
 const executable = process.env.CHROMIUM_PATH || (process.platform === 'linux' ? '/usr/bin/chromium' : undefined);
 // This isolated bridge tests renderer behavior only. Real native-drive evidence is separate.
@@ -39,13 +39,9 @@ async function fixture(page) {
 // Include bounded hidden-desktop launch and independent process-exit proof.
 test('real renderer interactions, error states, keyboard dialogs and responsive layouts', {timeout:120000}, async t => {
  if (executable) { try { await fs.access(executable); } catch { return t.skip('Set CHROMIUM_PATH to an installed Chromium executable.'); } }
- const server = createServer(async (request,response) => {
-  const name = new URL(request.url,'http://localhost').pathname.slice(1) || 'index.html';
-  if (!/^[a-z0-9.-]+$/.test(name)) { response.writeHead(404).end(); return; }
-  try { response.setHeader('Content-Type',name.endsWith('.js') ? 'text/javascript' : name.endsWith('.css') ? 'text/css' : 'text/html'); response.end(await fs.readFile(path.join(root,name))); } catch { response.writeHead(404).end(); }
- });
+ const server = createServer(serveRendererFixture);
  await new Promise(resolve => server.listen(0,'127.0.0.1',resolve));
- let browser;
+ let browser,fixtureError;
  try {
   browser = await openRendererBrowser(`http://127.0.0.1:${server.address().port}/`);
   const page = browser.page; await page.setViewportSize({width:1440,height:900}); await fixture(page);
@@ -180,8 +176,8 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   await page.keyboard.press('Escape');await page.setViewportSize({width:720,height:450});await page.evaluate(() => {document.documentElement.style.zoom='2';});assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),true,'200% zoom has no page overflow');
   await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.locator('.view:not([hidden])').evaluate(el => getComputedStyle(el).animationName),'none');
   assert.deepEqual(errors,[]);
- } catch(error) { console.error('Renderer assertion failed:',error.message); throw error;
- } finally { try { await browser?.close(); } finally { await new Promise(resolve => server.close(resolve)); } }
+ } catch(error) { fixtureError=error;throw error;
+ } finally { try { try {await browser?.close();}catch(closureError){throw fixtureError?new AggregateError([fixtureError,closureError],'Renderer fixture assertion and closure failed.'):closureError;} } finally { await new Promise(resolve => server.close(resolve)); } }
 });
 
 // This isolated DOM regression does not claim native-drive or installed acceptance.
@@ -189,11 +185,7 @@ test('scoped clear-control selectors use their actual owning wrappers', {timeout
  const evidenceRoot = await fs.mkdtemp(path.join(os.tmpdir(),'mfe-scoped-clear-proof-'));
  const proof = {version:1,scope:'Actual renderer DOM selector regression',cases:[],passed:false};
  for (const name of ['scoped-search.js','clear-fields.js']) proof[name] = createHash('sha256').update(await fs.readFile(path.join(root,name))).digest('hex');
- const server = createServer(async (request,response) => {
-  const name = new URL(request.url,'http://localhost').pathname.slice(1) || 'index.html';
-  if (!/^[a-z0-9.-]+$/.test(name)) { response.writeHead(404).end(); return; }
-  try { response.setHeader('Content-Type',name.endsWith('.js') ? 'text/javascript' : name.endsWith('.css') ? 'text/css' : 'text/html'); response.end(await fs.readFile(path.join(root,name))); } catch { response.writeHead(404).end(); }
- });
+ const server = createServer(serveRendererFixture);
  await new Promise(resolve => server.listen(0,'127.0.0.1',resolve));
  let browser,primaryError;
  try {
