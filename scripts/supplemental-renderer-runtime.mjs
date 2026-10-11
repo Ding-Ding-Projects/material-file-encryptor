@@ -7,7 +7,7 @@ import {command,createRendererCdpTransport,verifyConnectedRenderer} from './test
 import {inspectPackagedRendererTarget} from './packaged-renderer-runtime.mjs';
 
 const scriptRoot=fileURLToPath(new URL('./',import.meta.url));
-const sourceFiles=['supplemental-renderer-runtime.mjs','supplemental-renderer-recovery.py','renderer-process-snapshot.py','test-renderer-browser.mjs','packaged-renderer-runtime.mjs'];
+const sourceFiles=['supplemental-renderer-runtime.mjs','supplemental-renderer-recovery.py','renderer-process-snapshot.py','test-renderer-browser.mjs','packaged-renderer-runtime.mjs','renderer-launch-observer.mjs','renderer-launch-observer.py'];
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 async function hashes(){const result={};for(const name of sourceFiles)result[name]=hash(await fs.readFile(path.join(scriptRoot,name)));return result;}
 async function bounded(promise,label,timeoutMs) {

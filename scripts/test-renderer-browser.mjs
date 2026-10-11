@@ -7,6 +7,7 @@ import net from 'node:net';
 import {spawn,execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {fileURLToPath} from 'node:url';
+import {observeRendererLaunch} from './renderer-launch-observer.mjs';
 
 export function command(executable,args,input,env,onOutcome,{timeoutMs}={}) {
  return new Promise((resolve,reject)=>{
@@ -118,7 +119,7 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
  const headlessShell=path.basename(executable)==='chrome-headless-shell.exe';
  for(const file of [installed,cli,python,executable])await fs.access(file);
  const adapter=fileURLToPath(new URL('./test-renderer-browser-cli.py',import.meta.url));
- const env={...process.env,PYTHONUTF8:'1',MFE_LOWLEVEL_CLIENT:installed,MFE_LOWLEVEL_CLI:cli,MFE_RENDERER_PROCESS_BACKEND:process.env.MFE_RENDERER_PROCESS_BACKEND||'native-v1'};
+ const env={...process.env,PYTHONUTF8:'1',MFE_LOWLEVEL_CLIENT:installed,MFE_LOWLEVEL_CLI:cli,MFE_LOWLEVEL_PYTHON:python,MFE_RENDERER_NODE_EXECUTABLE:process.execPath,MFE_RENDERER_PROCESS_BACKEND:process.env.MFE_RENDERER_PROCESS_BACKEND||'native-v1'};
  if(env.MFE_RENDERER_PROCESS_BACKEND!=='native-v1')throw new Error('Fresh renderer connections require explicit native ownership proof.');
  if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1') {
   const {stdout}=runtime.sourceCommit?{stdout:runtime.sourceCommit}:await promisify(execFile)('git',['rev-parse','HEAD'],{cwd:fileURLToPath(new URL('../',import.meta.url)),windowsHide:true,timeout:10000});
@@ -128,14 +129,17 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
  const runRoot=await fs.mkdtemp(path.join(os.tmpdir(),packagedTarget?'mfe-packaged-renderer-test-':'mfe-renderer-test-'));
  if(packagedTarget){if(expectedUrl!==packagedTarget.expectedUrl)throw new Error('Packaged renderer URL differs from validated bytes.');await fs.mkdir(path.join(runRoot,'profile'));await fs.mkdir(path.join(runRoot,'output'));}
  const state=path.join(runRoot,'lifecycle.json');const port=await freePort();
- let browser,cdpTransport,windowObservation,connectionOwned=false,launchAttempted=false,closed=false;
+ let browser,cdpTransport,windowObservation,connectionOwned=false,launchAttempted=false,launchPending=false,closed=false;
  const outcomes=[];
  let retainedEvidence;
  let closureObservation={normalClose:'not attempted',fallback:'not attempted',resourcesAbsent:false};
- const lifecycleCommand=(args,input)=>(runtime.command||command)(python,args,input,env,outcome=>outcomes.push(outcome));
+ const lifecycleCommand=(args,input)=>{
+  const runner=runtime.command||(args[1]==='launch'?observeRendererLaunch:command);
+  return runner(python,args,input,env,outcome=>outcomes.push(outcome)).catch(error=>{if(args[1]==='launch'&&error.launchPending)launchPending=true;throw error;});
+ };
  const retainEvidence=async()=>{
   const destination=evidenceRoot||path.join(runRoot,'evidence');
-  const receipt=await retainClosureAttempt(destination,state,{version:3,runRoot,closure:{...closureObservation},connectionOwned,launchAttempted,profileRetained:true,retentionReason:'Profiles and ownership evidence retained; filesystem deletion is disabled.',outcomes});
+  const receipt=await retainClosureAttempt(destination,state,{version:3,runRoot,closure:{...closureObservation},connectionOwned,launchAttempted,launchPending,profileRetained:true,retentionReason:'Profiles and ownership evidence retained; filesystem deletion is disabled.',outcomes});
   retainedEvidence={runRoot,...receipt,profileRetained:true,closure:{...closureObservation}};
  };
  const close=async()=>{
@@ -143,6 +147,7 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
   let primaryError,closureError;
   try {
    if(cdpTransport&&!connectionOwned){await cdpTransport.disconnect();closureObservation.transportDisconnected=true;}
+   if(launchPending)throw new Error('Launch observer remains pending; no automatic cleanup is permitted.');
    if(launchAttempted) {
     await fs.access(state);
     if(browser&&connectionOwned) {
@@ -155,7 +160,7 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
    }
   } catch(error) {
    primaryError=error;closureObservation.normalClose='failed or ownership unavailable';
-   if(launchAttempted && await fs.access(state).then(()=>true,()=>false))try {const result=await lifecycleCommand([adapter,'cleanup','--state',state,'--allow-saved-pid-kill','--timeout','20']);requireClosureProof(result);closureObservation.fallback='confirmed';closureObservation.resourcesAbsent=true;}catch(error){closureError=error;closureObservation.fallback='failed';}
+   if(launchAttempted && !launchPending && await fs.access(state).then(()=>true,()=>false))try {const result=await lifecycleCommand([adapter,'cleanup','--state',state,'--allow-saved-pid-kill','--timeout','20']);requireClosureProof(result);closureObservation.fallback='confirmed';closureObservation.resourcesAbsent=true;}catch(error){closureError=error;closureObservation.fallback='failed';}
   }
   // Preserve ownership evidence even when launch failed before a state receipt.
   try {await retainEvidence();}catch(error){
@@ -180,9 +185,11 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
   while(Date.now()<deadline){try{targets=await (await (runtime.fetch||fetch)(`${endpoint}/json/list`,{signal:AbortSignal.timeout(1000),headers:{Connection:'close'}})).json();break;}catch{await new Promise(resolve=>setTimeout(resolve,100));}}
   if(!Array.isArray(targets)||targets.length!==1||targets[0].type!=='page'||targets[0].url!==expectedUrl||!targets[0].webSocketDebuggerUrl?.startsWith(`ws://127.0.0.1:${port}/`))throw new Error('Renderer fixture CDP isolation proof failed.');
   if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await lifecycleCommand([adapter,'prove-cdp',state]);
+  const clientBinding=(await lifecycleCommand([adapter,'bind-client',state],{clientPid:process.pid})).clientBinding;
+  if(clientBinding?.clientIdentity?.pid!==process.pid)throw new Error('Fresh renderer client ancestry binding is unavailable.');
   cdpTransport=await (runtime.createTransport||createRendererCdpTransport)(endpoint);
   browser=await chromium.connectOverCDP(cdpTransport.transport);
-  if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await verifyConnectedRenderer(browser,{expectedUrl,targetId:targets[0].id},input=>lifecycleCommand([adapter,'prove-cdp',state],input));
+  if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await verifyConnectedRenderer(browser,{expectedUrl,targetId:targets[0].id},input=>lifecycleCommand([adapter,'prove-cdp',state],{...input,clientBinding}));
   connectionOwned=true;
   const page=browser.contexts()[0].pages()[0];
   if(!page||browser.contexts()[0].pages().length!==1)throw new Error('Renderer fixture page inventory changed.');

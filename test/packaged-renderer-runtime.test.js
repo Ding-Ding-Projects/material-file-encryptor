@@ -40,6 +40,7 @@ function runtimeFixture(target,events){
  const browser={contexts:()=>[{pages:()=>[{}]}],async newBrowserCDPSession(){return {async send(method){events.push(method);return method==='Target.getTargets'?{targetInfos:[{type:'page',url:target.expectedUrl,targetId:'owned'}]}:{};},async detach(){}};}};
  return {chromium:{executablePath:()=>process.execPath,async connectOverCDP(){return browser;}},async createTransport(){return {transport:{},async disconnect(){events.push('socket-disconnect');}};},async fetch(){return {async json(){return [{id:'owned',type:'page',url:target.expectedUrl,webSocketDebuggerUrl:`ws://127.0.0.1:${port}/devtools/page/owned`}];}};},async command(executable,args,input){
   const operation=args[1];events.push({operation,input});
+  if(operation==='bind-client')return {client_ok:true,clientBinding:{clientIdentity:{pid:process.pid}}};
   if(operation==='launch'){
    assert.equal(input.executable,target.executable);
    assert.ok(input.arguments.includes('--desktop-check'));

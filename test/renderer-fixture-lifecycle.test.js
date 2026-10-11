@@ -60,6 +60,20 @@ test('closure rejects helper success without both explicit absence flags',async(
  for(const result of [{recordedProcessesAbsent:true},{desktopClosed:true},{recordedProcessesAbsent:true,desktopClosed:false}])assert.throws(()=>requireClosureProof(result));
  assert.equal(requireClosureProof({recordedProcessesAbsent:true,desktopClosed:true}),true);
 });
+
+test('actual wrapper retains pending launch journal and never cleans partial state',{skip:process.platform!=='win32'},async()=>{
+ const evidenceRoot=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-pending-launch-unit-'));const events=[];
+ const runtime={executable:process.execPath,sourceCommit:'a'.repeat(40),chromium:{executablePath:()=>process.execPath},async command(executable,args,input,env,onOutcome){
+  events.push(args[1]);if(args[1]==='preflight')return {client_ok:true};
+  assert.equal(args[1],'launch');await fs.writeFile(args[3],JSON.stringify({fixtureOnly:true,partial:true}));
+  onOutcome({operation:'launch',pending:true,journalPath:path.join(input.runRoot,'launch-observation')});
+  throw Object.assign(new Error('Launch observer remains pending.'),{launchPending:true});
+ }};
+ await assert.rejects(openRendererBrowser('http://127.0.0.1:49151/',{evidenceRoot,runtime}),/closure also failed/);
+ assert.deepEqual(events,['preflight','launch']);
+ const [attempt]=await fs.readdir(evidenceRoot);const outcome=JSON.parse(await fs.readFile(path.join(evidenceRoot,attempt,'helper-outcomes.normalized.json')));
+ assert.equal(outcome.launchPending,true);assert.equal(outcome.closure.resourcesAbsent,false);assert.equal(outcome.outcomes[0].pending,true);
+});
 test('repeated closure retention preserves each original state and diagnostics',async()=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-retention-regression-')),state=path.join(root,'state.json');
  await fs.writeFile(state,'original state');

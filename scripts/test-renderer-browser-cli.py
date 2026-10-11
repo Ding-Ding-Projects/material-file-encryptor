@@ -111,11 +111,25 @@ elif backend_name == 'cim':
             raise module.ClientFailure('PROCESS_PROOF_FAILED', 'Native renderer receipt requires its explicit backend.')
         return original_read_state(path)
     module._read_state = read_cim_state
+if len(sys.argv) == 3 and sys.argv[1] == 'bind-client':
+    if native_backend is None:
+        raise SystemExit('Client ancestry binding requires the native backend.')
+    recovery_spec = importlib.util.spec_from_file_location('fresh_renderer_recovery', Path(__file__).with_name('supplemental-renderer-recovery.py'))
+    recovery = importlib.util.module_from_spec(recovery_spec)
+    sys.modules[recovery_spec.name] = recovery
+    recovery_spec.loader.exec_module(recovery)
+    request = module._read_json_source(None)
+    if set(request) != {'clientPid'}:
+        raise SystemExit('Exact client PID is required.')
+    with recovery.owning_client(request['clientPid']) as (binding, chain):
+        result = {'ok': True, 'client_ok': True, 'clientBinding': binding, 'clientLaunchChain': chain}
+    print(json.dumps(result))
+    raise SystemExit(0)
 if len(sys.argv) == 3 and sys.argv[1] == 'prove-cdp':
     if native_backend is None:
         raise SystemExit('Native renderer target proof requires its explicit backend.')
     request = module._read_json_source(None, allow_empty=True)
-    if set(request) - {'clientPid', 'targetId'}:
+    if set(request) - {'clientPid', 'targetId', 'clientBinding'}:
         raise SystemExit('Unexpected connected renderer proof fields.')
     client_pid = request.get('clientPid')
     target_id = request.get('targetId')
@@ -124,10 +138,20 @@ if len(sys.argv) == 3 and sys.argv[1] == 'prove-cdp':
             raise SystemExit('Connected renderer client PID is invalid.')
         if not isinstance(target_id, str) or not re.fullmatch('[A-Za-z0-9._-]{1,128}', target_id):
             raise SystemExit('Connected renderer target identity is invalid.')
-        actual_parent = native_backend.proof.identity(os.getpid())['parentPid']
-        if client_pid != actual_parent:
-            raise SystemExit('Connected renderer client is not the actual adapter parent.')
-    print(json.dumps(snapshot_module.prove_renderer_target(native_backend, client_pid=client_pid, target_id=target_id)))
+        recovery_spec = importlib.util.spec_from_file_location('fresh_renderer_recovery', Path(__file__).with_name('supplemental-renderer-recovery.py'))
+        recovery = importlib.util.module_from_spec(recovery_spec)
+        sys.modules[recovery_spec.name] = recovery
+        recovery_spec.loader.exec_module(recovery)
+        if not request.get('clientBinding'):
+            raise SystemExit('Connected renderer requires pinned actual client ancestry.')
+        with recovery.owning_client(client_pid, request['clientBinding']) as (binding, chain):
+            result = snapshot_module.prove_renderer_target(native_backend, client_pid=client_pid, target_id=target_id)
+            if result['clientIdentity'] != binding['clientIdentity']:
+                raise SystemExit('Connected renderer socket client differs from held ancestry.')
+            result['clientLaunchChain'] = chain
+    else:
+        result = snapshot_module.prove_renderer_target(native_backend)
+    print(json.dumps(result))
     raise SystemExit(0)
 if len(sys.argv) == 3 and sys.argv[1] in ['prepare-exit', 'confirm-exit']:
     state_path, state = module._read_state(sys.argv[2])

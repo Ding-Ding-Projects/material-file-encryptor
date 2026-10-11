@@ -9,7 +9,7 @@ import {promisify} from 'node:util';
 import * as asar from '@electron/asar';
 import {openRendererBrowser} from './test-renderer-browser.mjs';
 
-const verifierFiles=['packaged-renderer-runtime.mjs','test-renderer-browser.mjs','test-renderer-browser-cli.py','renderer-process-snapshot.py'];
+const verifierFiles=['packaged-renderer-runtime.mjs','test-renderer-browser.mjs','test-renderer-browser-cli.py','renderer-process-snapshot.py','renderer-launch-observer.mjs','renderer-launch-observer.py','supplemental-renderer-recovery.py'];
 async function fileHashes(files){const result={};for(const [key,file]of Object.entries(files)){const hash=createHash('sha256');for await(const chunk of createReadStream(file))hash.update(chunk);result[key]=hash.digest('hex');}return result;}
 
 export async function inspectPackagedRendererTarget(expected) {
