@@ -16,7 +16,8 @@
 - [ ] Verify persistent launch observer on the intended installed candidate and the restart isolation selector before any actual native update.
 - [ ] Prove installed automatic download, ready/Later behavior, active-work refusal and native update/restart without real-profile access.
 - [ ] Complete every app/site/settings/editor/motion/guidance/server feature and its genuine built-surface evidence; all 210 complete-surface rows remain unverified.
-- [ ] Replace every current presentation screenshot from accepted current captures, preserving historical originals.
+- [x] Correct historical homepage labels and accessible names without changing original images/provenance; independently refute thirteen presentation mutations, with 17/17 focused integration checks.
+- [ ] Verify deployed historical-label correction and replace every current presentation screenshot from accepted current captures, preserving historical originals.
 - [ ] Finish source/default-branch delivery, release/live verification, complete preservation archive and qualified cleanup.
 
 # Current cloud production and native acceptance, 2026-10-11 UTC
