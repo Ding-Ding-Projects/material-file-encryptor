@@ -403,14 +403,20 @@
     {
       "source": "docs/features/server-manager/README.md",
       "translation": "docs/features/server-manager/README.zh-HK.md",
-      "sourceSha256": "1cf4dfc36f13f0cc75fba457fdc7ac61ed2a80af2d4a4668c779cd7921f86c71",
-      "translationSha256": "d6cdc454b216328ddde23272da0a79850bfe5d5f3b542be5ec16632632f0daa9"
+      "sourceSha256": "c7f387f616fda6ebbc461a69cd5a5e88dc747cbdd5b22e676ac877c9e5750a77",
+      "translationSha256": "ce6b42072d14212d46a780c0f5e1a0fddcc54b4eb12d5ad6c84c30a5020d76a5"
     },
     {
       "source": "docs/features/server-manager/foundation.md",
       "translation": "docs/features/server-manager/foundation.zh-HK.md",
       "sourceSha256": "855280f12666e7f3bb139e1d6fcfb49e9f7d4f47854d06d93e915a7bbb453db9",
       "translationSha256": "dc1e4daff70c687e4b03e032554cbe4c26e655b66af8d89cd5967b7b669e0eea"
+    },
+    {
+      "source": "docs/features/server-manager/native-file-lease.md",
+      "translation": "docs/features/server-manager/native-file-lease.zh-HK.md",
+      "sourceSha256": "f561d4fb12b7af78c1bce3a5b322bda7199c510923b8f1bf6ea99d8fde193545",
+      "translationSha256": "e98dd6f84e3d12573048e43e03b2fd652c23c578fec67eac80e0c78a5cfca018"
     },
     {
       "source": "docs/features/interface/font-metadata.md",

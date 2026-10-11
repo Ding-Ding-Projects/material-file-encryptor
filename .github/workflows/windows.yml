@@ -68,6 +68,16 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+      - name: Preserve compiled server lease verifier
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        continue-on-error: true
+        with:
+          name: server-file-lease-verifier
+          path: out/verification/server-file-lease/**
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Preserve dependency download diagnostics
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: ${{ always() && env.DEPENDENCY_EVIDENCE_ROOT != '' }}

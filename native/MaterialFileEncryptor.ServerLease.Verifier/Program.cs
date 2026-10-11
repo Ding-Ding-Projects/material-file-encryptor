@@ -1,0 +1,89 @@
+using MaterialFileEncryptor.Host;
+using System.Security.Cryptography;
+using System.Text.Json;
+using System.Diagnostics;
+using System.IO.MemoryMappedFiles;
+
+internal static class Program
+{
+    private static void Assert(bool value,string message) { if (!value) throw new InvalidOperationException(message); }
+    private static string Hash(string path) { using var file=File.OpenRead(path);return Convert.ToHexString(SHA256.HashData(file)).ToLowerInvariant(); }
+    private static bool Blocked(Action action) { try { action();return false; } catch(IOException) { return true; } catch(UnauthorizedAccessException) { return true; } }
+    public static int Main(string[] args)
+    {
+        if(!OperatingSystem.IsWindows() || args.Length!=2 || args[0]!="--fixture-root") return 2;
+        string root=Path.GetFullPath(args[1]);
+        if(root.IndexOfAny("&|<>^%!\"\r\n".ToCharArray())>=0)return 2;
+        if(Directory.Exists(root)||File.Exists(root)) return 2;
+        Directory.CreateDirectory(root);
+        var checks=new List<string>();
+        try
+        {
+            string server=Path.Combine(root,"owned"),runtime=Path.Combine(root,"runtime"),jar=Path.Combine(server,"server","server.jar"),exe=Path.Combine(runtime,"java.exe");
+            Directory.CreateDirectory(Path.GetDirectoryName(jar));Directory.CreateDirectory(runtime);
+            File.WriteAllText(jar,"synthetic jar, never executed");File.WriteAllText(exe,"synthetic runtime, never executed");
+            string jarHash=Hash(jar),exeHash=Hash(exe);
+            var lease=ServerFileLease.Acquire(server,jarHash,runtime,exe,exeHash);
+            try
+            {
+                lease.AssertHeld();Assert(lease.Kind=="windows-deny-write-delete","Lease kind differs.");
+                foreach(string file in new[]{jar,exe})
+                {
+                    using(var reader=new FileStream(file,FileMode.Open,FileAccess.Read,FileShare.Read)) Assert(reader.ReadByte()>=0,"Read sharing failed.");
+                    Assert(Blocked(()=>{using var writer=new FileStream(file,FileMode.Open,FileAccess.Write,FileShare.ReadWrite);}),"Writer admitted.");
+                    Assert(Blocked(()=>File.Move(file,file+".moved")),"Rename admitted.");
+                    Assert(Blocked(()=>File.Delete(file)),"Delete admitted.");
+                }
+                Assert(Blocked(()=>Directory.Move(server,server+"-moved")),"Owned root replacement admitted.");
+                Assert(Blocked(()=>Directory.Move(runtime,runtime+"-moved")),"Runtime root replacement admitted.");
+                Assert(Blocked(()=>Directory.Move(Path.GetDirectoryName(jar),Path.GetDirectoryName(jar)+"-moved")),"Nested directory replacement admitted.");
+                checks.Add("held-files-and-ancestors");
+                // Simulated unknown ownership does not trigger release: the native owner retains the lease.
+                lease.AssertHeld();Assert(Blocked(()=>File.Delete(jar)),"Retained unknown ownership lost protection.");checks.Add("retained-unknown-ownership");
+            }
+            finally { lease.Release(); }
+            lease.Release();bool released=false;try{lease.AssertHeld();}catch(InvalidOperationException){released=true;}Assert(released,"Released lease reports held.");
+            using(var writer=new FileStream(jar,FileMode.Open,FileAccess.Write,FileShare.ReadWrite)){}checks.Add("explicit-idempotent-release");
+            bool failed=false;try{ServerFileLease.Acquire(server,jarHash,runtime,exe,new string('0',64));}catch(InvalidDataException){failed=true;}Assert(failed,"Wrong runtime digest admitted.");
+            using(var writer=new FileStream(jar,FileMode.Open,FileAccess.Write,FileShare.ReadWrite)){}
+            using(var writer=new FileStream(exe,FileMode.Open,FileAccess.Write,FileShare.ReadWrite)){}
+            Directory.Move(server,server+"-check");Directory.Move(server+"-check",server);checks.Add("partial-acquire-releases-owned-handles");
+            using(var writer=new FileStream(exe,FileMode.Open,FileAccess.Write,FileShare.ReadWrite))
+            {failed=false;try{ServerFileLease.Acquire(server,jarHash,runtime,exe,exeHash);}catch(System.ComponentModel.Win32Exception){failed=true;}Assert(failed,"Existing writer admitted.");}checks.Add("existing-writer-rejected");
+            failed=false;try{ServerFileLease.Acquire(server,jarHash,Path.Combine(root,"outside"),exe,exeHash);}catch(ArgumentException){failed=true;}Assert(failed,"Runtime outside admission root accepted.");checks.Add("runtime-root-admission");
+            string linked=Path.Combine(root,"linked-runtime");
+            using(var process=Process.Start(new ProcessStartInfo("cmd.exe") { UseShellExecute=false,CreateNoWindow=true,ArgumentList={"/d","/c","mklink","/J",linked,runtime} }))
+            {if(!process.WaitForExit(10000)||process.ExitCode!=0)throw new InvalidOperationException("Junction fixture unavailable.");}
+            failed=false;try{ServerFileLease.Acquire(server,jarHash,linked,Path.Combine(linked,"java.exe"),exeHash);}catch(InvalidDataException){failed=true;}Assert(failed,"Junction runtime admitted.");checks.Add("junction-rejected");
+            string mappedServer=Path.Combine(root,"mapped-owned"),mappedJar=Path.Combine(mappedServer,"server","server.jar");
+            Directory.CreateDirectory(Path.GetDirectoryName(mappedJar));File.WriteAllText(mappedJar,"mapped fixture, never executed");string mappedHash=Hash(mappedJar);
+            using(var original=new FileStream(mappedJar,FileMode.Open,FileAccess.ReadWrite,FileShare.ReadWrite|FileShare.Delete))
+            using(var mapping=MemoryMappedFile.CreateFromFile(original,null,0,MemoryMappedFileAccess.ReadWrite,HandleInheritability.None,true))
+            {
+                original.Dispose();
+                using var view=mapping.CreateViewAccessor(0,0,MemoryMappedFileAccess.ReadWrite);
+                ServerFileLease mappedLease=null;
+                try { mappedLease=ServerFileLease.Acquire(mappedServer,mappedHash,runtime,exe,exeHash); }
+                catch(System.ComponentModel.Win32Exception) { checks.Add("preexisting-mapping-admission-rejected"); }
+                if(mappedLease!=null)
+                {
+                    try
+                    {
+                        view.Write(0,(byte)'X');view.Flush();mappedLease.AssertHeld();
+                        Assert(Hash(mappedJar)!=mappedHash,"Mapped mutation observation missing.");
+                        checks.Add("preexisting-mapping-mutates-despite-held-sharing-lease");
+                    }
+                    finally {mappedLease.Release();}
+                }
+            }
+            Assert(Hash(jar)==jarHash&&Hash(exe)==exeHash,"Fixture bytes changed.");
+            File.WriteAllText(Path.Combine(root,"receipt.json"),JsonSerializer.Serialize(new{schemaVersion=1,status="passed",checks,verifierSha256=Hash(Environment.ProcessPath),runtimeAcceptance="not-run",ipcIntegration="pending"}));
+            Console.WriteLine("PASS: native server lease verifier; "+checks.Count+" synthetic boundaries. Fixtures retained.");return 0;
+        }
+        catch(Exception error)
+        {
+            File.WriteAllText(Path.Combine(root,"receipt.json"),JsonSerializer.Serialize(new{schemaVersion=1,status="failed",checks,errorType=error.GetType().Name,runtimeAcceptance="not-run",ipcIntegration="pending"}));
+            Console.Error.WriteLine("Native server lease verification failed; retained receipt records the completed boundaries.");return 1;
+        }
+    }
+}

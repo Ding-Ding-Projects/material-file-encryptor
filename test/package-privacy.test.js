@@ -33,6 +33,22 @@ test('verification fixtures are rejected from actual archive contents', async ()
   } finally { await rm(temporary, { recursive: true, force: true }); }
 });
 
+test('compiled server lease verifier is excluded and rejected from ASAR and loose resources', async () => {
+  const temporary=await mkdtemp(path.join(os.tmpdir(),'server-lease-package-exclusion-'));
+  const name='MaterialFileEncryptor.ServerLease.Verifier.exe';
+  try {
+    assert.equal(config.packagerConfig.ignore.some(rule=>rule.test(`/nested/${name}`)),true);
+    const source=path.join(temporary,'source'),output=path.join(temporary,'output'),archive=path.join(output,'resources','app.asar');
+    await mkdir(source,{recursive:true});await mkdir(path.dirname(archive),{recursive:true});await writeFile(path.join(source,'index.js'),'export const ready=true;');
+    await writeFile(path.join(source,name),'synthetic verifier bytes');await createPackage(source,archive);
+    assert.equal((await inspectPackage(output)).code,'PACKAGE_PRIVACY_REJECTED');
+    await rm(path.join(source,name));await createPackage(source,archive);
+    assert.equal((await inspectPackage(output)).code,'PACKAGE_PRIVACY_OK');
+    await writeFile(path.join(output,'resources',name),'synthetic verifier bytes');
+    assert.equal((await inspectPackage(output)).code,'PACKAGE_PRIVACY_REJECTED');
+  } finally {await rm(temporary,{recursive:true,force:true});}
+});
+
 test('actual ASAR and resource inspection rejects synthetic private entries then accepts restored output', async () => {
   const temporary = await mkdtemp(path.join(os.tmpdir(), 'package-privacy-'));
   try {

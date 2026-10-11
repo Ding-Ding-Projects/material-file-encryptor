@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { listPackage, statFile, extractFile, uncache } from '@electron/asar';
 
-export const isPrivateEntry = name => /(?:^|[\\/])(?:\.agent|\.test-output)(?:[\\/]|$)/i.test(name);
+export const isPrivateEntry = name => /(?:^|[\\/])MaterialFileEncryptor\.ServerLease\.Verifier(?:\.|[\\/]|$)/i.test(name) || /(?:^|[\\/])(?:\.agent|\.test-output)(?:[\\/]|$)/i.test(name);
 
 // Never reflect rejected paths, archive metadata or exception messages in diagnostics.
 export async function inspectPackage(root) {
