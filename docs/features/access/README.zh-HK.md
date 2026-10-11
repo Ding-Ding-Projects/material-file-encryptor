@@ -8,3 +8,6 @@
 - [本機個人檔案、元素鎖定、驗證器同支援台（廣東話全文）](local-access.zh-HK.md)
 
 - [訪客本機加密設定及存取](visitor-local-access.zh-HK.md)
+
+- [特權主機挑戰同加密修改歷史（英文）](access-host.md)
+- [特權存取主機同加密修改歷史](access-host.zh-HK.md)
