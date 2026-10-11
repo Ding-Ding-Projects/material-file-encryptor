@@ -72,7 +72,7 @@ async function backend(method, params = {}) {
   if (!helper) throw new Error('The mounted drive is available on Windows.');
   const result = await helper.request(method, params);
   if (result && typeof result.locked === 'boolean') state = nativeState(result);
-  else state = nativeState(await helper.request('status'));
+  else state = nativeState(await helper.request('statusSummary'));
   if(state.locked)localAdapter?.revoke();
   void features?.checkpoint('Drive state changed.',null);
   publish(); return snapshot();
@@ -112,7 +112,7 @@ async function request(method, params) {
     const answer = await dialog.showMessageBox(window, {type:'warning',buttons:['Keep running','Force Lock'],defaultId:0,cancelId:0,title:'Force Lock',message:'Disconnect idle open files and lock this drive?',detail:'Encryption, decryption, queued work and pending content prevent Force Lock. Other applications may retain plaintext they already read.'});
     if (answer.response !== 1) return {cancelled:true};
     const result = await helper.request('forceLock');
-    if (result.locked) { state = nativeState(await helper.request('status')); publish(); }
+    if (result.locked) { state = nativeState(await helper.request('statusSummary')); publish(); }
     else if (result.busy) throw new Error('Force Lock could not start because encryption, decryption or pending content is active. Try again after the operation finishes.');
     else throw new Error('Force Lock did not confirm that the drive was detached and locked.');
     return result;
@@ -133,8 +133,8 @@ async function request(method, params) {
   if (method === 'chooseFiles') { const picked = await dialog.showOpenDialog(window, { title: 'Import files into encrypted storage', properties: ['openFile', 'multiSelections'] }); if (picked.canceled) return []; for (const filename of picked.filePaths) selectedImports.add(filename); return picked.filePaths; }
   if (method === 'chooseExport') { const picked = await dialog.showSaveDialog(window, { title: 'Export a readable copy', defaultPath: path.win32.basename(params.name) }); if (picked.canceled) return null; selectedExports.add(picked.filePath); return picked.filePath; }
   if (method === 'importSelected' || method === 'startImport') { if (quitPending) throw new Error('The application is waiting to quit.'); if (params.paths.some(filename => !selectedImports.has(filename))) throw new Error('Choose files using the file picker.'); for (const filename of params.paths) selectedImports.delete(filename); return helper.request('startImport', { paths: params.paths }); }
-  if (method === 'fileAction') { const entry = state.files.find(file => file.id === params.id); if (!entry) throw new Error('Select a current file.'); if (params.action === 'open') return openPath(mountedPath(entry.path)); if (params.action === 'export') { if (!selectedExports.delete(params.destination)) throw new Error('Choose an export destination using the file picker.'); const target = await safeDestination(params.destination, [state.storageDir, state.cacheDir, mountedPath()]); if (quitPending || shuttingDown) throw new Error('The application is waiting to quit.'); return helper.request('startExport', {path:entry.path,destination:target}); } return perform(params.action, () => backend(params.action, { path: entry.path })); }
-  if (method === 'resplitAll') return perform('resplit', async () => { for (const file of state.files.filter(file => !file.isDirectory)) await backend('resplit', { path: file.path, partSizeBytes: state.partSizeBytes }); return snapshot(); });
+  if (method === 'fileAction') { const entry = await helper.request('getFile',{entryId:params.id}); if (!entry) throw new Error('Select a current file.'); if (params.action === 'open') return openPath(mountedPath(entry.path)); if (params.action === 'export') { if (!selectedExports.delete(params.destination)) throw new Error('Choose an export destination using the file picker.'); const target = await safeDestination(params.destination, [state.storageDir, state.cacheDir, mountedPath()]); if (quitPending || shuttingDown) throw new Error('The application is waiting to quit.'); return helper.request('startExport', {path:entry.path,destination:target}); } return perform(params.action, () => backend(params.action, { path: entry.path })); }
+  if (method === 'resplitAll') return perform('resplit', async () => { for (const file of await currentFileInventory()) await backend('resplit', { path: file.path, partSizeBytes: state.partSizeBytes }); return snapshot(); });
   if (method === 'windowControl') { if (params.action === 'minimize') window.minimize(); if (params.action === 'maximize') window.isMaximized() ? window.unmaximize() : window.maximize(); if (params.action === 'close') window.close(); return; }
   if (method === 'openExternal') return shell.openExternal(params.url);
   if (method === 'selectFolder') { const picked = await dialog.showOpenDialog(window, { title: params.kind === 'storage' ? 'Choose encrypted storage folder' : 'Choose encrypted cache folder', properties: ['openDirectory', 'createDirectory'] }); return picked.canceled ? null : picked.filePaths[0]; }
@@ -186,6 +186,17 @@ async function request(method, params) {
   }
   const commands = { mount: 'mount', unmount: 'unmount', lockVault: 'lock', keepOffline: 'keepOffline', releaseOffline: 'releaseOffline', setPartSize: 'setPartSize', resplit: 'resplit', sync: 'sync' };
   return perform(['lockVault', 'unmount'].includes(method) ? 'unmounting' : method === 'mount' ? 'mounting' : method, () => backend(commands[method], params));
+}
+async function currentFileInventory() {
+  const files=[];let cursor=0,revision;
+  do {
+    const page=await helper.request('listFiles',{cursor,limit:1000,...(revision===undefined?{}:{revision})});
+    if(page.resetRequired || (revision!==undefined&&page.revision!==revision))throw new Error('The file list changed. Retry the operation.');
+    revision=page.revision;files.push(...page.items);
+    if(page.nextCursor===null)return files;
+    if(!Number.isSafeInteger(page.nextCursor)||page.nextCursor<=cursor)throw new Error('The file list could not be read completely.');
+    cursor=page.nextCursor;
+  } while(true);
 }
 function showWindow() { window.show(); window.focus(); }
 async function handleExplorerCopy(argumentsList){
@@ -280,7 +291,7 @@ else {
     if (process.platform === 'win32') {
       const executable = app.isPackaged ? path.join(process.resourcesPath, 'native/MaterialFileEncryptor.Host.exe') : path.resolve('out/native/MaterialFileEncryptor.Host.exe');
       helper = new NativeClient(executable); helper.on('slow', warning => { state = { ...state, sync: { ...state.sync, error: warning.message } }; publish(); }); helper.on('status', result => { if (result && typeof result.locked === 'boolean') { state = nativeState(result); publish(); } }); helper.on('exit', () => { state = { ...state, mounted: false, lockVerified:false, files: [], sync: { ...state.sync, error: 'The native helper stopped. Drive teardown is unverified. Reopen the application for locked recovery.' } }; publish(); });
-      try { await backend('status'); if(interruptedSession){state.recoveryRequired=true;state.sync.error='An interrupted session was detected. Recovery starts locked; unlock explicitly to review encrypted records.';publish();} if (!interruptedSession && preferences.autoUnlock && preferences.storageDir) { await backend('autoUnlock', { storageDir: preferences.storageDir, cacheDir: preferences.cacheDir, driveLetter: preferences.driveLetter, transport: preferences.transport, remoteRepository: preferences.remoteRepository }); await backend('setHistoryRetention', { days: preferences.historyRetentionDays }); await backend('mount', { driveLetter: preferences.driveLetter }); } } catch (error) { state.driver.checking = false; state.sync.error = error.message; publish(); }
+      try { await backend('statusSummary'); if(interruptedSession){state.recoveryRequired=true;state.sync.error='An interrupted session was detected. Recovery starts locked; unlock explicitly to review encrypted records.';publish();} if (!interruptedSession && preferences.autoUnlock && preferences.storageDir) { await backend('autoUnlock', { storageDir: preferences.storageDir, cacheDir: preferences.cacheDir, driveLetter: preferences.driveLetter, transport: preferences.transport, remoteRepository: preferences.remoteRepository }); await backend('setHistoryRetention', { days: preferences.historyRetentionDays }); await backend('mount', { driveLetter: preferences.driveLetter }); } } catch (error) { state.driver.checking = false; state.sync.error = error.message; publish(); }
     } else { state.driver.checking = false; state.driver.error = 'Windows and WinFsp are required to mount a drive.'; publish(); }
     await handleExplorerCopy(process.argv);
   }).catch(() => { app.exit(1); });

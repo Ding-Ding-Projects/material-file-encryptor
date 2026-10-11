@@ -15,24 +15,34 @@ function fixture(){
   selectedExports:new Set(['C:\\output\\document.txt']),window:{},
   mountedPath:()=> 'M:\\',safeDestination:async value=>value,
   dialog:{showSaveDialog:async()=>({canceled:false,filePath:'C:\\output\\document.txt'})},
-  helper:{request:async(method,params)=>{calls.push({method,params});return {operationId:'owned-operation'};}}
+  helper:{request:async(method,params)=>{calls.push({method,params});return method==='getFile'?{id:'file-1',path:'folder/document.txt'}:{operationId:'owned-operation'};}}
  });
- vm.runInContext(source.slice(start,end)+'\nglobalThis.invoke=request;',context);
+ vm.runInContext(source.slice(start,end)+'\nglobalThis.invoke=request;globalThis.inventory=currentFileInventory;',context);
  return {context,calls};
 }
 test('selected and path exports enter the cancellable native operation registry',async()=>{
  for(const [method,params]of [['fileAction',{id:'file-1',action:'export',destination:'C:\\output\\document.txt'}],['exportFile',{path:'folder/document.txt'}]]){
   const {context,calls}=fixture();
   assert.equal((await context.invoke(method,params)).operationId,'owned-operation');
-  assert.equal(calls.length,1);assert.equal(calls[0].method,'startExport');
-  assert.equal(calls[0].params.path,'folder/document.txt');
-  assert.equal(calls[0].params.destination,'C:\\output\\document.txt');
+  const exports=calls.filter(call=>call.method==='startExport');
+  assert.equal(exports.length,1);
+  assert.equal(exports[0].params.path,'folder/document.txt');
+  assert.equal(exports[0].params.destination,'C:\\output\\document.txt');
  }
+});
+test('bulk file inventory completes paged reads and rejects a moving revision',async()=>{
+ const {context}=fixture();const cursors=[];
+ context.helper.request=async(_method,params)=>{cursors.push(params.cursor);return {revision:7,items:[{id:String(params.cursor)}],nextCursor:params.cursor===0?1000:null,resetRequired:false};};
+ assert.equal((await context.inventory()).length,2);assert.deepEqual(cursors,[0,1000]);
+ context.helper.request=async(_method,params)=>({revision:params.cursor===0?7:8,items:[],nextCursor:params.cursor===0?1000:null,resetRequired:params.cursor!==0});
+ await assert.rejects(context.inventory(),/file list changed/);
+ context.helper.request=async()=>({revision:7,items:[],nextCursor:0});
+ await assert.rejects(context.inventory(),/read completely/);
 });
 test('export admission requires a chosen destination and rechecks pending quit',async()=>{
  const {context,calls}=fixture();
  await assert.rejects(context.invoke('fileAction',{id:'file-1',action:'export',destination:'C:\\unselected.txt'}),/file picker/);
  context.safeDestination=async value=>{context.quitPending=true;return value;};
  await assert.rejects(context.invoke('fileAction',{id:'file-1',action:'export',destination:'C:\\output\\document.txt'}),/waiting to quit/);
- assert.equal(calls.length,0);
+ assert.equal(calls.filter(call=>call.method==='startExport').length,0);
 });
