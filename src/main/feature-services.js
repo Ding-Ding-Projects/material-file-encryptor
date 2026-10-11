@@ -12,6 +12,7 @@ import { createRuntimeController } from '../features/ollama/runtime.js';
 import { REVIEWED_OLLAMA_MANIFESTS, OLLAMA_PUBLISHER_POLICIES } from './ollama-provenance.js';
 import { createWorkflowServices } from './workflow-services.js';
 import {createAppearanceImageService, APPEARANCE_IMAGE_REQUEST_BYTES} from './appearance-image-service.js';
+import {createOllamaConfiguration} from './ollama-configuration.js';
 const scrypt=promisify(scryptCallback);
 const executeFile=promisify(execFile);
 const object=value=>value&&typeof value==='object'&&!Array.isArray(value);
@@ -48,7 +49,8 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
  const schedules=createScheduleSource({credentials,authorizeCredentialMutation:context=>context?.authorization===scheduleAuthorization});
  const workflows=createWorkflowServices({dataDirectory,dialog,getWindow,openPath,openExternal,emit});
  const grants=new Map();let converter,ollama,ollamaPromise,closed=false,exiting=false,sharedCredentialGranted=false,pendingRequests=0;
- const modelEvents=[];let modelSequence=0,modelEventBytes=0;
+ const modelEvents=[];let modelSequence=0,modelEventBytes=0,activeOllamaRequests=0;
+ const ollamaConfiguration=createOllamaConfiguration({directory:dataDirectory});
  function modelEvent(data){const item={sequence:++modelSequence,data};const bytes=Buffer.byteLength(JSON.stringify(item));if(bytes<=524288){modelEvents.push({item,bytes});modelEventBytes+=bytes;}while(modelEvents.length>128||modelEventBytes>524288){modelEventBytes-=modelEvents.shift().bytes;}emit('ollama',data);}
  const statusPromise=createApplicationStatus({createClient:createStatusHubClient,clientOptions:{sessionId:'material-file-encryptor-'+randomUUID(),title:'Material File Encryptor',repository:'Ding-Ding-Projects/material-file-encryptor',branch:'main',machine:process.platform+' desktop',exitHooks:false},collectWorktrees,repoPath:applicationRoot});
  const settingsPath=path.join(dataDirectory,'shared-settings.json');
@@ -58,7 +60,7 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
  let converterPromise, converterProvider;
  const imageService=createAppearanceImageService({getProvider:async()=>{await converterService();return converterProvider;}});
  async function converterService(){if(!converterPromise)converterPromise=(async()=>{let provider=sandboxProvider;if(!provider&&sandboxDirectory){try{const manifest=await readConverterManifest(path.join(sandboxDirectory,'manifest.json'));let mediaRuntime;try{const media=await readConverterManifest(path.join(sandboxDirectory,'minimal-media','manifest.json'));if(media.profile!=='minimal-v1'||media.ffmpeg!=='ffmpeg.exe'||media.ffprobe!=='ffprobe.exe'||![media.ffmpegSha256,media.ffprobeSha256].every(value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value)))throw Error('Invalid media manifest.');mediaRuntime={profile:media.profile,ffmpegPath:path.join(sandboxDirectory,'minimal-media',media.ffmpeg),ffmpegSha256:media.ffmpegSha256,ffprobePath:path.join(sandboxDirectory,'minimal-media',media.ffprobe),ffprobeSha256:media.ffprobeSha256};}catch{/* Optional media failure does not disable other conversion adapters. */}let archiveRuntime;try{const archive=await readConverterManifest(path.join(sandboxDirectory,'archive-manifest.json'));if(archive.schema!==1||archive.version!=='26.04'||!['7z.exe','7z.dll'].every(name=>typeof archive.files?.[name]==='string'&&/^[a-f0-9]{64}$/.test(archive.files[name])))throw Error('Invalid archive runtime manifest.');archiveRuntime={sevenZipPath:path.join(sandboxDirectory,'archive','7z.exe'),sevenZipSha256:archive.files['7z.exe'],sevenZipDllPath:path.join(sandboxDirectory,'archive','7z.dll'),sevenZipDllSha256:archive.files['7z.dll']};}catch{/* Other adapters remain available if the optional archive runtime is invalid. */}const{createWindowsSandboxProvider}=await import('../features/converter/windows-sandbox.mjs');provider=await createWindowsSandboxProvider({mediaRuntime,archiveRuntime,launcherPath:path.join(sandboxDirectory,'ConverterSandbox.exe'),launcherSha256:manifest.launcherSha256,runtimePath:path.join(sandboxDirectory,'node.exe'),runtimeSha256:manifest.runtimeSha256,launcherCompanionHashes:manifest.launcherCompanionHashes});}catch{provider=null;}}converterProvider=provider;const{createConverterService}=await import('../features/converter/service.mjs');converter=createConverterService({stateDirectory:path.join(dataDirectory,'conversion-queue'),resolveGrant,bundledProof:{pdfLib:true},sandboxProvider:provider});void converter.run();return converter;})();return converterPromise;}
- async function ollamaService(){if(!ollamaPromise)ollamaPromise=(async()=>{const{createOllamaService}=await import('../features/ollama/service.js');const{createNativeHardwareProbe}=await import('../features/ollama/native-hardware.js');const host=createNativeOllamaHost({dialog,getWindow,openExternal,credentials,dataDirectory,reviewedManifests:REVIEWED_OLLAMA_MANIFESTS,publisherPolicies:OLLAMA_PUBLISHER_POLICIES});await host.initialize();ollama=createOllamaService({dataDir:path.join(dataDirectory,'local-models'),hardwareProbe:createNativeHardwareProbe(),...host.serviceOptions,runtimeController:createRuntimeController(host.runtimeOptions)});ollama.subscribe(modelEvent);return ollama;})();return ollamaPromise;}
+ async function ollamaService(){if(!ollamaPromise)ollamaPromise=(async()=>{const{createOllamaService}=await import('../features/ollama/service.js');const{createNativeHardwareProbe}=await import('../features/ollama/native-hardware.js');const host=createNativeOllamaHost({dialog,getWindow,openExternal,credentials,dataDirectory,loopbackPort:await ollamaConfiguration.read(),reviewedManifests:REVIEWED_OLLAMA_MANIFESTS,publisherPolicies:OLLAMA_PUBLISHER_POLICIES});await host.initialize();ollama=createOllamaService({dataDir:path.join(dataDirectory,'local-models'),hardwareProbe:createNativeHardwareProbe(),...host.serviceOptions,runtimeController:createRuntimeController(host.runtimeOptions)});ollama.subscribe(modelEvent);return ollama;})();return ollamaPromise;}
  async function pick(properties,title){const result=await dialog.showOpenDialog(getWindow(),{title,properties});return result.canceled?[]:result.filePaths;}
  async function dispatch(feature,action,payload={}){
   ensureOpen();if(typeof feature!=='string'||typeof action!=='string'||!object(payload))throw Error('Invalid feature request.');bounded(payload,feature==='personalization'&&action==='normalizeImage'?APPEARANCE_IMAGE_REQUEST_BYTES:262144);
@@ -71,8 +73,14 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
    if(!['catalog','inspect','enqueue','list','control'].includes(action))throw Error('Unsupported conversion action.');const service=await converterService();return service[action](payload);
   }
   if(feature==='ollama'){
+   if(action==='configureRuntime')return ollamaConfiguration.apply(payload,{
+    canChange:()=>!closed&&!exiting&&activeOllamaRequests===0&&!(ollama?.operations().length),
+    confirm:async port=>(await dialog.showMessageBox(getWindow(),{type:'question',title:'Change local model connection',message:'Use the selected loopback port for local models?',detail:'Address: 127.0.0.1:'+port+'\nOnly an application-owned runtime will be stopped. External processes and their model files remain untouched.',buttons:['Cancel','Change port'],defaultId:0,cancelId:0})).response===1,
+    retire:async()=>{await ollama?.dispose();ollama=null;ollamaPromise=null;modelEvents.length=0;modelEventBytes=0;emit('ollama',{type:'connectionChanged'});}
+   });
+   if(ollamaConfiguration.changing)throw Error('Local runtime configuration is changing.');
    if(action==='events'){const after=payload.after??0;if(!Number.isSafeInteger(after)||after<0)throw Error('Invalid event cursor.');const events=modelEvents.filter(({item})=>item.sequence>after).map(({item})=>item);return{events,cursor:modelSequence,gap:after>modelSequence||events.length!==modelSequence-after};}
-   return(await ollamaService()).request(action,payload);
+   activeOllamaRequests++;try{return await (await ollamaService()).request(action,payload);}finally{activeOllamaRequests--;}
   }
   if(feature==='documentation'){
    if(!['catalog','changelog'].includes(action))throw Error('Unsupported documentation action.');
