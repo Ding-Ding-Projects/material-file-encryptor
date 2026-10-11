@@ -37,3 +37,5 @@
 - [有型別嘅文字排版設定](typography-inspector.zh-HK.md)
 
 - [繪畫同狀態預覽嘅可選指引](workbench-guidance.zh-HK.md)
+
+- [具型別色彩選擇器](color-picker.zh-HK.md)：表示方式、調色盤、彩虹同能力界線。
