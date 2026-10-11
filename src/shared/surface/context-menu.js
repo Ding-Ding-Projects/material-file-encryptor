@@ -36,7 +36,7 @@ export class ContextMenu extends SurfaceElement {
     if(this.hidden)return;
     if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();this.close('escape');return;}
     const path=event.composedPath();if(!path.includes(this))return;
-    if(event.key==='Tab'){this.close('tab',{restoreFocus:true});return;}
+    if(event.key==='Tab')return;
     const nodes=[...this.itemsHost.querySelectorAll('md-menu-item')].filter(node=>!node.disabled&&!node.hidden);if(!nodes.length)return;
     const active=nodes.findIndex(node=>path.includes(node));const inSearch=path.includes(this.search),searching=inSearch&&path.includes(this.search.input);
     if(inSearch&&!searching)return;
