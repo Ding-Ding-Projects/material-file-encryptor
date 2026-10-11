@@ -1,5 +1,19 @@
 # Material File Encryptor wiki
 
+## Current reviewed integration and live delivery, 2026-10-11 UTC
+
+Main d8a8b211b3a5bb77e82818edbd0e6be14ab6887b integrates the reviewed motion/guidance, Unicode family matching, installed-font mount recovery, restart isolation selector and durable launch observer foundations. The canonical inventory now has 105 feature IDs, 210 complete-surface acceptance rows and 160 documentation routes. All complete-surface rows remain unverified. Production builds use GitHub Actions with the exact root build.bat /s and build-installer.bat /s; current cloud packaging remains pending at this observation.
+
+Documentation deployment 38121308257 succeeded for exact acbdf10150e470457e19a4e895c06296b0218954. Independent live readback matched all 198 cloud files, totaling 17,687,042 bytes, checked 6,430 internal references with no missing files or anchors, and proved stable source provenance and exact repository homepage https://ding-ding-projects.github.io/material-file-encryptor/. This verifies content/assets/routes, not rendered feature acceptance. New source always needs its own production and deployment verdict.
+
+The font mount corrections independently verify rollback/retry persistence and subscription recovery. Cached bundled-font staging cancellation is independently corrected; build hooks and exact rendered face acceptance remain pending. The restart selector stops missing or mismatched required verification context before default-profile selection; six checks passed and one symbolic-link fixture remains unverified because the host returned EPERM. No installed marker or native update occurred.
+
+The later c028 recovery captured the genuine older v1.148.1 initial interface on its exact owned hidden target. One browser-close response timed out, so its operation remains unknown; separate native proof established six recorded processes, port and desktop absent. The original failed launch receipt remains unchanged, and the older diagnostic image is not current-main acceptance. Installed startup preparation found a canonical-path mapping requiring native file-identity proof and requires a separately reviewed graceful-only closure option before launch.
+
+Full settings/image/typography/motion/server capability, current presentation capture replacement, installed automatic updating and final qualified cleanup remain incomplete. All eight worktrees and evidence remain retained. The earlier verified f8 production/download/native receipts below retain their exact source boundaries.
+
+主分支已整合覆核過嘅動態、導覽、字款、啟動隔離同持久觀察基礎。線上文件 198 個檔案同 6,430 個內部參照已逐項核對，唔代表每個畫面功能驗收完成。字款回復修正有獨立證據，真正安裝啟動、自動更新、完整編輯器同最新畫面仍然未完成。舊版本診斷圖片保留原有身份，唔會冒充新版。
+
 ## Verified main production update, 2026-10-11 UTC
 
 Main source `f8f3638633cc329d0ebcfc16dcd8355bd01562b4` passed [cloud release delivery 38118239407](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38118239407), executing exact `build.bat /s` and `build-installer.bat /s`. Normal [v1.158.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.158.1) is non-draft and non-prerelease, with the exact source tag verified. Five independent asset downloads, 761 archive CRC entries, 663 Squirrel payload files, Setup embedding and 6,193 privacy entries with zero rejected paths passed.

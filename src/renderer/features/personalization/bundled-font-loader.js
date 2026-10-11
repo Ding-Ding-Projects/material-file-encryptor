@@ -1,0 +1,14 @@
+import {BUNDLED_FONT_MANIFEST,bundledFontDescriptors} from '../../../shared/fonts/index.js';
+const hex=bytes=>[...new Uint8Array(bytes)].map(value=>value.toString(16).padStart(2,'0')).join('');
+/** Receipt admission proves staged bytes, while FontFace loading is a separate
+ * consumer outcome. Neither result claims inspected rendered glyph identity. */
+export async function loadBundledFontCatalog({baseURL,document:doc=globalThis.document,FontFaceClass=doc?.defaultView?.FontFace,loadReceipt=url=>import(url),signal}={}){
+ if(!baseURL||!FontFaceClass||!doc?.fonts)throw Error('Bundled font loading is unavailable.');const base=new URL(baseURL),descriptors=bundledFontDescriptors({baseURL:base.href,verifiedAssets:true});signal?.throwIfAborted();const receipt=(await loadReceipt(new URL('receipt.mjs',base).href)).default;signal?.throwIfAborted();
+ const identity=hex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(BUNDLED_FONT_MANIFEST))));const expected=BUNDLED_FONT_MANIFEST.assets.map(({name,bytes,sha256})=>({name,bytes,sha256}));if(receipt?.schemaVersion!==1||receipt.identity!==identity||receipt.status!=='staged-not-rendered'||JSON.stringify(receipt.assets)!==JSON.stringify(expected))throw Error('Bundled font staging receipt differs.');
+ const loaded=[],faces=[];try{for(const descriptor of descriptors){signal?.throwIfAborted();const weight=descriptor.axes?.find(axis=>axis.tag==='wght'),stretch=descriptor.axes?.find(axis=>axis.tag==='wdth');const rendererStyle=/italic/i.test(descriptor.style)?'italic':'normal',rendererWeight=String(weight?.default??400);const face=new FontFaceClass(descriptor.cssFamily,`url(${JSON.stringify(descriptor.url)})`,{style:rendererStyle,weight:weight?`${weight.min} ${weight.max}`:rendererWeight,stretch:stretch?`${stretch.min}% ${stretch.max}%`:'100%'});await face.load();signal?.throwIfAborted();doc.fonts.add(face);loaded.push(face);faces.push({...descriptor,availability:'loaded',mapping:{verified:true,cssFamily:descriptor.cssFamily,style:rendererStyle,weight:rendererWeight},reason:'Local FontFace loaded; inspected rendered glyph identity remains unverified.'});}return{faces,identity,status:'loaded-not-rendered',destroy(){loaded.splice(0).forEach(face=>doc.fonts.delete(face));}};}catch(error){loaded.forEach(face=>doc.fonts.delete(face));throw error;}
+}
+
+const catalogs=new WeakMap();
+/** Loaded aliases belong to the document because saved appearance outlives an
+ * editor panel. A document owns at most one load per local asset directory. */
+export function sharedBundledFontCatalog(options={}){const doc=options.document||globalThis.document;let entries=catalogs.get(doc);if(!entries){entries=new Map();catalogs.set(doc,entries);}const key=String(options.baseURL);if(!entries.has(key)){const pending=loadBundledFontCatalog(options).catch(error=>{entries.delete(key);throw error;});entries.set(key,pending);}return entries.get(key);}

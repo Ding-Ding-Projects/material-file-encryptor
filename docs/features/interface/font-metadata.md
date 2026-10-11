@@ -91,9 +91,11 @@ Reopening the editor restores a uniquely mapped regular family and saved axes
 from its persisted properties after metadata becomes available again.
 
 This browser workflow does not request installed-device inventory. Declared
-bundled descriptors can be supplied, but the current mount has no staged bundled
-font bytes and explicitly reports that boundary. A CSS fallback family name is
-not proof of a bundled asset. Bundled staging, renderer asset validation, exact
-non-Regular face mapping, full typography depth, native bridge acceptance and
+bundled descriptors can be supplied, and build hooks now provide exact staged local font bytes plus a verified
+receipt. The source loader waits for local FontFace loading before admitting
+known aliases; missing or rejected staging remains explicitly unavailable. A CSS fallback family name is
+not proof of a bundled asset. The three bundled aliases have source-level explicit mapping. Real renderer
+asset acceptance, exact installed non-Regular mapping, full typography depth,
+native bridge acceptance and
 replacement screenshots remain pending. Component fixtures prove source
 consumers and teardown, not rendered font identity or production acceptance.

@@ -1,3 +1,4 @@
+import {stageFontOutputs} from './stage-font-outputs.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createHash,randomUUID} from 'node:crypto';
@@ -8,6 +9,7 @@ const digest=content=>createHash('sha256').update(content).digest('hex');
 export async function stageWorkspace(root=process.cwd(),destination=path.join(root,'out/site')) {
  root=await fs.realpath(root);destination=path.resolve(destination);
  await fs.access(path.join(destination,'index.html'));
+ await stageFontOutputs({root,siteDirectory:path.join(destination,'fonts')});
  const catalog=JSON.parse(await fs.readFile(path.join(destination,'workspace-catalog.json'),'utf8'));
  if(!Array.isArray(catalog.documents)||!Array.isArray(catalog.changelog))throw Error('A reviewed workspace documentation catalog is required.');
  for(const item of catalog.documents)if(typeof item.id!=='string'||typeof item.markdown!=='string'||!Array.isArray(item.headings))throw Error('Invalid workspace documentation record.');
