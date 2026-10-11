@@ -99,7 +99,7 @@ export async function retainClosureAttempt(destination,state,observation) {
 }
 async function freePort(){const server=net.createServer();await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});const port=server.address().port;await new Promise(resolve=>server.close(resolve));return port;}
 
-export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={}}={}) {
+export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},packagedTarget}={}) {
  const {chromium}=runtime.chromium?{chromium:runtime.chromium}:await import('playwright');
  if(process.platform!=='win32') {
   const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
@@ -114,7 +114,7 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={}}=
  const cli=process.env.MFE_LOWLEVEL_CLI||path.join(documents,'GitHub','lowlevel-computer-use-mcp','.venv','Scripts','lowlevel-computer-use-cheap.exe');
  const python=process.env.MFE_LOWLEVEL_PYTHON||path.join(path.dirname(cli),'python.exe');
  const fullChromium=chromium.executablePath();
- const executable=runtime.executable||process.env.CHROMIUM_PATH||path.join(path.dirname(path.dirname(path.dirname(fullChromium))),path.basename(path.dirname(path.dirname(fullChromium))).replace('chromium-','chromium_headless_shell-'),'chrome-headless-shell-win64','chrome-headless-shell.exe');
+ const executable=packagedTarget?.executable||runtime.executable||process.env.CHROMIUM_PATH||path.join(path.dirname(path.dirname(path.dirname(fullChromium))),path.basename(path.dirname(path.dirname(fullChromium))).replace('chromium-','chromium_headless_shell-'),'chrome-headless-shell-win64','chrome-headless-shell.exe');
  const headlessShell=path.basename(executable)==='chrome-headless-shell.exe';
  for(const file of [installed,cli,python,executable])await fs.access(file);
  const adapter=fileURLToPath(new URL('./test-renderer-browser-cli.py',import.meta.url));
@@ -125,9 +125,10 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={}}=
   if(!/^[a-f0-9]{40}$/.test(stdout.trim()))throw new Error('Native renderer source binding is unavailable.');
   env.MFE_RENDERER_SOURCE_COMMIT=stdout.trim();
  }
- const runRoot=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-renderer-test-'));
+ const runRoot=await fs.mkdtemp(path.join(os.tmpdir(),packagedTarget?'mfe-packaged-renderer-test-':'mfe-renderer-test-'));
+ if(packagedTarget){if(expectedUrl!==packagedTarget.expectedUrl)throw new Error('Packaged renderer URL differs from validated bytes.');await fs.mkdir(path.join(runRoot,'profile'));await fs.mkdir(path.join(runRoot,'output'));}
  const state=path.join(runRoot,'lifecycle.json');const port=await freePort();
- let browser,cdpTransport,connectionOwned=false,launchAttempted=false,closed=false;
+ let browser,cdpTransport,windowObservation,connectionOwned=false,launchAttempted=false,closed=false;
  const outcomes=[];
  let retainedEvidence;
  let closureObservation={normalClose:'not attempted',fallback:'not attempted',resourcesAbsent:false};
@@ -167,11 +168,13 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={}}=
  };
  try {
   await lifecycleCommand([adapter,'preflight','--require','launch_on_headless_desktop','--require','list_headless_windows','--require','kill_process','--require','close_headless_desktop']);
+  if(packagedTarget)await packagedTarget.revalidate();
   launchAttempted=true;
-  await lifecycleCommand([adapter,'launch','--state',state],{executable,arguments:[`--user-data-dir=${path.join(runRoot,'profile')}`,`--remote-debugging-port=${port}`,'--remote-debugging-address=127.0.0.1','--no-first-run','--no-default-browser-check','--disable-background-networking','--disable-extensions','--enable-automation',headlessShell?expectedUrl:`--app=${expectedUrl}`],runRoot,outputRoot:path.join(runRoot,'output'),cdp:{port,expectedUrl}});
+  const launchArguments=packagedTarget?['--desktop-check',`--verification-profile=${path.join(runRoot,'profile')}`,`--remote-debugging-port=${port}`,'--remote-debugging-address=127.0.0.1']:[`--user-data-dir=${path.join(runRoot,'profile')}`,`--remote-debugging-port=${port}`,'--remote-debugging-address=127.0.0.1','--no-first-run','--no-default-browser-check','--disable-background-networking','--disable-extensions','--enable-automation',headlessShell?expectedUrl:`--app=${expectedUrl}`];
+  await lifecycleCommand([adapter,'launch','--state',state],{executable,arguments:launchArguments,runRoot,outputRoot:path.join(runRoot,'output'),cdp:{port,expectedUrl}});
   // Headless shell has no HWND. Its PID/creation-time/executable receipt and
   // exact CDP target prove ownership, not native pixels or keyboard delivery.
-  if(!headlessShell)await lifecycleCommand([adapter,'wait-window','--state',state,'--title-pattern','.*','--class-pattern','^Chrome_WidgetWin_1$','--timeout','10']);
+  if(!headlessShell)windowObservation=await lifecycleCommand([adapter,'wait-window','--state',state,'--title-pattern','.*','--class-pattern','^Chrome_WidgetWin_1$','--timeout','10']);
   const endpoint=`http://127.0.0.1:${port}`;const deadline=Date.now()+15000;
   let targets;
   while(Date.now()<deadline){try{targets=await (await (runtime.fetch||fetch)(`${endpoint}/json/list`,{signal:AbortSignal.timeout(1000),headers:{Connection:'close'}})).json();break;}catch{await new Promise(resolve=>setTimeout(resolve,100));}}
@@ -183,6 +186,7 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={}}=
   connectionOwned=true;
   const page=browser.contexts()[0].pages()[0];
   if(!page||browser.contexts()[0].pages().length!==1)throw new Error('Renderer fixture page inventory changed.');
-  return {page,close};
+  if(packagedTarget)await packagedTarget.revalidate();
+  return {page,close,runRoot,statePath:state,windowObservation,connectionOwned,backend:env.MFE_RENDERER_PROCESS_BACKEND};
  } catch(error){try {await close();}catch(closureError){throw new AggregateError([error,closureError],'Renderer fixture failed and closure also failed.');}throw error;}
 }
