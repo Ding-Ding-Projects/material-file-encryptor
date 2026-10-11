@@ -2,6 +2,7 @@ export interface VaultVersionInfo { descendantIds?: string[]; id: string; entryI
 export interface DriveFile { id: string; path: string; size: number; modified: string; partCount: number; partSizeBytes: number; offline: boolean }
 export interface DriveState {
   storageFormat?: 1 | 2;
+  packing?: {pendingFiles:number;running:boolean;paused:boolean;activeWriters:number;lastError:string|null;targetPartSizeBytes:number};
   locked: boolean; mounted: boolean; driveLetter?: string; storageDir?: string; cacheDir: string;
   files: DriveFile[]; availableDriveLetters: string[]; partSizeBytes?: number; autoUnlock?: boolean;
   history?: { versionCount: number; recycledCount: number; pendingVersionCount: number; retentionDays: number | null; gitAvailable: boolean };
@@ -13,6 +14,7 @@ export interface DriveState {
 }
 export type VaultOptions = { storageDir: string; cacheDir: string; driveLetter: string; transport?: 'folder' | 'privateGit'; remoteRepository?: string; autoUnlock?: boolean } & ({ password: string; keyFilePath?: never } | { password?: never; keyFilePath: string });
 export interface DriveBridge {
+  featureRequest<T=unknown>(feature:'workflow',action:string,payload?:Record<string,unknown>):Promise<T>;
   storageDiagnostics(): Promise<StorageDiagnostics>;
   startPacking(options?: {path?: string; partSizeBytes?: number}): Promise<{operationId: string}>;
   status(): Promise<DriveState>; create(options: VaultOptions & { partSizeBytes: number }): Promise<DriveState>;
