@@ -4,6 +4,8 @@ using System.IO.MemoryMappedFiles;
 using System.Security.Cryptography;
 using System.Text.Json;
 
+if(args.Length==4&&args[0]=="--mapped-writer-child"){MappedWriter.Run(args[1],args[2],args[3]);return;}
+
 if(args.Length is <3 or >4)throw new ArgumentException("Supply package root, output JSON, exact source commit and optional --ordinary-only.");
 bool ordinaryOnly=args.Length==4&&args[3]=="--ordinary-only";
 if(args.Length==4&&!ordinaryOnly)throw new ArgumentException("Unknown verification mode.");
@@ -39,12 +41,9 @@ try
     using(var idle=new FileStream(idleFile,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete))
     {
         var result=await helper.Call("forceLock",new{});bool locked=result.GetProperty("locked").GetBoolean();
-        Require(locked&&!result.GetProperty("busy").GetBoolean(),"Idle open handle prevented force lock.");mounted=false;
-        Require(!Directory.Exists(mountedRoot),"Owned drive remained visible after force lock.");
-        checks.Add(new{name="idle-open-handle-force-lock",verified=true,locked,driveAbsent=true});
-        await Unlock();await Mount();mountedRoot=drive+"\\";
-        Require(File.ReadAllBytes(Path.Combine(mountedRoot,"idle.bin")).SequenceEqual(new byte[]{1,2,3,4}),"Immediate unlock lost durable bytes.");
-        checks.Add(new{name="immediate-reunlock-with-old-idle-handle",verified=true});
+        Require(!locked&&result.GetProperty("busy").GetBoolean(),"Retained idle handle did not veto force lock.");
+        Require(Directory.Exists(mountedRoot),"Busy force lock detached the owned drive.");
+        checks.Add(new{name="idle-open-handle-force-lock-busy",verified=true,locked});
     }
     OrdinaryOperations.Run(root,mountedRoot,checks);
     File.WriteAllText(Path.Combine(mountedRoot,"prior.bin"),"existing destination stays intact");
@@ -77,29 +76,56 @@ try
     {
     string mappedFile=Path.Combine(mountedRoot,"mapped.bin");
     using(var seed=new FileStream(mappedFile,FileMode.CreateNew,FileAccess.Write,FileShare.ReadWrite)){seed.SetLength(64L*1024*1024);seed.Flush(true);}
-    bool concurrentBusy=false;JsonElement last=default;Exception? writerFailure=null;
-    using(var file=new FileStream(mappedFile,FileMode.Open,FileAccess.ReadWrite,FileShare.ReadWrite|FileShare.Delete))
-    using(var mapping=MemoryMappedFile.CreateFromFile(file,null,0,MemoryMappedFileAccess.ReadWrite,HandleInheritability.None,true))
-    using(var view=mapping.CreateViewAccessor())
-    using(var stop=new CancellationTokenSource())
+    string ready=Path.Combine(root,"writer.ready"),stop=Path.Combine(root,"writer.stop");
+    var writerStart=new ProcessStartInfo(Environment.ProcessPath!){UseShellExecute=false,CreateNoWindow=true};
+    if(Path.GetFileNameWithoutExtension(Environment.ProcessPath!).Equals("dotnet",StringComparison.OrdinalIgnoreCase))writerStart.ArgumentList.Add(typeof(MappedWriter).Assembly.Location);
+    foreach(string arg in new[]{"--mapped-writer-child",mappedFile,ready,stop})writerStart.ArgumentList.Add(arg);
+    using(var writer=Process.Start(writerStart)!)
     {
-        var started=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var writer=Task.Run(()=>{try{byte[] block=new byte[65536];RandomNumberGenerator.Fill(block);started.TrySetResult();while(!stop.IsCancellationRequested){for(long offset=0;offset<64L*1024*1024&&!stop.IsCancellationRequested;offset+=block.Length)view.WriteArray(offset,block,0,block.Length);view.Flush();}CryptographicOperations.ZeroMemory(block);}catch(Exception error){writerFailure=error;}});
-        await started.Task;await Task.Delay(25);
-        for(int attempt=0;attempt<3&&!exactOverlap;attempt++)
+        try
         {
-            last=await helper.Call("forceLock",new{});
-            bool busy=last.TryGetProperty("busy",out var flag)&&flag.GetBoolean();concurrentBusy|=busy;
-            exactOverlap=busy&&last.TryGetProperty("activeFilesystemIo",out var active)&&active.GetInt32()>0;
-            if(last.GetProperty("locked").GetBoolean()){mounted=false;break;}
-            await Task.Delay(10);
+            var readyWait=Stopwatch.StartNew();
+            while(!File.Exists(ready)&&!writer.HasExited&&readyWait.Elapsed<TimeSpan.FromSeconds(15))await Task.Delay(10);
+            Require(File.Exists(ready)&&!writer.HasExited,"Mapped writer did not become ready.");
+            bool busyObserved=false;
+            for(int attempt=0;attempt<3;attempt++)
+            {
+                var response=await helper.Call("forceLock",new{});
+                bool locked=response.GetProperty("locked").GetBoolean();
+                if(locked)mounted=false;
+                checks.Add(new{name="retained-mapped-descriptor-force-lock",attempt,verified=!locked&&response.GetProperty("busy").GetBoolean(),locked,code=response.GetProperty("code").GetString(),activeFilesystemIo=response.GetProperty("activeFilesystemIo").GetInt32()});
+                Require(!locked&&response.GetProperty("busy").GetBoolean(),"Force lock detached a retained mapped descriptor.");
+                busyObserved=true;
+            }
+            exactOverlap=busyObserved;
         }
-        stop.Cancel();await writer.WaitAsync(TimeSpan.FromSeconds(10));
+        finally
+        {
+            File.WriteAllText(stop,"stop");
+            try { await writer.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(15)); }
+            catch (TimeoutException)
+            {
+                // Only this runner's owned writer may be terminated. Join it
+                // before helper teardown can detach its mapped backing file.
+                if(!writer.HasExited)writer.Kill(true);
+                await writer.WaitForExitAsync();
+                checks.Add(new{name="mapped-writer-stop-timeout",verified=false});
+                throw;
+            }
+            checks.Add(new{name="mapped-writer-child-exit",verified=writer.ExitCode==0,exitCode=writer.ExitCode,viewsReleased=writer.ExitCode==0});
+        }
+        Require(writer.ExitCode==0,"Mapped writer exited abnormally; mapped persistence is unverified.");
     }
-    checks.Add(new{name="active-mapped-io-force-lock",verified=exactOverlap,concurrentBusyObserved=concurrentBusy,exactActiveIoOverlap=exactOverlap,verdict=exactOverlap?"passed":"unverified",reason=exactOverlap?null:"No response proved a nonzero activeFilesystemIo counter while mapped I/O was active.",writerFailure=writerFailure?.GetType().Name});
+    Require(exactOverlap,"No retained mapping force-lock busy response was observed.");
     }
     if(mounted){for(int attempt=0;attempt<10;attempt++){var result=await helper.Call("forceLock",new{});if(result.GetProperty("locked").GetBoolean()){mounted=false;break;}await Task.Delay(100);}}
-    Require(!mounted,"Owned mount did not detach after workload stopped.");finished=ordinaryOnly||exactOverlap;
+    Require(!mounted,"Owned mount did not detach after workload stopped.");
+    await Unlock();await Mount();mountedRoot=drive+"\\";
+    Require(File.ReadAllBytes(Path.Combine(mountedRoot,"idle.bin")).SequenceEqual(new byte[]{1,2,3,4}),"Authenticated reopen lost idle bytes.");
+    if(!ordinaryOnly)MappedWriter.Verify(Path.Combine(mountedRoot,"mapped.bin"));
+    checks.Add(new{name="authenticated-reopen-after-all-views-release",verified=true});
+    for(int attempt=0;attempt<10&&mounted;attempt++){var result=await helper.Call("forceLock",new{});mounted=!result.GetProperty("locked").GetBoolean();if(mounted)await Task.Delay(100);}
+    Require(!mounted,"Reopened synthetic mount did not detach.");finished=ordinaryOnly||exactOverlap;
 }
 catch(Exception error){checks.Add(new{name="run-error",verified=false,type=error.GetType().Name,message=error.Message});}
 finally

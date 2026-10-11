@@ -85,7 +85,9 @@ internal sealed class VaultFileSystem : FileSystemBase
     {
         lock (gate)
         {
-            if (activeIo != 0) return false;
+            // Cleanup can precede Close while a mapped view still owns the file
+            // descriptor. A gap between callbacks is not permission to detach.
+            if (activeHandles != 0 || activeIo != 0) return false;
             stopping = true;
             return true;
         }
