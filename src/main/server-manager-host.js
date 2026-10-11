@@ -1,0 +1,54 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {randomUUID} from 'node:crypto';
+import {refreshJavaCatalogue,resolveJavaDistribution,catalogueState} from '../features/server-manager/catalog.js';
+import {LocalProcessServerAdapter} from '../features/server-manager/local-process.js';
+import {targetCapabilities} from '../features/server-manager/targets.js';
+
+const EULA='https://www.minecraft.net/en-us/eula';
+const SHUTDOWN_REASON='Native process supervision, compatible runtime admission, version-bound loopback configuration, resource limits and native lease IPC are not integrated. Preparation never starts a server.';
+function record(payload,keys=[]){if(!payload||typeof payload!=='object'||Array.isArray(payload)||![Object.prototype,null].includes(Object.getPrototypeOf(payload))||Object.keys(payload).some(key=>!keys.includes(key)))throw Error('Invalid preparation request.');}
+function identifier(value,max=128){if(typeof value!=='string'||!value.length||value.length>max||/[\x00-\x1f\x7f]/.test(value))throw Error('Invalid preparation identity.');return value;}
+async function directory(value){let current=path.resolve(value);for(;;){const stat=await fs.lstat(current);if(!stat.isDirectory()||stat.isSymbolicLink())throw Error('An unlinked owned directory is required.');const parent=path.dirname(current);if(parent===current)break;current=parent;}return fs.realpath(value);}
+/** The protected main process alone supplies the root, network and capacity providers.
+ * Renderer actions cannot provide paths, URLs, digests, consent or launch providers. */
+export function createServerManagerHost({dataDirectory,fetchImpl=fetch,emit=()=>{},capacity=async root=>{const stat=await fs.statfs(root,{bigint:true});return stat.bavail*stat.bsize;},now=()=>new Date().toISOString()}={}){
+ const session=randomUUID(),base=path.join(path.resolve(dataDirectory),'server-manager',session),selections=new Map(),operations=new Map(),controllers=new Set(),flights=new Set();let initialized,adapter,snapshot=null,closed=false,refreshing=false,active=null,offline=false;
+ const ensure=()=>{if(closed)throw Error('Preparation service is closing.');};
+ const event=operationId=>{try{emit({type:'changed',operationId});}catch{}};
+ async function initialize(){if(!initialized)initialized=(async()=>{await directory(dataDirectory);await fs.mkdir(path.dirname(base),{recursive:true});await directory(path.dirname(base));await fs.mkdir(base);await directory(base);adapter=new LocalProcessServerAdapter({baseRoot:base,fetchImpl:download,now});})();await initialized;ensure();}
+ function track(promise){flights.add(promise);promise.finally(()=>flights.delete(promise)).catch(()=>{});return promise;}
+ async function persist(operation){const value={schemaVersion:1,...operation.view};const file=path.join(base,'operation-'+operation.view.id+'.json'),temporary=file+'.'+randomUUID()+'.tmp';await fs.writeFile(temporary,JSON.stringify(value,null,2)+'\n',{flag:'wx'});await fs.rename(temporary,file);}
+ async function download(url,options){const operation=active;if(!operation)throw Error('No owned preparation is active.');const response=await fetchImpl(url,options);if(!response.body)return response;const reader=response.body.getReader();let last=0;const stream=new ReadableStream({async pull(controller){try{const value=await reader.read();if(value.done){controller.close();return;}operation.view.receivedBytes+=value.value.byteLength;if(Date.now()-last>=100){last=Date.now();event(operation.view.id);}controller.enqueue(value.value);}catch(error){controller.error(error);}},cancel:reason=>reader.cancel(reason)});return new Response(stream,{status:response.status,headers:response.headers});}
+ function summary(){const catalog=catalogueState(snapshot,{offline,now:Date.parse(now())});return {schemaVersion:1,catalogue:{state:catalog.state,sourceSha256:catalog.sourceSha256||null,retrievedAt:catalog.retrievedAt||null,total:snapshot?.versions.length||0},operations:[...operations.values()].map(operation=>structuredClone(operation.view)),targets:targetCapabilities().map(row=>({id:row.id,available:false})),startAvailable:false,startReason:SHUTDOWN_REASON,licenseAcceptanceAvailable:false};}
+ async function dispatch(action,payload={}){
+  ensure();
+  if(action==='snapshot'){record(payload);return summary();}
+  if(action==='refreshCatalogue'){
+   record(payload);if(refreshing)throw Error('A catalogue refresh is already active.');refreshing=true;const controller=new AbortController();controllers.add(controller);
+   return track((async()=>{try{await initialize();const next=await refreshJavaCatalogue({fetchImpl,signal:controller.signal,now});ensure();const file=path.join(base,'catalogue-'+next.sourceSha256+'.json');await fs.writeFile(file,JSON.stringify(next),{flag:'wx'}).catch(error=>{if(error.code!=='EEXIST')throw error;});ensure();snapshot=next;offline=false;selections.clear();return summary();}catch(error){offline=!!snapshot;throw error;}finally{refreshing=false;controllers.delete(controller);event();}})());
+  }
+  if(action==='versions'){
+   record(payload,['catalogueId','cursor']);if(!snapshot||payload.catalogueId!==snapshot.sourceSha256)throw Error('Refresh or reselect the catalogue.');const cursor=payload.cursor??'0';if(typeof cursor!=='string'||!/^\d{1,5}$/.test(cursor))throw Error('Invalid catalogue cursor.');const offset=Number(cursor);if(offset>snapshot.versions.length)throw Error('Invalid catalogue cursor.');return{catalogueId:snapshot.sourceSha256,total:snapshot.versions.length,next:offset+100<snapshot.versions.length?String(offset+100):null,versions:snapshot.versions.slice(offset,offset+100).map(({id,channel,releaseTime})=>({id,channel,releaseTime}))};
+  }
+  if(action==='resolveVersion'){
+   record(payload,['catalogueId','versionId']);identifier(payload.versionId);if(!snapshot||payload.catalogueId!==snapshot.sourceSha256)throw Error('Refresh or reselect the catalogue.');const row=snapshot.versions.find(row=>row.id===payload.versionId);if(!row)throw Error('Choose a version from the official catalogue.');const sourceId=snapshot.sourceSha256,controller=new AbortController();controllers.add(controller);
+   return track((async()=>{try{const distribution=await resolveJavaDistribution(row,{fetchImpl,signal:controller.signal});ensure();if(sourceId!==snapshot?.sourceSha256)throw Error('Catalogue changed during resolution.');const id=randomUUID();if(selections.size>=100)throw Error('Too many resolved selections; refresh the catalogue.');selections.set(id,{distribution,sourceId});return{selectionId:id,version:row.id,state:distribution.state,size:distribution.size||null,runtime:distribution.runtime||null,preparable:distribution.state==='resolved'&&distribution.size<=1024*1024*1024};}finally{controllers.delete(controller);}})());
+  }
+  if(action==='prepare'){
+   record(payload,['selectionId']);identifier(payload.selectionId,36);if(active)throw Error('An owned preparation is already active.');if(operations.size>=100)throw Error('This session has reached its preparation record limit.');const selected=selections.get(payload.selectionId);if(!selected||selected.sourceId!==snapshot?.sourceSha256||selected.distribution.state!=='resolved'||selected.distribution.size>1024*1024*1024)throw Error('A current supported distribution selection is required.');
+   // Claim admission before any await so two renderer requests cannot create two roots.
+   const controller=new AbortController(),id=randomUUID(),serverId='server-'+randomUUID(),operation={controller,view:{id,serverId,version:selected.distribution.version,catalogueId:selected.sourceId,status:'admitting',receivedBytes:0,expectedBytes:selected.distribution.size,bytesVerified:false,licenseAccepted:false,createdAt:now(),recoveryRequired:false}};active=operation;operations.set(id,operation);controllers.add(controller);
+   operation.flight=track((async()=>{try{await initialize();controller.signal.throwIfAborted();const available=await capacity(base);controller.signal.throwIfAborted();if(typeof available!=='bigint'||available<BigInt(selected.distribution.size)+16n*1024n*1024n)throw Error('Insufficient verified capacity for preparation.');ensure();if(selected.sourceId!==snapshot?.sourceSha256||!selections.has(payload.selectionId))throw Error('Catalogue changed before preparation admission.');operation.view.status='downloading';await persist(operation);event(id);const result=await adapter.create({id:serverId,distribution:selected.distribution,signal:controller.signal});operation.view.status='prepared';operation.view.bytesVerified=result.bytesVerified===true;operation.view.distributionSha256=result.distributionSha256;operation.view.receivedBytes=selected.distribution.size;operation.view.licenseAccepted=false;}catch(error){operation.view.status=controller.signal.aborted?'canceled':'failed';operation.view.recoveryRequired=true;operation.view.reasonCode=controller.signal.aborted?'canceled':'preparation-failed';}finally{try{if(initialized)await persist(operation);}catch{operation.view.status='recovery-required';operation.view.recoveryRequired=true;operation.view.receiptPersisted=false;}controllers.delete(controller);if(active===operation)active=null;event(id);}})());
+   return structuredClone(operation.view);
+  }
+  if(action==='cancel'){
+   record(payload,['operationId']);identifier(payload.operationId,36);const operation=operations.get(payload.operationId);if(!operation)throw Error('Preparation is not owned by this session.');if(operation===active)operation.controller.abort();return {requested:operation===active,status:operation.view.status};
+  }
+  if(action==='reviewLicense'){
+   record(payload,['serverId']);identifier(payload.serverId,64);const operation=[...operations.values()].find(item=>item.view.serverId===payload.serverId&&item.view.status==='prepared');if(!operation)throw Error('Prepare an owned server before reviewing its license.');return {...adapter.licenseContract(payload.serverId),url:EULA,accepted:false,acceptanceAvailable:false};
+  }
+  throw Error('Unsupported preparation action.');
+ }
+ return{dispatch,get pending(){return flights.size;},cancelAll(){for(const controller of controllers)controller.abort();},async close(){closed=true;for(const controller of controllers)controller.abort();await Promise.allSettled([...flights]);}};
+}
