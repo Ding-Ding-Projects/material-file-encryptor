@@ -104,6 +104,10 @@
     "docs/features/schedules/README.zh-HK.md",
     "docs/features/schedules/external-sources.md",
     "docs/features/schedules/external-sources.zh-HK.md",
+    "docs/features/server-manager/README.md",
+    "docs/features/server-manager/README.zh-HK.md",
+    "docs/features/server-manager/foundation.md",
+    "docs/features/server-manager/foundation.zh-HK.md",
     "docs/features/storage/README.md",
     "docs/features/storage/README.zh-HK.md",
     "docs/features/storage/file-history-activity.md",
@@ -141,6 +145,7 @@
     "platform",
     "release",
     "schedules",
+    "server-manager",
     "storage",
     "surface-foundation"
   ],
