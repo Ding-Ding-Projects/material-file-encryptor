@@ -27,3 +27,14 @@
 .ollama-suite [type=textarea]{width:100%;min-height:100px}
 .ollama-cart{display:grid;gap:16px}
 .ollama-cart>.ollama-row{padding:16px;background:var(--md-sys-color-surface-container);border-radius:12px}
+
+.ollama-message{display:grid;gap:8px;padding:16px;border-radius:16px;background:var(--md-sys-color-surface-container-low);min-width:0}
+.ollama-message+.ollama-message{margin-top:16px}
+.ollama-message[data-role=user]{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)}
+.ollama-message-content{white-space:normal;overflow-wrap:anywhere;min-width:0}
+.ollama-message-content :where(p,ul,ol,blockquote,pre,table){margin-block:8px}
+.ollama-message-content :where(pre,code),.ollama-user-message{white-space:pre-wrap;overflow-wrap:anywhere}
+.ollama-message-content blockquote{border-inline-start:3px solid var(--md-sys-color-outline-variant);padding-inline-start:12px;margin-inline:0}
+.ollama-message-content table{border-collapse:collapse;width:100%}
+.ollama-message-content :where(th,td){padding:8px;border:1px solid var(--md-sys-color-outline-variant);text-align:start}
+.ollama-response-state,.ollama-format-notice,.ollama-empty-response{color:var(--md-sys-color-on-surface-variant);font-size:.9em}
