@@ -679,6 +679,181 @@
         "cancel-wait",
         "logout-clears-wait"
       ]
+    },
+    {
+      "id": "access-profile-locked",
+      "owner": "access",
+      "selector": "#access-panel-profile",
+      "fixture": "Synthetic local access fixture with private fields cleared",
+      "observable": "Password field, setup/unlock actions, local-only disclosure, private cache locked status.",
+      "actions": [
+        "begin-unlock",
+        "cancel-unlock"
+      ]
+    },
+    {
+      "id": "access-profile-unlocked",
+      "owner": "access",
+      "selector": "#access-panel-profile",
+      "fixture": "Synthetic local access fixture with private fields cleared",
+      "observable": "Synthetic profile has authenticated session; cleared password; logout available. Never capture credential values.",
+      "actions": [
+        "logout"
+      ]
+    },
+    {
+      "id": "access-locks-empty",
+      "owner": "access",
+      "selector": "#access-panel-locks",
+      "fixture": "Synthetic local access fixture with private fields cleared",
+      "observable": "Scoped search and context-menu creation guidance; no fabricated records.",
+      "actions": [
+        "open-target-wizard"
+      ]
+    },
+    {
+      "id": "access-lock-wizard",
+      "owner": "access",
+      "selector": "[data-access-wizard]",
+      "fixture": "Synthetic local access fixture with private fields cleared",
+      "observable": "Readonly exact target; explicit policy and session choices; only selected factors; consent checkbox; cancel returns origin focus.",
+      "actions": [
+        "choose-policy",
+        "choose-session",
+        "cancel-wizard"
+      ]
+    },
+    {
+      "id": "access-unlock",
+      "owner": "access",
+      "selector": "[data-access-unlock]",
+      "fixture": "Synthetic local access fixture with private fields cleared",
+      "observable": "Exact target name, selected factor fields, PIN keypad when applicable; mismatch, waiting, cancel states.",
+      "actions": [
+        "invalid-factor",
+        "cancel-unlock"
+      ]
+    },
+    {
+      "id": "access-authenticator-list",
+      "owner": "access",
+      "selector": "#access-panel-authenticator",
+      "fixture": "Synthetic local access fixture with private fields cleared",
+      "observable": "Scoped registered search, selected metadata export requiring profile, live records without default samples.",
+      "actions": [
+        "filter-authenticators",
+        "export-selected-metadata"
+      ]
+    },
+    {
+      "id": "access-authenticator-registration",
+      "owner": "access",
+      "selector": ".access-registration",
+      "fixture": "Synthetic local access fixture with private fields cleared",
+      "observable": "Explicit Add action expands registration; Material input/select/file primitives; current-code confirmation; cancel hides details and stops camera.",
+      "actions": [
+        "open-registration",
+        "cancel-registration-clears-private-fields"
+      ]
+    },
+    {
+      "id": "access-qr-hidden",
+      "owner": "access",
+      "selector": "#access-panel-authenticator",
+      "fixture": "Synthetic local access fixture with private fields cleared",
+      "observable": "Hidden outside deliberate reveal. Never retain QR, manual secret or generated code pixels in public evidence.",
+      "actions": [
+        "verify-secret-preview-hidden"
+      ]
+    },
+    {
+      "id": "access-confirmation",
+      "owner": "access",
+      "selector": "[data-access-confirmation]",
+      "fixture": "Synthetic local access fixture with private fields cleared",
+      "observable": "Both confirmation switches and slider at100 required; early click cannot mutate; cancel during storage restores owned records.",
+      "actions": [
+        "reject-early-confirm",
+        "cancel-delete",
+        "confirm-delete"
+      ]
+    },
+    {
+      "id": "p-schedule-narrator",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "Synthetic local schedule with bounded snapshot registry",
+      "observable": "Typed narrator schedule controls",
+      "actions": [
+        "select-narrator-settings",
+        "save-schedule"
+      ]
+    },
+    {
+      "id": "p-schedule-attention",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "Synthetic local schedule with bounded snapshot registry",
+      "observable": "Typed attention schedule controls",
+      "actions": [
+        "select-attention-settings",
+        "save-schedule"
+      ]
+    },
+    {
+      "id": "p-schedule-appearance-ref",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "Synthetic local schedule with bounded snapshot registry",
+      "observable": "Bounded local appearance snapshot reference",
+      "actions": [
+        "capture-appearance-snapshot",
+        "save-reference"
+      ]
+    },
+    {
+      "id": "p-schedule-logo-ref",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "Synthetic local schedule with bounded snapshot registry",
+      "observable": "Bounded local logo snapshot reference",
+      "actions": [
+        "capture-logo-snapshot",
+        "save-reference"
+      ]
+    },
+    {
+      "id": "p-schedule-active-override",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "Synthetic local schedule with bounded snapshot registry",
+      "observable": "Effective snapshot differs from preserved base",
+      "actions": [
+        "activate-schedule",
+        "verify-effective-snapshot"
+      ]
+    },
+    {
+      "id": "p-schedule-restored-base",
+      "owner": "personalization",
+      "selector": "#view-personalization",
+      "fixture": "Synthetic local schedule with bounded snapshot registry",
+      "observable": "Latest base restored without history or storage mutation",
+      "actions": [
+        "end-schedule",
+        "verify-restored-base"
+      ]
+    },
+    {
+      "id": "storage-paused",
+      "owner": "records",
+      "selector": "mfe-storage-maintenance",
+      "fixture": "Cancelled synthetic operation with packingPaused true and pending files retained",
+      "observable": "Retained queue and Resume packing action",
+      "actions": [
+        "resume-packing",
+        "verify-pause-cleared"
+      ]
     }
   ]
 }
