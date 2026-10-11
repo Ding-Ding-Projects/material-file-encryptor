@@ -10,7 +10,7 @@
 
 The requirement applies to the desktop workspace, documentation website, settings and every nested editor. Registered buttons, text fields, selectors, sliders, checkboxes and tabs are being integrated with the original validation, locks, persistence and cancellation behavior. Source conversions alone do not establish keyboard, accessibility or visual conformance.
 
-Reviewed source includes shared settings controls, private-history controls, appearance actions, logo actions and appearance number/name/preset fields. Unique contextual guidance and Clear actions remain incomplete in parts of the editors. Specialized property, mesh, path, file, date/time and other remaining controls need complete workflows and actual rendered verification. Full Photoshop-grade editing, motion authoring and the complete feature inventory remain unfinished.
+Reviewed source includes shared settings controls, private-history controls, appearance actions, logo actions, appearance number/name/preset fields and CSS property fields with their original Clear/Reset routes. Property rollback now renews only the still-owned field cohort; unrelated replacements remain stale. Unique contextual guidance and Clear actions remain incomplete in parts of the editors. Specialized property, mesh, path, file, date/time and other remaining controls need complete workflows and actual rendered verification. Full Photoshop-grade editing, motion authoring and the complete feature inventory remain unfinished.
 
 ## Core workflows
 

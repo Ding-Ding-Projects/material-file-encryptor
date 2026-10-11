@@ -1,3 +1,12 @@
+# Final source preservation, 2026-10-11 UTC
+
+- [x] Preserve exact property repair0e7b717 on its owning branch with remote proof; two source reviews and focused mounted regressions pass.
+- [x] Preserve incomplete capture diagnostics3fd3fb7 on its owning branch with remote proof; keep it unmerged.
+- [ ] Implement and verify the capture attempt/result markers in a later authorized implementation session, then rerun exact-source genuine scenes.
+- [ ] Verify a fresh complete source/admin archive and separately inventoried private images. Prepared machinery is not a backup; no deletion qualifies.
+- [ ] Complete separate public-gallery source/hosting/image verification or preserve its exact blocker.
+- [ ] Resolve the historical99e07c8 source-history publication finding through an explicitly authorized route; current editable surfaces are corrected.
+
 # Preservation closeout, 2026-10-11 UTC
 
 - [x] Rewrite README opening with independently accepted v1.259.1, exact evidence boundaries and retained historical records; all 31 local references exist.

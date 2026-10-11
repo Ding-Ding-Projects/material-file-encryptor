@@ -1,3 +1,15 @@
+# Final preservation source unit, 2026-10-11 UTC
+
+Reviewed source 0e7b7178e32760bf44136f8f7920adbb0e1508c2 is included in this integration. It retains 8d83230 and corrects the independently reproduced sibling-field rollback defect. CSS property fields use registered outlined controls and the original change/Clear/Reset, validation and persistence authority. Shared mutate renews only the still-owned cohort after successful synchronous rollback; unrelated replacement and persistence faults do not renew. Two fresh review lenses are dry. The focused source suite passed16/16, independent sibling/typography/Reset probes passed, and parent ran the decisive mounted property consumer1/1. Unique per-property guidance, vendor keyboard/accessibility and real pixels remain unfinished.
+
+Capture diagnostics 3fd3fb7ea6f1dc4ed5332f302e505d0001355052 are preserved on task/documentation-gallery-20261010 with exact remote proof, but remain incomplete and unmerged. The missing original-click attempt/result markers have NOT been implemented. Do not claim the editor was clicked or occluded from source68ca's seven reached/three unsuccessful scenes. No new capture was launched during closeout.
+
+Installer branch dd56c45 has patch-equivalent contributions already in main, but strict ancestor proof is absent and its checkout is retained. PNG branch fd259295 contains unintegrated converter resource-release source across CleanupActions.cs, Native.cs, Program.cs and converter-sandbox.test.js; it has remote proof, no fresh lifecycle acceptance and remains retained. Preserve all eight checkouts, every ignored evidence path/profile and all private announcement variants. Fresh archive machinery has review gaps and is not yet a verified backup. No deletion qualifies.
+
+Current public files corrected the historical99e07c8 publication finding. The immutable source-history finding remains unresolved without authorized rewriting. The affected99 and f79 production runs were canceled before publication; their publish steps are skipped. A read-only sweep of407 editable release/issue/Discussion bodies found zero matches; current-tree technical/upstream/proper-name/synthetic matches were classified narrowly, not globally exempted. The source repository is public, as verified through the actual CLI; no visibility change occurred.
+
+Strongest independently accepted package remains normalv1.259.1/source68ca7f15, separate from this newer source unit. Installed startup/update/restart and fresh Setup lifecycle remain unverified. Native headroom admission failed; existing1.133.1 occupies the current-user installation destination. The one public capture-gallery lane is finishing separate source/hosting/image verification. Full105-ID/210-row, pure Material Design 3 and advanced editor/motion/guidance acceptance remain unfinished. This is preservation closeout, not goal completion.
+
 # User-requested preservation closeout, 2026-10-11 UTC
 
 The user requested preservation and safe cleanup before full delivery. The full goal remains unfinished.
