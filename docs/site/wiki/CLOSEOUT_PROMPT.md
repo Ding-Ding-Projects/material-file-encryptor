@@ -1,5 +1,16 @@
 # Wiki continuation handoff
 
+## Current source and verification update
+
+The current reviewed source is `1faecd9`. Main `3f3e97c` was pushed and verified. Deployment `38101869288` passed independent checks for 169 live files, 115 article/wiki documents, 4,662 internal references and the exact repository homepage. These counts describe that deployment before this wiki update. The previously fetched wiki revision was `43f17a1f7cd24f4079409d1127bc1d145b1c97da`; this new section awaits wiki publication and source-revision readback.
+
+The exact build and installer entrypoints passed for `3f3e97c`, including unsigned status and archive CRC checks. Installed execution, native update and removal remain explicitly deferred by the maintainer. Four Updates controls ran in the mounted GUI without exceptions; portable installation stayed disabled with `INSTALLED_WINDOWS_SQUIRREL_REQUIRED`. Release workflow `38101869261` failed during component extraction and did not publish a release; repair is in progress.
+
+The source-bound `3b9c5b4` receipt verified a full 512 MiB mounted import hash, cancellation of a second 2 GiB file at 1,419,575,296 bytes, reopening with only the completed file and its exact hash, final lock, owned-process absence and hidden-desktop closure. Cancellation latency and the final cryptographic block were not instrumented. PNG GUI decoding remains unavailable; the direct frozen-archive provider passes, while diagnostic source `1faecd9` awaits a build. All 208 feature-delivery rows remain unverified.
+
+Read the [current integration status](../../features/platform/current-integration.md), [full feature documentation](../../features/README.md), [native update controller](../../features/release/native-update-controller.md) and [transfer lifecycle](../../features/storage/transfer-lifecycle.md) for complete behavior and limits. Historical sections below retain their original source bindings and do not establish current acceptance.
+
+
 ## Current delivery and unfinished acceptance, 2026-10-10 UTC
 
 Main source `761e5423fa9c6ea1f988428771fc3a537906a665` contains the reviewed per-plan tuple preparation repair from `8b74984bb0e44c00e5a1008009122b497ee85956`. Documentation run `38070180659` succeeded and deployment `6984035573` serves this exact main source. All 52 live files matched the actual deployment archive, SHA-256 `31efdb5b4cca6ba35d250d794b48f4780a27192011818b8ae1a8a8982989b144`. The inventory contains 18 complete articles including two wiki pages, 73 article anchors, 27 HTML routes and 873 checked links. Eight excluded paths returned 404. The stored repository homepage is exactly https://ding-ding-projects.github.io/material-file-encryptor/ .
