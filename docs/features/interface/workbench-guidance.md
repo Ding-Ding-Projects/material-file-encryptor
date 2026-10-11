@@ -53,3 +53,11 @@ Find named static appearance samples. Search changes comparison discovery only, 
 ### preview
 
 Inspect a supplied state snapshot. The sample is not a live interaction or completed action. No private input value is copied. Reopen comparison to obtain a fresh snapshot.
+
+### tool-search-clear
+
+Clear the original scoped drawing query and return focus to its editable input. Disabled or read-only inputs remain unchanged. This restores discovery without changing the drawing.
+
+### preview-search-clear
+
+Clear the original state query to restore all supplied samples. It does not apply any sample to the target. A disabled or read-only query cannot be cleared.

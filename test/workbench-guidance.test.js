@@ -22,7 +22,7 @@ async function finish(module){module.open();const panel=module.host.shadowRoot.c
 const help=(workbench,key)=>workbench.guidance.find(module=>module.host.dataset.guidanceId.startsWith('workbench:'+key+':'));
 
 test('authored workbench inventory has distinct bilingual context and exact article anchors',()=>{
- const required=['drawing','apply','clear','guide-x','guide-y','guide-edit','guide-remove','tool-search','preview-search','preview'];
+ const required=['drawing','apply','clear','guide-x','guide-y','guide-edit','guide-remove','tool-search','preview-search','preview','tool-search-clear','preview-search-clear'];
  assert.deepEqual(WORKBENCH_GUIDANCE.map(row=>row.key),required);assert.equal(new Set(WORKBENCH_GUIDANCE.map(row=>row.purpose)).size,required.length);
  const validate=rows=>{for(const key of required){const row=rows.find(row=>row.key===key);assert.ok(row);for(const field of ['purpose','options','default','effects','example','validation','recovery']){assert.ok(row[field]);assert.ok(WORKBENCH_GUIDANCE_COPY[row[field]]);}assert.equal(workbenchDescriptor(key).sourceId,'docs/features/interface/workbench-guidance.md');assert.ok(workbenchDescriptor(key).help.endsWith('#'+key));}};
  validate(WORKBENCH_GUIDANCE);for(const key of required)assert.throws(()=>validate(WORKBENCH_GUIDANCE.filter(row=>row.key!==key)));
@@ -54,3 +54,10 @@ test('state comparisons omit target text and values, preserve unrelated sheets a
  const {doc,host}=scene(),target=doc.createElement('input');target.value='secret value';target.textContent='private child text';const unrelated={};doc.adoptedStyleSheets=[unrelated];let registered=0,disposed=0;
  const preview=mountStatePreviews(host,{target,states:[{name:'normal',properties:{color:'#123456'}}],attachSearch:()=>()=>disposed++,registerCommands(){registered++;return()=>disposed++;}});assert.doesNotMatch(host.textContent,/secret value|private child text/);assert.equal(doc.adoptedStyleSheets.length,2);assert.equal(help(preview,'preview').host.shadowRoot.children.at(-1).hidden,true);preview.destroy();assert.deepEqual(doc.adoptedStyleSheets,[unrelated]);assert.equal(disposed,registered+1);
 });
+
+test('guidance targets the visible scoped search and clear uses its real query consumer',async()=>{
+ const {doc,host}=scene();let changes=0,disposed=0;const workbench=mountSelectionWorkbench(host,{attachSearch(field){const search=doc.createElement('mfe-search');search.input=doc.createElement('md-outlined-text-field');search.query='guide';search.input.value='guide';search.emitChange=()=>changes++;field.hidden=true;field.before(search);return()=>{disposed++;search.remove();};}});
+ const target=host.querySelector('mfe-search'),module=help(workbench,'tool-search');assert.equal(target.parentNode.children[target.parentNode.children.indexOf(target)-1],module.host);button(host,'Clear drawing tool search').click();await settle();assert.equal(target.query,'');assert.equal(target.input.value,'');assert.equal(changes,1);target.input.value='readonly';target.query='readonly';target.input.readOnly=true;button(host,'Clear drawing tool search').click();await settle();assert.equal(target.query,'readonly');assert.equal(changes,1);workbench.destroy();assert.equal(disposed,1);
+});
+
+test('every authored concept resolves an exact anchor in both complete articles',async()=>{const {readFile}=await import('node:fs/promises');for(const file of ['workbench-guidance.md','workbench-guidance.zh-HK.md']){const text=await readFile(new URL('../docs/features/interface/'+file,import.meta.url),'utf8');for(const row of WORKBENCH_GUIDANCE)assert.ok(text.replaceAll('\r\n','\n').includes('### '+row.key+'\n'),file+': '+row.key);}});
