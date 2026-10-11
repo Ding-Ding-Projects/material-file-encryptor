@@ -8608,6 +8608,92 @@
           "declaredScope": "Roblox/game projects only"
         }
       }
+    },
+    {
+      "id": "minecraft-server-manager",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [
+        "src/features/server-manager/local-process.js",
+        "src/features/server-manager/configuration.js",
+        "src/renderer/features/server-manager/configuration-controls.js"
+      ],
+      "documentation": [
+        "docs/features/server-manager/foundation.md"
+      ],
+      "localization": [
+        "docs/features/server-manager/foundation.zh-HK.md"
+      ],
+      "tests": [
+        "test/server-manager.test.js",
+        "test/server-manager-local-process.test.js"
+      ],
+      "evidence": [],
+      "reason": "Conditional local process foundation and configuration primitives only. Full interactive management, provider installation and real server acceptance remain incomplete.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "sourceReview": {
+        "baseline": "ac8fcbc2c81a126bde7c374694d666d7603752e8",
+        "readyCandidates": [
+          "42b95a51c84d68a3a5e0d4174788787680dbea2e"
+        ],
+        "scope": "Reviewed conditional source foundation only; no server or rendered acceptance."
+      },
+      "persistence": [
+        "src/features/server-manager/configuration.js"
+      ],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "minecraft-server-manager",
+          "declaredScope": "User-facing product surface"
+        }
+      }
+    },
+    {
+      "id": "minecraft-server-manager",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [
+        "docs/site/publication.mjs"
+      ],
+      "documentation": [
+        "docs/features/server-manager/foundation.md"
+      ],
+      "localization": [
+        "docs/features/server-manager/foundation.zh-HK.md"
+      ],
+      "tests": [
+        "test/server-manager.test.js",
+        "test/server-manager-local-process.test.js"
+      ],
+      "evidence": [],
+      "reason": "Deployed article source and static documentation boundary only. Full interactive server management and real browser acceptance remain incomplete.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "sourceReview": {
+        "baseline": "ac8fcbc2c81a126bde7c374694d666d7603752e8",
+        "readyCandidates": [
+          "42b95a51c84d68a3a5e0d4174788787680dbea2e"
+        ],
+        "scope": "Reviewed conditional source foundation only; no server or rendered acceptance."
+      },
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "minecraft-server-manager",
+          "declaredScope": "User-facing product surface"
+        }
+      }
     }
   ],
   "referenceSources": {
@@ -8712,7 +8798,7 @@
     "src/main/ollama-provenance.js": "2903fc50b23913330c30d884618891260adccd09",
     "docs/features/ollama/release-provenance.md": "2903fc50b23913330c30d884618891260adccd09",
     "test/ollama-provenance.test.js": "2903fc50b23913330c30d884618891260adccd09",
-    "docs/site/publication.mjs": "37fa47a209057f08a60f85510f6852ad7f8823c7",
+    "docs/site/publication.mjs": "ac8fcbc2c81a126bde7c374694d666d7603752e8",
     "docs/features/desktop/runtime-evidence.md": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "test/site-publication.test.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "scripts/local-headless-desktop-check.mjs": "37fa47a209057f08a60f85510f6852ad7f8823c7",
@@ -8777,6 +8863,13 @@
     "scripts/check-vocabulary.mjs": "e824003bb9747068efe735dda97dee913bb4318b",
     ".githooks/pre-push": "e824003bb9747068efe735dda97dee913bb4318b",
     "docs/features/platform/instruction-currency.md": "e824003bb9747068efe735dda97dee913bb4318b",
-    "test/check-vocabulary.test.js": "e824003bb9747068efe735dda97dee913bb4318b"
+    "test/check-vocabulary.test.js": "e824003bb9747068efe735dda97dee913bb4318b",
+    "src/features/server-manager/local-process.js": "42b95a51c84d68a3a5e0d4174788787680dbea2e",
+    "src/features/server-manager/configuration.js": "42b95a51c84d68a3a5e0d4174788787680dbea2e",
+    "src/renderer/features/server-manager/configuration-controls.js": "42b95a51c84d68a3a5e0d4174788787680dbea2e",
+    "docs/features/server-manager/foundation.md": "42b95a51c84d68a3a5e0d4174788787680dbea2e",
+    "docs/features/server-manager/foundation.zh-HK.md": "42b95a51c84d68a3a5e0d4174788787680dbea2e",
+    "test/server-manager.test.js": "42b95a51c84d68a3a5e0d4174788787680dbea2e",
+    "test/server-manager-local-process.test.js": "42b95a51c84d68a3a5e0d4174788787680dbea2e"
   }
 }

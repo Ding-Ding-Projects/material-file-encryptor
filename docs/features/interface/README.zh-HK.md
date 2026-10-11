@@ -29,3 +29,5 @@
 - [選用控制導引同獨立說明](settings-guidance.zh-HK.md)
 
 - [巢狀外觀控制項指引](nested-appearance-guidance.zh-HK.md)
+
+- [本機字型中繼資料同可變軸](font-metadata.zh-HK.md)
