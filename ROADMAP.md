@@ -511,3 +511,11 @@
 - [ ] Complete retained-profile cleanup and the full audit: automatic approval review rejected deletion; profiles remain retained and no alternate route is attempted.
 - [ ] Verify large v1.373.1 package bytes, installer and installed update; normal release metadata/provenance/RELEASES are verified separately.
 - [ ] Complete the wider language/theme/scale matrix and current-image promotion; the bounded diagram result does not certify these outcomes.
+## Ollama source incorporation preparation, 2026-10-12
+
+- [x] Prepare the finite accepted `412a217` source contribution on main baseline `660dd563`, with independent exact comparison of 30 dedicated files and reviewed shared wiring.
+- [x] Preserve main's documentation publisher and merge only the related article inventory and language bindings.
+- [ ] Run the mapped 12-file JavaScript regression queue serially on the preserved candidate.
+- [ ] Build and verify the resulting main candidate through its exact root entrypoints.
+- [ ] Complete genuine `412a217` one-click GUI verification after the unchanged memory-admission floor permits it; retain that verdict separately from the prepared main candidate.
+- [ ] Verify source-bound main installation/runtime and interface behavior before claiming delivery.

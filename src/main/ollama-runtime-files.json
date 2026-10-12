@@ -1,0 +1,424 @@
+{
+  "schemaVersion": 1,
+  "archives": [
+    {
+      "architecture": "x64",
+      "version": "v0.40.3",
+      "sourceUrl": "https://github.com/ollama/ollama/releases/download/v0.40.3/ollama-windows-amd64.zip",
+      "archiveSha256": "e5ecff02dfc7cae8ddf6d6b7a7ac5f727ffeedf4491f44ae75ff5b0820dbbbd5",
+      "expandedBytes": 1941752691,
+      "files": [
+        {
+          "path": "lib/ollama/CPP_HTTPLIB_LICENSE",
+          "bytes": 1097,
+          "sha256": "bb546eae5924d8ee842e0e567e6d533c5824bdebccf605f99a5b3429034e6697"
+        },
+        {
+          "path": "lib/ollama/CUDNN_LICENSE.txt",
+          "bytes": 1169,
+          "sha256": "b6fe452605fe29245f0cbafa724b42df94a5e170bedb9d45bc9cfaa4883ad907"
+        },
+        {
+          "path": "lib/ollama/CUTLASS_LICENSE.txt",
+          "bytes": 1888,
+          "sha256": "48eb34a9124af8fdd2ad1858a64be9827ebc42e5389c6dd4b5a93e411ac7e693"
+        },
+        {
+          "path": "lib/ollama/DLFCN_WIN32_COPYING",
+          "bytes": 1040,
+          "sha256": "4cc7ac997b9293db5919baf630100cc09b3508efdfe6a6611c95511fb863b3c7"
+        },
+        {
+          "path": "lib/ollama/DLPACK_LICENSE",
+          "bytes": 11546,
+          "sha256": "9bda2385fa325d1df6dc39772eba3cc6d07bdfaf2c656cd644cd29f7509514fd"
+        },
+        {
+          "path": "lib/ollama/FMT_LICENSE",
+          "bytes": 1458,
+          "sha256": "25b5db04aa6070c12ac518b91cbd0a59725c050ecb091456e6ebc3d3eeb369cf"
+        },
+        {
+          "path": "lib/ollama/GO_LICENSE",
+          "bytes": 166573,
+          "sha256": "7fee9b29a1541b5a9ec03c5d57e095ad280f67a824cf3818445ba6996f86fe85"
+        },
+        {
+          "path": "lib/ollama/JSON_LICENSE.MIT",
+          "bytes": 1076,
+          "sha256": "86b998c792894ccb911a1cb7994f7a9652894e7a094c0b5e45be2f553f45cf14"
+        },
+        {
+          "path": "lib/ollama/LLAMA_CPP_LICENSE",
+          "bytes": 1099,
+          "sha256": "bcd8ec749126d45cb06737d0690295d73df4b6e7e194205bcf91190368f27285"
+        },
+        {
+          "path": "lib/ollama/LLAMA_CPP_VENDORS_LICENSE",
+          "bytes": 7424,
+          "sha256": "7547ae6372a35e7382898dd9f5519ebc16e93095f69c2466b5b74b617c33d4da"
+        },
+        {
+          "path": "lib/ollama/MLX_C_LICENSE",
+          "bytes": 1088,
+          "sha256": "d8d63c7fa57071d80d30116d014e4189c52ef4cb2d1671f6d848e78d9f6cfad0"
+        },
+        {
+          "path": "lib/ollama/MLX_LICENSE",
+          "bytes": 1087,
+          "sha256": "e93675e97d080c4fcfef6dd530448b9a6fd7c1ad43c736d593537079cd669d3d"
+        },
+        {
+          "path": "lib/ollama/NVTX3_LICENSE.txt",
+          "bytes": 12706,
+          "sha256": "c3b19baa37cf18bac07b65700824acadcfa617316f02af10d3852ed20f4f6ab8"
+        },
+        {
+          "path": "lib/ollama/PICOJSON_LICENSE",
+          "bytes": 1441,
+          "sha256": "02f4aea46c66a0c110bb4fd995817db2dc2af0b57c18336b367e6bc9c27eb91f"
+        },
+        {
+          "path": "lib/ollama/XGRAMMAR_LICENSE",
+          "bytes": 11558,
+          "sha256": "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c6"
+        },
+        {
+          "path": "lib/ollama/XGRAMMAR_NOTICE",
+          "bytes": 57,
+          "sha256": "93971ad2b725c8398df171dbd7c8145fc9d11bf016294aa69a8a783b55a40775"
+        },
+        {
+          "path": "lib/ollama/cuda_v12/concrt140.dll",
+          "bytes": 311688,
+          "sha256": "b4df10daba97ee5e20f18e0a43f0c399bfaf462a04acdf4edd2d662887a38404"
+        },
+        {
+          "path": "lib/ollama/cuda_v12/cublas64_12.dll",
+          "bytes": 113720712,
+          "sha256": "c92ed1f48272b6b08123f00174c200f87de10728d781e022d3955945223ccf2a"
+        },
+        {
+          "path": "lib/ollama/cuda_v12/cublasLt64_12.dll",
+          "bytes": 692449672,
+          "sha256": "04c8a6439afe8fbd4806c6f22cc430cccfb65bbaa9466dc77c0d0204b7b97044"
+        },
+        {
+          "path": "lib/ollama/cuda_v12/cudart64_12.dll",
+          "bytes": 582024,
+          "sha256": "26767316a00753ab780862c84a249e9407dcb5d6d8684ec1c08072866db38dc8"
+        },
+        {
+          "path": "lib/ollama/cuda_v12/ggml-cuda.dll",
+          "bytes": 354065288,
+          "sha256": "219635c567d2f63c37f59cb20f66fced2c9148c4d8cf9d5ad692a985614126b6"
+        },
+        {
+          "path": "lib/ollama/cuda_v12/msvcp140.dll",
+          "bytes": 545160,
+          "sha256": "63275ea3fd0857ccdcc13c65b8c76b6d32255bdae29c46289ca9467f526527bb"
+        },
+        {
+          "path": "lib/ollama/cuda_v12/msvcp140_1.dll",
+          "bytes": 23432,
+          "sha256": "1ad5e68fad56f70a6c48e7a311d280f2a0b9ef4c1e0c3e268294263e480383ac"
+        },
+        {
+          "path": "lib/ollama/cuda_v12/msvcp140_2.dll",
+          "bytes": 267656,
+          "sha256": "7255fade0161a72771c1829c1b97750cce6996edf767e6fa17ae102e2e07c228"
+        },
+        {
+          "path": "lib/ollama/cuda_v12/msvcp140_atomic_wait.dll",
+          "bytes": 37768,
+          "sha256": "cd3f877fdb13755879690c6988891864617f302cc2cae6e3430417d17b8a8fb8"
+        },
+        {
+          "path": "lib/ollama/cuda_v12/msvcp140_codecvt_ids.dll",
+          "bytes": 19336,
+          "sha256": "d110cab2b48527b4f585c19e884c9a3d0736508d64eb1e97d3fb044a582ee2a5"
+        },
+        {
+          "path": "lib/ollama/cuda_v12/vccorlib140.dll",
+          "bytes": 339848,
+          "sha256": "0b56a2e67e27af0e527e3859c4072c138016ec07d2951c3c8a329246ebe6c269"
+        },
+        {
+          "path": "lib/ollama/cuda_v12/vcruntime140.dll",
+          "bytes": 112008,
+          "sha256": "e82aee022c0c5a22d33fb8cbe39f49a6b581b9e0cf26394f7ad5fc79bd204909"
+        },
+        {
+          "path": "lib/ollama/cuda_v12/vcruntime140_1.dll",
+          "bytes": 37256,
+          "sha256": "d17d72825f75243d5947e5b33cb692525e84925e190bd794118006baba9f15fe"
+        },
+        {
+          "path": "lib/ollama/cuda_v12/vcruntime140_threads.dll",
+          "bytes": 25992,
+          "sha256": "49d5735f8f4d542f95d9749cc86c361ea7b54141810e7258bc03aeb64a50f571"
+        },
+        {
+          "path": "lib/ollama/cuda_v13/concrt140.dll",
+          "bytes": 311688,
+          "sha256": "057245775deb4271a41fffb70b5b201fe1b07a139f23e4a7e85b552a31f7e2dd"
+        },
+        {
+          "path": "lib/ollama/cuda_v13/cublas64_13.dll",
+          "bytes": 50285960,
+          "sha256": "7958fbf7577d4b686ee6d18339373e4d1f120aa8f3b76da79c1b48eb76f76a57"
+        },
+        {
+          "path": "lib/ollama/cuda_v13/cublasLt64_13.dll",
+          "bytes": 477894536,
+          "sha256": "cf64e6f6eb7ea25f10bc35cf2d90605574d2d5a7dc68d25ef031500b10f49f4e"
+        },
+        {
+          "path": "lib/ollama/cuda_v13/ggml-cuda.dll",
+          "bytes": 134465928,
+          "sha256": "9f8b046a5e8e9bd11d6bc879958cae17c056ac55074602c6e4d39a8b38b8f7df"
+        },
+        {
+          "path": "lib/ollama/cuda_v13/msvcp140.dll",
+          "bytes": 545160,
+          "sha256": "298f28371f1e0a0a6c9a0fac59181ff982aa598f5f7d372cd1f7840f9e49b817"
+        },
+        {
+          "path": "lib/ollama/cuda_v13/msvcp140_1.dll",
+          "bytes": 23432,
+          "sha256": "09af8b0d17ef5c2f393e3930d9859880291ced7b9ee133c537688e243f5a7027"
+        },
+        {
+          "path": "lib/ollama/cuda_v13/msvcp140_2.dll",
+          "bytes": 267656,
+          "sha256": "2cdacefb4b9476f447b4e6503e421c92c9ce1d2b05d460e7bb111e003f39266b"
+        },
+        {
+          "path": "lib/ollama/cuda_v13/msvcp140_atomic_wait.dll",
+          "bytes": 37768,
+          "sha256": "68332689251ba3e217a57ac1b339b02d0bd1a431887d5d6967a8422f6d5a98dd"
+        },
+        {
+          "path": "lib/ollama/cuda_v13/msvcp140_codecvt_ids.dll",
+          "bytes": 19336,
+          "sha256": "e2817775fb263f788a8b6bd934e1aa6120908687a37e85022dce1845207eb817"
+        },
+        {
+          "path": "lib/ollama/cuda_v13/vccorlib140.dll",
+          "bytes": 339848,
+          "sha256": "6e88f2752b5a44bec3b228d05eae7370bec94b3038aa0b4745c4114104008b93"
+        },
+        {
+          "path": "lib/ollama/cuda_v13/vcruntime140.dll",
+          "bytes": 112008,
+          "sha256": "0e55446ad56def4679b1a58e7bd8e148b0ac1abb39cfcec3b9e4e2f21cbe5a66"
+        },
+        {
+          "path": "lib/ollama/cuda_v13/vcruntime140_1.dll",
+          "bytes": 37256,
+          "sha256": "16226d3daf3b194416016bed3731cbe2275555ae350c550e1086edfcd80975f7"
+        },
+        {
+          "path": "lib/ollama/cuda_v13/vcruntime140_threads.dll",
+          "bytes": 25992,
+          "sha256": "83a06a73c171d5cd4a77ce0054764a3d6468b7e34d00d7e49c07e3f2f8160cc7"
+        },
+        {
+          "path": "lib/ollama/ggml-base.dll",
+          "bytes": 850312,
+          "sha256": "077806c667b84b26b6a076d22d34239c36a13d66d86c73b9dd0562e624115163"
+        },
+        {
+          "path": "lib/ollama/ggml-cpu-alderlake.dll",
+          "bytes": 1756552,
+          "sha256": "b0f973139ddc96f48b0e4a4e27c84591c7c8c130f398c09d1daf7a6a35f7bb8c"
+        },
+        {
+          "path": "lib/ollama/ggml-cpu-cannonlake.dll",
+          "bytes": 2032008,
+          "sha256": "58b62607fc503d3888b884082d69279e25b80abe45bc754641cc059765350b03"
+        },
+        {
+          "path": "lib/ollama/ggml-cpu-cascadelake.dll",
+          "bytes": 2014600,
+          "sha256": "2135a4e3cbb32c8e844e53b40c18872e04b04a2eeaa8c99969b986701704ed8f"
+        },
+        {
+          "path": "lib/ollama/ggml-cpu-cooperlake.dll",
+          "bytes": 2017672,
+          "sha256": "3ee016609efc2081f1291b1dcf71b4ea0104fb4d607ce0a500104ce2888d1e23"
+        },
+        {
+          "path": "lib/ollama/ggml-cpu-haswell.dll",
+          "bytes": 1764232,
+          "sha256": "592d6901e757d4d3668d3729f0565f92d287a995fcd3c3db9a4d2126a2a48693"
+        },
+        {
+          "path": "lib/ollama/ggml-cpu-icelake.dll",
+          "bytes": 2022280,
+          "sha256": "7f03bbcc1dfe43959a49543c58670722430ad62ed99e9d34aa28aed798602e39"
+        },
+        {
+          "path": "lib/ollama/ggml-cpu-ivybridge.dll",
+          "bytes": 1648520,
+          "sha256": "20031721e10b1710d54caa7c0ba1d3fa116da10786b2793f779286515d512d7b"
+        },
+        {
+          "path": "lib/ollama/ggml-cpu-piledriver.dll",
+          "bytes": 1650568,
+          "sha256": "4e5ceed61c09a439d31b71b4bce85343679e94c1c17433a6b9cf6f457543255a"
+        },
+        {
+          "path": "lib/ollama/ggml-cpu-sandybridge.dll",
+          "bytes": 1628552,
+          "sha256": "24299c72b755cf25bb625b36e0b2295df7a4ffd60a0901ed0eccdb05fbb0c6fd"
+        },
+        {
+          "path": "lib/ollama/ggml-cpu-sapphirerapids.dll",
+          "bytes": 2319240,
+          "sha256": "8ba83f77b1abbb8dafec758b1a1aa848956dc3e79b839c012e4794c7782af088"
+        },
+        {
+          "path": "lib/ollama/ggml-cpu-skylakex.dll",
+          "bytes": 2024840,
+          "sha256": "a65b77eaee052e68178cd969c09a83ebf46067775808f831bfdbb92ec558ebc6"
+        },
+        {
+          "path": "lib/ollama/ggml-cpu-sse42.dll",
+          "bytes": 1257352,
+          "sha256": "5aa176176dd07fc49d93980063bfcc0d25d07d84e01ceb76905bf5d0f1f9f280"
+        },
+        {
+          "path": "lib/ollama/ggml-cpu-x64.dll",
+          "bytes": 1245064,
+          "sha256": "7caa7909e4d5cd1148c9422f6f7b8ca0bff8159ec9a82e41d60437d1777d71bb"
+        },
+        {
+          "path": "lib/ollama/ggml-cpu-zen4.dll",
+          "bytes": 2024840,
+          "sha256": "1d826f0d2a9c8456749ebbfe15ddea569f0e0a15fcf28ccb6f8784d29f41351f"
+        },
+        {
+          "path": "lib/ollama/ggml.dll",
+          "bytes": 52104,
+          "sha256": "8f5db3b47d204b6ccb5eee7ab7821d72a299f966fc05e2b4f437806bb70b65f1"
+        },
+        {
+          "path": "lib/ollama/libc++.dll",
+          "bytes": 1767816,
+          "sha256": "5fab271586373d0a87b863d2fa584578566d8868677de18c74ba6457600f6d27"
+        },
+        {
+          "path": "lib/ollama/libllama-common.dll",
+          "bytes": 4188040,
+          "sha256": "9a7fb6689e058ba421eb784521bda8faf5c626e96ee340c2d084e7a8ef36e836"
+        },
+        {
+          "path": "lib/ollama/libllama-quantize-impl.dll",
+          "bytes": 83848,
+          "sha256": "d9490b36bbc138403f6f1c1d4ce4f8ebfe24c4b57def9ed3874710690f9bc6bd"
+        },
+        {
+          "path": "lib/ollama/libllama-server-impl.dll",
+          "bytes": 2582408,
+          "sha256": "3f5d10637e0b47f82e282f6eb4d439005fbe2a0b2b41eb023994eae5f6e43b2d"
+        },
+        {
+          "path": "lib/ollama/libllama.dll",
+          "bytes": 3558280,
+          "sha256": "2d27f0eeec81d6c40e621922cbeec70e9867be3445f95da1cd30b0ca7945ba57"
+        },
+        {
+          "path": "lib/ollama/libmtmd.dll",
+          "bytes": 1428360,
+          "sha256": "e58d22ce57673277bb70f9f5569c87dff42bf57ba05ab1a6e80f18a23a4f55bb"
+        },
+        {
+          "path": "lib/ollama/libomp.dll",
+          "bytes": 965000,
+          "sha256": "e6f0e65c9fbdbd8d2c9e681c710a80d26906e3932cbbe1e5775446e89923ec9f"
+        },
+        {
+          "path": "lib/ollama/libunwind.dll",
+          "bytes": 107912,
+          "sha256": "a13a088ca16e2f786b9aa11d3e2847b579cee68ecd6794f97a4fb4988c630d80"
+        },
+        {
+          "path": "lib/ollama/libwinpthread-1.dll",
+          "bytes": 390024,
+          "sha256": "9ffbf12808c7120658b45dcb9b36f8876f9859d24695cdebb8d31b64524c6dba"
+        },
+        {
+          "path": "lib/ollama/llama-quantize.exe",
+          "bytes": 22920,
+          "sha256": "65eb4708b9f64285ddf753e1af0616960df9f1710240579920f18be11a1dff16"
+        },
+        {
+          "path": "lib/ollama/llama-server.exe",
+          "bytes": 22920,
+          "sha256": "bba0d7777785e8ad7a7d88885127be00dfff49d0016d1287d6f7075a8626200d"
+        },
+        {
+          "path": "lib/ollama/vulkan/concrt140.dll",
+          "bytes": 311688,
+          "sha256": "8de6675330f5b85d1c89ef7071dba70b073173140da43f41faf74ad51e07e657"
+        },
+        {
+          "path": "lib/ollama/vulkan/ggml-vulkan.dll",
+          "bytes": 43663752,
+          "sha256": "00b1554af9e5592885af877b3f49ecdf9edd2f0bfccb5b3c86b10de46742867a"
+        },
+        {
+          "path": "lib/ollama/vulkan/msvcp140.dll",
+          "bytes": 545160,
+          "sha256": "da0d1ec1b3a166a71693c57157943e6495bd130401051b8adcbc49192635f8ea"
+        },
+        {
+          "path": "lib/ollama/vulkan/msvcp140_1.dll",
+          "bytes": 23432,
+          "sha256": "4bb6bbf49a27be6da2ca008953a73684624111348db619dbedc5c9bdf2222602"
+        },
+        {
+          "path": "lib/ollama/vulkan/msvcp140_2.dll",
+          "bytes": 267656,
+          "sha256": "48d069a92dcf93e7c77bebc0d16a6f4bac019539a995b97b105bcff4bb69c796"
+        },
+        {
+          "path": "lib/ollama/vulkan/msvcp140_atomic_wait.dll",
+          "bytes": 37768,
+          "sha256": "f0f2936246101958ed6de26231b2ccb794fb50d28f2fc444dada95a8c516c811"
+        },
+        {
+          "path": "lib/ollama/vulkan/msvcp140_codecvt_ids.dll",
+          "bytes": 19336,
+          "sha256": "dd12cd99eb3fb3d75c631a3ca7dcf376dbd69fe5ed18bf84627f33bf74693065"
+        },
+        {
+          "path": "lib/ollama/vulkan/vccorlib140.dll",
+          "bytes": 339848,
+          "sha256": "64e79f255e1eef196075dc974445c112004eeafb70ec880572530d9173fbfe40"
+        },
+        {
+          "path": "lib/ollama/vulkan/vcruntime140.dll",
+          "bytes": 112008,
+          "sha256": "bd99912b09d7ece511986215862e578414ca841c0e7c350d15334cca511ae1cb"
+        },
+        {
+          "path": "lib/ollama/vulkan/vcruntime140_1.dll",
+          "bytes": 37256,
+          "sha256": "4cc993bee6b6befe7d01ce4a12567b79ae91d3f38befdb0ecdee986126d77e9b"
+        },
+        {
+          "path": "lib/ollama/vulkan/vcruntime140_threads.dll",
+          "bytes": 25992,
+          "sha256": "61ed953e0c1c69748642a313941d8bc610903b83ee705c17f7c248fc301e42c1"
+        },
+        {
+          "path": "ollama.exe",
+          "bytes": 27815816,
+          "sha256": "61b44cfb6d3aa2393a4a731af33c9329bedd58b1c454bdebd185d4a607d0303d"
+        }
+      ]
+    }
+  ]
+}

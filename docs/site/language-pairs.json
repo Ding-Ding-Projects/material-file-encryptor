@@ -175,8 +175,8 @@
     {
       "source": "docs/features/ollama/README.md",
       "translation": "docs/features/ollama/README.zh-HK.md",
-      "sourceSha256": "9248073388314dafb347042334c49059a1505a962a4fe83f6d5e40ed7e600fda",
-      "translationSha256": "cd02152e2464a4e7550b37d5da9b63e83d5476b254a5fdcc93959a05318bda2d"
+      "sourceSha256": "f28ce1b5edadb610ccd7b8c6855a58d69a7fc8559ae44416adba7d477dbec8ce",
+      "translationSha256": "494a172b5b62409467ac7ea8718b57a3632989ec4a1044b799848e8166d7ac01"
     },
     {
       "source": "docs/features/ollama/local-models.md",
@@ -495,6 +495,12 @@
       "translation": "docs/features/platform/packaged-documentation-cache.zh-HK.md",
       "sourceSha256": "e7ad3455e61d47dbf7b5ab634f5c6d54b54da43d0a76914f12b5430acc4236d7",
       "translationSha256": "b3f8b3aae92caaeac27ce02bb1203f85d1361cd1579336634dfbae8db6f307e7"
+    },
+    {
+      "source": "docs/features/ollama/managed-runtime-installation.md",
+      "translation": "docs/features/ollama/managed-runtime-installation.zh-HK.md",
+      "sourceSha256": "71525bd00175d51e610d72a47d2a93f95f3f74e01ddec73072be8dc5415cfc6b",
+      "translationSha256": "bd05aaa87ed612860aff26dbcbff9e7ec6cc50e5d6107e60ea11500f5d0243b5"
     }
   ]
 }

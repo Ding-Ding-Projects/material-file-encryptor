@@ -6,20 +6,21 @@ import { OfficialCatalog,reconcile } from './catalog.js';
 import { detectHardware,assessFit,modelEvidence } from './hardware.js';
 import { ProfileManager } from './profiles.js';
 import {createRuntimeController,probeOllamaHealth} from './runtime.js';
-export const OLLAMA_ACTIONS=Object.freeze(['status','runtimeInstall','runtimeStart','chooseRuntimeExecutable','registerProfile','catalog','refreshCatalog','models','show','deleteModel','copyModel','generate','hardware','cart','addToCart','removeFromCart','startPulls','cancel','retryPull','chat','sessions','session','renameSession','deleteSession','exportSession','profiles','preflight','launch','snapshots','restore']);
+export const OLLAMA_ACTIONS=Object.freeze(['status','runtimeInstall','runtimeInstallStatus','runtimeInstallCancel','runtimeStart','runtimeStop','chooseRuntimeExecutable','registerProfile','catalog','refreshCatalog','models','show','deleteModel','copyModel','generate','hardware','cart','addToCart','removeFromCart','startPulls','cancel','retryPull','chat','sessions','session','renameSession','deleteSession','exportSession','profiles','preflight','launch','snapshots','restore']);
 export function redactChat(text) {return text.replace(/(?:[A-Za-z]:[\\/]|\/home\/|\/Users\/)[^\s]+/g,'[private path]').replace(/\b(?:password|passwd|secret|api[_ -]?key|token|authorization)\s*[:=]\s*[^\s,;]+/gi,'[credential redacted]').replace(/\bBearer\s+\S+/gi,'[credential redacted]').replace(/\b(?:sk-|ghp_|github_pat_)[A-Za-z0-9_-]+\b/g,'[credential redacted]').replace(/\b[A-Z][A-Z_0-9]{2,}=[^\s]+/g,'[environment value redacted]');}
-const HELP=Object.freeze({title:'Local Ollama recovery',steps:['Install the official Ollama desktop application with its verified platform installer if it is missing. Installation is never started automatically.','For a detected stopped runtime, choose Start verified local runtime and review the confirmation. Startup is loopback-only with cloud features disabled.','Choose Check runtime again. A successful version response confirms API health, not model compatibility.','If health fails, inspect the Ollama application logs using its own troubleshooting controls. No arbitrary command is required here.','Return to Model Store or Local chat after a successful check. Cached catalog, saved sessions, and profiles remain available offline.'],officialInstaller:'https://ollama.com/download/windows',boundary:'This suite never automatically installs or starts Ollama and never exposes it over the network.'});
+const HELP=Object.freeze({title:'Local Ollama recovery',steps:['Choose Install managed runtime to download and verify the pinned official complete CLI archive. Review the confirmation first. Installation never starts the runtime.','For a detected stopped runtime, choose Start verified local runtime and review the confirmation. Startup is loopback-only with cloud features disabled.','Choose Check runtime again. A successful version response confirms API health, not model compatibility.','If health fails, use the runtime status and its own troubleshooting controls. No arbitrary command is required here.','Return to Model Store or Local chat after a successful check. Cached catalog, saved sessions, and profiles remain available offline.'],officialInstaller:'https://ollama.com/download/windows',boundary:'This suite never automatically installs or starts Ollama and never exposes it over the network.'});
 export function createOllamaService({dataDir,fetchImpl=fetch,hardwareProbe,profileLauncher,verifyExecutable,validateProfile,profileHealthCheck,profileOwnedRoots=[],runtimeController,profilePicker,loopbackPort=11434}={}) {
   if(!dataDir||!path.isAbsolute(dataDir))throw new Error('An absolute private data directory is required.');
   const client=new OllamaClient({fetchImpl,loopbackPort}),catalogClient=new OfficialCatalog({fetchImpl}),profiles=new ProfileManager({launcher:profileLauncher,verifyExecutable,validateProfile,healthCheck:profileHealthCheck,ownedRoots:profileOwnedRoots,onStateChange:()=>persist()});
   const runtime=runtimeController||createRuntimeController({loopbackPort,apiProbe:()=>probeOllamaHealth(fetchImpl,loopbackPort)});
-  const listeners=new Set(),operations=new Map(),metadataByTag=new Map(),pendingRequests=new Map();let catalog=null,cart=[],sessions=[],installed=[],running=[],hardware=null,loadPromise=null,reservingChat=false,saveQueue=Promise.resolve(),closing=false,cancelling=false,cancellationPromise=null;
+  const listeners=new Set(),operations=new Map(),metadataByTag=new Map(),pendingRequests=new Map();let catalog=null,cart=[],sessions=[],installed=[],running=[],hardware=null,loadPromise=null,reservingChat=false,saveQueue=Promise.resolve(),closing=false,cancelling=false,cancellationPromise=null,runtimeStopping=false;
   const emit=e=>{for(const listener of listeners)try{listener(e);}catch{}};
+  const stopInstallationEvents=runtime.subscribeInstallation?.(installation=>emit({type:'runtime-installation',installation}));
   const persist=()=>{const value=JSON.stringify({version:1,catalog,cart,sessions,profileState:profiles.state()});if(Buffer.byteLength(value)>32*1024*1024)throw new Error('Local state exceeds 32 MiB. Remove old sessions before continuing.');saveQueue=saveQueue.catch(()=>{}).then(async()=>{await fs.mkdir(dataDir,{recursive:true,mode:0o700});const temp=path.join(dataDir,'ollama-state.tmp');await fs.writeFile(temp,value,{mode:0o600});await fs.rename(temp,path.join(dataDir,'ollama-state.json'));});return saveQueue;};
   // Every reader and mutation joins the same initialization promise. Publishing
   // a boolean before the asynchronous read would expose empty defaults to peers.
   const load=()=>{if(!loadPromise)loadPromise=(async()=>{try{const file=path.join(dataDir,'ollama-state.json');if((await fs.stat(file)).size>32*1024*1024)throw new Error('Saved state is too large.');const s=JSON.parse(await fs.readFile(file,'utf8'));if(s.version===1){catalog=s.catalog;cart=Array.isArray(s.cart)?s.cart.slice(0,100).map(c=>({...c,state:c.state==='pulling'?'interrupted':c.state})):[];sessions=Array.isArray(s.sessions)?s.sessions.slice(0,100):[];if(s.profileState){try{await profiles.importState(s.profileState);}catch{emit({type:'storage-warning',message:'Saved external profiles did not pass current host validation and were not activated.'});}}}}catch(error){if(error.code!=='ENOENT')emit({type:'storage-warning',message:'Saved local state could not be read. The original file has been retained.'});}})();return loadPromise;};
-  const begin=async(kind,work)=>{if(closing||cancelling)throw new Error('The local model service is stopping.');if(operations.size>=4)throw new Error('Four operations are already active. Stop one before starting another.');const id=randomUUID(),controller=new AbortController(),entry={controller,kind,done:null};operations.set(id,entry);entry.done=Promise.resolve().then(()=>work(controller.signal,id)).then(result=>emit({type:'complete',operationId:id,result}),error=>emit({type:controller.signal.aborted?'cancelled':'error',operationId:id,message:controller.signal.aborted?'Operation cancelled.':error.message})).finally(()=>operations.delete(id));return {operationId:id,state:'started'};};
+  const begin=async(kind,work)=>{if(closing||cancelling||runtimeStopping)throw new Error('The local model service is stopping.');if(operations.size>=4)throw new Error('Four operations are already active. Stop one before starting another.');const id=randomUUID(),controller=new AbortController(),entry={controller,kind,done:null};operations.set(id,entry);entry.done=Promise.resolve().then(()=>work(controller.signal,id)).then(result=>emit({type:'complete',operationId:id,result}),error=>emit({type:controller.signal.aborted?'cancelled':'error',operationId:id,message:controller.signal.aborted?'Operation cancelled.':error.message})).finally(()=>operations.delete(id));return {operationId:id,state:'started'};};
   const refreshModels=async()=>{const a=await client.call('installed');const b=await client.call('running');if(!Array.isArray(a.models)||!Array.isArray(b.models)||a.models.length>50000||b.models.length>50000)throw new Error('Invalid model inventory.');installed=a.models;running=b.models;return reconcile(catalog,installed,running);};
   const tagKnown=tag=>{modelName(tag);if(!reconcile(catalog,installed,running).some(v=>v.tag===tag))throw new Error('Select a verified catalog or installed tag first.');return tag;};
   const findSession=id=>{const s=sessions.find(s=>s.id===id);if(!s)throw new Error('Session not found.');return s;};
@@ -31,8 +32,11 @@ export function createOllamaService({dataDir,fetchImpl=fetch,hardwareProbe,profi
       if(!p||typeof p!=='object'||Array.isArray(p)||Buffer.byteLength(JSON.stringify(p))>LIMITS.request)throw new Error('Invalid suite payload.');
       switch(action){
         case 'status':{const state=await runtime.inspect();return {...state,actions:{...state.actions,registerProfile:Boolean(profilePicker)},help:HELP};}
-        case 'runtimeInstall':return runtime.install({confirmed:p.confirmed===true});
-        case 'runtimeStart':return runtime.start({confirmed:p.confirmed===true});
+        case 'runtimeInstall':if(closing||cancelling||operations.size)throw new Error('Wait for active local model work to finish before installation.');return runtime.install({confirmed:p.confirmed===true,language:p.language});
+        case 'runtimeInstallStatus':return runtime.installationStatus?.()||null;
+        case 'runtimeInstallCancel':return runtime.cancelInstallation(p.operationId);
+        case 'runtimeStop':if(closing||cancelling||operations.size)throw new Error('Wait for active local model work to finish before stopping the runtime.');return runtime.stop({confirmed:p.confirmed===true});
+        case 'runtimeStart':return runtime.start({confirmed:p.confirmed===true,language:p.language});
         case 'chooseRuntimeExecutable':return runtime.chooseExecutable();
         case 'registerProfile':{if(!profilePicker)throw new Error('The host has not enabled native profile registration.');if(!['version','models','inspect'].includes(p.recipe))throw new Error('Select a registered profile recipe.');const selected=await profilePicker({recipe:p.recipe});if(!selected)return {state:'cancelled'};return profiles.registerPicked(selected);}
         case 'catalog':return {...(catalog||{variants:[],complete:false,lastSuccessfulRefresh:null}),ageMs:catalog?.lastSuccessfulRefresh?Date.now()-Date.parse(catalog.lastSuccessfulRefresh):null};
@@ -102,28 +106,30 @@ export function createOllamaService({dataDir,fetchImpl=fetch,hardwareProbe,profi
         case 'restore':return profiles.restore(p.id);
       }
     },
-    operations(){return [...operations.entries()].map(([id,op])=>({id,kind:op.kind,state:op.controller.signal.aborted?'cancelling':'running'})).concat([...pendingRequests.values()].map(kind=>({kind,state:'pending'})));},
+    operations(){return [...operations.entries()].map(([id,op])=>({id,kind:op.kind,state:op.controller.signal.aborted?'cancelling':'running'})).concat([...pendingRequests.values()].map(kind=>({kind,state:'pending'})),runtime.installationPending?[{id:runtime.installationStatus()?.operationId,kind:'runtime-installation',state:'running'}]:[]);},
     async cancelAll(){
       if(cancellationPromise)return cancellationPromise;
       cancelling=true;
       cancellationPromise=(async()=>{
         // A request admitted before cancellation may still be loading or doing
         // a metadata preflight. Drain it too, so it cannot start work afterward.
-        while(operations.size||pendingRequests.size){
+        while(operations.size||pendingRequests.size||runtime.installationPending){
           for(const op of operations.values())op.controller.abort();
-          await Promise.allSettled([...pendingRequests.keys(),...operations.values()].map(item=>item.done||item));
+          await Promise.allSettled([...pendingRequests.keys(),...operations.values()].map(item=>item.done||item).concat([runtime.cancelInstallations?.()]));
         }
         await saveQueue;
       })();
-      try{await cancellationPromise;return {state:'idle'};}finally{cancellationPromise=null;cancelling=false;}
+      try{await cancellationPromise;return {state:'idle'};}finally{cancellationPromise=null,runtimeStopping=false;cancelling=false;}
     },
-    async dispose(){closing=true;await api.cancelAll();await runtime.dispose?.();listeners.clear();},
+    async dispose(){closing=true;await api.cancelAll();await runtime.dispose?.();stopInstallationEvents?.();listeners.clear();},
   };
   const dispatch=api.request;
   api.request=(action,payload)=>{
     if(closing||cancelling)return Promise.reject(new Error('The local model service is stopping.'));
+    if(runtimeStopping&&!['status','runtimeInstallStatus'].includes(action))return Promise.reject(new Error('The owned runtime is stopping.'));
+    if(action==='runtimeStop'){if(operations.size||pendingRequests.size||runtime.installationPending)return Promise.reject(new Error('Wait for active local model work to finish before stopping the runtime.'));runtimeStopping=true;}
     const pending=dispatch(action,payload);pendingRequests.set(pending,action);
-    void pending.finally(()=>pendingRequests.delete(pending)).catch(()=>{});
+    void pending.finally(()=>{pendingRequests.delete(pending);if(action==='runtimeStop')runtimeStopping=false;}).catch(()=>{});
     return pending;
   };
   return api;
