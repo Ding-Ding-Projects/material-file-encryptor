@@ -568,5 +568,14 @@
 - [ ] Reacquire the frozen04 GUI observation lifecycle; root build exit0 and recorded-child absence do not prove full job closure or packaging.
 - [ ] Independently refute/repair offline failed-preparation restoration and obtain actual runtime evidence.
 - [ ] Complete full candidate verification and safe canonical integration.
-- [ ] Verify the complete fresh archive before processing any exact task-owned cleanup candidate.
+- [x] Verify the complete fresh product archive before processing the completed fixture cleanup candidate; fresh canonical archive remains pending.
 - [ ] Publish only independently reviewed, genuine product captures; private status captures remain excluded.
+
+## Verified preservation archive and scoped cleanup
+
+- [x] Verify the complete pre-cleanup product archive, full Git administration and separate ignored fixture image preservation.
+- [x] Remove only the completed fixture branch/worktree after current-main ancestry and ownership proof; verify local/remote absence.
+- [x] Retain all unfinished and ownership-uncertain work, with 34 product and 15 canonical worktrees remaining.
+- [ ] Verify cloud upload of the local preservation archive.
+- [ ] Complete a fresh full canonical archive before any canonical cleanup.
+- [ ] Complete the full feature, runtime, visual and installed-update goal; preservation is not product completion.
