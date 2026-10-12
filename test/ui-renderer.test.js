@@ -7,6 +7,7 @@ import os from 'node:os';
 import {createHash} from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { openRendererBrowser, serveRendererFixture } from '../scripts/test-renderer-browser.mjs';
+import {assertOwnedTouchTarget,assertReducedTouchTargetRejected} from './helpers/touch-target.js';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../src/renderer');
 const executable = process.env.CHROMIUM_PATH || (process.platform === 'linux' ? '/usr/bin/chromium' : undefined);
 
@@ -98,7 +99,9 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   for (const id of ['storage-input','cache-input','drive-letter','password-input','confirm-password','create-split-value']) {
    const input = page.locator('#'+id), clear = input.locator('md-icon-button[slot="trailing-icon"]');
    await input.fill(id==='drive-letter'?'N:':id==='create-split-value'?'12':'sample value');
-   const bounds = await clear.boundingBox(); assert.ok(bounds.width>=44 && bounds.height>=44);
+   const touchTarget=await assertOwnedTouchTarget(clear);
+   const restoredTarget=await assertReducedTouchTargetRejected(clear);
+   assert.deepEqual(restoredTarget.touch,touchTarget.touch);
    assert.equal(await clear.evaluate(el=>el.type),'button');
    await clear.focus(); await page.keyboard.press('Enter');
    assert.equal(await input.inputValue(),'');
@@ -258,9 +261,15 @@ test('scoped clear-control selectors use their actual owning wrappers', {timeout
    await input.fill('missing-entry');assert.equal(await input.inputValue(),'missing-entry');
    await (await eligible(clear)).click();assert.equal(await input.inputValue(),'');assert.equal(await input.evaluate(activeWithin),true);
    await page.waitForFunction(kind=>document.querySelectorAll('#'+kind+'-list tr').length>0,view);
-   const bounds=await clear.boundingBox();assert.ok(bounds.width>=44&&bounds.height>=44);
+   const touchTarget=await assertOwnedTouchTarget(clear);
+   await assertReducedTouchTargetRejected(clear);
+   await input.fill('outside-host-synthetic');
+   const outsideHostPoint={x:touchTarget.host.right+3,y:touchTarget.host.y+touchTarget.host.height/2};
+   assert.ok(outsideHostPoint.x<touchTarget.touch.right,'Probe must lie inside the real touch layer.');
+   await page.mouse.click(outsideHostPoint.x,outsideHostPoint.y);
+   assert.equal(await input.inputValue(),'');assert.equal(await input.evaluate(activeWithin),true);
    const imagePath=path.join(evidenceRoot,view+'.png');await page.screenshot({path:imagePath});
-   proof.cases.push({id:'clear-'+view+'-search',oldMatchCount:0,newMatchCount:1,wrongHostRejected:true,duplicateRejected:true,hiddenRejected:true,disabledRejected:true,emptyAndFocused:true,imageSha256:createHash('sha256').update(await fs.readFile(imagePath)).digest('hex')});
+   proof.cases.push({id:'clear-'+view+'-search',oldMatchCount:0,newMatchCount:1,wrongHostRejected:true,duplicateRejected:true,hiddenRejected:true,disabledRejected:true,emptyAndFocused:true,touchTarget,reducedTouchTargetRejected:true,outsideHostPoint,outsideHostClearAndFocus:true,imageSha256:createHash('sha256').update(await fs.readFile(imagePath)).digest('hex')});
    await fs.writeFile(path.join(evidenceRoot,'dom-proof.json'),JSON.stringify(proof,null,2));
   }
   proof.domPassed=true;

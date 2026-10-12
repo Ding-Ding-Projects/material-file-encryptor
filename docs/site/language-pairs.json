@@ -343,8 +343,8 @@
     {
       "source": "docs/features/platform/README.md",
       "translation": "docs/features/platform/README.zh-HK.md",
-      "sourceSha256": "89906287ed25bdc5e5dcd7c627e7471b641a2dde900a8a35a146b71eae08145f",
-      "translationSha256": "2b6bb529d7e73454b63bd19d77c9e78df5ace6cd6ecf091135b25ca3ac2e873f"
+      "sourceSha256": "a589abd4ce71c921e36a689bf7d6d3fe440ba33b93760459f2ce1b13721c9a2f",
+      "translationSha256": "cc9052ec8085211a7d5cea9e754cb176ed903793ace5103deb3b72293f3e5b04"
     },
     {
       "source": "docs/features/platform/current-integration.md",
@@ -573,6 +573,12 @@
       "translation": "docs/features/workflows/browser-protection-observations.zh-HK.md",
       "sourceSha256": "c90cff68a319dcac282b70e77585d51b2bb1be4a4705c4dbe82e00e074e853d5",
       "translationSha256": "05b0bdc2fc4582366463bf8d3a2b0a3fc36050a840a4e9c3caf3dd25740542c1"
+    },
+    {
+      "source": "docs/features/platform/renderer-task-timing.md",
+      "translation": "docs/features/platform/renderer-task-timing.zh-HK.md",
+      "sourceSha256": "84a26a80f3995927279bf06392823c3b5e537a047b2dc585470ffc1438634453",
+      "translationSha256": "60f24418aaf7913bb1a6bab39cfceddd76d7cb12ea5f5f8ac2a4437ef745f566"
     }
   ]
 }

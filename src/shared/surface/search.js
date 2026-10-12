@@ -48,14 +48,17 @@ export class SurfaceSearch extends SurfaceElement {
       worker.postMessage({pattern:this.query,flags:this.flags,...extra});
     });
   }
-  async filter(rows) {
-    const generation=this.generation;
-    if(!this.regex) {if(this.status)this.status.textContent='';const q=this.query.toLocaleLowerCase();return rows.filter(row=>row.text.toLocaleLowerCase().includes(q));}
-    if(rows.length>10000){if(this.status)this.status.textContent=this.t('Too many rows for regex. Narrow the collection first.','資料太多，請先縮小範圍。');return [];}
+  async filter(rows, { reportOutcome = false } = {}) {
+    const generation=this.generation,sequence=this.filterSequence=(this.filterSequence||0)+1;
+    const output=(matched,outcome)=>reportOutcome?{rows:matched,outcome}:matched;
+    const request=(matched,outcome)=>generation===this.generation?output(matched,outcome):output(null,'superseded');
+    if(!this.regex) {if(this.status)this.status.textContent='';const q=this.query.toLocaleLowerCase();return request(rows.filter(row=>row.text.toLocaleLowerCase().includes(q)),'ready');}
+    if(rows.length>10000){if(this.status)this.status.textContent=this.t('Too many rows for regex. Narrow the collection first.','資料太多，請先縮小範圍。');return request([],'unavailable');}
     const result=await this.evaluate({rows});
-    if(generation!==this.generation)return null;
+    if(generation!==this.generation)return output(null,'superseded');
+    if(sequence!==this.filterSequence)return reportOutcome?output(null,'superseded'):(result.error?[]:rows.filter(row=>result.matches.includes(row.id)));
     if(this.status)this.status.textContent=result.error || this.t(`${result.matches.length} matches`,`${result.matches.length} 個結果`);
-    return result.error?[]:rows.filter(row=>result.matches.includes(row.id));
+    return request(result.error?[]:rows.filter(row=>result.matches.includes(row.id)),result.error?'failed':'ready');
   }
 }
 register('mfe-search',SurfaceSearch);

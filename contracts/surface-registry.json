@@ -1351,6 +1351,24 @@
       "proofs": {}
     },
     {
+      "id": "desktop:document:docs/features/platform/renderer-task-timing",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/platform/renderer-task-timing",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/platform/renderer-task-timing.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/platform/renderer-task-timing.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "desktop:document:docs/features/README",
       "family": "desktop",
       "route": "src/renderer/index.html",
@@ -4564,6 +4582,42 @@
       "proofs": {}
     },
     {
+      "id": "site:article:docs/features/platform/renderer-task-timing.md",
+      "family": "site",
+      "route": "articles/docs--features--platform--renderer-task-timing.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/platform/renderer-task-timing.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--platform--renderer-task-timing.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/platform/renderer-task-timing.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--platform--renderer-task-timing.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/platform/renderer-task-timing.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--platform--renderer-task-timing.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:article:docs/features/README.md",
       "family": "site",
       "route": "articles/docs--features--README.html",
@@ -7386,6 +7440,24 @@
       "route": "workspace.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/platform/README.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/platform/renderer-task-timing",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/platform/renderer-task-timing",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/platform/renderer-task-timing.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/platform/renderer-task-timing.zh-HK",
       "template": "required-families",
       "proofs": {}
     },
