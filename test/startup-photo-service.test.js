@@ -36,3 +36,18 @@ test('accessibility state reflects only the actual runtime boolean and read-only
  assert.deepEqual(readRuntimeAccessibility({accessibilitySupportEnabled:false}),{known:true,enabled:false,source:'runtime'});assert.deepEqual(readRuntimeAccessibility({accessibilitySupportEnabled:true}),{known:true,enabled:true,source:'runtime'});assert.equal(readRuntimeAccessibility({}).known,false);assert.equal(readRuntimeAccessibility({get accessibilitySupportEnabled(){throw Error('unavailable');}}).known,false);
  for(const [feature,action]of [['surprise','resolvePublishedDish'],['personalization','accessibilityState']]){assert.doesNotThrow(()=>validateFeatureRequest(feature,action,{}));assert.throws(()=>validateFeatureRequest(feature,action,{url:'https://other.example'}));assert.throws(()=>validateFeatureRequest(feature,action,{}, {browser:true}));}
 });
+
+
+test('default transport uses the digest-verified bundled CLI and never host PATH',async t=>{
+ const directory=await fs.mkdtemp(path.join(os.tmpdir(),'startup-tools-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
+ const ghBytes=Buffer.from('synthetic gh executable'),gitBytes=Buffer.from('synthetic git executable');
+ await fs.mkdir(path.join(directory,'gh','bin'),{recursive:true});await fs.mkdir(path.join(directory,'git','cmd'),{recursive:true});
+ await fs.writeFile(path.join(directory,'gh/bin/gh.exe'),ghBytes);await fs.writeFile(path.join(directory,'git/cmd/git.exe'),gitBytes);
+ await fs.writeFile(path.join(directory,'forge-executables.json'),JSON.stringify({schemaVersion:1,gh:{relativePath:'gh/bin/gh.exe',version:'2.102.0',sha256:hash(ghBytes)},git:{relativePath:'git/cmd/git.exe',version:'2.56.0.windows.2',sha256:hash(gitBytes)}}));
+ const f=fixture(),executables=[];
+ const options={toolsDirectory:directory,random:()=>0,inspectImage:f.inspectImage,executeFile:async(executable,args,settings)=>{executables.push(executable);assert.equal(settings.windowsHide,true);assert.equal(settings.timeout,15000);assert.equal(settings.encoding,'buffer');return{stdout:await f.run(args,settings)};}};
+ assert.equal((await createStartupPhotoService(options).resolvePublishedDish()).published,true);
+ assert.equal(executables.length,4);assert.ok(executables.every(value=>value===path.join(directory,'gh/bin/gh.exe')));
+ await fs.writeFile(path.join(directory,'gh/bin/gh.exe'),Buffer.from('changed'));
+ assert.equal(await createStartupPhotoService(options).resolvePublishedDish(),null);assert.equal(executables.length,4);
+});
