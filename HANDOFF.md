@@ -829,3 +829,7 @@ A bounded adaptation of `7ad539a937f5c2828572884cc7ef7111290ba62c` excludes only
 ## Main-baseline documentation cache candidate
 
 A bounded adaptation reuses an immutable packaged documentation catalogue through existing main request and close seams. No newer access, browser or server lifecycle methods are imported. Focused source checks and independent review precede a new exact build and component measurement. Installed and renderer acceptance remain separate.
+
+## Current main documentation delivery
+
+Main source `187364a3094b1f66e5798d10991f2e3d09d40af9` includes the verified PDF exclusion and documentation cache. Both exact root builds passed; selected source-bound package hashes and component measurements are published in `docs/evidence/main-performance-20261012.json`. The README now distinguishes main behavior from unfinished recovery branches and retains historical capture provenance. Latest steering requests frequent verified main delivery, full documentation with diagrams, startup and automatic-update repair, and canonical shared Ollama path use only after actual identity and operational proof. Startup/updater/Ollama work, current replacement captures, installed lifecycle and the complete visual matrix remain pending. This documentation unit changes no runtime file.

@@ -1,3 +1,7 @@
 # Continuation handoff
 
-Main includes verified PDF exclusion source `a0239c91d517ca06d9725f36dd76874f5ab33ece`. This separate candidate adapts only documentation catalogue caching to existing request, trusted packaged-state and close seams. Focused lifecycle tests, independent review, exact root build and new component measurements must bind to this source. No newer access, browser or server production methods are included. No installed or renderer performance claim is made. Preserve prior PDF receipts and older unfinished branches.
+Main source `187364a3094b1f66e5798d10991f2e3d09d40af9` includes verified PDF packaging and documentation cache units. This documentation-only candidate rewrites the README around actual main behavior, three Mermaid diagrams, sanitized working instructions and selected public proof. Historical images and their provenance remain unchanged; current replacement captures are pending.
+
+Latest requested work includes frequent verified main delivery, complete README and diagrams, startup and automatic-update repair, and the canonical shared Ollama path only after actual identity and operational proof. Those runtime repairs remain on separate branches and are not described as shipped. No runtime file, build or user data is changed here.
+
+Next: focused README link, diagram and public-proof checks, independent review, preservation and verified main delivery. Retain older unfinished branches and all private evidence.

@@ -488,8 +488,17 @@
 
 ## Main-baseline packaging optimization
 
-- [ ] Verify the bounded PDF debug-map exclusion through the exact root build, retained runtime-file hashes and PDF round-trip checks before main delivery. Source rule preserves existing resources; package-size evidence does not establish application-speed improvement.
+- [x] Verify PDF debug-map exclusion at `a0239c9` through the exact root build, 994 retained-file hashes and five PDF checks; source reached main. Package-size evidence does not establish application-speed improvement.
 
 ## Main-baseline documentation performance
 
-- [ ] Verify the packaged catalogue cache adaptation with focused lifecycle checks, independent review, exact root build and source-bound service measurements before main delivery.
+- [x] Verify catalogue cache at `187364a` with eight focused checks, independent review, exact root build and source-bound component measurements; source reached main. Installed and renderer performance remain separate.
+
+## Current main documentation and remaining delivery
+
+- [x] Verify PDF exclusion at `a0239c9` through the exact root build, 994 retained-file hashes and five extracted PDF checks.
+- [x] Verify catalogue cache at `187364a` through independent focused checks, exact root build, production-byte identity and bounded same-input component timings.
+- [ ] Deliver the rewritten README, three explanatory diagrams and selected public proof after focused link/privacy checks and independent review.
+- [ ] Finish installed startup and automatic updating on their owning branches with actual source-bound observations.
+- [ ] Establish the canonical shared Ollama executable/model path and operational proof before applying that path.
+- [ ] Replace current screenshots only after genuine rebuilt capture acceptance, preserving historical originals.
