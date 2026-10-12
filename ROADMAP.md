@@ -546,3 +546,5 @@
 - [ ] Complete retained-profile cleanup and the full audit: automatic approval review rejected deletion; profiles remain retained and no alternate route is attempted.
 - [ ] Verify large v1.373.1 package bytes, installer and installed update; normal release metadata/provenance/RELEASES are verified separately.
 - [ ] Complete the wider language/theme/scale matrix and current-image promotion; the bounded diagram result does not certify these outcomes.
+
+- [x] Reconcile the encrypted personal-wording upload callback fixture with current persistence functions; focused source check passed, browser acceptance remains pending.

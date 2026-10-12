@@ -1,3 +1,7 @@
+## Encrypted upload callback fixture
+
+The focused source-only callback check passed once after supplying the minimum logic-only HTMLElement base. It exercises current encrypted visitor-cache persistence, locked pending input, stale authorization and awaited reset. No browser launch, package build or installed operation occurred.
+
 ## Active continuation, 2026-10-12
 
 Implementation has resumed under the approved full-goal plan. Main contains independently reviewed converter admission retirement and synthetic service-fixture repair at f52b6542ec03d7f35bd3daa03b077acb90411739. The permission-query-only launcher stays unavailable before converter input is read. Twenty focused checks pass on pinned Node24.19.0 and installed Node26.10; this is component evidence, not operating-system isolation.

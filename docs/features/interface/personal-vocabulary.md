@@ -11,3 +11,7 @@ Mappings stay in this device's local preferences. A failed storage write reports
 The public documentation starts locked. Its visible picker validates files locally and retains a pending valid file only in memory. Public text remains unchanged until the private-profile controller calls `setAuthenticatedLocalSession(true)`. Only then does it read the local cache and apply wording. Calling it with false restores public wording immediately. Clearing works while locked too. The authentication controller is a separate integration requirement; this module does not claim that selecting a file authenticates a reader.
 
 Focused tests cover canonical and legacy data, large inventories, Unicode limits, malformed and duplicate JSON, atomic rejection, cache validation, storage failures, reset and single-pass replacement.
+
+## Callback fixture verification
+
+The source-only upload fixture now executes the actual encrypted-cache persistence functions and bounds callback extraction before unrelated foundation mounting. It verifies locked pending input, authenticated encrypted storage, invalid input preservation, rejection after locking and asynchronous reset. This is not browser, packaged or installed acceptance.
