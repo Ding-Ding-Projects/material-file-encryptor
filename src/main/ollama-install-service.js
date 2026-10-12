@@ -3,13 +3,13 @@ import path from 'node:path';
 import os from 'node:os';
 import {createHash,randomUUID} from 'node:crypto';
 import {OLLAMA_RUNTIME_ARCHIVES} from './ollama-provenance.js';
-import {canonicalInstallPath,downloadRuntimeArchive,extractRuntimeArchive,listRuntimeTree,installationError,verifyArchiveTools} from './ollama-install-archive.js';
+import {canonicalInstallPath,downloadRuntimeArchive,extractRuntimeArchive,listRuntimeTree,installationError,verifyExtractionHost,runtimeArchiveAdmitted} from './ollama-install-archive.js';
 const digest=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const reasons=Object.freeze({unavailable:'Managed Ollama installation is unavailable on this platform.',cancelled:'Installation cancelled. Existing runtimes were not changed.',failed:'Installation could not complete. Verified existing runtimes were retained.',tools:'Verified archive tools are unavailable.',trust:'The runtime publisher or complete file tree could not be verified.',space:'Insufficient storage for the verified runtime.',installed:'Managed runtime installed. Start it separately when ready.'});
 export function runtimeArchitecture(machine=os.machine()){const value=machine.toLowerCase();return ['arm64','aarch64'].includes(value)?'arm64':['x86_64','amd64','x64'].includes(value)?'x64':null;}
-export function createManagedOllamaInstaller({dataDirectory,toolsRoot,credentials,confirmInstall,signatureInspector,publisherPolicies=[],platform=process.platform,architecture=runtimeArchitecture(),archives=OLLAMA_RUNTIME_ARCHIVES,download=downloadRuntimeArchive,extract=extractRuntimeArchive,inspectTools=verifyArchiveTools}={}){
+export function createManagedOllamaInstaller({dataDirectory,toolsRoot,credentials,confirmInstall,signatureInspector,publisherPolicies=[],platform=process.platform,architecture=runtimeArchitecture(),archives=OLLAMA_RUNTIME_ARCHIVES,download=downloadRuntimeArchive,extract=extractRuntimeArchive,inspectTools=verifyExtractionHost,admitArchive=runtimeArchiveAdmitted}={}){
  if(!path.isAbsolute(dataDirectory||''))throw installationError('PATH');
- const manifest=archives[architecture],enabled=platform==='win32'&&Boolean(manifest&&path.isAbsolute(toolsRoot||'')&&credentials?.get&&credentials?.set&&confirmInstall&&signatureInspector&&publisherPolicies.length);
+ const manifest=archives[architecture],enabled=platform==='win32'&&Boolean(manifest&&admitArchive(manifest)&&path.isAbsolute(toolsRoot||'')&&credentials?.get&&credentials?.set&&confirmInstall&&signatureInspector&&publisherPolicies.length);
  const root=path.join(dataDirectory,'local-models','managed-runtime'),cache=path.join(root,'cache');
  const destination=manifest?path.join(root,manifest.version+'-'+architecture+'-'+manifest.sha256.slice(0,16)):null;
  const credentialKey=manifest?'profile:ollama-managed:'+manifest.sha256:null,listeners=new Set();let active=null,closed=false,installed=false;

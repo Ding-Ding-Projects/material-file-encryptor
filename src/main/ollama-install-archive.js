@@ -1,24 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createHash,randomUUID} from 'node:crypto';
-import {execFile,spawn} from 'node:child_process';
-import {promisify} from 'node:util';
+import {spawn} from 'node:child_process';
 import {safeArchiveName} from '../features/converter/archive.mjs';
-const execute=promisify(execFile);
 export const INSTALL_LIMITS=Object.freeze({archiveBytes:2*1024**3,expandedBytes:8*1024**3,entryBytes:4*1024**3,entries:4096,listingBytes:8*1024**2,downloadMs:30*60*1000});
-const toolHashes={'7z.exe':'95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53','7z.dll':'899cd73d7fc60e1c1c35c7de0f5bed3dc69bfe2cecbd48014d868a347970a0b1'};
-export async function holdRuntimeArchive(archive,manifest,{signal,spawnImpl=spawn}={}){
- if(!manifest||!Number.isSafeInteger(manifest.bytes)||manifest.bytes<1||manifest.bytes>INSTALL_LIMITS.archiveBytes||!/^[a-f0-9]{64}$/.test(manifest.sha256))throw installationError('HASH');
- const systemRoot=process.env.SystemRoot;if(!systemRoot||!path.win32.isAbsolute(systemRoot))throw installationError('TOOLS');
- const encoded=Buffer.from(archive,'utf8').toString('base64');
- // The read-sharing handle prevents archive writes and replacement while the extractor reads it.
- const command=`$ErrorActionPreference='Stop';try{$p=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${encoded}'));$f=[IO.File]::Open($p,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read);try{if($f.Length -ne ${manifest.bytes}){throw 'size'};$h=[Security.Cryptography.SHA256]::Create();try{$d=([BitConverter]::ToString($h.ComputeHash($f))).Replace('-','').ToLowerInvariant()}finally{$h.Dispose()};if($d -ne '${manifest.sha256}'){throw 'hash'};[Console]::Out.WriteLine('READY');[Console]::Out.Flush();[void][Console]::In.ReadLine()}finally{$f.Dispose()}}catch{exit 1}`;
- const child=spawnImpl(path.win32.join(systemRoot,'System32','WindowsPowerShell','v1.0','powershell.exe'),['-NoLogo','-NoProfile','-NonInteractive','-Command',command],{windowsHide:true,shell:false,stdio:['pipe','pipe','pipe']});
- let released=false,ready=false,output='';const completion=new Promise(resolve=>child.once('close',code=>resolve(code)));const abort=()=>child.kill();signal?.addEventListener('abort',abort,{once:true});
- try{await new Promise((resolve,reject)=>{const timer=setTimeout(()=>{child.kill();reject(installationError('HASH'));},120000);const fail=()=>{clearTimeout(timer);reject(installationError('HASH'));};child.once('error',fail);child.once('close',()=>{if(!ready)fail();});child.stderr.on('data',()=>{});child.stdout.on('data',data=>{output+=data.toString('utf8');if(output.length>32){child.kill();fail();}else if(output==='READY\r\n'||output==='READY\n'){ready=true;clearTimeout(timer);resolve();}});});signal?.throwIfAborted();
-  return {assertHeld(){if(released||child.exitCode!==null||child.signalCode!==null||signal?.aborted)throw installationError('HASH');},async release(){if(released)return;released=true;signal?.removeEventListener('abort',abort);child.stdin.end('\n');const timer=setTimeout(()=>child.kill(),5000);await completion;clearTimeout(timer);}};
- }catch{signal?.removeEventListener('abort',abort);child.kill();await completion;throw installationError(signal?.aborted?'CANCELLED':'HASH');}
-}
 export function installationError(code){return Object.assign(new Error('Managed runtime operation did not complete.'),{installationCode:code});}
 export async function canonicalInstallPath(filename,{directory=false,missing=false}={}){
  if(!path.isAbsolute(filename))throw installationError('PATH');
@@ -65,23 +50,6 @@ export async function downloadRuntimeArchive(manifest,cache,{signal,fetchImpl=fe
  }catch(error){throw signal?.aborted?installationError('CANCELLED'):error.installationCode?error:installationError('DOWNLOAD');}
  finally{await reader?.cancel().catch(()=>{});await handle.close().catch(()=>{});}
 }
-export function parseRuntimeArchiveListing(text){
- if(Buffer.byteLength(text)>INSTALL_LIMITS.listingBytes)throw installationError('ARCHIVE');const split=text.replace(/\r\n/g,'\n').split('\n----------\n');if(split.length!==2)throw installationError('ARCHIVE');
- const rows=[],names=new Map();let expanded=0;
- for(const block of split[1].replace(/^\n+|\n+$/g,'').split(/\n\n+/)){
-  const fields={};for(const line of block.split('\n')){const index=line.indexOf(' = ');if(index<1)throw installationError('ARCHIVE');const key=line.slice(0,index);if(Object.hasOwn(fields,key))throw installationError('ARCHIVE');fields[key]=line.slice(index+3);}
-  const name=safeArchiveName(fields.Path);if(name!==fields.Path.replace(/\\/g,'/')||fields['Symbolic Link']||fields['Hard Link']||fields.Encrypted!=='-'||!['+','-'].includes(fields.Folder)||(fields.Attributes||'').split(/\s+/).some(value=>/^[lbcpsoh][rwxstST-]{9}$/.test(value)))throw installationError('ARCHIVE');
-  const directory=fields.Folder==='+';const bytes=Number(fields.Size);if(!Number.isSafeInteger(bytes)||bytes<0||bytes>INSTALL_LIMITS.entryBytes||directory&&bytes!==0||name.endsWith('/')&&!directory)throw installationError('ARCHIVE');
-  const normalized=name.replace(/\/$/,'');if(names.has(normalized.toLowerCase()))throw installationError('ARCHIVE');names.set(normalized.toLowerCase(),directory);rows.push({path:normalized,bytes,directory});expanded+=bytes;
-  if(rows.length>INSTALL_LIMITS.entries||expanded>INSTALL_LIMITS.expandedBytes)throw installationError('ARCHIVE');
- }
- for(const row of rows){const parts=row.path.split('/');for(let i=1;i<parts.length;i++)if(names.get(parts.slice(0,i).join('/').toLowerCase())===false)throw installationError('ARCHIVE');}
- if(rows.filter(row=>row.path==='ollama.exe'&&!row.directory).length!==1||!rows.some(row=>row.path.startsWith('lib/ollama/')&&!row.directory)||names.has('managed-runtime.json'))throw installationError('ARCHIVE');return rows;
-}
-export async function verifyArchiveTools(root){
- await canonicalInstallPath(root,{directory:true});const directory=path.join(root,'archive');await canonicalInstallPath(directory,{directory:true});
- for(const [name,sha256]of Object.entries(toolHashes))if((await hashInstallFile(path.join(directory,name),64*1024**2)).sha256!==sha256)throw installationError('TOOLS');return path.join(directory,'7z.exe');
-}
 export async function listRuntimeTree(root,{signal}={}){
  await canonicalInstallPath(root,{directory:true});const rows=[];let total=0;
  async function walk(relative=''){
@@ -90,14 +58,22 @@ export async function listRuntimeTree(root,{signal}={}){
   }
  }await walk();return rows.sort((a,b)=>a.path.localeCompare(b.path));
 }
-export async function extractRuntimeArchive(archive,stage,toolsRoot,{signal,manifest,executeFile=execute,holdArchive=holdRuntimeArchive}={}){
- const executable=await verifyArchiveTools(toolsRoot);await canonicalInstallPath(archive);await canonicalInstallPath(stage,{directory:true});if((await fs.readdir(stage)).length)throw installationError('ARCHIVE');
- const held=await holdArchive(archive,manifest,{signal});try{held.assertHeld();
- const options={windowsHide:true,shell:false,timeout:10*60*1000,maxBuffer:INSTALL_LIMITS.listingBytes,encoding:'utf8',signal,cwd:path.dirname(executable)};
- const {stdout}=await executeFile(executable,['l','-slt','-sccUTF-8','--',archive],options);held.assertHeld();const listed=parseRuntimeArchiveListing(stdout);
- const capacity=await fs.statfs(stage);if(Number(capacity.bavail)*Number(capacity.bsize)<listed.reduce((sum,row)=>sum+row.bytes,0)+64*1024**2)throw installationError('SPACE');
- await verifyArchiveTools(toolsRoot);await executeFile(executable,['x','-y','-bd','-bb0','-sccUTF-8','-o'+stage,'--',archive],options);await verifyArchiveTools(toolsRoot);
- const files=await listRuntimeTree(stage,{signal});const expected=listed.filter(row=>!row.directory).sort((a,b)=>a.path.localeCompare(b.path));
- held.assertHeld();if(files.length!==expected.length||files.some((row,i)=>row.path!==expected[i].path||row.bytes!==expected[i].bytes))throw installationError('ARCHIVE');return files;
- }finally{await held.release();}
+const extractionScript=await fs.readFile(new URL('./ollama-install-extract.ps1',import.meta.url),'utf8');
+const expectedArchives=JSON.parse(await fs.readFile(new URL('./ollama-runtime-files.json',import.meta.url),'utf8')).archives;
+export function runtimeArchiveAdmitted(manifest){return expectedArchives.some(value=>value.architecture===manifest?.architecture&&value.version===manifest?.version&&value.archiveSha256===manifest?.sha256&&value.sourceUrl===manifest?.sourceUrl);}
+export async function verifyExtractionHost(){const root=process.env.SystemRoot;if(!root||!path.win32.isAbsolute(root))throw installationError('TOOLS');await canonicalInstallPath(path.win32.join(root,'System32','WindowsPowerShell','v1.0','powershell.exe'));}
+export async function extractRuntimeArchive(archive,stage,_toolsRoot,{signal,manifest,spawnImpl=spawn,reviewedArchive}={}){
+ const expected=reviewedArchive||expectedArchives.find(value=>value.architecture===manifest?.architecture&&value.version===manifest?.version&&value.archiveSha256===manifest?.sha256&&value.sourceUrl===manifest?.sourceUrl);
+ if(!expected)throw installationError('TRUST');await canonicalInstallPath(archive);await canonicalInstallPath(stage,{directory:true});
+ const systemRoot=process.env.SystemRoot;if(!systemRoot||!path.win32.isAbsolute(systemRoot))throw installationError('TOOLS');
+ const capacity=await fs.statfs(stage);if(Number(capacity.bavail)*Number(capacity.bsize)<expected.expandedBytes+64*1024**2)throw installationError('SPACE');
+ const cancelPath=path.join(path.dirname(stage),'.cancel-'+randomUUID());const configuration=JSON.stringify({schemaVersion:1,archive,stage,cancelPath,bytes:manifest.bytes,sha256:manifest.sha256,expandedBytes:expected.expandedBytes,files:expected.files});if(configuration.length>30000)throw installationError('SIZE');
+ const child=spawnImpl(path.win32.join(systemRoot,'System32','WindowsPowerShell','v1.0','powershell.exe'),['-NoLogo','-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(extractionScript,'utf16le').toString('base64')],{windowsHide:true,shell:false,stdio:['pipe','pipe','pipe'],env:{SystemRoot:systemRoot,TEMP:process.env.TEMP,TMP:process.env.TMP,MFE_OLLAMA_EXTRACTION_CONFIGURATION:configuration}});
+ let markerIdentity=null,marker=Promise.resolve(),output='',initialized=false,ready=false,cancelRequested=Boolean(signal?.aborted);const requestCancel=()=>{cancelRequested=true;if(!ready)return;marker=marker.then(async()=>{if(markerIdentity)return;await canonicalInstallPath(path.dirname(cancelPath),{directory:true});const handle=await fs.open(cancelPath,'wx',0o600);try{await handle.writeFile('cancel');await handle.sync();markerIdentity=await handle.stat();}finally{await handle.close();}}).catch(()=>{});};
+ signal?.addEventListener('abort',requestCancel,{once:true});const timeout=setTimeout(requestCancel,INSTALL_LIMITS.downloadMs);
+ try{
+  await new Promise((resolve,reject)=>{let spawnError=false;child.once('error',()=>{spawnError=true;});child.stderr.on('data',()=>{});child.stdout.on('data',data=>{output+=data.toString('utf8');if(output.length>128){requestCancel();return;}if(!initialized&&output.includes('INITIALIZED')){initialized=true;child.stdin.end();}if(!ready&&output.includes('READY')){ready=true;if(cancelRequested)requestCancel();}if(output.includes('COMPLETE')||output.includes('FAILED'))child.stdin.end();});child.once('close',code=>{if(spawnError)reject(installationError('TOOLS'));else if(cancelRequested)reject(installationError('CANCELLED'));else if(code===0&&output.replace(/\r/g,'')==='INITIALIZED\nREADY\nCOMPLETE\n')resolve();else reject(installationError('TRUST'));});child.stdin.on('error',()=>{});});
+ }finally{clearTimeout(timeout);signal?.removeEventListener('abort',requestCancel);child.stdin.end();await marker;if(markerIdentity){await canonicalInstallPath(path.dirname(cancelPath),{directory:true});const info=await canonicalInstallPath(cancelPath);if(info.dev!==markerIdentity.dev||info.ino!==markerIdentity.ino||info.size!==6||(await hashInstallFile(cancelPath,6)).sha256!==createHash('sha256').update('cancel').digest('hex'))throw installationError('PATH');await fs.unlink(cancelPath);}}
+ const files=await listRuntimeTree(stage,{signal});const target=[...expected.files].sort((a,b)=>a.path.localeCompare(b.path));
+ if(files.length!==target.length||files.some((row,i)=>row.path!==target[i].path||row.bytes!==target[i].bytes||row.sha256!==target[i].sha256))throw installationError('TRUST');return files;
 }

@@ -92,6 +92,8 @@
     "docs/features/ollama/README.zh-HK.md",
     "docs/features/ollama/local-models.md",
     "docs/features/ollama/local-models.zh-HK.md",
+    "docs/features/ollama/managed-runtime-installation.md",
+    "docs/features/ollama/managed-runtime-installation.zh-HK.md",
     "docs/features/ollama/native-host.md",
     "docs/features/ollama/native-host.zh-HK.md",
     "docs/features/ollama/regression-verification.md",
