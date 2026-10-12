@@ -60,13 +60,13 @@ export function sanitizeConverterDiagnostic(record){const safe={schema:1,compone
 
 export function converterUnavailableError(record){const safe=sanitizeConverterDiagnostic(record);const fields=['launcherExitCode','workerExitCode','nativeError','nativeHresult'].filter(key=>Object.hasOwn(safe,key)).map(key=>key+'='+safe[key]);return new Error(`Isolated image decoding unavailable: ${safe.component}/${safe.phase}/${safe.code}${fields.length?' ['+fields.join(', ')+']':''}.`);}
 
-export function createFeatureServices({dataDirectory,applicationRoot,toolsDirectory=applicationRoot?.endsWith('.asar')?path.join(path.dirname(applicationRoot),'tools'):path.join(applicationRoot||'','out','tools'),sandboxDirectory,safeStorage,dialog,getWindow,getMainFrame,openPath,openExternal,emit=()=>{},sandboxProvider,reviewedForgeClient=null,onConverterDiagnostic=()=>{},accessibilityState=()=>({known:false,enabled:false,source:'runtime'})}){
+export function createFeatureServices({dataDirectory,applicationRoot,nativeRequest,toolsDirectory=applicationRoot?.endsWith('.asar')?path.join(path.dirname(applicationRoot),'tools'):path.join(applicationRoot||'','out','tools'),sandboxDirectory,safeStorage,dialog,getWindow,getMainFrame,openPath,openExternal,emit=()=>{},sandboxProvider,reviewedForgeClient=null,onConverterDiagnostic=()=>{},accessibilityState=()=>({known:false,enabled:false,source:'runtime'})}){
  const credentials=createCredentialStore({directory:dataDirectory,safeStorage});
  const mutationHistory=createAccessMutationHistory({dataDirectory,toolsDirectory});
  const access=createAccessIntegration({dataDirectory,toolsDirectory,credentials,getMainFrame,recordMutation:event=>mutationHistory.record(event)});
  const scheduleAuthorization={};
  const schedules=createScheduleSource({credentials,authorizeCredentialMutation:context=>context?.authorization===scheduleAuthorization});
- const servers=createServerManagerHost({dataDirectory,emit:data=>emit('server-manager',data)});
+ const servers=createServerManagerHost({dataDirectory,nativeRequest,confirmLicense:async contract=>(await dialog.showMessageBox(getWindow(),{type:'question',title:'Review server license',message:'Accept the Minecraft End User License Agreement for this prepared server?',detail:'Version: '+contract.version+'\nDistribution SHA-256: '+contract.distributionSha256+'\n'+contract.url,buttons:['Cancel','Accept this server license'],defaultId:0,cancelId:0})).response===1,emit:data=>emit('server-manager',data)});
  const protectedForgeTransport=createProtectedForgeDeviceTransport({toolsDirectory});
  const protectedAccounts=createProtectedForgeAccounts({credentialStore:credentials,reviewedClient:reviewedForgeClient,...protectedForgeTransport,onChallenge:item=>emit('workflow',{type:'forge-authentication',item})});
  const workflows=createWorkflowServices({dataDirectory,toolsDirectory,protectedAccounts,dialog,getWindow,openPath,openExternal,emit});

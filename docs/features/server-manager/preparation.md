@@ -20,7 +20,7 @@ The panel retrieves pages of 100 official version identifiers. **Load more versi
 
 ## Review license
 
-**Review server license** is available only for a successfully prepared owned server. It shows the official Minecraft EULA link and confirms that acceptance is false. Reading or opening the link cannot accept it. There is no acceptance or start IPC action in this unit.
+**Review server license** is available only for a successfully prepared owned server. It shows the official Minecraft EULA link and the current acceptance state. Reading or opening the link cannot accept it. The protected host now supports a separate native confirmation action bound to the exact server version and digest; the existing preparation panel does not yet expose that action. See [protected native supervision](native-supervision.md). Actual startup remains unavailable.
 
 ## Guidance and accessibility
 
@@ -28,7 +28,7 @@ Every preparation action has distinct optional guidance above its target. The or
 
 ## Security and remaining targets
 
-Desktop IPC validates action-specific bounded identifiers and rejects unknown keys. The host resolves official metadata, owned paths and hashes. No launch provider is passed to the local adapter. Native process supervision, compatible runtime admission, version-bound loopback configuration, resource limits and native lease IPC are not integrated. A lease primitive alone does not establish safe startup. Local Docker, SSH process and SSH Docker management are not implemented. All four targets remain unavailable.
+Desktop IPC validates action-specific bounded identifiers and rejects unknown keys. The host resolves official metadata, owned paths and hashes. No launch provider is passed to the preparation adapter. Protected native lifecycle composition is implemented, but compatible runtime admission, exact-version generated network configuration proof and actual lease IPC acceptance remain unavailable. A lease primitive or composition alone does not establish safe startup. Local Docker, SSH process and SSH Docker management are not implemented. All four targets remain unavailable.
 
 ## Verification
 

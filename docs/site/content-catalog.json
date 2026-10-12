@@ -148,6 +148,8 @@
     "docs/features/server-manager/foundation.zh-HK.md",
     "docs/features/server-manager/native-file-lease.md",
     "docs/features/server-manager/native-file-lease.zh-HK.md",
+    "docs/features/server-manager/native-supervision.md",
+    "docs/features/server-manager/native-supervision.zh-HK.md",
     "docs/features/server-manager/preparation.md",
     "docs/features/server-manager/preparation.zh-HK.md",
     "docs/features/storage/README.md",
