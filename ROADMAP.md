@@ -4,7 +4,9 @@
 - [x] Record exact e189 build exit0 and interrupted installer with unavailable terminal proof.
 - [ ] Complete final installer, current interaction and89-state/4272-tuple visual acceptance.
 - [ ] Complete combined JavaScript verification and diagnose four synthetic password-verification failures.
-- [ ] Verify complete archives, safe ignored-evidence preservation and exact cleanup ancestry.
+- [x] Verify the complete 30-checkout source/admin archive and separate 273-file private announcement copy at main97a87c2.
+- [x] Assess exact cleanup ownership and ancestry; retain every candidate because unclassified ignored data, incomplete work or uncertain ownership prevents deletion. No deletions performed.
+- [ ] Classify remaining ignored runtime evidence and verify archive cloud synchronization before a future qualified cleanup.
 
 ## Active redesign acceptance, 2026-10-11
 

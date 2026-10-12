@@ -1,6 +1,10 @@
 ## Preservation checkpoint after interrupted verification
 
-The requested preservation and cleanup pass is in progress. The full product goal is not complete. Product main retains the accepted native 80 MiB implementation; newer interface work is preserved on codex/integration-20261011 at e1891f08bf5463fa93435d179060231ad8d52216 and its original task branches.
+The preservation pass verified all six outstanding remote tips, including main at 97a87c280d204651aa25304cb10146081cf1a175 and codex/integration-20261011 at 6b86cd2c074cc75a8ef9ee204ab75d8aa2a2e653. Product code on main retains the accepted native 80 MiB baseline. Newer interface code remains preserved on the integration branch and its original task branches. The full product goal is not complete.
+
+The complete private archive of 30 checkouts and common Git administration passed integrity, exact 23,470-file inventory, before/after source stability, destination-boundary and access checks. Its 269,372,442 bytes have SHA-256 3eff8dca6bd0d09953edb29ba87ad4f7a87e32e5587c89c5f5b0b526ee6152e7. A separate hash-verified private copy preserves 273 announcement files (317,266,144 bytes). Cloud synchronization is unverified. This archive captures the stated source snapshot before this documentation-only follow-up.
+
+No deletion candidate qualified. The explicitly owned storage-packing tip is an ancestor of remote main, but its 20,244 non-announcement ignored entries remain unclassified. Other candidates remain active, incomplete, unmerged or ownership-uncertain. All original checkouts, branches, unclassified ignored data and partial archive passes remain retained. No process was terminated to finish preservation.
 
 The latest exact build.bat /s at e1891f08 exited 0. The subsequent build-installer.bat /s was interrupted after packaging began. There is no final installer or supervisor exit receipt and no newly accepted installer output. Current observations show the recorded processes and exact named hidden desktop are absent; absence does not establish an exit code or normal closure. Retain the entire diagnostic run and its read-only recovery record. Earlier complete production evidence remains bound to375373a.
 
