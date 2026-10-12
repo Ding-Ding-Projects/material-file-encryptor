@@ -16,18 +16,29 @@ function Gh([string[]]$Arguments){
   if($Arguments[1] -notlike '*ref=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'){throw 'PINNED_CATALOG_REQUIRED'}
   return '{"dishes":[{"id":"hk-dish-0001","name":{"en":"Synthetic dish","zhHant":"測試"},"image":{"path":"images/sample.png"}}]}'
  }
- if($Arguments[1] -like '*/releases?*'){return ConvertTo-Json -InputObject @($script:release) -Depth 8 -Compress}
+ if($Arguments[1] -like '*/releases?*'){
+  if($Arguments[1] -like '*page=2'){return ConvertTo-Json -InputObject @($script:secondReleaseRows) -Depth 8 -Compress}
+  return ConvertTo-Json -InputObject @($script:releaseRows) -Depth 8 -Compress
+ }
  throw 'UNEXPECTED_METADATA_ROUTE'
 }
 function Reset-Fixture {
  $script:calls=@()
  $script:release=@{tag_name='catalog-v1';draft=$false;prerelease=$false;assets=@(@{name='sample.png';state='uploaded';size=100;digest=('sha256:'+('b'*64));browser_download_url='https://github.com/Ding-Ding-Projects/dim-sum-photos/releases/download/catalog-v1/sample.png'})}
+ $script:releaseRows=@(@{tag_name='desktop-67-sample';draft=$false;prerelease=$false;assets=@()}, $script:release)
+ $script:secondReleaseRows=@()
 }
 Reset-Fixture
 $reference=Resolve-PublicReleasePhoto
 Assert ($reference.catalogRevision -eq ('a'*40) -and $reference.nameEnglish -eq 'Synthetic dish' -and $reference.url -eq $release.assets[0].browser_download_url) 'PUBLIC_REFERENCE_INVALID'
 Assert ($calls.Count -eq 3) 'METADATA_CALL_COUNT_INVALID'
 $count=1
+Reset-Fixture
+$script:releaseRows=@(1..100 | ForEach-Object { @{tag_name="desktop-$_-sample";draft=$false;prerelease=$false;assets=@()} })
+$script:secondReleaseRows=@($script:release)
+$reference=Resolve-PublicReleasePhoto
+Assert ($reference.release -eq 'catalog-v1' -and $calls.Count -eq 4) 'PAGINATED_REFERENCE_INVALID'
+$count++
 foreach($mutation in @('draft','prerelease','wrong-tag','wrong-url','missing-digest','unpublished')){
  Reset-Fixture
  switch($mutation){
