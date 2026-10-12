@@ -2,6 +2,7 @@ import {IMAGE_TRANSFORM_SURFACE} from '../../renderer/features/personalization/i
 import { localized } from './localization.js';
 
 export const surfaceRegistry = Object.freeze([
+  { tag: 'mfe-startup-surprise', role: 'status', module: '../../renderer/features/shell/startup-surprise.js', primitives: ['md-text-button'] },
   { tag: 'mfe-transition-properties', role: 'region', module: '../../renderer/features/personalization/transition-property-inspector.js', primitives: ['md-outlined-text-field','md-text-button'] },
   IMAGE_TRANSFORM_SURFACE,
   { tag: 'mfe-motion-keyframes', role: 'region', module: '../../renderer/features/personalization/motion-keyframe-inspector.js', primitives: ['md-outlined-text-field','md-text-button','md-checkbox'] },

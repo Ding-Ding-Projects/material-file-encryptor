@@ -39,20 +39,38 @@ foreach ($line in Get-Content $releases) {
 Assert ($indexed.Count -eq $packages.Count) 'PACKAGE_SET_MISMATCH'
 foreach ($package in $packages) { Assert ($indexed.ContainsKey($package.Name)) 'UNINDEXED_PACKAGE' }
 & scripts/package-integrity.ps1 -Packages @($packages.FullName)
-$catalog=Get-Content docs/release-assets/catalog.json -Raw | ConvertFrom-Json
-$imageEntry=@($catalog.images | Where-Object id -eq 'hk-dish-0001')[0]
-$catalogRelease=(Gh @('release','view',$imageEntry.sourceReleaseTag,'--repo',$imageEntry.sourceRepository,'--json','isDraft,assets')) | ConvertFrom-Json
-$catalogAsset=@($catalogRelease.assets | Where-Object name -eq $imageEntry.file)
-Assert (!$catalogRelease.isDraft -and $catalogAsset.Count -eq 1 -and $catalogAsset[0].size -eq $imageEntry.bytes -and $catalogAsset[0].url -match '^https://github.com/') 'PUBLIC_CATALOG_IMAGE_REQUIRED'
-$imageUrl=$catalogAsset[0].url
-$imagePath=Join-Path 'docs/release-assets' $imageEntry.file
-Assert ((Test-Path -LiteralPath $imagePath) -and (Get-Item -LiteralPath $imagePath).Length -eq $imageEntry.bytes -and (Digest $imagePath) -eq $imageEntry.sha256) 'BUNDLED_CATALOG_IMAGE_MISMATCH'
-Add-Type -AssemblyName System.Drawing
-$decodedImage=[Drawing.Image]::FromFile((Resolve-Path -LiteralPath $imagePath).Path)
-try { Assert ($decodedImage.Width -eq $imageEntry.width -and $decodedImage.Height -eq $imageEntry.height) 'BUNDLED_CATALOG_IMAGE_DIMENSIONS' }
-finally { $decodedImage.Dispose() }
-$assets=@($setup,$releases)+@($packages.FullName)+@($imagePath)
-$receipt=[ordered]@{schemaVersion=1; sourceCommit=$source; tag=$tag; packageVersion=(Get-Content package.json -Raw | ConvertFrom-Json).version; runId=$env:GITHUB_RUN_ID; runAttempt=$env:GITHUB_RUN_ATTEMPT; workflowUrl=$workflowUrl; workflowStartedAtUtc=$workflowStartedUtc.ToString('o'); buildStartedAtUtc=$env:BUILD_STARTED_AT; packagingCompletedAtUtc=[DateTime]::UtcNow.ToString('o'); testsRunInCI=$false; runtimeVerification='pending independent local receipt'; unsignedInstaller=$true; assets=@($assets | ForEach-Object { @{name=(Split-Path $_ -Leaf); bytes=(Get-Item $_).Length; sha256=Digest $_} })}
+# Resolve a public reference only. Consumer releases never attach copied photos.
+function Resolve-PublicReleasePhoto {
+ $photoRepo='Ding-Ding-Projects/dim-sum-photos'
+ $head=((Gh @('api',"repos/$photoRepo/commits/main")) -join "`n") | ConvertFrom-Json
+ Assert ($head.sha -match '^[a-f0-9]{40}$') 'PUBLIC_PHOTO_REVISION_REQUIRED'
+ $catalog=((Gh @('api',"repos/$photoRepo/contents/catalog/index.json?ref=$($head.sha)",'-H','Accept: application/vnd.github.raw+json')) -join "`n") | ConvertFrom-Json
+ $rows=@($catalog.dishes | Where-Object id -eq 'hk-dish-0001')
+ Assert ($rows.Count -eq 1) 'PUBLIC_PHOTO_CATALOG_ROW_REQUIRED'
+ $dish=$rows[0]
+ Assert ($dish.image.path -match '^images/([-a-zA-Z0-9_.]+\.(png|jpe?g|webp))$') 'PUBLIC_PHOTO_PATH_INVALID'
+ $photoName=$Matches[1]
+ foreach($name in @($dish.name.en,$dish.name.zhHant)){Assert ($name -is [string] -and $name.Length -gt 0 -and $name.Length -le 180 -and $name -notmatch '[\x00-\x1f\x7f\[\]<>\x60]') 'PUBLIC_PHOTO_NAME_INVALID'}
+ for($page=1;$page -le 3;$page++){
+  $releaseJson=(Gh @('api',"repos/$photoRepo/releases?per_page=100&page=$page")) -join "`n"
+  $releases=ConvertFrom-Json $releaseJson
+  foreach($release in $releases){
+   if($release.draft -or $release.prerelease -or $release.tag_name -notmatch '^catalog-v1[A-Za-z0-9._-]*$'){continue}
+   foreach($asset in @($release.assets)){
+    $expected="https://github.com/$photoRepo/releases/download/$($release.tag_name)/$photoName"
+    if($asset.name -ceq $photoName -and $asset.state -eq 'uploaded' -and $asset.size -gt 0 -and $asset.digest -match '^sha256:[a-f0-9]{64}$' -and $asset.browser_download_url -ceq $expected){
+     return [ordered]@{sourceRepository=$photoRepo;catalogRevision=$head.sha;nameEnglish=$dish.name.en;nameTraditionalChinese=$dish.name.zhHant;release=$release.tag_name;url=$expected;sha256=$asset.digest.Substring(7);bytes=$asset.size}
+    }
+   }
+  }
+  if($releases.Count -lt 100){break}
+ }
+ throw 'PUBLIC_CATALOG_IMAGE_REQUIRED'
+}
+$photoReference=Resolve-PublicReleasePhoto
+$imageUrl=$photoReference.url
+$assets=@($setup,$releases)+@($packages.FullName)
+$receipt=[ordered]@{schemaVersion=1; photoReference=$photoReference; sourceCommit=$source; tag=$tag; packageVersion=(Get-Content package.json -Raw | ConvertFrom-Json).version; runId=$env:GITHUB_RUN_ID; runAttempt=$env:GITHUB_RUN_ATTEMPT; workflowUrl=$workflowUrl; workflowStartedAtUtc=$workflowStartedUtc.ToString('o'); buildStartedAtUtc=$env:BUILD_STARTED_AT; packagingCompletedAtUtc=[DateTime]::UtcNow.ToString('o'); testsRunInCI=$false; runtimeVerification='pending independent local receipt'; unsignedInstaller=$true; assets=@($assets | ForEach-Object { @{name=(Split-Path $_ -Leaf); bytes=(Get-Item $_).Length; sha256=Digest $_} })}
 $receipt | ConvertTo-Json -Depth 8 | Set-Content "$output/build-provenance.json" -Encoding utf8
 $notes=@"
 Unsigned Squirrel.Windows x64 release from ``$source``. Package version $($receipt.packageVersion).
@@ -65,9 +83,9 @@ Workflow run: $workflowUrl
 
 Build started UTC: $($receipt.buildStartedAtUtc). Packaging completed UTC: $($receipt.packagingCompletedAtUtc).
 
-Downloadable photo: ``$($imageEntry.file)`` (Classic Har Gow / 蝦餃), from the bundled verified catalog.
+Code name: $($photoReference.nameEnglish) / $($photoReference.nameTraditionalChinese). Photo is linked from the authoritative public catalog release, not copied into this release.
 
-![Classic Har Gow 蝦餃]($imageUrl)
+![$($photoReference.nameEnglish) $($photoReference.nameTraditionalChinese)]($imageUrl)
 "@
 $notes | Set-Content "$output/release-notes.md" -Encoding utf8
 $assets+=@("$output/build-provenance.json")

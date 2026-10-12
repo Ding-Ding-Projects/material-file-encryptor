@@ -7,6 +7,35 @@ import os from 'node:os';
 import path from 'node:path';
 import { createUpdateService, UPDATE_PROJECT } from '../src/main/update-service.js';
 
+for (const bom of [false, true]) test(`RELEASES integrity preserves original bytes with BOM=${bom}`, async t => {
+  const f = await fixture(t);
+  const url = [...f.routes.keys()].find(url => url.endsWith('/RELEASES'));
+  const raw = Buffer.concat([bom ? Buffer.from([0xef, 0xbb, 0xbf]) : Buffer.alloc(0), Buffer.from(f.routes.get(url)()), Buffer.from('\r\n')]);
+  Object.assign(f.provenance.assets.find(asset => asset.name === 'RELEASES'), { bytes: raw.length, sha256: createHash('sha256').update(raw).digest('hex') });
+  f.release.assets.find(asset => asset.name === 'RELEASES').size = raw.length;
+  f.routes.set(url, () => raw);
+  assert.equal((await f.service.check()).state, 'available');
+  assert.deepEqual(f.calls, []); assert.ok(!f.requested.some(url => url.endsWith('.nupkg')));
+});
+for (const suffix of [Buffer.from([0xff]), Buffer.from('\nnot a package')]) test(`verified RELEASES rejects invalid syntax ${suffix.toString('hex')}`, async t => {
+  const f = await fixture(t);
+  const url = [...f.routes.keys()].find(url => url.endsWith('/RELEASES'));
+  const raw = Buffer.concat([Buffer.from(f.routes.get(url)()), suffix]);
+  Object.assign(f.provenance.assets.find(asset => asset.name === 'RELEASES'), { bytes: raw.length, sha256: createHash('sha256').update(raw).digest('hex') });
+  f.release.assets.find(asset => asset.name === 'RELEASES').size = raw.length;
+  f.routes.set(url, () => raw);
+  assert.equal((await f.service.check()).reason, 'INVALID_RELEASES');
+  assert.deepEqual(f.calls, []);
+});
+test('RELEASES rejects an added BOM not covered by its raw integrity record', async t => {
+  const f = await fixture(t);
+  const url = [...f.routes.keys()].find(url => url.endsWith('/RELEASES'));
+  const raw = Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from(f.routes.get(url)())]);
+  f.routes.set(url, () => raw);
+  assert.equal((await f.service.check()).reason, 'RELEASES_HASH_MISMATCH');
+  assert.deepEqual(f.calls, []);
+});
+
 async function fixture(t, options = {}) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'update-service-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));

@@ -1,6 +1,7 @@
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
 export function validateFeatureRequest(feature, action, payload, { browser = false } = {}) {
   const actions = {
+    ...(!browser?{surprise:['resolvePublishedDish']}:{}),
     converter: ['catalog','inspect','enqueue','list','control','pickSources','pickDestination','pickDestinationDirectory'],
     workflow: ['documents','pickDocument','pickProject','readDocument','saveDocument','createDocument','templates','editors','pickEditor','openEditor','openInCode','editorDownload','downloads','prepareDownload','startDownload','cancelDownload','accounts','owners','prepareHandoff','exportHandoff','openHandoff'],
     updates: ['status','check','download',...(!browser?['install']:[])],
@@ -12,6 +13,7 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
   };
   const limit=!browser&&feature==='personalization'&&action==='normalizeImage'?Math.ceil(4*1024*1024*4/3)+256:262144;
   if (!actions[feature]?.includes(action) || !object(payload) || Buffer.byteLength(JSON.stringify(payload)) > limit) throw new Error('Unsupported feature request.');
+  if (feature === 'surprise' && (Reflect.ownKeys(payload).length || ![Object.prototype,null].includes(Object.getPrototypeOf(payload)))) throw new Error('Unsupported startup photo request.');
   if (feature === 'server-manager') {
     const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
     const hash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);

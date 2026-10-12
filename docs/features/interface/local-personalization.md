@@ -49,3 +49,30 @@ Personal wording is projected onto eligible display text and accessibility attri
 `refresh()` retains the small-document synchronous result and returns `{ projected: false, reason: 'pending' }` while more slices remain. Integrations requiring a completed display can await `whenSettled()`. Revoking activation or destroying the view cancels outstanding work and restores only tracked modified display values immediately. A replacement exception restores earlier writes and settles with `replacement-failed`. Canonical application data, inputs, code blocks, exports, and network requests are not rewritten. The projection is incremental, so a partially completed active pass can temporarily show both canonical and personalized display text; it is not an atomic whole-document paint.
 
 Focused verification covers a synthetic document exceeding 42,000 nodes, bounded scheduling, changed-subtree updates, shadow-root removal, cancellation, restoration, and rollback after a later-slice exception. This does not by itself establish native runtime or installer acceptance.
+
+## Connected desktop startup surprise
+
+The earlier main baseline provided only the probability helper. The desktop now
+connects that helper to startup readiness, updater snapshots and a non-blocking
+registered presentation with a local image data URL, bilingual dish name, meaningful
+alt text and five-second dismissal. It never moves focus or starts an operation.
+
+The single 10% draw waits for a transient update check to settle. First-run, School,
+quiet, error and active-work exclusions remain terminal, including during checking.
+Trusted pointer, keyboard or input activity ends the opportunity; an open modal
+also suppresses display. The opportunity expires after 15 seconds, including while
+a photo is resolving. There is no preference to force or disable the draw.
+
+The desktop-only `surprise/resolvePublishedDish` request accepts an empty payload.
+It resolves authoritative bilingual metadata from the public dim-sum photo catalog
+and only published normal `catalog-v1*` assets. The bundled CLI is selected from
+`forge-executables.json` and verified by version, path and SHA-256 before execution;
+no global `PATH` fallback exists. The host verifies asset URL, digest, size and
+native image decoding before returning bounded bytes. No catalog or photo is
+tracked here. The one-image private application-data cache records source revision
+and integrity; offline metadata or missing verified tools returns unavailable.
+
+Focused checks cover the actual renderer startup seam, terminal exclusions, late
+results, trusted input, verified tool selection, image bounds and publication
+validation. They do not prove installed startup display or native decoding. Those
+remain separate built-runtime acceptance requirements.
