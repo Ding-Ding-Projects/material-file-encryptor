@@ -1,9 +1,18 @@
+## Preservation closeout, 2026-10-12
+
+- [x] Stop new implementation and retain the proposed next-phase sequence in HANDOFF.md.
+- [x] Verify accepted source 5f76e81, normal v1.400.1 publication/promotion, downloaded release hashes and delivered package inspection.
+- [x] Verify clean local main branches and retain historical remote branches and private evidence.
+- [ ] Resume converter sandbox capability repair, then platform-correct verification and reviewed GUI integration.
+- [ ] Obtain the required verified off-disk archive before any qualified deletion; no deletion occurred in this pass.
+- [ ] Complete installed lifecycle and full GUI/feature-matrix acceptance.
+
 ## ASAR integrity inspection, 2026-10-12
 
 - [x] Reproduce same-length packed and unpacked corruption passing the previous length-only inspector.
 - [x] Validate content hashes, block hashes and metadata; independently check unpacked file type and length, including empty files.
 - [x] Pass eight focused synthetic regressions after four new tests failed before the repair; complete independent bounded source review.
-- [ ] Retain exact-source Windows production and released-byte verification separately from installed lifecycle acceptance.
+- [x] Retain exact-source Windows production and released-byte verification separately from installed lifecycle acceptance: source 5f76e81, release v1.400.1.
 
 ## Current preservation pass
 

@@ -1,5 +1,13 @@
 # Continuation handoff
 
+## Preservation closeout
+
+The user requested preservation and cleanup on 2026-10-12. No new implementation began after that request. Read the latest HANDOFF.md section before continuing; it records the proposed converter-sandbox-first repair sequence and the separate GUI integration and installed-lifecycle boundaries.
+
+Accepted source5f76e81 was delivered and promoted as normal v1.400.1. Downloaded release hashes and the Squirrel index match provenance; the published package inspector reports5,718entries and zero rejected entries. Thirteen focused tests and exact-source live bilingual article readback passed. The complete site archive download returned HTTP403. Broad verification remains failed/incomplete; installed execution/update/removal and full GUI acceptance remain unfinished.
+
+This documentation-only preservation commit is not a fresh runtime build. Historical branches, primary checkouts and private receipts remain retained. No deletion occurred because the required off-disk archive destination was unavailable and no proven task-owned branch or linked-checkout candidate existed. Every new GUI agent explicitly uses gpt-6-astra.
+
 ## Current ASAR integrity repair
 
 The package inspector now validates declared SHA-256 content and block hashes for packed and unpacked ASAR files. Missing, malformed or inconsistent metadata and same-length corruption fail closed. Actual unpacked file type and length are checked, including empty entries. Existing exclusions and sanitized diagnostics are preserved.

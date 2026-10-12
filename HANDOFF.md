@@ -1,3 +1,22 @@
+## Preservation closeout, 2026-10-12
+
+Implementation stopped at the user's closeout request. The next-phase plan is recorded below; its repairs have not begun. Preserve unfinished source on the existing remote branches rather than integrating it during this pass.
+
+The accepted implementation is `5f76e8117145b7245bd3b4f8fb52dac4d0f9156f`. Windows delivery run [38284642250](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38284642250) completed successfully, including default-release promotion. Normal release [v1.400.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.400.1) has draft and prerelease flags false and the exact source commit. Downloaded installer, full package and RELEASES sizes and SHA-256 hashes match provenance; the Squirrel index SHA-1 and size match the full package. Inspection of the downloaded application reports PACKAGE_PRIVACY_OK, 5,718 entries and zero rejected entries. Thirteen focused package/documentation tests passed. Installed execution, update, removal and full GUI acceptance remain unfinished.
+
+Documentation deployment run [38284642105](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38284642105) succeeded for the accepted source. Live clean provenance and both package-integrity articles matched that source. Downloading the complete deployment archive returned HTTP 403, so this pass does not establish complete site-archive byte equality. This later documentation-only closeout does not relabel those earlier build or runtime receipts.
+
+The existing public gallery and inventory returned HTTP 200, and all 14 approved image URLs returned HTTP 200 with image/png content. Two originals remain withheld because they expose local paths. Ten historical records lack validated capture dates/timezones; four packaged Windows records carry UTC timestamps from 2026-10-09. This is a point-in-time delivery check of previously published evidence, not current-source pixel or runtime acceptance. No new capture or duplicate gallery was created.
+
+Both local repositories were clean and matched their remote main branches before this handoff. No additional local branch, linked checkout or stash was present. Historical remote branches, primary checkouts and private evidence remain retained. No deletion occurred: the required off-disk archive destination was unavailable and no proven task-owned branch or linked-checkout deletion candidate existed.
+
+Next implementation sequence:
+
+1. Investigate and repair converter sandbox capability admission. The baseline log shows a network connection attempt reaching ECONNREFUSED despite the probe claiming restrictions. Verify actual enforcement with bounded behavioral probes and reject unsupported runtimes before delivering converter input. Host tests and packaged Windows enforcement require separate evidence.
+2. Correct Windows-path update fixtures on Linux without weakening production checks. Repair extracted callback harnesses, missing Cantonese inventory and generated public-route inventory; classify external download prerequisites separately. The recorded broad suite remains failed and incomplete: 939 reported, 870 passed, 29 failed and 40 skipped.
+3. Review coherent preserved integration units, then resume GUI implementation and source-bound capture. Every new GUI design, implementation, review and capture agent explicitly uses `gpt-6-astra`. Investigate renderer startup timeouts and native-selector assumptions through actual behavior before treating them as product defects.
+4. Complete the required feature/surface inventory, responsive visual matrix, full bounded verification and isolated installed lifecycle. Publish only independently reviewed changes and preserve precise unavailable or unfinished boundaries.
+
 ## ASAR integrity inspection, 2026-10-12
 
 The package inspector previously accepted same-length ASAR content corruption because it checked extracted length without validating the declared integrity metadata. It now requires supported SHA-256 content and block hashes, a positive safe-integer block size and exact block count. Unpacked entries receive an independent actual file-type and length check, including empty entries that the archive reader otherwise returns without accessing their loose file. Existing private-directory exclusions, archive-cache invalidation and sanitized diagnostics are preserved.
