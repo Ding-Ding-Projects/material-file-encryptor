@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "classification": "reviewed-selection-not-promoted",
+  "sourceCommit": "49fe7b4ce817f7006a42172bdfbb9bccfddb4df7",
+  "route": "cheap-lowlevel-headless",
+  "build": {
+    "command": "build.bat /s",
+    "exitCode": 0,
+    "sourceStable": true,
+    "receiptSha256": "711232774ebc06e42bc8a4a3506f52921d96464b4500074f87995b59a9896f98",
+    "executableSha256": "e1c1f6abd131790dc8c0ecd7a7c5782d78d8c46327a389fb79a39d90dd365026",
+    "resourceSha256": "0bb7eb9d82b1b3b8ad53736c8a85b8dbb5dfeed3e9f0311ec0a94d7ad06bb472",
+    "bytesRehashed": true
+  },
+  "tuple": {
+    "screen": "Create a drive",
+    "language": "en",
+    "theme": "light",
+    "viewport": {
+      "width": 1180,
+      "height": 752
+    },
+    "rendererScale": 1.5
+  },
+  "selected": [
+    {
+      "id": "storage-input-center",
+      "description": "Create dialog with a neutral synthetic storage field and centered clear control",
+      "captureSha256": "0ca40689ec5dc8b1bba5dcc55441ad9adefb7faf10544182952dd8b49ec9e6cf",
+      "width": 1792,
+      "height": 1139,
+      "receiptRecordedCapturedAt": "2026-10-12T07:52:04.369Z",
+      "captureStartedAt": null,
+      "sourceStartCommit": "49fe7b4ce817f7006a42172bdfbb9bccfddb4df7",
+      "sourceEndCommit": "49fe7b4ce817f7006a42172bdfbb9bccfddb4df7",
+      "layoutProbeSha256": "ebfba71d295839e19db2ad03592afbded6fe535bbb4f5e41b4cbed3df6c528a7",
+      "pixelsInspected": true,
+      "expectedStateVisible": true,
+      "privacyReview": "Selected pixels contain only the application and synthetic fixture content; no private filesystem path was visible.",
+      "runtimeObservation": {
+        "consoleErrorCount": 0,
+        "unhandledExceptionCount": 0,
+        "pageErrorCount": 0,
+        "scope": "Console and page listeners attached after the packaged target opened; not complete launch diagnostics."
+      },
+      "originalRuntimeReceiptClosed": false,
+      "separateClosure": {
+        "receiptSha256": "b751d36bd60d81ba85b0b4b346942c4b2321a54bc2fb0e421a76c3c7083496fd",
+        "gracefulExit": true,
+        "recordedProcessesAbsent": true,
+        "desktopClosed": true
+      },
+      "promoted": false,
+      "promotedPath": null
+    },
+    {
+      "id": "password-input-center",
+      "description": "Create dialog with the masked synthetic password field and centered clear control",
+      "captureSha256": "93b4753ccf38719e151a45d6a31ae078df370741950552739d02ec04a7c273d8",
+      "width": 1792,
+      "height": 1139,
+      "receiptRecordedCapturedAt": "2026-10-12T07:47:45.787Z",
+      "captureStartedAt": null,
+      "sourceStartCommit": "49fe7b4ce817f7006a42172bdfbb9bccfddb4df7",
+      "sourceEndCommit": "49fe7b4ce817f7006a42172bdfbb9bccfddb4df7",
+      "layoutProbeSha256": "08e59c30035722ade830eb0869516a92e2009e852bd78ecc256e06dff9e6b0ad",
+      "pixelsInspected": true,
+      "expectedStateVisible": true,
+      "privacyReview": "Selected pixels contain only the application and synthetic fixture content; no private filesystem path was visible.",
+      "runtimeObservation": {
+        "consoleErrorCount": 0,
+        "unhandledExceptionCount": 0,
+        "pageErrorCount": 0,
+        "scope": "Console and page listeners attached after the packaged target opened; not complete launch diagnostics."
+      },
+      "originalRuntimeReceiptClosed": false,
+      "separateClosure": {
+        "receiptSha256": "5c463ded66ca6e1ac1d74f0fe6618886869ff0c53b55bd3098d453530ee6b1f8",
+        "gracefulExit": true,
+        "recordedProcessesAbsent": true,
+        "desktopClosed": true
+      },
+      "promoted": false,
+      "promotedPath": null
+    }
+  ],
+  "withheld": [
+    {
+      "id": "original-storage-input-default",
+      "reason": "Private task-owned filesystem path visible."
+    },
+    {
+      "id": "original-storage-input-center",
+      "reason": "Private task-owned filesystem path visible."
+    }
+  ],
+  "promotion": {
+    "status": "incomplete",
+    "validatorRun": false,
+    "missing": [
+      "Explicit capture-start timestamp; live ownership observation time cannot substitute.",
+      "Complete version-1 promotion receipt with exact inventory and documentation bindings.",
+      "Dedicated hashed interaction and privacy-review records required by the promotion contract."
+    ],
+    "copiedImages": 0,
+    "originalReceiptsModified": false
+  },
+  "limitations": [
+    "One English/light viewport and renderer-scale tuple only.",
+    "Scrollable dialog views show a subset of controls; no whole-dialog clipping-free or all-state claim.",
+    "No field-clearing interaction, keyboard or assistive-technology acceptance from these images.",
+    "No installed-package, security, performance, release or startup-probability acceptance.",
+    "Original runtime closed:false is preserved; the separate confirmation establishes recorded process absence and desktop closure."
+  ]
+}

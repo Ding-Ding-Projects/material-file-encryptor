@@ -1,4 +1,38 @@
-# Active continuation handoff, 2026-10-12 UTC
+# Current continuation handoff, 2026-10-12 08:00 UTC
+
+This current section supersedes the historical snapshot below. The full goal remains active and incomplete. The current-session stopping boundary is 8 percent remaining; the latest verified allowance was 48 percent remaining.
+
+## Current durable delivery
+
+Main is 6536fa04326a139e1de26356af0fd844e10a5e28, pushed and independently read back. It includes PDF packaging, measured immutable packaged-documentation reuse, raw-byte updater integrity repair, BOM-free future Squirrel feeds and the rewritten README with three Mermaid diagrams. Main updater source 411ce5d55b96958799d996713374b7b683552234 produced normal release v1.344.1 through successful workflow 38219671466.
+
+The exact controller extracted from installed 1.133.1 now discovers actual hosted 1.344.1 and returns available without an error reason. Real metadata was transported through the GitHub CLI, with actual feed/provenance bytes matching hosted hashes. This was isolated read-only execution, not installed GUI or applied-update acceptance. No package download, native apply or mounted-data change occurred.
+
+The successful local installer receipt remains bound to ab975bb0f7cd9354c86ef130c54d7e276dc8941d. Its full tree equals corrected published 411ce5d, but its receipt was not relabelled. Original history remains in refs/agent-recovery/update-message-original-20261012. Hosted 411ce5d has its own workflow proof.
+
+Recovery source 49fe7b4ce817f7006a42172bdfbb9bccfddb4df7 is pushed and passed its exact root build with unchanged clean source. Do not merge this whole recovery ancestry into main. Additional recovery features remain incomplete.
+
+Ollama branch codex/ollama-one-click-20261012 is remotely preserved at 482c3c58bee8849907e19a22adba2c1c2afd565e. The official x64 archive is downloaded and hash-verified; independent GUI source review passed. Protected extraction, cancellation, actual button installation and runtime acceptance remain incomplete. The next implementation uses fixed PowerShell/.NET ZipArchive with the same held stream for hashing and extraction, the reviewed 82-file manifest, protected destination identity and confirmed owned-process exit. No actual extraction or installation has passed.
+
+Startup source 4c2a6540cd6789e1042b600b6a283354ec8e8e71 is now integrated and remotely verified on main and codex/main-startup-surprise-20261012. Forty-nine focused source checks, eight publication checks and its exact root build passed. Package privacy accepted 5717 entries with zero rejected. Packaged gh/git resolve through production hash verification without PATH or network. The original build receipt's generated-file dirty marker remains preserved; separate exact-byte proof confirms the generated file equals its committed blob. Hosted delivery and actual returning-launch photo display remain pending.
+
+## Latest user steering and remaining acceptance
+
+Deliver verified increments to main frequently. Once actual button-driven Ollama installation works and the installed runtime is verified, record the reusable procedure in the canonical shared instructions, require every application to expose the one-click installation control, regenerate and validate managed outputs, push and verify the canonical remote. This means a reusable procedure, not one shared physical directory. Do not call an unverified route working.
+
+Recovery 49fe7b4 now has fourteen validated layout receipts for English/light, 1180 by 752 client area at 1.5 scale. Icons measure 24 by 24, hosts 40 by 40, touch regions 48 by 48. Field-centering exposes nine of nine sampled points for each of six fields. Default preparation obstructs three storage/password points beneath heading/footer; this alone does not establish an ordinary-interaction product cause. Both hidden desktops and all recorded processes are independently confirmed closed. Original unknown-close receipts remain unchanged.
+
+Two original storage captures containing temporary machine paths are withheld; neutral replacements were genuinely captured. Complete promotion receipts remain missing explicit capture-start and separately hashed interaction/privacy proof. Never invent these fields. Full language/theme/scale coverage, History/Recycle captures and current presentation replacement remain incomplete.
+
+Documentation deployment 38220606400 succeeded at 6536fa0. The live home, assets and four changed paired feature articles match its deployment artifact; the exact About homepage is verified. The complete README article and reviewed evidence JSON are absent from that artifact and return 404. The README diagrams are not rendered there. A bounded publication repair is in progress.
+
+Installed updater GUI discovery, actual apply/continuity, returning-launch surprise display, complete required features and full visual acceptance remain pending. Keep the mounted drive and real data untouched. Never initiate local host power or login actions.
+
+Canonical shared instructions remain at 194ceca48a55313ade8703a0cd4695efb41482b1, with the earlier supported synchronization showing 83 of 83 current targets. The conditional Ollama update has not been made. Status Hub enrollment and Project access remain unavailable.
+
+Twelve working trees and one preservation stash remain retained. Archive-v3 TREE admission independently passed 22 bounded checks, but actual production archive creation, ACL verification and cleanup remain unrun. The old archive covers eight trees only. Preserve all ignored announcement variants and verification evidence privately before deletion. Require exact ownership, inactivity, preservation, remote-main ancestry and complete archive proof. No cleanup occurred.
+
+## Historical continuation snapshot
 
 Continue measured performance improvements, confirmed defect repairs, complete required features and pure Material Design 3 across every rendered surface. GUI design, implementation and independent GUI review explicitly use gpt-6-astra. Replace current presentation screenshots with genuine rebuilt captures, add coverage for new features and preserve historical originals. Fully rewrite README.md with public-safe contribution instructions and architecture, file-workflow and verification diagrams. The objective is active and incomplete.
 
