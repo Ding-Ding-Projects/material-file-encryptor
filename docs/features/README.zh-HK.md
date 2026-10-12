@@ -13,7 +13,7 @@
 
 ## 桌面工作流程
 
-- [共用分頁、搜尋、命令列同通知](surface-foundation/README.md)
+- [共用分頁、搜尋、命令選單同通知](surface-foundation/README.md)
 - [語言、旁白、排程同注意力模式](interface/local-personalization.md)
 - [元素外觀編輯器同標誌自訂](interface/appearance-editor.md)
 - [本機個人用語](interface/personal-vocabulary.md)
