@@ -273,6 +273,13 @@ def configured_base_interpreter(values, launcher, actual_base):
     return base
 
 
+def interpreter_commands(launcher, base, arguments):
+    """Build exact commands for the supported CPython redirector routes."""
+    command = subprocess.list2cmdline([str(launcher), *arguments])
+    base_command = command if launcher.name.lower() == 'pythonw.exe' else '"' + str(base) + '" ' + subprocess.list2cmdline(arguments)
+    return command, base_command
+
+
 @contextmanager
 def owning_client(client_pid, expected=None, api=None, binding=None, configuration=None):
     """Hold exact self/optional venv launcher/Node identities across proof."""
@@ -285,9 +292,10 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
         cfg = launcher.parent.parent / 'pyvenv.cfg'
         values = dict(line.split(' = ', 1) for line in cfg.read_text().splitlines() if ' = ' in line)
         base = configured_base_interpreter(values, launcher, sys._base_executable)
-        # CPython's Windows venv redirector replaces argv[0] with a quoted
-        # base executable. The intermediate launcher retains the original.
-        configuration = {'launcher': str(launcher), 'base': str(base), 'node': str(node), 'files': {str(p): digest(p) for p in [launcher, base, cfg, node]}, 'command': subprocess.list2cmdline([os.environ['MFE_LOWLEVEL_PYTHON'], *sys.argv]), 'baseCommand': '"' + str(base) + '" ' + subprocess.list2cmdline(sys.argv), 'selfPid': os.getpid()}
+        # The GUI redirector retains the isolated launch command in the base
+        # process. The console redirector substitutes its quoted base image.
+        command, base_command = interpreter_commands(launcher, base, sys.argv)
+        configuration = {'launcher': str(launcher), 'base': str(base), 'node': str(node), 'files': {str(p): digest(p) for p in [launcher, base, cfg, node]}, 'command': command, 'baseCommand': base_command, 'selfPid': os.getpid()}
     rows, chain = api.inventory(), []
     current = configuration['selfPid']
     with ExitStack() as stack:
@@ -306,7 +314,20 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
         if len(chain) not in (2, 3) or chain[-1][0]['pid'] != client_pid or chain[-1][0]['executablePath'] != configuration['node']:
             raise Error('Actual Node client ancestry differs.')
         if chain[0][0]['executablePath'] != configuration['base'] or chain[0][1] != configuration.get('baseCommand', configuration['command']):
-            raise Error('Actual Python execution image or command differs.')
+            error = Error('Actual Python execution image or command differs.')
+            actual_identity, actual_command, _ = chain[0]
+            expected_command = configuration.get('baseCommand', configuration['command'])
+            image_matches = actual_identity['executablePath'] == configuration['base']
+            error.executionDiagnostic = {
+                'expectedImage': configuration['base'],
+                'actualIdentity': actual_identity,
+                'imageMatches': image_matches,
+                'commandMatches': actual_command == expected_command,
+                'expectedCommand': expected_command if len(expected_command) <= 4096 else None,
+                'actualCommand': actual_command if image_matches and len(actual_command) <= 4096 else None,
+                'actualCommandRetained': image_matches and len(actual_command) <= 4096,
+            }
+            raise error
         if len(chain) == 3 and (chain[1][0]['executablePath'] != configuration['launcher'] or chain[1][1] != configuration['command']):
             error = Error('Intermediate Python launcher image or command differs.')
             actual_identity, actual_command, _ = chain[1]

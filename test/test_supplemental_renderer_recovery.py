@@ -26,6 +26,18 @@ class Binding:
         return {'hwnd': hwnd, 'pid': self.owner, 'threadId': 9}
 
 
+class InterpreterCommandTests(unittest.TestCase):
+    def test_gui_retains_exact_launcher_and_console_substitutes_base(self):
+        root = Path('C:/synthetic root')
+        arguments = [str(root / 'worker.py'), '17']
+        launcher, base = root / 'venv/Scripts/pythonw.exe', root / 'runtime/pythonw.exe'
+        command, actual = recovery.interpreter_commands(launcher, base, arguments)
+        self.assertEqual(actual, subprocess.list2cmdline([str(launcher), *arguments]))
+        self.assertNotEqual(actual, '"' + str(base) + '" ' + subprocess.list2cmdline(arguments))
+        command, actual = recovery.interpreter_commands(launcher.with_name('python.exe'), base.with_name('python.exe'), arguments)
+        self.assertEqual(actual, '"' + str(base.with_name('python.exe')) + '" ' + subprocess.list2cmdline(arguments))
+
+
 class Tests(unittest.TestCase):
     def test_stdlib_and_uv_configuration_require_actual_base_identity(self):
         root = Path(tempfile.gettempdir()).resolve()
@@ -190,6 +202,24 @@ class Tests(unittest.TestCase):
             def command(self,handle): return redirected['baseCommand'] if handle==77 else super().command(handle)
         with recovery.owning_client(80,api=api,binding=RedirectedCommand(),configuration=redirected): pass
         with self.assertRaises(recovery.Error), recovery.owning_client(80,api=api,binding=binding,configuration=redirected): pass
+
+        with self.assertRaises(recovery.Error) as captured:
+            with recovery.owning_client(80,api=api,binding=binding,configuration=redirected): pass
+        diagnostic = captured.exception.executionDiagnostic
+        self.assertTrue(diagnostic['imageMatches'])
+        self.assertFalse(diagnostic['commandMatches'])
+        self.assertEqual(diagnostic['actualCommand'], configuration['command'])
+        unrelated = {**observations, 77:{**own, 'executablePath':'C:/unrelated.exe'}}
+        with self.assertRaises(recovery.Error) as captured:
+            with recovery.owning_client(80,api=Fake(rows=api.rows,observations=unrelated),binding=binding,configuration=configuration): pass
+        self.assertFalse(captured.exception.executionDiagnostic['imageMatches'])
+        self.assertIsNone(captured.exception.executionDiagnostic['actualCommand'])
+        self.assertFalse(captured.exception.executionDiagnostic['actualCommandRetained'])
+        class OversizedCommand(Commands):
+            def command(self, handle): return 'x' * 4097 if handle == 77 else super().command(handle)
+        with self.assertRaises(recovery.Error) as captured:
+            with recovery.owning_client(80,api=api,binding=OversizedCommand(),configuration=configuration): pass
+        self.assertIsNone(captured.exception.executionDiagnostic['actualCommand'])
 
 
 if __name__ == '__main__':
