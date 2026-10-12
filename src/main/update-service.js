@@ -135,8 +135,9 @@ export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl
     for await (const chunk of response.body) {
       bytes += chunk.length; assert(bytes <= MAX_METADATA, 'METADATA_TOO_LARGE'); chunks.push(Buffer.from(chunk));
     }
-    const text = Buffer.concat(chunks).toString('utf8').replace(/^\uFEFF/, '');
-    if (!json) return text;
+    const raw = Buffer.concat(chunks);
+    if (!json) return raw;
+    const text = raw.toString('utf8').replace(/^\uFEFF/, '');
     try { return JSON.parse(text); } catch { throw new Error('INVALID_METADATA'); }
   }
   async function transaction(work, timeoutMs = requestTimeoutMs) {
@@ -184,11 +185,12 @@ export function createUpdateService({ app, autoUpdater, dialog, fetch: fetchImpl
         proof.total_commits === proof.ahead_by && Array.isArray(proof.commits) && proof.commits.length <= 1 && !Object.hasOwn(proof, 'files') &&
         ((proof.status === 'identical' && proof.ahead_by === 0 && main.object.sha === provenance.sourceCommit) ||
          (proof.status === 'ahead' && proof.ahead_by > 0 && main.object.sha !== provenance.sourceCommit)), 'UPDATE_SOURCE_NOT_ON_MAIN');
-      const releasesText = await metadata(base + 'RELEASES', signal, false, true);
+      const releasesBytes = await metadata(base + 'RELEASES', signal, false, true);
       const releasesRecord = provenance.assets.filter(a => a.name === 'RELEASES');
-      assert(releasesRecord.length === 1 && releasesRecord[0].bytes === Buffer.byteLength(releasesText) &&
+      assert(releasesRecord.length === 1 && releasesRecord[0].bytes === releasesBytes.length &&
         asset('RELEASES').size === releasesRecord[0].bytes &&
-        releasesRecord[0].sha256 === createHash('sha256').update(releasesText).digest('hex'), 'RELEASES_HASH_MISMATCH');
+        releasesRecord[0].sha256 === createHash('sha256').update(releasesBytes).digest('hex'), 'RELEASES_HASH_MISMATCH');
+      const releasesText = releasesBytes.toString('utf8').replace(/^\uFEFF/, '');
       const entries = releasesText.trim().split(/\r?\n/).map(line => {
         const match = /^([a-fA-F0-9]{40})\s+([A-Za-z0-9_.-]+\.nupkg)\s+([1-9]\d*)$/.exec(line);
         assert(match && !match[2].includes('..'), 'INVALID_RELEASES');
