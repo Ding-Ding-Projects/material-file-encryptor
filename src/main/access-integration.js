@@ -59,10 +59,12 @@ export function createAccessIntegration({dataDirectory,toolsDirectory,credential
   if(key.startsWith('authenticator:'))return action==='credentialSet'?host.setCredential(key,value):host.deleteCredential(key);
   if(key.startsWith('history:'))return privateHistoryMutation(who,action,key,value);
   if(typeof recordMutation!=='function')throw Error('Local mutation history is unavailable.');
-  const target=targetFor(key),epoch=generation(who,target),before=await credentials.readVersioned(key);current(who,target,epoch);
+  const target=targetFor(key);let epoch=generation(who,target);const before=await credentials.readVersioned(key);current(who,target,epoch);
   if(action==='credentialSet'&&before.value!==null)throw Error('An existing credential cannot be replaced through creation. Authenticate and use its supported removal workflow.');
   if(action==='credentialDelete'&&before.value===null)return true;
   if(action==='credentialDelete'){const verified=grants.get(identity(who,target)),created=creations.get(identity(who,key));if(!(verified&&verified.expires>now()&&verified.revision===before.revision)&&!(created&&created.expires>now()&&created.revision===before.revision))throw Error('Verify the current credential before removing it.');}
+  // Revoke old profile verification before a supported write can reach storage or await its audit.
+  if(target==='profile'){epoch++;epochs.set(identity(who,target),epoch);grants.delete(identity(who,target));}
   const result=await credentials.compareAndSetVersioned(key,before.revision,action==='credentialSet'?value:null);if(!result.updated)throw Error('Protected access record changed concurrently.');
   try{current(who,target,epoch);await recordMutation({version:1,action:action==='credentialSet'?'access-credential-created':'access-credential-removed',target:target,at:new Date(now()).toISOString()});current(who,target,epoch);}
   catch(error){const restored=await credentials.compareAndSetVersioned(key,result.revision,before.value);if(!restored.updated)throw Error('Protected access record changed concurrently. Local recovery is required.');try{await recordMutation({version:1,action:'access-credential-rolled-back',target,at:new Date(now()).toISOString()});}catch{throw Error('Local mutation history is unavailable.');}throw error;}
