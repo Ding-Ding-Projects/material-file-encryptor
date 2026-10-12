@@ -14,7 +14,10 @@
 - [x] Verify actual v1.356.1 archive CRC, Setup embedding and all665 payload files without product execution.
 - [x] Deliver the full README, three rendered diagrams and reviewed evidence JSON directly on the documentation site; all 234 live files match deployment bytes, with internal routes and anchors verified.
 - [x] Verify normal v1.373.1 metadata, source/tag/run binding and downloaded provenance/update-feed digests. Installed acceptance remains separate.
-- [ ] Complete corrected native Ollama verifier4a27564 execution, then actual managed installation and button/runtime acceptance; production admission remains disabled.
+- [x] Complete corrected native Ollama verifier4a27564 execution with shared production settlement, exact descendant identity, whole-job zero and independent process absence.
+- [x] Preserve independently reviewed renderer status ordering atfd2a316 with18 focused checks and isolated causal negative/green.
+- [x] Complete source-accepted412a217 exact root build with unchanged source and5728 accepted package entries, zero rejected.
+- [ ] Complete412a217 actual managed installation/API/button acceptance; the initial fresh memory reading was below the existing GUI floor and no launch occurred at that observation.
 - [ ] Record complete capture-promotion provenance during future genuine captures; the current 49fe7b4 selections remain unpromoted.
 - [ ] Complete all required features and the full language/theme/viewport/scale visual matrix; current fourteen layout receipts cover one tuple only.
 - [ ] Produce and verify the current complete private archive before any ownership-qualified cleanup; 22 helper checks do not constitute an archive.
