@@ -79,5 +79,29 @@
     "mountedDriveAccessed": false,
     "activeCancellationVerified": false,
     "installedLifecycleVerified": false
+  },
+  "nativeLifetime": {
+    "sourceCommit": "f2f20c077cccdbb46c572b84df8cc8fca11f89ca",
+    "entrypoint": "build.bat /s",
+    "buildExitCode": 0,
+    "nativeHostSha256": "481574d1570a96eaed1f82d7ce485b994bb2cf2164dc1eef2ae01ebd59ddfde0",
+    "verifierDllSha256": "64b9a92f36a5807637e994618d6b71c55bf77930d2ccd74a336380d8b5378fb8",
+    "observedAt": "2026-10-12T06:40:50.210679Z",
+    "checks": [
+      "partial-acquisition-releases-full-tree",
+      "proven-no-launch-release",
+      "proven-createprocess-failure-release",
+      "full-tree-protected-through-child-lifetime",
+      "live-timeout-retains-complete-tree",
+      "exact-child-exit-releases-complete-tree",
+      "post-spawn-uncertainty-retains-full-tree",
+      "uncertain-exact-exit-release"
+    ],
+    "positiveExitCode": 0,
+    "negativeControlExitCode": 1,
+    "negativeControlReason": "Full-tree DLL writer admitted while the exact child is alive.",
+    "javaExecuted": false,
+    "serverStarted": false,
+    "configurationAdmitted": false
   }
 }

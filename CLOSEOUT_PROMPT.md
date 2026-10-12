@@ -4,7 +4,7 @@ Continue the approved full-product task: improve measured application speed, rep
 
 ## Current source and preservation
 
-The primary recovery branch is codex/resume-integration-20261012. Its latest verified remote source before this record is 33ed0f8b58b1238ff28264aa0ea8b019759a7a55. Main remains f026abd65d80b28f42707635d9ce2a19cce83001. Reviewed server provisioning 4666237, extension workspace 39cbbd2 and documentation cache 9c4f6dc were independently preserved remotely and integrated before the declaration-only native correction at 33ed0f8.
+The primary recovery branch is codex/resume-integration-20261012. Its latest verified remote source before this record is 945fc2580ba631ea9f28288db7420dc09f8a8c24. Main remains f026abd65d80b28f42707635d9ce2a19cce83001. Reviewed server provisioning 4666237, extension workspace 39cbbd2 and documentation cache 9c4f6dc were independently preserved remotely and integrated before the declaration-only native correction at 33ed0f8.
 
 The surface branch retains test-only candidate ae762c714e18a1f67e2f3f5193ecc9019b775ac4, with verified remote readback. Other retained branches and checkouts remain untouched. Shared instructions are synchronized at 194ceca48a55313ade8703a0cd4695efb41482b1, with 83 of 83 managed targets current. Status Hub enrollment is unavailable; current status uses a private local fallback. Project access lacks read:project scope.
 
@@ -21,7 +21,7 @@ The surface branch retains test-only candidate ae762c714e18a1f67e2f3f5193ecc9019
 
 ## Active isolated work and next steps
 
-The server branch is implementing complete runtime-file protection for the entire child lifetime, with configuration admission still closed. The extension branch is implementing a typed read-only protection-status route, with no browser grant, private mapping transmission or borrowed actor context. Both slices require independent review, preservation, integration and their own actual verification.
+The reviewed complete runtime-file lifetime contribution 82463fc is integrated at f2f20c0. Its exact root build passed and the actual native verifier passed eight synthetic checks; the intentional negative control failed as expected. Java and server execution remain unrun, with configuration admission closed. The extension branch has independently reviewed candidate 9a2186c for a typed read-only protection-status route and repaired stale observations during deferred profile-removal audit, with no browser grant, private mapping transmission or borrowed actor context. Both slices require independent review, preservation, integration and their own actual verification.
 
 Finish those bounded slices. Complete native lifetime proof and exact-version configuration before enabling startup. Resume the first renderer diagnostic only after a relevant resource change permits admission, preserving the already passing scoped proof. Add truthful renderer task-ready timing before claiming end-to-end speed. Complete the remaining extension mediation, required features, visual matrix, installed continuity, normal release and live documentation evidence. Integrate accepted completed work into main and verify its remote state.
 
