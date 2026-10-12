@@ -34,6 +34,12 @@ internal static class Program
             return driver.GetProperty("available").GetBoolean() ? 0 : 1;
         }
         using var cancellation = new CancellationTokenSource();
+        // This root is supplied only by the desktop-owned private pipe launcher.
+        // Runtime admission stays closed until the native lifetime checks pass.
+        OllamaRuntimeBroker? managedRuntime = null;
+        int managedRootIndex = Array.IndexOf(args, "--managed-data-root");
+        if (managedRootIndex >= 0 && managedRootIndex + 1 < args.Length)
+            managedRuntime = new OllamaRuntimeBroker(args[managedRootIndex + 1], startupAdmitted: false);
         controller.Status();
         object previousSummary=controller.StatusSummary();
         Task background = Task.Run(async () =>
@@ -73,7 +79,10 @@ internal static class Program
                     JsonElement? responseId = id;
                     // Clone before disposing the parsed request. Dispatch registers
                     // admission immediately but never blocks the stdin reader.
-                    Task<object?> pending = controller.DispatchAsync(method, parameters.ValueKind == JsonValueKind.Undefined ? default : parameters.Clone());
+                    JsonElement ownedParameters = parameters.ValueKind == JsonValueKind.Undefined ? default : parameters.Clone();
+                    Task<object?> pending = method.StartsWith("managedOllama.", StringComparison.Ordinal)
+                        ? DispatchManagedAsync(managedRuntime, method, ownedParameters)
+                        : controller.DispatchAsync(method, ownedParameters);
                     requests.RemoveAll(task => task.IsCompleted);
                     requests.Add(pending.ContinueWith(task =>
                     {
@@ -86,6 +95,11 @@ internal static class Program
         }
         finally
         {
+            // Seal admission before draining requests. Keep exact native ownership
+            // retained until the complete job has settled, including descendants.
+            if (managedRuntime is not null)
+                while (!await managedRuntime.CloseAllAsync())
+                { Console.Error.WriteLine("Waiting for the owned runtime process tree before shutdown."); await Task.Delay(1000); }
             await Task.WhenAll(requests);
             cancellation.Cancel(); await background;
             // EOF is an orderly parent shutdown. Preserve a busy mount until its
@@ -98,5 +112,10 @@ internal static class Program
             }
         }
         return exitCode;
+    }
+    private static async Task<object?> DispatchManagedAsync(OllamaRuntimeBroker? broker, string method, JsonElement parameters)
+    {
+        if (broker is null) throw new InvalidOperationException("The managed runtime ownership service is unavailable.");
+        return await broker.DispatchAsync(method, parameters);
     }
 }
