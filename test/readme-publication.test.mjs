@@ -3,7 +3,7 @@ test('all three README flowcharts preserve declared nodes and arrows as accessib
  const readme=(await fs.readFile('README.md','utf8')).replaceAll('\r\n','\n'),graphs=[...readme.matchAll(/```mermaid\n([\s\S]*?)```/g)].map(m=>m[1]);assert.equal(graphs.length,3);
  const expectedEdges=[['Desktop>Main','Main>Host','Explorer>Driver','Driver>Host','Host>Core','Core>Cache','Core>Backing','Backing>Provider'],['Write>Encrypt','Encrypt>Durable','Durable>Close','Close>Pack','Pack>Queue','Queue>Backing','Durable>Read','Read>Verify','Verify>Plain'],['Source>Build','Build>Package','Package>Bytes','Bytes>Install','Install>Runtime','Runtime>Evidence','Evidence>Release']];
  for(const [i,graph]of graphs.entries()){const svg=renderReadmeFlowchart(graph,i),nodes=new Set([...graph.matchAll(/([A-Za-z][A-Za-z0-9_]*)\["/g)].map(m=>m[1]));assert.equal((svg.match(/data-node=/g)||[]).length,nodes.size);for(const node of nodes)assert.ok(svg.includes(`data-node="${node}"`));assert.equal((svg.match(/class="diagram-edge"/g)||[]).length,(graph.match(/-->/g)||[]).length);assert.deepEqual([...svg.matchAll(/data-from="([^"]+)" data-to="([^"]+)"/g)].map(m=>m[1]+'>'+m[2]),expectedEdges[i]);assert.match(svg,/role="img" aria-labelledby=/);assert.match(svg,/<desc /);assert.match(svg,/tabindex="0" role="region" aria-label="Scrollable flowchart"/);assert.ok(svg.includes('Diagram source'));assert.ok(!/(?:href|src)="https?:/.test(svg));}
- const architecture=renderReadmeFlowchart(graphs[0]);const x=id=>Number(new RegExp('<g data-node="'+id+'"><rect[^>]* x="([0-9]+)"').exec(architecture)[1]);assert.equal(x('Host')-(x('Main')+260),180);assert.ok(architecture.includes('Private pipe'));const workflow=renderReadmeFlowchart(graphs[1]);assert.ok(workflow.includes('x="20" y="160" width="260"'));
+ const architecture=renderReadmeFlowchart(graphs[0]);const x=id=>Number(new RegExp('<g data-node="'+id+'"><rect[^>]* x="([0-9]+)"').exec(architecture)[1]);assert.equal(x('Host')-(x('Main')+260),180);assert.ok(architecture.includes('Private pipe'));const workflow=renderReadmeFlowchart(graphs[1]);assert.ok(workflow.includes('x="12" y="152" width="260"'));
  const output=renderMarkdown(readme,'README.md',new Map());assert.equal((output.match(/<svg /g)||[]).length,3);const css=await fs.readFile('docs/site/site.css','utf8');assert.match(css,/\.diagram-scroll\{max-width:100%;overflow:auto/);assert.match(css,/max-width:none/);assert.match(css,/font-size:18px/);
 });
 test('README diagram subset rejects unsupported directives cycles missing nodes and hostile syntax',()=>{
@@ -25,7 +25,7 @@ test('diagram roots retain native dimensions while ordinary SVG icons keep their
   const generic=styles.match(/(?:^|\})\s*svg\s*\{([^}]*)\}/)?.[1];assert.ok(generic,'shared SVG paint rule');
   assert.doesNotMatch(generic,/(?:^|;)\s*(?:width|height)\s*:/,'generic paint must not impose icon dimensions');
   assert.match(styles,/svg:not\(\.documentation-flowchart\)\{width:24px;height:24px\}/);
-  const expected=[[2680,320],[680,1020],[3560,180]];assert.equal(images.length,expected.length);
+  const expected=[[2484,250],[604,950],[3364,110]];assert.equal(images.length,expected.length);
   images.forEach((html,index)=>{const opening=html.match(/<svg\b[^>]*>/)?.[0];assert.ok(opening);assert.match(opening,/class="documentation-flowchart"/);assert.doesNotMatch(opening,/\sstyle=/);const [width,height]=expected[index];assert.ok(opening.includes(`width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"`));assert.match(html,/class="diagram-scroll" tabindex="0" role="region" aria-label="Scrollable flowchart"/);});
   assert.match(styles,/\.diagram-scroll\{max-width:100%;overflow:auto/);assert.match(styles,/\.diagram-scroll svg\{[^}]*max-width:none/);
  };
@@ -34,5 +34,22 @@ test('diagram roots retain native dimensions while ordinary SVG icons keep their
  assert.throws(()=>check(css.replace('svg{','svg{width:24px;height:24px;'),diagrams));
  assert.throws(()=>check(css.replace('svg:not(.documentation-flowchart)','svg'),diagrams));
  assert.throws(()=>check(css,diagrams.map(html=>html.replace('class="documentation-flowchart"',''))));
- assert.throws(()=>check(css,diagrams.map(html=>html.replace('width="2680"','width="24"'))));
+ assert.throws(()=>check(css,diagrams.map(html=>html.replace('width="2484"','width="24"'))));
+});
+
+test('diagram labels have no inherited stroke and end panning retains the full terminal node',async()=>{
+ const css=await fs.readFile('docs/site/site.css','utf8'),readme=(await fs.readFile('README.md','utf8')).replaceAll('\r\n','\n');
+ const diagrams=[...readme.matchAll(/```mermaid\n([\s\S]*?)```/g)].map((m,i)=>renderReadmeFlowchart(m[1],i));
+ const paint=styles=>{assert.match(styles,/\.documentation-flowchart :is\(text,tspan\)\{stroke:none\}/);assert.match(styles,/\.diagram-edge\{[^}]*stroke:var\(--primary/);assert.match(styles,/\.diagram-node\{[^}]*stroke:var\(--outline/);assert.match(styles,/\.diagram-scroll svg\{[^}]*font-size:18px/);};
+ const geometry=html=>{
+  const [,w,h]=html.match(/<svg[^>]* width="(\d+)" height="(\d+)"/),width=Number(w),height=Number(h);
+  const nodes=[...html.matchAll(/<rect class="diagram-node" x="(\d+)" y="(\d+)" width="(\d+)" height="(\d+)"/g)].map(m=>({x:+m[1],y:+m[2],w:+m[3],h:+m[4]}));
+  assert.ok(nodes.length>0);const right=Math.max(...nodes.map(n=>n.x+n.w)),bottom=Math.max(...nodes.map(n=>n.y+n.h));
+  assert.equal(Math.min(...nodes.map(n=>n.x)),12);assert.equal(Math.min(...nodes.map(n=>n.y)),12);assert.equal(width-right,12);assert.equal(height-bottom,12);
+  for(const node of nodes.filter(n=>n.x+n.w===right)){const leftAtEnd=node.x-(width-279);assert.ok(leftAtEnd>=0);assert.ok(leftAtEnd+node.w<=279);}
+  for(const m of html.matchAll(/class="diagram-edge" d="M ([\d.]+) ([\d.]+) L ([\d.]+) ([\d.]+)"/g)){assert.ok(+m[1]>=0&&+m[3]<=width);assert.ok(+m[2]>=0&&+m[4]<=height);}
+ };
+ paint(css);diagrams.forEach(geometry);
+ assert.throws(()=>paint(css.replace('stroke:none}','stroke:currentColor}')));
+ assert.throws(()=>geometry(diagrams[0].replace('width="2484" height="250"','width="2680" height="250"')));
 });
