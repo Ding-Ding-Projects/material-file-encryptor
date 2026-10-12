@@ -571,8 +571,8 @@
     {
       "source": "docs/features/workflows/browser-protection-observations.md",
       "translation": "docs/features/workflows/browser-protection-observations.zh-HK.md",
-      "sourceSha256": "c90cff68a319dcac282b70e77585d51b2bb1be4a4705c4dbe82e00e074e853d5",
-      "translationSha256": "05b0bdc2fc4582366463bf8d3a2b0a3fc36050a840a4e9c3caf3dd25740542c1"
+      "sourceSha256": "bea4f95936b0acea823cc8aca4feef16c73fc175442fd091e46ec515ee3c99a6",
+      "translationSha256": "6c6fc8a384c19d7b3ffa5e174c4cdd770532f4e1c731678816b5c7e795176917"
     },
     {
       "source": "docs/features/platform/renderer-task-timing.md",
