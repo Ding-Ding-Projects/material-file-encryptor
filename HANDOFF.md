@@ -825,3 +825,7 @@ The current review uses parent baseline `785fdf2` with ready revisions `4ca05780
 ## Main-baseline PDF packaging candidate
 
 A bounded adaptation of `7ad539a937f5c2828572884cc7ef7111290ba62c` excludes only upstream PDF debug maps while preserving the main-baseline resource list and runtime code. Exact-source root build and extracted PDF verification remain pending. No newer interface, extension, native provisioning or documentation cache is activated by this change.
+
+## Main-baseline documentation cache candidate
+
+A bounded adaptation reuses an immutable packaged documentation catalogue through existing main request and close seams. No newer access, browser or server lifecycle methods are imported. Focused source checks and independent review precede a new exact build and component measurement. Installed and renderer acceptance remain separate.

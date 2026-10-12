@@ -1,3 +1,4 @@
+import {createDocumentationCatalogService} from './documentation-catalog-service.js';
 import {createServerManagerHost} from './server-manager-host.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -49,7 +50,8 @@ export function sanitizeConverterDiagnostic(record){const safe={schema:1,compone
 
 export function converterUnavailableError(record){const safe=sanitizeConverterDiagnostic(record);const fields=['launcherExitCode','workerExitCode','nativeError','nativeHresult'].filter(key=>Object.hasOwn(safe,key)).map(key=>key+'='+safe[key]);return new Error(`Isolated image decoding unavailable: ${safe.component}/${safe.phase}/${safe.code}${fields.length?' ['+fields.join(', ')+']':''}.`);}
 
-export function createFeatureServices({dataDirectory,applicationRoot,sandboxDirectory,safeStorage,dialog,getWindow,openPath,openExternal,emit=()=>{},sandboxProvider,onConverterDiagnostic=()=>{}}){
+export function createFeatureServices({dataDirectory,applicationRoot,isPackaged=false,sandboxDirectory,safeStorage,dialog,getWindow,openPath,openExternal,emit=()=>{},sandboxProvider,onConverterDiagnostic=()=>{}}){
+ const documentation=createDocumentationCatalogService({filename:path.join(applicationRoot,'src/shared/documentation-catalog.json'),immutable:isPackaged===true});
  const credentials=createCredentialStore({directory:dataDirectory,safeStorage});
  const scheduleAuthorization={};
  const schedules=createScheduleSource({credentials,authorizeCredentialMutation:context=>context?.authorization===scheduleAuthorization});
@@ -97,7 +99,7 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
   }
   if(feature==='documentation'){
    if(!['catalog','changelog'].includes(action))throw Error('Unsupported documentation action.');
-   const file=path.join(applicationRoot,'src/shared/documentation-catalog.json');const catalog=JSON.parse(await fs.readFile(file,'utf8'));return action==='catalog'?catalog:catalog.changelog||[];
+   return documentation.request(action);
   }
   if(feature==='status'&&action==='status')return(await statusPromise).snapshot();
   if(feature==='access'){
@@ -134,5 +136,5 @@ export function createFeatureServices({dataDirectory,applicationRoot,sandboxDire
   throw Error('Unsupported feature action.');
  }
  async function request(...args){pendingRequests++;try{return await dispatch(...args);}finally{pendingRequests--;}}
- return {request,credentials,beginExit(){exiting=true;},endExit(){exiting=false;},async pending(){return pendingRequests+servers.pending+workflows.pending+(converter?await converter.pending():0)+(ollama?.operations().length||0);},async cancelAll(){servers.cancelAll();cancelFontMetadata();workflows.cancelAll();await imageService.cancelAll();await Promise.allSettled([converterPromise,ollamaPromise]);await Promise.all([converter?.cancelAll(),ollama?.cancelAll()]);},async checkpoint(summary,progress){return(await statusPromise).checkpoint(summary,progress);},async close(){closed=true;await servers.close();cancelFontMetadata();await schedules.dispose();await imageService.close();await workflows.close();await Promise.allSettled([converterPromise,ollamaPromise]);await converter?.close();await ollama?.dispose();await(await statusPromise).finish('waiting');grants.clear();}};
+ return {request,credentials,beginExit(){exiting=true;},endExit(){exiting=false;},async pending(){return pendingRequests+servers.pending+workflows.pending+(converter?await converter.pending():0)+(ollama?.operations().length||0);},async cancelAll(){servers.cancelAll();cancelFontMetadata();workflows.cancelAll();await imageService.cancelAll();await Promise.allSettled([converterPromise,ollamaPromise]);await Promise.all([converter?.cancelAll(),ollama?.cancelAll()]);},async checkpoint(summary,progress){return(await statusPromise).checkpoint(summary,progress);},async close(){closed=true;documentation.close();await servers.close();cancelFontMetadata();await schedules.dispose();await imageService.close();await workflows.close();await Promise.allSettled([converterPromise,ollamaPromise]);await converter?.close();await ollama?.dispose();await(await statusPromise).finish('waiting');grants.clear();}};
 }

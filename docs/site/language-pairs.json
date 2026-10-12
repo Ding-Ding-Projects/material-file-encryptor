@@ -223,8 +223,8 @@
     {
       "source": "docs/features/platform/README.md",
       "translation": "docs/features/platform/README.zh-HK.md",
-      "sourceSha256": "893a14790a76f43bdeaff76443e3f2d947aea2b6eda08b22a63b680169481d06",
-      "translationSha256": "3b00cdfa324161c388b7769db510db8b927a8c425c4c63a5740f1e14dc127211"
+      "sourceSha256": "61d5939c7c1c296eaf3d0038f4be4647f1c8692b896ecfdb54b1c845b184c70e",
+      "translationSha256": "9bf204dc96b2a4609d7620d906dd1acdf5c7aa83280311034acbd7e24e369ab5"
     },
     {
       "source": "docs/features/platform/current-integration.md",
@@ -489,6 +489,12 @@
       "translation": "docs/features/interface/private-history-controls.zh-HK.md",
       "sourceSha256": "ee83e49cc9342004e1686191e186bdd89655271845e9579dbdb1cf097b91dd6e",
       "translationSha256": "432a23e048cb21a38b0d69f87925590e49dbfb8ade3ea749a3e5e26831f77569"
+    },
+    {
+      "source": "docs/features/platform/packaged-documentation-cache.md",
+      "translation": "docs/features/platform/packaged-documentation-cache.zh-HK.md",
+      "sourceSha256": "c4929cd557fdb50236345056debcaf637fed50c4ca4c22162911ef566a9158d7",
+      "translationSha256": "9d4d80e246d6f7afcd17781f76702f3fb4ae1b42e922b19dbc4d96bce6cf6604"
     }
   ]
 }

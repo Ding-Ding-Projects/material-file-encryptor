@@ -489,3 +489,7 @@
 ## Main-baseline packaging optimization
 
 - [ ] Verify the bounded PDF debug-map exclusion through the exact root build, retained runtime-file hashes and PDF round-trip checks before main delivery. Source rule preserves existing resources; package-size evidence does not establish application-speed improvement.
+
+## Main-baseline documentation performance
+
+- [ ] Verify the packaged catalogue cache adaptation with focused lifecycle checks, independent review, exact root build and source-bound service measurements before main delivery.
