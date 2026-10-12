@@ -176,7 +176,7 @@
 - [x] Verify exact main738 live delivery: 209 files, 6,666 internal references and exact stored homepage.
 - [x] Preserve all eight working trees and Git administration in a dated verified private archive, including 150 announcement files and owner-only access.
 - [ ] Verify archive cloud synchronization and preserve remaining ignored runtime evidence before any qualified cleanup.
-- [ ] Complete the requested README revamp with verified links, honest feature status and preserved historical evidence.
+- [x] Complete the requested README revamp at `5c5c24b`, with verified links, honest feature status, three reviewed diagrams and preserved historical evidence.
 - [ ] Reconcile every current canonical feature and subrequirement against desktop and website implementation and acceptance.
 - [ ] Reproduce and repair the reported mobile visitor-personalization theme, typography and navigation defect using real source-bound rendered evidence.
 - [ ] Demonstrate Material Design 3 conformance across every visible nested surface.
@@ -471,7 +471,7 @@
 - [ ] Diagnose the incomplete descendant executable-path observations without weakening exact process identity or ancestry.
 - [ ] Complete the 144-tuple current documentation-browser acceptance. The latest diagnostic retained 24 completed desktop tuples and one partial narrow tuple, then stopped on a resource-body protocol rejection. Its profile remains retained and zero audits are finalized.
 - [x] Hash-preserve all 4,068 nonprofile files from that closed diagnostic and independently inspect all 25 genuine PNGs with their available raw observations. The bounded protocol projection repair passed 110 focused checks and independent review.
-- [ ] Repair the documentation publication trigger's missing generated-content inputs and verify the actual new deployment, complete live inventory and exact About homepage.
+- [x] Repair the README/two proof JSON publication trigger inputs and verify exact `5c5c24b` deployment, all 234 live files and the stored About homepage.
 
 ## Gallery pipeline candidate
 
@@ -498,7 +498,7 @@
 
 - [x] Verify PDF exclusion at `a0239c9` through the exact root build, 994 retained-file hashes and five extracted PDF checks.
 - [x] Verify catalogue cache at `187364a` through independent focused checks, exact root build, production-byte identity and bounded same-input component timings.
-- [ ] Deliver the rewritten README, three explanatory diagrams and selected public proof after focused link/privacy checks and independent review.
+- [x] Deliver the rewritten README, three explanatory diagrams and selected public proof at `5c5c24b`; exact root build, bounded 12-capture review and 234-file live delivery passed.
 - [ ] Finish installed startup and actual automatic-update acceptance; updater controller and future-feed source are on main, with local installer production passed and hosted/native apply pending.
 - [ ] Verify the one-click application-managed Ollama runtime procedure before updating shared instructions; preserve existing installations.
 - [ ] Replace current screenshots only after genuine rebuilt capture acceptance, preserving historical originals.
@@ -506,5 +506,8 @@
 ## Documentation publication correction
 
 - [x] Verify actual `6536fa0` publication bytes, stored homepage and static navigation; retain the missing README/proof and unrendered-diagram findings.
-- [ ] Independently review and deliver the explicit README route, bounded source-derived SVG diagrams and two-file public proof allowlist.
-- [ ] Verify successor live inventory, internal proof links, actual diagram pixels and 320 px upward scrolling behavior through the owned hidden-browser route.
+- [x] Independently review and deliver the explicit README route, bounded source-derived SVG diagrams and two-file public proof allowlist at `5c5c24b`.
+- [x] Verify exact `5c5c24b` live inventory/proof links and bounded 1440/320 px diagram pixels/scrolling; 12 captures and 234-file delivery passed.
+- [ ] Complete retained-profile cleanup and the full audit: automatic approval review rejected deletion; profiles remain retained and no alternate route is attempted.
+- [ ] Verify large v1.373.1 package bytes, installer and installed update; normal release metadata/provenance/RELEASES are verified separately.
+- [ ] Complete the wider language/theme/scale matrix and current-image promotion; the bounded diagram result does not certify these outcomes.
