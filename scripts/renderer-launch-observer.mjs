@@ -36,16 +36,19 @@ export async function startQuietObserver({python,workerPath,intentPath,journal,e
  return {child,exit,getSpawnError:()=>spawnError};
 }
 
-export async function observeRendererLaunch(python,args,input,env,onOutcome,{timeoutMs=30000,workerPath=fileURLToPath(new URL('./renderer-launch-observer.py',import.meta.url)),spawnImpl=spawn}={}) {
+export async function observeRendererLaunch(python,args,input,env,onOutcome,{expectedExecutableSha256,timeoutMs=30000,workerPath=fileURLToPath(new URL('./renderer-launch-observer.py',import.meta.url)),spawnImpl=spawn}={}) {
  if(args[1]!=='launch'||args[2]!=='--state'||!path.isAbsolute(input?.runRoot||'')||!path.isAbsolute(input?.executable||''))throw new Error('Durable observer requires an explicit renderer launch.');
  const interpreter=await quietInterpreter(python);
+ if(typeof expectedExecutableSha256!=='string'||! /^[a-f0-9]{64}$/.test(expectedExecutableSha256))throw new Error('Resolved executable hash binding required.');
+ if(await fileSha(input.executable)!==expectedExecutableSha256)throw new Error('Resolved executable bytes changed before launch intent.');
  const journal=path.join(input.runRoot,'launch-observation');
  await fs.mkdir(journal,{recursive:false});
  const request={...input,desktop:`MFE-${randomUUID()}`};
  const verifierHashes={};
  for(const name of ['renderer-launch-observer.mjs','renderer-launch-observer.py','supplemental-renderer-recovery.py','renderer-process-snapshot.py']){const file=fileURLToPath(new URL(name,import.meta.url));verifierHashes[file]=await fileSha(file);}
- const intent={observerInterpreter:interpreter,version:1,kind:'renderer-launch-observation',observedAt:new Date().toISOString(),declaredClientPid:process.pid,request,statePath:args[3],sourceCommit:env.MFE_RENDERER_SOURCE_COMMIT,verifierHashes,executableSha256:await fileSha(input.executable),workerSha256:sha(await fs.readFile(workerPath)),adapterPath:args[0],adapterSha256:sha(await fs.readFile(args[0]))};
+ const intent={observerInterpreter:interpreter,version:1,kind:'renderer-launch-observation',observedAt:new Date().toISOString(),declaredClientPid:process.pid,request,statePath:args[3],sourceCommit:env.MFE_RENDERER_SOURCE_COMMIT,verifierHashes,executableSha256:expectedExecutableSha256,resolvedExecutableSha256:expectedExecutableSha256,workerSha256:sha(await fs.readFile(workerPath)),adapterPath:args[0],adapterSha256:sha(await fs.readFile(args[0]))};
  const intentPath=path.join(journal,'000-intent.json');
+ if(await fileSha(input.executable)!==expectedExecutableSha256)throw new Error('Resolved executable bytes changed before launch intent.');
  const handle=await fs.open(intentPath,'wx');try{await handle.writeFile(JSON.stringify(intent,null,2));await handle.sync();}finally{await handle.close();}
  const observer=await startQuietObserver({python:interpreter.launcher,workerPath,intentPath,journal,env:{...env,MFE_LOWLEVEL_PYTHON:interpreter.launcher,MFE_RENDERER_NODE_EXECUTABLE:process.execPath},spawnImpl});
  const child=observer.child;

@@ -75,7 +75,7 @@ def run(intent_path):
         if not any(e.name=='lowlevel-computer-use-cheap' and e.value=='lowlevel_computer_use_mcp.server:cheap_entry' for e in distribution.entry_points):raise RuntimeError('Installed public Lowlevel entrypoint differs.')
         tools={'list_headless_windows':(server.list_headless_windows,server.HeadlessDesktopInput),'launch_on_headless_desktop':(server.launch_on_headless_desktop,server.LaunchHeadlessInput)}
         if any(not inspect.iscoroutinefunction(function) for function,_ in tools.values()):raise RuntimeError('Registered installed Lowlevel tool binding is unavailable.')
-        if digest(intent['request']['executable'])!=intent['executableSha256']:raise RuntimeError('Intended launch executable bytes changed.')
+        if intent.get('resolvedExecutableSha256')!=intent['executableSha256'] or digest(intent['request']['executable'])!=intent['resolvedExecutableSha256']:raise RuntimeError('Intended launch executable bytes changed.')
         source_paths=[Path(server.__file__),Path(winio.__file__),Path(native_win32.__file__),Path(recovery.__file__),Path(recovery.snapshot.__file__),Path(life.__file__),Path(os.environ['MFE_LOWLEVEL_CLI']),Path(intent['request']['executable']),Path(intent['adapterPath']),*[Path(p) for p in intent['verifierHashes']]]
         source_hashes={str(p):digest(p) for p in source_paths}
         journal.write('installed-tools-bound',distributionVersion=distribution.version,sourceHashes=source_hashes,route='installed-public-lowlevel-tool-binding')
@@ -96,7 +96,7 @@ def run(intent_path):
         result=launch_with_input(life,intent['request'],intent['statePath'])
         if result.get('client_ok') is True:
             _,state=backend.read(intent['statePath'])
-            if Path(state['process']['executablePath'])!=Path(intent['request']['executable']) or source_hashes!={str(p):digest(p) for p in source_paths}:raise RuntimeError('Launch image or bytes changed before admission.')
+            if Path(state['process']['executablePath'])!=Path(intent['request']['executable']) or digest(intent['request']['executable'])!=intent['resolvedExecutableSha256'] or source_hashes!={str(p):digest(p) for p in source_paths}:raise RuntimeError('Launch image or bytes changed before admission.')
             journal.write('state-published',rootIdentity=state['process'],stateSha256=digest(intent['statePath']),sidecarSha256=digest(backend.marker))
         journal.terminal(result)
     except BaseException as error:

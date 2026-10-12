@@ -170,7 +170,7 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
  let closureObservation={normalClose:'not attempted',fallback:'not attempted',resourcesAbsent:false,gracefulOnly};
  const lifecycleCommand=(args,input)=>{
   const runner=runtime.command||(args[1]==='launch'?observeRendererLaunch:command);
-  return runner(python,args,input,env,outcome=>outcomes.push(outcome)).catch(error=>{if(args[1]==='launch'&&error.launchPending)launchPending=true;throw error;});
+  return runner(python,args,input,env,outcome=>outcomes.push(outcome),args[1]==='launch'?{expectedExecutableSha256:executableResolution.sha256}:undefined).catch(error=>{if(args[1]==='launch'&&error.launchPending)launchPending=true;throw error;});
  };
  const retainEvidence=async()=>{
   const destination=evidenceRoot||path.join(runRoot,'evidence');
