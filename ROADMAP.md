@@ -560,3 +560,13 @@
 - [x] Add missing history-pruning translations and exact technical-literal classification with negative source checks; rendered localization remains pending.
 
 - [x] Refresh generated public-route declarations to 187 routes and verify safe refresh refusal/preservation behavior with six focused checks; browser evidence remains unverified.
+
+## Preservation closeout, 2026-10-12
+
+- [x] Preserve reviewed documentation on main4f351f2 and GUI59323c4/canonical770f2df recovery branches, with remote-ref proof.
+- [x] Retain exact negative native admission and prepared unexecuted diagnostic variants separately.
+- [ ] Reacquire the frozen04 GUI observation lifecycle; root build exit0 and recorded-child absence do not prove full job closure or packaging.
+- [ ] Independently refute/repair offline failed-preparation restoration and obtain actual runtime evidence.
+- [ ] Complete full candidate verification and safe canonical integration.
+- [ ] Verify the complete fresh archive before processing any exact task-owned cleanup candidate.
+- [ ] Publish only independently reviewed, genuine product captures; private status captures remain excluded.

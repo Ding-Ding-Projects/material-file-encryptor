@@ -1,3 +1,15 @@
+# Preservation closeout, 2026-10-12
+
+The user requested preservation and cleanup; account readback showed 8% remaining. New implementation has stopped. See CLOSEOUT_PROMPT.md for exact preserved sources, negative native admission, the unfinished offline provider, frozen GUI lifecycle gaps and continuation. No goal completion or deletion is claimed.
+
+- Main before this record: 4f351f28141312550d699af89b2c90414783daf1.
+- GUI recovery: 59323c4cda8bfe7077c01340aea0fda97d4301b9, source-only 23/66, 0/4272 actual accepted tuples; conditional restoration concern remains.
+- Converter recovery: 18f98d53ca50de31180b7117661be4c55856db2e, actual startup unavailable at BEHAVIORAL_PROBE_FAILED; typed diagnostic remains unexecuted.
+- Canonical recovery: 770f2dfaea4758d4ec9225e25d8c34b45e605a14, independently reviewed source; full candidate sweep remains unverified.
+- Inventory: 35 product and 15 canonical worktrees; unrelated and unfinished work retained. The archive directory exists; verification and cleanup prerequisites remain pending.
+
+# Historical snapshot before preservation
+
 ## Generated route declaration repair
 
 The catalog now maps to 187 declared routes and 105 feature families. Six focused inventory/refresh tests and refresh check mode pass. The helper rejects duplicates and existing evidence-bearing rows, preserves additional nested surfaces, and leaves every acceptance declaration unverified with empty browser evidence. No live publication, browser or packaged acceptance occurred.
