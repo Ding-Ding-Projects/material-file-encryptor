@@ -187,7 +187,9 @@
     "docs/features/workflows/browser-native-host.md",
     "docs/features/workflows/browser-native-host.zh-HK.md",
     "docs/features/workflows/forge-publication.md",
-    "docs/features/workflows/forge-publication.zh-HK.md"
+    "docs/features/workflows/forge-publication.zh-HK.md",
+    "docs/features/platform/packaged-documentation-cache.md",
+    "docs/features/platform/packaged-documentation-cache.zh-HK.md"
   ],
   "categories": [
     "access",

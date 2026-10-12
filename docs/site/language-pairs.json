@@ -343,8 +343,8 @@
     {
       "source": "docs/features/platform/README.md",
       "translation": "docs/features/platform/README.zh-HK.md",
-      "sourceSha256": "94f1071bae2ed06adc3621dc9f861092de8ee1782637e742fb52055afe728908",
-      "translationSha256": "3b4046b00e429d1ec5791c0403b10d8a7e94d77e1a412d84824d8d0f8f402f14"
+      "sourceSha256": "89906287ed25bdc5e5dcd7c627e7471b641a2dde900a8a35a146b71eae08145f",
+      "translationSha256": "2b6bb529d7e73454b63bd19d77c9e78df5ace6cd6ecf091135b25ca3ac2e873f"
     },
     {
       "source": "docs/features/platform/current-integration.md",
@@ -561,6 +561,12 @@
       "translation": "docs/features/workflows/browser-extension-workspace.zh-HK.md",
       "sourceSha256": "4662d9f62f6c3058f5323750d0b30f7e4b166cfee88d66e4a3a41e7113298479",
       "translationSha256": "b582eb76c6f5d036ba9eff8d9313e3431cd49cc47cb019f40480e3407f8d1698"
+    },
+    {
+      "source": "docs/features/platform/packaged-documentation-cache.md",
+      "translation": "docs/features/platform/packaged-documentation-cache.zh-HK.md",
+      "sourceSha256": "ed10ae70aa4bbe0d4d3abcc9f56e6994edd0a90cbd0746a93d0506285f7ed7db",
+      "translationSha256": "b3670b163ee87bef7edf930cb3de9d20e1ec6741590c4dfe759e158cf051179f"
     }
   ]
 }
