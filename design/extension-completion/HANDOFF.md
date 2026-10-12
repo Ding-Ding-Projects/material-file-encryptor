@@ -62,8 +62,9 @@ logo editor, element/state appearance and motion editors, five attention modes,
 date/time/weekday schedule editor and personal-vocabulary picker. Every control
 shows default provenance, optional exact-target guidance above it, validation,
 clear/reset where applicable, history outcome and palette/search focus target.
-The reference illustrates only Language/Privacy and the unavailable shared-mode
-boundary; remaining views require additional addressable references before parity.
+The shared reference components and per-state descriptors cover all declared
+settings states. Direct design edits are ephemeral; native execution, actual
+persistence and platform widgets still require production implementation and proof.
 
 **Access.** Shared mode read/watch/rename and authenticated disable flow; six
 element-lock policies; authenticator registration/import; QR pairing; protected
@@ -145,7 +146,12 @@ schema, duplicate/unsafe-key rejection and dynamic entries. Validate atomically;
 failure preserves only an explicitly retained prior valid cache. Clear restores
 original text immediately. Replace only private authored UI text and accessible
 names; preserve URLs, identifiers, code, external factual records and paths.
-Shared mode suppression removes those controls and results entirely when active.
+Private replacements additionally require an authenticated local profile. Native
+pairing is not profile authentication and must never unlock private wording.
+Pre-authentication UI stays in original wording, even when a valid cache exists.
+Missing profile authentication keeps mapping application unavailable; no fallback
+to paired status is permitted. Shared mode suppression removes those controls and
+results entirely when active.
 No real private file is used in reference data or captured evidence.
 
 ## Interaction and accessibility
@@ -201,8 +207,9 @@ with shared mode and reduced motion. No generated identity or screenshot is used
 - Capture no private mappings, credentials, QR secrets, personal history or paths.
   Use neutral owned fixtures with exact provenance; refresh current presentation
   only after genuine captures are inspected. Production screenshots do not yet exist
-  for this design. Additional unrendered nested states in `states.json` need their
-  own references before full parity can pass.
+  for this design. All 89 nested states in `states.json` now have addressable
+  reference routes. Their actual browser rendering, component interactions and
+  matching production routes remain unverified before full parity can pass.
 - Independent review must assess browser capability truthfulness, exact family
   classification, protocol/security separation, language/layout and real component
   reuse before implementation. The design author cannot self-approve that review.

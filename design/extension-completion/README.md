@@ -15,8 +15,14 @@ Serve the repository root with an isolated local static server and open
 local `src/shared/surface/material.js`; it has no CDN or remote asset requirement.
 It is a development design reference, not an extension package or product launch.
 
-Address screens with `?screen=popup`, `?screen=transfers`, `?screen=settings`, or
-`?screen=capabilities`. Add `state=unpaired`, `state=pairing`, `state=paired`,
+Address screens with `?screen=popup`, `?screen=transfers`, `?screen=settings`,
+`?screen=capabilities`, `?screen=access`, `?screen=history`, `?screen=notifications`,
+`?screen=documentation`, `?screen=status`, or `?screen=shared-overlays`.
+Every one of the 89 states in `states.json` has an exact reference route backed by
+the common screen components and authored `scenarios.js` descriptors. Native-only
+actions are explicitly disabled; reference navigation and local control edits
+operate only the design fixture. Actual browser rendering has not been inspected.
+Add `state=unpaired`, `state=pairing`, `state=paired`,
 `state=awaiting-confirmation`, `state=downloading`, `state=completed`,
 `state=failed`, `state=cancelled`, `state=unavailable`, or `state=unknown` for the
 transfer presentation. Add `language=en|yue|bilingual` and `theme=light|dark`.
@@ -24,6 +30,10 @@ The reference does not contact the native host, inspect a browser profile, read 
 user file, persist values, or simulate a successful real operation. Its navigation,
 language/theme choices and local design-state selector operate only the reference.
 Every screen identifies its design-only state; production provenance is unavailable.
+Use `connection=checking|unpaired|pairing|paired|unavailable` to control connection
+independently from a transfer outcome. A completed transfer never means the
+connection itself is completed. Bilingual labels stack primary and secondary
+lines. Internal tabs carry exact panel ownership and arrow/Home/End navigation.
 
 See [HANDOFF.md](HANDOFF.md) for behavior, security, component reuse and acceptance,
 [families.json](families.json) for every one of the 105 semantic family decisions,
