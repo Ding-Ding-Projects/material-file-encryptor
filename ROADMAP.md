@@ -1,19 +1,21 @@
 ## Active continuation, 2026-10-12
 
-- [x] Fast-forward main to the verified current source and integrate independently reviewed permission-launcher retirement/service fixtures at f52b6542.
-- [x] Verify normalv1.402.1 source, all four downloadable assets, Squirrel index and5,718-entry package inspection.
-- [x] Read the complete234-file deployment archive, compare every live file and verify exact About homepage. This does not erase the earlier HTTP403 result.
-- [x] Independently review branch-only native behavioral admission at18f98d53 with25component checks; retain the separate local-build0 and source-gate stop.
-- [x] Reconcile preserved GUI histories and independently review canonical acquisition authority/startup-readiness source units through23735c5.
-- [ ] Finish source-bound installer production and actual native behavioral enforcement, preserving the retained unsettled output.
-- [ ] Repair four current fixture failures and validate the affected current sources without weakening production checks.
-- [ ] Correct the invalid-UTF-8 article/source publication distinction.
-- [ ] Prove the narrow actual GUI targeting/activation/focus/dismissal/persistence/restoration sequence and negative targets.
-- [ ] Complete89states ×2viewports ×3languages ×2themes ×4scales:4,272source-bound visual tuples, currently0accepted.
-- [ ] Complete applicable105-family/210-row behavior, localization, persistence, categorized documentation and real acceptance.
+- [x] Integrate reviewed permission-launcher retirement and fixture repairs through f0d95; all four original focused failures are corrected.
+- [x] Verify exact-source normal releases 96dd/v1.403.1, f0d95/v1.404.1 and 80f6/v1.405.1.
+- [x] Verify all 234 live documentation files against the 80f6 deployment archive and the exact About homepage.
+- [x] Repair the malformed article byte at e7099d37, verify strict UTF-8 and both article hash bindings, and preserve unchanged translation and history.
+- [ ] Verify new live article bytes and the new workflow verdict for the e7099d37 repair.
+- [x] Preserve native 18f98d53 with remote proof, 25 component checks and independent source review; keep it separate from main.
+- [x] Complete exact native r7 build and installer production with exit 0, natural job settlement and 764 ZIP/665 payload/5,718 ASAR entries with zero rejected.
+- [ ] Execute real source-bound native behavioral acceptance; successful production does not establish runtime isolation.
+- [x] Independently review GUI source 8659 with 36 focused checks; retain source-only scope.
+- [ ] Resolve 74 addressable design gaps and verify actual GUI targeting, focus, dismissal, persistence and restoration.
+- [ ] Complete 89 states × 2 viewports × 3 languages × 2 themes × 4 scales: 4,272 visual tuples, currently zero accepted; 22 routes declared and 67 providers unavailable.
+- [ ] Complete applicable behavior, localization, persistence, documentation and runtime acceptance across 105 families and 210 rows.
+- [ ] Resolve the historical incomplete broad result: 870 passed, 29 failed and 40 skipped.
 - [ ] Verify accepted-channel installed update, ready/Later/restart continuity and rollback at the authorized safe boundary.
 - [ ] Keep initial installation, removal and real-data migration deferred and unticked.
-- [ ] Obtain a fresh verified archive and complete exact ownership/ancestry proof before any cleanup.
+- [ ] Obtain the unavailable archive destination, verify a fresh archive and complete ownership/preservation/remote/ancestry proof before deletion.
 
 ## Historical preservation record
 

@@ -12,6 +12,22 @@ The focused source-only callback check passed once after supplying the minimum l
 
 ## Active continuation, 2026-10-12
 
+Main includes the one-byte converter media article repair at e7099d37a881a1327451ed432dda358bcf3c3cd8, pushed and verified by remote readback. Strict UTF-8 and the corrected source hash pass; the Cantonese article is unchanged. New live article bytes and the new workflow verdict remain pending.
+
+Three accepted normal releases are bound to their exact sources: 96dd/v1.403.1, f0d95/v1.404.1 and 80f6/v1.405.1. The complete documentation deployment archive for 80f6 contains 234 files, each matching the live bytes. The deployed home and stored About homepage are https://ding-ding-projects.github.io/material-file-encryptor/. This proof belongs to 80f6, not the later article repair.
+
+Native behavioral admission at 18f98d53ca50de31180b7117661be4c55856db2e is pushed and verified on its preservation branch, not integrated into main. Its r7 production ran exact build.bat /s and build-installer.bat /s with exit 0; all owned jobs settled naturally. Package inspection reports 764 ZIP entries, 665 payload entries, 5,718 ASAR entries and zero rejected entries. The 25 focused checks and independent source review do not establish real AppContainer or installed runtime acceptance. Earlier SOURCE_NOT_FROZEN and interrupted production records remain historical evidence.
+
+GUI source 8659 has 36 focused checks and independent source review with no surviving finding. Its inventory remains 22 declared routes, 67 unavailable providers, zero of 4,272 accepted visual tuples and 74 addressable design gaps. Source fixture repair f0d95 corrected all four original focused failures. The historical broad result remains incomplete: 870 passed, 29 failed and 40 skipped. No broad green or rendered acceptance is inferred.
+
+The full required-feature goal remains open at 105 families and 210 surface rows. Next work is actual native behavioral acceptance, source-bound GUI interaction and design parity, then accepted-channel installed update and restart continuity at a safe boundary. Initial installation, removal and real-data migration remain deferred. The archive destination is unavailable, so deletion remains pending; retain original data, mounted work, installations, historical evidence and ownership-uncertain work. This snapshot is not full completion.
+
+## Historical preservation record
+
+This earlier snapshot is retained verbatim apart from its heading. Its pending production and fixture states are superseded only by the exact current evidence above.
+
+## Historical continuation snapshot before e7099d37
+
 Implementation has resumed under the approved full-goal plan. Main contains independently reviewed converter admission retirement and synthetic service-fixture repair at f52b6542ec03d7f35bd3daa03b077acb90411739. The permission-query-only launcher stays unavailable before converter input is read. Twenty focused checks pass on pinned Node24.19.0 and installed Node26.10; this is component evidence, not operating-system isolation.
 
 Normal release [v1.402.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.402.1) is bound to that exact source, with draft/prerelease flags false. [Windows delivery38303555472](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38303555472) and [documentation38303554680](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38303554680) succeeded. All four downloaded release assets match size and SHA-256 provenance. The Squirrel index matches package name, size and SHA-1; ZIP integrity and safe entry inspection pass. ASAR inspection reports5,718entries and zero rejected entries. No installer or installed application was executed for this proof.
