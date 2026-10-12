@@ -29,3 +29,13 @@ Finish the independently reviewed GUI icon/selector repair, preserve and integra
 The requested cleanup pass needs a new complete archive. Private archive-v3 remains under independent review; production admission and archive execution are unrun. The old verified archive covers eight trees, not the current twelve. Preserve ignored announcement variants separately. Retain active, incomplete or ownership-uncertain work and require verified main ancestry before deletion.
 
 Keep the mounted drive untouched. Real-data migration and fresh installation/removal remain deferred. Accepted-channel updating requires matching verified bytes and a safe continuity boundary. Never initiate local host power or login actions. Complete installed continuity, all required features, visual coverage, release-byte verification and live documentation/wiki proof before declaring the full objective complete.
+
+## Incremental delivery update, 2026-10-12 UTC
+
+The reviewed README rewrite at 221f6c0c0982865cff31d8ac93ca9167b9bde616 is integrated through 9146d9a. The reviewed Material control anatomy repair at 0f0b7e582e5c38f14ee0e0d3f62c52c6a9c840c0 is integrated through 00162241b7494cd47cfd890a040f09788e2bfadd. The combined candidate passed 27 focused documentation, control foundation and anatomy tests. All nine changed files passed the canonical public-text scan. Built visual acceptance remains pending.
+
+The user explicitly requests frequent verified delivery to main, including required features, so completed increments can be used before the whole objective finishes. PDF-only candidate a0239c91d517ca06d9725f36dd76874f5ab33ece is undergoing its exact isolated root build before independent main integration. Recovery-branch pushes preserve unfinished work and do not claim production delivery.
+
+Additional requested work: repair automatic updating and the missing Dim Sum surprise; provide actionable button-driven Ollama installation and test its failure paths. Read-only inspection confirms installed version 1.133.1 and a newer normal release, but no current updater runtime reason has been observed. Dim Sum diagnosis reproduced transient update-state consumption of its one startup opportunity and host-PATH dependence for photo lookup; an independent source review also identified missing user-interaction suppression. Repair is assigned to an explicit gpt-6-astra implementation lane. Preserve the 10-percent probability and approved published-photo boundary.
+
+Verified account allowance is 58 percent remaining. The current-session stopping boundary remains 8 percent remaining. The goal stays active; archive verification, cleanup, complete required-feature acceptance, installation continuity and current screenshot replacement remain incomplete.
