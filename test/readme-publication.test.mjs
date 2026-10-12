@@ -16,3 +16,23 @@ test('reviewed public proof allowlist rejects content changes and never copies n
 test('actual documentation publication contains README SVGs and self-contained proof links',async t=>{
  const output=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-readme-publication-'));t.after(()=>fs.rm(output,{recursive:true,force:true}));await buildDocumentation(process.cwd(),output,await fs.readFile('docs/site/index.html','utf8'));const html=await fs.readFile(path.join(output,'articles/README.html'),'utf8');assert.equal((html.match(/<figure class="documentation-diagram"/g)||[]).length,3);assert.ok(html.includes('href="../docs/evidence/main-performance-20261012.json"'));assert.deepEqual(JSON.parse(await fs.readFile(path.join(output,'docs/evidence/main-performance-20261012.json'),'utf8')),JSON.parse(await fs.readFile('docs/evidence/main-performance-20261012.json','utf8')));assert.ok((await fs.readFile(path.join(output,'library.html'),'utf8')).includes('articles/README.html'));
 });
+
+test('diagram roots retain native dimensions while ordinary SVG icons keep their 24px rule',async()=>{
+ const readme=(await fs.readFile('README.md','utf8')).replaceAll('\r\n','\n'),graphs=[...readme.matchAll(/```mermaid\n([\s\S]*?)```/g)].map(match=>match[1]);
+ const diagrams=graphs.map((graph,index)=>renderReadmeFlowchart(graph,index));
+ const css=await fs.readFile('docs/site/site.css','utf8');
+ const check=(styles,images)=>{
+  const generic=styles.match(/(?:^|\})\s*svg\s*\{([^}]*)\}/)?.[1];assert.ok(generic,'shared SVG paint rule');
+  assert.doesNotMatch(generic,/(?:^|;)\s*(?:width|height)\s*:/,'generic paint must not impose icon dimensions');
+  assert.match(styles,/svg:not\(\.documentation-flowchart\)\{width:24px;height:24px\}/);
+  const expected=[[2680,320],[680,1020],[3560,180]];assert.equal(images.length,expected.length);
+  images.forEach((html,index)=>{const opening=html.match(/<svg\b[^>]*>/)?.[0];assert.ok(opening);assert.match(opening,/class="documentation-flowchart"/);assert.doesNotMatch(opening,/\sstyle=/);const [width,height]=expected[index];assert.ok(opening.includes(`width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"`));assert.match(html,/class="diagram-scroll" tabindex="0" role="region" aria-label="Scrollable flowchart"/);});
+  assert.match(styles,/\.diagram-scroll\{max-width:100%;overflow:auto/);assert.match(styles,/\.diagram-scroll svg\{[^}]*max-width:none/);
+ };
+ check(css,diagrams);
+ // Source-level negative regressions, not browser geometry evidence.
+ assert.throws(()=>check(css.replace('svg{','svg{width:24px;height:24px;'),diagrams));
+ assert.throws(()=>check(css.replace('svg:not(.documentation-flowchart)','svg'),diagrams));
+ assert.throws(()=>check(css,diagrams.map(html=>html.replace('class="documentation-flowchart"',''))));
+ assert.throws(()=>check(css,diagrams.map(html=>html.replace('width="2680"','width="24"'))));
+});
