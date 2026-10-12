@@ -66,3 +66,35 @@ test('direct challenge service and timed grading reject sparse arrays independen
  try{const challenge=await service.request('waitChallenge',{target:'profile'});await assert.rejects(service.request('waitAnswer',{target:'profile',nonce:challenge.nonce,answer:Array(10)}),/Invalid waiting answer/);assert.equal((await service.request('waitStatus',{target:'profile'})).until,130000);assert.equal(await credentials.get('lock:access-budget:v1'),null);}finally{service.close();}
  for(const answer of [Array(12),[null],Array(12).fill(0)]){let now=0;const ladder=new WaitLadder({schoolMode:true,now:()=>now});ladder.rung='moles';const challenge=ladder.challenge();now=9000;assert.equal(ladder.answer(challenge.nonce,answer),false);assert.equal(ladder.skips.length,0);}
 });
+
+
+test('history setup respects an existing waiting deadline without installing configuration',async()=>{
+ const f=await fixture();try{
+  const waiting={version:1,targets:{history:{failures:0,level:1,until:200000}}};await f.credentials.set('lock:access-attempts:v1',waiting);
+  await assert.rejects(request(f,'historySetup',{password:'synthetic waiting setup'}),/history is waiting/);
+  assert.equal(await f.credentials.get('lock:access-history:v1'),null);assert.deepEqual(await f.credentials.get('lock:access-attempts:v1'),waiting);
+  f.setNow(200001);await request(f,'historySetup',{password:'synthetic waiting setup'});await request(f,'historyLock');
+  for(let n=0;n<4;n++)await assert.rejects(request(f,'historyUnlock',{password:'wrong'}),/did not match/);
+  await assert.rejects(request(f,'historyUnlock',{password:'wrong'}),/history is waiting/);
+  await assert.rejects(request(f,'historyUnlock',{password:'synthetic waiting setup'}),/history is waiting/);
+  assert.equal((await request(f,'historyStatus')).unlocked,false);f.setNow(230002);await request(f,'historyUnlock',{password:'synthetic waiting setup'});
+ }finally{await f.dispose();}
+});
+test('history waiting beginning during setup derivation prevents installation',async()=>{
+ const f=await fixture(),original=crypto.subtle.deriveBits;let release,started;
+ const ready=new Promise(r=>started=r),hold=new Promise(r=>release=r);crypto.subtle.deriveBits=async function(...args){started();await hold;return original.apply(this,args);};
+ try{const pending=request(f,'historySetup',{password:'synthetic waiting derivation'});await ready;
+  await f.credentials.set('lock:access-attempts:v1',{version:1,targets:{history:{failures:0,level:1,until:200000}}});release();
+  await assert.rejects(pending,/history is waiting/);assert.equal(await f.credentials.get('lock:access-history:v1'),null);assert.equal((await request(f,'historyStatus')).until,200000);
+ }finally{release?.();crypto.subtle.deriveBits=original;await f.dispose();}
+});
+test('history waiting racing with setup installation rolls back only the owned revision',async()=>{
+ for(const concurrent of [false,true]){const f=await fixture(),original=f.credentials.compareAndSetVersioned;let installed=false;
+  f.credentials.compareAndSetVersioned=async(key,revision,value)=>{const result=await original(key,revision,value);if(key==='lock:access-history:v1'&&value!==null&&!installed){installed=true;
+   await f.credentials.set('lock:access-attempts:v1',{version:1,targets:{history:{failures:0,level:1,until:200000}}});if(concurrent)await f.credentials.set(key,{synthetic:'later writer'});
+  }return result;};
+  try{await assert.rejects(request(f,'historySetup',{password:'synthetic waiting installation'}),concurrent?/changed concurrently/:/history is waiting/);
+   assert.deepEqual(await f.credentials.get('lock:access-history:v1'),concurrent?{synthetic:'later writer'}:null);assert.equal((await request(f,'historyStatus')).unlocked,false);assert.equal((await request(f,'historyStatus')).until,200000);
+  }finally{await f.dispose();}
+ }
+});
