@@ -4,6 +4,37 @@ using System.Text.Json;
 using MaterialFileEncryptor.Host;
 
 if(!OperatingSystem.IsWindows())throw new PlatformNotSupportedException();
+if(args.Length==1&&args[0]=="--long-path-observation")
+{
+    string fixtureRoot=Path.Combine(Path.GetTempPath(),"mfe-ollama-path-"+Guid.NewGuid().ToString("N"));
+    int filenameLength=279-fixtureRoot.Length-1;
+    if(fixtureRoot.Length>=260||filenameLength<5||filenameLength>255){Console.WriteLine("{\"syntheticLongPath\":true,\"stage\":\"geometry\",\"category\":\"unsupported\"}");Environment.ExitCode=1;return;}
+    string filename=new string('m',filenameLength-4)+".dll",member=Path.Combine(fixtureRoot,filename);
+    bool acquired=false,memberExists=false,fixtureCreated=false,fixtureRetained=false;int? nativeCode=null;string category="none",stage="setup";string? cleanupCategory=null;int? cleanupCode=null;
+    try
+    {
+        if(Directory.Exists(fixtureRoot))throw new InvalidOperationException();
+        Directory.CreateDirectory(fixtureRoot);fixtureCreated=true;
+        File.WriteAllText(member,"Synthetic long-path admitted member.");memberExists=File.Exists(member);stage="hash";
+        string digest=Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(member))).ToLowerInvariant();
+        stage="lease-acquisition";
+        var lease=OllamaRuntimeLease.AcquireSynthetic(fixtureRoot,new Dictionary<string,string>{{filename,digest}});
+        lease.Release();acquired=true;
+    }
+    catch(Exception error)
+    {
+        category=error switch{System.ComponentModel.Win32Exception=>"native-call",IOException=>"io",UnauthorizedAccessException=>"access",InvalidOperationException=>"state",_=>"unknown"};
+        nativeCode=error is System.ComponentModel.Win32Exception native?native.NativeErrorCode:null;
+    }
+    finally
+    {
+        if(fixtureCreated)try{File.Delete(member);Directory.Delete(fixtureRoot);}
+        catch(Exception error){fixtureRetained=true;cleanupCategory=error switch{System.ComponentModel.Win32Exception=>"native-call",IOException=>"io",UnauthorizedAccessException=>"access",_=>"unknown"};cleanupCode=error is System.ComponentModel.Win32Exception native?native.NativeErrorCode:null;}
+    }
+    Console.WriteLine(JsonSerializer.Serialize(new{syntheticLongPath=true,memberPathCharacters=member.Length,parentPathUnder260=fixtureRoot.Length<260,memberExists,leaseAcquisitionSucceeded=acquired,stage,category,nativeCode,fixtureRetained,cleanupDiagnostic=fixtureRetained?new{stage="cleanup",category=cleanupCategory,nativeCode=cleanupCode}:null}));
+    if(!acquired||fixtureRetained)Environment.ExitCode=1;
+    return;
+}
 static string OwnedSignal(string[] arguments)
 {
     if(arguments.Length!=3)throw new ArgumentException("Synthetic child arguments are invalid.");
