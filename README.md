@@ -4,7 +4,7 @@
 
 [Download Windows x64 installer · v1.259.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/download/v1.259.1/MaterialFileEncryptor-Setup.exe) · [Documentation](https://ding-ding-projects.github.io/material-file-encryptor/) · [Release and provenance](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.259.1) · [中文文件](docs/features/README.zh-HK.md)
 
-> **Development status:** independently downloaded historical package bytes pass verification. Installed startup, automatic updating, restart continuity and the current rebuilt interface remain unfinished. The historical inventory retains **105 feature IDs and 210 desktop/website rows**. The supplementary concrete-surface registry now declares **856 surfaces and 89,880 independently unverified assessments**, including nested panels and the browser extension. These counts do not establish complete-surface acceptance.
+> **Development status:** independently downloaded historical package bytes pass verification. Installed startup, automatic updating, restart continuity and the current rebuilt interface remain unfinished. The historical inventory retains **105 feature IDs and 210 desktop/website rows**. The supplementary concrete-surface registry now declares **864 surfaces and 90,720 independently unverified assessments**, including nested panels and the browser extension. These counts do not establish complete-surface acceptance.
 
 ## Resumed verification, 2026-10-12
 

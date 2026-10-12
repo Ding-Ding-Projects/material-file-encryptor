@@ -850,3 +850,11 @@ Surface registry source `a78d74ab5267618cbea404c4aee38ab6f09e23fd` is independen
 Shared instructions synchronized successfully with 83 of 83 managed targets current. No authenticated Status Hub enrollment is configured, so only a private local status fallback exists. Project access lacks read:project scope; no Project mutation is claimed.
 
 The existing mounted drive remains untouched. Real-data migration, initial installation and removal stay deferred. Only a separately accepted matching release may enter the safe installed-update workflow. Retain original profiles, diagnostic journals, archives and private announcement variants. No deletion qualifies from source ancestry alone.
+
+## Resumed native verification milestone
+
+The source candidate now includes reviewed local native-supervision composition84aceeb. Its exact root build passed, then a fresh actual native pipe probe passed12boundaries and observed normal host exit. Registration/status/close are verified on synthetic owned records; no license was accepted and no server was started. The separately downloaded source3aebe66file-lease verifier passed8synthetic boundaries after its DLL and all186pinned runtime members were verified.
+
+Downloaded normal releasev1.303.1 passed Setup embedding, archive integrity and Squirrel extraction of861payload files. These release bytes remain separate from local version0.2.0, and installed acceptance is still unverified. See [sanitized source-bound evidence](docs/evidence/resume-native-20261012.json).
+
+The two subsequent source8f18aa8renderer attempts remain unsuccessful admission records. Exact native path redirection was established, and both owned launches were closed normally with independent root/tree/listener/client proofs. Their profiles and original journals remain retained. The new resolver-to-launch byte binding and complete verifier inventory must pass independent review before a fresh attempt.

@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "observedDateUtc": "2026-10-12",
+  "scope": "Independent package and native synthetic boundaries; no full product acceptance",
+  "release": {
+    "tag": "v1.303.1",
+    "sourceCommit": "3aebe66ded78bbfb0e3b8f8d829e64100371f446",
+    "workflow": "https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38208563860",
+    "normalRelease": true,
+    "downloadedAssetHashesMatched": true,
+    "setupEmbeddingPassed": true,
+    "archiveIntegrityPassed": true,
+    "extractedPayloadFiles": 861,
+    "installedLifecycleVerified": false
+  },
+  "nativeLease": {
+    "sourceCommit": "3aebe66ded78bbfb0e3b8f8d829e64100371f446",
+    "downloadedVerifierSha256": "44c224e71923d39836a581adbac4055023cdbfe4ffeb3fe1d565331c12358bd1",
+    "dotnetHostSha256": "111da7b604cd196b49167cfeecdaef4034b58cc7de71a91cbf9e162c9e8b0931",
+    "pinnedRuntimeMembersVerified": 186,
+    "checksPassed": 8,
+    "ipcIntegrationVerified": false,
+    "serverRuntimeVerified": false
+  },
+  "nativeSupervision": {
+    "sourceCommit": "84aceeb0aabd9a79c85a912b9d557e6747d4e386",
+    "entrypoint": "build.bat /s",
+    "buildExitCode": 0,
+    "nativeHostSha256": "af880374eecdef09cf64b44a14d61e8a5e173ee1644b404bbdf08c20b2e96eb4",
+    "actualPipeChecksPassed": 12,
+    "normalHostExitCode": 0,
+    "serverStartAttempted": false,
+    "licenseAccepted": false,
+    "mountedDriveAccessed": false,
+    "available": false,
+    "remaining": [
+      "Reviewed compatible runtime inventory",
+      "Exact-version configuration admission",
+      "Real owned start, readiness and graceful shutdown",
+      "Current rendered management acceptance"
+    ]
+  },
+  "boundaries": [
+    "Original unsuccessful commands and incomplete admissions remain retained separately.",
+    "Build-generated Material bundle matched the pinned Git blob after normalization; original raw status receipt remains retained.",
+    "Synthetic file leases and native registration do not prove a running server.",
+    "All current surface interaction and visual verdicts retain independent evidence requirements."
+  ]
+}
