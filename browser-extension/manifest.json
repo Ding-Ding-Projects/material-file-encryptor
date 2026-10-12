@@ -1,9 +1,22 @@
 {
- "manifest_version":3,
- "name":"Material File Encryptor Download Handoff",
- "version":"0.1.0",
- "description":"Propose a link download to the paired desktop. Transfers start only after desktop confirmation.",
- "permissions":["contextMenus","nativeMessaging"],
- "background":{"service_worker":"background.js","type":"module"},
- "action":{"default_popup":"popup.html","default_title":"Pair download handoff"}
+  "manifest_version": 3,
+  "name": "Material File Encryptor Download Handoff",
+  "version": "0.1.0",
+  "description": "Propose a link download to the paired desktop. Transfers start only after desktop confirmation.",
+  "permissions": [
+    "contextMenus",
+    "nativeMessaging"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Pair download handoff"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  }
 }
