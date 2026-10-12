@@ -21,3 +21,7 @@ The options panel localizes observations in English, Cantonese and bilingual mod
 ## Verification boundary
 
 Dedicated access, broker, extension-worker and options tests exercise native grant expiry/revision/cancellation, close and frame changes during reads, shared-mode races, exact request and response shape, forged sender paths, stale ports and localized unavailable state. Existing native-host and actual-frame IPC tests remain separate checks. Signing, installed identity, registration, genuine browser/native interaction, runtime revocation, visual parity and display scaling require independent runtime evidence. Synthetic checks do not establish those outcomes.
+
+## Compiled pipe verification
+
+With `MFE_BROWSER_HOST_EXE` bound to the candidate-built native host, the existing compiled transport test sends protection frames through its real client pipe and broker. A controlled synthetic provider returns authenticated/inactive and expired/active observations, always with unavailable browser permission. Unpaired, forged-session, extra-field, expired and revoked requests must fail before that provider is called. Existing owned broker/client teardown remains required. This proves native frame traversal and admission only, not an actual renderer profile grant. Without the supplied executable, this test is explicitly skipped; source inspection never substitutes for its execution.
