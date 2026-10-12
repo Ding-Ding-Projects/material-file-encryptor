@@ -579,3 +579,15 @@
 - [ ] Recover261 GUI adapter ADAPTER_FAILED, settle exact owned resources and verify current real Start/Stop controls.
 - [ ] Build and verify the finite candidate before main delivery.
 - [ ] Adopt and synchronize the canonical one-click procedure after complete real route acceptance.
+
+
+## Allowance-boundary follow-up, 2026-10-12
+
+- [x] Preserve actual412 installation and actual261 production-native startup, health, ownership and Stop as separate evidence.
+- [x] Preserve finite2bf exact root success without promoting unrun runtime checks.
+- [x] Record canonical one-click procedure on its verified main140e422d.
+- [ ] Complete current GUI4551 recovery and real current Start/Stop captures.
+- [ ] Complete finite candidate synthetic checks, cancellation and existing-installation preservation acceptance.
+- [x] Record canonical installed synchronization:83 of83 targets current at140e422d.
+- [ ] Record final gallery outcome and resolve canonical record-only push rejection.
+- [ ] Continue broader required features and main integration after allowance renewal.
