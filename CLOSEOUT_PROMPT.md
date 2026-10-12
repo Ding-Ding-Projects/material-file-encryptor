@@ -8,6 +8,8 @@ Main is 6536fa04326a139e1de26356af0fd844e10a5e28, pushed and independently read 
 
 The exact controller extracted from installed 1.133.1 now discovers actual hosted 1.344.1 and returns available without an error reason. Real metadata was transported through the GitHub CLI, with actual feed/provenance bytes matching hosted hashes. This was isolated read-only execution, not installed GUI or applied-update acceptance. No package download, native apply or mounted-data change occurred.
 
+The selected public discovery record is docs/evidence/hosted-update-1344-20261012.json. Its downloaded feed and provenance were independently rehashed before recording. Later package-byte verification is separate and cannot change this historical check's scope.
+
 The successful local installer receipt remains bound to ab975bb0f7cd9354c86ef130c54d7e276dc8941d. Its full tree equals corrected published 411ce5d, but its receipt was not relabelled. Original history remains in refs/agent-recovery/update-message-original-20261012. Hosted 411ce5d has its own workflow proof.
 
 Recovery source 49fe7b4ce817f7006a42172bdfbb9bccfddb4df7 is pushed and passed its exact root build with unchanged clean source. Do not merge this whole recovery ancestry into main. Additional recovery features remain incomplete.
