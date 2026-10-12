@@ -550,3 +550,5 @@
 - [x] Reconcile the encrypted personal-wording upload callback fixture with current persistence functions; focused source check passed, browser acceptance remains pending.
 
 - [x] Add missing history-pruning translations and exact technical-literal classification with negative source checks; rendered localization remains pending.
+
+- [x] Refresh generated public-route declarations to 187 routes and verify safe refresh refusal/preservation behavior with six focused checks; browser evidence remains unverified.

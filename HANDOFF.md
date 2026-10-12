@@ -1,3 +1,7 @@
+## Generated route declaration repair
+
+The catalog now maps to 187 declared routes and 105 feature families. Six focused inventory/refresh tests and refresh check mode pass. The helper rejects duplicates and existing evidence-bearing rows, preserves additional nested surfaces, and leaves every acceptance declaration unverified with empty browser evidence. No live publication, browser or packaged acceptance occurred.
+
 ## Translation inventory repair
 
 Five local-language source checks pass, including negative cases for untranslated prose, changed or removed literal entries, and complete current history validation messages. The exact API/default/state values remain unchanged; two missing history-pruning messages now have Cantonese copy. No rendered acceptance is claimed.
