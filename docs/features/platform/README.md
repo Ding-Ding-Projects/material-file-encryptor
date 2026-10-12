@@ -10,3 +10,5 @@
 The documentation catalog is generated locally from all Markdown files under `docs/` and available root project articles. The documentation site has a separately enumerated article and wiki inventory. No HTTP API is introduced by these modules; a Postman collection is not applicable.
 
 - [Public route acceptance boundaries](public-route-acceptance.md)
+
+- [Packaged documentation catalogue reuse](packaged-documentation-cache.md)
