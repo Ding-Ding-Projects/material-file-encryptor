@@ -9,17 +9,17 @@ if(args.Length==1&&args[0]=="--long-path-observation")
     string fixtureRoot=Path.Combine(Path.GetTempPath(),"mfe-ollama-path-"+Guid.NewGuid().ToString("N"));
     int filenameLength=279-fixtureRoot.Length-1;
     if(fixtureRoot.Length>=260||filenameLength<5||filenameLength>255){Console.WriteLine("{\"syntheticLongPath\":true,\"stage\":\"geometry\",\"category\":\"unsupported\"}");Environment.ExitCode=1;return;}
-    string filename=new string('m',filenameLength-4)+".dll",member=Path.Combine(fixtureRoot,filename);
+    string filename=new string('m',filenameLength-4)+".dll",probeMember=Path.Combine(fixtureRoot,filename);
     bool acquired=false,memberExists=false,fixtureCreated=false,fixtureRetained=false;int? nativeCode=null;string category="none",stage="setup";string? cleanupCategory=null;int? cleanupCode=null;
     try
     {
         if(Directory.Exists(fixtureRoot))throw new InvalidOperationException();
         Directory.CreateDirectory(fixtureRoot);fixtureCreated=true;
-        File.WriteAllText(member,"Synthetic long-path admitted member.");memberExists=File.Exists(member);stage="hash";
-        string digest=Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(member))).ToLowerInvariant();
+        File.WriteAllText(probeMember,"Synthetic long-path admitted member.");memberExists=File.Exists(probeMember);stage="hash";
+        string digest=Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(probeMember))).ToLowerInvariant();
         stage="lease-acquisition";
-        var lease=OllamaRuntimeLease.AcquireSynthetic(fixtureRoot,new Dictionary<string,string>{{filename,digest}});
-        lease.Release();acquired=true;
+        var probeLease=OllamaRuntimeLease.AcquireSynthetic(fixtureRoot,new Dictionary<string,string>{{filename,digest}});
+        probeLease.Release();acquired=true;
     }
     catch(Exception error)
     {
@@ -28,10 +28,10 @@ if(args.Length==1&&args[0]=="--long-path-observation")
     }
     finally
     {
-        if(fixtureCreated)try{File.Delete(member);Directory.Delete(fixtureRoot);}
+        if(fixtureCreated)try{File.Delete(probeMember);Directory.Delete(fixtureRoot);}
         catch(Exception error){fixtureRetained=true;cleanupCategory=error switch{System.ComponentModel.Win32Exception=>"native-call",IOException=>"io",UnauthorizedAccessException=>"access",_=>"unknown"};cleanupCode=error is System.ComponentModel.Win32Exception native?native.NativeErrorCode:null;}
     }
-    Console.WriteLine(JsonSerializer.Serialize(new{syntheticLongPath=true,memberPathCharacters=member.Length,parentPathUnder260=fixtureRoot.Length<260,memberExists,leaseAcquisitionSucceeded=acquired,stage,category,nativeCode,fixtureRetained,cleanupDiagnostic=fixtureRetained?new{stage="cleanup",category=cleanupCategory,nativeCode=cleanupCode}:null}));
+    Console.WriteLine(JsonSerializer.Serialize(new{syntheticLongPath=true,memberPathCharacters=probeMember.Length,parentPathUnder260=fixtureRoot.Length<260,memberExists,leaseAcquisitionSucceeded=acquired,stage,category,nativeCode,fixtureRetained,cleanupDiagnostic=fixtureRetained?new{stage="cleanup",category=cleanupCategory,nativeCode=cleanupCode}:null}));
     if(!acquired||fixtureRetained)Environment.ExitCode=1;
     return;
 }
