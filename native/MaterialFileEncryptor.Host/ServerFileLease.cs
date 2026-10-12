@@ -109,7 +109,9 @@ namespace MaterialFileEncryptor.Host
         }
         private static SafeFileHandle Open(string path, uint access, uint share, uint flags)
         {
-            SafeFileHandle handle = CreateFile(path, access, share, IntPtr.Zero, 3, flags, IntPtr.Zero);
+            // Canonical local paths retain their identity checks while the native call
+            // supports admitted members beyond the classic path-length limit.
+            SafeFileHandle handle = CreateFile(@"\\?\" + path, access, share, IntPtr.Zero, 3, flags, IntPtr.Zero);
             if (handle.IsInvalid) { int error = Marshal.GetLastWin32Error(); handle.Dispose(); throw new Win32Exception(error); }
             return handle;
         }

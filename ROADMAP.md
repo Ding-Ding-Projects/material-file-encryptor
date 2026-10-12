@@ -527,3 +527,9 @@
 - [x] Prepare only the accepted `eaf2685` diagnostic slice and related paired article hashes on `f2f8c315`; dedicated paths match immutable source bytes.
 - [ ] Independently review and preserve this source-only delta before integration.
 - [ ] Verify native compilation and source-bound diagnostic runtime behavior; actual `412a217` installation passed, Start failed with unknown cause, and the owned flow closed gracefully.
+
+
+## Managed runtime long-path preparation
+
+- [x] Prepare only the independently reviewed lease native-call hunk and exact lifetime verifier from `261f92f`, preserving shared main seams.
+- [ ] Review and preserve the incorporated delta, then obtain its own root and runtime proof. Original `261f92f` root, synthetic 279-character protections and lifetime verifier passed separately; the native component is verified separately. The `261f92f` GUI adapter returned `ADAPTER_FAILED` before its lifecycle file; exact owned-resource inventory and private adapter diagnosis remain pending.
