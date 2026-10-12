@@ -109,8 +109,8 @@
     {
       "source": "docs/features/desktop/package-integrity.md",
       "translation": "docs/features/desktop/package-integrity.zh-HK.md",
-      "sourceSha256": "481dbb89a5983c9f2e6946fb4c33e1c2fc449f22f70fa33b86bdb54ffbc2fea0",
-      "translationSha256": "9b20419a3b802e3168a521550f6c5dd4f88d5202e65437e1f88dd0b0ba6d93d9"
+      "sourceSha256": "db6b2484e15244eb9c73fa655b263ecfacc2d385c45b908dd0e396aaa858659c",
+      "translationSha256": "e1d85fed6c49e76bebce5a3e687bf32fd6fa0d6aea606cdb68e96b3d320654d2"
     },
     {
       "source": "docs/features/desktop/runtime-evidence.md",
@@ -223,8 +223,8 @@
     {
       "source": "docs/features/platform/README.md",
       "translation": "docs/features/platform/README.zh-HK.md",
-      "sourceSha256": "893a14790a76f43bdeaff76443e3f2d947aea2b6eda08b22a63b680169481d06",
-      "translationSha256": "3b00cdfa324161c388b7769db510db8b927a8c425c4c63a5740f1e14dc127211"
+      "sourceSha256": "61d5939c7c1c296eaf3d0038f4be4647f1c8692b896ecfdb54b1c845b184c70e",
+      "translationSha256": "9bf204dc96b2a4609d7620d906dd1acdf5c7aa83280311034acbd7e24e369ab5"
     },
     {
       "source": "docs/features/platform/current-integration.md",
@@ -265,8 +265,8 @@
     {
       "source": "docs/features/release/native-update-controller.md",
       "translation": "docs/features/release/native-update-controller.zh-HK.md",
-      "sourceSha256": "14a54e33a5d4bb1a8baf570d7c4ad58494496d50cbd54bc4eeaa0a9f9b2a38fb",
-      "translationSha256": "419fbf30f3ea41f12ed2bb00a25e3172dd98b63406cb3a5603565806be93f231"
+      "sourceSha256": "a016a79d09ec268b6787fb61ab21042685b349fcfd34f9e372e3cf2474ad27fd",
+      "translationSha256": "54ee5d829e7ad88d5e82445cbe8eb0459e704f4cae21fa14caa72ecc576aa5db"
     },
     {
       "source": "docs/features/release/preview-delivery.md",
@@ -489,6 +489,12 @@
       "translation": "docs/features/interface/private-history-controls.zh-HK.md",
       "sourceSha256": "ee83e49cc9342004e1686191e186bdd89655271845e9579dbdb1cf097b91dd6e",
       "translationSha256": "432a23e048cb21a38b0d69f87925590e49dbfb8ade3ea749a3e5e26831f77569"
+    },
+    {
+      "source": "docs/features/platform/packaged-documentation-cache.md",
+      "translation": "docs/features/platform/packaged-documentation-cache.zh-HK.md",
+      "sourceSha256": "e7ad3455e61d47dbf7b5ab634f5c6d54b54da43d0a76914f12b5430acc4236d7",
+      "translationSha256": "b3f8b3aae92caaeac27ce02bb1203f85d1361cd1579336634dfbae8db6f307e7"
     }
   ]
 }

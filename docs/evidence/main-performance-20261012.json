@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "scope": "Selected source-bound main performance verification; no installed or GUI acceptance",
+  "pdf": {
+    "source": "a0239c91d517ca06d9725f36dd76874f5ab33ece",
+    "asarSha256": "8d16bd533dd95a3fbe8310e03588bd3c1c7df171c025e5a897d8af29ef0e6e12",
+    "asarBytes": 74301413,
+    "retainedPdfFiles": 994,
+    "excludedMaps": 560,
+    "existingPackagerOmissions": [
+      "node_modules/pdf-lib/yarn.lock"
+    ],
+    "exactRetainedHashes": true,
+    "pdfChecks": [
+      "create-text",
+      "inspect-pages-title",
+      "extract-order",
+      "rotate-selected",
+      "metadata-roundtrip"
+    ],
+    "passed": true,
+    "rootBuildExitCode": 0,
+    "packagePrivacy": {
+      "entries": 5713,
+      "rejected": 0
+    }
+  },
+  "documentationCache": {
+    "source": "187364a3094b1f66e5798d10991f2e3d09d40af9",
+    "method": "actual feature-service dispatch on one catalogue extracted from actual ASAR; existing fresh-read path versus trusted packaged reuse; same process and alternating order",
+    "catalogBytes": 7863011,
+    "catalogSha256": "83b07d77d0f6a9561ed39613496d59184e7e7750e70866a60222923d0fc9d790",
+    "asarSha256": "0778751d020e42a70a48546f721b460876b3cd3233a0589141f5ee73eb074213",
+    "sourceHashes": {
+      "src/main/feature-services.js": {
+        "packaged": "bdd4b07350a2eecbd9f9695d8a6aff1170b54ff57b17eab6ce870b1e0ae485d9",
+        "source": "bdd4b07350a2eecbd9f9695d8a6aff1170b54ff57b17eab6ce870b1e0ae485d9",
+        "normalizedEqual": true
+      },
+      "src/main/main.js": {
+        "packaged": "c0a2e917030c84b67dd0e27d3c4da17dd3b0c401b4e82152fcb3afe552e9a291",
+        "source": "c0a2e917030c84b67dd0e27d3c4da17dd3b0c401b4e82152fcb3afe552e9a291",
+        "normalizedEqual": true
+      },
+      "src/main/documentation-catalog-service.js": {
+        "packaged": "3d13d4abf0b397d2544932f1a681c9c41a52da4afff801b6940a4b315937edcd",
+        "source": "3d13d4abf0b397d2544932f1a681c9c41a52da4afff801b6940a4b315937edcd",
+        "normalizedEqual": true
+      }
+    },
+    "firstLoadMs": 24.959100000000007,
+    "medians": {
+      "fresh": 17.321500000000015,
+      "cached": 0.0181999999999789,
+      "freshConcurrent": 28.51819999999998,
+      "cachedConcurrent": 0.006499999999959982
+    },
+    "scope": "local Node component only; excludes IPC, original ASAR access, renderer and installed application",
+    "noGui": true,
+    "rootBuildExitCode": 0,
+    "sampleCountPerSeries": 31,
+    "packagePrivacy": {
+      "entries": 5714,
+      "rejected": 0
+    }
+  },
+  "sourceNormalization": {
+    "generatedMaterialChange": "Line endings only; configured normalized source blob equals committed content.",
+    "normalizedBlob": "2ba68b7d906a95c289cff4ef76ff77be36a0cbad",
+    "criticalCacheSourceRawHashesUnchanged": true
+  },
+  "limits": [
+    "Package size does not establish application speed.",
+    "Component timings exclude IPC, original ASAR access, renderer and installed behavior.",
+    "Current screenshots, full visual acceptance, installed startup and update lifecycle remain pending."
+  ]
+}

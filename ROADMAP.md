@@ -488,4 +488,17 @@
 
 ## Main-baseline packaging optimization
 
-- [ ] Verify the bounded PDF debug-map exclusion through the exact root build, retained runtime-file hashes and PDF round-trip checks before main delivery. Source rule preserves existing resources; package-size evidence does not establish application-speed improvement.
+- [x] Verify PDF debug-map exclusion at `a0239c9` through the exact root build, 994 retained-file hashes and five PDF checks; source reached main. Package-size evidence does not establish application-speed improvement.
+
+## Main-baseline documentation performance
+
+- [x] Verify catalogue cache at `187364a` with eight focused checks, independent review, exact root build and source-bound component measurements; source reached main. Installed and renderer performance remain separate.
+
+## Current main documentation and remaining delivery
+
+- [x] Verify PDF exclusion at `a0239c9` through the exact root build, 994 retained-file hashes and five extracted PDF checks.
+- [x] Verify catalogue cache at `187364a` through independent focused checks, exact root build, production-byte identity and bounded same-input component timings.
+- [ ] Deliver the rewritten README, three explanatory diagrams and selected public proof after focused link/privacy checks and independent review.
+- [ ] Finish installed startup and actual automatic-update acceptance; updater controller and future-feed source are on main, with local installer production passed and hosted/native apply pending.
+- [ ] Verify the one-click application-managed Ollama runtime procedure before updating shared instructions; preserve existing installations.
+- [ ] Replace current screenshots only after genuine rebuilt capture acceptance, preserving historical originals.

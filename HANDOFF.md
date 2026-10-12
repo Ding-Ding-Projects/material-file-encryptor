@@ -825,3 +825,11 @@ The current review uses parent baseline `785fdf2` with ready revisions `4ca05780
 ## Main-baseline PDF packaging candidate
 
 A bounded adaptation of `7ad539a937f5c2828572884cc7ef7111290ba62c` excludes only upstream PDF debug maps while preserving the main-baseline resource list and runtime code. Exact-source root build and extracted PDF verification remain pending. No newer interface, extension, native provisioning or documentation cache is activated by this change.
+
+## Main-baseline documentation cache candidate
+
+A bounded adaptation reuses an immutable packaged documentation catalogue through existing main request and close seams. No newer access, browser or server lifecycle methods are imported. Focused source checks and independent review precede a new exact build and component measurement. Installed and renderer acceptance remain separate.
+
+## Current main documentation delivery
+
+Main source `411ce5d55b96958799d996713374b7b683552234` includes verified PDF exclusion, documentation cache, updater controller and future release-index repair. Both exact root builds passed; selected source-bound package hashes and component measurements are published in `docs/evidence/main-performance-20261012.json`. The README now distinguishes main behavior from unfinished recovery branches and retains historical capture provenance. Latest steering requests frequent verified main delivery, full documentation with diagrams, startup and automatic-update repair, and the documented one-click application-managed Ollama runtime procedure, with shared instructions updated only after actual installation/runtime proof and existing installations untouched. Local installer production passed at `ab975`; `411ce5d` has the same complete source tree after a preserved unpublished message correction. Hosted future-feed, native update apply, installed startup, Ollama operations, current replacement captures and the complete visual matrix remain pending. This documentation unit changes no runtime file.
