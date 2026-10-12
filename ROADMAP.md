@@ -19,7 +19,7 @@
 - [x] Reduce the staged extension message helper from 431,433 to 999 bytes while preserving the exact shared table and translator exports; this is not a startup-speed measurement.
 - [ ] Measure current built startup, first usable state, navigation, search, representative large collections and native operations before and after relevant changes.
 - [ ] Prove 100% Material Design 3 on every current surface and supported state using genuine inspected captures and interaction.
-- [ ] Complete every applicable required feature across 885 current surfaces and 92,925 independently unverified assessments.
+- [ ] Complete every applicable required feature across 893 current surfaces and 93,765 independently unverified assessments.
 
 ## Current preservation pass
 

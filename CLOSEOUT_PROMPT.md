@@ -16,7 +16,7 @@ The surface branch retains test-only candidate ae762c714e18a1f67e2f3f5193ecc9019
 - Downloaded normal v1.303.1/source3a assets match their published hashes and 861 extracted files. Installed startup/update/removal acceptance is separate and incomplete.
 - Exact 7ad package comparison removed 560 PDF source maps, retained all 994 PDF files identically and passed the extracted PDF round-trip. Package size does not establish startup speed.
 - Documentation cache service measurements, raw samples and memory tradeoffs bind to 9c4f6dc. They exclude IPC, ASAR and renderer work. Extension helper staging fell from 431,433 to 999 bytes; 37 parent-repeated focused checks passed, while actual browser acceptance remains pending.
-- Current registry:885 surfaces and 92,925 independently unverified assessments. Keep historical 105-family/210-row and 89-state/4272-tuple evidence separate.
+- Current registry:893 surfaces and 93,765 independently unverified assessments. Keep historical 105-family/210-row and 89-state/4272-tuple evidence separate.
 - Genuine packaged diagnostics show 40-pixel Clear hosts with 48-pixel touch layers and successful outside-host clicks. Corrected History/Recycle checks and deliberate reduced-target rejection passed. The first renderer test still needs exact obstruction diagnosis. Latest admission:1,393,772 KiB free versus the unchanged 1,572,864 KiB floor. No GUI launched during that rejected admission; prior owned launches are closed.
 
 ## Active isolated work and next steps
