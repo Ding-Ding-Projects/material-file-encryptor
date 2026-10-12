@@ -445,8 +445,8 @@
     {
       "source": "docs/features/server-manager/native-supervision.md",
       "translation": "docs/features/server-manager/native-supervision.zh-HK.md",
-      "sourceSha256": "077b3dc78b7be32ce5fa145eead4cf8bf3f055041a632dbff7fd5b10cd0fc39a",
-      "translationSha256": "5a78274b4e1fcd5c61750e535276db20189c7d768cf69ba21b5eec5f91c5f9d5"
+      "sourceSha256": "e386d5385fc6c6702910e3cc41005d3c6ab8d7c5af37fe1353e3d9c5064d3a71",
+      "translationSha256": "656ade00bb2e1c2ca6b945fd5ebaad2119d005da3bbed5b59ccf6a45012cff88"
     },
     {
       "source": "docs/features/server-manager/preparation.md",
