@@ -117,3 +117,7 @@ test('Space uses the same owned target and render proof, and unknown keys fail b
 test('unready registered startup controls stop context preparation before native files',async()=>{
  const {producer,calls}=fixture({startupReady:false});await assert.rejects(producer.prepare(context),/startup select and appearance readiness/);assert.equal(calls.includes('native-prepare'),false);
 });
+
+test('retained editor route is explicit and never claims focus was restored',async()=>{
+ const {producer,calls}=fixture();await producer.prepare(context);await producer['open-context'](context);const proof=await producer['open-editor'](context);assert.equal(proof.editorRetained,true);assert.equal(proof.focusInEditor,true);assert.equal(Object.hasOwn(proof,'focusRestored'),false);await producer.restore(context);
+});

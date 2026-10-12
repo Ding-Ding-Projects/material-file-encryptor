@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {createContextAppearancePersistence} from './gui-acceptance-context-persistence.mjs';
 import {requireContextStartupReadiness} from './gui-acceptance-context-readiness.mjs';
 
 // Browser input reaches the production controls. Evaluation only observes state;
@@ -26,43 +27,7 @@ export function createContextFoundationFixture({opened,prepare,restore,identity,
   }
   assert.equal(await page.evaluate(()=>[...document.querySelectorAll('.appearance-editor')].some(n=>!n.hidden)),false,'Appearance editor did not close');
  };
- return {
-  requireActionProof:true,
-  async prepare(context){await identity(context);await dismiss();const startup=await requireContextStartupReadiness({page,identity,context});const prepared=await prepare(context);return {...prepared,startup};},
-  async restore(context){
-   await identity(context);
-   const errors=[];let result;
-   const attempt=async(name,operation)=>{try{await operation();}catch(cause){errors.push(new Error('Context restoration failed: '+name,{cause}));}};
-   await attempt('dismissal',dismiss);
-   await attempt('viewport',async()=>{if(viewport){await page.setViewportSize(viewport);viewport=null;}});
-   // UI transport failures must not skip separately identity/hash-checked files.
-   await attempt('native files',async()=>{result=await restore(context);assert.equal(result?.restored,true,'Native restoration was not confirmed');});
-   capturedId=null;
-   if(errors.length)throw new AggregateError(errors,'Context fixture restoration incomplete');
-   return result;
-  },
-  async 'open-context'(context){
-   await identity(context);await dismiss();const listing=await list();assert.equal(listing.more,false);
-   const find=name=>listing.rows.find(row=>row.path.replace(/^[/\\]+/,'')===name)?.id;
-   const selectedId=find('Acceptance A.txt'),targetId=find('Acceptance B.txt');
-   assert.equal(listing.rows.length,2);assert.ok(selectedId&&targetId&&selectedId!==targetId,'Two distinct owned files required');
-   await page.locator(rowSelector(selectedId)+' md-radio').click();
-   await page.waitForFunction(id=>document.querySelector('#file-list tr.selected')?.dataset.fileId===id,selectedId,{timeout:10000});
-   await page.locator(rowSelector(targetId)+' md-radio').click({button:'right'});
-   await page.waitForFunction(()=>[...document.querySelectorAll('mfe-context-menu')].some(n=>!n.hidden&&n.menu?.open),undefined,{timeout:10000});
-   const observation=await menuState();assert.equal(observation.count,1);assert.equal(observation.targetId,targetId);
-   assert.deepEqual(observation.selectedIds,[selectedId],'Right-click must preserve the earlier selection');capturedId=targetId;
-   return receipt({activated:true,activation:'native-pointer',inputRoute:'browser-pointer',selectedId,capturedTargetId:targetId,observation});
-  },
-  async resize(context){
-   await identity(context);const before=await menuState();assert.equal(before.count,1);assert.equal(before.targetId,capturedId);
-   const current=await page.evaluate(()=>({width:innerWidth,height:innerHeight}));viewport??=current;
-   await page.setViewportSize({width:current.width+1,height:current.height});await closed();
-   const observation=await menuState();assert.equal(observation.focusFileId,capturedId,'Resize dismissal must restore target focus');
-   await page.setViewportSize(current);viewport=null;
-   return receipt({activated:true,activation:'production-api',inputRoute:'browser-viewport-resize',physicalDpiVerified:false,capturedTargetId:capturedId,before,observation,viewportRestored:current});
-  },
-  async 'select-action'(context){
+ async function activateAppearance(context,retainEditor=false){
    await identity(context);const before=await menuState();assert.equal(before.count,1);assert.equal(before.targetId,capturedId);
    await page.locator('mfe-context-menu mfe-search md-outlined-text-field.query').click();
    await page.keyboard.press('Control+A');await page.keyboard.press('Backspace');
@@ -94,10 +59,50 @@ export function createContextFoundationFixture({opened,prepare,restore,identity,
    assert.equal(effect.renders,1,'One keyboard activation must produce exactly one target editor render');
    assert.ok(effect.headings[0].endsWith(': '+action.label));
    const focusInEditor=await page.evaluate(()=>document.querySelector('.appearance-editor')?.contains(document.activeElement));assert.equal(focusInEditor,true);
+   if(retainEditor)return receipt({activated:true,activation:'cdp-key',activationKey,capturedTargetId:capturedId,selectedId:before.selectedIds[0],effect:{kind:'appearance-editor-render',count:effect.renders,targetMatches:true},focusInEditor,editorRetained:true});
    await page.keyboard.press('Escape');await page.waitForFunction(()=>document.querySelector('.appearance-editor')?.hidden,undefined,{timeout:10000});
    const after=await menuState();assert.equal(after.count,0);assert.equal(after.focusFileId,capturedId);
    return receipt({activated:true,activation:'cdp-key',activationKey,capturedTargetId:capturedId,selectedId:before.selectedIds[0],effect:{kind:'appearance-editor-render',count:effect.renders,targetMatches:true},focusInEditor,focusRestored:true,observation:after});
+ }
+ const api={
+  requireActionProof:true,
+  async prepare(context){await identity(context);await dismiss();const startup=await requireContextStartupReadiness({page,identity,context});const prepared=await prepare(context);return {...prepared,startup};},
+  async restore(context){
+   await identity(context);
+   const errors=[];let result,appearanceRestored=false;
+   const attempt=async(name,operation)=>{try{await operation();}catch(cause){errors.push(new Error('Context restoration failed: '+name,{cause}));}};
+   await attempt('appearance persistence',async()=>{const value=await persistence.restore(context);assert.equal(value.restored,true);appearanceRestored=true;});
+   await attempt('dismissal',dismiss);
+   await attempt('viewport',async()=>{if(viewport){await page.setViewportSize(viewport);viewport=null;}});
+   // UI transport failures must not skip separately identity/hash-checked files.
+   if(appearanceRestored)await attempt('native files',async()=>{result=await restore(context);assert.equal(result?.restored,true,'Native restoration was not confirmed');});
+   capturedId=null;
+   if(errors.length)throw new AggregateError(errors,'Context fixture restoration incomplete');
+   return result;
   },
+  async 'open-context'(context){
+   await identity(context);await dismiss();const listing=await list();assert.equal(listing.more,false);
+   const find=name=>listing.rows.find(row=>row.path.replace(/^[/\\]+/,'')===name)?.id;
+   const selectedId=find('Acceptance A.txt'),targetId=find('Acceptance B.txt');
+   assert.equal(listing.rows.length,2);assert.ok(selectedId&&targetId&&selectedId!==targetId,'Two distinct owned files required');
+   await page.locator(rowSelector(selectedId)+' md-radio').click();
+   await page.waitForFunction(id=>document.querySelector('#file-list tr.selected')?.dataset.fileId===id,selectedId,{timeout:10000});
+   await page.locator(rowSelector(targetId)+' md-radio').click({button:'right'});
+   await page.waitForFunction(()=>[...document.querySelectorAll('mfe-context-menu')].some(n=>!n.hidden&&n.menu?.open),undefined,{timeout:10000});
+   const observation=await menuState();assert.equal(observation.count,1);assert.equal(observation.targetId,targetId);
+   assert.deepEqual(observation.selectedIds,[selectedId],'Right-click must preserve the earlier selection');capturedId=targetId;
+   return receipt({activated:true,activation:'native-pointer',inputRoute:'browser-pointer',selectedId,capturedTargetId:targetId,observation});
+  },
+  async resize(context){
+   await identity(context);const before=await menuState();assert.equal(before.count,1);assert.equal(before.targetId,capturedId);
+   const current=await page.evaluate(()=>({width:innerWidth,height:innerHeight}));viewport??=current;
+   await page.setViewportSize({width:current.width+1,height:current.height});await closed();
+   const observation=await menuState();assert.equal(observation.focusFileId,capturedId,'Resize dismissal must restore target focus');
+   await page.setViewportSize(current);viewport=null;
+   return receipt({activated:true,activation:'production-api',inputRoute:'browser-viewport-resize',physicalDpiVerified:false,capturedTargetId:capturedId,before,observation,viewportRestored:current});
+  },
+  'select-action':context=>activateAppearance(context),
+  'open-editor':context=>activateAppearance(context,true),
   async 'target-removal'(context){
    await identity(context);const before=await menuState();assert.equal(before.count,1);assert.equal(before.targetId,capturedId);
    const removal=await removeTarget(context,capturedId);await closed();
@@ -106,4 +111,8 @@ export function createContextFoundationFixture({opened,prepare,restore,identity,
    return receipt({activated:true,activation:'production-api',inputRoute:'owned-native-filesystem',capturedTargetId:capturedId,removal,before,observation});
   }
  };
+ const persistence=createContextAppearancePersistence({page,identity,contextFixture:api});
+ api['verify-persistence']=context=>persistence.run(context);
+ api['restore-persistence']=context=>persistence.restore(context);
+ return api;
 }
