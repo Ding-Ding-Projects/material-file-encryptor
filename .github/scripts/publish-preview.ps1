@@ -52,7 +52,8 @@ function Resolve-PublicReleasePhoto {
  $photoName=$Matches[1]
  foreach($name in @($dish.name.en,$dish.name.zhHant)){Assert ($name -is [string] -and $name.Length -gt 0 -and $name.Length -le 180 -and $name -notmatch '[\x00-\x1f\x7f\[\]<>\x60]') 'PUBLIC_PHOTO_NAME_INVALID'}
  for($page=1;$page -le 3;$page++){
-  $releases=@(((Gh @('api',"repos/$photoRepo/releases?per_page=100&page=$page")) -join "`n") | ConvertFrom-Json)
+  $releaseJson=(Gh @('api',"repos/$photoRepo/releases?per_page=100&page=$page")) -join "`n"
+  $releases=ConvertFrom-Json $releaseJson
   foreach($release in $releases){
    if($release.draft -or $release.prerelease -or $release.tag_name -notmatch '^catalog-v1[A-Za-z0-9._-]*$'){continue}
    foreach($asset in @($release.assets)){

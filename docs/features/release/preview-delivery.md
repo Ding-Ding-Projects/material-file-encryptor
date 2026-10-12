@@ -39,3 +39,5 @@ The focused publisher check rejects draft or prerelease sources, unrelated tags,
 wrong URLs, missing digests and unpublished assets. A metadata-only live probe
 verified a public source reference without downloading a photo or publishing a
 release. This does not establish future publication or installer acceptance.
+
+On Windows PowerShell, decoded release lists are assigned directly so each release is evaluated separately. Wrapping the decoder pipeline in an array can retain the whole list as one nested item and incorrectly reject a valid catalog release when unrelated desktop tags share its page. Regression fixtures cover a mixed list, a full first page followed by the catalog release, and the existing provenance refusals. This correction does not relax source validation or attach photo copies.
