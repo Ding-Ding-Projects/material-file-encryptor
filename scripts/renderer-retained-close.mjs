@@ -5,6 +5,7 @@ import os from 'node:os';
 import {spawn} from 'node:child_process';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {createRendererCdpTransport,verifyConnectedRenderer,proveStableRendererTree,requireClosureProof} from './test-renderer-browser.mjs';
+import {closeWithExitProof} from './renderer-close-response.mjs';
 if(!process.argv[2]||!path.isAbsolute(process.argv[2]))throw Error('Exact retained run root required.');
 const root=await fs.realpath(process.argv[2]);
 const statePath=path.join(root,'lifecycle.json');
@@ -35,10 +36,8 @@ try{
  await verifyConnectedRenderer(browser,{expectedUrl:state.cdp.expectedUrl,targetId:first.targetId},input=>proveStableRendererTree(()=>call('prove-cdp',{...input,clientBinding})));
  await call('prepare-exit');
  const session=await browser.newBrowserCDPSession();
- let closeResponse='acknowledged';
- try{await session.send('Browser.close');}catch{closeResponse='unknown';}
- const closure=await call('confirm-exit');requireClosureProof(closure);
- await fs.writeFile(path.join(attempt,'result.json'),JSON.stringify({ok:true,closeResponse,closure,targetLaunchAttempted:false},null,2),{flag:'wx'});
- console.log(JSON.stringify({ok:true,attempt,closeResponse,closure}));
-}catch(error){await fs.writeFile(path.join(attempt,'result.json'),JSON.stringify({ok:false,error:error.message,targetLaunchAttempted:false},null,2),{flag:'wx'});console.log(JSON.stringify({ok:false,attempt,error:error.message}));process.exitCode=1;}
+ const closed=await closeWithExitProof({sendClose:()=>session.send('Browser.close'),confirmExit:()=>call('confirm-exit'),requireClosureProof,recordResponse:response=>fs.writeFile(path.join(attempt,'close-response.json'),JSON.stringify(response,null,2),{flag:'wx'})});
+ await fs.writeFile(path.join(attempt,'result.json'),JSON.stringify({ok:true,...closed,targetLaunchAttempted:false},null,2),{flag:'wx'});
+ console.log(JSON.stringify({ok:true,attempt,...closed}));
+}catch(error){const failed={ok:false,error:error.message,...(error.closeResponseObservation?{...error.closeResponseObservation,reasons:error.errors.map(value=>String(value?.message??value))}:{}),targetLaunchAttempted:false};await fs.writeFile(path.join(attempt,'result.json'),JSON.stringify(failed,null,2),{flag:'wx'});console.log(JSON.stringify({attempt,...failed}));process.exitCode=1;}
 finally{if(transport)await transport.disconnect();}
