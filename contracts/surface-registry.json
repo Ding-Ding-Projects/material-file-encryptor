@@ -2224,6 +2224,15 @@
       "proofs": {}
     },
     {
+      "id": "extension:options:message-preview",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#message-preview",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "extension:options:personalization",
       "family": "extension",
       "route": "browser-extension/options.html",

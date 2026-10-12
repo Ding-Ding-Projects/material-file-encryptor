@@ -3,7 +3,7 @@ import { REQUIRED_FEATURE_IDS } from './required-features.mjs';
 // Handwritten expectations are independent of source extraction.
 export const REQUIRED_CONCRETE_SURFACE_IDS = Object.freeze([
   'desktop:vault-dialog', 'desktop:confirm-dialog', 'desktop:restore-descendants',
-  'extension:popup', 'extension:options', 'extension:options:connection', 'extension:options:personalization', 'extension:options:status', 'site:index', 'site:library', 'site:wiki', 'site:gallery', 'site:workspace',
+  'extension:popup', 'extension:options', 'extension:options:connection', 'extension:options:personalization', 'extension:options:status', 'extension:options:message-preview', 'site:index', 'site:library', 'site:wiki', 'site:gallery', 'site:workspace',
   ...['desktop', 'site:workspace'].flatMap(host => [
     ...['language', 'appearance', 'schedules', 'attention', 'history'].map(panel => `${host}:personalization:${panel}`),
     `${host}:personalization:home-assistant-credential`,
@@ -64,6 +64,8 @@ export async function discoverFeatureSurfaces(repositoryPath) {
   if(extensionManifest.options_ui?.page!=='options.html')throw new Error('Extension options route is unavailable.');
   add('extension:options','extension','browser-extension/options.html','browser-extension/options.js');
   const options=await read('browser-extension/options.html');
+  if(!options.includes('id="message-preview"'))throw new Error('Extension message preview is unavailable.');
+  add('extension:options:message-preview','extension','browser-extension/options.html','browser-extension/options.js','#message-preview');
   for(const panel of ['connection','personalization','status']){if(!options.includes('id="panel-'+panel+'"')||!options.includes('aria-controls="panel-'+panel+'"'))throw new Error('Extension panel ownership is unavailable: '+panel);add('extension:options:'+panel,'extension','browser-extension/options.html','browser-extension/options.js','#panel-'+panel);}
 
   // Preferences are independently addressable on every generated publication route.

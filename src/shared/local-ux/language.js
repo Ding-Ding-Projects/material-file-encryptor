@@ -1,3 +1,4 @@
+import {MESSAGE_STYLES} from './message-styles.js';
 import {ACCESS_COPY} from '../../renderer/features/access/copy.js';
 import {APPEARANCE_COPY} from '../../renderer/features/personalization/appearance-copy.js';
 import {LOCAL_COPY} from './local-copy.js';
@@ -45,10 +46,7 @@ Object.assign(COPY,{
   "false.": "假。",
   "normal, hover, focus, active, selected, disabled, dragged, invalid, loading, success, warning, error": "一般、滑鼠停留、焦點、啟用中、已選取、已停用、拖曳中、無效、載入中、成功、警告、錯誤"
 });
-export const MESSAGE_STYLES = Object.freeze({
- en:['','', ' The details are right here.',' The paperwork is keeping up.',' No mystery hidden in the small print.',' The fine print has nowhere to hide.'],
- yue:['','', ' 詳情喺呢度。',' 手續跟得上。',' 唔使估，細節寫清楚。',' 細字今次冇地方匿埋。'],
-});
+export {MESSAGE_STYLES} from './message-styles.js';
 export const SETTING_LABELS = Object.freeze({language:'Language',theme:'Theme',density:'Density',seed:'Accent color',fontFamily:'Font family',fontScale:'Font scale',fontWeight:'Font weight',motion:'Motion',displayName:'Display name',emoji:'Show emojis in dialogs and message boxes',funnyEnglish:'English playfulness',funnyCantonese:'Cantonese playfulness'});
 export function createTranslator(getSettings,{vocabulary,dictionary={}}={}) {
  const words={...COPY,...dictionary};
