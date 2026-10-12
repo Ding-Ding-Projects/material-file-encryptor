@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "classification": "design-only",
+  "baseCommit": "a0239c91d517ca06d9725f36dd76874f5ab33ece",
+  "routeTemplate": "reference.html?state={state}&lang={language}&theme={theme}",
+  "states": [
+    "missing",
+    "existing",
+    "checking",
+    "awaiting-consent",
+    "downloading",
+    "verifying",
+    "extracting",
+    "registering",
+    "checking-installation",
+    "installed-stopped",
+    "cancelled",
+    "failed",
+    "unavailable"
+  ],
+  "viewports": [
+    {
+      "width": 1180,
+      "height": 850
+    },
+    {
+      "width": 880,
+      "height": 650
+    }
+  ],
+  "languages": [
+    "en",
+    "yue",
+    "bilingual"
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "scales": [
+    1,
+    1.25,
+    1.5,
+    2
+  ],
+  "productionRoute": "Local models > Model Store > Local runtime",
+  "productionSelector": ".ollama-runtime",
+  "verificationStatus": "pending-built-capture",
+  "rawProductionCapture": null
+}

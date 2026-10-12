@@ -1,3 +1,4 @@
+import {ollamaCantonese} from './locales.js';
 import { createRegexFilter } from './regex.js';
 /** Local-only UI. The host supplies an authenticated request and event bridge. */
 export function mountOllama(root,{services,translate=(s)=>s,confirm:confirmAction=async()=>false}={}) {
@@ -15,16 +16,11 @@ export function mountOllama(root,{services,translate=(s)=>s,confirm:confirmActio
   const safe=async(fn)=>{try{await fn();}catch(error){status.textContent=error.message;}};
   const tabs=el('nav');tabs.setAttribute('aria-label',t('Local model sections'));
   const panels={};for(const name of ['Model Store','Pull cart','Local chat','Profiles','Help']){const p=el('article');p.hidden=name!=='Model Store';panels[name]=p;button(name,tabs,()=>{Object.entries(panels).forEach(([n,v])=>v.hidden=n!==name);});el('h3',name,p);}
+  let runtimeState=null;
+  const runtimePanel=createRuntimeInstallationPanel(panels['Model Store'],{request,configureRuntime:bridge.configureRuntime,confirm:confirmAction,getLanguage:()=>{const value=t('Local models');return value==='本機模型'?'yue':value.includes('本機模型')?'bilingual':'en';},onRuntime:value=>{runtimeState=value;registerProfileButton.disabled=!value.actions?.registerProfile;}});
+  async function checkRuntime(){await runtimePanel.refresh();}
   const summary=el('p','No verified catalog is stored.',panels['Model Store']);
   const controls=row(panels['Model Store']);
-  const runtimeDetails=el('p',null,panels['Model Store']);let runtimeState=null;
-  async function checkRuntime(){runtimeState=await request('status');runtimeDetails.textContent=`${t('Runtime state')}: ${t(runtimeState.state)}. ${t(runtimeState.reason||'')} ${runtimeState.version||''} ${runtimeState.endpoint||''} · ${t(runtimeState.managedModelStore?'Application-managed model storage':'Existing runtime model storage')}`;if(runtimeState.endpoint)portInput.value=new URL(runtimeState.endpoint).port;installButton.disabled=!runtimeState.actions?.install;startButton.disabled=!runtimeState.actions?.start;chooseRuntimeButton.disabled=!runtimeState.actions?.selectExecutable;registerProfileButton.disabled=!runtimeState.actions?.registerProfile;}
-  const portInput=label('Local runtime port','input',controls);portInput.type='number';portInput.min='1024';portInput.max='65535';portInput.value='11434';
-  const configureButton=button('Apply runtime port',controls,async()=>{const port=Number(portInput.value);if(!Number.isInteger(port)||port<1024||port>65535)throw new Error(t('Choose a port from 1024 to 65535.'));await bridge.configureRuntime({port});await checkRuntime();});configureButton.disabled=typeof bridge.configureRuntime!=='function';
-  button('Check runtime',controls,checkRuntime);
-  const installButton=button('Open official installation guide',controls,async()=>{if(!await confirmAction({title:t('Open the official installer page?'),message:t('No installer will be downloaded or executed by this application. Complete the official installation, then check runtime again.'),destructive:false}))return;const result=await request('runtimeInstall',{confirmed:true});status.textContent=t(result.next);});installButton.disabled=true;
-  const startButton=button('Start verified local runtime',controls,async()=>{if(!await confirmAction({title:t('Start the verified local runtime?'),message:t('Starts the verified Ollama executable with a loopback-only address and cloud features disabled. No model will be downloaded.'),destructive:false}))return;const result=await request('runtimeStart',{confirmed:true});status.textContent=t(result.state);await checkRuntime();});startButton.disabled=true;
-  const chooseRuntimeButton=button('Locate installed runtime',controls,async()=>{await request('chooseRuntimeExecutable');await checkRuntime();});chooseRuntimeButton.disabled=true;
 
   button('Refresh official catalog',controls,async()=>{const r=await request('refreshCatalog');operation=r.operationId;status.textContent=t('Refreshing all official model families and tags. Installed models remain available.');});
   button('Refresh installed models',controls,refresh);
@@ -96,11 +92,75 @@ export function mountOllama(root,{services,translate=(s)=>s,confirm:confirmActio
   button('Preflight selected model',panels.Profiles,async()=>{profilePreview.textContent=JSON.stringify(await request('preflight',{id:profileSelect.value,model:selected?.tag||modelSelect.value}),null,2);});
   button('Launch reviewed profile',panels.Profiles,async()=>{const model=selected?.tag||modelSelect.value;const preview=await request('preflight',{id:profileSelect.value,model});profilePreview.textContent=JSON.stringify(preview,null,2);if(!preview.ready)throw new Error(preview.blockers.join(' '));if(!await confirmAction({title:t('Launch selected profile?'),message:JSON.stringify(preview),destructive:false}))return;const r=await request('launch',{id:profileSelect.value,model});status.textContent=r.state;if(r.internal==='local-chat')Object.entries(panels).forEach(([n,p])=>p.hidden=n!=='Local chat');});
   const snapshots=select('Configuration snapshot',[],panels.Profiles);button('Refresh snapshots',panels.Profiles,async()=>{snapshots.replaceChildren();for(const s of await request('snapshots')){const o=el('option',s.at,snapshots);o.value=s.id;}});button('Restore selected snapshot',panels.Profiles,async()=>{await request('restore',{id:snapshots.value});status.textContent=t('Profile snapshot restored.');});
-  for(const text of ['This suite uses only the configured loopback Ollama API. No cloud model account is used.','Runtime unavailable: install the official desktop package if absent, or open Ollama through your operating-system application launcher if stopped. Then choose Check runtime. This suite never starts or installs a service automatically.','Catalog offline: use the last successful catalog and installed models. A refresh that loses a family, tag, or page does not replace the previous catalog.','Pull failed: check available storage and connectivity, then retry the individual item. Completed models are retained.','Model incompatible: inspect its declared capabilities and select another installed model. GPU, driver, or context evidence that cannot be verified is shown as Unknown.','External profiles require a host-provided executable picker, allowlist, and readiness verifier. No freeform shell commands or environment values are accepted.','Session exports redact recognized credentials, environment values, and private paths, and omit image bytes. Review the export locally before sharing because automatic redaction cannot identify every secret.'])el('p',text,panels.Help);
+  for(const text of ['This suite uses only the configured loopback Ollama API. No cloud model account is used.','Use Install managed Ollama runtime to download and verify the official command-line runtime. Installation does not start it or download a model. Use Start verified local runtime separately.','Catalog offline: use the last successful catalog and installed models. A refresh that loses a family, tag, or page does not replace the previous catalog.','Pull failed: check available storage and connectivity, then retry the individual item. Completed models are retained.','Model incompatible: inspect its declared capabilities and select another installed model. GPU, driver, or context evidence that cannot be verified is shown as Unknown.','External profiles require a host-provided executable picker, allowlist, and readiness verifier. No freeform shell commands or environment values are accepted.','Session exports redact recognized credentials, environment values, and private paths, and omit image bytes. Review the export locally before sharing because automatic redaction cannot identify every secret.'])el('p',text,panels.Help);
   async function refreshSessions(){sessions=await request('sessions');sessionSelect.replaceChildren();const n=el('option','New session',sessionSelect);n.value='';for(const s of sessions){const o=el('option',s.name,sessionSelect);o.value=s.id;}sessionSelect.value=sessionId||'';}
   async function refresh(){const results=await Promise.all([request('models'),request('catalog'),request('profiles'),request('cart')]);if(disposed)return;models=results[0].models;catalog=results[1];profiles=results[2];cart=results[3];summary.textContent=catalog.lastSuccessfulRefresh?`${t('Last successful refresh')}: ${catalog.lastSuccessfulRefresh} · ${catalog.familyCount} ${t('families')} · ${catalog.variants.length} ${t('variants')} · ${catalog.pageCount} ${t('pages')} · ${catalog.stale?t('Stale'):t('Verified refresh')} · ${t('Global completeness unknown')}`:t('No complete official catalog has been stored. Refresh the official catalog to discover models.');modelSelect.replaceChildren();for(const m of models.filter(m=>m.installed)){const o=el('option',m.tag,modelSelect);o.value=m.tag;}profileSelect.replaceChildren();for(const p of profiles){const o=el('option',p.name,profileSelect);o.value=p.id;}renderModels();renderCart();await refreshSessions();}
-  const unsubscribe=bridge.subscribe?.(event=>{if(disposed)return;if(event.type==='chat'){sessionId=event.sessionId;output.textContent+=event.delta;}if(event.type==='generate')output.textContent+=event.delta;if(event.type==='pull'){const i=cart.findIndex(c=>c.model===event.item.model);if(i>=0)cart[i]=event.item;else cart.push(event.item);renderCart();}if(['complete','error','cancelled'].includes(event.type)){operation=null;status.textContent=event.message||t('Operation finished. Review its outcome.');safe(refresh);}if(event.type==='catalog'){catalog=event.catalog;safe(refresh);}});
-  safe(async()=>{await refresh();await checkRuntime();});
-  return {refresh,destroy(){disposed=true;searchRevision++;regexFilter.dispose();unsubscribe?.();section.remove();}};
+  const unsubscribe=bridge.subscribe?.(event=>{if(disposed)return;if(event.type==='runtime-installation'){runtimePanel.consume(event.installation);return;}if(event.type==='chat'){sessionId=event.sessionId;output.textContent+=event.delta;}if(event.type==='generate')output.textContent+=event.delta;if(event.type==='pull'){const i=cart.findIndex(c=>c.model===event.item.model);if(i>=0)cart[i]=event.item;else cart.push(event.item);renderCart();}if(['complete','error','cancelled'].includes(event.type)){operation=null;status.textContent=event.message||t('Operation finished. Review its outcome.');safe(refresh);}if(event.type==='catalog'){catalog=event.catalog;safe(refresh);}});
+  safe(refresh);void runtimePanel.refresh();
+  return {refresh,setLanguage(){runtimePanel.refreshLabels();},destroy(){disposed=true;runtimePanel.destroy();searchRevision++;regexFilter.dispose();unsubscribe?.();section.remove();}};
 }
 function formatBytes(n){if(!Number.isFinite(n))return 'Unknown';if(n<1024)return `${n} B`;const unit=Math.min(Math.floor(Math.log(n)/Math.log(1024)),4);return `${(n/1024**unit).toFixed(1)} ${['B','KiB','MiB','GiB','TiB'][unit]}`;}
+
+
+const INSTALL_PHASES=['idle','checking','awaiting-consent','downloading','verifying','extracting','registering','checking-installation','complete'];
+const INSTALL_COPY={idle:'Ready to inspect installation.',checking:'Checking installation requirements.','awaiting-consent':'Waiting for installation confirmation.',downloading:'Downloading the official runtime.',verifying:'Verifying the complete runtime archive.',extracting:'Preparing the complete runtime files.',registering:'Registering the verified runtime. Cancellation is no longer available.','checking-installation':'Checking the installed runtime.',complete:'Installation finished.'};
+const INSTALL_OUTCOMES={'installed-stopped':'Managed runtime installed and stopped. Start it separately when ready.',cancelled:'Installation cancelled. Any previously verified runtime is retained.',failed:'Installation did not complete.',unavailable:'Managed installation is unavailable.'};
+/** Actual runtime region, also exercised by the synthetic DOM tests. */
+export function createRuntimeInstallationPanel(parent,{request,configureRuntime,confirm=async()=>false,getLanguage=()=> 'en',onRuntime=()=>{}}={}){
+ const doc=parent.ownerDocument||document,region=doc.createElement('section');region.className='ollama-runtime';region.setAttribute('aria-label','Local runtime');parent.append(region);
+ let disposed=false,runtime=null,snapshot=null,pending=false,cancelling=false,revision=0,notice='',poll=null;const retired=new Set(),labels=[];
+ const language=()=>getLanguage();
+ const text=(node,en)=>{node.replaceChildren();const yue=ollamaCantonese[en]||en,mode=language();const primary=doc.createElement('span');primary.textContent=mode==='yue'?yue:en;node.append(primary);if(mode==='bilingual'&&yue!==en){const secondary=doc.createElement('span');secondary.className='ollama-secondary';secondary.lang='yue-Hant';secondary.textContent=yue;node.append(secondary);}};
+ const named=(tag,en,host=region)=>{const node=doc.createElement(tag);host.append(node);labels.push([node,en]);text(node,en);return node;};
+ const heading=named('h4','Local runtime');heading.tabIndex=-1;
+ named('p','Install a verified, application-managed copy of the official Ollama command-line runtime. No model is downloaded, no existing process is stopped, and the runtime is not started.');
+ const state=doc.createElement('p');state.className='ollama-runtime-state';state.setAttribute('role','status');state.setAttribute('aria-live','polite');state.setAttribute('aria-atomic','true');region.append(state);
+ const metadata=doc.createElement('p');metadata.className='ollama-runtime-metadata';region.append(metadata);
+ const progress=doc.createElement('md-linear-progress');progress.setAttribute('aria-label','Runtime installation progress');progress.hidden=true;region.append(progress);
+ const bytes=doc.createElement('p');region.append(bytes);
+ const actions=doc.createElement('div');actions.className='ollama-runtime-actions';region.append(actions);
+ const active=()=>snapshot&&snapshot.phase!=='idle'&&snapshot.phase!=='complete';
+ const invoke=(name,fn,primary=false)=>{const button=named(primary?'md-filled-button':'md-outlined-button',name,actions);button.type='button';button.addEventListener('click',()=>{if(!button.disabled&&!disposed)void fn().catch(()=>{if(!disposed){notice='The runtime request could not be completed. Check runtime before retrying.';paint();}});});return button;};
+ const install=invoke('Install managed Ollama runtime',async()=>{
+  if(pending||active())return;pending=true;notice='';paint();
+  try{const result=await request('runtimeInstall',{confirmed:true});if(!disposed)consume(result,true);}
+  catch{if(!disposed)notice='The runtime request could not be completed. Check runtime before retrying.';}
+  finally{pending=false;if(!disposed){paint();void refresh();}}
+ },true);
+ const cancel=invoke('Cancel installation',async()=>{if(!snapshot?.cancellable||cancelling)return;cancelling=true;notice='';paint();const id=snapshot.operationId;try{const result=await request('runtimeInstallCancel',{operationId:id});if(!disposed&&snapshot?.operationId===id)consume(result);}finally{cancelling=false;if(!disposed)paint();}});
+ const check=invoke('Check runtime',refresh);
+ const start=invoke('Start verified local runtime',async()=>{if(pending||active())return;pending=true;paint();try{if(await confirm({title:local('Start the verified local runtime?'),message:local('Starts the verified Ollama executable with a loopback-only address and cloud features disabled. No model will be downloaded.'),destructive:false})){await request('runtimeStart',{confirmed:true});await refresh();}}finally{pending=false;if(!disposed)paint();}});
+ const locate=invoke('Locate installed runtime',async()=>{if(pending||active())return;pending=true;paint();try{await request('chooseRuntimeExecutable');await refresh();}finally{pending=false;if(!disposed)paint();}});
+ const advanced=doc.createElement('details');region.append(advanced);named('summary','Connection settings',advanced);
+ const connection=doc.createElement('div');connection.className='ollama-runtime-actions';advanced.append(connection);
+ const port=doc.createElement('md-outlined-text-field');port.type='number';port.min='1024';port.max='65535';port.value='11434';connection.append(port);
+ const apply=named('md-outlined-button','Apply runtime port',connection);apply.type='button';apply.addEventListener('click',()=>{if(apply.disabled)return;void(async()=>{const value=Number(port.value);if(!Number.isInteger(value)||value<1024||value>65535){notice='Choose a port from 1024 to 65535.';paint();return;}pending=true;paint();try{await configureRuntime({port:value});await refresh();}catch{notice='The runtime request could not be completed. Check runtime before retrying.';}finally{pending=false;if(!disposed)paint();}})();});
+ function local(en){const yue=ollamaCantonese[en]||en;return language()==='yue'?yue:language()==='bilingual'&&yue!==en?en+' · '+yue:en;}
+ function paint(){if(disposed)return;const working=active(),locked=pending||working;const previous=doc.activeElement;
+  text(install,snapshot&&['failed','cancelled'].includes(snapshot.outcome)?'Retry managed installation':'Install managed Ollama runtime');
+  install.disabled=locked||!runtime?.actions?.install||snapshot?.installed===true;
+  cancel.disabled=!working||!snapshot.cancellable||cancelling;check.disabled=pending;start.disabled=locked||!runtime?.actions?.start;locate.disabled=locked||!runtime?.actions?.selectExecutable;apply.disabled=locked||typeof configureRuntime!=='function';port.disabled=locked;
+  text(cancel,cancelling?'Stopping installation…':'Cancel installation');
+  const message=notice||(cancelling?'Stopping installation…':working?INSTALL_COPY[snapshot.phase]:snapshot?.outcome?INSTALL_OUTCOMES[snapshot.outcome]:runtime?.state==='healthy'?'The configured local API is responding.':runtime?.installed?'An existing runtime was detected.':runtime?'Ready to inspect installation.':'Checking local runtime.');text(state,message);
+  metadata.textContent=[snapshot?.version,snapshot?.architecture,runtime?.version,runtime?.endpoint].filter(Boolean).join(' · ');
+  const detail=snapshot?.reason;if(detail){const reason=doc.createElement('span');reason.className='ollama-runtime-reason';reason.textContent=local(detail);state.append(reason);}
+  progress.hidden=!working;progress.indeterminate=!(snapshot?.phase==='downloading'&&snapshot.totalBytes>0);progress.value=progress.indeterminate?0:Math.min(1,snapshot.receivedBytes/snapshot.totalBytes);
+  progress.setAttribute('aria-label',local('Runtime installation progress'));
+  bytes.textContent=working&&snapshot.phase==='downloading'?formatBytes(snapshot.receivedBytes)+(snapshot.totalBytes>0?' / '+formatBytes(snapshot.totalBytes):''):'';
+  port.label=local('Local runtime port');port.setAttribute('aria-label',local('Local runtime port'));region.setAttribute('aria-label',local('Local runtime'));region.setAttribute('aria-busy',String(Boolean(locked)));
+  if(previous?.disabled&&[install,cancel,start,locate,apply].includes(previous))heading.focus();
+  clearTimeout(poll);poll=null;if(working)poll=setTimeout(()=>{void restore();},1000);
+ }
+ function consume(value,admission=false){if(disposed||!value||!INSTALL_PHASES.includes(value.phase))return false;const id=value.operationId;
+  if(id!==null&&typeof id!=='string')return false;
+  if(retired.has(id))return false;
+  if(snapshot?.operationId===id){if(snapshot.phase==='complete'&&value.phase!=='complete')return false;if(INSTALL_PHASES.indexOf(value.phase)<INSTALL_PHASES.indexOf(snapshot.phase))return false;if(value.phase==='downloading'&&snapshot.phase==='downloading'&&value.receivedBytes<snapshot.receivedBytes)return false;}
+  else if(snapshot?.operationId){if(!admission&&active())return false;if(!id)return false;retired.add(snapshot.operationId);}
+  if(snapshot&&JSON.stringify(snapshot)===JSON.stringify(value))return false;
+  const terminal=value.phase==='complete'&&(snapshot?.operationId!==id||snapshot?.phase!=='complete');snapshot={...value};revision++;notice='';paint();if(terminal)void refresh();return true;
+ }
+ async function restore(){const at=revision;try{const value=await request('runtimeInstallStatus');if(!disposed&&revision===at)consume(value);}catch{if(!disposed){notice='Installation status is unavailable. Check runtime to reconnect.';paint();}}}
+ async function refresh(){const at=revision;try{const value=await request('status');if(disposed)return;runtime=value;onRuntime(value);if(value.endpoint)port.value=new URL(value.endpoint).port;if(value.installation&&revision===at)consume(value.installation);paint();}catch{if(!disposed){runtime=null;notice='The runtime request could not be completed. Check runtime before retrying.';paint();}}}
+ function refreshLabels(){for(const[node,en]of labels)text(node,en);paint();}
+ paint();return{refresh,consume,refreshLabels,restore,destroy(){disposed=true;clearTimeout(poll);region.remove();}};
+}

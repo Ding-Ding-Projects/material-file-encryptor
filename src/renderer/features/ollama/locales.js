@@ -1,4 +1,22 @@
 export const ollamaCantonese = Object.freeze({
+  'Managed Ollama installation is unavailable on this platform.':'此平台無法使用受管理 Ollama 安裝。',
+  'Installation cancelled. Existing runtimes were not changed.':'安裝已取消，現有執行環境冇任何更改。',
+  'Installation could not complete. Verified existing runtimes were retained.':'安裝未能完成，已驗證嘅現有執行環境已保留。',
+  'Verified archive tools are unavailable.':'已驗證封存工具無法使用。',
+  'The runtime publisher or complete file tree could not be verified.':'無法驗證執行環境發行者或完整檔案結構。',
+  'Insufficient storage for the verified runtime.':'儲存空間不足，無法安裝已驗證執行環境。',
+  'Managed runtime installed. Start it separately when ready.':'受管理執行環境已安裝，準備好後請另外啟動。',
+
+  'Local runtime':'本機執行環境','Install managed Ollama runtime':'安裝受管理 Ollama 執行環境','Retry managed installation':'重試受管理安裝',
+  'Cancel installation':'取消安裝','Stopping installation…':'正在停止安裝…','Connection settings':'連線設定','Runtime installation progress':'執行環境安裝進度',
+  'Install a verified, application-managed copy of the official Ollama command-line runtime. No model is downloaded, no existing process is stopped, and the runtime is not started.':'下載並驗證由程式管理嘅官方 Ollama 命令列執行環境。唔會下載模型、停止現有處理程序或啟動執行環境。',
+  'Ready to inspect installation.':'可以檢查安裝狀態。','Checking local runtime.':'正在檢查本機執行環境。','Checking installation requirements.':'正在檢查安裝條件。','Waiting for installation confirmation.':'等待確認安裝。',
+  'Downloading the official runtime.':'正在下載官方執行環境。','Verifying the complete runtime archive.':'正在驗證完整執行環境封存檔。','Preparing the complete runtime files.':'正在準備完整執行環境檔案。',
+  'Registering the verified runtime. Cancellation is no longer available.':'正在登記已驗證執行環境，現階段無法取消。','Checking the installed runtime.':'正在檢查已安裝執行環境。','Installation finished.':'安裝流程已結束。',
+  'Managed runtime installed and stopped. Start it separately when ready.':'受管理執行環境已安裝，尚未啟動。準備好後請另外啟動。','Installation cancelled. Any previously verified runtime is retained.':'安裝已取消，先前已驗證嘅執行環境會保留。','Installation did not complete.':'安裝未能完成。','Managed installation is unavailable.':'受管理安裝暫時無法使用。',
+  'The configured local API is responding.':'已設定嘅本機 API 正常回應。','An existing runtime was detected.':'已偵測到現有執行環境。','The runtime request could not be completed. Check runtime before retrying.':'無法完成執行環境要求，請先檢查執行環境再重試。','Installation status is unavailable. Check runtime to reconnect.':'無法取得安裝狀態，請檢查執行環境以重新連線。',
+  'Use Install managed Ollama runtime to download and verify the official command-line runtime. Installation does not start it or download a model. Use Start verified local runtime separately.':'使用安裝受管理 Ollama 執行環境，下載並驗證官方命令列執行環境。安裝唔會啟動環境或下載模型，請另外選擇啟動已驗證本機執行環境。',
+
   'Local runtime port':'本機執行環境連接埠','Apply runtime port':'套用執行環境連接埠','Choose a port from 1024 to 65535.':'請選擇 1024 至 65535 的連接埠。','Application-managed model storage':'應用程式管理的模型儲存','Existing runtime model storage':'現有執行環境的模型儲存',
   'Runtime state':'執行環境狀態','healthy':'正常','missing':'未找到','stopped':'已停止','unhealthy':'狀態異常','unknown':'未知',
   'Open official installation guide':'開啟官方安裝指引','Open the official installer page?':'開啟官方安裝頁面？','No installer will be downloaded or executed by this application. Complete the official installation, then check runtime again.':'此程式唔會下載或執行安裝檔，請完成官方安裝後再檢查執行環境。',
