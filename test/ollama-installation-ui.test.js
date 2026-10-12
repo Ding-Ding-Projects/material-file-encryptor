@@ -14,3 +14,23 @@ test('runtime requests fail visibly without enabling installation from unknown s
 
 test('late status responses cannot replace a newer installation event',async t=>{let finish;const f=fixture(t,async action=>action==='status'?new Promise(r=>finish=r):undefined);const pending=f.panel.refresh();f.panel.consume(installation('extracting'));finish({state:'missing',actions:{install:true},installation:installation('downloading')});await pending;assert.ok(f.doc.body.textContent.includes('Preparing the complete runtime files.'));});
 test('failed installation permits an explicit retry and never retries itself',async t=>{const f=fixture(t);const failed=installation('complete',{outcome:'failed',cancellable:false});f.setCurrent(failed);await f.panel.refresh();await tick();const retry=f.button('Retry managed installation');assert.equal(retry.disabled,false);assert.equal(f.calls.some(c=>c.action==='runtimeInstall'),false);});
+
+test('unchanged active polling repeats, serializes reads, and stops after terminal or disposal',async t=>{
+ const nativeSet=globalThis.setTimeout,nativeClear=globalThis.clearTimeout,timers=new Map();let id=0,reads=0,release;
+ globalThis.setTimeout=fn=>{timers.set(++id,fn);return id;};globalThis.clearTimeout=value=>timers.delete(value);
+ const f=fixture(t,async action=>{if(action==='runtimeInstallStatus'){reads++;return release?new Promise(r=>release=r):installation('downloading');}});
+ try{
+  f.setCurrent(installation('downloading'));await f.panel.refresh();
+  const fire=async()=>{const [key,fn]=timers.entries().next().value;timers.delete(key);fn();await tick();};
+  await fire();assert.equal(reads,1);assert.equal(timers.size,1);await fire();assert.equal(reads,2);assert.equal(timers.size,1);
+  release=true;const [key,fn]=timers.entries().next().value;timers.delete(key);fn();await tick();
+  f.panel.consume(installation('extracting'));await f.panel.restore();assert.equal(reads,3);assert.equal(timers.size,0);
+  release(installation('downloading'));await tick();assert.equal(timers.size,1);assert.ok(f.doc.body.textContent.includes('Preparing the complete runtime files.'));
+  const terminal=installation('complete',{outcome:'cancelled',cancellable:false});f.setCurrent(terminal);f.panel.consume(terminal);await tick();assert.equal(timers.size,0);
+  f.panel.consume(installation('downloading',{operationId:'two'}),true);assert.equal(timers.size,1);f.panel.destroy();assert.equal(timers.size,0);
+ }finally{f.panel.destroy();globalThis.setTimeout=nativeSet;globalThis.clearTimeout=nativeClear;}
+});
+test('connection settings uses a registered button with explicit disclosure ownership',async t=>{
+ const f=fixture(t);const toggle=f.doc.body.querySelectorAll('md-outlined-button').find(n=>n.textContent==='Connection settings');assert.ok(toggle);assert.equal(f.doc.body.querySelector('details'),null);assert.equal(f.doc.body.querySelector('summary'),null);
+ const id=toggle.getAttribute('aria-controls'),region=f.doc.body.querySelectorAll('div').find(n=>n.id===id);assert.ok(region);assert.equal(region.hidden,true);assert.equal(toggle.getAttribute('aria-expanded'),'false');await toggle.click();assert.equal(region.hidden,false);assert.equal(toggle.getAttribute('aria-expanded'),'true');await toggle.click();assert.equal(region.hidden,true);
+});

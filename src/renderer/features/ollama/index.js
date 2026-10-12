@@ -102,13 +102,14 @@ export function mountOllama(root,{services,translate=(s)=>s,confirm:confirmActio
 function formatBytes(n){if(!Number.isFinite(n))return 'Unknown';if(n<1024)return `${n} B`;const unit=Math.min(Math.floor(Math.log(n)/Math.log(1024)),4);return `${(n/1024**unit).toFixed(1)} ${['B','KiB','MiB','GiB','TiB'][unit]}`;}
 
 
+let runtimePanelSequence=0;
 const INSTALL_PHASES=['idle','checking','awaiting-consent','downloading','verifying','extracting','registering','checking-installation','complete'];
 const INSTALL_COPY={idle:'Ready to inspect installation.',checking:'Checking installation requirements.','awaiting-consent':'Waiting for installation confirmation.',downloading:'Downloading the official runtime.',verifying:'Verifying the complete runtime archive.',extracting:'Preparing the complete runtime files.',registering:'Registering the verified runtime. Cancellation is no longer available.','checking-installation':'Checking the installed runtime.',complete:'Installation finished.'};
 const INSTALL_OUTCOMES={'installed-stopped':'Managed runtime installed and stopped. Start it separately when ready.',cancelled:'Installation cancelled. Any previously verified runtime is retained.',failed:'Installation did not complete.',unavailable:'Managed installation is unavailable.'};
 /** Actual runtime region, also exercised by the synthetic DOM tests. */
 export function createRuntimeInstallationPanel(parent,{request,configureRuntime,confirm=async()=>false,getLanguage=()=> 'en',onRuntime=()=>{}}={}){
  const doc=parent.ownerDocument||document,region=doc.createElement('section');region.className='ollama-runtime';region.setAttribute('aria-label','Local runtime');parent.append(region);
- let disposed=false,runtime=null,snapshot=null,pending=false,cancelling=false,revision=0,notice='',poll=null;const retired=new Set(),labels=[];
+ let disposed=false,runtime=null,snapshot=null,pending=false,cancelling=false,revision=0,notice='',poll=null,restoring=false;const retired=new Set(),labels=[];
  const language=()=>getLanguage();
  const text=(node,en)=>{node.replaceChildren();const yue=ollamaCantonese[en]||en,mode=language();const primary=doc.createElement('span');primary.textContent=mode==='yue'?yue:en;node.append(primary);if(mode==='bilingual'&&yue!==en){const secondary=doc.createElement('span');secondary.className='ollama-secondary';secondary.lang='yue-Hant';secondary.textContent=yue;node.append(secondary);}};
  const named=(tag,en,host=region)=>{const node=doc.createElement(tag);host.append(node);labels.push([node,en]);text(node,en);return node;};
@@ -131,7 +132,8 @@ export function createRuntimeInstallationPanel(parent,{request,configureRuntime,
  const check=invoke('Check runtime',refresh);
  const start=invoke('Start verified local runtime',async()=>{if(pending||active())return;pending=true;paint();try{if(await confirm({title:local('Start the verified local runtime?'),message:local('Starts the verified Ollama executable with a loopback-only address and cloud features disabled. No model will be downloaded.'),destructive:false})){await request('runtimeStart',{confirmed:true});await refresh();}}finally{pending=false;if(!disposed)paint();}});
  const locate=invoke('Locate installed runtime',async()=>{if(pending||active())return;pending=true;paint();try{await request('chooseRuntimeExecutable');await refresh();}finally{pending=false;if(!disposed)paint();}});
- const advanced=doc.createElement('details');region.append(advanced);named('summary','Connection settings',advanced);
+ const advanced=doc.createElement('div');advanced.id='ollama-runtime-connection-'+(++runtimePanelSequence);advanced.hidden=true;
+ const connectionToggle=named('md-outlined-button','Connection settings');connectionToggle.type='button';connectionToggle.setAttribute('aria-controls',advanced.id);connectionToggle.setAttribute('aria-expanded','false');connectionToggle.addEventListener('click',()=>{if(disposed)return;advanced.hidden=!advanced.hidden;connectionToggle.setAttribute('aria-expanded',String(!advanced.hidden));});region.append(advanced);
  const connection=doc.createElement('div');connection.className='ollama-runtime-actions';advanced.append(connection);
  const port=doc.createElement('md-outlined-text-field');port.type='number';port.min='1024';port.max='65535';port.value='11434';connection.append(port);
  const apply=named('md-outlined-button','Apply runtime port',connection);apply.type='button';apply.addEventListener('click',()=>{if(apply.disabled)return;void(async()=>{const value=Number(port.value);if(!Number.isInteger(value)||value<1024||value>65535){notice='Choose a port from 1024 to 65535.';paint();return;}pending=true;paint();try{await configureRuntime({port:value});await refresh();}catch{notice='The runtime request could not be completed. Check runtime before retrying.';}finally{pending=false;if(!disposed)paint();}})();});
@@ -149,7 +151,7 @@ export function createRuntimeInstallationPanel(parent,{request,configureRuntime,
   bytes.textContent=working&&snapshot.phase==='downloading'?formatBytes(snapshot.receivedBytes)+(snapshot.totalBytes>0?' / '+formatBytes(snapshot.totalBytes):''):'';
   port.label=local('Local runtime port');port.setAttribute('aria-label',local('Local runtime port'));region.setAttribute('aria-label',local('Local runtime'));region.setAttribute('aria-busy',String(Boolean(locked)));
   if(previous?.disabled&&[install,cancel,start,locate,apply].includes(previous))heading.focus();
-  clearTimeout(poll);poll=null;if(working)poll=setTimeout(()=>{void restore();},1000);
+  clearTimeout(poll);poll=null;if(working&&!restoring)poll=setTimeout(()=>{void restore();},1000);
  }
  function consume(value,admission=false){if(disposed||!value||!INSTALL_PHASES.includes(value.phase))return false;const id=value.operationId;
   if(id!==null&&typeof id!=='string')return false;
@@ -159,7 +161,7 @@ export function createRuntimeInstallationPanel(parent,{request,configureRuntime,
   if(snapshot&&JSON.stringify(snapshot)===JSON.stringify(value))return false;
   const terminal=value.phase==='complete'&&(snapshot?.operationId!==id||snapshot?.phase!=='complete');snapshot={...value};revision++;notice='';paint();if(terminal)void refresh();return true;
  }
- async function restore(){const at=revision;try{const value=await request('runtimeInstallStatus');if(!disposed&&revision===at)consume(value);}catch{if(!disposed){notice='Installation status is unavailable. Check runtime to reconnect.';paint();}}}
+ async function restore(){if(disposed||restoring)return;restoring=true;clearTimeout(poll);poll=null;const at=revision;try{const value=await request('runtimeInstallStatus');if(!disposed&&revision===at)consume(value);}catch{if(!disposed)notice='Installation status is unavailable. Check runtime to reconnect.';}finally{restoring=false;if(!disposed)paint();}}
  async function refresh(){const at=revision;try{const value=await request('status');if(disposed)return;runtime=value;onRuntime(value);if(value.endpoint)port.value=new URL(value.endpoint).port;if(value.installation&&revision===at)consume(value.installation);paint();}catch{if(!disposed){runtime=null;notice='The runtime request could not be completed. Check runtime before retrying.';paint();}}}
  function refreshLabels(){for(const[node,en]of labels)text(node,en);paint();}
  paint();return{refresh,consume,refreshLabels,restore,destroy(){disposed=true;clearTimeout(poll);region.remove();}};
