@@ -13,6 +13,17 @@ Conflict ledger:
 Focused evidence: 15 converter sandbox/service checks, four personal-vocabulary handler checks, five local-language checks, four translation-inventory checks, four route-refresh checks and two route-contract checks pass, 34 distinct checks total. Refresh check mode reports 105 feature families and 208 routes. Initial merged translation checks exposed stale article hashes and main-only display expectations; the reconciled source resolves both. No broad suite, build, product GUI, capture, installed operation or native behavioral acceptance ran. The GUI state inventory remains 22 declared routes, 67 unavailable providers and zero of 4,272 accepted tuples. Independent source review is next.
 
 ## Retained main history at 07a9d286
+# Preservation closeout, 2026-10-12
+
+The user requested preservation and cleanup; account readback showed 8% remaining. New implementation has stopped. See CLOSEOUT_PROMPT.md for exact preserved sources, negative native admission, the unfinished offline provider, frozen GUI lifecycle gaps and continuation. No goal completion or deletion is claimed.
+
+- Main before this record: 4f351f28141312550d699af89b2c90414783daf1.
+- GUI recovery: 59323c4cda8bfe7077c01340aea0fda97d4301b9, source-only 23/66, 0/4272 actual accepted tuples; conditional restoration concern remains.
+- Converter recovery: 18f98d53ca50de31180b7117661be4c55856db2e, actual startup unavailable at BEHAVIORAL_PROBE_FAILED; typed diagnostic remains unexecuted.
+- Canonical recovery: 770f2dfaea4758d4ec9225e25d8c34b45e605a14, independently reviewed source; full candidate sweep remains unverified.
+- Inventory: 35 product and 15 canonical worktrees; unrelated and unfinished work retained. The archive directory exists; verification and cleanup prerequisites remain pending.
+
+# Historical snapshot before preservation
 
 ## Generated route declaration repair
 
@@ -25,6 +36,24 @@ Five local-language source checks pass, including negative cases for untranslate
 ## Encrypted upload callback fixture
 
 The focused source-only callback check passed once after supplying the minimum logic-only HTMLElement base. It exercises current encrypted visitor-cache persistence, locked pending input, stale authorization and awaited reset. No browser launch, package build or installed operation occurred.
+
+## Active continuation, 2026-10-12
+
+Current main is 07a9d2869725f8312ac0bc0642e3ccd55e058b34. The e7099d37 article repair has accepted complete deployment-archive comparison, all 234 live files, strict UTF-8 article bytes and exact About homepage at that observation. The deployed home and stored homepage are https://ding-ding-projects.github.io/material-file-encryptor/. Later source does not inherit that live verdict. Previously accepted exact-source releases remain 96dd/v1.403.1, f0d95/v1.404.1 and 80f6/v1.405.1.
+
+GUI preservation source 04bf6c25a9b713e94b1a28084e205cc59c719466 is pushed and verified, with exact parents 9d3b0130112d61e60fe33c46af7745c2cd43a347 and 07a9d2869725f8312ac0bc0642e3ccd55e058b34. Independent merge review found no surviving source defect; 34 focused checks passed. Native 80 MiB defaults and updater, BOM, release-index, ASAR, cache, startup and publication behavior were preserved by the source merge. These checks do not certify new runtime behavior. Its isolated exact-source producer started build.bat /s at 2026-10-12T22:58:04.8123288Z through the reviewed r7 controller; package and runtime verdicts remain pending.
+
+Separate converter source 18f98d53ca50de31180b7117661be4c55856db2e is preserved remotely and is not an ancestor of main. Exact r7 build and installer production exited 0; accepted inspection recorded 764 ZIP entries, 665 payload entries, 5,718 ASAR entries and zero rejected entries. Actual admission attempt d6e3 reports accepted=false with BEHAVIORAL_PROBE_FAILED in provider-probe. The root exited 1; job accounting reports total 10, terminated 0, with natural closure. The precise failed subpredicate was omitted and remains unknown. Customer input and the hex sanity conversion were not reached. A minimal typed diagnostic variant is planned, not executed. Production success remains separate from failed runtime admission.
+
+The GUI inventory remains 22 declared routes, 67 unavailable providers, zero of 4,272 accepted visual tuples and 74 addressable design gaps. One offline-populated source unit is in progress without acceptance. All four original focused fixture failures are repaired; the historical broad result remains incomplete at 870 passed, 29 failed and 40 skipped. Full required-feature acceptance remains open at 105 families and 210 surface rows.
+
+Canonical instruction recovery source 259 is pushed, with main at b81; its native selector/compiler unit still awaits review and the full verification sweep. Unrelated work remains retained. Public progress comment 18889746 was read back and matched the posted state. No new GUI captures or full-completion verdict are claimed.
+
+Next: obtain the narrow typed diagnostic evidence without inferring the missing admission cause, observe the frozen GUI producer, independently review coherent source units and complete actual interaction/design parity and installed-update acceptance. Initial installation, removal, real-data migration and deletion remain deferred. The required archive destination is unavailable. Preserve original data, mounted work, existing installations, historical receipts and ownership-uncertain work.
+
+## Historical continuation snapshot before 07a9d286 refresh
+
+The prior handoff below is retained verbatim, including its earlier pending states. Only the current snapshot supersedes those states within its exact evidence.
 
 ## Active continuation, 2026-10-12
 
@@ -973,3 +1002,9 @@ Browser.close was acknowledged and the browser root exited. Remaining members we
 [Normal release v1.373.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.373.1), [run 38232506647](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38232506647), completed successfully with its tag bound to exact `5c5c24b`, draft false and prerelease false. Independently downloaded provenance is 2,160 bytes, SHA-256 `44bcbd102bec95f5d086366b1b1b11900ffb7d136bb6f5f469fe935777acebd0`; RELEASES is 91 bytes, SHA-256 `4e1e5864ada1a0a52ca7688d62ee21577612cd92ecbc3f2f620824b1a6d79f3c`. Run, source and tag bindings match. Large v1.373.1 package-byte, installer and installed-update acceptance remain unverified.
 
 The full required-feature inventory, installed startup/automatic updating/restart, current replacement screenshots and full visual matrix remain unfinished. The one-click application-managed Ollama runtime procedure requires actual installation/runtime proof before shared instructions change; existing installations remain untouched. Other unfinished branches and their evidence remain preserved. This record changes no runtime file and launches no build or application.
+
+## Verified preservation and scoped cleanup result, 2026-10-12
+
+The complete 304,168,229-byte product archive passed integrity and hash readback, covering all 35 pre-cleanup worktrees and the full Git administrative directory. SHA-256: `1C4B5AE7A71827307A6650CCEE0C10F226A2C1CAA89C805CBED718D04DBB0714`. The ignored fixture announcement image has a separate owner-only, hash-verified preservation copy. Cloud upload remains unverified.
+
+Only completed fixture branch `codex/gui-fixtures-01a131a2` at `4f351f28141312550d699af89b2c90414783daf1` and its linked worktree were removed after verified ancestry to main `c5702b2f03589af07093e6e386c56d3e4d7f3c6f`, ownership, clean status and workflow checks. Local and remote absence were read back. All unfinished and ownership-uncertain work remains retained: 34 product and 15 canonical worktrees remain. The existing capture archive is public and serves historical evidence; no new publication or current product capture acceptance is claimed. Account allowance is 3% remaining; the full goal is active and unfinished.

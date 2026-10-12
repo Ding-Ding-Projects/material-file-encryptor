@@ -4,10 +4,16 @@
 - [x] Verify exact-source normal releases 96dd/v1.403.1, f0d95/v1.404.1 and 80f6/v1.405.1.
 - [x] Verify all 234 live documentation files against the 80f6 deployment archive and the exact About homepage.
 - [x] Repair the malformed article byte at e7099d37, verify strict UTF-8 and both article hash bindings, and preserve unchanged translation and history.
-- [ ] Verify new live article bytes and the new workflow verdict for the e7099d37 repair.
+- [x] Verify the e7099d37 complete deployment archive, all 234 live files, strict UTF-8 article bytes and exact About homepage at the recorded observation.
 - [x] Preserve native 18f98d53 with remote proof, 25 component checks and independent source review; keep it separate from main.
 - [x] Complete exact native r7 build and installer production with exit 0, natural job settlement and 764 ZIP/665 payload/5,718 ASAR entries with zero rejected.
 - [ ] Execute real source-bound native behavioral acceptance; successful production does not establish runtime isolation.
+- [x] Record actual converter d6e3 admission accepted=false, BEHAVIORAL_PROBE_FAILED/provider-probe, root exit 1 and natural closure (10 total, 0 terminated).
+- [ ] Implement and execute the planned minimal typed diagnostic; the omitted failed subpredicate remains unknown, with no input or hex sanity reached.
+- [x] Preserve reviewed GUI merge 04bf6c25 with exact parents 9d3b0130/07a9d286 and 34 focused source checks.
+- [ ] Complete the frozen 04bf6c25 producer started 2026-10-12T22:58:04.8123288Z; package/runtime pending.
+- [ ] Review and accept the in-progress offline-populated source unit separately.
+- [ ] Complete review and full verification sweep for the canonical instruction native selector/compiler unit; recovery 259/main b81 is preserved.
 - [x] Independently review GUI source 8659 with 36 focused checks; retain source-only scope.
 - [ ] Resolve 74 addressable design gaps and verify actual GUI targeting, focus, dismissal, persistence and restoration.
 - [ ] Complete 89 states × 2 viewports × 3 languages × 2 themes × 4 scales: 4,272 visual tuples, currently zero accepted; 22 routes declared and 67 providers unavailable.
@@ -581,3 +587,22 @@
 - [x] Add missing history-pruning translations and exact technical-literal classification with negative source checks; rendered localization remains pending.
 
 - [x] Refresh generated public-route declarations to 187 routes and verify safe refresh refusal/preservation behavior with six focused checks; browser evidence remains unverified.
+
+## Preservation closeout, 2026-10-12
+
+- [x] Preserve reviewed documentation on main4f351f2 and GUI59323c4/canonical770f2df recovery branches, with remote-ref proof.
+- [x] Retain exact negative native admission and prepared unexecuted diagnostic variants separately.
+- [ ] Reacquire the frozen04 GUI observation lifecycle; root build exit0 and recorded-child absence do not prove full job closure or packaging.
+- [ ] Independently refute/repair offline failed-preparation restoration and obtain actual runtime evidence.
+- [ ] Complete full candidate verification and safe canonical integration.
+- [x] Verify the complete fresh product archive before processing the completed fixture cleanup candidate; fresh canonical archive remains pending.
+- [ ] Publish only independently reviewed, genuine product captures; private status captures remain excluded.
+
+## Verified preservation archive and scoped cleanup
+
+- [x] Verify the complete pre-cleanup product archive, full Git administration and separate ignored fixture image preservation.
+- [x] Remove only the completed fixture branch/worktree after current-main ancestry and ownership proof; verify local/remote absence.
+- [x] Retain all unfinished and ownership-uncertain work, with 34 product and 15 canonical worktrees remaining.
+- [ ] Verify cloud upload of the local preservation archive.
+- [ ] Complete a fresh full canonical archive before any canonical cleanup.
+- [ ] Complete the full feature, runtime, visual and installed-update goal; preservation is not product completion.
