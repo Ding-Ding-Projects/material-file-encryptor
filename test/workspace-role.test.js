@@ -32,7 +32,8 @@ test('workspace emergency exit and owner abort do not grant approval',async()=>{
  const host=new Node(),controller=new AbortController();const pending=confirmWorkspaceAction(host,{title:'Replace',message:'output'},{requestConfirmation:requestSuperConfirmation,signal:controller.signal});controller.abort();assert.equal(await pending,false);assert.equal(host.children[0].removed,true);
 });
 test('companion keeps actual authorized tool and preference actions',()=>{
- for(const [feature,action]of [['personalization','sharedRead'],['personalization','fetchScheduleSource'],['status','status'],['converter','enqueue'],['converter','pickSources'],['ollama','chat'],['ollama','deleteModel'],['ollama','events']])assert.doesNotThrow(()=>assertCompanionRequest('featureRequest',{feature,action,payload:{}}));
+ for(const [feature,action]of [['personalization','sharedRead'],['personalization','fetchScheduleSource'],['status','status'],['converter','enqueue'],['converter','pickSources'],['ollama','chat'],['ollama','deleteModel'],['ollama','events']])assert.doesNotThrow(()=>assertCompanionRequest('featureRequest',{feature,action,payload:action==='fetchScheduleSource'?{source:{type:'home-assistant',url:'https://example.test',entity:'input_boolean.theme'},id:'theme'}:{}}));
+ assert.throws(()=>assertCompanionRequest('featureRequest',{feature:'personalization',action:'fetchScheduleSource',payload:{rule:{}}}));
 });
 test('public workspace contains no primary drive view or dispatch and retains cached-page controls',()=>{
  for(const forbidden of ["['files','Files']",'function refreshFiles','function renderFiles',...['getState','openExplorer','sync','lockVault','chooseFiles','importSelected','fileAction'].map(action=>"native('"+action+"'")])assert.equal(source.includes(forbidden),false,forbidden);
@@ -59,7 +60,7 @@ test('session loss and cached page departure cancel pending approval and renew t
  }
  const host=new Node(),pending=confirmWorkspaceAction(host,{title:'Delete'},{requestConfirmation:requestSuperConfirmation,signal:lifetime.signal});
  const dialog=host.children[0].children[0],content=dialog.children[1];content.children[2].selected=true;content.children[3].selected=true;content.children[4].value=100;await dialog.children[3].listeners.click();assert.equal(await pending,true);
- assert.ok(source.includes('if(!authenticated)confirmationLifetime.cancel()'));
+ assert.ok(source.includes('if(!authenticated){confirmationLifetime.cancel();settingsHistory?.lock();}'));
 });
 
 test('actual cached-page handler cancels approval before retaining live controls',async()=>{
@@ -70,4 +71,13 @@ test('actual cached-page handler cancels approval before retaining live controls
  const offset=source.indexOf("window.addEventListener('pagehide'");const statement=source.slice(offset,source.indexOf('\n}',offset));
  vm.runInNewContext(statement,{window:{addEventListener:(_event,handler)=>{pagehide=handler;}},wordingGeneration:0,authenticated:true,vocabulary:{},emptyVocabulary:()=>({}),confirmationLifetime:lifetime,refreshPrivateCopy:()=>refreshes++,copyObserver:{disconnect:()=>destroys++},modules:new Map(),adapter:{dispose:()=>destroys++},foundation:{destroy:()=>destroys++},cleanup:[]});
  pagehide({persisted:true});assert.equal(await pending,false);assert.equal(destroys,0);assert.equal(refreshes,1);assert.equal(lifetime.signal.aborted,false);
+});
+
+
+test('workspace approval revalidates authorization at final confirmation',async()=>{
+ const host=new Node();let allowed=true;
+ const promise=confirmWorkspaceAction(host,{title:'Prune history',validate:()=>{if(!allowed)throw Error('authorization lost');}},{requestConfirmation:requestSuperConfirmation});
+ const dialog=host.children[0].children[0],content=dialog.children[1];content.children[2].selected=true;content.children[3].selected=true;content.children[4].value=100;
+ allowed=false;await dialog.children[3].listeners.click();assert.match(content.children[5].textContent,/authorization lost/);assert.notEqual(dialog.children[3].textContent,'Done');
+ dialog.children[2].listeners.click();assert.equal(await promise,false);
 });

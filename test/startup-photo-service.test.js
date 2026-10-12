@@ -4,7 +4,7 @@ import {createHash} from 'node:crypto';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import {createStartupPhotoService,PHOTO_SOURCE} from '../src/main/startup-photo-service.js';
+import {createStartupPhotoService,readRuntimeAccessibility,PHOTO_SOURCE} from '../src/main/startup-photo-service.js';
 import {validateFeatureRequest} from '../src/main/validation.js';
 const image=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6lksAAAAASUVORK5CYII=','base64');
 const hash=value=>createHash('sha256').update(value).digest('hex');
@@ -31,6 +31,10 @@ test('private cache records source revision digest and bounds and skips only the
 });
 test('close aborts owned transport and invalidates late results',async()=>{
  let finish,signal;const service=createStartupPhotoService({run:(_args,options)=>{signal=options.signal;return new Promise(resolve=>{finish=resolve;});}});const pending=service.resolvePublishedDish();service.close();assert.equal(signal.aborted,true);finish(Buffer.from('{}'));assert.equal(await pending,null);
+});
+test('accessibility state reflects only the actual runtime boolean and read-only requests reject payloads and browser callers',()=>{
+ assert.deepEqual(readRuntimeAccessibility({accessibilitySupportEnabled:false}),{known:true,enabled:false,source:'runtime'});assert.deepEqual(readRuntimeAccessibility({accessibilitySupportEnabled:true}),{known:true,enabled:true,source:'runtime'});assert.equal(readRuntimeAccessibility({}).known,false);assert.equal(readRuntimeAccessibility({get accessibilitySupportEnabled(){throw Error('unavailable');}}).known,false);
+ for(const [feature,action]of [['surprise','resolvePublishedDish'],['personalization','accessibilityState']]){assert.doesNotThrow(()=>validateFeatureRequest(feature,action,{}));assert.throws(()=>validateFeatureRequest(feature,action,{url:'https://other.example'}));assert.throws(()=>validateFeatureRequest(feature,action,{}, {browser:true}));}
 });
 test('photo request rejects payloads and browser callers',()=>{
  assert.doesNotThrow(()=>validateFeatureRequest('surprise','resolvePublishedDish',{}));

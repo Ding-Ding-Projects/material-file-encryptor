@@ -10,7 +10,7 @@ function fixture(){
  doc.addEventListener=(name,fn)=>{const set=listeners.get(name)||new Set();set.add(fn);listeners.set(name,set);};
  doc.removeEventListener=(name,fn)=>listeners.get(name)?.delete(fn);
  const dispatch=event=>{for(const fn of listeners.get(event.type)||[])fn(event);};
- const create=doc.createElement.bind(doc);doc.createElement=tag=>{const node=create(tag);node.style={};node.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100});const original=node.matches.bind(node);node.pseudos=new Set();node.matches=selector=>selector.startsWith(':')?node.pseudos.has(selector):original(selector);return node;};
+ const create=doc.createElement.bind(doc);doc.createElement=tag=>{const node=create(tag);node.style={};if(tag==='mfe-context-menu')node.close=()=>{node.hidden=true;};node.contains=other=>node===other||node.children.some(child=>child.contains(other));node.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100});const original=node.matches.bind(node);node.pseudos=new Set();node.matches=selector=>selector.startsWith(':')?node.pseudos.has(selector):original(selector);return node;};
  doc.createElementNS=(_ns,tag)=>doc.createElement(tag);
  const root=doc.createElement('main'),a=doc.createElement('button'),b=doc.createElement('button');root.append(a,b);doc.body.append(root);
  let mutation,disconnected=false;class Observer{constructor(fn){mutation=fn;}observe(){}disconnect(){disconnected=true;}}

@@ -1,8 +1,9 @@
+import {control} from '../../../shared/surface/controls.js';
 export function mountStatus(host, { getStatus, translate = value => value } = {}) {
   host.replaceChildren();
   const title = document.createElement('h2'); title.textContent = translate('Status');
   const description = document.createElement('p'); description.setAttribute('role', 'status');
-  const refresh = document.createElement('button'); refresh.type = 'button'; refresh.textContent = translate('Refresh status');
+  const refresh = control('button', {type:'button'}); refresh.type = 'button'; refresh.textContent = translate('Refresh status');
   host.append(title, description, refresh); let generation = 0, disposed = false;
   async function update() {
     const request = ++generation; refresh.disabled = true;

@@ -43,7 +43,7 @@ test('trusted pointer, keyboard and input interaction cancel without responding 
 
 test('actual renderer startup seam waits for checking to settle and preserves interaction exclusion',async()=>{
  const source=await readFile(new URL('../src/renderer/app.js',import.meta.url),'utf8');
- const start=source.indexOf('let startupReady='),end=source.indexOf('function forceLockOptions()',start);assert.ok(start>=0&&end>start);
+ const start=source.indexOf('let startupReady='),end=source.indexOf('const narrationEvents=',start);assert.ok(start>=0&&end>start);
  const seam=source.slice(start,end);
  for(const exclusion of ['none','interaction','quiet','school']){
   const interacted=exclusion==='interaction',suppressed=exclusion!=='none';

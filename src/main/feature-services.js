@@ -1,4 +1,3 @@
-import {createStartupPhotoService} from './startup-photo-service.js';
 import {createDocumentationCatalogService} from './documentation-catalog-service.js';
 import {createServerManagerHost} from './server-manager-host.js';
 import fs from 'node:fs/promises';
@@ -17,11 +16,16 @@ import { createWorkflowServices } from './workflow-services.js';
 import {createAppearanceImageService, APPEARANCE_IMAGE_REQUEST_BYTES} from './appearance-image-service.js';
 import {createOllamaConfiguration} from './ollama-configuration.js';
 import {collectInstalledFontMetadata,createFontScanAdmission} from './font-catalog.js';
+import {createProtectedForgeAccounts} from './protected-forge-accounts.js';
+import {createProtectedForgeDeviceTransport} from './protected-forge-device-transport.js';
+import {createAccessIntegration} from './access-integration.js';
+import {createAccessMutationHistory} from './access-mutation-history.js';
+import {createStartupPhotoService} from './startup-photo-service.js';
 const scrypt=promisify(scryptCallback);
 const executeFile=promisify(execFile);
 const object=value=>value&&typeof value==='object'&&!Array.isArray(value);
 const encoded=value=>JSON.stringify(value);
-const keyPattern=/^(?:(?:profile:|lock:|authenticator:|history:|shared:|grant:|schedule:)[a-zA-Z0-9:_.-]{1,160}|element-lock:[^\x00-\x1f\x7f]{1,256}|local-profile:v1)$/;
+const keyPattern=/^(?:(?:profile:|forge-account:|lock:|authenticator:|history:|shared:|grant:|schedule:)[a-zA-Z0-9:_.-]{1,160}|element-lock:[^\x00-\x1f\x7f]{1,256}|local-profile:v1)$/;
 const rendererCredentialKey=key=>typeof key==='string'&&/^(?:local-profile:v1|element-lock:|authenticator:|history:)/.test(key)&&keyPattern.test(key);
 const secretKey=/^(?:password|pin|secret|token|credential|credentials|vocabulary|replacements|entries)$/i;
 function bounded(value,limit=262144){const text=encoded(value);if(typeof text!=='string'||Buffer.byteLength(text)>limit)throw Error('Request exceeds its size limit.');function visit(v,depth){if(depth>12)throw Error('Request is too deeply nested.');if(object(v)){for(const[k,item]of Object.entries(v)){if(['__proto__','prototype','constructor'].includes(k))throw Error('Invalid record key.');visit(item,depth+1);}}else if(Array.isArray(v)){for(const item of v)visit(item,depth+1);}}visit(value,0);return value;}
@@ -33,12 +37,18 @@ export function createCredentialStore({directory,safeStorage}){
  async function read(){try{const info=await fs.stat(filename);if(info.size>4*1024*1024)throw Error('Protected record store exceeds its limit.');const data=JSON.parse(await fs.readFile(filename,'utf8'));if(!object(data))throw Error('Invalid protected record store.');return data;}catch(e){if(e.code==='ENOENT')return {};throw e;}}
  function available(){if(!safeStorage?.isEncryptionAvailable())throw Error('Operating-system protected storage is unavailable.');}
  function check(key){if(typeof key!=='string'||!keyPattern.test(key))throw Error('Invalid protected record identifier.');}
- async function write(data){await fs.mkdir(directory,{recursive:true});const temporary=filename+'.'+randomUUID()+'.tmp';try{await fs.writeFile(temporary,encoded(data),{mode:0o600,flag:'wx'});await fs.rename(temporary,filename);}finally{await fs.rm(temporary,{force:true});}}
+ async function write(data){const text=encoded(data);if(Buffer.byteLength(text)>4*1024*1024)throw Error('Protected record store exceeds its limit.');await fs.mkdir(directory,{recursive:true});const temporary=filename+'.'+randomUUID()+'.tmp';try{await fs.writeFile(temporary,text,{mode:0o600,flag:'wx'});await fs.rename(temporary,filename);}finally{await fs.rm(temporary,{force:true});}}
+ const revisionKey="__protected_record_revisions_v1";
+ function revisions(data){if(!Object.hasOwn(data,revisionKey))return {};const value=JSON.parse(safeStorage.decryptString(Buffer.from(data[revisionKey],"base64")));if(!object(value)||Object.entries(value).some(([key,revision])=>!keyPattern.test(key)||typeof revision!=="string"||!/^[a-f0-9-]{36}$/.test(revision)))throw Error("Invalid protected revision index.");return value;}
+ function advanceRevision(data,key){const index=revisions(data),revision=randomUUID();index[key]=revision;bounded(index,1024*1024);data[revisionKey]=safeStorage.encryptString(encoded(index)).toString("base64");return revision;}
  function mutate(action){const next=chain.catch(()=>{}).then(action);chain=next;return next;}
  return {
   async get(key){check(key);available();await chain;const data=await read();if(!Object.hasOwn(data,key))return null;return JSON.parse(safeStorage.decryptString(Buffer.from(data[key],'base64')));},
-  set(key,value){check(key);available();bounded(value);return mutate(async()=>{const data=await read();data[key]=safeStorage.encryptString(encoded(value)).toString('base64');await write(data);});},
-  delete(key){check(key);return mutate(async()=>{const data=await read();delete data[key];await write(data);});},
+  set(key,value){check(key);available();bounded(value);return mutate(async()=>{const data=await read();data[key]=safeStorage.encryptString(encoded(value)).toString('base64');advanceRevision(data,key);await write(data);});},
+  compareAndSet(key,expected,replacement){check(key);available();bounded(expected);bounded(replacement);const expectedText=encoded(expected),replacementText=encoded(replacement);return mutate(async()=>{available();const data=await read();const current=Object.hasOwn(data,key)?safeStorage.decryptString(Buffer.from(data[key],'base64')):'null';if(encoded(JSON.parse(current))!==expectedText)return false;if(replacementText==='null')delete data[key];else data[key]=safeStorage.encryptString(replacementText).toString('base64');advanceRevision(data,key);await write(data);return true;});},
+  delete(key){check(key);return mutate(async()=>{const data=await read();available();delete data[key];advanceRevision(data,key);await write(data);});},
+  async readVersioned(key){check(key);available();await chain;const data=await read();return{value:Object.hasOwn(data,key)?JSON.parse(safeStorage.decryptString(Buffer.from(data[key],'base64'))):null,revision:revisions(data)[key]||null};},
+  compareAndSetVersioned(key,expectedRevision,replacement){check(key);available();if(expectedRevision!==null&&(typeof expectedRevision!=='string'||!/^[a-f0-9-]{36}$/.test(expectedRevision)))throw Error('Invalid protected record revision.');bounded(replacement);const replacementText=encoded(replacement);return mutate(async()=>{available();const data=await read(),currentRevision=revisions(data)[key]||null;if(currentRevision!==expectedRevision)return{updated:false,revision:currentRevision};if(replacementText==='null')delete data[key];else data[key]=safeStorage.encryptString(replacementText).toString('base64');const revision=advanceRevision(data,key);await write(data);return{updated:true,revision};});},
   async list(prefix){if(typeof prefix!=='string'||!keyPattern.test(prefix+'x'))throw Error('Invalid protected record prefix.');await chain;return Object.keys(await read()).filter(key=>key.startsWith(prefix));}
  };
 }
@@ -51,13 +61,17 @@ export function sanitizeConverterDiagnostic(record){const safe={schema:1,compone
 
 export function converterUnavailableError(record){const safe=sanitizeConverterDiagnostic(record);const fields=['launcherExitCode','workerExitCode','nativeError','nativeHresult'].filter(key=>Object.hasOwn(safe,key)).map(key=>key+'='+safe[key]);return new Error(`Isolated image decoding unavailable: ${safe.component}/${safe.phase}/${safe.code}${fields.length?' ['+fields.join(', ')+']':''}.`);}
 
-export function createFeatureServices({dataDirectory,applicationRoot,isPackaged=false,toolsDirectory=applicationRoot?.endsWith('.asar')?path.join(path.dirname(applicationRoot),'tools'):path.join(applicationRoot||'','out','tools'),sandboxDirectory,safeStorage,dialog,getWindow,openPath,openExternal,emit=()=>{},sandboxProvider,onConverterDiagnostic=()=>{}}){
+export function createFeatureServices({dataDirectory,applicationRoot,isPackaged=false,toolsDirectory=applicationRoot?.endsWith('.asar')?path.join(path.dirname(applicationRoot),'tools'):path.join(applicationRoot||'','out','tools'),sandboxDirectory,safeStorage,dialog,getWindow,getMainFrame,openPath,openExternal,emit=()=>{},sandboxProvider,reviewedForgeClient=null,onConverterDiagnostic=()=>{},accessibilityState=()=>({known:false,enabled:false,source:'runtime'})}){
  const documentation=createDocumentationCatalogService({filename:path.join(applicationRoot,'src/shared/documentation-catalog.json'),immutable:isPackaged===true});
  const credentials=createCredentialStore({directory:dataDirectory,safeStorage});
+ const mutationHistory=createAccessMutationHistory({dataDirectory,toolsDirectory});
+ const access=createAccessIntegration({dataDirectory,toolsDirectory,credentials,getMainFrame,recordMutation:event=>mutationHistory.record(event)});
  const scheduleAuthorization={};
  const schedules=createScheduleSource({credentials,authorizeCredentialMutation:context=>context?.authorization===scheduleAuthorization});
  const servers=createServerManagerHost({dataDirectory,emit:data=>emit('server-manager',data)});
- const workflows=createWorkflowServices({dataDirectory,dialog,getWindow,openPath,openExternal,emit});
+ const protectedForgeTransport=createProtectedForgeDeviceTransport({toolsDirectory});
+ const protectedAccounts=createProtectedForgeAccounts({credentialStore:credentials,reviewedClient:reviewedForgeClient,...protectedForgeTransport,onChallenge:item=>emit('workflow',{type:'forge-authentication',item})});
+ const workflows=createWorkflowServices({dataDirectory,toolsDirectory,protectedAccounts,dialog,getWindow,openPath,openExternal,emit});
  const startupPhotos=createStartupPhotoService({dataDirectory,toolsDirectory});
  const fontMetadataAdmission=createFontScanAdmission();const cancelFontMetadata=()=>fontMetadataAdmission.cancelAll();
  const grants=new Map();let converter,ollama,ollamaPromise,closed=false,exiting=false,sharedCredentialGranted=false,pendingRequests=0;
@@ -78,12 +92,13 @@ export function createFeatureServices({dataDirectory,applicationRoot,isPackaged=
  async function converterService(){if(!converterPromise)converterPromise=(async()=>{let provider=sandboxProvider;if(!provider&&sandboxDirectory){try{const manifest=await readConverterManifest(path.join(sandboxDirectory,'manifest.json'));let mediaRuntime;try{const media=await readConverterManifest(path.join(sandboxDirectory,'minimal-media','manifest.json'));if(media.profile!=='minimal-v1'||media.ffmpeg!=='ffmpeg.exe'||media.ffprobe!=='ffprobe.exe'||![media.ffmpegSha256,media.ffprobeSha256].every(value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value)))throw Object.assign(new Error('Invalid media manifest.'),{code:'INVALID_MANIFEST'});mediaRuntime={profile:media.profile,ffmpegPath:path.join(sandboxDirectory,'minimal-media',media.ffmpeg),ffmpegSha256:media.ffmpegSha256,ffprobePath:path.join(sandboxDirectory,'minimal-media',media.ffprobe),ffprobeSha256:media.ffprobeSha256};}catch(error){manifestDiagnostic(error,'media');}let archiveRuntime;try{const archive=await readConverterManifest(path.join(sandboxDirectory,'archive-manifest.json'));if(archive.schema!==1||archive.version!=='26.04'||!['7z.exe','7z.dll'].every(name=>typeof archive.files?.[name]==='string'&&/^[a-f0-9]{64}$/.test(archive.files[name])))throw Object.assign(new Error('Invalid archive runtime manifest.'),{code:'INVALID_MANIFEST'});archiveRuntime={sevenZipPath:path.join(sandboxDirectory,'archive','7z.exe'),sevenZipSha256:archive.files['7z.exe'],sevenZipDllPath:path.join(sandboxDirectory,'archive','7z.dll'),sevenZipDllSha256:archive.files['7z.dll']};}catch(error){manifestDiagnostic(error,'archive');}const{createWindowsSandboxProvider}=await import('../features/converter/windows-sandbox.mjs');provider=await createWindowsSandboxProvider({mediaRuntime,archiveRuntime,launcherPath:path.join(sandboxDirectory,'ConverterSandbox.exe'),launcherSha256:manifest.launcherSha256,runtimePath:path.join(sandboxDirectory,'node.exe'),runtimeSha256:manifest.runtimeSha256,launcherCompanionHashes:manifest.launcherCompanionHashes,onDiagnostic:converterDiagnostic});}catch(error){if(!error.converterDiagnostic)converterDiagnostic({schema:1,component:'provider',phase:'manifest',code:['ENOENT','EACCES','EPERM'].includes(error.code)?error.code:'INITIALIZATION_FAILED',errorName:['Error','TypeError','SyntaxError'].includes(error.name)?error.name:'Error'});provider=null;}}else if(!provider){converterDiagnostic({component:'provider',phase:'configuration',code:'MISSING_SANDBOX_DIRECTORY'});}converterProvider=provider;const{createConverterService}=await import('../features/converter/service.mjs');converter=createConverterService({stateDirectory:path.join(dataDirectory,'conversion-queue'),resolveGrant,bundledProof:{pdfLib:true},sandboxProvider:provider});void converter.run();return converter;})();return converterPromise;}
  async function ollamaService(){if(!ollamaPromise)ollamaPromise=(async()=>{const{createOllamaService}=await import('../features/ollama/service.js');const{createNativeHardwareProbe}=await import('../features/ollama/native-hardware.js');const host=createNativeOllamaHost({dialog,getWindow,openExternal,credentials,dataDirectory,loopbackPort:await ollamaConfiguration.read(),reviewedManifests:REVIEWED_OLLAMA_MANIFESTS,publisherPolicies:OLLAMA_PUBLISHER_POLICIES});await host.initialize();ollama=createOllamaService({dataDir:path.join(dataDirectory,'local-models'),hardwareProbe:createNativeHardwareProbe(),...host.serviceOptions,runtimeController:createRuntimeController(host.runtimeOptions)});ollama.subscribe(modelEvent);return ollama;})();return ollamaPromise;}
  async function pick(properties,title){const result=await dialog.showOpenDialog(getWindow(),{title,properties});return result.canceled?[]:result.filePaths;}
- async function dispatch(feature,action,payload={}){
+ async function dispatch(feature,action,payload={},context={}){
   ensureOpen();if(typeof feature!=='string'||typeof action!=='string'||!object(payload))throw Error('Invalid feature request.');bounded(payload,feature==='personalization'&&action==='normalizeImage'?APPEARANCE_IMAGE_REQUEST_BYTES:262144);
   if(exiting&&!['status','catalog','models','cart','list','operations','cancel','control','downloads','cancelDownload'].includes(action))throw Error('The application is waiting for active work before quitting.');
   if(feature==='server-manager'){if(exiting)throw Error('Application is closing.');return servers.dispatch(action,payload);}
   if(feature==='surprise'&&action==='resolvePublishedDish'){if(exiting||Reflect.ownKeys(payload).length)throw Error('Unsupported startup photo request.');return startupPhotos.resolvePublishedDish();}
   if(feature==='workflow')return workflows.dispatch(action,payload);
+  if(feature==='access'&&access.supports(action))return access.request(context?.senderFrame,action,payload);
   if(feature==='converter'){
    if(action==='pickSources')return Promise.all((await pick(['openFile','multiSelections'],'Choose conversion sources')).map(filename=>grant(filename,'read')));
    if(action==='pickDestinationDirectory'){const chosen=await pick(['openDirectory','createDirectory'],'Choose conversion output folder');return chosen[0]?grant(chosen[0],'directory'):null;}
@@ -116,6 +131,7 @@ export function createFeatureServices({dataDirectory,applicationRoot,isPackaged=
    if(action==='dataFolder')return dataDirectory;
   }
   if(feature==='personalization'){
+   if(action==='accessibilityState'){const state=await accessibilityState();return{known:state?.known===true,enabled:state?.enabled===true,source:'runtime'};}
    if(action==='cancelFontMetadata')return fontMetadataAdmission.cancel(payload.requestId);
    if(action==='fontMetadata'){const requestId=payload.requestId||randomUUID();return fontMetadataAdmission.run(requestId,signal=>collectInstalledFontMetadata({signal,onProgress:progress=>emit('personalization',{type:'fontMetadataProgress',requestId,...progress})}));}
    if(action==='normalizeImage')return imageService.normalize(payload);
@@ -139,5 +155,5 @@ export function createFeatureServices({dataDirectory,applicationRoot,isPackaged=
   throw Error('Unsupported feature action.');
  }
  async function request(...args){pendingRequests++;try{return await dispatch(...args);}finally{pendingRequests--;}}
- return {request,credentials,beginExit(){exiting=true;},endExit(){exiting=false;},async pending(){return pendingRequests+servers.pending+workflows.pending+(converter?await converter.pending():0)+(ollama?.operations().length||0);},async cancelAll(){servers.cancelAll();cancelFontMetadata();workflows.cancelAll();await imageService.cancelAll();await Promise.allSettled([converterPromise,ollamaPromise]);await Promise.all([converter?.cancelAll(),ollama?.cancelAll()]);},async checkpoint(summary,progress){return(await statusPromise).checkpoint(summary,progress);},async close(){closed=true;startupPhotos.close();documentation.close();await servers.close();cancelFontMetadata();await schedules.dispose();await imageService.close();await workflows.close();await Promise.allSettled([converterPromise,ollamaPromise]);await converter?.close();await ollama?.dispose();await(await statusPromise).finish('waiting');grants.clear();}};
+ return {request,credentials,receiveBrowserProposal(item){ensureOpen();if(exiting)throw Error('Application is closing.');return workflows.receiveBrowserProposal(item);},beginExit(){exiting=true;},endExit(){exiting=false;},async pending(){return pendingRequests+servers.pending+workflows.pending+(converter?await converter.pending():0)+(ollama?.operations().length||0);},async cancelAll(){servers.cancelAll();cancelFontMetadata();workflows.cancelAll();await imageService.cancelAll();await Promise.allSettled([converterPromise,ollamaPromise]);await Promise.all([converter?.cancelAll(),ollama?.cancelAll()]);},async checkpoint(summary,progress){return(await statusPromise).checkpoint(summary,progress);},async close(){closed=true;access.close();mutationHistory.close();startupPhotos.close();documentation.close();await servers.close();cancelFontMetadata();await schedules.dispose();await imageService.close();await workflows.close();await Promise.allSettled([converterPromise,ollamaPromise]);await converter?.close();await ollama?.dispose();await(await statusPromise).finish('waiting');grants.clear();}};
 }

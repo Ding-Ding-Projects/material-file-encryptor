@@ -1,8 +1,14 @@
+import {control,prepareControl} from './controls.js';
 import {IMAGE_TRANSFORM_SURFACE} from '../../renderer/features/personalization/image-geometry.js';
 import { localized } from './localization.js';
 
 export const surfaceRegistry = Object.freeze([
-  { tag: 'mfe-startup-surprise', role: 'status', module: '../../renderer/features/shell/startup-surprise.js', primitives: ['md-text-button'] },
+  { tag: 'mfe-startup-surprise', role: 'region', module: '../../renderer/features/shell/startup-surprise.js', primitives: ['md-text-button'] },
+  { tag: 'mfe-navigation-rail', role: 'navigation', module: '../../renderer/features/shell/navigation.js', primitives: ['md-text-button','md-filled-tonal-button'] },
+  { tag: 'mfe-top-bar', role: 'banner', module: '../../renderer/features/shell/navigation.js', primitives: ['md-icon-button','md-outlined-button'] },
+  { tag: 'mfe-date-field', role: 'group', module: 'controls.js', primitives: ['md-outlined-text-field','md-outlined-button'], nativeInternals: ['input[type=date]','input[type=time]','input[type=datetime-local]'] },
+  { tag: 'mfe-file-picker', role: 'group', module: 'controls.js', primitives: ['md-outlined-text-field','md-outlined-button'], nativeInternals: ['input[type=file]'] },
+  { tag: 'mfe-dialog', role: 'dialog', module: 'controls.js', primitives: ['md-dialog'] },
   { tag: 'mfe-transition-properties', role: 'region', module: '../../renderer/features/personalization/transition-property-inspector.js', primitives: ['md-outlined-text-field','md-text-button'] },
   IMAGE_TRANSFORM_SURFACE,
   { tag: 'mfe-motion-keyframes', role: 'region', module: '../../renderer/features/personalization/motion-keyframe-inspector.js', primitives: ['md-outlined-text-field','md-text-button','md-checkbox'] },
@@ -13,14 +19,14 @@ export const surfaceRegistry = Object.freeze([
   { tag: 'mfe-workspace-shell', role: 'region', module: 'workspace-shell.js', primitives: ['md-tabs','md-primary-tab','md-outlined-button'] },
   { tag: 'mfe-search', role: 'search', module: 'search.js', primitives: ['md-outlined-text-field','md-outlined-button','md-switch'] },
   { tag: 'mfe-command-palette', role: 'dialog', module: 'command-palette.js', primitives: ['md-dialog','md-text-button','md-switch','md-slider','md-outlined-text-field'] },
-  { tag: 'mfe-context-menu', role: 'menu', module: 'context-menu.js', primitives: ['md-text-button'] },
+  { tag: 'mfe-context-menu', role: 'menu', module: 'context-menu.js', primitives: ['md-menu','md-menu-item','mfe-search'] },
   { tag: 'mfe-notification-center', role: 'region', module: 'notification-center.js', primitives: ['md-outlined-button','md-text-button','md-switch'] },
   { tag: 'mfe-build-provenance', role: 'status', module: 'provenance.js', primitives: [] }
   ,{ tag: 'mfe-group-manager', role: 'dialog', module: 'group-manager.js', primitives: ['md-dialog','md-outlined-text-field','md-switch'] }
 ]);
 
 export function register(tag, constructor) {
-  if (!customElements.get(tag)) customElements.define(tag, constructor);
+  if (globalThis.customElements && !customElements.get(tag)) customElements.define(tag, constructor);
 }
 
 export { localized };
@@ -28,7 +34,9 @@ export { localized };
 export const text = (en, yue) => ({ en, yue });
 
 export function element(tag, props = {}, children = []) {
-  const node = document.createElement(tag);
+  if (['button','input','textarea','select','option','dialog'].includes(tag)) return control(tag,props,children);
+  const node = prepareControl(document.createElement(tag));
+  if (/^md-.*button$/.test(tag) && !Object.hasOwn(props,'type')) node.type='button';
   for (const [key, value] of Object.entries(props)) {
     if (key === 'text') node.textContent = value;
     else if (key === 'class') node.className = value;
@@ -40,7 +48,7 @@ export function element(tag, props = {}, children = []) {
   return node;
 }
 
-export class SurfaceElement extends HTMLElement {
+export class SurfaceElement extends (globalThis.HTMLElement||class{}) {
   constructor() { super(); this.attachShadow({mode:'open'}); this.language = 'en'; }
   t(en, yue) { return localized(text(en,yue),this.language); }
   emit(type, detail) { this.dispatchEvent(new CustomEvent(type,{ detail,bubbles:true,composed:true })); }

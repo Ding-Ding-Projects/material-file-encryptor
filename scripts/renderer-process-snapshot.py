@@ -17,6 +17,13 @@ class SnapshotError(RuntimeError):
     pass
 
 
+class DescendantMembershipChanged(SnapshotError):
+    code = 'NATIVE_DESCENDANT_MEMBERSHIP_CHANGED'
+    def __init__(self, evidence):
+        super().__init__('Native descendant membership changed around renderer target proof.')
+        self.evidence = evidence
+
+
 class ProcessAbsent(SnapshotError):
     pass
 
@@ -44,6 +51,8 @@ class Native:
             'Process32FirstW': ([W.HANDLE, ctypes.POINTER(ENTRY)], W.BOOL),
             'Process32NextW': ([W.HANDLE, ctypes.POINTER(ENTRY)], W.BOOL),
             'OpenProcess': ([W.DWORD, W.BOOL, W.DWORD], W.HANDLE),
+            'GetProcessId': ([W.HANDLE], W.DWORD),
+            'GetExitCodeProcess': ([W.HANDLE, ctypes.POINTER(W.DWORD)], W.BOOL),
             'GetProcessTimes': ([W.HANDLE] + [ctypes.POINTER(W.FILETIME)] * 4, W.BOOL),
             'QueryFullProcessImageNameW': ([W.HANDLE, W.DWORD, W.LPWSTR, ctypes.POINTER(W.DWORD)], W.BOOL),
             'WaitForSingleObject': ([W.HANDLE, W.DWORD], W.DWORD),
@@ -99,6 +108,20 @@ class Native:
             raise SnapshotError('Process liveness is unavailable.')
         return result == 0
 
+    def exit_record(self, handle):
+        if handle is None or not self.exited(handle):
+            raise SnapshotError('Held process has not signaled exit.')
+        pid = self.k.GetProcessId(handle)
+        if not pid:
+            raise SnapshotError('Held process ID is unavailable.')
+        created, ended, kernel, user = (W.FILETIME() for _ in range(4))
+        if not self.k.GetProcessTimes(handle, ctypes.byref(created), ctypes.byref(ended), ctypes.byref(kernel), ctypes.byref(user)):
+            raise SnapshotError('Held process creation time is unavailable.')
+        code = W.DWORD()
+        if not self.k.GetExitCodeProcess(handle, ctypes.byref(code)) or not self.exited(handle):
+            raise SnapshotError('Held process exit result is unavailable.')
+        return {'pid': int(pid), 'creationDate': creation_date((created.dwHighDateTime << 32) | created.dwLowDateTime), 'exitCode': int(code.value)}
+
     def observe(self, handle, pid, parent, allow_exited=False):
         if handle is None:
             raise SnapshotError('Selected process disappeared during proof.')
@@ -113,6 +136,16 @@ class Native:
         if self.exited(handle) and not allow_exited:
             raise SnapshotError('Process exited during identity observation.')
         return {'pid': pid, 'parentPid': parent, 'creationDate': creation_date((created.dwHighDateTime << 32) | created.dwLowDateTime), 'executablePath': path.value}
+
+
+def validate_exit_record(expected, record):
+    if not isinstance(record, dict) or set(record) != {'pid', 'creationDate', 'exitCode'}:
+        raise SnapshotError('Held exit record is incomplete.')
+    if record['pid'] != expected['pid'] or record['creationDate'] != expected['creationDate']:
+        raise SnapshotError('Held process execution identity changed.')
+    if type(record['exitCode']) is not int or not 0 <= record['exitCode'] <= 0xFFFFFFFF:
+        raise SnapshotError('Held process exit status is invalid.')
+    return record
 
 
 def descendants(rows, root):
@@ -202,12 +235,17 @@ class Proof:
                 exited = self.api.exited(handle)
                 if pid not in rows and not exited:
                     raise SnapshotError('Running process appeared during absence proof.')
-                current = self.api.observe(handle, pid, rows.get(pid, expected['parentPid']), allow_exited=True)
-                if not self.lifecycle._same_process(expected, current) or current['parentPid'] != expected['parentPid']:
-                    raise SnapshotError('Recorded process identity changed.')
-                if not exited:
+                if exited:
+                    record = validate_exit_record(expected, self.api.exit_record(handle))
+                    if pid in rows and rows[pid] != expected['parentPid']:
+                        raise SnapshotError('Recorded process parent identity changed.')
+                    verdicts.append({'pid': pid, 'verdict': 'exited-object-observed', 'exitCode': record['exitCode'], 'identityBasis': 'recorded-image-and-parent-plus-current-kernel-pid-and-creation'})
+                else:
+                    current = self.api.observe(handle, pid, rows[pid])
+                    if not self.lifecycle._same_process(expected, current) or current['parentPid'] != expected['parentPid']:
+                        raise SnapshotError('Recorded process identity changed.')
                     present = True
-                verdicts.append({'pid': pid, 'verdict': 'exited-object-observed' if exited else 'execution-present'})
+                    verdicts.append({'pid': pid, 'verdict': 'execution-present'})
         self.last_absence = {
             'recordedProcessesExited': not present,
             'recordedExecutionVerdicts': verdicts,
@@ -362,6 +400,10 @@ def prove_renderer_target(backend, run=None, fetch=None, client_pid=None, target
             raise
     endpoint = f"http://{address}/json/list"
     try:
+        root_handle = client_handles.enter_context(backend.proof.api.handle(state['process']['pid']))
+        held_root = backend.proof.api.observe(root_handle, state['process']['pid'], state['process']['parentPid'])
+        if held_root != state['process']:
+            raise SnapshotError('Root identity changed before target proof.')
         owner_before, pair_before = observe_tcp(before)
         server_before = next(item for item in before if item['pid'] == owner_before)
         server_handle = client_handles.enter_context(backend.proof.api.handle(owner_before))
@@ -385,18 +427,42 @@ def prove_renderer_target(backend, run=None, fetch=None, client_pid=None, target
         if client_pid is not None and (not target_id or target.get('id') != target_id or websocket.path != '/devtools/page/' + target_id):
             raise SnapshotError('Connected renderer target identity differs from the actual CDP session.')
         after = backend.tree(state['process'])
-        if sorted(before, key=lambda item: item['pid']) != sorted(after, key=lambda item: item['pid']):
-            raise SnapshotError('Native ancestry changed around renderer target proof.')
         owner_after, pair_after = observe_tcp(after)
         if owner_before != owner_after or pair_before != pair_after:
             raise SnapshotError('Listener or established peer changed around target proof.')
         final_tree = backend.tree(state['process'])
-        if sorted(after, key=lambda item: item['pid']) != sorted(final_tree, key=lambda item: item['pid']):
-            raise SnapshotError('Native ancestry changed after final listener proof.')
+        if fetch is None:
+            with urlopen(endpoint, timeout=5) as response:
+                final_data = response.read(65537)
+        else:
+            final_data = fetch(endpoint)
+        if len(final_data) > 65536:
+            raise SnapshotError('Final renderer target response exceeds bound.')
+        final_targets = json.loads(final_data)
+        keys = ('id', 'type', 'url', 'webSocketDebuggerUrl')
+        if not isinstance(final_targets, list) or len(final_targets) != 1 or not isinstance(final_targets[0], dict) or any(final_targets[0].get(key) != target.get(key) for key in keys):
+            raise SnapshotError('Renderer target changed around final proof.')
+        owner_final, pair_final = observe_tcp(final_tree)
+        if owner_final != owner_before or pair_final != pair_before:
+            raise SnapshotError('Final listener or established peer changed.')
         if client_pid is not None and backend.proof.identity(client_pid) != client_before:
             raise SnapshotError('Connected client identity changed around target proof.')
         if backend.proof.api.observe(server_handle, owner_before, server_before['parentPid']) != held_server_before:
             raise SnapshotError('Listener process changed around held-handle proof.')
+        if backend.proof.api.observe(root_handle, held_root['pid'], held_root['parentPid']) != held_root:
+            raise SnapshotError('Root identity changed around held-handle proof.')
+        inventories = [{row['pid']: row for row in tree} for tree in (before, after, final_tree)]
+        if any(len(inventory) != len(tree) for inventory, tree in zip(inventories, (before, after, final_tree))):
+            raise SnapshotError('Duplicate process identity in target proof.')
+        for pid in {pid for inventory in inventories for pid in inventory}:
+            records = [inventory[pid] for inventory in inventories if pid in inventory]
+            if any(record != records[0] for record in records[1:]):
+                raise SnapshotError('Shared process identity changed around target proof.')
+        for pid, expected in ((held_root['pid'], held_root), (owner_before, held_server_before)):
+            if any(inventory.get(pid) != expected for inventory in inventories):
+                raise SnapshotError('Required process identity missing around target proof.')
+        if any(inventory != inventories[0] for inventory in inventories[1:]):
+            raise DescendantMembershipChanged({'before': before, 'after': after, 'final': final_tree, 'targetBefore': {key: target.get(key) for key in keys}, 'targetAfter': {key: final_targets[0].get(key) for key in keys}, 'listenerOwnerPid': owner_before, 'peerBefore': pair_before, 'peerAfter': pair_after, 'peerFinal': pair_final, 'root': held_root, 'listener': held_server_before, 'client': client_before})
         return {'ok': True, 'client_ok': True, 'backend': 'native-v1', 'listenerOwnerPid': owner_after, 'listenerAddress': address, 'targetCount': 1, 'targetId': target.get('id'), 'exactUrl': cdp['expectedUrl'], 'nativeProcesses': final_tree, 'clientIdentity': client_before, 'establishedPeerPair': pair_after}
     finally:
         client_handles.close()

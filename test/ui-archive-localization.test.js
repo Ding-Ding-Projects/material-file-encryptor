@@ -1,3 +1,6 @@
+import {control as createControl,setControlLanguage} from '../src/shared/surface/controls.js';
+import {createHistorySelection} from '../src/renderer/features/shell/history-selection.js';
+import {createNotificationNarration} from '../src/renderer/features/shell/notification-narration.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -12,18 +15,19 @@ function section(start, end) {
  return source.slice(offset, source.indexOf(end, offset));
 }
 function fixture() {
- const elements = new Map();
+ const elements = new Map();let doc;
  function element(text = '') {
-  return {textContent:text, children:[], attributes:{}, dataset:{}, style:{setProperty(){}},
+  return {ownerDocument:doc,textContent:text, children:[], attributes:{}, dataset:{}, style:{setProperty(){}},
    set id(value) { this._id=value; elements.set(value,this); }, get id() { return this._id; },
    append(...children) { this.children.push(...children); },
    setAttribute(name,value) { this.attributes[name]=String(value); },
-   querySelectorAll() { return []; }};
+   getAttribute(name){return this.attributes[name]??null;},removeAttribute(name){delete this.attributes[name];},hasAttribute(name){return name in this.attributes;},replaceChildren(...children){this.children=children;},addEventListener(){},remove(){},querySelectorAll() { return []; }};
  }
  const get = id => { if (!elements.has(id)) elements.set(id,element()); return elements.get(id); };
  const preferences={language:'en',theme:'light',vocabulary:{replacements:[]}};
- const context=vm.createContext({preferences,cantonese,dictionary:new Map(),$:get,
-  document:{documentElement:{dataset:{}},activeElement:null,querySelectorAll:()=>[],createElement:()=>element(),createTextNode:text=>element(text)},
+ doc={documentElement:element(),activeElement:null,querySelectorAll:()=>[],createElement:()=>element(),createTextNode:text=>element(text)};
+ const context=vm.createContext({control:(tag,props,children)=>createControl(tag,props,children,doc),setControlLanguage,createHistorySelection,historySelection:null,historyRetentionDraft:false,historyRetentionRevision:0,formatDate:String,formatBytes:String,fileDetails:null,narrationEvents:createNotificationNarration({getNarrator:()=>null,getSettings:()=>preferences,isScreenReaderActive:()=>true}),preferences,cantonese,dictionary:new Map(),$:get,
+  document:doc,
   state:null,view:'drive',busy:false,colorQuery:{matches:false},clearFields:{refresh(){}},
   historySearch:null,recycleSearch:null,createScopedSearch:()=>({refresh(){}}),api:{},
   mountState:()=>'',setText:(id,text)=>{get(id).textContent=text;},operation(){},
@@ -33,6 +37,7 @@ function fixture() {
   renderedFilesKey:'',privateWordingView:{refresh(){}},currentFiles:()=>[],renderOperations(){}});
  vm.runInContext(section('function t(source,options)', 'const privateWordingView') +
   section('function applyPreferences()', "colorQuery.addEventListener") +
+  section('async function restoreHistoryVersion(', 'async function restoreRecycledSelection(') +
   section('function initializeArchive()', 'async function archiveMutation') +
   section('function render() {', 'function formatDate'),context);
  vm.runInContext('initializeArchive(); applyPreferences();',context);

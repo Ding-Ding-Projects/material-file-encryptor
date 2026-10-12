@@ -1,17 +1,63 @@
+import {requestControlAdmission} from './controls.js';
 import { SurfaceElement, element, register, localized } from './registry.js';
 import './search.js';
+// Per-event action ownership is private metadata, not a mutable provider item field.
+const actionTargets=new WeakMap();
+export function bindContextActionTarget(item,target){const bound={...item};actionTargets.set(bound,target);return bound;}
+/** One Material menu. The host is transparent plumbing, never a second dialog. */
 export class ContextMenu extends SurfaceElement {
-  connectedCallback(){this.render();}
-  open({items,anchor,language='en'}) {this.items=items;this.language=language;this.anchor=anchor;this.hidden=false;this.render();this.search.input.focus();}
-  close(){this.hidden=true;this.anchor?.focus();}
+  constructor(){super();this.epoch=0;this.controller=null;}
+  connectedCallback(){this.hidden=true;this.render();}
+  disconnectedCallback(){this.close('teardown',{restoreFocus:false});}
   render(){
-    this.style(`:host{position:fixed;z-index:10000;inset:12vh 16px auto auto;width:min(420px,calc(100vw - 32px));padding:16px;max-height:75vh;overflow:auto;background:var(--md-sys-color-surface-container,#f0f1f7);border:1px solid var(--md-sys-color-outline,#777);border-radius:16px;box-shadow:0 8px 24px #0004}.items{display:grid}md-text-button{width:100%;justify-content:flex-start}.shortcut{margin-inline-start:16px}`);
-    this.setAttribute('role','dialog');this.setAttribute('aria-label',this.t('Context actions','操作選單'));
-    this.search=element('mfe-search',{label:this.t('Filter actions','篩選操作')});this.search.language=this.language;
-    this.itemsHost=element('div',{class:'items',role:'menu'});
-    this.shadowRoot.append(this.search,this.itemsHost,element('md-text-button',{text:this.t('Close','關閉'),onclick:()=>this.close()}));
-    this.search.addEventListener('search-change',()=>this.renderItems());this.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();if(this.search.query){this.search.query='';this.search.input.value='';this.renderItems();}else this.close();} if(event.key==='ArrowDown'||event.key==='ArrowUp'){const buttons=[...this.itemsHost.querySelectorAll('md-text-button:not([disabled])')];const index=buttons.indexOf(this.shadowRoot.activeElement);buttons[(index+(event.key==='ArrowDown'?1:buttons.length-1))%buttons.length]?.focus();event.preventDefault();}};this.renderItems();
+    this.style(':host{position:fixed;inset:0;margin:0;padding:0;border:0;background:transparent;width:auto;height:auto;z-index:10000;pointer-events:none}:host([hidden]){display:none!important}.point{position:fixed;width:1px;height:1px;pointer-events:none}md-menu{pointer-events:auto;max-width:min(440px,calc(100vw - 24px));--md-menu-container-color:var(--md-sys-color-surface-container-high,var(--md-sys-color-surface-container));--md-menu-container-shape:12px}mfe-search{display:block;padding:8px 12px;width:min(400px,calc(100vw - 32px))}md-menu-item{max-width:420px}.empty{padding:12px 16px}.shortcut{margin-inline-start:20px}');
+    this.point=element('span',{class:'point','aria-hidden':'true'});this.menu=element('md-menu',{positioning:'fixed',quick:true,hasOverflow:true,'aria-label':this.t('Context actions','操作選單')});
+    this.menu.noNavigationWrap=false;this.menu.typeaheadActive=false;this.menu.stayOpenOnOutsideClick=true;this.menu.stayOpenOnFocusout=true;
+    this.search=element('mfe-search',{label:this.t('Filter actions','篩選操作')});this.search.language=this.language;this.search.setAttribute('data-menu-search','');
+    this.itemsHost=this.menu;this.menu.append(this.search);this.shadowRoot.append(this.point,this.menu);
+    this.search.addEventListener('search-change',()=>this.renderItems());this.search.addEventListener('keydown',event=>event.stopPropagation());
+    const ownedMenu=this.menu;this.menu.addEventListener('closed',()=>{if(this.hidden||this.menu!==ownedMenu||this.menu.open)return;this.close('dismiss');});
   }
-  async renderItems(){const list=await this.search.filter((this.items||[]).map((item,index)=>({id:String(index),text:localized(item.label,this.language)})));if(!list)return;this.itemsHost.replaceChildren();for(const row of list){const item=this.items[Number(row.id)];const button=element('md-text-button',{role:'menuitem',disabled:!!item.disabled,text:row.text,onclick:()=>{if(!item.disabled){this.close();item.run();}}});if(item.shortcut){button.setAttribute('aria-keyshortcuts',item.shortcut);button.append(element('span',{'aria-hidden':'true',class:'shortcut',text:item.shortcut}));}this.itemsHost.append(button);}if(!list.length)this.itemsHost.append(element('p',{role:'status',text:this.t('No matching actions','沒有相符操作')}));}
+  open({items=[],anchor,event,target,language='en',onClose,onError}={}) {
+    this.close('replace',{restoreFocus:false});this.language=language;this.render();this.items=items.slice();this.target=target||anchor||event?.composedPath?.().find(node=>node instanceof Element);this.anchor=anchor||this.target;this.returnFocus=this.ownerDocument.activeElement;this.onClose=onClose;this.onError=onError;this.hidden=false;this.setAttribute('popover','manual');this.showPopover?.();const epoch=++this.epoch;
+    const rect=this.anchor?.getBoundingClientRect?.();const pointer=event&&event.type==='contextmenu'&&(event.clientX||event.clientY);const x=pointer?event.clientX:rect?.left??12,y=pointer?event.clientY:rect?.bottom??12;
+    this.point.style.left=Math.max(8,Math.min(x,innerWidth-16))+'px';this.point.style.top=Math.max(8,Math.min(y,innerHeight-16))+'px';this.menu.anchorElement=this.point;
+    this.controller=new AbortController();const options={capture:true,signal:this.controller.signal};
+    this.ownerDocument.addEventListener('pointerdown',e=>{if(!e.composedPath().includes(this))this.close('outside');},options);
+    this.ownerDocument.addEventListener('keydown',e=>this.handleKey(e),options);
+    this.ownerDocument.addEventListener('focusin',e=>{if(!e.composedPath().includes(this))this.close('focusout',{restoreFocus:false});},options);
+    this.ownerDocument.defaultView.addEventListener('resize',()=>this.close('resize'),{signal:this.controller.signal});
+    this.observer=new MutationObserver(()=>{if(this.target instanceof Element&&!this.target.isConnected)this.close('target-removed',{restoreFocus:false});});this.observer.observe(this.ownerDocument,{subtree:true,childList:true});
+    this.renderItems().then(()=>{if(this.hidden||epoch!==this.epoch)return;this.menu.open=true;this.menu.updateComplete?.then(()=>{if(!this.hidden&&epoch===this.epoch)this.search.input?.focus();});});
+  }
+  close(reason='dismiss',{restoreFocus=true}={}) {
+    const wasOpen=!this.hidden;try{this.hidePopover?.();}catch{}this.hidden=true;this.epoch++;this.controller?.abort();this.controller=null;this.observer?.disconnect();this.observer=null;this.search?.closeBuilder?.();if(this.menu)this.menu.open=false;
+    if(wasOpen&&restoreFocus){const focus=this.anchor?.isConnected?this.anchor:this.returnFocus?.isConnected?this.returnFocus:null;focus?.focus?.();}
+    if(wasOpen)this.onClose?.(reason);this.onClose=null;
+  }
+  handleKey(event){
+    if(this.hidden)return;
+    if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();this.close('escape');return;}
+    const path=event.composedPath();if(!path.includes(this))return;
+    if(event.key==='Tab')return;
+    const nodes=[...this.itemsHost.querySelectorAll('md-menu-item')].filter(node=>!node.disabled&&!node.hidden);if(!nodes.length)return;
+    const active=nodes.findIndex(node=>path.includes(node));const inSearch=path.includes(this.search),searching=inSearch&&path.includes(this.search.input);
+    if(inSearch&&!searching)return;
+    if(searching&&!['ArrowDown','ArrowUp'].includes(event.key))return;
+    let index=active;
+    if(event.key==='ArrowDown')index=(active+1)%nodes.length;
+    else if(event.key==='ArrowUp')index=active<0?nodes.length-1:(active-1+nodes.length)%nodes.length;
+    else if(event.key==='Home')index=0;
+    else if(event.key==='End')index=nodes.length-1;
+    else if((event.key==='Enter'||event.key===' ')&&active>=0){event.preventDefault();event.stopImmediatePropagation();nodes[active].click();return;}
+    else return;
+    event.preventDefault();event.stopImmediatePropagation();nodes[index].focus();
+  }
+  async renderItems(){
+    const epoch=this.epoch,items=this.items||[];const list=await this.search.filter(items.map((item,index)=>({id:String(index),text:localized(item.label,this.language)})));if(!list||epoch!==this.epoch)return;
+    for(const child of [...this.itemsHost.children])if(child!==this.search)child.remove();for(const row of list){const item=items[Number(row.id)],capturedTarget=actionTargets.has(item)?actionTargets.get(item):this.target;const button=element('md-menu-item',{disabled:!!item.disabled,keepOpen:true,'aria-label':row.text});button.append(element('span',{slot:'headline',text:row.text}));if(item.shortcut){button.setAttribute('aria-keyshortcuts',item.shortcut);button.append(element('span',{slot:'end',class:'shortcut','aria-hidden':'true',text:item.shortcut}));}
+      button.addEventListener('click',()=>{if(item.disabled||button.disabled||this.hidden||epoch!==this.epoch||!button.isConnected)return;if(capturedTarget instanceof Element&&(!capturedTarget.isConnected||!requestControlAdmission(capturedTarget))){this.close('admission');return;}const onError=this.onError;this.close('selection',{restoreFocus:true});Promise.resolve().then(()=>item.run?.(capturedTarget)).catch(error=>onError?onError(error):this.emit('context-action-error',{error}));},{capture:true});this.itemsHost.append(button);}
+    if(!list.length)this.itemsHost.append(element('div',{class:'empty',role:'status',text:this.t('No matching actions','沒有相符操作')}));
+  }
 }
 register('mfe-context-menu',ContextMenu);

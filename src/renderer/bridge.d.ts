@@ -1,13 +1,15 @@
 export {};
 
-type FeatureName = 'converter'|'ollama'|'documentation'|'status'|'personalization'|'access';
+type FeatureName = 'converter'|'ollama'|'documentation'|'status'|'personalization'|'access'|'workflow'|'surprise';
 interface FileEntry {id:string;entryId?:string;path:string;size:number;offline:boolean;modified:string;partCount?:number;partSizeBytes?:number}
 interface FilePage {items:FileEntry[];nextCursor:string|null;revision?:string|number}
-interface Operation {id:string;type?:string;label?:string;state:string;progress?:number;error?:string}
+interface Operation {id?:string;operationId:string;kind?:'import'|'export'|'packing';phase?:'queued'|'staging'|'packing'|'publication'|'completed';bytesCompleted?:number;totalBytes?:number;type?:string;label?:string;state:string;progress?:number;error?:string}
 interface VersionEntry {id:string;entryId:string;path:string;timestampUtc:string;length:number;label?:string;isAvailable:boolean}
 interface ActivityPage {items:Array<{id:string;entryId?:string;action:string;path?:string;timestampUtc:string;detail?:string}>;nextCursor:string|null}
 interface DriveBridge {
- status():Promise<Record<string,unknown>&{files?:FileEntry[];filesRevision?:string|number;operations?:Operation[];build?:{version?:string;builtAt?:string}}>;
+  storageDiagnostics(): Promise<StorageDiagnostics>;
+  startPacking(options?: {path?: string; partSizeBytes?: number}): Promise<{operationId: string}>;
+ status():Promise<Record<string,unknown>&{packing?:{pendingFiles:number;running:boolean;paused:boolean;activeWriters:number;lastError:string|null;targetPartSizeBytes:number};files?:FileEntry[];filesRevision?:string|number;operations?:Operation[];build?:{version?:string;builtAt?:string}}>;
  onStatus(callback:(state:Record<string,unknown>)=>void):()=>void;
  featureRequest<T=unknown>(feature:FeatureName,action:string,payload?:Record<string,unknown>):Promise<T>;
  onFeatureEvent(feature:FeatureName,callback:(event:Record<string,unknown>)=>void):()=>void;
@@ -26,3 +28,5 @@ interface DriveBridge {
  [method:string]:unknown;
 }
 declare global {interface Window {drive:DriveBridge}}
+
+interface StorageDiagnostics {targetPartSizeBytes:number;pendingPackingFiles:number;activeWriters:number;packingRunning:boolean;packingPaused:boolean;packingError:string|null;currentReferencedParts:number;currentReferencedBytes:number;historicalOnlyParts:number;historicalOnlyBytes:number;temporaryFiles:number;temporaryBytes:number}

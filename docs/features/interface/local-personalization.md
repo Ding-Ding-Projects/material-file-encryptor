@@ -50,6 +50,66 @@ Personal wording is projected onto eligible display text and accessibility attri
 
 Focused verification covers a synthetic document exceeding 42,000 nodes, bounded scheduling, changed-subtree updates, shadow-root removal, cancellation, restoration, and rollback after a later-slice exception. This does not by itself establish native runtime or installer acceptance.
 
+## Material control migration
+
+The five destinations retain their existing setting stores and protected host adapters. Text and search fields use outlined Material fields; finite choices use outlined selects with adjacent searchable actions and the shared regex builder. Checkbox and range settings use Material checkbox and slider controls. Date, time and file inputs use registered compositions containing actual platform pickers behind Material fields and buttons. The control kind is chosen before construction.
+
+Accent entry retains a typed field and offers the existing color workbench in an expandable section. Only a solid accent is accepted. Motion and typography choices use finite selects where a closed set exists; editable CSS property names and easing values retain free text with shared anchored suggestions. Invalid drafts, blocked controls, disconnected controls and rejected asynchronous stores do not authorize another mutation path.
+
+The host supplies onLogoChange(dataUrlOrNull) to apply the normalized local logo to the application identity and restore its saved value at startup. The module itself owns conversion, local storage and editor preview. School-mode sharing, narration voices and external schedule requests retain their real host boundaries. Model checks do not establish those external capabilities.
+
+The reference and state inventory are under design/gui-personalization/. Built-surface verification belongs to the integrated evidence, not that design reference.
+
+## Local schedule snapshots
+
+Appearance and logo schedules use versioned local references. Capture current appearance or Capture current logo records the saved base presentation under the schedule name. A schedule exports only its reference, never the private pixel data. Each local registry holds at most 20 entries and 4 MiB in total; missing, corrupt or oversized records are reported without resetting them. Snapshot references are bounded and are not paths or URLs.
+
+The schedule value editor offers typed narration and attention controls. Appearance and logo values use a saved-reference picker with the shared regex search. Remove local snapshot requires the destructive confirmation workflow and refuses references used by any saved schedule.
+
+The returned appearance and logo adapters expose resolve, registerSnapshot, listSnapshots, removeSnapshot, applyTransient and clearTransient. Applying or clearing a schedule does not write the base appearance record, logo record, undo history or revision journal. Editing the base during an override preserves that new base for restoration. Logo snapshots accept only a normalized static 128 by 128 PNG or an explicit original-logo value. The appearance validator continues to reject external resources and unsafe declarations.
+
+## History export
+
+Unlocked history supports individual selection, Shift ranges, all filtered records, inversion and clear. Export selected records or the currently visible filtered result; comparison still requires exactly two entries. Ten text formats preserve complete redacted metadata with an explicit omission manifest. Snapshots, credentials, vocabulary and image pixels remain excluded. The complete format matrix below defines representations and exclusions.
+
+## Logo authoring
+
+The appearance tab offers local lock/key presets, local upload, contain/cover, focal points, numeric crop bounds, a safe area and the shared static background color workbench. The conversion notice precedes applying any output. Rejected application preserves the saved mark; rejected storage restores the prior display. Original source bytes and validated editing recipes persist locally alongside the normalized PNG; local schedule snapshots continue to contain only their normalized logo output. See the [state inventory](../../../design/gui-personalization/logo-authoring-states.md) for decoder isolation and other remaining requirements.
+
+## Record export matrix
+
+All files use UTF-8. JSON, JSON Lines, YAML, TOML, XML, Markdown, HTML and SQL use LF; CSV and TSV use CRLF rows. The final newline is included. Exports are bounded to 10,000 records and 16 MiB of serialized JSON input. Exceeding a bound rejects the operation without truncation.
+
+| Surface / record | Formats | Scope and actions | Exclusions |
+| --- | --- | --- | --- |
+| Unlocked private history metadata | JSON, JSONL, YAML 1.2, TOML, XML, CSV, TSV, Markdown, HTML, SQLite SQL | Individual checkbox selection, all filtered, invert filtered, clear, selected export, filtered export. Compare requires exactly two. Existing restore and label remain individual actions. | Snapshots, credentials, vocabulary and custom image bytes remain omitted, declared in every export. |
+| Shared adapter | Same ten formats | Caller supplies the exact reviewed record set and redaction policy. | It does not read storage or implicitly redact arbitrary data. |
+| Notifications | Adapter available | Consumer integration belongs to notification center. | Not verified by history tests. |
+| Appearance and logo images | Existing local snapshot / appearance transfer only | Separate image safety rules apply. | This record adapter does not export image bytes. |
+
+JSON and YAML preserve the versioned envelope. YAML uses the strict JSON subset of YAML 1.2. JSONL begins with a manifest and wraps each complete record. TOML stores each record as a JSON string in records_json. XML stores escaped complete JSON in record-json elements. CSV/TSV use schema_json, omissions_json and record_json columns, so nested fields and types survive instead of being flattened away. An empty table contains one manifest-only row with an empty record_json cell. Markdown and HTML contain escaped complete JSON in a preformatted block. SQL targets SQLite and inserts one complete JSON envelope into a dedicated record_export table inside a transaction; importing into an existing table fails rather than replacing it.
+
+Generated language source, Protobuf and JSON Schema are not supported for these variable history metadata records: they describe executable bindings or a type contract, not a faithful record interchange without an additional schema decision. PDF, workbook and image exports are outside this bounded structured-record adapter. An archive is unnecessary for one self-contained text document. These exclusions do not claim universal export completion.
+
+The adapter rejects cycles, sparse arrays, non-finite numbers, unsupported objects, hidden fields and computed accessors. Markup escapes active syntax and HTML prohibits external resources. SQL quotes apostrophes. Table cells contain JSON syntax rather than raw formula-bearing text. Selection is resolved from the currently visible filtered rows immediately before export, with an unlocked-session check after decryption. No bulk destructive removal is added; the existing confirmed retention prune remains the removal workflow.
+
+Runtime capture remains pending the production matrix. Source checks are not visual evidence.
+
+### Isolated logo conversion
+
+Logo decoding and canvas conversion run in a dedicated module worker. The controller allows one active job, caps execution at ten seconds, and terminates the worker on success, failure, cancellation or panel disposal. Input signatures and declared dimensions are checked before decoding; the worker verifies actual dimensions and decodes the final 128 by 128 PNG again. Network entrypoints are disabled inside the worker. This is a worker boundary, not an operating-system process. Focused checks verify controller admission and termination; actual built worker execution remains pending runtime verification. Original editing recipes now persist, and the current 20 by 20 title mark has a synchronized preview. Separate 64- and 128-pixel views are labelled editing previews, not additional application targets.
+
+### Retained logo source and target preview
+
+The private authoring record retains at most 4 MiB of original static PNG, JPEG or WebP bytes, the accepted contain/cover, focal, crop, safe-area, background and preset recipe, and the normalized PNG output. The complete versioned record is bounded to 8 MiB. Reopening the appearance panel restores those values and can regenerate output without selecting the file again. Storage quota rejection keeps the previous accepted mark; no smaller or lossy original is silently substituted.
+
+The existing normalized output key remains compatible with the title consumer. Both records use compare-before-write and rollback checks. A conflicting concurrent value is never overwritten during recovery. Unverifiable rollback disables further edits until reload and review. Malformed or inconsistent saved authoring bytes remain preserved, with an explicit replacement notice. Older normalized-only records display an original-source-unavailable notice and remain editable from their saved PNG. Reset removes both the original authoring record and normalized output. History and record exports contain neither image payload.
+
+The sole current application target is the decorative 20 by 20 title mark on the titlebar's frame background. Its labelled preview follows effective scheduled logo changes. The 64- and 128-pixel editing previews continue to show the saved base, so an active schedule does not hide what is being edited. Resetting the base while a schedule is active reports that the schedule remains visible. No taskbar or package icon mutation is implied. Model and mounted-fixture checks establish persistence and callback behavior; actual title pixels and the complete visual matrix still require the packaged candidate.
+
+Logo concurrency checks retain the editor’s accepted record pair before asynchronous work. A newer writer prevents stale publication, conversion completion or reset from overwriting it. Both intended records must match before an accepted-history event. Rollback touches only attempted writes still containing this edit’s value; foreign values remain intact and unresolved restoration produces a visible recovery failure.
+
+Display-name edits, Reset name, settings import and a settings-history restoration that changes the name require the protected desktop host to return exactly `true` before local preferences change. Missing, cancelled, rejected or malformed responses preserve the local name and draft. One request runs at a time; unrelated settings updates remain available and pending drafts survive rerendering. Disposal or newer changes to affected local fields prevent a delayed response from overwriting current preferences. Host history and renderer preferences are separate stores; a durable host acceptance followed by local unavailability or conflicting changes requires reopening or reloading to synchronize, rather than a false combined-success claim.
 ## Connected desktop startup surprise
 
 The earlier main baseline provided only the probability helper. The desktop now
@@ -79,4 +139,4 @@ remain separate built-runtime acceptance requirements.
 
 ## Translation inventory verification
 
-History pruning cancellation and concurrent-change errors have Cantonese copy. The source check explicitly distinguishes exact API names, authored default values and the enumerated state keys from prose. Those literals must retain their declared values and punctuation; missing entries, changed literals and untranslated new prose fail. Five focused source checks pass. Rendered localization remains a separate requirement.
+History pruning cancellation and concurrent-change errors have Cantonese copy. The source check explicitly distinguishes exact names from translated API/default/state display labels. Each finite entry must retain its declared literal or established translation and punctuation; missing entries, changed values and untranslated new prose fail. Five focused source checks pass. Rendered localization remains a separate requirement.

@@ -1,3 +1,5 @@
+import {createHistorySelection} from '../src/renderer/features/shell/history-selection.js';
+import {createAccessDocument} from './helpers/local-access-dom.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
@@ -108,7 +110,8 @@ test('archive readiness stays loading until current rows and retention controls 
  const body=source.slice(source.indexOf('async function loadArchive(kind)'),source.indexOf('async function renderArchive(kind)'));
  const elements=new Map();const get=id=>{if(!elements.has(id))elements.set(id,{dataset:{},replaceChildren(){},setAttribute(name,value){this[name]=value;}});return elements.get(id);};
  const requests=[];let finishRender;
- const context={archiveRequests:{history:0,recycle:0},archiveRows:{history:[],recycle:[]},state:{locked:false,preferences:{historyRetentionDays:90}},$:get,api:{history:()=>new Promise(resolve=>requests.push(resolve))},renderArchive:()=>new Promise(resolve=>{finishRender=resolve;}),setArchiveMessage(){},showError(){},t:value=>value};
+ const historyDocument=createAccessDocument(),historySelection=createHistorySelection({host:historyDocument.body});
+ const context={historySelection,historyRetentionDraft:false,archiveRequests:{history:0,recycle:0},archiveRows:{history:[],recycle:[]},state:{locked:false,preferences:{historyRetentionDays:90}},$:get,api:{history:()=>new Promise(resolve=>requests.push(resolve))},renderArchive:()=>new Promise(resolve=>{finishRender=resolve;}),setArchiveMessage(){},showError(){},t:value=>value};
  vm.createContext(context);vm.runInContext(body+';this.load=loadArchive',context);
  const first=context.load('history');assert.equal(get('view-history').dataset.archiveState,'loading');
  const second=context.load('history');requests[0]([]);await first;assert.equal(get('view-history').dataset.archiveState,'loading');

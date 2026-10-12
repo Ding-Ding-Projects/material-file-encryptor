@@ -252,6 +252,22 @@ class Recovery:
             time.sleep(0.2)
 
 
+def configured_base_interpreter(values, launcher, actual_base, actual_launcher):
+    """Bind supported venv metadata to the exact executing launcher and base."""
+    launcher, actual = Path(launcher), Path(actual_base)
+    declared = values.get('executable')
+    if not declared and not (values.get('uv') and values.get('implementation') == 'CPython'):
+        raise Error('Base interpreter metadata is unavailable.')
+    base = Path(declared) if declared else actual
+    if (not base.is_absolute() or not base.is_file() or base != actual
+            or Path(actual_launcher) != launcher or launcher.parent.name.lower() != 'scripts'
+            or launcher.name.lower() not in ('python.exe', 'pythonw.exe')
+            or values.get('include-system-site-packages') != 'false'
+            or Path(values.get('home', '')) != base.parent):
+        raise Error('Supported isolated Python launcher configuration is required.')
+    return base
+
+
 @contextmanager
 def owning_client(client_pid, expected=None, api=None, binding=None, configuration=None):
     """Hold exact self/optional venv launcher/Node identities across proof."""
@@ -263,10 +279,10 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
         node = Path(os.environ['MFE_RENDERER_NODE_EXECUTABLE'])
         cfg = launcher.parent.parent / 'pyvenv.cfg'
         values = dict(line.split(' = ', 1) for line in cfg.read_text().splitlines() if ' = ' in line)
-        base = Path(values['executable'])
-        if launcher.parent.name.lower() != 'scripts' or values.get('include-system-site-packages') != 'false' or Path(values.get('home', '')) != base.parent:
-            raise Error('Supported isolated Python launcher configuration is required.')
-        configuration = {'launcher': str(launcher), 'base': str(base), 'node': str(node), 'files': {str(p): digest(p) for p in [launcher, base, cfg, node]}, 'command': subprocess.list2cmdline([os.environ['MFE_LOWLEVEL_PYTHON'], *sys.argv]), 'selfPid': os.getpid()}
+        base = configured_base_interpreter(values, launcher, sys._base_executable, sys.executable)
+        # CPython's Windows venv redirector replaces argv[0] with a quoted
+        # base executable. The intermediate launcher retains the original.
+        configuration = {'launcher': str(launcher), 'base': str(base), 'node': str(node), 'files': {str(p): digest(p) for p in [launcher, base, cfg, node]}, 'command': subprocess.list2cmdline([os.environ['MFE_LOWLEVEL_PYTHON'], *sys.argv]), 'baseCommand': '"' + str(base) + '" ' + subprocess.list2cmdline(sys.argv), 'selfPid': os.getpid()}
     rows, chain = api.inventory(), []
     current = configuration['selfPid']
     with ExitStack() as stack:
@@ -284,10 +300,23 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
             raise Error('Client is not a direct parent or one supported launcher ancestor.')
         if len(chain) not in (2, 3) or chain[-1][0]['pid'] != client_pid or chain[-1][0]['executablePath'] != configuration['node']:
             raise Error('Actual Node client ancestry differs.')
-        if chain[0][0]['executablePath'] != configuration['base'] or chain[0][1] != configuration['command']:
+        if chain[0][0]['executablePath'] != configuration['base'] or chain[0][1] != configuration['baseCommand']:
             raise Error('Actual Python execution image or command differs.')
         if len(chain) == 3 and (chain[1][0]['executablePath'] != configuration['launcher'] or chain[1][1] != configuration['command']):
-            raise Error('Intermediate Python launcher image or command differs.')
+            error = Error('Intermediate Python launcher image or command differs.')
+            actual_identity, actual_command, _ = chain[1]
+            # Diagnostics concern only the selected direct interpreter ancestor.
+            # Preserve rejection; never search other process command lines.
+            error.launcherDiagnostic = {
+                'expectedImage': configuration['launcher'],
+                'actualIdentity': actual_identity,
+                'imageMatches': actual_identity['executablePath'] == configuration['launcher'],
+                'commandMatches': actual_command == configuration['command'],
+                'expectedCommand': configuration['command'] if len(configuration['command']) <= 4096 else None,
+                'actualCommand': actual_command if actual_identity['executablePath'] == configuration['launcher'] and len(actual_command) <= 4096 else None,
+                'actualCommandRetained': actual_identity['executablePath'] == configuration['launcher'] and len(actual_command) <= 4096,
+            }
+            raise error
         if any(chain[i][0]['creationDate'] < chain[i+1][0]['creationDate'] for i in range(len(chain)-1)):
             raise Error('Client launcher creation ancestry differs.')
         observed = {'clientIdentity': chain[-1][0], 'clientCommand': chain[-1][1], 'routeFiles': configuration['files']}

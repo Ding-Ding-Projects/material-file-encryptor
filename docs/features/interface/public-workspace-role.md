@@ -15,3 +15,11 @@ A cached browser navigation clears local pairing and private wording while retai
 ## Verification
 
 Focused behavioral tests cover rejection before network access, retained companion mediation, real two-key and slider interaction, exact-text refusal, cancellation, owner abort and legacy-tab migration. Server tests retain installed-context API coverage. Source checks do not establish built browser layout, live pairing, native tool acceptance or deployed behavior; those remain separate verification.
+
+## Paired preferences and capability limits
+
+Saved external schedule reads forward the selected source and stable schedule identifier to the installed host. Installed font names are available while paired. Shared mode changes are read every five seconds with an overlapping-request guard; obsolete responses from a disconnected or replaced session cannot update preferences. An unchanged snapshot does not create another history entry.
+
+Home Assistant credential storage and clearing, native font metadata scanning, native image normalization and runtime-port configuration remain desktop-only. The browser does not extend either allowlist. Configure these capabilities in the installed application; local browser image normalization uses its existing worker. Credential values are never fetched back into the browser. The connection view states these limits explicitly.
+
+Settings guidance opens the bundled article and concept in the documentation reader and registers its commands. History pruning requires both authenticated local access and unlocked private history, the two-key confirmation and full slider, and revalidation at the mutation boundary. Losing either authorization cancels pending approval. The frame keeps navigation and open-work tabs stationary while the selected content scrolls. New profiles open documentation only; opening another destination creates an actual work tab.

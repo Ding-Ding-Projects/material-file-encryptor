@@ -6,7 +6,7 @@ globalThis.HTMLElement??=class {};
 const {mountVisitorAccess}=await import('../docs/site/visitor-access.js');
 function memory(){const data=new Map();return {data,get length(){return data.size;},key:i=>[...data.keys()][i]??null,getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k)};}
 const click=(root,text)=>{const button=root.querySelectorAll('button').find(b=>b.textContent===text);assert.ok(button,text);return button.click();};
-const field=(root,label)=>{const wrap=root.querySelectorAll('label').find(node=>node.textContent.startsWith(label));assert.ok(wrap,label);return wrap.querySelector('input');};
+const field=(root,label)=>{const input=root.querySelectorAll('md-outlined-text-field').find(node=>node.getAttribute('aria-label')===label);assert.ok(input,label);for(let node=input;node&&node!==root;node=node.parentElement)assert.notEqual(node.hidden,true,'Field must be reached through its visible workflow');return input;};
 test('real authenticator registration encrypts its secret; support tickets remain session-only and use browser recovery',async()=>{
   const doc=createAccessDocument(),root=doc.createElement('main');doc.body.append(root);const storage=memory();
   const api=mountVisitorAccess(root,{storage,withLock:(_name,run)=>run(),eventTarget:null});
@@ -14,6 +14,7 @@ test('real authenticator registration encrypts its secret; support tickets remai
   try{
     root.querySelectorAll('input')[0].value='synthetic profile fixture';await click(root,'Set up local profile');
     const auth=root.querySelectorAll('fieldset').find(node=>node.querySelector('legend')?.textContent==='Authenticator');
+    const registration=auth.querySelector('fieldset');assert.equal(registration.hidden,true);await click(auth,'Add authenticator');assert.equal(registration.hidden,false);
     const entry={secret:'JBSWY3DPEHPK3PXP',issuer:'Fixture',account:'fixture@example.invalid',algorithm:'SHA1',digits:6,period:30};
     field(auth,'Manual base32 secret').value=entry.secret;field(auth,'Issuer').value=entry.issuer;field(auth,'Account').value=entry.account;field(auth,'Current code').value=await totp(entry);
     await click(auth,'Save authenticator');assert.ok(api.credentialStore.ids('authenticator:').length>=2);assert.ok(auth.textContent.includes(entry.account));assert.ok(![...storage.data.values()].join('').includes(entry.secret));

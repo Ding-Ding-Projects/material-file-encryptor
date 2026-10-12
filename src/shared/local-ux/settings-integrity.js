@@ -3,10 +3,11 @@ import {createSettingsStore,validateSettings} from './store.js';
 /** Desktop settings share one mutation boundary even when a renderer receives
  * an existing store. Credentials remain with the privileged host capability. */
 export function createDesktopSettingsIntegrity({storage,isAuthenticated=()=>false,onError=()=>{},verifyCredential,setCredential,writeSharedMode}={}) {
- let manager=null,historyFlight=Promise.resolve(),verified=false,permit=null;
+ let manager=null,historyFlight=Promise.resolve(),verified=false,permit=null,hostNameHistoryPermit=null;
  const modeKey=value=>JSON.stringify({enabled:value.enabled===true,name:value.name});
  const requiresPermission=(before,next)=>modeKey(before)!==modeKey(next)&&(before.enabled||next.enabled);
  const store=createSettingsStore({storage,onError,history:record=>{
+  if(hostNameHistoryPermit&&record.action===hostNameHistoryPermit){hostNameHistoryPermit=null;return;}
   if(!isAuthenticated()||!manager?.unlocked)return;
   const consumer=manager;
   historyFlight=historyFlight.catch(()=>{}).then(()=>{
@@ -15,6 +16,7 @@ export function createDesktopSettingsIntegrity({storage,isAuthenticated=()=>fals
   }).catch(error=>onError(error.message));
  }});
  const update=store.update.bind(store);
+ const assertCanUpdate=patch=>{const before=store.get(),next=validateSettings({...before,...patch});if(requiresPermission(before.school,next.school)&&!(permit?.before===modeKey(before.school)&&permit?.after===modeKey(next.school)))throw Error('Verify and change the shared mode through its control before importing, resetting or restoring a different protected mode state.');return next;};
  store.update=(patch,action)=>{
   const before=store.get(),next=validateSettings({...before,...patch});
   if(requiresPermission(before.school,next.school)){
@@ -25,7 +27,13 @@ export function createDesktopSettingsIntegrity({storage,isAuthenticated=()=>fals
   if(JSON.stringify(before)===JSON.stringify(next))return before;
   return update(next,action);
  };
- return {store,
+ return {store,assertCanUpdate,
+  applyDisplayNameFromHost(value){
+   if(value===null)return store.get();
+   if(typeof value!=='string'||!value.trim()||value.length>160||/[\x00-\x1f]/.test(value))throw Error('The host returned an invalid display name.');
+   const previous=hostNameHistoryPermit,own=Symbol('trusted display name');hostNameHistoryPermit=own;
+   try{return store.update({displayName:value},own);}finally{hostNameHistoryPermit=previous;}
+  },
   connectHistory(value){manager=value;},flushHistory:()=>historyFlight,
   async verifySharedCredential(password){verified=false;permit=null;const result=await verifyCredential?.(password);verified=result===true;return verified;},
   async setSharedCredential(password){verified=false;permit=null;if(!setCredential)throw Error('Protected mode credential storage is unavailable.');const result=await setCredential(password);if(result===false)throw Error('The mode credential was not stored.');verified=true;return result;},

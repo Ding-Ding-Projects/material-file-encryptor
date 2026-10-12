@@ -22,6 +22,7 @@ function imageFormat(bytes){
  return null;
 }
 async function inspectNative(bytes){const {nativeImage}=await import('electron');const image=nativeImage.createFromBuffer(bytes);return image.isEmpty()?null:image.getSize();}
+export function readRuntimeAccessibility(runtime){try{const enabled=runtime.accessibilitySupportEnabled;return{known:typeof enabled==='boolean',enabled:enabled===true,source:'runtime'};}catch{return{known:false,enabled:false,source:'runtime'};}}
 export function createStartupPhotoService({dataDirectory,toolsDirectory,resolveTool=createForgeToolResolver(toolsDirectory),executeFile=execute,run,inspectImage=inspectNative,random=Math.random}={}){
  const runCommand=run||async function(args,options){const executable=await resolveTool('gh');return(await executeFile(executable,args,{...options,windowsHide:true,timeout:15000,encoding:'buffer'})).stdout;};
  let closed=false,inflight;const controller=new AbortController();

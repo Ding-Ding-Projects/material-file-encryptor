@@ -1,0 +1,20 @@
+export const RECORD_EXPORT_COPY=Object.freeze({
+  "Select all filtered entries": "選取所有篩選後記錄",
+  "Invert filtered selection": "反轉篩選後選取項目",
+  "Clear selection": "清除選取項目",
+  "Export selected history": "匯出已選歷史記錄",
+  "Export format": "匯出格式",
+  "Exported history entries": "已匯出歷史記錄",
+  "Select history entries before exporting.": "請先選取要匯出嘅歷史記錄。",
+  "History export was cancelled.": "歷史記錄匯出已取消。",
+  "Exports contain redacted metadata only. The current filtered list defines the export scope.": "匯出檔只包含已移除敏感資料嘅中繼資料，範圍以目前篩選後清單為準。",
+  "The current filtered list defines the available records.": "可用記錄以目前篩選後清單為準。",
+  "No records selected": "未選取任何記錄",
+  "Exports contain redacted metadata only.": "匯出檔只包含已移除敏感資料嘅中繼資料。",
+  "Select visible records and export JSON.": "選取可見記錄，再匯出 JSON。",
+  "History must remain unlocked and selected records must still exist.": "歷史記錄必須保持解鎖，而已選記錄仍須存在。",
+  "Unlock history and refresh the list.": "解鎖歷史記錄並重新整理清單。",
+  "Review the current filtered list.": "檢查目前篩選後清單。",
+  "Choose records and an export format.": "選擇記錄同匯出格式。",
+  "Export the selected or filtered records.": "匯出已選或篩選後記錄。"
+});

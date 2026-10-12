@@ -9,6 +9,8 @@
     "docs/features/access-local.zh-HK.md",
     "docs/features/access/README.md",
     "docs/features/access/README.zh-HK.md",
+    "docs/features/access/access-host.md",
+    "docs/features/access/access-host.zh-HK.md",
     "docs/features/access/local-access.md",
     "docs/features/access/local-access.zh-HK.md",
     "docs/features/access/visitor-local-access.md",
@@ -57,8 +59,12 @@
     "docs/features/interface/color-picker.zh-HK.md",
     "docs/features/interface/font-metadata.md",
     "docs/features/interface/font-metadata.zh-HK.md",
+    "docs/features/interface/gui-redesign.md",
+    "docs/features/interface/gui-redesign.zh-HK.md",
     "docs/features/interface/local-personalization.md",
     "docs/features/interface/local-personalization.zh-HK.md",
+    "docs/features/interface/local-tools-workspaces.md",
+    "docs/features/interface/local-tools-workspaces.zh-HK.md",
     "docs/features/interface/modern-fields.md",
     "docs/features/interface/modern-fields.zh-HK.md",
     "docs/features/interface/motion-keyframes.md",
@@ -75,8 +81,12 @@
     "docs/features/interface/settings-completeness.zh-HK.md",
     "docs/features/interface/settings-guidance.md",
     "docs/features/interface/settings-guidance.zh-HK.md",
+    "docs/features/interface/startup-photo-host.md",
+    "docs/features/interface/startup-photo-host.zh-HK.md",
     "docs/features/interface/startup-registration.md",
     "docs/features/interface/startup-registration.zh-HK.md",
+    "docs/features/interface/storage-maintenance.md",
+    "docs/features/interface/storage-maintenance.zh-HK.md",
     "docs/features/interface/transition-properties.md",
     "docs/features/interface/transition-properties.zh-HK.md",
     "docs/features/interface/typography-inspector.md",
@@ -131,6 +141,8 @@
     "docs/features/release/preview-verification.zh-HK.md",
     "docs/features/schedules/README.md",
     "docs/features/schedules/README.zh-HK.md",
+    "docs/features/schedules/customization.md",
+    "docs/features/schedules/customization.zh-HK.md",
     "docs/features/schedules/external-sources.md",
     "docs/features/schedules/external-sources.zh-HK.md",
     "docs/features/server-manager/README.md",
@@ -166,7 +178,15 @@
     "docs/features/surface-foundation/updates-panel.md",
     "docs/features/surface-foundation/updates-panel.zh-HK.md",
     "docs/features/surface-foundation/workflow-handoffs.md",
-    "docs/features/surface-foundation/workflow-handoffs.zh-HK.md"
+    "docs/features/surface-foundation/workflow-handoffs.zh-HK.md",
+    "docs/features/workflows/README.md",
+    "docs/features/workflows/README.zh-HK.md",
+    "docs/features/workflows/browser-download-handoff.md",
+    "docs/features/workflows/browser-download-handoff.zh-HK.md",
+    "docs/features/workflows/browser-native-host.md",
+    "docs/features/workflows/browser-native-host.zh-HK.md",
+    "docs/features/workflows/forge-publication.md",
+    "docs/features/workflows/forge-publication.zh-HK.md"
   ],
   "categories": [
     "access",
@@ -182,19 +202,20 @@
     "schedules",
     "server-manager",
     "storage",
-    "surface-foundation"
+    "surface-foundation",
+    "workflows"
   ],
   "wiki": {
     "status": "available",
     "source": "https://github.com/Ding-Ding-Projects/material-file-encryptor/wiki",
-    "sourceCommit": "0375b87c435ef1743d606233f47b0ee89120cd48",
+    "sourceCommit": "c7b2d266a7cb4d34595ae0792f1d69b466177d42",
     "files": [
       "CLOSEOUT_PROMPT.md",
       "Home.md"
     ],
     "previousBoundary": "An earlier attempt returned Repository not found. A subsequent Git CLI read succeeded; this snapshot contains every Markdown page in that fetched revision.",
     "fileSha256": {
-      "Home.md": "a3aabb0969880c2ff4cb392907b497aaf9a64911c9f751747bd5d90eb4a5c6c0",
+      "Home.md": "efa41f5672873e2912348ed3b16bdd7633a08edc9751388eb9462d420051164c",
       "CLOSEOUT_PROMPT.md": "951ce6704e26dd69476b2d36dc1ea5a0fb33c1a1eb3db94d7a005383d510ba78"
     }
   },

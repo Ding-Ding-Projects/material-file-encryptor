@@ -12,7 +12,7 @@ test('appearance adopts constructed rules and removes only its own sheet',()=>{
  class Sheet{replaceSync(text){this.text=text;}}
  document.defaultView={CSSStyleSheet:Sheet};
  const create=document.createElement.bind(document);
- document.createElement=tag=>{assert.notEqual(tag,'style','CSP forbids an inline style element');return create(tag);};
+ document.createElement=tag=>{assert.notEqual(tag,'style','CSP forbids an inline style element');const node=create(tag);if(tag==='mfe-context-menu')node.close=()=>{node.hidden=true;};return node;};
  const previous={addEventListener:globalThis.addEventListener,removeEventListener:globalThis.removeEventListener,CSS:globalThis.CSS};
  globalThis.addEventListener=()=>{};globalThis.removeEventListener=()=>{};globalThis.CSS={escape:value=>value};
  try{

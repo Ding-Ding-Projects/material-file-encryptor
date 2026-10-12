@@ -2,6 +2,8 @@
 
 ## 儲存同磁碟
 
+- [帳戶發布同瀏覽器下载交接](workflows/README.zh-HK.md)
+
 - [加密儲存同離線快取](storage/native-vault.md)
 - [歷史同資源回收筒](storage/history-and-recycle-bin.md)
 - [所選檔案版本同加密活動](storage/file-history-activity.md)
@@ -34,6 +36,6 @@
 - [桌面更新工作區](surface-foundation/updates-panel.md)
 - [介面設計](../../DESIGN.md)
 
-每篇文章分清來源實作、專項檢查、主程序整合同真實執行驗收。功能交付清單將全部 208 個桌面／網站列保留為未驗證，直到完整證據存在。歷史畫面擷取同發行版保留原始來源邊界。
+每篇文章分清來源實作、專項檢查、主程序整合同真實執行驗收。功能交付清單將全部 210 個桌面／網站列保留為未驗證，直到完整證據存在。歷史畫面擷取同發行版保留原始來源邊界。
 
 本應用程式冇引入公開 HTTP API。原生 JSONL 通道同有權限功能橋接都係本機協定，唔係公開網絡 API。本機模型服務使用 Ollama API，狀態模組使用已設定服務。呢啲模組唔適用新 Postman collection。

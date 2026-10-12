@@ -60,6 +60,10 @@ def run(intent_path):
         if intent.get('kind')!='renderer-launch-observation' or intent['workerSha256']!=digest(__file__) or intent['adapterSha256']!=digest(intent['adapterPath']):raise RuntimeError('Launch intent source binding differs.')
         required={str(Path(__file__).with_name(name)) for name in ['renderer-launch-observer.mjs','renderer-launch-observer.py','supplemental-renderer-recovery.py','renderer-process-snapshot.py']}
         if set(intent.get('verifierHashes',{}))!=required or any(digest(p)!=value for p,value in intent['verifierHashes'].items()):raise RuntimeError('Launch intent verifier inventory differs.')
+        interpreter=intent.get('observerInterpreter')
+        if not isinstance(interpreter,dict) or set(interpreter)!={'launcher','base','hashes'} or Path(interpreter['launcher']).name.lower()!='pythonw.exe' or Path(interpreter['base']).name.lower()!='pythonw.exe':raise RuntimeError('GUI observer interpreter binding missing.')
+        if Path(os.environ['MFE_LOWLEVEL_PYTHON'])!=Path(interpreter['launcher']) or Path(sys.executable)!=Path(interpreter['launcher']) or Path(sys._base_executable)!=Path(interpreter['base']):raise RuntimeError('Executing GUI observer interpreter differs.')
+        if any(digest(p)!=value for p,value in interpreter['hashes'].items()):raise RuntimeError('GUI observer interpreter bytes changed.')
         recovery=load('launch_recovery',Path(__file__).with_name('supplemental-renderer-recovery.py'))
         life=load('launch_lifecycle',os.environ['MFE_LOWLEVEL_CLIENT'])
         life._reject_link_components(Path(intent_path));life._reject_link_components(Path(intent['statePath']))
@@ -96,7 +100,7 @@ def run(intent_path):
             journal.write('state-published',rootIdentity=state['process'],stateSha256=digest(intent['statePath']),sidecarSha256=digest(backend.marker))
         journal.terminal(result)
     except BaseException as error:
-        journal.terminal({'ok':False,'client_ok':False,'error':str(error),'exceptionType':type(error).__name__,'processLaunchOutcome':'Unverified; retained phase journal is authoritative.'})
+        journal.terminal({'ok':False,'client_ok':False,'error':str(error),'exceptionType':type(error).__name__,'processLaunchOutcome':'Unverified; retained phase journal is authoritative.',**({'launcherDiagnostic':error.launcherDiagnostic} if hasattr(error,'launcherDiagnostic') else {})})
 
 
 if __name__=='__main__':run(sys.argv[1])

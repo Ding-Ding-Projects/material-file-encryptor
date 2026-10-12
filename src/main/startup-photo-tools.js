@@ -17,4 +17,3 @@ export function createForgeToolResolver(directory){
   }catch{throw new Error('Verified bundled forge tools are unavailable or changed. Rebuild or reinstall the application.');}
  };
 }
-

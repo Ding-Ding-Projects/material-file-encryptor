@@ -20,7 +20,7 @@ test('native probe reports measured resources and preserves unsupported GPU memo
   const unknown=await createNativeHardwareProbe({platform:'linux',system,filesystem})();assert.equal(unknown.freeDiskBytes,null);assert.equal(unknown.gpu,null);
 });
 test('profile snapshot state persists through service restart and revalidates owned paths',async()=>{
-  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'ollama-profiles-'));const options={dataDir:dir,profileOwnedRoots:[dir],verifyExecutable:async p=>p===process.execPath,validateProfile:async p=>p.args.length===1&&p.args[0]==='--version',fetchImpl:async u=>new Response(JSON.stringify(u.endsWith('/api/tags')?{models:[{name:'a:1'}]}:{models:[]}))};
+  const dir=await fs.mkdtemp(path.join(os.tmpdir(),'ollama-profiles-')),executable=await fs.realpath(process.execPath);const options={dataDir:dir,profileOwnedRoots:[dir],verifyExecutable:async p=>p===executable,validateProfile:async p=>p.args.length===1&&p.args[0]==='--version',fetchImpl:async u=>new Response(JSON.stringify(u.endsWith('/api/tags')?{models:[{name:'a:1'}]}:{models:[]}))};
   let service=createOllamaService(options);
   try{
     await service.registerPickedProfile({id:'version-check',name:'Version check',executable:process.execPath,cwd:dir,args:['--version'],requiredFiles:[]});
@@ -47,4 +47,20 @@ test('interrupted launch remains durable across two service restarts and field b
     for(const override of [{profileId:'x'.repeat(65)},{snapshotId:'x'.repeat(129)},{at:'not-a-date'},{unexpected:'value'}])await assert.rejects(manager.importState({...profileState,lastLaunch:{...profileState.lastLaunch,...override}}),/Invalid saved launch/);
     assert.equal(manager.state().lastLaunch,null);
   }finally{await fs.rm(dir,{recursive:true,force:true});}
+});
+
+test('picked executable identity is canonical while a different existing file remains rejected',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'ollama-canonical-profile-'));
+ const executable=await fs.realpath(process.execPath),alias=path.dirname(process.execPath)+path.sep+'.'+path.sep+path.basename(process.execPath),seen=[];
+ const manager=new ProfileManager({ownedRoots:[dir],verifyExecutable:async candidate=>{seen.push(candidate);return candidate===executable;},validateProfile:async()=>true});
+ try{
+  assert.notEqual(alias,executable);
+  const lexicalOnly=new ProfileManager({ownedRoots:[dir],verifyExecutable:async candidate=>candidate===alias,validateProfile:async()=>true});
+  await assert.rejects(lexicalOnly.registerPicked({id:'lexical',name:'Lexical',executable:alias,cwd:dir,args:[]}),/not in the host allowlist/);
+  const selected=await manager.registerPicked({id:'canonical',name:'Canonical',executable:alias,cwd:dir,args:[]});
+  assert.equal(selected.executable,executable);assert.deepEqual(seen,[executable]);
+  const other=path.join(dir,'not-the-allowed-executable');await fs.writeFile(other,'Synthetic unrelated file');
+  await assert.rejects(manager.registerPicked({id:'other',name:'Other',executable:other,cwd:dir,args:[]}),/not in the host allowlist/);
+  assert.equal(manager.profiles.has('other'),false);
+ }finally{await fs.rm(dir,{recursive:true,force:true});}
 });

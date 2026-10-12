@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "sourceBase": "6c59f10652fa00f71bcb40eae6073e73e82c0689",
+  "kind": "design-reference",
+  "runtimeEvidence": false,
+  "surfaces": [
+    {
+      "id": "personalization",
+      "tabs": [
+        "Language and voice",
+        "Appearance",
+        "Schedules",
+        "Attention",
+        "Private local history"
+      ],
+      "primitives": [
+        "md-tabs",
+        "md-primary-tab",
+        "md-outlined-text-field",
+        "md-outlined-select",
+        "md-checkbox",
+        "md-slider",
+        "mfe-date-field",
+        "mfe-file-picker"
+      ],
+      "states": [
+        "default",
+        "saved",
+        "invalid draft",
+        "disabled by mode",
+        "protected history locked",
+        "protected history unlocked"
+      ]
+    },
+    {
+      "id": "appearance",
+      "sections": [
+        "Images and groups",
+        "Selection and masks",
+        "Channels and effects",
+        "Text and decoration presets",
+        "Layer organization",
+        "Font and typography",
+        "Size and spacing",
+        "Edges and elevation",
+        "Background and blending",
+        "Advanced visual properties",
+        "History, presets and transfer"
+      ],
+      "states": [
+        "normal",
+        "hover",
+        "focus",
+        "active",
+        "selected",
+        "disabled",
+        "dragged",
+        "invalid",
+        "loading",
+        "success",
+        "warning",
+        "error"
+      ],
+      "actions": [
+        "Edit appearance",
+        "Lock this element"
+      ],
+      "targetInvariant": "Capture the light DOM owning target before overlay actions; recheck admission before invocation."
+    },
+    {
+      "id": "motion",
+      "states": [
+        "animation track",
+        "transition rule",
+        "finite choice",
+        "custom CSS property",
+        "date schedule",
+        "time schedule",
+        "runtime unavailable",
+        "reduced motion"
+      ]
+    }
+  ],
+  "verification": {
+    "local": "Focused consumer suites and source syntax checks",
+    "runtime": "Pending integrated build capture by parent task",
+    "languages": [
+      "en",
+      "yue",
+      "bilingual"
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "scales": [
+      1,
+      1.25,
+      1.5,
+      2
+    ],
+    "minimumViewport": [
+      320,
+      640
+    ]
+  },
+  "externalIntegration": [
+    "Shell logo display and startup restore",
+    "Access admission callback",
+    "Shared overlay notification routing",
+    "Search opens matching authoring sections"
+  ]
+}

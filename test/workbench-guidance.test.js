@@ -1,5 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+// The logic fixture aliases generic selectors to Material controls. Inspect literal
+// tags here so registered compositions pass while native replacements still fail.
+function assertRegisteredControls(root){
+ const native=root.querySelectorAll('*').filter(node=>['INPUT','BUTTON','SELECT','TEXTAREA'].includes(node.tagName));
+ assert.deepEqual(native.map(node=>node.tagName),[],'Generic controls must not replace registered Material controls');
+}
+
 import {createAccessDocument} from './helpers/local-access-dom.js';
 import {mountSelectionWorkbench,mountStatePreviews} from '../src/renderer/features/personalization/appearance-workbench.js';
 import {WORKBENCH_GUIDANCE,WORKBENCH_GUIDANCE_COPY,workbenchDescriptor} from '../src/renderer/features/personalization/workbench-guidance.js';
@@ -30,7 +37,7 @@ test('authored workbench inventory has distinct bilingual context and exact arti
 test('mounted optional guidance is above original Material controls and performs one awaited mutation',async()=>{
  const {host}=scene();let release,calls=0;const pending=new Promise(resolve=>release=resolve);
  const workbench=mountSelectionWorkbench(host,{onSelection:async()=>{calls++;return pending;},onGuides:()=>true});
- const apply=button(host,'Apply freehand selection'),module=help(workbench,'apply');assert.equal(apply.parentNode.children[apply.parentNode.children.indexOf(apply)-1],module.host);assert.equal(module.host.shadowRoot.children.at(-1).hidden,true);assert.equal(host.querySelectorAll('button').length,0);assert.equal(host.querySelectorAll('input').length,0);
+ const apply=button(host,'Apply freehand selection'),module=help(workbench,'apply');assert.equal(apply.parentNode.children[apply.parentNode.children.indexOf(apply)-1],module.host);assert.equal(module.host.shadowRoot.children.at(-1).hidden,true);assertRegisteredControls(host);
  await triangle(host.querySelector('svg'));const flight=finish(module);await settle();assert.equal(calls,1);assert.doesNotMatch(host.textContent,/Selection applied/);apply.click();await settle();assert.equal(calls,1);release(true);await flight;await settle();assert.match(host.textContent,/Selection applied/);workbench.destroy();
 });
 test('false, missing and rejected consumers never report applied; direct and guided paths retain draft',async()=>{
@@ -61,3 +68,14 @@ test('guidance targets the visible scoped search and clear uses its real query c
 });
 
 test('every authored concept resolves an exact anchor in both complete articles',async()=>{const {readFile}=await import('node:fs/promises');for(const file of ['workbench-guidance.md','workbench-guidance.zh-HK.md']){const text=await readFile(new URL('../docs/features/interface/'+file,import.meta.url),'utf8');for(const row of WORKBENCH_GUIDANCE)assert.ok(text.replaceAll('\r\n','\n').includes('### '+row.key+'\n'),file+': '+row.key);}});
+
+test('literal control assertion accepts registered components and rejects generic replacements',()=>{
+ const {doc,host}=scene();
+ for(const tag of ['md-outlined-text-field','md-checkbox','md-outlined-button','md-outlined-select','mfe-file-picker'])host.append(doc.createElement(tag));
+ assertRegisteredControls(host);
+ for(const tag of ['input','button','select','textarea']){
+  const generic=doc.createElement(tag);host.append(generic);
+  assert.throws(()=>assertRegisteredControls(host),/Generic controls must not replace/);
+  generic.remove();assertRegisteredControls(host);
+ }
+});

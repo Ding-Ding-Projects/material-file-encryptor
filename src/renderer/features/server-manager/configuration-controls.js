@@ -1,3 +1,4 @@
+import { control as materialControl, connectSelectSearch } from '../../../shared/surface/controls.js';
 import {validateDescriptors,validateConfigurationValue} from '../../../features/server-manager/configuration.js';
 
 // The caller supplies localized copy and the real permission/confirmation/write action.
@@ -6,7 +7,7 @@ export function mountConfigurationControls(root,{descriptors,binding,values,onCh
   const mountBinding=Object.freeze(structuredClone(binding));
   const inventory=validateDescriptors(descriptors,mountBinding);
   const document=root.ownerDocument;
-  const lifetime=new AbortController();
+  const lifetime=new AbortController(),disposers=[];
   const container=document.createElement('section');
   container.setAttribute('aria-label',translate('server.configuration'));
   for(const descriptor of inventory) {
@@ -15,12 +16,9 @@ export function mountConfigurationControls(root,{descriptors,binding,values,onCh
     label.textContent=translate(descriptor.helpId+'.label');
     const help=document.createElement('p');
     help.textContent=translate(descriptor.helpId+'.description');
-    const control=document.createElement(descriptor.type==='enum'?'select':'input');
+    const inputType=descriptor.type==='boolean'?'checkbox':['integer','number'].includes(descriptor.type)?'number':'text';const control=materialControl(descriptor.type==='enum'?'select':'input',{type:inputType,label:label.textContent,'aria-label':label.textContent},[],document);
     if(descriptor.type==='enum') {
-      const search=document.createElement('input');search.type='search';search.setAttribute('aria-label',translate(descriptor.helpId+'.search'));
-      for(const choice of descriptor.choices) {const option=document.createElement('option');option.value=choice;option.textContent=translate(descriptor.helpId+'.choice.'+choice);control.append(option);}
-      search.addEventListener('input',()=>{for(const option of control.options)option.hidden=!option.textContent.toLocaleLowerCase().includes(search.value.toLocaleLowerCase());},{signal:lifetime.signal});
-      row.append(search);
+      for(const choice of descriptor.choices) {const option=materialControl('option',{value:choice,text:translate(descriptor.helpId+'.choice.'+choice)},[],document);control.append(option);}
     } else {
       control.type=descriptor.type==='boolean'?'checkbox':['integer','number'].includes(descriptor.type)?'number':'text';
       if(control.type==='number'){control.step=descriptor.type==='integer'?'1':'any';for(const bound of ['min','max'])if(descriptor[bound]!==undefined)control[bound]=String(descriptor[bound]);}
@@ -39,8 +37,8 @@ export function mountConfigurationControls(root,{descriptors,binding,values,onCh
       catch {if(!lifetime.signal.aborted){restoreConfirmed();status.textContent=translate('server.configuration.notApplied');}}
       finally {pending=false;if(!lifetime.signal.aborted)control.disabled=false;}
     },{signal:lifetime.signal});
-    label.append(control);row.append(label,help,status);container.append(row);
+    label.append(control);row.append(label,help,status);container.append(row);if(descriptor.type==='enum')disposers.push(connectSelectSearch(control));
   }
   root.append(container);
-  return {destroy(){lifetime.abort();container.remove();}};
+  return {destroy(){lifetime.abort();disposers.splice(0).forEach(dispose=>dispose());container.remove();}};
 }

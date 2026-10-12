@@ -25,7 +25,7 @@ test('closing during load rejects the result and unsupported actions never read'
 });
 test('production dispatch preserves exit admission and closes the packaged catalogue',async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-documentation-cache-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));await fs.mkdir(path.join(root,'src/shared'),{recursive:true});await fs.writeFile(path.join(root,'src/shared/documentation-catalog.json'),body);
- const service=createFeatureServices({dataDirectory:root,applicationRoot:root,isPackaged:true,safeStorage:{isEncryptionAvailable:()=>true,encryptString:text=>Buffer.from(text),decryptString:value=>value.toString()},dialog:{},getWindow:()=>null,openPath:async()=>{}});
+ const service=createFeatureServices({dataDirectory:root,applicationRoot:root,isPackaged:true,safeStorage:{isEncryptionAvailable:()=>true,encryptString:text=>Buffer.from(text),decryptString:value=>value.toString()},dialog:{},getWindow:()=>null,getMainFrame:()=>null,openPath:async()=>{}});
  try{const catalog=await service.request('documentation','catalog');assert.ok(Object.isFrozen(catalog.documents[0]));assert.strictEqual(await service.request('documentation','catalog'),catalog);service.beginExit();assert.strictEqual(await service.request('documentation','catalog'),catalog);await assert.rejects(service.request('documentation','changelog'),/waiting for active work/);service.endExit();assert.deepEqual(await service.request('documentation','changelog'),JSON.parse(body).changelog);}finally{await service.close();}await assert.rejects(service.request('documentation','catalog'),/closing/);
  const main=await fs.readFile('src/main/main.js','utf8');assert.match(main,/createFeatureServices\(\{isPackaged:app\.isPackaged,/);
 });

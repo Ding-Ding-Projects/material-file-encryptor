@@ -27,6 +27,51 @@ class Binding:
 
 
 class Tests(unittest.TestCase):
+    def test_stdlib_and_uv_configuration_require_actual_base_identity(self):
+        root = self.base
+        launcher = root / 'isolated' / 'Scripts' / 'python.exe'
+        base = root / 'runtime' / 'python.exe'
+        base.parent.mkdir(parents=True); base.write_bytes(b'fixture')
+        values = {'home':str(base.parent),'include-system-site-packages':'false','executable':str(base)}
+        self.assertEqual(recovery.configured_base_interpreter(values,launcher,str(base),str(launcher)),base)
+        uv = {key:value for key,value in values.items() if key != 'executable'}
+        uv.update(implementation='CPython',uv='0.12.23')
+        self.assertEqual(recovery.configured_base_interpreter(uv,launcher,str(base),str(launcher)),base)
+        for invalid in [{**uv,'home':'relative'},{**uv,'implementation':'Other'},{**uv,'include-system-site-packages':'true'},{**uv,'uv':''},{**values,'executable':str(root/'wrong.exe')}]:
+            with self.assertRaises(recovery.Error):
+                recovery.configured_base_interpreter(invalid,launcher,str(base),str(launcher))
+        with self.assertRaises(recovery.Error):
+            recovery.configured_base_interpreter(uv,launcher,str(root/'unrelated.exe'),str(launcher))
+
+    def test_gui_launcher_requires_exact_gui_base(self):
+        root = self.base
+        launcher = root / 'isolated' / 'Scripts' / 'pythonw.exe'
+        base = root / 'runtime' / 'pythonw.exe'
+        base.parent.mkdir(parents=True); base.write_bytes(b'fixture')
+        values = {'home': str(base.parent), 'include-system-site-packages': 'false', 'implementation': 'CPython', 'uv': 'fixture'}
+        self.assertEqual(recovery.configured_base_interpreter(values, launcher, str(base), str(launcher)), base)
+        with self.assertRaises(recovery.Error):
+            recovery.configured_base_interpreter(values, launcher, str(base.with_name('python.exe')), str(launcher))
+
+    def test_declared_console_base_cannot_be_substituted_for_gui_base(self):
+        launcher = self.base / 'isolated/Scripts/pythonw.exe'
+        base = self.base / 'runtime/pythonw.exe'
+        base.parent.mkdir(parents=True); base.write_bytes(b'fixture')
+        values = {'home':str(base.parent),'include-system-site-packages':'false','executable':str(base.with_name('python.exe'))}
+        with self.assertRaises(recovery.Error):
+            recovery.configured_base_interpreter(values,launcher,str(base),str(launcher))
+
+    def test_runtime_launcher_and_missing_base_are_rejected(self):
+        launcher = self.base / 'isolated/Scripts/python.exe'
+        base = self.base / 'runtime/python.exe'
+        base.parent.mkdir(parents=True); base.write_bytes(b'fixture')
+        values = {'home':str(base.parent),'include-system-site-packages':'false','implementation':'CPython','uv':'fixture'}
+        with self.assertRaises(recovery.Error):
+            recovery.configured_base_interpreter(values,launcher,str(base),str(base))
+        base.unlink()
+        with self.assertRaises(recovery.Error):
+            recovery.configured_base_interpreter(values,launcher,str(base),str(launcher))
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
@@ -136,7 +181,7 @@ class Tests(unittest.TestCase):
         node = {**self.root, 'pid': 80, 'parentPid': 1, 'executablePath': 'C:/node.exe', 'creationDate': '2026-10-09T12:00:00.1234560Z'}
         launcher = {**self.root, 'pid': 79, 'parentPid': 80, 'executablePath': 'C:/venv/python.exe', 'creationDate': '2026-10-09T12:00:00.1234561Z'}
         own = {**self.root, 'pid': 77, 'parentPid': 79, 'executablePath': 'C:/base/python.exe'}
-        configuration = {'selfPid':77,'base':own['executablePath'],'launcher':launcher['executablePath'],'node':node['executablePath'],'command':'exact adapter invocation','files':{'fixed':'hash'}}
+        configuration = {'selfPid':77,'base':own['executablePath'],'launcher':launcher['executablePath'],'node':node['executablePath'],'command':'exact adapter invocation','baseCommand':'exact adapter invocation','files':{'fixed':'hash'}}
         observations = {77:own,79:launcher,80:node}
         api = Fake(rows={77:79,79:80,80:1}, observations=observations)
         class Commands:
@@ -151,11 +196,27 @@ class Tests(unittest.TestCase):
         class WrongCommand(Commands):
             def command(self,handle): return 'unrelated command' if handle==79 else super().command(handle)
         with self.assertRaises(recovery.Error), recovery.owning_client(80,client,api=api,binding=WrongCommand(),configuration=configuration): pass
+        with self.assertRaises(recovery.Error) as captured:
+            with recovery.owning_client(80,client,api=api,binding=WrongCommand(),configuration=configuration): pass
+        self.assertEqual(captured.exception.launcherDiagnostic['actualCommand'], 'unrelated command')
+        self.assertTrue(captured.exception.launcherDiagnostic['imageMatches'])
+        self.assertFalse(captured.exception.launcherDiagnostic['commandMatches'])
         changed={**client,'clientIdentity':{**node,'creationDate':'2026-10-09T12:00:00.1234559Z'}}
         with self.assertRaises(recovery.Error), recovery.owning_client(80,changed,api=api,binding=binding,configuration=configuration): pass
         own_direct={**own,'parentPid':80}
         with recovery.owning_client(80,api=Fake(rows={77:80,80:1},observations={77:own_direct,80:node}),binding=binding,configuration=configuration) as (_,chain): self.assertEqual(len(chain),2)
         with self.assertRaises(recovery.Error), recovery.owning_client(999,api=api,binding=binding,configuration=configuration): pass
+        redirected = {**configuration, 'baseCommand':'"C:/base/python.exe" exact arguments'}
+        class RedirectedCommand(Commands):
+            def command(self,handle): return redirected['baseCommand'] if handle==77 else super().command(handle)
+        with recovery.owning_client(80,api=api,binding=RedirectedCommand(),configuration=redirected): pass
+        with self.assertRaises(recovery.Error), recovery.owning_client(80,api=api,binding=binding,configuration=redirected): pass
+        for pid,command in [(77,configuration['command']),(77,redirected['baseCommand']+' extra'),(79,redirected['baseCommand']),(79,configuration['command']+' extra')]:
+            class AlteredCommand(RedirectedCommand):
+                def command(self,handle): return command if handle==pid else super().command(handle)
+            with self.assertRaises(recovery.Error), recovery.owning_client(80,api=api,binding=AlteredCommand(),configuration=redirected): pass
+        missing = {key:value for key,value in redirected.items() if key!='baseCommand'}
+        with self.assertRaises(KeyError), recovery.owning_client(80,api=api,binding=binding,configuration=missing): pass
 
 
 if __name__ == '__main__':

@@ -1,3 +1,5 @@
+import {getContextOverlay,openContextMenu,closeContextMenu,registerContextActions} from '../../../shared/surface/overlay.js';
+import {mountNavigationFrame} from './navigation.js';
 import {registerOwnedCommands} from '../../../shared/surface/control-guidance.js';
 import '../../../shared/surface/material.js';
 import {createSurfaceModel} from '../../../shared/surface/model.js';
@@ -11,18 +13,19 @@ import {captureSurfaceState,restoreSurfaceState} from '../../../shared/surface/t
 import {shouldOpenRegisteredView} from '../../../shared/surface/view-registration.js';
 
 /** Mounts reusable chrome without mutating host content or acquiring host capabilities. */
-export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport,renderText=value=>value,onNotificationAction}={}) {
+export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport,renderText=value=>value,onNotificationAction,onNotification,navigationHost}={}) {
   if(!(host instanceof HTMLElement))throw new TypeError('A host element is required');
   tabs=[...tabs];
-  const model=createSurfaceModel({storage,storageKey:'mfe.surface.tabs.v1',tabs:tabs.map(tab=>({...tab,label:localized(tab.label,'en')}))});
+  const model=createSurfaceModel({storage,storageKey:'mfe.surface.tabs.v1',tabs:tabs.slice(0,1).map(tab=>({...tab,label:localized(tab.label,'en')}))});
   const labels=new Map(tabs.map(tab=>[tab.id,typeof tab.label==='object'?tab.label:{en:tab.label,yue:tab.labelYue??tab.label}]));
   const shell=element('mfe-workspace-shell');const build=element('mfe-build-provenance');
-  const context=element('mfe-context-menu',{hidden:true});const palette=element('mfe-command-palette');palette.storage=storage;
+  const context=getContextOverlay(host.ownerDocument).menu;const palette=element('mfe-command-palette');palette.storage=storage;
   const notifications=element('mfe-notification-center',{hidden:true});
   const toolbar=element('mfe-surface-actions');
   const panels=new Map();
-  const registerPanel=(id,root)=>{if(panels.has(id))return panels.get(id);const panel=mountPanelLayout(root,{id,storage,language:activeLanguage});panels.set(id,panel);return panel;};
+  const registerPanel=(id,root)=>{if(panels.has(id))return panels.get(id);const panel=mountPanelLayout(root,{id,storage,language:activeLanguage,registerContextActions});panels.set(id,panel);return panel;};
   const views=new Map();let activeLanguage=language;let hostCommands=commands;
+  let frame;
   const audio=createNotificationAudio();
   let messageTimer;
   const live=element('mfe-live-notification',{role:'status','aria-live':'polite'});
@@ -30,16 +33,16 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
   if(!customElements.get('mfe-live-notification'))customElements.define('mfe-live-notification',class extends HTMLElement{});
   // Upgrade newly defined elements before accessing their component internals.
   customElements.upgrade(toolbar);
-  const showView=id=>{for(const [key,view]of views){view.root.hidden=key!==id;}onActivate(id);};
+  const showView=id=>{closeContextMenu('navigation',{restoreFocus:false});frame?.setActive(id);for(const [key,view]of views){view.root.hidden=key!==id;}onActivate(id);};
   const configure=()=>{
-    shell.configure({model,language:activeLanguage,labels,onActivate:showView,onContext:options=>context.open(options)});
+    shell.configure({model,language:activeLanguage,labels,onActivate:showView,onContext:openContextMenu});
     build.language=activeLanguage;build.value=provenance;
     palette.language=activeLanguage;palette.render();palette.setCommands([...tabs.map(tab=>({id:`view:${tab.id}`,label:labels.get(tab.id),run:()=>{model.openTab({id:tab.id,label:localized(labels.get(tab.id),'en')});shell.activate(tab.id);}})),...hostCommands]);
     notifications.configure({model,language:activeLanguage,onExport,renderText,onAction:onNotificationAction,onAudio:enabled=>audio.enable(enabled)});
     const sheet=new CSSStyleSheet();sheet.replaceSync(':host{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}');toolbar.shadowRoot.adoptedStyleSheets=[sheet];
     toolbar.shadowRoot.replaceChildren(element('md-outlined-button',{text:localized(text('Commands · Ctrl+Shift+F','指令 · Ctrl+Shift+F'),activeLanguage),onclick:()=>palette.open()}),element('md-outlined-button',{text:localized(text('Notifications','通知'),activeLanguage),onclick:()=>{notifications.hidden=!notifications.hidden;}}));
   };
-  host.insertBefore(shell,before);host.insertBefore(build,before);host.insertBefore(toolbar,before);host.insertBefore(notifications,before);host.append(live);document.body.append(palette,context);configure();
+  host.insertBefore(shell,before);host.append(live);document.body.append(palette);configure();frame=mountNavigationFrame({navigationHost,host,shell,build,toolbar,notifications,labels,language:activeLanguage,onActivate:id=>shell.activate(id),onCommands:()=>palette.open(),onNotifications:()=>{notifications.hidden=!notifications.hidden;}});frame.setActive(model.getState().activeTabId);
   const keydown=event=>{
     if(!(event.ctrlKey||event.metaKey))return;
     if(event.shiftKey&&event.key.toLowerCase()==='f'){event.preventDefault();palette.open();}
@@ -48,16 +51,19 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
     else {const match=hostCommands.find(c=>c.shortcut?.toLowerCase()===[event.ctrlKey?'control':'meta',event.shiftKey?'shift':null,event.key.toLowerCase()].filter(Boolean).join('+'));if(match&&!match.disabled){event.preventDefault();Promise.resolve(match.run()).catch(error=>api.notify({title:'Command failed',message:error.message,level:'error'}));}}
   };
   document.addEventListener('keydown',keydown);
-  const api={model,shell,palette,notifications,
-    notify(input){const id=model.addNotification(input);if(model.getState().notificationAudio)audio.play();notifications.renderEntries();live.textContent=`${renderText(input.title)}: ${renderText(input.message||'')}`;clearTimeout(messageTimer);messageTimer=setTimeout(()=>{live.textContent='';},8000);return id;},
-    updateNotification(id,patch){const changed=model.updateNotification(id,patch);if(changed)notifications.renderEntries();return changed;},
-    setLanguage(value){const next=['en','yue','bilingual'].includes(value)?value:'en';if(next===activeLanguage)return;const roots=[shell,palette,notifications];const states=roots.map(captureSurfaceState);activeLanguage=next;configure();roots.forEach((root,index)=>restoreSurfaceState(root,states[index]));shell.renderTabs();palette.renderResults();notifications.renderEntries();for(const panel of panels.values())panel.setLanguage(next);},
+  const api={model,shell,palette,notifications,context,openContextMenu,closeContextMenu,
+    notify(input){const id=model.addNotification(input);if(model.getState().notificationAudio)audio.play();notifications.renderEntries();live.textContent=`${renderText(input.title)}: ${renderText(input.message||'')}`;clearTimeout(messageTimer);messageTimer=setTimeout(()=>{live.textContent='';},8000);const record=model.getState().notifications.find(row=>row.id===id);onNotification?.(record,{narrate:input.narration!==false});return id;},
+    updateNotification(id,patch){const changed=model.updateNotification(id,patch);if(changed){notifications.renderEntries();onNotification?.(model.getState().notifications.find(row=>row.id===id),{narrate:patch.narration!==false});}return changed;},
+    setLanguage(value){const next=['en','yue','bilingual'].includes(value)?value:'en';if(next===activeLanguage)return;const roots=[shell,palette,notifications];const states=roots.map(captureSurfaceState);activeLanguage=next;configure();frame?.setLanguage(next);roots.forEach((root,index)=>restoreSurfaceState(root,states[index]));shell.renderTabs();palette.renderResults();notifications.renderEntries();for(const panel of panels.values())panel.setLanguage(next);},
     registerPanel,
+    setLogo(value){frame?.setLogo(value);},
+    setOfflineCount(value){frame?.setOfflineCount(value);},
     setProvenance(value){provenance=value;build.value=value;},
     registerCommands(value){return registerOwnedCommands({get:()=>hostCommands,set:value=>{hostCommands=value;},refresh:configure},value);},
-    registerViews(value){const active=model.getState().activeTabId;for(const view of value){if(!view.id||!(view.root instanceof HTMLElement))throw new TypeError('A view id and root are required');views.set(view.id,view);if(view.layout!==false)registerPanel(view.id,view.root);if(!tabs.some(t=>t.id===view.id))tabs.push(view);labels.set(view.id,view.label);if(shouldOpenRegisteredView(model.getState(),view.id))model.openTab({id:view.id,label:localized(view.label,'en')});}model.activateTab(active);configure();showView(model.getState().activeTabId);},
-    destroy(){audio.destroy();for(const panel of panels.values())panel.destroy();panels.clear();clearTimeout(messageTimer);document.removeEventListener('keydown',keydown);for(const node of[shell,build,toolbar,notifications,live,palette,context])node.remove();}
+    registerViews(value){const active=model.getState().activeTabId;for(const view of value){if(!view.id||!(view.root instanceof HTMLElement))throw new TypeError('A view id and root are required');views.set(view.id,view);if(view.layout!==false)registerPanel(view.id,view.root);if(!tabs.some(t=>t.id===view.id))tabs.push(view);labels.set(view.id,view.label);model.registerCanonicalTab(view.id,localized(view.label,'en'));if(shouldOpenRegisteredView(model.getState(),view.id))model.openTab({id:view.id,label:localized(view.label,'en')});}model.activateTab(active);configure();frame?.refreshNavigation();showView(model.getState().activeTabId);},
+    destroy(){frame?.destroy();getContextOverlay(host.ownerDocument).destroy();audio.destroy();for(const panel of panels.values())panel.destroy();panels.clear();clearTimeout(messageTimer);document.removeEventListener('keydown',keydown);for(const node of[shell,build,toolbar,notifications,live,palette,context])node.remove();}
   };
+  context.addEventListener('context-action-error',event=>api.notify({title:localized(text('Action unavailable','操作無法使用'),activeLanguage),message:event.detail.error.message,level:'warning'}));
   palette.addEventListener('command-error',event=>api.notify({title:localized(text('Command failed','指令未能完成'),activeLanguage),message:event.detail.error.message,level:'error'}));
   return api;
 }

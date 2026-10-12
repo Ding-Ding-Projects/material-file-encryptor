@@ -27,6 +27,13 @@
 
 ## Preservation closeout, 2026-10-12
 
+## GUI reconciliation, 2026-10-12
+
+- [x] Reconcile preserved interface source with current main and retain both histories. Source checks only.
+- [x] Parameterize owned context activation for separate Enter and Space observations with bounded key admission.
+- [ ] Independently review the merge and complete frozen production plus the startup/context/persistence acceptance sequence.
+- [ ] Complete remaining visual matrix and physical display-scale evidence; no new tuple is accepted by this reconciliation.
+
 - [x] Stop new implementation and retain the proposed next-phase sequence in HANDOFF.md.
 - [x] Verify accepted source 5f76e81, normal v1.400.1 publication/promotion, downloaded release hashes and delivered package inspection.
 - [x] Verify clean local main branches and retain historical remote branches and private evidence.
@@ -47,6 +54,26 @@
 - [x] Record exact e189 build exit0 and interrupted installer with unavailable terminal proof.
 - [ ] Complete final installer, current interaction and89-state/4272-tuple visual acceptance.
 - [ ] Complete combined JavaScript verification and diagnose four synthetic password-verification failures.
+- [ ] Verify complete archives, safe ignored-evidence preservation and exact cleanup ancestry.
+
+## Active redesign acceptance, 2026-10-11
+
+- [x] Independently verify and publish the native 80 MiB storage unit at main f6990e24 and normal release v1.275.1.
+- [x] Complete exact build.bat /s and build-installer.bat /s at dc498289; verify 963 archive entries and 861 extracted payload files.
+- [x] Independently review the measured registered-button reset and live-announcer source repair; observe focused red/green regressions. Source acceptance only.
+- [x] Verify the held-handle quiet observer native smoke and normal owned closure; retain the original parser rejection separately from the reviewed corrected verdict.
+- [x] Preserve the exact unsuccessful 7192b4c build result, omitted installer phase and normal owned closure. This does not certify production.
+- [x] Independently review context/access fixture source, causal negatives, restoration and merged producer composition. Packaged acceptance remains pending.
+- [x] Complete reviewed quiet production at 375373a through both exact entrypoints, actual exits, package validation and owned closure.
+- [ ] Rebuild and verify the newer context-provider and startup-readiness repairs.
+- [ ] Complete combined JavaScript verification. Current 375373a result: 1326 passed, 23 failed, 24 skipped. A later bounded run had 49 passed and four password-verification failures; it does not replace the combined verdict.
+- [x] Observe genuine startup/Help frame and real composed-target context dismissal by Escape, outside pointer and navigation at 375373a. Diagnostic evidence only.
+- [ ] Verify repaired startup, working appearance/lock actions, persistence, live announcement behavior, full button geometry and all registered controls in a fresh rebuilt runtime.
+- [ ] Complete 89 states across 4272 visual tuples, plus separate physical DPI proof. Zero tuples are accepted.
+- [ ] Complete applicable finite-ledger behavior, including the full interactive server manager and protected complete-reset transaction.
+- [ ] Resolve actual main-runtime cryptographic comparison with exact process ownership evidence.
+- [ ] Real-data migration is deferred by the user while the existing drive remains mounted.
+- [ ] Initial installation and removal remain deferred. Automatically update the existing installation after an accepted release, preserving mounted work and verifying the installed version.
 - [x] Verify the complete 30-checkout source/admin archive and separate 273-file private announcement copy at main97a87c2.
 - [x] Assess exact cleanup ownership and ancestry; retain every candidate because unclassified ignored data, incomplete work or uncertain ownership prevents deletion. No deletions performed.
 - [ ] Classify remaining ignored runtime evidence and verify archive cloud synchronization before a future qualified cleanup.
@@ -56,7 +83,7 @@
 - [x] Implement 80 MiB defaults, durable snapshot packing, resumable queue and generation-aware pause/resume.
 - [x] Verify bounded history batches, authenticated content, concurrent mounted writers, reopen and normal teardown on synthetic data.
 - [ ] Migrate the explicitly requested existing drive after active copying and conflicting ownership end normally.
-- [ ] Complete the separate GUI, documentation, package/release and installed-lifecycle acceptance boundaries recorded in the active plan. Actual installation, installed update and removal remain deferred.
+- [ ] Complete the separate GUI, documentation, package/release and installed-lifecycle acceptance boundaries recorded in the active plan. Initial installation and removal remain deferred. Accepted-release updates of the matching existing installation are authorized at a safe boundary, with actual installed-version verification.
 
 # Final source preservation, 2026-10-11 UTC
 

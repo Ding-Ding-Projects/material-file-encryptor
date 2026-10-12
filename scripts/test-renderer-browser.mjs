@@ -42,7 +42,7 @@ export async function serveRendererFixture(request,response,{sourceRoot=fileURLT
  const parts=pathname.split('/');
  if(parts.some(part=>part==='.'||part==='..')||pathname.includes('\\')||!/^\/[a-zA-Z0-9_./-]*$/.test(pathname)){response.writeHead(404).end();return;}
  const relative=pathname.slice(1);
- const mapped=relative.startsWith('shared/')?relative:`renderer/${relative||'index.html'}`;
+ const mapped=relative.startsWith('shared/')||relative.startsWith('renderer/')?relative:`renderer/${relative||'index.html'}`;
  if(!/\.(?:html|js|mjs|css|json|svg|png|woff2?)$/.test(mapped)){response.writeHead(404).end();return;}
  const filename=path.resolve(sourceRoot,mapped);
  const allowed=path.resolve(sourceRoot,mapped.startsWith('shared/')?'shared':'renderer');
@@ -58,6 +58,13 @@ export function requireClosureProof(result) {
  if(result?.recordedProcessesAbsent!==true||result?.desktopClosed!==true)throw new Error('Renderer closure lacks explicit process and desktop absence proof.');
  return true;
 }
+export function rendererTargetReadiness(targets,expectedUrl,port) {
+ if(!Array.isArray(targets))return 'invalid';
+ if(targets.length===0)return 'pending';
+ if(targets.length!==1||targets[0].type!=='page')return 'invalid';
+ if(targets[0].url==='about:blank'||targets[0].url==='')return 'pending';
+ return targets[0].url===expectedUrl&&targets[0].webSocketDebuggerUrl?.startsWith(`ws://127.0.0.1:${port}/`)?'ready':'invalid';
+}
 export async function verifyConnectedRenderer(browser,{expectedUrl,targetId},prove) {
  const session=await browser.newBrowserCDPSession();
  try {
@@ -67,6 +74,16 @@ export async function verifyConnectedRenderer(browser,{expectedUrl,targetId},pro
  const result=await prove({clientPid:process.pid,targetId});
  if(result?.client_ok!==true||result.clientIdentity?.pid!==process.pid||result.establishedPeerPair?.clientPid!==process.pid||result.exactUrl!==expectedUrl||result.targetId!==targetId)throw new Error('Connected renderer lacks exact client peer ownership proof.');
  return result;
+}
+export async function proveStableRendererTree(prove,{wait=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}) {
+ for(let attempt=1;attempt<=3;attempt++){
+  try{return await prove();}catch(error){
+   const diagnostic=error.lifecycleObservation?.stderr?.trim(),result=error.lifecycleObservation?.result;
+   const transient=result?(result.code==='PROCESS_PROOF_FAILED'&&result.error==='Process ancestry changed during inventory.')||(result.code==='NATIVE_DESCENDANT_MEMBERSHIP_CHANGED'&&result.error==='Native descendant membership changed around renderer target proof.'&&result.evidence?.before?.length>0&&result.evidence?.after?.length>0&&result.evidence?.final?.length>0):diagnostic?.endsWith('renderer_snapshot.SnapshotError: Process ancestry changed during inventory.');
+   if(attempt===3||!transient)throw error;
+   await wait(200*attempt);
+  }
+ }
 }
 export async function createRendererCdpTransport(endpoint,{fetchImpl=fetch,WebSocketImpl=WebSocket}={}) {
  const response=await fetchImpl(`${endpoint}/json/version`,{signal:AbortSignal.timeout(3000),headers:{Connection:'close'}});
@@ -99,6 +116,19 @@ export async function retainClosureAttempt(destination,state,observation) {
  return {statePath:stateBytes?statePath:null,stateSha256:stateBytes?createHash('sha256').update(stateBytes).digest('hex'):null,outcomePath,outcomeSha256:createHash('sha256').update(outcomeBytes).digest('hex')};
 }
 async function freePort(){const server=net.createServer();await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});const port=server.address().port;await new Promise(resolve=>server.close(resolve));return port;}
+
+export async function preparePackagedProfile({runtime,packagedTarget,runRoot}) {
+ if(!runtime.prepareProfile)return null;
+ if(!packagedTarget||packagedTarget.kind!=='extracted-packaged-runtime')throw new Error('Profile preparation requires a validated packaged target.');
+ const profile=path.join(runRoot,'profile');
+ if(await fs.realpath(profile)!==path.resolve(profile))throw new Error('Packaged profile must be canonical.');
+ if((await fs.readdir(profile)).length)throw new Error('Packaged profile must be fresh before fixture preparation.');
+ await packagedTarget.revalidate();
+ const result=await runtime.prepareProfile({profile,runRoot,target:packagedTarget});
+ if(result?.ownedSyntheticFixture!==true||result.sourceCommit!==packagedTarget.sourceCommit)throw new Error('Profile preparation ownership or source binding is invalid.');
+ await packagedTarget.revalidate();
+ return {ownedSyntheticFixture:true,sourceCommit:result.sourceCommit,profilePrepared:true};
+}
 
 export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},packagedTarget,gracefulOnly=false}={}) {
  if(typeof gracefulOnly!=='boolean')throw new Error('Graceful-only closure option must be boolean.');
@@ -190,22 +220,34 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
  try {
   await lifecycleCommand([adapter,'preflight','--require','launch_on_headless_desktop','--require','list_headless_windows','--require','kill_process','--require','close_headless_desktop']);
   if(packagedTarget)await packagedTarget.revalidate();
+  await preparePackagedProfile({runtime,packagedTarget,runRoot});
+  const launchArguments=packagedTarget?['--desktop-check',`--verification-profile=${path.join(runRoot,'profile')}`,`--remote-debugging-port=${port}`,'--remote-debugging-address=127.0.0.1']:[`--user-data-dir=${path.join(runRoot,'profile')}`,`--remote-debugging-port=${port}`,'--remote-debugging-address=127.0.0.1','--no-first-run','--no-default-browser-check','--disable-background-networking','--disable-extensions','--enable-automation',...(path.basename(executable).toLowerCase()==='msedge.exe'?['--edge-skip-compat-layer-relaunch','--disable-component-extensions-with-background-pages']:[]),headlessShell?expectedUrl:`--app=${expectedUrl}`];
+  if(runtime.mainInspectorPort!==undefined){
+   if(!packagedTarget||!Number.isInteger(runtime.mainInspectorPort)||runtime.mainInspectorPort<1024||runtime.mainInspectorPort>65535||runtime.mainInspectorPort===port)throw Error('A distinct packaged-only loopback main inspector port is required');
+   launchArguments.push(`--inspect=127.0.0.1:${runtime.mainInspectorPort}`);
+  }
   launchAttempted=true;
-  const launchArguments=packagedTarget?['--desktop-check',`--verification-profile=${path.join(runRoot,'profile')}`,`--remote-debugging-port=${port}`,'--remote-debugging-address=127.0.0.1']:[`--user-data-dir=${path.join(runRoot,'profile')}`,`--remote-debugging-port=${port}`,'--remote-debugging-address=127.0.0.1','--no-first-run','--no-default-browser-check','--disable-background-networking','--disable-extensions','--enable-automation',headlessShell?expectedUrl:`--app=${expectedUrl}`];
   await lifecycleCommand([adapter,'launch','--state',state],{executable,arguments:launchArguments,runRoot,outputRoot:path.join(runRoot,'output'),cdp:{port,expectedUrl}});
   // Headless shell has no HWND. Its PID/creation-time/executable receipt and
   // exact CDP target prove ownership, not native pixels or keyboard delivery.
-  if(!headlessShell)windowObservation=await lifecycleCommand([adapter,'wait-window','--state',state,'--title-pattern','.*','--class-pattern','^Chrome_WidgetWin_1$','--timeout','10']);
+  if(!headlessShell)windowObservation=await proveStableRendererTree(()=>lifecycleCommand([adapter,'wait-window','--state',state,'--title-pattern','.*','--class-pattern','^Chrome_WidgetWin_1$','--timeout','10']));
   const endpoint=`http://127.0.0.1:${port}`;const deadline=Date.now()+15000;
   let targets;
-  while(Date.now()<deadline){try{targets=await (await (runtime.fetch||fetch)(`${endpoint}/json/list`,{signal:AbortSignal.timeout(1000),headers:{Connection:'close'}})).json();break;}catch{await new Promise(resolve=>setTimeout(resolve,100));}}
+  while(Date.now()<deadline){
+   try{targets=await (await (runtime.fetch||fetch)(`${endpoint}/json/list`,{signal:AbortSignal.timeout(1000),headers:{Connection:'close'}})).json();}
+   catch{await new Promise(resolve=>setTimeout(resolve,100));continue;}
+   const readiness=rendererTargetReadiness(targets,expectedUrl,port);
+   outcomes.push({operation:'target-inventory',result:{readiness,count:Array.isArray(targets)?targets.length:null,types:Array.isArray(targets)?targets.map(target=>target.type):[],exactMatches:Array.isArray(targets)?targets.filter(target=>target.url===expectedUrl).length:0}});
+   if(readiness!=='pending')break;
+   await new Promise(resolve=>setTimeout(resolve,100));
+  }
   if(!Array.isArray(targets)||targets.length!==1||targets[0].type!=='page'||targets[0].url!==expectedUrl||!targets[0].webSocketDebuggerUrl?.startsWith(`ws://127.0.0.1:${port}/`))throw new Error('Renderer fixture CDP isolation proof failed.');
-  if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await lifecycleCommand([adapter,'prove-cdp',state]);
+  if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await proveStableRendererTree(()=>lifecycleCommand([adapter,'prove-cdp',state]));
   const clientBinding=(await lifecycleCommand([adapter,'bind-client',state],{clientPid:process.pid})).clientBinding;
   if(clientBinding?.clientIdentity?.pid!==process.pid)throw new Error('Fresh renderer client ancestry binding is unavailable.');
   cdpTransport=await (runtime.createTransport||createRendererCdpTransport)(endpoint);
   browser=await chromium.connectOverCDP(cdpTransport.transport);
-  if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await verifyConnectedRenderer(browser,{expectedUrl,targetId:targets[0].id},input=>lifecycleCommand([adapter,'prove-cdp',state],{...input,clientBinding}));
+  if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await verifyConnectedRenderer(browser,{expectedUrl,targetId:targets[0].id},input=>proveStableRendererTree(()=>lifecycleCommand([adapter,'prove-cdp',state],{...input,clientBinding})));
   connectionOwned=true;
   const page=browser.contexts()[0].pages()[0];
   if(!page||browser.contexts()[0].pages().length!==1)throw new Error('Renderer fixture page inventory changed.');

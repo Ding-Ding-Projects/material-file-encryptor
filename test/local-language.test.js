@@ -4,11 +4,16 @@ import {readFile} from 'node:fs/promises';
 import {COPY,createTranslator,MESSAGE_STYLES,SETTING_LABELS} from '../src/shared/local-ux/language.js';
 import {DEFAULTS} from '../src/shared/local-ux/store.js';
 
-// Exact API names and literal authored defaults are data, not untranslated sentences.
-// Each exception is explicit, exists in COPY and must preserve its exact value.
+// API/default/state display labels retain their established translations.
+// Exact product names remain literal. Every finite entry must exist and match.
 const literalCopy = new Map([
- ...['HTTPS API','Home Assistant','Web Animations','KeyframeEffect','normal.','none.','linear.','opacity.','element.','replace.','entry.','any.','restart.','true.','document.','target.','block.','auto.','false.'].map(value=>[value,value.endsWith('.')?value.slice(0,-1)+'。':value]),
- ['normal, hover, focus, active, selected, disabled, dragged, invalid, loading, success, warning, error','normal、hover、focus、active、selected、disabled、dragged、invalid、loading、success、warning、error']
+ ['HTTPS API','HTTPS API'],['Home Assistant','Home Assistant'],
+ ['Web Animations','網頁動畫'],['KeyframeEffect','KeyframeEffect 關鍵影格效果'],
+ ['normal.','一般。'],['none.','無。'],['linear.','線性。'],['opacity.','不透明度。'],
+ ['element.','元素。'],['replace.','取代。'],['entry.','進入。'],['any.','任何。'],
+ ['restart.','重新開始。'],['true.','真。'],['document.','文件。'],['target.','目標。'],
+ ['block.','區塊。'],['auto.','自動。'],['false.','假。'],
+ ['normal, hover, focus, active, selected, disabled, dragged, invalid, loading, success, warning, error','一般、滑鼠停留、焦點、啟用中、已選取、已停用、拖曳中、無效、載入中、成功、警告、錯誤']
 ]);
 function validateCopy(copy) {
  for(const [source,expected] of literalCopy){assert.ok(Object.hasOwn(copy,source),source);assert.equal(copy[source],expected,source);}

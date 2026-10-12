@@ -1,3 +1,18 @@
+## GUI and current-main reconciliation, 2026-10-12
+
+This merge retains GUI parent 9d3b0130112d61e60fe33c46af7745c2cd43a347 and main parent 07a9d2869725f8312ac0bc0642e3ccd55e058b34. It changes no native storage implementation, GUI provider or renderer recovery behavior. Separate converter admission 18f98d53ca50de31180b7117661be4c55856db2e remains unintegrated.
+
+Conflict ledger:
+
+- Converter service fixtures retain main's synthetic converter import alias and single early unverified-provider test. Both parents had equivalent checks; no duplicate is retained. The retired permission-only sandbox is byte-identical to main.
+- The encrypted upload callback fixture retains main's minimum logic-only HTMLElement base. No custom-element registration or browser layout is inferred.
+- Public route declarations are joined by route/feature identity, preserving nested surfaces, then refreshed through the accepted helper against the combined catalog. The result has 105 feature families and 208 routes, all unverified with empty browser evidence. Main's 187-route receipt remains historical, not evidence for this expanded catalog.
+- Main's finite translation classification is reconciled with the GUI parent's established API/default/state display translations. Literal product names remain unchanged, and missing entries, altered declared values and untranslated prose still fail. No product translation is removed. English/Cantonese article unions have refreshed normalized UTF-8/LF bindings.
+- Main's exact converter media UTF-8 repair and source-bound publication/production snapshot remain present. Historical handoffs from both parents are retained below and in the continuation file, without rebinding old receipts to this merge.
+
+Focused evidence: 15 converter sandbox/service checks, four personal-vocabulary handler checks, five local-language checks, four translation-inventory checks, four route-refresh checks and two route-contract checks pass, 34 distinct checks total. Refresh check mode reports 105 feature families and 208 routes. Initial merged translation checks exposed stale article hashes and main-only display expectations; the reconciled source resolves both. No broad suite, build, product GUI, capture, installed operation or native behavioral acceptance ran. The GUI state inventory remains 22 declared routes, 67 unavailable providers and zero of 4,272 accepted tuples. Independent source review is next.
+
+## Retained main history at 07a9d286
 # Preservation closeout, 2026-10-12
 
 The user requested preservation and cleanup; account readback showed 8% remaining. New implementation has stopped. See CLOSEOUT_PROMPT.md for exact preserved sources, negative native admission, the unfinished offline provider, frozen GUI lifecycle gaps and continuation. No goal completion or deletion is claimed.
@@ -74,6 +89,31 @@ Next: finish exact installer production in proven isolation, inspect exact packa
 
 ## Historical preservation record
 
+
+## Retained GUI reconciliation history
+
+## Preservation checkpoint after interrupted verification
+
+## GUI candidate reconciliation, 2026-10-12
+
+This candidate merges main 2e61a9f64123f43e317f10e27c687a357dbe3d24 into preserved interface source 6b86cd2c074cc75a8ef9ee204ab75d8aa2a2e653. Both histories remain parents of the merge. It is source reconciliation, not accepted production, installed behavior or visual-matrix completion.
+
+Conflict resolution ledger:
+
+- Host service construction retains protected access, mutation history, browser proposals, reviewed account transport and accessibility state. It also passes the packaged flag to the immutable documentation cache, closes that cache, and supplies the verified bundled CLI directory to startup photo lookup. Duplicate imports and duplicate surprise dispatch/admission entries are removed.
+- Startup lookup retains the verified bundled CLI transport from main and the runtime accessibility export from the interface candidate. The renderer retains notification narration and the newer feature mounts while adopting main's deferred update check, trusted-interaction dismissal, modal exclusion and bounded startup window. Quiet and school changes dismiss the presentation. The registered surprise remains its existing labelled region.
+- Packaging retains browser host and extension resources and main's PDF debug-map exclusion. Main's updater raw-byte/BOM/hash checks, Squirrel index normalization, ASAR block inspection and documentation deployment changes remain intact. Native storage source is identical to main; only the candidate's separate browser-host project differs under native/.
+- English and Cantonese personalization articles retain both additions. The language-pair registry is a source-keyed union with normalized UTF-8/LF bindings. Earlier handoff and roadmap evidence is retained as dated history.
+- Existing startup-select readiness and per-provider context target repairs remain intact. The mounted context fixture accepts an explicit Enter or Space activation and records which key produced its single-editor-render and focus proof. Invalid keys fail before input.
+
+Focused verification: startup photo, startup orchestration and documentation cache 23/23; context targeting 10/10; access select readiness 3/3; context/native fixtures 10/10 after the Space addition; translation inventory, narration and surface registry 15/15; Squirrel normalization 1/1; startup registration 3/3; selected updater byte/hash cases 6/6. Syntax and merge-marker checks are separate. ASAR tests were unavailable in this isolated checkout because @electron/asar is not installed; the inspector and tests are byte-identical to main and are not newly certified here. No build, package production, GUI launch, capture, installer or migration ran in this slice.
+
+Next bounded production route: freeze the reviewed candidate, invoke exact build.bat /s and build-installer.bat /s through the existing owned hidden-desktop producer, retain start/completion source and byte hashes, then open only its admitted extracted package with openGuiAcceptancePackage. Use a fresh synthetic non-M: fixture and exact process/profile ownership. Run startup-select readiness first; createMountedFoundationFixtures provides drive-overflow with contextActivationKey set separately to Enter and Space. Observe select A/right-click B, exactly one target editor, focus, Escape/outside/navigation dismissal, persistence and independent restoration. Disabled, stale, removed and locked negatives require their own observed runs. The default acquirePackagedBaseline tuple list covers only three states and cannot prove the 89-state/4,272-tuple matrix. Persistence and the remaining runtime negatives are not claimed by the fixture unit checks.
+
+Converter admission belongs to a separate review lane. Preserve the mounted drive, existing installation, vaults, historical profiles, rejected receipts and original captures. Initial installation/removal and real-data migration remain deferred. No remote push, main integration, publication or cleanup belongs to this candidate slice.
+
+
+The requested preservation and cleanup pass is in progress. The full product goal is not complete. Product main retains the accepted native 80 MiB implementation; newer interface work is preserved on codex/integration-20261011 at e1891f08bf5463fa93435d179060231ad8d52216 and its original task branches.
 ## Preservation closeout, 2026-10-12
 
 Implementation stopped at the user's closeout request. The next-phase plan is recorded below; its repairs have not begun. Preserve unfinished source on the existing remote branches rather than integrating it during this pass.
@@ -124,6 +164,22 @@ Keep the existing drive mounted. Real-data migration, initial installation and r
 Retain incomplete, active, unmerged, unpushed, ownership-uncertain and load-bearing branches/checkouts. Cleanup requires complete verified source/administrative archives, separate safe preservation of ignored announcement variants and evidence, exact remote proof and ancestry into main. Unknown process ownership is not grounds for termination.
 
 Next after preservation: recover or repeat only the missing source-bound installer phase through the reviewed quiet route after fresh admission; inspect package bytes; run the accepted interaction sequence; complete the combined checks and visual matrix; resolve the four synthetic verification failures and remaining finite features. Do not present archived or pushed unfinished work as delivery.
+
+## Current interface integration checkpoint, 2026-10-11
+
+The interface remains under verification. Main f6990e24 and normal release v1.275.1 retain the separately accepted 80 MiB storage result. Keep the existing mounted drive active and defer real-data migration. Initial installation and removal remain deferred. Safe automatic updates of the matching existing installation are authorized after verified accepted-channel releases, preserving active work and verifying the installed version. Do not open or retain visible terminals.
+
+The exact build.bat /s and build-installer.bat /s both completed with exit zero at 375373aeb32251c5150b7dc4e6021b3a5abbe7d2. The held supervisor also exited zero; the job emptied, recorded owned processes were absent and the hidden desktop closed normally. Explicit Default-desktop observations reported zero terminals before and after. These are point observations. The immutable package receipt has SHA-256 916290014ec1e98e51658810d3c6243cf7d61b5773f8c403f2fb01eda480f6ee. Squirrel archive validation covered 963 entries and 861 matching extracted payload files. This local package is not a new public release or an installed update.
+
+The actual combined JavaScript run at 375373a executed 1373 tests: 1326 passed, 23 failed and 24 skipped. Its command exited 1, held supervisor 2, and owned closure passed. A later bounded four-file run under a canonical tool environment and short owned temporary path executed 53 tests: 49 passed, four failed, zero skipped. Those four converge on password verification; three fail during initial history setup before cancellation/recovery injections. The retained logs cannot distinguish derivation mismatch from a caught exception. Neither focused results nor fixture repairs replace the combined verdict.
+
+Genuine fresh-package diagnostics reached startup, registered controls and the stationary Help frame. A selected/B context targeting was verified through composed ancestry. Escape, outside-pointer and navigation dismissed the real menu. Startup still exposed a deferred Material select getter exception that prevented access mounting and appearance admission. Separately, merged providers passed an inner Shadow DOM node instead of each action provider’s resolved target. Source repairs 79adffeb and 2a2012b8 have independent review and causal regressions, but have not yet been rebuilt or verified together. Four platform fixture corrections at a425c646 also have independent review. The original owned branch tips are preserved remotely.
+
+Zero of the 89-state, 4272-tuple visual matrix is accepted. Current diagnostic screenshots are private evidence, not promoted matrix tuples. Layout-probe/reference comparisons and physical DPI proof remain separate. The earlier dc498289 production evidence and unsuccessful 7192b4c build are preserved under their original source and verdicts.
+
+Next: rebuild the integrated repairs through both exact production entrypoints, then verify actual fresh startup, appearance/lock actions, focus, persisted side effects and independent restoration. Continue the finite feature inventory and diagnose the four password-verification cases without touching real credentials. Main-runtime cryptographic comparison, full server management, protected complete reset, new OAuth enrollment and other finite-ledger gaps remain unfinished. Retain ignored diagnostics, controller versions, profiles and private announcement variants. No deletion qualifies until archive, ownership, preservation, remote and ancestry proof is complete.
+
+Historical records below retain their original scope. Current decisions above supersede earlier deferrals.
 
 # Verified native storage unit, 2026-10-11
 

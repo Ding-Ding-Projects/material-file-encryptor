@@ -56,6 +56,11 @@ class Fake:
     def exited(self, handle):
         return self.stopped
 
+    def exit_record(self, handle):
+        if not self.stopped: raise native.SnapshotError('Not exited')
+        row = self.observations[handle]
+        return {'pid': row['pid'], 'creationDate': row['creationDate'], 'exitCode': 0}
+
     def observe(self, handle, pid, parent, allow_exited=False):
         if handle is None:
             raise native.SnapshotError('Process disappeared')
@@ -66,6 +71,38 @@ class Fake:
 
 
 class SnapshotTests(unittest.TestCase):
+    def test_membership_retry_requires_all_endpoint_and_identity_bookends(self):
+        state = {'process': identity, 'cdp': {'port': 49150, 'expectedUrl': 'http://127.0.0.1:49151/'}}
+        for mode in ('membership', 'shared-identity', 'target', 'owner', 'root'):
+            api = Fake()
+            trees = [[identity, child], [identity], [identity, child]]
+            if mode == 'shared-identity':
+                trees[2] = [identity, {**child, 'creationDate': '2026-10-09T12:00:00.1234570Z'}]
+            counts = {'tree': 0, 'tcp': 0, 'fetch': 0}
+            def tree(root):
+                value = trees[counts['tree']]
+                counts['tree'] += 1
+                return value
+            backend = SimpleNamespace(path='fixture', read=lambda path: ('fixture', state), tree=tree, proof=native.Proof(lifecycle, api))
+            def run(*args, **kwargs):
+                counts['tcp'] += 1
+                owner = 999 if mode == 'owner' and counts['tcp'] > 1 else 77
+                return SimpleNamespace(stdout=f'TCP 127.0.0.1:49150 0.0.0.0:0 LISTENING {owner}')
+            def fetch(endpoint):
+                counts['fetch'] += 1
+                target_id = 'changed' if mode == 'target' and counts['fetch'] > 1 else 'fixture'
+                if mode == 'root' and counts['fetch'] > 1:
+                    api.observations[77] = {**identity, 'creationDate': '2026-10-09T12:00:00.1234570Z'}
+                return json.dumps([{'id': target_id, 'type': 'page', 'url': state['cdp']['expectedUrl'], 'webSocketDebuggerUrl': 'ws://127.0.0.1:49150/devtools/page/' + target_id}]).encode()
+            with self.subTest(mode=mode), self.assertRaises(native.SnapshotError) as caught:
+                native.prove_renderer_target(backend, run=run, fetch=fetch)
+            if mode == 'membership':
+                self.assertIsInstance(caught.exception, native.DescendantMembershipChanged)
+                self.assertEqual(counts, {'tree': 3, 'tcp': 3, 'fetch': 2})
+                self.assertEqual(caught.exception.evidence['final'], trees[2])
+            else:
+                self.assertNotIsInstance(caught.exception, native.DescendantMembershipChanged)
+
     def test_target_fetch_and_connect_races_reject_matching_url(self):
         client = {**identity, 'pid':99, 'parentPid':1, 'executablePath':'C:/owned/client.exe'}
         api = Fake(rows={77:1,99:1},observations={77:identity,99:client})
@@ -127,6 +164,34 @@ class SnapshotTests(unittest.TestCase):
             marker.unlink()
             with self.assertRaises(FileNotFoundError):
                 backend.verify(state)
+
+    def test_exit_proof_needs_no_post_exit_image_but_rejects_reuse(self):
+        api = Fake({}, {77: identity}); api.stopped = True
+        def unavailable(*args, **kwargs): raise native.SnapshotError('Image unavailable')
+        api.observe = unavailable
+        proof = native.Proof(lifecycle, api)
+        self.assertTrue(proof.absent([identity]))
+        for field, value in [('pid', 99), ('creationDate', '2026-10-09T12:00:00.1234569Z')]:
+            api.observations[77] = {**identity, field: value}
+            with self.assertRaises(native.SnapshotError): proof.absent([identity])
+        for code in (-1, True, None, 0x100000000):
+            with self.assertRaises(native.SnapshotError): native.validate_exit_record(identity, {'pid':77,'creationDate':identity['creationDate'],'exitCode':code})
+        self.assertEqual(native.validate_exit_record(identity, {'pid':77,'creationDate':identity['creationDate'],'exitCode':2})['exitCode'],2)
+
+    def test_exit_record_uses_same_handle_for_all_kernel_queries(self):
+        handles=[]
+        class Kernel:
+            def WaitForSingleObject(self,h,t): handles.append(h); return 0
+            def GetProcessId(self,h): handles.append(h); return 77
+            def GetProcessTimes(self,h,c,e,k,u):
+                handles.append(h); c._obj.dwLowDateTime=123456789; c._obj.dwHighDateTime=0; return True
+            def GetExitCodeProcess(self,h,c): handles.append(h); c._obj.value=2; return True
+        api=native.Native.__new__(native.Native); api.k=Kernel()
+        result=api.exit_record(123)
+        self.assertEqual(result,{'pid':77,'creationDate':native.creation_date(123456789),'exitCode':2})
+        self.assertEqual(handles,[123]*5)
+        api.k.GetExitCodeProcess=lambda *args: False
+        with self.assertRaises(native.SnapshotError): api.exit_record(123)
 
     @unittest.skipUnless(os.name == 'nt', 'Requires actual Windows native process and listener APIs')
     def test_fresh_backend_production_launch_and_owned_listener_seams(self):
