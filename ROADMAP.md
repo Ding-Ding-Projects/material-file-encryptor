@@ -558,3 +558,14 @@
 - [ ] Complete exact incorporated root production and actual source-bound interaction before main integration.
 - [ ] Complete real412 button installation/runtime/owned-stop proof after unchanged memory admission permits launch; final prelaunch1478908KiB was held.
 - [ ] Adopt the universal reusable one-click installation rule only after genuine button success.
+
+## Actual Ollama installation and diagnostic checkpoint, 2026-10-12
+
+- [x] Verify actual412 button installation and native-consent cancellation/retry, retaining separate startup failure and graceful closure receipts.
+- [x] Build exact reviewed eaf2685 diagnostic source and execute its high-bit exit/lifetime verifier; official runtime success remains separate.
+- [x] Preserve independently reviewed finite diagnostic incorporation efbd3cd on its remote branch.
+- [x] Complete efbd3cd exact root production with unchanged source and recorded build executions absent.
+- [ ] Complete efbd3cd source-bound runtime and interface verification before main integration.
+- [ ] Identify and repair the actual startup cause, then verify official API health and exact owned Stop.
+- [ ] Verify cooperative mid-extraction cancellation and preservation with an existing valid installation fixture.
+- [ ] Adopt canonical one-click installation requirements only after the complete real runtime route works.
