@@ -10,14 +10,18 @@ import {matrixFor,tupleKey,validateBinding,sha256,admitRow,verifyFiles} from './
 import {inspectSurface} from './gui-acceptance-components.mjs';
 import {resolveLayoutTargets,composedLayoutExpression} from './gui-acceptance-layout.mjs';
 
-import inventoryContract from '../contracts/gui-states.json' with {type:'json'};
+// Parse independently of the shared JSON module cache. Neither caller imports nor
+// assertion diagnostics can mutate this private authority, including nested rows.
+function deepFreeze(value){if(value&&typeof value==='object'){for(const child of Object.values(value))deepFreeze(child);Object.freeze(value);}return value;}
+const inventoryContract=deepFreeze(JSON.parse(await fs.readFile(new URL('../contracts/gui-states.json',import.meta.url),'utf8')));
+const canonicalTuples=deepFreeze(matrixFor(inventoryContract));
 
 // Validate the entire requested run before file creation, resume admission or UI work.
 export function validateAcquisitionRequest({inventory,tuples,mode='full'}={}){
  assert.deepEqual(inventory,inventoryContract,'Complete current state inventory required');
  assert.ok(['full','diagnostic-subset'].includes(mode),'Unknown acquisition mode');
  assert.ok(Array.isArray(tuples)&&tuples.length>0,'Explicit nonempty acquisition tuples required');
- const planned=matrixFor(inventory),known=new Map(planned.map(tuple=>[tupleKey(tuple),tuple])),seen=new Set();
+ const planned=canonicalTuples,known=new Map(planned.map(tuple=>[tupleKey(tuple),tuple])),seen=new Set();
  for(const tuple of tuples){assert.ok(tuple&&typeof tuple==='object','Invalid matrix tuple');const key=tupleKey(tuple);assert.deepEqual(tuple,known.get(key),'Unknown matrix tuple');assert.ok(!seen.has(key),'Duplicate matrix tuple');seen.add(key);}
  if(mode==='full')assert.equal(seen.size,planned.length,'Complete matrix required for full acquisition');
  return {mode,expected:planned.length,requested:tuples.length,complete:seen.size===planned.length,accepted:false};

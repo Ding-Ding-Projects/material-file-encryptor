@@ -99,3 +99,9 @@ Missing callbacks must be implemented through supported native or actionable UI 
 ## Source verification
 
 The acquisition-family source suite passed 79 focused checks. Removing the complete-matrix assertion made the causal regression fail with a missing expected rejection; restoration passed the 18 acquisition/producer checks. These are synthetic source checks. No build, launch, capture, installed workflow or full matrix acceptance occurred.
+
+## Independent inventory authority correction
+
+The original acquisition validator shared Node's mutable JSON module object. Mutation before or after importing the validator could reduce its apparent authority to 88 states and 4,224 tuples while the canonical file stayed unchanged. Two isolated-process regressions failed against source 202c24c before repair. The validator now separately parses its fixed module-relative canonical file, deeply freezes every nested object and array, and derives the tuple plan from that private authority. Caller data is compared with the independent authority. Mutating the shared JSON module, caller copies or assertion diagnostic references cannot reduce the required inventory.
+
+The two corrected import-order regressions and existing acquisition/producer checks pass 20/20. The default provider audit still identifies 22 declared routes and 67 unavailable producers. This repair supplies no runtime or visual acceptance; accepted tuples remain 0/4,272.
