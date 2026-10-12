@@ -5,7 +5,8 @@ module.exports = {
     executableName: 'MaterialFileEncryptor',
     appBundleId: 'uk.dewhui.material-file-encryptor',
     extraResource: [path.resolve('out/native'), path.resolve('out/converter'), path.resolve('out/tools'), path.resolve('.cache/driver'), path.resolve('dependencies.json')],
-    ignore: [/(?:^|[\\/])MaterialFileEncryptor\.ServerLease\.Verifier(?:\.|[\\/]|$)/i,/^\/font-assets(?:\/|$)/,/(?:^|[\\/])(?:\.agent|\.test-output)(?:[\\/]|$)/i, /^\/src\/features\/converter\/native\/(?:bin|obj)(?:\/|$)/i, /^\/coverage(?:\/|$)/, /^\/docs/, /^\/test/, /^\/scripts/, /^\/native/, /^\/out/, /^\/\.git/, /^\/\.cache/, /^\/\.github/, /^\/CLOSEOUT_PROMPT\.md/],
+    // Keep PDF runtime code and notices; upstream debug maps stay in the source installation.
+    ignore: [/^\/node_modules\/pdf-lib\/.*\.map$/,/(?:^|[\\/])MaterialFileEncryptor\.ServerLease\.Verifier(?:\.|[\\/]|$)/i,/^\/font-assets(?:\/|$)/,/(?:^|[\\/])(?:\.agent|\.test-output)(?:[\\/]|$)/i, /^\/src\/features\/converter\/native\/(?:bin|obj)(?:\/|$)/i, /^\/coverage(?:\/|$)/, /^\/docs/, /^\/test/, /^\/scripts/, /^\/native/, /^\/out/, /^\/\.git/, /^\/\.cache/, /^\/\.github/, /^\/CLOSEOUT_PROMPT\.md/],
   },
   hooks: { postPackage: async (_config, result) => {
     const { requirePrivateFreePackage } = await import('./scripts/package-privacy.mjs');

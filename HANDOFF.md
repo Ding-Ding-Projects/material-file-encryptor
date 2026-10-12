@@ -821,3 +821,7 @@ The gallery pipeline now groups the unchanged 14 historical originals by workflo
 ## Delivery-reference refresh
 
 The current review uses parent baseline `785fdf2` with ready revisions `4ca05780`, `455153bd`, `86c5cec`, `6ac06935` and `5f02f6c`. `contracts/feature-delivery.json` retains 208 unverified rows; 88 rows now carry concrete source mappings for 44 requirements on each surface. All 95 distinct referenced files resolve to an available reviewed commit. Ready source is not automatically described as integrated parent behavior, and no build interaction or screenshot is inferred. See [current integration boundaries](docs/features/platform/current-integration.md) before choosing the next verification step.
+
+## Main-baseline PDF packaging candidate
+
+A bounded adaptation of `7ad539a937f5c2828572884cc7ef7111290ba62c` excludes only upstream PDF debug maps while preserving the main-baseline resource list and runtime code. Exact-source root build and extracted PDF verification remain pending. No newer interface, extension, native provisioning or documentation cache is activated by this change.

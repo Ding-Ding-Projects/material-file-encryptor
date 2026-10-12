@@ -485,3 +485,7 @@
 - [ ] Convert remaining specialized property, color, mesh, path, file and state-tab controls through real supported workflows.
 - [ ] Repair the three unsuccessful exact-source ten-scene capture states, then verify the newer typed-field source separately.
 - [ ] Complete installed startup/updater lifecycle after independently accepted corrective v1.259.1 bytes. Repaired observer preparation passes, but fresh memory remains below the unchanged launch floor.
+
+## Main-baseline packaging optimization
+
+- [ ] Verify the bounded PDF debug-map exclusion through the exact root build, retained runtime-file hashes and PDF round-trip checks before main delivery. Source rule preserves existing resources; package-size evidence does not establish application-speed improvement.

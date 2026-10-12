@@ -61,3 +61,7 @@ gh workflow run windows.yml --repo Ding-Ding-Projects/material-file-encryptor --
 省略 `source_commit` 即發佈選定 ref，唔加額外限制。檢出及事件 SHA 仍須一致。提供的 SHA 唔符會以 `PUBLICATION_SOURCE_CHANGED` 失敗。
 
 固定的 Windows runner 執行 `build.bat /s` 同 `build-installer.bat /s`，取得缺少工具，並發佈未簽署 Squirrel setup、完整套件、RELEASES 及建置來源證明。交付標籤用 `v1.<run_number>.<run_attempt>`，係單調遞增數字序列，同記錄的應用程式／套件版本分開；現有標籤及版本永不覆寫。已發佈附件會下載並比較雜湊。說明連結工作流程，記錄 UTC 首個工作開始、發佈完成及所需時間。建置或發佈失敗後，安全輸出仍會保留。
+
+## PDF 除錯對照檔排除
+
+封裝只排除 `node_modules/pdf-lib/` 下面嘅 `.map` 檔案。執行模組同授權文件仍然包括，來源安裝亦保留上游除錯對照檔，所以執行期除錯會少咗呢啲上游來源對照資料。呢次主線基準調整保留現有資源清單。確切根目錄組建、保留檔案雜湊同 PDF 往返檢查仍待完成；候選 `7ad539a937f5c2828572884cc7ef7111290ba62c` 嘅舊證據唔能驗證呢個新來源。套件大小同應用程式速度分開記錄。

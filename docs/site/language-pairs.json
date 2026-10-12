@@ -109,8 +109,8 @@
     {
       "source": "docs/features/desktop/package-integrity.md",
       "translation": "docs/features/desktop/package-integrity.zh-HK.md",
-      "sourceSha256": "c10bbf649df4983f2d5f08587e52ab6d0853186ffb851de2b9d6f4e9617eb1f5",
-      "translationSha256": "2106a4b4e19fe414b86cd42989372587560a359bdd823f2090ac388f83e76d06"
+      "sourceSha256": "481dbb89a5983c9f2e6946fb4c33e1c2fc449f22f70fa33b86bdb54ffbc2fea0",
+      "translationSha256": "9b20419a3b802e3168a521550f6c5dd4f88d5202e65437e1f88dd0b0ba6d93d9"
     },
     {
       "source": "docs/features/desktop/runtime-evidence.md",

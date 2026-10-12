@@ -50,3 +50,7 @@ gh workflow run windows.yml --repo Ding-Ding-Projects/material-file-encryptor --
 Omit `source_commit` to publish the selected ref without an additional constraint. Checkout and event SHA must still agree. A mismatched supplied SHA fails with `PUBLICATION_SOURCE_CHANGED`.
 
 The pinned Windows runner invokes `build.bat /s` and `build-installer.bat /s`, bootstraps missing tools, and publishes the unsigned Squirrel setup, full package, RELEASES and build provenance. Delivery tags use `v1.<run_number>.<run_attempt>`, a monotonically increasing numeric sequence distinct from the recorded application/package version; existing tags and releases are never overwritten. Published assets are downloaded and hash-compared. Notes link the workflow run and record UTC first-job start, publication completion and duration. Safe outputs are retained even after a failed build or publication.
+
+## PDF debug-map exclusion
+
+Packaging excludes only `.map` files below `node_modules/pdf-lib/`. Executable modules and legal notices remain included, and the source installation keeps the upstream debug maps. Runtime debugging therefore loses those upstream source mappings. This main-baseline adaptation preserves the existing resource list. Its exact root build, retained-file hashes and PDF round-trip checks remain pending; earlier candidate evidence at `7ad539a937f5c2828572884cc7ef7111290ba62c` does not certify this new source. Package size is separate from application speed.
