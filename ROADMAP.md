@@ -510,3 +510,10 @@
 - [ ] Compile reviewed diagnostics and diagnose actual stopped startup with fresh identities.
 - [ ] Verify official API health and owned Stop before adopting the reusable procedure.
 - [ ] Verify extraction cancellation, existing valid installation/model contents and full rendered acceptance separately.
+
+## Repaired managed runtime verification
+
+- [x] Verify exact 261f92f root build, deep-path lease checks and native lifetime checks.
+- [x] Verify official 0.40.3 production native component API health and exact owned Stop/Close settlement.
+- [ ] Verify real desktop Start/health/Stop, currently blocked by supported launch native code 4551; no security or identity changes.
+- [ ] Retain separate extraction cancellation, pre-existing content preservation and full visual acceptance gaps.
