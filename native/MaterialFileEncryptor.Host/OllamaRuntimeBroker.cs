@@ -199,9 +199,59 @@ internal sealed class OllamaContainedProcess
         }
         finally {Marshal.FreeHGlobal(buffer);}
     }
+    internal object[] ObserveJobMembersForSynthetic()
+    {
+        const long fileBound=32L*1024*1024,totalBound=64L*1024*1024;
+        long remaining=totalBound;var observations=new List<object>();
+        foreach(uint pid in JobProcessIdsForSynthetic())
+        {
+            // Observation never becomes lifecycle ownership. In particular the
+            // original closed owner is never reopened through a numeric PID.
+            if(pid==ProcessId){observations.Add(new{processId=pid,verified=false,category="original-owner-not-reopened"});continue;}
+            try
+            {
+                using SafeFileHandle observed=OpenProcessForSynthetic(0x0400,false,pid); // Query information only.
+                if(observed.IsInvalid){observations.Add(new{processId=pid,verified=false,category="query-unavailable"});continue;}
+                if(job is null||job.IsClosed||job.IsInvalid||GetProcessId(observed)!=pid||!GetProcessTimes(observed,out ulong creation,out _,out _,out _)||!IsProcessInJob(observed,job,out bool before)||!before)
+                {observations.Add(new{processId=pid,verified=false,category="membership-unverified"});continue;}
+                var image=new StringBuilder(2048);uint length=(uint)image.Capacity;
+                if(!QueryFullProcessImageName(observed,0,image,ref length)||length==0||length>=image.Capacity)
+                {observations.Add(new{processId=pid,verified=false,category="image-unavailable"});continue;}
+                string name=Path.GetFileName(image.ToString());
+                if(name.Length==0||name.Length>255||name.Any(Char.IsControl)||!name.EndsWith(".exe",StringComparison.OrdinalIgnoreCase))
+                {observations.Add(new{processId=pid,verified=false,category="image-name-invalid"});continue;}
+                string digest;
+                using(var file=new FileStream(image.ToString(),FileMode.Open,FileAccess.Read,FileShare.Read,65536,FileOptions.SequentialScan))
+                {
+                    long expected=file.Length;
+                    if(expected<1||expected>fileBound||expected>remaining){observations.Add(new{processId=pid,verified=false,category="file-byte-bound"});continue;}
+                    using var hash=System.Security.Cryptography.IncrementalHash.CreateHash(System.Security.Cryptography.HashAlgorithmName.SHA256);
+                    byte[] buffer=new byte[65536];long bytes=0;
+                    while(bytes<expected)
+                    {
+                        int read=file.Read(buffer,0,checked((int)Math.Min(buffer.Length,expected-bytes)));if(read==0)break;
+                        bytes+=read;remaining-=read;
+                        if(bytes>fileBound||remaining<0)throw new InvalidDataException("Synthetic executable hashing exceeds its byte bound.");
+                        hash.AppendData(buffer,0,read);
+                    }
+                    if(bytes!=expected||file.Length!=expected)throw new InvalidDataException("Synthetic executable bytes changed during observation.");
+                    digest=Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
+                }
+                if(GetProcessId(observed)!=pid||!GetProcessTimes(observed,out ulong afterCreation,out _,out _,out _)||afterCreation!=creation||!IsProcessInJob(observed,job,out bool after)||!after)
+                {observations.Add(new{processId=pid,verified=false,category="identity-race"});continue;}
+                observations.Add(new{processId=pid,creationFileTime=creation,verified=true,category="exact-job-member",executableBasename=name,executableSha256=digest});
+            }
+            catch(Exception error)when(error is IOException or UnauthorizedAccessException or Win32Exception or ArgumentException)
+            {observations.Add(new{processId=pid,verified=false,category="observation-unavailable",hResult=error.HResult});}
+        }
+        return observations.ToArray();
+    }
     [DllImport("kernel32.dll",SetLastError=true)]private static extern bool GetExitCodeProcess(SafeFileHandle process,out uint exitCode);
     [DllImport("kernel32.dll",SetLastError=true)]private static extern uint GetProcessId(SafeFileHandle process);
     [DllImport("kernel32.dll",EntryPoint="QueryInformationJobObject",SetLastError=true)]private static extern bool QueryJobProcessList(SafeFileHandle job,int info,IntPtr buffer,uint length,out uint returned);
+    [DllImport("kernel32.dll",EntryPoint="OpenProcess",SetLastError=true)]private static extern SafeFileHandle OpenProcessForSynthetic(uint access,bool inherit,uint pid);
+    [DllImport("kernel32.dll",SetLastError=true)]private static extern bool IsProcessInJob(SafeFileHandle process,SafeFileHandle job,out bool result);
+    [DllImport("kernel32.dll",EntryPoint="QueryFullProcessImageNameW",CharSet=CharSet.Unicode,SetLastError=true)]private static extern bool QueryFullProcessImageName(SafeFileHandle process,uint flags,StringBuilder name,ref uint length);
 #endif
     private void Start(string executable,string arguments,string directory,IReadOnlyDictionary<string,string>? environment)
     {

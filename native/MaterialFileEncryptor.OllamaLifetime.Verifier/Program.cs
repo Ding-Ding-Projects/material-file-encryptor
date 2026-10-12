@@ -97,7 +97,7 @@ try
         }
         await Task.Delay(25);
     }
-    Console.WriteLine(JsonSerializer.Serialize(new {syntheticHandleReferenceExperiment=true,originalHandleExperiment,original=owner.OriginalIdentityForSynthetic(),jobPidsBefore,jobPidsAfter,accountingBefore,accountingImmediatelyAfter,accountingAtAssertion=owner.ActiveProcesses(),descendantMemberProtected=Prevented(()=>File.WriteAllText(member,"synthetic reference diagnostic mutation")),runtimeLeaseRetained=!lease.Released}));
+    Console.WriteLine(JsonSerializer.Serialize(new {syntheticHandleReferenceExperiment=true,originalHandleExperiment,original=owner.OriginalIdentityForSynthetic(),jobPidsBefore,jobPidsAfter,accountingBefore,accountingImmediatelyAfter,accountingAtAssertion=owner.ActiveProcesses(),memberObservations=owner.ObserveJobMembersForSynthetic(),descendantMemberProtected=Prevented(()=>File.WriteAllText(member,"synthetic reference diagnostic mutation")),runtimeLeaseRetained=!lease.Released}));
     if(!File.Exists(signal)||owner.ActiveProcesses()!=1)
     {
         uint? originalExitCode=null;bool exitCodeAvailable=true;
