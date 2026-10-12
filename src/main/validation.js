@@ -25,7 +25,7 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
     documentation: ['catalog','changelog'], status: ['status'],
     ...(!browser ? {surprise:['resolvePublishedDish']} : {}),
     personalization: [...(!browser?['accessibilityState']:[]),'sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts',...(!browser?['setScheduleCredential','clearScheduleCredential','normalizeImage','fontMetadata','cancelFontMetadata']:[])],
-    ...(!browser ? { 'server-manager': ['snapshot','refreshCatalogue','versions','resolveVersion','prepare','cancel','reviewLicense'] } : {}),
+    ...(!browser ? { 'server-manager': ['snapshot','refreshCatalogue','versions','resolveVersion','prepare','cancel','reviewLicense','capabilities','acceptLicense','start','status','stop'] } : {}),
     ...(!browser ? { access: ['credentialGet','credentialSet','credentialDelete','credentialList','openDataFolder','dataFolder',...ACCESS_HOST_ACTIONS] } : {}),
   };
   const limit=!browser&&feature==='personalization'&&action==='normalizeImage'?Math.ceil(4*1024*1024*4/3)+256:262144;
@@ -41,11 +41,12 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
     const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
     const hash = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
     const schemas = {
-      snapshot: {}, refreshCatalogue: {},
+      snapshot: {}, refreshCatalogue: {}, capabilities: {},
       versions: { catalogueId: hash, cursor: value => value === undefined || typeof value === 'string' && /^\d{1,5}$/.test(value) },
       resolveVersion: { catalogueId: hash, versionId: value => typeof value === 'string' && value.length > 0 && value.length <= 128 && !/[\x00-\x1f\x7f]/.test(value) },
       prepare: { selectionId: uuid }, cancel: { operationId: uuid },
       reviewLicense: { serverId: value => typeof value === 'string' && value.startsWith('server-') && uuid(value.slice(7)) },
+      ...Object.fromEntries(['acceptLicense','start','status','stop'].map(action=>[action,{serverId:value=>typeof value==='string'&&value.startsWith('server-')&&uuid(value.slice(7))}])),
     };
     const schema = schemas[action];
     const prototype = Object.getPrototypeOf(payload);

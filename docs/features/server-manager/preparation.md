@@ -20,7 +20,7 @@ The panel retrieves pages of 100 official version identifiers. **Load more versi
 
 ## Review license
 
-**Review server license** is available only for a successfully prepared owned server. It shows the official Minecraft EULA link and confirms that acceptance is false. Reading or opening the link cannot accept it. There is no acceptance or start IPC action in this unit.
+**Review server license** is available only for a successfully prepared owned server. It shows the official Minecraft EULA link and the current acceptance state. Reading or opening the link cannot accept it. The protected host now supports a separate native confirmation action bound to the exact server version and digest; the existing preparation panel does not yet expose that action. See [protected native supervision](native-supervision.md). Actual startup remains unavailable.
 
 ## Guidance and accessibility
 

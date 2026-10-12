@@ -26,6 +26,7 @@ internal static class Program
         if (args.Contains("--self-test", StringComparer.Ordinal)) return await WindowsSelfTest.RunAsync();
         int exitCode = 0;
         var controller = new VaultController();
+        var servers = new ServerLeaseBroker();
         if (args.Contains("--driver-check", StringComparer.Ordinal))
         {
             var driver = JsonSerializer.SerializeToElement(controller.Status()).GetProperty("driver");
@@ -73,7 +74,9 @@ internal static class Program
                     JsonElement? responseId = id;
                     // Clone before disposing the parsed request. Dispatch registers
                     // admission immediately but never blocks the stdin reader.
-                    Task<object?> pending = controller.DispatchAsync(method, parameters.ValueKind == JsonValueKind.Undefined ? default : parameters.Clone());
+                    Task<object?> pending = method.StartsWith("server.", StringComparison.Ordinal)
+                        ? servers.DispatchAsync(method.Substring(7), parameters.ValueKind == JsonValueKind.Undefined ? default : parameters.Clone())
+                        : controller.DispatchAsync(method, parameters.ValueKind == JsonValueKind.Undefined ? default : parameters.Clone());
                     requests.RemoveAll(task => task.IsCompleted);
                     requests.Add(pending.ContinueWith(task =>
                     {
@@ -87,6 +90,13 @@ internal static class Program
         finally
         {
             await Task.WhenAll(requests);
+            // EOF requests graceful server shutdown. A timeout retains this native
+            // process and its leases rather than orphaning an unprotected child.
+            while (true)
+            {
+                try { await servers.CloseAsync(); break; }
+                catch { Console.Error.WriteLine("Owned server shutdown is unverified; native supervision remains retained."); await Task.Delay(1000); }
+            }
             cancellation.Cancel(); await background;
             // EOF is an orderly parent shutdown. Preserve a busy mount until its
             // application handles close; successful writes are already journaled.
