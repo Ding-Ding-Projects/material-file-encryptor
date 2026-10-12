@@ -5,6 +5,12 @@ import { spawnSync } from 'node:child_process';
 import { promoteDefaultRelease } from '../scripts/release-channel.mjs';
 
 const source = 'a'.repeat(40);
+const scriptsDisabled = diagnostic => /running\s+scripts\s+is\s+disabled/.test(diagnostic);
+
+test('script capability diagnostic tolerates wrapping without accepting other failures',()=>{
+  for(const value of ['running scripts is disabled','running \r\nscripts is disabled','running\tscripts\nis disabled'])assert.equal(scriptsDisabled(value),true);
+  for(const value of ['', 'running scripts is enabled', 'running scripts was disabled', 'PROMOTION_MAIN_ONLY', 'UNEXPECTED_PROVIDER', 'script execution failed'])assert.equal(scriptsDisabled(value),false);
+});
 test('task releases invoke no main or promotion provider', async () => {
   const result = await promoteDefaultRelease({ ref: 'refs/heads/task/example', source,
     readMain: () => assert.fail('unexpected main lookup'), promote: () => assert.fail('unexpected promotion') });
@@ -59,7 +65,7 @@ test('actual PowerShell promotion script parses and rejects task refs before any
     catch { if ($_.Exception.Message -ne 'PROMOTION_MAIN_ONLY') { throw }; 'TASK_REF_REJECTED_BEFORE_PROVIDER' }
   `;
   const result = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', command], { encoding: 'utf8', windowsHide: true, timeout: 30000 });
-  if (/running scripts is disabled/.test(result.stderr)) { t.skip('Host execution policy prevents the actual script dependency; admission execution unverified'); return; }
+  if (scriptsDisabled(result.stderr)) { t.skip('Host execution policy prevents the actual script dependency; admission execution unverified'); return; }
   assert.equal(result.status, 0, result.stderr); assert.match(result.stdout, /TASK_REF_REJECTED_BEFORE_PROVIDER/);
 });
 

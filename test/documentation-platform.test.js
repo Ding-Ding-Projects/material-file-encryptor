@@ -124,7 +124,7 @@ test('repository-aware verifier proves blobs and reports absent Git access hones
   assert.equal(offline.referenceVerification, 'unverified'); assert.equal(offline.checkedReferences, 0);
   const repositoryPath = fileURLToPath(new URL('../', import.meta.url));
   const fixture = structuredClone(manifest); for (const row of fixture.features) for (const field of ['implementation','documentation','localization','tests','evidence','persistence']) row[field] = [];
-  const revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repositoryPath, encoding: 'utf8' }).trim();
+  const revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repositoryPath, encoding: 'utf8', windowsHide: true }).trim();
   fixture.features[0].implementation = ['src/features/documentation/required-features.mjs'];
   fixture.referenceSources = { 'src/features/documentation/required-features.mjs': revision };
   const actual = await verifyFeatureDeliveryReferences(fixture, { repositoryPath });
@@ -138,9 +138,24 @@ test('repository-aware verifier proves blobs and reports absent Git access hones
   const directory = structuredClone(fixture); directory.features[0].implementation = ['src']; directory.referenceSources = { src: revision };
   const notFile = await verifyFeatureDeliveryReferences(directory, { repositoryPath });
   assert.equal(notFile.referenceVerification, 'failed'); assert.match(notFile.errors[0], /not a file/);
-  const noRepository = await mkdtemp(path.join(tmpdir(), 'inventory-no-git-'));
-  try { assert.equal((await verifyFeatureDeliveryReferences(manifest, { repositoryPath: noRepository })).referenceVerification, 'unverified'); }
-  finally { await rm(noRepository, { recursive: true, force: true }); }
+  const parentRepository = await mkdtemp(path.join(tmpdir(), 'inventory-parent-git-'));
+  const noRepository = path.join(parentRepository, 'not-a-repository');
+  try {
+    execFileSync('git', ['init', '--quiet', '--template=', parentRepository], { windowsHide: true, encoding: 'utf8' });
+    await mkdir(noRepository);
+    // An empty child alone discovers its parent, so it is not a no-repository fixture.
+    const inherited = await verifyFeatureDeliveryReferences(fixture, { repositoryPath: noRepository });
+    assert.equal(inherited.referenceVerification, 'failed');
+    assert.equal(inherited.errors.length, 1);
+    // A local discovery boundary is deterministic even when the temp directory
+    // itself lives inside another checkout. No process-wide Git settings change.
+    await writeFile(path.join(noRepository, '.git'), 'gitdir: ./absent-owned-metadata\n');
+    const unavailable = await verifyFeatureDeliveryReferences(manifest, { repositoryPath: noRepository });
+    assert.equal(unavailable.referenceVerification, 'unverified');
+    assert.equal(unavailable.checkedReferences, 0);
+    assert.deepEqual(unavailable.errors, []);
+    assert.match(unavailable.reason, /Git repository access is unavailable/);
+  } finally { await rm(parentRepository, { recursive: true, force: true }); }
 });
 test('status without client is explicit and configured snapshots cannot expose secrets', async () => {
   const missing = await createApplicationStatus({});
