@@ -1,3 +1,4 @@
+#nullable enable
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -8,6 +9,7 @@ internal sealed class ServerRuntimeProvisioner
 {
     internal sealed record Member(string Path, long Bytes, string Sha256);
     internal sealed record Inventory(string Root, string Executable, string JavaHash, int Major, string ManifestHash);
+    internal sealed record RetainedInventory(Inventory Inventory,ServerFileLease Lease);
     private readonly JsonDocument manifest;
     private readonly string manifestHash;
     private readonly Dictionary<string, Member> files;
@@ -74,16 +76,21 @@ internal sealed class ServerRuntimeProvisioner
     }
     public Inventory Verify(string root,int major)
     {
+        var retained=VerifyAndRetain(root,major);try{return retained.Inventory;}finally{retained.Lease.Release();}
+    }
+    internal RetainedInventory VerifyAndRetain(string root,int major)
+    {
         if(!Supports(major))throw new InvalidOperationException("Unsupported runtime major or architecture.");DirectoryProof(root);
         var lease=ServerFileLease.AcquireRuntimeInventory(root,files.ToDictionary(value=>value.Key,value=>value.Value.Sha256,StringComparer.Ordinal));
         try
         {
+        foreach(string directory in directories)lease.HoldDirectory(Path.Combine(root,directory));
         var actualFiles=new HashSet<string>(StringComparer.Ordinal);var actualDirs=new HashSet<string>(StringComparer.Ordinal);var pending=new Stack<string>();pending.Push(root);
         while(pending.Count!=0){string directory=pending.Pop();DirectoryProof(directory);foreach(string item in Directory.EnumerateFileSystemEntries(directory)){var attributes=File.GetAttributes(item);if((attributes&FileAttributes.ReparsePoint)!=0)throw new InvalidDataException("Linked runtime content is forbidden.");string relative=Path.GetRelativePath(root,item).Replace('\\','/');if((attributes&FileAttributes.Directory)!=0){if(!directories.Contains(relative)||!actualDirs.Add(relative))throw new InvalidDataException();pending.Push(item);}else{if(!files.TryGetValue(relative,out var member)||!actualFiles.Add(relative)||Digest(item,member.Bytes)!=member.Sha256)throw new InvalidDataException("Runtime tree differs from pinned inventory.");}}}
         if(actualFiles.Count!=files.Count||actualDirs.Count!=directories.Count)throw new InvalidDataException("Runtime tree is incomplete.");
         string release=File.ReadAllText(Path.Combine(root,"release"));if(!Regex.IsMatch(release,"(?m)^JAVA_VERSION=\"21[.\"+_-]"))throw new InvalidDataException("Java major differs.");
-        return new Inventory(root,Path.Combine(root,"bin","java.exe"),files["bin/java.exe"].Sha256,major,manifestHash);
+        return new RetainedInventory(new Inventory(root,Path.Combine(root,"bin","java.exe"),files["bin/java.exe"].Sha256,major,manifestHash),lease);
         }
-        finally { lease.Release(); }
+        catch { lease.Release();throw; }
     }
 }

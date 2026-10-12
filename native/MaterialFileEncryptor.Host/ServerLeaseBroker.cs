@@ -22,7 +22,7 @@ internal sealed class ServerLeaseBroker
         public required string Id, Root, Version, JarHash;
         public int Major;
         public Process? Child;
-        public ServerFileLease? Lease;
+        public ServerExecutionLease? Lease;
         public long CreationTicks;
         public string State = "prepared";
         public string? RuntimePath;
@@ -60,10 +60,9 @@ internal sealed class ServerLeaseBroker
     }
     private static object View(Entry entry)
     {
-        if (entry.Child is not null && entry.Child.HasExited)
+        if (entry.Lease?.ReleaseAfterExactExit()==true)
         {
-            entry.State = "stopped"; entry.Lease?.Release(); entry.Lease = null;
-            entry.Child.Dispose(); entry.Child = null;
+            entry.State = "stopped"; entry.Lease = null;entry.Child = null;
         }
         return new { id = entry.Id, status = entry.State, readiness = "not-verified", process = entry.Child is null ? null : new { pid = entry.Child.Id, creationTime = entry.CreationTicks.ToString() }, network = entry.Port == 0 ? null : new { host = "127.0.0.1", port = entry.Port } };
     }
@@ -126,18 +125,17 @@ internal sealed class ServerLeaseBroker
             if (!ConfigurationAdmitted(owned)) throw new InvalidOperationException("Exact-version generated network configuration proof is unavailable.");
             // This path becomes reachable only after a separately reviewed configuration
             // admission implementation is provided, never by a renderer boolean.
-            owned.Lease = ServerFileLease.Acquire(owned.Root, owned.JarHash, runtime.Root, runtime.Executable, runtime.Hash);
+            owned.Lease = ServerExecutionLease.Acquire(runtimes,registered.Root,owned.Major,owned.Root,owned.JarHash);
             try
             {
                 var start = new ProcessStartInfo(runtime.Executable) { WorkingDirectory = Path.Combine(owned.Root, "server"), UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true };
                 foreach (string argument in new[] { "-Xmx512M", "-jar", Path.Combine(owned.Root, "server", "server.jar"), "nogui" }) start.ArgumentList.Add(argument);
-                var child = new Process { StartInfo = start };
-                if (!child.Start()) throw new InvalidOperationException("Owned server did not start.");
-                owned.Child = child; owned.RuntimePath = runtime.Executable; owned.CreationTicks = child.StartTime.ToUniversalTime().Ticks; owned.State = "running";
+                var child = owned.Lease.Start(start);
+                owned.Child = child; owned.RuntimePath = runtime.Executable; owned.CreationTicks = owned.Lease.CreationTicks; owned.State = "running";
                 _ = Drain(child.StandardOutput); _ = Drain(child.StandardError);
                 return View(owned);
             }
-            catch { if (owned.Child is null) { owned.Lease.Release(); owned.Lease = null; } else owned.State = "ownership-unverified"; throw; }
+            catch { owned.Child=owned.Lease.Child;if(owned.Lease.Released)owned.Lease=null;else if(owned.Child is null){try{owned.Lease.ReleaseBeforeSpawn();owned.Lease=null;}catch{owned.State="ownership-unverified";}}else owned.State="ownership-unverified";throw; }
         }
         finally { admission.Release();if(runtimeOperationId is not null)runtimeOperations.TryRemove(runtimeOperationId,out _);runtimeController?.Dispose(); }
     }
@@ -146,7 +144,7 @@ internal sealed class ServerLeaseBroker
     {
         View(entry); if (entry.Child is null) return;
         if (entry.State is not ("running" or "stopping" or "stop-timeout") || entry.Child.StartTime.ToUniversalTime().Ticks != entry.CreationTicks || !String.Equals(entry.Child.MainModule?.FileName, entry.RuntimePath, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Exact owned running process identity is required for stop.");
-        entry.Lease?.AssertHeld(); entry.State = "stopping";
+        entry.Lease?.AssertCanStop(); entry.State = "stopping";
         if (!entry.StopDelivered)
         {
             await entry.Child.StandardInput.WriteLineAsync("stop"); await entry.Child.StandardInput.FlushAsync(); entry.StopDelivered = true;
@@ -155,5 +153,9 @@ internal sealed class ServerLeaseBroker
         try { await entry.Child.WaitForExitAsync(timeout.Token); View(entry); }
         catch (OperationCanceledException) { entry.State = "stop-timeout"; throw new InvalidOperationException("Owned server graceful stop timed out; native leases are retained and no force termination was attempted."); }
     }
-    public async Task CloseAsync() { if (root is not null) await DispatchAsync("close", JsonSerializer.SerializeToElement(new { })); }
+    public async Task CloseAsync()
+    {
+        if(root is null)return;var result=await DispatchAsync("close",JsonSerializer.SerializeToElement(new { }));
+        if(!JsonSerializer.SerializeToElement(result).GetProperty("verified").GetBoolean())throw new InvalidOperationException("Native execution ownership remains retained and shutdown is unverified.");
+    }
 }

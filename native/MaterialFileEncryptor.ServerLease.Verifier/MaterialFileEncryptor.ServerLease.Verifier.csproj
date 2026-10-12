@@ -1,4 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0-windows</TargetFramework><EnableWindowsTargeting>true</EnableWindowsTargeting><ImplicitUsings>enable</ImplicitUsings><Nullable>disable</Nullable><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup>
-  <ItemGroup><Compile Include="../MaterialFileEncryptor.Host/ServerFileLease.cs" Link="ServerFileLease.cs" /></ItemGroup>
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0-windows</TargetFramework><EnableWindowsTargeting>true</EnableWindowsTargeting><ImplicitUsings>enable</ImplicitUsings><Nullable>disable</Nullable><TreatWarningsAsErrors>true</TreatWarningsAsErrors><DefineConstants>$(DefineConstants);SERVER_LEASE_VERIFIER</DefineConstants></PropertyGroup>
+  <ItemGroup><Compile Include="../MaterialFileEncryptor.Host/ServerFileLease.cs" Link="ServerFileLease.cs" /><Compile Include="../MaterialFileEncryptor.Host/ServerExecutionLease.cs" Link="ServerExecutionLease.cs" /><Compile Include="../MaterialFileEncryptor.Host/ServerRuntimeProvisioner.cs" Link="ServerRuntimeProvisioner.cs" /><EmbeddedResource Include="../../src/features/server-manager/runtime-provenance.json" LogicalName="MaterialFileEncryptor.ServerRuntimeManifest" /></ItemGroup>
 </Project>
