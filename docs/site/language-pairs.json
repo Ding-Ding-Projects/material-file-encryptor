@@ -427,8 +427,8 @@
     {
       "source": "docs/features/server-manager/README.md",
       "translation": "docs/features/server-manager/README.zh-HK.md",
-      "sourceSha256": "bf0890a10579a8099db84662b9a9b6440b34a6489a9a657db5cbe27ab4adf947",
-      "translationSha256": "c889ddf9536ee28aff383fae374e45d3e31b0cc21ea7cd5f17c45500bb19f809"
+      "sourceSha256": "8a8886608c3c9e8be398f6cb17bf3f26b745c090fddc41ddfc1884a7f902704c",
+      "translationSha256": "793a92c8d9f7d73fb3878fbce02888351e056a0ece6319759c1524354ded8c12"
     },
     {
       "source": "docs/features/server-manager/foundation.md",
@@ -439,14 +439,20 @@
     {
       "source": "docs/features/server-manager/native-file-lease.md",
       "translation": "docs/features/server-manager/native-file-lease.zh-HK.md",
-      "sourceSha256": "34e1a9ec31562a0d2ed57eee0194c4adc9e93009584a5635c492a580ace97422",
-      "translationSha256": "816202aeddea0944fdc390e9240b5ea3d0fe8ae2753a5edaa0db21b465f6aaaa"
+      "sourceSha256": "af8433e559cc0af422d99adae349d1c71e70badcc9342c213a77a57a526a5a63",
+      "translationSha256": "886c3cdd8dc72c1f5c9167e7f2ee3205475c845ee2f36fef7a4bc8eddda7bc37"
+    },
+    {
+      "source": "docs/features/server-manager/native-supervision.md",
+      "translation": "docs/features/server-manager/native-supervision.zh-HK.md",
+      "sourceSha256": "e34378ff94297a00927a64e2d43fa3a1e79bf8245f98969fc7cee01d5a29a761",
+      "translationSha256": "d836db465e80d8d1cfd75832542b7917b4f9f93ae1c168a159199b07593c4cfc"
     },
     {
       "source": "docs/features/server-manager/preparation.md",
       "translation": "docs/features/server-manager/preparation.zh-HK.md",
-      "sourceSha256": "40bdf1ca49b622dc80b6a54b759c20d72f3273890911a9e521ff480d9d079554",
-      "translationSha256": "fabdeedfa8c617f8d9a05105b0ac392378eb88675a79d75308811a6b8c0f5e02"
+      "sourceSha256": "52f112f9d82d74c0fb47e17cd2c9af0a79b48b6d1e92b407d9b5cbd5d6be9d71",
+      "translationSha256": "48c02e164823c5d1c60817f93054211e356d77e0e79022172ff2b7bc13e59386"
     },
     {
       "source": "docs/features/storage/README.md",

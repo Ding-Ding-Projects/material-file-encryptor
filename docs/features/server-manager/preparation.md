@@ -28,7 +28,7 @@ Every preparation action has distinct optional guidance above its target. The or
 
 ## Security and remaining targets
 
-Desktop IPC validates action-specific bounded identifiers and rejects unknown keys. The host resolves official metadata, owned paths and hashes. No launch provider is passed to the local adapter. Native process supervision, compatible runtime admission, version-bound loopback configuration, resource limits and native lease IPC are not integrated. A lease primitive alone does not establish safe startup. Local Docker, SSH process and SSH Docker management are not implemented. All four targets remain unavailable.
+Desktop IPC validates action-specific bounded identifiers and rejects unknown keys. The host resolves official metadata, owned paths and hashes. No launch provider is passed to the preparation adapter. Protected native lifecycle composition is implemented, but compatible runtime admission, exact-version generated network configuration proof and actual lease IPC acceptance remain unavailable. A lease primitive or composition alone does not establish safe startup. Local Docker, SSH process and SSH Docker management are not implemented. All four targets remain unavailable.
 
 ## Verification
 
