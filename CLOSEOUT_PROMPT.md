@@ -1,6 +1,18 @@
 # Current continuation handoff, 2026-10-12 08:00 UTC
 
-This current section supersedes the historical snapshot below. The full goal remains active and incomplete. The current-session stopping boundary is 8 percent remaining; the latest verified allowance was 48 percent remaining.
+This current section supersedes the historical snapshot below. The full goal remains active and incomplete. The current-session stopping boundary is 8 percent remaining; the latest verified allowance was 43 percent remaining.
+
+## Latest checkpoint, 08:29 UTC
+
+Main is now remotely verified at 7e61bf4440f4a614909cca461df577ae3bd79aa1. The earlier 4c2a654 workflow 38221273508 built and packaged but failed publication at PUBLIC_CATALOG_IMAGE_REQUIRED, with no exact-source release. The cause was nested JSON-array handling in Windows PowerShell. The minimal two-line repair preserves all photo provenance checks, passed nine regressions including mixed and paginated release lists, and resolved the actual original catalog reference through a function-only metadata check. New main release run 38223052600 remains in progress; do not claim its publication yet.
+
+The actual-main clear-control candidate 07bf61005fff3543b3ac9024b8ecc16079d719a8 is remotely preserved, independently reviewed and passed its exact clean root build. Fresh GUI admission passed, but actual CreateProcessW returned Application Control error 4551 before a target PID, interaction or screenshot. No alternate path/copy, security change or retry occurred. Separate read-only observations prove the exact hidden desktop and recorded processes absent; the original helper's pending/closure failure remains unchanged. Actual GUI acceptance needs an external authorized state change for the exact executable. Evidence remains under the owning tree's out/main-control-capture-07bf-20261012. Its executable hash is 3f09578b0cd28e71561e3863a62d6e64169268bbb16040145dcae231d71ca064.
+
+Documentation candidate 9e325618735a08f73fd8f80517a491aad5d9737d incorporates main7e61 and passed its exact root build. Its real out/site provenance is source9e3256, built 2026-10-12T08:22:27.400Z, sourceDirty:true from the separately documented generated-file EOL observation. It is not the older staging output. Exact documentation input hashes are stable; preserve the original provenance. The branch's last remote proof was 08c3808272aec4e72c09a919b660dccd8a1e0870, so preserve9e promptly. Independent documentation-only hidden-browser verification is scheduled; it does not substitute for blocked native GUI acceptance.
+
+Ollama extractor source daec62711b26f7682e927a4c79108d085003b2fa is remotely preserved. Nonexecuting official extraction verified all 82 files and 1,941,752,691 expanded bytes. A production Authenticode inspection initially returned false because its child PowerShell inherited an incompatible module path; native inspection shows a valid signature matching the reviewed publisher. A narrow trusted-module-path repair and ten host checks are prepared, with review pending. The earlier false result remains historical. No actual installation or runtime execution has passed.
+
+Managed runtime launch still needs retained native file/directory and process-tree ownership. The bounded native child lane reuses only the exact 20-line ServerFileLease additions from accepted source f2f20c077cccdbb46c572b84df8cc8fca11f89ca, with new Ollama-specific fixed-manifest admission and descendant job lifetime. It must not import unrelated recovery ancestry or enable Minecraft configuration admission. Parent retains JavaScript glue; native source and synthetic proof are in progress. The canonical one-click procedure update remains conditional on actual installation and runtime verification.
 
 ## Current durable delivery
 
