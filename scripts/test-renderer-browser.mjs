@@ -8,6 +8,7 @@ import {spawn,execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {fileURLToPath} from 'node:url';
 import {observeRendererLaunch} from './renderer-launch-observer.mjs';
+import {resolveNativeExecutable} from './renderer-native-path.mjs';
 
 export function command(executable,args,input,env,onOutcome,{timeoutMs}={}) {
  return new Promise((resolve,reject)=>{
@@ -146,7 +147,9 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
  const cli=process.env.MFE_LOWLEVEL_CLI||path.join(documents,'GitHub','lowlevel-computer-use-mcp','.venv','Scripts','lowlevel-computer-use-cheap.exe');
  const python=process.env.MFE_LOWLEVEL_PYTHON||path.join(path.dirname(cli),'python.exe');
  const fullChromium=chromium.executablePath();
- const executable=packagedTarget?.executable||runtime.executable||process.env.CHROMIUM_PATH||path.join(path.dirname(path.dirname(path.dirname(fullChromium))),path.basename(path.dirname(path.dirname(fullChromium))).replace('chromium-','chromium_headless_shell-'),'chrome-headless-shell-win64','chrome-headless-shell.exe');
+ const selectedExecutable=packagedTarget?.executable||runtime.executable||process.env.CHROMIUM_PATH||path.join(path.dirname(path.dirname(path.dirname(fullChromium))),path.basename(path.dirname(path.dirname(fullChromium))).replace('chromium-','chromium_headless_shell-'),'chrome-headless-shell-win64','chrome-headless-shell.exe');
+ const executableResolution=await resolveNativeExecutable(python,selectedExecutable);
+ const executable=executableResolution.finalPath;
  const headlessShell=path.basename(executable)==='chrome-headless-shell.exe';
  for(const file of [installed,cli,python,executable])await fs.access(file);
  const adapter=fileURLToPath(new URL('./test-renderer-browser-cli.py',import.meta.url));
@@ -158,6 +161,7 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
   env.MFE_RENDERER_SOURCE_COMMIT=stdout.trim();
  }
  const runRoot=await fs.mkdtemp(path.join(os.tmpdir(),packagedTarget?'mfe-packaged-renderer-test-':'mfe-renderer-test-'));
+ await fs.writeFile(path.join(runRoot,'executable-resolution.json'),JSON.stringify(executableResolution,null,2),{flag:'wx'});
  if(packagedTarget){if(expectedUrl!==packagedTarget.expectedUrl)throw new Error('Packaged renderer URL differs from validated bytes.');await fs.mkdir(path.join(runRoot,'profile'));await fs.mkdir(path.join(runRoot,'output'));}
  const state=path.join(runRoot,'lifecycle.json');const port=await freePort();
  let browser,cdpTransport,windowObservation,connectionOwned=false,launchAttempted=false,launchPending=false,closed=false,closeAttemptError;
