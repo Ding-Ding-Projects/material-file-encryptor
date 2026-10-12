@@ -109,8 +109,8 @@ const INSTALL_OUTCOMES={'installed-stopped':'Managed runtime installation comple
 /** Actual runtime region, also exercised by the synthetic DOM tests. */
 export function createRuntimeInstallationPanel(parent,{request,configureRuntime,confirm=async()=>false,getLanguage=()=> 'en',onRuntime=()=>{}}={}){
  const doc=parent.ownerDocument||document,region=doc.createElement('section');region.className='ollama-runtime';region.setAttribute('aria-label','Local runtime');parent.append(region);
- let disposed=false,runtime=null,snapshot=null,pending=false,cancelling=false,revision=0,notice='',poll=null,restoring=false,startupResult=null,runtimeRequestRevision=0;const retired=new Set(),labels=[];
- const language=()=>getLanguage();
+ let disposed=false,runtime=null,snapshot=null,pending=false,cancelling=false,revision=0,notice='',poll=null,restoring=false,startupResult=null,stopNotice='',runtimeRequestRevision=0;const retired=new Set(),labels=[];
+ const language=()=>{const value=getLanguage();return ['en','yue','bilingual'].includes(value)?value:'en';};
  const text=(node,en)=>{node.replaceChildren();const yue=ollamaCantonese[en]||en,mode=language();const primary=doc.createElement('span');primary.textContent=mode==='yue'?yue:en;node.append(primary);if(mode==='bilingual'&&yue!==en){const secondary=doc.createElement('span');secondary.className='ollama-secondary';secondary.lang='yue-Hant';secondary.textContent=yue;node.append(secondary);}};
  const named=(tag,en,host=region)=>{const node=doc.createElement(tag);host.append(node);labels.push([node,en]);text(node,en);return node;};
  const heading=named('h4','Local runtime');heading.tabIndex=-1;
@@ -118,6 +118,7 @@ export function createRuntimeInstallationPanel(parent,{request,configureRuntime,
  const state=doc.createElement('p');state.className='ollama-runtime-state';state.setAttribute('role','status');state.setAttribute('aria-live','polite');state.setAttribute('aria-atomic','true');region.append(state);
  const health=doc.createElement('p');health.className='ollama-runtime-health';health.setAttribute('role','status');health.setAttribute('aria-live','polite');region.append(health);
  const startupDiagnostic=doc.createElement('p');startupDiagnostic.className='ollama-runtime-startup-diagnostic';startupDiagnostic.setAttribute('role','status');region.append(startupDiagnostic);
+ const stopDiagnostic=doc.createElement('p');stopDiagnostic.className='ollama-runtime-stop-diagnostic';stopDiagnostic.setAttribute('role','status');region.append(stopDiagnostic);
  const metadata=doc.createElement('p');metadata.className='ollama-runtime-metadata';region.append(metadata);
  const progress=doc.createElement('md-linear-progress');progress.setAttribute('aria-label','Runtime installation progress');progress.hidden=true;region.append(progress);
  const bytes=doc.createElement('p');region.append(bytes);
@@ -126,14 +127,24 @@ export function createRuntimeInstallationPanel(parent,{request,configureRuntime,
  const invoke=(name,fn,primary=false)=>{const button=named(primary?'md-filled-button':'md-outlined-button',name,actions);button.type='button';button.addEventListener('click',()=>{if(!button.disabled&&!disposed)void fn().catch(()=>{if(!disposed){notice='The runtime request could not be completed. Check runtime before retrying.';paint();}});});return button;};
  const install=invoke('Install managed Ollama runtime',async()=>{
   if(pending||active())return;pending=true;runtimeRequestRevision++;notice='';paint();
-  try{const result=await request('runtimeInstall',{confirmed:true});if(!disposed)consume(result,true);}
+  try{const result=await request('runtimeInstall',{confirmed:true,language:language()});if(!disposed)consume(result,true);}
   catch{if(!disposed)notice='The runtime request could not be completed. Check runtime before retrying.';}
   finally{pending=false;if(!disposed){paint();void refresh();}}
  },true);
  const cancel=invoke('Cancel installation',async()=>{if(!snapshot?.cancellable||cancelling)return;cancelling=true;notice='';paint();const id=snapshot.operationId;try{const result=await request('runtimeInstallCancel',{operationId:id});if(!disposed&&snapshot?.operationId===id)consume(result);}finally{cancelling=false;if(!disposed)paint();}});
  const check=invoke('Check runtime',refresh);
- const start=invoke('Start verified local runtime',async()=>{if(pending||active())return;pending=true;runtimeRequestRevision++;startupResult=null;notice='';paint();try{if(await confirm({title:local('Start the verified local runtime?'),message:local('Starts the verified Ollama executable with a loopback-only address and cloud features disabled. No model will be downloaded.'),destructive:false})){const result=await request('runtimeStart',{confirmed:true});if(disposed)return;startupResult=result;await refresh();}}catch(error){if(!disposed){startupResult={state:'unavailable',next:error?.code==='USER_CANCELLED'?'Runtime startup was cancelled. No process was started.':'Runtime startup could not complete. Check runtime before retrying.'};await refresh();}}finally{pending=false;if(!disposed)paint();}});
+ const start=invoke('Start verified local runtime',async()=>{if(pending||active())return;pending=true;runtimeRequestRevision++;startupResult=null;stopNotice='';notice='';paint();try{if(await confirm({title:local('Start the verified local runtime?'),message:local('Starts the verified Ollama executable with a loopback-only address and cloud features disabled. No model will be downloaded.'),destructive:false})){const result=await request('runtimeStart',{confirmed:true,language:language()});if(disposed)return;startupResult=result;await refresh();}}catch(error){if(!disposed){startupResult={state:'unavailable',next:error?.code==='USER_CANCELLED'?'Runtime startup was cancelled. No process was started.':'Runtime startup could not complete. Check runtime before retrying.'};await refresh();}}finally{pending=false;if(!disposed)paint();}});
  const startReason=doc.createElement('p');startReason.id='ollama-start-reason-'+(++runtimePanelSequence);startReason.className='ollama-runtime-start-reason';region.append(startReason);start.setAttribute('aria-describedby',startReason.id);
+ const stop=invoke('Stop owned runtime',async()=>{
+  if(pending||active()||runtime?.ownedManaged!==true||runtime?.actions?.stop!==true)return;
+  pending=true;runtimeRequestRevision++;stopNotice='Stopping the owned runtime. Waiting for verified exit.';notice='';paint();
+  try{const result=await request('runtimeStop',{confirmed:true,language:language()});if(disposed)return;
+   if(result?.state!=='stopped'||result.ownedManaged!==false||result.exitVerified!==true||result.leaseReleased!==true)throw Error('Unverified stop result');
+   stopNotice='Owned runtime stopped. Native exit and lease release were verified.';await refresh();
+  }catch(error){if(!disposed){stopNotice=error?.code==='USER_CANCELLED'?'Runtime stop was cancelled. Ownership remains with the host.':'Owned runtime stop is unverified. The host retains unresolved ownership. Check runtime before retrying.';await refresh();}}
+  finally{pending=false;if(!disposed)paint();}
+ });
+ const stopReason=doc.createElement('p');stopReason.id='ollama-stop-reason-'+(++runtimePanelSequence);stopReason.className='ollama-runtime-stop-reason';region.append(stopReason);stop.setAttribute('aria-describedby',stopReason.id);
  const locate=invoke('Locate installed runtime',async()=>{if(pending||active())return;pending=true;runtimeRequestRevision++;paint();try{await request('chooseRuntimeExecutable');await refresh();}finally{pending=false;if(!disposed)paint();}});
  const advanced=doc.createElement('div');advanced.id='ollama-runtime-connection-'+(++runtimePanelSequence);advanced.hidden=true;
  const connectionToggle=named('md-outlined-button','Connection settings');connectionToggle.type='button';connectionToggle.setAttribute('aria-controls',advanced.id);connectionToggle.setAttribute('aria-expanded','false');connectionToggle.addEventListener('click',()=>{if(disposed)return;advanced.hidden=!advanced.hidden;connectionToggle.setAttribute('aria-expanded',String(!advanced.hidden));});region.append(advanced);
@@ -144,7 +155,7 @@ export function createRuntimeInstallationPanel(parent,{request,configureRuntime,
  function paint(){if(disposed)return;const working=active(),locked=pending||working;const previous=doc.activeElement;
   text(install,snapshot&&['failed','cancelled'].includes(snapshot.outcome)?'Retry managed installation':'Install managed Ollama runtime');
   install.disabled=locked||!runtime?.actions?.install||snapshot?.installed===true;
-  cancel.disabled=!working||!snapshot.cancellable||cancelling;check.disabled=pending;start.disabled=locked||!runtime?.actions?.start;locate.disabled=locked||!runtime?.actions?.selectExecutable;apply.disabled=locked||typeof configureRuntime!=='function';port.disabled=locked;
+  cancel.disabled=!working||!snapshot.cancellable||cancelling;check.disabled=pending;start.disabled=locked||!runtime?.actions?.start;stop.disabled=locked||runtime?.ownedManaged!==true||runtime?.actions?.stop!==true;locate.disabled=locked||!runtime?.actions?.selectExecutable;apply.disabled=locked||typeof configureRuntime!=='function';port.disabled=locked;
   text(cancel,cancelling?'Stopping installation…':'Cancel installation');
   const message=notice||(cancelling?'Stopping installation…':working?INSTALL_COPY[snapshot.phase]:snapshot?.outcome?INSTALL_OUTCOMES[snapshot.outcome]:runtime?'Ready to inspect installation.':'Checking local runtime.');text(state,message);
   const healthMessage=!runtime?'Runtime status is unknown. Check runtime.':runtime.state==='healthy'?'The configured local API is responding.':runtime.state==='stopped'?'The detected runtime is stopped.':runtime.state==='missing'?'No local runtime was detected.':runtime.state==='unhealthy'?'The local runtime or endpoint is not healthy.':'Runtime status is unknown. Check runtime.';
@@ -153,13 +164,15 @@ export function createRuntimeInstallationPanel(parent,{request,configureRuntime,
   const diagnostic=startupResult&&startupResult.state!=='healthy'?(startupResult.next||'Runtime startup could not complete. Check runtime before retrying.'):'';startupDiagnostic.hidden=!diagnostic;text(startupDiagnostic,diagnostic);
   const disabledReason=working?'Finish or cancel installation before starting.':pending?'Wait for the current runtime action to finish.':!runtime?'Check runtime before starting.':runtime.state==='healthy'?'The configured endpoint is already responding. Another start is not needed.':runtime.state==='unhealthy'?'Resolve the current runtime or endpoint problem before starting.':runtime.state==='unknown'?'Runtime status is unknown. Check runtime before starting.':!runtime.installed?'Install or locate a verified runtime before starting.':runtime.executableTrusted===false?'The detected executable has not passed runtime trust verification.':!runtime.actions?.start?'Verified startup is unavailable through the current host capability. Check runtime before retrying.':'';
   startReason.hidden=!start.disabled;text(startReason,start.disabled?disabledReason:'');
+  const stopDisabledReason=working?'Finish or cancel installation before stopping.':pending?'Wait for the current runtime action to finish.':!runtime?'Check runtime before stopping.':runtime.ownedManaged!==true?runtime.state==='healthy'?'The endpoint is responding, but this controller does not own it. It cannot be stopped here.':'This controller has no owned managed runtime to stop.':'The host has not enabled stopping for the retained runtime. Check runtime before retrying.';
+  stopReason.hidden=!stop.disabled;text(stopReason,stop.disabled?stopDisabledReason:'');stopDiagnostic.hidden=!stopNotice;text(stopDiagnostic,stopNotice);
   metadata.textContent=[snapshot?.version,snapshot?.architecture,runtime?.version,runtime?.endpoint].filter(Boolean).join(' · ');
   const detail=snapshot?.outcome==='installed-stopped'?null:snapshot?.reason;if(detail){const reason=doc.createElement('span');reason.className='ollama-runtime-reason';reason.textContent=local(detail);state.append(reason);}
   progress.hidden=!working;progress.indeterminate=!(snapshot?.phase==='downloading'&&snapshot.totalBytes>0);progress.value=progress.indeterminate?0:Math.min(1,snapshot.receivedBytes/snapshot.totalBytes);
   progress.setAttribute('aria-label',local('Runtime installation progress'));
   bytes.textContent=working&&snapshot.phase==='downloading'?formatBytes(snapshot.receivedBytes)+(snapshot.totalBytes>0?' / '+formatBytes(snapshot.totalBytes):''):'';
   port.label=local('Local runtime port');port.setAttribute('aria-label',local('Local runtime port'));region.setAttribute('aria-label',local('Local runtime'));region.setAttribute('aria-busy',String(Boolean(locked)));
-  if(previous?.disabled&&[install,cancel,start,locate,apply].includes(previous))heading.focus();
+  if(previous?.disabled&&[install,cancel,start,stop,locate,apply].includes(previous))heading.focus();
   clearTimeout(poll);poll=null;if(working&&!restoring)poll=setTimeout(()=>{void restore();},1000);
  }
  function consume(value,admission=false){if(disposed||!value||!INSTALL_PHASES.includes(value.phase))return false;const id=value.operationId;

@@ -76,3 +76,21 @@ test('starting an action invalidates an earlier observation before its replaceme
 test('disposed panel ignores a pending status response and its runtime callback',async t=>{
  const doc=createAccessDocument();let resolve,callbacks=0;const panel=createRuntimeInstallationPanel(doc.body,{request:()=>new Promise(done=>resolve=done),onRuntime:()=>callbacks++});const pending=panel.refresh();panel.destroy();resolve({state:'healthy',actions:{start:false}});await pending;assert.equal(callbacks,0);assert.equal(doc.body.children.length,0);
 });
+
+test('Stop requires explicit retained managed ownership even when an external endpoint is healthy',async t=>{
+ const f=fixture(t,async action=>action==='status'?{state:'healthy',installed:true,ownedManaged:false,actions:{start:false,stop:true},installation:installation()}:undefined);await f.panel.refresh();const stop=f.button('Stop owned runtime');assert.equal(stop.disabled,true);const reason=f.doc.body.querySelectorAll('p').find(n=>n.id===stop.getAttribute('aria-describedby'));assert.ok(reason.textContent.includes('does not own it'));await stop.click();assert.equal(f.calls.some(c=>c.action==='runtimeStop'),false);
+});
+test('owned Stop waits for exact settlement and invalidates an older running observation',async t=>{
+ let reads=0,finishOld,finishStop,stopped=false;const running={state:'healthy',installed:true,ownedManaged:true,actions:{start:false,stop:true},installation:installation()};
+ const f=fixture(t,async action=>{if(action==='status'){reads++;if(reads===2)return new Promise(resolve=>finishOld=()=>resolve(running));return stopped?{...running,state:'stopped',ownedManaged:false,actions:{start:true,stop:false}}:running;}if(action==='runtimeStop')return new Promise(resolve=>finishStop=()=>{stopped=true;resolve({state:'stopped',ownedManaged:false,exitVerified:true,leaseReleased:true});});});
+ await f.panel.refresh();const old=f.panel.refresh();const stop=f.button('Stop owned runtime');await stop.click();await tick();assert.equal(stop.disabled,true);assert.ok(f.doc.body.textContent.includes('Waiting for verified exit.'));await stop.click();assert.equal(f.calls.filter(c=>c.action==='runtimeStop').length,1);
+ finishStop();await tick();finishOld();await old;assert.ok(f.doc.body.textContent.includes('Native exit and lease release were verified.'));assert.ok(f.doc.body.textContent.includes('The detected runtime is stopped.'));assert.equal(stop.disabled,true);
+});
+test('unverified or rejected Stop cannot claim settlement or discard retained ownership',async t=>{
+ for(const rejection of [false,true]){const f=fixture(t,async action=>{if(action==='status')return{state:'healthy',installed:true,ownedManaged:true,actions:{stop:true},installation:installation()};if(action==='runtimeStop'){if(rejection)throw Error('synthetic private host details');return{state:'stopped',ownedManaged:false,exitVerified:false,leaseReleased:true};}});await f.panel.refresh();await f.button('Stop owned runtime').click();await tick();assert.ok(f.doc.body.textContent.includes('stop is unverified'));assert.ok(!f.doc.body.textContent.includes('Native exit and lease release were verified.'));assert.ok(!f.doc.body.textContent.includes('synthetic private host details'));assert.equal(f.button('Stop owned runtime').disabled,false);f.panel.destroy();}
+});
+test('Install Start and Stop forward only the selected supported confirmation language',async t=>{
+ for(const language of ['en','yue','bilingual'])for(const [label,action]of [['Install managed Ollama runtime','runtimeInstall'],['Start verified local runtime','runtimeStart'],['Stop owned runtime','runtimeStop']]){
+  const f=fixture(t,async name=>{if(name==='status')return{state:'stopped',installed:false,ownedManaged:true,actions:{install:true,start:true,stop:true},installation:installation()};if(name==='runtimeStart')return{state:'healthy'};if(name==='runtimeStop')return{state:'stopped',ownedManaged:false,exitVerified:true,leaseReleased:true};},{confirm:async()=>true});await f.panel.refresh();const button=f.button(label);f.setLanguage(language);await button.click();await tick();const call=f.calls.find(c=>c.action===action);assert.deepEqual(call?.payload,{confirmed:true,language});f.panel.destroy();
+ }
+});

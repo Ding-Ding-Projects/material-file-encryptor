@@ -5,7 +5,7 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
     converter: ['catalog','inspect','enqueue','list','control','pickSources','pickDestination','pickDestinationDirectory'],
     workflow: ['documents','pickDocument','pickProject','readDocument','saveDocument','createDocument','templates','editors','pickEditor','openEditor','openInCode','editorDownload','downloads','prepareDownload','startDownload','cancelDownload','accounts','owners','prepareHandoff','exportHandoff','openHandoff'],
     updates: ['status','check','download',...(!browser?['install']:[])],
-    ollama: [...(!browser?['configureRuntime','runtimeInstall','runtimeInstallCancel']:[]),'status','catalog','refreshCatalog','models','show','deleteModel','copyModel','generate','hardware','cart','addToCart','removeFromCart','retryPull','startPulls','cancel','sessions','session','renameSession','deleteSession','exportSession','chat','profiles','preflight','launch','snapshots','restore','events','runtimeInstallStatus','runtimeStart','chooseRuntimeExecutable','registerProfile'],
+    ollama: [...(!browser?['configureRuntime','runtimeInstall','runtimeInstallCancel','runtimeStop']:[]),'status','catalog','refreshCatalog','models','show','deleteModel','copyModel','generate','hardware','cart','addToCart','removeFromCart','retryPull','startPulls','cancel','sessions','session','renameSession','deleteSession','exportSession','chat','profiles','preflight','launch','snapshots','restore','events','runtimeInstallStatus','runtimeStart','chooseRuntimeExecutable','registerProfile'],
     documentation: ['catalog','changelog'], status: ['status'],
     personalization: ['sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts',...(!browser?['setScheduleCredential','clearScheduleCredential','normalizeImage','fontMetadata','cancelFontMetadata']:[])],
     ...(!browser ? { 'server-manager': ['snapshot','refreshCatalogue','versions','resolveVersion','prepare','cancel','reviewLicense'] } : {}),
@@ -13,6 +13,7 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
   };
   const limit=!browser&&feature==='personalization'&&action==='normalizeImage'?Math.ceil(4*1024*1024*4/3)+256:262144;
   if (!actions[feature]?.includes(action) || !object(payload) || Buffer.byteLength(JSON.stringify(payload)) > limit) throw new Error('Unsupported feature request.');
+  if(feature==='ollama'&&['runtimeInstall','runtimeStart','runtimeStop'].includes(action)){if(Reflect.ownKeys(payload).some(key=>!['confirmed','language'].includes(key))||typeof payload.confirmed!=='boolean'||payload.language!==undefined&&!['en','yue','bilingual'].includes(payload.language))throw new Error('Unsupported runtime action payload.');}
   if (feature === 'surprise' && (Reflect.ownKeys(payload).length || ![Object.prototype,null].includes(Object.getPrototypeOf(payload)))) throw new Error('Unsupported startup photo request.');
   if (feature === 'server-manager') {
     const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);

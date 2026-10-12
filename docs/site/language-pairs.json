@@ -187,8 +187,8 @@
     {
       "source": "docs/features/ollama/managed-runtime-installation.md",
       "translation": "docs/features/ollama/managed-runtime-installation.zh-HK.md",
-      "sourceSha256": "e46f2931911a472de7db00bfcdb3e4630e9d610be9be4eae3b61c2bb07bf449b",
-      "translationSha256": "721b81025f171e9fce6e95026d99be151c4491aff0721a44f517378bad784207"
+      "sourceSha256": "71525bd00175d51e610d72a47d2a93f95f3f74e01ddec73072be8dc5415cfc6b",
+      "translationSha256": "bd05aaa87ed612860aff26dbcbff9e7ec6cc50e5d6107e60ea11500f5d0243b5"
     },
     {
       "source": "docs/features/ollama/native-host.md",

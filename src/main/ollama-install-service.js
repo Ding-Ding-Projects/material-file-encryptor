@@ -1,3 +1,4 @@
+import {confirmationLanguage} from './ollama-confirmation-copy.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
@@ -36,7 +37,7 @@ export function createManagedOllamaInstaller({dataDirectory,toolsRoot,credential
   try{
    publish({phase:'checking',cancellable:true});await directory(root);await directory(cache);check();
    if(await getExecutable({verifyTree:true})){publish({phase:'complete',outcome:'installed-stopped',reason:reasons.installed,cancellable:false});return;}
-   await inspectTools(toolsRoot);check();publish({phase:'awaiting-consent'});if(!await confirmInstall({version:manifest.version,architecture,bytes:manifest.bytes,signal}))throw installationError('CANCELLED');check();
+   await inspectTools(toolsRoot);check();publish({phase:'awaiting-consent'});if(!await confirmInstall({version:manifest.version,architecture,bytes:manifest.bytes,signal,language:entry.language}))throw installationError('CANCELLED');check();
    publish({phase:'downloading'});const archive=await download(manifest,cache,{signal,onProgress:receivedBytes=>{if(active===entry&&!signal.aborted)publish({receivedBytes});}});check();publish({phase:'verifying',receivedBytes:manifest.bytes});
    stage=path.join(root,'.staging-'+randomUUID());await canonicalInstallPath(stage,{missing:true});await fs.mkdir(stage,{mode:0o700});check();publish({phase:'extracting'});
    const files=await extract(archive,stage,toolsRoot,{signal,manifest});check();
@@ -55,8 +56,8 @@ export function createManagedOllamaInstaller({dataDirectory,toolsRoot,credential
   subscribe(listener){listeners.add(listener);return()=>listeners.delete(listener);},
   getExecutable,
   async verifyExecutable(filename,{verifyTree=true}={}){if(!destination||path.resolve(filename).toLowerCase()!==path.join(destination,'ollama.exe').toLowerCase())return null;return Boolean(await getExecutable({verifyTree}));},
-  start(){if(closed)throw installationError('CLOSED');if(active)throw installationError('BUSY');if(!enabled)return publish({phase:'complete',outcome:'unavailable',reason:reasons.unavailable,cancellable:false});
-   const entry={id:randomUUID(),controller:new AbortController(),done:null};active=entry;entry.done=Promise.resolve().then(()=>work(entry)).finally(()=>{if(active===entry)active=null;});publish({operationId:entry.id,phase:'checking',receivedBytes:0,cancellable:true,outcome:null,reason:null});return current;},
+  start({language='en'}={}){confirmationLanguage(language);if(closed)throw installationError('CLOSED');if(active)throw installationError('BUSY');if(!enabled)return publish({phase:'complete',outcome:'unavailable',reason:reasons.unavailable,cancellable:false});
+   const entry={language,id:randomUUID(),controller:new AbortController(),done:null};active=entry;entry.done=Promise.resolve().then(()=>work(entry)).finally(()=>{if(active===entry)active=null;});publish({operationId:entry.id,phase:'checking',receivedBytes:0,cancellable:true,outcome:null,reason:null});return current;},
   async cancel(operationId){if(!active||typeof operationId!=='string'||active.id!==operationId)throw installationError('OPERATION');const entry=active;if(current.cancellable)entry.controller.abort();await entry.done;return current;},
   async cancelAll(){const entry=active;if(!entry)return current;if(current.cancellable)entry.controller.abort();await entry.done;return current;},
   get pending(){return active?1:0;},

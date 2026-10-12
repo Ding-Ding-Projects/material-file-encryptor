@@ -39,7 +39,7 @@ internal static class Program
         OllamaRuntimeBroker? managedRuntime = null;
         int managedRootIndex = Array.IndexOf(args, "--managed-data-root");
         if (managedRootIndex >= 0 && managedRootIndex + 1 < args.Length)
-            managedRuntime = new OllamaRuntimeBroker(args[managedRootIndex + 1], startupAdmitted: false);
+            managedRuntime = new OllamaRuntimeBroker(args[managedRootIndex + 1], startupAdmitted: true);
         controller.Status();
         object previousSummary=controller.StatusSummary();
         Task background = Task.Run(async () =>

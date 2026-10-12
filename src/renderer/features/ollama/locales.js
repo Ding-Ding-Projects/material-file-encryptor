@@ -1,4 +1,15 @@
 export const ollamaCantonese = Object.freeze({
+  'Stop owned runtime':'停止受管理執行環境',
+  'Stopping the owned runtime. Waiting for verified exit.':'正在停止受管理執行環境，等待確認完全結束。',
+  'Owned runtime stopped. Native exit and lease release were verified.':'受管理執行環境已停止，原生處理程序結束同租約釋放已確認。',
+  'Runtime stop was cancelled. Ownership remains with the host.':'已取消停止，主機仍然保留擁有權。',
+  'Owned runtime stop is unverified. The host retains unresolved ownership. Check runtime before retrying.':'未能確認受管理執行環境已停止，主機保留未解決嘅擁有權。請先檢查再重試。',
+  'Finish or cancel installation before stopping.':'請先完成或取消安裝，再停止執行環境。',
+  'Check runtime before stopping.':'停止前請先檢查執行環境。',
+  'The endpoint is responding, but this controller does not own it. It cannot be stopped here.':'端點有回應，但此控制器唔擁有佢，唔可以喺呢度停止。',
+  'This controller has no owned managed runtime to stop.':'此控制器冇可以停止嘅受管理執行環境。',
+  'The host has not enabled stopping for the retained runtime. Check runtime before retrying.':'主機未啟用停止目前保留嘅執行環境，請先檢查再重試。',
+
   'Managed runtime installation completed.':'受管理執行環境安裝已完成。',
   'Runtime status is unknown. Check runtime.':'執行環境狀態未知，請檢查執行環境。',
   'The detected runtime is stopped.':'偵測到嘅執行環境已停止。',
