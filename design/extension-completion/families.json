@@ -1,0 +1,1059 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "6c880446b9e884efed589f189bbb7bda3111ae6f",
+  "sourceInventory": "src/features/documentation/required-features.mjs",
+  "familyCount": 105,
+  "purpose": "Explicit design decisions for all canonical semantic families. No row is product proof.",
+  "families": [
+    {
+      "id": "language",
+      "classification": "extension-owned",
+      "surface": "options:personalization",
+      "decision": "Extension owns visible controls, local consumers and private persistence. Each popup and nested surface consumes the effective state; shared imports are not acceptance.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "funny-emoji",
+      "classification": "extension-owned",
+      "surface": "options:personalization",
+      "decision": "Extension owns visible controls, local consumers and private persistence. Each popup and nested surface consumes the effective state; shared imports are not acceptance.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "personal-vocabulary",
+      "classification": "extension-owned",
+      "surface": "options:personalization",
+      "decision": "Extension owns visible controls, local consumers and private persistence. Each popup and nested surface consumes the effective state; shared imports are not acceptance.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "school-mode",
+      "classification": "native-mediated-incomplete",
+      "surface": "options:access + personalization:schedules + history",
+      "decision": "Extension owns the workflow. Shared application-data watching, credential vault, authenticated unlock and actual Git history require a reviewed native adapter absent from the current handoff-only protocol. Browser-local equivalents must disclose their weaker scope and cannot close the native requirement.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "narration",
+      "classification": "extension-owned",
+      "surface": "options:personalization",
+      "decision": "Extension owns visible controls, local consumers and private persistence. Each popup and nested surface consumes the effective state; shared imports are not acceptance.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "scheduled-settings",
+      "classification": "native-mediated-incomplete",
+      "surface": "options:access + personalization:schedules + history",
+      "decision": "Extension owns the workflow. Shared application-data watching, credential vault, authenticated unlock and actual Git history require a reviewed native adapter absent from the current handoff-only protocol. Browser-local equivalents must disclose their weaker scope and cannot close the native requirement.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "display-name",
+      "classification": "extension-owned",
+      "surface": "options:personalization",
+      "decision": "Extension owns visible controls, local consumers and private persistence. Each popup and nested surface consumes the effective state; shared imports are not acceptance.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "adhd-modes",
+      "classification": "extension-owned",
+      "surface": "options:personalization",
+      "decision": "Extension owns visible controls, local consumers and private persistence. Each popup and nested surface consumes the effective state; shared imports are not acceptance.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "dim-sum",
+      "classification": "extension-owned",
+      "surface": "options:personalization",
+      "decision": "Extension owns visible controls, local consumers and private persistence. Each popup and nested surface consumes the effective state; shared imports are not acceptance.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "dim-sum-photo-source",
+      "classification": "extension-owned",
+      "surface": "options:personalization",
+      "decision": "Extension owns visible controls, local consumers and private persistence. Each popup and nested surface consumes the effective state; shared imports are not acceptance.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "material-design",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Implement separately at each rendered boundary with exact element IDs, real component registration, validation, keyboard paths, focus return and a hand-written inventory.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "workflow-navigation",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Implement separately at each rendered boundary with exact element IDs, real component registration, validation, keyboard paths, focus return and a hand-written inventory.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "motion",
+      "classification": "extension-owned",
+      "surface": "options:personalization",
+      "decision": "Extension owns visible controls, local consumers and private persistence. Each popup and nested surface consumes the effective state; shared imports are not acceptance.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "appearance-editor",
+      "classification": "extension-owned",
+      "surface": "options:personalization",
+      "decision": "Extension owns visible controls, local consumers and private persistence. Each popup and nested surface consumes the effective state; shared imports are not acceptance.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "minecraft-server-manager",
+      "classification": "native-mediated-incomplete",
+      "surface": "options:tools",
+      "decision": "Provide extension-owned guided structured controls. Browser-safe operations need independently bundled proof. Native execution, OS credentials and filesystem operations have no current protocol capability; keep them unavailable with precise reasons until reviewed adapters and runtime evidence exist.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "color-picker",
+      "classification": "extension-owned",
+      "surface": "options:personalization",
+      "decision": "Extension owns visible controls, local consumers and private persistence. Each popup and nested surface consumes the effective state; shared imports are not acceptance.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "logo-customization",
+      "classification": "extension-owned",
+      "surface": "options:personalization",
+      "decision": "Extension owns visible controls, local consumers and private persistence. Each popup and nested surface consumes the effective state; shared imports are not acceptance.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "overlay-panels",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Implement separately at each rendered boundary with exact element IDs, real component registration, validation, keyboard paths, focus return and a hand-written inventory.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "collapse-filters",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Implement separately at each rendered boundary with exact element IDs, real component registration, validation, keyboard paths, focus return and a hand-written inventory.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "accessibility-sizing",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Implement separately at each rendered boundary with exact element IDs, real component registration, validation, keyboard paths, focus return and a hand-written inventory.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "functional-ui",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Implement separately at each rendered boundary with exact element IDs, real component registration, validation, keyboard paths, focus return and a hand-written inventory.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "tabs",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Implement separately at each rendered boundary with exact element IDs, real component registration, validation, keyboard paths, focus return and a hand-written inventory.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "regex-search",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Implement separately at each rendered boundary with exact element IDs, real component registration, validation, keyboard paths, focus return and a hand-written inventory.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "command-palette",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Implement separately at each rendered boundary with exact element IDs, real component registration, validation, keyboard paths, focus return and a hand-written inventory.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "context-menus",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Implement separately at each rendered boundary with exact element IDs, real component registration, validation, keyboard paths, focus return and a hand-written inventory.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "menu-shortcuts",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Implement separately at each rendered boundary with exact element IDs, real component registration, validation, keyboard paths, focus return and a hand-written inventory.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "rich-controls",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Implement separately at each rendered boundary with exact element IDs, real component registration, validation, keyboard paths, focus return and a hand-written inventory.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "guided-forms",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Implement separately at each rendered boundary with exact element IDs, real component registration, validation, keyboard paths, focus return and a hand-written inventory.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "settings-explanations",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Implement separately at each rendered boundary with exact element IDs, real component registration, validation, keyboard paths, focus return and a hand-written inventory.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "blank-editors",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Implement separately at each rendered boundary with exact element IDs, real component registration, validation, keyboard paths, focus return and a hand-written inventory.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "super-confirmation",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Use actual data and action handlers. Preview destructive scope, preserve safe defaults, expose exact per-item outcomes, exclude private payloads, and never manufacture success.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "element-locks",
+      "classification": "native-mediated-incomplete",
+      "surface": "options:access + personalization:schedules + history",
+      "decision": "Extension owns the workflow. Shared application-data watching, credential vault, authenticated unlock and actual Git history require a reviewed native adapter absent from the current handoff-only protocol. Browser-local equivalents must disclose their weaker scope and cannot close the native requirement.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "support-tickets",
+      "classification": "native-mediated-incomplete",
+      "surface": "options:access + personalization:schedules + history",
+      "decision": "Extension owns the workflow. Shared application-data watching, credential vault, authenticated unlock and actual Git history require a reviewed native adapter absent from the current handoff-only protocol. Browser-local equivalents must disclose their weaker scope and cannot close the native requirement.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "unlock-ladder",
+      "classification": "native-mediated-incomplete",
+      "surface": "options:access + personalization:schedules + history",
+      "decision": "Extension owns the workflow. Shared application-data watching, credential vault, authenticated unlock and actual Git history require a reviewed native adapter absent from the current handoff-only protocol. Browser-local equivalents must disclose their weaker scope and cannot close the native requirement.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "authenticator",
+      "classification": "native-mediated-incomplete",
+      "surface": "options:access + personalization:schedules + history",
+      "decision": "Extension owns the workflow. Shared application-data watching, credential vault, authenticated unlock and actual Git history require a reviewed native adapter absent from the current handoff-only protocol. Browser-local equivalents must disclose their weaker scope and cannot close the native requirement.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "qr-pairing",
+      "classification": "native-mediated-incomplete",
+      "surface": "options:access + personalization:schedules + history",
+      "decision": "Extension owns the workflow. Shared application-data watching, credential vault, authenticated unlock and actual Git history require a reviewed native adapter absent from the current handoff-only protocol. Browser-local equivalents must disclose their weaker scope and cannot close the native requirement.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "honest-monetization",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Use actual data and action handlers. Preview destructive scope, preserve safe defaults, expose exact per-item outcomes, exclude private payloads, and never manufacture success.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "local-history",
+      "classification": "native-mediated-incomplete",
+      "surface": "options:access + personalization:schedules + history",
+      "decision": "Extension owns the workflow. Shared application-data watching, credential vault, authenticated unlock and actual Git history require a reviewed native adapter absent from the current handoff-only protocol. Browser-local equivalents must disclose their weaker scope and cannot close the native requirement.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "exports",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Use actual data and action handlers. Preview destructive scope, preserve safe defaults, expose exact per-item outcomes, exclude private payloads, and never manufacture success.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "bulk-actions",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Use actual data and action handlers. Preview destructive scope, preserve safe defaults, expose exact per-item outcomes, exclude private payloads, and never manufacture success.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "changelog",
+      "classification": "extension-owned",
+      "surface": "options:documentation",
+      "decision": "Bundle the full reviewed content and internal navigation. Filter dates and text, render markup in isolation, preserve exact release sources and export the current view.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "offline-docs",
+      "classification": "extension-owned",
+      "surface": "options:documentation",
+      "decision": "Bundle the full reviewed content and internal navigation. Filter dates and text, render markup in isolation, preserve exact release sources and export the current view.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "rendered-provider-text",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Use actual data and action handlers. Preview destructive scope, preserve safe defaults, expose exact per-item outcomes, exclude private payloads, and never manufacture success.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "notifications",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Use actual data and action handlers. Preview destructive scope, preserve safe defaults, expose exact per-item outcomes, exclude private payloads, and never manufacture success.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "file-converter",
+      "classification": "native-mediated-incomplete",
+      "surface": "options:tools",
+      "decision": "Provide extension-owned guided structured controls. Browser-safe operations need independently bundled proof. Native execution, OS credentials and filesystem operations have no current protocol capability; keep them unavailable with precise reasons until reviewed adapters and runtime evidence exist.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "ollama-suite",
+      "classification": "native-mediated-incomplete",
+      "surface": "options:tools",
+      "decision": "Provide extension-owned guided structured controls. Browser-safe operations need independently bundled proof. Native execution, OS credentials and filesystem operations have no current protocol capability; keep them unavailable with precise reasons until reviewed adapters and runtime evidence exist.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "external-editor",
+      "classification": "native-mediated-incomplete",
+      "surface": "options:tools",
+      "decision": "Provide extension-owned guided structured controls. Browser-safe operations need independently bundled proof. Native execution, OS credentials and filesystem operations have no current protocol capability; keep them unavailable with precise reasons until reviewed adapters and runtime evidence exist.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "download-handoff",
+      "classification": "extension-and-desktop",
+      "surface": "popup + options:transfers + native download surfaces",
+      "decision": "Existing pairing/proposal/status source is partial. Installed signed identity, registered native host and real Start, Downloading and completion surfaces require separate correlated acceptance.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "forge-publishing",
+      "classification": "native-mediated-incomplete",
+      "surface": "options:tools",
+      "decision": "Provide extension-owned guided structured controls. Browser-safe operations need independently bundled proof. Native execution, OS credentials and filesystem operations have no current protocol capability; keep them unavailable with precise reasons until reviewed adapters and runtime evidence exist.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "progress-recovery",
+      "classification": "cross-cutting",
+      "surface": "popup + every options surface",
+      "decision": "Use actual data and action handlers. Preview destructive scope, preserve safe defaults, expose exact per-item outcomes, exclude private payloads, and never manufacture success.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "completeness-parity",
+      "classification": "delivery-evidence",
+      "surface": "extension acceptance inventory",
+      "decision": "Required delivery evidence owned by this extension surface, not an end-user command. Exact source/build/identity-bound runtime proof, inspected captures and negative completeness checks remain pending.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "front-provenance",
+      "classification": "cross-cutting",
+      "surface": "popup + options entry + protected states",
+      "decision": "Show running package provenance before navigation or unavailable. Only valid locally supplied mappings can affect private authenticated text; preserve original pre-authentication wording. No cache or filename crosses publication or messaging boundaries.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "product-evidence",
+      "classification": "delivery-evidence",
+      "surface": "extension acceptance inventory",
+      "decision": "Required delivery evidence owned by this extension surface, not an end-user command. Exact source/build/identity-bound runtime proof, inspected captures and negative completeness checks remain pending.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "screen-recording",
+      "classification": "delivery-evidence",
+      "surface": "extension acceptance inventory",
+      "decision": "Required delivery evidence owned by this extension surface, not an end-user command. Exact source/build/identity-bound runtime proof, inspected captures and negative completeness checks remain pending.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "design-reference-parity",
+      "classification": "delivery-evidence",
+      "surface": "extension acceptance inventory",
+      "decision": "Required delivery evidence owned by this extension surface, not an end-user command. Exact source/build/identity-bound runtime proof, inspected captures and negative completeness checks remain pending.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "design-folder",
+      "classification": "delivery-evidence",
+      "surface": "extension acceptance inventory",
+      "decision": "Required delivery evidence owned by this extension surface, not an end-user command. Exact source/build/identity-bound runtime proof, inspected captures and negative completeness checks remain pending.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "cheap-jor-matrix",
+      "classification": "delivery-evidence",
+      "surface": "extension acceptance inventory",
+      "decision": "Required delivery evidence owned by this extension surface, not an end-user command. Exact source/build/identity-bound runtime proof, inspected captures and negative completeness checks remain pending.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "public-screenshot-gallery",
+      "classification": "delivery-evidence",
+      "surface": "extension acceptance inventory",
+      "decision": "Required delivery evidence owned by this extension surface, not an end-user command. Exact source/build/identity-bound runtime proof, inspected captures and negative completeness checks remain pending.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "landing-site",
+      "classification": "repository-delivery",
+      "surface": "documentation + public delivery",
+      "decision": "Repository/publication obligations remain active and must include the extension. Do not place marketing in the popup. Bundle relevant documentation/fonts and verify public content separately.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "deen-wah-site",
+      "classification": "repository-delivery",
+      "surface": "documentation + public delivery",
+      "decision": "Repository/publication obligations remain active and must include the extension. Do not place marketing in the popup. Bundle relevant documentation/fonts and verify public content separately.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "installer-download-button",
+      "classification": "repository-delivery",
+      "surface": "documentation + public delivery",
+      "decision": "Repository/publication obligations remain active and must include the extension. Do not place marketing in the popup. Bundle relevant documentation/fonts and verify public content separately.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "feature-articles",
+      "classification": "repository-delivery",
+      "surface": "documentation + public delivery",
+      "decision": "Repository/publication obligations remain active and must include the extension. Do not place marketing in the popup. Bundle relevant documentation/fonts and verify public content separately.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "vendored-fonts",
+      "classification": "repository-delivery",
+      "surface": "documentation + public delivery",
+      "decision": "Repository/publication obligations remain active and must include the extension. Do not place marketing in the popup. Bundle relevant documentation/fonts and verify public content separately.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "shared-link-embed",
+      "classification": "repository-delivery",
+      "surface": "documentation + public delivery",
+      "decision": "Repository/publication obligations remain active and must include the extension. Do not place marketing in the popup. Bundle relevant documentation/fonts and verify public content separately.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "homepage-link",
+      "classification": "repository-delivery",
+      "surface": "documentation + public delivery",
+      "decision": "Repository/publication obligations remain active and must include the extension. Do not place marketing in the popup. Bundle relevant documentation/fonts and verify public content separately.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "vocabulary-unlock-boundary",
+      "classification": "cross-cutting",
+      "surface": "popup + options entry + protected states",
+      "decision": "Show running package provenance before navigation or unavailable. Only valid locally supplied mappings can affect private authenticated text; preserve original pre-authentication wording. No cache or filename crosses publication or messaging boundaries.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "status-hub",
+      "classification": "native-mediated-incomplete",
+      "surface": "options:status",
+      "decision": "Own an evidence-backed status view. No enrollment, direct Hub credential or status mutation is exposed by the current native protocol. Show unavailable and exact enrollment/setup state without inventing delivery.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "discord-status-bridge",
+      "classification": "host-service-delivery",
+      "surface": "options:status disclosures + owner-managed services",
+      "decision": "Owner-managed authenticated service capabilities, not extension secrets or direct webhook controls. Extension reports actual exposed observation only; no native capability currently grants service administration.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "panic-webhooks",
+      "classification": "host-service-delivery",
+      "surface": "options:status disclosures + owner-managed services",
+      "decision": "Owner-managed authenticated service capabilities, not extension secrets or direct webhook controls. Extension reports actual exposed observation only; no native capability currently grants service administration.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "tidbyt-displays",
+      "classification": "host-service-delivery",
+      "surface": "options:status disclosures + owner-managed services",
+      "decision": "Owner-managed authenticated service capabilities, not extension secrets or direct webhook controls. Extension reports actual exposed observation only; no native capability currently grants service administration.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "build-entrypoints",
+      "classification": "repository-delivery",
+      "surface": "extension package + native companion delivery",
+      "decision": "Build/release duties need package-specific proof. Native installer requirements apply to the installed companion; the browser extension needs its own supported package identity, installation and update evidence. Source staging is not installation.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "fresh-build-run-command",
+      "classification": "repository-delivery",
+      "surface": "extension package + native companion delivery",
+      "decision": "Build/release duties need package-specific proof. Native installer requirements apply to the installed companion; the browser extension needs its own supported package identity, installation and update evidence. Source staging is not installation.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "dependency-fetcher",
+      "classification": "repository-delivery",
+      "surface": "extension package + native companion delivery",
+      "decision": "Build/release duties need package-specific proof. Native installer requirements apply to the installed companion; the browser extension needs its own supported package identity, installation and update evidence. Source staging is not installation.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "bundled-dependencies",
+      "classification": "repository-delivery",
+      "surface": "extension package + native companion delivery",
+      "decision": "Build/release duties need package-specific proof. Native installer requirements apply to the installed companion; the browser extension needs its own supported package identity, installation and update evidence. Source staging is not installation.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "squirrel-installer",
+      "classification": "repository-delivery",
+      "surface": "extension package + native companion delivery",
+      "decision": "Build/release duties need package-specific proof. Native installer requirements apply to the installed companion; the browser extension needs its own supported package identity, installation and update evidence. Source staging is not installation.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "self-signing",
+      "classification": "repository-delivery",
+      "surface": "extension package + native companion delivery",
+      "decision": "Build/release duties need package-specific proof. Native installer requirements apply to the installed companion; the browser extension needs its own supported package identity, installation and update evidence. Source staging is not installation.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "auto-updates",
+      "classification": "repository-delivery",
+      "surface": "extension package + native companion delivery",
+      "decision": "Build/release duties need package-specific proof. Native installer requirements apply to the installed companion; the browser extension needs its own supported package identity, installation and update evidence. Source staging is not installation.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "app-icon",
+      "classification": "repository-delivery",
+      "surface": "extension package + native companion delivery",
+      "decision": "Build/release duties need package-specific proof. Native installer requirements apply to the installed companion; the browser extension needs its own supported package identity, installation and update evidence. Source staging is not installation.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "release-workflow",
+      "classification": "repository-delivery",
+      "surface": "extension package + native companion delivery",
+      "decision": "Build/release duties need package-specific proof. Native installer requirements apply to the installed companion; the browser extension needs its own supported package identity, installation and update evidence. Source staging is not installation.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "release-timing",
+      "classification": "repository-delivery",
+      "surface": "extension package + native companion delivery",
+      "decision": "Build/release duties need package-specific proof. Native installer requirements apply to the installed companion; the browser extension needs its own supported package identity, installation and update evidence. Source staging is not installation.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "release-line-counts",
+      "classification": "repository-delivery",
+      "surface": "extension package + native companion delivery",
+      "decision": "Build/release duties need package-specific proof. Native installer requirements apply to the installed companion; the browser extension needs its own supported package identity, installation and update evidence. Source staging is not installation.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "release-dim-sum-photo",
+      "classification": "repository-delivery",
+      "surface": "extension package + native companion delivery",
+      "decision": "Build/release duties need package-specific proof. Native installer requirements apply to the installed companion; the browser extension needs its own supported package identity, installation and update evidence. Source staging is not installation.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "dim-sum-code-names",
+      "classification": "repository-delivery",
+      "surface": "extension package + native companion delivery",
+      "decision": "Build/release duties need package-specific proof. Native installer requirements apply to the installed companion; the browser extension needs its own supported package identity, installation and update evidence. Source staging is not installation.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "ci-bootstrap",
+      "classification": "repository-delivery",
+      "surface": "extension package + native companion delivery",
+      "decision": "Build/release duties need package-specific proof. Native installer requirements apply to the installed companion; the browser extension needs its own supported package identity, installation and update evidence. Source staging is not installation.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "runner-selection",
+      "classification": "repository-delivery",
+      "surface": "extension package + native companion delivery",
+      "decision": "Build/release duties need package-specific proof. Native installer requirements apply to the installed companion; the browser extension needs its own supported package identity, installation and update evidence. Source staging is not installation.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "encrypted-public-builder",
+      "classification": "repository-delivery",
+      "surface": "extension package + native companion delivery",
+      "decision": "Build/release duties need package-specific proof. Native installer requirements apply to the installed companion; the browser extension needs its own supported package identity, installation and update evidence. Source staging is not installation.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "tabbed-readme",
+      "classification": "repository-delivery",
+      "surface": "repository records",
+      "decision": "Maintain project records and sanitized documentation; this family is not a popup control. Extension-specific implementation and evidence must be reflected without exposing private records.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "human-time-estimate",
+      "classification": "repository-delivery",
+      "surface": "repository records",
+      "decision": "Maintain project records and sanitized documentation; this family is not a popup control. Extension-specific implementation and evidence must be reflected without exposing private records.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "sanitized-instruction-copy",
+      "classification": "repository-delivery",
+      "surface": "repository records",
+      "decision": "Maintain project records and sanitized documentation; this family is not a popup control. Extension-specific implementation and evidence must be reflected without exposing private records.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "agents-md-vocabulary-block",
+      "classification": "repository-delivery",
+      "surface": "repository records",
+      "decision": "Maintain project records and sanitized documentation; this family is not a popup control. Extension-specific implementation and evidence must be reflected without exposing private records.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "vocabulary-hash-lock",
+      "classification": "repository-delivery",
+      "surface": "repository records",
+      "decision": "Maintain project records and sanitized documentation; this family is not a popup control. Extension-specific implementation and evidence must be reflected without exposing private records.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "roadmap-checklist",
+      "classification": "repository-delivery",
+      "surface": "repository records",
+      "decision": "Maintain project records and sanitized documentation; this family is not a popup control. Extension-specific implementation and evidence must be reflected without exposing private records.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "feature-docs",
+      "classification": "repository-delivery",
+      "surface": "repository records",
+      "decision": "Maintain project records and sanitized documentation; this family is not a popup control. Extension-specific implementation and evidence must be reflected without exposing private records.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "postman-collections",
+      "classification": "repository-delivery",
+      "surface": "repository records",
+      "decision": "Maintain project records and sanitized documentation; this family is not a popup control. Extension-specific implementation and evidence must be reflected without exposing private records.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "wiki-documentation-sync",
+      "classification": "repository-delivery",
+      "surface": "repository records",
+      "decision": "Maintain project records and sanitized documentation; this family is not a popup control. Extension-specific implementation and evidence must be reflected without exposing private records.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "handoff-record",
+      "classification": "repository-delivery",
+      "surface": "repository records",
+      "decision": "Maintain project records and sanitized documentation; this family is not a popup control. Extension-specific implementation and evidence must be reflected without exposing private records.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "closeout-prompt",
+      "classification": "repository-delivery",
+      "surface": "repository records",
+      "decision": "Maintain project records and sanitized documentation; this family is not a popup control. Extension-specific implementation and evidence must be reflected without exposing private records.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "discussion-records",
+      "classification": "repository-delivery",
+      "surface": "repository records",
+      "decision": "Maintain project records and sanitized documentation; this family is not a popup control. Extension-specific implementation and evidence must be reflected without exposing private records.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "project-board",
+      "classification": "repository-delivery",
+      "surface": "repository records",
+      "decision": "Maintain project records and sanitized documentation; this family is not a popup control. Extension-specific implementation and evidence must be reflected without exposing private records.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "operational-skill",
+      "classification": "repository-delivery",
+      "surface": "repository records",
+      "decision": "Maintain project records and sanitized documentation; this family is not a popup control. Extension-specific implementation and evidence must be reflected without exposing private records.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "readme-prompt-banner",
+      "classification": "canonical-source-only",
+      "surface": "not a product UI",
+      "decision": "Applies to the canonical instruction source, not consumer extension UI. Preserve the semantic inventory row with this explicit scope reason; do not bundle private instruction material.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "uh-single-file-editions",
+      "classification": "canonical-source-only",
+      "surface": "not a product UI",
+      "decision": "Applies to the canonical instruction source, not consumer extension UI. Preserve the semantic inventory row with this explicit scope reason; do not bundle private instruction material.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "project-profile",
+      "classification": "repository-delivery",
+      "surface": "repository records",
+      "decision": "Maintain project records and sanitized documentation; this family is not a popup control. Extension-specific implementation and evidence must be reflected without exposing private records.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "roblox-model-catalogue",
+      "classification": "not-applicable",
+      "surface": "not a Roblox product",
+      "decision": "This extension is not a Roblox game and has no Roblox model/rendering surface. This narrow scope exception does not exempt browser UI, local tools or required server-manager workflows.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    },
+    {
+      "id": "roblox-visual-realism",
+      "classification": "not-applicable",
+      "surface": "not a Roblox product",
+      "decision": "This extension is not a Roblox game and has no Roblox model/rendering surface. This narrow scope exception does not exempt browser UI, local tools or required server-manager workflows.",
+      "implementation": "unverified",
+      "documentation": "HANDOFF.md",
+      "runtimeEvidence": [],
+      "completionClaim": false
+    }
+  ]
+}
