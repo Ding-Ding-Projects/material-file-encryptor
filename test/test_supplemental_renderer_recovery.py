@@ -27,7 +27,7 @@ class Binding:
 
 
 class InterpreterCommandTests(unittest.TestCase):
-    def test_gui_retains_exact_launcher_and_console_substitutes_base(self):
+    def test_supported_redirectors_retain_exact_invocation_spelling(self):
         root = Path('C:/synthetic root')
         arguments = [str(root / 'worker.py'), '17']
         launcher, base = root / 'venv/Scripts/pythonw.exe', root / 'runtime/pythonw.exe'
@@ -35,7 +35,10 @@ class InterpreterCommandTests(unittest.TestCase):
         self.assertEqual(actual, subprocess.list2cmdline([str(launcher), *arguments]))
         self.assertNotEqual(actual, '"' + str(base) + '" ' + subprocess.list2cmdline(arguments))
         command, actual = recovery.interpreter_commands(launcher.with_name('python.exe'), base.with_name('python.exe'), arguments)
-        self.assertEqual(actual, '"' + str(base.with_name('python.exe')) + '" ' + subprocess.list2cmdline(arguments))
+        self.assertEqual(actual, command)
+        invocation = 'C:/synthetic root/venv/Scripts/python.exe'
+        command, actual = recovery.interpreter_commands(launcher.with_name('python.exe'), base.with_name('python.exe'), arguments, invocation)
+        self.assertEqual(actual, subprocess.list2cmdline([invocation, *arguments]))
 
 
 class Tests(unittest.TestCase):

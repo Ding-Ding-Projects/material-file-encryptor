@@ -273,11 +273,10 @@ def configured_base_interpreter(values, launcher, actual_base):
     return base
 
 
-def interpreter_commands(launcher, base, arguments):
+def interpreter_commands(launcher, base, arguments, invocation=None):
     """Build exact commands for the supported CPython redirector routes."""
-    command = subprocess.list2cmdline([str(launcher), *arguments])
-    base_command = command if launcher.name.lower() == 'pythonw.exe' else '"' + str(base) + '" ' + subprocess.list2cmdline(arguments)
-    return command, base_command
+    command = subprocess.list2cmdline([invocation if invocation is not None else str(launcher), *arguments])
+    return command, command
 
 
 @contextmanager
@@ -292,9 +291,9 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
         cfg = launcher.parent.parent / 'pyvenv.cfg'
         values = dict(line.split(' = ', 1) for line in cfg.read_text().splitlines() if ' = ' in line)
         base = configured_base_interpreter(values, launcher, sys._base_executable)
-        # The GUI redirector retains the isolated launch command in the base
-        # process. The console redirector substitutes its quoted base image.
-        command, base_command = interpreter_commands(launcher, base, sys.argv)
+        # The supported redirectors retain the original invocation spelling in
+        # the base process. Native image identity remains separately checked.
+        command, base_command = interpreter_commands(launcher, base, sys.argv, os.environ['MFE_LOWLEVEL_PYTHON'])
         configuration = {'launcher': str(launcher), 'base': str(base), 'node': str(node), 'files': {str(p): digest(p) for p in [launcher, base, cfg, node]}, 'command': command, 'baseCommand': base_command, 'selfPid': os.getpid()}
     rows, chain = api.inventory(), []
     current = configuration['selfPid']
