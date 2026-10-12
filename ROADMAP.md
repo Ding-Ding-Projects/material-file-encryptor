@@ -9,6 +9,7 @@
 - [ ] Finish actual one-click Ollama installation, native lifetime execution, cancellation and installed runtime verification.
 - [ ] After Ollama verification, record the reusable installation procedure and universal one-click control requirement in canonical shared instructions, validate generated outputs and verify its push.
 - [x] Deliver the exact README/evidence deployment trigger on main 1024c149 with successful release and documentation workflows.
+- [x] Independently review and root-build diagram stroke/extent repair 5c5c24b; successor rendered acceptance remains pending.
 - [ ] Deliver the full README, three rendered diagrams and reviewed evidence JSON directly on the documentation site, then verify actual live routes.
 - [ ] Record complete capture-promotion provenance during future genuine captures; the current 49fe7b4 selections remain unpromoted.
 - [ ] Complete all required features and the full language/theme/viewport/scale visual matrix; current fourteen layout receipts cover one tuple only.
