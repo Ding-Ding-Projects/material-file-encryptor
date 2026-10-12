@@ -62,6 +62,30 @@ browser guarantees. Browser zoom and host display scaling must be measured
 independently at 100%, 125%, 150% and 200%. The content reflows to one column;
 primary actions wrap rather than truncating; overlays scroll within the viewport.
 
+## Reference focus verification
+
+Redraw-triggering controls retain stable `data-focus-key` identities. Language,
+theme and state selectors survive translated labels and Material button variants;
+tab arrows explicitly target the newly selected tab. Redraw restores focus after
+the replacement component's `updateComplete`, with a generation check preventing
+an older redraw from taking focus. The heading is used only when the initiating
+control was removed. An initial render without a focus request does not move focus.
+
+Run `node --test design/extension-completion/focus.test.js` for eight synthetic
+focus cases, including nested component focus, translated/replaced controls,
+removed-control fallback, asynchronous completion and superseded redraws. These
+checks exercise reference helper behavior, not an installed browser or real pixels.
+
+The remaining real-reference check uses an isolated browser and keyboard only:
+open a settings state, activate each language choice, toggle light/dark twice,
+select another state, then use Arrow/Home/End on the workspace tabs. After each
+action await the reference element's `focusRestored` promise and inspect its
+composed active element: the stable key must match the initiating control (or the
+explicit arrow destination), with a visible ring and no unexpected scroll. Open
+workspace from the popup to remove that originating control and require heading
+focus instead. Repeat in all language modes, both themes and minimum/high-scale
+tuples. This actual rendering check remains pending.
+
 ## Asset and reference provenance
 
 All reference layout and copy are authored here. There are no generated images,

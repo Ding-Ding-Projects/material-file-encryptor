@@ -1,6 +1,7 @@
 import '../../src/shared/surface/material.js';
 import '../../src/shared/surface/search.js';
 import {scenarios} from './scenarios.js';
+import {captureFocusKey,restoreReferenceFocus} from './focus.js';
 
 // All content is an explicitly labelled design fixture. No production API calls.
 const params = new URLSearchParams(location.search);
@@ -32,20 +33,22 @@ class ExtensionReference extends HTMLElement {
   connectedCallback() { this.render(); }
   t(en, yue) { return this.language === 'yue' ? yue : this.language === 'bilingual' ? `${en}\u2063${yue}` : en; }
   text(pair) { return this.t(...pair); }
-  button(en, yue, action, kind = 'md-outlined-button') {
-    const button = node(kind, this.t(en, yue), {type: 'button'});
-    button.addEventListener('click', action); return button;
+  button(en, yue, action, kind = 'md-outlined-button', focusKey = `action:${en}:${yue}`) {
+    const button = node(kind, this.t(en, yue), {type: 'button','data-focus-key':focusKey});
+    button.addEventListener('click',event=>{this.initiatingFocusKey=focusKey;try{action(event);}finally{this.initiatingFocusKey=null;}});return button;
   }
   unavailable(en, yue) {
     const button = this.button(en, yue, () => {}); button.disabled = true; return button;
   }
-  go(screen, state) { this.screen = screen; this.state=state || (screen==='popup'||screen==='transfers'?'unpaired':Object.keys(scenarios[screen]||{})[0]); this.render(); this.shadowRoot.querySelector('h1')?.focus(); }
+  go(screen, state, focusKey) { this.screen = screen; this.state=state || (screen==='popup'||screen==='transfers'?'unpaired':Object.keys(scenarios[screen]||{})[0]); this.render(focusKey); }
   paragraph(en, yue, className = '') { return node('p', this.t(en, yue), {class: className}); }
   section(en, yue) {
     const region = node('section', '', {class: 'surface'});
     region.append(node('h2', this.t(en, yue))); return region;
   }
-  render() {
+  render(requestedFocusKey) {
+    const focusKey=requestedFocusKey||this.initiatingFocusKey||captureFocusKey(this.shadowRoot);
+    const renderGeneration=this.renderGeneration=(this.renderGeneration||0)+1;
     const savedLanguage=this.language;
     if(this.screen==='settings'&&this.state==='shared-mode-active')this.language='en';
     document.documentElement.lang = this.language === 'yue' ? 'zh-HK' : 'en';
@@ -66,7 +69,7 @@ class ExtensionReference extends HTMLElement {
     if(this.screen !== 'popup') {
       const bar=node('div','',{class:'tabs'}),tabs=node('md-tabs','',{'aria-label':this.t('Reference workspace destinations','參考工作區目的地')});
       const destinations=['transfers','settings','capabilities','access','history','notifications','documentation','status'];
-      for (const screen of destinations) { const tab=node('md-primary-tab',this.text(copy[screen]),{id:`tab-${screen}`,'aria-controls':`panel-${screen}`,'aria-selected':String(this.screen===screen),tabindex:this.screen===screen?'0':'-1'});tab.active=this.screen===screen;tab.addEventListener('click',()=>this.go(screen));tab.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const index=destinations.indexOf(screen);const next=event.key==='Home'?0:event.key==='End'?destinations.length-1:(index+(event.key==='ArrowRight'?1:-1)+destinations.length)%destinations.length;this.go(destinations[next]);this.shadowRoot.getElementById(`tab-${destinations[next]}`)?.focus();});tabs.append(tab); }
+      for (const screen of destinations) { const tab=node('md-primary-tab',this.text(copy[screen]),{id:`tab-${screen}`,'data-focus-key':`tab-${screen}`,'aria-controls':`panel-${screen}`,'aria-selected':String(this.screen===screen),tabindex:this.screen===screen?'0':'-1'});tab.active=this.screen===screen;tab.addEventListener('click',()=>this.go(screen));tab.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const index=destinations.indexOf(screen);const next=event.key==='Home'?0:event.key==='End'?destinations.length-1:(index+(event.key==='ArrowRight'?1:-1)+destinations.length)%destinations.length;this.go(destinations[next],undefined,`tab-${destinations[next]}`);});tabs.append(tab); }
       bar.append(tabs);main.append(bar);
     }
     const standalone=['popup','shared-overlays'].includes(this.screen);
@@ -78,18 +81,19 @@ class ExtensionReference extends HTMLElement {
     const tools=node('section','',{class:'design-tools','aria-label':this.t('Design preview controls','設計預覽控制')});
     tools.append(node('h2',this.t('Reference controls','參考控制')));
     const languages=node('div','',{class:'actions'});
-    for(const [id,label] of [['en','English'],['yue','廣東話'],['bilingual','English · 廣東話']])languages.append(this.button(label,label,()=>{this.language=id;this.render();},this.language===id?'md-filled-tonal-button':'md-text-button'));
+    for(const [id,label] of [['en','English'],['yue','廣東話'],['bilingual','English · 廣東話']])languages.append(this.button(label,label,()=>{this.language=id;this.render();},this.language===id?'md-filled-tonal-button':'md-text-button',`reference-language:${id}`));
     if(this.state!=='shared-mode-active')tools.append(languages);
-    tools.append(this.button(dark?'Preview light theme':'Preview dark theme',dark?'預覽淺色主題':'預覽深色主題',()=>{this.theme=dark?'light':'dark';this.render();}));
+    tools.append(this.button(dark?'Preview light theme':'Preview dark theme',dark?'預覽淺色主題':'預覽深色主題',()=>{this.theme=dark?'light':'dark';this.render();},'md-outlined-button','reference-theme'));
     const states=node('div','',{class:'actions'});
     const currentStates=[...new Set([...(['popup','transfers'].includes(this.screen)?allowedStates:[]),...Object.keys(scenarios[this.screen]||{})])];
-    for(const state of currentStates){if(this.state==='shared-mode-active'&&state!=='shared-mode-unavailable'&&state!=='shared-mode-active')continue;const label=scenarios[this.screen]?.[state]?.slice(0,2)||copy[state];states.append(this.button(...label,()=>{this.state=state;this.render();},this.state===state?'md-filled-tonal-button':'md-text-button'));}
+    for(const state of currentStates){if(this.state==='shared-mode-active'&&state!=='shared-mode-unavailable'&&state!=='shared-mode-active')continue;const label=scenarios[this.screen]?.[state]?.slice(0,2)||copy[state];states.append(this.button(...label,()=>{this.state=state;this.render();},this.state===state?'md-filled-tonal-button':'md-text-button',`reference-state:${this.screen}:${state}`));}
     const screens=node('div','',{class:'actions'});for(const screen of allowedScreens)screens.append(this.button(...copy[screen],()=>this.go(screen),'md-text-button'));
     tools.append(states,screens);main.append(tools,node('footer',this.t('Design state only. No operation, storage, pairing or release acceptance is claimed.','僅屬設計狀態。並未聲稱操作、儲存、配對或發佈已通過驗收。')));this.shadowRoot.append(main);
     const walker=document.createTreeWalker(this.shadowRoot,NodeFilter.SHOW_TEXT);const pending=[];while(walker.nextNode())if(walker.currentNode.textContent.includes('\u2063'))pending.push(walker.currentNode);
     for(const textNode of pending){const parts=textNode.textContent.split('\u2063');const fragment=document.createDocumentFragment();parts.forEach((part,index)=>fragment.append(node('span',part,{class:index?'secondary':'primary',lang:index?'zh-HK':'en'})));textNode.replaceWith(fragment);}
     for(const el of this.shadowRoot.querySelectorAll('*'))for(const attr of [...el.attributes])if(attr.value.includes('\u2063'))el.setAttribute(attr.name,attr.value.replaceAll('\u2063',', '));
     this.language=savedLanguage;
+    this.focusRestored=restoreReferenceFocus(this.shadowRoot,focusKey,()=>this.renderGeneration===renderGeneration);
   }
   renderTransfers(main) {
     const connection=this.section('Browser connection','瀏覽器連線');
