@@ -13,26 +13,189 @@
   "primitiveAudit": "planned in README.md; integrated candidate audit pending",
   "intentionalDeviation": null,
   "tuples": {
-    "viewports": [{"width": 1180, "height": 850}, {"width": 880, "height": 650}],
-    "themes": ["light", "dark"],
-    "languages": ["en", "yue", "bilingual"],
-    "scales": [1, 1.25, 1.5, 2]
+    "viewports": [
+      {
+        "width": 1180,
+        "height": 850
+      },
+      {
+        "width": 880,
+        "height": 650
+      }
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "languages": [
+      "en",
+      "yue",
+      "bilingual"
+    ],
+    "scales": [
+      1,
+      1.25,
+      1.5,
+      2
+    ]
   },
   "states": [
-    {"id": "drive-locked", "screen": "drive", "state": "locked"},
-    {"id": "drive-empty", "screen": "drive", "state": "empty"},
-    {"id": "drive-populated", "screen": "drive", "state": "populated"},
-    {"id": "drive-selected", "screen": "drive", "state": "selected"},
-    {"id": "drive-busy", "screen": "drive", "state": "busy"},
-    {"id": "drive-error", "screen": "drive", "state": "error"},
-    {"id": "drive-overflow", "screen": "drive", "state": "overflow"},
-    {"id": "drive-search", "screen": "drive", "state": "search"},
-    {"id": "drive-notifications", "screen": "drive", "state": "notifications"},
-    {"id": "offline-populated", "screen": "offline", "state": "populated"},
-    {"id":"history-populated","screen":"history","state":"populated","selectionContract":{"control":"md-radio[data-history-select]","row":"tr[data-history-version][aria-selected=\"true\"]","details":"[data-history-details][data-version-id]","restore":"[data-history-restore-selected]","keyboard":["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Home","End","Enter","Space"],"selectionMutatesFiles":false,"persistence":"Version identity survives filtering and language changes; lock or record removal clears it.","detailsFields":["id","entryId","path","timestampUtc","length","isDirectory","isAvailable"],"verification":"Source-only interaction checks; built capture pending."}},
-    {"id": "recycle-selected", "screen": "recycle", "state": "selected"},
-    {"id": "tools-default", "screen": "tools", "state": "default"},
-    {"id": "settings-default", "screen": "settings", "state": "default"},
-    {"id": "help-default", "screen": "help", "state": "default"}
+    {
+      "id": "drive-locked",
+      "screen": "drive",
+      "state": "locked"
+    },
+    {
+      "id": "drive-empty",
+      "screen": "drive",
+      "state": "empty"
+    },
+    {
+      "id": "drive-populated",
+      "screen": "drive",
+      "state": "populated"
+    },
+    {
+      "id": "drive-selected",
+      "screen": "drive",
+      "state": "selected"
+    },
+    {
+      "id": "drive-busy",
+      "screen": "drive",
+      "state": "busy"
+    },
+    {
+      "id": "drive-error",
+      "screen": "drive",
+      "state": "error"
+    },
+    {
+      "id": "drive-overflow",
+      "screen": "drive",
+      "state": "overflow"
+    },
+    {
+      "id": "drive-search",
+      "screen": "drive",
+      "state": "search"
+    },
+    {
+      "id": "drive-notifications",
+      "screen": "drive",
+      "state": "notifications"
+    },
+    {
+      "id": "offline-populated",
+      "screen": "offline",
+      "state": "populated"
+    },
+    {
+      "id": "history-populated",
+      "screen": "history",
+      "state": "populated",
+      "selectionContract": {
+        "control": "md-radio[data-history-select]",
+        "row": "tr[data-history-version][aria-selected=\"true\"]",
+        "details": "[data-history-details][data-version-id]",
+        "restore": "[data-history-restore-selected]",
+        "keyboard": [
+          "ArrowUp",
+          "ArrowDown",
+          "ArrowLeft",
+          "ArrowRight",
+          "Home",
+          "End",
+          "Enter",
+          "Space"
+        ],
+        "selectionMutatesFiles": false,
+        "persistence": "Version identity survives filtering and language changes; lock or record removal clears it.",
+        "detailsFields": [
+          "id",
+          "entryId",
+          "path",
+          "timestampUtc",
+          "length",
+          "isDirectory",
+          "isAvailable"
+        ],
+        "verification": "Source-only interaction checks; built capture pending."
+      }
+    },
+    {
+      "id": "recycle-selected",
+      "screen": "recycle",
+      "state": "selected"
+    },
+    {
+      "id": "tools-default",
+      "screen": "tools",
+      "state": "default"
+    },
+    {
+      "id": "settings-default",
+      "screen": "settings",
+      "state": "default"
+    },
+    {
+      "id": "help-default",
+      "screen": "help",
+      "state": "default"
+    },
+    {
+      "id": "drive-create-dialog",
+      "screen": "drive",
+      "state": "create-dialog",
+      "productionRoute": "Drive -> Create a drive; enter owned neutral fixture paths without submitting",
+      "productionSelector": "#vault-dialog[open]",
+      "productionState": "Open create form, folder transport, storage and cache fields populated, first field focused",
+      "referencePurpose": "Local SVG helper anatomy and grouped select search; no production capture claim",
+      "baselineSource": "7ad539a937f5c2828572884cc7ef7111290ba62c",
+      "captureTuples": [
+        {
+          "width": 1180,
+          "height": 752,
+          "scale": 1.5
+        }
+      ],
+      "verification": "New build and genuine capture pending"
+    },
+    {
+      "id": "history-filtered-empty",
+      "screen": "history",
+      "state": "filtered-empty",
+      "productionRoute": "History -> Search entries -> type a neutral query with no matching owned records",
+      "productionSelector": "#view-history",
+      "productionState": "Synthetic query in the scoped search, no matching rows, no selection or file mutation",
+      "referencePurpose": "Own toolbar, no-match state and local SVG clear helper, not populated drive content",
+      "baselineSource": "7ad539a937f5c2828572884cc7ef7111290ba62c",
+      "captureTuples": [
+        {
+          "width": 1180,
+          "height": 752,
+          "scale": 1.5
+        }
+      ],
+      "verification": "New build and genuine capture pending"
+    },
+    {
+      "id": "recycle-filtered-empty",
+      "screen": "recycle",
+      "state": "filtered-empty",
+      "productionRoute": "Recycle Bin -> Search entries -> type a neutral query with no matching owned records",
+      "productionSelector": "#view-recycle",
+      "productionState": "Synthetic query in the scoped search, no matching rows, no selection or file mutation",
+      "referencePurpose": "Own toolbar, no-match state and local SVG clear helper, not populated drive content",
+      "baselineSource": "7ad539a937f5c2828572884cc7ef7111290ba62c",
+      "captureTuples": [
+        {
+          "width": 1180,
+          "height": 752,
+          "scale": 1.5
+        }
+      ],
+      "verification": "New build and genuine capture pending"
+    }
   ]
 }
