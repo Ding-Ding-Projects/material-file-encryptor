@@ -10,6 +10,7 @@
     <NoWarn>$(NoWarn);CA1416</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="../../src/features/server-manager/runtime-provenance.json" LogicalName="MaterialFileEncryptor.ServerRuntimeManifest" />
     <ProjectReference Include="../MaterialFileEncryptor.Core/MaterialFileEncryptor.Core.csproj" />
     <ProjectReference Include="../vendor/WinFsp/WinFsp.Binding.csproj" />
   </ItemGroup>
