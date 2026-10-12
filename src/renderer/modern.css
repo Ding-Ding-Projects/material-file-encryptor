@@ -16,3 +16,7 @@ mfe-dialog{display:contents}.dialog-heading{padding:8px 0 16px}.dialog-heading h
 
 /* Preserve live announcements without allocating a visible workspace row. */
 main>mfe-live-notification{position:absolute;width:1px;height:1px;padding:0;margin:-1px;border:0;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap}
+
+/* Keep the original select and its owned search action in one visual row. */
+.dialog-body>md-outlined-select[data-select-search-composition="adjacent"]:has(+md-icon-button[data-choice-search]){width:calc(100% - 56px);vertical-align:middle}
+.dialog-body>md-outlined-select[data-select-search-composition="adjacent"]+md-icon-button[data-choice-search]{vertical-align:middle;margin-inline:12px 4px}
