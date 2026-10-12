@@ -837,3 +837,16 @@ The gallery pipeline now groups the unchanged 14 historical originals by workflo
 ## Delivery-reference refresh
 
 The current review uses parent baseline `785fdf2` with ready revisions `4ca05780`, `455153bd`, `86c5cec`, `6ac06935` and `5f02f6c`. `contracts/feature-delivery.json` retains 208 unverified rows; 88 rows now carry concrete source mappings for 44 requirements on each surface. All 95 distinct referenced files resolve to an available reviewed commit. Ready source is not automatically described as integrated parent behavior, and no build interaction or screenshot is inferred. See [current integration boundaries](docs/features/platform/current-integration.md) before choosing the next verification step.
+# Resumed task state, 2026-10-12 UTC
+
+The current request includes all applicable required features, optimization, independently verified defect repair and shared-instruction synchronization. Newer interface source was retained, reconciled with main, and preserved on `codex/resume-integration-20261012`. Main remains at `f026abd65d80b28f42707635d9ce2a19cce83001`; branch preservation is not default-branch delivery.
+
+History repair `21bba22aaac0046374f6b1e1733b766a481e5248` is included in production source `3aebe66ded78bbfb0e3b8f8d829e64100371f446`. Both exact root entrypoints passed at that source. The first build's extension-publication EPERM remains retained; its unchanged algorithm subsequently published successfully and no unproved source repair is claimed. Squirrel extraction matched 860 payload files. Normal release v1.303.1 and successful workflow 38208563860 bind to this source. Downloaded-release and installed lifecycle acceptance remain unverified.
+
+The broad JavaScript run recorded 1,392 tests: 1,364 passed, three failed and 25 skipped. The translation check stopped at a stale content binding. Both renderer failures stopped in the quiet observer's native interpreter image/command comparison before an installed launch tool was invoked; the retained journal does not distinguish those two comparisons. Add bounded diagnostics and retain the rejection before correcting its cause.
+
+Surface registry source `a78d74ab5267618cbea404c4aee38ab6f09e23fd` is independently reviewed and preserved on its remote branch. It declares 856 concrete surfaces and 89,880 unverified assessments. Parent verification passed all 19 focused checks. The previous malformed vault-dialog identity was rejected, repaired and negatively tested; no count is runtime acceptance. Translation review and native server lifecycle implementation continue in isolated owned branches.
+
+Shared instructions synchronized successfully with 83 of 83 managed targets current. No authenticated Status Hub enrollment is configured, so only a private local status fallback exists. Project access lacks read:project scope; no Project mutation is claimed.
+
+The existing mounted drive remains untouched. Real-data migration, initial installation and removal stay deferred. Only a separately accepted matching release may enter the safe installed-update workflow. Retain original profiles, diagnostic journals, archives and private announcement variants. No deletion qualifies from source ancestry alone.

@@ -4,7 +4,13 @@
 
 [Download Windows x64 installer · v1.259.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/download/v1.259.1/MaterialFileEncryptor-Setup.exe) · [Documentation](https://ding-ding-projects.github.io/material-file-encryptor/) · [Release and provenance](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.259.1) · [中文文件](docs/features/README.zh-HK.md)
 
-> **Development status:** independently downloaded package bytes pass verification. Installed startup, automatic updating, restart continuity and the current rebuilt interface remain unfinished. The complete inventory contains **105 feature IDs and 210 desktop/website rows**; no complete-surface acceptance is claimed.
+> **Development status:** independently downloaded historical package bytes pass verification. Installed startup, automatic updating, restart continuity and the current rebuilt interface remain unfinished. The historical inventory retains **105 feature IDs and 210 desktop/website rows**. The supplementary concrete-surface registry now declares **856 surfaces and 89,880 independently unverified assessments**, including nested panels and the browser extension. These counts do not establish complete-surface acceptance.
+
+## Resumed verification, 2026-10-12
+
+Source `3aebe66ded78bbfb0e3b8f8d829e64100371f446` passed both exact root entrypoints, `build.bat /s` and `build-installer.bat /s`. Squirrel extraction matched all 860 payload files. The local package identifies version `0.2.0`; this local output is not an accepted installed-update candidate. The separately published normal release [v1.303.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.303.1) binds to the same source, but downloaded-release and installed-runtime acceptance remain separate.
+
+Combined JavaScript verification recorded 1,364 passes, three failures and 25 skips. One failure concerns stale reviewed-translation bindings; two renderer checks stopped at interpreter ownership admission before product launch. An independently reviewed history-setup repair prevents a waiting deadline from installing a verifier and preserves a concurrent later writer. Its 43 focused checks and three independently repeated waiting cases passed. The older four password-verification failures were not reproduced and are not claimed fixed.
 
 ## Verified storage packing update, 2026-10-11
 

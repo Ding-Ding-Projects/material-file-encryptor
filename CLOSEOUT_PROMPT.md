@@ -1,23 +1,24 @@
-# Continuation handoff
+# Active continuation handoff, 2026-10-12 UTC
 
-## Preservation checkpoint after interrupted verification
+Continue the approved full-product task: resume newer preserved source, optimize, repair independently confirmed defects, synchronize shared instructions and implement every applicable required feature across every rendered product surface. The full goal remains active and incomplete.
 
-The preservation pass verified all six outstanding remote tips, including main at 97a87c280d204651aa25304cb10146081cf1a175 and codex/integration-20261011 at 6b86cd2c074cc75a8ef9ee204ab75d8aa2a2e653. Product code on main retains the accepted native 80 MiB baseline. Newer interface code remains preserved on the integration branch and its original task branches. The full product goal is not complete.
+## Preserved source and verification
 
-The complete private archive of 30 checkouts and common Git administration passed integrity, exact 23,470-file inventory, before/after source stability, destination-boundary and access checks. Its 269,372,442 bytes have SHA-256 3eff8dca6bd0d09953edb29ba87ad4f7a87e32e5587c89c5f5b0b526ee6152e7. A separate hash-verified private copy preserves 273 announcement files (317,266,144 bytes). Cloud synchronization is unverified. This archive captures the stated source snapshot before this documentation-only follow-up.
+- Main remains f026abd65d80b28f42707635d9ce2a19cce83001. Candidate 3aebe66ded78bbfb0e3b8f8d829e64100371f446 is preserved on codex/resume-integration-20261012. History repair21bba22 is also preserved on its owning remote branch.
+- Both exact root entrypoints passed at3aebe66. Squirrel extraction matched860payload files. Local version0.2.0 is not an accepted installed-update candidate.
+- Successful workflow38208563860 published normal releasev1.303.1 at3aebe66. Metadata and uploaded inventory were read back. Downloaded bytes and installed acceptance remain unverified.
+- Combined JavaScript:1392tests,1364passed,3failed,25skipped. One stale-translation binding and two renderer observer identity failures are under repair. Retain original negative journals; observer exit0 does not establish product launch or cleanup.
+- Independently reviewed surface registrya78d74ab5267618cbea404c4aee38ab6f09e23fd is preserved on codex/surface-ledger-20261012 and integrated into the local candidate. Parent19focused checks passed.856surfaces and89880assessments remain unverified; source inventory is not runtime proof.
+- Shared instructions synchronized at194ceca48a55313ade8703a0cd4695efb41482b1 with83of83managed targets current. No authenticated Status Hub enrollment exists. Project access lacks read:project scope.
 
-No deletion candidate qualified. The explicitly owned storage-packing tip is an ancestor of remote main, but its 20,244 non-announcement ignored entries remain unclassified. Other candidates remain active, incomplete, unmerged or ownership-uncertain. All original checkouts, branches, unclassified ignored data and partial archive passes remain retained. No process was terminated to finish preservation.
+## Active work and next steps
 
-The latest exact build.bat /s at e1891f08 exited 0. The subsequent build-installer.bat /s was interrupted after packaging began. There is no final installer or supervisor exit receipt and no newly accepted installer output. Current observations show the recorded processes and exact named hidden desktop are absent; absence does not establish an exit code or normal closure. Retain the entire diagnostic run and its read-only recovery record. Earlier complete production evidence remains bound to375373a.
+Translation candidate6c880446b9e884efed589f189bbb7bda3111ae6f on codex/resume-history-20261012 corrects actual Cantonese drift and rebinds four reviewed pairs. Producer23focused checks pass; independently verify, preserve and integrate.
 
-Current JavaScript verification remains1326passed,23failed,24skipped at375373a. A later bounded run had49passed and4password-verification failures. Three fail during initial history setup before their named cancellation/recovery scenarios. A bounded synthetic diagnostic is prepared but unexecuted. No real credentials or mounted data were inspected.
+Observer repair continues in codex/surface-ledger-20261012 with bounded self-only diagnostics and a fresh no-product-launch probe. Initial evidence shows the actual GUI interpreter retains the original launcher command. Preserve exact native identity, hashes, ancestry and arguments while correcting only the demonstrated deterministic mismatch. Parent review and affected renderer rerun remain next.
 
-Context-provider targeting79adffeb and startup-select readiness2a2012b8 have independent source acceptance. The prepared fifth interaction controller has independent source review but has not run on a newly admitted package. Genuine375diagnostics verified composed targeting and Escape/outside/navigation dismissal while retaining startup action unavailability. There are zero accepted tuples in the89-state/4272-tuple matrix.
+Local server lifecycle work continues in codex/server-runtime-20261012 froma78d74. Compose native supervision and protected host lifecycle, preserving exact runtime, file lease, version configuration and license admission. Missing proof remains unavailable. Other three targets and complete rendered management remain unfinished.
 
-The established feature ledger contains105families and210rows, including the previously reviewed server-manager pair. Its historical104/208baseline remains recorded. Current classifications are113partial,63implemented-runtime-unverified,10unknown,18not-applicable,4deferred and2missing;192applicable rows lack complete current runtime evidence.
+Keep the existing mounted drive untouched. Real-data migration, initial installation and removal stay deferred. Safe automatic update requires a separately accepted matching release and actual installed-version continuity. No local computer power or login actions are authorized.
 
-Keep the existing drive mounted. Real-data migration, initial installation and removal remain deferred. Safe automatic update of the matching existing installation is authorized after a verified accepted-channel release, at a normal safe boundary with preservation and installed-version verification. No installed update occurred here.
-
-Retain incomplete, active, unmerged, unpushed, ownership-uncertain and load-bearing branches/checkouts. Cleanup requires complete verified source/administrative archives, separate safe preservation of ignored announcement variants and evidence, exact remote proof and ancestry into main. Unknown process ownership is not grounds for termination.
-
-Next after preservation: recover or repeat only the missing source-bound installer phase through the reviewed quiet route after fresh admission; inspect package bytes; run the accepted interaction sequence; complete the combined checks and visual matrix; resolve the four synthetic verification failures and remaining finite features. Do not present archived or pushed unfinished work as delivery.
+Integrate independently reviewed source units, preserve branches, verify remote refs and run focused checks after relevant changes. Resume packaged interaction only after fresh admission. Complete every applicable feature and genuine current visual evidence before claiming delivery. Retain all historical branches, profiles, diagnostics, archives and private announcement variants. Earlier archive proof remains historical and cloud synchronization unverified. No deletion qualifies from ancestry alone.

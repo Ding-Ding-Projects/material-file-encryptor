@@ -1,3 +1,16 @@
+## Resumed implementation, 2026-10-12 UTC
+
+- [x] Reconcile the newer preserved interface candidate with current main without discarding either history.
+- [x] Independently repair history setup during active waiting, including revision-owned rollback and concurrent-writer preservation; 43 focused checks and three parent-repeated waiting cases pass.
+- [x] Complete both exact root production entrypoints at 3aebe66; verify Squirrel extraction against all 860 payload files. Installed acceptance remains separate.
+- [x] Independently review the concrete-surface registry, repair malformed dialog extraction, and verify 19 focused checks. All 89,880 assessments across 856 surfaces remain unverified.
+- [ ] Repair stale translation bindings after actual bilingual content review; do not refresh hashes blindly.
+- [ ] Diagnose and repair quiet observer interpreter admission without weakening identity checks; rerun the two affected renderer checks.
+- [ ] Implement and verify trusted local server runtime admission and protected lifecycle integration, then complete the other execution targets.
+- [ ] Complete every applicable feature across extension, desktop, nested panels and documentation surfaces with separate actual runtime evidence.
+- [ ] Verify downloaded normal-release bytes, full packaged interaction, live documentation and safe accepted-channel update continuity.
+- [ ] Integrate completed source into main, verify remote refs and retain all incomplete or ownership-uncertain work.
+
 ## Current preservation pass
 
 - [x] Preserve reviewed interface source e1891f08 and original task tips on their remote branches.
