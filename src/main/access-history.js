@@ -10,7 +10,7 @@ const actionNames=new Set(['display-name-changed','authenticator-created','authe
 const clone=value=>structuredClone(value),hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const metadata=(record)=>({id:record.id,at:record.at,action:record.action,label:record.label||'',source:record.source||null,omitted:'Credential values and encrypted snapshots are omitted.'});
 const validKey=key=>typeof key==='string'&&(key===DISPLAY_KEY||/^authenticator:[a-zA-Z0-9:_.-]{1,160}$/.test(key));
-export function createAccessHistory({dataDirectory,credentials,getActor,now=Date.now,executeGit=execute,verifyHistory}={}){
+export function createAccessHistory({dataDirectory,credentials,getActor,now=Date.now,executeGit=execute,verifyHistory,getHistoryWaiting}={}){
  const directory=path.join(dataDirectory,'access-history'),recordsDirectory=path.join(directory,'records');
  let chain=Promise.resolve(),closed=false,initialized=false;const grants=new Map(),epochs=new Map();
  const actor=()=>{const value=getActor?.();if(typeof value!=='string'||!value||value.length>160)throw Error('Trusted access actor is unavailable.');return value;};
@@ -61,7 +61,29 @@ export function createAccessHistory({dataDirectory,credentials,getActor,now=Date
    if(action==='historyLock'){epochs.set(who,epoch(who)+1);grants.delete(who);return Promise.resolve(true);}
    if(action==='historyStatus')return Promise.resolve({unlocked:grants.get(who)>now()});
    if(action==='historySetup'||action==='historyUnlock'){
-    const start=epoch(who);return serial(async()=>{if(typeof payload.password!=='string'||!payload.password||payload.password.length>4096)throw Error('Enter a bounded history password.');let record=await credentials.get(VAULT_KEY);if(action==='historySetup'){if(record)throw Error('Access history already has a password.');if(typeof credentials.readVersioned!=='function'||typeof credentials.compareAndSetVersioned!=='function')throw Error('Atomic protected-record updates are unavailable.');const initial=await credentials.readVersioned(VAULT_KEY);if(initial.value!==null)throw Error('Access history already has a password.');await initialize();const verifier=await passwordVerifier(payload.password);if(closed||epoch(who)!==start||actor()!==who)throw Error('Access history setup was cancelled.');record={version:1,verifier,key:randomBytes(32).toString('base64')};const installed=await credentials.compareAndSetVersioned(VAULT_KEY,initial.revision,record);if(!installed.updated)throw Error('Access history already has a password.');if(closed||epoch(who)!==start||actor()!==who){await credentials.compareAndSetVersioned(VAULT_KEY,installed.revision,null);throw Error('Access history setup was cancelled.');}}if(!record||!(verifyHistory?(await verifyHistory(payload.password)).ok:await verifyPassword(payload.password,record.verifier)))throw Error('The access history password did not match.');if(closed||epoch(who)!==start||actor()!==who)throw Error('Access history unlock was cancelled.');const k=await key();try{await read(k);}finally{k.fill(0);}if(closed||epoch(who)!==start||actor()!==who)throw Error('Access history unlock was cancelled.');grants.set(who,now()+600000);return {unlocked:true};});
+    const start=epoch(who);return serial(async()=>{
+     if(typeof payload.password!=='string'||!payload.password||payload.password.length>4096)throw Error('Enter a bounded history password.');
+     const current=()=>{if(closed||epoch(who)!==start||actor()!==who)throw Error('Access history '+(action==='historySetup'?'setup':'unlock')+' was cancelled.');};
+     const checkWaiting=async()=>{if(getHistoryWaiting){const waiting=await getHistoryWaiting();current();if(waiting.until>now())throw Error('Access history is waiting. Wait until its deadline before retrying.');}};
+     let record=await credentials.get(VAULT_KEY),installed;
+     try{
+      if(action==='historySetup'){
+       if(record)throw Error('Access history already has a password.');
+       if(typeof credentials.readVersioned!=='function'||typeof credentials.compareAndSetVersioned!=='function')throw Error('Atomic protected-record updates are unavailable.');
+       const initial=await credentials.readVersioned(VAULT_KEY);if(initial.value!==null)throw Error('Access history already has a password.');
+       await checkWaiting();await initialize();const verifier=await passwordVerifier(payload.password);current();await checkWaiting();
+       record={version:1,verifier,key:randomBytes(32).toString('base64')};installed=await credentials.compareAndSetVersioned(VAULT_KEY,initial.revision,record);
+       if(!installed.updated)throw Error('Access history already has a password.');current();await checkWaiting();
+      }
+      if(!record)throw Error('The access history password did not match.');
+      const verified=verifyHistory?await verifyHistory(payload.password):{ok:await verifyPassword(payload.password,record.verifier)};
+      current();if(!verified.ok){if(verified.until>now())throw Error('Access history is waiting. Wait until its deadline before retrying.');throw Error('The access history password did not match.');}
+      const k=await key();try{await read(k);}finally{k.fill(0);}current();grants.set(who,now()+600000);return {unlocked:true};
+     }catch(error){
+      if(installed?.updated){const restored=await credentials.compareAndSetVersioned(VAULT_KEY,installed.revision,null);if(!restored.updated)throw Error('Access history setup changed concurrently. Review its configuration before retrying.');}
+      throw error;
+     }
+    });
    }
    if(action==='historyRestore'){const check=authorization(who);return serial(async()=>{check();const k=await key();try{const {rows}=await read(k),entry=rows.find(r=>r.id===payload.id);if(!entry)throw Error('Access history entry was not found.');check();const before=await snapshot(),transaction=await writeSnapshot(entry.snapshot,before);try{check();await append('authenticator-restored',entry.snapshot,k,{source:entry.id});check();return {restored:true,displayName:entry.snapshot[DISPLAY_KEY]?.value||null};}catch(error){await transaction.rollback();await append('mutation-rolled-back',before,k).catch(()=>{});throw error;}}finally{k.fill(0);}});}
    const check=authorization(who);return serial(async()=>{check();const k=await key();try{const {rows}=await read(k);check();const retention=rows.filter(r=>r.action==='history-retention-changed').at(-1)?.days||365,pruned=new Set(rows.filter(r=>r.action==='history-pruned').flatMap(r=>r.prunedIds||[])),visible=rows.filter(r=>!pruned.has(r.id));const find=id=>{const entry=visible.find(r=>r.id===id);if(!entry)throw Error('Access history entry was not found.');return entry;};

@@ -1,5 +1,7 @@
 # Privileged access host integration
 
+History setup checks the persisted waiting deadline before deriving or installing its verifier, then rechecks after installation. A deadline that starts during setup prevents access and removes only the setup operation's own installed revision. A later writer is preserved and reported for review. Setup and unlock report an active waiting deadline explicitly rather than presenting it as an incorrect password. Ordinary incorrect unlock attempts retain the same escalation and deadline enforcement.
+
 The privileged host verifies passwords, PINs and TOTP, persists failed-attempt deadlines, grades one-use waiting challenges and enforces three successful waiting skips per rolling hour. Winning a challenge only ends waiting. It never authenticates a profile, unlocks an element or grants history access.
 
 Waiting answers require dense arrays with an own data property at every index. Inherited indices, accessors, extra properties and missing elements are rejected before grading. The host schema, direct challenge service and sum/timed-round grader enforce this independently. An invalid answer cannot clear the stored deadline or consume a successful skip, and even a correctly solved round never authenticates the caller.
