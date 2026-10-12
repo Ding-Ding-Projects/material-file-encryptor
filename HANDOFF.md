@@ -1,3 +1,7 @@
+## Translation inventory repair
+
+Five local-language source checks pass, including negative cases for untranslated prose, changed or removed literal entries, and complete current history validation messages. The exact API/default/state values remain unchanged; two missing history-pruning messages now have Cantonese copy. No rendered acceptance is claimed.
+
 ## Encrypted upload callback fixture
 
 The focused source-only callback check passed once after supplying the minimum logic-only HTMLElement base. It exercises current encrypted visitor-cache persistence, locked pending input, stale authorization and awaited reset. No browser launch, package build or installed operation occurred.

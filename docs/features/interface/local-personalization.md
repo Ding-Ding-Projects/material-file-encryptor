@@ -76,3 +76,7 @@ Focused checks cover the actual renderer startup seam, terminal exclusions, late
 results, trusted input, verified tool selection, image bounds and publication
 validation. They do not prove installed startup display or native decoding. Those
 remain separate built-runtime acceptance requirements.
+
+## Translation inventory verification
+
+History pruning cancellation and concurrent-change errors have Cantonese copy. The source check explicitly distinguishes exact API names, authored default values and the enumerated state keys from prose. Those literals must retain their declared values and punctuation; missing entries, changed literals and untranslated new prose fail. Five focused source checks pass. Rendered localization remains a separate requirement.

@@ -4,14 +4,32 @@ import {readFile} from 'node:fs/promises';
 import {COPY,createTranslator,MESSAGE_STYLES,SETTING_LABELS} from '../src/shared/local-ux/language.js';
 import {DEFAULTS} from '../src/shared/local-ux/store.js';
 
-test('every registered label and setting has a real Cantonese path',()=>{
- const state=structuredClone(DEFAULTS);state.language='yue';const t=createTranslator(()=>state);
- for(const [source,translated]of Object.entries(COPY)){
-  assert.equal(t(source),translated,source);
-  if(!['HTTPS API','Home Assistant'].includes(source)&&/[a-zA-Z]/.test(source.replace(/\{[^}]+\}/g,'')))assert.match(translated,/[\u3400-\u9fff]/u,source);
+// Exact API names and literal authored defaults are data, not untranslated sentences.
+// Each exception is explicit, exists in COPY and must preserve its exact value.
+const literalCopy = new Map([
+ ...['HTTPS API','Home Assistant','Web Animations','KeyframeEffect','normal.','none.','linear.','opacity.','element.','replace.','entry.','any.','restart.','true.','document.','target.','block.','auto.','false.'].map(value=>[value,value.endsWith('.')?value.slice(0,-1)+'。':value]),
+ ['normal, hover, focus, active, selected, disabled, dragged, invalid, loading, success, warning, error','normal、hover、focus、active、selected、disabled、dragged、invalid、loading、success、warning、error']
+]);
+function validateCopy(copy) {
+ for(const [source,expected] of literalCopy){assert.ok(Object.hasOwn(copy,source),source);assert.equal(copy[source],expected,source);}
+ for(const [source,translated] of Object.entries(copy)){
+  if(literalCopy.has(source))continue;
+  if(/[a-zA-Z]/.test(source.replace(/\{[^}]+\}/g,'')))assert.match(translated,/[\u3400-\u9fff]/u,source);
  }
+}
+test('every registered label and setting has a real Cantonese path',()=>{
+ validateCopy(COPY);
+ const state=structuredClone(DEFAULTS);state.language='yue';const t=createTranslator(()=>state);
+ for(const [source,translated]of Object.entries(COPY))assert.equal(t(source),translated,source);
  for(const label of Object.values(SETTING_LABELS))assert.ok(t.has(label),label);
 });
+test('copy classification rejects untranslated prose and changed or absent technical literals',()=>{
+ for(const mutate of [copy=>{copy.Personalization='Personalization';},copy=>{copy['KeyframeEffect']='renamed';},copy=>{delete copy['normal.'];},copy=>{copy['New untranslated sentence.']='New untranslated sentence.';}]){
+  const copy={...COPY};mutate(copy);assert.throws(()=>validateCopy(copy));
+ }
+ validateCopy(COPY);
+});
+
 test('all five independent message levels preserve interpolated facts',()=>{
  const state=structuredClone(DEFAULTS),t=createTranslator(()=>state,{dictionary:{'Remove {count} records from {path}.':'由 {path} 移除 {count} 項記錄。'}});
  const values={count:17,path:'/synthetic/input.txt'};

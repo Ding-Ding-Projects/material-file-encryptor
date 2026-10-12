@@ -548,3 +548,5 @@
 - [ ] Complete the wider language/theme/scale matrix and current-image promotion; the bounded diagram result does not certify these outcomes.
 
 - [x] Reconcile the encrypted personal-wording upload callback fixture with current persistence functions; focused source check passed, browser acceptance remains pending.
+
+- [x] Add missing history-pruning translations and exact technical-literal classification with negative source checks; rendered localization remains pending.
