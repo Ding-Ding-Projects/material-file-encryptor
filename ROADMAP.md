@@ -516,7 +516,7 @@
 
 - [x] Prepare the finite accepted `412a217` source contribution on main baseline `660dd563`, with independent exact comparison of 30 dedicated files and reviewed shared wiring.
 - [x] Preserve main's documentation publisher and merge only the related article inventory and language bindings.
-- [ ] Run the mapped 12-file JavaScript regression queue serially on the preserved candidate.
+- [x] Run the mapped 12-file JavaScript queue serially at `062e6a5`: 123/124 passed, original exit 1 retained. Independently review its one-entry documentation inventory repair and verify the exact main-based file 3/3, exit 0.
 - [ ] Build and verify the resulting main candidate through its exact root entrypoints.
 - [ ] Complete genuine `412a217` one-click GUI verification after the unchanged memory-admission floor permits it; retain that verdict separately from the prepared main candidate.
 - [ ] Verify source-bound main installation/runtime and interface behavior before claiming delivery.
