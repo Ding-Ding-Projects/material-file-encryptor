@@ -551,3 +551,10 @@
 - [ ] Convert remaining specialized property, color, mesh, path, file and state-tab controls through real supported workflows.
 - [ ] Repair the three unsuccessful exact-source ten-scene capture states, then verify the newer typed-field source separately.
 - [ ] Complete installed startup/updater lifecycle after independently accepted corrective v1.259.1 bytes. Repaired observer preparation passes, but fresh memory remains below the unchanged launch floor.
+
+## Ollama incorporation checkpoint, 2026-10-12
+
+- [x] Preserve finite accepted source and independently reviewed article-inventory repair on f2f8c315; retain123/124original and3/3focused verdicts separately.
+- [ ] Complete exact incorporated root production and actual source-bound interaction before main integration.
+- [ ] Complete real412 button installation/runtime/owned-stop proof after unchanged memory admission permits launch; final prelaunch1478908KiB was held.
+- [ ] Adopt the universal reusable one-click installation rule only after genuine button success.
