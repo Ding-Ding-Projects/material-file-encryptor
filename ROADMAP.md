@@ -3,7 +3,8 @@
 - [x] Deliver the reviewed PDF packaging, measured documentation cache and rewritten README to main at 6536fa04326a139e1de26356af0fd844e10a5e28, with verified remote refs.
 - [x] Publish normal updater-repair release v1.344.1 from 411ce5d and verify actual older-controller discovery through real hosted metadata, separately from installation.
 - [ ] Verify installed GUI update discovery, package download and safe update continuity without altering mounted user data.
-- [ ] Finish startup-surprise main adaptation, exact build and returning-launch visual acceptance.
+- [x] Deliver startup-surprise source and original-photo publication metadata through main 7e61 and normal release v1.356.1; exact older-controller discovery passed.
+- [ ] Verify actual returning-launch startup-surprise photo display and installed update continuity.
 - [ ] Finish actual one-click Ollama installation, protected extraction, cancellation and installed runtime verification.
 - [ ] After Ollama verification, record the reusable installation procedure and universal one-click control requirement in canonical shared instructions, validate generated outputs and verify its push.
 - [ ] Deliver the full README, three rendered diagrams and reviewed evidence JSON directly on the documentation site, then verify actual live routes.

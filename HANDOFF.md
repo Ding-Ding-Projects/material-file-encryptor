@@ -1,3 +1,13 @@
+# Latest verified delivery, 12 October 2026 08:40 UTC
+
+This section supersedes historical snapshots below. Main is remotely verified at `7e61bf4440f4a614909cca461df577ae3bd79aa1`. Normal release `v1.356.1` completed publication and promotion in workflow `38223052600`. The exact installed `1.133.1` controller discovers it as available through real hosted metadata. Original photo-reference metadata and the four consumer assets passed verification; no photo was copied. New large assets, installed GUI, update apply and returning-launch photo display remain unverified.
+
+Ollama publisher inspection repair is independently reviewed and remotely preserved at `99e69a52f6b94b9352b5ace89e9c1592fdd486a9`. Official nonexecuting extraction verified 82 files. Native lifetime integration is source-only work in progress. Actual one-click installation and runtime proof remain pending; only after those pass should the reusable procedure and universal control requirement enter the shared instructions.
+
+Documentation candidate `9e325618735a08f73fd8f80517a491aad5d9737d` is remotely preserved and root-built, with 234 static files bound to its actual provenance. Hidden-browser preparation is in progress. Native clear-control candidate `07bf61005fff3543b3ac9024b8ecc16079d719a8` remains unintegrated after exact launch returned Application Control 4551. No retry or security changes occurred; independent process and desktop absence proof is retained alongside the unchanged failed helper receipt.
+
+Latest verified allowance is 40 percent remaining; the active goal remains incomplete and this session stops at 8 percent remaining. Keep all 12 working trees, the preservation stash and private evidence until current archive, ownership and ancestry checks pass. See `CLOSEOUT_PROMPT.md` for current continuation instructions.
+
 # Current recovery checkpoint, 12 October 2026
 
 This checkpoint supersedes older delivery and allowance statements below. Main is remotely verified at `6536fa04326a139e1de26356af0fd844e10a5e28`. Normal release `v1.344.1` is bound to updater source `411ce5d55b96958799d996713374b7b683552234`; workflow `38219671466` succeeded. The exact installed `1.133.1` controller, isolated with real hosted metadata through the GitHub CLI, returned `available` for `1.344.1`. Raw 91-byte BOM-free feed SHA-256 `31086e659406d73f30e5512d3282bcbeee3072896a607b3fa5f3415f4615bdad` matches provenance and hosted digest. No installed GUI, package download, native apply or mounted-data mutation occurred.
