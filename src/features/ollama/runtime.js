@@ -1,3 +1,4 @@
+import {runtimeDiagnostic} from './runtime-diagnostic.js';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import {execFile,spawn} from 'node:child_process';
@@ -42,7 +43,7 @@ export async function probeOllamaHealth(fetchImpl=fetch,loopbackPort=11434){
 }
 // Pickers, trust verification, and process creation belong to the native host.
 // This adapter never downloads or runs an installer and never accepts commands.
-export function createRuntimeController({candidatePaths,environment=process.env,filesystem=fs,processProbe=probeRuntimeProcesses,verifyExecutable,launchVerified,openOfficialPage,pickExecutable,installer,platform=process.platform,loopbackPort=11434,managedModelDirectory=null,runtimeStartAvailable=()=>true,closeRuntime,apiProbe=()=>probeOllamaHealth(fetch,loopbackPort),pause=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}){
+export function createRuntimeController({candidatePaths,environment=process.env,filesystem=fs,processProbe=probeRuntimeProcesses,verifyExecutable,launchVerified,openOfficialPage,pickExecutable,installer,platform=process.platform,loopbackPort=11434,managedModelDirectory=null,runtimeStartAvailable=()=>true,runtimeDiagnostics=()=>null,closeRuntime,apiProbe=()=>probeOllamaHealth(fetch,loopbackPort),pause=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}){
   const endpoint=localEndpoint(loopbackPort);
   const candidates=candidatePaths||[environment.LOCALAPPDATA&&path.join(environment.LOCALAPPDATA,'Programs','Ollama','ollama.exe'),environment.ProgramFiles&&path.join(environment.ProgramFiles,'Ollama','ollama.exe')].filter(Boolean);
   let selected=null,owned=null,starting=false,stopping=null;
@@ -58,7 +59,7 @@ export function createRuntimeController({candidatePaths,environment=process.env,
     else if(installed.present&&processes.known)state='stopped';
     else if(!installed.present&&processes.known)state='missing';
     else state='unknown';
-    return {state,ownedManaged:owned?.managed===true,endpoint:endpoint.url,managedModelStore:owned!==null&&managedModelDirectory!==null,managedModelStoreConfigured:managedModelDirectory!==null,version:api.version||null,installed:installed.present,executableTrusted:installed.trusted,processInspectionKnown:processes.known,processCount:processes.rows.length,reason:api.reason||null,...(installer?{installation:installer.status()}:{}),actions:{stop:owned?.managed===true&&!starting&&!stopping,install:installer?installer.enabled&&!installer.pending&&!installer.status().installed:state==='missing'&&Boolean(openOfficialPage),start:!owned&&!starting&&!stopping&&state==='stopped'&&installed.trusted&&Boolean(launchVerified)&&await runtimeStartAvailable(installed.executable),retry:true,selectExecutable:Boolean(pickExecutable&&verifyExecutable)},at:new Date().toISOString()};
+    return {diagnostic:runtimeDiagnostic(runtimeDiagnostics()),state,ownedManaged:owned?.managed===true,endpoint:endpoint.url,managedModelStore:owned!==null&&managedModelDirectory!==null,managedModelStoreConfigured:managedModelDirectory!==null,version:api.version||null,installed:installed.present,executableTrusted:installed.trusted,processInspectionKnown:processes.known,processCount:processes.rows.length,reason:api.reason||null,...(installer?{installation:installer.status()}:{}),actions:{stop:owned?.managed===true&&!starting&&!stopping,install:installer?installer.enabled&&!installer.pending&&!installer.status().installed:state==='missing'&&Boolean(openOfficialPage),start:!owned&&!starting&&!stopping&&state==='stopped'&&installed.trusted&&Boolean(launchVerified)&&await runtimeStartAvailable(installed.executable),retry:true,selectExecutable:Boolean(pickExecutable&&verifyExecutable)},at:new Date().toISOString()};
   }
   return {
     inspect,

@@ -1,3 +1,4 @@
+import {runtimeDiagnostic} from '../features/ollama/runtime-diagnostic.js';
 import {localEndpoint} from '../features/ollama/endpoint.js';
 
 const phases=new Set(['idle','running','stopping','stopped','unavailable','unknown']);
@@ -6,17 +7,17 @@ const count=value=>value===null||Number.isSafeInteger(value)&&value>=0&&value<=0
 const settled=value=>value.leaseReleased&&value.activeProcesses===0&&(value.exitVerified||(value.phase==='stopped'&&value.processId===null));
 function snapshot(value){
  if(!value||typeof value!=='object'||typeof value.available!=='boolean'||typeof value.startAvailable!=='boolean'||!phases.has(value.phase)||!(value.operationId===null||identity(value.operationId))||!count(value.processId)||!count(value.activeProcesses)||typeof value.exitVerified!=='boolean'||typeof value.leaseReleased!=='boolean')throw new Error('The native runtime returned an invalid ownership status.');
- return Object.freeze({available:value.available,startAvailable:value.startAvailable,operationId:value.operationId,phase:value.phase,processId:value.processId,activeProcesses:value.activeProcesses,exitVerified:value.exitVerified,leaseReleased:value.leaseReleased});
+ return Object.freeze({available:value.available,startAvailable:value.startAvailable,operationId:value.operationId,phase:value.phase,processId:value.processId,activeProcesses:value.activeProcesses,exitVerified:value.exitVerified,leaseReleased:value.leaseReleased,diagnostic:runtimeDiagnostic(value.diagnostic)});
 }
 export function createManagedOllamaRuntimeAdapter({nativeRequest,loopbackPort=11434}={}){
- const endpoint=localEndpoint(loopbackPort),owners=new Map(),settlements=new Map();let closing=false,starting=null,closePending=null;
+ const endpoint=localEndpoint(loopbackPort),owners=new Map(),settlements=new Map();let closing=false,starting=null,closePending=null,diagnostic=null,recoveryUnknown=false;
  const request=async(method,payload)=>{if(typeof nativeRequest!=='function')throw new Error('The native runtime ownership service is unavailable.');try{return snapshot(await nativeRequest(method,payload));}catch{throw new Error('The native runtime ownership operation could not complete.');}};
  return Object.freeze({
   async available(){if(closing||typeof nativeRequest!=='function')return false;try{const value=await request('managedOllama.status',{});return value.available&&value.startAvailable;}catch{return false;}},
   launch(){
-   if(closing||owners.size||starting)return Promise.reject(new Error('Wait for the owned native runtime to settle before startup.'));
+   if(closing||owners.size||starting||recoveryUnknown)return Promise.reject(new Error('Wait for the owned native runtime to settle before startup.'));
    starting=(async()=>{
-   const value=await request('managedOllama.start',{port:Number(new URL(endpoint.url).port)});
+   diagnostic=null;let value;try{value=await request('managedOllama.start',{port:Number(new URL(endpoint.url).port)});}catch(error){recoveryUnknown=true;try{const recovered=await request('managedOllama.status',{});diagnostic=recovered.diagnostic;if(identity(recovered.operationId)){if(!settled(recovered))owners.set(recovered.operationId,recovered);recoveryUnknown=false;}else if(recovered.phase==='idle'&&recovered.processId===null){recoveryUnknown=false;}}catch{}throw error;}diagnostic=value.diagnostic;
    if(!identity(value.operationId))throw new Error('The native runtime did not return an owned operation identity.');
    const operationId=value.operationId;owners.set(operationId,value);
    let stopping=null,terminal=null;
@@ -24,7 +25,8 @@ export function createManagedOllamaRuntimeAdapter({nativeRequest,loopbackPort=11
    if(closing||value.phase!=='running'||value.activeProcesses<1||!value.processId){await handle.stop();throw new Error('The owned native runtime did not start.');}return handle;
    })();const pending=starting;return pending.finally(()=>{if(starting===pending)starting=null;});
   },
-  close(){closing=true;if(closePending)return closePending;closePending=(async()=>{if(starting)await starting.catch(()=>{});for(const operationId of [...owners.keys()]){if(settlements.has(operationId))await settlements.get(operationId).catch(()=>{});if(!owners.has(operationId))continue;const value=await request('managedOllama.close',{operationId});owners.set(operationId,value);if(value.operationId!==operationId||!settled(value))throw new Error('The owned native process tree remains active or unknown.');owners.delete(operationId);}})();return closePending.finally(()=>{closePending=null;});},
-  get pending(){return owners.size+(starting?1:0);}
+  close(){closing=true;if(closePending)return closePending;closePending=(async()=>{if(starting)await starting.catch(()=>{});if(recoveryUnknown){const recovered=await request('managedOllama.status',{});diagnostic=recovered.diagnostic;if(identity(recovered.operationId)){if(!settled(recovered))owners.set(recovered.operationId,recovered);recoveryUnknown=false;}else if(recovered.phase==='idle'&&recovered.processId===null)recoveryUnknown=false;else throw new Error('The native startup recovery remains unknown.');}for(const operationId of [...owners.keys()]){if(settlements.has(operationId))await settlements.get(operationId).catch(()=>{});if(!owners.has(operationId))continue;const value=await request('managedOllama.close',{operationId});owners.set(operationId,value);if(value.operationId!==operationId||!settled(value))throw new Error('The owned native process tree remains active or unknown.');owners.delete(operationId);}})();return closePending.finally(()=>{closePending=null;});},
+  get diagnostic(){return diagnostic;},
+  get pending(){return owners.size+(starting?1:0)+(recoveryUnknown?1:0);}
  });
 }
