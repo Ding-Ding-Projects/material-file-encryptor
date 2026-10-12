@@ -100,7 +100,7 @@ def run(intent_path):
             journal.write('state-published',rootIdentity=state['process'],stateSha256=digest(intent['statePath']),sidecarSha256=digest(backend.marker))
         journal.terminal(result)
     except BaseException as error:
-        journal.terminal({'ok':False,'client_ok':False,'error':str(error),'exceptionType':type(error).__name__,'processLaunchOutcome':'Unverified; retained phase journal is authoritative.',**({'launcherDiagnostic':error.launcherDiagnostic} if hasattr(error,'launcherDiagnostic') else {})})
+        journal.terminal({'ok':False,'client_ok':False,'error':str(error),'exceptionType':type(error).__name__,'processLaunchOutcome':'Unverified; retained phase journal is authoritative.',**({'launcherDiagnostic':error.launcherDiagnostic} if hasattr(error,'launcherDiagnostic') else {}),**({'executionDiagnostic':error.executionDiagnostic} if hasattr(error,'executionDiagnostic') else {})})
 
 
 if __name__=='__main__':run(sys.argv[1])
