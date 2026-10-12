@@ -40,3 +40,21 @@ test('unavailable startup recovery retains pending until a later exact idle obse
  let recover=false;const adapter=createManagedOllamaRuntimeAdapter({nativeRequest:async method=>{if(method==='managedOllama.start'||!recover)throw new Error('private-native-error');return {available:true,startAvailable:true,operationId:null,phase:'idle',processId:null,activeProcesses:null,exitVerified:false,leaseReleased:false};}});
  await assert.rejects(adapter.launch());assert.equal(adapter.pending,1);await assert.rejects(adapter.close());assert.equal(adapter.pending,1);recover=true;await adapter.close();assert.equal(adapter.pending,0);
 });
+
+test('observed original exit never settles a live descendant job',async()=>{
+ const id='c'.repeat(32);const adapter=createManagedOllamaRuntimeAdapter({nativeRequest:async()=>({available:true,startAvailable:false,operationId:id,phase:'running',processId:12,activeProcesses:2,exitVerified:false,leaseReleased:false,originalExitCode:7})});
+ const handle=await adapter.launch();assert.deepEqual(await handle.observeDiagnostic(),{stage:'process-exit',category:'native-exit',nativeCode:7});assert.equal(adapter.pending,1);await assert.rejects(handle.stop(),/confirmed exit/);assert.equal(adapter.pending,1);
+});
+test('unavailable original exit and API readiness timeout stay distinct from success',async()=>{
+ const id='d'.repeat(32);const adapter=createManagedOllamaRuntimeAdapter({nativeRequest:async()=>({available:true,startAvailable:false,operationId:id,phase:'running',processId:12,activeProcesses:1,exitVerified:false,leaseReleased:false,originalExitCode:null})});
+ const handle=await adapter.launch();assert.equal(await handle.observeDiagnostic(),null);
+ let stopped=0;const controller=createRuntimeController({candidatePaths:[path.resolve('fixture/ollama.exe')],filesystem:{realpath:async p=>p,stat:async()=>({isFile:()=>true})},platform:'win32',processProbe:async()=>[],verifyExecutable:async()=>true,apiProbe:async()=>({healthy:false,reachable:false}),launchVerified:async()=>({stop:async()=>{stopped++;},observeDiagnostic:async()=>null}),pause:async()=>{}});
+ const result=await controller.start({confirmed:true});assert.equal(result.state,'unhealthy');assert.equal(result.rolledBack,true);assert.equal(stopped,1);assert.deepEqual((await controller.inspect()).diagnostic,{stage:'api-readiness',category:'readiness-timeout',nativeCode:null});assert.equal((await controller.inspect()).ownedManaged,false);
+});
+
+test('native exact exit observation survives handle disposal without changing job-zero settlement',async()=>{
+ const source=await fs.readFile(new URL('../native/MaterialFileEncryptor.Host/OllamaRuntimeBroker.cs',import.meta.url),'utf8');const release=source.slice(source.indexOf('internal bool ReleaseAfterTreeExit()'),source.indexOf('internal void Stop()'));
+ assert.ok(release.indexOf('ActiveProcesses()!=0')<release.indexOf('ObserveOriginalExitCode()'));assert.ok(release.indexOf('ObserveOriginalExitCode()')<release.indexOf('process.Dispose()'));
+ const observe=source.slice(source.indexOf('internal uint? ObserveOriginalExitCode()'),source.indexOf('internal bool ReleaseBeforeSpawnIfKnown()'));
+ assert.match(observe,/if\(observedOriginalExitCode is not null\)return observedOriginalExitCode/);assert.match(observe,/creation!=CreationFileTime/);assert.match(observe,/observedOriginalExitCode=code/);
+});

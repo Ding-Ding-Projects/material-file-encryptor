@@ -113,7 +113,8 @@ internal sealed class OllamaRuntimeBroker
     private object Summary(string? id,OllamaContainedProcess? owner,string phase)
     {
         uint? active=null;try{if(owner is not null)active=owner.ActiveProcesses();}catch{phase="unknown";}
-        return new {diagnostic,available=startupAdmitted,startAvailable=startupAdmitted&&!closing&&operations.Values.All(value=>value.Released),operationId=id,phase,processId=owner is null||owner.ProcessId==0?(uint?)null:owner.ProcessId,activeProcesses=active,exitVerified=owner is not null&&owner.ProcessId!=0&&owner.Released,leaseReleased=owner?.Released??false,limitations=new[]{"File sharing does not establish absolute exclusion against same-user directory insertion or mapped writers.","Orderly exact-job settlement does not verify abrupt host-death handle-release ordering."}};
+        uint? originalExitCode=null;try{originalExitCode=owner?.ObserveOriginalExitCode();}catch{}
+        return new {originalExitCode,diagnostic,available=startupAdmitted,startAvailable=startupAdmitted&&!closing&&operations.Values.All(value=>value.Released),operationId=id,phase,processId=owner is null||owner.ProcessId==0?(uint?)null:owner.ProcessId,activeProcesses=active,exitVerified=owner is not null&&owner.ProcessId!=0&&owner.Released,leaseReleased=owner?.Released??false,limitations=new[]{"File sharing does not establish absolute exclusion against same-user directory insertion or mapped writers.","Orderly exact-job settlement does not verify abrupt host-death handle-release ordering."}};
     }
     private Dictionary<string,string> PrepareEnvironment(int port,out ServerFileLease retainedScope)
     {
@@ -163,8 +164,22 @@ internal sealed class OllamaContainedProcess
     internal ulong CreationFileTime { get; private set; }
     internal bool Released { get; private set; }
     internal string? StartStage {get;private set;}
+    private uint? observedOriginalExitCode;
     internal OllamaContainedProcess(OllamaRuntimeLease lease) { this.lease=lease; }
     internal void HoldWritableDirectories(ServerFileLease scope) { if(createAttempted||writableDirectories is not null)throw new InvalidOperationException("Writable directory scope is already assigned.");writableDirectories=scope; }
+    internal uint? ObserveOriginalExitCode()
+    {
+        if(observedOriginalExitCode is not null)return observedOriginalExitCode;
+        try
+        {
+        if(process is null||process.IsClosed||process.IsInvalid||WaitForSingleObject(process,0)!=0)return null;
+        if(OriginalProcessId(process)!=ProcessId||!GetProcessTimes(process,out ulong creation,out _,out _,out _)||creation!=CreationFileTime||!OriginalExitCode(process,out uint code))return null;
+        observedOriginalExitCode=code;return code;
+        }
+        catch{return null;}
+    }
+    [DllImport("kernel32.dll",EntryPoint="GetProcessId",SetLastError=true)]private static extern uint OriginalProcessId(SafeFileHandle process);
+    [DllImport("kernel32.dll",EntryPoint="GetExitCodeProcess",SetLastError=true)]private static extern bool OriginalExitCode(SafeFileHandle process,out uint exitCode);
     internal bool ReleaseBeforeSpawnIfKnown()
     {
         if(Released)return true;if(createAttempted)return false;
@@ -315,6 +330,7 @@ internal sealed class OllamaContainedProcess
         if(Released)return true;
         if(ActiveProcesses()!=0)return false;
         if(process is null||process.IsClosed||process.IsInvalid||WaitForSingleObject(process,0)!=0)return false;
+        _ = ObserveOriginalExitCode();
         lease.AssertHeld();lease.Release();writableDirectories?.Release();writableDirectories=null;process.Dispose();process=null;job!.Dispose();job=null;Released=true;retained.TryRemove(this,out _);return true;
     }
     internal void Stop()

@@ -37,6 +37,7 @@ if(args.Length>0&&args[0] is "--parent" or "--descendant")
             using Process child=Process.Start(new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute=false,CreateNoWindow=true,ArgumentList={"--descendant",childSignal,childDiagnostics} })??throw new InvalidOperationException("Synthetic descendant creation returned no process.");
             stage="descendant-identity";
             Marker(childDiagnostics,childSignal,".parent-started","descendant-started",childId:child.Id,childCreation:child.StartTime.ToUniversalTime().Ticks);
+            Environment.ExitCode=unchecked((int)0x80000007);
         }
         else { stage="signal-write";File.WriteAllText(childSignal,"ready");await Task.Delay(60000); }
     }
@@ -119,6 +120,7 @@ try
     owner.Stop();deadline=DateTime.UtcNow.AddSeconds(10);
     while(!owner.ReleaseAfterTreeExit()&&DateTime.UtcNow<deadline)await Task.Delay(25);
     Require(owner.Released&&lease.Released,"Exact zero-member job must release the lease.");
+    Require(owner.ObserveOriginalExitCode()==0x80000007,"Exact high-bit original exit code must survive full-job settlement and handle disposal.");
     File.WriteAllText(member,"released");
     string registryRoot=Path.Combine(fixture,"registry"),registrySignal=Path.Combine(fixture,"registry-ready");Directory.CreateDirectory(registryRoot);
     string registryMember=Path.Combine(registryRoot,"member.dll");File.WriteAllText(registryMember,"registry admitted member");
@@ -147,6 +149,7 @@ try
         await Task.WhenAll(broker.DispatchAsync("managedOllama.stop",Params(new{operationId})),broker.DispatchAsync("managedOllama.close",Params(new{operationId})));
         JsonElement stopped=Params(await broker.DispatchAsync("managedOllama.status",Params(new{operationId})));
         Require(stopped.GetProperty("exitVerified").GetBoolean()&&stopped.GetProperty("leaseReleased").GetBoolean(),"Concurrent stop and close must settle the exact registry owner.");
+        Require(stopped.GetProperty("originalExitCode").GetUInt32()==0x80000007,"Settled registry status must retain the exact high-bit original exit code.");
         File.Delete(registrySignal);
         JsonElement eofStarted=Params(await broker.DispatchAsync("managedOllama.start",Params(new{port=11435})));
         string eofId=eofStarted.GetProperty("operationId").GetString()!;

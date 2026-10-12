@@ -502,3 +502,11 @@
 - [ ] Finish installed startup and actual automatic-update acceptance; updater controller and future-feed source are on main, with local installer production passed and hosted/native apply pending.
 - [ ] Verify the one-click application-managed Ollama runtime procedure before updating shared instructions; preserve existing installations.
 - [ ] Replace current screenshots only after genuine rebuilt capture acceptance, preserving historical originals.
+
+## Managed runtime actual verification
+
+- [x] Verify genuine installation button and native consent cancellation/retry at source `412a217`.
+- [x] Verify graceful six-process, port and hidden-desktop closure with profile/cache preserved.
+- [ ] Compile reviewed diagnostics and diagnose actual stopped startup with fresh identities.
+- [ ] Verify official API health and owned Stop before adopting the reusable procedure.
+- [ ] Verify extraction cancellation, existing valid installation/model contents and full rendered acceptance separately.
