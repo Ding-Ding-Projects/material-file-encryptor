@@ -78,3 +78,9 @@ The deterministic publication-reference.html and publication-inventory.json cove
 ### History selection
 
 The History table uses a single registered radio selection per version. Arrow keys, Home and End change selection and keep focus within the visible rows. Enter and Space select without restoring. A read-only summary shows the native version identity, file identity, path, saved time, size and availability. Filtering retains the selected identity and labels a selected record outside the current results. Language refresh retains selection and retention drafts. Locking or removal clears the summary. Restore remains a distinct button followed by confirmation and a second availability check. The state inventory names the exact production selectors. Source interaction checks do not replace built evidence.
+
+## Composed context action ownership
+
+A shared context menu captures the originating composed event once. Each contributed action is bound to the stable target resolved by its own provider, even when a nearer panel-layout provider supplies the menu anchor first. Duplicate action identifiers retain the first contribution and its target. Per-action targets are private runtime metadata, not mutable fields on provider-owned items. Directly opened menus retain their explicit menu target when no provider binding exists.
+
+Activation rechecks that action's captured target is connected and passes the existing control-admission event. Disabled actions, replaced menus, and repeated clicks after closure remain inactive. The original first-provider anchor continues to govern positioning and focus restoration. The focused regression executes the actual provider composition and menu callback path with modeled Shadow DOM ancestry; it does not claim browser layout or physical-input evidence.

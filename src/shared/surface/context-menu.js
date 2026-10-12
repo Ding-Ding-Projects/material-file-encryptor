@@ -1,6 +1,9 @@
 import {requestControlAdmission} from './controls.js';
 import { SurfaceElement, element, register, localized } from './registry.js';
 import './search.js';
+// Per-event action ownership is private metadata, not a mutable provider item field.
+const actionTargets=new WeakMap();
+export function bindContextActionTarget(item,target){const bound={...item};actionTargets.set(bound,target);return bound;}
 /** One Material menu. The host is transparent plumbing, never a second dialog. */
 export class ContextMenu extends SurfaceElement {
   constructor(){super();this.epoch=0;this.controller=null;}
@@ -52,7 +55,7 @@ export class ContextMenu extends SurfaceElement {
   }
   async renderItems(){
     const epoch=this.epoch,items=this.items||[];const list=await this.search.filter(items.map((item,index)=>({id:String(index),text:localized(item.label,this.language)})));if(!list||epoch!==this.epoch)return;
-    for(const child of [...this.itemsHost.children])if(child!==this.search)child.remove();for(const row of list){const item=items[Number(row.id)],capturedTarget=this.target;const button=element('md-menu-item',{disabled:!!item.disabled,keepOpen:true,'aria-label':row.text});button.append(element('span',{slot:'headline',text:row.text}));if(item.shortcut){button.setAttribute('aria-keyshortcuts',item.shortcut);button.append(element('span',{slot:'end',class:'shortcut','aria-hidden':'true',text:item.shortcut}));}
+    for(const child of [...this.itemsHost.children])if(child!==this.search)child.remove();for(const row of list){const item=items[Number(row.id)],capturedTarget=actionTargets.has(item)?actionTargets.get(item):this.target;const button=element('md-menu-item',{disabled:!!item.disabled,keepOpen:true,'aria-label':row.text});button.append(element('span',{slot:'headline',text:row.text}));if(item.shortcut){button.setAttribute('aria-keyshortcuts',item.shortcut);button.append(element('span',{slot:'end',class:'shortcut','aria-hidden':'true',text:item.shortcut}));}
       button.addEventListener('click',()=>{if(item.disabled||button.disabled||this.hidden||epoch!==this.epoch||!button.isConnected)return;if(capturedTarget instanceof Element&&(!capturedTarget.isConnected||!requestControlAdmission(capturedTarget))){this.close('admission');return;}const onError=this.onError;this.close('selection',{restoreFocus:true});Promise.resolve().then(()=>item.run?.(capturedTarget)).catch(error=>onError?onError(error):this.emit('context-action-error',{error}));},{capture:true});this.itemsHost.append(button);}
     if(!list.length)this.itemsHost.append(element('div',{class:'empty',role:'status',text:this.t('No matching actions','沒有相符操作')}));
   }
