@@ -110,3 +110,29 @@ The sole current application target is the decorative 20 by 20 title mark on the
 Logo concurrency checks retain the editor’s accepted record pair before asynchronous work. A newer writer prevents stale publication, conversion completion or reset from overwriting it. Both intended records must match before an accepted-history event. Rollback touches only attempted writes still containing this edit’s value; foreign values remain intact and unresolved restoration produces a visible recovery failure.
 
 Display-name edits, Reset name, settings import and a settings-history restoration that changes the name require the protected desktop host to return exactly `true` before local preferences change. Missing, cancelled, rejected or malformed responses preserve the local name and draft. One request runs at a time; unrelated settings updates remain available and pending drafts survive rerendering. Disposal or newer changes to affected local fields prevent a delayed response from overwriting current preferences. Host history and renderer preferences are separate stores; a durable host acceptance followed by local unavailability or conflicting changes requires reopening or reloading to synchronize, rather than a false combined-success claim.
+## Connected desktop startup surprise
+
+The earlier main baseline provided only the probability helper. The desktop now
+connects that helper to startup readiness, updater snapshots and a non-blocking
+registered presentation with a local image data URL, bilingual dish name, meaningful
+alt text and five-second dismissal. It never moves focus or starts an operation.
+
+The single 10% draw waits for a transient update check to settle. First-run, School,
+quiet, error and active-work exclusions remain terminal, including during checking.
+Trusted pointer, keyboard or input activity ends the opportunity; an open modal
+also suppresses display. The opportunity expires after 15 seconds, including while
+a photo is resolving. There is no preference to force or disable the draw.
+
+The desktop-only `surprise/resolvePublishedDish` request accepts an empty payload.
+It resolves authoritative bilingual metadata from the public dim-sum photo catalog
+and only published normal `catalog-v1*` assets. The bundled CLI is selected from
+`forge-executables.json` and verified by version, path and SHA-256 before execution;
+no global `PATH` fallback exists. The host verifies asset URL, digest, size and
+native image decoding before returning bounded bytes. No catalog or photo is
+tracked here. The one-image private application-data cache records source revision
+and integrity; offline metadata or missing verified tools returns unavailable.
+
+Focused checks cover the actual renderer startup seam, terminal exclusions, late
+results, trusted input, verified tool selection, image bounds and publication
+validation. They do not prove installed startup display or native decoding. Those
+remain separate built-runtime acceptance requirements.

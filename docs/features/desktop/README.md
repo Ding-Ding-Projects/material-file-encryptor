@@ -1,6 +1,6 @@
 # Desktop packaging
 
-- [Package integrity and local installer verification](package-integrity.md): private-directory exclusion and output inspection, pinned archive writer, complete entry integrity and isolated local Squirrel lifecycle.
+- [Package integrity and local installer verification](package-integrity.md): private-directory exclusion, ASAR content and block hash validation, pinned archive writer, complete entry integrity and isolated local Squirrel lifecycle.
 
 - [Runtime rejection evidence](runtime-evidence.md): private exact-edge retention and unchanged lifecycle rejection.
 

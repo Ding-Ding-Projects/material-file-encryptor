@@ -24,3 +24,20 @@ The verifier does not change LOCALAPPDATA or pretend to run in CI. It requires t
 Installer production uses the complete genuine Squirrel vendor layout with two explicitly pinned tools: the archive writer and NuGet 7.9.0. Bootstrap downloads NuGet from its versioned official HTTPS URL, verifies SHA-256 and exact PE file version, reuses a matching cache and rejects mismatches. Packaging copies it into the temporary vendor directory and rechecks its digest before the unchanged maker runs. This replaces the bundled NuGet 2.8.3 process that failed twice in local compression; it does not substitute another installer technology or relax final package integrity checks. Production recovery requires the actual root entrypoint to pass and is separate from the focused selection/version/digest regression.
 
 Bootstrap supplies pinned Node, .NET and WinFsp plus complete verified portable MinGit and GitHub CLI distributions. The runtime tool ZIPs are checked against pinned SHA-256, every extracted file is compared with its archive, and executable versions are checked using absolute paths. Existing valid caches are reused; replacement preserves the previous cache. No administrator rights or installed system Git are required. No signing credential or paid certificate is required. `build.bat` stages complete tool trees and included notices under `out/tools/git` and `out/tools/gh` before application packaging. Bootstrap exports absolute `MFE_GIT_EXECUTABLE` and `MFE_GH_EXECUTABLE` paths for local native verification. Packaged resource resolution and transport behavior remain independently verified by their owning implementation. `scripts/bootstrap.ps1 -RuntimeToolsOnly` activates and validates only these two portable tools without building the application.
+
+## Release photo references
+
+Future preview publication resolves a pinned revision of the authoritative public
+dim-sum catalog and verifies a matching uploaded asset on a normal `catalog-v1*`
+release. The bilingual code name and illustration URL come from that public source.
+Build provenance retains the catalog revision, original photo URL, size and digest
+as reference metadata. The consumer release does not require a bundled PNG and
+does not attach a copied photo. Historical release bytes and source originals are
+retained unchanged.
+
+The focused publisher check rejects draft or prerelease sources, unrelated tags,
+wrong URLs, missing digests and unpublished assets. A metadata-only live probe
+verified a public source reference without downloading a photo or publishing a
+release. This does not establish future publication or installer acceptance.
+
+On Windows PowerShell, decoded release lists are assigned directly so each release is evaluated separately. Wrapping the decoder pipeline in an array can retain the whole list as one nested item and incorrectly reject a valid catalog release when unrelated desktop tags share its page. Regression fixtures cover a mixed list, a full first page followed by the catalog release, and the existing provenance refusals. This correction does not relax source validation or attach photo copies.

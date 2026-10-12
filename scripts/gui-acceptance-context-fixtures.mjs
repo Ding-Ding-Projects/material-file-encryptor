@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 
 // Browser input reaches the production controls. Evaluation only observes state;
 // it never supplies application records, menu items or successful action results.
-export function createContextFoundationFixture({opened,prepare,restore,identity,list,removeTarget}){
+export function createContextFoundationFixture({opened,prepare,restore,identity,list,removeTarget,activationKey='Enter'}){
+ assert.ok(['Enter','Space'].includes(activationKey),'Unsupported context activation key');
  const {page,target}=opened;let viewport=null,capturedId=null;
  const receipt=extra=>({ownedSyntheticFixture:true,sourceCommit:target.sourceCommit,...extra});
  const rowSelector=id=>'#file-list tr[data-file-id='+JSON.stringify(id)+']';
@@ -84,7 +85,7 @@ export function createContextFoundationFixture({opened,prepare,restore,identity,
     // Start at the search field using actual input, then traverse to the action.
     await page.locator('mfe-context-menu mfe-search md-outlined-text-field.query').click();
     for(let index=0;index<=action.index;index++)await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
+    await page.keyboard.press(activationKey);
     await page.waitForFunction(label=>{const panel=document.querySelector('.appearance-editor');return panel&&!panel.hidden&&panel.querySelector('h2')?.textContent.endsWith(': '+label);},action.label,{timeout:10000});
     await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
     effect=await observation.evaluate(handle=>handle.stop());
@@ -94,7 +95,7 @@ export function createContextFoundationFixture({opened,prepare,restore,identity,
    const focusInEditor=await page.evaluate(()=>document.querySelector('.appearance-editor')?.contains(document.activeElement));assert.equal(focusInEditor,true);
    await page.keyboard.press('Escape');await page.waitForFunction(()=>document.querySelector('.appearance-editor')?.hidden,undefined,{timeout:10000});
    const after=await menuState();assert.equal(after.count,0);assert.equal(after.focusFileId,capturedId);
-   return receipt({activated:true,activation:'cdp-key',capturedTargetId:capturedId,selectedId:before.selectedIds[0],effect:{kind:'appearance-editor-render',count:effect.renders,targetMatches:true},focusInEditor,focusRestored:true,observation:after});
+   return receipt({activated:true,activation:'cdp-key',activationKey,capturedTargetId:capturedId,selectedId:before.selectedIds[0],effect:{kind:'appearance-editor-render',count:effect.renders,targetMatches:true},focusInEditor,focusRestored:true,observation:after});
   },
   async 'target-removal'(context){
    await identity(context);const before=await menuState();assert.equal(before.count,1);assert.equal(before.targetId,capturedId);

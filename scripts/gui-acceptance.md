@@ -88,3 +88,5 @@ and do not receive inferred evidence.
 
 `acquisitionCapabilities` reports missing setup, observable and every action adapter per state. Missing capabilities stop that state before capture, while the full inventory remains unchanged. Resume revalidates complete admission and rehashes all files; a caller-supplied success flag cannot skip acquisition. Interrupted or failed capture directories are retained and require a new attempt directory rather than overwriting their evidence.
 
+
+For the bounded context keyboard sequence, construct `createMountedFoundationFixtures({opened, contextActivationKey: "Enter"})` and separately `createMountedFoundationFixtures({opened, contextActivationKey: "Space"})`. Each provider uses the same owned target, actual key input, single-render and focus assertions and retains `activationKey` in its result. Restore one owned fixture before creating the next. The default is Enter; other key values are rejected before input. This extension does not establish persistence, disabled/stale/locked runtime negatives or full matrix acceptance.

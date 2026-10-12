@@ -1,5 +1,9 @@
 // Public Cantonese translations. Product names, commands and revision IDs stay exact.
 export const cantonese = Object.freeze({
+'Flowchart. Scroll horizontally to read all steps.':'流程圖。橫向捲動即可閱讀全部步驟。',
+'Scrollable flowchart':'可捲動流程圖',
+'Workflow diagram':'工作流程圖',
+'Diagram source':'圖表來源',
 'Documentation library':'文件總覽',
 'Wiki':'維基',
 'Capture gallery':'畫面紀錄集',

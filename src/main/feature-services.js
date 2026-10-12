@@ -1,3 +1,4 @@
+import {createDocumentationCatalogService} from './documentation-catalog-service.js';
 import {createServerManagerHost} from './server-manager-host.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -60,7 +61,8 @@ export function sanitizeConverterDiagnostic(record){const safe={schema:1,compone
 
 export function converterUnavailableError(record){const safe=sanitizeConverterDiagnostic(record);const fields=['launcherExitCode','workerExitCode','nativeError','nativeHresult'].filter(key=>Object.hasOwn(safe,key)).map(key=>key+'='+safe[key]);return new Error(`Isolated image decoding unavailable: ${safe.component}/${safe.phase}/${safe.code}${fields.length?' ['+fields.join(', ')+']':''}.`);}
 
-export function createFeatureServices({dataDirectory,applicationRoot,toolsDirectory=applicationRoot?.endsWith('.asar')?path.join(path.dirname(applicationRoot),'tools'):path.join(applicationRoot||'','out','tools'),sandboxDirectory,safeStorage,dialog,getWindow,getMainFrame,openPath,openExternal,emit=()=>{},sandboxProvider,reviewedForgeClient=null,onConverterDiagnostic=()=>{},accessibilityState=()=>({known:false,enabled:false,source:'runtime'})}){
+export function createFeatureServices({dataDirectory,applicationRoot,isPackaged=false,toolsDirectory=applicationRoot?.endsWith('.asar')?path.join(path.dirname(applicationRoot),'tools'):path.join(applicationRoot||'','out','tools'),sandboxDirectory,safeStorage,dialog,getWindow,getMainFrame,openPath,openExternal,emit=()=>{},sandboxProvider,reviewedForgeClient=null,onConverterDiagnostic=()=>{},accessibilityState=()=>({known:false,enabled:false,source:'runtime'})}){
+ const documentation=createDocumentationCatalogService({filename:path.join(applicationRoot,'src/shared/documentation-catalog.json'),immutable:isPackaged===true});
  const credentials=createCredentialStore({directory:dataDirectory,safeStorage});
  const mutationHistory=createAccessMutationHistory({dataDirectory,toolsDirectory});
  const access=createAccessIntegration({dataDirectory,toolsDirectory,credentials,getMainFrame,recordMutation:event=>mutationHistory.record(event)});
@@ -70,7 +72,7 @@ export function createFeatureServices({dataDirectory,applicationRoot,toolsDirect
  const protectedForgeTransport=createProtectedForgeDeviceTransport({toolsDirectory});
  const protectedAccounts=createProtectedForgeAccounts({credentialStore:credentials,reviewedClient:reviewedForgeClient,...protectedForgeTransport,onChallenge:item=>emit('workflow',{type:'forge-authentication',item})});
  const workflows=createWorkflowServices({dataDirectory,toolsDirectory,protectedAccounts,dialog,getWindow,openPath,openExternal,emit});
- const startupPhotos=createStartupPhotoService({dataDirectory});
+ const startupPhotos=createStartupPhotoService({dataDirectory,toolsDirectory});
  const fontMetadataAdmission=createFontScanAdmission();const cancelFontMetadata=()=>fontMetadataAdmission.cancelAll();
  const grants=new Map();let converter,ollama,ollamaPromise,closed=false,exiting=false,sharedCredentialGranted=false,pendingRequests=0;
  const modelEvents=[];let modelSequence=0,modelEventBytes=0,activeOllamaRequests=0;
@@ -94,9 +96,9 @@ export function createFeatureServices({dataDirectory,applicationRoot,toolsDirect
   ensureOpen();if(typeof feature!=='string'||typeof action!=='string'||!object(payload))throw Error('Invalid feature request.');bounded(payload,feature==='personalization'&&action==='normalizeImage'?APPEARANCE_IMAGE_REQUEST_BYTES:262144);
   if(exiting&&!['status','catalog','models','cart','list','operations','cancel','control','downloads','cancelDownload'].includes(action))throw Error('The application is waiting for active work before quitting.');
   if(feature==='server-manager'){if(exiting)throw Error('Application is closing.');return servers.dispatch(action,payload);}
+  if(feature==='surprise'&&action==='resolvePublishedDish'){if(exiting||Reflect.ownKeys(payload).length)throw Error('Unsupported startup photo request.');return startupPhotos.resolvePublishedDish();}
   if(feature==='workflow')return workflows.dispatch(action,payload);
   if(feature==='access'&&access.supports(action))return access.request(context?.senderFrame,action,payload);
-  if(feature==='surprise'&&action==='resolvePublishedDish')return startupPhotos.resolvePublishedDish();
   if(feature==='converter'){
    if(action==='pickSources')return Promise.all((await pick(['openFile','multiSelections'],'Choose conversion sources')).map(filename=>grant(filename,'read')));
    if(action==='pickDestinationDirectory'){const chosen=await pick(['openDirectory','createDirectory'],'Choose conversion output folder');return chosen[0]?grant(chosen[0],'directory'):null;}
@@ -115,7 +117,7 @@ export function createFeatureServices({dataDirectory,applicationRoot,toolsDirect
   }
   if(feature==='documentation'){
    if(!['catalog','changelog'].includes(action))throw Error('Unsupported documentation action.');
-   const file=path.join(applicationRoot,'src/shared/documentation-catalog.json');const catalog=JSON.parse(await fs.readFile(file,'utf8'));return action==='catalog'?catalog:catalog.changelog||[];
+   return documentation.request(action);
   }
   if(feature==='status'&&action==='status')return(await statusPromise).snapshot();
   if(feature==='access'){
@@ -153,5 +155,5 @@ export function createFeatureServices({dataDirectory,applicationRoot,toolsDirect
   throw Error('Unsupported feature action.');
  }
  async function request(...args){pendingRequests++;try{return await dispatch(...args);}finally{pendingRequests--;}}
- return {request,credentials,receiveBrowserProposal(item){ensureOpen();if(exiting)throw Error('Application is closing.');return workflows.receiveBrowserProposal(item);},beginExit(){exiting=true;},endExit(){exiting=false;},async pending(){return pendingRequests+servers.pending+workflows.pending+(converter?await converter.pending():0)+(ollama?.operations().length||0);},async cancelAll(){servers.cancelAll();cancelFontMetadata();workflows.cancelAll();await imageService.cancelAll();await Promise.allSettled([converterPromise,ollamaPromise]);await Promise.all([converter?.cancelAll(),ollama?.cancelAll()]);},async checkpoint(summary,progress){return(await statusPromise).checkpoint(summary,progress);},async close(){closed=true;access.close();mutationHistory.close();startupPhotos.close();await servers.close();cancelFontMetadata();await schedules.dispose();await imageService.close();await workflows.close();await Promise.allSettled([converterPromise,ollamaPromise]);await converter?.close();await ollama?.dispose();await(await statusPromise).finish('waiting');grants.clear();}};
+ return {request,credentials,receiveBrowserProposal(item){ensureOpen();if(exiting)throw Error('Application is closing.');return workflows.receiveBrowserProposal(item);},beginExit(){exiting=true;},endExit(){exiting=false;},async pending(){return pendingRequests+servers.pending+workflows.pending+(converter?await converter.pending():0)+(ollama?.operations().length||0);},async cancelAll(){servers.cancelAll();cancelFontMetadata();workflows.cancelAll();await imageService.cancelAll();await Promise.allSettled([converterPromise,ollamaPromise]);await Promise.all([converter?.cancelAll(),ollama?.cancelAll()]);},async checkpoint(summary,progress){return(await statusPromise).checkpoint(summary,progress);},async close(){closed=true;access.close();mutationHistory.close();startupPhotos.close();documentation.close();await servers.close();cancelFontMetadata();await schedules.dispose();await imageService.close();await workflows.close();await Promise.allSettled([converterPromise,ollamaPromise]);await converter?.close();await ollama?.dispose();await(await statusPromise).finish('waiting');grants.clear();}};
 }

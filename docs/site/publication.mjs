@@ -1,3 +1,5 @@
+import {renderReadmeFlowchart} from './readme-flowchart.mjs';
+import {publicProofs,stagePublicProofs} from './public-proofs.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
@@ -7,7 +9,7 @@ const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 const slug=value=>value.toLowerCase().replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-|-$/g,'');
 export const route=source=>`articles/${source.replace(/\.md$/i,'').replaceAll('/','--')}.html`;
 export function renderMarkdown(markdown,source,routeMap,prefix='../') {
- const headings=new Map();
+ const headings=new Map();let diagramOrdinal=0;
  const inline=text=>{
   const tokens=[];
   const save=html=>`\u0000${tokens.push(html)-1}\u0000`;
@@ -19,7 +21,7 @@ export function renderMarkdown(markdown,source,routeMap,prefix='../') {
     const [file,anchor]=url.split('#');const resolved=path.posix.normalize(path.posix.join(path.posix.dirname(source),file));
     target=routeMap.has(resolved)?prefix+routeMap.get(resolved)+(anchor?'#'+anchor:''):`${repository}/blob/main/${resolved}`;
    }
-   if(!/^(?:https?:|mailto:|#|\.\.\/articles\/|articles\/)/i.test(target)) throw new Error('Unsupported documentation URL');
+   if(!/^(?:https?:|mailto:|#|\.\.\/articles\/|articles\/|\.\.\/docs\/evidence\/)/i.test(target)) throw new Error('Unsupported documentation URL');
    if(image) throw new Error('Documentation image needs an explicit local asset entry');
    return save(`<a href="${escapeHtml(target)}">${escapeHtml(label)}</a>`);
   });
@@ -30,7 +32,7 @@ export function renderMarkdown(markdown,source,routeMap,prefix='../') {
  const flush=()=>{if(paragraph.length){output+=`<p>${inline(paragraph.join(' '))}</p>`;paragraph=[];}if(list){output+=`</${list}>`;list=null;}};
  for(let i=0;i<lines.length;i++) {
   const line=lines[i];
-  if(line.startsWith('```')){flush();const code=[];while(++i<lines.length&&!lines[i].startsWith('```'))code.push(lines[i]);if(i===lines.length)throw new Error('Unclosed documentation fence');output+=`<pre><code>${escapeHtml(code.join('\n'))}</code></pre>`;continue;}
+  if(line.startsWith('```')){flush();const language=line.slice(3).trim(),code=[];while(++i<lines.length&&!lines[i].startsWith('```'))code.push(lines[i]);if(i===lines.length)throw new Error('Unclosed documentation fence');const body=code.join('\n');output+=source==='README.md'&&language==='mermaid'?renderReadmeFlowchart(body,diagramOrdinal++):`<pre><code>${escapeHtml(body)}</code></pre>`;continue;}
   const heading=/^(#{1,6})\s+(.+)$/.exec(line);
   if(heading){flush();const base=slug(heading[2]),count=headings.get(base)||0;headings.set(base,count+1);const id=base+(count?'-'+count:'');const level=Math.min(6,heading[1].length+1);output+=`<h${level} id="${id}">${inline(heading[2])}<a class="heading-link" href="#${id}" aria-label="Link to this section">#</a></h${level}>`;continue;}
   if(line.includes('|')&&/^\s*\|?\s*:?-{3,}/.test(lines[i+1]||'')) {
@@ -65,7 +67,7 @@ async function markdownFiles(directory) {
 }
 export async function buildDocumentation(root,output,home) {
  const catalog=JSON.parse(await fs.readFile(path.join(root,'docs/site/content-catalog.json'),'utf8'));
- if(catalog.version!==1||!Array.isArray(catalog.articles)||new Set(catalog.articles).size!==catalog.articles.length||catalog.articles.some(file=>typeof file!=='string'||file.split('/').some(part=>part==='..')||(!/^docs\/features\/[a-z0-9/.-]+\.md$/i.test(file)&&file!=='DESIGN.md')))throw new Error('Invalid documentation catalogue');
+ if(catalog.version!==1||!Array.isArray(catalog.articles)||new Set(catalog.articles).size!==catalog.articles.length||catalog.articles.some(file=>typeof file!=='string'||file.split('/').some(part=>part==='..')||(!/^docs\/features\/[a-z0-9/.-]+\.md$/i.test(file)&&file!=='DESIGN.md'&&file!=='README.md')))throw new Error('Invalid documentation catalogue');
  if(!/^[a-f0-9]{40}$/.test(catalog.wiki.sourceCommit)||catalog.wiki.source!==repository+'/wiki'||catalog.wiki.files.some(file=>!/^[-_a-z0-9]+\.md$/i.test(file)))throw new Error('Invalid wiki provenance');
  const wikiHashes=catalog.wiki.fileSha256;if(!wikiHashes||typeof wikiHashes!=='object'||Array.isArray(wikiHashes)||JSON.stringify(Object.keys(wikiHashes).sort())!==JSON.stringify([...catalog.wiki.files].sort())||Object.values(wikiHashes).some(value=>typeof value!=='string'||!/^[a-f0-9]{64}$/.test(value)))throw new Error('Invalid wiki content hash inventory');
  const actual=(await markdownFiles(path.join(root,'docs/features'))).map(file=>path.relative(root,file).replaceAll('\\','/')).sort();
@@ -74,10 +76,12 @@ export async function buildDocumentation(root,output,home) {
  const wikiFiles=(await markdownFiles(path.join(root,'docs/site/wiki'))).map(file=>path.basename(file)).sort();
  if(JSON.stringify(wikiFiles)!==JSON.stringify([...catalog.wiki.files].sort()))throw new Error('Wiki snapshot inventory differs');
  for(const file of wikiFiles){const expected=wikiHashes[file],actual=digest(await fs.readFile(path.join(root,'docs/site/wiki',file)));if(actual!==expected)throw new Error('Wiki snapshot content hash differs: '+file);}
+ if(catalog.articles.includes('README.md'))await stagePublicProofs(root,output);
  const routes=new Map(catalog.articles.map(source=>[source,route(source)]));
+ if(catalog.articles.includes('README.md'))for(const proof of publicProofs)routes.set(proof.source,proof.route);
  for(const file of wikiFiles)routes.set('docs/site/wiki/'+file,route('wiki/'+file));
  const articles=[];
- for(const [source,url]of routes){const markdown=await fs.readFile(path.join(root,source),'utf8');articles.push({source,url,markdown,title:/^#\s+(.+)$/m.exec(markdown)?.[1]||path.basename(source,'.md'),sha256:digest(markdown),category:source.startsWith('docs/features/')?source.split('/')[2]:'reference'});}
+ for(const [source,url]of routes){if(publicProofs.some(proof=>proof.source===source))continue;const markdown=await fs.readFile(path.join(root,source),'utf8');articles.push({source,url,markdown,title:/^#\s+(.+)$/m.exec(markdown)?.[1]||path.basename(source,'.md'),sha256:digest(markdown),category:source.startsWith('docs/features/')?source.split('/')[2]:'reference'});}
  await fs.mkdir(path.join(output,'articles'),{recursive:true});await fs.mkdir(path.join(output,'categories'),{recursive:true});
  const links=(list,prefix='')=>`<ul class="article-links">${list.map(a=>`<li><a href="${prefix}${a.url}">${escapeHtml(a.title)}</a></li>`).join('')}</ul>`;
  for(const article of articles){const related=articles.filter(a=>a!==article&&a.category===article.category);const body=`<article class="guide documentation-article" id="article" data-search="${escapeHtml(article.title)}"><p class="eyebrow">Complete source article</p>${renderMarkdown(article.markdown,article.source,routes)}<p class="small source-reference">Source: <a href="${article.source.startsWith('docs/site/wiki/')?catalog.wiki.source+'/'+path.basename(article.source,'.md'):repository+'/blob/main/'+article.source}">${escapeHtml(article.source.startsWith('docs/site/wiki/')?'Wiki '+path.basename(article.source,'.md'):article.source)}</a> · SHA-256 <code>${article.sha256}</code></p><nav aria-label="Suggested articles"><h2>Suggested articles</h2>${links(related.length?related:articles.filter(a=>a!==article).slice(0,3),'../')}<a href="../library.html">All documentation categories</a></nav></article>`;await fs.writeFile(path.join(output,article.url),pageShell(home,article.title,body,{depth:1}));}

@@ -3,6 +3,7 @@ import {promisify} from 'node:util';
 import {createHash,randomUUID} from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {createForgeToolResolver} from './startup-photo-tools.js';
 
 const execute=promisify(execFile);
 export const PHOTO_SOURCE='https://raw.githubusercontent.com/Ding-Ding-Projects/dim-sum-photos/main/catalog/index.json';
@@ -22,11 +23,12 @@ function imageFormat(bytes){
 }
 async function inspectNative(bytes){const {nativeImage}=await import('electron');const image=nativeImage.createFromBuffer(bytes);return image.isEmpty()?null:image.getSize();}
 export function readRuntimeAccessibility(runtime){try{const enabled=runtime.accessibilitySupportEnabled;return{known:typeof enabled==='boolean',enabled:enabled===true,source:'runtime'};}catch{return{known:false,enabled:false,source:'runtime'};}}
-export function createStartupPhotoService({dataDirectory,run=async(args,options)=>(await execute('gh',args,{...options,windowsHide:true,timeout:15000,encoding:'buffer'})).stdout,inspectImage=inspectNative,random=Math.random}={}){
+export function createStartupPhotoService({dataDirectory,toolsDirectory,resolveTool=createForgeToolResolver(toolsDirectory),executeFile=execute,run,inspectImage=inspectNative,random=Math.random}={}){
+ const runCommand=run||async function(args,options){const executable=await resolveTool('gh');return(await executeFile(executable,args,{...options,windowsHide:true,timeout:15000,encoding:'buffer'})).stdout;};
  let closed=false,inflight;const controller=new AbortController();
  const api=async(endpoint,{raw=false,limit=MAX_METADATA}={})=>{
   if(closed)throw Error('Photo lookup is closed.');
-  const output=await run(['api',endpoint,...(raw?['-H','Accept: application/vnd.github.raw+json']:[])],{signal:controller.signal,maxBuffer:limit});
+  const output=await runCommand(['api',endpoint,...(raw?['-H','Accept: application/vnd.github.raw+json']:[])],{signal:controller.signal,maxBuffer:limit});
   const bytes=Buffer.from(output);if(bytes.length>limit)throw Error('Public source exceeds the allowed size.');return raw?bytes:JSON.parse(bytes.toString('utf8'));
  };
  async function resolve(){
@@ -45,7 +47,7 @@ export function createStartupPhotoService({dataDirectory,run=async(args,options)
    if(!candidates.length)return null;const draw=random();if(!Number.isFinite(draw)||draw<0||draw>=1)return null;const dish=candidates[Math.floor(draw*candidates.length)],asset=assets.get(dish.image.path.slice(7)),expectedDigest=asset.digest.slice(7);
    let bytes=null;const cache=dataDirectory?path.join(dataDirectory,'startup-photo-cache'):null;
    if(cache){try{const stat=await fs.lstat(path.join(cache,'image'));if(stat.isFile()&&!stat.isSymbolicLink()&&stat.size===asset.size){const candidate=await fs.readFile(path.join(cache,'image'));if(digest(candidate)===expectedDigest)bytes=candidate;}}catch{}}
-   if(!bytes){const output=await run(['api',`repos/${REPOSITORY}/releases/assets/${asset.id}`,'-H','Accept: application/octet-stream'],{signal:controller.signal,maxBuffer:MAX_IMAGE,windowsHide:true,timeout:15000});bytes=Buffer.from(output);}
+   if(!bytes){const output=await runCommand(['api',`repos/${REPOSITORY}/releases/assets/${asset.id}`,'-H','Accept: application/octet-stream'],{signal:controller.signal,maxBuffer:MAX_IMAGE,windowsHide:true,timeout:15000});bytes=Buffer.from(output);}
    if(closed||bytes.length!==asset.size||bytes.length>MAX_IMAGE||digest(bytes)!==expectedDigest)return null;
    const format=imageFormat(bytes);if(!format||format.width<1||format.height<1||format.width>4096||format.height>4096||format.width*format.height>16777216)return null;
    const decoded=await inspectImage(bytes);if(!decoded||decoded.width!==format.width||decoded.height!==format.height)return null;

@@ -7,10 +7,10 @@ import {createMountedFoundationFixtures} from '../scripts/gui-acceptance-native-
 import './gui-acceptance-native-files.test.js';
 
 const sourceCommit='a'.repeat(40),context={binding:{sourceCommit}};
-function fixture({wrongTarget=false,renders=1,wrongFocus=false}={}){
+function fixture({wrongTarget=false,renders=1,wrongFocus=false,activationKey='Enter'}={}){
  const calls=[];let menu=false,editor=false,selected=[],focus='b',size={width:1180,height:850};
  const page={
-  keyboard:{async press(key){calls.push(key);if(key==='Enter'){menu=false;editor=true;}if(key==='Escape'){menu=false;editor=false;}}},
+  keyboard:{async press(key){calls.push(key);if(key==='Enter'||key==='Space'){menu=false;editor=true;}if(key==='Escape'){menu=false;editor=false;}}},
   locator(selector){return {async click(options){if(selector==='mfe-context-menu mfe-search md-outlined-text-field')throw Error('Strict locator: four search fields including hidden builder controls');calls.push({selector,...options});if(options?.button==='right')menu=true;else if(selector.includes('data-file-id'))selected=['a'];}};},
   async waitForFunction(){},
   async setViewportSize(value){calls.push({resize:value});size=value;menu=false;},
@@ -27,7 +27,7 @@ function fixture({wrongTarget=false,renders=1,wrongFocus=false}={}){
   async evaluateHandle(){return {async evaluate(){return {renders,headings:['Appearance: Select Acceptance B.txt']};},async dispose(){calls.push('disposed');}};}
  };
  const owned={opened:{page,target:{sourceCommit}},prepare:async()=>({ownedSyntheticFixture:true,sourceCommit}),restore:async()=>({restored:true}),identity:async c=>assert.equal(c.binding.sourceCommit,sourceCommit),list:async()=>({more:false,rows:[{id:'a',path:'Acceptance A.txt'},{id:'b',path:'Acceptance B.txt'}]}),removeTarget:async(c,id)=>{assert.equal(id,'b');menu=false;calls.push('native-remove-b');return {removedId:id,remainingId:'a'};}};
- return {producer:createContextFoundationFixture(owned),calls,page,removeRow(){menu=false;}};
+ return {producer:createContextFoundationFixture({...owned,activationKey}),calls,page,removeRow(){menu=false;}};
 }
 test('context fixture uses actual input interface and retains distinct target, one render and focus evidence',async()=>{
  const {producer,calls}=fixture();await producer.prepare(context);
@@ -105,4 +105,10 @@ test('native context action retains bounded route and removal receipts beside th
  native.resize=async()=>common;await assert.rejects(actions.resize(c),/receipt/);
  native.requireActionProof=false;const legacy=await actions.resize(c);assert.equal(Object.hasOwn(legacy.evidence,'providerReceipt'),false);
  native.resize=async()=>({...common,inputRoute:'browser-viewport-resize',physicalDpiVerified:false,capturedTargetId:'x'.repeat(300),viewportRestored:{width:1180,height:850}});await assert.rejects(actions.resize(c),/receipt/);
+});
+
+test('Space uses the same owned target and render proof, and unknown keys fail before input',async()=>{
+ const {producer,calls}=fixture({activationKey:'Space'});await producer.prepare(context);await producer['open-context'](context);
+ const proof=await producer['select-action'](context);assert.equal(proof.activationKey,'Space');assert.equal(proof.effect.count,1);assert.equal(proof.focusInEditor,true);assert.equal(proof.focusRestored,true);assert.ok(calls.includes('Space'));assert.equal(calls.includes('Enter'),false);
+ await producer.restore(context);assert.throws(()=>fixture({activationKey:'Escape'}),/Unsupported context activation key/);
 });

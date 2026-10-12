@@ -18,12 +18,12 @@ function validateDesktopWorkflow(action, payload) {
 }
 export function validateFeatureRequest(feature, action, payload, { browser = false } = {}) {
   const actions = {
+    ...(!browser?{surprise:['resolvePublishedDish']}:{}),
     converter: ['catalog','inspect','enqueue','list','control','pickSources','pickDestination','pickDestinationDirectory'],
     workflow: ['documents','pickDocument','pickProject','readDocument','saveDocument','createDocument','templates','editors','pickEditor','openEditor','openInCode','editorDownload','downloads','prepareDownload','startDownload','cancelDownload','accounts','prepareHandoff','exportHandoff','openHandoff',...(!browser?WORKFLOW_DESKTOP_ACTIONS:[])],
     updates: ['status','check','download',...(!browser?['install']:[])],
     ollama: [...(!browser?['configureRuntime']:[]),'status','catalog','refreshCatalog','models','show','deleteModel','copyModel','generate','hardware','cart','addToCart','removeFromCart','retryPull','startPulls','cancel','sessions','session','renameSession','deleteSession','exportSession','chat','profiles','preflight','launch','snapshots','restore','events','runtimeInstall','runtimeStart','chooseRuntimeExecutable','registerProfile'],
     documentation: ['catalog','changelog'], status: ['status'],
-    ...(!browser ? {surprise:['resolvePublishedDish']} : {}),
     personalization: [...(!browser?['accessibilityState']:[]),'sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts',...(!browser?['setScheduleCredential','clearScheduleCredential','normalizeImage','fontMetadata','cancelFontMetadata']:[])],
     ...(!browser ? { 'server-manager': ['snapshot','refreshCatalogue','versions','resolveVersion','prepare','cancel','reviewLicense'] } : {}),
     ...(!browser ? { access: ['credentialGet','credentialSet','credentialDelete','credentialList','openDataFolder','dataFolder',...ACCESS_HOST_ACTIONS] } : {}),

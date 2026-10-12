@@ -8,7 +8,7 @@ import {createContextFoundationFixture} from './gui-acceptance-context-fixtures.
 // Uses the actual mounted verification filesystem. This producer cannot unlock
 // a prior locked session. Schedule mounted states before locked states, or open
 // a fresh independently owned session through the normal auto-unlock startup.
-export function createMountedFoundationFixtures({opened,io=fs}){
+export function createMountedFoundationFixtures({opened,io=fs,contextActivationKey='Enter'}){
  assert.equal(opened.connectionOwned,true);assert.equal(opened.target.kind,'extracted-packaged-runtime');
  const {page,fixture,target}=opened;assert.match(fixture.driveLetter,/^[D-Z]:$/);assert.notEqual(fixture.driveLetter,'M:');
  const files=[['Acceptance A.txt','Synthetic alpha.\n'],['Acceptance B.txt','Synthetic beta.\n']].map(([name,text])=>({name,text,path:path.win32.join(fixture.driveLetter+'\\',name),sha256:sha256(text)}));
@@ -64,7 +64,7 @@ export function createMountedFoundationFixtures({opened,io=fs}){
   const after=await list();assert.equal(after.more,false);assert.deepEqual(after.rows.map(row=>row.path.replace(/^[/\\]+/,'')).sort(),[files[0].name]);
   return {removedId:id,remainingId:after.rows[0].id};
  };
- const context=createContextFoundationFixture({opened,prepare,restore,identity,list,removeTarget});
+ const context=createContextFoundationFixture({opened,prepare,restore,identity,list,removeTarget,activationKey:contextActivationKey});
  return {'drive-populated':{prepare,restore},'drive-selected':{prepare,restore},'drive-overflow':context};
 }
 

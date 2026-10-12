@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "scope": "Isolated exact older-controller discovery using actual hosted metadata; no installed GUI or applied-update acceptance",
+  "observedAtUtc": "2026-10-12T07:58:16.398Z",
+  "installedVersion": "1.133.1",
+  "installedControllerSha256": "ac02dfbfcd923dcd6099ea2b7538dd13a66c95dbea1b06ac9557c6876de4f544",
+  "release": {
+    "tag": "v1.344.1",
+    "url": "https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.344.1",
+    "source": "411ce5d55b96958799d996713374b7b683552234",
+    "draft": false,
+    "prerelease": false
+  },
+  "workflow": {
+    "id": 38219671466,
+    "conclusion": "success",
+    "source": "411ce5d55b96958799d996713374b7b683552234"
+  },
+  "feed": {
+    "bytes": 91,
+    "sha256": "31086e659406d73f30e5512d3282bcbeee3072896a607b3fa5f3415f4615bdad",
+    "bom": false
+  },
+  "provenance": {
+    "bytes": 1699,
+    "sha256": "18008322df934486f695c51b8844ed80c7c441bc6be162720bc77f26cd93fd02"
+  },
+  "result": {
+    "state": "available",
+    "reason": null,
+    "availableVersion": "1.344.1"
+  },
+  "transport": "GitHub CLI with real hosted metadata and downloaded feed/provenance; no synthetic provider or version",
+  "nativeUpdateCalled": false,
+  "packageDownloadedDuringThisCheck": false,
+  "installedGuiAcceptance": false,
+  "appliedUpdateAcceptance": false,
+  "downloadedBytesVerification": {
+    "source": "411ce5d55b96958799d996713374b7b683552234",
+    "tag": "v1.344.1",
+    "setup": {
+      "name": "MaterialFileEncryptor-Setup.exe",
+      "bytes": 368392192,
+      "sha256": "675f67faa78bf5ec965870889ad2baa3dcfd37bff25f25c4c5ded4afc593610d",
+      "verifiedAtUtc": "2026-10-12T08:07:07.099Z",
+      "downloadDurationSeconds": null
+    },
+    "package": {
+      "name": "MaterialFileEncryptor-1.344.1-full.nupkg",
+      "bytes": 368646583,
+      "sha256": "b295a0d7e4fedf10d122a753a6bcbdf21c4e1d009b8fef6b82011b9096fc054b",
+      "verifiedAtUtc": "2026-10-12T08:07:58.245Z"
+    },
+    "archiveEntries": 764,
+    "extractedPayloadFiles": 665,
+    "setupEmbeddingVerified": true,
+    "allArchiveEntriesVerified": true,
+    "embeddedVersionAndSourceVerified": true,
+    "installedLifecycleVerified": false,
+    "nativeApply": false
+  }
+}
