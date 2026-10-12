@@ -1,3 +1,12 @@
+# Context action targeting and startup readiness, 2026-10-11
+
+- Preserve each context action provider’s resolved target while retaining the original menu anchor, focus and admission checks.
+- Paint the explicit initial PIN fields while Material select initializes; disable creation until the current policy is valid and revalidate on submission.
+- Correct four platform fixtures without weakening authentication or operation checks.
+- Retain the successful 375373a production package separately from these newer source repairs and the incomplete visual/combined verification.
+
+右鍵操作各自保留正確目標，選單遲到亦唔會借錯地方開門。鎖定選项未準備好前唔准建立，提交時再核對。新源碼仍待重新建置及實機驗證。
+
 # Source integration, 2026-10-11
 
 - Admit automatic update candidates through immutable main ancestry before staging or cached-ready restoration. Create normal branch downloads without default promotion, then serialize verified main promotion separately from builds.

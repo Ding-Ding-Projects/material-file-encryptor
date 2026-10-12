@@ -6,9 +6,11 @@
 - [x] Verify the held-handle quiet observer native smoke and normal owned closure; retain the original parser rejection separately from the reviewed corrected verdict.
 - [x] Preserve the exact unsuccessful 7192b4c build result, omitted installer phase and normal owned closure. This does not certify production.
 - [x] Independently review context/access fixture source, causal negatives, restoration and merged producer composition. Packaged acceptance remains pending.
-- [ ] Complete the final v3 environment/driver review and rebuild the pinned merged source through the exact entrypoints without a visible terminal.
-- [ ] Complete combined JavaScript verification. The dc498289 run had 20 fixture failures; repairs passed focused checks, while the later shell-mediated attempt is unverified.
-- [ ] Verify repaired button geometry, live announcement behavior, stationary frame, real context-menu actions and all registered controls in the rebuilt runtime.
+- [x] Complete reviewed quiet production at 375373a through both exact entrypoints, actual exits, package validation and owned closure.
+- [ ] Rebuild and verify the newer context-provider and startup-readiness repairs.
+- [ ] Complete combined JavaScript verification. Current 375373a result: 1326 passed, 23 failed, 24 skipped. A later bounded run had 49 passed and four password-verification failures; it does not replace the combined verdict.
+- [x] Observe genuine startup/Help frame and real composed-target context dismissal by Escape, outside pointer and navigation at 375373a. Diagnostic evidence only.
+- [ ] Verify repaired startup, working appearance/lock actions, persistence, live announcement behavior, full button geometry and all registered controls in a fresh rebuilt runtime.
 - [ ] Complete 89 states across 4272 visual tuples, plus separate physical DPI proof. Zero tuples are accepted.
 - [ ] Complete applicable finite-ledger behavior, including the full interactive server manager and protected complete-reset transaction.
 - [ ] Resolve actual main-runtime cryptographic comparison with exact process ownership evidence.
