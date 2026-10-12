@@ -57,23 +57,33 @@ test('native broker child requires actual ACL ready receipt and frames correlate
 });
 test('native frame encoder rejects over 64 KiB before sending any bytes',()=>{assert.throws(()=>nativeFrame({data:'x'.repeat(65536)}),/64 KiB/);});
 
-test('compiled native host relays synthetic pairing and proposal frames through its actual broker',{
+test('compiled native host relays pairing download and read-only protection frames through its actual broker',{
  skip:!process.env.MFE_BROWSER_HOST_EXE?'Focused native build executable was not supplied.':false,timeout:20000
 },async()=>{
  const source=path.resolve(process.env.MFE_BROWSER_HOST_EXE),fixtureRoot=path.resolve('.test-output');await fs.mkdir(fixtureRoot,{recursive:true});const folder=await fs.mkdtemp(path.join(fixtureRoot,'native-host-'));
  let broker,client;
  try{
   await fs.cp(path.dirname(source),folder,{recursive:true});const hostPath=path.join(folder,'MaterialFileEncryptor.BrowserHost.exe');await fs.writeFile(path.join(folder,'browser-host-config.json'),JSON.stringify(plan.config),{flag:'wx'});
-  const captures=[];broker=factory({hostPath,onProposal:item=>captures.push(item)});await broker.start();assert.equal(broker.available,true);
+  let providerReads=0,clock=100000;const protection={schemaVersion:1,profile:'authenticated',sharedMode:'inactive',browserPermission:'unavailable'};
+  const captures=[];broker=factory({hostPath,now:()=>clock,readProtectionStatus:async()=>{providerReads++;return {...protection};},onProposal:item=>captures.push(item)});await broker.start();assert.equal(broker.available,true);
   client=spawn(hostPath,[origin],{shell:false,windowsHide:true,stdio:['pipe','pipe','pipe']});let next=null;const replies=[];
   const decoder=createNativeMessageDecoder(message=>{if(next){const resolve=next;next=null;resolve(message);}else replies.push(message);});
   client.stdout.on('data',chunk=>decoder.push(chunk));client.stderr.resume();
   const request=message=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Synthetic host response timed out.')),5000);next=value=>{clearTimeout(timer);resolve(value);};client.stdin.write(nativeFrame(message));});
-  const paired=await request({type:'pair'});assert.equal(paired.type,'paired');const proposed=await request({type:'propose',session:paired.session,proposal});assert.equal(proposed.type,'proposed');assert.equal(captures.length,1);
+  assert.equal((await request({type:'protection-status',session:'a'.repeat(43)})).type,'error');assert.equal(providerReads,0);
+  const paired=await request({type:'pair'});assert.equal(paired.type,'paired');
+  assert.equal((await request({type:'protection-status',session:'b'.repeat(43)})).type,'error');
+  assert.equal((await request({type:'protection-status',session:paired.session,actor:'forged'})).type,'error');assert.equal(providerReads,0);
+  const observed=await request({type:'protection-status',session:paired.session});assert.deepEqual(observed,{type:'protection-status',...protection});assert.equal(providerReads,1);
+  // The controlled provider proves transport only, never actual desktop profile authentication.
+  protection.profile='expired';protection.sharedMode='active';assert.deepEqual(await request({type:'protection-status',session:paired.session}),{type:'protection-status',...protection});assert.equal(providerReads,2);
+const proposed=await request({type:'propose',session:paired.session,proposal});assert.equal(proposed.type,'proposed');assert.equal(captures.length,1);
   assert.equal((await request({type:'status',session:paired.session,id:proposed.id})).state,'awaiting-confirmation');
   broker.observeDownload({type:'download',item:{browserCaptureId:proposed.id,state:'downloading',received:1,total:2}});assert.equal((await request({type:'status',session:paired.session,id:proposed.id})).state,'downloading');
   broker.observeDownload({type:'download',item:{browserCaptureId:proposed.id,state:'completed',received:2,total:2}});assert.equal((await request({type:'status',session:paired.session,id:proposed.id})).state,'completed');
   assert.equal((await request({type:'propose',session:paired.session,proposal})).type,'error');
+  clock+=900001;assert.equal((await request({type:'protection-status',session:paired.session})).type,'error');assert.equal(providerReads,2);
+  broker.revoke();assert.equal((await request({type:'protection-status',session:paired.session})).type,'error');assert.equal(providerReads,2);
  }finally{
   const exit=client?new Promise(resolve=>{if(client.exitCode!==null)resolve();else{client.once('exit',resolve);client.kill();}}):Promise.resolve();const receipt=await broker?.close();if(receipt)assert.deepEqual({processExited:receipt.processExited,stdioClosed:receipt.stdioClosed,verified:receipt.verified},{processExited:true,stdioClosed:true,verified:true});await exit;
   if(!folder.startsWith(fixtureRoot+path.sep))throw Error('Fixture cleanup target is outside its owned root.');await fs.rm(folder,{recursive:true,force:true});
