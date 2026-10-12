@@ -14,15 +14,18 @@ export function mountDocumentation(host, { catalog, translate = value => value, 
   navigation.style.cssText = 'display:flex;flex-direction:column;min-width:0;overflow:auto'; article.style.cssText = 'min-width:0;overflow:auto;overflow-wrap:anywhere';
   workspace.append(navigation, article); host.append(searchHost, actions, message, workspace);
   let disposed = false;
+  let resolveReady;const ready=new Promise(resolve=>resolveReady=resolve);const finishReady=outcome=>{resolveReady?.(outcome);resolveReady=null;};
   let active = catalog.documents.find(row => row.id === initialId) || catalog.documents[0], generation = 0;
   const search = createScopedSearch(searchHost, translate, renderList);
   async function renderList() {
-    const request = ++generation;
-    const rows = await search.filter(catalog.documents.map(row => ({ ...row, path: `${row.category} ${row.title}\n${row.markdown}` })));
+    const request = ++generation;try{
+    const result = await search.filterWithOutcome(catalog.documents.map(row => ({ ...row, path: `${row.category} ${row.title}\n${row.markdown}` })));
     if (disposed || request !== generation) return;
+    if(result.outcome==='superseded')return;const rows=result.rows;
     navigation.replaceChildren();
     for (const row of rows) { const button = element('button', row.title); button.type = 'button'; button.setAttribute('aria-current', String(active?.id === row.id)); button.addEventListener('click', () => open(row.id)); navigation.append(button); }
-    message.textContent = rows.length ? '' : translate('No matching articles.');
+    message.textContent = rows.length ? '' : translate('No matching articles.');finishReady(result.outcome);
+    }catch(error){if(!disposed&&request===generation)finishReady('failed');throw error;}
   }
   function open(id, anchor = '') {
     if (disposed) return false;
@@ -39,6 +42,6 @@ export function mountDocumentation(host, { catalog, translate = value => value, 
     if (onExport) return onExport({ name: `${active.id.split('/').pop()}.md`, text: active.markdown, mime: 'text/markdown' });
     const url = URL.createObjectURL(new Blob([active.markdown], { type: 'text/markdown' })); const link = element('a'); link.href = url; link.download = `${active.id.split('/').pop()}.md`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
-  if (active) open(active.id); else message.textContent = translate('No bundled documentation is available.');
-  return { open, refresh: () => { search.refresh(); if (active) open(active.id); }, destroy: () => { disposed = true; generation++; search.destroy?.(); host.replaceChildren(); } };
+  if (active) open(active.id); else {message.textContent = translate('No bundled documentation is available.');finishReady('ready');}
+  return { ready,open, refresh: () => { search.refresh(); if (active) open(active.id); }, destroy: () => { disposed = true; generation++;finishReady('disposed'); search.destroy?.(); host.replaceChildren(); } };
 }

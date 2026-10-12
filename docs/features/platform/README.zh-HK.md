@@ -12,3 +12,5 @@
 - [公開路徑驗收界線](public-route-acceptance.zh-HK.md)
 
 - [封裝文件目錄重用](packaged-documentation-cache.zh-HK.md)
+
+- [本機介面工作計時](renderer-task-timing.zh-HK.md)
