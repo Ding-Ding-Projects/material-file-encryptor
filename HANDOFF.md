@@ -874,3 +874,7 @@ Extension39cbbd2 passed37parent-repeated focused checks plus independent source 
 Java4666237 passed74focused checks and two independent source reviews. The pinned48,999,141-byte archive binds315files/62directories and151,524,241expanded bytes. Actual native extraction and Java execution remain unrun. ConfigurationAdmitted staysfalse; a complete runtime-file lease must survive the entire future child lifetime before start becomes available.
 
 Latest steering requires measured application speed plus100%Material Design3 throughout every rendered surface. The goal is active and incomplete. Preserve existing mounted data and retained historical evidence.
+
+### Integrated native build correction
+
+The exact root build at 852e3fcd2c491ca4547f60f8adc6148257049db0 ended with exit 1 while source stayed unchanged. Native compilation reported CS0136 at ServerLeaseBroker.cs:102 and CS0819 at ServerRuntimeProvisioner.cs:81. The correction renames the status-local inventory variable and separates the two implicit declarations; it changes no admission rule. A fresh exact root build and actual native provisioning remain required. The original failed receipt is retained.

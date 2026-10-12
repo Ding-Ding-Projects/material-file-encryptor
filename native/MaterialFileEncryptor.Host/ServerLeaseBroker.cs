@@ -99,7 +99,7 @@ internal sealed class ServerLeaseBroker
             if(method=="runtimeStatus")
             {
                 var entry=Owned(value);if(entry.RuntimeInventory is null)return new { available=false,reason="No verified owned portable Java runtime is registered." };
-                var inventory=runtimes.Verify(entry.RuntimeInventory.Root,entry.Major);return new { available=true,majorVersion=entry.Major,manifestSha256=inventory.ManifestHash,execution="not-run",configurationAdmission="unavailable" };
+                var statusInventory=runtimes.Verify(entry.RuntimeInventory.Root,entry.Major);return new { available=true,majorVersion=entry.Major,manifestSha256=statusInventory.ManifestHash,execution="not-run",configurationAdmission="unavailable" };
             }
             if (method == "close") { Exact(value); closing = true; foreach (var entry in entries.Values) await Stop(entry); return new { closed = true, verified = entries.Values.All(e => e.Child is null && e.Lease is null) }; }
             if (closing && method != "status" && method != "stop") throw new InvalidOperationException("Native server supervision is closing.");
