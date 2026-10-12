@@ -10,7 +10,7 @@ if(args.Length==1&&args[0]=="--long-path-observation")
     int filenameLength=279-fixtureRoot.Length-1;
     if(fixtureRoot.Length>=260||filenameLength<5||filenameLength>255){Console.WriteLine("{\"syntheticLongPath\":true,\"stage\":\"geometry\",\"category\":\"unsupported\"}");Environment.ExitCode=1;return;}
     string filename=new string('m',filenameLength-4)+".dll",probeMember=Path.Combine(fixtureRoot,filename);
-    bool acquired=false,memberExists=false,fixtureCreated=false,fixtureRetained=false;int? nativeCode=null;string category="none",stage="setup";string? cleanupCategory=null;int? cleanupCode=null;
+    bool acquired=false,memberExists=false,fixtureCreated=false,fixtureRetained=false,writePrevented=false,deletePrevented=false,digestRejected=false,reparseRejected=false;int? nativeCode=null;string category="none",stage="setup";string? cleanupCategory=null;int? cleanupCode=null;
     try
     {
         if(Directory.Exists(fixtureRoot))throw new InvalidOperationException();
@@ -19,7 +19,16 @@ if(args.Length==1&&args[0]=="--long-path-observation")
         string digest=Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(probeMember))).ToLowerInvariant();
         stage="lease-acquisition";
         var probeLease=OllamaRuntimeLease.AcquireSynthetic(fixtureRoot,new Dictionary<string,string>{{filename,digest}});
+        writePrevented=Prevented(()=>File.WriteAllText(probeMember,"changed"));
+        deletePrevented=Prevented(()=>File.Delete(probeMember));
         probeLease.Release();acquired=true;
+        stage="digest-rejection";
+        try{var wrong=OllamaRuntimeLease.AcquireSynthetic(fixtureRoot,new Dictionary<string,string>{{filename,new string('0',64)}});wrong.Release();}catch(InvalidDataException){digestRejected=true;}
+        stage="reparse-rejection";
+        string linked=Path.Combine(fixtureRoot,"linked");
+        LongPathFixtureJunction.Create(linked,fixtureRoot);
+        try{var linkedLease=OllamaRuntimeLease.AcquireSynthetic(linked,new Dictionary<string,string>{{filename,digest}});linkedLease.Release();}catch(InvalidDataException){reparseRejected=true;}
+        Directory.Delete(linked);
     }
     catch(Exception error)
     {
@@ -28,11 +37,11 @@ if(args.Length==1&&args[0]=="--long-path-observation")
     }
     finally
     {
-        if(fixtureCreated)try{File.Delete(probeMember);Directory.Delete(fixtureRoot);}
+        if(fixtureCreated)try{string linked=Path.Combine(fixtureRoot,"linked");if(Directory.Exists(linked))Directory.Delete(linked);File.Delete(probeMember);Directory.Delete(fixtureRoot);}
         catch(Exception error){fixtureRetained=true;cleanupCategory=error switch{System.ComponentModel.Win32Exception=>"native-call",IOException=>"io",UnauthorizedAccessException=>"access",_=>"unknown"};cleanupCode=error is System.ComponentModel.Win32Exception native?native.NativeErrorCode:null;}
     }
-    Console.WriteLine(JsonSerializer.Serialize(new{syntheticLongPath=true,memberPathCharacters=probeMember.Length,parentPathUnder260=fixtureRoot.Length<260,memberExists,leaseAcquisitionSucceeded=acquired,stage,category,nativeCode,fixtureRetained,cleanupDiagnostic=fixtureRetained?new{stage="cleanup",category=cleanupCategory,nativeCode=cleanupCode}:null}));
-    if(!acquired||fixtureRetained)Environment.ExitCode=1;
+    Console.WriteLine(JsonSerializer.Serialize(new{syntheticLongPath=true,memberPathCharacters=probeMember.Length,parentPathUnder260=fixtureRoot.Length<260,memberExists,leaseAcquisitionSucceeded=acquired,writePrevented,deletePrevented,digestRejected,reparseRejected,stage,category,nativeCode,fixtureRetained,cleanupDiagnostic=fixtureRetained?new{stage="cleanup",category=cleanupCategory,nativeCode=cleanupCode}:null}));
+    if(!acquired||!writePrevented||!deletePrevented||!digestRejected||!reparseRejected||fixtureRetained)Environment.ExitCode=1;
     return;
 }
 static string OwnedSignal(string[] arguments)
@@ -223,4 +232,25 @@ finally
     if(owner is not null&&!owner.Released){owner.Stop();DateTime deadline=DateTime.UtcNow.AddSeconds(10);while(!owner.ReleaseAfterTreeExit()&&DateTime.UtcNow<deadline)await Task.Delay(25);}
     if(owner is null)lease.Release();
     if(lease.Released){Directory.Delete(fixture,true);if(verificationCompleted)Directory.Delete(diagnostics,true);}
+}
+
+internal static class LongPathFixtureJunction
+{
+    internal static void Create(string path,string target)
+    {
+        // Build a mount-point reparse buffer only for this new synthetic fixture directory.
+        Directory.CreateDirectory(path);
+        byte[] substitute=System.Text.Encoding.Unicode.GetBytes("\\??\\"+target),print=System.Text.Encoding.Unicode.GetBytes(target);
+        byte[] buffer=new byte[16+substitute.Length+2+print.Length+2];
+        void U16(int offset,int value) { BitConverter.GetBytes(checked((ushort)value)).CopyTo(buffer,offset); }
+        BitConverter.GetBytes(0xA0000003u).CopyTo(buffer,0);
+        U16(4,buffer.Length-8);U16(8,0);U16(10,substitute.Length);U16(12,substitute.Length+2);U16(14,print.Length);
+        substitute.CopyTo(buffer,16);print.CopyTo(buffer,16+substitute.Length+2);
+        using Microsoft.Win32.SafeHandles.SafeFileHandle handle=CreateFile(path,0x40000000,0,IntPtr.Zero,3,0x02200000,IntPtr.Zero);
+        if(handle.IsInvalid)throw new System.ComponentModel.Win32Exception(System.Runtime.InteropServices.Marshal.GetLastWin32Error());
+        uint returned;
+        if(!DeviceIoControl(handle,0x000900A4,buffer,(uint)buffer.Length,IntPtr.Zero,0,out returned,IntPtr.Zero))throw new System.ComponentModel.Win32Exception(System.Runtime.InteropServices.Marshal.GetLastWin32Error());
+    }
+    [System.Runtime.InteropServices.DllImport("kernel32.dll",EntryPoint="CreateFileW",CharSet=System.Runtime.InteropServices.CharSet.Unicode,SetLastError=true)]private static extern Microsoft.Win32.SafeHandles.SafeFileHandle CreateFile(string path,uint access,uint share,IntPtr security,uint creation,uint flags,IntPtr template);
+    [System.Runtime.InteropServices.DllImport("kernel32.dll",SetLastError=true)]private static extern bool DeviceIoControl(Microsoft.Win32.SafeHandles.SafeFileHandle handle,uint control,byte[] input,uint inputLength,IntPtr output,uint outputLength,out uint returned,IntPtr overlapped);
 }
