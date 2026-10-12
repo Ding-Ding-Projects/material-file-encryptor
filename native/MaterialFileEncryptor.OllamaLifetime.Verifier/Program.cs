@@ -86,7 +86,18 @@ try
     Require(Prevented(()=>File.Delete(member)),"Retained member must reject deletion.");
     OllamaContainedProcess.StartSynthetic(lease,executable,"--parent \""+signal+"\" \""+diagnostics+"\"",out owner);
     DateTime deadline=DateTime.UtcNow.AddSeconds(10);
-    while((!File.Exists(signal)||owner.ActiveProcesses()!=1)&&DateTime.UtcNow<deadline)await Task.Delay(25);
+    uint[]? jobPidsBefore=null,jobPidsAfter=null;uint? accountingBefore=null,accountingImmediatelyAfter=null;bool originalHandleExperiment=false;
+    while((!File.Exists(signal)||owner.ActiveProcesses()!=1)&&DateTime.UtcNow<deadline)
+    {
+        if(!originalHandleExperiment&&File.Exists(signal)&&owner.OriginalExitCodeForSynthetic() is not null)
+        {
+            jobPidsBefore=owner.JobProcessIdsForSynthetic();accountingBefore=owner.ActiveProcesses();
+            originalHandleExperiment=owner.CloseExitedOriginalForSynthetic();
+            jobPidsAfter=owner.JobProcessIdsForSynthetic();accountingImmediatelyAfter=owner.ActiveProcesses();
+        }
+        await Task.Delay(25);
+    }
+    Console.WriteLine(JsonSerializer.Serialize(new {syntheticHandleReferenceExperiment=true,originalHandleExperiment,original=owner.OriginalIdentityForSynthetic(),jobPidsBefore,jobPidsAfter,accountingBefore,accountingImmediatelyAfter,accountingAtAssertion=owner.ActiveProcesses(),descendantMemberProtected=Prevented(()=>File.WriteAllText(member,"synthetic reference diagnostic mutation")),runtimeLeaseRetained=!lease.Released}));
     if(!File.Exists(signal)||owner.ActiveProcesses()!=1)
     {
         uint? originalExitCode=null;bool exitCodeAvailable=true;

@@ -158,6 +158,8 @@ internal sealed class OllamaContainedProcess
     }
     internal void StartManaged(IReadOnlyDictionary<string,string> environment)=>Start(lease.Executable,"serve",lease.Root,environment);
 #if OLLAMA_LIFETIME_VERIFIER
+    private bool syntheticOriginalExitProven;
+    private uint syntheticOriginalExitCode;
     internal static void StartSynthetic(OllamaRuntimeLease lease,string executable,string arguments,out OllamaContainedProcess owner)
     {
         lease.AssertHeld();owner=new OllamaContainedProcess(lease);
@@ -166,11 +168,40 @@ internal sealed class OllamaContainedProcess
     internal void StartSyntheticOwned(string executable,string arguments)=>Start(executable,arguments,Path.GetDirectoryName(executable)!,null);
     internal uint? OriginalExitCodeForSynthetic()
     {
+        if(syntheticOriginalExitProven)return syntheticOriginalExitCode;
         if(process is null||process.IsClosed||process.IsInvalid||WaitForSingleObject(process,0)!=0)return null;
         if(!GetExitCodeProcess(process,out uint exitCode))throw new Win32Exception(Marshal.GetLastWin32Error());
         return exitCode;
     }
+    internal bool CloseExitedOriginalForSynthetic()
+    {
+        if(syntheticOriginalExitProven)return true;
+        if(process is null||process.IsClosed||process.IsInvalid||WaitForSingleObject(process,0)!=0)return false;
+        if(GetProcessId(process)!=ProcessId||!GetProcessTimes(process,out ulong creation,out _,out _,out _)||creation!=CreationFileTime||!GetExitCodeProcess(process,out uint exitCode))throw new InvalidOperationException("Synthetic original process exit identity could not be proven.");
+        lease.AssertHeld();syntheticOriginalExitCode=exitCode;syntheticOriginalExitProven=true;
+        // Retain the exact job and all runtime leases. Never reopen by PID.
+        process.Dispose();process=null;return true;
+    }
+    internal object OriginalIdentityForSynthetic()=>new {processId=ProcessId,creationFileTime=CreationFileTime,exitCode=OriginalExitCodeForSynthetic(),exitProven=syntheticOriginalExitProven,originalHandleClosed=process is null&&syntheticOriginalExitProven};
+    internal uint[] JobProcessIdsForSynthetic()
+    {
+        const int limit=128;int bytes=checked(8+limit*IntPtr.Size);
+        if(job is null||job.IsClosed||job.IsInvalid)throw new InvalidOperationException("Synthetic job identity is unavailable.");
+        IntPtr buffer=Marshal.AllocHGlobal(bytes);
+        try
+        {
+            if(!QueryJobProcessList(job,3,buffer,(uint)bytes,out uint returned))throw new Win32Exception(Marshal.GetLastWin32Error());
+            uint assigned=unchecked((uint)Marshal.ReadInt32(buffer,0)),count=unchecked((uint)Marshal.ReadInt32(buffer,4));
+            if(returned<8||returned>bytes||assigned>limit||count>limit||count>assigned||8+(ulong)count*(uint)IntPtr.Size>returned)throw new InvalidDataException("Synthetic job PID inventory exceeds its bounds.");
+            var result=new uint[checked((int)count)];
+            for(int index=0;index<result.Length;index++){long pid=Marshal.ReadIntPtr(buffer,8+index*IntPtr.Size).ToInt64();if(pid<=0||pid>UInt32.MaxValue)throw new InvalidDataException("Synthetic job process identity is invalid.");result[index]=(uint)pid;}
+            return result;
+        }
+        finally {Marshal.FreeHGlobal(buffer);}
+    }
     [DllImport("kernel32.dll",SetLastError=true)]private static extern bool GetExitCodeProcess(SafeFileHandle process,out uint exitCode);
+    [DllImport("kernel32.dll",SetLastError=true)]private static extern uint GetProcessId(SafeFileHandle process);
+    [DllImport("kernel32.dll",EntryPoint="QueryInformationJobObject",SetLastError=true)]private static extern bool QueryJobProcessList(SafeFileHandle job,int info,IntPtr buffer,uint length,out uint returned);
 #endif
     private void Start(string executable,string arguments,string directory,IReadOnlyDictionary<string,string>? environment)
     {
@@ -216,9 +247,15 @@ internal sealed class OllamaContainedProcess
     internal bool ReleaseAfterTreeExit()
     {
         if(Released)return true;
+#if OLLAMA_LIFETIME_VERIFIER
+        _=CloseExitedOriginalForSynthetic();
+#endif
         if(ActiveProcesses()!=0)return false;
+#if OLLAMA_LIFETIME_VERIFIER
+        if(!syntheticOriginalExitProven)
+#endif
         if(process is null||process.IsClosed||process.IsInvalid||WaitForSingleObject(process,0)!=0)return false;
-        lease.AssertHeld();lease.Release();writableDirectories?.Release();writableDirectories=null;process.Dispose();process=null;job!.Dispose();job=null;Released=true;retained.TryRemove(this,out _);return true;
+        lease.AssertHeld();lease.Release();writableDirectories?.Release();writableDirectories=null;process?.Dispose();process=null;job!.Dispose();job=null;Released=true;retained.TryRemove(this,out _);return true;
     }
     internal void Stop()
     {
