@@ -589,5 +589,6 @@
 - [ ] Complete current GUI4551 recovery and real current Start/Stop captures.
 - [ ] Complete finite candidate synthetic checks, cancellation and existing-installation preservation acceptance.
 - [x] Record canonical installed synchronization:83 of83 targets current at140e422d.
-- [ ] Record final gallery outcome and resolve canonical record-only push rejection.
+- [x] Verify canonical record-only successor718e0792 reached main after two transient rejections.
+- [x] Record bounded historical gallery availability and exact exclusions; no new image publication.
 - [ ] Continue broader required features and main integration after allowance renewal.
