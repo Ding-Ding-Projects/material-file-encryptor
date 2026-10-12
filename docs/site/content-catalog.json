@@ -122,6 +122,8 @@
     "docs/features/platform/documentation-and-status.zh-HK.md",
     "docs/features/platform/instruction-currency.md",
     "docs/features/platform/instruction-currency.zh-HK.md",
+    "docs/features/platform/packaged-documentation-cache.md",
+    "docs/features/platform/packaged-documentation-cache.zh-HK.md",
     "docs/features/platform/public-document-foundation.md",
     "docs/features/platform/public-document-foundation.zh-HK.md",
     "docs/features/platform/public-route-acceptance.md",
@@ -186,10 +188,10 @@
     "docs/features/workflows/browser-extension-workspace.zh-HK.md",
     "docs/features/workflows/browser-native-host.md",
     "docs/features/workflows/browser-native-host.zh-HK.md",
+    "docs/features/workflows/browser-protection-observations.md",
+    "docs/features/workflows/browser-protection-observations.zh-HK.md",
     "docs/features/workflows/forge-publication.md",
-    "docs/features/workflows/forge-publication.zh-HK.md",
-    "docs/features/platform/packaged-documentation-cache.md",
-    "docs/features/platform/packaged-documentation-cache.zh-HK.md"
+    "docs/features/workflows/forge-publication.zh-HK.md"
   ],
   "categories": [
     "access",

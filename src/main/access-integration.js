@@ -69,7 +69,34 @@ export function createAccessIntegration({dataDirectory,toolsDirectory,credential
   if(action==='credentialSet')creations.set(identity(who,key),{revision:result.revision,expires:now()+300000});else creations.delete(identity(who,key));
   grants.delete(identity(who,target));return true;
  }
+ async function protectionStatus(){
+  const frame=getMainFrame(),who=frame&&typeof frame==='object'?actors.get(frame):null;
+  const live=()=>!closed&&frame&&typeof frame==='object'&&frame===getMainFrame()&&frame?.detached!==true&&!(typeof frame?.isDestroyed==='function'&&frame.isDestroyed());
+  let profile='locked',sharedMode='unknown';
+  const grant=who?grants.get(identity(who,'profile')):null,epoch=who?generation(who,'profile'):null;
+  if(!live())return {schemaVersion:1,profile:'unknown',sharedMode:'unknown',browserPermission:'unavailable'};
+  try{const before=await readSchool(),after=await readSchool();if(before===after)sharedMode=after?'active':'inactive';}catch{}
+  if(grant){
+   if(grant.expires<=now())profile='expired';
+   else try{const record=await credentials.readVersioned('local-profile:v1');if(live()&&generation(who,'profile')===epoch&&grants.get(identity(who,'profile'))===grant){if(grant.expires<=now())profile='expired';else if(record.revision===grant.revision)profile='authenticated';else {grants.delete(identity(who,'profile'));profile='locked';}}else profile='unknown';}catch{profile='unknown';}
+  }
+  try{const after=await readSchool();if(sharedMode!==(after?'active':'inactive'))sharedMode='unknown';}catch{sharedMode='unknown';}
+  if(profile==='authenticated')try{
+   const record=await credentials.readVersioned('local-profile:v1');
+   if(!live()||generation(who,'profile')!==epoch||grants.get(identity(who,'profile'))!==grant)profile='unknown';
+   else if(grant.expires<=now())profile='expired';
+   else if(record.revision!==grant.revision){grants.delete(identity(who,'profile'));profile='locked';}
+  }catch{profile='unknown';}
+  try{const after=await readSchool();if(sharedMode!==(after?'active':'inactive'))sharedMode='unknown';}catch{sharedMode='unknown';}
+  if(profile==='authenticated'){
+   if(grants.get(identity(who,'profile'))!==grant)profile='unknown';
+   else if(grant.expires<=now())profile='expired';
+  }
+  if(!live()||who&&generation(who,'profile')!==epoch)return {schemaVersion:1,profile:'unknown',sharedMode:'unknown',browserPermission:'unavailable'};
+  return {schemaVersion:1,profile,sharedMode,browserPermission:'unavailable'};
+ }
  return {
+  protectionStatus,
   request(senderFrame,action,payload={}){
    if(closed||!senderFrame||typeof senderFrame!=='object'||senderFrame!==getMainFrame())return Promise.reject(Error('Trusted access actor is unavailable.'));
    if(credentialActions.has(action))validateCredentialRequest(action,payload);else validateAccessHostRequest(action,payload);

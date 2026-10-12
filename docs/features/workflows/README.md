@@ -7,3 +7,5 @@
 These workflows use local native service entrypoints rather than an HTTP API. Postman collections are not applicable.
 
 - [Browser extension workspace](browser-extension-workspace.md)
+
+- [Browser protection observations](browser-protection-observations.md)

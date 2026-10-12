@@ -18,7 +18,7 @@ async function readHostConfiguration(filename){
 }
 
 /** Desktop integration uses only bundled configuration, never renderer input. */
-export function createBrowserHandoffLifecycle({hostDirectory,platform=process.platform,verificationMode=false,readConfiguration=readHostConfiguration,createBroker=createBrowserNativeBroker,authorizePair,isUnlocked,canAdmit=()=>true,onProposal}={}){
+export function createBrowserHandoffLifecycle({hostDirectory,platform=process.platform,verificationMode=false,readConfiguration=readHostConfiguration,createBroker=createBrowserNativeBroker,authorizePair,isUnlocked,canAdmit=()=>true,onProposal,readProtectionStatus}={}){
  let broker=null,closed=false,starting=null,lastReceipt=null;let state={available:false,configured:false,reason:'NOT_INITIALIZED',installation:'not-performed'};
  const admitted=()=>!closed&&canAdmit()===true&&isUnlocked()===true;
  const status=()=>({...state,available:broker?.available===true&&!closed,closeReceipt:lastReceipt});
@@ -29,7 +29,7 @@ export function createBrowserHandoffLifecycle({hostDirectory,platform=process.pl
    let config;try{config=await readConfiguration(path.join(hostDirectory,'browser-host-config.json'));validateBrowserHostConfig(config);}catch{state={...state,reason:'REVIEWED_EXTENSION_IDENTITY_UNAVAILABLE'};return status();}
    if(closed)return status();
    state={...state,configured:true,reason:'STARTING'};
-   broker=createBroker({config,hostPath:path.join(hostDirectory,'MaterialFileEncryptor.BrowserHost.exe'),authorizePair:async context=>admitted()&&await authorizePair(context)===true&&admitted(),isUnlocked:admitted,onProposal:item=>{if(!admitted())throw Error('Unlock the desktop before receiving downloads.');return onProposal(item);}});
+   broker=createBroker({config,readProtectionStatus,hostPath:path.join(hostDirectory,'MaterialFileEncryptor.BrowserHost.exe'),authorizePair:async context=>admitted()&&await authorizePair(context)===true&&admitted(),isUnlocked:admitted,onProposal:item=>{if(!admitted())throw Error('Unlock the desktop before receiving downloads.');return onProposal(item);}});
    try{await broker.start();state={...state,reason:null};}catch{lastReceipt=await broker.close();state={...state,reason:'NATIVE_BROKER_START_UNVERIFIED'};}
    if(closed){lastReceipt=await broker.close();state={...state,reason:'CLOSED'};}return status();
   })();try{return await starting;}finally{starting=null;}
@@ -39,7 +39,7 @@ export function createBrowserHandoffLifecycle({hostDirectory,platform=process.pl
 
 /** Host-only transport. Its caller origin is an allowlist input, never proof of
  * browser provenance. Every pair still requires approval in the unlocked app. */
-export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnlocked,onProposal,spawnHost=spawn,now=Date.now,closeTimeoutMs=3000}={}){
+export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnlocked,onProposal,readProtectionStatus,spawnHost=spawn,now=Date.now,closeTimeoutMs=3000}={}){
  if(typeof authorizePair!=='function'||typeof isUnlocked!=='function'||typeof onProposal!=='function')throw Error('Native approval, unlocked admission and host proposal delivery are required.');
  if(!Number.isSafeInteger(closeTimeoutMs)||closeTimeoutMs<25||closeTimeoutMs>5000)throw Error('Native close timeout must be between 25 and 5000 milliseconds.');
  const allowedOrigins=validateBrowserHostConfig(config),sessions=new Map(),proposals=new Map(),owners=new Set(),jobs=new Set();let child=null,closed=false,ready=false,active=0,starting=null,readyResolve,readyReject,closing=null;
@@ -49,6 +49,14 @@ export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnloc
  async function receive(origin,message){
   if(!allowedOrigins.includes(origin)||active>=2)throw Error('Browser caller unavailable or not allowed.');unlocked();active++;
   try{
+   if(exact(message,['type','session'])&&message.type==='protection-status'){
+    const pair=sessions.get(origin);if(!pair||pair.expires<=now()||!same(message.session,pair.session))throw Error('Pair the browser again.');
+    if(typeof readProtectionStatus!=='function')throw Error('Protection observations are unavailable.');
+    const value=await readProtectionStatus();unlocked();
+    if(sessions.get(origin)!==pair||pair.expires<=now())throw Error('Pair the browser again.');
+    if(!exact(value,['schemaVersion','profile','sharedMode','browserPermission'])||value.schemaVersion!==1||!['authenticated','locked','expired','unknown'].includes(value.profile)||!['active','inactive','unknown'].includes(value.sharedMode)||value.browserPermission!=='unavailable')throw Error('Protection observation is invalid.');
+    return {type:'protection-status',schemaVersion:1,profile:value.profile,sharedMode:value.sharedMode,browserPermission:'unavailable'};
+   }
    if(exact(message,['type','session','id'])&&message.type==='status'){
     const pair=sessions.get(origin);if(!pair||pair.expires<=now()||!same(message.session,pair.session))throw Error('Pair the browser again.');if(!uuid(message.id))throw Error('Invalid browser proposal identifier.');
     const item=proposals.get(message.id);if(!item||item.origin!==origin)throw Error('Browser proposal unavailable.');return{type:'status',id:message.id,state:item.state,received:item.received,total:item.total};
