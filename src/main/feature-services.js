@@ -72,7 +72,7 @@ export function createFeatureServices({dataDirectory,applicationRoot,isPackaged=
  const protectedForgeTransport=createProtectedForgeDeviceTransport({toolsDirectory});
  const protectedAccounts=createProtectedForgeAccounts({credentialStore:credentials,reviewedClient:reviewedForgeClient,...protectedForgeTransport,onChallenge:item=>emit('workflow',{type:'forge-authentication',item})});
  const workflows=createWorkflowServices({dataDirectory,toolsDirectory,protectedAccounts,dialog,getWindow,openPath,openExternal,emit});
- const startupPhotos=createStartupPhotoService({dataDirectory});
+ const startupPhotos=createStartupPhotoService({dataDirectory,toolsDirectory});
  const fontMetadataAdmission=createFontScanAdmission();const cancelFontMetadata=()=>fontMetadataAdmission.cancelAll();
  const grants=new Map();let converter,ollama,ollamaPromise,closed=false,exiting=false,sharedCredentialGranted=false,pendingRequests=0;
  const modelEvents=[];let modelSequence=0,modelEventBytes=0,activeOllamaRequests=0;

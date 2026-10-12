@@ -1,4 +1,4 @@
-import {createStartupSurprise} from '../shared/local-ux/surprise.js';
+import {createStartupSurprise,observeStartupInteraction} from '../shared/local-ux/surprise.js';
 import {createStartupPresentation} from './features/shell/startup-surprise.js';
 import {createNotificationNarration} from './features/shell/notification-narration.js';
 import {control,prepareControl,controlKind,CONTROL_SELECTOR,setControlLanguage} from '../shared/surface/controls.js';
@@ -47,12 +47,14 @@ const localSettings=settingsIntegrity.store;
 if(localSettings.provenance==='default')try{localSettings.update({...LOCAL_DEFAULTS,...preferences,vocabulary:undefined},'existing preferences migrated');}catch{}
 let effectiveLocalSettings=localSettings.get();
 let screenReaderActive=null;
-let startupReady=false,statusReady=false,startupStarted=false,updateSnapshot=null;
+let startupReady=false,statusReady=false,startupStarted=false,startupInteracted=false,updateSnapshot=null;
 let firstLaunch=true;try{firstLaunch=localStorage.getItem('mfe.startup.completed.v1')!=='1';}catch{}
-const startupState=()=>{const operations=state?.operations||[],rows=Array.isArray(operations)?operations:Object.values(operations);return{school:effectiveLocalSettings.school,firstRun:firstLaunch,busy:busy||rows.some(row=>!['completed','cancelled','failed'].includes(row.state||row.status)),error:!$('main-error')?.hidden||rows.some(row=>(row.state||row.status)==='failed'),updating:!updateSnapshot||!['idle','current','unavailable'].includes(updateSnapshot.state),quiet:effectiveLocalSettings.attention?.lowStimulation===true||Number(effectiveLocalSettings.attention?.snoozedUntil)>Date.now(),reducedMotion:effectiveLocalSettings.motion==='reduced'||matchMedia('(prefers-reduced-motion: reduce)').matches};};
+const startupState=()=>{const operations=state?.operations||[],rows=Array.isArray(operations)?operations:Object.values(operations);return{school:effectiveLocalSettings.school,firstRun:firstLaunch,interacted:startupInteracted,modalOpen:!!document.querySelector('mfe-dialog[open],md-dialog[open],dialog[open]'),updateChecking:updateSnapshot?.state==='checking',busy:busy||rows.some(row=>!['completed','cancelled','failed'].includes(row.state||row.status)),error:!$('main-error')?.hidden||rows.some(row=>(row.state||row.status)==='failed'),updating:!updateSnapshot||!['idle','current','unavailable'].includes(updateSnapshot.state),quiet:effectiveLocalSettings.attention?.lowStimulation===true||Number(effectiveLocalSettings.attention?.snoozedUntil)>Date.now(),reducedMotion:effectiveLocalSettings.motion==='reduced'||matchMedia('(prefers-reduced-motion: reduce)').matches};};
 const startupPresentation=createStartupPresentation({getState:startupState});
 const startupSurprise=createStartupSurprise({getState:startupState,show:details=>startupPresentation.show(details),resolvePublishedDish:()=>featureRequest('surprise','resolvePublishedDish',{})});
-function attemptStartup(){if(startupStarted||!startupReady||!statusReady||!updateSnapshot)return;startupStarted=true;void startupSurprise.attempt().catch(()=>{});try{localStorage.setItem('mfe.startup.completed.v1','1');}catch{}}
+const stopStartupInteraction=observeStartupInteraction(document,()=>{startupInteracted=true;startupPresentation.dismiss();});
+onPageDiscard(window,stopStartupInteraction);
+function attemptStartup(){if(startupStarted||!startupReady||!statusReady||!updateSnapshot)return;try{localStorage.setItem('mfe.startup.completed.v1','1');}catch{}void startupSurprise.attempt().then(result=>{if(!result.deferred)startupStarted=true;}).catch(()=>{startupStarted=true;});}
 function acceptUpdateSnapshot(value){updateSnapshot=value?.snapshot||value;const s=startupState();if(s.updating||s.error||s.busy||s.quiet||s.school?.enabled)startupPresentation.dismiss();attemptStartup();return value;}
 
 const narrationEvents=createNotificationNarration({getNarrator:()=>featureMounts.get('personalization')?.narrator,getSettings:()=>effectiveLocalSettings,translate:(source,options)=>t(source,options),isScreenReaderActive:()=>screenReaderActive!==false,onUnavailable:()=>foundation?.notify({title:'Narration unavailable',message:'Open Settings, Personalization, then Language to select an installed voice. Visual notifications remain available.',level:'warning',narration:false})});
