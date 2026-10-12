@@ -1,0 +1,16 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import manifest from '../features/server-manager/runtime-provenance.json' with {type:'json'};
+export const JAVA_RUNTIME_MANIFEST=Object.freeze(manifest);
+export function runtimeCandidate(major,architecture=process.arch){return major===manifest.majorVersion&&architecture===manifest.architecture?{available:true,id:manifest.id,majorVersion:major,release:manifest.release,bytes:manifest.archiveBytes,sha256:manifest.archiveSha256,sourceUrl:manifest.sourceUrl}:{available:false,reason:'No reviewed portable Java runtime matches this exact major and architecture.'};}
+async function directory(root){for(let current=path.resolve(root);;){const value=await fs.lstat(current);if(!value.isDirectory()||value.isSymbolicLink())throw Error('Owned unlinked runtime directory required.');const parent=path.dirname(current);if(parent===current)break;current=parent;}}
+export async function downloadPinnedJava({baseRoot,operationId,fetchImpl=fetch,signal,onProgress=()=>{},capacity=async root=>{const value=await fs.statfs(root,{bigint:true});return value.bavail*value.bsize;}}){
+ if(!/^[a-f0-9-]{36}$/.test(operationId))throw Error('Invalid owned runtime operation.');await directory(baseRoot);const available=await capacity(baseRoot);if(typeof available!=='bigint'||available<BigInt(manifest.archiveBytes+manifest.expandedBytes+16*1024*1024))throw Error('Insufficient verified capacity for the portable runtime.');signal?.throwIfAborted();
+ const root=path.join(baseRoot,'runtime-'+operationId);await fs.mkdir(root);await directory(root);const temporary=path.join(root,'archive.partial');let url=manifest.sourceUrl,response;
+ for(let redirects=0;redirects<=3;redirects++){response=await fetchImpl(url,{redirect:'manual',signal:signal?AbortSignal.any([signal,AbortSignal.timeout(120000)]):AbortSignal.timeout(120000)});if(![301,302,303,307,308].includes(response.status))break;const next=new URL(response.headers.get('location')||'',url);if(next.protocol!=='https:'||!['release-assets.githubusercontent.com','objects.githubusercontent.com'].includes(next.hostname)||next.username||next.password||next.port||next.hash)throw Error('Untrusted portable runtime redirect.');await response.body?.cancel();url=next.href;response=null;}
+ if(!response?.ok||!response.body)throw Error('Pinned Java runtime download unavailable.');const length=response.headers.get('content-length');if(length!==null&&Number(length)!==manifest.archiveBytes)throw Error('Pinned runtime size mismatch.');
+ const file=await fs.open(temporary,'wx'),hash=createHash('sha256');let received=0;
+ try{for await(const chunk of response.body){signal?.throwIfAborted();received+=chunk.byteLength;if(received>manifest.archiveBytes)throw Error('Pinned runtime exceeded exact size.');hash.update(chunk);await file.writeFile(chunk);onProgress(received,manifest.archiveBytes);}await file.sync();}finally{await file.close();}
+ signal?.throwIfAborted();if(received!==manifest.archiveBytes||hash.digest('hex')!==manifest.archiveSha256)throw Error('Pinned runtime integrity mismatch.');await directory(root);await fs.link(temporary,path.join(root,'archive.zip'));await fs.unlink(temporary);return{operationId,archiveVerified:true,bytes:received};
+}

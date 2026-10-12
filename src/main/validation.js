@@ -25,7 +25,7 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
     documentation: ['catalog','changelog'], status: ['status'],
     ...(!browser ? {surprise:['resolvePublishedDish']} : {}),
     personalization: [...(!browser?['accessibilityState']:[]),'sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts',...(!browser?['setScheduleCredential','clearScheduleCredential','normalizeImage','fontMetadata','cancelFontMetadata']:[])],
-    ...(!browser ? { 'server-manager': ['snapshot','refreshCatalogue','versions','resolveVersion','prepare','cancel','reviewLicense','capabilities','acceptLicense','start','status','stop'] } : {}),
+    ...(!browser ? { 'server-manager': ['snapshot','refreshCatalogue','versions','resolveVersion','prepare','cancel','reviewLicense','capabilities','acceptLicense','start','status','stop','runtimeCandidate','prepareRuntime','runtimeStatus','cancelRuntime'] } : {}),
     ...(!browser ? { access: ['credentialGet','credentialSet','credentialDelete','credentialList','openDataFolder','dataFolder',...ACCESS_HOST_ACTIONS] } : {}),
   };
   const limit=!browser&&feature==='personalization'&&action==='normalizeImage'?Math.ceil(4*1024*1024*4/3)+256:262144;
@@ -46,7 +46,8 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
       resolveVersion: { catalogueId: hash, versionId: value => typeof value === 'string' && value.length > 0 && value.length <= 128 && !/[\x00-\x1f\x7f]/.test(value) },
       prepare: { selectionId: uuid }, cancel: { operationId: uuid },
       reviewLicense: { serverId: value => typeof value === 'string' && value.startsWith('server-') && uuid(value.slice(7)) },
-      ...Object.fromEntries(['acceptLicense','start','status','stop'].map(action=>[action,{serverId:value=>typeof value==='string'&&value.startsWith('server-')&&uuid(value.slice(7))}])),
+      ...Object.fromEntries(['acceptLicense','start','status','stop','runtimeCandidate','prepareRuntime','runtimeStatus'].map(action=>[action,{serverId:value=>typeof value==='string'&&value.startsWith('server-')&&uuid(value.slice(7))}])),
+      cancelRuntime:{operationId:uuid},
     };
     const schema = schemas[action];
     const prototype = Object.getPrototypeOf(payload);

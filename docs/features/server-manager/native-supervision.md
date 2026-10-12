@@ -26,13 +26,7 @@ configuration proof has not been retained, so native configuration admission
 always fails closed. No loopback property schema, management setting, readiness,
 or historical version compatibility is inferred from the catalogue.
 
-Runtime discovery considers only a reviewed bundled `server-runtime` inventory.
-It excludes PATH, JAVA_HOME, renderer-selected executables, and unreviewed local
-installations. The inventory must bind Java major version, executable SHA-256 and
-the release-file SHA-256. No reviewed runtime inventory is currently bundled.
-This implementation performs no runtime installation or automatic license
-acceptance. Installed-runtime discovery and trusted package acquisition remain
-unfinished work.
+Runtime discovery now considers only a [reviewed owned portable runtime](preparation.md#reviewed-portable-java-runtime). It excludes PATH, JAVA_HOME, renderer-selected executables and unreviewed local installations. The native host embeds the pinned complete runtime inventory and independently verifies the archive, every member and the release-file major before registration. Java 21 on Windows x64 is the initial supported acquisition combination; other majors and architectures remain unavailable. This prepares owned files without global installation, Java execution or automatic server license acceptance. Installed-runtime discovery remains unfinished.
 
 Verification and test modes deliberately disable the production native callback.
 Synthetic tests verify the protected main-process wiring, identifier validation,

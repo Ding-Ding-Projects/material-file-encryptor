@@ -445,14 +445,14 @@
     {
       "source": "docs/features/server-manager/native-supervision.md",
       "translation": "docs/features/server-manager/native-supervision.zh-HK.md",
-      "sourceSha256": "e34378ff94297a00927a64e2d43fa3a1e79bf8245f98969fc7cee01d5a29a761",
-      "translationSha256": "d836db465e80d8d1cfd75832542b7917b4f9f93ae1c168a159199b07593c4cfc"
+      "sourceSha256": "308cf1402b8dc3c0d2937d77000d38603fda7561412fec08506d4a606ad692cb",
+      "translationSha256": "a2ceb36437380231743ccf61cd0ae697b16764188e52253789f9010f1b9f1cbb"
     },
     {
       "source": "docs/features/server-manager/preparation.md",
       "translation": "docs/features/server-manager/preparation.zh-HK.md",
-      "sourceSha256": "52f112f9d82d74c0fb47e17cd2c9af0a79b48b6d1e92b407d9b5cbd5d6be9d71",
-      "translationSha256": "48c02e164823c5d1c60817f93054211e356d77e0e79022172ff2b7bc13e59386"
+      "sourceSha256": "72871336e9f1c2f829623bdb383f973c981a0e0100d64fea4f1c01a95d47fd6c",
+      "translationSha256": "d7ea080ed90a30b70606eeb0139094f520d89089d3b0d484b5114ba8b8a89fa0"
     },
     {
       "source": "docs/features/storage/README.md",
