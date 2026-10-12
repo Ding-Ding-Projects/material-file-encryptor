@@ -97,7 +97,9 @@ export function createAccessAdapters({launch,receipt,inventory,prepareOwnedFixtu
   await observeProducer(context,state.id,id);
   return {id,activated:true,observablePassed:true,activation:'dom-click-or-control-change',evidence:{observed:true,stateId:state.id,actionId:id,sourceCommit:binding.sourceCommit,planId:id+'-result'}};
  }
+ const preflight=state=>{const producer=access();if(typeof producer.assertCapabilities!=='function')throw Error('CAPABILITY_UNAVAILABLE: access.assertCapabilities');producer.assertCapabilities(state.id,state.actions);if(state.id==='access-once')capability('nativePicker');if(typeof prepareOwnedFixture!=='function')throw Error('CAPABILITY_UNAVAILABLE: prepareOwnedFixture');};
  return Object.fromEntries(entries.map(state=>[state.id,{
+  preflight:()=>preflight(state),
   async prepare(context){
    const producer=access();producer.assertCapabilities?.(state.id,state.actions);if(state.id==='access-once')capability('nativePicker');
    if(typeof prepareOwnedFixture!=='function')throw Error('CAPABILITY_UNAVAILABLE: prepareOwnedFixture');

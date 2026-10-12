@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
-import {stateRoutes,acquisitionCapabilities,makeAcquisitionPlan,acquireMatrix,composeAdapters,settledComposedMotion,validateStateObservation} from '../scripts/gui-acceptance-acquire.mjs';
+import {stateRoutes,acquisitionCapabilities,makeAcquisitionPlan,acquireMatrix,acquireDiagnosticSubset,validateAcquisitionRequest,composeAdapters,settledComposedMotion,validateStateObservation} from '../scripts/gui-acceptance-acquire.mjs';
 import {bindingFor,matrixFor,tupleKey,sha256} from '../scripts/gui-acceptance.mjs';
 import {chooseVerificationDriveLetter} from '../scripts/preview-runtime-fixture.mjs';
 import {ownedFixturePreparation} from '../scripts/gui-acceptance-baseline.mjs';
@@ -67,7 +67,7 @@ test('all 4272 plans retain exact URL proof, scale and real navigation',()=>{
 test('missing action adapters fail closed before any packaged acquisition',async()=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'gui-acquisition-test-'));
  const binding=bindingFor({sourceCommit:'a'.repeat(40),executableSha256:'b'.repeat(64),resourceSha256:'c'.repeat(64),verifierSha256:'d'.repeat(64),referenceSha256:'e'.repeat(64),inventory});
- let calls=0;const result=await acquireMatrix({inventory,binding,launch,receipt:path.resolve('receipt.json'),outputRoot:root,executePlan:async()=>{calls++;},probeEvidence:{},adapters:{},tuples:[matrixFor(inventory)[0]]});
+ let calls=0;const result=await acquireDiagnosticSubset({inventory,binding,launch,receipt:path.resolve('receipt.json'),outputRoot:root,executePlan:async()=>{calls++;},probeEvidence:{},adapters:{},tuples:[matrixFor(inventory)[0]]});
  assert.equal(calls,0);assert.equal(result.results[0].status,'unavailable');assert.equal(result.accepted,false);
  await fs.rmdir(root);
 });
@@ -77,8 +77,20 @@ test('admitted unchanged evidence resumes without acquiring a live capability',a
   const binding=bindingFor({sourceCommit:'a'.repeat(40),executableSha256:'b'.repeat(64),resourceSha256:'c'.repeat(64),verifierSha256:'d'.repeat(64),referenceSha256:'e'.repeat(64),inventory});
   const tuple=matrixFor(inventory)[0],state=inventory.states[0],file={path:'proof.json',sha256:sha256('proof')};await fs.writeFile(path.join(root,file.path),'proof');
   const row={schemaVersion:1,status:'passed',tuple,binding,route:'cheap-lowlevel-headless',captureKind:'packaged-renderer',scaleProof:'renderer-emulation',capture:file,layout:file,referenceCapture:file,sideBySide:file,visualDiff:file,inspection:{inspected:true,privacyPassed:true,correctState:true,referenceReviewed:true,designParityPassed:true},layoutResult:{outerFrameScroll:false,clipped:[]},primitiveAudit:{genericControls:[],unregisteredControls:[]},motionSettled:true,resourceGraphVerified:true,cspVerified:true,fixtureIdentityVerified:true,stateObservable:state.observable,actions:state.actions.map(id=>({id,activated:true,observablePassed:true,evidencePath:file.path,evidenceSha256:file.sha256}))};
-  const run=()=>acquireMatrix({inventory,binding,launch,receipt:path.resolve('receipt.json'),outputRoot:root,executePlan:()=>{throw Error('Must not acquire');},adapters:{},tuples:[tuple],resume:new Map([[tupleKey(tuple),row]])});
+  const run=()=>acquireDiagnosticSubset({inventory,binding,launch,receipt:path.resolve('receipt.json'),outputRoot:root,executePlan:()=>{throw Error('Must not acquire');},adapters:{},tuples:[tuple],resume:new Map([[tupleKey(tuple),row]])});
   assert.equal((await run()).results[0].status,'reused');
   await fs.writeFile(path.join(root,file.path),'changed');assert.equal((await run()).results[0].status,'unavailable');
  }finally{await fs.unlink(path.join(root,'proof.json'));await fs.rmdir(root);}
+});
+
+test('full acquisition rejects omitted, shortened, duplicate and unknown tuples before runtime',async()=>{
+ const all=matrixFor(inventory),binding=bindingFor({sourceCommit:'a'.repeat(40),executableSha256:'b'.repeat(64),resourceSha256:'c'.repeat(64),verifierSha256:'d'.repeat(64),referenceSha256:'e'.repeat(64),inventory});let touched=0;const rejectRun=tuples=>acquireMatrix({inventory,binding,tuples,adapters:{},launch,receipt:path.resolve('receipt.json'),outputRoot:path.resolve('uncreated-rejected-acquisition'),executePlan:()=>{touched++;},createProbeEvidence:()=>{touched++;}});
+ for(const [tuples,reason] of [[undefined,/Explicit nonempty/],[[],/Explicit nonempty/],[all.slice(1),/Complete matrix/],[[...all,all[0]],/Duplicate matrix/],[[...all.slice(0,-1),{...all.at(-1),state:'unknown-state'}],/Unknown matrix/]])await assert.rejects(rejectRun(tuples),reason);
+ assert.equal(touched,0);assert.equal(validateAcquisitionRequest({inventory,tuples:all}).requested,4272);
+ assert.throws(()=>validateAcquisitionRequest({inventory:{...inventory,states:inventory.states.slice(1)},tuples:all.slice(48)}),/Complete current state inventory/);
+ assert.throws(()=>validateAcquisitionRequest({inventory,tuples:[{...all[0],extra:true}],mode:'diagnostic-subset'}),/Unknown matrix tuple/);
+ assert.equal(validateAcquisitionRequest({inventory,tuples:[all[0]],mode:'diagnostic-subset'}).complete,false);
+});
+test('a late invalid diagnostic tuple cannot execute an earlier valid tuple',async()=>{
+ let touched=0;await assert.rejects(acquireDiagnosticSubset({inventory,tuples:[matrixFor(inventory)[0],{state:'unknown-state'}],executePlan:()=>{touched++;}}),/Unknown matrix tuple/);assert.equal(touched,0);
 });

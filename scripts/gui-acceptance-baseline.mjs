@@ -56,6 +56,7 @@ export function baselineAdapters({launch,receipt,prepareOwnedFixture,inventory})
   return {...first,restoration:restored,before};
  };
  const make=(id,expression,actions)=>({
+  preflight:()=>assert.equal(typeof prepareOwnedFixture,'function','CAPABILITY_UNAVAILABLE: prepareOwnedFixture'),
   prepare:async context=>{const result=await prepareOwnedFixture({...context,state:id,requiredDriveState:id==='drive-locked'||id.startsWith('create-')?'locked':'unchanged'});assert.equal(result.ownedSyntheticFixture,true);assert.equal(result.sourceCommit,context.binding.sourceCommit);return result;},
   assertState:async({executePlan})=>({passed:true,evidence:await check(executePlan,id+'-state',expression),observable:inventory.states.find(state=>state.id===id).observable}),actions
  });

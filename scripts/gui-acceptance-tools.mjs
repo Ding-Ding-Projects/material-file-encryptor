@@ -94,6 +94,7 @@ export function createToolsAdapters({launch,receipt,inventory,prepareOwnedFixtur
    'cancel-preparation':action('cancel-preparation',cancelNative)
   };
   return[id,{
+   preflight(){requireCapabilities(fixtures,TOOLS_CAPABILITIES[id]);if(typeof prepareOwnedFixture!=='function')unavailable('prepareOwnedFixture');},
    async prepare(context){
     assert.equal(context.tuple.state,id,'Wrong adapter tuple');requireCapabilities(fixtures,TOOLS_CAPABILITIES[id]);if(typeof prepareOwnedFixture!=='function')unavailable('prepareOwnedFixture');
     const owned=await prepareOwnedFixture({...context,state:id,requiredDriveState:'unchanged'});assert.equal(owned?.ownedSyntheticFixture,true);assert.equal(owned.sourceCommit,context.binding.sourceCommit);

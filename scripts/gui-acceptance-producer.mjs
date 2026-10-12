@@ -5,7 +5,7 @@ import os from 'node:os';
 import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {bindingFor,sha256,matrixFor} from './gui-acceptance.mjs';
-import {acquireMatrix,composeAdapters} from './gui-acceptance-acquire.mjs';
+import {acquireMatrix,composeAdapters,validateAcquisitionRequest} from './gui-acceptance-acquire.mjs';
 import {baselineAdapters,ownedFixturePreparation} from './gui-acceptance-baseline.mjs';
 import {createFoundationAdapters} from './gui-acceptance-foundation.mjs';
 import {createAccessAdapters} from './gui-acceptance-access.mjs';
@@ -75,7 +75,10 @@ export function runEvidenceJson(executable,args,input,env=process.env){
 
 // Starts no process and owns no teardown. The supplied live session has already
 // passed exact package, profile, process, target and client-socket admission.
-export async function acquirePackagedBaseline({opened,inventory,buildReceiptPath,referencePath,outputRoot,tuples,fixtures={},report=()=>{}}){
+export function acquirePackagedDiagnosticSubset(options){return acquirePackagedBaseline({...options,mode:'diagnostic-subset'});}
+export async function acquirePackagedBaseline({opened,inventory,buildReceiptPath,referencePath,outputRoot,tuples,mode='full',fixtures={},report=()=>{}}){
+ const request=validateAcquisitionRequest({inventory,tuples,mode});
+ inventory=structuredClone(inventory);tuples=structuredClone(tuples);
  assert.equal(opened.connectionOwned,true);assert.equal(opened.target.kind,'extracted-packaged-runtime');
  const target=opened.target,receipt=opened.statePath,state=JSON.parse(await fs.readFile(receipt));
  const launch=makeLaunch({executable:target.executable,runRoot:opened.runRoot,port:state.cdp.port});assert.equal(launch.cdp.expectedUrl,target.expectedUrl);
@@ -104,6 +107,6 @@ export async function acquirePackagedBaseline({opened,inventory,buildReceiptPath
  const adapters=createPackagedAdapters(context);
  const createProbeEvidence=({outputRoot})=>createModernProbeEvidence({binding:build,outputRoot,helperPath:cdp,observe,validate:file=>runEvidenceJson(process.execPath,[path.join(skillRoot,'diagnose-built-ui-layout','scripts','validate-layout-probe.mjs'),'--input',file],undefined,env)});
  await fs.mkdir(outputRoot,{recursive:true});
- await fs.writeFile(path.join(outputRoot,'producer-binding.json'),JSON.stringify({binding,build,packageBinding:opened.receiptPath,physicalDpiVerified:false},null,2),{flag:'wx'});
- return acquireMatrix({inventory,binding,launch,receipt,outputRoot,executePlan,createProbeEvidence,adapters,tuples:tuples||matrixFor(inventory).filter(tuple=>['drive-locked','create-password','settings-default'].includes(tuple.state)&&tuple.language==='en'&&tuple.theme==='light'&&tuple.scale===1),report});
+ await fs.writeFile(path.join(outputRoot,'producer-binding.json'),JSON.stringify({binding,build,request,scope:mode==='full'?'full-packaged-acquisition':'diagnostic-subset',packageBinding:opened.receiptPath,physicalDpiVerified:false},null,2),{flag:'wx'});
+ return acquireMatrix({inventory,binding,launch,receipt,outputRoot,executePlan,createProbeEvidence,adapters,tuples,mode,report});
 }

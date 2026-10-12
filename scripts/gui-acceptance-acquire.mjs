@@ -10,6 +10,20 @@ import {matrixFor,tupleKey,validateBinding,sha256,admitRow,verifyFiles} from './
 import {inspectSurface} from './gui-acceptance-components.mjs';
 import {resolveLayoutTargets,composedLayoutExpression} from './gui-acceptance-layout.mjs';
 
+import inventoryContract from '../contracts/gui-states.json' with {type:'json'};
+
+// Validate the entire requested run before file creation, resume admission or UI work.
+export function validateAcquisitionRequest({inventory,tuples,mode='full'}={}){
+ assert.deepEqual(inventory,inventoryContract,'Complete current state inventory required');
+ assert.ok(['full','diagnostic-subset'].includes(mode),'Unknown acquisition mode');
+ assert.ok(Array.isArray(tuples)&&tuples.length>0,'Explicit nonempty acquisition tuples required');
+ const planned=matrixFor(inventory),known=new Map(planned.map(tuple=>[tupleKey(tuple),tuple])),seen=new Set();
+ for(const tuple of tuples){assert.ok(tuple&&typeof tuple==='object','Invalid matrix tuple');const key=tupleKey(tuple);assert.deepEqual(tuple,known.get(key),'Unknown matrix tuple');assert.ok(!seen.has(key),'Duplicate matrix tuple');seen.add(key);}
+ if(mode==='full')assert.equal(seen.size,planned.length,'Complete matrix required for full acquisition');
+ return {mode,expected:planned.length,requested:tuples.length,complete:seen.size===planned.length,accepted:false};
+}
+export function acquireDiagnosticSubset(options){return acquireMatrix({...options,mode:'diagnostic-subset'});}
+
 const q=JSON.stringify;
 const poll=(id,expression)=>({id,op:'poll',expression,equals:true,intervalMs:100});
 export function settledComposedMotion(selector,resolve){
@@ -51,8 +65,14 @@ export const stateRoutes=Object.freeze({
  'tools-default':{view:'converter'},'drive-overflow':{view:'drive'},'drive-search':{view:'drive'},'drive-notifications':{view:'drive'}
 });
 
-export function acquisitionCapabilities(inventory,adapters={}){
- return inventory.states.map(state=>({state:state.id,navigation:Boolean(stateRoutes[state.id]),fixture:typeof adapters[state.id]?.prepare==='function',observable:typeof adapters[state.id]?.assertState==='function',actions:state.actions.filter(id=>typeof adapters[state.id]?.actions?.[id]==='function'),missingActions:state.actions.filter(id=>typeof adapters[state.id]?.actions?.[id]!=='function')}));
+export function acquisitionCapabilities(inventory,adapters={}, {inspectProviders=false}={}){
+ return inventory.states.map(state=>{
+  const adapter=adapters[state.id],row={state:state.id,navigation:Boolean(stateRoutes[state.id]),fixture:typeof adapter?.prepare==='function',observable:typeof adapter?.assertState==='function',actions:state.actions.filter(id=>typeof adapter?.actions?.[id]==='function'),missingActions:state.actions.filter(id=>typeof adapter?.actions?.[id]!=='function'),provider:'not-inspected'};
+  if(inspectProviders){
+   if(typeof adapter?.preflight!=='function'){row.provider='unknown';row.reason='CAPABILITY_UNAVAILABLE: provider preflight '+state.id;}
+   else try{const result=adapter.preflight();assert.ok(!result||typeof result.then!=='function','Provider preflight must be synchronous and read-only');row.provider='declared';}catch(error){row.provider='unavailable';row.reason=String(error.message);}
+  }return row;
+ });
 }
 export function composeAdapters(inventory,...areas){
  const known=new Set(inventory.states.map(state=>state.id)),combined={};
@@ -82,19 +102,22 @@ export function makeAcquisitionPlan({launch,receipt,tuple,state,outputRoot}){
 // Each state adapter prepares only an explicitly owned native fixture, observes
 // the mounted production state, and exercises its individually named actions.
 // Missing adapters stop before acquisition instead of producing misleading PNGs.
-export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot,executePlan,createProbeEvidence,adapters,tuples=matrixFor(inventory),resume=new Map(),report=()=>{}}){
+export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot,executePlan,createProbeEvidence,adapters,tuples,mode='full',resume=new Map(),report=()=>{}}){
+ const request=validateAcquisitionRequest({inventory,tuples,mode});
+ inventory=structuredClone(inventory);tuples=structuredClone(tuples);
  validateBinding(binding,inventory);assert.ok(path.isAbsolute(outputRoot));
  const planned=new Map(matrixFor(inventory).map(tuple=>[tupleKey(tuple),tuple]));const results=[],unavailableStates=new Map();
+ const capabilityAudit=acquisitionCapabilities(inventory,adapters,{inspectProviders:true}),byState=new Map(capabilityAudit.map(row=>[row.state,row]));
  for(const tuple of tuples){
   const key=tupleKey(tuple);assert.deepEqual(tuple,planned.get(key),'Unknown matrix tuple');
   const state=inventory.states.find(item=>item.id===tuple.state),adapter=adapters[state.id];
   if(resume.has(key)){try{admitRow(resume.get(key),{tuple,state,binding});await verifyFiles(resume.get(key),outputRoot);results.push({key,status:'reused'});continue;}catch{/* Changed or incomplete evidence must be acquired again. */}}
   if(unavailableStates.has(state.id)){results.push({key,status:'unavailable',reason:unavailableStates.get(state.id),notRetried:true});continue;}
-  const capabilities=acquisitionCapabilities({states:[state]},adapters)[0];
-  if(!capabilities.navigation||!capabilities.fixture||!capabilities.observable||capabilities.missingActions.length){results.push({key,status:'unavailable',capabilities});continue;}
+  const capabilities=byState.get(state.id);
+  if(capabilities.provider!=='declared'||!capabilities.navigation||!capabilities.fixture||!capabilities.observable||capabilities.missingActions.length){results.push({key,status:'unavailable',capabilities});continue;}
   const tupleDirectory=path.join(outputRoot,key.replaceAll('/','-'));await fs.mkdir(tupleDirectory,{recursive:true});
   const directory=await fs.mkdtemp(path.join(tupleDirectory,'attempt-'));
-  const record={schemaVersion:1,tuple,binding,scope:'packaged-acquisition',status:'started',physicalDpiVerified:false};
+  const record={schemaVersion:1,tuple,binding,scope:mode==='full'?'full-packaged-acquisition':'diagnostic-subset',status:'started',physicalDpiVerified:false};
   const save=()=>fs.writeFile(path.join(directory,'acquisition.json'),JSON.stringify(record,null,2));await save();report({key,status:'started'});
   try{
    assert.equal(typeof createProbeEvidence,'function','A per-attempt native probe factory is required');
@@ -118,5 +141,5 @@ export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot
   }catch(error){record.status='failed';record.reason=error.message;if(String(error.message).startsWith('CAPABILITY_UNAVAILABLE:')){record.status='unavailable';unavailableStates.set(state.id,error.message);}}
   finally{try{if(adapter.restore)record.restoration=await adapter.restore({tuple,binding,executePlan});}catch(error){record.status='restoration-failed';record.restorationReason=error.message;}await save();results.push({key,status:record.status,path:path.join(directory,'acquisition.json')});report(results.at(-1));}
  }
- return {schemaVersion:1,binding,results,accepted:false};
+ return {schemaVersion:1,binding,request,capabilityAudit,scope:mode==='full'?'full-packaged-acquisition':'diagnostic-subset',results,accepted:false};
 }

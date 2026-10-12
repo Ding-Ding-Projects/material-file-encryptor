@@ -42,7 +42,7 @@ const acquisition = await acquireMatrix({
 });
 ```
 
-The five-adapter baseline is historical. The current packaged producer composes foundation, access, records, tools and personalization adapters, while actual fixture preparation, observation and restoration still require the supported native producers listed below. Its default tuple selection covers only locked drive, password creation and default settings at English/light/scale 1 across two viewports; callers must supply the full declared tuple set for complete coverage. Inventory additions retain their owner source revision and reason, while an independent test freezes the original 74 IDs.
+The five-adapter baseline is historical. The current packaged producer composes foundation, access, records, tools and personalization adapters, while actual fixture preparation, observation and restoration still require the supported native producers listed below. The former implicit three-state tuple selection has been removed. Full acquisition requires the caller to supply the exact current inventory and every explicit tuple. Inventory additions retain their owner source revision and reason, while an independent test freezes the original 74 IDs.
 
 The remaining finite acquisition capabilities are:
 
@@ -90,3 +90,13 @@ and do not receive inferred evidence.
 
 
 For the bounded context keyboard sequence, construct `createMountedFoundationFixtures({opened, contextActivationKey: "Enter"})` and separately `createMountedFoundationFixtures({opened, contextActivationKey: "Space"})`. Each provider uses the same owned target, actual key input, single-render and focus assertions and retains `activationKey` in its result. Restore one owned fixture before creating the next. The default is Enter; other key values are rejected before input. This extension does not establish persistence, disabled/stale/locked runtime negatives or full matrix acceptance.
+
+## Explicit acquisition scope and preflight
+
+`acquireMatrix` and `acquirePackagedBaseline` now require the complete caller-supplied `contracts/gui-states.json` inventory and an explicit complete `matrixFor(inventory)` tuple list. Missing, empty, incomplete, duplicate, unknown or altered tuples fail before runtime or evidence-directory creation. The inventory and tuple list are copied before asynchronous work. The historical function name does not select a baseline implicitly.
+
+Use `acquireDiagnosticSubset` or `acquirePackagedDiagnosticSubset` only for a deliberately bounded explicit tuple list. Their run and attempt scope is `diagnostic-subset`, and `accepted` remains false, even when a diagnostic caller supplies all tuples. The producer binding retains scope and expected/requested counts. Neither acquisition route certifies pixel inspection, design parity or physical display scaling.
+
+Every adapter exposes a synchronous source-only `preflight` that checks required callbacks without running fixture setup or controls. The acquisition audit lists all states before the first plan; missing declarations remain unknown and missing providers remain unavailable. A declared provider is only a candidate route. Live ownership and actual workflow observations are still mandatory. Existing resume evidence must pass its separate source, content and inspection admission.
+
+The [complete default-provider inventory](gui-acquisition-providers.md) records 22 declared routes and 67 unavailable producers, with the exact first missing capability for each state. No new provider fabricates application state or protected records. Current accepted matrix remains 0/4,272.
