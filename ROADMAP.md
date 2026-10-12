@@ -520,3 +520,10 @@
 - [ ] Build and verify the resulting main candidate through its exact root entrypoints.
 - [ ] Complete genuine `412a217` one-click GUI verification after the unchanged memory-admission floor permits it; retain that verdict separately from the prepared main candidate.
 - [ ] Verify source-bound main installation/runtime and interface behavior before claiming delivery.
+
+
+## Managed runtime diagnostic incorporation preparation
+
+- [x] Prepare only the accepted `eaf2685` diagnostic slice and related paired article hashes on `f2f8c315`; dedicated paths match immutable source bytes.
+- [ ] Independently review and preserve this source-only delta before integration.
+- [ ] Verify native compilation and source-bound diagnostic runtime behavior; actual `412a217` installation passed, Start failed with unknown cause, and the owned flow closed gracefully.

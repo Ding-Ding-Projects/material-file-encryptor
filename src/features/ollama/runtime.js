@@ -1,3 +1,4 @@
+import {runtimeDiagnostic} from './runtime-diagnostic.js';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import {execFile,spawn} from 'node:child_process';
@@ -42,10 +43,10 @@ export async function probeOllamaHealth(fetchImpl=fetch,loopbackPort=11434){
 }
 // Pickers, trust verification, and process creation belong to the native host.
 // This adapter never downloads or runs an installer and never accepts commands.
-export function createRuntimeController({candidatePaths,environment=process.env,filesystem=fs,processProbe=probeRuntimeProcesses,verifyExecutable,launchVerified,openOfficialPage,pickExecutable,installer,platform=process.platform,loopbackPort=11434,managedModelDirectory=null,runtimeStartAvailable=()=>true,closeRuntime,apiProbe=()=>probeOllamaHealth(fetch,loopbackPort),pause=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}){
+export function createRuntimeController({candidatePaths,environment=process.env,filesystem=fs,processProbe=probeRuntimeProcesses,verifyExecutable,launchVerified,openOfficialPage,pickExecutable,installer,platform=process.platform,loopbackPort=11434,managedModelDirectory=null,runtimeStartAvailable=()=>true,runtimeDiagnostics=()=>null,closeRuntime,apiProbe=()=>probeOllamaHealth(fetch,loopbackPort),pause=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}){
   const endpoint=localEndpoint(loopbackPort);
   const candidates=candidatePaths||[environment.LOCALAPPDATA&&path.join(environment.LOCALAPPDATA,'Programs','Ollama','ollama.exe'),environment.ProgramFiles&&path.join(environment.ProgramFiles,'Ollama','ollama.exe')].filter(Boolean);
-  let selected=null,owned=null,starting=false,stopping=null;
+  let selected=null,owned=null,starting=false,stopping=null,readinessDiagnostic=null;
   async function installation(){
     const managed=await installer?.getExecutable();for(const candidate of [...(managed?[managed]:[]),...(selected?[selected]:[]),...candidates]){try{if(!path.isAbsolute(candidate))continue;const executable=await filesystem.realpath(candidate);if(path.basename(executable).toLowerCase()!=='ollama.exe'||!(await filesystem.stat(executable)).isFile())continue;let trusted=false;try{trusted=verifyExecutable?await verifyExecutable(executable)===true:false;}catch{}return {present:true,executable,trusted};}catch{}}
     return {present:false,executable:null,trusted:false};
@@ -58,7 +59,7 @@ export function createRuntimeController({candidatePaths,environment=process.env,
     else if(installed.present&&processes.known)state='stopped';
     else if(!installed.present&&processes.known)state='missing';
     else state='unknown';
-    return {state,ownedManaged:owned?.managed===true,endpoint:endpoint.url,managedModelStore:owned!==null&&managedModelDirectory!==null,managedModelStoreConfigured:managedModelDirectory!==null,version:api.version||null,installed:installed.present,executableTrusted:installed.trusted,processInspectionKnown:processes.known,processCount:processes.rows.length,reason:api.reason||null,...(installer?{installation:installer.status()}:{}),actions:{stop:owned?.managed===true&&!starting&&!stopping,install:installer?installer.enabled&&!installer.pending&&!installer.status().installed:state==='missing'&&Boolean(openOfficialPage),start:!owned&&!starting&&!stopping&&state==='stopped'&&installed.trusted&&Boolean(launchVerified)&&await runtimeStartAvailable(installed.executable),retry:true,selectExecutable:Boolean(pickExecutable&&verifyExecutable)},at:new Date().toISOString()};
+    return {diagnostic:readinessDiagnostic||runtimeDiagnostic(runtimeDiagnostics()),state,ownedManaged:owned?.managed===true,endpoint:endpoint.url,managedModelStore:owned!==null&&managedModelDirectory!==null,managedModelStoreConfigured:managedModelDirectory!==null,version:api.version||null,installed:installed.present,executableTrusted:installed.trusted,processInspectionKnown:processes.known,processCount:processes.rows.length,reason:api.reason||null,...(installer?{installation:installer.status()}:{}),actions:{stop:owned?.managed===true&&!starting&&!stopping,install:installer?installer.enabled&&!installer.pending&&!installer.status().installed:state==='missing'&&Boolean(openOfficialPage),start:!owned&&!starting&&!stopping&&state==='stopped'&&installed.trusted&&Boolean(launchVerified)&&await runtimeStartAvailable(installed.executable),retry:true,selectExecutable:Boolean(pickExecutable&&verifyExecutable)},at:new Date().toISOString()};
   }
   return {
     inspect,
@@ -78,11 +79,13 @@ export function createRuntimeController({candidatePaths,environment=process.env,
       return stopping.finally(()=>{stopping=null;});
     },
     async start({confirmed=false,language='en'}={}){
-      if(!confirmed)throw new Error('Confirm starting the detected local runtime.');if(starting||stopping||owned)throw new Error('Wait for the owned runtime operation to settle.');starting=true;
+      if(!confirmed)throw new Error('Confirm starting the detected local runtime.');if(starting||stopping||owned)throw new Error('Wait for the owned runtime operation to settle.');starting=true;readinessDiagnostic=null;
       try{const status=await inspect();if(status.state==='healthy')return status;if(status.state!=='stopped')throw new Error('Start is available only for a detected stopped runtime.');const installed=await installation();if(!installed.trusted||!launchVerified)throw new Error('The native host must verify the executable before startup.');
         owned=await launchVerified({executable:installed.executable,args:['serve'],environment:{OLLAMA_HOST:endpoint.host,OLLAMA_NO_CLOUD:'1'},windowsHide:true,language});
         if(!owned||typeof owned.stop!=='function')throw new Error('The native launcher did not return an owned process stop handle.');
         for(let attempt=0;attempt<10;attempt++){const api=await apiProbe();if(api.healthy&&(!owned.isRunning||await owned.isRunning()))return {state:'healthy',version:api.version,owned:true};await pause(500);}
+        try{readinessDiagnostic=runtimeDiagnostic(await owned?.observeDiagnostic?.());}catch{}
+        readinessDiagnostic??=runtimeDiagnostic({stage:'api-readiness',category:'readiness-timeout',nativeCode:null});
         await owned?.stop?.();owned=null;return {state:'unhealthy',rolledBack:true,next:'The started process did not expose a healthy local API and was stopped. Check runtime diagnostics before retrying.'};
       }finally{starting=false;}
     },

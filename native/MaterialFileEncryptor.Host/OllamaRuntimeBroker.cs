@@ -14,6 +14,8 @@ internal sealed class OllamaRuntimeBroker
     private readonly Dictionary<string,OllamaContainedProcess> operations=new(StringComparer.Ordinal);
     private string? latest;
     private bool closing;
+    private object? diagnostic;
+    private static object Diagnostic(string stage,Exception error)=>new {stage,category=error switch {Win32Exception=>"native-call",UnauthorizedAccessException=>"access",InvalidDataException=>"data",IOException=>"io",ArgumentException=>"argument",InvalidOperationException=>"state",_=>"unknown"},nativeCode=error is Win32Exception native?(int?)native.NativeErrorCode:null};
 #if OLLAMA_LIFETIME_VERIFIER
     private Func<OllamaRuntimeLease>? syntheticLease;
     private string? syntheticExecutable,syntheticArguments;
@@ -49,12 +51,18 @@ internal sealed class OllamaRuntimeBroker
                     if(latest is not null&&!operations.ContainsKey(latest))latest=null;
                 }
                 if(operations.Count>=64)throw new InvalidOperationException("Managed operation retention exceeds its bound.");
+                diagnostic=null;
                 OllamaRuntimeLease lease;
+                string stage="environment";
+                try
+                {
 #if OLLAMA_LIFETIME_VERIFIER
                 lease=syntheticLease is not null?syntheticLease():OllamaRuntimeLease.Acquire(dataRoot);
 #else
                 lease=OllamaRuntimeLease.Acquire(dataRoot);
 #endif
+                }
+                catch(Exception error){diagnostic=Diagnostic("runtime-inventory",error);throw;}
                 var owner=new OllamaContainedProcess(lease);string operationId=Guid.NewGuid().ToString("N");
                 operations.Add(operationId,owner);latest=operationId;
                 try
@@ -65,13 +73,14 @@ internal sealed class OllamaRuntimeBroker
 #endif
                     {
                         var environment=PrepareEnvironment(number,out var writableScope);
-                        owner.HoldWritableDirectories(writableScope);
-                        owner.StartManaged(environment);
+                        stage="writable-directories";owner.HoldWritableDirectories(writableScope);
+                        stage="process-start";owner.StartManaged(environment);
                     }
                     return Summary(operationId,owner,"running");
                 }
-                catch
+                catch(Exception error)
                 {
+                    diagnostic=Diagnostic(owner.StartStage??stage,error);
                     // A failed post-spawn inspection still has an opaque owner.
                     // Attempt exact settlement; unknown outcomes retain ownership.
                     try { if(!owner.ReleaseBeforeSpawnIfKnown()){owner.Stop();await Settle(owner);} } catch { }
@@ -104,7 +113,8 @@ internal sealed class OllamaRuntimeBroker
     private object Summary(string? id,OllamaContainedProcess? owner,string phase)
     {
         uint? active=null;try{if(owner is not null)active=owner.ActiveProcesses();}catch{phase="unknown";}
-        return new {available=startupAdmitted,startAvailable=startupAdmitted&&!closing&&operations.Values.All(value=>value.Released),operationId=id,phase,processId=owner is null||owner.ProcessId==0?(uint?)null:owner.ProcessId,activeProcesses=active,exitVerified=owner is not null&&owner.ProcessId!=0&&owner.Released,leaseReleased=owner?.Released??false,limitations=new[]{"File sharing does not establish absolute exclusion against same-user directory insertion or mapped writers.","Orderly exact-job settlement does not verify abrupt host-death handle-release ordering."}};
+        uint? originalExitCode=null;try{originalExitCode=owner?.ObserveOriginalExitCode();}catch{}
+        return new {originalExitCode,diagnostic,available=startupAdmitted,startAvailable=startupAdmitted&&!closing&&operations.Values.All(value=>value.Released),operationId=id,phase,processId=owner is null||owner.ProcessId==0?(uint?)null:owner.ProcessId,activeProcesses=active,exitVerified=owner is not null&&owner.ProcessId!=0&&owner.Released,leaseReleased=owner?.Released??false,limitations=new[]{"File sharing does not establish absolute exclusion against same-user directory insertion or mapped writers.","Orderly exact-job settlement does not verify abrupt host-death handle-release ordering."}};
     }
     private Dictionary<string,string> PrepareEnvironment(int port,out ServerFileLease retainedScope)
     {
@@ -153,8 +163,23 @@ internal sealed class OllamaContainedProcess
     internal uint ProcessId { get; private set; }
     internal ulong CreationFileTime { get; private set; }
     internal bool Released { get; private set; }
+    internal string? StartStage {get;private set;}
+    private uint? observedOriginalExitCode;
     internal OllamaContainedProcess(OllamaRuntimeLease lease) { this.lease=lease; }
     internal void HoldWritableDirectories(ServerFileLease scope) { if(createAttempted||writableDirectories is not null)throw new InvalidOperationException("Writable directory scope is already assigned.");writableDirectories=scope; }
+    internal uint? ObserveOriginalExitCode()
+    {
+        if(observedOriginalExitCode is not null)return observedOriginalExitCode;
+        try
+        {
+        if(process is null||process.IsClosed||process.IsInvalid||WaitForSingleObject(process,0)!=0)return null;
+        if(OriginalProcessId(process)!=ProcessId||!GetProcessTimes(process,out ulong creation,out _,out _,out _)||creation!=CreationFileTime||!OriginalExitCode(process,out uint code))return null;
+        observedOriginalExitCode=code;return code;
+        }
+        catch{return null;}
+    }
+    [DllImport("kernel32.dll",EntryPoint="GetProcessId",SetLastError=true)]private static extern uint OriginalProcessId(SafeFileHandle process);
+    [DllImport("kernel32.dll",EntryPoint="GetExitCodeProcess",SetLastError=true)]private static extern bool OriginalExitCode(SafeFileHandle process,out uint exitCode);
     internal bool ReleaseBeforeSpawnIfKnown()
     {
         if(Released)return true;if(createAttempted)return false;
@@ -258,16 +283,17 @@ internal sealed class OllamaContainedProcess
     private void Start(string executable,string arguments,string directory,IReadOnlyDictionary<string,string>? environment)
     {
         if(createAttempted||Released)throw new InvalidOperationException("Exactly one contained launch is permitted.");lease.AssertHeld();writableDirectories?.AssertHeld();
-        job=CreateJobObject(IntPtr.Zero,null);
+        StartStage="job-create";job=CreateJobObject(IntPtr.Zero,null);
         if(job.IsInvalid){int error=Marshal.GetLastWin32Error();ReleaseBeforeSpawnIfKnown();throw new Win32Exception(error);}
         var limits=new ExtendedLimits();limits.Basic.LimitFlags=0x2000; // KILL_ON_JOB_CLOSE, no breakaway flags.
+        StartStage="job-configure";
         if(!SetInformationJobObject(job,9,ref limits,(uint)Marshal.SizeOf<ExtendedLimits>())){int error=Marshal.GetLastWin32Error();ReleaseBeforeSpawnIfKnown();throw new Win32Exception(error);}
         var startup=new StartupInfo { Size=(uint)Marshal.SizeOf<StartupInfo>() };
         IntPtr environmentBlock=IntPtr.Zero;ProcessInformation child;
         try
         {
             if(environment is not null)environmentBlock=Marshal.StringToHGlobalUni(String.Join("\0",environment.OrderBy(value=>value.Key,StringComparer.OrdinalIgnoreCase).Select(value=>value.Key+"="+value.Value))+"\0\0");
-            createAttempted=true;
+            StartStage="process-create";createAttempted=true;
             if(!CreateProcess(executable,new StringBuilder("\""+executable+"\" "+arguments),IntPtr.Zero,IntPtr.Zero,false,0x08000404,environmentBlock,directory,ref startup,out child))
             {int error=Marshal.GetLastWin32Error();job.Dispose();job=null;lease.Release();writableDirectories?.Release();writableDirectories=null;Released=true;throw new Win32Exception(error);}
         }
@@ -275,6 +301,7 @@ internal sealed class OllamaContainedProcess
         process=new SafeFileHandle(child.Process,true);using var thread=new SafeFileHandle(child.Thread,true);ProcessId=child.ProcessId;
         // Keep an ownership reference even if containment or identity inspection fails.
         retained.TryAdd(this,0);
+        StartStage="job-assign";
         if(!AssignProcessToJobObject(job,process))
         {
             int error=Marshal.GetLastWin32Error();
@@ -283,9 +310,11 @@ internal sealed class OllamaContainedProcess
             throw new Win32Exception(error);
         }
         contained=true;
+        StartStage="process-identity";
         if(!GetProcessTimes(process,out var creation,out _,out _,out _))throw new Win32Exception(Marshal.GetLastWin32Error());
         CreationFileTime=creation;
         lease.AssertHeld();
+        StartStage="process-resume";
         if(ResumeThread(thread)==uint.MaxValue)throw new Win32Exception(Marshal.GetLastWin32Error());
     }
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<OllamaContainedProcess,byte> retained=new();
@@ -301,6 +330,7 @@ internal sealed class OllamaContainedProcess
         if(Released)return true;
         if(ActiveProcesses()!=0)return false;
         if(process is null||process.IsClosed||process.IsInvalid||WaitForSingleObject(process,0)!=0)return false;
+        _ = ObserveOriginalExitCode();
         lease.AssertHeld();lease.Release();writableDirectories?.Release();writableDirectories=null;process.Dispose();process=null;job!.Dispose();job=null;Released=true;retained.TryRemove(this,out _);return true;
     }
     internal void Stop()
