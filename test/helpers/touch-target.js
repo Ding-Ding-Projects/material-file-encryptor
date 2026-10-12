@@ -12,13 +12,13 @@ export async function assertOwnedTouchTarget(locator,minimum=44) {
    const x=r.x+r.width/2+dx,y=r.y+r.height/2+dy;let node=host.ownerDocument.elementFromPoint(x,y);const visited=new Set();
    while(node?.shadowRoot&&!visited.has(node)){visited.add(node);const inner=node.shadowRoot.elementFromPoint(x,y);if(!inner||inner===node)break;node=inner;}
    let owned=false;for(let current=node;current;current=parent(current))if(current===host){owned=true;break;}
-   hits.push({x,y,owned});
+   hits.push({x,y,owned,hitTag:node?.localName??null,hitId:node?.id??null});
   }
   return {host:rectangle(host),touch:rectangle(touch),hits,minimum,disabled:!!host.disabled};
  },minimum);
  assert.equal(measured.disabled,false,'Touch control must be enabled.');
  assert.ok(measured.touch.width>=minimum&&measured.touch.height>=minimum,`Internal touch area must be at least ${minimum} CSS pixels in both dimensions.`);
- assert.ok(measured.hits.every(point=>point.owned),'Control must own all nine minimum-area hit points.');
+ assert.ok(measured.hits.every(point=>point.owned),'Control must own all nine minimum-area hit points: '+JSON.stringify(measured));
  return measured;
 }
 
