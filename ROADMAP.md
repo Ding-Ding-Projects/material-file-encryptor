@@ -499,6 +499,6 @@
 - [x] Verify PDF exclusion at `a0239c9` through the exact root build, 994 retained-file hashes and five extracted PDF checks.
 - [x] Verify catalogue cache at `187364a` through independent focused checks, exact root build, production-byte identity and bounded same-input component timings.
 - [ ] Deliver the rewritten README, three explanatory diagrams and selected public proof after focused link/privacy checks and independent review.
-- [ ] Finish installed startup and automatic updating on their owning branches with actual source-bound observations.
-- [ ] Establish the canonical shared Ollama executable/model path and operational proof before applying that path.
+- [ ] Finish installed startup and actual automatic-update acceptance; updater controller and future-feed source are on main, with local installer production passed and hosted/native apply pending.
+- [ ] Verify the one-click application-managed Ollama runtime procedure before updating shared instructions; preserve existing installations.
 - [ ] Replace current screenshots only after genuine rebuilt capture acceptance, preserving historical originals.

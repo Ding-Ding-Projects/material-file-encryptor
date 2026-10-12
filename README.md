@@ -4,7 +4,7 @@
 
 [Documentation website](https://ding-ding-projects.github.io/material-file-encryptor/) · [Feature library](docs/features/README.md) · [中文文件](docs/features/README.zh-HK.md) · [Roadmap](ROADMAP.md) · [Current handoff](HANDOFF.md) · [Releases](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases)
 
-> **Current main status:** `187364a3094b1f66e5798d10991f2e3d09d40af9` includes the verified PDF packaging exclusion and documentation catalogue cache. Their exact root builds and bounded component results are recorded below. Complete required features, current Material Design 3 acceptance, installed startup, automatic updating and restart continuity remain unfinished. A successful build or release does not certify those outcomes.
+> **Current main status:** `411ce5d55b96958799d996713374b7b683552234` includes verified PDF packaging and documentation catalogue caching, plus the updater controller and future release-index repair. Their exact root builds and bounded component results are recorded below. Complete required features, current Material Design 3 acceptance, installed startup, automatic updating and restart continuity remain unfinished. A successful build or release does not certify those outcomes.
 
 ## Choose a workflow
 
@@ -73,7 +73,7 @@ The historical inventory contains **105 required feature identifiers and 210 des
 
 **Current replacement screenshots remain pending source-bound acceptance and promotion.** Historical originals retain their dates, sources, hashes and exclusions in the [preview inventory](docs/images/captures/preview/inventory.json), [preview summary](docs/images/captures/preview/verification-summary.json), [Linux provenance](docs/images/captures/provenance.json), [Windows provenance](docs/images/captures/windows/provenance.json) and [historical gallery](https://ding-ding-projects.github.io/material-file-encryptor/gallery.html). These diagrams explain workflows; they are not screenshots.
 
-Installed startup and automatic update repair are active but pending on separate branches. No newer installed update, ready/Later interaction, restart continuity or removal verdict is claimed. Local models must use the owner's canonical shared Ollama installation path only after its actual executable/model identity, ownership and operational proof are established; this documentation change neither chooses an unverified path nor starts a model service. See [local model boundaries](docs/features/ollama/local-models.md).
+Updater source and future BOM-free release-index production are delivered on main. Local installer production passed at `ab975`; main `411ce5d` retains the same complete source tree after a preserved unpublished message correction. Hosted future-feed and actual native apply acceptance remain pending. Installed startup, ready/Later interaction, restart continuity and removal are not certified. Local models must follow the documented one-click application-managed Ollama runtime procedure. The shared instructions may be updated only after actual installation and runtime proof; no shared physical directory is implied, existing installations remain untouched, and this documentation change starts no model service. See [local model boundaries](docs/features/ollama/local-models.md).
 
 ## Build, package and verify
 

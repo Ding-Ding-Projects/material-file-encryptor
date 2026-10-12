@@ -109,8 +109,8 @@
     {
       "source": "docs/features/desktop/package-integrity.md",
       "translation": "docs/features/desktop/package-integrity.zh-HK.md",
-      "sourceSha256": "481dbb89a5983c9f2e6946fb4c33e1c2fc449f22f70fa33b86bdb54ffbc2fea0",
-      "translationSha256": "9b20419a3b802e3168a521550f6c5dd4f88d5202e65437e1f88dd0b0ba6d93d9"
+      "sourceSha256": "db6b2484e15244eb9c73fa655b263ecfacc2d385c45b908dd0e396aaa858659c",
+      "translationSha256": "e1d85fed6c49e76bebce5a3e687bf32fd6fa0d6aea606cdb68e96b3d320654d2"
     },
     {
       "source": "docs/features/desktop/runtime-evidence.md",
@@ -493,8 +493,8 @@
     {
       "source": "docs/features/platform/packaged-documentation-cache.md",
       "translation": "docs/features/platform/packaged-documentation-cache.zh-HK.md",
-      "sourceSha256": "c4929cd557fdb50236345056debcaf637fed50c4ca4c22162911ef566a9158d7",
-      "translationSha256": "9d4d80e246d6f7afcd17781f76702f3fb4ae1b42e922b19dbc4d96bce6cf6604"
+      "sourceSha256": "e7ad3455e61d47dbf7b5ab634f5c6d54b54da43d0a76914f12b5430acc4236d7",
+      "translationSha256": "b3f8b3aae92caaeac27ce02bb1203f85d1361cd1579336634dfbae8db6f307e7"
     }
   ]
 }
