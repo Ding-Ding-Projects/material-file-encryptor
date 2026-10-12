@@ -1,11 +1,18 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';
-import {convertRequest} from '../src/features/converter/convert.mjs';
+import {convertRequest as convertBytes} from '../src/features/converter/convert.mjs';
 // Logic-only fixture over owned synthetic bytes. The injected admission flag does
 // not attest to OS isolation; native confinement has separate integration tests.
 function launchSyntheticConversion({inputs,adapterId,options}){
  let cancelled=false;
- return {result:Promise.resolve().then(()=>{if(cancelled)throw new Error('Synthetic conversion cancelled');return convertRequest(adapterId,inputs,options);}),terminate:async()=>{cancelled=true;}};
+ return {result:Promise.resolve().then(()=>{if(cancelled)throw new Error('Synthetic conversion cancelled');return convertBytes(adapterId,inputs,options);}),terminate:async()=>{cancelled=true;}};
 }
+test('unverified provider rejects enqueue before source resolution or payload delivery',async t=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'converter-admission-proof-'));let reads=0,launches=0;
+ const service=createConverterService({stateDirectory:dir,resolveGrant:async()=>{reads++;throw new Error('Source must not be read');},sandboxProvider:{verifiedOsIsolation:false,launch(){launches++;throw new Error('Payload must not be delivered');}}});
+ t.after(async()=>{await service.close();await fs.rm(dir,{recursive:true,force:true});});
+ await assert.rejects(service.enqueue({sourceIds:['synthetic'],destinationId:'synthetic-output',adapterId:'hex'}),/isolation/);
+ assert.equal(reads,0);assert.equal(launches,0);assert.deepEqual(await service.list(),[]);
+});
 import {createConverterService} from '../src/features/converter/service.mjs';
 async function fixture(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'converter-'));t.after(async()=>{await service.close();await fs.rm(dir,{recursive:true,force:true});});const source=path.join(dir,'input.json'),dest=path.join(dir,'output.json');await fs.writeFile(source,'{"a":1}');const grants={source,dest};const service=createConverterService({stateDirectory:path.join(dir,'state'),sandboxProvider:{verifiedOsIsolation:true,launch:launchSyntheticConversion},resolveGrant:async id=>{if(!grants[id])throw new Error('Invalid grant.');return grants[id];}});return{service,source,dest,dir};}
 async function terminal(service,id){for(let i=0;i<100;i++){const r=(await service.list()).find(r=>r.id===id);if(['completed','failed','cancelled'].includes(r.state))return r;await new Promise(r=>setTimeout(r,20));}throw new Error('Timed out');}
@@ -30,11 +37,3 @@ test('cancelAll invalidates an admission still reading its source',async t=>{con
 test('ZIP extraction uses a folder grant and safely publishes nested files',async t=>{const {writeZip}=await import('../src/features/converter/archive.mjs');const dir=await fs.mkdtemp(path.join(os.tmpdir(),'converter-zip-')),source=path.join(dir,'input.zip'),folder=path.join(dir,'output');await fs.mkdir(folder);await fs.writeFile(source,writeZip([{name:'nested/data.txt',bytes:Buffer.from('content')} ]));const service=createConverterService({stateDirectory:path.join(dir,'state'),sandboxProvider:{verifiedOsIsolation:true,launch:launchSyntheticConversion},resolveGrant:async(id,mode)=>{if(id==='source'&&mode==='read')return source;if(id==='folder'&&mode==='directory')return folder;throw new Error('Invalid grant');}});t.after(async()=>{await service.close();await fs.rm(dir,{recursive:true,force:true});});const item=await service.enqueue({sourceIds:['source'],destinationDirectoryId:'folder',adapterId:'zip-extract',lossyConfirmed:true});assert.equal((await terminal(service,item.id)).state,'completed');assert.equal(await fs.readFile(path.join(folder,'nested','data.txt'),'utf8'),'content');});
 
 test('quit cancels and waits for an active media preview',async t=>{const dir=await fs.mkdtemp(path.join(os.tmpdir(),'converter-preview-'));let stop,started;const entered=new Promise(r=>started=r);const result=new Promise((resolve,reject)=>stop=()=>reject(new Error('Cancelled.')));const source=path.join(dir,'a.png');await fs.writeFile(source,Buffer.from([137,80,78,71,13,10,26,10]));const service=createConverterService({stateDirectory:path.join(dir,'state'),resolveGrant:async()=>source,sandboxProvider:{verifiedOsIsolation:true,verifiedMediaRuntime:true,launch:launchSyntheticConversion,previewMedia(){started();return {result,terminate:async()=>stop()};}}});t.after(async()=>{await service.close();await fs.rm(dir,{recursive:true,force:true});});const preview=service.inspect({sourceIds:['source']});const rejected=assert.rejects(preview,/Cancelled/);await entered;assert.equal(await service.pending(),1);assert.equal((await service.cancelAll()).remaining,0);await rejected;assert.equal(await service.pending(),0);});
-
-test('unverified provider rejects enqueue before source resolution or payload delivery',async t=>{
- const dir=await fs.mkdtemp(path.join(os.tmpdir(),'converter-admission-proof-'));let reads=0,launches=0;
- const service=createConverterService({stateDirectory:dir,resolveGrant:async()=>{reads++;throw new Error('Source must not be read');},sandboxProvider:{verifiedOsIsolation:false,launch(){launches++;throw new Error('Payload must not be delivered');}}});
- t.after(async()=>{await service.close();await fs.rm(dir,{recursive:true,force:true});});
- await assert.rejects(service.enqueue({sourceIds:['synthetic'],destinationId:'synthetic-output',adapterId:'hex'}),/isolation/);
- assert.equal(reads,0);assert.equal(launches,0);assert.deepEqual(await service.list(),[]);
-});

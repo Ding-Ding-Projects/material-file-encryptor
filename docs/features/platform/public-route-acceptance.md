@@ -22,3 +22,7 @@ The companion machine-readable inventory enumerates every generated route and ea
 ## Evidence limits
 
 No browser capture or live deployment is claimed here. Source tests cover selected composition and state transitions. The settings and editor audits maintain their own desktop and website columns. This feature introduces no HTTP API; a Postman collection is not applicable.
+
+## Declaration refresh
+
+Run `node scripts/refresh-public-route-contracts.mjs` after changing the publication catalog; `--check` reports drift without writing. The current declaration inventory has 105 feature families and 208 routes. Refresh rejects duplicate declarations and any existing accepted status or browser evidence, which require explicit reconciliation. It preserves extra declared nested surfaces and never manufactures acceptance. Six focused inventory/refresh checks pass, including negative cases. Live browser and deployment acceptance remain separate.

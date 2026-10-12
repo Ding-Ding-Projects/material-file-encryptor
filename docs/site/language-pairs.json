@@ -67,8 +67,8 @@
     {
       "source": "docs/features/converter/README.md",
       "translation": "docs/features/converter/README.zh-HK.md",
-      "sourceSha256": "cbdc72f2bd2d03cf292f5a6311ed94580720d214c1753149cf77ab2e4e628945",
-      "translationSha256": "63baf82ada2894c2fab24f624860e88faac8bbdbdda5063ed83705c27c9d9bfe"
+      "sourceSha256": "a1e7f8753a14aed25846f0f9a0de724fb8ddf413915b477f88df1eeeb37b5dc9",
+      "translationSha256": "c324569adda471c56f5d5ad421d6535bb11b51c3c9a09b708360f773c54dbb2c"
     },
     {
       "source": "docs/features/converter/archive-and-data.md",
@@ -85,7 +85,7 @@
     {
       "source": "docs/features/converter/media-plan.md",
       "translation": "docs/features/converter/media-plan.zh-HK.md",
-      "sourceSha256": "81e6df4abaf027c1eebe767561f3ec76acbf554ab1d811b917bbbabf3b3e9a1f",
+      "sourceSha256": "76897b612ef3f18110fb98820fa47d3ff4c68d08406deb3d9bd2603a5307523f",
       "translationSha256": "ca93f9255341f073cb0c00b0dbc27848b2d86e7a3437b307ea4a8d2e612c17fc"
     },
     {
@@ -181,8 +181,8 @@
     {
       "source": "docs/features/interface/local-personalization.md",
       "translation": "docs/features/interface/local-personalization.zh-HK.md",
-      "sourceSha256": "0f2639e783c248d588a3c02094ab61fadc743551ff02d33e848eaa814a03da5a",
-      "translationSha256": "b88b068933e73ff4dc39c16c2c323bbfb394e0673df02727a13a4b795e3aa1de"
+      "sourceSha256": "07c6ee97e1a65f7d2d0c123b2680571fdd47a6bbdac6e0817e40dc403eea34e1",
+      "translationSha256": "6fe8c0a174e1544dad5a9b8a4fd239d8d679bf5b7c49b577be64229c88f20358"
     },
     {
       "source": "docs/features/interface/local-tools-workspaces.md",
@@ -211,8 +211,8 @@
     {
       "source": "docs/features/interface/personal-vocabulary.md",
       "translation": "docs/features/interface/personal-vocabulary.zh-HK.md",
-      "sourceSha256": "e7a1d0862daed3d8fcc846a01860d6384d749cbaca847558ac90e3168328e851",
-      "translationSha256": "e77ed9145b828b9fe55f2d11d3e22d5b6ff28081404450dc6f9f28774656a288"
+      "sourceSha256": "398a98552cebe95bb18db34dc530833ee84b6d99f7101be58a256e8a27bc17c7",
+      "translationSha256": "2f5f6a61210286019009a69d126fc79d3adb44825bac991d46e96af0e5c7f4de"
     },
     {
       "source": "docs/features/interface/private-history-controls.md",
@@ -373,8 +373,8 @@
     {
       "source": "docs/features/platform/public-route-acceptance.md",
       "translation": "docs/features/platform/public-route-acceptance.zh-HK.md",
-      "sourceSha256": "c065db130fd88ded1cdcded895d2ffa801c262f02aa5020c2c4d074bb6e04bdd",
-      "translationSha256": "69ba0fc3852e80950e42c97c43e214970429918e62579796a4a0753ae1f33560"
+      "sourceSha256": "8352fa4d0f0cab97cd2726f8803f6d4735bde2f08f4d50fd8634609cbb450569",
+      "translationSha256": "9bb3b74900f8ebae9048855837e56dd6c9721f93fd98c0857b87e12c7bf71c7a"
     },
     {
       "source": "docs/features/release/README.md",

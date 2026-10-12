@@ -54,6 +54,14 @@ flowchart TD
 
 New vaults default to an **80 MiB physical part cap (83,886,080 bytes)**. The maximum remains **90,000,000 bytes**, including authentication framing. Existing data needs explicit packing or resplitting; historical versions and pending work remain protected. See [physical packing](docs/features/storage/physical-packing.md). Existing user-data migration remains deferred.
 
+## Current continuation
+
+Main e7099d37 includes the strict UTF-8 converter article repair and current hash binding; its new live bytes and workflow verdict remain pending. Exact-source normal releases 96dd/v1.403.1, f0d95/v1.404.1 and 80f6/v1.405.1 are accepted. All 234 live documentation files match the 80f6 deployment archive, with the exact About homepage verified.
+
+Separate native source 18f98d53 has completed r7 build and installer production, natural job settlement and inspected packages with zero rejected entries, but runtime acceptance is unverified and its preservation branch is not integrated. GUI source 8659 has 36 focused checks and independent source review; zero of 4,272 visual tuples are accepted, 67 providers are unavailable and 74 design gaps remain. All four original focused fixture failures are repaired; the historical broad 870-pass/29-failure/40-skip result remains incomplete.
+
+The 105-family/210-row required-feature goal, actual installed update and design parity remain unfinished. Initial installation, removal and real-data migration are deferred; deletion awaits an available verified archive destination and complete preservation proof. See the [handoff](HANDOFF.md) and [roadmap](ROADMAP.md) for exact evidence boundaries.
+
 ## Source-bound verification
 
 Evidence applies to the named source and scope. Later revisions do not inherit earlier installed or visual verdicts.

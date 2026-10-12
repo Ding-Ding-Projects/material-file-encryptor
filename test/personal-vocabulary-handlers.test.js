@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parseVocabulary, emptyVocabulary, serializeVocabulary, replaceVocabulary } from '../src/shared/personal-vocabulary.js';
 import {createAccessDocument} from './helpers/local-access-dom.js';
+// Logic-only fixture: no browser custom-element registration or layout is claimed.
+globalThis.HTMLElement ??= class {};
 const {mountVisitorAccess}=await import('../docs/site/visitor-access.js');
 const source = path => readFileSync(new URL(path, import.meta.url), 'utf8');
 const file = text => ({ size: text.length, text: async () => text });

@@ -1,3 +1,24 @@
+## Active continuation, 2026-10-12
+
+- [x] Integrate reviewed permission-launcher retirement and fixture repairs through f0d95; all four original focused failures are corrected.
+- [x] Verify exact-source normal releases 96dd/v1.403.1, f0d95/v1.404.1 and 80f6/v1.405.1.
+- [x] Verify all 234 live documentation files against the 80f6 deployment archive and the exact About homepage.
+- [x] Repair the malformed article byte at e7099d37, verify strict UTF-8 and both article hash bindings, and preserve unchanged translation and history.
+- [ ] Verify new live article bytes and the new workflow verdict for the e7099d37 repair.
+- [x] Preserve native 18f98d53 with remote proof, 25 component checks and independent source review; keep it separate from main.
+- [x] Complete exact native r7 build and installer production with exit 0, natural job settlement and 764 ZIP/665 payload/5,718 ASAR entries with zero rejected.
+- [ ] Execute real source-bound native behavioral acceptance; successful production does not establish runtime isolation.
+- [x] Independently review GUI source 8659 with 36 focused checks; retain source-only scope.
+- [ ] Resolve 74 addressable design gaps and verify actual GUI targeting, focus, dismissal, persistence and restoration.
+- [ ] Complete 89 states × 2 viewports × 3 languages × 2 themes × 4 scales: 4,272 visual tuples, currently zero accepted; 22 routes declared and 67 providers unavailable.
+- [ ] Complete applicable behavior, localization, persistence, documentation and runtime acceptance across 105 families and 210 rows.
+- [ ] Resolve the historical incomplete broad result: 870 passed, 29 failed and 40 skipped.
+- [ ] Verify accepted-channel installed update, ready/Later/restart continuity and rollback at the authorized safe boundary.
+- [ ] Keep initial installation, removal and real-data migration deferred and unticked.
+- [ ] Obtain the unavailable archive destination, verify a fresh archive and complete ownership/preservation/remote/ancestry proof before deletion.
+
+## Historical preservation record
+
 ## Preservation closeout, 2026-10-12
 
 ## GUI reconciliation, 2026-10-12
@@ -554,3 +575,9 @@
 - [ ] Complete retained-profile cleanup and the full audit: automatic approval review rejected deletion; profiles remain retained and no alternate route is attempted.
 - [ ] Verify large v1.373.1 package bytes, installer and installed update; normal release metadata/provenance/RELEASES are verified separately.
 - [ ] Complete the wider language/theme/scale matrix and current-image promotion; the bounded diagram result does not certify these outcomes.
+
+- [x] Reconcile the encrypted personal-wording upload callback fixture with current persistence functions; focused source check passed, browser acceptance remains pending.
+
+- [x] Add missing history-pruning translations and exact technical-literal classification with negative source checks; rendered localization remains pending.
+
+- [x] Refresh generated public-route declarations to 187 routes and verify safe refresh refusal/preservation behavior with six focused checks; browser evidence remains unverified.
