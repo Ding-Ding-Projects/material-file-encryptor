@@ -139,8 +139,8 @@
     {
       "source": "docs/features/interface/local-personalization.md",
       "translation": "docs/features/interface/local-personalization.zh-HK.md",
-      "sourceSha256": "fc683469a84e747ba768721420c9f4dba80133af57a1706e2fba242a65737fd2",
-      "translationSha256": "edd326a1e701612f8fb8857a95d90e7cf6c49bea1de8aa86c2a0515343b3d935"
+      "sourceSha256": "2f3c558fb55b1d7977238a6ce7d161072cfa7690de14b8e7cf796994d5e2d6a0",
+      "translationSha256": "2ac12feb5d58de6838e1e397af5019ac58a7268ce82513d9546ad738297aa0ae"
     },
     {
       "source": "docs/features/interface/modern-fields.md",
@@ -271,8 +271,8 @@
     {
       "source": "docs/features/release/preview-delivery.md",
       "translation": "docs/features/release/preview-delivery.zh-HK.md",
-      "sourceSha256": "66ee24f09ecad901759320ff97fe9f9f51631d5deffc6ff37d2ccacc58b6ae24",
-      "translationSha256": "f7a9aa1604afa37c50b920f6bb55aef286dd2ef0030bb745f4d3dd1610f21fe3"
+      "sourceSha256": "cc278f53109abb0c2d29cff709a7321ac64d28f371f9756816ecb974a51b8ede",
+      "translationSha256": "45de139629197d437e7db526b5be7d57578e16652b391fcb5f91de9b310ad8a2"
     },
     {
       "source": "docs/features/release/preview-verification.md",
