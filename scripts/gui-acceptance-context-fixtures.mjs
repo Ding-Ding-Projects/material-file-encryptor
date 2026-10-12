@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {requireContextStartupReadiness} from './gui-acceptance-context-readiness.mjs';
 
 // Browser input reaches the production controls. Evaluation only observes state;
 // it never supplies application records, menu items or successful action results.
@@ -27,7 +28,7 @@ export function createContextFoundationFixture({opened,prepare,restore,identity,
  };
  return {
   requireActionProof:true,
-  async prepare(context){await identity(context);await dismiss();return prepare(context);},
+  async prepare(context){await identity(context);await dismiss();const startup=await requireContextStartupReadiness({page,identity,context});const prepared=await prepare(context);return {...prepared,startup};},
   async restore(context){
    await identity(context);
    const errors=[];let result;

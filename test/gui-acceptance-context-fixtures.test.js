@@ -7,7 +7,7 @@ import {createMountedFoundationFixtures} from '../scripts/gui-acceptance-native-
 import './gui-acceptance-native-files.test.js';
 
 const sourceCommit='a'.repeat(40),context={binding:{sourceCommit}};
-function fixture({wrongTarget=false,renders=1,wrongFocus=false,activationKey='Enter'}={}){
+function fixture({wrongTarget=false,renders=1,wrongFocus=false,startupReady=true,activationKey='Enter'}={}){
  const calls=[];let menu=false,editor=false,selected=[],focus='b',size={width:1180,height:850};
  const page={
   keyboard:{async press(key){calls.push(key);if(key==='Enter'||key==='Space'){menu=false;editor=true;}if(key==='Escape'){menu=false;editor=false;}}},
@@ -15,6 +15,7 @@ function fixture({wrongTarget=false,renders=1,wrongFocus=false,activationKey='En
   async waitForFunction(){},
   async setViewportSize(value){calls.push({resize:value});size=value;menu=false;},
   async evaluate(fn){const text=String(fn);
+   if(fn.name==='observeContextStartupReadiness')return startupReady;
    if(text.includes('focusRow'))return {count:menu?1:0,targetId:menu?(wrongTarget?'foreign':'b'):null,selectedIds:selected,focusConnected:true,focusFileId:wrongFocus?'a':focus};
    if(text.includes('index:nodes.filter'))return {index:0,label:'Select Acceptance B.txt',query:''};
    if(text.includes('width:innerWidth'))return size;
@@ -26,7 +27,7 @@ function fixture({wrongTarget=false,renders=1,wrongFocus=false,activationKey='En
   },
   async evaluateHandle(){return {async evaluate(){return {renders,headings:['Appearance: Select Acceptance B.txt']};},async dispose(){calls.push('disposed');}};}
  };
- const owned={opened:{page,target:{sourceCommit}},prepare:async()=>({ownedSyntheticFixture:true,sourceCommit}),restore:async()=>({restored:true}),identity:async c=>assert.equal(c.binding.sourceCommit,sourceCommit),list:async()=>({more:false,rows:[{id:'a',path:'Acceptance A.txt'},{id:'b',path:'Acceptance B.txt'}]}),removeTarget:async(c,id)=>{assert.equal(id,'b');menu=false;calls.push('native-remove-b');return {removedId:id,remainingId:'a'};}};
+ const owned={opened:{page,target:{sourceCommit}},prepare:async()=>{calls.push('native-prepare');return {ownedSyntheticFixture:true,sourceCommit};},restore:async()=>({restored:true}),identity:async c=>assert.equal(c.binding.sourceCommit,sourceCommit),list:async()=>({more:false,rows:[{id:'a',path:'Acceptance A.txt'},{id:'b',path:'Acceptance B.txt'}]}),removeTarget:async(c,id)=>{assert.equal(id,'b');menu=false;calls.push('native-remove-b');return {removedId:id,remainingId:'a'};}};
  return {producer:createContextFoundationFixture({...owned,activationKey}),calls,page,removeRow(){menu=false;}};
 }
 test('context fixture uses actual input interface and retains distinct target, one render and focus evidence',async()=>{
@@ -111,4 +112,8 @@ test('Space uses the same owned target and render proof, and unknown keys fail b
  const {producer,calls}=fixture({activationKey:'Space'});await producer.prepare(context);await producer['open-context'](context);
  const proof=await producer['select-action'](context);assert.equal(proof.activationKey,'Space');assert.equal(proof.effect.count,1);assert.equal(proof.focusInEditor,true);assert.equal(proof.focusRestored,true);assert.ok(calls.includes('Space'));assert.equal(calls.includes('Enter'),false);
  await producer.restore(context);assert.throws(()=>fixture({activationKey:'Escape'}),/Unsupported context activation key/);
+});
+
+test('unready registered startup controls stop context preparation before native files',async()=>{
+ const {producer,calls}=fixture({startupReady:false});await assert.rejects(producer.prepare(context),/startup select and appearance readiness/);assert.equal(calls.includes('native-prepare'),false);
 });
