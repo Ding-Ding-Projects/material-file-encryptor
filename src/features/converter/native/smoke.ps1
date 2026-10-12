@@ -1,19 +1,43 @@
-param([ValidateSet('containment','child','memory','storage','cancel','timeout')][string]$Mode = 'containment')
+param([ValidateSet('containment','child','memory','storage','cancel','timeout')][string]$Mode = 'containment', [string]$RuntimePath = (Get-Command node).Source)
 $ErrorActionPreference = 'Stop'
 $launcher = Join-Path $PSScriptRoot 'bin/Release/net8.0-windows/ConverterSandbox.exe'
 if (-not (Test-Path -LiteralPath $launcher)) { throw 'Build ConverterSandbox before running the smoke test.' }
+if (-not [IO.Path]::IsPathFullyQualified($RuntimePath) -or -not (Test-Path -LiteralPath $RuntimePath -PathType Leaf)) { throw 'An absolute standalone Node runtime is required.' }
+$runtimeHash = (Get-FileHash -LiteralPath $RuntimePath -Algorithm SHA256).Hash
+function Assert-ListenerBaseline {
+    if ((Get-FileHash -LiteralPath $RuntimePath -Algorithm SHA256).Hash -ne $runtimeHash) { throw 'The baseline runtime changed.' }
+    $start = [Diagnostics.ProcessStartInfo]::new()
+    $start.FileName = $RuntimePath
+    $start.UseShellExecute = $false
+    $start.CreateNoWindow = $true
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    $start.Environment.Clear()
+    foreach ($name in @('SystemRoot', 'WINDIR')) { if ([Environment]::GetEnvironmentVariable($name)) { $start.Environment[$name] = [Environment]::GetEnvironmentVariable($name) } }
+    $start.ArgumentList.Add('-e')
+    $start.ArgumentList.Add('const net=require("node:net");const socket=net.connect(Number(process.argv[1]),"127.0.0.1");socket.once("connect",()=>{process.stdout.write("connected");socket.destroy();});socket.once("error",()=>process.exitCode=1);socket.setTimeout(2000,()=>{socket.destroy();process.exitCode=1;});')
+    $start.ArgumentList.Add([string]$listener.LocalEndpoint.Port)
+    $process = [Diagnostics.Process]::Start($start)
+    try {
+        if (-not $process.WaitForExit(5000)) { $process.Kill(); if (-not $process.WaitForExit(5000)) { throw 'Owned baseline process did not terminate.' }; throw 'Listener baseline timed out.' }
+        if ($process.ExitCode -ne 0 -or $process.StandardOutput.ReadToEnd() -ne 'connected' -or -not $listener.Pending()) { throw 'Listener baseline was not positively observed.' }
+        $accepted = $listener.AcceptTcpClient()
+        $accepted.Dispose()
+        if ($listener.Pending()) { throw 'An unexpected listener connection was observed.' }
+        if ((Get-FileHash -LiteralPath $RuntimePath -Algorithm SHA256).Hash -ne $runtimeHash) { throw 'The baseline runtime changed during execution.' }
+    } finally { $process.Dispose() }
+}
 $root = Join-Path ([IO.Path]::GetTempPath()) ('converter-smoke-' + [Guid]::NewGuid().ToString('N'))
 $outside = Join-Path ([IO.Path]::GetTempPath()) ('converter-private-' + [Guid]::NewGuid().ToString('N') + '.txt')
 New-Item -ItemType Directory -Path (Join-Path $root 'payload'), (Join-Path $root 'work') | Out-Null
 $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
 $listener.Start()
-$connect = [Net.Sockets.TcpClient]::new()
-$connect.Connect([Net.IPAddress]::Loopback, $listener.LocalEndpoint.Port)
-$connect.Dispose()
 $cancelJob = $null
 try {
-    Copy-Item -LiteralPath (Get-Command node).Source -Destination (Join-Path $root 'payload/node.exe')
-    [IO.File]::WriteAllText($outside, 'private')
+    Assert-ListenerBaseline
+    Copy-Item -LiteralPath $RuntimePath -Destination (Join-Path $root 'payload/node.exe')
+    if ($runtimeHash -ne (Get-FileHash -LiteralPath (Join-Path $root 'payload/node.exe') -Algorithm SHA256).Hash) { throw 'Staged runtime does not match the baseline runtime.' }
+    [IO.File]::WriteAllText($outside, 'synthetic')
     $owner = [Security.Principal.WindowsIdentity]::GetCurrent().User
     $acl = [Security.AccessControl.FileSecurity]::new()
     $acl.SetOwner($owner)
@@ -48,8 +72,8 @@ let networkStatus;
 const networkDenied = await new Promise(resolve => {
  const socket = net.connect({host:'127.0.0.1',port:request.port});
  socket.once('connect',()=>{networkStatus='connected';socket.destroy();resolve(false)});
- socket.once('error',error=>{networkStatus=error.code;resolve(['EACCES','EPERM','ECONNREFUSED','ENETUNREACH','ETIMEDOUT'].includes(error.code))});
- socket.setTimeout(3000,()=>{networkStatus='timeout';socket.destroy();resolve(true)});
+ socket.once('error',error=>{networkStatus=error.code;resolve(['EACCES','EPERM'].includes(error.code))});
+ socket.setTimeout(3000,()=>{networkStatus='timeout';socket.destroy();resolve(false)});
 });
 fs.writeFileSync(arg('--result'),JSON.stringify({nonce:arg('--nonce'),outsideDenied,payloadDenied,childDenied,networkDenied,networkStatus,converted:Buffer.from([65]).toString('hex')}));
 progress('finished');
@@ -65,10 +89,9 @@ progress('finished');
     $exit = $LASTEXITCODE
     $output
     $receipt = $output | ConvertFrom-Json
-    $connect = [Net.Sockets.TcpClient]::new()
-    $connect.Connect([Net.IPAddress]::Loopback, $listener.LocalEndpoint.Port)
-    $connect.Dispose()
-    if (-not $receipt.profileDeleted -or -not $receipt.appContainerVerified -or $receipt.capabilityCount -ne 0) { throw 'Token or profile cleanup was not verified.' }
+    if ($listener.Pending()) { throw 'The isolated worker connected to the listener.' }
+    Assert-ListenerBaseline
+    if (-not $receipt.profileDeleted -or -not $receipt.appContainerVerified -or $receipt.capabilityCount -ne 0 -or -not $receipt.jobLimitsVerified -or $receipt.networkCapabilities -ne 0 -or $receipt.activeProcessLimit -ne 1 -or $receipt.memoryBytes -ne 268435456 -or $receipt.timeoutMs -ne 30000) { throw 'Token, resource limits or profile cleanup was not verified.' }
     if ($Mode -ne 'containment') {
         $passed = $exit -ne 0
         if ($Mode -eq 'child') { $passed = $passed -and $receipt.timedOut -and $receipt.activeProcessLimit -eq 1 -and (Get-Content -Raw -LiteralPath (Join-Path $root 'work/progress.txt')) -eq 'file-denials-complete' -and -not (Test-Path -LiteralPath (Join-Path $root 'work/child-executed.txt')) }
@@ -82,7 +105,7 @@ progress('finished');
     }
     if ($exit -ne 0) { if (Test-Path -LiteralPath (Join-Path $root 'work/worker.log')) { Get-Content -LiteralPath (Join-Path $root 'work/worker.log') }; throw "Launcher exited $exit" }
     $result = Get-Content -Raw -LiteralPath (Join-Path $root 'work/result.json') | ConvertFrom-Json
-    if (-not $receipt.isolated -or $receipt.nonce -ne $nonce -or $result.nonce -ne $nonce -or -not $result.outsideDenied -or -not $result.payloadDenied -or -not $result.childDenied -or -not $result.networkDenied -or $result.converted -ne '41') { throw ('Containment verification failed: ' + ($result | ConvertTo-Json -Compress)) }
+    if (-not $receipt.isolated -or $receipt.nonce -ne $nonce -or $result.nonce -ne $nonce -or -not $result.outsideDenied -or -not $result.payloadDenied -or -not $result.childDenied -or -not $result.networkDenied -or $result.networkStatus -notin @('EACCES','EPERM') -or $result.converted -ne '41') { throw ('Containment verification failed: ' + ($result | ConvertTo-Json -Compress)) }
     if ((Get-FileHash -LiteralPath (Join-Path $root 'work/result.json') -Algorithm SHA256).Hash.ToLowerInvariant() -ne $receipt.resultSha256) { throw 'Receipt hash mismatch.' }
     'PASS: conversion, external path denial, read-only payload, network denial, nonce and hash.'
 } finally {

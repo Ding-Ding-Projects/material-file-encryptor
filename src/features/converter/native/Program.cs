@@ -75,6 +75,8 @@ internal static class Program
         MediaCommand? media = m.TryGetProperty("media", out var mediaOptions) ? MediaCommand.Create(mediaOptions, runtime, work) : null;
         ArchiveCommand? archive = m.TryGetProperty("archive", out var archiveOptions) ? ArchiveCommand.Create(archiveOptions, runtime, work) : null;
         if (media is not null && archive is not null) throw new ArgumentException("Only one runtime mode is supported.");
+        var confinementProbe = m.TryGetProperty("confinementProbe", out var probeMode) && probeMode.GetBoolean();
+        if (confinementProbe && (media is not null || archive is not null)) throw new ArgumentException("Confinement probes require the Node worker.");
         string[] commandArguments;
         if (media is null && archive is null)
         {
@@ -103,8 +105,16 @@ internal static class Program
         bool profileCreated = false, timedOut = false, killedForStorage = false, cancelled = false;
         uint finalExit = 1; string? finalHash = null;
         IntPtr log = IntPtr.Zero, input = IntPtr.Zero, handles = IntPtr.Zero, childPolicy = IntPtr.Zero;
+        string? outsideSentinel = null; bool probeSentinelDeleted = false;
         try
         {
+            if (confinementProbe)
+            {
+                var probeDirectory = ExactPath(m.GetProperty("probeDirectory").GetString()!);
+                if (!Inside(probeDirectory, temporary) || !Path.GetFileName(probeDirectory).StartsWith("converter-probe-parent-", StringComparison.Ordinal) || Directory.EnumerateFileSystemEntries(probeDirectory).Any()) throw new ArgumentException("Probe directory must be fresh, empty and outside staging.");
+                if (probeDirectory.Equals(root, StringComparison.OrdinalIgnoreCase) || Inside(probeDirectory, root) || Inside(root, probeDirectory)) throw new ArgumentException("Probe directory must be separate from staging.");
+                outsideSentinel = PrepareConfinementProbe(work, probeDirectory, nonce, owner);
+            }
             var hr = Native.CreateAppContainerProfile(profile, profile, "Isolated local conversion", IntPtr.Zero, 0, out sid);
             Marshal.ThrowExceptionForHR(hr);
             profileCreated = true;
@@ -203,14 +213,60 @@ internal static class Program
             if (handles != IntPtr.Zero) Marshal.FreeHGlobal(handles);
             if (childPolicy != IntPtr.Zero) Marshal.FreeHGlobal(childPolicy);
             if (sid != IntPtr.Zero) Native.FreeSid(sid);
-            if (profileCreated)
+            try
             {
-                var cleanup = Native.DeleteAppContainerProfile(profile);
-                Marshal.ThrowExceptionForHR(cleanup);
+                if (profileCreated)
+                {
+                    var cleanup = Native.DeleteAppContainerProfile(profile);
+                    Marshal.ThrowExceptionForHR(cleanup);
+                }
+            }
+            finally
+            {
+                if (outsideSentinel is not null)
+                {
+                    File.Delete(outsideSentinel);
+                    probeSentinelDeleted = !File.Exists(outsideSentinel);
+                    if (!probeSentinelDeleted) throw new IOException("Probe sentinel cleanup failed.");
+                }
             }
         }
-        Console.WriteLine(JsonSerializer.Serialize(new { schema = 1, nonce, isolated = true, profile, exitCode = finalExit, timedOut, cancelled, killedForStorage, storageLimitBytes = MemoryLimit, resultSha256 = finalHash, profileDeleted = true, appContainerVerified = true, jobLimitsVerified = true, capabilityCount = 0, memoryBytes = MemoryLimit, timeoutMs = Timeout, activeProcessLimit = 1, networkCapabilities = 0 }));
+        Console.WriteLine(JsonSerializer.Serialize(new { schema = 1, nonce, isolated = true, profile, exitCode = finalExit, timedOut, cancelled, killedForStorage, storageLimitBytes = MemoryLimit, resultSha256 = finalHash, profileDeleted = true, appContainerVerified = true, jobLimitsVerified = true, capabilityCount = 0, memoryBytes = MemoryLimit, timeoutMs = Timeout, activeProcessLimit = 1, networkCapabilities = 0, probeSentinelDeleted = confinementProbe ? (bool?)probeSentinelDeleted : null }));
         return timedOut || killedForStorage || cancelled || finalExit != 0 ? 1 : 0;
+    }
+
+    private static string PrepareConfinementProbe(string work, string probeDirectory, string nonce, SecurityIdentifier owner)
+    {
+        var request = ExactPath(Path.Combine(work, "request.json"));
+        var bytes = File.ReadAllBytes(request);
+        if (bytes.Length > 4096) throw new InvalidDataException("Probe request exceeds its limit.");
+        using var document = JsonDocument.Parse(bytes);
+        var value = document.RootElement;
+        var port = value.GetProperty("port").GetInt32();
+        var challenge = value.GetProperty("challenge").GetString();
+        if (value.GetProperty("schema").GetInt32() != 1 || value.GetProperty("nonce").GetString() != nonce || port is < 1 or > 65535 || challenge is null || challenge.Length != 64 || challenge.Any(c => !Uri.IsHexDigit(c))) throw new InvalidDataException("Invalid synthetic probe request.");
+        var outside = Path.Combine(probeDirectory, "converter-probe-" + Guid.NewGuid().ToString("N") + ".bin");
+        bool created = false;
+        try
+        {
+            using (var stream = new FileStream(outside, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            {
+                created = true;
+                stream.Write(Encoding.UTF8.GetBytes("synthetic"));
+            }
+            var acl = new FileSecurity();
+            acl.SetOwner(owner); acl.SetAccessRuleProtection(true, false);
+            acl.AddAccessRule(new FileSystemAccessRule(owner, FileSystemRights.FullControl, AccessControlType.Allow));
+            new FileInfo(outside).SetAccessControl(acl);
+            var readback = new FileInfo(outside).GetAccessControl();
+            if (!readback.AreAccessRulesProtected || !readback.GetOwner(typeof(SecurityIdentifier)).Equals(owner)) throw new InvalidOperationException("Probe sentinel ownership was not applied.");
+            foreach (FileSystemAccessRule rule in readback.GetAccessRules(true, true, typeof(SecurityIdentifier)))
+                if (rule.AccessControlType != AccessControlType.Allow || !rule.IdentityReference.Equals(owner) || rule.IsInherited) throw new InvalidOperationException("Probe sentinel ACL contains an unexpected principal.");
+            if (File.ReadAllText(outside) != "synthetic") throw new InvalidOperationException("Probe sentinel baseline failed.");
+            File.WriteAllText(request, JsonSerializer.Serialize(new { schema = 1, nonce, port, challenge, outside }));
+            return outside;
+        }
+        catch { if (created) File.Delete(outside); throw; }
     }
 
     private static void SetAcl(string path, SecurityIdentifier owner, SecurityIdentifier container, bool writable)
