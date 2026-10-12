@@ -32,6 +32,7 @@ export async function runObserverMockChecks(){
  await assert.rejects(observeRendererLaunch(python,[adapter,'launch','--state',path.join(replaced,'state')],{runRoot:replaced,executable},{},()=>{},{expectedExecutableSha256:originalHash,workerPath:worker,spawnImpl(){replacementSpawned=true;}}),/bytes changed before launch intent/);
  assert.equal(replacementSpawned,false);await assert.rejects(fs.access(path.join(replaced,'launch-observation')),{code:'ENOENT'});
  const acceptedIntent=JSON.parse(await fs.readFile(path.join(root,'terminal-true','launch-observation','000-intent.json')));assert.equal(acceptedIntent.executableSha256,expectedExecutableSha256);assert.equal(acceptedIntent.resolvedExecutableSha256,expectedExecutableSha256);
+ assert.deepEqual(Object.keys(acceptedIntent.verifierHashes).map(file=>path.basename(file)).sort(),['renderer-launch-observer.mjs','renderer-launch-observer.py','renderer-native-path.mjs','renderer-native-path.py','supplemental-renderer-recovery.py','renderer-process-snapshot.py'].sort());
  return {checks:16,processesSpawned:0,root};
 }
 if(process.env.MFE_OBSERVER_MOCK_ONLY!=='1'){const {default:test}=await import('node:test');test('GUI observer uses mocked pipes and retains actual exit supervision',runObserverMockChecks);}

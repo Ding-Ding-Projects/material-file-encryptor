@@ -45,7 +45,7 @@ export async function observeRendererLaunch(python,args,input,env,onOutcome,{exp
  await fs.mkdir(journal,{recursive:false});
  const request={...input,desktop:`MFE-${randomUUID()}`};
  const verifierHashes={};
- for(const name of ['renderer-launch-observer.mjs','renderer-launch-observer.py','supplemental-renderer-recovery.py','renderer-process-snapshot.py']){const file=fileURLToPath(new URL(name,import.meta.url));verifierHashes[file]=await fileSha(file);}
+ for(const name of ['renderer-launch-observer.mjs','renderer-launch-observer.py','renderer-native-path.mjs','renderer-native-path.py','supplemental-renderer-recovery.py','renderer-process-snapshot.py']){const file=fileURLToPath(new URL(name,import.meta.url));verifierHashes[file]=await fileSha(file);}
  const intent={observerInterpreter:interpreter,version:1,kind:'renderer-launch-observation',observedAt:new Date().toISOString(),declaredClientPid:process.pid,request,statePath:args[3],sourceCommit:env.MFE_RENDERER_SOURCE_COMMIT,verifierHashes,executableSha256:expectedExecutableSha256,resolvedExecutableSha256:expectedExecutableSha256,workerSha256:sha(await fs.readFile(workerPath)),adapterPath:args[0],adapterSha256:sha(await fs.readFile(args[0]))};
  const intentPath=path.join(journal,'000-intent.json');
  if(await fileSha(input.executable)!==expectedExecutableSha256)throw new Error('Resolved executable bytes changed before launch intent.');

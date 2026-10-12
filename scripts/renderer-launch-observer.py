@@ -53,13 +53,18 @@ def launch_with_input(lifecycle, request, state_path):
         sys.stdin = original_stdin
         stream.close()
 
+def validate_verifier_inventory(intent):
+    required={str(Path(__file__).with_name(name)) for name in ['renderer-launch-observer.mjs','renderer-launch-observer.py','renderer-native-path.mjs','renderer-native-path.py','supplemental-renderer-recovery.py','renderer-process-snapshot.py']}
+    if set(intent.get('verifierHashes',{}))!=required or any(digest(p)!=value for p,value in intent['verifierHashes'].items()):
+        raise RuntimeError('Launch intent verifier inventory differs.')
+
+
 def run(intent_path):
     journal=Journal(intent_path)
     try:
         intent=json.loads(Path(intent_path).read_bytes())
         if intent.get('kind')!='renderer-launch-observation' or intent['workerSha256']!=digest(__file__) or intent['adapterSha256']!=digest(intent['adapterPath']):raise RuntimeError('Launch intent source binding differs.')
-        required={str(Path(__file__).with_name(name)) for name in ['renderer-launch-observer.mjs','renderer-launch-observer.py','supplemental-renderer-recovery.py','renderer-process-snapshot.py']}
-        if set(intent.get('verifierHashes',{}))!=required or any(digest(p)!=value for p,value in intent['verifierHashes'].items()):raise RuntimeError('Launch intent verifier inventory differs.')
+        validate_verifier_inventory(intent)
         interpreter=intent.get('observerInterpreter')
         if not isinstance(interpreter,dict) or set(interpreter)!={'launcher','base','hashes'} or Path(interpreter['launcher']).name.lower()!='pythonw.exe' or Path(interpreter['base']).name.lower()!='pythonw.exe':raise RuntimeError('GUI observer interpreter binding missing.')
         if Path(os.environ['MFE_LOWLEVEL_PYTHON'])!=Path(interpreter['launcher']) or Path(sys.executable)!=Path(interpreter['launcher']) or Path(sys._base_executable)!=Path(interpreter['base']):raise RuntimeError('Executing GUI observer interpreter differs.')
