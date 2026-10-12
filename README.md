@@ -56,11 +56,11 @@ New vaults default to an **80 MiB physical part cap (83,886,080 bytes)**. The ma
 
 ## Current continuation
 
-Main e7099d37 includes the strict UTF-8 converter article repair and current hash binding; its new live bytes and workflow verdict remain pending. Exact-source normal releases 96dd/v1.403.1, f0d95/v1.404.1 and 80f6/v1.405.1 are accepted. All 234 live documentation files match the 80f6 deployment archive, with the exact About homepage verified.
+Main 07a9d286 records the completed e7099d37 strict UTF-8 article repair. All 234 deployed files, the complete deployment archive, article bytes and exact About homepage were accepted at that observation. Later source requires its own live verification.
 
-Separate native source 18f98d53 has completed r7 build and installer production, natural job settlement and inspected packages with zero rejected entries, but runtime acceptance is unverified and its preservation branch is not integrated. GUI source 8659 has 36 focused checks and independent source review; zero of 4,272 visual tuples are accepted, 67 providers are unavailable and 74 design gaps remain. All four original focused fixture failures are repaired; the historical broad 870-pass/29-failure/40-skip result remains incomplete.
+GUI source 04bf6c25 is preserved remotely with independent merge review and 34 focused checks. Its frozen isolated build started at 2026-10-12T22:58:04.8123288Z; package and runtime remain pending. Separate converter 18f98d53 has accepted build/package production, but actual admission d6e3 failed with BEHAVIORAL_PROBE_FAILED/provider-probe before customer input or hex sanity conversion. Its precise failed subpredicate is unknown; a typed diagnostic variant is planned, not executed.
 
-The 105-family/210-row required-feature goal, actual installed update and design parity remain unfinished. Initial installation, removal and real-data migration are deferred; deletion awaits an available verified archive destination and complete preservation proof. See the [handoff](HANDOFF.md) and [roadmap](ROADMAP.md) for exact evidence boundaries.
+The 105-family/210-row goal remains open, with 22 routes declared, 67 unavailable providers, zero of 4,272 accepted visual tuples and 74 design gaps. One offline-populated source unit is in progress without acceptance. Installed update and parity remain unfinished; initial installation, removal and real-data migration remain deferred. Deletion awaits the unavailable verified archive destination. See the [handoff](HANDOFF.md) and [roadmap](ROADMAP.md) for source-specific evidence.
 
 ## Source-bound verification
 

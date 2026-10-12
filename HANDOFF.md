@@ -12,6 +12,24 @@ The focused source-only callback check passed once after supplying the minimum l
 
 ## Active continuation, 2026-10-12
 
+Current main is 07a9d2869725f8312ac0bc0642e3ccd55e058b34. The e7099d37 article repair has accepted complete deployment-archive comparison, all 234 live files, strict UTF-8 article bytes and exact About homepage at that observation. The deployed home and stored homepage are https://ding-ding-projects.github.io/material-file-encryptor/. Later source does not inherit that live verdict. Previously accepted exact-source releases remain 96dd/v1.403.1, f0d95/v1.404.1 and 80f6/v1.405.1.
+
+GUI preservation source 04bf6c25a9b713e94b1a28084e205cc59c719466 is pushed and verified, with exact parents 9d3b0130112d61e60fe33c46af7745c2cd43a347 and 07a9d2869725f8312ac0bc0642e3ccd55e058b34. Independent merge review found no surviving source defect; 34 focused checks passed. Native 80 MiB defaults and updater, BOM, release-index, ASAR, cache, startup and publication behavior were preserved by the source merge. These checks do not certify new runtime behavior. Its isolated exact-source producer started build.bat /s at 2026-10-12T22:58:04.8123288Z through the reviewed r7 controller; package and runtime verdicts remain pending.
+
+Separate converter source 18f98d53ca50de31180b7117661be4c55856db2e is preserved remotely and is not an ancestor of main. Exact r7 build and installer production exited 0; accepted inspection recorded 764 ZIP entries, 665 payload entries, 5,718 ASAR entries and zero rejected entries. Actual admission attempt d6e3 reports accepted=false with BEHAVIORAL_PROBE_FAILED in provider-probe. The root exited 1; job accounting reports total 10, terminated 0, with natural closure. The precise failed subpredicate was omitted and remains unknown. Customer input and the hex sanity conversion were not reached. A minimal typed diagnostic variant is planned, not executed. Production success remains separate from failed runtime admission.
+
+The GUI inventory remains 22 declared routes, 67 unavailable providers, zero of 4,272 accepted visual tuples and 74 addressable design gaps. One offline-populated source unit is in progress without acceptance. All four original focused fixture failures are repaired; the historical broad result remains incomplete at 870 passed, 29 failed and 40 skipped. Full required-feature acceptance remains open at 105 families and 210 surface rows.
+
+Canonical instruction recovery source 259 is pushed, with main at b81; its native selector/compiler unit still awaits review and the full verification sweep. Unrelated work remains retained. Public progress comment 18889746 was read back and matched the posted state. No new GUI captures or full-completion verdict are claimed.
+
+Next: obtain the narrow typed diagnostic evidence without inferring the missing admission cause, observe the frozen GUI producer, independently review coherent source units and complete actual interaction/design parity and installed-update acceptance. Initial installation, removal, real-data migration and deletion remain deferred. The required archive destination is unavailable. Preserve original data, mounted work, existing installations, historical receipts and ownership-uncertain work.
+
+## Historical continuation snapshot before 07a9d286 refresh
+
+The prior handoff below is retained verbatim, including its earlier pending states. Only the current snapshot supersedes those states within its exact evidence.
+
+## Active continuation, 2026-10-12
+
 Main includes the one-byte converter media article repair at e7099d37a881a1327451ed432dda358bcf3c3cd8, pushed and verified by remote readback. Strict UTF-8 and the corrected source hash pass; the Cantonese article is unchanged. New live article bytes and the new workflow verdict remain pending.
 
 Three accepted normal releases are bound to their exact sources: 96dd/v1.403.1, f0d95/v1.404.1 and 80f6/v1.405.1. The complete documentation deployment archive for 80f6 contains 234 files, each matching the live bytes. The deployed home and stored About homepage are https://ding-ding-projects.github.io/material-file-encryptor/. This proof belongs to 80f6, not the later article repair.
