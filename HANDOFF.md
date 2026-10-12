@@ -1,3 +1,21 @@
+## Active continuation, 2026-10-12
+
+Implementation has resumed under the approved full-goal plan. Main contains independently reviewed converter admission retirement and synthetic service-fixture repair at f52b6542ec03d7f35bd3daa03b077acb90411739. The permission-query-only launcher stays unavailable before converter input is read. Twenty focused checks pass on pinned Node24.19.0 and installed Node26.10; this is component evidence, not operating-system isolation.
+
+Normal release [v1.402.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.402.1) is bound to that exact source, with draft/prerelease flags false. [Windows delivery38303555472](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38303555472) and [documentation38303554680](https://github.com/Ding-Ding-Projects/material-file-encryptor/actions/runs/38303554680) succeeded. All four downloaded release assets match size and SHA-256 provenance. The Squirrel index matches package name, size and SHA-1; ZIP integrity and safe entry inspection pass. ASAR inspection reports5,718entries and zero rejected entries. No installer or installed application was executed for this proof.
+
+The complete234-file documentation deployment archive was read back and every live file matches its archived bytes. The exact deployed home and stored About homepage are https://ding-ding-projects.github.io/material-file-encryptor/. Historical HTTP403 evidence remains historical. A separate source comparison identified replacement decoding of invalid UTF-8 in docs/features/converter/media-plan.md; that content distinction remains open rather than being silently called raw-source equality.
+
+Native behavioral admission is preserved locally at18f98d53ca50de31180b7117661be4c55856db2e on codex/converter-admission-01a131a2. Its25focused checks and independent source review pass. Exact local build.bat /s exited0 at2026-10-12T20:55:43.7942838Z; the controller then stopped at SOURCE_NOT_FROZEN before installer production. The observed generated material.js status remains recorded. Current raw source, HEAD blob and packaged ASAR bytes match exactly, but producer settlement is unproven and its output reservation remains retained. No new production, native-runtime or installed verdict is inferred.
+
+The preserved GUI history was reconciled with current main at ec92e87c3f891c06c05bb0e6abef343c9e854155. GUI-only continuation at23735c5a02ee529ada92bd4995fd6f598a37e6a6 includes independently parsed deeply frozen89-state authority and read-only startup readiness before synthetic context-file creation. Both repairs have causal regressions and independent source review. They remain branch-only source evidence. The inventory is22declared acquisition routes,67unavailable providers and0/4,272accepted visual tuples. Full required-feature delivery remains105families/210surface rows, with no aggregate completion claim. Every GUI lane explicitly uses gpt-6-astra.
+
+A new bounded primary fixture run reports12checks:8passed,4failed,0skipped. Remaining causes are the extracted website upload callback, technical/localized label classification, two missing history translations and25missing generated route declarations. Archive-localization and desktop callback checks passed. The interrupted historical broad result remains939reported,870passed,29failed,40skipped.
+
+Next: finish exact installer production in proven isolation, inspect exact package bytes, execute the narrow real GUI sequence, reconcile current fixtures, then expand explicit acceptance tuples and complete applicable required-feature rows. Preserve existing installations, mounted work, original vaults, historical evidence and ownership-uncertain branches/checkouts. Existing-installed update is authorized only after accepted-channel proof at a safe boundary. Initial installation, removal and real-data migration remain deferred. No deletion is authorized without a fresh verified archive and complete ownership, preservation, remote and ancestry proof.
+
+## Historical preservation record
+
 ## Preservation closeout, 2026-10-12
 
 Implementation stopped at the user's closeout request. The next-phase plan is recorded below; its repairs have not begun. Preserve unfinished source on the existing remote branches rather than integrating it during this pass.

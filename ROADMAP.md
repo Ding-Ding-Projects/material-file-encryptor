@@ -1,3 +1,22 @@
+## Active continuation, 2026-10-12
+
+- [x] Fast-forward main to the verified current source and integrate independently reviewed permission-launcher retirement/service fixtures at f52b6542.
+- [x] Verify normalv1.402.1 source, all four downloadable assets, Squirrel index and5,718-entry package inspection.
+- [x] Read the complete234-file deployment archive, compare every live file and verify exact About homepage. This does not erase the earlier HTTP403 result.
+- [x] Independently review branch-only native behavioral admission at18f98d53 with25component checks; retain the separate local-build0 and source-gate stop.
+- [x] Reconcile preserved GUI histories and independently review canonical acquisition authority/startup-readiness source units through23735c5.
+- [ ] Finish source-bound installer production and actual native behavioral enforcement, preserving the retained unsettled output.
+- [ ] Repair four current fixture failures and validate the affected current sources without weakening production checks.
+- [ ] Correct the invalid-UTF-8 article/source publication distinction.
+- [ ] Prove the narrow actual GUI targeting/activation/focus/dismissal/persistence/restoration sequence and negative targets.
+- [ ] Complete89states ×2viewports ×3languages ×2themes ×4scales:4,272source-bound visual tuples, currently0accepted.
+- [ ] Complete applicable105-family/210-row behavior, localization, persistence, categorized documentation and real acceptance.
+- [ ] Verify accepted-channel installed update, ready/Later/restart continuity and rollback at the authorized safe boundary.
+- [ ] Keep initial installation, removal and real-data migration deferred and unticked.
+- [ ] Obtain a fresh verified archive and complete exact ownership/ancestry proof before any cleanup.
+
+## Historical preservation record
+
 ## Preservation closeout, 2026-10-12
 
 - [x] Stop new implementation and retain the proposed next-phase sequence in HANDOFF.md.

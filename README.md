@@ -54,6 +54,10 @@ flowchart TD
 
 New vaults default to an **80 MiB physical part cap (83,886,080 bytes)**. The maximum remains **90,000,000 bytes**, including authentication framing. Existing data needs explicit packing or resplitting; historical versions and pending work remain protected. See [physical packing](docs/features/storage/physical-packing.md). Existing user-data migration remains deferred.
 
+## Current continuation
+
+Reviewed main source f52b6542 has retired permission-query-only converter admission and corrected synthetic service fixtures. Normal [v1.402.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.402.1), exact downloadable bytes and complete deployed documentation bytes are verified. Native behavioral admission and GUI source reconciliation are continuing on separate branches. Actual installed behavior,4,272visual tuples and full105-family/210-row required-feature acceptance remain unfinished. See the current [handoff](HANDOFF.md) and [roadmap](ROADMAP.md) for precise source/production limits.
+
 ## Source-bound verification
 
 Evidence applies to the named source and scope. Later revisions do not inherit earlier installed or visual verdicts.
