@@ -535,8 +535,8 @@
     {
       "source": "docs/features/workflows/README.md",
       "translation": "docs/features/workflows/README.zh-HK.md",
-      "sourceSha256": "4ddea2b139723b37da3cfa792fa2ae36620e2df505ed89c78075f2f682d37eb4",
-      "translationSha256": "18824bda1925fa37bea92167bebd205f2193f530f0d0c9f3a8cddaf68de8758d"
+      "sourceSha256": "f69aff963f8a79532a9c25f61fae2de97cd33d8fd21f23b7abf1d0d8d71e78b9",
+      "translationSha256": "4451254ad22bf969e927aefd468d6e8fe1afc1150e394d87b660591204f16921"
     },
     {
       "source": "docs/features/workflows/browser-download-handoff.md",
@@ -567,6 +567,12 @@
       "translation": "docs/features/platform/packaged-documentation-cache.zh-HK.md",
       "sourceSha256": "ed10ae70aa4bbe0d4d3abcc9f56e6994edd0a90cbd0746a93d0506285f7ed7db",
       "translationSha256": "b3670b163ee87bef7edf930cb3de9d20e1ec6741590c4dfe759e158cf051179f"
+    },
+    {
+      "source": "docs/features/workflows/browser-protection-observations.md",
+      "translation": "docs/features/workflows/browser-protection-observations.zh-HK.md",
+      "sourceSha256": "c90cff68a319dcac282b70e77585d51b2bb1be4a4705c4dbe82e00e074e853d5",
+      "translationSha256": "05b0bdc2fc4582366463bf8d3a2b0a3fc36050a840a4e9c3caf3dd25740542c1"
     }
   ]
 }
