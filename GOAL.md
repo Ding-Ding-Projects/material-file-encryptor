@@ -9,7 +9,7 @@ The current task explicitly requires measured application speed improvements and
 - [ ] Prove every applicable visible state against the checked-in design references using genuine built captures and computed geometry.
 - [ ] Keep package-size reductions separate from application-speed claims.
 
-The resumed task explicitly includes every applicable required feature on every rendered product surface, including the browser extension, nested panels and documentation routes. The supplemental surface registry is an inventory, not a delivery verdict: its 885 surfaces produce 92,925 independently unverified assessments. Preserve the historical 105-family/210-row ledger and its original evidence separately.
+The resumed task explicitly includes every applicable required feature on every rendered product surface, including the browser extension, nested panels and documentation routes. The supplemental surface registry is an inventory, not a delivery verdict: its 901 surfaces produce 94,605 independently unverified assessments. Preserve the historical 105-family/210-row ledger and its original evidence separately.
 
 Earlier source production at `3aebe66ded78bbfb0e3b8f8d829e64100371f446` passed both exact root entrypoints and matched 860 extracted Squirrel payload files. Combined JavaScript verification remains incomplete at 1,364 passes, three failures and 25 skips. Reviewed translation and exact physical-path admission repairs are integrated. Fresh rendered checks reach actual controls; their host-size assertions are being corrected against genuine packaged touch-layer evidence. Full local-process and remaining three-target server management, complete extension behavior and the entire rendered acceptance matrix remain unfinished.
 
@@ -49,3 +49,9 @@ Windows CI has verified startup registration and its enable/disable setting. A f
 Source `1e16dea8` passed 70 actual packaged GUI checks with all 73 captures inspected and owned-process cleanup verified. This includes real create/unlock dialogs, picker selection, lowercase manual drive input, mounted-byte persistence, recovery, offline pinning, startup restoration, and theme/language controls. Its JavaScript suite passed 39 checks with one platform-specific skip, and native core/controller results were 34/eight. Source `216829e1` remains the 39-check real mounted-filesystem baseline; `4f0a4b48` remains the ten-check live private transport baseline. A test-only cancellation fixture repair at `d0c5e036` passed 42 transport checks and is integrated with matching native source. Installed execution passed 70 checks and 72 inspected captures. Removal acceptance, release publication and downloaded-release verification remain pending. [Exact verification boundaries](docs/features/release/preview-verification.md).
 
 The roadmap tracks preview delivery. Earlier Windows run `37863451177` remains historical evidence of `INSTALL_REGISTRATION_MISSING`; it is not a verdict about the current candidate.
+## Current documentation and presentation direction
+
+- [ ] Use explicitly selected `gpt-6-astra` agents for GUI design, implementation and independent GUI review.
+- [ ] Replace every current presentation screenshot with inspected genuine rebuilt captures, and add coverage for new features. Preserve historical originals and their exact provenance.
+- [ ] Fully rewrite README.md with accurate public-safe contribution instructions and architecture, encrypted-file workflow and verification diagrams.
+- [ ] Preserve every branch and working tree, integrate independently complete verified contributions into main, verify remote refs, and remove only archive-backed, inactive, fully merged candidates with proven ownership and ancestry.

@@ -853,7 +853,7 @@ The existing mounted drive remains untouched. Real-data migration, initial insta
 
 ## Resumed native verification milestone
 
-The source candidate now includes reviewed local native-supervision composition84aceeb. Its exact root build passed, then a fresh actual native pipe probe passed12boundaries and observed normal host exit. Registration/status/close are verified on synthetic owned records; no license was accepted and no server was started. The separately downloaded source3aebe66file-lease verifier passed8synthetic boundaries after its DLL and all186pinned runtime members were verified.
+The source candidate now includes reviewed local native-supervision composition84aceeb. Its exact root build passed, then a fresh actual native pipe probe passed 12boundaries and observed normal host exit. Registration/status/close are verified on synthetic owned records; no license was accepted and no server was started. The separately downloaded source3aebe66file-lease verifier passed 8synthetic boundaries after its DLL and all186pinned runtime members were verified.
 
 Downloaded normal releasev1.303.1 passed Setup embedding, archive integrity and Squirrel extraction of861payload files. These release bytes remain separate from local version0.2.0, and installed acceptance is still unverified. See [sanitized source-bound evidence](docs/evidence/resume-native-20261012.json).
 
@@ -888,3 +888,12 @@ Test-only correction ae762c714e18a1f67e2f3f5193ecc9019b775ac4 is preserved on it
 ## Complete native lifetime ownership, 2026-10-12 UTC
 
 Reviewed source 82463fca7c142fa6da0e726963e8883350774c0b was integrated at f2f20c077cccdbb46c572b84df8cc8fca11f89ca. Its exact build.bat /s passed with unchanged clean source. The actual native verifier passed eight synthetic child-lifetime checks, including partial acquisition, proven non-launch, complete file protection, live timeout, exact exit and post-spawn uncertainty. The deliberately weakened negative control exited 1 with the expected DLL-writer assertion. These checks used owned synthetic children, not Java or a server. Configuration admission remains closed. Selected hashes and verdicts are recorded in docs/evidence/resume-native-20261012.json. Historical CI run 38212337658 failed CS0136/CS0819; corrected successor 38212829338 passed.
+## Current GUI, documentation and preservation direction
+
+The current request requires gpt-6-astra for GUI design, implementation and independent GUI review, replacement screenshots from genuine rebuilt states, expanded new-feature captures, a complete README rewrite and explanatory diagrams. The combined inventory at 53d2b4612b96559c5afaac2c28e2888fa0a3ba91 contains 901 surfaces and 94,605 unverified assessments.
+
+The exact root build at 53d2b46 passed with unchanged source and package privacy inspection of 6013 entries with zero rejected. The actual compiled protection-pipe test at adb2f92198c9cf848ddd4377cf778ce84d135da1 passed with unchanged BrowserHost bytes after an earlier preserved startup timeout; no cause or production repair is established. The public native evidence summary records exact hashes and its synthetic-provider limitation. The retained-close helper repair has six passing synthetic checks and independent source review; actual execution remains pending.
+
+The first renderer diagnostic measured a header obstructing three upper points of a 48-pixel touch layer. A later packaged attempt failed executable-identity admission before capture. Supported retained proofs and independent exit confirmation subsequently verified all six owned processes absent and the desktop closed. Neither attempt establishes current visual acceptance.
+
+A preservation push processed all existing local branches and verified advanced remote tips. The separate main-performance branch starts at main f026abd65d80b28f42707635d9ce2a19cce83001 to deliver independent verified packaging/cache units. The full recovery candidate retains unfinished production ancestry. The archive inventory now has twelve working trees; the old eight-tree archive remains historical. A new private helper is under review; no actual archive or deletion is claimed.

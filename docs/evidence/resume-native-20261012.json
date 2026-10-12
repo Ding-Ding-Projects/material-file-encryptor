@@ -103,5 +103,39 @@
     "javaExecuted": false,
     "serverStarted": false,
     "configurationAdmitted": false
+  },
+  "currentBuild": {
+    "sourceCommit": "53d2b4612b96559c5afaac2c28e2888fa0a3ba91",
+    "sourceCommitAtCompletion": "53d2b4612b96559c5afaac2c28e2888fa0a3ba91",
+    "sourceDirtyAtStart": false,
+    "sourceDirtyAtCompletion": false,
+    "command": "build.bat /s",
+    "startedAt": "2026-10-12T06:50:41.1074379Z",
+    "finishedAt": "2026-10-12T06:51:48.6752524Z",
+    "exitCode": 0,
+    "executableSha256": "ebd6cda2e85e3cc2905a0ee5aadcbd5dffec1290fecfe6756ecbb3f6a6563e4a",
+    "archiveSha256": "0a8802317cb47158fe4cfb58c5dc7acf21307db19450d1af8eeca2f6957f3fc6",
+    "nativeHostSha256": "9712a8aaceb25bd4ba56d321c6244d8892ae201ca6a316367245ae106029c1ff"
+  },
+  "compiledProtectionTransport": {
+    "testSource": "adb2f92198c9cf848ddd4377cf778ce84d135da1",
+    "buildSource": "53d2b4612b96559c5afaac2c28e2888fa0a3ba91",
+    "browserHostSha256": "a732b6d4790f4455fa7ee107e5d226e2ca03a084da33c6fd52b0158fdce37156",
+    "command": "node --test --test-name-pattern=\"compiled native host\" test/browser-native-host.test.js",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "testDurationMs": 1296.1129,
+    "sourceDirty": false,
+    "observedAtUtc": "2026-10-12T06:55:08.1363561Z",
+    "originalFailurePreserved": true,
+    "cause": "not established",
+    "productionChanges": "none",
+    "limitations": [
+      "Controlled synthetic provider; no real renderer grant acceptance.",
+      "No installed browser identity or genuine browser interaction proof.",
+      "Browser permission remains unavailable.",
+      "Earlier timeout retained; no production repair or timeout increase was made."
+    ]
   }
 }
