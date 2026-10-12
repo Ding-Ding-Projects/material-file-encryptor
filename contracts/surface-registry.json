@@ -1855,6 +1855,24 @@
       "proofs": {}
     },
     {
+      "id": "desktop:document:docs/features/workflows/browser-extension-workspace",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/workflows/browser-extension-workspace",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/workflows/browser-extension-workspace.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/workflows/browser-extension-workspace.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "desktop:document:docs/features/workflows/browser-native-host",
       "family": "desktop",
       "route": "src/renderer/index.html",
@@ -2220,6 +2238,51 @@
       "route": "src/renderer/index.html",
       "owner": "src/renderer/app.js",
       "selector": "#view-workflow",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:connection",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#panel-connection",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:message-preview",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#message-preview",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:personalization",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#panel-personalization",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:status",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#panel-status",
       "template": "required-families",
       "proofs": {}
     },
@@ -5491,6 +5554,42 @@
       "proofs": {}
     },
     {
+      "id": "site:article:docs/features/workflows/browser-extension-workspace.md",
+      "family": "site",
+      "route": "articles/docs--features--workflows--browser-extension-workspace.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/workflows/browser-extension-workspace.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--workflows--browser-extension-workspace.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/workflows/browser-extension-workspace.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--workflows--browser-extension-workspace.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/workflows/browser-extension-workspace.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--workflows--browser-extension-workspace.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:article:docs/features/workflows/browser-native-host.md",
       "family": "site",
       "route": "articles/docs--features--workflows--browser-native-host.html",
@@ -7737,6 +7836,24 @@
       "route": "workspace.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/workflows/browser-download-handoff.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/workflows/browser-extension-workspace",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/workflows/browser-extension-workspace",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/workflows/browser-extension-workspace.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/workflows/browser-extension-workspace.zh-HK",
       "template": "required-families",
       "proofs": {}
     },

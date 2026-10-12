@@ -5,3 +5,5 @@
 - [瀏覽器原生訊息傳輸](browser-native-host.zh-HK.md)：有界訊息、目前用戶管道檢查、同意程序同已審閱擴充功能身分。
 
 呢啲工作流程使用本機原生服務入口，唔係 HTTP API，所以唔適用 Postman 集合。
+
+- [瀏覽器擴充功能工作區](browser-extension-workspace.md)

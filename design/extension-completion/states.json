@@ -1,0 +1,3567 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "6c880446b9e884efed589f189bbb7bda3111ae6f",
+  "captureRule": "Every listed state has an addressable design reference. Actual rendered reference inspection, exact source/build-bound production acceptance and all visual evidence remain pending.",
+  "states": [
+    {
+      "id": "extension:popup:checking",
+      "screen": "popup",
+      "state": "checking",
+      "reference": "reference.html?screen=popup&state=checking",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          400,
+          560
+        ],
+        [
+          320,
+          480
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:popup:unpaired",
+      "screen": "popup",
+      "state": "unpaired",
+      "reference": "reference.html?screen=popup&state=unpaired",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          400,
+          560
+        ],
+        [
+          320,
+          480
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:popup:pairing",
+      "screen": "popup",
+      "state": "pairing",
+      "reference": "reference.html?screen=popup&state=pairing",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          400,
+          560
+        ],
+        [
+          320,
+          480
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:popup:paired",
+      "screen": "popup",
+      "state": "paired",
+      "reference": "reference.html?screen=popup&state=paired",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          400,
+          560
+        ],
+        [
+          320,
+          480
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:popup:awaiting-confirmation",
+      "screen": "popup",
+      "state": "awaiting-confirmation",
+      "reference": "reference.html?screen=popup&state=awaiting-confirmation",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          400,
+          560
+        ],
+        [
+          320,
+          480
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:popup:downloading",
+      "screen": "popup",
+      "state": "downloading",
+      "reference": "reference.html?screen=popup&state=downloading",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          400,
+          560
+        ],
+        [
+          320,
+          480
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:popup:completed",
+      "screen": "popup",
+      "state": "completed",
+      "reference": "reference.html?screen=popup&state=completed",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          400,
+          560
+        ],
+        [
+          320,
+          480
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:popup:failed",
+      "screen": "popup",
+      "state": "failed",
+      "reference": "reference.html?screen=popup&state=failed",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          400,
+          560
+        ],
+        [
+          320,
+          480
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:popup:cancelled",
+      "screen": "popup",
+      "state": "cancelled",
+      "reference": "reference.html?screen=popup&state=cancelled",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          400,
+          560
+        ],
+        [
+          320,
+          480
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:popup:unavailable",
+      "screen": "popup",
+      "state": "unavailable",
+      "reference": "reference.html?screen=popup&state=unavailable",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          400,
+          560
+        ],
+        [
+          320,
+          480
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:popup:unknown",
+      "screen": "popup",
+      "state": "unknown",
+      "reference": "reference.html?screen=popup&state=unknown",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          400,
+          560
+        ],
+        [
+          320,
+          480
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:transfers:empty",
+      "screen": "transfers",
+      "state": "empty",
+      "reference": "reference.html?screen=transfers&state=empty",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:transfers:awaiting-confirmation",
+      "screen": "transfers",
+      "state": "awaiting-confirmation",
+      "reference": "reference.html?screen=transfers&state=awaiting-confirmation",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:transfers:downloading",
+      "screen": "transfers",
+      "state": "downloading",
+      "reference": "reference.html?screen=transfers&state=downloading",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:transfers:completed",
+      "screen": "transfers",
+      "state": "completed",
+      "reference": "reference.html?screen=transfers&state=completed",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:transfers:failed",
+      "screen": "transfers",
+      "state": "failed",
+      "reference": "reference.html?screen=transfers&state=failed",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:transfers:cancelled",
+      "screen": "transfers",
+      "state": "cancelled",
+      "reference": "reference.html?screen=transfers&state=cancelled",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:transfers:unknown",
+      "screen": "transfers",
+      "state": "unknown",
+      "reference": "reference.html?screen=transfers&state=unknown",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:transfers:bulk-preview",
+      "screen": "transfers",
+      "state": "bulk-preview",
+      "reference": "reference.html?screen=transfers&state=bulk-preview",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:transfers:retry-unavailable",
+      "screen": "transfers",
+      "state": "retry-unavailable",
+      "reference": "reference.html?screen=transfers&state=retry-unavailable",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:language",
+      "screen": "settings",
+      "state": "language",
+      "reference": "reference.html?screen=settings&state=language",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:vocabulary-empty",
+      "screen": "settings",
+      "state": "vocabulary-empty",
+      "reference": "reference.html?screen=settings&state=vocabulary-empty",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:vocabulary-validating",
+      "screen": "settings",
+      "state": "vocabulary-validating",
+      "reference": "reference.html?screen=settings&state=vocabulary-validating",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:vocabulary-loaded",
+      "screen": "settings",
+      "state": "vocabulary-loaded",
+      "reference": "reference.html?screen=settings&state=vocabulary-loaded",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:vocabulary-invalid-prior-valid",
+      "screen": "settings",
+      "state": "vocabulary-invalid-prior-valid",
+      "reference": "reference.html?screen=settings&state=vocabulary-invalid-prior-valid",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:vocabulary-invalid-empty",
+      "screen": "settings",
+      "state": "vocabulary-invalid-empty",
+      "reference": "reference.html?screen=settings&state=vocabulary-invalid-empty",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:vocabulary-replace",
+      "screen": "settings",
+      "state": "vocabulary-replace",
+      "reference": "reference.html?screen=settings&state=vocabulary-replace",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:vocabulary-cleared",
+      "screen": "settings",
+      "state": "vocabulary-cleared",
+      "reference": "reference.html?screen=settings&state=vocabulary-cleared",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:vocabulary-cache-corrupt",
+      "screen": "settings",
+      "state": "vocabulary-cache-corrupt",
+      "reference": "reference.html?screen=settings&state=vocabulary-cache-corrupt",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:shared-mode-unavailable",
+      "screen": "settings",
+      "state": "shared-mode-unavailable",
+      "reference": "reference.html?screen=settings&state=shared-mode-unavailable",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:shared-mode-active",
+      "screen": "settings",
+      "state": "shared-mode-active",
+      "reference": "reference.html?screen=settings&state=shared-mode-active",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:appearance",
+      "screen": "settings",
+      "state": "appearance",
+      "reference": "reference.html?screen=settings&state=appearance",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:logo-invalid",
+      "screen": "settings",
+      "state": "logo-invalid",
+      "reference": "reference.html?screen=settings&state=logo-invalid",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:attention",
+      "screen": "settings",
+      "state": "attention",
+      "reference": "reference.html?screen=settings&state=attention",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:schedules",
+      "screen": "settings",
+      "state": "schedules",
+      "reference": "reference.html?screen=settings&state=schedules",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:schedule-source-unavailable",
+      "screen": "settings",
+      "state": "schedule-source-unavailable",
+      "reference": "reference.html?screen=settings&state=schedule-source-unavailable",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:settings:voice-unavailable",
+      "screen": "settings",
+      "state": "voice-unavailable",
+      "reference": "reference.html?screen=settings&state=voice-unavailable",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:capabilities:unavailable",
+      "screen": "capabilities",
+      "state": "unavailable",
+      "reference": "reference.html?screen=capabilities&state=unavailable",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:capabilities:converter-empty",
+      "screen": "capabilities",
+      "state": "converter-empty",
+      "reference": "reference.html?screen=capabilities&state=converter-empty",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:capabilities:converter-category",
+      "screen": "capabilities",
+      "state": "converter-category",
+      "reference": "reference.html?screen=capabilities&state=converter-category",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:capabilities:converter-invalid",
+      "screen": "capabilities",
+      "state": "converter-invalid",
+      "reference": "reference.html?screen=capabilities&state=converter-invalid",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:capabilities:converter-running",
+      "screen": "capabilities",
+      "state": "converter-running",
+      "reference": "reference.html?screen=capabilities&state=converter-running",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:capabilities:converter-partial-result",
+      "screen": "capabilities",
+      "state": "converter-partial-result",
+      "reference": "reference.html?screen=capabilities&state=converter-partial-result",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:capabilities:models-empty",
+      "screen": "capabilities",
+      "state": "models-empty",
+      "reference": "reference.html?screen=capabilities&state=models-empty",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:capabilities:models-stale",
+      "screen": "capabilities",
+      "state": "models-stale",
+      "reference": "reference.html?screen=capabilities&state=models-stale",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:capabilities:models-variant",
+      "screen": "capabilities",
+      "state": "models-variant",
+      "reference": "reference.html?screen=capabilities&state=models-variant",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:capabilities:models-operation",
+      "screen": "capabilities",
+      "state": "models-operation",
+      "reference": "reference.html?screen=capabilities&state=models-operation",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:capabilities:servers-targets",
+      "screen": "capabilities",
+      "state": "servers-targets",
+      "reference": "reference.html?screen=capabilities&state=servers-targets",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:capabilities:servers-version-unavailable",
+      "screen": "capabilities",
+      "state": "servers-version-unavailable",
+      "reference": "reference.html?screen=capabilities&state=servers-version-unavailable",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:capabilities:servers-config",
+      "screen": "capabilities",
+      "state": "servers-config",
+      "reference": "reference.html?screen=capabilities&state=servers-config",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:capabilities:servers-backup",
+      "screen": "capabilities",
+      "state": "servers-backup",
+      "reference": "reference.html?screen=capabilities&state=servers-backup",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:capabilities:servers-connection-lost",
+      "screen": "capabilities",
+      "state": "servers-connection-lost",
+      "reference": "reference.html?screen=capabilities&state=servers-connection-lost",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:access:locked",
+      "screen": "access",
+      "state": "locked",
+      "reference": "reference.html?screen=access&state=locked",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:access:unlock",
+      "screen": "access",
+      "state": "unlock",
+      "reference": "reference.html?screen=access&state=unlock",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:access:wrong-factor",
+      "screen": "access",
+      "state": "wrong-factor",
+      "reference": "reference.html?screen=access&state=wrong-factor",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:access:ladder-wait",
+      "screen": "access",
+      "state": "ladder-wait",
+      "reference": "reference.html?screen=access&state=ladder-wait",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:access:authenticator-empty",
+      "screen": "access",
+      "state": "authenticator-empty",
+      "reference": "reference.html?screen=access&state=authenticator-empty",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:access:authenticator-register",
+      "screen": "access",
+      "state": "authenticator-register",
+      "reference": "reference.html?screen=access&state=authenticator-register",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:access:support-empty",
+      "screen": "access",
+      "state": "support-empty",
+      "reference": "reference.html?screen=access&state=support-empty",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:access:support-recovery-unavailable",
+      "screen": "access",
+      "state": "support-recovery-unavailable",
+      "reference": "reference.html?screen=access&state=support-recovery-unavailable",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:history:credential-unavailable",
+      "screen": "history",
+      "state": "credential-unavailable",
+      "reference": "reference.html?screen=history&state=credential-unavailable",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:history:locked",
+      "screen": "history",
+      "state": "locked",
+      "reference": "reference.html?screen=history&state=locked",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:history:empty",
+      "screen": "history",
+      "state": "empty",
+      "reference": "reference.html?screen=history&state=empty",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:history:filtered",
+      "screen": "history",
+      "state": "filtered",
+      "reference": "reference.html?screen=history&state=filtered",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:history:diff",
+      "screen": "history",
+      "state": "diff",
+      "reference": "reference.html?screen=history&state=diff",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:history:restore-preview",
+      "screen": "history",
+      "state": "restore-preview",
+      "reference": "reference.html?screen=history&state=restore-preview",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:history:write-failed",
+      "screen": "history",
+      "state": "write-failed",
+      "reference": "reference.html?screen=history&state=write-failed",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:notifications:empty",
+      "screen": "notifications",
+      "state": "empty",
+      "reference": "reference.html?screen=notifications&state=empty",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:notifications:unread",
+      "screen": "notifications",
+      "state": "unread",
+      "reference": "reference.html?screen=notifications&state=unread",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:notifications:retry",
+      "screen": "notifications",
+      "state": "retry",
+      "reference": "reference.html?screen=notifications&state=retry",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:notifications:bulk-preview",
+      "screen": "notifications",
+      "state": "bulk-preview",
+      "reference": "reference.html?screen=notifications&state=bulk-preview",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:documentation:index",
+      "screen": "documentation",
+      "state": "index",
+      "reference": "reference.html?screen=documentation&state=index",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:documentation:article",
+      "screen": "documentation",
+      "state": "article",
+      "reference": "reference.html?screen=documentation&state=article",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:documentation:no-match",
+      "screen": "documentation",
+      "state": "no-match",
+      "reference": "reference.html?screen=documentation&state=no-match",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:documentation:changelog-empty",
+      "screen": "documentation",
+      "state": "changelog-empty",
+      "reference": "reference.html?screen=documentation&state=changelog-empty",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:documentation:changelog-filtered",
+      "screen": "documentation",
+      "state": "changelog-filtered",
+      "reference": "reference.html?screen=documentation&state=changelog-filtered",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:status:unavailable",
+      "screen": "status",
+      "state": "unavailable",
+      "reference": "reference.html?screen=status&state=unavailable",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:status:observed",
+      "screen": "status",
+      "state": "observed",
+      "reference": "reference.html?screen=status&state=observed",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:status:stale",
+      "screen": "status",
+      "state": "stale",
+      "reference": "reference.html?screen=status&state=stale",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:shared-overlays:palette",
+      "screen": "shared-overlays",
+      "state": "palette",
+      "reference": "reference.html?screen=shared-overlays&state=palette",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:shared-overlays:regex-builder",
+      "screen": "shared-overlays",
+      "state": "regex-builder",
+      "reference": "reference.html?screen=shared-overlays&state=regex-builder",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:shared-overlays:context-menu",
+      "screen": "shared-overlays",
+      "state": "context-menu",
+      "reference": "reference.html?screen=shared-overlays&state=context-menu",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:shared-overlays:group-picker",
+      "screen": "shared-overlays",
+      "state": "group-picker",
+      "reference": "reference.html?screen=shared-overlays&state=group-picker",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:shared-overlays:tab-close-preview",
+      "screen": "shared-overlays",
+      "state": "tab-close-preview",
+      "reference": "reference.html?screen=shared-overlays&state=tab-close-preview",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:shared-overlays:guidance",
+      "screen": "shared-overlays",
+      "state": "guidance",
+      "reference": "reference.html?screen=shared-overlays&state=guidance",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:shared-overlays:appearance-editor",
+      "screen": "shared-overlays",
+      "state": "appearance-editor",
+      "reference": "reference.html?screen=shared-overlays&state=appearance-editor",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:shared-overlays:element-lock",
+      "screen": "shared-overlays",
+      "state": "element-lock",
+      "reference": "reference.html?screen=shared-overlays&state=element-lock",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:shared-overlays:super-confirmation",
+      "screen": "shared-overlays",
+      "state": "super-confirmation",
+      "reference": "reference.html?screen=shared-overlays&state=super-confirmation",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    },
+    {
+      "id": "extension:shared-overlays:export-preview",
+      "screen": "shared-overlays",
+      "state": "export-preview",
+      "reference": "reference.html?screen=shared-overlays&state=export-preview",
+      "referenceStatus": "implemented-design-reference-unverified",
+      "productionRoute": null,
+      "productionStatus": "unverified",
+      "theme": [
+        "light",
+        "dark"
+      ],
+      "language": [
+        "en",
+        "yue",
+        "bilingual"
+      ],
+      "displayScale": [
+        100,
+        125,
+        150,
+        200
+      ],
+      "viewports": [
+        [
+          1280,
+          800
+        ],
+        [
+          320,
+          568
+        ]
+      ],
+      "rawCaptures": [],
+      "comparison": null,
+      "visualDiff": null,
+      "layoutProbe": null,
+      "componentAudit": "pending",
+      "independentReview": "pending"
+    }
+  ]
+}

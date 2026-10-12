@@ -15,6 +15,8 @@ internal sealed class ServerLeaseBroker
     private readonly Dictionary<string, Entry> entries = new(StringComparer.Ordinal);
     private string? root;
     private bool closing;
+    private readonly ServerRuntimeProvisioner runtimes = new();
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string,CancellationTokenSource> runtimeOperations = new();
     private sealed class Entry
     {
         public required string Id, Root, Version, JarHash;
@@ -26,6 +28,7 @@ internal sealed class ServerLeaseBroker
         public string? RuntimePath;
         public int Port;
         public bool StopDelivered;
+        public ServerRuntimeProvisioner.Inventory? RuntimeInventory;
     }
     private sealed record Runtime(string Root, string Executable, string Hash, int Major);
     private static void Exact(JsonElement value, params string[] keys)
@@ -45,28 +48,6 @@ internal sealed class ServerLeaseBroker
     {
         if ((File.GetAttributes(file) & (FileAttributes.Directory | FileAttributes.ReparsePoint)) != 0) throw new InvalidOperationException("An unlinked regular file is required.");
         using var stream = File.OpenRead(file); return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
-    }
-    // Only a reviewed, bundled runtime inventory is considered. PATH, JAVA_HOME,
-    // renderer paths and arbitrary executables are intentionally not discovery inputs.
-    private static Runtime? DiscoverRuntime(int major)
-    {
-        if (major < 1) return null;
-        string directory = Path.Combine(AppContext.BaseDirectory, "server-runtime");
-        string manifest = Path.Combine(directory, "manifest.json");
-        if (!File.Exists(manifest)) return null;
-        DirectoryProof(directory);
-        if (new FileInfo(manifest).Length > 16384) throw new InvalidDataException();
-        using var document = JsonDocument.Parse(File.ReadAllText(manifest));
-        var value = document.RootElement;
-        Exact(value, "schemaVersion", "majorVersion", "javaSha256", "releaseSha256", "provenance");
-        if (value.GetProperty("schemaVersion").GetInt32() != 1 || value.GetProperty("majorVersion").GetInt32() != major || Text(value, "provenance") != "reviewed-bundled-runtime-v1") return null;
-        string executable = Path.Combine(directory, "bin", "java.exe"), release = Path.Combine(directory, "release");
-        DirectoryProof(Path.GetDirectoryName(executable)!);
-        string digest = Text(value, "javaSha256");
-        if (!Regex.IsMatch(digest, "^[a-f0-9]{64}$") || Hash(executable) != digest || Hash(release) != Text(value, "releaseSha256")) throw new InvalidDataException();
-        string version = File.ReadAllText(release);
-        if (version.Length > 16384 || !Regex.IsMatch(version, "(?m)^JAVA_VERSION=\"" + major + "(?:[.\"+_-])")) throw new InvalidDataException();
-        return new Runtime(directory, executable, digest, major);
     }
     // Exact-version network schemas must be retained from an independently
     // inspected distribution. No such proof is currently shipped; fail closed.
@@ -88,6 +69,13 @@ internal sealed class ServerLeaseBroker
     }
     public async Task<object?> DispatchAsync(string method, JsonElement value)
     {
+        if(method=="runtimeCancel") { Exact(value,"operationId");string operationId=Text(value,"operationId");if(runtimeOperations.TryGetValue(operationId,out var controller)){controller.Cancel();return new { requested=true };}return new { requested=false }; }
+        CancellationTokenSource? runtimeController=null;string? runtimeOperationId=null;
+        if(method=="runtimePrepare")
+        {
+            Exact(value,"id","operationId");runtimeOperationId=Text(value,"operationId");if(!Regex.IsMatch(runtimeOperationId,"^[a-f0-9-]{36}$"))throw new ArgumentException();
+            runtimeController=new CancellationTokenSource();if(!runtimeOperations.TryAdd(runtimeOperationId,runtimeController)){runtimeController.Dispose();throw new InvalidOperationException("Runtime operation already active.");}
+        }
         await admission.WaitAsync();
         try
         {
@@ -100,7 +88,18 @@ internal sealed class ServerLeaseBroker
             if (root is null) throw new InvalidOperationException("Initialize the native server session first.");
             if (method == "capabilities")
             {
-                Exact(value); return new { available = false, nativeSupervision = true, runtimeDiscovery = "reviewed-bundled-only", configurationAdmission = "unavailable", reason = "Exact-version generated network configuration proof is not retained. No server can start." };
+                Exact(value); return new { available = false, nativeSupervision = true, runtimeDiscovery = "reviewed-owned-portable", runtimeProvisioning=true, configurationAdmission = "unavailable", reason = "Exact-version generated network configuration proof is not retained. No server can start." };
+            }
+            if(method=="runtimePrepare")
+            {
+                Exact(value,"id","operationId");string id=Text(value,"id"),operationId=Text(value,"operationId");
+                if(closing||!entries.TryGetValue(id,out var entry)||entry.Child is not null||entry.RuntimeInventory is not null||!Regex.IsMatch(operationId,"^[a-f0-9-]{36}$"))throw new InvalidOperationException("Owned runtime preparation is unavailable.");
+                runtimeController!.Token.ThrowIfCancellationRequested();entry.RuntimeInventory=await runtimes.Prepare(root,operationId,entry.Major,runtimeController.Token);return new { verified=true,majorVersion=entry.Major,manifestSha256=entry.RuntimeInventory.ManifestHash,execution="not-run",configurationAdmission="unavailable" };
+            }
+            if(method=="runtimeStatus")
+            {
+                var entry=Owned(value);if(entry.RuntimeInventory is null)return new { available=false,reason="No verified owned portable Java runtime is registered." };
+                var statusInventory=runtimes.Verify(entry.RuntimeInventory.Root,entry.Major);return new { available=true,majorVersion=entry.Major,manifestSha256=statusInventory.ManifestHash,execution="not-run",configurationAdmission="unavailable" };
             }
             if (method == "close") { Exact(value); closing = true; foreach (var entry in entries.Values) await Stop(entry); return new { closed = true, verified = entries.Values.All(e => e.Child is null && e.Lease is null) }; }
             if (closing && method != "status" && method != "stop") throw new InvalidOperationException("Native server supervision is closing.");
@@ -122,7 +121,8 @@ internal sealed class ServerLeaseBroker
             if (owned.Child is not null || owned.Lease is not null || owned.State != "prepared") throw new InvalidOperationException("Prepared owned server admission is required.");
             DirectoryProof(Path.Combine(owned.Root, "server"));
             if (File.ReadAllText(Path.Combine(owned.Root, "server", "eula.txt")) != "eula=true\n") throw new InvalidOperationException("Exact server license acceptance is required.");
-            var runtime = DiscoverRuntime(owned.Major) ?? throw new InvalidOperationException("A reviewed compatible bundled Java runtime is unavailable.");
+            var registered=owned.RuntimeInventory??throw new InvalidOperationException("A reviewed compatible owned portable Java runtime is unavailable.");
+            var inventory=runtimes.Verify(registered.Root,owned.Major);var runtime=new Runtime(inventory.Root,inventory.Executable,inventory.JavaHash,inventory.Major);
             if (!ConfigurationAdmitted(owned)) throw new InvalidOperationException("Exact-version generated network configuration proof is unavailable.");
             // This path becomes reachable only after a separately reviewed configuration
             // admission implementation is provided, never by a renderer boolean.
@@ -139,7 +139,7 @@ internal sealed class ServerLeaseBroker
             }
             catch { if (owned.Child is null) { owned.Lease.Release(); owned.Lease = null; } else owned.State = "ownership-unverified"; throw; }
         }
-        finally { admission.Release(); }
+        finally { admission.Release();if(runtimeOperationId is not null)runtimeOperations.TryRemove(runtimeOperationId,out _);runtimeController?.Dispose(); }
     }
     private static async Task Drain(StreamReader reader) { try { char[] buffer = new char[4096]; while (await reader.ReadAsync(buffer) != 0) Array.Clear(buffer); } catch { } }
     private static async Task Stop(Entry entry)

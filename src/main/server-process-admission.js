@@ -10,6 +10,9 @@ export function createServerProcessAdmission({nativeRequest}={}) {
   async start(id){if(!initialized||closing)throw Error('Native server admission is unavailable.');return request('start',{id});},
   async status(id){if(!initialized)throw Error('Native server admission is unavailable.');return request('status',{id});},
   async stop(id){if(!initialized)throw Error('Native server admission is unavailable.');return request('stop',{id});},
+  async runtimePrepare(id,operationId){if(!initialized||closing)throw Error('Native runtime admission is unavailable.');return request('runtimePrepare',{id,operationId});},
+  async runtimeCancel(operationId){if(!initialized)throw Error('Native runtime admission is unavailable.');return request('runtimeCancel',{operationId});},
+  async runtimeStatus(id){if(!initialized)throw Error('Native runtime admission is unavailable.');return request('runtimeStatus',{id});},
   get pending(){return active;},
   async close(){closing=true;if(!initialized)return {closed:true,verified:true};return request('close',{});}
  };

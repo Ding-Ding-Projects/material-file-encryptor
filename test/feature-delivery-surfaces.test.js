@@ -72,3 +72,5 @@ test('unverified proof cannot replace derived identity or applicability', () => 
   const row = expandSurfaceFeatureDelivery(broken).find(row => row.surface === surface.id && row.id === 'language');
   assert.equal(row.applicability.applies, true);
 });
+
+test('extension options panels are exact consumers and omission cannot be hidden by extraction',()=>{for(const id of ['extension:options','extension:options:connection','extension:options:personalization','extension:options:status','extension:options:message-preview']){const row=expected.find(row=>row.id===id);assert.equal(row.route,'browser-extension/options.html');assert.equal(row.owner,'browser-extension/options.js');const broken=structuredClone(registry);broken.surfaces=broken.surfaces.filter(item=>item.id!==id);assert.ok(validateSurfaceRegistry(broken,expected.filter(item=>item.id!==id)).includes('Missing handwritten required surface: '+id+'.'));}});
