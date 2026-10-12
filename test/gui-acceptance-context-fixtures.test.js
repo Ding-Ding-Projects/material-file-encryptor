@@ -27,7 +27,7 @@ function fixture({wrongTarget=false,renders=1,wrongFocus=false,startupReady=true
   },
   async evaluateHandle(){return {async evaluate(){return {renders,headings:['Appearance: Select Acceptance B.txt']};},async dispose(){calls.push('disposed');}};}
  };
- const owned={opened:{page,target:{sourceCommit}},prepare:async()=>{calls.push('native-prepare');return {ownedSyntheticFixture:true,sourceCommit};},restore:async()=>({restored:true}),identity:async c=>assert.equal(c.binding.sourceCommit,sourceCommit),list:async()=>({more:false,rows:[{id:'a',path:'Acceptance A.txt'},{id:'b',path:'Acceptance B.txt'}]}),removeTarget:async(c,id)=>{assert.equal(id,'b');menu=false;calls.push('native-remove-b');return {removedId:id,remainingId:'a'};}};
+ const owned={opened:{page,target:{sourceCommit}},prepare:async()=>{calls.push('native-prepare');return {ownedSyntheticFixture:true,sourceCommit};},restore:async()=>{calls.push('native-restore');return{restored:true};},identity:async c=>assert.equal(c.binding.sourceCommit,sourceCommit),list:async()=>({more:false,rows:[{id:'a',path:'Acceptance A.txt'},{id:'b',path:'Acceptance B.txt'}]}),removeTarget:async(c,id)=>{assert.equal(id,'b');menu=false;calls.push('native-remove-b');return {removedId:id,remainingId:'a'};}};
  return {producer:createContextFoundationFixture({...owned,activationKey}),calls,page,removeRow(){menu=false;}};
 }
 test('context fixture uses actual input interface and retains distinct target, one render and focus evidence',async()=>{
@@ -120,4 +120,18 @@ test('unready registered startup controls stop context preparation before native
 
 test('retained editor route is explicit and never claims focus was restored',async()=>{
  const {producer,calls}=fixture();await producer.prepare(context);await producer['open-context'](context);const proof=await producer['open-editor'](context);assert.equal(proof.editorRetained,true);assert.equal(proof.focusInEditor,true);assert.equal(Object.hasOwn(proof,'focusRestored'),false);await producer.restore(context);
+});
+
+test('unproved pre-fill ownership retains native synthetic files during outer restoration',async()=>{
+ const f=fixture(),evaluate=f.page.evaluate,locator=f.page.locator;let observations=0;
+ f.page.locator=selector=>({...locator(selector),evaluate:async()=>true});
+ f.page.evaluate=async fn=>{
+  if(fn.name==='observeContextAppearance'){
+   observations++;const changed=observations>1;
+   return{targetId:'b',appearanceId:changed?'target':null,connected:true,opacity:1,editorOpen:changed,fieldValue:'1',fieldDisabled:false,state:changed?{elements:{target:{color:'#abcdef'}}}:null,journal:changed?[{id:'r1'}]:[]};
+  }
+  return evaluate(fn);
+ };
+ await f.producer.prepare(context);await assert.rejects(f.producer['verify-persistence'](context));assert.equal(observations,3);
+ await assert.rejects(f.producer.restore(context));assert.equal(f.calls.includes('native-restore'),false);
 });

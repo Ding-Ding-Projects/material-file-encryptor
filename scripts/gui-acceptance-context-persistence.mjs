@@ -30,7 +30,10 @@ export function createContextAppearancePersistence({page,identity,contextFixture
  };
  const close=async()=>{await page.keyboard.press('Escape');await page.waitForFunction(()=>document.querySelector('.appearance-editor')?.hidden===true,undefined,{timeout:10000});};
  const reload=async context=>{await identity(context);await page.reload({waitUntil:'domcontentloaded',timeout:10000});await requireContextStartupReadiness({page,identity,context});};
- const journalAdvance=(before,after)=>{assert.equal(after.length,before.length+1,'Exactly one appearance revision required');assert.deepEqual(after.slice(0,-1),before,'Earlier appearance revisions changed');};
+ const journalAdvance=(before,after,state)=>{assert.equal(after.length,before.length+1,'Exactly one appearance revision required');assert.deepEqual(after.slice(0,-1),before,'Earlier appearance revisions changed');const last=after.at(-1);assert.ok(typeof last.id==='string'&&/^[-\w]{1,80}$/.test(last.id)&&!before.some(row=>row.id===last.id),'New appearance revision identity required');assert.equal(last.previous,before.at(-1)?.id??null,'Appearance revision predecessor differs');assert.deepEqual(last.snapshot,state,'Saved revision differs from appearance');};
+ // This is the exact first-write shape of defaultAppearance() and newLayer('Base').
+ // Do not adopt additional properties, layers, targets or settings from observation.
+ const permittedWrite=id=>({version:1,elements:{[id]:{normal:[{name:'Base',visible:true,locked:false,properties:{opacity:'0.37'}}]}},presets:{},rainbowLevel:5,colorPalette:{custom:[],recent:[]}});
  const assertChanged=value=>{sameTarget(value);assert.equal(value.fieldDisabled,false);assert.equal(value.fieldValue,'0.37');assert.ok(Math.abs(value.opacity-.37)<.001,'Saved opacity has no live effect');assert.equal(value.state?.elements?.[session.appearanceId]?.normal?.[0]?.properties?.opacity,'0.37');assert.deepEqual(Object.keys(value.state.elements),[session.appearanceId],'Unexpected appearance target mutation');};
  async function finishRestoration(context){
   await close();await reload(context);const reloaded=await observe(context);assert.deepEqual(reloaded.state,session.expectedState);assert.deepEqual(reloaded.journal,session.expectedJournal);assert.ok(Math.abs(reloaded.opacity-session.originalOpacity)<.001,'Restored live appearance differs');
@@ -39,12 +42,12 @@ export function createContextAppearancePersistence({page,identity,contextFixture
  async function restore(context){
   if(!session)return{restored:true,mutated:false,journalRetained:true};
   await identity(context);
+  assert.equal(session.ownershipUnproved,false,'Unproved appearance write ownership prevents restoration');
   if(!session.writeAttempted){await page.keyboard.press('Escape');session=null;return{restored:true,mutated:false,journalRetained:true};}
   if(session.resetApplied)return finishRestoration(context);
   // Restoration is independent of the run's success. Reopen the actual editor,
   // then activate Reset element. Never replace localStorage or erase revisions.
   await page.keyboard.press('Escape');const before=await openEditor(context);sameTarget(before);
-  if(before.state===null&&before.journal.length===0){await close();assert.ok(Math.abs(before.opacity-session.originalOpacity)<.001);session=null;return{restored:true,mutated:false,journalRetained:true};}
   assert.ok(session.expectedState,'Unobserved appearance mutation prevents restoration');
   assert.deepEqual(before.state,session.expectedState,'Appearance changed outside the observed mutation');
   assert.deepEqual(before.journal,session.expectedJournal,'Appearance revisions changed outside the observed mutation');
@@ -53,9 +56,9 @@ export function createContextAppearancePersistence({page,identity,contextFixture
   if(!await page.locator(history).evaluate(node=>node.open))await page.locator(history+' > summary').click();
   const buttons=page.locator(history+' md-outlined-button').filter({hasText:/^(Reset element(?: \/ 重設元素)?|重設元素)$/});
   assert.equal(await buttons.count(),1,'Exact normal Reset element control is unavailable');
-  await identity(context);await buttons.click();
+  await identity(context);const resetReady=await observe(context);sameTarget(resetReady);assert.deepEqual(resetReady.state,session.expectedState,'Appearance changed before Reset element');assert.deepEqual(resetReady.journal,session.expectedJournal,'Appearance revisions changed before Reset element');await buttons.click();
   await page.waitForFunction(({targetId})=>{const state=JSON.parse(localStorage.getItem('m4e.appearance.v1')||'null');return state&&Object.keys(state.elements||{}).length===0;},{targetId:session.targetId},{timeout:10000});
-  const after=await observe(context);journalAdvance(before.journal,after.journal);assert.deepEqual(after.state.elements,{});
+  const after=await observe(context);journalAdvance(before.journal,after.journal,after.state);assert.deepEqual(after.state.elements,{});
   const previous={...before.state,elements:{}},restored={...after.state};assert.deepEqual(restored,previous,'Unrelated appearance settings changed during restoration');
   assert.deepEqual(after.journal.at(-1).snapshot,after.state,'Restoration revision differs from saved state');
   session.expectedState=structuredClone(after.state);session.expectedJournal=structuredClone(after.journal);session.resetApplied=true;
@@ -63,17 +66,21 @@ export function createContextAppearancePersistence({page,identity,contextFixture
  }
  async function run(context){
   assert.equal(session,null,'Earlier persistence sequence requires restoration');await identity(context);
-  const opened=await contextFixture['open-context'](context);session={targetId:opened.capturedTargetId,appearanceId:null,writeAttempted:false};
+  const opened=await contextFixture['open-context'](context);session={targetId:opened.capturedTargetId,appearanceId:null,writeAttempted:false,ownershipUnproved:false};
   let primary,restoration,result;
   try{
    const baseline=await observe(context);assert.equal(baseline.state,null,'Persistence sequence requires a fresh owned appearance profile');assert.deepEqual(baseline.journal,[],'Persistence sequence requires an empty owned appearance journal');assert.ok(Number.isFinite(baseline.opacity));session.originalOpacity=baseline.opacity;session.originalStorageAbsent=true;
+   session.ownershipUnproved=true;
    await page.keyboard.press('Escape');await openEditor(context);
    if(!await page.locator(details).evaluate(node=>node.open))await page.locator(details+' > summary').click();
    const ready=await observe(context);sameTarget(ready);assert.equal(ready.fieldDisabled,false);assert.equal(ready.fieldValue,'1');
-   await identity(context);session.writeAttempted=true;
+   assert.deepEqual(ready.state,baseline.state,'Appearance changed before input');assert.deepEqual(ready.journal,baseline.journal,'Appearance revisions changed before input');
+   session.writeAttempted=true;
    await page.locator(field+' input').fill('0.37');await page.locator(field+' input').press('Tab');
    await page.waitForFunction(()=>{const state=JSON.parse(localStorage.getItem('m4e.appearance.v1')||'null');return state&&Object.values(state.elements||{}).some(value=>value.normal?.[0]?.properties?.opacity==='0.37');},undefined,{timeout:10000});
-   const changed=await observe(context);session.expectedState=structuredClone(changed.state);session.expectedJournal=structuredClone(changed.journal);assertChanged(changed);journalAdvance(baseline.journal,changed.journal);assert.deepEqual(changed.journal.at(-1).snapshot,changed.state,'Saved revision differs from appearance');
+   const changed=await observe(context);sameTarget(changed);
+   assert.deepEqual(changed.state,permittedWrite(session.appearanceId),'Appearance write exceeds the permitted opacity delta');journalAdvance(baseline.journal,changed.journal,changed.state);
+   session.expectedState=structuredClone(changed.state);session.expectedJournal=structuredClone(changed.journal);session.ownershipUnproved=false;assertChanged(changed);
    await close();await reload(context);await openEditor(context);const persisted=await observe(context);assertChanged(persisted);assert.deepEqual(persisted.state,changed.state);assert.deepEqual(persisted.journal,changed.journal);
    result={sourceCommit:context.binding.sourceCommit,ownedSyntheticFixture:true,scope:'context-appearance-persistence',actualControlInput:true,liveEffectVerified:true,reloadVerified:true,saveReadbackVerified:true,revisionCount:changed.journal.length,privateRecordsRetained:false,accepted:false};
   }catch(error){primary=error;}
