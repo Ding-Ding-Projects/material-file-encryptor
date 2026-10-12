@@ -1,3 +1,10 @@
+## ASAR integrity inspection, 2026-10-12
+
+- [x] Reproduce same-length packed and unpacked corruption passing the previous length-only inspector.
+- [x] Validate content hashes, block hashes and metadata; independently check unpacked file type and length, including empty files.
+- [x] Pass eight focused synthetic regressions after four new tests failed before the repair; complete independent bounded source review.
+- [ ] Retain exact-source Windows production and released-byte verification separately from installed lifecycle acceptance.
+
 ## Current preservation pass
 
 - [x] Preserve reviewed interface source e1891f08 and original task tips on their remote branches.

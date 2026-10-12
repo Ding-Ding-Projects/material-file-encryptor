@@ -1,3 +1,13 @@
+## ASAR integrity inspection, 2026-10-12
+
+The package inspector previously accepted same-length ASAR content corruption because it checked extracted length without validating the declared integrity metadata. It now requires supported SHA-256 content and block hashes, a positive safe-integer block size and exact block count. Unpacked entries receive an independent actual file-type and length check, including empty entries that the archive reader otherwise returns without accessing their loose file. Existing private-directory exclusions, archive-cache invalidation and sanitized diagnostics are preserved.
+
+All eight focused tests pass. Four newly added integrity tests failed against the previous inspector before the repair. Independent bounded source review found no surviving concrete defect and repeated the eight passing tests. This is synthetic archive and source evidence, not Windows production, installed behavior or publisher authentication. Documentation in both languages describes the boundary.
+
+The unchanged baseline `660dd563820e6d3db51ccbf22f2f284b7d1de201` broad JavaScript run reported 939 tests: 870 passed, 29 failed and 40 skipped. Its remaining update-service worker was stopped after bounded observation, so the run remains failed and incomplete. No broader green verdict is claimed or inferred from this focused repair. Preserve the previously deferred installation, migration and full visual acceptance boundaries below.
+
+Next: verify exact-source production through the existing Windows build and genuine Squirrel publication route, independently inspect delivered bytes, then choose the next bounded unfinished unit. Do not upgrade historical runtime evidence to the new source.
+
 ## Preservation checkpoint after interrupted verification
 
 The preservation pass verified all six outstanding remote tips, including main at 97a87c280d204651aa25304cb10146081cf1a175 and codex/integration-20261011 at 6b86cd2c074cc75a8ef9ee204ab75d8aa2a2e653. Product code on main retains the accepted native 80 MiB baseline. Newer interface code remains preserved on the integration branch and its original task branches. The full product goal is not complete.

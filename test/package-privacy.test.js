@@ -4,9 +4,107 @@ import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { createPackage } from '@electron/asar';
+import { createPackage, createPackageWithOptions, getRawHeader, uncache } from '@electron/asar';
 import { inspectPackage, requirePrivateFreePackage } from '../scripts/package-privacy.mjs';
 const config = createRequire(import.meta.url)('../forge.config.cjs');
+
+async function rewriteHeader(archive, mutate) {
+  uncache(archive);
+  const original = await readFile(archive);
+  const { header, headerSize } = getRawHeader(archive);
+  mutate(header);
+  const json = Buffer.from(JSON.stringify(header));
+  const payloadSize = Math.ceil((4 + json.length) / 4) * 4;
+  const serialized = Buffer.alloc(4 + payloadSize);
+  serialized.writeUInt32LE(payloadSize, 0);
+  serialized.writeUInt32LE(json.length, 4);
+  json.copy(serialized, 8);
+  const size = Buffer.alloc(8);
+  size.writeUInt32LE(4, 0);
+  size.writeUInt32LE(serialized.length, 4);
+  await writeFile(archive, Buffer.concat([size, serialized, original.subarray(8 + headerSize)]));
+}
+
+async function withArchive(unpacked, contents, run) {
+  const temporary = await mkdtemp(path.join(os.tmpdir(), 'package-integrity-'));
+  try {
+    const source = path.join(temporary, 'source');
+    const output = path.join(temporary, 'output');
+    const archive = path.join(output, 'resources', 'app.asar');
+    await mkdir(source, { recursive: true });
+    await mkdir(path.dirname(archive), { recursive: true });
+    await writeFile(path.join(source, 'payload.bin'), contents);
+    await createPackageWithOptions(source, archive, unpacked ? { unpack: 'payload.bin' } : {});
+    await run({ archive, output });
+  } finally { await rm(temporary, { recursive: true, force: true }); }
+}
+
+for (const unpacked of [false, true]) {
+  test(`same-length ${unpacked ? 'unpacked' : 'packed'} corruption rejects inspection and packaging`, async () => {
+    await withArchive(unpacked, Buffer.from('GOOD'), async ({ archive, output }) => {
+      assert.equal((await inspectPackage(output)).code, 'PACKAGE_PRIVACY_OK');
+      const target = unpacked ? path.join(archive + '.unpacked', 'payload.bin') : archive;
+      const original = await readFile(target);
+      const damaged = Buffer.from(original);
+      damaged[damaged.length - 1] ^= 1;
+      await writeFile(target, damaged);
+      const receipt = await inspectPackage(output);
+      assert.equal(receipt.code, 'PACKAGE_PRIVACY_UNREADABLE');
+      assert.equal('archiveSha256' in receipt, false);
+      assert.equal(JSON.stringify(receipt).includes('payload'), false);
+      await assert.rejects(requirePrivateFreePackage(output), { message: 'PACKAGE_PRIVACY_UNREADABLE' });
+      await assert.rejects(config.hooks.postPackage({}, { outputPaths: [output] }), { message: 'PACKAGE_PRIVACY_UNREADABLE' });
+      await writeFile(target, original);
+      assert.equal((await inspectPackage(output)).code, 'PACKAGE_PRIVACY_OK');
+    });
+  });
+}
+
+test('empty and multiblock content validates in packed and unpacked archives', async () => {
+  for (const unpacked of [false, true]) {
+    for (const content of [Buffer.alloc(0), Buffer.alloc(4 * 1024 * 1024 + 1, 0x61)]) {
+      await withArchive(unpacked, content, async ({ archive, output }) => {
+        const { header } = getRawHeader(archive);
+        assert.equal(header.files['payload.bin'].integrity.blocks.length, content.length ? 2 : 1);
+        assert.equal((await inspectPackage(output)).code, 'PACKAGE_PRIVACY_OK');
+        if (unpacked && content.length === 0) {
+          await writeFile(path.join(archive + '.unpacked', 'payload.bin'), 'unexpected bytes');
+          assert.equal((await inspectPackage(output)).code, 'PACKAGE_PRIVACY_UNREADABLE');
+        }
+      });
+    }
+  }
+});
+
+test('missing, malformed and inconsistent ASAR integrity metadata fails closed', async () => {
+  const mutations = [
+    info => { delete info.integrity; },
+    info => { info.integrity = null; },
+    info => { info.integrity.algorithm = 'SHA512'; },
+    info => { info.integrity.hash = '0'.repeat(64); },
+    info => { info.integrity.hash = 'not a digest'; },
+    info => { info.integrity.blockSize = 0; },
+    info => { info.integrity.blockSize = -1; },
+    info => { info.integrity.blockSize = 1.5; },
+    info => { info.integrity.blockSize = '4194304'; },
+    info => { info.integrity.blocks = []; },
+    info => { info.integrity.blocks = ['0'.repeat(64)]; },
+    info => { info.integrity.blocks = ['not a digest']; },
+    info => { info.integrity.blocks.push(info.integrity.blocks[0]); },
+  ];
+  for (const unpacked of [false, true]) {
+    await withArchive(unpacked, Buffer.from('GOOD'), async ({ archive, output }) => {
+      const original = await readFile(archive);
+      for (const mutate of mutations) {
+        await writeFile(archive, original);
+        await rewriteHeader(archive, header => mutate(header.files['payload.bin']));
+        assert.equal((await inspectPackage(output)).code, 'PACKAGE_PRIVACY_UNREADABLE');
+      }
+      await writeFile(archive, original);
+      assert.equal((await inspectPackage(output)).code, 'PACKAGE_PRIVACY_OK');
+    });
+  }
+});
 
 test('directory-boundary exclusion blocks only complete private segments', () => {
   const excluded = name => config.packagerConfig.ignore.some(rule => rule.test(name));

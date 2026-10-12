@@ -1,5 +1,15 @@
 # Continuation handoff
 
+## Current ASAR integrity repair
+
+The package inspector now validates declared SHA-256 content and block hashes for packed and unpacked ASAR files. Missing, malformed or inconsistent metadata and same-length corruption fail closed. Actual unpacked file type and length are checked, including empty entries. Existing exclusions and sanitized diagnostics are preserved.
+
+Four new integrity tests failed against the prior length-only source. All eight focused package tests and five documentation-catalog tests now pass. Independent bounded review found no surviving concrete defect. The inspector source SHA-256 is `c1c67fa72c7c89b9647d9cf546d632e115dc3793a61d81e4afc625913cd970e5`; test source SHA-256 is `980e891ffd0e4ca635efb6b760104bf62a175c574d88333a7a64bb812d9a2428`.
+
+The baseline broad JavaScript run at `660dd563820e6d3db51ccbf22f2f284b7d1de201` remains failed and incomplete: 939 reported tests, 870 passed, 29 failed, 40 skipped, with its remaining update-service worker stopped after bounded observation. New-source Windows production, release-byte inspection and documentation deployment are next. Installed lifecycle and full visual acceptance remain separate and unfinished.
+
+## Historical documentation handoff
+
 Main contains exact verified documentation source `5c5c24bfdbe13ea344c0eccfec8a447f04173579`. Its exact root `build.bat /s` passed exit 0, package privacy passed 5,717 entries/zero rejected, and the archive SHA-256 is `fe3e8f82c2145b35ddfc6a8e5b98f4bd9c9965537dc48b9f10f7296cafb39ccc`. Preserve the original modified-at-completion result: only generated line endings differed, normalized content equals HEAD, and six selected source hashes remained unchanged. This documentation-only follow-up is not a new runtime build.
 
 Twelve genuine diagram captures at 1440 × 1000 and emulated 320 × 1000, English/light, passed bounded source/visual review: native SVG scale, 18-pixel unstroked text, named focus, keyboard pan, full final-node horizontal visibility and no body overflow. Runtime/network observations and unnamed visible interactive counts were zero. No current-public-image promotion or complete language/theme/scale matrix is claimed.
