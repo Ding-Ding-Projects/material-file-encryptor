@@ -569,3 +569,13 @@
 - [ ] Identify and repair the actual startup cause, then verify official API health and exact owned Stop.
 - [ ] Verify cooperative mid-extraction cancellation and preservation with an existing valid installation fixture.
 - [ ] Adopt canonical one-click installation requirements only after the complete real runtime route works.
+
+## Native Ollama long-path repair
+
+- [x] Reproduce the real native lease failure on an existing279-character member with matching host manifest behavior.
+- [x] Independently review and build261f92f, verify repaired deep-path protection and unchanged native lifetime behavior.
+- [x] Verify actual official Ollama0.40.3 production-native startup, owned listener health, exact Stop/Close and independent process/port absence.
+- [x] Preserve finite reviewed main-incorporation2bf5f19 with raw and normalized source identities kept separate.
+- [ ] Recover261 GUI adapter ADAPTER_FAILED, settle exact owned resources and verify current real Start/Stop controls.
+- [ ] Build and verify the finite candidate before main delivery.
+- [ ] Adopt and synchronize the canonical one-click procedure after complete real route acceptance.
