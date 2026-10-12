@@ -26,3 +26,9 @@ Focused tests cover defaults and migration, independent language levels, serious
 
 - [Surface integration](../surface-foundation/integration.md)
 - [Personal vocabulary](../interface/personal-vocabulary.md)
+
+## README diagrams and reviewed public evidence
+
+The publication catalogue explicitly includes `README.md`. Its three existing flowcharts are converted at staging into accessible local SVG, preserving the declared nodes, arrows and source text. Only the bounded README subset of `flowchart LR` or `flowchart TD`, quoted node labels and directed arrows is supported. Unsupported syntax fails as `UNSUPPORTED_README_FLOWCHART_SYNTAX`; this is not general Mermaid support. Readable labels stay at their natural size inside named keyboard-focusable scroll regions, including narrow screens. Browser pixels, overflow and interaction still require actual rendering evidence.
+
+Exactly two reviewed JSON files are published from the tracked public source: `docs/evidence/main-performance-20261012.json` and `docs/evidence/hosted-update-1344-20261012.json`. A frozen allowlist binds their normalized content hashes and exact routes. Changed, oversized or unreviewed content is rejected. Neighboring evidence files and private outputs are never enumerated or copied. Internal article links resolve to these delivered files. Performance, older-controller metadata, downloaded-package bytes and installed acceptance keep separate verdicts.

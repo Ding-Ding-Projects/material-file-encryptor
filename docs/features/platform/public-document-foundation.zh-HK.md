@@ -26,3 +26,9 @@
 
 - [介面整合](../surface-foundation/integration.md)
 - [個人用詞](../interface/personal-vocabulary.md)
+
+## README 圖表同已檢閱公開證據
+
+發佈目錄明確包括 `README.md`。原有三幅流程圖喺暫存時轉成本地可存取 SVG，保留宣告節點、箭嘴同來源文字。只支援 README 有界子集：`flowchart LR` 或 `flowchart TD`、引號節點標籤同有方向箭嘴。不支援語法會以 `UNSUPPORTED_README_FLOWCHART_SYNTAX` 失敗，唔代表一般 Mermaid 支援。標籤保留正常可讀大小，放喺具名稱、鍵盤可聚焦捲動區域，窄畫面亦一樣。瀏覽器像素、溢出同互動仍需實際呈現證據。
+
+只有兩個已檢閱 JSON 從已追蹤公開來源發佈：`docs/evidence/main-performance-20261012.json` 同 `docs/evidence/hosted-update-1344-20261012.json`。已凍結允許清單綁定正規化內容雜湊同確切路徑。已改動、過大或未檢閱內容會拒絕。附近證據檔案同私人輸出永不枚舉或複製。文章內部連結會指向已交付檔案。效能、舊控制器資料、下載套件位元組同已安裝驗收仍有獨立結果。

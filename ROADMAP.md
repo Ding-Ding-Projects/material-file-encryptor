@@ -502,3 +502,9 @@
 - [ ] Finish installed startup and actual automatic-update acceptance; updater controller and future-feed source are on main, with local installer production passed and hosted/native apply pending.
 - [ ] Verify the one-click application-managed Ollama runtime procedure before updating shared instructions; preserve existing installations.
 - [ ] Replace current screenshots only after genuine rebuilt capture acceptance, preserving historical originals.
+
+## Documentation publication correction
+
+- [x] Verify actual `6536fa0` publication bytes, stored homepage and static navigation; retain the missing README/proof and unrendered-diagram findings.
+- [ ] Independently review and deliver the explicit README route, bounded source-derived SVG diagrams and two-file public proof allowlist.
+- [ ] Verify successor live inventory, internal proof links, actual diagram pixels and 320 px upward scrolling behavior through the owned hidden-browser route.

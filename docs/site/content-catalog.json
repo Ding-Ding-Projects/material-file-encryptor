@@ -1,6 +1,7 @@
 {
   "version": 1,
   "articles": [
+    "README.md",
     "DESIGN.md",
     "docs/features/README.md",
     "docs/features/README.zh-HK.md",
