@@ -36,6 +36,7 @@ export function createAccessAdapters({launch,receipt,inventory,prepareOwnedFixtu
  };
  async function perform(state,id,context){
   const {executePlan,binding}=context;
+  await access().beforeAction?.({...context,state:state.id,action:id});
   if(protectedActions.has(id)||(id==='cancel-unlock'&&state.id.includes('profile'))){
    if(['open-picker','select-synthetic-file'].includes(id))capability('nativePicker');
    const result=await access().perform({...context,state:state.id,action:id,nativePicker:fixtures.nativePicker});proof(result,binding);
@@ -51,7 +52,7 @@ export function createAccessAdapters({launch,receipt,inventory,prepareOwnedFixtu
    if((id==='log-out'||id==='logout'||id==='logout-clears-wait')&&!state.selector.includes('profile'))await execute(executePlan,id+'-profile-tab',click('#access-tab-profile'));
    await execute(executePlan,id+'-activate',click(actionSelector(name,parent)));await execute(executePlan,id+'-result',expected,true);
   }else if(id==='lock-history'||id==='cancel-history-unlock'){
-   await execute(executePlan,id,click('[data-access-history-action=lock-history]'));await execute(executePlan,id+'-result','document.querySelector("[data-access-history] section").hidden',true);await observeProducer(context,state.id,id);
+   await execute(executePlan,id,click('[data-access-history-action=lock-history]'));await execute(executePlan,id+'-result','document.querySelector("[data-access-history] section").hidden',true);
   }else if(id==='open-history-wait'){
    await execute(executePlan,id,click('[data-access-history-action=try-the-waiting-ladder]'));await execute(executePlan,id+'-result',visible('[data-access-waiting=history]'),true);
   }else if(id==='cancel-history-wait'){
@@ -87,18 +88,18 @@ export function createAccessAdapters({launch,receipt,inventory,prepareOwnedFixtu
   }else if(id==='reject-early-confirm'){
    await execute(executePlan,id,'(()=>{const panel=document.querySelector("[data-access-confirmation]"),button=panel?.querySelector("[data-access-action=confirm]");if(!panel||!button||!button.disabled||!panel.getClientRects().length)throw Error("Incomplete confirmation was not blocked");button.click();return true;})()');
    await execute(executePlan,id+'-result',visible('[data-access-confirmation]')+'&&document.querySelector("[data-access-confirmation] [data-access-action=confirm]").disabled',true);
-   await observeProducer(context,state.id,id);
   }else if(id==='confirm-delete'){
    await execute(executePlan,id+'-reopen','(()=>{if(document.querySelector("[data-access-confirmation]"))return true;const select=document.querySelector("#access-panel-support [data-access-action=select-visible]"),remove=document.querySelector("#access-panel-support [data-access-action=remove-selected]");if(!select||!remove||select.disabled||remove.disabled||!select.getClientRects().length)throw Error("Ticket selection unavailable");select.click();remove.click();return true;})()');
    await execute(executePlan,id+'-keys','(()=>{const panel=document.querySelector("[data-access-confirmation]");if(!panel||!panel.getClientRects().length)throw Error("Confirmation unavailable");const switches=[...panel.querySelectorAll("md-switch")];if(switches.length!==2)throw Error("Confirmation keys missing");for(const item of switches){if(item.disabled)throw Error("Confirmation key disabled");item.selected=true;item.dispatchEvent(new Event("change",{bubbles:true,composed:true}));}const slider=panel.querySelector("md-slider");if(!slider||slider.disabled)throw Error("Confirmation slider unavailable");slider.value=100;slider.dispatchEvent(new Event("input",{bubbles:true,composed:true}));return true;})()');
    await execute(executePlan,id,click(actionSelector('confirm','[data-access-confirmation]')));
-   await execute(executePlan,id+'-result','!document.querySelector("[data-access-confirmation]")',true);await observeProducer(context,state.id,id);
+   await execute(executePlan,id+'-result','!document.querySelector("[data-access-confirmation]")',true);
   }else throw Error('CAPABILITY_UNAVAILABLE: access action '+id);
+  await observeProducer(context,state.id,id);
   return {id,activated:true,observablePassed:true,activation:'dom-click-or-control-change',evidence:{observed:true,stateId:state.id,actionId:id,sourceCommit:binding.sourceCommit,planId:id+'-result'}};
  }
  return Object.fromEntries(entries.map(state=>[state.id,{
   async prepare(context){
-   const producer=access();if(state.id==='access-once')capability('nativePicker');
+   const producer=access();producer.assertCapabilities?.(state.id,state.actions);if(state.id==='access-once')capability('nativePicker');
    if(typeof prepareOwnedFixture!=='function')throw Error('CAPABILITY_UNAVAILABLE: prepareOwnedFixture');
    const native=await prepareOwnedFixture({...context,state:state.id,requiredDriveState:state.id.startsWith('create-')?'locked':'unchanged'});assert.equal(native.ownedSyntheticFixture,true);assert.equal(native.sourceCommit,context.binding.sourceCommit);
    const result=await producer.prepare({...context,state:state.id,phase:'prepare'});proof(result,context.binding);
@@ -114,6 +115,6 @@ export function createAccessAdapters({launch,receipt,inventory,prepareOwnedFixtu
    return {passed:true,observable:state.observable,evidence:{visible:true,privacySafe:true,productionState:true}};
   },
   actions:Object.fromEntries(state.actions.map(id=>[id,context=>perform(state,id,context)])),
-  async restore(context){const result=await access().restore({...context,state:state.id});proof(result,context.binding);assert.equal(result.restored,true);return {restored:true,evidence:{ownedSyntheticFixture:true}};}
+  async restore(context){const result=await access().restore({...context,state:state.id});proof(result,context.binding);assert.equal(result.restored,true);return {restored:true,evidence:{ownedSyntheticFixture:true,profileRetained:result.profileRetained===true,sessionBound:result.sessionBound===true}};}
  }]));
 }

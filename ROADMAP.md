@@ -3,7 +3,10 @@
 - [x] Independently verify and publish the native 80 MiB storage unit at main f6990e24 and normal release v1.275.1.
 - [x] Complete exact build.bat /s and build-installer.bat /s at dc498289; verify 963 archive entries and 861 extracted payload files.
 - [x] Independently review the measured registered-button reset and live-announcer source repair; observe focused red/green regressions. Source acceptance only.
-- [ ] Finish the quiet nested-process route and rebuild the later stylesheet candidate without a visible terminal.
+- [x] Verify the held-handle quiet observer native smoke and normal owned closure; retain the original parser rejection separately from the reviewed corrected verdict.
+- [x] Preserve the exact unsuccessful 7192b4c build result, omitted installer phase and normal owned closure. This does not certify production.
+- [x] Independently review context/access fixture source, causal negatives, restoration and merged producer composition. Packaged acceptance remains pending.
+- [ ] Complete the final v3 environment/driver review and rebuild the pinned merged source through the exact entrypoints without a visible terminal.
 - [ ] Complete combined JavaScript verification. The dc498289 run had 20 fixture failures; repairs passed focused checks, while the later shell-mediated attempt is unverified.
 - [ ] Verify repaired button geometry, live announcement behavior, stationary frame, real context-menu actions and all registered controls in the rebuilt runtime.
 - [ ] Complete 89 states across 4272 visual tuples, plus separate physical DPI proof. Zero tuples are accepted.
@@ -17,7 +20,7 @@
 - [x] Implement 80 MiB defaults, durable snapshot packing, resumable queue and generation-aware pause/resume.
 - [x] Verify bounded history batches, authenticated content, concurrent mounted writers, reopen and normal teardown on synthetic data.
 - [ ] Migrate the explicitly requested existing drive after active copying and conflicting ownership end normally.
-- [ ] Complete the separate GUI, documentation, package/release and installed-lifecycle acceptance boundaries recorded in the active plan. Actual installation, installed update and removal remain deferred.
+- [ ] Complete the separate GUI, documentation, package/release and installed-lifecycle acceptance boundaries recorded in the active plan. Initial installation and removal remain deferred. Accepted-release updates of the matching existing installation are authorized at a safe boundary, with actual installed-version verification.
 
 # Final source preservation, 2026-10-11 UTC
 
