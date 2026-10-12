@@ -19,6 +19,10 @@ internal sealed class OllamaRuntimeBroker
     private string? syntheticExecutable,syntheticArguments;
     internal static OllamaRuntimeBroker ForSynthetic(string dataRoot,Func<OllamaRuntimeLease> acquire,string executable,string arguments)
         =>new(dataRoot,true){syntheticLease=acquire,syntheticExecutable=executable,syntheticArguments=arguments};
+    internal async Task<bool> VerifySyntheticDescendantAsync(string operationId,uint parentId,uint descendantId,long creationTicks)
+    {
+        await serial.WaitAsync();try{return operations.TryGetValue(operationId,out var owner)&&owner.ProcessId==parentId&&owner.OriginalExitCodeForSynthetic() is not null&&owner.VerifyRecordedDescendantForSynthetic(descendantId,creationTicks);}finally{serial.Release();}
+    }
 #endif
     internal OllamaRuntimeBroker(string dataRoot,bool startupAdmitted=false)
     {
@@ -158,8 +162,6 @@ internal sealed class OllamaContainedProcess
     }
     internal void StartManaged(IReadOnlyDictionary<string,string> environment)=>Start(lease.Executable,"serve",lease.Root,environment);
 #if OLLAMA_LIFETIME_VERIFIER
-    private bool syntheticOriginalExitProven;
-    private uint syntheticOriginalExitCode;
     internal static void StartSynthetic(OllamaRuntimeLease lease,string executable,string arguments,out OllamaContainedProcess owner)
     {
         lease.AssertHeld();owner=new OllamaContainedProcess(lease);
@@ -168,21 +170,21 @@ internal sealed class OllamaContainedProcess
     internal void StartSyntheticOwned(string executable,string arguments)=>Start(executable,arguments,Path.GetDirectoryName(executable)!,null);
     internal uint? OriginalExitCodeForSynthetic()
     {
-        if(syntheticOriginalExitProven)return syntheticOriginalExitCode;
         if(process is null||process.IsClosed||process.IsInvalid||WaitForSingleObject(process,0)!=0)return null;
-        if(!GetExitCodeProcess(process,out uint exitCode))throw new Win32Exception(Marshal.GetLastWin32Error());
+        if(GetProcessId(process)!=ProcessId||!GetProcessTimes(process,out ulong creation,out _,out _,out _)||creation!=CreationFileTime||!GetExitCodeProcess(process,out uint exitCode))throw new InvalidOperationException("Synthetic original process exit identity could not be proven.");
         return exitCode;
     }
-    internal bool CloseExitedOriginalForSynthetic()
+    internal bool VerifyRecordedDescendantForSynthetic(uint pid,long creationTicks)
     {
-        if(syntheticOriginalExitProven)return true;
-        if(process is null||process.IsClosed||process.IsInvalid||WaitForSingleObject(process,0)!=0)return false;
-        if(GetProcessId(process)!=ProcessId||!GetProcessTimes(process,out ulong creation,out _,out _,out _)||creation!=CreationFileTime||!GetExitCodeProcess(process,out uint exitCode))throw new InvalidOperationException("Synthetic original process exit identity could not be proven.");
-        lease.AssertHeld();syntheticOriginalExitCode=exitCode;syntheticOriginalExitProven=true;
-        // Retain the exact job and all runtime leases. Never reopen by PID.
-        process.Dispose();process=null;return true;
+        if(pid==0||pid==ProcessId||creationTicks<=0||job is null||job.IsClosed||job.IsInvalid)return false;
+        // Query information and synchronization are read-only observation rights.
+        // This handle never becomes an owner and is closed before returning.
+        using SafeFileHandle observed=OpenProcessForSynthetic(0x00100400,false,pid);
+        if(observed.IsInvalid||GetProcessId(observed)!=pid||WaitForSingleObject(observed,0)!=258||!GetProcessTimes(observed,out ulong creation,out _,out _,out _)||creation>Int64.MaxValue||DateTime.FromFileTimeUtc((long)creation).Ticks!=creationTicks||!IsProcessInJob(observed,job,out bool before)||!before)return false;
+        lease.AssertHeld();
+        return GetProcessId(observed)==pid&&WaitForSingleObject(observed,0)==258&&GetProcessTimes(observed,out ulong afterCreation,out _,out _,out _)&&afterCreation==creation&&IsProcessInJob(observed,job,out bool after)&&after;
     }
-    internal object OriginalIdentityForSynthetic()=>new {processId=ProcessId,creationFileTime=CreationFileTime,exitCode=OriginalExitCodeForSynthetic(),exitProven=syntheticOriginalExitProven,originalHandleClosed=process is null&&syntheticOriginalExitProven};
+    internal object OriginalIdentityForSynthetic()=>new {processId=ProcessId,creationFileTime=CreationFileTime,exitCode=OriginalExitCodeForSynthetic(),originalHandleRetained=process is not null&&!process.IsClosed&&!process.IsInvalid};
     internal uint[] JobProcessIdsForSynthetic()
     {
         const int limit=128;int bytes=checked(8+limit*IntPtr.Size);
@@ -206,7 +208,7 @@ internal sealed class OllamaContainedProcess
         foreach(uint pid in JobProcessIdsForSynthetic())
         {
             // Observation never becomes lifecycle ownership. In particular the
-            // original closed owner is never reopened through a numeric PID.
+            // original owner is never reopened through a numeric PID.
             if(pid==ProcessId){observations.Add(new{processId=pid,verified=false,category="original-owner-not-reopened"});continue;}
             try
             {
@@ -297,15 +299,9 @@ internal sealed class OllamaContainedProcess
     internal bool ReleaseAfterTreeExit()
     {
         if(Released)return true;
-#if OLLAMA_LIFETIME_VERIFIER
-        _=CloseExitedOriginalForSynthetic();
-#endif
         if(ActiveProcesses()!=0)return false;
-#if OLLAMA_LIFETIME_VERIFIER
-        if(!syntheticOriginalExitProven)
-#endif
         if(process is null||process.IsClosed||process.IsInvalid||WaitForSingleObject(process,0)!=0)return false;
-        lease.AssertHeld();lease.Release();writableDirectories?.Release();writableDirectories=null;process?.Dispose();process=null;job!.Dispose();job=null;Released=true;retained.TryRemove(this,out _);return true;
+        lease.AssertHeld();lease.Release();writableDirectories?.Release();writableDirectories=null;process.Dispose();process=null;job!.Dispose();job=null;Released=true;retained.TryRemove(this,out _);return true;
     }
     internal void Stop()
     {

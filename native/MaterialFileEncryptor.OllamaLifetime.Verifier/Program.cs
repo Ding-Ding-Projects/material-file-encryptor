@@ -70,6 +70,23 @@ static object ReadMarker(string diagnostics,string signal,string suffix)
 static void Require(bool condition,string description) { if(!condition)throw new InvalidOperationException(description); }
 static bool Prevented(Action action) { try { action();return false; } catch(IOException) { return true; } catch(UnauthorizedAccessException) { return true; } }
 static JsonElement Params(object value)=>JsonSerializer.SerializeToElement(value);
+static (uint Parent,uint Child,long Creation)? RecordedDescendant(string diagnostics,string signal)
+{
+    JsonElement started=Params(ReadMarker(diagnostics,signal,".parent-started")),entered=Params(ReadMarker(diagnostics,signal,".descendant-entered"));
+    if(!started.TryGetProperty("valid",out var valid)||!valid.GetBoolean()||!entered.TryGetProperty("valid",out var descendantValid)||!descendantValid.GetBoolean())return null;
+    if(!started.GetProperty("childId").TryGetUInt32(out uint child)||child==0||!started.GetProperty("processId").TryGetUInt32(out uint parent)||parent==0||!started.GetProperty("childCreation").TryGetInt64(out long creation)||creation<=0||!entered.GetProperty("processId").TryGetUInt32(out uint actual)||actual!=child)return null;
+    return(parent,child,creation);
+}
+static bool DescendantIsLive(OllamaContainedProcess owner,string diagnostics,string signal)
+{
+    var recorded=RecordedDescendant(diagnostics,signal);
+    return recorded is not null&&owner.ProcessId==recorded.Value.Parent&&owner.OriginalExitCodeForSynthetic() is not null&&owner.VerifyRecordedDescendantForSynthetic(recorded.Value.Child,recorded.Value.Creation);
+}
+static async Task<bool> RegistryDescendantIsLive(OllamaRuntimeBroker broker,string id,string diagnostics,string signal)
+{
+    var recorded=RecordedDescendant(diagnostics,signal);
+    return recorded is not null&&await broker.VerifySyntheticDescendantAsync(id,recorded.Value.Parent,recorded.Value.Child,recorded.Value.Creation);
+}
 static async Task<bool> Rejected(Func<Task<object>> action) { try { await action();return false; } catch(ArgumentException) { return true; } }
 string executable=Environment.ProcessPath!;
 Require(Path.GetFileNameWithoutExtension(executable)=="MaterialFileEncryptor.OllamaLifetime.Verifier","Run the verifier apphost directly.");
@@ -86,25 +103,15 @@ try
     Require(Prevented(()=>File.Delete(member)),"Retained member must reject deletion.");
     OllamaContainedProcess.StartSynthetic(lease,executable,"--parent \""+signal+"\" \""+diagnostics+"\"",out owner);
     DateTime deadline=DateTime.UtcNow.AddSeconds(10);
-    uint[]? jobPidsBefore=null,jobPidsAfter=null;uint? accountingBefore=null,accountingImmediatelyAfter=null;bool originalHandleExperiment=false;
-    while((!File.Exists(signal)||owner.ActiveProcesses()!=1)&&DateTime.UtcNow<deadline)
-    {
-        if(!originalHandleExperiment&&File.Exists(signal)&&owner.OriginalExitCodeForSynthetic() is not null)
-        {
-            jobPidsBefore=owner.JobProcessIdsForSynthetic();accountingBefore=owner.ActiveProcesses();
-            originalHandleExperiment=owner.CloseExitedOriginalForSynthetic();
-            jobPidsAfter=owner.JobProcessIdsForSynthetic();accountingImmediatelyAfter=owner.ActiveProcesses();
-        }
-        await Task.Delay(25);
-    }
-    Console.WriteLine(JsonSerializer.Serialize(new {syntheticHandleReferenceExperiment=true,originalHandleExperiment,original=owner.OriginalIdentityForSynthetic(),jobPidsBefore,jobPidsAfter,accountingBefore,accountingImmediatelyAfter,accountingAtAssertion=owner.ActiveProcesses(),memberObservations=owner.ObserveJobMembersForSynthetic(),descendantMemberProtected=Prevented(()=>File.WriteAllText(member,"synthetic reference diagnostic mutation")),runtimeLeaseRetained=!lease.Released}));
-    if(!File.Exists(signal)||owner.ActiveProcesses()!=1)
+    while((!File.Exists(signal)||!DescendantIsLive(owner,diagnostics,signal))&&DateTime.UtcNow<deadline)await Task.Delay(25);
+    Console.WriteLine(JsonSerializer.Serialize(new {syntheticDescendantIdentity=true,original=owner.OriginalIdentityForSynthetic(),recordedDescendantLiveInExactJob=DescendantIsLive(owner,diagnostics,signal),accountingAtAssertion=owner.ActiveProcesses(),memberObservations=owner.ObserveJobMembersForSynthetic(),descendantMemberProtected=Prevented(()=>File.WriteAllText(member,"synthetic reference diagnostic mutation")),runtimeLeaseRetained=!lease.Released}));
+    if(!File.Exists(signal)||!DescendantIsLive(owner,diagnostics,signal))
     {
         uint? originalExitCode=null;bool exitCodeAvailable=true;
         try{originalExitCode=owner.OriginalExitCodeForSynthetic();}catch{exitCodeAvailable=false;}
         Console.WriteLine(JsonSerializer.Serialize(new {syntheticDiagnostic=true,signalPresent=File.Exists(signal),activeProcesses=owner.ActiveProcesses(),originalExitCode,exitCodeAvailable,parentEntered=ReadMarker(diagnostics,signal,".parent-entered"),parentStarted=ReadMarker(diagnostics,signal,".parent-started"),parentFailure=ReadMarker(diagnostics,signal,".parent-failure"),descendantEntered=ReadMarker(diagnostics,signal,".descendant-entered"),descendantFailure=ReadMarker(diagnostics,signal,".descendant-failure")}));
     }
-    Require(File.Exists(signal)&&owner.ActiveProcesses()==1,"The original parent must exit while its descendant remains in the exact job.");
+    Require(File.Exists(signal)&&DescendantIsLive(owner,diagnostics,signal),"The exact original parent must exit while its recorded descendant remains live in the retained job.");
     Require(!owner.ReleaseAfterTreeExit()&&!lease.Released,"Parent exit must retain the whole runtime lease.");
     Require(Prevented(()=>File.WriteAllText(member,"changed after parent exit")),"Live descendant must retain member protection.");
     // This negative capability test must never be reported as insertion isolation.
@@ -135,8 +142,8 @@ try
         string operationId=started.GetProperty("operationId").GetString()!;
         Require(started.GetProperty("phase").GetString()=="running","Synthetic registry start must return running.");
         deadline=DateTime.UtcNow.AddSeconds(10);
-        while(!File.Exists(registrySignal)&&DateTime.UtcNow<deadline)await Task.Delay(25);
-        Require(File.Exists(registrySignal),"Registry descendant must start.");
+        while((!File.Exists(registrySignal)||!await RegistryDescendantIsLive(broker,operationId,diagnostics,registrySignal))&&DateTime.UtcNow<deadline)await Task.Delay(25);
+        Require(File.Exists(registrySignal)&&await RegistryDescendantIsLive(broker,operationId,diagnostics,registrySignal),"Exact registry descendant must remain live in the retained job after original parent exit.");
         await Task.WhenAll(broker.DispatchAsync("managedOllama.stop",Params(new{operationId})),broker.DispatchAsync("managedOllama.close",Params(new{operationId})));
         JsonElement stopped=Params(await broker.DispatchAsync("managedOllama.status",Params(new{operationId})));
         Require(stopped.GetProperty("exitVerified").GetBoolean()&&stopped.GetProperty("leaseReleased").GetBoolean(),"Concurrent stop and close must settle the exact registry owner.");
@@ -144,8 +151,8 @@ try
         JsonElement eofStarted=Params(await broker.DispatchAsync("managedOllama.start",Params(new{port=11435})));
         string eofId=eofStarted.GetProperty("operationId").GetString()!;
         deadline=DateTime.UtcNow.AddSeconds(10);
-        while(!File.Exists(registrySignal)&&DateTime.UtcNow<deadline)await Task.Delay(25);
-        Require(File.Exists(registrySignal),"EOF descendant must start.");
+        while((!File.Exists(registrySignal)||!await RegistryDescendantIsLive(broker,eofId,diagnostics,registrySignal))&&DateTime.UtcNow<deadline)await Task.Delay(25);
+        Require(File.Exists(registrySignal)&&await RegistryDescendantIsLive(broker,eofId,diagnostics,registrySignal),"Exact EOF descendant must remain live in the retained job after original parent exit.");
         Require(await broker.CloseAllAsync(),"EOF close must settle every exact owner.");
         JsonElement eofStopped=Params(await broker.DispatchAsync("managedOllama.status",Params(new{operationId=eofId})));
         Require(eofStopped.GetProperty("exitVerified").GetBoolean()&&eofStopped.GetProperty("leaseReleased").GetBoolean()&&!eofStopped.GetProperty("startAvailable").GetBoolean(),"EOF must release settled leases and prohibit another start.");
