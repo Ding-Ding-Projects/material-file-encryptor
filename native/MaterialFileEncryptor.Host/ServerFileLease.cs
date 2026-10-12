@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -32,7 +33,7 @@ namespace MaterialFileEncryptor.Host
                 {
                     string file=Canonical(Path.Combine(root,item.Key));
                     if(!file.StartsWith(root+"\\",StringComparison.OrdinalIgnoreCase))throw new ArgumentException("Runtime member must remain inside its owned root.");
-                    ValidateDigest(item.Value);lease.PinDirectories(Path.GetDirectoryName(file));lease.PinFile(file,item.Value);
+                    ValidateDigest(item.Value);lease.PinDirectories(Path.GetDirectoryName(file) ?? throw new ArgumentException("Runtime member must have an owning directory."));lease.PinFile(file,item.Value);
                 }
                 lease.AssertHeld();return lease;
             }
@@ -49,8 +50,8 @@ namespace MaterialFileEncryptor.Host
             var lease = new ServerFileLease();
             try
             {
-                lease.PinDirectories(Path.GetDirectoryName(jar));
-                lease.PinDirectories(Path.GetDirectoryName(executable));
+                lease.PinDirectories(Path.GetDirectoryName(jar) ?? throw new ArgumentException("Server distribution must have an owning directory."));
+                lease.PinDirectories(Path.GetDirectoryName(executable) ?? throw new ArgumentException("Runtime executable must have an owning directory."));
                 lease.PinFile(jar, jarSha256);
                 lease.PinFile(executable, runtimeSha256);
                 lease.AssertHeld();
@@ -74,7 +75,8 @@ namespace MaterialFileEncryptor.Host
         private void PinDirectories(string directory)
         {
             var paths = new Stack<string>();
-            while (!String.IsNullOrEmpty(directory)) { paths.Push(directory); directory = Path.GetDirectoryName(directory); }
+            string? cursor = directory;
+            while (!String.IsNullOrEmpty(cursor)) { paths.Push(cursor); cursor = Path.GetDirectoryName(cursor); }
             while (paths.Count != 0)
             {
                 string path = paths.Pop();
