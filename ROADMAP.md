@@ -4,12 +4,22 @@
 - [x] Independently repair history setup during active waiting, including revision-owned rollback and concurrent-writer preservation; 43 focused checks and three parent-repeated waiting cases pass.
 - [x] Complete both exact root production entrypoints at 3aebe66; verify Squirrel extraction against all 860 payload files. Installed acceptance remains separate.
 - [x] Independently review the concrete-surface registry, repair malformed dialog extraction, and verify 19 focused checks. All 89,880 assessments across 856 surfaces remain unverified.
-- [ ] Repair stale translation bindings after actual bilingual content review; do not refresh hashes blindly.
-- [ ] Diagnose and repair quiet observer interpreter admission without weakening identity checks; rerun the two affected renderer checks.
+- [x] Repair stale translation bindings after actual bilingual content review; focused checks pass and the reviewed repair is integrated.
+- [x] Repair quiet observer interpreter and physical-path admission without weakening identity; actual renderer checks now reach controls.
+- [ ] Correct two host-size assertions against real 48-pixel touch-layer evidence, then complete the affected renderer checks.
 - [ ] Implement and verify trusted local server runtime admission and protected lifecycle integration, then complete the other execution targets.
 - [ ] Complete every applicable feature across extension, desktop, nested panels and documentation surfaces with separate actual runtime evidence.
 - [ ] Verify downloaded normal-release bytes, full packaged interaction, live documentation and safe accepted-channel update continuity.
 - [ ] Integrate completed source into main, verify remote refs and retain all incomplete or ownership-uncertain work.
+
+## Measured speed and complete visual acceptance
+
+- [x] Remove 560 PDF source maps while preserving all 994 retained PDF files by exact name and hash; the extracted candidate passes a PDF round-trip.
+- [x] Implement and independently review immutable packaged documentation reuse, with actual service timing, raw samples, memory observations and failure/close regression checks. Packaged and end-to-end speed acceptance remain pending.
+- [x] Reduce the staged extension message helper from 431,433 to 999 bytes while preserving the exact shared table and translator exports; this is not a startup-speed measurement.
+- [ ] Measure current built startup, first usable state, navigation, search, representative large collections and native operations before and after relevant changes.
+- [ ] Prove 100% Material Design 3 on every current surface and supported state using genuine inspected captures and interaction.
+- [ ] Complete every applicable required feature across 885 current surfaces and 92,925 independently unverified assessments.
 
 ## Current preservation pass
 

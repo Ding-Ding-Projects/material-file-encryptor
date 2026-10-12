@@ -858,3 +858,19 @@ The source candidate now includes reviewed local native-supervision composition8
 Downloaded normal releasev1.303.1 passed Setup embedding, archive integrity and Squirrel extraction of861payload files. These release bytes remain separate from local version0.2.0, and installed acceptance is still unverified. See [sanitized source-bound evidence](docs/evidence/resume-native-20261012.json).
 
 The two subsequent source8f18aa8renderer attempts remain unsuccessful admission records. Exact native path redirection was established, and both owned launches were closed normally with independent root/tree/listener/client proofs. Their profiles and original journals remain retained. The new resolver-to-launch byte binding and complete verifier inventory must pass independent review before a fresh attempt.
+
+## Reviewed performance and extension integration, 2026-10-12 UTC
+
+Integration base4ae878b incorporates reviewed Java provisioning4666237, extension workspace39cbbd2 and packaged documentation cache9c4f6dc. Each source branch was pushed and its remote tip read back before integration. Main remains f026abd65d80b28f42707635d9ce2a19cce83001; integrated native build, full renderer acceptance and main delivery remain pending.
+
+The exact7ad539a root build passed with unchanged source. Its archive is75,530,557bytes versus86,271,026bytes in downloaded baseline3aebe66. It removes560PDF maps; all994retained PDF files match exact names and hashes, and the extracted candidate passed creation/text/metadata/extraction/rotation. Other source changes contribute to the overall size difference; no compressed-installer or startup claim is made.
+
+Actual packaged7ad captures at1180x752CSS pixels and scale1.5 show40x40Clear hosts with48x48internal touch layers. Create, History and Recycle clear controls have observed owned touch points and successful clicks outside the visual host. Original host>=44 assertions are therefore not valid touch-area measurements. Keep the original failed fixture checks and failed shadow-selector helper attempt. Browser.close response observation remained negative, but independent exact-process confirmation proved all recorded processes absent and named desktops closed. No full visual tuple is accepted from these diagnostic states.
+
+Documentation cache9c4f6dc preserves exact catalogue bytes and behavior: lazy shared packaged promise, deep immutable results, retry after read/parse rejection, close revocation and fresh development reads. Actual main-service repeated request median14.96ms fresh versus0.0014ms reused, concurrent pair33.11ms versus0.0338ms, first parse/freeze14.64ms. Retained heap observation8,295,528bytes; close released the retained allocation. These measurements exclude IPC, ASAR and renderer work. Raw samples and source hashes remain privately retained.
+
+Extension39cbbd2 passed37parent-repeated focused checks plus independent source review. Local preferences, options routing, sender boundaries, translated status/accessibility, failure notices and independent message settings are implemented. Its staged language helper is999bytes versus431,433earlier. Runtime browser acceptance, authenticated native mediation and remaining required features are unfinished.
+
+Java4666237 passed74focused checks and two independent source reviews. The pinned48,999,141-byte archive binds315files/62directories and151,524,241expanded bytes. Actual native extraction and Java execution remain unrun. ConfigurationAdmitted staysfalse; a complete runtime-file lease must survive the entire future child lifetime before start becomes available.
+
+Latest steering requires measured application speed plus100%Material Design3 throughout every rendered surface. The goal is active and incomplete. Preserve existing mounted data and retained historical evidence.

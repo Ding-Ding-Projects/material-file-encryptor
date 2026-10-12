@@ -1,8 +1,17 @@
 # Current completion criteria, 2026-10-12 UTC
 
-The resumed task explicitly includes every applicable required feature on every rendered product surface, including the browser extension, nested panels and documentation routes. The supplemental surface registry is an inventory, not a delivery verdict: its 864 surfaces produce 90,720 independently unverified assessments. Preserve the historical 105-family/210-row ledger and its original evidence separately.
+## Current performance and visual completion requirements
 
-Current source production at `3aebe66ded78bbfb0e3b8f8d829e64100371f446` passed both exact root entrypoints and matched 860 extracted Squirrel payload files. Combined JavaScript verification remains incomplete at 1,364 passes, three failures and 25 skips. Current work repairs reviewed translation bindings and the quiet observer's exact interpreter admission, then resumes packaged interaction. Full local-process and remaining three-target server management, complete extension behavior and the entire rendered acceptance matrix remain unfinished.
+The current task explicitly requires measured application speed improvements and 100% Material Design 3 conformance across every rendered surface. This includes the desktop application, browser extension, documentation website, nested panels, editors, dialogs and all applicable language, theme, viewport and scale states. Source-only component selection does not establish visual acceptance.
+
+- [ ] Record source-bound startup and first-usable-state timings, navigation and search latency, representative large-collection behavior, memory cost and native-operation timings.
+- [ ] Repair measured bottlenecks with before/after evidence while preserving correctness, privacy, accessibility and supported workflows.
+- [ ] Prove every applicable visible state against the checked-in design references using genuine built captures and computed geometry.
+- [ ] Keep package-size reductions separate from application-speed claims.
+
+The resumed task explicitly includes every applicable required feature on every rendered product surface, including the browser extension, nested panels and documentation routes. The supplemental surface registry is an inventory, not a delivery verdict: its 885 surfaces produce 92,925 independently unverified assessments. Preserve the historical 105-family/210-row ledger and its original evidence separately.
+
+Earlier source production at `3aebe66ded78bbfb0e3b8f8d829e64100371f446` passed both exact root entrypoints and matched 860 extracted Squirrel payload files. Combined JavaScript verification remains incomplete at 1,364 passes, three failures and 25 skips. Reviewed translation and exact physical-path admission repairs are integrated. Fresh rendered checks reach actual controls; their host-size assertions are being corrected against genuine packaged touch-layer evidence. Full local-process and remaining three-target server management, complete extension behavior and the entire rendered acceptance matrix remain unfinished.
 
 The active goal includes the original installer/updater repair and complete feature delivery for the desktop application and documentation website. Historical preview checks below remain source-specific evidence and do not certify the rebuilt current product.
 

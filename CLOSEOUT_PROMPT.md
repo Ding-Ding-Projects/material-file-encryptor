@@ -1,24 +1,23 @@
 # Active continuation handoff, 2026-10-12 UTC
 
-Continue the approved full-product task: resume newer preserved source, optimize, repair independently confirmed defects, synchronize shared instructions and implement every applicable required feature across every rendered product surface. The full goal remains active and incomplete.
+Resume the approved full-product task: optimize measured application speed, repair confirmed defects, synchronize shared instructions, deliver every applicable required feature, and prove100%Material Design3 across every rendered desktop, extension and documentation surface. The goal remains active and incomplete.
 
-## Preserved source and verification
+## Source and preservation
 
-- Main remains f026abd65d80b28f42707635d9ce2a19cce83001. Candidate 3aebe66ded78bbfb0e3b8f8d829e64100371f446 is preserved on codex/resume-integration-20261012. History repair21bba22 is also preserved on its owning remote branch.
-- Both exact root entrypoints passed at3aebe66. Squirrel extraction matched860payload files. Local version0.2.0 is not an accepted installed-update candidate.
-- Successful workflow38208563860 published normal releasev1.303.1 at3aebe66. Metadata and uploaded inventory were read back. Downloaded bytes and installed acceptance remain unverified.
-- Combined JavaScript:1392tests,1364passed,3failed,25skipped. One stale-translation binding and two renderer observer identity failures are under repair. Retain original negative journals; observer exit0 does not establish product launch or cleanup.
-- Independently reviewed surface registrya78d74ab5267618cbea404c4aee38ab6f09e23fd is preserved on codex/surface-ledger-20261012 and integrated into the local candidate. Parent19focused checks passed.856surfaces and89880assessments remain unverified; source inventory is not runtime proof.
-- Shared instructions synchronized at194ceca48a55313ade8703a0cd4695efb41482b1 with83of83managed targets current. No authenticated Status Hub enrollment exists. Project access lacks read:project scope.
+Main remains f026abd65d80b28f42707635d9ce2a19cce83001. Current integration base4ae878b combines reviewed server4666237646aa95c111dd731c45113c23d38aec0e, extension39cbbd2324b8b3fba10df651487caa129ca97d2f and documentation-speed9c4f6dc33d1988fc3a47bcdb7f2ebf420438dc08. Those three owning remote branches were independently verified. The recovery branch was last read back at7ad539a937f5c2828572884cc7ef7111290ba62c; newer integration preservation follows this record.
 
-## Active work and next steps
+Shared instructions are synchronized at194ceca48a55313ade8703a0cd4695efb41482b1 with83of83managed targets current. Status Hub health responds, enrollment remains unavailable; the current status surface is a private local fallback. Project access lacks read:project scope.
 
-Translation candidate6c880446b9e884efed589f189bbb7bda3111ae6f on codex/resume-history-20261012 corrects actual Cantonese drift and rebinds four reviewed pairs. Producer23focused checks pass; independently verify, preserve and integrate.
+## Evidence and limits
 
-Observer repair continues in codex/surface-ledger-20261012 with bounded self-only diagnostics and a fresh no-product-launch probe. Initial evidence shows the actual GUI interpreter retains the original launcher command. Preserve exact native identity, hashes, ancestry and arguments while correcting only the demonstrated deterministic mismatch. Parent review and affected renderer rerun remain next.
+Exact7ad root build passed unchanged-source checks. Actual package comparison retained994PDFfiles identically, removed560maps and passed the extracted PDF round-trip. Downloaded normalv1.303.1/source3a assets match published hashes and861extractedfiles. Installed startup/update/removal acceptance is separate and incomplete.
 
-Local server lifecycle work continues in codex/server-runtime-20261012 froma78d74. Compose native supervision and protected host lifecycle, preserving exact runtime, file lease, version configuration and license admission. Missing proof remains unavailable. Other three targets and complete rendered management remain unfinished.
+Current surface registry contains885surfaces and92925independently unverified assessments. Preserve historical105-family/210-row and89-state/4272-tuple records separately. Three genuine packaged diagnostic states show40pxClearhosts with48pxtouchlayers and successful outside-host clicks. The affected source-renderer assertions are being repaired without changing product styling. Original failed observations remain retained; independent owned-resource absence was verified after captures.
 
-Keep the existing mounted drive untouched. Real-data migration, initial installation and removal stay deferred. Safe automatic update requires a separately accepted matching release and actual installed-version continuity. No local computer power or login actions are authorized.
+Reviewed documentation-cache service timings and memory observations, extension bundle reduction, focused tests and native inventory evidence are recorded in HANDOFF.md and paired feature articles. Root build/native extraction/current browser/complete visual acceptance after the new integration remain pending. Source-only checks never prove those outcomes.
 
-Integrate independently reviewed source units, preserve branches, verify remote refs and run focused checks after relevant changes. Resume packaged interaction only after fresh admission. Complete every applicable feature and genuine current visual evidence before claiming delivery. Retain all historical branches, profiles, diagnostics, archives and private announcement variants. Earlier archive proof remains historical and cloud synchronization unverified. No deletion qualifies from ancestry alone.
+## Next actions
+
+Preserve this integration, complete the two corrected renderer assertions and new exact root build, verify actual native provisioning against the pinned archive, and measure actual built responsiveness. Complete native lifetime/configuration admission before enabling real server start. Finish extension native mediation and remaining required features. Integrate independently accepted work into main, verify remote and release/deployment results, refresh genuine current evidence and complete the whole product goal.
+
+Keep the existing mounted drive untouched. Real-data migration, fresh installation and removal remain deferred. Any accepted-channel update requires separately verified matching release and continuity. Do not change local host power/login state. Retain all unfinished branches, profiles, original diagnostics and ignored announcement variants; no deletion is justified by ancestry alone.
