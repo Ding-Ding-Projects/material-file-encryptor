@@ -10,6 +10,8 @@
 
 執行 `node --test test/feature-delivery-surfaces.test.js test/documentation-platform.test.js` 可檢查清單邊界。新增、移除或改名文章之後，要重新產生清單。實際建置及公開部署仍然需要另外驗收。
 
+獨立手寫清單另外要求精確嘅保險庫與確認對話框、動態還原子項對話框、五個個人化面板、Home Assistant 憑證對話框，同桌面及瀏覽器工作區嘅存取面板子項。動態狀態選擇器只描述語義擁有權，唔聲稱存在固定 CSS ID。HTML ID 只會喺單一有界開始標籤內解析。測試同時喺登記表及擷取結果移除保險庫，仍然必須拒絕遺漏。
+
 `buildDocumentationCatalog(root)` 讀取 `docs/` 下每個 Markdown 檔，包括維基，以及可用嘅根目錄專案文章。每份文件記錄完整來源文字、穩定路徑 ID、分類、標題同內容雜湊。符號連結會排除。封裝期間執行 `node src/features/documentation/build-catalog.mjs <repository-root> <output.json>`，再將解析後套件傳畀 `mountDocumentation`。
 
 `mountDocumentation(host, { catalog, translate, onExport, initialId })` 提供文章導覽、使用現有有限工作者正則表達式建構器嘅全文搜尋、標題錨點、內部 Markdown 連結同 Markdown 匯出。只用 DOM 嘅渲染器支援表格、圍欄程式碼、強調、清單同工作清單、引文、本機點陣圖片，以及專案文章使用嘅精確無屬性 details／summary 容器。任意來源 HTML 只會當文字顯示，唔會執行。外部連結只接受 HTTP 同 HTTPS，並有明確標示。缺失內部文章同錨點會顯示，但冇可啟動連結。文件改動後必須重建目錄；封裝整合仍然有需要。

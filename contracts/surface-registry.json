@@ -127,6 +127,105 @@
   },
   "surfaces": [
     {
+      "id": "desktop:access:authenticator",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "access:active=authenticator",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:access:confirmation",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "[data-access-confirmation]",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:access:history",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/access/history-view.js",
+      "selector": "access:active=history",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:access:locks",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "access:active=locks",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:access:profile",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "access:active=profile",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:access:qr-preview",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "[data-access-qr-preview]",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:access:support",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "access:active=support",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:access:unlock",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "[data-access-unlock]",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:access:waiting",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "[data-access-waiting]",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:access:wizard",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "[data-access-wizard]",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:confirm-dialog",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/index.html",
+      "selector": "#confirm-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "desktop:document:CHANGELOG",
       "family": "desktop",
       "route": "src/renderer/index.html",
@@ -1864,11 +1963,74 @@
       "proofs": {}
     },
     {
-      "id": "desktop:vault-dialog\" aria-labelledby=\"dialog-title\"><form id=\"vault-form\"><header class=\"dialog-heading\"><div><p class=\"eyebrow\" data-i18n>YOUR DRIVE, YOUR KEYS</p><h2 id=\"dialog-title\"></h2></div><md-icon-button id=\"dialog-close\" type=\"button\" class=\"icon-button\" aria-label=\"Close dialog\" data-icon=\"close\"></md-icon-button></header><div class=\"dialog-body\"><p id=\"dialog-description\" class=\"muted\"></p><label for=\"transport-mode\" data-i18n>Encrypted storage transport</label><md-outlined-select id=\"transport-mode\"><md-select-option value=\"folder\" data-i18n>Local or cloud folder</md-select-option><md-select-option value=\"privateGit\" data-i18n>Private GitHub repository</md-select-option></md-outlined-select><div id=\"private-git-fields\" hidden><label for=\"remote-repository\" data-i18n>Private repository owner/name</label><md-outlined-text-field id=\"remote-repository\" autocomplete=\"off\" spellcheck=\"false\" maxlength=\"140\"></md-outlined-text-field><p class=\"field-help\" data-i18n>Use owner/repository, not a URL. Create a private repository and sign in with GitHub CLI. Never enter a token here. Only encrypted vault data is synchronized.</p></div><label for=\"storage-input\" data-i18n>Encrypted storage folder</label><div class=\"folder-input\"><md-outlined-text-field id=\"storage-input\" required autocomplete=\"off\" spellcheck=\"false\"></md-outlined-text-field><md-filled-tonal-button class=\"button tonal\" type=\"button\" data-browse=\"storage-input\" data-i18n>Browse</md-filled-tonal-button></div><p class=\"field-help\" data-i18n>A local folder, or a folder managed by your cloud app.</p><label for=\"cache-input\" data-i18n>Encrypted cache folder</label><div class=\"folder-input\"><md-outlined-text-field id=\"cache-input\" required autocomplete=\"off\" spellcheck=\"false\"></md-outlined-text-field><md-filled-tonal-button class=\"button tonal\" type=\"button\" data-browse=\"cache-input\" data-i18n>Browse</md-filled-tonal-button></div><p class=\"field-help\" data-i18n>Offline parts stay encrypted here. This is not a decrypted folder.</p><label for=\"drive-letter\" id=\"drive-letter-label\" data-i18n>Drive letter</label><div class=\"drive-picker\" id=\"drive-picker\"><div class=\"drive-picker-input\"><md-outlined-text-field id=\"drive-letter\" role=\"combobox\" aria-autocomplete=\"list\" aria-haspopup=\"listbox\" aria-expanded=\"false\" aria-controls=\"drive-letter-options\" aria-describedby=\"drive-letter-help drive-letter-status\" required pattern=\"[A-Za-z]:?\" maxlength=\"2\" placeholder=\"M:\" autocomplete=\"off\" spellcheck=\"false\"></md-outlined-text-field><md-text-button id=\"drive-letter-toggle\" type=\"button\" aria-label=\"Choose an available drive letter\" aria-controls=\"drive-letter-options\" aria-expanded=\"false\"><span class=\"drive-picker-chevron\" aria-hidden=\"true\"></span></md-text-button></div><div id=\"drive-letter-options\" class=\"drive-letter-options\" role=\"listbox\" aria-labelledby=\"drive-letter-label\" hidden></div><p class=\"field-help\" id=\"drive-letter-status\" role=\"status\"></p></div><p class=\"field-help\" id=\"drive-letter-help\" data-i18n>Choose an available letter, or type one manually, such as M or M:.</p><fieldset class=\"credential-selector\"><legend data-i18n>Unlock with</legend><label><md-radio  name=\"credential-mode\" value=\"password\" checked></md-radio><span class=\"credential-symbol\" data-icon=\"lock\"></span><span data-i18n>Password</span><span class=\"segment-check\" aria-hidden=\"true\"></span></label><label><md-radio  name=\"credential-mode\" value=\"keyFile\"></md-radio><svg class=\"icon credential-symbol\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M14 7a5 5 0 1 1-4-4 5 5 0 0 1 4 4Z M14 7h7v4h-3v3h-4l-3-3 M7 7h.01\"/></svg><span data-i18n>Key file</span><span class=\"segment-check\" aria-hidden=\"true\"></span></label></fieldset><div id=\"password-fields\"><label for=\"password-input\" data-i18n>Password</label><div class=\"password-field\"><md-outlined-text-field id=\"password-input\" type=\"password\" required autocomplete=\"new-password\"></md-outlined-text-field><md-text-button type=\"button\" id=\"show-password\" class=\"button small\" aria-pressed=\"false\" data-i18n>Show</md-text-button></div><div id=\"confirm-password-fields\"><label for=\"confirm-password\" data-i18n>Confirm password</label><md-outlined-text-field id=\"confirm-password\" type=\"password\" autocomplete=\"new-password\"></md-outlined-text-field></div><p class=\"field-help\" data-i18n>Use a long, unique password. Keep it safe: there is no recovery.</p></div><div id=\"key-fields\" hidden><label for=\"key-path\" data-i18n>Key file</label><md-outlined-text-field id=\"key-path\" autocomplete=\"off\" spellcheck=\"false\"></md-outlined-text-field><div class=\"key-actions\"><md-outlined-button id=\"choose-key\" type=\"button\" class=\"button outlined\" data-i18n>Choose key file</md-outlined-button><md-filled-tonal-button id=\"generate-key\" type=\"button\" class=\"button tonal\" data-i18n>Generate key file</md-filled-tonal-button></div><p class=\"field-help\" data-i18n>Keep the key file outside storage and cache. You need it to unlock this drive.</p></div><div id=\"create-split\"><label for=\"create-split-value\" data-i18n>Maximum encrypted part size</label><div class=\"split-form\"><md-outlined-text-field id=\"create-split-value\" inputmode=\"decimal\" value=\"80\" maxlength=\"18\"></md-outlined-text-field><md-outlined-select id=\"create-split-unit\" aria-label=\"Creation part size unit\"><md-select-option value=\"KB\">KiB</md-select-option><md-select-option value=\"MB\" selected>MiB</md-select-option><md-select-option value=\"GB\">GiB</md-select-option></md-outlined-select></div><p class=\"field-help\" data-i18n>Default: 80 MiB. Limit: 1 KiB to 90,000,000 physical bytes, including encryption overhead.</p></div><p id=\"dialog-error\" class=\"field-error\" role=\"alert\" hidden></p></div><footer class=\"dialog-actions\"><md-text-button id=\"dialog-cancel\" type=\"button\" class=\"button\" data-i18n>Cancel</md-text-button><md-filled-button id=\"dialog-submit\" class=\"button primary\" type=\"submit\"></md-filled-button></footer></form></mfe-dialog>\r\n<mfe-dialog id=",
+      "id": "desktop:personalization:appearance",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/personalization/index.js",
+      "selector": "personalization:active=appearance;role=tabpanel",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:personalization:attention",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/personalization/index.js",
+      "selector": "personalization:active=attention;role=tabpanel",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:personalization:history",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/personalization/index.js",
+      "selector": "personalization:active=history;role=tabpanel",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:personalization:home-assistant-credential",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/personalization/index.js",
+      "selector": "personalization:Home Assistant credential dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:personalization:language",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/personalization/index.js",
+      "selector": "personalization:active=language;role=tabpanel",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:personalization:schedules",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/personalization/index.js",
+      "selector": "personalization:active=schedules;role=tabpanel",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:restore-descendants",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/app.js",
+      "selector": "dialog[aria-labelledby=\"descendant-dialog-title\"]",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:vault-dialog",
       "family": "desktop",
       "route": "src/renderer/index.html",
       "owner": "src/renderer/index.html",
-      "selector": "#vault-dialog\" aria-labelledby=\"dialog-title\"><form id=\"vault-form\"><header class=\"dialog-heading\"><div><p class=\"eyebrow\" data-i18n>YOUR DRIVE, YOUR KEYS</p><h2 id=\"dialog-title\"></h2></div><md-icon-button id=\"dialog-close\" type=\"button\" class=\"icon-button\" aria-label=\"Close dialog\" data-icon=\"close\"></md-icon-button></header><div class=\"dialog-body\"><p id=\"dialog-description\" class=\"muted\"></p><label for=\"transport-mode\" data-i18n>Encrypted storage transport</label><md-outlined-select id=\"transport-mode\"><md-select-option value=\"folder\" data-i18n>Local or cloud folder</md-select-option><md-select-option value=\"privateGit\" data-i18n>Private GitHub repository</md-select-option></md-outlined-select><div id=\"private-git-fields\" hidden><label for=\"remote-repository\" data-i18n>Private repository owner/name</label><md-outlined-text-field id=\"remote-repository\" autocomplete=\"off\" spellcheck=\"false\" maxlength=\"140\"></md-outlined-text-field><p class=\"field-help\" data-i18n>Use owner/repository, not a URL. Create a private repository and sign in with GitHub CLI. Never enter a token here. Only encrypted vault data is synchronized.</p></div><label for=\"storage-input\" data-i18n>Encrypted storage folder</label><div class=\"folder-input\"><md-outlined-text-field id=\"storage-input\" required autocomplete=\"off\" spellcheck=\"false\"></md-outlined-text-field><md-filled-tonal-button class=\"button tonal\" type=\"button\" data-browse=\"storage-input\" data-i18n>Browse</md-filled-tonal-button></div><p class=\"field-help\" data-i18n>A local folder, or a folder managed by your cloud app.</p><label for=\"cache-input\" data-i18n>Encrypted cache folder</label><div class=\"folder-input\"><md-outlined-text-field id=\"cache-input\" required autocomplete=\"off\" spellcheck=\"false\"></md-outlined-text-field><md-filled-tonal-button class=\"button tonal\" type=\"button\" data-browse=\"cache-input\" data-i18n>Browse</md-filled-tonal-button></div><p class=\"field-help\" data-i18n>Offline parts stay encrypted here. This is not a decrypted folder.</p><label for=\"drive-letter\" id=\"drive-letter-label\" data-i18n>Drive letter</label><div class=\"drive-picker\" id=\"drive-picker\"><div class=\"drive-picker-input\"><md-outlined-text-field id=\"drive-letter\" role=\"combobox\" aria-autocomplete=\"list\" aria-haspopup=\"listbox\" aria-expanded=\"false\" aria-controls=\"drive-letter-options\" aria-describedby=\"drive-letter-help drive-letter-status\" required pattern=\"[A-Za-z]:?\" maxlength=\"2\" placeholder=\"M:\" autocomplete=\"off\" spellcheck=\"false\"></md-outlined-text-field><md-text-button id=\"drive-letter-toggle\" type=\"button\" aria-label=\"Choose an available drive letter\" aria-controls=\"drive-letter-options\" aria-expanded=\"false\"><span class=\"drive-picker-chevron\" aria-hidden=\"true\"></span></md-text-button></div><div id=\"drive-letter-options\" class=\"drive-letter-options\" role=\"listbox\" aria-labelledby=\"drive-letter-label\" hidden></div><p class=\"field-help\" id=\"drive-letter-status\" role=\"status\"></p></div><p class=\"field-help\" id=\"drive-letter-help\" data-i18n>Choose an available letter, or type one manually, such as M or M:.</p><fieldset class=\"credential-selector\"><legend data-i18n>Unlock with</legend><label><md-radio  name=\"credential-mode\" value=\"password\" checked></md-radio><span class=\"credential-symbol\" data-icon=\"lock\"></span><span data-i18n>Password</span><span class=\"segment-check\" aria-hidden=\"true\"></span></label><label><md-radio  name=\"credential-mode\" value=\"keyFile\"></md-radio><svg class=\"icon credential-symbol\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M14 7a5 5 0 1 1-4-4 5 5 0 0 1 4 4Z M14 7h7v4h-3v3h-4l-3-3 M7 7h.01\"/></svg><span data-i18n>Key file</span><span class=\"segment-check\" aria-hidden=\"true\"></span></label></fieldset><div id=\"password-fields\"><label for=\"password-input\" data-i18n>Password</label><div class=\"password-field\"><md-outlined-text-field id=\"password-input\" type=\"password\" required autocomplete=\"new-password\"></md-outlined-text-field><md-text-button type=\"button\" id=\"show-password\" class=\"button small\" aria-pressed=\"false\" data-i18n>Show</md-text-button></div><div id=\"confirm-password-fields\"><label for=\"confirm-password\" data-i18n>Confirm password</label><md-outlined-text-field id=\"confirm-password\" type=\"password\" autocomplete=\"new-password\"></md-outlined-text-field></div><p class=\"field-help\" data-i18n>Use a long, unique password. Keep it safe: there is no recovery.</p></div><div id=\"key-fields\" hidden><label for=\"key-path\" data-i18n>Key file</label><md-outlined-text-field id=\"key-path\" autocomplete=\"off\" spellcheck=\"false\"></md-outlined-text-field><div class=\"key-actions\"><md-outlined-button id=\"choose-key\" type=\"button\" class=\"button outlined\" data-i18n>Choose key file</md-outlined-button><md-filled-tonal-button id=\"generate-key\" type=\"button\" class=\"button tonal\" data-i18n>Generate key file</md-filled-tonal-button></div><p class=\"field-help\" data-i18n>Keep the key file outside storage and cache. You need it to unlock this drive.</p></div><div id=\"create-split\"><label for=\"create-split-value\" data-i18n>Maximum encrypted part size</label><div class=\"split-form\"><md-outlined-text-field id=\"create-split-value\" inputmode=\"decimal\" value=\"80\" maxlength=\"18\"></md-outlined-text-field><md-outlined-select id=\"create-split-unit\" aria-label=\"Creation part size unit\"><md-select-option value=\"KB\">KiB</md-select-option><md-select-option value=\"MB\" selected>MiB</md-select-option><md-select-option value=\"GB\">GiB</md-select-option></md-outlined-select></div><p class=\"field-help\" data-i18n>Default: 80 MiB. Limit: 1 KiB to 90,000,000 physical bytes, including encryption overhead.</p></div><p id=\"dialog-error\" class=\"field-error\" role=\"alert\" hidden></p></div><footer class=\"dialog-actions\"><md-text-button id=\"dialog-cancel\" type=\"button\" class=\"button\" data-i18n>Cancel</md-text-button><md-filled-button id=\"dialog-submit\" class=\"button primary\" type=\"submit\"></md-filled-button></footer></form></mfe-dialog>\r\n<mfe-dialog id=",
+      "selector": "#vault-dialog",
       "template": "required-families",
       "proofs": {}
     },
@@ -5725,6 +5887,96 @@
       "proofs": {}
     },
     {
+      "id": "site:workspace:access:authenticator",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "access:active=authenticator",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:access:confirmation",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "[data-access-confirmation]",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:access:history",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/access/history-view.js",
+      "selector": "access:active=history",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:access:locks",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "access:active=locks",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:access:profile",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "access:active=profile",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:access:qr-preview",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "[data-access-qr-preview]",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:access:support",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "access:active=support",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:access:unlock",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "[data-access-unlock]",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:access:waiting",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "[data-access-waiting]",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:access:wizard",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/access/index.js",
+      "selector": "[data-access-wizard]",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:workspace:changelog",
       "family": "site",
       "route": "workspace.html",
@@ -7512,6 +7764,60 @@
       "route": "workspace.html",
       "owner": "docs/site/workspace.js",
       "selector": "view:personalization",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:personalization:appearance",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/personalization/index.js",
+      "selector": "personalization:active=appearance;role=tabpanel",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:personalization:attention",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/personalization/index.js",
+      "selector": "personalization:active=attention;role=tabpanel",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:personalization:history",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/personalization/index.js",
+      "selector": "personalization:active=history;role=tabpanel",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:personalization:home-assistant-credential",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/personalization/index.js",
+      "selector": "personalization:Home Assistant credential dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:personalization:language",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/personalization/index.js",
+      "selector": "personalization:active=language;role=tabpanel",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:personalization:schedules",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/personalization/index.js",
+      "selector": "personalization:active=schedules;role=tabpanel",
       "template": "required-families",
       "proofs": {}
     },

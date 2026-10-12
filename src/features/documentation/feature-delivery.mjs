@@ -1,5 +1,22 @@
 import { REQUIRED_FEATURE_IDS } from './required-features.mjs';
 
+// Handwritten expectations are independent of source extraction.
+export const REQUIRED_CONCRETE_SURFACE_IDS = Object.freeze([
+  'desktop:vault-dialog', 'desktop:confirm-dialog', 'desktop:restore-descendants',
+  'extension:popup', 'site:index', 'site:library', 'site:wiki', 'site:gallery', 'site:workspace',
+  ...['desktop', 'site:workspace'].flatMap(host => [
+    ...['language', 'appearance', 'schedules', 'attention', 'history'].map(panel => `${host}:personalization:${panel}`),
+    `${host}:personalization:home-assistant-credential`,
+    ...['profile', 'locks', 'authenticator', 'support', 'history', 'unlock', 'waiting', 'wizard', 'confirmation', 'qr-preview'].map(panel => `${host}:access:${panel}`)
+  ])
+]);
+
+export function validatePublicationSurfaceCatalogue(catalog, bundledDocuments) {
+  const actual = prefix => bundledDocuments.filter(row => row.source.startsWith(prefix)).map(row => prefix === 'docs/site/wiki/' ? row.source.slice(prefix.length) : row.source).sort();
+  if (JSON.stringify(actual('docs/features/')) !== JSON.stringify(catalog.articles.filter(file => file.startsWith('docs/features/')).sort())) throw new Error('Publication catalogue omits or invents concrete feature article routes.');
+  if (JSON.stringify(actual('docs/site/wiki/')) !== JSON.stringify([...catalog.wiki.files].sort())) throw new Error('Publication catalogue omits or invents concrete wiki article routes.');
+}
+
 /** Concrete routes supplement, and never rewrite, the historical two-surface assessment. */
 export async function discoverFeatureSurfaces(repositoryPath) {
   const { readFile } = await import('node:fs/promises');
@@ -9,10 +26,7 @@ export async function discoverFeatureSurfaces(repositoryPath) {
   const read = file => readFile(path.join(repositoryPath, file), 'utf8');
   const catalog = JSON.parse(await read('docs/site/content-catalog.json'));
   const bundled = await buildDocumentationCatalog(repositoryPath);
-  const featureArticles = bundled.documents.filter(row => row.source.startsWith('docs/features/')).map(row => row.source).sort();
-  if (JSON.stringify(featureArticles) !== JSON.stringify(catalog.articles.filter(file => file.startsWith('docs/features/')).sort())) throw new Error('Publication catalogue omits or invents concrete feature article routes.');
-  const wikiFiles = bundled.documents.filter(row => row.source.startsWith('docs/site/wiki/')).map(row => path.posix.basename(row.source)).sort();
-  if (JSON.stringify(wikiFiles) !== JSON.stringify([...catalog.wiki.files].sort())) throw new Error('Publication catalogue omits or invents concrete wiki article routes.');
+  validatePublicationSurfaceCatalogue(catalog, bundled.documents);
   const surfaces = [];
   const add = (id, family, target, owner, selector = '') => surfaces.push({ id, family, route: target, owner, selector });
   for (const name of ['index', 'library', 'wiki', 'gallery', 'workspace']) add(`site:${name}`, 'site', `${name}.html`, name === 'workspace' ? 'docs/site/workspace.js' : name === 'index' ? 'docs/site/index.html' : 'docs/site/publication.mjs');
@@ -20,7 +34,10 @@ export async function discoverFeatureSurfaces(repositoryPath) {
   for (const file of catalog.wiki.files) add(`site:wiki:${file}`, 'site', route(`wiki/${file}`), 'docs/site/publication.mjs');
   for (const category of catalog.categories) add(`site:category:${category}`, 'site', `categories/${category}.html`, 'docs/site/publication.mjs');
   const desktop = await read('src/renderer/index.html');
-  for (const match of desktop.matchAll(/<(?:section|mfe-dialog)\b[^>]*id="((?:view-|.*dialog)[^"]*)"/g)) add(`desktop:${match[1]}`, 'desktop', 'src/renderer/index.html', 'src/renderer/index.html', `#${match[1]}`);
+  for (const tag of desktop.matchAll(/<(section|mfe-dialog)\b[^<>]*>/g)) {
+    const id = /\bid="([A-Za-z][A-Za-z0-9_-]{0,127})"/.exec(tag[0])?.[1];
+    if (id && (id.startsWith('view-') || tag[1] === 'mfe-dialog')) add(`desktop:${id}`, 'desktop', 'src/renderer/index.html', 'src/renderer/index.html', `#${id}`);
+  }
   const app = await read('src/renderer/app.js');
   const labels = /const canonicalViewLabels=\{([^}]+)\}/.exec(app)?.[1];
   if (!labels) throw new Error('Desktop route declarations unavailable.');
@@ -29,6 +46,15 @@ export async function discoverFeatureSurfaces(repositoryPath) {
   const definitions = /const definitions=\[([^;]+)\];/.exec(workspace)?.[1];
   if (!definitions) throw new Error('Workspace route declarations unavailable.');
   for (const match of definitions.matchAll(/\['([a-z]+)'/g)) add(`site:workspace:${match[1]}`, 'site', 'workspace.html', 'docs/site/workspace.js', `view:${match[1]}`);
+  add('desktop:restore-descendants', 'desktop', 'src/renderer/index.html', 'src/renderer/app.js', 'dialog[aria-labelledby="descendant-dialog-title"]');
+  for (const [host, family, target] of [['desktop', 'desktop', 'src/renderer/index.html'], ['site:workspace', 'site', 'workspace.html']]) {
+    const personalizationOwner = 'src/renderer/features/personalization/index.js';
+    for (const panel of ['language', 'appearance', 'schedules', 'attention', 'history']) add(`${host}:personalization:${panel}`, family, target, personalizationOwner, `personalization:active=${panel};role=tabpanel`);
+    add(`${host}:personalization:home-assistant-credential`, family, target, personalizationOwner, 'personalization:Home Assistant credential dialog');
+    const accessOwner = 'src/renderer/features/access/index.js';
+    for (const panel of ['profile', 'locks', 'authenticator', 'support', 'history']) add(`${host}:access:${panel}`, family, target, panel === 'history' ? 'src/renderer/features/access/history-view.js' : accessOwner, `access:active=${panel}`);
+    for (const [panel, selector] of [['unlock', '[data-access-unlock]'], ['waiting', '[data-access-waiting]'], ['wizard', '[data-access-wizard]'], ['confirmation', '[data-access-confirmation]'], ['qr-preview', '[data-access-qr-preview]']]) add(`${host}:access:${panel}`, family, target, accessOwner, selector);
+  }
   for (const document of bundled.documents) {
     add(`desktop:document:${document.id}`, 'desktop', 'src/renderer/index.html', 'src/renderer/features/documentation/index.js', `document:${document.id}`);
     add(`site:workspace:document:${document.id}`, 'site', 'workspace.html', 'src/renderer/features/documentation/index.js', `document:${document.id}`);
@@ -78,6 +104,7 @@ export function validateSurfaceRegistry(registry, expectedSurfaces) {
     }
   }
   for (const id of expected.keys()) if (!seen.has(id)) errors.push(`Missing concrete surface: ${id}.`);
+  for (const id of REQUIRED_CONCRETE_SURFACE_IDS) if (!seen.has(id)) errors.push(`Missing handwritten required surface: ${id}.`);
   return errors;
 }
 

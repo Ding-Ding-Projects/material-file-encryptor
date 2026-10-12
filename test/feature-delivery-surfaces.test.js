@@ -1,12 +1,32 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import { discoverFeatureSurfaces, expandSurfaceFeatureDelivery, validateSurfaceRegistry } from '../src/features/documentation/feature-delivery.mjs';
+import { discoverFeatureSurfaces, expandSurfaceFeatureDelivery, validateSurfaceRegistry, REQUIRED_CONCRETE_SURFACE_IDS, validatePublicationSurfaceCatalogue } from '../src/features/documentation/feature-delivery.mjs';
+import { buildDocumentationCatalog } from '../src/features/documentation/catalog.mjs';
 import { REQUIRED_FEATURE_IDS } from '../src/features/documentation/required-features.mjs';
 const registry = JSON.parse(await fs.readFile(new URL('../contracts/surface-registry.json', import.meta.url), 'utf8'));
 const root = new URL('../', import.meta.url);
 const { fileURLToPath } = await import('node:url');
 const expected = await discoverFeatureSurfaces(fileURLToPath(root));
+test('handwritten vault, descendants, personalization and access surfaces have exact bounded identities', () => {
+  const vault = expected.find(row => row.id === 'desktop:vault-dialog');
+  assert.deepEqual(vault, {id:'desktop:vault-dialog',family:'desktop',route:'src/renderer/index.html',owner:'src/renderer/index.html',selector:'#vault-dialog'});
+  assert.ok(expected.every(row => !/[<>"\r\n]/.test(row.id)));
+  for (const id of REQUIRED_CONCRETE_SURFACE_IDS) assert.ok(expected.some(row => row.id === id), id);
+  assert.ok(expected.some(row => row.id === 'desktop:restore-descendants' && row.owner === 'src/renderer/app.js'));
+});
+test('vault omission is rejected even when the extracted expected inventory also omits it', () => {
+  const broken = structuredClone(registry); broken.surfaces = broken.surfaces.filter(row => row.id !== 'desktop:vault-dialog');
+  assert.ok(validateSurfaceRegistry(broken, expected.filter(row => row.id !== 'desktop:vault-dialog')).some(error => error === 'Missing handwritten required surface: desktop:vault-dialog.'));
+});
+test('publication catalogue omission of an actual feature article fails before route extraction', async () => {
+  const catalog = JSON.parse(await fs.readFile(new URL('../docs/site/content-catalog.json', import.meta.url), 'utf8'));
+  const bundled = await buildDocumentationCatalog(fileURLToPath(root));
+  validatePublicationSurfaceCatalogue(catalog, bundled.documents);
+  const omitted = catalog.articles.find(file => file.startsWith('docs/features/'));
+  catalog.articles = catalog.articles.filter(file => file !== omitted);
+  assert.throws(() => validatePublicationSurfaceCatalogue(catalog, bundled.documents), /Publication catalogue omits or invents concrete feature article routes/);
+});
 test('concrete inventory retains 105 families and independent unverified defaults', () => {
   assert.equal(REQUIRED_FEATURE_IDS.length, 105);
   assert.deepEqual(validateSurfaceRegistry(registry, expected), []);
