@@ -164,6 +164,13 @@ internal sealed class OllamaContainedProcess
         owner.Start(executable,arguments,Path.GetDirectoryName(executable)!,null);
     }
     internal void StartSyntheticOwned(string executable,string arguments)=>Start(executable,arguments,Path.GetDirectoryName(executable)!,null);
+    internal uint? OriginalExitCodeForSynthetic()
+    {
+        if(process is null||process.IsClosed||process.IsInvalid||WaitForSingleObject(process,0)!=0)return null;
+        if(!GetExitCodeProcess(process,out uint exitCode))throw new Win32Exception(Marshal.GetLastWin32Error());
+        return exitCode;
+    }
+    [DllImport("kernel32.dll",SetLastError=true)]private static extern bool GetExitCodeProcess(SafeFileHandle process,out uint exitCode);
 #endif
     private void Start(string executable,string arguments,string directory,IReadOnlyDictionary<string,string>? environment)
     {

@@ -4,11 +4,68 @@ using System.Text.Json;
 using MaterialFileEncryptor.Host;
 
 if(!OperatingSystem.IsWindows())throw new PlatformNotSupportedException();
-if(args.Length>0&&args[0]=="--descendant") { File.WriteAllText(args[1],"ready");await Task.Delay(60000);return; }
-if(args.Length>0&&args[0]=="--parent")
+static string OwnedSignal(string[] arguments)
 {
-    Process.Start(new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute=false,CreateNoWindow=true,ArgumentList={"--descendant",args[1]} })!.Dispose();
+    if(arguments.Length!=3)throw new ArgumentException("Synthetic child arguments are invalid.");
+    string signal=Path.GetFullPath(arguments[1]),root=Path.GetDirectoryName(signal)!,name=Path.GetFileName(root);
+    const string prefix="mfe-ollama-lifetime-";
+    if(!name.StartsWith(prefix,StringComparison.Ordinal)||!Guid.TryParseExact(name[prefix.Length..],"N",out _)||!String.Equals(Path.GetDirectoryName(root)?.TrimEnd(Path.DirectorySeparatorChar),Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar),StringComparison.OrdinalIgnoreCase)||Path.GetFileName(signal) is not ("descendant-ready" or "registry-ready"))throw new ArgumentException("Synthetic child signal is outside its owned fixture.");
+    return signal;
+}
+static string OwnedDiagnostics(string[] arguments)
+{
+    string root=Path.GetFullPath(arguments[2]),name=Path.GetFileName(root);const string prefix="mfe-ollama-diagnostics-";
+    if(!name.StartsWith(prefix,StringComparison.Ordinal)||!Guid.TryParseExact(name[prefix.Length..],"N",out _)||!String.Equals(Path.GetDirectoryName(root)?.TrimEnd(Path.DirectorySeparatorChar),Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar),StringComparison.OrdinalIgnoreCase)||!Directory.Exists(root))throw new ArgumentException("Synthetic diagnostics are outside their owned fixture.");
+    return root;
+}
+static string Category(Exception error)=>error switch { System.ComponentModel.Win32Exception=>"win32",IOException=>"io",UnauthorizedAccessException=>"access",InvalidOperationException=>"invalid-operation",ArgumentException=>"argument",_=>"other" };
+static void Marker(string diagnostics,string signal,string suffix,string category,int hResult=0,int? childId=null,long? childCreation=null,string? exceptionType=null,string? stage=null)
+{
+    string json=JsonSerializer.Serialize(new { category,hResult,runtime8=Environment.Version.Major==8,dotnetRootPresent=!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("DOTNET_ROOT")),processId=Environment.ProcessId,childId,childCreation,exceptionType,stage });
+    if(json.Length>1024)throw new InvalidOperationException("Synthetic marker exceeds its bound.");
+    File.WriteAllText(Path.Combine(diagnostics,Path.GetFileName(signal)+suffix),json);
+}
+if(args.Length>0&&args[0] is "--parent" or "--descendant")
+{
+    string childSignal=OwnedSignal(args),childDiagnostics=OwnedDiagnostics(args);bool parent=args[0]=="--parent";string stage="entered-marker";
+    try
+    {
+        Marker(childDiagnostics,childSignal,parent?".parent-entered":".descendant-entered",parent?"parent-entered":"descendant-entered");
+        if(parent)
+        {
+            stage="descendant-start";
+            using Process child=Process.Start(new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute=false,CreateNoWindow=true,ArgumentList={"--descendant",childSignal,childDiagnostics} })??throw new InvalidOperationException("Synthetic descendant creation returned no process.");
+            stage="descendant-identity";
+            Marker(childDiagnostics,childSignal,".parent-started","descendant-started",childId:child.Id,childCreation:child.StartTime.ToUniversalTime().Ticks);
+        }
+        else { stage="signal-write";File.WriteAllText(childSignal,"ready");await Task.Delay(60000); }
+    }
+    catch(Exception error)
+    {
+        Environment.ExitCode=1;
+        try { Marker(childDiagnostics,childSignal,parent?".parent-failure":".descendant-failure",Category(error),error.HResult,exceptionType:error.GetType().FullName,stage:stage); }
+        catch { Environment.ExitCode=2; }
+    }
     return;
+}
+static object ReadMarker(string diagnostics,string signal,string suffix)
+{
+    string filename=Path.Combine(diagnostics,Path.GetFileName(signal)+suffix);
+    if(!File.Exists(filename))return new {present=false,valid=false};
+    try
+    {
+        if(new FileInfo(filename).Length>1024)return new{present=true,valid=false};
+        using var document=JsonDocument.Parse(File.ReadAllText(filename));var value=document.RootElement;
+        string? category=value.GetProperty("category").GetString();
+        if(category is not ("parent-entered" or "descendant-entered" or "descendant-started" or "win32" or "io" or "access" or "invalid-operation" or "argument" or "other"))return new{present=true,valid=false};
+        int? childId=value.GetProperty("childId").ValueKind==JsonValueKind.Null?null:value.GetProperty("childId").GetInt32();
+        long? childCreation=value.GetProperty("childCreation").ValueKind==JsonValueKind.Null?null:value.GetProperty("childCreation").GetInt64();
+        string? exceptionType=value.GetProperty("exceptionType").GetString(),stage=value.GetProperty("stage").GetString();
+        if(exceptionType is not null&&(exceptionType.Length>128||exceptionType.Any(character=>!Char.IsLetterOrDigit(character)&&character is not ('.' or '+' or '_'))))return new{present=true,valid=false};
+        if(stage is not (null or "entered-marker" or "descendant-start" or "descendant-identity" or "signal-write"))return new{present=true,valid=false};
+        return new{present=true,valid=true,category,hResult=value.GetProperty("hResult").GetInt32(),runtime8=value.GetProperty("runtime8").GetBoolean(),dotnetRootPresent=value.GetProperty("dotnetRootPresent").GetBoolean(),processId=value.GetProperty("processId").GetInt32(),childId,childCreation,exceptionType,stage};
+    }
+    catch { return new{present=true,valid=false}; }
 }
 static void Require(bool condition,string description) { if(!condition)throw new InvalidOperationException(description); }
 static bool Prevented(Action action) { try { action();return false; } catch(IOException) { return true; } catch(UnauthorizedAccessException) { return true; } }
@@ -17,17 +74,25 @@ static async Task<bool> Rejected(Func<Task<object>> action) { try { await action
 string executable=Environment.ProcessPath!;
 Require(Path.GetFileNameWithoutExtension(executable)=="MaterialFileEncryptor.OllamaLifetime.Verifier","Run the verifier apphost directly.");
 string fixture=Path.Combine(Path.GetTempPath(),"mfe-ollama-lifetime-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(fixture);
+string diagnostics=Path.Combine(Path.GetTempPath(),"mfe-ollama-diagnostics-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(diagnostics);
 string member=Path.Combine(fixture,"member.dll"),signal=Path.Combine(fixture,"descendant-ready");File.WriteAllText(member,"synthetic admitted member");
 string hash=Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(member))).ToLowerInvariant();
 var lease=OllamaRuntimeLease.AcquireSynthetic(fixture,new Dictionary<string,string>{{"member.dll",hash}});
 OllamaContainedProcess? owner=null;
+bool verificationCompleted=false;
 try
 {
     Require(Prevented(()=>File.WriteAllText(member,"changed")),"Retained member must reject mutation.");
     Require(Prevented(()=>File.Delete(member)),"Retained member must reject deletion.");
-    OllamaContainedProcess.StartSynthetic(lease,executable,"--parent \""+signal+"\"",out owner);
+    OllamaContainedProcess.StartSynthetic(lease,executable,"--parent \""+signal+"\" \""+diagnostics+"\"",out owner);
     DateTime deadline=DateTime.UtcNow.AddSeconds(10);
     while((!File.Exists(signal)||owner.ActiveProcesses()!=1)&&DateTime.UtcNow<deadline)await Task.Delay(25);
+    if(!File.Exists(signal)||owner.ActiveProcesses()!=1)
+    {
+        uint? originalExitCode=null;bool exitCodeAvailable=true;
+        try{originalExitCode=owner.OriginalExitCodeForSynthetic();}catch{exitCodeAvailable=false;}
+        Console.WriteLine(JsonSerializer.Serialize(new {syntheticDiagnostic=true,signalPresent=File.Exists(signal),activeProcesses=owner.ActiveProcesses(),originalExitCode,exitCodeAvailable,parentEntered=ReadMarker(diagnostics,signal,".parent-entered"),parentStarted=ReadMarker(diagnostics,signal,".parent-started"),parentFailure=ReadMarker(diagnostics,signal,".parent-failure"),descendantEntered=ReadMarker(diagnostics,signal,".descendant-entered"),descendantFailure=ReadMarker(diagnostics,signal,".descendant-failure")}));
+    }
     Require(File.Exists(signal)&&owner.ActiveProcesses()==1,"The original parent must exit while its descendant remains in the exact job.");
     Require(!owner.ReleaseAfterTreeExit()&&!lease.Released,"Parent exit must retain the whole runtime lease.");
     Require(Prevented(()=>File.WriteAllText(member,"changed after parent exit")),"Live descendant must retain member protection.");
@@ -47,7 +112,7 @@ try
     catch(InvalidDataException) { unexpectedDirectoryRejected=true; }
     finally { Directory.Delete(extra); }
     Require(unexpectedDirectoryRejected,"Unknown empty directory must be rejected before traversal.");
-    var broker=OllamaRuntimeBroker.ForSynthetic(fixture,()=>OllamaRuntimeLease.AcquireSynthetic(registryRoot,registryMembers),executable,"--parent \""+registrySignal+"\"");
+    var broker=OllamaRuntimeBroker.ForSynthetic(fixture,()=>OllamaRuntimeLease.AcquireSynthetic(registryRoot,registryMembers),executable,"--parent \""+registrySignal+"\" \""+diagnostics+"\"");
     try
     {
         Require(await Rejected(()=>broker.DispatchAsync("managedOllama.start",Params(new{port=1023}))),"Invalid port must be rejected.");
@@ -99,10 +164,11 @@ try
     }
     finally { Require(await recovery.CloseAllAsync(),"Retention-bound negative-control teardown must settle."); }
     Console.WriteLine(JsonSerializer.Serialize(new { synthetic=true,officialRuntimeExecuted=false,parentExitRetainsLease=true,descendantContained=true,exactTreeExitReleasesLease=true,registryUnknownIdRejected=true,concurrentStopCloseSettled=true,invalidAuthorityFieldsRejected=true,unexpectedDirectoryRejected,eofCloseSettled=true,retentionBoundAcquisitionFailureRecovered=true,directoryInsertionPrevented=insertionPrevented,productionStartAvailable=false,hostDeathOrderingVerified=false }));
+    verificationCompleted=true;
 }
 finally
 {
     if(owner is not null&&!owner.Released){owner.Stop();DateTime deadline=DateTime.UtcNow.AddSeconds(10);while(!owner.ReleaseAfterTreeExit()&&DateTime.UtcNow<deadline)await Task.Delay(25);}
     if(owner is null)lease.Release();
-    if(lease.Released)Directory.Delete(fixture,true);
+    if(lease.Released){Directory.Delete(fixture,true);if(verificationCompleted)Directory.Delete(diagnostics,true);}
 }
