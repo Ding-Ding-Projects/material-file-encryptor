@@ -35,3 +35,13 @@ configuration state. These tests do not prove native compilation, lease IPC,
 child launch, actual configuration consumption, readiness, or graceful runtime
 shutdown. Those need candidate-bound native and real-runtime evidence before
 local-process support can be declared operational.
+
+## Complete runtime member lifetime
+
+The native execution owner now acquires verification and retention together. Every pinned runtime file and its directory ancestors remain held alongside the server distribution. Partial acquisition releases acquired handles. A proven failure before process creation releases them. Once process creation returns a child, an identity observation error retains that exact child and the complete member leases. Graceful-stop timeout also retains them. Release requires exit observation through the retained child process handle, never adoption of a matching PID.
+
+The dedicated verifier adds fresh synthetic files and a managed .NET child. Its eight checks cover partial acquisition, no-launch release, process-creation failure, live DLL and legal-member mutation rejection, timeout retention, exact-exit release, uncertain post-spawn retention and uncertain exact-exit release. The negative mode deliberately releases runtime protection and must fail on the DLL write. Java and server files are never executed by this verifier. Candidate-bound compilation and execution of these new modes are pending; source assertions do not supply that evidence.
+
+This bounded change protects inventoried members for the child lifetime. It does not close the existing writable-mapping limitation or prevent adding new directory contents. Complete loading-tree isolation and exact-version configuration proof remain separate admission requirements. Configuration admission remains false, and actual Java/server start remains unavailable.
+
+After the root build, run the built server lease verifier through its verified .NET host with either --lifetime-fixture-root or --lifetime-negative-fixture-root and a fresh absolute fixture directory. The first mode must return 0 with eight passed checks; the negative mode must return 1 with the full-tree DLL writer rejection assertion. Retain source and binary identities with both receipts. Neither command constitutes runtime or server acceptance.
