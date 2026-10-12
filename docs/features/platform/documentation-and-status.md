@@ -2,6 +2,14 @@
 
 ## Documentation
 
+### Independent surface delivery inventory
+
+`contracts/surface-registry.json` supplements the historical two-surface assessment in `contracts/feature-delivery.json` without changing its verdicts or source bindings. The concrete registry includes publication home, library, wiki, gallery, generated articles and category indexes; publication preferences for each page; browser workspace views and bundled documents; desktop views, dialogs and bundled documents; and the extension popup. Every surface inherits the same 105 semantic declarations, but no completion verdict. Empty independent proof maps expand to unverified assessments.
+
+`discoverFeatureSurfaces(root)` reads the publication catalogue and its actual article route function, workspace declarations, desktop declarations, and recursive documentation catalogue. `validateSurfaceRegistry(registry, expectedSurfaces)` requires that authoritative discovery result and rejects missing routes, mismatched route/component identities, duplicate surfaces, omitted families, inherited verdicts and borrowed proof. An implemented assessment needs its own exact route and selector, source commit, built hash and declared visual/interaction evidence. These are structural declarations, not verification that evidence exists or that a runtime check passed. The inventory is an acceptance backlog, not a claim that all required behavior ships.
+
+Run `node --test test/feature-delivery-surfaces.test.js test/documentation-platform.test.js` for the bounded inventory checks. When a source article is added, removed or renamed, regenerate the registry from discovery before accepting its route inventory. The build and live publication remain separate acceptance work.
+
 `buildDocumentationCatalog(root)` reads every Markdown file under `docs/`, including the wiki, plus available root project articles. Each document records its full source text, stable path-based ID, category, headings and content hash. Symbolic links are excluded. Run `node src/features/documentation/build-catalog.mjs <repository-root> <output.json>` during packaging, then supply the parsed bundle to `mountDocumentation`.
 
 `mountDocumentation(host, { catalog, translate, onExport, initialId })` provides article navigation, full-text search with the existing bounded worker-based regular-expression builder, heading anchors, internal Markdown links and Markdown export. The DOM-only renderer supports tables, fenced code, emphasis, lists and task lists, quotes, local raster images, and the exact attribute-free details/summary containers used in project articles. Arbitrary source HTML is rendered as text, not executed. External links accept HTTP and HTTPS only and are explicitly marked. Missing internal articles and anchors are displayed without an active link. The catalog must be regenerated after documentation changes; packaging integration remains required.

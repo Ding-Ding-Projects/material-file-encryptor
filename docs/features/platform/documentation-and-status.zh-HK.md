@@ -2,6 +2,14 @@
 
 ## 文件
 
+### 每個畫面獨立記錄驗收
+
+`contracts/surface-registry.json` 保留舊有 `contracts/feature-delivery.json` 兩個表面嘅評估同來源綁定，另列首頁、文件庫、wiki、圖片庫、生成文章、分類索引、每頁偏好設定、瀏覽器工作區、桌面畫面與對話框、內置文件及擴充功能彈出視窗。每個畫面承接同一份 105 項語義聲明，但唔承接完成結論。空白獨立證據表一律係未驗證。
+
+`discoverFeatureSurfaces(root)` 讀取實際出版文章路由、目錄、桌面及工作區聲明。`validateSurfaceRegistry(registry, expectedSurfaces)` 必須收到呢份獨立清單，遺漏路由、冒用另一畫面證據、遺漏項目同承接完成狀態都會被拒絕。完成聲明需要自己嘅路由、選擇器、來源版本、建置雜湊及互動與畫面證據。呢啲只係結構檢查，唔等於證據檔案存在或執行驗收通過。
+
+執行 `node --test test/feature-delivery-surfaces.test.js test/documentation-platform.test.js` 可檢查清單邊界。新增、移除或改名文章之後，要重新產生清單。實際建置及公開部署仍然需要另外驗收。
+
 `buildDocumentationCatalog(root)` 讀取 `docs/` 下每個 Markdown 檔，包括維基，以及可用嘅根目錄專案文章。每份文件記錄完整來源文字、穩定路徑 ID、分類、標題同內容雜湊。符號連結會排除。封裝期間執行 `node src/features/documentation/build-catalog.mjs <repository-root> <output.json>`，再將解析後套件傳畀 `mountDocumentation`。
 
 `mountDocumentation(host, { catalog, translate, onExport, initialId })` 提供文章導覽、使用現有有限工作者正則表達式建構器嘅全文搜尋、標題錨點、內部 Markdown 連結同 Markdown 匯出。只用 DOM 嘅渲染器支援表格、圍欄程式碼、強調、清單同工作清單、引文、本機點陣圖片，以及專案文章使用嘅精確無屬性 details／summary 容器。任意來源 HTML 只會當文字顯示，唔會執行。外部連結只接受 HTTP 同 HTTPS，並有明確標示。缺失內部文章同錨點會顯示，但冇可啟動連結。文件改動後必須重建目錄；封裝整合仍然有需要。

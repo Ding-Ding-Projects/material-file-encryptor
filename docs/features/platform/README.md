@@ -1,6 +1,6 @@
 # Platform features
 
-- [Documentation browser, changelog, status and delivery inventory](documentation-and-status.md)
+- [Documentation browser, changelog, status and independent concrete surface delivery inventory](documentation-and-status.md)
 - [Current source integration and verification boundaries](current-integration.md)
 - [External instruction currency check](instruction-currency.md)
 - [Native helper measurement limits](../performance/native-helper.md)

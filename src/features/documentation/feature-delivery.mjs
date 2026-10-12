@@ -1,5 +1,86 @@
 import { REQUIRED_FEATURE_IDS } from './required-features.mjs';
 
+/** Concrete routes supplement, and never rewrite, the historical two-surface assessment. */
+export async function discoverFeatureSurfaces(repositoryPath) {
+  const { readFile } = await import('node:fs/promises');
+  const { default: path } = await import('node:path');
+  const { buildDocumentationCatalog } = await import('./catalog.mjs');
+  const { route } = await import('../../../docs/site/publication.mjs');
+  const read = file => readFile(path.join(repositoryPath, file), 'utf8');
+  const catalog = JSON.parse(await read('docs/site/content-catalog.json'));
+  const bundled = await buildDocumentationCatalog(repositoryPath);
+  const featureArticles = bundled.documents.filter(row => row.source.startsWith('docs/features/')).map(row => row.source).sort();
+  if (JSON.stringify(featureArticles) !== JSON.stringify(catalog.articles.filter(file => file.startsWith('docs/features/')).sort())) throw new Error('Publication catalogue omits or invents concrete feature article routes.');
+  const wikiFiles = bundled.documents.filter(row => row.source.startsWith('docs/site/wiki/')).map(row => path.posix.basename(row.source)).sort();
+  if (JSON.stringify(wikiFiles) !== JSON.stringify([...catalog.wiki.files].sort())) throw new Error('Publication catalogue omits or invents concrete wiki article routes.');
+  const surfaces = [];
+  const add = (id, family, target, owner, selector = '') => surfaces.push({ id, family, route: target, owner, selector });
+  for (const name of ['index', 'library', 'wiki', 'gallery', 'workspace']) add(`site:${name}`, 'site', `${name}.html`, name === 'workspace' ? 'docs/site/workspace.js' : name === 'index' ? 'docs/site/index.html' : 'docs/site/publication.mjs');
+  for (const source of catalog.articles) add(`site:article:${source}`, 'site', route(source), 'docs/site/publication.mjs');
+  for (const file of catalog.wiki.files) add(`site:wiki:${file}`, 'site', route(`wiki/${file}`), 'docs/site/publication.mjs');
+  for (const category of catalog.categories) add(`site:category:${category}`, 'site', `categories/${category}.html`, 'docs/site/publication.mjs');
+  const desktop = await read('src/renderer/index.html');
+  for (const match of desktop.matchAll(/<(?:section|mfe-dialog)\b[^>]*id="((?:view-|.*dialog)[^"]*)"/g)) add(`desktop:${match[1]}`, 'desktop', 'src/renderer/index.html', 'src/renderer/index.html', `#${match[1]}`);
+  const app = await read('src/renderer/app.js');
+  const labels = /const canonicalViewLabels=\{([^}]+)\}/.exec(app)?.[1];
+  if (!labels) throw new Error('Desktop route declarations unavailable.');
+  for (const match of labels.matchAll(/(?:^|,)([a-z]+):/g)) if (!surfaces.some(row => row.id === `desktop:view-${match[1]}`)) add(`desktop:view-${match[1]}`, 'desktop', 'src/renderer/index.html', 'src/renderer/app.js', `#view-${match[1]}`);
+  const workspace = await read('docs/site/workspace.js');
+  const definitions = /const definitions=\[([^;]+)\];/.exec(workspace)?.[1];
+  if (!definitions) throw new Error('Workspace route declarations unavailable.');
+  for (const match of definitions.matchAll(/\['([a-z]+)'/g)) add(`site:workspace:${match[1]}`, 'site', 'workspace.html', 'docs/site/workspace.js', `view:${match[1]}`);
+  for (const document of bundled.documents) {
+    add(`desktop:document:${document.id}`, 'desktop', 'src/renderer/index.html', 'src/renderer/features/documentation/index.js', `document:${document.id}`);
+    add(`site:workspace:document:${document.id}`, 'site', 'workspace.html', 'src/renderer/features/documentation/index.js', `document:${document.id}`);
+  }
+  add('extension:popup', 'extension', 'browser-extension/popup.html', 'browser-extension/popup.js');
+  // Preferences are independently addressable on every generated publication route.
+  for (const row of [...surfaces].filter(row => row.family === 'site' && !row.selector && row.route !== 'workspace.html')) add(`${row.id}:preferences`, 'site', row.route, 'docs/site/preferences.js', '#preferences-dialog');
+  return surfaces.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/** Templates inherit declarations only. Every surface/family verdict defaults to unverified. */
+export function expandSurfaceFeatureDelivery(registry) {
+  return registry.surfaces.flatMap(surface => (registry.templates[surface.template]?.features || []).map(id => ({
+    surface: surface.id, id, applicability: expectedFeatureApplicability(id, surface.family === 'extension' ? 'desktop' : surface.family),
+    status: surface.proofs?.[id]?.status || 'unverified', proof: surface.proofs?.[id] || null
+  })));
+}
+
+export function validateSurfaceRegistry(registry, expectedSurfaces) {
+  const errors = [];
+  if (!object(registry) || registry.schemaVersion !== 1 || !object(registry.templates) || !Array.isArray(registry.surfaces) || registry.surfaces.length > 10000) return ['Invalid concrete surface registry.'];
+  if (!Array.isArray(expectedSurfaces) || !expectedSurfaces.length) return ['Authoritative concrete surface inventory required.'];
+  const expected = new Map(expectedSurfaces.map(row => [row.id, row]));
+  const seen = new Set();
+  for (const surface of registry.surfaces) {
+    if (!object(surface)) { errors.push('Invalid concrete surface.'); continue; }
+    const original = expected.get(surface.id);
+    if (!original) errors.push(`Unknown surface: ${surface.id}.`);
+    if (seen.has(surface.id)) errors.push(`Duplicate surface: ${surface.id}.`);
+    seen.add(surface.id);
+    if (original) for (const key of ['family', 'route', 'owner', 'selector']) if (surface[key] !== original[key]) errors.push(`${surface.id}: unknown ${key} ownership.`);
+    const template = registry.templates[surface.template];
+    if (!object(template) || !Array.isArray(template.features)) { errors.push(`${surface.id}: missing capability template.`); continue; }
+    if (Object.keys(template).some(key => key !== 'features')) errors.push(`${surface.id}: inherited verdict prohibited.`);
+    if (template.features.length !== REQUIRED_FEATURE_IDS.length || new Set(template.features).size !== REQUIRED_FEATURE_IDS.length || REQUIRED_FEATURE_IDS.some(id => !template.features.includes(id))) errors.push(`${surface.id}: omitted or unknown semantic family.`);
+    if (!object(surface.proofs)) { errors.push(`${surface.id}: independent proof map required.`); continue; }
+    for (const [id, proof] of Object.entries(surface.proofs)) {
+      if (!REQUIRED_FEATURE_IDS.includes(id) || !object(proof)) { errors.push(`${surface.id}: invalid proof family.`); continue; }
+      if (Object.keys(proof).some(key => !['status', 'surface', 'route', 'selector', 'sourceCommit', 'builtSha256', 'builtInteraction', 'visualEvidence', 'evidence', 'reason'].includes(key))) errors.push(`${surface.id}/${id}: unknown proof field.`);
+      for (const key of ['surface', 'route', 'selector']) if (Object.hasOwn(proof, key) && proof[key] !== (key === 'surface' ? surface.id : surface[key])) errors.push(`${surface.id}/${id}: mismatched proof ${key}.`);
+      const scope = expectedFeatureApplicability(id, surface.family === 'extension' ? 'desktop' : surface.family);
+      if (!['implemented', 'unverified', 'missing', 'not-applicable'].includes(proof.status)) errors.push(`${surface.id}/${id}: invalid proof status.`);
+      if (proof.status === 'not-applicable' && scope.applies) errors.push(`${surface.id}/${id}: applicable family cannot be exempted.`);
+      if (proof.status === 'implemented') {
+        if (!scope.applies || proof.surface !== surface.id || proof.route !== surface.route || proof.selector !== surface.selector || !commitId(proof.sourceCommit) || !/^[a-f0-9]{64}$/.test(proof.builtSha256 || '') || proof.builtInteraction !== 'verified' || proof.visualEvidence !== 'verified' || !Array.isArray(proof.evidence) || !proof.evidence.length || proof.evidence.some(file => !sourcePath(file))) errors.push(`${surface.id}/${id}: independent source-bound built and visual proof required.`);
+      }
+    }
+  }
+  for (const id of expected.keys()) if (!seen.has(id)) errors.push(`Missing concrete surface: ${id}.`);
+  return errors;
+}
+
 // Independent scope rules: missing implementation never grants an exemption.
 const REPOSITORY_IDS = new Set('design-folder build-entrypoints fresh-build-run-command dependency-fetcher self-signing release-workflow release-timing release-line-counts release-dim-sum-photo ci-bootstrap runner-selection encrypted-public-builder tabbed-readme human-time-estimate sanitized-instruction-copy agents-md-vocabulary-block vocabulary-hash-lock roadmap-checklist feature-docs postman-collections handoff-record closeout-prompt discussion-records project-board operational-skill'.split(' '));
 const CANONICAL_ONLY = new Set(['readme-prompt-banner', 'uh-single-file-editions', 'project-profile']);
