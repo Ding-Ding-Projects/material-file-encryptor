@@ -1,3 +1,11 @@
+## Current preservation pass
+
+- [x] Preserve reviewed interface source e1891f08 and original task tips on their remote branches.
+- [x] Record exact e189 build exit0 and interrupted installer with unavailable terminal proof.
+- [ ] Complete final installer, current interaction and89-state/4272-tuple visual acceptance.
+- [ ] Complete combined JavaScript verification and diagnose four synthetic password-verification failures.
+- [ ] Verify complete archives, safe ignored-evidence preservation and exact cleanup ancestry.
+
 ## Active redesign acceptance, 2026-10-11
 
 - [x] Independently verify and publish the native 80 MiB storage unit at main f6990e24 and normal release v1.275.1.

@@ -36,6 +36,6 @@
 - [Desktop update workspace](surface-foundation/updates-panel.md)
 - [Interface design](../../DESIGN.md)
 
-Each article distinguishes source implementation, focused checks, host integration and actual runtime acceptance. The feature delivery inventory keeps all 208 desktop/site rows unverified until their complete evidence exists. Historical captures and releases retain their original source boundaries.
+Each article distinguishes source implementation, focused checks, host integration and actual runtime acceptance. The feature delivery inventory keeps all 210 desktop/site rows unverified until their complete evidence exists. Historical captures and releases retain their original source boundaries.
 
 The application introduces no public HTTP API. Its native JSONL channel and privileged feature bridge are local protocols, not a public web API. The local model service consumes Ollama's API, and the status module consumes its configured service. No new Postman collection is applicable to these modules.
