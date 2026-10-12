@@ -49,7 +49,7 @@ test('packaged producer rejects an implicit or partial full request before readi
  assert.equal(touched,0);
 });
 
-test('default producer audit names all 89 states and 67 unavailable providers without runtime work',async()=>{
+test('default producer audit names all 89 states and 66 unavailable providers without runtime work',async()=>{
  const {acquisitionCapabilities}=await import('../scripts/gui-acceptance-acquire.mjs');
  const {createMountedFoundationFixtures,createKeyboardFoundationFixtures}=await import('../scripts/gui-acceptance-native-files.mjs');
  const inventory=JSON.parse(await fs.readFile(new URL('../contracts/gui-states.json',import.meta.url)));let touched=0;
@@ -57,8 +57,8 @@ test('default producer audit names all 89 states and 67 unavailable providers wi
  const fixtures={access:createPackagedAccessFixture({opened}),foundation:{...createMountedFoundationFixtures({opened}),...createKeyboardFoundationFixtures({opened})}};
  const adapters=createPackagedAdapters({inventory,launch:{cdp:{port:54321,expectedUrl:'file:///owned/app.asar/src/renderer/index.html'}},receipt:opened.statePath,prepareOwnedFixture:()=>{touched++;throw Error('No fixture mutation');},fixtures});
  const audit=acquisitionCapabilities(inventory,adapters,{inspectProviders:true});
- const declared='drive-locked drive-populated drive-selected drive-overflow drive-search tools-default settings-default help-default create-password create-private-repository ollama-help p-language p-schedules-draft p-attention access-removal access-profile-locked access-profile-unlocked access-authenticator-registration access-qr-hidden access-confirmation p-schedule-narrator p-schedule-attention'.split(' ');
- assert.deepEqual(audit.filter(row=>row.provider==='declared').map(row=>row.state),declared);assert.equal(audit.filter(row=>row.provider==='unavailable').length,67);assert.equal(touched,0);
+ const declared='drive-locked drive-populated drive-selected drive-overflow drive-search offline-populated tools-default settings-default help-default create-password create-private-repository ollama-help p-language p-schedules-draft p-attention access-removal access-profile-locked access-profile-unlocked access-authenticator-registration access-qr-hidden access-confirmation p-schedule-narrator p-schedule-attention'.split(' ');
+ assert.deepEqual(audit.filter(row=>row.provider==='declared').map(row=>row.state),declared);assert.equal(audit.filter(row=>row.provider==='unavailable').length,66);assert.equal(touched,0);
  for(const row of audit.filter(row=>row.provider==='unavailable'))assert.match(row.reason,/^CAPABILITY_UNAVAILABLE:/);
  delete fixtures.foundation['drive-overflow']['open-context'];const missing=acquisitionCapabilities(inventory,adapters,{inspectProviders:true}).find(row=>row.state==='drive-overflow');assert.equal(missing.provider,'unavailable');assert.match(missing.reason,/open-context/);assert.equal(touched,0);
  const doc=await fs.readFile('scripts/gui-acquisition-providers.md','utf8');for(const row of audit)assert.ok(doc.includes('| '+String.fromCharCode(96)+row.state+String.fromCharCode(96)+' |'),'Missing documented state '+row.state);

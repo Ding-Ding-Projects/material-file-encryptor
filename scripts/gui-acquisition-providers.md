@@ -13,7 +13,7 @@ This is a source-level audit of the default packaged producer, not runtime accep
 | `drive-overflow` | `drive` | declared | Live identity, workflow, restoration and evidence unverified |
 | `drive-search` | `drive` | declared | Live identity, workflow, restoration and evidence unverified |
 | `drive-notifications` | `drive` | unavailable | `CAPABILITY_UNAVAILABLE: foundation.drive-notifications.prepare` |
-| `offline-populated` | `offline` | unavailable | `CAPABILITY_UNAVAILABLE: foundation.offline-populated.prepare` |
+| `offline-populated` | `offline` | declared | Live identity, native pin readback, controls, restoration and evidence unverified |
 | `history-populated` | `history` | unavailable | `CAPABILITY_UNAVAILABLE: foundation.history-populated.prepare` |
 | `recycle-selected` | `recycle` | unavailable | `CAPABILITY_UNAVAILABLE: foundation.recycle-selected.prepare` |
 | `tools-default` | `converter` | declared | Live identity, workflow, restoration and evidence unverified |
@@ -105,3 +105,13 @@ The acquisition-family source suite passed 79 focused checks. Removing the compl
 The original acquisition validator shared Node's mutable JSON module object. Mutation before or after importing the validator could reduce its apparent authority to 88 states and 4,224 tuples while the canonical file stayed unchanged. Two isolated-process regressions failed against source 202c24c before repair. The validator now separately parses its fixed module-relative canonical file, deeply freezes every nested object and array, and derives the tuple plan from that private authority. Caller data is compared with the independent authority. Mutating the shared JSON module, caller copies or assertion diagnostic references cannot reduce the required inventory.
 
 The two corrected import-order regressions and existing acquisition/producer checks pass 20/20. The default provider audit still identifies 22 declared routes and 67 unavailable producers. This repair supplies no runtime or visual acceptance; accepted tuples remain 0/4,272.
+
+## Owned offline-file acquisition
+
+The current source declaration inventory is 23 routes and 66 unavailable providers. The earlier 22/67 results above remain historical evidence. Only `offline-populated` changed declaration; accepted tuples remain 0/4,272.
+
+The mounted provider exclusively creates Acceptance A/B in the existing fresh owned non-reserved drive fixture, verifies original bytes and exact native identities, then calls the actual `keepOffline` API for each ID. It reads back the full two-row native inventory after every call and accepts only the requested offline-flag delta. The existing foundation actions select and release through normal controls. Re-preparation can restore a released owned pin before capture.
+
+Restoration releases only still-pinned owned IDs through `releaseOffline`, verifies both original bytes and native flags, then invokes the existing owned file restoration. Pre-existing pins, unknown flags, duplicate or changed IDs, foreign files, pagination, changed bytes, locked/busy/foreign ownership and uncertain pin or release completion preserve the files instead of claiming restoration. Shared populated/context restoration cannot remove files while offline ownership remains active. Synthetic version history and encrypted cache retention remain governed by the product; no cache purge or byte-for-byte vault rollback is claimed. These bounded observations do not provide an atomic concurrency transaction.
+
+Focused fixtures execute the actual provider callbacks over task-owned synthetic service data and retain separate positive and negative verdicts. They do not prove native runtime, mounted behavior, displayed rows, layout or pixel parity. Real frozen-package acquisition, UI release, restored mounted readback and hidden capture remain required.
