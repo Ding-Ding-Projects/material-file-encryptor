@@ -54,7 +54,7 @@ const startupPresentation=createStartupPresentation({getState:startupState});
 const startupSurprise=createStartupSurprise({getState:startupState,show:details=>startupPresentation.show(details),resolvePublishedDish:()=>featureRequest('surprise','resolvePublishedDish',{})});
 const stopStartupInteraction=observeStartupInteraction(document,()=>{startupInteracted=true;startupPresentation.dismiss();});
 onPageDiscard(window,stopStartupInteraction);
-function attemptStartup(){if(startupStarted||!startupReady||!statusReady||!updateSnapshot)return;try{localStorage.setItem('mfe.startup.completed.v1','1');}catch{}if(startupState().updateChecking)return;startupStarted=true;void startupSurprise.attempt().catch(()=>{});}
+function attemptStartup(){if(startupStarted||!startupReady||!statusReady||!updateSnapshot)return;try{localStorage.setItem('mfe.startup.completed.v1','1');}catch{}void startupSurprise.attempt().then(result=>{if(!result.deferred)startupStarted=true;}).catch(()=>{startupStarted=true;});}
 function acceptUpdateSnapshot(value){updateSnapshot=value?.snapshot||value;const s=startupState();if(s.updating||s.error||s.busy||s.quiet||s.school?.enabled)startupPresentation.dismiss();attemptStartup();return value;}
 
 const narrationEvents=createNotificationNarration({getNarrator:()=>featureMounts.get('personalization')?.narrator,getSettings:()=>effectiveLocalSettings,translate:(source,options)=>t(source,options),isScreenReaderActive:()=>screenReaderActive!==false,onUnavailable:()=>foundation?.notify({title:'Narration unavailable',message:'Open Settings, Personalization, then Language to select an installed voice. Visual notifications remain available.',level:'warning',narration:false})});

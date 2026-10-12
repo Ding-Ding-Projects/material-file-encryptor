@@ -45,14 +45,18 @@ test('actual renderer startup seam waits for checking to settle and preserves in
  const source=await readFile(new URL('../src/renderer/app.js',import.meta.url),'utf8');
  const start=source.indexOf('let startupReady='),end=source.indexOf('const narrationEvents=',start);assert.ok(start>=0&&end>start);
  const seam=source.slice(start,end);
- for(const interacted of [false,true]){
+ for(const exclusion of ['none','interaction','quiet','school']){
+  const interacted=exclusion==='interaction',suppressed=exclusion!=='none';
   const listeners=new Map();let shown=0,draws=0,stored=0;
   const context={effectiveLocalSettings:{school:{enabled:false}},state:{operations:[]},busy:false,document:{querySelector:()=>null,addEventListener:(type,fn)=>listeners.set(type,fn),removeEventListener:()=>{}},window:{},localStorage:{getItem:()=> '1',setItem:()=>stored++},$:()=>({hidden:true}),matchMedia:()=>({matches:false}),createStartupSurprise:options=>createStartupSurprise({...options,random:()=>{draws++;return 0;}}),observeStartupInteraction,createStartupPresentation:()=>({show:()=>{shown++;return true;},dismiss:()=>{}}),featureRequest:async()=>dish,onPageDiscard:()=>{}};
   vm.runInNewContext(seam+';startupReady=true;statusReady=true;globalThis.accept=acceptUpdateSnapshot;',context);
+  if(exclusion==='quiet')context.effectiveLocalSettings.attention={lowStimulation:true};
+  if(exclusion==='school')context.effectiveLocalSettings.school.enabled=true;
   context.accept({state:'checking'});assert.equal(draws,0);
+  context.effectiveLocalSettings.attention={lowStimulation:false};context.effectiveLocalSettings.school.enabled=false;
   if(interacted)listeners.get('pointerdown')({isTrusted:true});
   context.accept({state:'current'});await new Promise(resolve=>setImmediate(resolve));
-  assert.equal(draws,interacted?0:1);assert.equal(shown,interacted?0:1);assert.ok(stored>0);
-  context.accept({state:'current'});assert.equal(draws,interacted?0:1);
+  assert.equal(draws,suppressed?0:1);assert.equal(shown,suppressed?0:1);assert.ok(stored>0);
+  context.accept({state:'current'});assert.equal(draws,suppressed?0:1);
  }
 });
