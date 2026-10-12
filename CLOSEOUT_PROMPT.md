@@ -1,25 +1,28 @@
 # Active continuation handoff, 2026-10-12 UTC
 
-Resume the approved full-product task: optimize measured application speed, repair confirmed defects, synchronize shared instructions, deliver every applicable required feature, and prove100%Material Design3 across every rendered desktop, extension and documentation surface. The goal remains active and incomplete.
+Continue the approved full-product task: improve measured application speed, repair confirmed defects, synchronize shared instructions, deliver every applicable required feature, and prove 100% Material Design 3 across every rendered desktop, extension and documentation surface. The goal is active and incomplete.
 
-## Source and preservation
+## Current source and preservation
 
-Main remains f026abd65d80b28f42707635d9ce2a19cce83001. Current integration base4ae878b combines reviewed server4666237646aa95c111dd731c45113c23d38aec0e, extension39cbbd2324b8b3fba10df651487caa129ca97d2f and documentation-speed9c4f6dc33d1988fc3a47bcdb7f2ebf420438dc08. Those three owning remote branches were independently verified. The recovery branch was last read back at7ad539a937f5c2828572884cc7ef7111290ba62c; newer integration preservation follows this record.
+The primary recovery branch is codex/resume-integration-20261012. Its latest verified remote source before this record is 33ed0f8b58b1238ff28264aa0ea8b019759a7a55. Main remains f026abd65d80b28f42707635d9ce2a19cce83001. Reviewed server provisioning 4666237, extension workspace 39cbbd2 and documentation cache 9c4f6dc were independently preserved remotely and integrated before the declaration-only native correction at 33ed0f8.
 
-Shared instructions are synchronized at194ceca48a55313ade8703a0cd4695efb41482b1 with83of83managed targets current. Status Hub health responds, enrollment remains unavailable; the current status surface is a private local fallback. Project access lacks read:project scope.
+The surface branch retains test-only candidate ae762c714e18a1f67e2f3f5193ecc9019b775ac4, with verified remote readback. Other retained branches and checkouts remain untouched. Shared instructions are synchronized at 194ceca48a55313ade8703a0cd4695efb41482b1, with 83 of 83 managed targets current. Status Hub enrollment is unavailable; current status uses a private local fallback. Project access lacks read:project scope.
 
-## Evidence and limits
+## Accepted evidence and remaining limits
 
-Exact7ad root build passed unchanged-source checks. Actual package comparison retained994PDFfiles identically, removed560maps and passed the extracted PDF round-trip. Downloaded normalv1.303.1/source3a assets match published hashes and861extractedfiles. Installed startup/update/removal acceptance is separate and incomplete.
+- Exact root build at 33ed0f8 passed with unchanged clean source. Native host SHA-256:1767ec5819d01b069191fc58f88c43a3ad0f4bf549492c48193bd66f991b9e62.
+- Actual native provisioning passed 12 production-pipe checks: modified archive and retained extraction rejection, extraction, exact 315-file and 62-directory inventory, status, normal close and host exit 0. Java execution, active cancellation, real server start and license acceptance remain unrun. Configuration admission stays false.
+- The original 852e3fc build failed CS0136 and CS0819; its unchanged-source failure receipt remains retained. The correction changed two declarations only.
+- Downloaded normal v1.303.1/source3a assets match their published hashes and 861 extracted files. Installed startup/update/removal acceptance is separate and incomplete.
+- Exact 7ad package comparison removed 560 PDF source maps, retained all 994 PDF files identically and passed the extracted PDF round-trip. Package size does not establish startup speed.
+- Documentation cache service measurements, raw samples and memory tradeoffs bind to 9c4f6dc. They exclude IPC, ASAR and renderer work. Extension helper staging fell from 431,433 to 999 bytes; 37 parent-repeated focused checks passed, while actual browser acceptance remains pending.
+- Current registry:885 surfaces and 92,925 independently unverified assessments. Keep historical 105-family/210-row and 89-state/4272-tuple evidence separate.
+- Genuine packaged diagnostics show 40-pixel Clear hosts with 48-pixel touch layers and successful outside-host clicks. Corrected History/Recycle checks and deliberate reduced-target rejection passed. The first renderer test still needs exact obstruction diagnosis. Latest admission:1,393,772 KiB free versus the unchanged 1,572,864 KiB floor. No GUI launched during that rejected admission; prior owned launches are closed.
 
-Current surface registry contains885surfaces and92925independently unverified assessments. Preserve historical105-family/210-row and89-state/4272-tuple records separately. Three genuine packaged diagnostic states show40pxClearhosts with48pxtouchlayers and successful outside-host clicks. The affected source-renderer assertions are being repaired without changing product styling. Original failed observations remain retained; independent owned-resource absence was verified after captures.
+## Active isolated work and next steps
 
-Reviewed documentation-cache service timings and memory observations, extension bundle reduction, focused tests and native inventory evidence are recorded in HANDOFF.md and paired feature articles. Root build/native extraction/current browser/complete visual acceptance after the new integration remain pending. Source-only checks never prove those outcomes.
+The server branch is implementing complete runtime-file protection for the entire child lifetime, with configuration admission still closed. The extension branch is implementing a typed read-only protection-status route, with no browser grant, private mapping transmission or borrowed actor context. Both slices require independent review, preservation, integration and their own actual verification.
 
-## Next actions
+Finish those bounded slices. Complete native lifetime proof and exact-version configuration before enabling startup. Resume the first renderer diagnostic only after a relevant resource change permits admission, preserving the already passing scoped proof. Add truthful renderer task-ready timing before claiming end-to-end speed. Complete the remaining extension mediation, required features, visual matrix, installed continuity, normal release and live documentation evidence. Integrate accepted completed work into main and verify its remote state.
 
-Preserve this integration, complete the two corrected renderer assertions and new exact root build, verify actual native provisioning against the pinned archive, and measure actual built responsiveness. Complete native lifetime/configuration admission before enabling real server start. Finish extension native mediation and remaining required features. Integrate independently accepted work into main, verify remote and release/deployment results, refresh genuine current evidence and complete the whole product goal.
-
-Keep the existing mounted drive untouched. Real-data migration, fresh installation and removal remain deferred. Any accepted-channel update requires separately verified matching release and continuity. Do not change local host power/login state. Retain all unfinished branches, profiles, original diagnostics and ignored announcement variants; no deletion is justified by ancestry alone.
-
-The subsequent exact root build at 852e3fc failed native compilation with CS0136 and CS0819. Two declaration-only repairs are now preserved with this record, pending a fresh exact root build. Do not execute the prepared native provisioning probe until its source and successful build receipt match. The corrected History/Recycle renderer check passed, while the first test still needs precise scroll/hit diagnostics. Its latest launch admission stopped below the unchanged memory floor; no GUI was launched by that attempt.
+Keep the existing mounted drive untouched. Real-data migration, fresh installation and removal stay deferred. Accepted-channel updating requires separately verified matching release and continuity. No local host power/login action is authorized. Retain original negative receipts, profiles, historical work and all ignored announcement variants. No deletion qualifies from ancestry alone.

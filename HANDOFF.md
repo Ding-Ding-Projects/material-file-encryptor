@@ -878,3 +878,9 @@ Latest steering requires measured application speed plus100%Material Design3 thr
 ### Integrated native build correction
 
 The exact root build at 852e3fcd2c491ca4547f60f8adc6148257049db0 ended with exit 1 while source stayed unchanged. Native compilation reported CS0136 at ServerLeaseBroker.cs:102 and CS0819 at ServerRuntimeProvisioner.cs:81. The correction renames the status-local inventory variable and separates the two implicit declarations; it changes no admission rule. A fresh exact root build and actual native provisioning remain required. The original failed receipt is retained.
+
+### Native provisioning verified at 33ed0f8
+
+The corrected exact root build passed at 33ed0f8b58b1238ff28264aa0ea8b019759a7a55 with unchanged clean source. Native host SHA-256 is 1767ec5819d01b069191fc58f88c43a3ad0f4bf549492c48193bd66f991b9e62. The production pipe probe passed 12 actual checks, including rejected modified archive copies, retained extraction protection, native extraction, all 315 file names/sizes/hashes and 62 directories, runtime status and normal close/exit 0. Java execution, active cancellation, real server start, license acceptance and installed lifecycle remain unrun. Exact public evidence is in docs/evidence/resume-native-20261012.json.
+
+Test-only correction ae762c714e18a1f67e2f3f5193ecc9019b775ac4 is preserved on its remote branch. History/Recycle passes the real 48-pixel touch-layer checks and deliberate reduced-target rejection. The first renderer test needs precise obstruction diagnosis. Latest admission had 1,393,772 KiB free versus the unchanged 1,572,864 KiB floor; no process was launched. Do not infer a product defect or change scrolling without that observation.

@@ -45,5 +45,39 @@
     "Build-generated Material bundle matched the pinned Git blob after normalization; original raw status receipt remains retained.",
     "Synthetic file leases and native registration do not prove a running server.",
     "All current surface interaction and visual verdicts retain independent evidence requirements."
-  ]
+  ],
+  "nativeProvisioning": {
+    "sourceCommit": "33ed0f8b58b1238ff28264aa0ea8b019759a7a55",
+    "entrypoint": "build.bat /s",
+    "buildExitCode": 0,
+    "nativeHostSha256": "1767ec5819d01b069191fc58f88c43a3ad0f4bf549492c48193bd66f991b9e62",
+    "archiveSha256": "d35f31e712f0fcf6ac5a093edc90204fbff22f720ba3950bd09d331d5e621636",
+    "manifestSha256": "b82d68f6a68c1e1f3d5df33b594b433fae3e11463937a42917777431aab1b849",
+    "actualPipeChecksPassed": 12,
+    "checks": [
+      "actual-native-initialize",
+      "truthful-native-capabilities",
+      "unprepared-runtime-status",
+      "mismatched-owned-copy-rejected-and-retained",
+      "retained-extraction-rejected-without-overwrite",
+      "actual-native-runtime-prepare",
+      "all-315-runtime-files-and-directory-inventory-read-back",
+      "actual-native-runtime-status-without-java-execution",
+      "unknown-cancellation-is-nondestructive",
+      "license-distribution-and-accepted-archive-unchanged",
+      "native-close-verified",
+      "normal-host-exit-and-stable-host-bytes"
+    ],
+    "files": 315,
+    "directories": 62,
+    "normalHostExitCode": 0,
+    "closed": true,
+    "passed": true,
+    "javaExecuted": false,
+    "serverStartAttempted": false,
+    "licenseAccepted": false,
+    "mountedDriveAccessed": false,
+    "activeCancellationVerified": false,
+    "installedLifecycleVerified": false
+  }
 }
