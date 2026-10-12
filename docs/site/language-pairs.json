@@ -7,8 +7,8 @@
     {
       "source": "docs/features/README.md",
       "translation": "docs/features/README.zh-HK.md",
-      "sourceSha256": "bc44a1d5017039ac8e81ee92877963c3f094a43c4c17739758800b58ab8c729b",
-      "translationSha256": "02bf8ce59c9d2ec300f9f65cd02289355fa14acdd01f993c6a2ca4b16ff69ec8"
+      "sourceSha256": "5a95fb7adac10a57ad32a4be87dffc4570dfed2037b175e55a989f5212de5516",
+      "translationSha256": "be0f924ac0d3dfe799a2342f8a68265535882b3a5ea2888f94a199f9b2376a85"
     },
     {
       "source": "docs/features/access-local.md",
@@ -25,8 +25,8 @@
     {
       "source": "docs/features/access/access-host.md",
       "translation": "docs/features/access/access-host.zh-HK.md",
-      "sourceSha256": "e79e5382c30524e0515cefb25c7415a11c1af82e8e8aef2dc192e66da8d3d17d",
-      "translationSha256": "f3f0bcb3dec31678d3def989f8da83a17c29f75d415ede9ca53f9e81e0a5264b"
+      "sourceSha256": "6ee9845fe6370d9d9b853c436a978ceef166801d4a8bb7488977cbf23aac0bb6",
+      "translationSha256": "9b00b7d3ed00a06b21afa2240879a5dcf0b9ff8595da350910cd0059698435d5"
     },
     {
       "source": "docs/features/access/local-access.md",
@@ -343,8 +343,8 @@
     {
       "source": "docs/features/platform/README.md",
       "translation": "docs/features/platform/README.zh-HK.md",
-      "sourceSha256": "893a14790a76f43bdeaff76443e3f2d947aea2b6eda08b22a63b680169481d06",
-      "translationSha256": "3b00cdfa324161c388b7769db510db8b927a8c425c4c63a5740f1e14dc127211"
+      "sourceSha256": "94f1071bae2ed06adc3621dc9f861092de8ee1782637e742fb52055afe728908",
+      "translationSha256": "3b4046b00e429d1ec5791c0403b10d8a7e94d77e1a412d84824d8d0f8f402f14"
     },
     {
       "source": "docs/features/platform/current-integration.md",
@@ -355,8 +355,8 @@
     {
       "source": "docs/features/platform/documentation-and-status.md",
       "translation": "docs/features/platform/documentation-and-status.zh-HK.md",
-      "sourceSha256": "b39916fe9c150777a0742905e6b42f8ac53797fed855d97f23a7112ab3209739",
-      "translationSha256": "19f154f889fff05da30b197bd448b887bd5ba758b8dab4aec512dbc1484e8d45"
+      "sourceSha256": "b121a9ae8e6193d91a51355d2cd503d5c1c40427ea28e07c676fa9e13f3ebac7",
+      "translationSha256": "e303f34b1e4c00b16cd47ce650ecc3a84a91ebfa3ef1c10c91cca39e815bdc1c"
     },
     {
       "source": "docs/features/platform/instruction-currency.md",
