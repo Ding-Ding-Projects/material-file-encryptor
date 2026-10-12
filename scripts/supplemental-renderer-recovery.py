@@ -252,24 +252,19 @@ class Recovery:
             time.sleep(0.2)
 
 
-def configured_base_interpreter(values, launcher, actual_base):
-    """Resolve stdlib or uv venv metadata against this executing interpreter."""
-    home = Path(values.get('home', ''))
-    if not home.is_absolute() or launcher.parent.name.lower() != 'scripts' or values.get('include-system-site-packages') != 'false':
-        raise Error('Supported isolated Python launcher configuration is required.')
-    executable = values.get('executable')
-    if executable:
-        base = Path(executable)
-    elif values.get('implementation') == 'CPython' and values.get('uv'):
-        base = home / 'python.exe'
-    else:
+def configured_base_interpreter(values, launcher, actual_base, actual_launcher):
+    """Bind supported venv metadata to the exact executing launcher and base."""
+    launcher, actual = Path(launcher), Path(actual_base)
+    declared = values.get('executable')
+    if not declared and not (values.get('uv') and values.get('implementation') == 'CPython'):
         raise Error('Base interpreter metadata is unavailable.')
-    if launcher.name.lower() == 'pythonw.exe':
-        base = base.with_name('pythonw.exe')
-    elif launcher.name.lower() != 'python.exe':
-        raise Error('Unsupported interpreter launcher name.')
-    if not base.is_absolute() or base.parent != home or base != Path(actual_base):
-        raise Error('Configured base interpreter differs from the executing interpreter.')
+    base = Path(declared) if declared else actual
+    if (not base.is_absolute() or not base.is_file() or base != actual
+            or Path(actual_launcher) != launcher or launcher.parent.name.lower() != 'scripts'
+            or launcher.name.lower() not in ('python.exe', 'pythonw.exe')
+            or values.get('include-system-site-packages') != 'false'
+            or Path(values.get('home', '')) != base.parent):
+        raise Error('Supported isolated Python launcher configuration is required.')
     return base
 
 
@@ -284,7 +279,7 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
         node = Path(os.environ['MFE_RENDERER_NODE_EXECUTABLE'])
         cfg = launcher.parent.parent / 'pyvenv.cfg'
         values = dict(line.split(' = ', 1) for line in cfg.read_text().splitlines() if ' = ' in line)
-        base = configured_base_interpreter(values, launcher, sys._base_executable)
+        base = configured_base_interpreter(values, launcher, sys._base_executable, sys.executable)
         # CPython's Windows venv redirector replaces argv[0] with a quoted
         # base executable. The intermediate launcher retains the original.
         configuration = {'launcher': str(launcher), 'base': str(base), 'node': str(node), 'files': {str(p): digest(p) for p in [launcher, base, cfg, node]}, 'command': subprocess.list2cmdline([os.environ['MFE_LOWLEVEL_PYTHON'], *sys.argv]), 'baseCommand': '"' + str(base) + '" ' + subprocess.list2cmdline(sys.argv), 'selfPid': os.getpid()}
@@ -305,7 +300,7 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
             raise Error('Client is not a direct parent or one supported launcher ancestor.')
         if len(chain) not in (2, 3) or chain[-1][0]['pid'] != client_pid or chain[-1][0]['executablePath'] != configuration['node']:
             raise Error('Actual Node client ancestry differs.')
-        if chain[0][0]['executablePath'] != configuration['base'] or chain[0][1] != configuration.get('baseCommand', configuration['command']):
+        if chain[0][0]['executablePath'] != configuration['base'] or chain[0][1] != configuration['baseCommand']:
             raise Error('Actual Python execution image or command differs.')
         if len(chain) == 3 and (chain[1][0]['executablePath'] != configuration['launcher'] or chain[1][1] != configuration['command']):
             error = Error('Intermediate Python launcher image or command differs.')
