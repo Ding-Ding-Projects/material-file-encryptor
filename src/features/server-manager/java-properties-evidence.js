@@ -1,4 +1,5 @@
 import {createHash} from 'node:crypto';
+import {types} from 'node:util';
 
 // Inspection only. This module is not a native admission capability and accepts
 // no generated-default, loader or consumer proof supplied by a renderer.
@@ -10,12 +11,19 @@ export class PropertiesInspectionError extends Error {
 const fail=code=>{throw new PropertiesInspectionError(code);};
 const whitespace=character=>character===' '||character==='\t'||character==='\f';
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
+const typedArrayPrototype=Object.getPrototypeOf(Uint8Array.prototype);
+const intrinsic=Object.fromEntries(['byteLength','byteOffset','length','buffer'].map(key=>[key,Object.getOwnPropertyDescriptor(typedArrayPrototype,key).get]));
 function boundedBytes(bytes){
-  if(!(bytes instanceof Uint8Array))fail('BYTE_INPUT_REQUIRED');
-  if(bytes.byteLength>PROPERTIES_LIMITS.bytes)fail('BYTE_LIMIT');
+  if(types.isProxy(bytes)||!types.isUint8Array(bytes))fail('BYTE_INPUT_REQUIRED');
+  const byteLength=Reflect.apply(intrinsic.byteLength,bytes,[]);
+  if(byteLength>PROPERTIES_LIMITS.bytes)fail('BYTE_LIMIT');
   // Snapshot after the bound, before hashing and decoding, so caller mutation
-  // cannot bind one byte sequence to another parse result.
-  return Buffer.from(bytes);
+  // cannot bind one byte sequence to another parse result. Copy a new native
+  // view, not caller-overridable length, iterator or byteLength properties.
+  try{
+    const buffer=Reflect.apply(intrinsic.buffer,bytes,[]),offset=Reflect.apply(intrinsic.byteOffset,bytes,[]),length=Reflect.apply(intrinsic.length,bytes,[]);
+    return Buffer.from(new Uint8Array(buffer,offset,length));
+  }catch{fail('UNSUPPORTED_BYTE_STORAGE');}
 }
 function unescape(text){
   let result='';
@@ -89,15 +97,27 @@ export function parseJavaProperties(bytes,{profile}={}){
   return Object.freeze({status:'parsed',profile,rawSha256:hash(snapshot),byteCount:snapshot.byteLength,entries:Object.freeze(entries)});
 }
 const missing=Object.freeze(['exact-distribution-generated-defaults','exact-version-loader-profile','exact-version-network-consumers','complete-loading-tree-isolation']);
+function snapshotBinding(binding){
+  const keys=['edition','version','distributionSha256','propertiesSha256','profile'];
+  if(!binding||typeof binding!=='object'||types.isProxy(binding)||![Object.prototype,null].includes(Object.getPrototypeOf(binding)))fail('INVALID_INSPECTION_BINDING');
+  const descriptors=Object.getOwnPropertyDescriptors(binding),own=Reflect.ownKeys(descriptors);
+  if(own.length!==keys.length||own.some(key=>!keys.includes(key)))fail('INVALID_INSPECTION_BINDING');
+  const snapshot={};
+  for(const key of keys){
+    const descriptor=descriptors[key];
+    if(!descriptor||!Object.hasOwn(descriptor,'value')||!descriptor.enumerable||typeof descriptor.value!=='string')fail('INVALID_INSPECTION_BINDING');
+    snapshot[key]=descriptor.value;
+  }
+  return Object.freeze(snapshot);
+}
 export function inspectJava1219Configuration(bytes,binding){
   try{
-    const keys=['edition','version','distributionSha256','propertiesSha256','profile'];
-    if(!binding||Object.keys(binding).length!==keys.length||Object.keys(binding).some(key=>!keys.includes(key)))fail('INVALID_INSPECTION_BINDING');
-    if(binding.edition!=='java'||binding.version!=='1.21.9')fail('UNSUPPORTED_VERSION');
-    if(!/^[a-f0-9]{64}$/.test(binding.distributionSha256)||!/^[a-f0-9]{64}$/.test(binding.propertiesSha256))fail('INVALID_INSPECTION_BINDING');
-    const parsed=parseJavaProperties(bytes,{profile:binding.profile});
-    if(parsed.rawSha256!==binding.propertiesSha256)fail('SOURCE_BYTE_BINDING_MISMATCH');
-    return Object.freeze({status:'parsed-unadmitted',configurationAdmitted:false,binding:Object.freeze({...binding}),parsed,missingEvidence:missing});
+    const snapshot=snapshotBinding(binding);
+    if(snapshot.edition!=='java'||snapshot.version!=='1.21.9')fail('UNSUPPORTED_VERSION');
+    if(!/^[a-f0-9]{64}$/.test(snapshot.distributionSha256)||!/^[a-f0-9]{64}$/.test(snapshot.propertiesSha256))fail('INVALID_INSPECTION_BINDING');
+    const parsed=parseJavaProperties(bytes,{profile:snapshot.profile});
+    if(parsed.rawSha256!==snapshot.propertiesSha256)fail('SOURCE_BYTE_BINDING_MISMATCH');
+    return Object.freeze({status:'parsed-unadmitted',configurationAdmitted:false,binding:snapshot,parsed,missingEvidence:missing});
   }catch(error){
     if(!(error instanceof PropertiesInspectionError))throw error;
     return Object.freeze({status:'unavailable',configurationAdmitted:false,reason:error.code});

@@ -63,3 +63,23 @@ test('unsupported states are precise, bounded and cannot accept caller proof fla
   const broker=readFileSync('native/MaterialFileEncryptor.Host/ServerLeaseBroker.cs','utf8');assert.match(broker,/ConfigurationAdmitted\(Entry entry\) => false/);
   assert.throws(()=>assert.match(broker.replace('ConfigurationAdmitted(Entry entry) => false','ConfigurationAdmitted(Entry entry) => true'),/ConfigurationAdmitted\(Entry entry\) => false/));
 });
+test('binding accessors and proxies cannot change the retained source identity',()=>{
+  const data=bytes('k=v'),original=binding(data);let reads=0;
+  const changing={...original};Object.defineProperty(changing,'propertiesSha256',{enumerable:true,get(){return ++reads<=2?original.propertiesSha256:'b'.repeat(64);}});
+  assert.deepEqual(inspect(data,changing),{status:'unavailable',configurationAdmitted:false,reason:'INVALID_INSPECTION_BINDING'});assert.equal(reads,0);
+  let traps=0;const proxy=new Proxy(original,{get(){traps++;throw Error('must not read');},ownKeys(){traps++;throw Error('must not enumerate');}});
+  assert.equal(inspect(data,proxy).reason,'INVALID_INSPECTION_BINDING');assert.equal(traps,0);
+  const result=inspect(data,original);original.propertiesSha256='b'.repeat(64);assert.equal(result.binding.propertiesSha256,result.parsed.rawSha256);
+});
+test('intrinsic byte bounds reject oversized subclasses and unsupported storage',()=>{
+  class HiddenByteLength extends Uint8Array{get byteLength(){return 0;}}
+  const oversized=new HiddenByteLength(PROPERTIES_LIMITS.bytes+1);oversized.fill(32);
+  code(()=>parse(oversized,{profile:latin}),'BYTE_LIMIT');
+  let reads=0;class HiddenLength extends Uint8Array{get byteLength(){reads++;return 0;}get length(){reads++;return 0;}[Symbol.iterator](){throw Error('must not iterate');}}
+  code(()=>parse(new HiddenLength(PROPERTIES_LIMITS.bytes+1),{profile:latin}),'BYTE_LIMIT');assert.equal(reads,0);
+  const data=new HiddenLength([0x6b,0x3d,0x76]);assert.deepEqual(pairs(parse(data,{profile:latin})),[['k','v']]);assert.equal(reads,0);
+  code(()=>parse(new Proxy(bytes('k=v'),{}),{profile:latin}),'BYTE_INPUT_REQUIRED');
+  // Use a dedicated transferable array buffer, without Buffer pool storage.
+  const owned=new Uint8Array(new ArrayBuffer(3));owned.set([0x6b,0x3d,0x76]);structuredClone(owned.buffer,{transfer:[owned.buffer]});
+  code(()=>parse(owned,{profile:latin}),'UNSUPPORTED_BYTE_STORAGE');
+});
