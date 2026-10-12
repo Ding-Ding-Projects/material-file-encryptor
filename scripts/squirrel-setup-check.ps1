@@ -1,5 +1,5 @@
 param([Parameter(Mandatory)][string]$Setup, [Parameter(Mandatory)][string]$Package,
-  [Parameter(Mandatory)][string]$Updater, [string]$Background, [string]$ReceiptPath)
+  [Parameter(Mandatory)][string]$Updater, [string]$Background, [string]$ReceiptPath, [string]$ReleaseIndex)
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/squirrel-file-hash.ps1"
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -110,6 +110,12 @@ try {
   if ($entries['RELEASES'].Length -gt 4096) { throw 'SETUP_RELEASES_TOO_LARGE' }
   $textReader = [IO.StreamReader]::new($entries['RELEASES'].Open())
   try { $release = $textReader.ReadToEnd().Trim() } finally { $textReader.Dispose() }
+  if ($ReleaseIndex) {
+    $external = [IO.File]::ReadAllBytes($ReleaseIndex)
+    if ($external.Length -gt 4096 -or ($external.Length -ge 3 -and $external[0] -eq 239 -and $external[1] -eq 187 -and $external[2] -eq 191)) { throw 'SETUP_EXTERNAL_RELEASES_INVALID' }
+    $externalText = [Text.UTF8Encoding]::new($false, $true).GetString($external).Trim()
+    if ($externalText -cne $release) { throw 'SETUP_EXTERNAL_RELEASES_MISMATCH' }
+  }
   $fields = $release -split '\s+'
   if ($fields.Count -ne 3 -or $fields[0] -notmatch '^[a-fA-F0-9]{40}$' -or $fields[1] -cne $packageName -or $fields[2] -cne [string]$entries[$packageName].Length -or $fields[0].ToLowerInvariant() -ne (Get-EntryDigest $entries[$packageName] 'SHA1')) { throw 'SETUP_EMBEDDED_RELEASES_MISMATCH' }
 } finally { $zip.Dispose() }
