@@ -59,17 +59,46 @@ export function createAccessIntegration({dataDirectory,toolsDirectory,credential
   if(key.startsWith('authenticator:'))return action==='credentialSet'?host.setCredential(key,value):host.deleteCredential(key);
   if(key.startsWith('history:'))return privateHistoryMutation(who,action,key,value);
   if(typeof recordMutation!=='function')throw Error('Local mutation history is unavailable.');
-  const target=targetFor(key),epoch=generation(who,target),before=await credentials.readVersioned(key);current(who,target,epoch);
+  const target=targetFor(key);let epoch=generation(who,target);const before=await credentials.readVersioned(key);current(who,target,epoch);
   if(action==='credentialSet'&&before.value!==null)throw Error('An existing credential cannot be replaced through creation. Authenticate and use its supported removal workflow.');
   if(action==='credentialDelete'&&before.value===null)return true;
   if(action==='credentialDelete'){const verified=grants.get(identity(who,target)),created=creations.get(identity(who,key));if(!(verified&&verified.expires>now()&&verified.revision===before.revision)&&!(created&&created.expires>now()&&created.revision===before.revision))throw Error('Verify the current credential before removing it.');}
+  // Revoke old profile verification before a supported write can reach storage or await its audit.
+  if(target==='profile'){epoch++;epochs.set(identity(who,target),epoch);grants.delete(identity(who,target));}
   const result=await credentials.compareAndSetVersioned(key,before.revision,action==='credentialSet'?value:null);if(!result.updated)throw Error('Protected access record changed concurrently.');
   try{current(who,target,epoch);await recordMutation({version:1,action:action==='credentialSet'?'access-credential-created':'access-credential-removed',target:target,at:new Date(now()).toISOString()});current(who,target,epoch);}
   catch(error){const restored=await credentials.compareAndSetVersioned(key,result.revision,before.value);if(!restored.updated)throw Error('Protected access record changed concurrently. Local recovery is required.');try{await recordMutation({version:1,action:'access-credential-rolled-back',target,at:new Date(now()).toISOString()});}catch{throw Error('Local mutation history is unavailable.');}throw error;}
   if(action==='credentialSet')creations.set(identity(who,key),{revision:result.revision,expires:now()+300000});else creations.delete(identity(who,key));
   grants.delete(identity(who,target));return true;
  }
+ async function protectionStatus(){
+  const frame=getMainFrame(),who=frame&&typeof frame==='object'?actors.get(frame):null;
+  const live=()=>!closed&&frame&&typeof frame==='object'&&frame===getMainFrame()&&frame?.detached!==true&&!(typeof frame?.isDestroyed==='function'&&frame.isDestroyed());
+  let profile='locked',sharedMode='unknown';
+  const grant=who?grants.get(identity(who,'profile')):null,epoch=who?generation(who,'profile'):null;
+  if(!live())return {schemaVersion:1,profile:'unknown',sharedMode:'unknown',browserPermission:'unavailable'};
+  try{const before=await readSchool(),after=await readSchool();if(before===after)sharedMode=after?'active':'inactive';}catch{}
+  if(grant){
+   if(grant.expires<=now())profile='expired';
+   else try{const record=await credentials.readVersioned('local-profile:v1');if(live()&&generation(who,'profile')===epoch&&grants.get(identity(who,'profile'))===grant){if(grant.expires<=now())profile='expired';else if(record.revision===grant.revision)profile='authenticated';else {grants.delete(identity(who,'profile'));profile='locked';}}else profile='unknown';}catch{profile='unknown';}
+  }
+  try{const after=await readSchool();if(sharedMode!==(after?'active':'inactive'))sharedMode='unknown';}catch{sharedMode='unknown';}
+  if(profile==='authenticated')try{
+   const record=await credentials.readVersioned('local-profile:v1');
+   if(!live()||generation(who,'profile')!==epoch||grants.get(identity(who,'profile'))!==grant)profile='unknown';
+   else if(grant.expires<=now())profile='expired';
+   else if(record.revision!==grant.revision){grants.delete(identity(who,'profile'));profile='locked';}
+  }catch{profile='unknown';}
+  try{const after=await readSchool();if(sharedMode!==(after?'active':'inactive'))sharedMode='unknown';}catch{sharedMode='unknown';}
+  if(profile==='authenticated'){
+   if(grants.get(identity(who,'profile'))!==grant)profile='unknown';
+   else if(grant.expires<=now())profile='expired';
+  }
+  if(!live()||who&&generation(who,'profile')!==epoch)return {schemaVersion:1,profile:'unknown',sharedMode:'unknown',browserPermission:'unavailable'};
+  return {schemaVersion:1,profile,sharedMode,browserPermission:'unavailable'};
+ }
  return {
+  protectionStatus,
   request(senderFrame,action,payload={}){
    if(closed||!senderFrame||typeof senderFrame!=='object'||senderFrame!==getMainFrame())return Promise.reject(Error('Trusted access actor is unavailable.'));
    if(credentialActions.has(action))validateCredentialRequest(action,payload);else validateAccessHostRequest(action,payload);

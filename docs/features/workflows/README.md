@@ -5,3 +5,7 @@
 - [Native browser messaging transport](browser-native-host.md): bounded framing, current-user pipe checks, consent and reviewed extension identity.
 
 These workflows use local native service entrypoints rather than an HTTP API. Postman collections are not applicable.
+
+- [Browser extension workspace](browser-extension-workspace.md)
+
+- [Browser protection observations](browser-protection-observations.md)

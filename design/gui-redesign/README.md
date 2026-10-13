@@ -43,6 +43,47 @@ The baseline `src/shared/surface/material-entry.js` imports existing components.
 
 ## Hand-written state and parity inventory
 
+### Shared helper anatomy repair
+
+Three additional exact reference routes cover the retained source-bound diagnostic
+states: `screen=drive&state=create-dialog`, `screen=history&state=filtered-empty`
+and `screen=recycle&state=filtered-empty`. Add `width=1180&height=752&scale=1.5`
+to compare the historical diagnostic tuple, plus the existing theme and language
+parameters. The create route shows the real form hierarchy, transport selector,
+adjacent choice-search icon, local-folder fields and pinned footer. Filtered routes
+show their own toolbars and no matching rows; no fictional populated drive is reused.
+
+The helper specification uses local 24-unit SVG geometry inside the existing
+registered `md-icon-button`. It preserves `currentColor`, component state layers,
+customization tokens, the existing 40 px button box and 48 px touch region.
+Neither source SVG dimensions nor the reference illustration prove the computed
+production dimensions. No external font or network icon fetch is introduced.
+
+Select search remains adjacent to the original `md-outlined-select`; the select is
+not wrapped, cloned, moved or replaced. The owned
+`data-select-search-composition="adjacent"` marker names this pairing. It retains
+its original form, labels, slots, values, inline styles and listeners. In a dialog,
+the default same-row layout reserves 56 px, comprising a 40 px button and 16 px
+horizontal spacing including the touch-region overhang. Existing inline custom
+widths and component sizing tokens remain authoritative; their wrapping behavior
+requires separate real capture. Disposing the helper restores the prior marker.
+Portal anchoring stays on the actual helper button; activation still checks the
+select's admission and returns focus to that original select after selection.
+
+The History reference uses an explicit unavailable selection for its unverified
+empty/locked setup. The historical blank selector remains a measurement question;
+this task does not rewrite the production retention default or selected value.
+
+The retained diagnostic images belong to source
+`7ad539a937f5c2828572884cc7ef7111290ba62c`. Their executable path was subsequently
+reused, so a current validator cannot establish that old executable's hash there.
+They are historical observations, not images of this repair. The parent build and
+capture lane must produce a new exact source/build binding, inspect all three
+states and refresh current presentation only after acceptance. Measure SVG and
+touch geometry, select/helper row bounds, focus/clear/selection behavior, anchored
+regex menu, normal/minimum widths, language modes, themes and display scales.
+Do not infer the cause of the partially visible title bar from these helper probes.
+
 Each row resolves through the exact `screen` and `state` query fields. Every row requires both reference and production raw captures, labeled side-by-side output and machine-readable visual diff for an identical tuple. All are currently **unverified**. Production navigation below is a human route, not a claimed deterministic fixture endpoint.
 
 | Screen | State | Production navigation / intended behavior |

@@ -18,6 +18,26 @@ namespace MaterialFileEncryptor.Host
         private bool released;
         public string Kind { get { return "windows-deny-write-delete"; } }
         private ServerFileLease() { }
+        internal static ServerFileLease AcquireDirectoryScope(string root)
+        {
+            var lease=new ServerFileLease();try{lease.PinDirectories(Canonical(root));return lease;}catch{lease.Release();throw;}
+        }
+        internal void HoldDirectory(string directory) { lock(sync){AssertHeld();PinDirectories(Canonical(directory));} }
+        internal static ServerFileLease AcquireRuntimeInventory(string runtimeRoot, IReadOnlyDictionary<string, string> files)
+        {
+            string root = Canonical(runtimeRoot);var lease = new ServerFileLease();
+            try
+            {
+                foreach(var item in files)
+                {
+                    string file=Canonical(Path.Combine(root,item.Key));
+                    if(!file.StartsWith(root+"\\",StringComparison.OrdinalIgnoreCase))throw new ArgumentException("Runtime member must remain inside its owned root.");
+                    ValidateDigest(item.Value);lease.PinDirectories(Path.GetDirectoryName(file));lease.PinFile(file,item.Value);
+                }
+                lease.AssertHeld();return lease;
+            }
+            catch { lease.Release();throw; }
+        }
 
         public static ServerFileLease Acquire(string ownedServerRoot, string jarSha256, string admittedRuntimeRoot, string runtimeExecutable, string runtimeSha256)
         {

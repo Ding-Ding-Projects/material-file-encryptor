@@ -30,6 +30,9 @@ internal static class Program
     [DllImport("kernel32.dll",SetLastError=true)]private static extern bool DeviceIoControl(SafeFileHandle handle,uint control,byte[] input,uint inputLength,IntPtr output,uint outputLength,out uint returned,IntPtr overlapped);
     public static int Main(string[] args)
     {
+        if(args.Length==1&&args[0]=="--lifetime-child")return ExecutionLifetimeVerifier.Child();
+        if(args.Length==2&&args[0]=="--lifetime-fixture-root")return ExecutionLifetimeVerifier.Run(args[1],false);
+        if(args.Length==2&&args[0]=="--lifetime-negative-fixture-root")return ExecutionLifetimeVerifier.Run(args[1],true);
         if(!OperatingSystem.IsWindows() || args.Length!=2 || args[0]!="--fixture-root") return 2;
         string root=Path.GetFullPath(args[1]);
         if(root.IndexOfAny("&|<>^%!\"\r\n".ToCharArray())>=0)return 2;

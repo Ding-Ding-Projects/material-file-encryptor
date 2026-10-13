@@ -18,6 +18,7 @@ class Node {
  setAttribute(name,value){this.attributes.set(name,String(value));}
  getAttribute(name){return this.attributes.get(name)??null;}
  hasAttribute(name){return this.attributes.has(name);}
+ removeAttribute(name){this.attributes.delete(name);}
  addEventListener(name,listener){const list=this.listeners.get(name)||[];list.push(listener);this.listeners.set(name,list);}
  removeEventListener(name,listener){this.listeners.set(name,(this.listeners.get(name)||[]).filter(fn=>fn!==listener));}
  dispatchEvent(event){return Promise.all((this.listeners.get(event.type)||[]).map(fn=>fn(event)));}
@@ -29,7 +30,7 @@ class Node {
  querySelector(selector){return this.querySelectorAll(selector)[0]||null;}
  closest(selector){return this.matches(selector)?this:this.parentElement?.closest(selector)||null;}
 }
-export function createAccessDocument(){const document={activeElement:null,createElement(tag){return new Node(document,tag);},createTextNode(text){return new Node(document,null,text);},createTreeWalker(root){const nodes=[];const walk=node=>{for(const child of node.childNodes){if(child.nodeType===3)nodes.push(child);else walk(child);}};walk(root);let index=0;return{nextNode:()=>nodes[index++]||null};}};document.body=new Node(document,'body');document.activeElement=document.body;return document;}
+export function createAccessDocument(){const document={activeElement:null,createElement(tag){return new Node(document,tag);},createElementNS(namespaceURI,tag){return Object.assign(new Node(document,tag),{namespaceURI});},createTextNode(text){return new Node(document,null,text);},createTreeWalker(root){const nodes=[];const walk=node=>{for(const child of node.childNodes){if(child.nodeType===3)nodes.push(child);else walk(child);}};walk(root);let index=0;return{nextNode:()=>nodes[index++]||null};}};document.body=new Node(document,'body');document.activeElement=document.body;return document;}
 
 // Stores source text only; CSS parsing and computed styles require a real browser.
 export class FixtureCSSStyleSheet {

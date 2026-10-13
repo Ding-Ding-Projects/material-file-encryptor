@@ -9,8 +9,10 @@ import {promisify} from 'node:util';
 import * as asar from '@electron/asar';
 import {openRendererBrowser} from './test-renderer-browser.mjs';
 
-const verifierFiles=['packaged-renderer-runtime.mjs','test-renderer-browser.mjs','test-renderer-browser-cli.py','renderer-process-snapshot.py','renderer-launch-observer.mjs','renderer-launch-observer.py','supplemental-renderer-recovery.py'];
+const verifierFiles=['packaged-renderer-runtime.mjs','test-renderer-browser.mjs','test-renderer-browser-cli.py','renderer-process-snapshot.py','renderer-launch-observer.mjs','renderer-launch-observer.py','renderer-native-path.mjs','renderer-native-path.py','supplemental-renderer-recovery.py'];
 async function fileHashes(files){const result={};for(const [key,file]of Object.entries(files)){const hash=createHash('sha256');for await(const chunk of createReadStream(file))hash.update(chunk);result[key]=hash.digest('hex');}return result;}
+export async function packagedRendererVerifierHashes(root=fileURLToPath(new URL('./',import.meta.url))){return fileHashes(Object.fromEntries(verifierFiles.map(name=>[name,path.join(root,name)])));}
+export async function assertPackagedRendererVerifierHashes(expected,root){if(JSON.stringify(await packagedRendererVerifierHashes(root))!==JSON.stringify(expected))throw new Error('Verifier files changed during packaged verification.');}
 
 export async function inspectPackagedRendererTarget(expected) {
  if(!/^[a-f0-9]{40}$/.test(expected?.sourceCommit||'')||!/^\d+\.\d+\.\d+$/.test(expected?.version||''))throw new Error('Exact packaged source and version are required.');
@@ -42,8 +44,7 @@ export async function openPackagedRendererTarget(expected,{evidenceRoot,runtime=
  const target=await inspectPackagedRendererTarget(expected);
  if(!path.isAbsolute(evidenceRoot||''))throw new Error('An explicit absolute packaged evidence destination is required.');
  const scriptRoot=fileURLToPath(new URL('./',import.meta.url));
- const paths=Object.fromEntries(verifierFiles.map(name=>[name,path.join(scriptRoot,name)]));
- const initialVerifierHashes=await fileHashes(paths);
+ const initialVerifierHashes=await packagedRendererVerifierHashes(scriptRoot);
  const {stdout}=await promisify(execFile)('git',['rev-parse','HEAD'],{cwd:path.dirname(scriptRoot),windowsHide:true,timeout:10000});
  const verifierSourceCommit=stdout.trim();
  if(!/^[a-f0-9]{40}$/.test(verifierSourceCommit))throw new Error('Verifier source identity is unavailable.');
@@ -53,7 +54,7 @@ export async function openPackagedRendererTarget(expected,{evidenceRoot,runtime=
  await fs.writeFile(preparedPath,JSON.stringify(receipt,null,2),{flag:'wx'});
  const revalidate=async()=>{
   await inspectPackagedRendererTarget(expected);
-  if(JSON.stringify(await fileHashes(paths))!==JSON.stringify(initialVerifierHashes))throw new Error('Verifier files changed during packaged verification.');
+  await assertPackagedRendererVerifierHashes(initialVerifierHashes,scriptRoot);
  };
  let opened;
  try{opened=await openRendererBrowser(target.expectedUrl,{evidenceRoot,runtime:{...runtime,sourceCommit:verifierSourceCommit},packagedTarget:{...target,revalidate},gracefulOnly});}catch(error){

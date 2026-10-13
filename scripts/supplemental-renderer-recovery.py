@@ -268,6 +268,12 @@ def configured_base_interpreter(values, launcher, actual_base, actual_launcher):
     return base
 
 
+def interpreter_commands(launcher, base, arguments, invocation=None):
+    """Build exact commands for the supported CPython redirector routes."""
+    command = subprocess.list2cmdline([invocation if invocation is not None else str(launcher), *arguments])
+    return command, command
+
+
 @contextmanager
 def owning_client(client_pid, expected=None, api=None, binding=None, configuration=None):
     """Hold exact self/optional venv launcher/Node identities across proof."""
@@ -301,7 +307,20 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
         if len(chain) not in (2, 3) or chain[-1][0]['pid'] != client_pid or chain[-1][0]['executablePath'] != configuration['node']:
             raise Error('Actual Node client ancestry differs.')
         if chain[0][0]['executablePath'] != configuration['base'] or chain[0][1] != configuration['baseCommand']:
-            raise Error('Actual Python execution image or command differs.')
+            error = Error('Actual Python execution image or command differs.')
+            actual_identity, actual_command, _ = chain[0]
+            expected_command = configuration['baseCommand']
+            image_matches = actual_identity['executablePath'] == configuration['base']
+            error.executionDiagnostic = {
+                'expectedImage': configuration['base'],
+                'actualIdentity': actual_identity,
+                'imageMatches': image_matches,
+                'commandMatches': actual_command == expected_command,
+                'expectedCommand': expected_command if len(expected_command) <= 4096 else None,
+                'actualCommand': actual_command if image_matches and len(actual_command) <= 4096 else None,
+                'actualCommandRetained': image_matches and len(actual_command) <= 4096,
+            }
+            raise error
         if len(chain) == 3 and (chain[1][0]['executablePath'] != configuration['launcher'] or chain[1][1] != configuration['command']):
             error = Error('Intermediate Python launcher image or command differs.')
             actual_identity, actual_command, _ = chain[1]

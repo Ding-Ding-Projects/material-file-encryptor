@@ -2,6 +2,16 @@
 
 ## 文件
 
+### 每個畫面獨立記錄驗收
+
+`contracts/surface-registry.json` 補充舊有 `contracts/feature-delivery.json` 兩個表面嘅評估，唔會改變其結論或來源綁定。具體登記表包括公開首頁、文件庫、wiki、圖片庫、生成文章同分類索引；每頁出版偏好設定；瀏覽器工作區畫面同內置文件；桌面畫面、對話框同內置文件；以及擴充功能彈出視窗。每個畫面承接同一份 105 項語義聲明，但唔承接完成結論。空白獨立證據表展開後一律係未驗證評估。
+
+`discoverFeatureSurfaces(root)` 讀取出版目錄及其實際文章路由函數、工作區聲明、桌面聲明，同遞迴文件目錄。`validateSurfaceRegistry(registry, expectedSurfaces)` 必須收到呢份權威探索結果，並拒絕遺漏路由、路由／元件身分不符、重複畫面、遺漏類別、承接完成結論同借用證據。已實作評估需要自己嘅精確路由同選擇器、來源提交、建置雜湊，以及聲明嘅畫面與互動證據。呢啲只係結構聲明，唔等於證據存在或執行檢查通過。清單係驗收待辦，唔係所有必要行為已交付嘅聲稱。
+
+執行 `node --test test/feature-delivery-surfaces.test.js test/documentation-platform.test.js` 可檢查清單邊界。新增、移除或改名文章之後，要重新產生清單。實際建置及公開部署仍然需要另外驗收。
+
+獨立手寫必要畫面清單要求精確嘅保險庫同確認對話框身分、動態還原子項對話框、全部五個個人化面板及其 Home Assistant 憑證對話框，並要求桌面同瀏覽器工作區主機嘅存取設定檔、鎖、驗證器、支援、歷史、解鎖、等候、精靈、確認同 QR 預覽子畫面。描述啟用狀態嘅動態選擇器係語義擁有權描述，唔聲稱 DOM 有固定 CSS ID。引號包住嘅 HTML ID 只會喺單一有界開始標籤內解析。專用回歸檢查同時喺登記表及擷取結果移除保險庫，因此兩者一齊遺漏仍然唔會通過。
+
 `buildDocumentationCatalog(root)` 讀取 `docs/` 下每個 Markdown 檔，包括維基，以及可用嘅根目錄專案文章。每份文件記錄完整來源文字、穩定路徑 ID、分類、標題同內容雜湊。符號連結會排除。封裝期間執行 `node src/features/documentation/build-catalog.mjs <repository-root> <output.json>`，再將解析後套件傳畀 `mountDocumentation`。
 
 `mountDocumentation(host, { catalog, translate, onExport, initialId })` 提供文章導覽、使用現有有限工作者正則表達式建構器嘅全文搜尋、標題錨點、內部 Markdown 連結同 Markdown 匯出。只用 DOM 嘅渲染器支援表格、圍欄程式碼、強調、清單同工作清單、引文、本機點陣圖片，以及專案文章使用嘅精確無屬性 details／summary 容器。任意來源 HTML 只會當文字顯示，唔會執行。外部連結只接受 HTTP 同 HTTPS，並有明確標示。缺失內部文章同錨點會顯示，但冇可啟動連結。文件改動後必須重建目錄；封裝整合仍然有需要。

@@ -1,6 +1,6 @@
 # 平台功能
 
-- [文件瀏覽器、變更記錄、狀態同交付清單](documentation-and-status.zh-HK.md)
+- [文件瀏覽器、變更記錄、狀態同獨立具體畫面交付清單](documentation-and-status.zh-HK.md)
 - [目前來源整合同驗證邊界](current-integration.md)
 - [外部指引時效檢查](instruction-currency.zh-HK.md)
 - [原生輔助程式測量限制](../performance/native-helper.md)
@@ -12,3 +12,5 @@
 - [公開路徑驗收界線](public-route-acceptance.zh-HK.md)
 
 - [已封裝文件目錄重用](packaged-documentation-cache.zh-HK.md)
+
+- [本機介面工作計時](renderer-task-timing.zh-HK.md)

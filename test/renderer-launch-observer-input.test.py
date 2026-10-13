@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import sys
 import unittest
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 def load(name, path):
@@ -16,6 +17,23 @@ def load(name, path):
 
 observer = load('stdin_observer', ROOT / 'scripts/renderer-launch-observer.py')
 class InputContractTests(unittest.TestCase):
+    def test_handwritten_launch_inventory_rejects_missing_and_changed_resolvers(self):
+        names=['renderer-launch-observer.mjs','renderer-launch-observer.py','renderer-native-path.mjs','renderer-native-path.py','supplemental-renderer-recovery.py','renderer-process-snapshot.py']
+        with tempfile.TemporaryDirectory(prefix='mfe-observer-inventory-') as directory:
+            root=Path(directory)
+            for name in names:
+                (root/name).write_bytes((ROOT/'scripts'/name).read_bytes() if name=='renderer-launch-observer.py' else b'synthetic verifier bytes')
+            copied=load('copied_inventory_observer',root/'renderer-launch-observer.py')
+            hashes={str(root/name):copied.digest(root/name) for name in names}
+            copied.validate_verifier_inventory({'verifierHashes':hashes})
+            for name in ['renderer-native-path.mjs','renderer-native-path.py']:
+                missing=dict(hashes);del missing[str(root/name)]
+                with self.assertRaisesRegex(RuntimeError,'inventory differs'):
+                    copied.validate_verifier_inventory({'verifierHashes':missing})
+                original=(root/name).read_bytes();(root/name).write_bytes(b'changed synthetic verifier')
+                with self.assertRaisesRegex(RuntimeError,'inventory differs'):
+                    copied.validate_verifier_inventory({'verifierHashes':hashes})
+                (root/name).write_bytes(original)
     def test_real_installed_reader_and_restore(self):
         installed = Path.home() / '.agents/skills/run-lowlevel-headless-app/scripts/lowlevel_mcp_client.py'
         if not installed.is_file():
