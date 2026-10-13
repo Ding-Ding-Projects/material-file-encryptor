@@ -452,7 +452,7 @@ else {
 
 
 function initializeArchive() {
- const button=(id,text,handler)=>{const el=control('button');el.id=id;el.type='button';el.className='button outlined';el.textContent=t(text);dictionary.set(el,text);el.onclick=handler;return el;};
+ const button=(id,text,handler)=>{const el=control('button',{class:'button outlined'});el.id=id;el.type='button';el.textContent=t(text);dictionary.set(el,text);el.onclick=handler;return el;};
  historySelection=createHistorySelection({host:$('view-history'),translate:t,formatDate,formatBytes,isBusy:()=>busy||!state||state.locked||$('view-history').dataset.archiveState!=='ready',onRestore:restoreHistoryVersion});
  const retentionLabel=document.createTextNode(t('Show history'));dictionary.set(retentionLabel,'Show history');
  $('history-actions').append(button('save-version','Save version now',()=>archiveMutation('history',()=>api.saveVersion())),retentionLabel);
@@ -509,7 +509,7 @@ async function restoreRecycledSelection() {
  const checks=[];
  for(const row of [...original.map(id=>byId.get(id)).filter(Boolean),...candidates]) {const label=document.createElement('label');const input=control('input',{type:'checkbox'});input.type='checkbox';input.value=row.id;input.checked=original.includes(row.id);input.disabled=input.checked||!row.isAvailable;const name=document.createElement('span');name.textContent=row.path+' · '+String(row.timestampUtc||'');label.append(input,name);body.append(label);checks.push(input);}
  const selectAll=control('button');selectAll.type='button';selectAll.className='button';selectAll.textContent=t('Select all descendants');selectAll.onclick=()=>{for(const input of checks)if(!input.disabled)input.checked=true;};body.append(selectAll);
- const footer=document.createElement('footer');footer.className='dialog-actions';for(const [value,text] of [['cancel','Cancel'],['folder','Restore original selection only'],['subtree','Restore explicitly selected descendants']]){const button=control('button',{type:'submit'});button.value=value;button.className='button'+(value==='subtree'?' primary':'');button.textContent=t(text);footer.append(button);}
+ const footer=document.createElement('footer');footer.className='dialog-actions';for(const [value,text] of [['cancel','Cancel'],['folder','Restore original selection only'],['subtree','Restore explicitly selected descendants']]){const button=control('button',{type:'submit',class:'button'+(value==='subtree'?' primary':'')});button.value=value;button.textContent=t(text);footer.append(button);}
  form.append(heading,body,footer);dialog.append(form);document.body.append(dialog);dialog.showModal();footer.querySelector('md-text-button,md-filled-button,md-outlined-button').focus();
  const action=await new Promise(resolve=>dialog.addEventListener('close',()=>resolve(dialog.returnValue),{once:true}));
  const ids=action==='folder'?original:[...new Set([...original,...checks.filter(input=>input.checked&&!input.disabled).map(input=>input.value)])];dialog.remove();
