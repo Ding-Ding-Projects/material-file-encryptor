@@ -1,0 +1,9 @@
+import {definePractice} from '../surface/guidance-playground.js';
+export const LOGO_PRACTICE_COPY={};
+const say=(en,yue)=>{LOGO_PRACTICE_COPY[en]=yue;return en;};
+const image={fit:'contain',crop:[10,10,80,80],focalX:50,focalY:50,x:0,y:0,scaleX:1,scaleY:1,rotate:0,skewX:0,skewY:0,opacity:1,blend:'normal',safeArea:0};
+const input=say('A locally drawn sample mark uses normalized crop coordinates and a fixed square target.','本機繪畫樣本標誌使用標準化裁剪座標同固定正方形目標。');
+const fixtures={};
+for(const[label,yue,key,min,max,initial]of [['Crop left','裁剪左邊','crop0',0,.99,.1],['Crop top','裁剪頂部','crop1',0,.99,.1],['Crop width','裁剪闊度','crop2',.01,1,.8],['Crop height','裁剪高度','crop3',.01,1,.8],['Logo safe area','標誌安全範圍','safeArea',0,.25,0]])fixtures[label]=definePractice({id:'logo-authoring-sample:'+key,kind:'image',sourceSize:[128,128],control:'number',key,normalized:true,label:say(label,yue),min,max,initial,image,input,action:say('Adjust sample '+label+' within its normalized bounds.','喺標準化範圍內調整樣本「'+yue+'」。'),expected:key==='safeArea'?say('The synthetic mark shrinks inside an equal margin on all four sides.','合成標誌縮入四邊相等嘅邊界內。'):say('The sample crop changes while remaining wholly inside its authored source.','樣本裁剪改變，並完全保持喺預先編寫來源內。')});
+fixtures['Logo preset']=definePractice({id:'logo-authoring-sample:preset',kind:'image',sourceSize:[128,128],control:'select',key:'preset',label:say('Logo preset','標誌預設'),initial:'custom',choices:[{value:'custom',label:say('Custom sample','自訂樣本')},{value:'lock',label:say('Lock emblem','鎖頭標誌')},{value:'key',label:say('Key emblem','鎖匙標誌')}],image:{...image,crop:[0,0,100,100]},input,action:say('Select a locally drawn lock or key emblem.','選擇本機繪畫鎖頭或鎖匙標誌。'),expected:say('Only the synthetic vector mark changes. No conversion or file write occurs.','只有合成向量標誌改變，唔會轉換或寫入檔案。')});
+export const LOGO_PRACTICE=Object.freeze(fixtures);
