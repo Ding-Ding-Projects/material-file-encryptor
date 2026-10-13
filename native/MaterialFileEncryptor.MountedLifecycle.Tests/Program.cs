@@ -8,6 +8,8 @@ if(args.Length==1&&args[0]=="--settlement-self-test"){await DetachSettlement.Sel
 
 if(args.Length==1&&args[0]=="--teardown-self-test"){await BoundedProcessStop.SelfTest();await ChildDiagnostics.SelfTest();HelperAdmission.SelfTest();return;}
 
+if(args.Length==2&&args[0]=="--mapped-child"){await IsolatedMappedProbe.Child(args[1]);return;}
+if(args.Length==5&&args[0]=="--isolated-mapped"){await IsolatedMappedProbe.Run(args[1],args[2],args[3],args[4]);return;}
 if(args.Length==4&&args[0]=="--mapped-writer-child"){MappedWriter.Run(args[1],args[2],args[3]);return;}
 
 if(args.Length is <4 or >5)throw new ArgumentException("Supply package root, private output JSON, exact source commit, expected helper SHA-256 from the production receipt and optional --ordinary-only.");

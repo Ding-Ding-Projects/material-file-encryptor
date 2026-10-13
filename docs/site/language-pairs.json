@@ -89,6 +89,12 @@
       "translationSha256": "ca93f9255341f073cb0c00b0dbc27848b2d86e7a3437b307ea4a8d2e612c17fc"
     },
     {
+      "source": "docs/features/converter/media-source-review.md",
+      "translation": "docs/features/converter/media-source-review.zh-HK.md",
+      "sourceSha256": "ef3d2f295d898aecff91500906d12f76232af54b928c25257cb9bc3c2a71b53b",
+      "translationSha256": "7651a9af83a6e15eaef226cd5f7ef585a40a9feab27a0782bbe3e5b86bbf2cc4"
+    },
+    {
       "source": "docs/features/converter/minimal-component.md",
       "translation": "docs/features/converter/minimal-component.zh-HK.md",
       "sourceSha256": "22296f43a511fe0d48c680eb614dc402709a0e27e052cb0f10bea9f21faa13af",

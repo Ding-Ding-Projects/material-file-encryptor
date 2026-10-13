@@ -36,13 +36,10 @@ pending() streams the complete durable inventory and returns the numeric count o
 
 See [Archive and structured-data adapters](archive-and-data.md) for enabled ZIP/CSV/TSV/JSON behavior and [Offline media conversion](media-plan.md) for the implemented image/audio/video adapters, verified runtime prerequisites, and parent build manifest contract.
 
-<<<<<<< HEAD
-=======
 ## Source-built minimal media runtime
 
 - [Minimal runtime recipe and source verification](minimal-runtime.md) describes the pinned source archives, existing build tools and intentionally restricted codec/protocol profile.
 - [Reviewed minimal component and local acceptance](minimal-component.md) records exact runtime/archive hashes, source closure and six-format AppContainer checks. Component publication and application-installed acceptance are separate boundaries.
->>>>>>> 3f3e97c
 ## Additional table and archive workflows
 
 - [XLSX and ODS table conversion](spreadsheets.md)
