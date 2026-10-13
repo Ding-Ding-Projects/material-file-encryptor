@@ -13,7 +13,7 @@ import {WORKBENCH_GUIDANCE,WORKBENCH_GUIDANCE_COPY,workbenchDescriptor} from '..
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
 function scene(){
  const doc=createAccessDocument(),original=doc.createElement.bind(doc),definitions=new Map();
- const decorate=node=>{node.hidden=false;node.disabled=false;node.readOnly=false;node.classList={add(...names){node.className=names.join(' ');}};node.getBoundingClientRect=()=>({left:0,top:0,width:116,height:116});node.setCustomValidity=value=>node.validationMessage=value;node.reportValidity=()=>!node.validationMessage;node.before=function(other){other.remove();other.parentNode=this.parentNode;this.parentNode.childNodes.splice(this.parentNode.childNodes.indexOf(this),0,other);};return node;};
+ const decorate=node=>{node.style||={};node.hidden=false;node.disabled=false;node.readOnly=false;node.classList={add(...names){node.className=names.join(' ');}};node.getBoundingClientRect=()=>({left:0,top:0,width:116,height:116});node.setCustomValidity=value=>node.validationMessage=value;node.reportValidity=()=>!node.validationMessage;node.before=function(other){other.remove();other.parentNode=this.parentNode;this.parentNode.childNodes.splice(this.parentNode.childNodes.indexOf(this),0,other);};return node;};
  const Base=original('div').constructor;
  class Element extends Base {constructor(){super(doc,'mfe-control-guidance');decorate(this);}attachShadow(){this.shadowRoot=decorate(original('shadow'));return this.shadowRoot;}}
  class Sheet{replaceSync(text){this.text=text;}}
