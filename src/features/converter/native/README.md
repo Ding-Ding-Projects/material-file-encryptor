@@ -48,10 +48,26 @@ timeout/cancellation/storage state, profile deletion and the result hash. Setup,
 validation, or cleanup failures return a nonzero status with the native error or
 HRESULT. A parent must never accept partial output or a missing cleanup receipt.
 
+An internal startup manifest may additionally set `confinementProbe: true` for
+the supplied Node confinement worker. The parent creates a separate fresh empty
+temporary directory under the fixed `converter-probe-parent-` prefix and passes
+it as `probeDirectory`. The launcher rejects overlap with staging and creates
+its own fresh owner-only synthetic sentinel there, reads back the protected ACL and
+synthetic contents, and rewrites only the bounded synthetic request with that
+path. Callers cannot choose an outside sentinel. Cleanup runs even if profile
+deletion fails, and the probe receipt requires `probeSentinelDeleted: true`.
+The parent removes its exact owned probe directory on every outcome, including
+launcher startup or deadline failure, without taking a cleanup path from worker output.
+No customer source bytes belong in this request.
+
 `smoke.ps1` exercises conversion, read-only payload, an owner-only file outside
-staging, and a loopback listener reachable by the parent before and after the
-isolated probe. Loopback rejection may appear as a bounded connection timeout
-rather than an immediate access error. Other modes are `child`, `memory`,
+staging, and a loopback listener reachable by the same unconstrained Node runtime
+before and after the isolated probe. Pass `-RuntimePath` with the exact reviewed
+standalone runtime; the staged runtime hash must match it. Network acceptance
+requires an explicit `EACCES` or `EPERM`, and an observed connection is negative.
+Loopback rejection may appear as a bounded connection timeout rather than an
+immediate access error. A timeout, `ECONNREFUSED`, or other ambiguous transport
+result remains unavailable and cannot certify containment. Other modes are `child`, `memory`,
 `storage`, `cancel`, and `timeout`. The child test distinguishes an absent execution
 marker plus deadline termination from immediate process-creation rejection.
 
