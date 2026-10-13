@@ -641,7 +641,7 @@
 
 ## Packaged guidance diagnostic entrypoint
 
-- [x] Implement strict reviewed configuration, production opener/subset composition and bounded guidance-control plans; seven focused source admission/lifecycle checks passed.
+- [x] Implement strict reviewed configuration, production opener/subset composition and bounded guidance-control plans; ten focused source checks passed, including actual driver poll/output contracts.
 - [ ] Independently review the entrypoint and assign exclusive package, hidden lifecycle and output ownership before execution.
 - [ ] Execute the p-language diagnostic and guidance interactions against the retained package, inspect raw captures and verify restoration/closure; accepted remains false.
 - [ ] Extend separately assigned runtime coverage to menu keyboard and motion consumers without claiming full matrix, physical DPI or design parity from this subset.

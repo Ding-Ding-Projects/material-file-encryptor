@@ -7,7 +7,7 @@ import {createHash} from 'node:crypto';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {fileURLToPath,pathToFileURL} from 'node:url';
-import {matrixFor} from './gui-acceptance.mjs';
+import {validateAcquisitionRequest} from './gui-acceptance-acquire.mjs';
 import {withCdpConnectionProof} from './cdp-connection-plan.mjs';
 
 const directory=fileURLToPath(new URL('./',import.meta.url));
@@ -50,13 +50,28 @@ export async function verifyGuidanceInputs(config,{packagedVerifierHash,inspectP
  const cdp=path.join(skillRoot,'drive-electron-cdp-headless','scripts','cdp_driver.mjs'),client=path.join(skillRoot,'run-lowlevel-headless-app','scripts','lowlevel_mcp_client.py');
  await verifyFile(cdp,config.verifier.cdpDriverSha256);await verifyFile(client,config.verifier.lowlevelClientSha256);
  await verifyFile(config.transport.cli,config.transport.cliSha256);await verifyFile(config.transport.python,config.transport.pythonSha256);
- const inventory=JSON.parse(await verifyFile(config.inventory.path,config.inventory.sha256));assert.ok(matrixFor(inventory).some(tuple=>JSON.stringify(tuple)===JSON.stringify(GUIDANCE_TUPLE)),'Required tuple is absent');
+ const inventory=JSON.parse(await verifyFile(config.inventory.path,config.inventory.sha256));validateAcquisitionRequest({inventory,tuples:[{...GUIDANCE_TUPLE}],mode:'diagnostic-subset'});
  await verifyFile(config.reference.path,config.reference.sha256);
  const target=await inspectPackagedRendererTarget(config.expected),build=JSON.parse(await verifyFile(config.buildReceipt.path,config.buildReceipt.sha256));
  assert.equal(build.command,'build.bat /s','Exact root build receipt required');assert.equal(build.sourceCommit,target.sourceCommit);
  if(Object.hasOwn(build,'sourceCommitAtCompletion')){assert.equal(build.sourceCommitAtCompletion,target.sourceCommit);assert.equal(build.sourceDirtyAtStart,false);assert.equal(build.sourceDirtyAtCompletion,false);assert.equal(build.exitCode,0);assert.equal(build.executableSha256,target.hashes.executable);assert.equal(build.archiveSha256,target.hashes.asar);assert.equal(build.nativeHostSha256,target.hashes.nativeHost);}
  else{assert.equal(build.sourceEndCommit,target.sourceCommit);assert.equal(build.sourceClean,true);assert.equal(build.buildExitCode,0);assert.equal(build.artifactSha256,target.hashes.executable);assert.equal(build.asarSha256,target.hashes.asar);assert.equal(build.nativeHostSha256,target.hashes.nativeHost);}
  return{inventory,target,cdp,client};
+}
+
+export async function checkGuidanceObservation(execute,id,expression,equals=true){
+ const result=await execute([{id,op:'poll',expression,equals,intervalMs:100}]),row=result.results?.find(row=>row.id===id);
+ assert.equal(row?.op,'poll','Expected a driver poll observation');assert.equal(row.value?.matched,true,'Poll did not match');
+ assert.ok(Number.isInteger(row.value.attempts)&&row.value.attempts>0,'Missing poll attempt count');assert.deepEqual(row.value.value,equals,'Observable did not settle');
+}
+export async function captureGuidanceObservation({execute,outputRoot,name}){
+ assert.match(name,/^[a-z][a-z0-9-]*$/);const file=path.join(outputRoot,'guidance-'+name+'.png');
+ // Keep original bytes in the receipt-admitted directory. The driver validates
+ // containment and writes atomically before any file is read or hashed here.
+ const result=await execute([{id:name,op:'capture',path:file,overwrite:false}],true),row=result.results?.find(row=>row.id===name);
+ assert.equal(row?.op,'capture');assert.equal(row.value?.path,file);hash(row.value.sha256);
+ const bytes=await verifyFile(file,row.value.sha256);assert.equal(bytes.length,row.value.bytes);
+ return{path:file,sha256:row.value.sha256,result,pixelsInspected:false};
 }
 
 const preferenceExpression=`(()=>{const row=JSON.parse(localStorage.getItem('material-file-encryptor.local-ux.v1')||'{}');return {language:row.language||'en',funnyEnglish:row.funnyEnglish??5,funnyCantonese:row.funnyCantonese??5,theme:row.theme||'system',density:row.density||'comfortable',fontScale:row.fontScale??1,fontWeight:row.fontWeight??400,motion:row.motion||'system'};})()`;
@@ -68,15 +83,15 @@ function body(script){return `(()=>{${script}})()`;}
 // are separate proof-bound plans; no store writes or handler counters are used.
 export async function exerciseGuidanceControls({execute,outputRoot,record}){
  const value=async(id,expression)=>{const result=await execute([{id,op:'evaluate',expression}]);const row=result.results?.find(row=>row.id===id);assert.ok(row&&Object.hasOwn(row,'value'),'Missing independent observation');return row.value;};
- const check=async(id,expression,equals=true)=>{const result=await execute([{id,op:'poll',expression,equals,intervalMs:100}]);assert.deepEqual(result.results?.find(row=>row.id===id)?.value,equals,'Observable did not settle');};
+ const check=(id,expression,equals=true)=>checkGuidanceObservation(execute,id,expression,equals);
  const action=async(id,script)=>value(id,body(script));
  const tab=async key=>{await action('tab-'+key,`const n=document.querySelector('#view-personalization md-primary-tab[id$="-tab-${key}"]');if(!n||n.disabled)throw Error('TAB_UNAVAILABLE');n.click();return true;`);await check('tab-'+key+'-selected',activeTabExpression,key);};
  const root=id=>`${guideExpression(id)}?.shadowRoot`;
  const click=async(id,selector,label,step)=>action(step,`const r=${root(id)},n=[...r.querySelectorAll(${JSON.stringify(selector)})].find(n=>${label===null?'true':`n.textContent.trim()===${JSON.stringify(label)}`});if(!n||n.disabled)throw Error('GUIDANCE_CONTROL_UNAVAILABLE');n.click();return true;`);
- const capture=async name=>{const file=path.join(outputRoot,name+'.png'),result=await execute([{id:name,op:'capture',path:file,overwrite:false}],true);return{path:file,sha256:digest(await fs.readFile(file)),result,pixelsInspected:false};};
+ const capture=name=>captureGuidanceObservation({execute,outputRoot,name});
  const restore=[];let baseline;
  try{
-  await action('navigate-personalization',`const n=document.querySelector('[data-view="personalization"]');if(!n||n.disabled)throw Error('PERSONALIZATION_UNAVAILABLE');n.click();return true;`);await tab('language');
+  await check('mounted-personalization',`(()=>{const n=document.querySelector('#view-personalization');return Boolean(n&&!n.hidden&&n.getClientRects().length);})()`);await tab('language');
   await check('english-light-tuple',`innerWidth===1180&&innerHeight===850&&Math.abs(devicePixelRatio-1)<0.01&&document.documentElement.dataset.theme==='light'&&document.documentElement.lang==='en'`);
   baseline=await value('preferences-before-guidance',preferenceExpression);
   for(const key of GUIDANCE_TABS){
@@ -142,7 +157,7 @@ async function loadProduction(){
   async preflight(config,admission){return producer.runEvidenceJson(config.transport.python,[path.join(directory,'test-renderer-browser-cli.py'),'preflight','--require','launch_on_headless_desktop','--require','list_headless_windows','--require','screenshot','--require','close_headless_desktop'],undefined,environment(config,admission));},
   async open(config){return openGuiAcceptancePackage({expected:config.expected,evidenceRoot:path.join(config.outputRoot,'lifecycle'),openTarget:(expected,options)=>openPackagedRendererTarget(expected,{...options,gracefulOnly:true})});},
   async acquire(config,admission,opened){return producer.acquirePackagedDiagnosticSubset({opened,inventory:admission.inventory,buildReceiptPath:config.buildReceipt.path,referencePath:config.reference.path,outputRoot:path.join(config.outputRoot,'acquisition'),tuples:[{...GUIDANCE_TUPLE}]});},
-  async exercise(config,admission,opened,record){const state=JSON.parse(await fs.readFile(opened.statePath)),outputRoot=path.join(config.outputRoot,'guidance');await fs.mkdir(outputRoot);const recorder=createPlanRecorder(opened.runRoot,plan=>producer.runEvidenceJson(process.execPath,[admission.cdp,'run'],plan,environment(config,admission)));
+  async exercise(config,admission,opened,record){const state=JSON.parse(await fs.readFile(opened.statePath)),outputRoot=state.outputRoot;assert.equal(path.resolve(state.runRoot),path.resolve(opened.runRoot));assert.equal(outputRoot,path.join(opened.runRoot,'output'));const recorder=createPlanRecorder(opened.runRoot,plan=>producer.runEvidenceJson(process.execPath,[admission.cdp,'run'],plan,environment(config,admission)));
    const execute=async(steps,capture=false)=>{await verifyFile(fileURLToPath(import.meta.url),config.verifier.entrypointSha256);assert.equal(await producer.packagedVerifierHash(),config.verifier.packagedVerifierSha256);await verifyFile(config.buildReceipt.path,config.buildReceipt.sha256);await verifyFile(admission.cdp,config.verifier.cdpDriverSha256);await verifyFile(admission.client,config.verifier.lowlevelClientSha256);return recorder(withCdpConnectionProof({version:1,receipt:opened.statePath,endpoint:`http://127.0.0.1:${state.cdp.port}`,expectedUrl:opened.target.expectedUrl,allowEvaluate:true,timeoutMs:30000,steps,...(capture?{observeRuntime:true}:{})},capture?'capture':'control'));};
    await exerciseGuidanceControls({execute,outputRoot,record});
   },

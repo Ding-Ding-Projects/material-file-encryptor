@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
-import {validateGuidanceConfiguration,verifyGuidanceInputs,runGuidanceDiagnostic,GUIDANCE_TUPLE,GUIDANCE_TABS} from '../scripts/gui-guidance-diagnostic.mjs';
+import {validateGuidanceConfiguration,verifyGuidanceInputs,runGuidanceDiagnostic,checkGuidanceObservation,captureGuidanceObservation,GUIDANCE_TUPLE,GUIDANCE_TABS} from '../scripts/gui-guidance-diagnostic.mjs';
 const sha=value=>createHash('sha256').update(value).digest('hex');
 async function fixture(){
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-guidance-admission-unit-'));
@@ -32,7 +32,7 @@ test('file admission rejects stale bytes, wrong verifier source and mismatched r
  await assert.rejects(fs.access(f.config.outputRoot));
 });
 test('a hashed but incomplete inventory and an existing output directory are not admitted',async()=>{
- const f=await fixture(),inventory=JSON.parse(await fs.readFile(f.config.inventory.path));inventory.states=inventory.states.filter(row=>row.id!=='p-language');const bytes=JSON.stringify(inventory);await fs.writeFile(f.config.inventory.path,bytes);f.config.inventory.sha256=sha(bytes);await assert.rejects(verifyGuidanceInputs(f.config,f.admission),/Required tuple/);
+ const f=await fixture(),inventory=JSON.parse(await fs.readFile(f.config.inventory.path));inventory.states=inventory.states.filter(row=>row.id!=='p-language');const bytes=JSON.stringify(inventory);await fs.writeFile(f.config.inventory.path,bytes);f.config.inventory.sha256=sha(bytes);await assert.rejects(verifyGuidanceInputs(f.config,f.admission),/Complete current state inventory/);
  await fs.mkdir(f.config.outputRoot);await assert.rejects(verifyGuidanceInputs(f.config,f.admission),/already exists/);
 });
 function lifecycle(f,{stageFailure,closureFailure}={}){
@@ -56,4 +56,41 @@ test('changed admission after transport preflight and a falsely accepted produce
  await assert.rejects(runGuidanceDiagnostic(f.config,{...f,platform:'win32',load}),/CHANGED DURING PREFLIGHT/);assert.equal(l.calls.includes('open'),false);await assert.rejects(fs.access(f.config.outputRoot));
  const g=await fixture(),m=lifecycle(g),overclaim=async()=>({...await m.load(),acquire:async()=>({scope:'diagnostic-subset',accepted:true,results:[{status:'captured-awaiting-inspection-and-reference'}]})});
  await assert.rejects(runGuidanceDiagnostic(g.config,{...g,platform:'win32',load:overclaim}));assert.equal(m.calls.includes('exercise'),false);assert.equal(m.calls.filter(row=>row==='close').length,1);const result=JSON.parse(await fs.readFile(path.join(g.config.outputRoot,'guidance-diagnostic.json')));assert.equal(result.accepted,false);
+});
+
+// Exercise the installed driver's real step executor and output-containment
+// check in a VM with an inert CDP connection. This is a source contract test,
+// not a browser session, capture, native fixture or runtime acceptance claim.
+async function installedDriver(t){
+ const file=path.join(os.homedir(),'.agents','skills','drive-electron-cdp-headless','scripts','cdp_driver.mjs');let source;
+ try{source=await fs.readFile(file,'utf8');}catch(error){if(error.code!=='ENOENT')throw error;t.skip('Installed CDP driver unavailable for source seam verification');return;}
+ const {runInNewContext}=await import('node:vm'),start=source.indexOf('async function assertOutputPath('),end=source.indexOf('async function inspectPlan(',start);
+ assert.ok(start>=0&&end>start,'Installed driver seam changed; review it before adapting this test');
+ const signature=Buffer.from([137,80,78,71,13,10,26,10]);
+ return runInNewContext(source.slice(start,end)+';({executeSteps,assertOutputPath})',{
+  ...path,lstat:fs.lstat,realpath:fs.realpath,Buffer,createHash,PNG_SIGNATURE:signature,MAX_CAPTURE_BYTES:1048576,
+  fail:(code,message)=>{throw Error(code+': '+message);},evaluate:async(connection,expression)=>connection.values[expression],
+  atomicWrite:(file,bytes,overwrite)=>fs.writeFile(file,bytes,{flag:overwrite?'w':'wx'}),setTimeout,
+ });
+}
+test('actual driver poll envelopes are normalized while mismatched observations remain rejected',async t=>{
+ const driver=await installedDriver(t);if(!driver)return;
+ const execute=async steps=>({results:await driver.executeSteps({command:async()=>{},values:{ready:true,index:4}}, {steps}, {})});
+ await checkGuidanceObservation(execute,'ready','ready');await checkGuidanceObservation(execute,'index','index',4);
+ await assert.rejects(checkGuidanceObservation(async()=>({results:[{id:'bad',op:'poll',value:{matched:true,attempts:1,value:false}}]}),'bad','ready'),/Observable did not settle/);
+ await assert.rejects(checkGuidanceObservation(async()=>({results:[{id:'bad',op:'poll',value:true}]}),'bad','ready'),/Poll did not match/);
+});
+test('actual driver rejects the old capture destination and preserves admitted original bytes',async t=>{
+ const driver=await installedDriver(t);if(!driver)return;const f=await fixture(),runRoot=path.join(f.root,'owned-session'),outputRoot=path.join(runRoot,'output');await fs.mkdir(outputRoot,{recursive:true});
+ const png=Buffer.from([137,80,78,71,13,10,26,10]);let captures=0;
+ const execute=async steps=>({results:await driver.executeSteps({command:async method=>{if(method==='Page.captureScreenshot'){captures++;return{data:png.toString('base64')};}return{};}},{steps},{runRoot,outputRoot})});
+ await assert.rejects(captureGuidanceObservation({execute,outputRoot:f.config.outputRoot,name:'outside'}),/OUTPUT_ESCAPE/);assert.equal(captures,0);
+ const result=await captureGuidanceObservation({execute,outputRoot,name:'inside'});assert.equal(result.path,path.join(outputRoot,'guidance-inside.png'));assert.equal(result.sha256,sha(png));assert.equal(result.pixelsInspected,false);assert.equal(captures,1);
+ await assert.rejects(captureGuidanceObservation({execute,outputRoot,name:'inside'}),/EEXIST/);
+ const changed=async steps=>{const result=await execute(steps);await fs.appendFile(steps[0].path,'changed');return result;};await assert.rejects(captureGuidanceObservation({execute:changed,outputRoot,name:'changed'}),/Changed input/);
+});
+test('a hash-valid inventory retaining p-language but omitting another canonical state stops before preflight or fixture',async()=>{
+ const f=await fixture(),inventory=JSON.parse(await fs.readFile(f.config.inventory.path));assert.ok(inventory.states.some(row=>row.id==='p-language'));inventory.states=inventory.states.filter(row=>row.id!=='drive-locked');const bytes=JSON.stringify(inventory);await fs.writeFile(f.config.inventory.path,bytes);f.config.inventory.sha256=sha(bytes);
+ const l=lifecycle(f),load=async()=>({...await l.load(),verify:config=>verifyGuidanceInputs(config,f.admission)});
+ await assert.rejects(runGuidanceDiagnostic(f.config,{...f,platform:'win32',load}),/Complete current state inventory/);assert.deepEqual(l.calls,[]);await assert.rejects(fs.access(f.config.outputRoot));
 });
