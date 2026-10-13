@@ -673,3 +673,13 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 
 - [x] Match only the six supported complete Settings/How it works names and verify the actual helper action sequence with a red-to-green source fixture.
 - [ ] Rerun the complete actual renderer language/width case after independent review; no runtime verdict is claimed by the source fixture.
+
+
+## October 13 representative guidance evidence
+
+- [x] Inspect and validate byte-exact source83documentation captures at normal and320pxbilingual viewports, with exact capture intervals, hashes, touch bounds and owned closure.
+- [x] Embed those bounded documentation captures in README and retain historical originals.
+- [ ] Complete packaged guidance interaction admission after retained timeout/ancestry failures.
+- [ ] Resolve the actual source-fixture timeout without weakening assertions or fabricating an action journal.
+- [ ] Complete combined instruction-root sweep and current installed readback.
+- [ ] Complete native/full visual matrix, main integration and live deployment acceptance.

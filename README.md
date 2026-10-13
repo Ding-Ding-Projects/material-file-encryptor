@@ -84,7 +84,7 @@ Package inspection also validates each ASAR file's declared SHA-256 and block ha
 
 The historical inventory contains **105 required feature identifiers and 210 desktop/website rows**. It does not count completed features. The [goal](GOAL.md), [roadmap](ROADMAP.md) and [interface design](DESIGN.md) retain the outstanding controls, guidance, accessibility, language/theme/scale states and full visual matrix.
 
-**Current replacement screenshots remain pending source-bound acceptance and promotion.**
+Two inspected source-bound documentation screenshots now appear below. Current native-product replacements and the full visual matrix remain pending.
 
 ### Verified preview captures
 
@@ -135,7 +135,11 @@ Material Design 3 applies to the desktop, documentation website, extension and n
 
 ### Current captures
 
-**Current replacement screenshots are pending source-bound acceptance and promotion.** This README does not present an older interface as the latest build.
+The following genuine documentation captures show the information entry, worked example and isolated playground from source `83e14d8627b9782d5acc12221c22ed4f0b8b2d4c`. Capture time: October 13, 2026, 11:50 UTC. They cover two bilingual/light tuples, not native-product or installed acceptance. The [source-bound inventory](docs/evidence/control-guidance-83-inventory.json) retains exact intervals, hashes and limitations.
+
+![Bilingual history guidance and isolated sample controls at 1280 by 900](docs/images/captures/site-guidance-normal-83e14d86.png)
+
+![Bilingual history guidance at a 320 pixel CSS viewport with DPR 2](docs/images/captures/site-guidance-narrow-83e14d86.png)
 
 Historical originals remain available in the [reviewed historical gallery](https://ding-ding-projects.github.io/material-file-encryptor/gallery.html), [original preview inventory](docs/images/captures/preview/inventory.json), [preview verification summary](docs/images/captures/preview/verification-summary.json), [Linux capture provenance](docs/images/captures/provenance.json), and [Windows capture provenance](docs/images/captures/windows/provenance.json). Their original dates, sources, hashes, exclusions and incomplete verdicts remain unchanged. The diagrams here explain behavior; they are not screenshots or runtime evidence.
 
@@ -215,4 +219,4 @@ a step, not a habit.
 
 The current candidate replaces persistent guidance text entries with accessible information icons and isolated worked examples. All 88 static settings descriptors have authored practice fixtures; scheduled scalar values, clear actions and snapshot operations have separate synthetic examples. Other control families and the complete built acceptance inventory remain unfinished. See [guidance playgrounds](docs/features/interface/guidance-playgrounds.md) for exact boundaries and remaining work.
 
-Public document controls now prepare real Material Web components before listeners and localization snapshots. The navigation menu follows its measured header height, and tab information panels use the actual navigation scrollport width. Focused source checks pass; fresh source-bound captures, the full language/theme/scale matrix and live publication checks are pending. Existing historical images retain their original provenance.
+Public document controls now prepare real Material Web components before listeners and localization snapshots. The navigation menu follows its measured header height, and tab information panels use the actual navigation scrollport width. Focused source checks pass; two representative source-bound documentation captures are inspected and inventoried. The full language/theme/scale matrix and live publication checks remain pending. Existing historical images retain their original provenance.
