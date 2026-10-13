@@ -4,7 +4,7 @@ import {MOTION_GUIDANCE} from '../src/renderer/features/personalization/motion-g
 import {MOTION_PRACTICE,MOTION_PRACTICE_COPY} from '../src/shared/local-ux/motion-practice.js';
 import {newMotionTrack,motionActiveTime,resolveMotionSequence,compileMotionFrames} from '../src/renderer/features/personalization/motion-model.js';
 import {resolveMotionSchedule} from '../src/renderer/features/personalization/motion-schedules.js';
-import {createPracticeSession,mountGuidancePlayground,assertPracticeCoverage,PRACTICE_COPY} from '../src/shared/surface/guidance-playground.js';
+import {createPracticeSession,mountGuidancePlayground,assertPracticeCoverage,PRACTICE_COPY,definePractice} from '../src/shared/surface/guidance-playground.js';
 import {createAccessDocument} from './helpers/local-access-dom.js';
 test('all fifty-nine motion concepts have exact immutable authored fixtures and translated worked content',()=>{
  assert.equal(MOTION_GUIDANCE.length,59);assert.deepEqual(new Set(Object.keys(MOTION_PRACTICE)),new Set(MOTION_GUIDANCE.map(row=>row.concept)));const ids=MOTION_GUIDANCE.map(row=>row.id);assertPracticeCoverage(ids,MOTION_GUIDANCE);assert.throws(()=>assertPracticeCoverage(ids,MOTION_GUIDANCE.slice(1)),/mismatch/);
@@ -22,6 +22,13 @@ test('keyframe timing matches compiled offsets and preview controls expose bound
 });
 test('trigger samples calculate event matching debounce and priority without dispatching events',()=>{
  assert.equal(createPracticeSession(MOTION_PRACTICE.trigger).edit('click').motion.trigger.matched,false);assert.equal(createPracticeSession(MOTION_PRACTICE['progress-threshold']).edit(.8).motion.trigger.matched,false);assert.equal(createPracticeSession(MOTION_PRACTICE.debounce).edit(201).motion.trigger.matched,false);assert.equal(createPracticeSession(MOTION_PRACTICE.debounce).edit(200).motion.trigger.matched,true);assert.equal(createPracticeSession(MOTION_PRACTICE.retrigger).edit('ignore').motion.trigger.reaction,'ignore');assert.equal(createPracticeSession(MOTION_PRACTICE['trigger-priority']).edit(-1).motion.trigger.winningId,'sample-other');assert.equal(createPracticeSession(MOTION_PRACTICE['cancel-on-exit']).edit('false').motion.trigger.cancelOnExit,false);
+});
+test('sample playback position clamps non-looping ranges and holds before entry without reverse wrapping',()=>{
+ assert.equal(createPracticeSession(MOTION_PRACTICE['playback-range-end']).edit(2000).motion.preview.positionAfter1100,1100);
+ for(const[start,end,loop,expected]of [[0,1000,false,1000],[0,2000,false,1100],[1200,2000,false,1200],[1200,2000,true,1200],[100,1000,true,200],[1100,2000,true,1100],[0,1100,true,0],[500,500,true,500],[500,500,false,500]]){
+  const source=MOTION_PRACTICE['loop-preview'],fixture=definePractice({...source,id:`range-sample:${start}:${end}:${loop}`,initial:String(loop),record:{...source.record,preview:{...source.record.preview,rangeStart:start,rangeEnd:end}}});
+  assert.equal(createPracticeSession(fixture).result.motion.preview.positionAfter1100,expected,JSON.stringify({start,end,loop}));
+ }
 });
 test('fixed-clock schedules match the original rule matcher and reject invalid calendar or integer boundaries',()=>{
  for(const[key,value]of [['schedule-enabled','false'],['schedule-start-time','22:00'],['schedule-end-time','12:00'],['schedule-first-date','2030-01-16'],['schedule-last-date','2030-01-14'],['schedule-timezone','America/Toronto'],['schedule-weekdays','[1,3,5]'],['schedule-priority',-1]]){const result=createPracticeSession(MOTION_PRACTICE[key]).edit(value);assert.equal(result.valid,true,key);const quiet={name:'quiet'},active={name:'active'},rule=result.motion.track.schedule,model={unknown:{presets:{'Sample quiet':quiet,'Sample active':active},schedules:[{...rule,values:{},source:{type:'local'}},{...rule,id:'sample-other',preset:'Sample active',enabled:true,start:'00:00',end:'00:00',startDate:'',endDate:'',weekdays:[0,1,2,3,4,5,6],priority:0}]}};assert.equal(resolveMotionSchedule(model,new Date(MOTION_PRACTICE[key].instant)).name,result.motion.schedule.winningPreset==='Sample quiet'?'quiet':'active',key);}
