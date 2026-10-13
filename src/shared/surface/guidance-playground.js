@@ -22,7 +22,7 @@ export function definePractice(definition){
  const result=freeze(copy(definition));authored.add(result);return result;
 }
 export const PRACTICE_COPY={
- 'The selected sample snapshot is in use.':'所選樣本快照使用中。','Preview only. No real operation is performed.':'只作預覽，唔會執行真實操作。','Year':'年份','Month':'月份','Day':'日期','Choose a real calendar date between 2000 and 2099.':'請選擇 2000 至 2099 年之間嘅有效日期。','Confirm this synthetic operation first.':'請先確認呢個合成操作。','Sample input is invalid. Review its displayed bounds.':'樣本輸入無效，請檢查顯示嘅範圍。','Choose two different sample entries.':'請選擇兩個不同嘅樣本記錄。','The sample file has an unsupported version.':'樣本檔案版本未獲支援。','Practice with sample data':'用樣本資料練習','Sample input':'樣本輸入','Sample action':'樣本操作','Expected result':'預期結果','Reset example':'重設例子','Clear sample input':'清除樣本輸入','Apply to sample':'套用至樣本','Confirm sample removal':'確認移除樣本','Sample result':'樣本結果','Sample label':'樣本標籤','Sample caption':'樣本說明','Enabled':'啟用','Disabled':'停用','No matching sample rows.':'冇符合嘅樣本項目。','Enter a value within the sample bounds.':'請輸入樣本範圍內嘅數值。','Use a six-digit hexadecimal color, such as #52643f.':'請使用六位十六進位顏色，例如 #52643f。','Choose one of the authored sample options.':'請選擇其中一個預先編寫嘅樣本選項。','Enter between 1 and 80 characters without control characters.':'請輸入 1 至 80 個字元，唔好用控制字元。','Confirm removal before changing the sample list.':'修改樣本清單前，請先確認移除。','No sample items remain.':'冇剩餘樣本項目。','Use HH:MM within one day.':'請使用一日內嘅 HH:MM 時間。','Sample is disposed.':'樣本已關閉。','Only the fixed demonstration text is accepted.':'只接受固定示範文字。','Demonstration accepted. No credential was stored.':'示範已接受，冇儲存任何憑證。','Practice is unavailable for this control. Its specific fixture has not been implemented.':'呢個控制項未有專用練習樣本，暫時無法練習。',
+ 'Sample frame offsets must remain between zero and one.':'樣本影格偏移必須保持零至一。','At least one sample property must remain.':'最少必須保留一個樣本屬性。','The selected sample snapshot is in use.':'所選樣本快照使用中。','Preview only. No real operation is performed.':'只作預覽，唔會執行真實操作。','Year':'年份','Month':'月份','Day':'日期','Choose a real calendar date between 2000 and 2099.':'請選擇 2000 至 2099 年之間嘅有效日期。','Confirm this synthetic operation first.':'請先確認呢個合成操作。','Sample input is invalid. Review its displayed bounds.':'樣本輸入無效，請檢查顯示嘅範圍。','Choose two different sample entries.':'請選擇兩個不同嘅樣本記錄。','The sample file has an unsupported version.':'樣本檔案版本未獲支援。','Practice with sample data':'用樣本資料練習','Sample input':'樣本輸入','Sample action':'樣本操作','Expected result':'預期結果','Reset example':'重設例子','Clear sample input':'清除樣本輸入','Apply to sample':'套用至樣本','Confirm sample removal':'確認移除樣本','Sample result':'樣本結果','Sample label':'樣本標籤','Sample caption':'樣本說明','Enabled':'啟用','Disabled':'停用','No matching sample rows.':'冇符合嘅樣本項目。','Enter a value within the sample bounds.':'請輸入樣本範圍內嘅數值。','Use a six-digit hexadecimal color, such as #52643f.':'請使用六位十六進位顏色，例如 #52643f。','Choose one of the authored sample options.':'請選擇其中一個預先編寫嘅樣本選項。','Enter between 1 and 80 characters without control characters.':'請輸入 1 至 80 個字元，唔好用控制字元。','Confirm removal before changing the sample list.':'修改樣本清單前，請先確認移除。','No sample items remain.':'冇剩餘樣本項目。','Use HH:MM within one day.':'請使用一日內嘅 HH:MM 時間。','Sample is disposed.':'樣本已關閉。','Only the fixed demonstration text is accepted.':'只接受固定示範文字。','Demonstration accepted. No credential was stored.':'示範已接受，冇儲存任何憑證。','Practice is unavailable for this control. Its specific fixture has not been implemented.':'呢個控制項未有專用練習樣本，暫時無法練習。',
 };
 /** Pure evaluator returns a new JSON result. User input is never evaluated as code
  * or applied as arbitrary style, HTML, a URL or a regular expression. */
@@ -59,6 +59,49 @@ function evaluateOperation(fixture,state){
  case 'reminder-snooze':record.now='2030-01-15T10:00:00Z';record.reminderAfter='2030-01-15T11:00:00Z';record.timerScheduled=false;break;
  case 'clear-field':record.value='';break;
  case 'snapshot-capture':record.snapshots=[...record.snapshots,{id:'sample-new',label:input.label,reference:{version:1,reference:'sample-new'},snapshot:copy(record.base)}];break;
+ case 'keyframe': {
+  const frame=record.frames[0],numeric=value=>Number(value),coordinate=value=>Math.round(value*1000000)/1000000;
+  switch(fixture.key){
+   case 'select':record.selected=Number(input.index);record.selectedValue=record.frames[record.selected].value;break;
+   case 'multi':record.selection=input.included?[0,1]:[0];break;
+   case 'mode':delete frame.offset;delete frame.time;delete frame.relativeTime;frame[{offset:'offset',absolute:'time',relative:'relativeTime'}[input.mode]]=0;break;
+   case 'time':frame.offset=numeric(input.position);record.resolvedTime=frame.offset*record.duration;break;
+   case 'value':frame.value=numeric(input.value);break;
+   case 'unit':record.draft.unit=input.unit;break;
+   case 'apply':frame.value=String(numeric(input.number))+input.unit;break;
+   case 'easing':{frame.easing=input.easing;let low=0,high=1;for(let i=0;i<32;i++){const t=(low+high)/2,x=3*(1-t)*(1-t)*t*0.42+3*(1-t)*t*t+t*t*t;if(x<0.5)low=t;else high=t;}const t=(low+high)/2;record.sampleMidpoint=input.easing==='linear'?0.5:input.easing==='ease-in'?coordinate(3*(1-t)*t*t+t*t*t):0;break;}
+   case 'composition':frame.composite=input.composition;record.composedSample=['add','accumulate'].includes(input.composition)?15:5;break;
+   case 'hold':frame.hold=input.hold;record.sampleMidpoint=input.hold?0.2:0.5;break;
+   case 'add':record.frames.push({id:'sample-new',offset:1,value:'computed',easing:'linear',composite:'auto'});break;
+   case 'copy':record.copiedFrames=record.frames.filter((_,index)=>record.selection.includes(index)).map(copy);break;
+   case 'paste':record.frames.push(...record.copiedFrames.map(copy));break;
+   case 'remove':record.frames=record.frames.filter((_,index)=>!record.selection.includes(index));record.selection=[];break;
+   case 'move':{const delta=numeric(input.delta);if(record.frames.some((row,index)=>record.selection.includes(index)&&(row.offset+delta<0||row.offset+delta>1)))return invalid('Sample frame offsets must remain between zero and one.');record.frames=record.frames.map((row,index)=>record.selection.includes(index)?{...row,offset:coordinate(row.offset+delta)}:row);break;}
+   case 'reorder':case 'later':[record.frames[0],record.frames[1]]=[record.frames[1],record.frames[0]];break;
+   case 'reset':delete frame.time;delete frame.relativeTime;delete frame.hold;Object.assign(frame,{offset:0,value:'computed',easing:'linear',composite:'auto'});break;
+   case 'clear':record.draft.number='';break;
+   default:throw Error('Unknown synthetic keyframe operation.');
+  }break;
+ }
+ case 'transition': {
+  const row=record.rows[0];
+  switch(fixture.key){
+   case 'migrate':case 'expand':record.version=2;if(fixture.key==='expand')record.properties=copy(record.catalog);record.rows=record.properties.map((property,index)=>({id:'sample-property-'+index,property,from:record.from,to:record.to,behavior:'normal'}));break;
+   case 'select':record.selected=Number(input.index);record.selectedProperty=record.rows[record.selected].property;break;
+   case 'property':row.property=input.property;break;
+   case 'add':record.rows.push({id:'sample-new',property:'letter-spacing',from:'computed',to:'computed',behavior:'normal'});break;
+   case 'remove':if(record.rows.length<2)return invalid('At least one sample property must remain.');record.rows.splice(0,1);break;
+   case 'earlier':case 'later':[record.rows[0],record.rows[1]]=[record.rows[1],record.rows[0]];break;
+   case 'from':case 'to':row[fixture.key]=Number(input.value);break;
+   case 'number':record.draft.number=Number(input.number);break;
+   case 'unit':record.draft.unit=input.unit;break;
+   case 'apply':record.rows[1].to=String(Number(input.number))+input.unit;break;
+   case 'clear':record.draft.number='';break;
+   case 'behavior':row.behavior=input.behavior;record.rendererPreview=input.behavior==='allow-discrete'?'unavailable':'not-run';break;
+   case 'reset':Object.assign(row,{from:'computed',to:'computed',behavior:'normal'});break;
+   default:throw Error('Unknown synthetic transition operation.');
+  }break;
+ }
  case 'snapshot-remove':if(record.snapshots.find(row=>row.id===input.reference)?.inUse)return invalid('The selected sample snapshot is in use.');record.snapshots=record.snapshots.filter(row=>row.id!==input.reference);break;
  default:throw Error('Unsupported synthetic operation.');
  }
