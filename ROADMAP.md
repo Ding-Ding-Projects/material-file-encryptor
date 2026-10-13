@@ -613,3 +613,10 @@
 - [x] Preserve both frozen production branches at exact 18f98d53/04bf6c25 sources, with remote-ref readback.
 - [ ] Refute/repair offline failed-preparation restoration and obtain actual acceptance at the incoming main; 0/4,272 tuples remain accepted.
 - [ ] Refresh current source-bound release, documentation/wiki/About and installed-update proof before completing the full goal.
+
+## Complete branch integration
+
+- [x] Merge every unmerged local and remote branch into main with reviewed conflict resolution, keeping the suite at main's baseline.
+- [x] Verify a pre-cleanup archive that excludes Git-ignored files.
+- [ ] Remove every merged branch and checkout so only main remains.
+- [ ] Obtain actual runtime, GUI and installed acceptance for newly integrated branch work.

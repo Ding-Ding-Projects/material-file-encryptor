@@ -1,3 +1,20 @@
+## Complete branch integration, 2026-10-13
+
+Every previously unmerged branch, local and remote (34 branches carrying about 330 commits that were not patch-equivalent to main), was merged into main through a reviewed integration branch. Every branch tip is now an ancestor of main, so main is the only remaining branch and checkout.
+
+Resolution ledger:
+
+- Older parallel, interface and encryptor branches whose work main had already reconciled in reworked form keep main's reviewed versions. Their unique commits were checked individually; each is present, superseded by a same-subject rework, or recorded below.
+- Newer work is integrated: the managed Ollama runtime installation panel and native ownership dispatch; protected native server supervision, routed alongside managed Ollama through one native request gate that verification and test modes still disable; read-only browser protection status; owned-desktop converter isolation with cleanup that attempts every release and preserves the original failure; separate exit and output-drain deadlines for storage tools; registered Material icon buttons for clear actions; renderer task timing; and the media source review article with a new Cantonese pair.
+- Repairs made during integration: unresolved conflict markers committed inside one branch's own merge (converter articles now match main's published text); duplicated catalogue, language-pair and required-inventory registrations; stale translation bindings; a duplicated import; an outdated helper constructor call; and an orphaned 7-Zip 26.03 bootstrap block superseded by main's 26.04 provisioning.
+- Inventories: two new articles and the README route are registered as unverified concrete surfaces, and generated public routes were refreshed to 220. Three reference-only design routes stay outside the frozen 89-state acceptance authority. The reviewed search filter hash is re-pinned after its outcome-reporting change.
+
+Verification at the integration source `b1de246691baa766263051259b384caf08bda4df`: the full JavaScript suite ran 1,634 tests with 1,608 passed, 24 skipped and 2 failed. The two failures are browser-driven renderer tests that need Playwright, which is unavailable on this host; main fails the same two. The exact `build.bat /s` exited 0 at the earlier integration source `a6bd47ca7db7cf152330b4b0964b3ba7678d8121` and is recorded separately for this source. No installer was produced locally.
+
+Not verified by this integration: actual GUI acceptance remains 0/4,272 tuples; native converter admission remains unavailable; frozen GUI production lifecycle closure and installer production remain unverified; merged branch work carries no runtime or installed verdict of its own.
+
+Preservation: a pre-cleanup archive of all 36 checkouts and the complete Git administrative directory was verified (562 MB, every entry count matching the tracked and non-ignored file lists, all hashes verified, all-refs bundle verified). Git-ignored files such as dependency trees, build output, local profiles and ignored evidence are excluded from the archive by the owner's instruction and are not retained after their checkouts are removed.
+
 ## Final moving-baseline preservation record, 2026-10-12
 
 During preservation closeout, repository owner merge `a98c56b807c1cc904e1ce8aa51118a3d7be4da5e` integrated PR #11 from `codex/gui-reconcile-01a131a2`. Fresh fetch showed zero local-only commits and 221 incoming commits. The primary checkout was reconciled through `git pull --ff-only origin main`; preservation commit `6dc11bc1cd2385e3973c13f51a9288654ec9d8f6` is an ancestor. This records the incoming source, not a new runtime verdict.
