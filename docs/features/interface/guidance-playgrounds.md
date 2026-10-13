@@ -26,7 +26,7 @@ The 88-row static settings inventory has 88 distinct authored fixtures, includin
 
 Clear variants have their own synthetic editable field and local clear action. Fourteen scalar/snapshot scheduled value domains select a fixture from explicit setting metadata, not the live value. Narrator and attention retain their separately authored nested controls. Snapshot capture and removal have local record demonstrations, including refusal to remove an in-use synthetic reference.
 
-The 11 nested appearance concepts and six font concepts have authored fixtures. Font face/instance examples change actual sample weight; non-weight font axes still require their own precise adapters. All 19 keyframe concepts and all 16 transition-property concepts now have distinct authored operations, with exact factory coverage checks. They manipulate synthetic frames, local copies, timing coordinates and independently identified endpoint rows. Movement rejects out-of-range offsets, resets retain metadata, and discrete renderer playback stays explicitly unavailable. Nested motion, color, image, drawing/workbench, typography helper variants, logo authoring and server-preparation registrations still require their own complete fixture coverage. A kind taxonomy is not full control coverage. Unknown descriptors show an explicit unavailable practice message; no generic success-only exercise is substituted.
+The 11 nested appearance concepts and six font concepts have authored fixtures. Font face/instance examples change actual sample weight; non-weight font axes still require their own precise adapters. All 19 keyframe concepts and all 16 transition-property concepts now have distinct authored operations, with exact factory coverage checks. They manipulate synthetic frames, local copies, timing coordinates and independently identified endpoint rows. Movement rejects out-of-range offsets, resets retain metadata, and discrete renderer playback stays explicitly unavailable. Nested motion, color, image, drawing/workbench, typography helper variants and logo authoring registrations still require their own complete fixture coverage. A kind taxonomy is not full control coverage. Unknown descriptors show an explicit unavailable practice message; no generic success-only exercise is substituted.
 
 ## Verification
 
@@ -49,6 +49,8 @@ The following twelve source families are the actual descriptor consumers. Counts
 | `src/renderer/features/personalization/workbench-guidance.js` | 12 concepts | Pending |
 | `src/renderer/features/personalization/typography-inspector.js` | 18 fields, per-field clear/reset, preset/step helpers and search | Pending |
 | `src/renderer/features/personalization/logo.js` | 5 crop/safe-area fields and preset, plus composed nested/color consumers | Extra authoring fixtures pending |
-| `src/renderer/features/server-manager/index.js` | 11 preparation concepts | Pending |
+| `src/renderer/features/server-manager/index.js` | 11 preparation concepts | Implemented as explicit synthetic preparation previews |
 
 The runtime comparison must additionally enumerate helper controls, actual rendered instances and every target identity. This table does not replace that comparison.
+
+Server preparation examples cover exact major matching, consent and digest mismatch, completed-operation cancellation refusal, catalogue identity and pagination, selection availability, license review without acceptance, and search. Their states are explicitly synthetic: no file creation, download, Java execution or server start occurs.

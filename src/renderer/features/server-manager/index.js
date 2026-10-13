@@ -1,3 +1,4 @@
+import {SERVER_PRACTICE} from '../../../shared/local-ux/server-preparation-practice.js';
 import { control } from '../../../shared/surface/controls.js';
 import {surfaceRegistry} from '../../../shared/surface/registry.js';
 import {mountControlGuidance} from '../../../shared/surface/control-guidance.js';
@@ -18,7 +19,7 @@ export function mountServerPreparation(host,services={}){
  const request=(action,payload={})=>{if(!available()||typeof services.request!=='function')throw Error('The native preparation service is unavailable on this surface.');return services.request(action,payload);};
  function guidance(target,key,run,context=''){
   const row=PREPARATION_GUIDANCE.find(row=>row.key===key);const helpBase=services.guidanceHelpBase||'docs/features/server-manager/preparation.md';
-  const module=mountControlGuidance(target,{descriptor:{...row,id:`server-preparation:${key}:${context}`,labelYue:t(row.label),sourceId:'docs/features/server-manager/preparation.md',concept:key,help:helpBase+'#'+key,steps:[row.purpose,row.validation]},t,run,validate:()=>{if(!available()||target.isConnected===false||target.disabled)throw Error(t('This action is no longer available.'));},registerHelp:services.registerHelp,registerCommands:services.registerCommands,openHelp:services.openGuidanceHelp,getDetails:()=>context?{provenance:context}:{} });mounted.push(()=>module.destroy());
+  const module=mountControlGuidance(target,{descriptor:{...row,practice:SERVER_PRACTICE[key],id:`server-preparation:${key}:${context}`,labelYue:t(row.label),sourceId:'docs/features/server-manager/preparation.md',concept:key,help:helpBase+'#'+key,steps:[row.purpose,row.validation]},t,run,validate:()=>{if(!available()||target.isConnected===false||target.disabled)throw Error(t('This action is no longer available.'));},registerHelp:services.registerHelp,registerCommands:services.registerCommands,openHelp:services.openGuidanceHelp,getDetails:()=>context?{provenance:context}:{} });mounted.push(()=>module.destroy());
  }
  function action(parent,label,key,operation,{disabled=false,reason='',context=''}={}){
   const button=node('md-outlined-button',label);button.type='button';button.disabled=disabled||typeof services.request!=='function';button.setAttribute('aria-label',t(label));if(reason)button.title=t(reason);parent.append(button);const generation=epoch;let flight=null;

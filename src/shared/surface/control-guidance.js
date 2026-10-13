@@ -1,3 +1,4 @@
+import {SERVER_PRACTICE_COPY} from '../local-ux/server-preparation-practice.js';
 import {SETTINGS_TAB_COPY} from '../local-ux/settings-tab-guidance.js';
 import {FRAME_PRACTICE_COPY} from '../local-ux/frame-practice.js';
 import {APPEARANCE_PRACTICE_COPY} from '../local-ux/appearance-practice.js';
@@ -5,7 +6,7 @@ import {mountGuidancePlayground,PRACTICE_COPY} from './guidance-playground.js';
 
 
 export const GUIDANCE_COPY={
- ...PRACTICE_COPY,...APPEARANCE_PRACTICE_COPY,...FRAME_PRACTICE_COPY,...SETTINGS_TAB_COPY, 'Help for':'說明：','Close information':'關閉說明','Open guided operation':'開啟逐步操作','Full explanation':'完整解說','Guide':'指引','Explain':'解說',
+ ...PRACTICE_COPY,...APPEARANCE_PRACTICE_COPY,...FRAME_PRACTICE_COPY,...SETTINGS_TAB_COPY,...SERVER_PRACTICE_COPY, 'Help for':'說明：','Close information':'關閉說明','Open guided operation':'開啟逐步操作','Full explanation':'完整解說','Guide':'指引','Explain':'解說',
  'Guide this control':'逐步了解這個控制項','Explain this control':'解釋這個控制項','Back':'上一步','Next':'下一步','Apply through the direct control':'透過原有控制項套用','Cancel guidance':'取消指引','Return to control':'返回控制項','Guidance cancelled. Completed effects are retained.':'指引已取消，已完成的修改會保留。','Ready. Review the original control and its result.':'準備就緒，請檢查原有控制項及其結果。','Working through the original action.':'正在執行原有操作。','Purpose':'用途','Options':'選項','Default':'預設值','Effects':'影響','Example':'例子','Validation':'驗證','Recovery':'復原方法','Authoritative documentation':'完整說明文件','Review the value at the original control.':'請檢查原有控制項的數值。','Review the consequences before continuing.':'繼續前請檢查操作的影響。','A required value is invalid. Correct the original control before continuing.':'必填數值無效，請先修正原有控制項。','This control is unavailable. Review its adjacent explanation.':'這個控制項目前無法使用，請查看旁邊的解釋。',
 };
 
