@@ -1,0 +1,24 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {spawn} from 'node:child_process';
+import {createHash} from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+import {MEDIA_RELEASE} from './converter-media-runtime.mjs';
+const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
+export function sourceInventory(readme,versionOutput){
+ const section=(start,end)=>readme.split(start)[1]?.split(end)[0]?.trim()||'';
+ const external=section('External libraries:','External libraries providing hardware acceleration:').split(/\s+/).filter(Boolean);
+ const hardware=section('External libraries providing hardware acceleration:','Libraries:').split(/\s+/).filter(Boolean);
+ const reported=new Map(section("release-essentials external libraries' versions:",'\u0000').split(/\r?\n/).map(line=>line.trim().split(/\s+(.+)/)).filter(parts=>parts[1]).map(([name,version])=>[name.toLowerCase(),version]));
+ const aliases={avisynth:'avisynthplus',libaom:'aom',libfreetype:'freetype',libfribidi:'fribidi',libgsm:'gsm',libharfbuzz:'harfbuzz',libmp3lame:'lame',libopencore_amrnb:'libopencore-amrnb',libopencore_amrwb:'libopencore-amrwb',libopenjpeg:'openjpeg2',libopenmpt:'openmpt',libopus:'opus',librubberband:'rubberband',libspeex:'speex',libsrt:'srt',libtheora:'libtheora',libvidstab:'vidstab',libvmaf:'vmaf',libvo_amrwbenc:'vo-amrwbenc',libvorbis:'vorbis',libvpx:'vpx',libwebp:'libwebp',libx264:'x264',libx265:'x265',libxvid:'xvid',libzimg:'zimg',libzmq:'zeromq',openal:'openal-soft',sdl2:'sdl',libvpl:'vpl',vaapi:'vaapi'};
+ const configuration=versionOutput.match(/^configuration: (.+)$/m)?.[1];if(!configuration||external.length<30||hardware.length<10)throw new Error('The publisher metadata format changed.');
+ const components=[...new Set([...external,...hardware])].sort().map(name=>({name,kind:hardware.includes(name)?'hardware-interface-or-library':'external-library',reportedVersion:reported.get(aliases[name]||name)||null,sourceArchive:null,sourceSha256:null,exactBuildRecipe:null,status:'unresolved-corresponding-source'}));
+ return {schema:1,status:'incomplete',binaryRelease:MEDIA_RELEASE.version,archiveSha256:MEDIA_RELEASE.archiveSha256,ffmpegSha256:MEDIA_RELEASE.ffmpegSha256,ffprobeSha256:MEDIA_RELEASE.ffprobeSha256,publisherReadmeSha256:sha(Buffer.from(readme)),upstreamCommit:'946fcce07b6dcd0331c8cc609192aeff5e1924f8',compiler:versionOutput.match(/^built with (.+)$/m)?.[1]||null,configuration,components,blockers:['No matching complete source bundle is listed among the six publisher release assets.','The publisher support repository contains README and funding configuration, not an exact build recipe.','Reported component versions do not identify exact source archives, local patches, generated configuration or transitive source closure.','Some enabled components have no version in the publisher metadata.','Platform interfaces require separate applicability review; missing metadata is not silently exempted.'],release:{includeMediaRuntime:false,reason:'Corresponding-source closure for the exact binary remains unverified.',proposalOnly:true},references:['https://github.com/GyanD/codexffmpeg/releases/tag/9.0.2','https://www.gyan.dev/ffmpeg/builds/','https://github.com/GyanD/codexffmpeg/issues/91#issuecomment-1474806731','https://github.com/GyanD/codexffmpeg/issues/119#issuecomment-2028846467','https://ffmpeg.org/legal.html']};
+}
+export async function inspectMediaSource(binaryDirectory,output){
+ for(const [name,h] of [['ffmpeg.exe',MEDIA_RELEASE.ffmpegSha256],['ffprobe.exe',MEDIA_RELEASE.ffprobeSha256]])if(sha(await fs.readFile(path.join(binaryDirectory,name)))!==h)throw new Error('Exact media binary hash mismatch.');
+ const readme=await fs.readFile(path.join(binaryDirectory,'README.txt'),'utf8');
+ const version=await new Promise((resolve,reject)=>{const child=spawn(path.resolve(binaryDirectory,'ffmpeg.exe'),['-version'],{windowsHide:true,stdio:['ignore','pipe','pipe']});let result='';const timer=setTimeout(()=>child.kill(),10000);for(const stream of [child.stdout,child.stderr])stream.on('data',b=>{result+=b;if(result.length>65536)child.kill();});child.once('error',reject);child.once('exit',code=>{clearTimeout(timer);code===0&&result.length<=65536?resolve(result):reject(new Error('Bounded version inspection failed.'));});});
+ const inventory=sourceInventory(readme,version);await fs.writeFile(output,JSON.stringify(inventory,null,2)+'\n');return {status:inventory.status,components:inventory.components.length,missingVersions:inventory.components.filter(x=>!x.reportedVersion).map(x=>x.name)};
+}
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){if(process.argv.length!==4)throw new Error('Usage: node scripts/converter-media-source-inventory.mjs <verified-runtime-directory> <output-json>');console.log(JSON.stringify(await inspectMediaSource(process.argv[2],process.argv[3])));}

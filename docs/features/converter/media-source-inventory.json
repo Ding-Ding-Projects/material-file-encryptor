@@ -1,0 +1,528 @@
+{
+  "schema": 1,
+  "status": "incomplete",
+  "binaryRelease": "9.0.2",
+  "archiveSha256": "60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba",
+  "ffmpegSha256": "3256173f3f8bffd7df12227c68adf68025edb1832273a9530688a7bb1ed8edec",
+  "ffprobeSha256": "f0d36ecbbdd3bcfac3efa078c96c7271c2e68b3810595552ac3b7f17e9a65c52",
+  "publisherReadmeSha256": "0342de6bb39dd421cbec2c00d89ad274b640d75ad3f2cab09ffd647ce2d8f949",
+  "upstreamCommit": "946fcce07b6dcd0331c8cc609192aeff5e1924f8",
+  "compiler": "gcc 16.2.0 (Rev3, Built by MSYS2 project)",
+  "configuration": "--enable-gpl --enable-version3 --enable-static --disable-w32threads --disable-autodetect --enable-cairo --enable-fontconfig --enable-iconv --enable-gnutls --enable-libxml2 --enable-gmp --enable-bzlib --enable-lzma --enable-zlib --enable-libsrt --enable-libssh --enable-libzmq --enable-avisynth --enable-sdl2 --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxvid --enable-libaom --enable-libopenjpeg --enable-libvpx --enable-mediafoundation --enable-libass --enable-libfreetype --enable-libfribidi --enable-libharfbuzz --enable-libvidstab --enable-libvmaf --enable-libzimg --enable-amf --enable-cuda-llvm --enable-cuvid --enable-dxva2 --enable-d3d11va --enable-d3d12va --enable-ffnvcodec --enable-libvpl --enable-nvdec --enable-nvenc --enable-vaapi --enable-openal --enable-libgme --enable-libopenmpt --enable-libopencore-amrwb --enable-libmp3lame --enable-libtheora --enable-libvo-amrwbenc --enable-libgsm --enable-libopencore-amrnb --enable-libopus --enable-libspeex --enable-libvorbis --enable-librubberband",
+  "components": [
+    {
+      "name": "amf",
+      "kind": "hardware-interface-or-library",
+      "reportedVersion": "v1.5.2-2-gc35f613",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "avisynth",
+      "kind": "external-library",
+      "reportedVersion": "v3.7.5-383-g5c82777b",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "bzlib",
+      "kind": "external-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "cairo",
+      "kind": "external-library",
+      "reportedVersion": "1.18.5",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "cuda",
+      "kind": "hardware-interface-or-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "cuda_llvm",
+      "kind": "hardware-interface-or-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "cuvid",
+      "kind": "hardware-interface-or-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "d3d11va",
+      "kind": "hardware-interface-or-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "d3d12va",
+      "kind": "hardware-interface-or-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "dxva2",
+      "kind": "hardware-interface-or-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "ffnvcodec",
+      "kind": "hardware-interface-or-library",
+      "reportedVersion": "n13.1.15.0-1-geddcea9",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "gmp",
+      "kind": "external-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "gnutls",
+      "kind": "external-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "iconv",
+      "kind": "external-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libaom",
+      "kind": "external-library",
+      "reportedVersion": "v3.15.0-25-g023743a7d7",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libass",
+      "kind": "external-library",
+      "reportedVersion": "0.17.5-8-gb2fe9d8",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libfontconfig",
+      "kind": "external-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libfreetype",
+      "kind": "external-library",
+      "reportedVersion": "VER-2-14-3",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libfribidi",
+      "kind": "external-library",
+      "reportedVersion": "v1.0.16-19-gc928e4c",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libgme",
+      "kind": "external-library",
+      "reportedVersion": "0.6.6",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libgsm",
+      "kind": "external-library",
+      "reportedVersion": "1.0.24",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libharfbuzz",
+      "kind": "external-library",
+      "reportedVersion": "14.4.0-108-g64e2b532",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libmfx",
+      "kind": "hardware-interface-or-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libmp3lame",
+      "kind": "external-library",
+      "reportedVersion": "3.100",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libopencore_amrnb",
+      "kind": "external-library",
+      "reportedVersion": "0.1.6",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libopencore_amrwb",
+      "kind": "external-library",
+      "reportedVersion": "0.1.6",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libopenjpeg",
+      "kind": "external-library",
+      "reportedVersion": "2.5.4",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libopenmpt",
+      "kind": "external-library",
+      "reportedVersion": "libopenmpt-0.6.30-3-g6c0a06bc",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libopus",
+      "kind": "external-library",
+      "reportedVersion": "v1.6.1-68-g503d81b1",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "librubberband",
+      "kind": "external-library",
+      "reportedVersion": "v4.0.0",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libspeex",
+      "kind": "external-library",
+      "reportedVersion": "Speex-1.2.1-51-g0589522",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libsrt",
+      "kind": "external-library",
+      "reportedVersion": "v1.5.7-7-gcae8f62",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libssh",
+      "kind": "external-library",
+      "reportedVersion": "0.12.2",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libtheora",
+      "kind": "external-library",
+      "reportedVersion": "v1.2.0",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libvidstab",
+      "kind": "external-library",
+      "reportedVersion": "v1.1.2-214-ge2445c4",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libvmaf",
+      "kind": "external-library",
+      "reportedVersion": "v3.2.0-13-gf85a8536",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libvo_amrwbenc",
+      "kind": "external-library",
+      "reportedVersion": "0.1.3",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libvorbis",
+      "kind": "external-library",
+      "reportedVersion": "v1.3.7-37-g1b75110b",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libvpl",
+      "kind": "hardware-interface-or-library",
+      "reportedVersion": "2.17",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libvpx",
+      "kind": "external-library",
+      "reportedVersion": "v1.17.0-57-gd2413e2ca",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libwebp",
+      "kind": "external-library",
+      "reportedVersion": "v1.6.0-249-g1f34635",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libx264",
+      "kind": "external-library",
+      "reportedVersion": "v0.165.3223",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libx265",
+      "kind": "external-library",
+      "reportedVersion": "4.3-45-g116b875",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libxml2",
+      "kind": "external-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libxvid",
+      "kind": "external-library",
+      "reportedVersion": "v1.3.7",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libzimg",
+      "kind": "external-library",
+      "reportedVersion": "release-3.0.6-253-g67e0603",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "libzmq",
+      "kind": "external-library",
+      "reportedVersion": "4.3.5",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "lzma",
+      "kind": "external-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "mediafoundation",
+      "kind": "external-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "nvdec",
+      "kind": "hardware-interface-or-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "nvenc",
+      "kind": "hardware-interface-or-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "openal",
+      "kind": "external-library",
+      "reportedVersion": "1.25.2-48-g7532541",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "sdl2",
+      "kind": "external-library",
+      "reportedVersion": "release-2.32.0-234-gb90ac9502",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "vaapi",
+      "kind": "hardware-interface-or-library",
+      "reportedVersion": "2.25.0.",
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    },
+    {
+      "name": "zlib",
+      "kind": "external-library",
+      "reportedVersion": null,
+      "sourceArchive": null,
+      "sourceSha256": null,
+      "exactBuildRecipe": null,
+      "status": "unresolved-corresponding-source"
+    }
+  ],
+  "blockers": [
+    "No matching complete source bundle is listed among the six publisher release assets.",
+    "The publisher support repository contains README and funding configuration, not an exact build recipe.",
+    "Reported component versions do not identify exact source archives, local patches, generated configuration or transitive source closure.",
+    "Some enabled components have no version in the publisher metadata.",
+    "Platform interfaces require separate applicability review; missing metadata is not silently exempted."
+  ],
+  "release": {
+    "includeMediaRuntime": false,
+    "reason": "Corresponding-source closure for the exact binary remains unverified.",
+    "proposalOnly": true
+  },
+  "references": [
+    "https://github.com/GyanD/codexffmpeg/releases/tag/9.0.2",
+    "https://www.gyan.dev/ffmpeg/builds/",
+    "https://github.com/GyanD/codexffmpeg/issues/91#issuecomment-1474806731",
+    "https://github.com/GyanD/codexffmpeg/issues/119#issuecomment-2028846467",
+    "https://ffmpeg.org/legal.html"
+  ]
+}
