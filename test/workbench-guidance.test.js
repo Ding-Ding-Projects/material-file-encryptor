@@ -25,7 +25,7 @@ const buttons=root=>root.querySelectorAll('md-outlined-button');
 const button=(root,label)=>buttons(root).find(node=>node.textContent===label);
 const key=(surface,value,extra={})=>surface.dispatchEvent({type:'keydown',key:value,preventDefault(){},...extra});
 async function triangle(surface){await key(surface,' ');await key(surface,'ArrowRight',{shiftKey:true});await key(surface,' ');await key(surface,'ArrowDown',{shiftKey:true});await key(surface,' ');}
-async function finish(module){module.open();const panel=module.host.shadowRoot.children.at(-1);panel.querySelector('md-filled-button').click();await settle();panel.querySelector('md-filled-button').click();await settle();return panel;}
+async function finish(module){module.openWizard();const panel=module.host.shadowRoot.children.at(-1).children[5];panel.querySelector('md-filled-button').click();await settle();panel.querySelector('md-filled-button').click();await settle();return panel;}
 const help=(workbench,key)=>workbench.guidance.find(module=>module.host.dataset.guidanceId.startsWith('workbench:'+key+':'));
 
 test('authored workbench inventory has distinct bilingual context and exact article anchors',()=>{
@@ -47,7 +47,7 @@ test('false, missing and rejected consumers never report applied; direct and gui
 });
 test('destroyed pending instance cannot repaint or mutate a replacement and stale listeners are removed',async()=>{
  const {host}=scene();let release,calls=0;const first=mountSelectionWorkbench(host,{onSelection:()=>{calls++;return new Promise(resolve=>release=resolve);}});const svg=host.querySelector('svg');await triangle(svg);const module=help(first,'apply');await finishFirst(module);first.destroy();const replacement=mountSelectionWorkbench(host,{onSelection:()=>{calls++;return true;}});const before=host.textContent;release(true);await settle();assert.equal(host.textContent,before);await key(svg,'Enter');assert.equal(calls,1);replacement.destroy();
- async function finishFirst(module){module.open();let panel=module.host.shadowRoot.children.at(-1);panel.querySelector('md-filled-button').click();await settle();panel.querySelector('md-filled-button').click();await settle();}
+ async function finishFirst(module){module.openWizard();let panel=module.host.shadowRoot.children.at(-1).children[5];panel.querySelector('md-filled-button').click();await settle();panel.querySelector('md-filled-button').click();await settle();}
 });
 test('guide rejection rolls back local geometry, validates empty values and disposes old row guidance',async()=>{
  const {host}=scene();let accept=false,calls=0,registered=0,released=0;const workbench=mountSelectionWorkbench(host,{guides:[{axis:'x',value:50}],onGuides:()=>{calls++;return accept;},registerHelp(){registered++;return()=>released++;}});
@@ -55,7 +55,7 @@ test('guide rejection rolls back local geometry, validates empty values and disp
  accept=true;field.value='33';await field.dispatchEvent(new Event('change'));await settle();assert.deepEqual(workbench.getGuides(),[{axis:'x',value:33}]);const previous=calls;await field.dispatchEvent(new Event('change'));assert.equal(calls,previous);assert.ok(released>=2);workbench.destroy();assert.equal(released,registered);
 });
 test('guide actions obey admission and bounds, cancellation changes no saved mask',async()=>{
- const {host}=scene();let available=true,calls=0;const workbench=mountSelectionWorkbench(host,{onSelection:()=>{calls++;return true;},onGuides:()=>{calls++;return true;},isAvailable:()=>available});await triangle(host.querySelector('svg'));const module=help(workbench,'apply');module.open();const panel=module.host.shadowRoot.children.at(-1);panel.children.find(node=>node.textContent==='Cancel guidance').click();assert.equal(panel.hidden,true);assert.equal(calls,0);available=false;button(host,'Add vertical guide').click();await settle();assert.equal(calls,0);workbench.destroy();
+ const {host}=scene();let available=true,calls=0;const workbench=mountSelectionWorkbench(host,{onSelection:()=>{calls++;return true;},onGuides:()=>{calls++;return true;},isAvailable:()=>available});await triangle(host.querySelector('svg'));const module=help(workbench,'apply');module.openWizard();const panel=module.host.shadowRoot.children.at(-1).children[5];panel.querySelectorAll('md-text-button').find(node=>node.textContent==='Cancel guidance').click();assert.equal(panel.hidden,true);assert.equal(calls,0);available=false;button(host,'Add vertical guide').click();await settle();assert.equal(calls,0);workbench.destroy();
 });
 test('state comparisons omit target text and values, preserve unrelated sheets and own service disposal',()=>{
  const {doc,host}=scene(),target=doc.createElement('input');target.value='secret value';target.textContent='private child text';const unrelated={};doc.adoptedStyleSheets=[unrelated];let registered=0,disposed=0;
