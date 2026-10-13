@@ -1,3 +1,4 @@
+import {MOTION_PRACTICE} from '../../../shared/local-ux/motion-practice.js';
 /** Handwritten explanations for individual authoring fields. No operation lives here. */
 const records=[
  ['Duration','持續時間','duration',
@@ -107,5 +108,5 @@ records.push(
  ['Schedule weekdays','時間表星期日子','schedule-weekdays',['Choose the local starting weekdays eligible for this motion rule.','選擇動態規則符合資格嘅本地開始星期日子。'],['A JSON array of distinct integers 0 through 6; Sunday is 0.','互不重複嘅 0 至 6 整數 JSON 陣列，星期日係 0。'],['Monday through Friday, represented by 1 through 5.','星期一至五，用 1 至 5 表示。'],['Overnight matching retains the weekday of the interval starting date.','跨夜比對保留時段開始日期嘅星期日子。'],['Use [1,3,5] for Monday, Wednesday and Friday.','用 [1,3,5] 表示星期一、三、五。'],['At least one distinct valid weekday is required.','必須最少有一個互不重複嘅有效星期日子。'],['Restore [1,2,3,4,5] or disable the schedule while editing its weekdays.','還原 [1,2,3,4,5]，或者編輯星期日子時停用時間表。']]
 );
 export const MOTION_GUIDANCE_COPY=Object.freeze(Object.fromEntries(records.flatMap(([label,yue,,...parts])=>[[label,yue],...parts])));
-export const MOTION_GUIDANCE=Object.freeze(records.map(([label,labelYue,concept,...parts])=>Object.freeze({id:'motion:'+concept,label,labelYue,concept,help:'docs/features/interface/animation-transition.md#'+concept,...Object.fromEntries(names.map((name,index)=>[name,parts[index][0]])),steps:[parts[0][0],parts[1][0],parts[3][0]]})));
+export const MOTION_GUIDANCE=Object.freeze(records.map(([label,labelYue,concept,...parts])=>Object.freeze({practice:MOTION_PRACTICE[concept],id:'motion:'+concept,label,labelYue,concept,help:'docs/features/interface/animation-transition.md#'+concept,...Object.fromEntries(names.map((name,index)=>[name,parts[index][0]])),steps:[parts[0][0],parts[1][0],parts[3][0]]})));
 export function motionGuidanceDescriptor(label,id){const row=MOTION_GUIDANCE.find(row=>row.label===label);return row?{...row,id:'motion:'+id}:null;}
