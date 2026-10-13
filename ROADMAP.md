@@ -661,3 +661,9 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 
 - [x] Reserve 48x48 host layout for outlined text-field trailing actions, preserve native-wrapper placement and callbacks, and verify eight focused source checks including a red-to-green geometry assertion.
 - [ ] Independently review the source repair and rerun the original nine-point isolated renderer check; rendered ownership remains unverified for this revision.
+
+
+## History selection visibility
+
+- [x] Remove obsolete history first-column hiding while retaining recycle action hiding and nonwrapping headings; six focused source checks pass with a red-to-green regression.
+- [ ] Run the extended actual renderer case for radio visibility, focus, selection, cancelled restoration and independent restore actions after source review.

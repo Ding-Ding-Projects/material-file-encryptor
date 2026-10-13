@@ -8,3 +8,13 @@ test('filtering and language refresh preserve identity and expose the selected m
 test('only explicit available restore invokes the callback and busy state is rechecked',async()=>{const f=setup(),button=f.host.querySelector('[data-history-restore-selected]');f.selection.select('two');await button.click();assert.deepEqual(f.restored,[]);f.selection.select('one');f.setBusy(true);await button.click();assert.deepEqual(f.restored,[]);f.setBusy(false);await button.click();assert.deepEqual(f.restored,['one']);});
 test('removed records and locking clear selection and retained details',()=>{const f=setup();f.selection.select('one');f.selection.setRecords([records[1]]);assert.equal(f.selection.selectedId,null);assert.equal(f.host.querySelector('[data-history-details]').hidden,true);f.selection.select('two');f.selection.clear();assert.equal(f.selection.selectedId,null);assert.equal(f.host.querySelector('dl').textContent,'');assert.equal(f.selection.select('one'),false);});
 test('desktop restore performs a second admission check after confirmation',async()=>{const source=await fs.readFile(new URL('../src/renderer/app.js',import.meta.url),'utf8');const body=source.slice(source.indexOf('async function restoreHistoryVersion'),source.indexOf('async function restoreRecycledSelection'));assert.equal((body.match(/if\(!permitted\(\)\)return/g)||[]).length,2);assert.match(body,/confirmAction/);assert.match(source,/historySelection\?\.clear\(\)/);assert.match(source,/kind==='history'&&!historyRetentionDraft/);});
+
+test('history selection column remains rendered while recycle action hiding stays scoped',async()=>{
+ const css=await fs.readFile(new URL('../src/renderer/style.css',import.meta.url),'utf8');
+ const hiddenRules=[...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([,selectors,body])=>/display\s*:\s*none\b/.test(body)&&selectors.split(',').some(selector=>/^#view-history\s+(?:th|td):first-child$/.test(selector.trim())));
+ assert.equal(hiddenRules.length,0,'The actual history radio occupies the first cell and must not be hidden');
+ assert.match(css,/#view-recycle th:last-child,#view-recycle td:last-child\{display:none\}/);
+ assert.match(css,/#view-history th:first-child,#view-recycle th:first-child\{white-space:nowrap;overflow-wrap:normal\}/);
+ const html=await fs.readFile(new URL('../src/renderer/index.html',import.meta.url),'utf8');assert.match(html,/<th data-i18n>Select<\/th>/);
+ const source=await fs.readFile(new URL('../src/renderer/app.js',import.meta.url),'utf8');assert.match(source,/if\(kind==='history'\)historySelection\.bindRow\(row,version,selection\)/);
+});

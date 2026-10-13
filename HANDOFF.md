@@ -1112,3 +1112,10 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 The isolated renderer run reported a 40x40 slotted clear-action host with a 48x48 internal touch layer. At the scroll boundary, three of the nine minimum-area hit points reached the header. The affected action is the registered trailing-icon child of an outlined text field, not the separate native-input .field-clear wrapper.
 
 The scoped modern.css rule reserves 48x48 host dimensions for direct trailing-icon button children. It changes no callbacks, admission, z-index, vendor touch layer or state-layer tokens. Native-input wrappers retain their existing 40px placement. The existing nine-point runtime assertion is unchanged. The added source assertion failed before the rule and passed afterward; all eight clear-field source checks pass. This is source verification only. The coordinating owner must independently review the revision and run the original isolated renderer case for actual hit ownership.
+
+
+## History selection column, source repair
+
+Removed only the obsolete rule hiding the first history header and data cells. The actual history-selection controller binds its radio into that first cell, so the hiding rule removed the only row-selection route. Recycle last-column hiding and shared nonwrapping selection headings remain unchanged. Production controllers and restore admission/callbacks were not modified.
+
+Six focused history-selection checks pass. The new source regression failed with the old hiding rule and passed after its removal. The existing renderer test now checks actual radio visibility, keyboard focus and Enter selection, selected metadata, no restore from selection or cancelled confirmation, and exactly one invocation from each independent row/selected restore route. Its prior multilingual narrow/normal heading checks are unchanged. Renderer execution remains assigned to the coordinating owner and has not run for this revision.

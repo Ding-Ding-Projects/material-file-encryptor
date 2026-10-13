@@ -121,6 +121,24 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   const create = await page.evaluate(() => window.calls.find(call => call.name === 'create').value); assert.equal(create.keyFilePath,'C:\\Keys\\generated.key');assert.equal(Object.hasOwn(create,'password'),false);assert.equal(create.partSizeBytes,10485760);
   await navigate(page,'history');await page.waitForSelector('#history-list tr');
   assert.match(await page.locator('#history-list').textContent(),/notes.txt/);
+  const historyRadio=page.locator('#history-list md-radio[data-history-select]');
+  assert.equal(await historyRadio.isVisible(),true);
+  await historyRadio.focus();assert.equal(await historyRadio.evaluate(activeWithin),true);
+  await page.keyboard.press('Enter');
+  assert.equal(await historyRadio.isChecked(),true);
+  assert.equal(await page.locator('#history-list tr').getAttribute('aria-selected'),'true');
+  assert.equal(await page.locator('[data-history-details]').getAttribute('data-version-id'),'version-1');
+  assert.equal(await page.locator('[data-history-details]').isVisible(),true);
+  assert.equal(await page.evaluate(()=>window.calls.filter(call=>call.name==='restoreVersion').length),0,'Keyboard selection must not restore');
+  assert.equal(await page.locator('#confirm-dialog').evaluate(node=>node.open),false);
+  await page.click('[data-history-restore-selected]');
+  await page.waitForFunction(()=>document.querySelector('#confirm-dialog').open);
+  assert.equal(await page.evaluate(()=>window.calls.filter(call=>call.name==='restoreVersion').length),0,'Opening confirmation must not restore');
+  await page.click('#confirm-dialog [value="cancel"]');
+  await page.waitForFunction(()=>!document.querySelector('#confirm-dialog').open);
+  assert.equal(await page.evaluate(()=>window.calls.filter(call=>call.name==='restoreVersion').length),0,'Cancelling selected restore must not restore');
+  assert.equal(await historyRadio.isChecked(),true);
+
   for(const width of [1440,390]) {
    await page.setViewportSize({width,height:900});
    for(const language of ['en','yue','bilingual']) {
@@ -153,6 +171,12 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   await page.click('#save-version');await page.waitForFunction(()=>window.calls.some(call=>call.name==='saveVersion'));
   await page.selectOption('#history-retention','30');await page.click('#history-retention-apply');await page.waitForFunction(()=>window.calls.some(call=>call.name==='setHistoryRetention'&&call.value===30));
   await page.click('#history-list md-text-button');await page.click('#confirm-action');await page.waitForFunction(()=>window.calls.some(call=>call.name==='restoreVersion'&&call.value==='version-1'));
+  assert.equal(await page.evaluate(()=>window.calls.filter(call=>call.name==='restoreVersion').length),1,'Row restore remains independently functional');
+  const selectedRestore=page.locator('[data-history-restore-selected]');assert.equal(await selectedRestore.isVisible(),true);
+  await selectedRestore.click();await page.click('#confirm-action');
+  await page.waitForFunction(()=>window.calls.filter(call=>call.name==='restoreVersion').length===2);
+  assert.deepEqual(await page.evaluate(()=>window.calls.filter(call=>call.name==='restoreVersion').map(call=>call.value)),['version-1','version-1']);
+
   await navigate(page,'recycle');await page.waitForSelector('#recycle-list md-checkbox');await page.check('#recycle-list md-checkbox');await page.click('#restore-recycled');await page.waitForFunction(()=>window.calls.some(call=>call.name==='restoreDeleted'&&call.value[0]==='deleted-1'));
   await page.click('#empty-recycle');assert.match(await page.locator('#confirm-description').textContent(),/history is retained/);await page.click('#confirm-action');await page.waitForFunction(()=>window.calls.some(call=>call.name==='emptyRecycleBin'));
   await navigate(page,'drive');
