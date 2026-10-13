@@ -606,3 +606,10 @@
 - [ ] Verify cloud upload of the local preservation archive.
 - [ ] Complete a fresh full canonical archive before any canonical cleanup.
 - [ ] Complete the full feature, runtime, visual and installed-update goal; preservation is not product completion.
+
+## Incoming GUI source during preservation
+
+- [x] Reconcile owner merge a98c56b through a non-destructive fast-forward and prove final preservation ancestry.
+- [x] Preserve both frozen production branches at exact 18f98d53/04bf6c25 sources, with remote-ref readback.
+- [ ] Refute/repair offline failed-preparation restoration and obtain actual acceptance at the incoming main; 0/4,272 tuples remain accepted.
+- [ ] Refresh current source-bound release, documentation/wiki/About and installed-update proof before completing the full goal.

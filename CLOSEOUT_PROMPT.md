@@ -1,3 +1,17 @@
+## Final moving-baseline preservation record, 2026-10-12
+
+During preservation closeout, repository owner merge `a98c56b807c1cc904e1ce8aa51118a3d7be4da5e` integrated PR #11 from `codex/gui-reconcile-01a131a2`. Fresh fetch showed zero local-only commits and 221 incoming commits. The primary checkout was reconciled through `git pull --ff-only origin main`; preservation commit `6dc11bc1cd2385e3973c13f51a9288654ec9d8f6` is an ancestor. This records the incoming source, not a new runtime verdict.
+
+Actual GUI acceptance remains 0/4,272. Source declarations are 23 available acquisition routes and 66 unavailable producers. The offline failed-preparation restoration concern is still open and requires independent refutation/repair before runtime acceptance. Frozen GUI production remains source `04bf6c25a9b713e94b1a28084e205cc59c719466`, with exact build exit 0 but full lifecycle closure and installer production unverified. Native converter admission remains unavailable at `18f98d53ca50de31180b7117661be4c55856db2e`; the diagnostic is prepared but unexecuted. Both frozen production branches were pushed and read back at their exact source hashes, without changing frozen source or outputs.
+
+The verified pre-cleanup product archive is 304,168,229 bytes and 21,134 entries, SHA-256 `1C4B5AE7A71827307A6650CCEE0C10F226A2C1CAA89C805CBED718D04DBB0714`. It covers all 35 pre-cleanup worktrees and complete Git administration; ignored fixture image preservation was verified separately. Only the completed fixture branch/worktree was removed after ownership, current-main ancestry and workflow proof. There are 34 retained product worktrees and 15 retained canonical worktrees. Cloud upload and complete fresh canonical archive remain unverified.
+
+Canonical main remains `b81f487c79034c396605952ee0f2014c0854eedc`; recovery `942ced3d093e82d9b5206d7233b7af5347e5efc3` retains reviewed native unit `770f2dfaea4758d4ec9225e25d8c34b45e605a14`. Its complete 91-check sweep and safe integration remain pending. Account allowance was 3% remaining at 2026-10-12T23:30:04Z. The full goal is active and unfinished. Mounted work, original data, existing installation/settings, historical evidence and uncertain ownership are preserved. Initial installation, removal and real-data migration remain deferred.
+
+Next continuation: recheck goal/allowance and current source/ownership, review and separately authorize the exact diagnostic controller, diagnose native admission without weakening production checks, independently refute/repair offline restoration, reacquire frozen GUI lifecycle before packaging, then obtain narrow real GUI proof and complete deterministic state/design references and 4,272 tuples. Current release/download/documentation/wiki/About and installed-update proof remain source-specific and incomplete at the new main. GUI workers use explicit `gpt-6-astra`, non-GUI workers `gpt-6.1-sol`, and image/publication workers `gpt-6-luna`.
+
+Earlier source-specific records below retain their original observations.
+
 # Current GUI reconciliation continuation
 
 This candidate reconciles main 07a9d2869725f8312ac0bc0642e3ccd55e058b34 with GUI source 9d3b0130112d61e60fe33c46af7745c2cd43a347, preserving both histories. It retains the native 80 MiB baseline, retired unsafe converter execution, synthetic service fixtures, encrypted upload callback fixture, localization, exact UTF-8 repair and source-bound documentation evidence. GUI startup, context persistence ownership and renderer identity repairs remain present.
