@@ -11,7 +11,7 @@ import {mountControlGuidance} from '../../../shared/surface/control-guidance.js'
 import {motionGuidanceDescriptor} from './motion-guidance.js';
 /** Direct authoring controls remain available independently of optional guidance. */
 export function mountMotionEditor(host,{getMotion,setMotion,target,stateName='normal',translate=t=>t,attachSearch,getRuntime=()=>null,undo=()=>{},redo=()=>{},disabled=false,registerHelp,registerCommands,openHelp,guidanceHelpBase='docs/features/interface/animation-transition.md',notify=()=>{}}={}){
- const doc=host.ownerDocument,view=doc.defaultView||globalThis,t=translate;let disposed=false,selectedId=null,selectedFrames=new Set(),clipboard=null,playhead=0,playheadClock='',frame=null,started=0,previewing=false;const disposers=[],renderDisposers=[];let changeEpoch=0,playbackEpoch=0;const presentedMutationErrors=new WeakSet();
+ const doc=host.ownerDocument,view=doc.defaultView||globalThis,t=translate;let disposed=false,selectedId=null,selectedFrames=new Set(),clipboard=null,playhead=0,playheadClock='',frame=null,started=0,previewing=false;const disposers=[],renderDisposers=[];let changeEpoch=0,playbackEpoch=0,renderEpoch=0;const presentedMutationErrors=new WeakSet();
  const node=(tag,text,props={})=>materialControl(tag,props,text?[t(text)]:[],doc);
  const root=node('section');root.className='appearance-motion';root.setAttribute('aria-label',t('Animation and Transition'));host.append(root);
  const status=node('output');status.setAttribute('role','status');
@@ -50,13 +50,15 @@ export function mountMotionEditor(host,{getMotion,setMotion,target,stateName='no
  }
  function requireMotionRuntime(method){const runtime=getRuntime();if(!runtime||typeof runtime[method]!=='function'){const error=Error('No live motion consumer is available for this target.');status.textContent=t(error.message);throw error;}return runtime;}
  function playback(command,value){
-  const runtime=requireMotionRuntime('playback'),invocation=++playbackEpoch,epoch=changeEpoch,trackId=selectedId;
-  const current=()=>{if(disposed||invocation!==playbackEpoch||epoch!==changeEpoch||getRuntime()!==runtime)throw Error('This control is unavailable. Review its adjacent explanation.');};
+  const runtime=requireMotionRuntime('playback'),invocation=++playbackEpoch,epoch=changeEpoch,rendered=renderEpoch,trackId=selectedId;
+  const startPosition=['play','restart'].includes(command)?(()=>{const model=read(),track=[...model.tracks,...model.transitions].find(row=>row.id===trackId);return track&&track.timeline.type!=='document'?0:model.timeline.rangeStart;})():null;
+  const current=()=>{if(disposed||invocation!==playbackEpoch||epoch!==changeEpoch||rendered!==renderEpoch||trackId!==selectedId||getRuntime()!==runtime)throw Error('This control is unavailable. Review its adjacent explanation.');};
   const settled=(result,next)=>result&&typeof result.then==='function'?Promise.resolve(result).then(next):next(result);
   const finish=()=>{current();if(['play','restart','resume','reverse'].includes(command)){previewing=true;started=view.performance?.now?.()||0;if(frame!==null)view.cancelAnimationFrame(frame);frame=view.requestAnimationFrame(tick);}if(['pause','stop','before','after'].includes(command)){previewing=false;if(frame!==null)view.cancelAnimationFrame(frame);frame=null;}};
-  return settled(runtime.playback(command,value,['seek','step'].includes(command)?{trackId}:undefined),()=>{current();return ['play','restart'].includes(command)?settled(runtime.playback('seek',progressClock()?0:read().timeline.rangeStart,{trackId}),finish):finish();});
+  return settled(runtime.playback(command,value,['seek','step'].includes(command)?{trackId}:undefined),()=>{current();return ['play','restart'].includes(command)?settled(runtime.playback('seek',startPosition,{trackId}),finish):finish();});
  }
  function render(){
+  renderEpoch++;
   const restoreFocus=doc.activeElement?.closest?.('[data-motion-control]')?.dataset.motionControl;renderDisposers.splice(0).forEach(f=>f());root.replaceChildren();const model=read(),all=[...model.tracks,...model.transitions];selectedId=all.some(track=>track.id===selectedId)?selectedId:all[0]?.id;const selected=all.find(track=>track.id===selectedId),clockKey=selectedId+':'+(selected?.timeline.type||'document');if(clockKey!==playheadClock){playhead=0;playheadClock=clockKey;}root.append(node('h3','Animation and Transition'),node('p','Document time is measured in milliseconds. Scroll and view timelines use renderer progress. Authored values remain separate from reduced-motion rendering.'));
   const controls=node('section'),search=node('input','',{type:'search'});search.setAttribute('aria-label',t('Search motion controls'));root.append(search,controls);if(attachSearch){const off=attachSearch(search,controls);if(typeof off==='function')renderDisposers.push(off);}else{search.disabled=true;search.title=t('The application search adapter is unavailable.');}let searchFlight=null;search.addEventListener('input',()=>{searchFlight=Promise.resolve();});eventGuidance(search,'search','input',()=>searchFlight=null,()=>searchFlight,'global');
   const strip=node('div');strip.setAttribute('role','tablist');strip.setAttribute('aria-label',t('Animation tracks and transition rules'));controls.append(strip);
