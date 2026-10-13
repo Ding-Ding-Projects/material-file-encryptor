@@ -1,0 +1,12 @@
+import {definePractice} from '../surface/guidance-playground.js';
+export const FONT_AXIS_PRACTICE_COPY={};
+const say=(en,yue)=>{FONT_AXIS_PRACTICE_COPY[en]=yue;return en;};
+const family='MFE Noto Sans Regular';
+const rows=[['wght','Weight','粗幼',100,400,900,700],['wdth','Width','闊度',62.5,100,100,75],['CTGR','Contrast','對比',0,0,100,50]];
+const axes=Object.fromEntries(rows.map(([tag,,,,initial])=>[tag,initial]));
+const label=tag=>{const row=rows.find(row=>row[0]===tag);return say('Sample '+row[1]+' axis','樣本'+row[2]+'軸');};
+const input=say('Authored bundled Noto Sans sample axes: weight 400, width 100, contrast 0.','預先編寫隨附 Noto Sans 樣本軸：粗幼 400、闊度 100、對比 0。');
+const fixtures=Object.fromEntries(rows.map(([tag,name,yue,min,initial,max,example])=>[tag,definePractice({id:'font-axis-sample:'+tag,kind:'number',preview:'font-axis',axisTag:tag,family,label:label(tag),min,max,initial,step:.1,input,action:say(`Request ${example} on the sample ${name} axis.`,`喺樣本${yue}軸要求 ${example}。`),expected:say(`Only the local ${tag} axis request changes. Exact glyph rendering requires the already loaded bundled face.`,`只有本機 ${tag} 軸要求改變，精確字形顯示需要已載入隨附字型。`)})]));
+fixtures.apply=definePractice({id:'font-axes-sample:apply',kind:'operation',operation:'font-axes',key:'apply',visual:'font-axes',family,label:say('Apply sample font axes','套用樣本字型軸'),initial:Object.fromEntries(rows.map(([tag,,,,,,example])=>[tag,example])),fields:rows.map(([tag,,,min,,max])=>({key:tag,label:label(tag),type:'number',min,max})),record:{axes},input,action:say('Validate weight 700, width 75 and contrast 50 together, then apply to the sample.','一齊驗證粗幼 700、闊度 75 同對比 50，再套用至樣本。'),expected:say('All three accepted sample axes change together; invalid input preserves the prior sample.','三個已接受樣本軸一齊改變，無效輸入會保留先前樣本。')});
+fixtures.reset=definePractice({id:'font-axes-sample:reset',kind:'operation',operation:'font-axes',key:'reset',visual:'font-axes',family,label:say('Reset sample font axes','重設樣本字型軸'),initial:{},fields:[],record:{axes:{wght:700,wdth:75,CTGR:50}},defaults:axes,input:say('The synthetic axes are weight 700, width 75 and contrast 50.','合成軸數值係粗幼 700、闊度 75 同對比 50。'),action:say('Restore the authored bundled sample defaults.','還原預先編寫隨附樣本預設。'),expected:say('The local sample returns to weight 400, width 100 and contrast 0.','本機樣本還原粗幼 400、闊度 100 同對比 0。')});
+export const FONT_AXIS_PRACTICE=Object.freeze(fixtures);

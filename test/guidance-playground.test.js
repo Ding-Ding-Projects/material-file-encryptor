@@ -59,9 +59,11 @@ test('sample module has no production helper imports or external-effect capabili
  const verify=text=>assert.doesNotMatch(text,/\b(?:fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|clipboard|showPicker|setTimeout|setInterval|registerCommands|registerHelp|dispatchEvent|eval|Function)\s*[.(]|\bimport\s|\.cloneNode\s*\(|\.innerHTML\s*=/);
  const adapterImport="import {evaluateColorPractice} from '../local-ux/color-practice-evaluator.js';",mathImport="import {parseColorEntry,parseColor,colorRepresentations,contrastRatio,rainbowDuration} from '../../renderer/features/personalization/color.js';";
  const typographyImport="import {evaluateTypographyPractice} from '../local-ux/typography-practice-evaluator.js';",typographyMathImport="import {parseColorEntry} from '../../renderer/features/personalization/color.js';";
- assert.ok(source.includes(adapterImport));assert.ok(source.startsWith(typographyImport));const core=source.replace(adapterImport,'').replace(typographyImport,'');verify(core);
+ const motionImport="import {evaluateMotionPractice} from '../local-ux/motion-practice-evaluator.js';";
+ assert.ok(source.includes(adapterImport));assert.ok(source.includes(typographyImport));assert.ok(source.startsWith(motionImport));const core=source.replace(adapterImport,'').replace(typographyImport,'').replace(motionImport,'');verify(core);
  const adapter=await fs.readFile(new URL('../src/shared/local-ux/color-practice-evaluator.js',import.meta.url),'utf8'),math=await fs.readFile(new URL('../src/renderer/features/personalization/color.js',import.meta.url),'utf8');assert.ok(adapter.startsWith(mathImport));verify(adapter.replace(mathImport,''));verify(math);
  const typography=await fs.readFile(new URL('../src/shared/local-ux/typography-practice-evaluator.js',import.meta.url),'utf8');assert.ok(typography.startsWith(typographyMathImport));verify(typography.replace(typographyMathImport,''));
+ verify(await fs.readFile(new URL('../src/shared/local-ux/motion-practice-evaluator.js',import.meta.url),'utf8'));
  assert.throws(()=>verify(core+'\nimport original from "./controls.js";'),assert.AssertionError);assert.throws(()=>verify(math+'\nfetch("https://example.invalid")'),assert.AssertionError);assert.throws(()=>verify(adapter.replace(mathImport,'')+'\nlocalStorage.setItem("a","b")'),assert.AssertionError);
 });
 
