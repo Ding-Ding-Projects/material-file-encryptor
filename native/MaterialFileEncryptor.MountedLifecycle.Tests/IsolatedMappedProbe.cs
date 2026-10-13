@@ -29,7 +29,7 @@ internal static class IsolatedMappedProbe
         string password=Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
         var evidence=new List<object>();string? drive=null;Process? child=null;Task<string>? errors=null;Task<string>? childOutput=null;
         using var stream=new MemoryStream();
-        await using var helper=new MountedHelper(helperPath);
+        await using var helper=new MountedHelper(helperPath,expectedHash);
         try
         {
             var status=await helper.Call("status",new{});
