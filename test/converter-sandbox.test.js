@@ -1,11 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {execFile} from 'node:child_process';
+import {execFile,spawnSync} from 'node:child_process';
+import {readFileSync} from 'node:fs';
 import {promisify} from 'node:util';
 import net from 'node:net';
 import {probeRestrictedRuntime,createRestrictedProcess} from '../src/features/converter/sandbox.mjs';
 const execute=promisify(execFile);
 const unavailable=error=>error.code==='ERR_CONVERTER_NETWORK_ISOLATION_UNAVAILABLE'&&/operating-system isolation/.test(error.message);
+test('native cleanup attempts later releases and preserves the original failure',{skip:process.platform!=='win32'},()=>{
+ const source=readFileSync(new URL('../src/features/converter/native/CleanupActions.cs',import.meta.url),'utf8');
+ const probe=`public static class CleanupProbe { public static string Run() { var original = new System.Exception("original"); var first = new System.Exception("desktop"); var second = new System.Exception("profile"); int attempted = 0; try { CleanupActions.Run(original, new System.Action[] { () => { attempted++; throw first; }, () => { attempted++; }, () => { attempted++; throw second; } }); return "missing failure"; } catch (System.AggregateException error) { if (attempted != 3 || error.InnerExceptions.Count != 3 || !object.ReferenceEquals(error.InnerExceptions[0], original) || !object.ReferenceEquals(error.InnerExceptions[1], first) || !object.ReferenceEquals(error.InnerExceptions[2], second)) return "lost cleanup or original failure"; } CleanupActions.Run(null, new System.Action[] { () => { attempted++; } }); return attempted == 4 ? "cleanup verified" : "success cleanup skipped"; } }`;
+ const script=`$ErrorActionPreference='Stop'; $source=[Console]::In.ReadToEnd(); Add-Type -TypeDefinition $source; [Console]::Write([CleanupProbe]::Run())`;
+ const result=spawnSync('powershell.exe',['-NoProfile','-NonInteractive','-Command',script],{input:source+'\n'+probe,encoding:'utf8',windowsHide:true,timeout:30000});
+ assert.equal(result.status,0,result.stderr);assert.equal(result.stdout,'cleanup verified');
+});
 
 test('observed network behavior never substitutes for operating-system isolation',async t=>{
  const sockets=new Set();let connections=0;
