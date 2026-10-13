@@ -6,6 +6,7 @@ import subprocess
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 from types import SimpleNamespace
 
 from test_renderer_process_snapshot import load, lifecycle, Fake, ROOT, native
@@ -42,6 +43,34 @@ class InterpreterCommandTests(unittest.TestCase):
 
 
 class Tests(unittest.TestCase):
+    def test_default_configuration_binds_exact_preserved_launcher_command(self):
+        launcher = self.base / 'venv/Scripts/python.exe'
+        base = self.base / 'runtime/python.exe'
+        node_file = self.base / 'runtime/node.exe'
+        cfg = launcher.parent.parent / 'pyvenv.cfg'
+        for item in (launcher, base, node_file):
+            item.parent.mkdir(parents=True, exist_ok=True)
+            item.write_bytes(b'fixed fixture executable')
+        cfg.write_text('home = ' + str(base.parent) + '\ninclude-system-site-packages = false\nexecutable = ' + str(base) + '\n')
+        arguments = [str(self.base / 'adapter.py'), 'bind-client', 'owned-state.json']
+        command = subprocess.list2cmdline([str(launcher), *arguments])
+        own = {**self.root, 'pid':77, 'parentPid':80, 'executablePath':str(base)}
+        node = {**self.root, 'pid':80, 'parentPid':1, 'executablePath':str(node_file)}
+        api = Fake(rows={77:80,80:1}, observations={77:own,80:node})
+        class Commands:
+            def command(self, handle):
+                return command if handle == 77 else 'exact node invocation'
+        with patch.dict(recovery.os.environ, {'MFE_LOWLEVEL_PYTHON':str(launcher), 'MFE_RENDERER_NODE_EXECUTABLE':str(node_file)}), patch.object(recovery.sys,'_base_executable',str(base)), patch.object(recovery.sys,'executable',str(launcher)), patch.object(recovery.sys,'argv',arguments), patch.object(recovery.os,'getpid',return_value=77):
+            with recovery.owning_client(80, api=api, binding=Commands()) as (client, chain):
+                self.assertEqual(client['clientIdentity'],node)
+                self.assertEqual(chain[0]['command'],command)
+                self.assertEqual(len(client['routeFiles']),4)
+            class ExtraArgument(Commands):
+                def command(self, handle):
+                    return command + ' extra' if handle == 77 else super().command(handle)
+            with self.assertRaises(recovery.Error), recovery.owning_client(80, api=api, binding=ExtraArgument()):
+                pass
+
     def test_stdlib_and_uv_configuration_require_actual_base_identity(self):
         root = self.base
         launcher = root / 'isolated' / 'Scripts' / 'python.exe'

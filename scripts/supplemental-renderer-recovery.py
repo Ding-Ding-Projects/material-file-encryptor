@@ -286,9 +286,10 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
         cfg = launcher.parent.parent / 'pyvenv.cfg'
         values = dict(line.split(' = ', 1) for line in cfg.read_text().splitlines() if ' = ' in line)
         base = configured_base_interpreter(values, launcher, sys._base_executable, sys.executable)
-        # CPython's Windows venv redirector replaces argv[0] with a quoted
-        # base executable. The intermediate launcher retains the original.
-        configuration = {'launcher': str(launcher), 'base': str(base), 'node': str(node), 'files': {str(p): digest(p) for p in [launcher, base, cfg, node]}, 'command': subprocess.list2cmdline([os.environ['MFE_LOWLEVEL_PYTHON'], *sys.argv]), 'baseCommand': '"' + str(base) + '" ' + subprocess.list2cmdline(sys.argv), 'selfPid': os.getpid()}
+        # Bind preserved launcher command spelling separately from the executing
+        # base image. The optional intermediate launcher uses the same invocation.
+        command, base_command = interpreter_commands(launcher, base, sys.argv, os.environ['MFE_LOWLEVEL_PYTHON'])
+        configuration = {'launcher': str(launcher), 'base': str(base), 'node': str(node), 'files': {str(p): digest(p) for p in [launcher, base, cfg, node]}, 'command': command, 'baseCommand': base_command, 'selfPid': os.getpid()}
     rows, chain = api.inventory(), []
     current = configuration['selfPid']
     with ExitStack() as stack:
