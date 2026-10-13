@@ -21,11 +21,11 @@ export function evaluateMotionRemaining(fixture,state){
   if(state.applied){
    if(key==='track-add'){tracks.push({id:'sample-new',name:'Sample new track',enabled:true,muted:false,solo:false,timing:{duration:300}});record.selected='sample-new';}
    if(key==='transition-add')record.model.transitions.push({id:'sample-transition',property:'opacity',duration:300});
-   if(key==='track-duplicate'){tracks.splice(index+1,0,{...copy(selected),id:'sample-duplicate',name:selected.name+' copy'});record.selected='sample-duplicate';}
+   if(key==='track-duplicate'){tracks.push({...copy(selected),id:'sample-duplicate',name:selected.name+' copy'});record.selected='sample-duplicate';}
    if(key==='track-up'&&index>0)[tracks[index-1],tracks[index]]=[tracks[index],tracks[index-1]];
    if(key==='track-down'&&index<tracks.length-1)[tracks[index],tracks[index+1]]=[tracks[index+1],tracks[index]];
    if(key==='track-remove'){tracks.splice(index,1);record.selected=tracks[0]?.id||null;}
-   if(key==='track-reset')tracks[index]={id:selected.id,name:selected.name,enabled:true,muted:false,solo:false,timing:{duration:300}};
+   if(key==='track-reset')tracks[index]={id:selected.id,name:'Animation',enabled:true,muted:false,solo:false,timing:{duration:300},unknown:{}};
    if(key==='motion-reset'){record.model={version:1,tracks:[],transitions:[],unknown:{}};record.selected=null;}
    if(key==='motion-copy')record.buffer=copy(record.model);
    if(key==='motion-paste'){record.model=copy(record.copied);record.selected=record.model.tracks[0].id;}
