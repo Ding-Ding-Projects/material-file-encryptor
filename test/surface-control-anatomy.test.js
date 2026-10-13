@@ -55,7 +55,8 @@ test('exact diagnostic design routes generate their own deterministic SVG conten
  const inventory=JSON.parse(await readFile(new URL('../design/gui-redesign/inventory.json',import.meta.url),'utf8'));
  const render=(screen,state,script=source)=>{const output={},document={documentElement:{dataset:{}},querySelector:()=>output};vm.runInNewContext(script,{location:{search:`?screen=${screen}&state=${state}&width=1180&height=752&scale=1.5&theme=light&lang=en`},URLSearchParams,document});return{svg:output.innerHTML,tuple:JSON.parse(document.documentElement.dataset.referenceTuple)};};
  for(const [screen,state,id]of [['drive','create-dialog','drive-create-dialog'],['history','filtered-empty','history-filtered-empty'],['recycle','filtered-empty','recycle-filtered-empty']]){
-  const row=inventory.states.find(item=>item.id===id);assert.ok(row?.productionSelector);assert.ok(row.productionRoute);const result=render(screen,state);assert.equal(result.tuple.state,state);assert.doesNotMatch(result.svg,/Project notes\.txt|Archive\.zip/);assert.equal(result.svg,render(screen,state).svg);
+  // Reference-only diagnostic routes stay outside the frozen acceptance authority.
+  const row=inventory.diagnosticRoutes.find(item=>item.id===id);assert.ok(row?.productionSelector);assert.ok(row.productionRoute);const result=render(screen,state);assert.equal(result.tuple.state,state);assert.doesNotMatch(result.svg,/Project notes\.txt|Archive\.zip/);assert.equal(result.svg,render(screen,state).svg);
   if(screen==='drive')assert.match(result.svg,/Encrypted storage transport/);else{assert.match(result.svg,/Synthetic query/);assert.match(result.svg,/No matching entries/);}
  }
  assert.notEqual(render('history','filtered-empty',source.replace(",'filtered-empty'",'')).tuple.state,'filtered-empty');

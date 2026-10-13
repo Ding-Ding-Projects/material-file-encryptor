@@ -142,7 +142,9 @@
       "id": "help-default",
       "screen": "help",
       "state": "default"
-    },
+    }
+  ],
+  "diagnosticRoutes": [
     {
       "id": "drive-create-dialog",
       "screen": "drive",
