@@ -54,7 +54,7 @@ export function renderReleaseDownload(document, record) {
       disabled.id = 'preview-download'; disabled.type = 'button'; disabled.disabled = true;
       disabled.className = 'button button-disabled'; disabled.setAttribute('aria-describedby', 'download-help');
       disabled.textContent = 'Download verified preview for Windows'; control.replaceWith(disabled);
-    } else { control.disabled = true; control.removeAttribute('href'); }
+    } else { control.disabled = true;if('href' in control)control.href='';control.removeAttribute('href'); }
     state.textContent = 'Published preview · verification pending';
     help.textContent = 'Direct download stays disabled until the downloaded installer, installed application and uninstall checks pass.';
     return false;

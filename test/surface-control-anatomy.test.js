@@ -17,6 +17,17 @@ function assertIcon(button){
  assert.equal(button.textContent,'');assert.equal(button.getAttribute('style'),null);
 }
 
+test('isolated practice controls never acquire production clear or choice-search helpers',async()=>{
+ const doc=createAccessDocument(),scope=doc.createElement('section');scope.setAttribute('data-guidance-sandbox','');doc.body.append(scope);
+ const field=control('input',{label:'Practice text',value:'sample'},[],doc),select=control('select',{label:'Practice choice'},[],doc);
+ field.closest=select.closest=selector=>selector==='[data-guidance-sandbox]'?scope:null;
+ scope.append(field,select);await tick();connectSelectSearch(select);
+ assert.equal(field.children.some(child=>child.localName==='md-icon-button'),false);
+ assert.equal(scope.children.some(child=>child.hasAttribute('data-choice-search')),false);
+ assert.equal(select.getAttribute('data-select-search-composition'),null);
+ field.value='local edit';assert.equal(field.value,'local edit');
+});
+
 test('clear and select search render local SVG inside real icon buttons without resizing their touch targets',async()=>{
  const doc=createAccessDocument(),field=control('input',{label:'Folder',value:'owned'},[],doc),select=control('select',{label:'Format'},[],doc);doc.body.append(field,select);await tick();
  const clear=field.children.find(child=>child.localName==='md-icon-button');const search=doc.body.children.find(child=>child.hasAttribute('data-choice-search'));

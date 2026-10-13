@@ -1,10 +1,12 @@
 import { mountSiteFoundation } from './site-foundation.js';
+import {preparePublicDocumentControls} from './site-foundation.js';
 import { parseVocabulary, replaceVocabulary, filterGuides, updateGalleryGroups } from './preferences.js';
 import { emptyVocabulary, serializeVocabulary } from './personal-vocabulary.js';
 import { cantonese, localized, loadMessagePreferences, effectiveMessagePair } from './locales.js';
 import { previewRelease, renderReleaseDownload } from './release.js';
 
 renderReleaseDownload(document, previewRelease);
+preparePublicDocumentControls(document);
 
 let siteStorage;try{siteStorage=window.localStorage;}catch{siteStorage={getItem:()=>null,setItem:()=>{throw Error('Browser storage unavailable');},removeItem:()=>{throw Error('Browser storage unavailable');}};}
 let preferences;
@@ -68,7 +70,7 @@ const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
 });
 while (walker.nextNode()) {
   const node = walker.currentNode;
-  textRecords.push({ node, original: node.textContent, key: node.textContent.trim().replace(/\s+/gu, ' '), vocabulary: !node.parentElement.closest('#preferences-dialog,select'), secondary: null });
+  textRecords.push({ node, original: node.textContent, key: node.textContent.trim().replace(/\s+/gu, ' '), vocabulary: !node.parentElement.closest('#preferences-dialog,select,md-outlined-select'), secondary: null });
 }
 const attributes = [];
 for (const element of document.querySelectorAll('[aria-label],[alt],[title],[placeholder]')) {
@@ -76,6 +78,7 @@ for (const element of document.querySelectorAll('[aria-label],[alt],[title],[pla
   for (const name of ['aria-label', 'alt', 'title', 'placeholder']) if (element.hasAttribute(name)) attributes.push({ element, name, original: element.getAttribute(name) });
 }
 const originalTitle = document.title;
+const controlLabels=[...document.querySelectorAll('md-outlined-text-field,md-outlined-select,mfe-file-picker')].filter(node=>node.label&&!node.closest('#interactive-workflow')).map(node=>({node,original:node.label}));
 const activeLanguage = () => schoolEnabled ? 'en' : preferences.language;
 const menu = document.querySelector('#navigation');
 const menuToggle = document.querySelector('#menu-toggle');
@@ -140,7 +143,7 @@ function renderCopy() {
     const trailing = record.original.match(/\s*$/u)[0];
     record.node.textContent = leading + replace((!schoolEnabled && preferences.language === 'yue') && translated ? translated : record.key) + trailing;
     if ((!schoolEnabled && preferences.language === 'bilingual') && translated) {
-      if (record.node.parentElement.tagName === 'OPTION') record.node.textContent = localized(record.key, 'bilingual');
+      if (record.node.parentElement.closest('option,md-select-option')) record.node.textContent = localized(record.key, 'bilingual');
       else {
         const translation = document.createElement('span'); translation.lang = 'yue-Hant-HK'; translation.className = 'translation';
         translation.textContent = replace(translated); record.node.after(translation); record.secondary = translation;
@@ -148,6 +151,8 @@ function renderCopy() {
     }
   }
   for (const record of attributes) record.element.setAttribute(record.name, localized(record.original, schoolEnabled?'en':preferences.language));
+  for(const record of controlLabels)record.node.label=localized(record.original,schoolEnabled?'en':preferences.language);
+  document.documentElement.setAttribute('data-control-language',schoolEnabled?'en':preferences.language);
   menuToggle.setAttribute('aria-label', localized(menu.classList.contains('is-open') ? 'Close navigation' : 'Open navigation', preferences.language));
   if(siteDisplayName!=='Material File Encryptor'){for(const node of document.querySelectorAll('.brand span,.footer-brand'))node.textContent=siteDisplayName;document.title=siteDisplayName+' · '+localized('Documentation library',activeLanguage());}
   updateMessages();
@@ -166,7 +171,6 @@ document.addEventListener('keydown', event => { if (event.key === 'Escape' && me
 document.addEventListener('click', event => { if (!event.target.closest('.site-header')) closeMenu(); });
 matchMedia('(min-width: 800px)').addEventListener('change', closeMenu);
 for (const id of ['preferences-open', 'preferences-footer']) document.getElementById(id).addEventListener('click', () => { closeMenu(); dialog.showModal(); });
-dialog.addEventListener('click', event => { if (event.target === dialog) { const r = dialog.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close(); } });
 const themeSelect = document.querySelector('#theme-select');
 function applyTheme(theme) {
   if (!['system', 'light', 'dark'].includes(theme)) theme = 'system';

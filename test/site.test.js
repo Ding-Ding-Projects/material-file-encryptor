@@ -148,7 +148,7 @@ test('capture gallery identifies historical Linux evidence, pending current acce
 });
 
 
-test('both editable textboxes expose dedicated non-submitting clear controls with 44 px targets',async()=>{
+test('both editable textboxes expose dedicated non-submitting clear controls with at least 44 px targets',async()=>{
   const html=await readFile(new URL('../docs/site/index.html',import.meta.url),'utf8');
   const css=await readFile(new URL('../docs/site/site.css',import.meta.url),'utf8');
   const script=await readFile(new URL('../docs/site/explainer.js',import.meta.url),'utf8');
@@ -156,7 +156,9 @@ test('both editable textboxes expose dedicated non-submitting clear controls wit
   for(const id of ['search-clear','part-limit-clear']) {
     assert.match(html,new RegExp(`<button id="${id}" type="button" aria-label="[^"]+"`));
     const rules=css.slice(css.lastIndexOf('/* Both editable text controls'));
-    assert.match(rules,new RegExp(`#${id}\\{[^}]*min-width:44px[^}]*min-height:44px`));
+    const rule=rules.match(new RegExp(`#${id}\\{([^}]*)\\}`))?.[1];assert.ok(rule);
+    assert.ok(Number(rule.match(/min-width:(\d+)px/)?.[1])>=44);
+    assert.ok(Number(rule.match(/min-height:(\d+)px/)?.[1])>=44);
   }
   assert.match(script,/clearLimit[.]addEventListener\('click', \(\) => clearExampleLimit\(limit\)\)/);
   assert.match(script,/'Clear maximum encrypted part size':'清除加密分割檔最大大小'/);

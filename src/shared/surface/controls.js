@@ -87,7 +87,7 @@ define('mfe-date-field',class extends PlatformField{});define('mfe-file-picker',
 /** Explicit migration before host listeners are bound; never monkey-patches DOM constructors. */
 export function upgradeControls(root) {
   for(const old of [...root.querySelectorAll('button,input,textarea,select,dialog')]) {
-    if(!old.isConnected||old.closest('[data-native-internal]'))continue;
+    if(!old.isConnected||old.closest('[data-native-internal],[data-guidance-sandbox]'))continue;
     const props=Object.fromEntries([...old.attributes].map(a=>[a.name,a.value]));
     if(old.localName==='input'){props.type=old.type;props.value=old.value;props.checked=old.checked;}
     if(old.localName==='textarea')props.value=old.value;
@@ -108,11 +108,12 @@ function controlIcon(name,doc){
   path.setAttribute('d',name==='clear'?'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12Z':'M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16a6.47 6.47 0 0 0 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5ZM9.5 14a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Z');
   svg.append(path);return svg;
 }
-function connectFieldClear(field){if(fieldClearOwners.has(field)||field.readOnly||field.querySelector('[slot="trailing-icon"]'))return;const button=field.ownerDocument.createElement('md-icon-button');button.type='button';button.slot='trailing-icon';button.append(controlIcon('clear',field.ownerDocument));const refresh=()=>{const label=field.label||field.getAttribute('aria-label')||'Text field';button.setAttribute('aria-label',controlText(field,'Clear field: '+label,'清除欄位：'+label));button.disabled=!!(field.disabled||field.readOnly);};helperOwners.set(button,field);fieldClearOwners.set(field,{button,refresh});refresh();button.addEventListener('pointerdown',refresh);field.addEventListener('focusin',refresh);button.addEventListener('click',()=>{if(field.disabled||field.readOnly||!requestControlAdmission(field))return;field.value='';field.setCustomValidity?.('');field.dispatchEvent(new Event('input',{bubbles:true,composed:true}));field.dispatchEvent(new Event('change',{bubbles:true,composed:true}));field.focus();});field.append(button);}
+function connectFieldClear(field){if(field.closest?.('[data-guidance-sandbox]')||fieldClearOwners.has(field)||field.readOnly||field.querySelector('[slot="trailing-icon"]'))return;const button=field.ownerDocument.createElement('md-icon-button');button.type='button';button.slot='trailing-icon';button.append(controlIcon('clear',field.ownerDocument));const refresh=()=>{const label=field.label||field.getAttribute('aria-label')||'Text field';button.setAttribute('aria-label',controlText(field,'Clear field: '+label,'清除欄位：'+label));button.disabled=!!(field.disabled||field.readOnly);};helperOwners.set(button,field);fieldClearOwners.set(field,{button,refresh});refresh();button.addEventListener('pointerdown',refresh);field.addEventListener('focusin',refresh);button.addEventListener('click',()=>{if(field.disabled||field.readOnly||!requestControlAdmission(field))return;field.value='';field.setCustomValidity?.('');field.dispatchEvent(new Event('input',{bubbles:true,composed:true}));field.dispatchEvent(new Event('change',{bubbles:true,composed:true}));field.focus();});field.append(button);}
 export function requestControlAdmission(target){return target.dispatchEvent(new CustomEvent('mfe-action-request',{bubbles:true,composed:true,cancelable:true,detail:{target}}));}
 const selectSearchOwners=new WeakMap();
 /** Adjacent choice search uses the shared menu and its full regex workbench. */
 export function connectSelectSearch(select,{language}={}) {
+  if(select.closest?.('[data-guidance-sandbox]'))return()=>{};
   if(selectSearchOwners.has(select))return selectSearchOwners.get(select);
   if(!select.parentNode)return()=>{};
   const previousComposition=select.getAttribute('data-select-search-composition');

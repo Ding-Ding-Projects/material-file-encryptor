@@ -63,8 +63,9 @@ test('School command filtering survives a language refresh and BFCache retains c
  assert.ok(refresh.includes('foundation.setLanguage(value)'));assert.ok(refresh.includes('foundation.palette.setCommands(visibleCommands())'));
  const calls=[],field=()=>({setAttribute:(key,value)=>calls.push([key,value]),setLanguage:value=>calls.push(['field-language',value])});
  const foundation={setLanguage(value){calls.push(['foundation-language',value]);this.palette.rows=commands;},palette:{rows:[],setCommands(rows){this.rows=rows;}}};
- const handler=Function('foundation','search','settingsSearch','role','localized','commands','let schoolEnabled=true;'+filter+refresh+'return handleLanguage;')(foundation,field(),field(),{},localized,commands);
+ const handler=Function('foundation','search','settingsSearch','role','localized','commands','document','setControlLanguage','let schoolEnabled=true;'+filter+refresh+'return handleLanguage;')(foundation,field(),field(),{},localized,commands,{},(_document,value)=>calls.push(['control-language',value]));
  for(const language of ['yue','bilingual']){handler({detail:{language}});assert.deepEqual(foundation.palette.rows.map(row=>row.id),['preferences','setting:theme-select']);assert.deepEqual(calls.find(row=>row[0]==='foundation-language'),['foundation-language','en']);}
+ assert.deepEqual(calls.filter(row=>row[0]==='control-language'),[['control-language','en'],['control-language','en']]);
 
  for(const label of ['Find in this page','Search website preferences'])assert.notEqual(localized(label,'yue'),label);
  assert.ok(source.includes('yue:cantonese[label]||label'));

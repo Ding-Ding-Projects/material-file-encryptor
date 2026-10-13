@@ -52,6 +52,8 @@ const copy = {
 'This example has no reachable storage destination. It does not show resplitting as completed; a complete cached copy alone is not proof that replacement parts were stored.':'呢個示例冇可連接嘅儲存目的地，所以唔會顯示重新分割完成。單靠完整快取副本，唔代表替換分割檔已經儲存。',
 };
 if (typeof document !== 'undefined') {
+  const {preparePublicDocumentControls}=await import('./site-foundation.js');
+  preparePublicDocumentControls(document);
   const root = document.querySelector('#interactive-workflow');
   if (root) {
     let language = document.documentElement.dataset.language || 'en';
@@ -70,6 +72,7 @@ if (typeof document !== 'undefined') {
     const pair = (en, yue) => language === 'yue' ? yue : language === 'bilingual' ? `${en} / ${yue}` : en;
     const labels = buttons.map(button => [button, button.textContent]);
     const options = [...availability.options].map(option => [option, option.textContent]);
+    const controlLabels=[availability,limit,unit].filter(node=>node.label).map(node=>[node,node.label]);
     const attrs = [...root.querySelectorAll('[aria-label]')].map(element => [element, element.getAttribute('aria-label')]);
     function stop() { if (timer) clearInterval(timer); timer = null; root.classList.remove('is-playing'); play.textContent = translated(reduced.matches ? 'Next step' : 'Play walkthrough'); }
     function render() {
@@ -97,7 +100,8 @@ if (typeof document !== 'undefined') {
     }
     function translate() {
       for (const element of root.querySelectorAll('[data-copy]')) element.textContent = translated(element.dataset.copy);
-      for (const [element, original] of [...labels, ...options]) element.textContent = translated(original);
+      for (const [element, original] of [...labels, ...options]) (element.querySelector?.('[slot="headline"]')||element).textContent = translated(original);
+      for(const [element,original]of controlLabels)element.label=translated(original);
       for (const [element, original] of attrs) element.setAttribute('aria-label', translated(original));
       play.textContent = translated(timer ? 'Pause walkthrough' : reduced.matches ? 'Next step' : 'Play walkthrough'); replay.textContent = translated('Replay'); render();
     }
