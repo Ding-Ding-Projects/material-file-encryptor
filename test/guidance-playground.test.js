@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {definePractice,createPracticeSession,evaluatePractice,mountGuidancePlayground,practiceCoverage,assertPracticeCoverage} from '../src/shared/surface/guidance-playground.js';
 import {settingsOperationPractice,clearSettingPractice} from '../src/shared/local-ux/settings-operation-practice.js';
-import {settingsPractice,scheduledValuePractice} from '../src/shared/local-ux/settings-practice.js';
+import {settingsPractice,scheduledValuePractice,SETTINGS_PRACTICE_COPY} from '../src/shared/local-ux/settings-practice.js';
 import {settingsGuidance,SETTINGS_GUIDANCE_INVENTORY} from '../src/shared/local-ux/settings-guidance.js';
 import {NESTED_PRACTICE,FONT_PRACTICE,APPEARANCE_PRACTICE_COPY} from '../src/shared/local-ux/appearance-practice.js';
 import {createAccessDocument} from './helpers/local-access-dom.js';
@@ -130,4 +130,26 @@ test('mounted consequential preview edits, validates, applies and resets only it
  await mount.querySelectorAll('md-text-button').find(node=>node.textContent==='Reset example').click();assert.equal(confirm.checked,false);assert.equal(first.session.result.record.entries.length,2);first.destroy();second.destroy();
  const clearMount=doc.createElement('section');doc.body.append(clearMount);const cleared=mountGuidancePlayground(clearMount,{fixture:clearSettingPractice('Search settings')}),field=clearMount.querySelector('md-outlined-text-field');field.value='New sample';await field.dispatchEvent({type:'input'});assert.equal(cleared.session.result.record.value,'New sample');await clearMount.querySelector('md-filled-button').click();assert.equal(field.value,'');assert.equal(cleared.session.result.record.value,'');assert.equal(doc.activeElement,field);await clearMount.querySelectorAll('md-text-button').find(node=>node.textContent==='Reset example').click();assert.equal(field.value,'Sample text');cleared.destroy();
  }finally{if(previous)Object.defineProperty(prototype,'style',previous);else delete prototype.style;}
+});
+
+test('all settings choices register authored Cantonese labels and result strings',()=>{
+ const technical=new Set(['UTC','Asia/Hong_Kong']);
+ for(const row of SETTINGS_GUIDANCE_INVENTORY){const fixture=settingsPractice(row.label);for(const option of fixture.choices||[]){for(const key of ['label','result']){assert.ok(Object.hasOwn(SETTINGS_PRACTICE_COPY,option[key]),row.id+': '+option[key]);if(!technical.has(option[key]))assert.match(SETTINGS_PRACTICE_COPY[option[key]],/[\u3400-\u9fff]/,option[key]);}}}
+ for(const[en,yue]of [['Sample palette: dark','樣本色彩：深色'],['Sample spacing: 8 px','樣本間距：8 px'],['Sample family: serif','樣本字型家族：serif']])assert.equal(SETTINGS_PRACTICE_COPY[en],yue);
+ const broken={...SETTINGS_PRACTICE_COPY};delete broken['Sample palette: dark'];assert.throws(()=>assert.ok(Object.hasOwn(broken,'Sample palette: dark')),assert.AssertionError);
+});
+test('Priority practice rejects fractional input and recovers at the declared integer step',()=>{
+ const fixture=settingsPractice('Priority');assert.equal(fixture.integer,true);assert.equal(fixture.step,1);const sample=createPracticeSession(fixture);assert.equal(sample.edit('0.5').valid,false);assert.equal(sample.edit('-999.5').valid,false);assert.equal(sample.edit('1').valid,true);assert.equal(sample.result.number,1);assert.equal(sample.edit('-1000').valid,true);assert.equal(sample.edit('1001').valid,false);
+ const broken=definePractice({...fixture,integer:false});assert.throws(()=>assert.equal(createPracticeSession(broken).edit('0.5').valid,false),assert.AssertionError);
+});
+test('editing Year repairs all date field diagnostics after an invalid leap day',async()=>{
+ const doc=createAccessDocument(),mount=doc.createElement('section');doc.body.append(mount);const sample=mountGuidancePlayground(mount,{fixture:settingsPractice('Start date')}),fields=mount.querySelectorAll('md-outlined-text-field'),[year,month,day]=fields;
+ month.value='2';await month.dispatchEvent({type:'input'});day.value='29';await day.dispatchEvent({type:'input'});assert.equal(sample.session.result.valid,false);assert.equal(day.getAttribute('aria-invalid'),'true');assert.equal(day.error,true);
+ year.value='2032';await year.dispatchEvent({type:'input'});assert.equal(sample.session.result.valid,true);for(const field of fields){assert.equal(field.getAttribute('aria-invalid'),'false');assert.equal(field.error,false);assert.equal(field.errorText,'');}assert.equal(sample.session.result.text,'2032-02-29 UTC');sample.destroy();
+});
+test('mounted settings choice options and visible results use Cantonese and bilingual copy',async()=>{
+ const doc=createAccessDocument(),prototype=Object.getPrototypeOf(doc.body),previous=Object.getOwnPropertyDescriptor(prototype,'style');Object.defineProperty(prototype,'style',{configurable:true,get(){return this._style||={};}});
+ try{for(const mode of ['yue','bilingual'])for(const[label,value,en]of [['Theme','dark','Sample palette: dark'],['Density','compact','Sample spacing: 8 px'],['Font family','serif','Sample family: serif']]){
+  const t=text=>SETTINGS_PRACTICE_COPY[text]?(mode==='yue'?SETTINGS_PRACTICE_COPY[text]:text+' / '+SETTINGS_PRACTICE_COPY[text]):text,mount=doc.createElement('section');doc.body.append(mount);const fixture=settingsPractice(label),sample=mountGuidancePlayground(mount,{fixture,t}),field=mount.querySelector('md-outlined-select');assert.deepEqual(field.children.map(row=>row.textContent),fixture.choices.map(row=>t(row.label)));field.value=value;await field.dispatchEvent({type:'change'});const result=mount.querySelector('[role="status"]');assert.equal(result.textContent,t(en));assert.match(result.textContent,/[\u3400-\u9fff]/);sample.destroy();
+ }}finally{if(previous)Object.defineProperty(prototype,'style',previous);else delete prototype.style;}
 });
