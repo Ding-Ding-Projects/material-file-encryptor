@@ -41,6 +41,19 @@ function trackedControls(page){
   return async(...args)=>{const record=page.__fixtureProgress,phase=(label+'.'+key+(label==='page'&&['click','fill','selectOption','waitForSelector'].includes(key)?':'+String(args[0]):'')).slice(0,160);if(record)await record({kind:'phase',state:'started',phase});const result=await value.apply(object,args);if(record)await record({kind:'phase',state:'completed',phase});return result;};
  }});return wrap(page,'page');
 }
+async function selectImportedFile(page){
+ const row=page.locator('#file-list tr[data-file-id="file-1"]');
+ const selection=page.locator('#file-list tr[data-file-id="file-1"] md-radio.file-selection');
+ assert.equal(await selection.count(),1);assert.equal(await selection.isVisible(),true);assert.equal(await selection.evaluate(node=>node.name),'selected-file');
+ await selection.check();assert.equal(await selection.isChecked(),true);
+ assert.equal(await row.getAttribute('data-file-id'),'file-1');
+ assert.equal(await row.evaluate(node=>node.classList.contains('selected')),true);
+ assert.equal(await page.locator('#selection-label').textContent(),'notes.txt');
+ await selection.focus();assert.equal(await selection.evaluate(activeWithin),true);
+ await page.keyboard.press('Enter');
+ await page.waitForFunction(()=>window.calls.some(call=>call.name==='open'&&call.value==='file-1'));
+ assert.deepEqual(await page.evaluate(()=>window.calls.filter(call=>call.name==='open').map(call=>call.value)),['file-1']);
+}
 async function navigate(page,id){
  const group=['settings','personalization','access','updates'].includes(id)?'settings':['help','documentation','changelog'].includes(id)?'help':['converter','workflow','ollama','server-manager','storage','status','details'].includes(id)?'tools':id;
  const rail=page.locator('mfe-navigation-rail');
@@ -233,7 +246,7 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   await page.evaluate(()=>window.pushState({storageFormat:1}));assert.equal(await page.locator('#upgrade-vault').isVisible(),true);
   await page.click('#upgrade-vault');assert.equal(await page.locator('#storage-input').inputValue(),'');assert.equal(await page.locator('#cache-input').inputValue(),'');assert.match(await page.locator('#dialog-description').textContent(),/original vault is preserved/);
   await page.fill('#storage-input','C:\\UpgradedStorage');await page.fill('#cache-input','C:\\UpgradedCache');await page.fill('#password-input','new copy credential');await page.fill('#confirm-password','new copy credential');await page.click('#dialog-submit');await page.waitForFunction(()=>window.calls.some(call=>call.name==='upgrade'));await page.waitForFunction(()=>!document.querySelector('#vault-dialog').open);assert.equal(await page.locator('#upgrade-vault').isVisible(),false);
-  await page.click('#explorer-button');await page.click('#import-button');await page.waitForSelector('#file-list tr');await page.check('#file-list md-checkbox');await page.keyboard.press('Enter');
+  await page.click('#explorer-button');await page.click('#import-button');await page.waitForSelector('#file-list tr');await selectImportedFile(page);
   await page.click('#offline-button');await page.waitForFunction(() => document.querySelector('mfe-navigation-rail').shadowRoot.querySelector('[data-destination=offline] .count').textContent === '1');
   await navigate(page,'offline');assert.equal(await page.locator('#file-list tr').count(),1);
   await page.click('#release-button');assert.equal(await page.locator('#confirm-dialog md-text-button[value=cancel]').evaluate(activeWithin),true);await page.keyboard.press('Escape');assert.equal(await page.locator('#confirm-dialog').evaluate(el => el.open),false);

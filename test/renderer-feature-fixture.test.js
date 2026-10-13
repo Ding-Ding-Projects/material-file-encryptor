@@ -66,3 +66,21 @@ test('both actual renderer case callbacks reject an invalid bridge before eviden
   assert.deepEqual(calls,[],name+' must validate before creating evidence or opening a server/browser');
  }
 });
+
+test('imported-file action uses the exact radio through the real renderer control adapter',async()=>{
+ const source=await fs.readFile(new URL('./ui-renderer.test.js',import.meta.url),'utf8');
+ const {default:path}=await import('node:path'),{default:os}=await import('node:os'),{fileURLToPath}=await import('node:url');
+ const selector='#file-list tr[data-file-id="file-1"] md-radio.file-selection',doc={activeElement:null},calls=[],actions=[];let selected=false;
+ const radio={get checked(){return selected;},name:'selected-file',ownerDocument:doc,shadowRoot:null},row={classList:{contains:name=>name==='selected'&&selected}};
+ const context={assert:{...assert,deepEqual:(a,b)=>assert.deepEqual(JSON.parse(JSON.stringify(a)),JSON.parse(JSON.stringify(b)))},path,os,fileURLToPath,process,test:()=>{},window:{calls}};
+ const locator=key=>{
+  if(![selector,'#file-list tr[data-file-id="file-1"]','#selection-label'].includes(key))throw Error('UNSUPPORTED FIXTURE SELECTOR: '+key);
+  const node=key===selector?radio:row;
+  return{count:async()=>1,isVisible:async()=>true,evaluate:async fn=>fn(node),click:async()=>{assert.equal(key,selector);actions.push('radio-click');selected=true;},focus:async()=>{assert.equal(key,selector);actions.push('radio-focus');doc.activeElement=radio;},getAttribute:async name=>name==='data-file-id'?'file-1':null,textContent:async()=>selected?'notes.txt':''};
+ };
+ const page={locator,keyboard:{press:async key=>{assert.equal(key,'Enter');assert.equal(doc.activeElement,radio);actions.push('keyboard-enter');calls.push({name:'open',value:'file-1'});}},waitForFunction:async fn=>assert.equal(fn(),true),evaluate:async fn=>fn()};
+ const executableSource=source.replace(/^import .*;\r?\n/gm,'').replaceAll('import.meta.url',JSON.stringify(new URL('./ui-renderer.test.js',import.meta.url).href));
+ const api=vm.runInNewContext(executableSource+';({controls,selectImportedFile})',context);
+ await api.selectImportedFile(api.controls(page));assert.deepEqual(actions,['radio-click','radio-focus','keyboard-enter']);assert.deepEqual(calls,[{name:'open',value:'file-1'}]);
+ assert.equal(radio.checked,true);
+});
