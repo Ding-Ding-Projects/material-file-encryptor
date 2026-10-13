@@ -22,8 +22,14 @@ export function installClearFields(root, translate) {
   for (const input of root.querySelectorAll('input,textarea')) {
    if (records.has(input) || (input.tagName === 'INPUT' && !editableTypes.has(input.type))) continue;
    const wrapper = document.createElement('span'); wrapper.className = 'clearable-field';
-   const button = document.createElement('button'); button.type = 'button'; button.className = 'field-clear';
-   const glyph = document.createElement('span'); glyph.setAttribute('aria-hidden', 'true'); glyph.textContent = '×'; button.append(glyph);
+   const button = document.createElement('md-icon-button'); button.type = 'button'; button.className = 'field-clear';
+   const namespace = 'http://www.w3.org/2000/svg';
+   const glyph = document.createElementNS(namespace, 'svg');
+   for (const [name, value] of Object.entries({viewBox:'0 0 24 24', width:'24', height:'24', 'aria-hidden':'true', focusable:'false'})) glyph.setAttribute(name, value);
+   const path = document.createElementNS(namespace, 'path');
+   path.setAttribute('fill', 'currentColor');
+   path.setAttribute('d', 'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12Z');
+   glyph.append(path); button.append(glyph);
    input.before(wrapper); wrapper.append(input, button); records.set(input, {wrapper, button});
    button.addEventListener('click', () => {
     if (input.matches(':disabled') || input.readOnly) return;
