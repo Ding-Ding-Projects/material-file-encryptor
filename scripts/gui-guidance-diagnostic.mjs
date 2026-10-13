@@ -149,6 +149,17 @@ export async function runGuidanceDiagnostic(input,{load=loadProduction,now=Date.
  finally{if(opened){try{record.closure=await opened.close();assert.equal(record.closure.closureVerified,true);}catch(error){record.status='closure-unverified';record.closureError=error.message;failure ||= error;}}record.finishedAt=new Date().toISOString();record.accepted=false;await fs.writeFile(path.join(config.outputRoot,'guidance-diagnostic.json'),JSON.stringify(record,null,2),{flag:'wx'});}
  if(failure)throw failure;return record;
 }
+export async function admittedGuidanceOutput(opened){
+ const state=JSON.parse(await fs.readFile(opened.statePath));
+ assert.equal(path.resolve(state.runRoot),path.resolve(opened.runRoot));
+ assert.equal(state.outputRoot,path.join(opened.runRoot,'output'),'Receipt output directory changed');
+ return state.outputRoot;
+}
+export async function acquireGuidanceSubset(producer,config,admission,opened){
+ const outputRoot=path.join(await admittedGuidanceOutput(opened),'guidance-acquisition');
+ const result=await producer.acquirePackagedDiagnosticSubset({opened,inventory:admission.inventory,buildReceiptPath:config.buildReceipt.path,referencePath:config.reference.path,outputRoot,tuples:[{...GUIDANCE_TUPLE}]});
+ return{...result,outputRoot};
+}
 async function loadProduction(){
  const [{openGuiAcceptancePackage},{openPackagedRendererTarget,inspectPackagedRendererTarget},producer,{createPlanRecorder}]=await Promise.all([import('./gui-acceptance-packaged.mjs'),import('./packaged-renderer-runtime.mjs'),import('./gui-acceptance-producer.mjs'),import('./local-headless-desktop-check.mjs')]);
  const environment=(config,admission)=>({...process.env,PYTHONUTF8:'1',MFE_LOWLEVEL_CLIENT:admission.client,MFE_LOWLEVEL_CLI:config.transport.cli,MFE_LOWLEVEL_PYTHON:config.transport.python,MFE_RENDERER_PROCESS_BACKEND:'native-v1',MFE_RENDERER_NODE_EXECUTABLE:process.execPath,MFE_RENDERER_SOURCE_COMMIT:config.verifier.sourceCommit});
@@ -156,8 +167,8 @@ async function loadProduction(){
   async verify(config){const options={cwd:path.dirname(directory),windowsHide:true,timeout:10000};await promisify(execFile)('git',['ls-files','--error-unmatch','scripts/gui-guidance-diagnostic.mjs'],options);const {stdout:changes}=await promisify(execFile)('git',['status','--porcelain','--untracked-files=all','--','scripts'],options);assert.equal(changes.trim(),'','Commit and freeze verifier scripts before packaged execution');const {stdout}=await promisify(execFile)('git',['rev-parse','HEAD'],options);return verifyGuidanceInputs(config,{packagedVerifierHash:producer.packagedVerifierHash,inspectPackagedRendererTarget,head:stdout.trim()});},
   async preflight(config,admission){return producer.runEvidenceJson(config.transport.python,[path.join(directory,'test-renderer-browser-cli.py'),'preflight','--require','launch_on_headless_desktop','--require','list_headless_windows','--require','screenshot','--require','close_headless_desktop'],undefined,environment(config,admission));},
   async open(config){return openGuiAcceptancePackage({expected:config.expected,evidenceRoot:path.join(config.outputRoot,'lifecycle'),openTarget:(expected,options)=>openPackagedRendererTarget(expected,{...options,gracefulOnly:true})});},
-  async acquire(config,admission,opened){return producer.acquirePackagedDiagnosticSubset({opened,inventory:admission.inventory,buildReceiptPath:config.buildReceipt.path,referencePath:config.reference.path,outputRoot:path.join(config.outputRoot,'acquisition'),tuples:[{...GUIDANCE_TUPLE}]});},
-  async exercise(config,admission,opened,record){const state=JSON.parse(await fs.readFile(opened.statePath)),outputRoot=state.outputRoot;assert.equal(path.resolve(state.runRoot),path.resolve(opened.runRoot));assert.equal(outputRoot,path.join(opened.runRoot,'output'));const recorder=createPlanRecorder(opened.runRoot,plan=>producer.runEvidenceJson(process.execPath,[admission.cdp,'run'],plan,environment(config,admission)));
+  async acquire(config,admission,opened){return acquireGuidanceSubset(producer,config,admission,opened);},
+  async exercise(config,admission,opened,record){const state=JSON.parse(await fs.readFile(opened.statePath)),outputRoot=await admittedGuidanceOutput(opened);const recorder=createPlanRecorder(opened.runRoot,plan=>producer.runEvidenceJson(process.execPath,[admission.cdp,'run'],plan,environment(config,admission)));
    const execute=async(steps,capture=false)=>{await verifyFile(fileURLToPath(import.meta.url),config.verifier.entrypointSha256);assert.equal(await producer.packagedVerifierHash(),config.verifier.packagedVerifierSha256);await verifyFile(config.buildReceipt.path,config.buildReceipt.sha256);await verifyFile(admission.cdp,config.verifier.cdpDriverSha256);await verifyFile(admission.client,config.verifier.lowlevelClientSha256);return recorder(withCdpConnectionProof({version:1,receipt:opened.statePath,endpoint:`http://127.0.0.1:${state.cdp.port}`,expectedUrl:opened.target.expectedUrl,allowEvaluate:true,timeoutMs:30000,steps,...(capture?{observeRuntime:true}:{})},capture?'capture':'control'));};
    await exerciseGuidanceControls({execute,outputRoot,record});
   },

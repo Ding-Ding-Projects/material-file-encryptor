@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
-import {validateGuidanceConfiguration,verifyGuidanceInputs,runGuidanceDiagnostic,checkGuidanceObservation,captureGuidanceObservation,GUIDANCE_TUPLE,GUIDANCE_TABS} from '../scripts/gui-guidance-diagnostic.mjs';
+import {validateGuidanceConfiguration,verifyGuidanceInputs,runGuidanceDiagnostic,checkGuidanceObservation,captureGuidanceObservation,acquireGuidanceSubset,GUIDANCE_TUPLE,GUIDANCE_TABS} from '../scripts/gui-guidance-diagnostic.mjs';
 const sha=value=>createHash('sha256').update(value).digest('hex');
 async function fixture(){
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-guidance-admission-unit-'));
@@ -93,4 +93,19 @@ test('a hash-valid inventory retaining p-language but omitting another canonical
  const f=await fixture(),inventory=JSON.parse(await fs.readFile(f.config.inventory.path));assert.ok(inventory.states.some(row=>row.id==='p-language'));inventory.states=inventory.states.filter(row=>row.id!=='drive-locked');const bytes=JSON.stringify(inventory);await fs.writeFile(f.config.inventory.path,bytes);f.config.inventory.sha256=sha(bytes);
  const l=lifecycle(f),load=async()=>({...await l.load(),verify:config=>verifyGuidanceInputs(config,f.admission)});
  await assert.rejects(runGuidanceDiagnostic(f.config,{...f,platform:'win32',load}),/Complete current state inventory/);assert.deepEqual(l.calls,[]);await assert.rejects(fs.access(f.config.outputRoot));
+});
+
+test('initial acquisition builds its real capture path inside the opened receipt, separate from the summary output',async t=>{
+ const driver=await installedDriver(t);if(!driver)return;
+ const {acquireMatrix}=await import('../scripts/gui-acceptance-acquire.mjs'),{bindingFor}=await import('../scripts/gui-acceptance.mjs');
+ const f=await fixture(),inventory=JSON.parse(await fs.readFile(f.config.inventory.path)),state=inventory.states.find(row=>row.id==='p-language');
+ const runRoot=path.join(f.root,'actual-owned-session'),outputRoot=path.join(runRoot,'output');await fs.mkdir(outputRoot,{recursive:true});const statePath=path.join(runRoot,'state.json');await fs.writeFile(statePath,JSON.stringify({runRoot,outputRoot}));
+ const opened={runRoot,statePath},binding=bindingFor({inventory,sourceCommit:'a'.repeat(40),executableSha256:'b'.repeat(64),resourceSha256:'c'.repeat(64),verifierSha256:'d'.repeat(64),referenceSha256:'e'.repeat(64)});
+ let admittedCaptures=0,constructedPath;
+ const adapter={preflight:()=>{},prepare:async()=>({ownedSyntheticFixture:true,sourceCommit:binding.sourceCommit}),assertState:async()=>({passed:true,observable:state.observable,evidence:{unit:true}}),actions:Object.fromEntries(state.actions.map(id=>[id,async()=>({id,activated:true,observablePassed:true,evidence:{unit:true}})]))};
+ const producer={acquirePackagedDiagnosticSubset:options=>acquireMatrix({...options,mode:'diagnostic-subset',binding,launch:{cdp:{port:19222,expectedUrl:'file:///unit-only/index.html'}},receipt:statePath,adapters:{'p-language':adapter},createProbeEvidence:async()=>({observe:async()=>({unit:true}),persist:async()=>1}),executePlan:async plan=>{for(const step of plan.steps){if(step.op==='capture'){constructedPath=step.path;await driver.assertOutputPath(step.path,{runRoot,outputRoot});admittedCaptures++;throw Error('UNIT PATH VERIFIED; NO CAPTURE EXECUTED');}}return{results:[]};}})};
+ const result=await acquireGuidanceSubset(producer,f.config,{inventory},opened);assert.equal(admittedCaptures,1);assert.equal(result.outputRoot,path.join(outputRoot,'guidance-acquisition'));assert.ok(constructedPath.startsWith(result.outputRoot+path.sep));assert.equal(path.basename(constructedPath),'capture.png');
+ const record=JSON.parse(await fs.readFile(result.results[0].path));assert.equal(record.reason,'UNIT PATH VERIFIED; NO CAPTURE EXECUTED');assert.equal(result.accepted,false);await assert.rejects(fs.access(f.config.outputRoot));
+ // A redirected receipt is rejected before the producer receives any request.
+ await fs.writeFile(statePath,JSON.stringify({runRoot,outputRoot:f.config.outputRoot}));let calls=0;await assert.rejects(acquireGuidanceSubset({acquirePackagedDiagnosticSubset:()=>{calls++;}},f.config,{inventory},opened),/Receipt output directory changed/);assert.equal(calls,0);
 });
