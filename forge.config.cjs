@@ -14,6 +14,7 @@ module.exports = {
     for (const output of result.outputPaths) await requirePrivateFreePackage(output);
   } },
   makers: [{ name: '@electron-forge/maker-squirrel', platforms: ['win32'], config: {
+    vendorDirectory: process.env.MFE_SQUIRREL_VENDOR_DIRECTORY,
     name: 'MaterialFileEncryptor', authors: 'Ding Ding Projects',
     description: 'Encrypted storage mounted as a Windows drive',
     setupExe: 'MaterialFileEncryptor-Setup.exe',
