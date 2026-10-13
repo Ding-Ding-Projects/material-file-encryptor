@@ -620,3 +620,11 @@
 - [x] Verify a pre-cleanup archive that excludes Git-ignored files.
 - [x] Remove every merged branch and checkout so only main remains.
 - [ ] Obtain actual runtime, GUI and installed acceptance for newly integrated branch work.
+
+## Control guidance and responsive continuation, 2026-10-13
+
+- [x] Preserve independently reviewed guidance design references.
+- [ ] Complete every control-specific playground family, including remaining motion, keyframe, transition, color, image, workbench, typography, logo and server controls.
+- [ ] Verify information icons, tab-panel geometry, actual examples, isolation and keyboard behavior in the current built application.
+- [ ] Verify public documentation controls and navigation at 320 px upward in English, Cantonese and bilingual, both themes and all four display scales.
+- [ ] Refresh genuine current captures and documentation, verify deployment and repository homepage, integrate verified work into main and verify remote delivery.

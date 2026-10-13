@@ -1,6 +1,7 @@
 # Interface
 
 - [Private history controls](private-history-controls.md)
+- [Guidance examples and isolated playgrounds](guidance-playgrounds.md)
 
 - [Language, narration, schedules and attention modes](local-personalization.md)
 - [Element appearance and logo customization](appearance-editor.md)
@@ -13,6 +14,8 @@
 These renderer modules do not introduce a public HTTP API; a Postman collection is not applicable. Their focused checks and integration contracts do not establish full built-interface or language-matrix acceptance.
 
 ## 廣東話全文
+
+- [指引示例同獨立練習區](guidance-playgrounds.zh-HK.md)
 
 - [語言、旁白、時間表同專注模式](local-personalization.zh-HK.md)
 - [元素外觀同標誌自訂](appearance-editor.zh-HK.md)

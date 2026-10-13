@@ -210,3 +210,9 @@ canonical instructions; do not infer any other.
 Scan any text bound for a public surface against that vocabulary before publishing it. A
 reviewer cannot tell a correct release note from a leaking one by reading it, so the scan is
 a step, not a habit.
+
+## Guidance and responsive interface candidate
+
+The current candidate replaces persistent guidance text entries with accessible information icons and isolated worked examples. All 88 static settings descriptors have authored practice fixtures; scheduled scalar values, clear actions and snapshot operations have separate synthetic examples. Other control families and the complete built acceptance inventory remain unfinished. See [guidance playgrounds](docs/features/interface/guidance-playgrounds.md) for exact boundaries and remaining work.
+
+Public document controls now prepare real Material Web components before listeners and localization snapshots. The navigation menu follows its measured header height, and tab information panels use the actual navigation scrollport width. Focused source checks pass; fresh source-bound captures, the full language/theme/scale matrix and live publication checks are pending. Existing historical images retain their original provenance.

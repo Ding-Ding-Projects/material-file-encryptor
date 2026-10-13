@@ -1042,3 +1042,9 @@ Next continuation: recheck goal/allowance and current source/ownership, review a
 
 Earlier source-specific records below retain their original observations.
 
+
+## Control guidance and responsive continuation, 2026-10-13
+
+The baseline exact `build.bat /s` passed from source b4eef01c331a2abdd738e2b7f16e3b465a5138ff after refreshing the external private instruction currency lock. Package privacy inspection recorded 6,037 entries and zero rejected paths. This proves the baseline build and package inspection, not installed, GUI or live acceptance.
+
+Reviewed guidance source through 432d0c99cc9238a8796d6e55e847a00593a00d72 and responsive source 78ffe10e2da034e3fce013f33d167f473bc3d11a are combined locally at 0184b363cdd96f5c7f3d37baaddbb8c31c2a266f on codex/lang-gui-responsive-20261013. Parent tab wiring and defensive helper isolation are now implemented with focused source checks passing. Current candidate build, rendered geometry, keyboard/touch/accessibility, production-side-effect observations and live deployment remain pending. Other playground consumer families continue in the retained independent implementation branch. No unrelated worktree or branch was removed.

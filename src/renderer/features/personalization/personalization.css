@@ -11,7 +11,7 @@
 
 .local-ux md-tabs{display:block;max-width:100%;min-width:0;overflow-x:auto;--md-primary-tab-container-height:48px}.local-ux md-primary-tab{flex:none;min-width:max-content}.local-ux md-tabs[role=tablist]{flex-wrap:nowrap;padding-bottom:0;gap:0;border-bottom:0}
 
-.local-ux-navigation{max-width:100%;min-width:0;overflow-x:auto}.local-ux-navigation-strip{width:max(100%,720px)}.local-ux-navigation-guidance{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:start}.local-ux-tab-guidance{min-width:0;padding-inline:4px}.local-ux-tab-guidance mfe-control-guidance{max-width:100%}.local-ux-navigation md-tabs{overflow:visible}.local-ux-navigation md-primary-tab{width:20%;flex:0 0 20%;min-width:0}
+.local-ux-navigation{max-width:100%;min-width:0;overflow-x:auto}.local-ux-navigation-strip{width:max(100%,720px)}.local-ux-navigation-guidance{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:start}.local-ux-tab-guidance{display:contents;min-width:0}.local-ux-tab-guidance mfe-control-guidance{max-width:100%}.local-ux-navigation md-tabs{overflow:visible}.local-ux-navigation md-primary-tab{width:20%;flex:0 0 20%;min-width:0}
 
 .local-ux md-outlined-button,.local-ux-attention-status md-outlined-button{min-height:44px;min-width:0;max-width:100%;font:inherit;text-wrap:wrap;text-overflow:clip;--md-outlined-button-label-text-font:var(--local-ux-font,"MFE Noto Sans Regular","MFE Noto Sans CJK HK",sans-serif)}
 
