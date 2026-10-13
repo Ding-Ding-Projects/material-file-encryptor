@@ -16,7 +16,8 @@ public sealed class VaultProcessRunner : IVaultProcessRunner
     private readonly string? gitExecutable, ghExecutable;
     private readonly string baseDirectory;
     private readonly NativeChildTrace? diagnostic;
-    public VaultProcessRunner(string? gitExecutable = null, string? ghExecutable = null, string? baseDirectory = null, NativeChildTrace? diagnostic = null) { this.gitExecutable = gitExecutable; this.ghExecutable = ghExecutable; this.baseDirectory = Path.GetFullPath(baseDirectory ?? AppContext.BaseDirectory); this.diagnostic = diagnostic; }
+    private readonly Func<Stream, Stream, CancellationToken, Task> copyOutput;
+    public VaultProcessRunner(string? gitExecutable = null, string? ghExecutable = null, string? baseDirectory = null, NativeChildTrace? diagnostic = null, Func<Stream, Stream, CancellationToken, Task>? copyOutput = null) { this.copyOutput = copyOutput ?? ((input, output, ct) => input.CopyToAsync(output, ct)); this.gitExecutable = gitExecutable; this.ghExecutable = ghExecutable; this.baseDirectory = Path.GetFullPath(baseDirectory ?? AppContext.BaseDirectory); this.diagnostic = diagnostic; }
     public string ResolveExecutable(string name)
     {
         var explicitPath = name == "git" ? gitExecutable : name == "gh" ? ghExecutable : null;
@@ -61,25 +62,32 @@ public sealed class VaultProcessRunner : IVaultProcessRunner
         // lets an unexpected prompt wait indefinitely for a user who cannot see it.
         process.StandardInput.Close();
         using var output = new MemoryStream();
-        var copy = process.StandardOutput.BaseStream.CopyToAsync(output, ct);
+        var copy = copyOutput(process.StandardOutput.BaseStream, output, ct);
         var error = process.StandardError.ReadToEndAsync(ct);
-        var completion = Task.WhenAll(copy, error, process.WaitForExitAsync(ct));
-        try { await completion.WaitAsync(ct); }
+        try
+        {
+            // Termination and drains have separate deadlines. A pipe that ignores
+            // cancellation must never postpone terminating the owned process.
+            await process.WaitForExitAsync(ct).ConfigureAwait(false);
+            await copy.WaitAsync(ct).ConfigureAwait(false);
+            var stderr = await error.WaitAsync(ct).ConfigureAwait(false);
+            return new(process.ExitCode, output.ToArray(), stderr);
+        }
         catch
         {
-            // Cancellation must cover both pipes, including stderr after the
-            // parent exits. Preserve the original exception if teardown races exit.
+            // Preserve the original exception if teardown races process exit.
             try
             {
                 if (!process.HasExited) process.Kill(true);
                 using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                await process.WaitForExitAsync(stop.Token);
-                await completion.WaitAsync(stop.Token);
+                await process.WaitForExitAsync(stop.Token).ConfigureAwait(false);
             }
             catch (Exception cleanup) when (cleanup is OperationCanceledException or IOException or InvalidOperationException or System.ComponentModel.Win32Exception) { }
+            process.StandardOutput.Dispose(); process.StandardError.Dispose();
+            _ = copy.ContinueWith(task => _ = task.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
+            _ = error.ContinueWith(task => _ = task.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
             throw;
         }
-        return new(process.ExitCode, output.ToArray(), await error);
     }
 }
 

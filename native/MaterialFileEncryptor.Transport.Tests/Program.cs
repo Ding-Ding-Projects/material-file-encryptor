@@ -17,6 +17,9 @@ if (args.Length == 2 && args[0] == "--child-fixture")
 if (args.Length == 1 && args[0] == "--stdin-fixture") { Console.Write(Console.IsInputRedirected && Console.In.ReadToEnd().Length == 0 ? "closed-input" : "inherited-input"); return; }
 if (args.Length == 1 && args[0] == "--stdin-parent-fixture") { var result = await new VaultProcessRunner().RunAsync("dotnet", [typeof(LiveTransportChecks).Assembly.Location, "--stdin-fixture"], Environment.CurrentDirectory); Console.Write(result.Text); return; }
 if (args.Length == 1 && args[0] == "--pipe-fixture") { while (true) { Console.Error.Write(new string('e', 8192)); Console.Out.Write(new string('o', 8192)); await Task.Delay(10); } }
+if (args.SequenceEqual(new[] { "--stdin-eof-child" })) { await ProcessInputChecks.RunChildAsync(); return; }
+if (args.SequenceEqual(new[] { "--stdin-eof" })) { await ProcessInputChecks.VerifyAsync(); Console.WriteLine("PASS transport children cannot inherit the helper request pipe"); return; }
+if (args.SequenceEqual(new[] { "--pipe-deadline" })) { await ProcessDeadlineChecks.VerifyAsync(); Console.WriteLine("PASS nonresponsive output drain cannot defeat cancellation"); return; }
 if (args.Length == 2 && args[0] == "--live-private") { await LiveTransportChecks.RunAsync(args[1]); return; }
 var root = Path.Combine(Path.GetTempPath(), "mfe-transport-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(root);
@@ -172,6 +175,8 @@ try
     using var alreadyCancelled = new CancellationTokenSource(); alreadyCancelled.Cancel();
     try { await new VaultProcessRunner(Path.Combine(root, "missing-git.exe")).RunAsync("git", [], root, alreadyCancelled.Token); throw new Exception("started cancelled process"); }
     catch (OperationCanceledException) { Check(true, "pre-cancelled operation never resolves or starts a subprocess"); }
+    await ProcessDeadlineChecks.VerifyAsync(); Check(true, "nonresponsive output drain cannot defeat cancellation");
+    await ProcessInputChecks.VerifyAsync(); Check(true, "transport children cannot inherit the helper request pipe");
     Console.WriteLine($"Passed {count} transport checks.");
 }
 finally
