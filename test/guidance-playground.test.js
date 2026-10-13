@@ -57,7 +57,10 @@ test('mounted practice retains input node and local result through edits and res
 test('sample module has no production helper imports or external-effect capability calls',async()=>{
  const source=await fs.readFile(new URL('../src/shared/surface/guidance-playground.js',import.meta.url),'utf8');
  const verify=text=>assert.doesNotMatch(text,/\b(?:fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|clipboard|showPicker|setTimeout|setInterval|registerCommands|registerHelp|dispatchEvent|eval|Function)\s*[.(]|\bimport\s|\.cloneNode\s*\(|\.innerHTML\s*=/);
- verify(source);assert.throws(()=>verify(source+'\nfetch("https://example.invalid")'),assert.AssertionError);assert.throws(()=>verify(source+'\nlocalStorage.setItem("a","b")'),assert.AssertionError);
+ const adapterImport="import {evaluateColorPractice} from '../local-ux/color-practice-evaluator.js';",mathImport="import {parseColorEntry,parseColor,colorRepresentations,contrastRatio,rainbowDuration} from '../../renderer/features/personalization/color.js';";
+ assert.ok(source.startsWith(adapterImport));verify(source.replace(adapterImport,''));
+ const adapter=await fs.readFile(new URL('../src/shared/local-ux/color-practice-evaluator.js',import.meta.url),'utf8'),math=await fs.readFile(new URL('../src/renderer/features/personalization/color.js',import.meta.url),'utf8');assert.ok(adapter.startsWith(mathImport));verify(adapter.replace(mathImport,''));verify(math);
+ assert.throws(()=>verify(source.replace(adapterImport,'')+'\nimport original from "./controls.js";'),assert.AssertionError);assert.throws(()=>verify(math+'\nfetch("https://example.invalid")'),assert.AssertionError);assert.throws(()=>verify(adapter.replace(mathImport,'')+'\nlocalStorage.setItem("a","b")'),assert.AssertionError);
 });
 
 test('every authored appearance choice preserves its Cantonese result including expected output',()=>{

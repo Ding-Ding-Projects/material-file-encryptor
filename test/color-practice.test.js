@@ -1,0 +1,33 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {COLOR_PRACTICE,COLOR_PRACTICE_COPY,COLOR_HUE_SLIDER_PRACTICE} from '../src/shared/local-ux/color-practice.js';
+import {COLOR_CONTROL_CONTRACTS,COLOR_SPACES,colorPickerDescriptor,translatePickerColor} from '../src/renderer/features/personalization/color-picker.js';
+import {parseColorEntry,parseColor,colorRepresentations} from '../src/renderer/features/personalization/color.js';
+import {createPracticeSession,mountGuidancePlayground,assertPracticeCoverage} from '../src/shared/surface/guidance-playground.js';
+import {createAccessDocument} from './helpers/local-access-dom.js';
+test('all twenty-four color contracts and the continuous hue variant have authored translated samples',()=>{
+ assert.equal(Object.keys(COLOR_CONTROL_CONTRACTS).length,24);assert.deepEqual(new Set(Object.keys(COLOR_PRACTICE)),new Set(Object.keys(COLOR_CONTROL_CONTRACTS)));const rows=Object.keys(COLOR_CONTROL_CONTRACTS).map(key=>colorPickerDescriptor(key)),ids=rows.map(row=>row.id);assertPracticeCoverage(ids,rows);assert.throws(()=>assertPracticeCoverage(ids,rows.slice(1)),/mismatch/);assert.equal(colorPickerDescriptor('hue','Continuous hue spectrum').practice,COLOR_HUE_SLIDER_PRACTICE);
+ for(const fixture of Object.values(COLOR_PRACTICE))for(const key of ['label','input','action','expected'])assert.ok(COLOR_PRACTICE_COPY[fixture[key]],fixture.id+': '+key);
+});
+test('notation and numeric channel samples use the production pure color mathematics',()=>{
+ const notation=createPracticeSession(COLOR_PRACTICE.space);for(const space of COLOR_SPACES){const result=notation.edit(space);assert.equal(result.record.representation,translatePickerColor('#ff0000ff')[space]);assert.equal(result.record.draft,'#ff0000ff');}
+ const entry=createPracticeSession(COLOR_PRACTICE.entry);for(const value of ['#24996680','hsv(120 50 70 / 0.5)','rgb(20 40 60 / .4)'])assert.equal(entry.edit(value).color,parseColorEntry(value));assert.equal(entry.edit('not a color').valid,false);assert.equal(entry.edit('oklch(1 1 90)').valid,false);
+ for(const[key,value,index]of [['hue',120,0],['saturation',50,1],['brightness',70,2],['alpha',.5,3]]){const sample=createPracticeSession(COLOR_PRACTICE[key]),hsv=colorRepresentations(COLOR_PRACTICE[key].record.draft).hsv;hsv[index]=value/([1,2].includes(index)?100:1);const result=sample.edit(value);assert.equal(result.color,parseColorEntry(`hsv(${hsv[0]} ${hsv[1]*100} ${hsv[2]*100} / ${hsv[3]})`));assert.equal(result.record.target,COLOR_PRACTICE[key].record.target);assert.equal(sample.edit('').valid,false);assert.equal(sample.edit(COLOR_PRACTICE[key].max+1).valid,false);}
+ const speed=createPracticeSession(COLOR_PRACTICE.speed);assert.equal(speed.edit(.5).valid,false);assert.equal(speed.edit(1.5).valid,false);assert.equal(speed.edit(1).record.duration,'55s');assert.equal(speed.edit(10).record.duration,'1s');
+});
+test('consequential color previews keep original targets, palette identities and external capabilities separate',()=>{
+ const apply=createPracticeSession(COLOR_PRACTICE.apply),other=createPracticeSession(COLOR_PRACTICE.apply);assert.equal(apply.apply().record.target,'#6750a480');assert.equal(other.result.record.target,'#335577ff');assert.equal(apply.reset().record.target,'#335577ff');
+ const copied=createPracticeSession(COLOR_PRACTICE.copy).apply().record;assert.equal(copied.copiedText,'#6750a480');assert.equal(copied.osCopyPerformed,false);
+ const pixel=createPracticeSession(COLOR_PRACTICE.eyedropper).apply().record;assert.equal(pixel.draft,'#24996680');assert.equal(pixel.screenSampled,false);
+ const save=createPracticeSession(COLOR_PRACTICE.save);save.edit('');assert.equal(save.apply().valid,false);save.edit('Local blue');assert.equal(save.apply().record.palette.at(-1).name,'Local blue');assert.equal(save.result.record.target,'#335577ff');
+ assert.deepEqual(createPracticeSession(COLOR_PRACTICE.remove).apply().record.palette.map(row=>row.id),['sample-blue']);const rainbow=createPracticeSession(COLOR_PRACTICE.rainbow).apply();assert.deepEqual(rainbow.record.draft,{kind:'rainbow'});assert.equal(rainbow.record.target,'#335577ff');assert.equal(rainbow.record.animationStarted,false);assert.equal(rainbow.rainbow,true);
+ const reset=createPracticeSession(COLOR_PRACTICE.reset).apply();assert.equal(reset.color,'#445566ff');assert.equal(reset.record.palette.length,2);
+ for(const[key,fixture]of Object.entries(COLOR_PRACTICE).filter(([key])=>key.startsWith('clear-'))){const sample=createPracticeSession(fixture),result=sample.apply();assert.equal(result.emptyDraft,true,key);assert.equal(result.record.target,fixture.record.target);assert.deepEqual(result.record.palette,fixture.record.palette);assert.equal(sample.edit(fixture.initial).emptyDraft,false);sample.dispose();assert.throws(()=>sample.reset(),/disposed/);}
+});
+test('actual Material slider, fields and buttons affect only their sample and restore on Reset',async()=>{
+ const doc=createAccessDocument(),prototype=Object.getPrototypeOf(doc.body),previous=Object.getOwnPropertyDescriptor(prototype,'style');Object.defineProperty(prototype,'style',{configurable:true,get(){return this._style||={};}});
+ try{const mount=doc.createElement('section');doc.body.append(mount);let sample=mountGuidancePlayground(mount,{fixture:COLOR_HUE_SLIDER_PRACTICE}),slider=mount.querySelector('md-slider');assert.equal(slider.step,.1);slider.value=120;await slider.dispatchEvent({type:'input'});assert.equal(Math.round(colorRepresentations(sample.session.result.color).hsv[0]),120);assert.equal(parseColor(sample.session.result.color)[3],128/255);sample.destroy();assert.equal(slider.listeners.get('input').length,0);
+ sample=mountGuidancePlayground(mount,{fixture:COLOR_PRACTICE.space});assert.equal(mount.querySelectorAll('md-outlined-button').length,12);await mount.querySelectorAll('md-outlined-button').find(row=>row.textContent==='oklab').click();assert.equal(sample.session.result.record.space,'oklab');await mount.querySelectorAll('md-text-button').find(row=>row.textContent==='Reset example').click();assert.equal(sample.session.result.record.space,'hex');sample.destroy();
+ sample=mountGuidancePlayground(mount,{fixture:COLOR_PRACTICE['clear-entry']});const field=mount.querySelector('md-outlined-text-field');assert.equal(field.type,'text');await mount.querySelector('md-filled-button').click();assert.equal(field.getAttribute('aria-invalid'),'true');field.value='#336699';await field.dispatchEvent({type:'input'});assert.equal(field.getAttribute('aria-invalid'),'false');assert.equal(sample.session.result.color,parseColorEntry('#336699'));sample.destroy();}
+ finally{if(previous)Object.defineProperty(prototype,'style',previous);else delete prototype.style;}
+});
