@@ -1119,3 +1119,8 @@ The scoped modern.css rule reserves 48x48 host dimensions for direct trailing-ic
 Removed only the obsolete rule hiding the first history header and data cells. The actual history-selection controller binds its radio into that first cell, so the hiding rule removed the only row-selection route. Recycle last-column hiding and shared nonwrapping selection headings remain unchanged. Production controllers and restore admission/callbacks were not modified.
 
 Six focused history-selection checks pass. The new source regression failed with the old hiding rule and passed after its removal. The existing renderer test now checks actual radio visibility, keyboard focus and Enter selection, selected metadata, no restore from selection or cancelled confirmation, and exactly one invocation from each independent row/selected restore route. Its prior multilingual narrow/normal heading checks are unchanged. Renderer execution remains assigned to the coordinating owner and has not run for this revision.
+
+
+## Exact localized renderer navigation fixture
+
+Updated only the Settings and How it works menu-name matchers in test/ui-renderer.test.js. Each now matches exactly its English, Cantonese or middle-dot bilingual name. The real rail activation, menuitem role lookup, visible-view wait and all existing language/width loops remain unchanged. A source-only fixture calls that actual navigation helper for all six names, checks the complete action sequence, and rejects unrelated prefixes, suffixes and cross-language combinations. It failed against the old prefix matcher and passes after repair. No browser, native process, build or capture was launched; full renderer execution remains with the coordinating owner.

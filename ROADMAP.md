@@ -667,3 +667,9 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 
 - [x] Remove obsolete history first-column hiding while retaining recycle action hiding and nonwrapping headings; six focused source checks pass with a red-to-green regression.
 - [ ] Run the extended actual renderer case for radio visibility, focus, selection, cancelled restoration and independent restore actions after source review.
+
+
+## Localized renderer navigation fixture
+
+- [x] Match only the six supported complete Settings/How it works names and verify the actual helper action sequence with a red-to-green source fixture.
+- [ ] Rerun the complete actual renderer language/width case after independent review; no runtime verdict is claimed by the source fixture.

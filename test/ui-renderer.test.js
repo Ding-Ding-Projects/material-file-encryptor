@@ -36,12 +36,27 @@ async function navigate(page,id){
  if(!await rail.isVisible())await page.locator('mfe-top-bar .drawer').click();
  await rail.locator('[data-destination="'+group+'"]').click();
  if(['settings','help','tools'].includes(group)){
-  const labels={settings:/^(?:Settings|設定)(?: \/ |$)/,help:/^(?:How it works|使用方法)(?: \/ |$)/};
+  const labels={settings:/^(?:Settings|設定|Settings · 設定)$/,help:/^(?:How it works|使用方法|How it works · 使用方法)$/};
   assert.ok(labels[id],'This fixture only navigates declared base destinations');
   await page.locator('mfe-context-menu').getByRole('menuitem',{name:labels[id]}).click();
  }
  await page.locator('#view-'+(id==='offline'?'drive':id)).waitFor({state:'visible'});
 }
+test('navigation fixture matches only complete supported localized menu names',async()=>{
+ const accepted={settings:['Settings','設定','Settings · 設定'],help:['How it works','使用方法','How it works · 使用方法']};
+ for(const [id,names]of Object.entries(accepted))for(const name of names){
+  const calls=[];const page={locator(selector){
+   if(selector==='mfe-navigation-rail')return{isVisible:async()=>true,locator:destination=>({click:async()=>calls.push(['rail',destination])})};
+   if(selector==='mfe-context-menu')return{getByRole(role,options){
+    assert.equal(role,'menuitem');assert.equal(options.name.test(name),true,'Supported complete name must match: '+name);
+    for(const rejected of [name+' extra','Other '+name,name+' / Other',name+' · Other','Settings · 使用方法','How it works · 設定'])assert.equal(options.name.test(rejected),false,'Unrelated or partial names must not match: '+rejected);
+    return{click:async()=>calls.push(['menu',name])};
+   }};
+   return{waitFor:async options=>calls.push(['view',selector,options.state])};
+  }};
+  await navigate(page,id);assert.deepEqual(calls,[['rail','[data-destination="'+id+'"]'],['menu',name],['view','#view-'+id,'visible']]);
+ }
+});
 const clearOf=field=>field.locator('md-icon-button[slot="trailing-icon"]');
 const activeWithin=el=>{let active=el.ownerDocument.activeElement;while(active){if(active===el)return true;active=active.shadowRoot?.activeElement;}return false;};
 
