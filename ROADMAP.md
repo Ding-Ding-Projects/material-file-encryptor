@@ -680,3 +680,8 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 - [x] Enumerate 28 mount/read pairs with explicit synthetic schemas, reject unknown/malformed requests, and implement filtered subscriptions with disposal.
 - [x] Add bounded phase/request progress retention and source checks for missing methods, invalid responses, unsupported actions, isolation and ledger bounds; seven checks plus the navigation fixture pass.
 - [ ] Independently review and rerun the unchanged complete renderer case; the previous 108b4c25 timeout remains a failure, not a passing baseline.
+
+
+## Pre-launch validation ordering repair
+
+Both main and scoped-clear renderer cases now validate the feature fixture as their first step, before evidence directories, servers or browser opening. An inert source test invokes both actual test callbacks with an invalid bridge and proves zero evidence/server/opener calls. Removing the early validation separately from either callback makes that ordering check fail; restored source passes all eight fixture-contract checks. All original operations, assertions and deadlines remain unchanged. No browser or native launch ran for this repair; independent review precedes execution.

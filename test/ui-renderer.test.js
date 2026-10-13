@@ -280,6 +280,7 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
 
 // This isolated DOM regression does not claim native-drive or installed acceptance.
 test('scoped clear-control selectors use their actual owning wrappers', {timeout:90000}, async () => {
+ await verifyRendererFeatureFixture(createRendererFeatureFixture().bridge);
  const evidenceRoot = await fs.mkdtemp(path.join(os.tmpdir(),'mfe-scoped-clear-proof-'));
  const proof = {version:1,scope:'Actual renderer DOM selector regression',cases:[],passed:false};
  for (const name of ['scoped-search.js','../shared/surface/controls.js','../shared/surface/search.js']) proof[name] = createHash('sha256').update(await fs.readFile(path.join(root,name))).digest('hex');

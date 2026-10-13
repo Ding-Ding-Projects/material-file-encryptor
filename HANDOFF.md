@@ -1149,3 +1149,8 @@ Unknown pairs and malformed request payloads reject. No native mutation, network
 A bounded progress snapshot records separate last-started/last-completed phase and request identities plus the latest 128 rows. It excludes request payloads, control values and response data. Actual awaited test operations retain their original calls and arguments. Serialized writes replace progress.json atomically beneath a fresh temporary evidence directory printed by the test. The page-error assertion, all navigation/geometry/language/width loops and 120000ms timeout remain unchanged.
 
 Seven source contract checks pass, plus the existing finite navigation fixture. Removing required-method validation or response-shape validation independently makes its causal check fail; restored source passes. No browser/native launch occurred for this repair. Independent review precedes any runtime rerun. Other native and package acceptance remains separate.
+
+
+## Pre-launch validation ordering repair
+
+Both main and scoped-clear renderer cases now validate the feature fixture as their first step, before evidence directories, servers or browser opening. An inert source test invokes both actual test callbacks with an invalid bridge and proves zero evidence/server/opener calls. Removing the early validation separately from either callback makes that ordering check fail; restored source passes all eight fixture-contract checks. All original operations, assertions and deadlines remain unchanged. No browser or native launch ran for this repair; independent review precedes execution.

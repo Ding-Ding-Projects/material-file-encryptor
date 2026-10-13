@@ -45,3 +45,24 @@ test('progress retains bounded identities and preserves the last unfinished oper
 test('renderer keeps native separation, full geometry checks and unchanged timeout',async()=>{
  const source=await fs.readFile(new URL('./ui-renderer.test.js',import.meta.url),'utf8');assert.match(source,/timeout:120000/);assert.match(source,/assert\.deepEqual\(errors,\[\]\)/);assert.match(source,/for\(const width of \[1440,390\]\)/);assert.match(source,/\['en','yue','bilingual'\]/);assert.match(source,/assertOwnedTouchTarget\(clear\)/);assert.match(source,/\.\.\.featureFixture\.bridge/);
 });
+
+test('both actual renderer case callbacks reject an invalid bridge before evidence, server or opener',async()=>{
+ const source=await fs.readFile(new URL('./ui-renderer.test.js',import.meta.url),'utf8');
+ const {default:path}=await import('node:path'),{default:os}=await import('node:os'),{fileURLToPath}=await import('node:url'),{createHash}=await import('node:crypto');
+ const names=['real renderer interactions, error states, keyboard dialogs and responsive layouts','scoped clear-control selectors use their actual owning wrappers'];
+ for(const name of names){
+  const cases=new Map(),calls=[];
+  const server={listen(_port,_host,callback){calls.push('listen');callback();},address:()=>({port:19222}),closeAllConnections(){},close(callback){callback();}};
+  const context={assert,path,os,fileURLToPath,createHash,process,console:{log:()=>{calls.push('unit-log');}},
+   test:(name,options,callback)=>cases.set(name,typeof options==='function'?options:callback),
+   fs:{access:async()=>{},mkdtemp:async()=>{calls.push('evidence');return path.join(os.tmpdir(),'unit-not-created');},readFile:async()=>Buffer.from('unit only'),writeFile:async()=>{calls.push('evidence-write');}},
+   createServer:()=>{calls.push('server');return server;},serveRendererFixture:()=>{},
+   openRendererBrowser:async()=>{calls.push('opener');throw Error('UNIT OPENER REACHED');},
+   createRendererFeatureFixture:()=>({bridge:{}}),verifyRendererFeatureFixture,
+  };
+  const executableSource=source.replace(/^import .*;\r?\n/gm,'').replaceAll('import.meta.url',JSON.stringify(new URL('./ui-renderer.test.js',import.meta.url).href));
+  vm.runInNewContext(executableSource,context);assert.equal(typeof cases.get(name),'function');
+  await assert.rejects(cases.get(name)({skip(){throw Error('UNIT UNEXPECTED SKIP');}}),/Required renderer fixture method missing/);
+  assert.deepEqual(calls,[],name+' must validate before creating evidence or opening a server/browser');
+ }
+});
