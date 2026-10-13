@@ -67,8 +67,8 @@
     {
       "source": "docs/features/converter/README.md",
       "translation": "docs/features/converter/README.zh-HK.md",
-      "sourceSha256": "a1e7f8753a14aed25846f0f9a0de724fb8ddf413915b477f88df1eeeb37b5dc9",
-      "translationSha256": "c324569adda471c56f5d5ad421d6535bb11b51c3c9a09b708360f773c54dbb2c"
+      "sourceSha256": "9418299399fba636276075b876477d90ad38e64819416a0b470f7815a0d81f0b",
+      "translationSha256": "2cbb23cdd4b46d8947df6abc4ca823b8409234cd1dfe65156dd7eeea53a00391"
     },
     {
       "source": "docs/features/converter/archive-and-data.md",
@@ -463,8 +463,8 @@
     {
       "source": "docs/features/storage/git-transport.md",
       "translation": "docs/features/storage/git-transport.zh-HK.md",
-      "sourceSha256": "a2105432c1137e7bc2413a9b4b023d567dab2c4aea366e8028f27eacadc68324",
-      "translationSha256": "800ab25d8e4f25d43de430069fb735a35ab4b1b78b08a36f87565eb1aa15a7b0"
+      "sourceSha256": "abf6a5367114232c9d2720b4d2dbf2ed1ce5a5c9676865f98825c0e9cad3b0ff",
+      "translationSha256": "e16a3d8e60c87dff2b8813b1212949aa2b515023f35ccdfea1dfd98776529083"
     },
     {
       "source": "docs/features/storage/history-and-recycle-bin.md",
