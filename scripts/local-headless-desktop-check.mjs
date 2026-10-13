@@ -94,6 +94,7 @@ export function captureProvenance(records,image,sha256) {
  }
  return provenance;
 }
+export function canRetireFixtureCredential(fixture,cleanup) {return Boolean(fixture&&cleanup?.client_ok===true&&cleanup?.recordedProcessesAbsent===true);}
 export function finalVerdict(receipt) {
  const pending=[];
  if(!/^[a-f0-9]{40}$/.test(receipt.sourceCommit||'')||!/^[a-f0-9]{64}$/.test(receipt.executableSha256||'')||!/^[a-f0-9]{64}$/.test(receipt.resourceHashes?.asar||'')||!/^[a-f0-9]{64}$/.test(receipt.resourceHashes?.nativeHost||''))pending.push('Exact packaged source and resource hash binding');

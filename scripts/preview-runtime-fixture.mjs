@@ -66,9 +66,9 @@ async function registerGuiFixture(gui,label) {
  await fs.writeFile(path.join(gui.root,'owned-'+label+'-fixture.json'),JSON.stringify({version:1,root:gui.root,nativeExecutable:saved.nativeExecutable,storageDir:gui.storageDir,cacheDir:gui.cacheDir}),{flag:'wx',mode:0o600});
 }
 export function runtimeCompletion(state,{synchronized=false,applicationError=false}={}) {
- if(applicationError||(synchronized&&state.sync?.error))return {failed:true,ready:false};
+ if(applicationError||(synchronized&&(state.sync?.error||state.transport?.lastError)))return {failed:true,ready:false};
  const operationFinished=state.operation==null;
- return {failed:false,ready:operationFinished&&(!synchronized||(state.sync?.running===false&&(state.transport?.available===true||state.sync?.sourceAvailable===true)&&(state.sync?.pendingCommits??0)===0&&!state.transport?.pendingSynchronization))};
+ return {failed:false,ready:operationFinished&&(!synchronized||(state.sync?.running===false&&(state.transport?.available===true||state.sync?.sourceAvailable===true)&&(state.sync?.pendingCommits??0)===0&&!state.transport?.pendingSynchronization&&(state.transport?.mode!=='privateGit'||state.transport?.pendingPublication===false)))};
 }
 const freshGuiFixtures=new WeakSet();
 export async function prepareGuiVaultFixture(fixture) {

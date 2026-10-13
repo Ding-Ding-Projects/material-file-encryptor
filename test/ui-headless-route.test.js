@@ -4,7 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-import {directLaunchTransportBinding,lifecycleTransport,safeFailureDetails,resumeCaptureReview,makeLaunch,makeBaselinePlan,makeInterfacePlan,validateCaptureReview,finalVerdict,helperFailure,createPlanRecorder,recordNativeCapture,captureProvenance} from '../scripts/local-headless-desktop-check.mjs';
+import {directLaunchTransportBinding,lifecycleTransport,safeFailureDetails,resumeCaptureReview,makeLaunch,makeBaselinePlan,makeInterfacePlan,validateCaptureReview,finalVerdict,helperFailure,createPlanRecorder,recordNativeCapture,captureProvenance,canRetireFixtureCredential} from '../scripts/local-headless-desktop-check.mjs';
 
 test('direct launch binds actual lifecycle provenance to prepared identity before acceptance',()=>{
  const prepared={transport:'direct-cheap-cli',transportProvenance:{version:1,cli:{sha256:'a'.repeat(64)},sourceCommit:'a'.repeat(40)}};
@@ -149,4 +149,12 @@ test('modern native inspections explicitly use bounded fresh-attachment proof',a
  assert.match(source,/const inspectionPlan=withCdpConnectionProof\(plan,'modern-observation'\);/);
  assert.match(source,/\[cdp,'inspect'\],inspectionPlan/);
  assert.doesNotMatch(source,/\[cdp,'inspect'\],plan\)/);
+});
+
+test('owned credential retirement follows proven process absence even after failed workflow',()=>{
+ const fixture={root:'/owned/fixture'};const absent={client_ok:true,recordedProcessesAbsent:true};
+ assert.equal(canRetireFixtureCredential(fixture,absent),true);
+ for(const cleanup of [{client_ok:true},{client_ok:true,recordedProcessesAbsent:false},{client_ok:false,recordedProcessesAbsent:true},undefined])assert.equal(canRetireFixtureCredential(fixture,cleanup),false);
+ assert.equal(canRetireFixtureCredential(undefined,absent),false);
+ const failed={failure:'workflow failed',fixtureCleanup:{ownedCredentialForgotten:true},cleanup:absent};assert.equal(finalVerdict(failed).passed,false);assert.ok(finalVerdict(failed).pending.includes('Resolve recorded runtime failure'));
 });

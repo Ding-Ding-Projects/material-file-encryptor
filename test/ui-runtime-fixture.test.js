@@ -103,3 +103,11 @@ test('one credential error does not suppress later registered targets or owned k
  const calls=[];const createClient=()=>({child:new EventEmitter(),async request(method,args){calls.push(args);if(args.storageDir===fixture.storageDir)throw Object.assign(new Error('Unavailable'),{code:'EACCES'});},dispose(){this.child.emit('exit',0);}});
  const result=await forgetRuntimeFixture(fixture,{createClient});assert.equal(result.ownedCredentialForgotten,false);assert.equal(result.targetRetirement[0].code,'EACCES');assert.equal(result.targetRetirement[1].status,'forgotten');assert.equal(calls.length,2);assert.equal(result.ownedKeyRetired,true);await assert.rejects(fs.access(gui.keyFilePath),{code:'ENOENT'});
 });
+
+test('physical synchronization does not wait for quiet version snapshots and still rejects unpublished private data',()=>{
+ const state={operation:null,sync:{running:false,pendingCommits:0},transport:{mode:'folder',available:true},history:{pendingVersionCount:1}};
+ assert.equal(runtimeCompletion(state,{synchronized:true}).ready,true);
+ assert.equal(runtimeCompletion({...state,sync:{running:false,pendingCommits:1}},{synchronized:true}).ready,false);
+ for(const pendingPublication of [true,undefined])assert.equal(runtimeCompletion({...state,transport:{mode:'privateGit',available:true,pendingPublication}},{synchronized:true}).ready,false);
+ assert.equal(runtimeCompletion({...state,transport:{mode:'privateGit',available:true,pendingPublication:false}},{synchronized:true}).ready,true);
+});
