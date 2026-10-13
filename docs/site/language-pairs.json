@@ -17,6 +17,12 @@
       "translationSha256": "c5d4cace30a8077335c01e1dbade8f0c55faddfebc9012776478ebaffdd1a11a"
     },
     {
+      "source": "docs/features/access/local-access.md",
+      "translation": "docs/features/access/local-access.zh-HK.md",
+      "sourceSha256": "4168bdf93b9cb4af30eaeb1434c96463ac2c920d38ae984f4a669dda1d133345",
+      "translationSha256": "fc5dd2293657a56fc2984b66adc11ab043567e81200892bc50357106a6bae2d0"
+    },
+    {
       "source": "docs/features/access/README.md",
       "translation": "docs/features/access/README.zh-HK.md",
       "sourceSha256": "0a95190a274fa987d9b47cb1f22d4ef0260a336da2ca9d3a1d192ee565b6b748",
@@ -141,6 +147,12 @@
       "translation": "docs/features/desktop/package-integrity.zh-HK.md",
       "sourceSha256": "5c8020e27a223b2d39f2966db5daa25a36786895975fcd79b4df34932a4a74b6",
       "translationSha256": "96e5eeab880c33799ad758cbc8361233c920a5c187d43ca9c9b62a215502cfa0"
+    },
+    {
+      "source": "docs/features/desktop/README.md",
+      "translation": "docs/features/desktop/README.zh-HK.md",
+      "sourceSha256": "7285fc26d034aa8e451e35deaa98737d41b77eaf072493060e5db93b9e61bccd",
+      "translationSha256": "b57684d54cd55079035695a18f8da59840d49304c0c339d18f1fc0641b36f573"
     },
     {
       "source": "docs/features/desktop/README.md",
@@ -321,6 +333,42 @@
       "translation": "docs/features/interface/settings-guidance.zh-HK.md",
       "sourceSha256": "44c760739960bc49e79193fd2c2bbe0182abd3ec44d9ed76e9103cdc1927c808",
       "translationSha256": "1a8b9ed617698f86a47bb74c51bc45ada2cdb40568680397a69651e103aebf44"
+    },
+    {
+      "source": "docs/features/interface/private-history-controls.md",
+      "translation": "docs/features/interface/private-history-controls.zh-HK.md",
+      "sourceSha256": "ee83e49cc9342004e1686191e186bdd89655271845e9579dbdb1cf097b91dd6e",
+      "translationSha256": "432a23e048cb21a38b0d69f87925590e49dbfb8ade3ea749a3e5e26831f77569"
+    },
+    {
+      "source": "docs/features/interface/public-workspace-role.md",
+      "translation": "docs/features/interface/public-workspace-role.zh-HK.md",
+      "sourceSha256": "d760d4185b9671ace751e0f12a55b4ca00813917b684f0a43265245d17134f00",
+      "translationSha256": "7c87c7752fbb5880ad775981afdd5b284cbb1b704c34ea53f7247376c40859e9"
+    },
+    {
+      "source": "docs/features/interface/README.md",
+      "translation": "docs/features/interface/README.zh-HK.md",
+      "sourceSha256": "3e49992d14ff1e6f5315a5383532d3a4a0f2602f2bd11db301cc6af8a2355b65",
+      "translationSha256": "2f1f7d7c49a689038ba9f44a32c18ee08f507137086ab7d35b54b6efbe847dd9"
+    },
+    {
+      "source": "docs/features/interface/settings-completeness.md",
+      "translation": "docs/features/interface/settings-completeness.zh-HK.md",
+      "sourceSha256": "3169607dc50cb06d1a6430f8167162e7992f6ea1af3a1a39cf80cd0b54e5fde6",
+      "translationSha256": "d5a8b19afcd59b9a1398aee9ca15357d65655b03148332cb878865bfa4d1c2a8"
+    },
+    {
+      "source": "docs/features/interface/settings-guidance.md",
+      "translation": "docs/features/interface/settings-guidance.zh-HK.md",
+      "sourceSha256": "44c760739960bc49e79193fd2c2bbe0182abd3ec44d9ed76e9103cdc1927c808",
+      "translationSha256": "1a8b9ed617698f86a47bb74c51bc45ada2cdb40568680397a69651e103aebf44"
+    },
+    {
+      "source": "docs/features/interface/startup-photo-host.md",
+      "translation": "docs/features/interface/startup-photo-host.zh-HK.md",
+      "sourceSha256": "3f8163ee6755529cd00f8b18ba5f0710a7ba19ccb9595c93d761b4aa575afca1",
+      "translationSha256": "3b76fca130d573e56580402f75619e0e446fe24853a8a3def8b63c3c2dd3317d"
     },
     {
       "source": "docs/features/interface/startup-registration.md",
