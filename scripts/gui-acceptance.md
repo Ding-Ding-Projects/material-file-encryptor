@@ -122,3 +122,30 @@ Twelve dedicated Python checks pass, including a causal console/GUI substitution
 ## Offline populated state provider
 
 The default source producer now declares `offline-populated` through the exclusive mounted synthetic file provider. Its workflow is real native pin, bounded full-inventory and byte readback, existing select/release controls, optional re-preparation for capture, and independent pin/file restoration. See the provider inventory for ownership exclusions and retained-data limitations. Current declarations are 23 declared routes and 66 unavailable producers, superseding the historical 22/67 source audit only. Source declaration does not establish runtime availability or acceptance; the accepted matrix remains 0/4,272.
+
+
+## Bounded packaged guidance diagnostic
+
+Use `node scripts/gui-guidance-diagnostic.mjs validate <reviewed-config.json>` for read-only package, file and provenance admission. Use `run` only after assigning exclusive ownership of the intended package and its new hidden lifecycle. Validation does not start the native fixture, launch a process, create an evidence directory or prove live transport capability. Execution performs the supported direct-CLI capability preflight, revalidates inputs, then joins `openGuiAcceptancePackage`, `openPackagedRendererTarget` with graceful-only closure, and `acquirePackagedDiagnosticSubset`.
+
+The configuration is a local, reviewed JSON document. It contains no credentials. Every field below is mandatory, unknown fields are rejected, and paths must be absolute canonical local paths. Supply actual hashes, not placeholders. The review interval may span at most 24 hours and must include the current time.
+
+| Field | Required content |
+| --- | --- |
+| `schemaVersion`, `scope` | `1`, `diagnostic-subset` |
+| `reviewedAt`, `expiresAt` | Explicit ISO timestamps for the reviewed configuration |
+| `expected` | `sourceCommit` (40 hex characters), `version`, `executable`, and `hashes` containing exactly `executable`, `asar`, `nativeHost` |
+| `buildReceipt`, `reference`, `inventory` | Each has exactly `path` and `sha256`; inventory is the complete current `contracts/gui-states.json` |
+| `verifier` | `sourceCommit`, `entrypointSha256`, `packagedVerifierSha256`, `cdpDriverSha256`, `lowlevelClientSha256` |
+| `transport` | `backend: "native-v1"`, `cli`, `cliSha256`, `python`, `pythonSha256` |
+| `outputRoot` | New directory under an existing canonical parent, separate from all inputs |
+
+The package source is read from the archive and must match its root `build.bat /s` receipt, executable, archive and native-host hashes. The verifier source is the current source revision running the diagnostic and may legitimately differ. The entrypoint must be tracked and the scripts directory must have no modified or untracked inputs before admission. For the retained candidate, the archive belongs to source `4840f931f67b16cb4ebde81c471d271908c4b021` with SHA-256 `fdc19a65d32748c10a438bf10b4c752a279e17e7fc6c3766aa558f19a5562433`; adding this diagnostic does not rebuild or relabel those bytes. The configuration still requires actual executable, native-host, version and build-receipt values from their reviewed receipt.
+
+Compute `entrypointSha256` from this script and `packagedVerifierSha256` with the existing exported `packagedVerifierHash()`. Bind the installed lifecycle client and CDP driver from their existing managed skill paths. Set `MFE_LOWLEVEL_CLI`, `MFE_LOWLEVEL_PYTHON` and `MFE_RENDERER_PROCESS_BACKEND=native-v1` to exactly match the reviewed configuration; an HTTP override is rejected. Missing dependencies, installed helpers or native capabilities remain explicit failures. The script never installs a substitute or uses a visible browser. No existing profile or running capture session is reused.
+
+Execution acquires exactly `p-language/1180x850/en/light/1` through its existing production adapter, including its original preference actions and restoration. It then uses proof-bound plans to open all five real settings tab information entries, change and reset their synthetic tabs, verify original navigation and persisted preferences remain unchanged, exercise invalid/valid/reset numeric practice, close information with focus restoration, and perform an original guided tab navigation followed by restoration. No bridge, store, consumer or component is replaced or remounted. Control changes use the mounted production controls; observations are separate reads. Preference observation is limited to the declared nonsecret settings fields.
+
+The new local output retains `diagnostic-binding.json`, the existing package/fixture lifecycle receipts, acquisition receipts, proof-bound interaction plans, six raw diagnostic PNGs and `guidance-diagnostic.json`. Raw PNGs remain uninspected until a separate reviewer inspects them. The report always has `scope: "diagnostic-subset"` and `accepted: false`, including successful behavior, failures and incomplete closure. A failed acquisition stops the extra interactions. Any opened session attempts its own verified graceful closure once; profiles and uncertain process state remain retained by the existing lifecycle. A changed entrypoint, verifier, root receipt or installed helper stops subsequent interaction plans.
+
+Menu keyboard, motion-runtime/unavailable-consumer and delayed-playback scenarios are explicitly unrun in this first entrypoint. This is not the complete 4,272-tuple matrix, physical display-scale proof, design parity, installed/update acceptance or a substitute for the real desktop capture owner's verdict. Seven focused unit admission/lifecycle checks pass in `test/gui-guidance-diagnostic.test.js`; they launch nothing and do not establish packaged behavior.

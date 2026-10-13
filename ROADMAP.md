@@ -637,3 +637,11 @@
 - [ ] Build the complete integrated candidate through the exact root entrypoint and bind its new output hashes.
 - [ ] Verify the complete control/practice inventory in the new built application and public documentation, including real menu focus, keyboard behavior and supported language/theme/scale tuples.
 - [ ] Promote current genuine captures, complete live documentation and homepage readback, integrate verified source into main, and prove remote delivery.
+
+
+## Packaged guidance diagnostic entrypoint
+
+- [x] Implement strict reviewed configuration, production opener/subset composition and bounded guidance-control plans; seven focused source admission/lifecycle checks passed.
+- [ ] Independently review the entrypoint and assign exclusive package, hidden lifecycle and output ownership before execution.
+- [ ] Execute the p-language diagnostic and guidance interactions against the retained package, inspect raw captures and verify restoration/closure; accepted remains false.
+- [ ] Extend separately assigned runtime coverage to menu keyboard and motion consumers without claiming full matrix, physical DPI or design parity from this subset.

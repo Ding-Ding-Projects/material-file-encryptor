@@ -1084,3 +1084,10 @@ Latest shared-instruction main readback09704a76c1285c0a612f2cb29919f8eddd7c4249 
 ## Current integrated guidance build
 
 Exact root build.bat /s at4840f931f67b16cb4ebde81c471d271908c4b021 finished exit0 with sourceDirty:false. Package privacy6059entries/0rejected, ASARfdc19a65d32748c10a438bf10b4c752a279e17e7fc6c3766aa558f19a5562433. Twenty-four focused files pass159/159checks. Capture of the new source is in progress; older815captures prove only815. Full rendered matrix, current evidence promotion, main integration and live delivery remain incomplete.
+
+
+## Packaged guidance diagnostic entrypoint, source only
+
+A bounded executable entrypoint now joins the existing packaged opener, native fixture owner and diagnostic-subset acquisition producer. Its strict reviewed configuration binds package source and all three package hashes, exact successful root-build receipt, full inventory, reference, verifier source and hashes, and the installed direct-CLI/Python/native-v1 route. The package remains bound to embedded source4840f931 and its retained archive hash; this verifier revision is separate.
+
+The initial tuple is p-language/1180x850/en/light/1. Extra production-control plans cover five information entries, isolated tab samples and reset, numeric validation/recovery/reset, close/focus, original guided navigation and restoration with independent preference observations. Seven focused admission/lifecycle checks passed. No packaged launch, actual interaction, capture, build or native acceptance was performed for this entrypoint. The report remains diagnostic-subset with accepted:false. Source review and explicit package/lifecycle ownership assignment precede execution; the existing capture profile remains untouched. Detailed configuration and unrun menu/motion/native-DPI boundaries are in scripts/gui-acceptance.md.
