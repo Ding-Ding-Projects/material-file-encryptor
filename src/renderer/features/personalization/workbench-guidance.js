@@ -1,3 +1,4 @@
+import {WORKBENCH_PRACTICE} from '../../../shared/local-ux/workbench-practice.js';
 import {mountControlGuidance} from '../../../shared/surface/control-guidance.js';
 
 // Each row describes one distinct local workflow, never a replacement operation.
@@ -19,7 +20,7 @@ export const WORKBENCH_GUIDANCE=Object.freeze(records.map(([key,label,labelYue,.
 export const WORKBENCH_GUIDANCE_COPY=Object.freeze(Object.assign({},...WORKBENCH_GUIDANCE.map(row=>({[row.label]:row.labelYue,...row.translations})),{'Review the original workbench control.':'檢查原有工作區控制項。','Review its validation and consequences.':'檢查驗證要求同影響。','The original control did not confirm a change.':'原有控制項未確認修改。','This workbench is no longer available.':'呢個工作區已經不可用。','Drawing cleared.':'已清除繪畫。','Guides saved.':'已儲存參考線。','Selection draft is ready; use Apply to save it.':'選取草稿已準備好；請用套用儲存。','Guide position':'參考線位置','Clear drawing tool search':'清除繪畫工具搜尋','Clear state preview search':'清除狀態預覽搜尋'}));
 export function workbenchDescriptor(key,context='',helpBase='docs/features/interface/workbench-guidance.md'){
  const row=WORKBENCH_GUIDANCE.find(row=>row.key===key);if(!row)throw Error('Unknown workbench guidance.');
- return {...row,id:`workbench:${key}:${context}`,concept:key,sourceId:'docs/features/interface/workbench-guidance.md',help:`${helpBase}#${key}`,steps:key==='preview'?[row.purpose]:[row.purpose,row.validation]};
+ return {...row,practice:WORKBENCH_PRACTICE[key],id:`workbench:${key}:${context}`,concept:key,sourceId:'docs/features/interface/workbench-guidance.md',help:`${helpBase}#${key}`,steps:key==='preview'?[row.purpose]:[row.purpose,row.validation]};
 }
 export function mountWorkbenchGuidance(target,{key,context='',options={},t,run,validate}={}){
  return mountControlGuidance(target,{descriptor:workbenchDescriptor(key,context,options.guidanceHelpBase),t,run,validate,registerHelp:options.registerHelp,registerCommands:options.registerCommands,openHelp:options.openGuidanceHelp});
