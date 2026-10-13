@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {launchAdmittedBrowser,launchDiagnostic,hostObservation,openPreferences,sceneName,selectAppearanceTarget,requestedSceneName,observeSharedNavigation,observeCurrentTheme,requestDarkState,chooseOriginalOption,CONVERTED_CONTROL_SCENES,prepareConvertedControlScene,componentFrameReadiness,currentRegisteredScene,prepareLockedHistory,openAppearanceEvidence} from './capture-visitor-evidence.mjs';
+import {launchAdmittedBrowser,launchDiagnostic,hostObservation,openPreferences,sceneName,selectAppearanceTarget,requestedSceneName,observeSharedNavigation,observeCurrentTheme,requestDarkState,chooseOriginalOption,CONVERTED_CONTROL_SCENES,prepareConvertedControlScene,componentFrameReadiness,currentRegisteredScene,prepareLockedHistory,openAppearanceEvidence,admitOriginalButton,inspectEditorOwnership,observeTabScroller} from './capture-visitor-evidence.mjs';
 const admitted='/synthetic/admitted/chrome';let actual;
 const sentinel={kind:'synthetic server'};assert.equal(await launchAdmittedBrowser({async launchServer(options){actual=options;return sentinel;}},admitted),sentinel);
 assert.equal(actual.executablePath,admitted);assert.equal(actual.chromiumSandbox,true);assert.equal(actual.headless,true);assert.equal(actual.timeout,30000);assert.equal(actual.args.some(value=>value.includes('no-sandbox')),false);
@@ -32,20 +32,43 @@ try{
   const element={localName:'md-outlined-button',isConnected:state!=='disconnected',updateComplete:state==='no-update'?undefined:Promise.resolve(true),shadowRoot:{childElementCount:state==='empty-shadow'?0:1}};
   const observations=[];let scrolls=0;
   const control={async count(){return 1;},async evaluate(callback){return callback(element);},async scrollIntoViewIfNeeded(){scrolls++;},async boundingBox(){return{x:0,y:state==='offscreen'?900:20,width:100,height:48};},async isVisible(){return true;},page(){return{viewportSize(){return{width:320,height:844};}};}};
-  assert.equal(await currentRegisteredScene(control,observations,'synthetic-action'),state==='ready');assert.equal(scrolls,1);assert.equal(observations[0].paintProof,false);
+  assert.equal(await currentRegisteredScene(control,observations,'synthetic-action'),state==='ready');assert.equal(scrolls,1);assert.equal(observations.at(-1).paintProof,false);
  }
 }finally{globalThis.customElements=oldRegistry;globalThis.requestAnimationFrame=oldFrame;}
 for(const state of ['locked-empty','unlocked','records']){
  const tab={async count(){return 1;},async scrollIntoViewIfNeeded(){},async click(){}};
  const history={async count(){return 1;},locator(selector){return selector==='article'?{async count(){return state==='records'?1:0;}}:{async count(){return 1;},async isVisible(){return state==='unlocked';}};}};
  const page={locator(selector){return selector.includes('.local-ux-history')?history:{async count(){return 1;},locator(){return tab;}};}};
- const observations=[];assert.equal(await prepareLockedHistory(page,observations),state==='locked-empty');assert.equal(observations[0].credentialActionsPerformed,false);
+ const observations=[];assert.equal(await prepareLockedHistory(page,observations),state==='locked-empty');assert.equal(observations.at(-1).credentialActionsPerformed,false);
 }
-for(const state of ['visible','hidden','modal','missing-action','missing-panel']){
- const actions=[];const tab={async count(){return 1;},async scrollIntoViewIfNeeded(){actions.push('tab-scroll');},async click(){actions.push('tab-click');}};
- const action={filter(){return this;},async count(){return state==='missing-action'?0:1;},async scrollIntoViewIfNeeded(){actions.push('action-scroll');},async click(){actions.push('action-click');}};
- const panel={async count(){return state==='missing-panel'?0:1;},async isVisible(){return state!=='hidden';},async getAttribute(){assert.notEqual(state,'missing-panel');return state==='modal'?'true':'false';}};
- const page={locator(selector){return selector.includes('.appearance-editor')?panel:selector.includes('md-outlined-button')?action:{async count(){return 1;},locator(){return tab;}};}};
- assert.equal(await openAppearanceEvidence(page,[]),state==='visible');assert.equal(actions.includes('action-click'),state!=='missing-action');
+for(const state of ['visible','hidden','modal','missing-action','duplicate-action','missing-panel']){
+ const actions=[];const observations=[];const tab={async count(){return 1;},async scrollIntoViewIfNeeded(){actions.push('tab-scroll');},async click(){actions.push('tab-click');},async evaluate(){return{observed:false,reason:'synthetic-scroller-unavailable'};}};
+ const action={async count(){return state==='missing-action'?0:state==='duplicate-action'?2:1;},async scrollIntoViewIfNeeded(){actions.push('action-scroll');},async isVisible(){return true;},async evaluate(){return{registered:true,tag:'md-outlined-button',connected:true,ownedRoot:true};},async click(){actions.push('action-click');}};
+ const panel={async count(){return state==='missing-panel'?0:1;},async isVisible(){return state!=='hidden';},async evaluate(){return{visible:state!=='hidden',nonmodal:state!=='modal',hidden:state==='hidden'};}};
+ const host={async count(){return 1;},locator(selector){return selector==='md-outlined-button'?{filter(){return action;}}:tab;},page(){return this;},getByRole(role,options){assert.equal(role,'button');assert.deepEqual(options,{name:'Edit this surface',exact:true});return action;}};
+ const page={locator(selector){return selector.includes('.appearance-editor')?panel:host;}};
+ assert.equal(await openAppearanceEvidence(page,observations),state==='visible');assert.equal(actions.includes('action-click'),!['missing-action','duplicate-action'].includes(state));
+ if(['missing-action','duplicate-action'].includes(state)){assert.equal(observations.at(-1).stage,'accessible-button-admission');assert.equal(observations.at(-1).matchedCount,state==='missing-action'?0:2);}
+ if(state==='missing-panel'){assert.equal(observations.at(-1).stage,'editor-admission');assert.equal(observations.at(-1).matchedCount,0);}
 }
-console.log('PASS: actual registered-component callback observes update completion and frames without paint claims; empty locked history and original nonmodal editor actions reject unavailable prerequisites. No credential values read.');
+for(const state of ['visible','unregistered','outside','hidden','duplicate-host']){
+ const observations=[];const element={localName:'md-outlined-button',isConnected:true,closest(){return state==='outside'?null:{};}};
+ const old=globalThis.customElements;globalThis.customElements={get(){return state==='unregistered'?undefined:class {};}};
+ try{const control={async count(){return state==='duplicate-host'?2:1;},async scrollIntoViewIfNeeded(){},async isVisible(){return state!=='hidden';},async evaluate(callback,argument){return callback(element,argument);}};
+ const root={async count(){return 1;},getByRole(role,options){assert.deepEqual(options,{name:'Set up history password',exact:true});return{async count(){return 1;},localName:'button'};},locator(selector){assert.equal(selector,'md-outlined-button');return{filter(options){assert.ok(options.has);return control;}};},page(){return this;}};
+ assert.equal(!!await admitOriginalButton(root,'Set up history password',observations,'history-action','.local-ux-history'),state==='visible');
+ }finally{globalThis.customElements=old;}
+}
+for(const count of [0,2]){const observations=[];assert.equal(await currentRegisteredScene({async count(){return count;}},observations,'control'),false);assert.equal(observations[0].matchedCount,count);assert.equal(observations[0].stage,'control-admission');}
+const originals=Object.fromEntries(['getComputedStyle','document','innerWidth','innerHeight'].map(key=>[key,globalThis[key]]));
+try{
+ const owner={getBoundingClientRect:()=>({x:49,y:400,width:222,height:48}),scrollLeft:0,clientWidth:222,scrollWidth:720};
+ const tab={active:true,closest:()=>owner,getBoundingClientRect:()=>({x:193,y:400,width:144,height:48})};
+ Object.assign(globalThis,{getComputedStyle:()=>({overflowX:'auto',display:'block',visibility:'visible'}),innerWidth:320,innerHeight:844});
+ const geometry=await observeTabScroller({evaluate:callback=>callback(tab)});assert.equal(geometry.fullHorizontalIntersection,false);assert.equal(geometry.scrollWidth,720);assert.equal(geometry.occlusionEstablished,false);
+ const modal={contains:()=>false};globalThis.document={querySelectorAll:()=>[modal]};
+ const editor={hidden:false,parentElement:{localName:'body'},closest:()=>null,getBoundingClientRect:()=>({x:12,y:12,width:296,height:650}),getAttribute:()=> 'false'};
+ const ownership=await inspectEditorOwnership({evaluate:callback=>callback(editor)});assert.equal(ownership.visible,true);assert.equal(ownership.nonmodal,true);assert.equal(ownership.insideOpenModal,false);assert.equal(ownership.openModalCount,1);assert.equal(ownership.occlusionEstablished,false);
+ editor.hidden=true;assert.equal((await inspectEditorOwnership({evaluate:callback=>callback(editor)})).visible,false);
+}finally{for(const [key,value]of Object.entries(originals)){if(value===undefined)delete globalThis[key];else globalThis[key]=value;}}
+console.log('PASS: actual accessible-name admission rejects zero/duplicate/unowned/unregistered/hidden targets, records early-return counts, and evaluated editor/scroller callbacks preserve geometry and modal ownership without occlusion claims. No credential values read.');
