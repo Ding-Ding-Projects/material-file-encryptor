@@ -699,3 +699,7 @@ The existing History runtime case now requires alert and dismiss visibility thro
 The 5308d0f run progressed through the extended History alert assertions, then timed out with page.check pending after the file-list row appeared. The fixture requested a checkbox, while the production row creates a named file-selection radio. Replace only that obsolete selection action with the exact file-1 row radio. The helper checks the real control through the existing adapter, verifies checked state, selected-file name, selected row and notes.txt label, focuses it, presses Enter and observes exactly the file-1 open request. It does not assign checked state, call production selection directly or accept alternate primitives.
 
 The causal source test executes the actual action helper and control adapter against an inert radio-only page: the old checkbox selector fails and the exact radio passes. Nine fixture-contract checks pass. All later offline/release/resplit/lock/mount assertions, language/width loops and original deadlines remain unchanged. No production control changed and no browser/native rerun occurred. Independent review precedes the next assigned runtime run; retained 5308 journals and profiles keep their original identity.
+
+
+- [x] Add source-verified monotonic case elapsed timing and explicit keyboard operation diagnostics, with pending/rejection causal coverage (10 focused checks).
+- [ ] Independently review and run the timed renderer diagnostics without increasing the existing deadlines; full runtime completion remains unverified.

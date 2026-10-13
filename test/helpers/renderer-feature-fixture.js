@@ -58,12 +58,13 @@ export function rendererFeatureFixtureScript(initialize){
  return `(()=>{const featureFixture=(${createRendererFeatureFixture.toString()})({record:row=>window.__recordRendererFixture(row)});(${assertRendererFeatureBridge.toString()})(featureFixture.bridge);(${initialize.toString()})(featureFixture);})();`;
 }
 
-export function createRendererFixtureProgress(persist){
- let sequence=0,queue=Promise.resolve();const state={version:1,lastStarted:null,lastCompleted:null,phase:{lastStarted:null,lastCompleted:null},request:{lastStarted:null,lastCompleted:null},recent:[]};
+export function createRendererFixtureProgress(persist,{now=()=>performance.now(),startedAt=now()}={}){
+ let sequence=0,queue=Promise.resolve();const state={version:2,lastStarted:null,lastCompleted:null,phase:{lastStarted:null,lastCompleted:null},request:{lastStarted:null,lastCompleted:null},recent:[]};
  const record=row=>{
   if(!row||!['phase','request'].includes(row.kind)||!['started','completed'].includes(row.state))throw Error('Invalid fixture progress row');
   const key=row.kind==='phase'?'phase':'pair';if(Object.keys(row).sort().join(',')!==['kind',key,'state'].sort().join(',')||typeof row[key]!=='string'||!row[key]||row[key].length>160)throw Error('Invalid fixture progress identity');
-  const entry={...row,sequence:++sequence};state[row.state==='started'?'lastStarted':'lastCompleted']=entry;state[row.kind][row.state==='started'?'lastStarted':'lastCompleted']=entry;state.recent.push(entry);state.recent=state.recent.slice(-128);
+  const elapsedMs=now()-startedAt;if(!Number.isFinite(elapsedMs)||elapsedMs<0)throw Error('Invalid monotonic fixture time');
+  const entry={...row,sequence:++sequence,elapsedMs};state[row.state==='started'?'lastStarted':'lastCompleted']=entry;state[row.kind][row.state==='started'?'lastStarted':'lastCompleted']=entry;state.recent.push(entry);state.recent=state.recent.slice(-128);
   const snapshot=JSON.parse(JSON.stringify(state));queue=queue.then(()=>persist(snapshot));return queue;
  };
  return{record,snapshot:()=>JSON.parse(JSON.stringify(state))};
