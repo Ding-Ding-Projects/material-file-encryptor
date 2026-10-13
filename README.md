@@ -96,18 +96,7 @@ Updater source and future BOM-free release-index production are delivered on mai
 
 Writes first become durable encrypted objects and journal state. Closing the final writable handle can trigger background physical-part packing. Source publication is separate and may remain queued. Reads return authenticated plaintext through the unlocked mounted drive, without a plaintext working folder.
 
-```mermaid
-flowchart TD
-    Write["Write through the mounted drive"] --> Encrypt["Encrypt and authenticate records"]
-    Encrypt --> Durable["Flush encrypted objects and local journal"]
-    Durable --> Close["Final writable handle closes"]
-    Close --> Pack["Background packing with generation checks"]
-    Pack --> Queue["Queue encrypted source publication"]
-    Queue --> Backing["Publish objects before commit metadata"]
-    Durable --> Read["Read cached or hydrated ciphertext"]
-    Read --> Verify["Authenticate before decrypting"]
-    Verify --> Plain["Return plaintext while unlocked"]
-```
+The [file workflow diagram](#what-happens-to-a-file) above shows this sequence and its separate read and publication paths.
 
 New vaults now default to an **80 MiB physical part cap (83,886,080 bytes)**. The maximum remains **90,000,000 bytes**, including authentication framing. This is a physical storage cap, not a plaintext allocation size. Existing data requires an explicit packing or resplitting workflow; versions and pending work remain protected. [Physical packing and migration](docs/features/storage/physical-packing.md) is the current source of truth for this behavior.
 

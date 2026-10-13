@@ -1,3 +1,4 @@
+import {publicImages} from '../docs/site/public-images.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -206,3 +207,12 @@ test('public projection rejects nested objects and arrays in every scalar field'
 });
 
 test('actual publication shell resolves local font registration for root, article, category, wiki and deeper routes',async()=>{const home=await fs.readFile('docs/site/index.html','utf8');const assertFont=(html,route)=>{const links=[...html.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="([^"]+)"[^>]*>/g)].map(match=>match[1]);const fontLinks=links.filter(href=>href.endsWith('fonts/fonts.css'));assert.equal(fontLinks.length,1);const resolved=new URL(fontLinks[0],'https://example.invalid/material-file-encryptor/'+route);assert.equal(resolved.origin,'https://example.invalid');assert.equal(resolved.pathname,'/material-file-encryptor/fonts/fonts.css');};for(const route of ['library.html','wiki.html','articles/manual.html','categories/interface.html','articles/wiki--Home.html','nested/deeper/article.html']){const depth=route.split('/').length-1,html=pageShell(home,'Fixture','<h1>Fixture</h1>',{depth});assertFont(html,route);assert.throws(()=>assertFont(html.replace(/<link rel="stylesheet" href="[^"]*fonts\/fonts.css">/,''),route));assert.throws(()=>assertFont(html.replace(/href="[^"]*fonts\/fonts.css"/,'href="https://untrusted.invalid/fonts/fonts.css"'),route));}assert.throws(()=>pageShell(home,'Fixture','',{depth:-1}));});
+
+
+test('documentation image admission is separate from article links and rejects unsafe references',()=>{
+ const image=publicImages[0],images=new Map(publicImages.map(item=>[item.source,item]));
+ for(const url of ['https://example.com/image.png','//example.com/image.png','/docs/images/captures/site-guidance-normal-83e14d86.png','C:/image.png','../'+image.source,'docs/images/captures/unknown.png',image.source+'#fragment',image.source+'?query','docs%2fimages/image.png',String.raw`docs\images\image.png`])assert.throws(()=>renderMarkdown('![image]('+url+')','README.md',new Map(),'../',images),/explicit local/);
+ assert.throws(()=>renderMarkdown('![image]('+image.source+')','README.md',new Map([[image.source,image.route]])),/explicit local/);
+ assert.throws(()=>renderMarkdown('![image]('+image.source+')','README.md',new Map(),'../',new Map([[image.source,{...image}]])),/explicit local/);
+ assert.match(renderMarkdown('![image](../../images/captures/site-guidance-normal-83e14d86.png)','docs/features/interface/example.md',new Map(),'../',images),/src="..\/images\/captures\/site-guidance-normal-83e14d86.png"/);
+});

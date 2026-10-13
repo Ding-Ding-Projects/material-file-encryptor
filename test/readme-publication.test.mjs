@@ -1,10 +1,11 @@
+import {publicImages,stagePublicImages} from '../docs/site/public-images.mjs';
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';import {renderReadmeFlowchart} from '../docs/site/readme-flowchart.mjs';import {renderMarkdown,buildDocumentation} from '../docs/site/publication.mjs';import {stagePublicProofs,publicProofs} from '../docs/site/public-proofs.mjs';
 test('all three README flowcharts preserve declared nodes and arrows as accessible local SVG',async()=>{
  const readme=(await fs.readFile('README.md','utf8')).replaceAll('\r\n','\n'),graphs=[...readme.matchAll(/```mermaid\n([\s\S]*?)```/g)].map(m=>m[1]);assert.equal(graphs.length,3);
  const expectedEdges=[['Desktop>Main','Main>Host','Explorer>Driver','Driver>Host','Host>Core','Core>Cache','Core>Backing','Backing>Provider'],['Write>Encrypt','Encrypt>Durable','Durable>Close','Close>Pack','Pack>Queue','Queue>Backing','Durable>Read','Read>Verify','Verify>Plain'],['Source>Build','Build>Package','Package>Bytes','Bytes>Install','Install>Runtime','Runtime>Evidence','Evidence>Release']];
  for(const [i,graph]of graphs.entries()){const svg=renderReadmeFlowchart(graph,i),nodes=new Set([...graph.matchAll(/([A-Za-z][A-Za-z0-9_]*)\["/g)].map(m=>m[1]));assert.equal((svg.match(/data-node=/g)||[]).length,nodes.size);for(const node of nodes)assert.ok(svg.includes(`data-node="${node}"`));assert.equal((svg.match(/class="diagram-edge"/g)||[]).length,(graph.match(/-->/g)||[]).length);assert.deepEqual([...svg.matchAll(/data-from="([^"]+)" data-to="([^"]+)"/g)].map(m=>m[1]+'>'+m[2]),expectedEdges[i]);assert.match(svg,/role="img" aria-labelledby=/);assert.match(svg,/<desc /);assert.match(svg,/tabindex="0" role="region" aria-label="Scrollable flowchart"/);assert.ok(svg.includes('Diagram source'));assert.ok(!/(?:href|src)="https?:/.test(svg));}
  const architecture=renderReadmeFlowchart(graphs[0]);const x=id=>Number(new RegExp('<g data-node="'+id+'"><rect[^>]* x="([0-9]+)"').exec(architecture)[1]);assert.equal(x('Host')-(x('Main')+260),180);assert.ok(architecture.includes('Private pipe'));const workflow=renderReadmeFlowchart(graphs[1]);assert.ok(workflow.includes('x="12" y="152" width="260"'));
- const output=renderMarkdown(readme,'README.md',new Map());assert.equal((output.match(/<svg /g)||[]).length,3);const css=await fs.readFile('docs/site/site.css','utf8');assert.match(css,/\.diagram-scroll\{max-width:100%;overflow:auto/);assert.match(css,/max-width:none/);assert.match(css,/font-size:18px/);
+ const output=renderMarkdown(readme,'README.md',new Map(),'../',new Map(publicImages.map(image=>[image.source,image])));assert.equal((output.match(/<svg /g)||[]).length,3);const css=await fs.readFile('docs/site/site.css','utf8');assert.match(css,/\.diagram-scroll\{max-width:100%;overflow:auto/);assert.match(css,/max-width:none/);assert.match(css,/font-size:18px/);
 });
 test('README diagram subset rejects unsupported directives cycles missing nodes and hostile syntax',()=>{
  for(const graph of ['flowchart XX\nA["A"] --> B["B"]','flowchart LR\nclick A "https://example.com"','flowchart LR\nA["A"] --> B["B"]\nB --> A','flowchart TD\nA["A"] --> B','flowchart LR\nA["A"] --> A','flowchart LR\nA["A"] --> B["B"]\nA --> B'])assert.throws(()=>renderReadmeFlowchart(graph),/UNSUPPORTED_README_FLOWCHART_SYNTAX/);
@@ -52,4 +53,37 @@ test('diagram labels have no inherited stroke and end panning retains the full t
  paint(css);diagrams.forEach(geometry);
  assert.throws(()=>paint(css.replace('stroke:none}','stroke:currentColor}')));
  assert.throws(()=>geometry(diagrams[0].replace('width="2484" height="250"','width="2680" height="250"')));
+});
+
+
+test('reviewed image staging preserves exact bytes and excludes neighboring files',async t=>{
+ const temp=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-reviewed-images-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
+ await fs.mkdir(path.join(temp,'docs/images/captures'),{recursive:true});
+ for(const image of publicImages)await fs.copyFile(image.source,path.join(temp,image.source));
+ await fs.writeFile(path.join(temp,'docs/images/captures/private-neighbor.png'),'private');
+ const output=path.join(temp,'output');const images=await stagePublicImages(temp,output);assert.equal(images.size,2);
+ for(const image of publicImages)assert.deepEqual(await fs.readFile(path.join(output,image.route)),await fs.readFile(image.source));
+ await assert.rejects(fs.access(path.join(output,'images/captures/private-neighbor.png')));
+ const changed=await fs.readFile(path.join(temp,publicImages[0].source));changed[changed.length-1]^=1;await fs.writeFile(path.join(temp,publicImages[0].source),changed);
+ await assert.rejects(stagePublicImages(temp,path.join(temp,'changed')),/PUBLIC_IMAGE_NOT_REVIEWED/);
+ await fs.writeFile(path.join(temp,publicImages[0].source),changed.subarray(0,24));
+ await assert.rejects(stagePublicImages(temp,path.join(temp,'short')),/PUBLIC_IMAGE_NOT_REVIEWED/);
+});
+
+test('actual README publishes only registered image routes with reviewed dimensions and escaped alt text',async t=>{
+ const output=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-readme-images-'));t.after(()=>fs.rm(output,{recursive:true,force:true}));
+ await buildDocumentation(process.cwd(),output,await fs.readFile('docs/site/index.html','utf8'));
+ const html=await fs.readFile(path.join(output,'articles/README.html'),'utf8');
+ for(const image of publicImages){assert.ok(html.includes('src="../'+image.route+'"'));assert.ok(html.includes('width="'+image.width+'" height="'+image.height+'"'));assert.deepEqual(await fs.readFile(path.join(output,image.route)),await fs.readFile(image.source));}
+ const escaped=renderMarkdown('![<unsafe>](docs/images/captures/site-guidance-normal-83e14d86.png)','README.md',new Map(),'../',new Map(publicImages.map(image=>[image.source,image])));assert.match(escaped,/alt="&lt;unsafe&gt;"/);
+});
+
+
+test('reviewed images reject linked source directories without copying outside bytes',async t=>{
+ const temp=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-linked-images-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
+ const outside=path.join(temp,'outside');await fs.mkdir(outside);await fs.mkdir(path.join(temp,'root/docs/images'),{recursive:true});
+ for(const image of publicImages)await fs.copyFile(image.source,path.join(outside,path.basename(image.source)));
+ await fs.symlink(outside,path.join(temp,'root/docs/images/captures'),process.platform==='win32'?'junction':'dir');
+ await assert.rejects(stagePublicImages(path.join(temp,'root'),path.join(temp,'output')),/PUBLIC_IMAGE_NOT_REVIEWED/);
+ await assert.rejects(fs.access(path.join(temp,'output')));
 });

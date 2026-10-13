@@ -1,5 +1,6 @@
 import {renderReadmeFlowchart} from './readme-flowchart.mjs';
 import {publicProofs,stagePublicProofs} from './public-proofs.mjs';
+import {resolvePublicImage,stagePublicImages} from './public-images.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
@@ -8,13 +9,14 @@ export const escapeHtml=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;'
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 const slug=value=>value.toLowerCase().replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-|-$/g,'');
 export const route=source=>`articles/${source.replace(/\.md$/i,'').replaceAll('/','--')}.html`;
-export function renderMarkdown(markdown,source,routeMap,prefix='../') {
+export function renderMarkdown(markdown,source,routeMap,prefix='../',images=new Map()) {
  const headings=new Map();let diagramOrdinal=0;
  const inline=text=>{
   const tokens=[];
   const save=html=>`\u0000${tokens.push(html)-1}\u0000`;
   let value=text.replace(/`([^`]+)`/g,(_,code)=>save(`<code>${escapeHtml(code)}</code>`));
   value=value.replace(/(!?)\[([^\]]+)\]\(([^\s)]+)\)/g,(_,image,label,url)=>{
+   if(image){const asset=resolvePublicImage(source,url,images);return save(`<img src="${escapeHtml(prefix+asset.route)}" alt="${escapeHtml(label)}" width="${asset.width}" height="${asset.height}" loading="lazy" decoding="async">`);}
    if(/^[a-z][a-z0-9+.-]*:/i.test(url)&&! /^(https?:|mailto:)/i.test(url))throw new Error('Unsupported documentation URL');
    let target=url;
    if(!/^(?:https?:|mailto:|#)/i.test(url)) {
@@ -22,7 +24,6 @@ export function renderMarkdown(markdown,source,routeMap,prefix='../') {
     target=routeMap.has(resolved)?prefix+routeMap.get(resolved)+(anchor?'#'+anchor:''):`${repository}/blob/main/${resolved}`;
    }
    if(!/^(?:https?:|mailto:|#|\.\.\/articles\/|articles\/|\.\.\/docs\/evidence\/)/i.test(target)) throw new Error('Unsupported documentation URL');
-   if(image) throw new Error('Documentation image needs an explicit local asset entry');
    return save(`<a href="${escapeHtml(target)}">${escapeHtml(label)}</a>`);
   });
   value=escapeHtml(value).replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\*([^*]+)\*/g,'<em>$1</em>');
@@ -77,6 +78,7 @@ export async function buildDocumentation(root,output,home) {
  if(JSON.stringify(wikiFiles)!==JSON.stringify([...catalog.wiki.files].sort()))throw new Error('Wiki snapshot inventory differs');
  for(const file of wikiFiles){const expected=wikiHashes[file],actual=digest(await fs.readFile(path.join(root,'docs/site/wiki',file)));if(actual!==expected)throw new Error('Wiki snapshot content hash differs: '+file);}
  if(catalog.articles.includes('README.md'))await stagePublicProofs(root,output);
+ const images=catalog.articles.includes('README.md')?await stagePublicImages(root,output):new Map();
  const routes=new Map(catalog.articles.map(source=>[source,route(source)]));
  if(catalog.articles.includes('README.md'))for(const proof of publicProofs)routes.set(proof.source,proof.route);
  for(const file of wikiFiles)routes.set('docs/site/wiki/'+file,route('wiki/'+file));
@@ -84,12 +86,12 @@ export async function buildDocumentation(root,output,home) {
  for(const [source,url]of routes){if(publicProofs.some(proof=>proof.source===source))continue;const markdown=await fs.readFile(path.join(root,source),'utf8');articles.push({source,url,markdown,title:/^#\s+(.+)$/m.exec(markdown)?.[1]||path.basename(source,'.md'),sha256:digest(markdown),category:source.startsWith('docs/features/')?source.split('/')[2]:'reference'});}
  await fs.mkdir(path.join(output,'articles'),{recursive:true});await fs.mkdir(path.join(output,'categories'),{recursive:true});
  const links=(list,prefix='')=>`<ul class="article-links">${list.map(a=>`<li><a href="${prefix}${a.url}">${escapeHtml(a.title)}</a></li>`).join('')}</ul>`;
- for(const article of articles){const related=articles.filter(a=>a!==article&&a.category===article.category);const body=`<article class="guide documentation-article" id="article" data-search="${escapeHtml(article.title)}"><p class="eyebrow">Complete source article</p>${renderMarkdown(article.markdown,article.source,routes)}<p class="small source-reference">Source: <a href="${article.source.startsWith('docs/site/wiki/')?catalog.wiki.source+'/'+path.basename(article.source,'.md'):repository+'/blob/main/'+article.source}">${escapeHtml(article.source.startsWith('docs/site/wiki/')?'Wiki '+path.basename(article.source,'.md'):article.source)}</a> · SHA-256 <code>${article.sha256}</code></p><nav aria-label="Suggested articles"><h2>Suggested articles</h2>${links(related.length?related:articles.filter(a=>a!==article).slice(0,3),'../')}<a href="../library.html">All documentation categories</a></nav></article>`;await fs.writeFile(path.join(output,article.url),pageShell(home,article.title,body,{depth:1}));}
+ for(const article of articles){const related=articles.filter(a=>a!==article&&a.category===article.category);const body=`<article class="guide documentation-article" id="article" data-search="${escapeHtml(article.title)}"><p class="eyebrow">Complete source article</p>${renderMarkdown(article.markdown,article.source,routes,'../',images)}<p class="small source-reference">Source: <a href="${article.source.startsWith('docs/site/wiki/')?catalog.wiki.source+'/'+path.basename(article.source,'.md'):repository+'/blob/main/'+article.source}">${escapeHtml(article.source.startsWith('docs/site/wiki/')?'Wiki '+path.basename(article.source,'.md'):article.source)}</a> · SHA-256 <code>${article.sha256}</code></p><nav aria-label="Suggested articles"><h2>Suggested articles</h2>${links(related.length?related:articles.filter(a=>a!==article).slice(0,3),'../')}<a href="../library.html">All documentation categories</a></nav></article>`;await fs.writeFile(path.join(output,article.url),pageShell(home,article.title,body,{depth:1}));}
  let categories='';
  for(const category of catalog.categories){const list=articles.filter(a=>a.category===category);if(!list.length)throw new Error('Empty documentation category');const name=category[0].toUpperCase()+category.slice(1);categories+=`<section class="guide category-index" id="category-${category}" data-search="${category}"><h2><a href="categories/${category}.html">${name}</a></h2>${links(list)}</section>`;await fs.writeFile(path.join(output,'categories',category+'.html'),pageShell(home,name+' documentation',`<section class="guide category-index" id="category-${category}"><h1>${name} documentation</h1>${links(list,'../')}</section>`,{depth:1}));}
  await fs.writeFile(path.join(output,'library.html'),pageShell(home,'Documentation library',`<h1>Documentation library</h1><p>Complete articles are available here without leaving this website. Commands and source articles retain their original language. This website documents the separate Windows application; it cannot open a vault.</p>${categories}<section class="guide" id="references"><h2>Project reference and wiki</h2>${links(articles.filter(a=>a.category==='reference'||a.source==='docs/features/README.md'))}</section>`));
  const wiki=articles.filter(a=>a.source.startsWith('docs/site/wiki/'));
- await fs.writeFile(path.join(output,'wiki.html'),pageShell(home,'Wiki',`<h1>Wiki</h1><p>The complete ${wiki.length}-page Markdown snapshot from wiki revision <code>${catalog.wiki.sourceCommit}</code> is included below. Earlier access was unavailable; the subsequent Git CLI read succeeded.</p>${wiki.map(a=>{const sectionId='wiki-'+path.basename(a.source,'.md');return `<section class="guide documentation-article" id="${sectionId}"><h2>${escapeHtml(a.title)}</h2>${renderMarkdown(a.markdown,a.source,routes,'').replace(/id="([^"]+)"/g,(_,id)=>`id="${sectionId}-${id}"`).replace(/href="#([^"]+)"/g,(_,id)=>`href="#${sectionId}-${id}"`)}<a href="${a.url}">Open this wiki article</a></section>`;}).join('')}`));
+ await fs.writeFile(path.join(output,'wiki.html'),pageShell(home,'Wiki',`<h1>Wiki</h1><p>The complete ${wiki.length}-page Markdown snapshot from wiki revision <code>${catalog.wiki.sourceCommit}</code> is included below. Earlier access was unavailable; the subsequent Git CLI read succeeded.</p>${wiki.map(a=>{const sectionId='wiki-'+path.basename(a.source,'.md');return `<section class="guide documentation-article" id="${sectionId}"><h2>${escapeHtml(a.title)}</h2>${renderMarkdown(a.markdown,a.source,routes,'',images).replace(/id="([^"]+)"/g,(_,id)=>`id="${sectionId}-${id}"`).replace(/href="#([^"]+)"/g,(_,id)=>`href="#${sectionId}-${id}"`)}<a href="${a.url}">Open this wiki article</a></section>`;}).join('')}`));
  await fs.writeFile(path.join(output,'documentation-inventory.json'),JSON.stringify({version:1,articles:articles.map(({markdown,...a})=>a),wiki:catalog.wiki,categories:catalog.categories},null,2));
  return articles;
 }

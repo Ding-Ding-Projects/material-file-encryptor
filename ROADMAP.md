@@ -1,3 +1,12 @@
+## October 13 documentation publication correction
+
+- [x] Preserve the exact f1 root-build failure and skipped packaging/publication result.
+- [ ] Review exact two-image registration, byte-preserving staging and negative admission checks.
+- [ ] Pass the corrected exact root build and verify its source-bound output.
+- [x] Independently review the finite synthetic bridge and both actual callbacks' causal prelaunch checks at8650.
+- [ ] Complete the pinned actual renderer run with unchanged assertions and verified owned closure.
+- [ ] Complete main integration, release bytes and live documentation delivery without inheriting older runtime verdicts.
+
 ## Current combined-suite repair, October 13
 
 - [x] Preserve the actual 1,733-test non-green result and separately verify the missing declarations, translated inventories and current wizard fixtures.

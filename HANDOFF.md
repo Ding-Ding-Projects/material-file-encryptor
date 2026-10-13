@@ -1,3 +1,11 @@
+## October 13 current verification correction
+
+Source `f1f6a0090e76df9c9d3ce1cedfaceaeead9a4eda` failed root production in Actions run `38394238545`: the two genuine README images had no explicit local asset registrations. Packaging and publication were skipped. The bounded correction registers only those reviewed PNG paths and exact bytes, retaining rejection of external and unreviewed images. An inherited duplicate storage diagram is replaced with a link to the unchanged complete diagram above. Focused review and the next exact root build remain pending until their actual verdicts are recorded.
+
+The finite synthetic renderer bridge at `6341649935bc342d968ecdc7430f50f7d89c0a7d` and prelaunch-order repair at `8650ad5ab23650e93ca99c18ccaa4aa237a59e60` have independent source approval. Eight fixture checks pass; separate removal of either actual callback's early validation turns the causal check red. Original operations, assertions and 120000ms/90000ms deadlines remain unchanged. An exact pinned renderer run is assigned in its isolated checkout. This does not establish native or installed acceptance.
+
+The two failed source83 packaged diagnostics remain failed historical attempts, with separately verified owned closure and credential retirement. Recorded converter process creation explains membership churn but provides no trustworthy pre-admission readiness signal. No unchanged third attempt or relaxed process proof is authorized by those receipts. The full native/visual matrix, main integration, installed lifecycle and current live deployment remain incomplete. Account readback is 21% remaining, with preservation at 10% or less and no fixed token ceiling.
+
 ## Current combined-suite repair, October 13
 
 The full JavaScript suite at `4514ca130e0d0871da54572bccd4b270f241a3d1` recorded 1,733 tests: 1,696 passed, 12 failed and 25 skipped. Retain that original result. Nine declaration, translation and fixture corrections resolve ten non-runtime failures: the guidance article pair, eight concrete surfaces, two public routes, three finite sample identifiers, actual info-icon wizard entry and the duplicated palette authority negative. Independent bounded source review found no additional semantic loss. The affected groups passed 36 and 16 checks; these are focused results, not a relabelled full suite.
