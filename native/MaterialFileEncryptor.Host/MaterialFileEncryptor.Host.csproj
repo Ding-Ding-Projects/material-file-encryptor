@@ -11,6 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="../../src/features/server-manager/runtime-provenance.json" LogicalName="MaterialFileEncryptor.ServerRuntimeManifest" />
+    <EmbeddedResource Include="../../src/main/ollama-runtime-files.json" LogicalName="MaterialFileEncryptor.OllamaRuntimeFiles" />
     <ProjectReference Include="../MaterialFileEncryptor.Core/MaterialFileEncryptor.Core.csproj" />
     <ProjectReference Include="../vendor/WinFsp/WinFsp.Binding.csproj" />
   </ItemGroup>

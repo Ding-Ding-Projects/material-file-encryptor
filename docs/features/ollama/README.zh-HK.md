@@ -6,6 +6,7 @@
 - [廣東話操作及復原指引](./local-models.zh-HK.md)
 - [原生主程序信任邊界](./native-host.md)
 - [已審閱 Windows 發行來源](./release-provenance.md)
+- [受管理 CLI 安裝同核對](./managed-runtime-installation.zh-HK.md)
 
 Ollama HTTP API 係外部本機服務 API；本功能冇引入公開 HTTP API，亦冇 Postman collection。
 

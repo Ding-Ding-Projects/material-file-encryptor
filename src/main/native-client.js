@@ -4,10 +4,11 @@ import { createInterface } from 'node:readline';
 
 /** Private child-process pipe. Credentials are never put in arguments, environment or logs. */
 export class NativeClient extends EventEmitter {
-  constructor(executable, { spawnProcess = spawn, slowAfterMs = 120000 } = {}) { super(); this.executable = executable; this.spawnProcess = spawnProcess; this.slowAfterMs = slowAfterMs; this.pending = new Map(); this.nextId = 1; }
+  constructor(executable, { spawnProcess = spawn, slowAfterMs = 120000, managedDataRoot = null } = {}) { super(); this.executable = executable; this.spawnProcess = spawnProcess; this.slowAfterMs = slowAfterMs; this.managedDataRoot = managedDataRoot; this.pending = new Map(); this.nextId = 1; }
   start() {
     if (this.child) return;
-    this.child = this.spawnProcess(this.executable, [], { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'], shell: false });
+    const args = this.managedDataRoot === null ? [] : ['--managed-data-root', this.managedDataRoot];
+    this.child = this.spawnProcess(this.executable, args, { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'], shell: false });
     // Backend diagnostics must never cross into a log containing sensitive paths or credentials.
     this.child.stderr.resume();
     this.reader = createInterface({ input: this.child.stdout, crlfDelay: Infinity });

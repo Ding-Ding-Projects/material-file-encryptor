@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net8.0-windows</TargetFramework><EnableWindowsTargeting>true</EnableWindowsTargeting><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><TreatWarningsAsErrors>true</TreatWarningsAsErrors><DefineConstants>OLLAMA_LIFETIME_VERIFIER</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../MaterialFileEncryptor.Host/ServerFileLease.cs" Link="ServerFileLease.cs" />
+    <Compile Include="../MaterialFileEncryptor.Host/OllamaRuntimeLease.cs" Link="OllamaRuntimeLease.cs" />
+    <Compile Include="../MaterialFileEncryptor.Host/OllamaRuntimeBroker.cs" Link="OllamaRuntimeBroker.cs" />
+  </ItemGroup>
+</Project>
