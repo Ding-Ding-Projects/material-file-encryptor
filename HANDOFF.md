@@ -1,3 +1,13 @@
+## Reviewed guidance integration, current source boundaries
+
+Integrate the four independently reviewed source units at6341649,8650ad5,5308d0f and776d354 with the reviewed two-image publication repair atb121aec. Common handoff history is retained once; the child lane's distinct authored explanations remain below. This integration does not claim complete GUI acceptance.
+
+The exact b121 local root build exited0 with unchanged source at completion,6059package entries and0privacy rejections. Actions38398772848 passed. Normalv1.448.1 is not draft or prerelease, its tag points tob121, and all four expected assets are uploaded. Downloaded provenance and RELEASES hashes match; complete Setup/package download and runtime verification remain separate.
+
+Actual source8650,5308 and776 renderer runs each recorded3cases,2passed,1timeout cancellation,0failed and0skipped. Source5308 executed the extended History alert visibility/keyboard dismissal/unchanged-view/invalid-input checks. Source776 additionally executed exactfile-1radio/focus/Enter/open and offline assertions. Its last completed phase1022 checks release-dialog cancel focus; the next uninstrumented Escape action has no completion proof. Remaining release/resplit/lock/mount and responsive loops remain unverified. All owned trees/desktops are closed, including source776's later source-bound saved-tree confirmation after original closure failures. Original receipts, profiles and genuine scoped captures remain retained.
+
+Shared instructions main d3ecac185eea0c183deee58b1476c76a7e688ca7 passed its exact root entrypoint:96discovered,95passed,0failed,1unverified(1671.6s). The Bash synchronizer requires Linux/macOS/Bash and remains unverified on this Windows host. All83managed targets were installed with83backups and independently read back current atd3. The full product goal remains active; latest allowance12percent, preservation threshold10percent, no fixed token ceiling.
+
 ## October 13 current verification correction
 
 Source `f1f6a0090e76df9c9d3ce1cedfaceaeead9a4eda` failed root production in Actions run `38394238545`: the two genuine README images had no explicit local asset registrations. Packaging and publication were skipped. The bounded correction registers only those reviewed PNG paths and exact bytes, retaining rejection of external and unreviewed images. An inherited duplicate storage diagram is replaced with a link to the unchanged complete diagram above. Focused review and the next exact root build remain pending until their actual verdicts are recorded.
@@ -1143,3 +1153,48 @@ Two genuine bilingual/light static-documentation captures from source83 are insp
 Reviewed fixture108b4c25cc3f6b6accef921493c63691160902b2 is integrated on this recovery branch. Its actual unchanged renderer run returned exit1:3cases,2passed,1cancelled at the120000ms main timeout. Scoped-clear passed with two genuine captures. Both owned trees/desktops closed and profiles retained. The source fixture lacks featureRequest and emitted bridge-unavailable messages; the exact timed-out action was not journaled, so timeout causality remains unproved. No timeout or ownership assertion was weakened.
 
 Instruction source68a3cda5915e781f3007970b5bdcd75fe67fd7bc is preserved on its owning branch and its new exact root build is running. Earlier d8source reported95discovered/94passed/0failed/1unverified; Bash has an explicit platform limitation. Current installed instruction targets were read back current at primary3535be06; combined-source installation remains pending while product helper bytes are held fixed. Main integration, complete acceptance, current live deployment and safe task-owned cleanup remain incomplete. Historical8b69a795public source contained one private term, corrected in editable current source83; no history rewrite was authorized or performed.
+
+
+
+## Source renderer feature fixture and stall ledger
+
+The prior 108b4c25 isolated run exited 1: three cases, two passed, one cancelled at the unchanged 120000ms deadline, zero skipped. Repeated missing-feature-bridge messages came from app.js:522 because the fixture lacked featureRequest; the exact timeout action was not recorded. Both owned process trees/desktops were subsequently proved absent, with profiles retained. This repair does not relabel that run as passing.
+
+The fixture now supplies featureRequest and onFeatureEvent through test/helpers/renderer-feature-fixture.js. Its finite mount/read inventory is:
+
+| Consumer family | Explicit actions | Synthetic response boundary |
+| --- | --- | --- |
+| Access bridge and access workspace | displayNameRead, dataFolder, credentialList, credentialGet, historyLock | Null protected display name, labelled synthetic folder, empty lock inventory, absent authored credential keys, lock acknowledgement |
+| Personalization mount and accessibility | accessibilityState, sharedRead, listFonts | Unknown accessibility, absent shared override, empty font inventory |
+| Update panel | status | Explicit unavailable snapshot, installation disabled |
+| Converter mount and polling | catalog, list | Empty catalog and first job page |
+| Document/publication workflow mount | documents, templates, editors, accountState, downloads, browserProposals | Separate empty typed collections, no account or transfer operation |
+| Local model mount | models, catalog, profiles, cart, sessions, status, runtimeInstallStatus | Empty inventory/catalog, stale catalogue, unavailable runtime, all runtime actions disabled |
+| Documentation mounts | catalog, changelog | Object containing an empty documents array, separate empty changelog array |
+| Server preparation mount | snapshot | Empty catalogue/operations, four unavailable targets, no startup/license capability |
+| Status mount | status | Explicit unavailable state |
+
+Unknown pairs and malformed request payloads reject. No native mutation, network, file picker or publication success is simulated. Responses are cloned per call. Subscriptions use the production feature/callback signature with an idempotent disposer; the only fixture-owned event helper emits the authored accessibility snapshot. No event timer exists.
+
+A bounded progress snapshot records separate last-started/last-completed phase and request identities plus the latest 128 rows. It excludes request payloads, control values and response data. Actual awaited test operations retain their original calls and arguments. Serialized writes replace progress.json atomically beneath a fresh temporary evidence directory printed by the test. The page-error assertion, all navigation/geometry/language/width loops and 120000ms timeout remain unchanged.
+
+Seven source contract checks pass, plus the existing finite navigation fixture. Removing required-method validation or response-shape validation independently makes its causal check fail; restored source passes. No browser/native launch occurred for this repair. Independent review precedes any runtime rerun. Other native and package acceptance remains separate.
+
+
+## Pre-launch validation ordering repair
+
+Both main and scoped-clear renderer cases now validate the feature fixture as their first step, before evidence directories, servers or browser opening. An inert source test invokes both actual test callbacks with an invalid bridge and proves zero evidence/server/opener calls. Removing the early validation separately from either callback makes that ordering check fail; restored source passes all eight fixture-contract checks. All original operations, assertions and deadlines remain unchanged. No browser or native launch ran for this repair; independent review precedes execution.
+
+
+## Shared non-dialog error ownership
+
+The 8650ad5 runtime ledger ended with retention validation completed, then dismissal pending. The shared error was inside the hidden Drive view while History remained active. The repair moves the existing main-error alert directly under the persistent main workspace and stops bootstrap from reparenting it into Drive. IDs, alert role, localized message, dismissal listener and dialog-local errors remain unchanged. No view navigation is added.
+
+The existing History runtime case now requires alert and dismiss visibility through every ancestor, keyboard focus/Enter dismissal, History remaining active, and no preference mutation from invalid retention. The Drive error case also checks shared alert visibility and keyboard dismissal. Original assertions and 120000/90000ms deadlines remain. Seven focused history source checks pass; old markup ownership and a separate bootstrap-reparent mutation each turned the ownership check red. No runtime launch occurred for this repair. Independent review and a separately assigned runtime run after the shared build hold remain required.
+
+
+## Exact imported-file radio fixture
+
+The 5308d0f run progressed through the extended History alert assertions, then timed out with page.check pending after the file-list row appeared. The fixture requested a checkbox, while the production row creates a named file-selection radio. Replace only that obsolete selection action with the exact file-1 row radio. The helper checks the real control through the existing adapter, verifies checked state, selected-file name, selected row and notes.txt label, focuses it, presses Enter and observes exactly the file-1 open request. It does not assign checked state, call production selection directly or accept alternate primitives.
+
+The causal source test executes the actual action helper and control adapter against an inert radio-only page: the old checkbox selector fails and the exact radio passes. Nine fixture-contract checks pass. All later offline/release/resplit/lock/mount assertions, language/width loops and original deadlines remain unchanged. No production control changed and no browser/native rerun occurred. Independent review precedes the next assigned runtime run; retained 5308 journals and profiles keep their original identity.

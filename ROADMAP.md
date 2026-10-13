@@ -1,3 +1,11 @@
+## Reviewed guidance source integration
+
+- [x] Retain the finite28-pair fixture, causal prelaunch ordering and exact radio-action source checks, with independent reviews.
+- [x] Record actual History alert, radio/open and offline observations with their partial source-renderer boundaries.
+- [ ] Complete the remaining renderer actions and responsive loops under the unchanged deadlines; the current whole case still times out.
+- [ ] Verify genuine complete alert captures and the full native/installed/visual matrix.
+- [ ] Pass the exact combined root build, verify current package/release/live documentation and deliver completed source to main.
+
 ## October 13 documentation publication correction
 
 - [x] Preserve the exact f1 root-build failure and skipped packaging/publication result.
