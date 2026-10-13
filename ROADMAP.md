@@ -655,3 +655,9 @@
 - [ ] Extend separately assigned runtime coverage to menu keyboard and motion consumers without claiming full matrix, physical DPI or design parity from this subset.
 
 Initial acquisition also writes its actual tuple directories and original PNGs under the opened receipt output directory, in a guidance-acquisition child. The reviewed configuration output directory retains the top-level binding and summary; the summary records acquisition.outputRoot and the original per-attempt receipt paths. A focused test runs the actual acquireMatrix path construction through the installed driver output check, without taking a capture. Reintroducing the old summary-root destination makes that test fail; restored source passes all eleven checks.
+
+
+## Slotted clear-control geometry
+
+- [x] Reserve 48x48 host layout for outlined text-field trailing actions, preserve native-wrapper placement and callbacks, and verify eight focused source checks including a red-to-green geometry assertion.
+- [ ] Independently review the source repair and rerun the original nine-point isolated renderer check; rendered ownership remains unverified for this revision.

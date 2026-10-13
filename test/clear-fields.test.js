@@ -55,3 +55,15 @@ test('host placement keeps component state and touch styling under vendor owners
  check(css);assert.throws(()=>check(css.replace('width:40px;height:40px','width:44px;height:44px')));
  const imports=await readFile(new URL('../src/shared/surface/material-entry.js',import.meta.url),'utf8');assert.match(imports,/@material\/web\/iconbutton\/icon-button\.js/);
 });
+
+test('slotted field actions reserve their complete vendor touch region in scrolling layout',async()=>{
+ const css=await readFile(new URL('../src/renderer/modern.css',import.meta.url),'utf8');
+ const rule=css.match(/md-outlined-text-field\s*>\s*md-icon-button\[slot="trailing-icon"\]\s*\{([^}]*)\}/)?.[1];
+ assert.ok(rule,'Slotted field actions need an explicit layout reservation');
+ const declarations=Object.fromEntries(rule.split(';').filter(Boolean).map(value=>value.split(':').map(part=>part.trim())));
+ for(const dimension of ['width','height','min-width','min-height'])assert.equal(declarations[dimension],'48px',dimension+' must include the full touch layer in scrolling geometry');
+ for(const property of ['position','z-index','transform','pointer-events','overflow'])assert.equal(declarations[property],undefined,'Do not move or hide the touch layer to satisfy ownership');
+ assert.doesNotMatch(rule,/--md-icon-button-(?:container|state-layer|icon-size)/,'Vendor visual geometry remains unchanged');
+ // The separate native-input wrapper still owns its existing 40px host placement.
+ assert.match(css,/\.clearable-field>md-icon-button\.field-clear\{[^}]*width:40px;height:40px/);
+});

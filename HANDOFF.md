@@ -1105,3 +1105,10 @@ The initial tuple is p-language/1180x850/en/light/1. Extra production-control pl
 Follow-up review repaired three adapter seams: actual nested poll results, receipt-admitted capture paths with original-byte hash verification, and full canonical acquisition inventory validation before fixture preparation. Three targeted mutations each failed, and restored source passed all eleven focused checks with zero skipped. Runtime execution remains unperformed.
 
 Initial acquisition also writes its actual tuple directories and original PNGs under the opened receipt output directory, in a guidance-acquisition child. The reviewed configuration output directory retains the top-level binding and summary; the summary records acquisition.outputRoot and the original per-attempt receipt paths. A focused test runs the actual acquireMatrix path construction through the installed driver output check, without taking a capture. Reintroducing the old summary-root destination makes that test fail; restored source passes all eleven checks.
+
+
+## Slotted clear-control touch ownership, source repair
+
+The isolated renderer run reported a 40x40 slotted clear-action host with a 48x48 internal touch layer. At the scroll boundary, three of the nine minimum-area hit points reached the header. The affected action is the registered trailing-icon child of an outlined text field, not the separate native-input .field-clear wrapper.
+
+The scoped modern.css rule reserves 48x48 host dimensions for direct trailing-icon button children. It changes no callbacks, admission, z-index, vendor touch layer or state-layer tokens. Native-input wrappers retain their existing 40px placement. The existing nine-point runtime assertion is unchanged. The added source assertion failed before the rule and passed afterward; all eight clear-field source checks pass. This is source verification only. The coordinating owner must independently review the revision and run the original isolated renderer case for actual hit ownership.
