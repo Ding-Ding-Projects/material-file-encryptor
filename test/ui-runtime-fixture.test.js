@@ -28,7 +28,7 @@ test('failed-run retirement covers registered GUI and legacy identities and owne
 test('synchronization completion remains separate from the quiet version interval',()=>{
  const state={operation:null,sync:{running:false,pendingCommits:0},transport:{available:true,pendingSynchronization:false},history:{pendingVersionCount:1}};
  assert.equal(runtimeCompletion(state,{synchronized:true}).ready,true);
- assert.equal(runtimeCompletion({...state,transport:{...state.transport,pendingSynchronization:true}},{synchronized:true}).ready,false);
+ assert.equal(runtimeCompletion({...state,transport:{mode:'privateGit',available:true,pendingPublication:true}},{synchronized:true}).ready,false);
  assert.equal(runtimeCompletion({...state,sync:{...state.sync,running:true}}).ready,true);
  assert.equal(runtimeCompletion({...state,operation:'restoreDeleted'}).ready,false);
  assert.equal(runtimeCompletion(state,{applicationError:true}).failed,true);
@@ -110,4 +110,5 @@ test('physical synchronization does not wait for quiet version snapshots and sti
  assert.equal(runtimeCompletion({...state,sync:{running:false,pendingCommits:1}},{synchronized:true}).ready,false);
  for(const pendingPublication of [true,undefined])assert.equal(runtimeCompletion({...state,transport:{mode:'privateGit',available:true,pendingPublication}},{synchronized:true}).ready,false);
  assert.equal(runtimeCompletion({...state,transport:{mode:'privateGit',available:true,pendingPublication:false}},{synchronized:true}).ready,true);
+ assert.equal(runtimeCompletion({...state,sync:{running:false,sourceAvailable:true,pendingCommits:0},transport:{mode:'privateGit',available:false,pendingPublication:false}},{synchronized:true}).ready,false);
 });
