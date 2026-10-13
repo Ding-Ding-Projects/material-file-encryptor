@@ -673,3 +673,10 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 
 - [x] Match only the six supported complete Settings/How it works names and verify the actual helper action sequence with a red-to-green source fixture.
 - [ ] Rerun the complete actual renderer language/width case after independent review; no runtime verdict is claimed by the source fixture.
+
+
+## Source renderer feature bridge fixture
+
+- [x] Enumerate 28 mount/read pairs with explicit synthetic schemas, reject unknown/malformed requests, and implement filtered subscriptions with disposal.
+- [x] Add bounded phase/request progress retention and source checks for missing methods, invalid responses, unsupported actions, isolation and ledger bounds; seven checks plus the navigation fixture pass.
+- [ ] Independently review and rerun the unchanged complete renderer case; the previous 108b4c25 timeout remains a failure, not a passing baseline.

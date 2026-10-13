@@ -1124,3 +1124,28 @@ Six focused history-selection checks pass. The new source regression failed with
 ## Exact localized renderer navigation fixture
 
 Updated only the Settings and How it works menu-name matchers in test/ui-renderer.test.js. Each now matches exactly its English, Cantonese or middle-dot bilingual name. The real rail activation, menuitem role lookup, visible-view wait and all existing language/width loops remain unchanged. A source-only fixture calls that actual navigation helper for all six names, checks the complete action sequence, and rejects unrelated prefixes, suffixes and cross-language combinations. It failed against the old prefix matcher and passes after repair. No browser, native process, build or capture was launched; full renderer execution remains with the coordinating owner.
+
+
+## Source renderer feature fixture and stall ledger
+
+The prior 108b4c25 isolated run exited 1: three cases, two passed, one cancelled at the unchanged 120000ms deadline, zero skipped. Repeated missing-feature-bridge messages came from app.js:522 because the fixture lacked featureRequest; the exact timeout action was not recorded. Both owned process trees/desktops were subsequently proved absent, with profiles retained. This repair does not relabel that run as passing.
+
+The fixture now supplies featureRequest and onFeatureEvent through test/helpers/renderer-feature-fixture.js. Its finite mount/read inventory is:
+
+| Consumer family | Explicit actions | Synthetic response boundary |
+| --- | --- | --- |
+| Access bridge and access workspace | displayNameRead, dataFolder, credentialList, credentialGet, historyLock | Null protected display name, labelled synthetic folder, empty lock inventory, absent authored credential keys, lock acknowledgement |
+| Personalization mount and accessibility | accessibilityState, sharedRead, listFonts | Unknown accessibility, absent shared override, empty font inventory |
+| Update panel | status | Explicit unavailable snapshot, installation disabled |
+| Converter mount and polling | catalog, list | Empty catalog and first job page |
+| Document/publication workflow mount | documents, templates, editors, accountState, downloads, browserProposals | Separate empty typed collections, no account or transfer operation |
+| Local model mount | models, catalog, profiles, cart, sessions, status, runtimeInstallStatus | Empty inventory/catalog, stale catalogue, unavailable runtime, all runtime actions disabled |
+| Documentation mounts | catalog, changelog | Object containing an empty documents array, separate empty changelog array |
+| Server preparation mount | snapshot | Empty catalogue/operations, four unavailable targets, no startup/license capability |
+| Status mount | status | Explicit unavailable state |
+
+Unknown pairs and malformed request payloads reject. No native mutation, network, file picker or publication success is simulated. Responses are cloned per call. Subscriptions use the production feature/callback signature with an idempotent disposer; the only fixture-owned event helper emits the authored accessibility snapshot. No event timer exists.
+
+A bounded progress snapshot records separate last-started/last-completed phase and request identities plus the latest 128 rows. It excludes request payloads, control values and response data. Actual awaited test operations retain their original calls and arguments. Serialized writes replace progress.json atomically beneath a fresh temporary evidence directory printed by the test. The page-error assertion, all navigation/geometry/language/width loops and 120000ms timeout remain unchanged.
+
+Seven source contract checks pass, plus the existing finite navigation fixture. Removing required-method validation or response-shape validation independently makes its causal check fail; restored source passes. No browser/native launch occurred for this repair. Independent review precedes any runtime rerun. Other native and package acceptance remains separate.

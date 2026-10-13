@@ -8,6 +8,7 @@ import {createHash} from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { openRendererBrowser, serveRendererFixture } from '../scripts/test-renderer-browser.mjs';
 import {assertOwnedTouchTarget,assertReducedTouchTargetRejected} from './helpers/touch-target.js';
+import {createRendererFeatureFixture,verifyRendererFeatureFixture,rendererFeatureFixtureScript,createRendererFixtureProgress} from './helpers/renderer-feature-fixture.js';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../src/renderer');
 const executable = process.env.CHROMIUM_PATH || (process.platform === 'linux' ? '/usr/bin/chromium' : undefined);
 
@@ -29,6 +30,16 @@ function controls(page) {
   if(key==='selectOption')return async(selector,value)=>{const select=target.locator(selector);const label=await select.evaluate((el,value)=>[...el.querySelectorAll('md-select-option')].find(option=>option.value===value)?.textContent?.trim(),value);assert.ok(label,'Requested option exists');await select.click();await select.getByRole('option',{name:label,exact:true}).click();assert.equal(await select.evaluate(el=>el.value),value);};
   const value=target[key];return typeof value==='function'?value.bind(target):value;
  }});
+}
+function trackedControls(page){
+ const methods=new Set(['click','fill','check','uncheck','selectOption','focus','press','goto','waitFor','waitForSelector','waitForFunction','scrollIntoViewIfNeeded','setViewportSize','evaluate']);
+ const wrap=(target,label)=>new Proxy(target,{get(object,key){
+  const value=object[key];if(['locator','getByRole'].includes(key))return(...args)=>wrap(value.apply(object,args),(label+'/'+key+':'+String(args[0])).slice(-120));
+  if(key==='keyboard')return wrap(value,'keyboard');
+  if(typeof value!=='function')return value;
+  if(!methods.has(key))return value.bind(object);
+  return async(...args)=>{const record=page.__fixtureProgress,phase=(label+'.'+key+(label==='page'&&['click','fill','selectOption','waitForSelector'].includes(key)?':'+String(args[0]):'')).slice(0,160);if(record)await record({kind:'phase',state:'started',phase});const result=await value.apply(object,args);if(record)await record({kind:'phase',state:'completed',phase});return result;};
+ }});return wrap(page,'page');
 }
 async function navigate(page,id){
  const group=['settings','personalization','access','updates'].includes(id)?'settings':['help','documentation','changelog'].includes(id)?'help':['converter','workflow','ollama','server-manager','storage','status','details'].includes(id)?'tools':id;
@@ -62,7 +73,13 @@ const activeWithin=el=>{let active=el.ownerDocument.activeElement;while(active){
 
 // This isolated bridge tests renderer behavior only. Real native-drive evidence is separate.
 async function fixture(page) {
- await page.addInitScript(() => {
+ await verifyRendererFeatureFixture(createRendererFeatureFixture().bridge);
+ const evidenceRoot=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-renderer-progress-'));
+ const progress=createRendererFixtureProgress(async snapshot=>{const file=path.join(evidenceRoot,'progress.json');await fs.writeFile(file+'.pending',JSON.stringify(snapshot,null,2));await fs.rename(file+'.pending',file);});
+ console.log(JSON.stringify({scope:'source-renderer-progress',evidenceRoot}));
+ await page.exposeFunction('__recordRendererFixture',progress.record);
+ page.__fixtureProgress=progress.record;
+ await page.addInitScript({content:rendererFeatureFixtureScript(featureFixture => {
   const clone = value => JSON.parse(JSON.stringify(value));
   window.calls = [];
   window.testState = {locked:true,mounted:false,storageDir:'',cacheDir:'C:\\EncryptedCache',driveLetter:'M:',partSizeBytes:10485760,availableDriveLetters:['M:','N:'],files:[],driver:{available:true},startup:true,autoUnlock:false,sync:{running:false},defaults:{cacheDir:'C:\\EncryptedCache',driveLetter:'M:'}};
@@ -71,6 +88,7 @@ async function fixture(page) {
   const change = patch => { Object.assign(window.testState,patch); subscriber(clone(window.testState)); return clone(window.testState); };
   window.pushState = change;
   window.drive = {
+   ...featureFixture.bridge,
    history: async () => [{id:'version-1',entryId:'file-1',path:'notes.txt',timestampUtc:'2026-01-01',length:4096,isDirectory:false,deleted:false,isAvailable:true}], recycled: async () => [{id:'deleted-1',entryId:'file-2',path:'deleted.txt',timestampUtc:'2026-01-01',length:20,isDirectory:false,deleted:true,isAvailable:true}], saveVersion:async()=>record('saveVersion'),restoreVersion:async id=>record('restoreVersion',id),restoreDeleted:async ids=>record('restoreDeleted',ids),emptyRecycleBin:async()=>record('emptyRecycleBin'),setHistoryRetention:async value=>{record('setHistoryRetention',value);return change({preferences:{historyRetentionDays:value}});},
    status: async () => clone(window.testState), onStatus: callback => { subscriber = callback; return () => {}; },
    chooseFolder: async kind => kind === 'cache' ? 'C:\\EncryptedCache' : 'C:\\EncryptedStorage', chooseFiles:async () => ['C:\\Import\\notes.txt'],chooseExport:async () => 'C:\\Export\\notes.txt',chooseKeyFile:async () => 'C:\\Keys\\test.key',generateKeyFile:async () => 'C:\\Keys\\generated.key',
@@ -84,17 +102,18 @@ async function fixture(page) {
    sync:async () => {record('sync');return change({sync:{running:false,lastSync:'2026-01-01'}});},setPartSize:async value => {record('setPartSize',value);return change({partSizeBytes:value});},resplit:async () => record('resplit'),
    setStartup:async value => {record('setStartup',value);return change({startup:value});},setAutoUnlock:async value => {record('setAutoUnlock',value);return change({autoUnlock:value});},forgetSavedCredential:async () => {record('forgetSavedCredential');return change({autoUnlock:false});},windowControl:async value => record('windowControl',value),openExternal:async value => record('openExternal',value)
   };
- });
+ })});
 }
 // Include bounded hidden-desktop launch and independent process-exit proof.
 test('real renderer interactions, error states, keyboard dialogs and responsive layouts', {timeout:120000}, async t => {
+ await verifyRendererFeatureFixture(createRendererFeatureFixture().bridge);
  if (executable) { try { await fs.access(executable); } catch { return t.skip('Set CHROMIUM_PATH to an installed Chromium executable.'); } }
  const server = createServer(serveRendererFixture);
  await new Promise(resolve => server.listen(0,'127.0.0.1',resolve));
  let browser,fixtureError;
  try {
   browser = await openRendererBrowser(`http://127.0.0.1:${server.address().port}/`,{runtime:{sourceCommit:process.env.MFE_TEST_SOURCE_COMMIT}});
-  const page = controls(browser.page); await page.setViewportSize({width:1440,height:900}); await fixture(page);
+  const page = trackedControls(controls(browser.page)); await page.setViewportSize({width:1440,height:900}); await fixture(page);
   const errors = []; page.on('pageerror',error => {errors.push(error.message);console.error(error.message);});
   await page.goto(`http://127.0.0.1:${server.address().port}`); await page.waitForFunction(() => document.querySelector('#vault-badge').textContent !== 'Checking drive…');
   assert.equal(await page.locator('#vault-badge').textContent(),'Locked'); assert.equal(await page.locator('#file-list tr').count(),0);
@@ -270,7 +289,7 @@ test('scoped clear-control selectors use their actual owning wrappers', {timeout
  try {
   const url = `http://127.0.0.1:${server.address().port}/`;
   browser = await openRendererBrowser(url,{evidenceRoot:path.join(evidenceRoot,'owned-closure'),runtime:{sourceCommit:process.env.MFE_TEST_SOURCE_COMMIT}});
-  const page = controls(browser.page); await page.setViewportSize({width:1180,height:850}); await fixture(page);
+  const page = trackedControls(controls(browser.page)); await page.setViewportSize({width:1180,height:850}); await fixture(page);
   await page.goto(url);
   await page.waitForFunction(() => document.querySelector('#vault-badge').textContent !== 'Checking drive…');
   await page.evaluate(() => window.pushState({locked:false,mounted:true,storageFormat:2}));
