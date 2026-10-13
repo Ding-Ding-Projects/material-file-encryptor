@@ -3,7 +3,7 @@
  * command, admission and shared-overlay factories are deliberately not imported. */
 const authored = new WeakSet();
 let invocationSerial=0;
-const kinds = new Set(['text','search','number','toggle','choice','color','remove','reset','append','navigation','file','schedule','credential','date','operation']);
+const kinds = new Set(['text','search','number','toggle','choice','color','remove','reset','append','navigation','file','schedule','credential','date','operation','tabs']);
 const copy = value => JSON.parse(JSON.stringify(value));
 const freeze = value => { if(value && typeof value === 'object'){Object.values(value).forEach(freeze);Object.freeze(value);}return value; };
 function dataOnly(value){
@@ -16,13 +16,13 @@ function dataOnly(value){
 export function definePractice(definition){
  dataOnly(definition);
  if(!definition.id||!kinds.has(definition.kind)||!definition.label||!definition.input||!definition.action||!definition.expected||!Object.hasOwn(definition,'initial'))throw Error('An explicit worked practice fixture is required.');
- if(['choice','navigation','file'].includes(definition.kind)&&(!Array.isArray(definition.choices)||definition.choices.length<2))throw Error('Practice choices must be authored.');
+ if(['choice','navigation','file','tabs'].includes(definition.kind)&&(!Array.isArray(definition.choices)||definition.choices.length<2))throw Error('Practice choices must be authored.');
  if(definition.primitive&&!['select','radio','buttons'].includes(definition.primitive))throw Error('Unsupported practice primitive.');
  if(definition.palette&&Object.values(definition.palette).some(row=>!/^#[a-f\d]{6}$/i.test(row.surface)||!/^#[a-f\d]{6}$/i.test(row.onSurface)))throw Error('Sample palettes require bounded authored colors.');
  const result=freeze(copy(definition));authored.add(result);return result;
 }
 export const PRACTICE_COPY={
- 'The selected sample snapshot is in use.':'所選樣本快照使用中。','Preview only. No real operation is performed.':'只作預覽，唔會執行真實操作。','Year':'年份','Month':'月份','Day':'日期','Choose a real calendar date between 2000 and 2099.':'請選擇 2000 至 2099 年之間嘅有效日期。','Confirm this synthetic operation first.':'請先確認呢個合成操作。','Sample input is invalid. Review its displayed bounds.':'樣本輸入無效，請檢查顯示嘅範圍。','Choose two different sample entries.':'請選擇兩個不同嘅樣本記錄。','The sample file has an unsupported version.':'樣本檔案版本未獲支援。','Practice with sample data':'用樣本資料練習','Sample input':'樣本輸入','Sample action':'樣本操作','Expected result':'預期結果','Reset example':'重設例子','Clear sample input':'清除樣本輸入','Apply to sample':'套用至樣本','Confirm sample removal':'確認移除樣本','Sample result':'樣本結果','Sample label':'樣本標籤','Sample caption':'樣本說明','Enabled':'啟用','Disabled':'停用','No matching sample rows.':'冇符合嘅樣本項目。','Enter a value within the sample bounds.':'請輸入樣本範圍內嘅數值。','Use a six-digit hexadecimal color, such as #52643f.':'請使用六位十六進位顏色，例如 #52643f。','Choose one of the authored sample options.':'請選擇其中一個預先編寫嘅樣本選項。','Enter between 1 and 80 characters without control characters.':'請輸入 1 至 80 個字元，唔好用控制字元。','Confirm removal before changing the sample list.':'修改樣本清單前，請先確認移除。','No sample items remain.':'冇剩餘樣本項目。','Use HH:MM within one day.':'請使用一日內嘅 HH:MM 時間。','Sample is disposed.':'樣本已關閉。','Only the fixed demonstration text is accepted.':'只接受固定示範文字。','Demonstration accepted. No credential was stored.':'示範已接受，冇儲存任何憑證。','Practice is unavailable for this control. Its specific fixture has not been implemented.':'呢個控制項未有專用練習樣本，暫時無法練習。',
+ 'Synthetic bytes or digest do not match.':'合成位元組或摘要唔相符。','Completed sample operations cannot be canceled.':'唔可以取消已完成樣本操作。','The synthetic page cursor is stale.':'合成頁面游標已過期。','Sample frame offsets must remain between zero and one.':'樣本影格偏移必須保持零至一。','At least one sample property must remain.':'最少必須保留一個樣本屬性。','The selected sample snapshot is in use.':'所選樣本快照使用中。','Preview only. No real operation is performed.':'只作預覽，唔會執行真實操作。','Year':'年份','Month':'月份','Day':'日期','Choose a real calendar date between 2000 and 2099.':'請選擇 2000 至 2099 年之間嘅有效日期。','Confirm this synthetic operation first.':'請先確認呢個合成操作。','Sample input is invalid. Review its displayed bounds.':'樣本輸入無效，請檢查顯示嘅範圍。','Choose two different sample entries.':'請選擇兩個不同嘅樣本記錄。','The sample file has an unsupported version.':'樣本檔案版本未獲支援。','Practice with sample data':'用樣本資料練習','Sample input':'樣本輸入','Sample action':'樣本操作','Expected result':'預期結果','Reset example':'重設例子','Clear sample input':'清除樣本輸入','Apply to sample':'套用至樣本','Confirm sample removal':'確認移除樣本','Sample result':'樣本結果','Sample label':'樣本標籤','Sample caption':'樣本說明','Enabled':'啟用','Disabled':'停用','No matching sample rows.':'冇符合嘅樣本項目。','Enter a value within the sample bounds.':'請輸入樣本範圍內嘅數值。','Use a six-digit hexadecimal color, such as #52643f.':'請使用六位十六進位顏色，例如 #52643f。','Choose one of the authored sample options.':'請選擇其中一個預先編寫嘅樣本選項。','Enter between 1 and 80 characters without control characters.':'請輸入 1 至 80 個字元，唔好用控制字元。','Confirm removal before changing the sample list.':'修改樣本清單前，請先確認移除。','No sample items remain.':'冇剩餘樣本項目。','Use HH:MM within one day.':'請使用一日內嘅 HH:MM 時間。','Sample is disposed.':'樣本已關閉。','Only the fixed demonstration text is accepted.':'只接受固定示範文字。','Demonstration accepted. No credential was stored.':'示範已接受，冇儲存任何憑證。','Practice is unavailable for this control. Its specific fixture has not been implemented.':'呢個控制項未有專用練習樣本，暫時無法練習。',
 };
 /** Pure evaluator returns a new JSON result. User input is never evaluated as code
  * or applied as arbitrary style, HTML, a URL or a regular expression. */
@@ -59,6 +59,61 @@ function evaluateOperation(fixture,state){
  case 'reminder-snooze':record.now='2030-01-15T10:00:00Z';record.reminderAfter='2030-01-15T11:00:00Z';record.timerScheduled=false;break;
  case 'clear-field':record.value='';break;
  case 'snapshot-capture':record.snapshots=[...record.snapshots,{id:'sample-new',label:input.label,reference:{version:1,reference:'sample-new'},snapshot:copy(record.base)}];break;
+ case 'server-preparation': {
+  switch(fixture.key){
+   case 'runtimeCheck':record.match=Number(input.major)===record.requiredMajor;record.offeredMajor=Number(input.major);record.executed=false;break;
+   case 'runtimePrepare':case 'prepare':if(!input.matchingDigest||record.receivedBytes!==record.expectedBytes)return invalid('Synthetic bytes or digest do not match.');record.state='prepared-example';if(fixture.key==='runtimePrepare')record.registered=true;else record.prepared=true;break;
+   case 'runtimeCancel':case 'cancel':if(input.phase==='completed')return invalid('Completed sample operations cannot be canceled.');record.state='canceled-example';record.canceled=true;record.recoveryRequired=true;break;
+   case 'refresh':record.catalogId='sample-current';record.selected=null;record.loaded=copy(fixture.catalog);break;
+   case 'page':if(input.cursor!=='current')return invalid('The synthetic page cursor is stale.');record.loaded.push(...copy(fixture.catalog.slice(record.nextIndex)));record.nextIndex=null;break;
+   case 'choose':record.selected=copy(fixture.catalog.find(row=>row.id===input.version));break;
+   case 'license':record.reviewed=true;break;
+   default:throw Error('Unknown synthetic server operation.');
+  }break;
+ }
+ case 'keyframe': {
+  const frame=record.frames[0],numeric=value=>Number(value),coordinate=value=>Math.round(value*1000000)/1000000;
+  switch(fixture.key){
+   case 'select':record.selected=Number(input.index);record.selectedValue=record.frames[record.selected].value;break;
+   case 'multi':record.selection=input.included?[0,1]:[0];break;
+   case 'mode':delete frame.offset;delete frame.time;delete frame.relativeTime;frame[{offset:'offset',absolute:'time',relative:'relativeTime'}[input.mode]]=0;break;
+   case 'time':frame.offset=numeric(input.position);record.resolvedTime=frame.offset*record.duration;break;
+   case 'value':frame.value=numeric(input.value);break;
+   case 'unit':record.draft.unit=input.unit;break;
+   case 'apply':frame.value=String(numeric(input.number))+input.unit;break;
+   case 'easing':{frame.easing=input.easing;let low=0,high=1;for(let i=0;i<32;i++){const t=(low+high)/2,x=3*(1-t)*(1-t)*t*0.42+3*(1-t)*t*t+t*t*t;if(x<0.5)low=t;else high=t;}const t=(low+high)/2;record.sampleMidpoint=input.easing==='linear'?0.5:input.easing==='ease-in'?coordinate(3*(1-t)*t*t+t*t*t):0;break;}
+   case 'composition':frame.composite=input.composition;record.composedSample=['add','accumulate'].includes(input.composition)?15:5;break;
+   case 'hold':frame.hold=input.hold;record.sampleMidpoint=input.hold?0.2:0.5;break;
+   case 'add':record.frames.push({id:'sample-new',offset:1,value:'computed',easing:'linear',composite:'auto'});break;
+   case 'copy':record.copiedFrames=record.frames.filter((_,index)=>record.selection.includes(index)).map(copy);break;
+   case 'paste':record.frames.push(...record.copiedFrames.map(copy));break;
+   case 'remove':record.frames=record.frames.filter((_,index)=>!record.selection.includes(index));record.selection=[];break;
+   case 'move':{const delta=numeric(input.delta);if(record.frames.some((row,index)=>record.selection.includes(index)&&(row.offset+delta<0||row.offset+delta>1)))return invalid('Sample frame offsets must remain between zero and one.');record.frames=record.frames.map((row,index)=>record.selection.includes(index)?{...row,offset:coordinate(row.offset+delta)}:row);break;}
+   case 'reorder':case 'later':[record.frames[0],record.frames[1]]=[record.frames[1],record.frames[0]];break;
+   case 'reset':delete frame.time;delete frame.relativeTime;delete frame.hold;Object.assign(frame,{offset:0,value:'computed',easing:'linear',composite:'auto'});break;
+   case 'clear':record.draft.number='';break;
+   default:throw Error('Unknown synthetic keyframe operation.');
+  }break;
+ }
+ case 'transition': {
+  const row=record.rows[0];
+  switch(fixture.key){
+   case 'migrate':case 'expand':record.version=2;if(fixture.key==='expand')record.properties=copy(record.catalog);record.rows=record.properties.map((property,index)=>({id:'sample-property-'+index,property,from:record.from,to:record.to,behavior:'normal'}));break;
+   case 'select':record.selected=Number(input.index);record.selectedProperty=record.rows[record.selected].property;break;
+   case 'property':row.property=input.property;break;
+   case 'add':record.rows.push({id:'sample-new',property:'letter-spacing',from:'computed',to:'computed',behavior:'normal'});break;
+   case 'remove':if(record.rows.length<2)return invalid('At least one sample property must remain.');record.rows.splice(0,1);break;
+   case 'earlier':case 'later':[record.rows[0],record.rows[1]]=[record.rows[1],record.rows[0]];break;
+   case 'from':case 'to':row[fixture.key]=Number(input.value);break;
+   case 'number':record.draft.number=Number(input.number);break;
+   case 'unit':record.draft.unit=input.unit;break;
+   case 'apply':record.rows[1].to=String(Number(input.number))+input.unit;break;
+   case 'clear':record.draft.number='';break;
+   case 'behavior':row.behavior=input.behavior;record.rendererPreview=input.behavior==='allow-discrete'?'unavailable':'not-run';break;
+   case 'reset':Object.assign(row,{from:'computed',to:'computed',behavior:'normal'});break;
+   default:throw Error('Unknown synthetic transition operation.');
+  }break;
+ }
  case 'snapshot-remove':if(record.snapshots.find(row=>row.id===input.reference)?.inUse)return invalid('The selected sample snapshot is in use.');record.snapshots=record.snapshots.filter(row=>row.id!==input.reference);break;
  default:throw Error('Unsupported synthetic operation.');
  }
@@ -75,7 +130,7 @@ export function evaluatePractice(fixture,state){
  case 'number': {const n=Number(value);return String(value).trim()===''||!Number.isFinite(n)||fixture.integer&&!Number.isInteger(n)||n<fixture.min||n>fixture.max?invalid('Enter a value within the sample bounds.'):{valid:true,text:`${n}${fixture.unit||''}`,number:n,preview:fixture.preview||null};}
  case 'color': return /^#[a-f\d]{6}$/i.test(String(value))?{valid:true,text:String(value),color:String(value)}:invalid('Use a six-digit hexadecimal color, such as #52643f.');
  case 'toggle': return{valid:true,text:value?'Enabled':'Disabled',visible:Boolean(value)};
- case 'choice':case 'navigation':case 'file': {const option=fixture.choices.find(row=>row.value===value);return option?{valid:true,text:option.result,choice:option.value,preview:fixture.preview||null,sampleWeight:option.fontWeight||null,sampleColors:fixture.palette?.[option.value==='dark'?'dark':'light']||null}:invalid('Choose one of the authored sample options.');}
+ case 'choice':case 'navigation':case 'file':case 'tabs': {const option=fixture.choices.find(row=>row.value===value);return option?{valid:true,text:option.result,choice:option.value,preview:fixture.preview||null,sampleWeight:option.fontWeight||null,sampleColors:fixture.palette?.[option.value==='dark'?'dark':'light']||null}:invalid('Choose one of the authored sample options.');}
  case 'remove': return state.applied&&!state.confirm?invalid('Confirm removal before changing the sample list.'):{valid:true,text:state.applied?'No sample items remain.':fixture.item,removed:Boolean(state.applied)};
  case 'reset':return{valid:true,text:String(state.applied?fixture.restored:fixture.initial)};
  case 'append':return{valid:true,text:[...fixture.rows,...(state.applied?[fixture.item]:[])].join(' · ')};
@@ -100,9 +155,13 @@ export function mountGuidancePlayground(mount,{fixture,t=s=>s}={}){
  for(const[key,label]of [['input','Sample input'],['action','Sample action'],['expected','Expected result']])mount.append(element('p',`${t(label)}: ${t(fixture[key])}`));
  const output=element('p'),preview=element('div','Sample caption');output.id=`practice-result-${invocation}`;preview.dataset.practicePreview=fixture.id;output.setAttribute('role','status');output.setAttribute('aria-live','polite');output.setAttribute('aria-label',t('Sample result'));
  const fields=element('div');fields.className='practice-controls';mount.append(fields,preview,output);
- let control,confirmation;const choiceButtons=[],choiceRadios=[],recordFields=[];
- const render=result=>{for(const{field}of recordFields){field.setAttribute('aria-invalid',String(!result.valid));field.error=!result.valid;field.errorText=result.valid?'':t(result.message);}output.textContent=t(result.valid?result.text:result.message);if(control){control.setAttribute('aria-invalid',String(!result.valid));control.error=!result.valid;control.errorText=result.valid?'':t(result.message);}preview.hidden=!result.valid||result.visible===false||result.removed===true;if(result.valid){preview.textContent=t(['text','choice','navigation','file','reset','append','remove','operation','date'].includes(fixture.kind)?result.text:'Sample caption');if(result.color)preview.style.backgroundColor=result.color;if(result.preview==='font-size')preview.style.fontSize=`${result.number}px`;if(result.preview==='font-weight')preview.style.fontWeight=String(result.number);if(result.preview==='opacity')preview.style.opacity=String(result.number);if(result.preview==='theme'){const dark=result.choice==='dark';preview.dataset.sampleTheme=dark?'dark':'light';preview.style.backgroundColor=result.sampleColors?.surface||'var(--md-sys-color-surface)';preview.style.color=result.sampleColors?.onSurface||'var(--md-sys-color-on-surface)';preview.style.padding='16px';}if(result.preview==='density'){const spacing=result.choice==='compact'?'8px':'16px';preview.style.display='grid';preview.style.gap=spacing;preview.style.padding=spacing;preview.replaceChildren(element('span','Sample label'),element('span','Sample caption'));}if(result.preview==='font-choice'&&Number.isFinite(result.sampleWeight)&&result.sampleWeight>=100&&result.sampleWeight<=900)preview.style.fontWeight=String(result.sampleWeight);if(result.preview==='font-family')preview.style.fontFamily=result.choice==='serif'?'serif':'sans-serif';}};
- if(['operation','date'].includes(fixture.kind)){
+ let control,confirmation,tabs=null;const tabButtons=[];const choiceButtons=[],choiceRadios=[],recordFields=[];
+ const render=result=>{if(tabs&&result.valid){const index=fixture.choices.findIndex(row=>row.value===result.choice);tabs.activeTabIndex=index;tabButtons.forEach((tab,i)=>{tab.active=i===index;tab.tabIndex=i===index?0:-1;tab.setAttribute('aria-selected',String(i===index));});preview.setAttribute('aria-labelledby',tabButtons[index].id);}for(const{field}of recordFields){field.setAttribute('aria-invalid',String(!result.valid));field.error=!result.valid;field.errorText=result.valid?'':t(result.message);}output.textContent=t(result.valid?result.text:result.message);if(control){control.setAttribute('aria-invalid',String(!result.valid));control.error=!result.valid;control.errorText=result.valid?'':t(result.message);}preview.hidden=!result.valid||result.visible===false||result.removed===true;if(result.valid){preview.textContent=t(['text','choice','navigation','file','reset','append','remove','operation','date','tabs'].includes(fixture.kind)?result.text:'Sample caption');if(result.color)preview.style.backgroundColor=result.color;if(result.preview==='font-size')preview.style.fontSize=`${result.number}px`;if(result.preview==='font-weight')preview.style.fontWeight=String(result.number);if(result.preview==='opacity')preview.style.opacity=String(result.number);if(result.preview==='theme'){const dark=result.choice==='dark';preview.dataset.sampleTheme=dark?'dark':'light';preview.style.backgroundColor=result.sampleColors?.surface||'var(--md-sys-color-surface)';preview.style.color=result.sampleColors?.onSurface||'var(--md-sys-color-on-surface)';preview.style.padding='16px';}if(result.preview==='density'){const spacing=result.choice==='compact'?'8px':'16px';preview.style.display='grid';preview.style.gap=spacing;preview.style.padding=spacing;preview.replaceChildren(element('span','Sample label'),element('span','Sample caption'));}if(result.preview==='font-choice'&&Number.isFinite(result.sampleWeight)&&result.sampleWeight>=100&&result.sampleWeight<=900)preview.style.fontWeight=String(result.sampleWeight);if(result.preview==='font-family')preview.style.fontFamily=result.choice==='serif'?'serif':'sans-serif';}};
+ if(fixture.kind==='tabs'){
+  tabs=element('md-tabs');tabs.autoActivate=true;tabs.setAttribute('aria-label',t(fixture.label));tabs.style.maxWidth='100%';preview.id=`practice-tabpanel-${invocation}`;preview.setAttribute('role','tabpanel');preview.tabIndex=0;
+  fixture.choices.forEach((option,index)=>{const tab=element('md-primary-tab',option.label);tab.id=`practice-tab-${invocation}-${index}`;tab.setAttribute('aria-controls',preview.id);tabs.append(tab);tabButtons.push(tab);});
+  listen(tabs,'change',()=>{const index=tabs.activeTabIndex;if(!Number.isInteger(index)||!fixture.choices[index])return;render(session.edit(fixture.choices[index].value));tabButtons[index].focus();});fields.append(tabs);
+ }else if(['operation','date'].includes(fixture.kind)){
   fields.append(element('p','Preview only. No real operation is performed.'));
   const specs=fixture.kind==='date'?[{key:'year',label:'Year',type:'number',min:2000,max:2099},{key:'month',label:'Month',type:'number',min:1,max:12},{key:'day',label:'Day',type:'number',min:1,max:31}]:fixture.fields;
   for(const spec of specs){const field=element(spec.type==='checkbox'?'md-checkbox':spec.type==='select'?'md-outlined-select':'md-outlined-text-field');field.setAttribute('aria-label',t(spec.label));field.setAttribute('aria-describedby',output.id);field.label=t(spec.label);field.value=String(fixture.initial[spec.key]??'');if(spec.type==='checkbox'){field.checked=fixture.initial[spec.key]===true;const label=element('label',spec.label);label.append(field);fields.append(label);}else{if(spec.type!=='select')field.type=spec.type==='number'?'number':'text';if(spec.type==='number'){field.min=String(spec.min);field.max=String(spec.max);}if(spec.type==='select'){field.menuPositioning='absolute';for(const option of spec.choices){const row=element('md-select-option');row.value=option.value;const headline=element('span',option.label);headline.slot='headline';row.append(headline);field.append(row);}}fields.append(field);}
