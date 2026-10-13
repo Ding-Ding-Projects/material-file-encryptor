@@ -1,3 +1,10 @@
+## Control guidance and responsive verification, current continuation
+
+The current task branch is `codex/lang-gui-responsive-20261013`. Source through `379f06d172f2c7a4f11250bffdb4cdfe0f35e6b5` includes independently reviewed authored practice for twelve registered consumer families, a tab-specific explanation repair, measured tab-label wrapping, and an exact interpreter-command recovery repair. The combined sixteen-file guidance suite passed 95 checks. The interpreter default-configuration regression reproduced its failure before the repair and passed fourteen checks afterward.
+
+Diagnostic build `906b84ddcecaf641754fb01db297b38ad5929bc8` passed the exact `build.bat /s` entrypoint, with 6,044 package entries and zero privacy rejections. Genuine isolated native/CDP inspection found a 38 CSS-pixel overflow at the end of the 320-pixel bilingual tab strip. Menu bounds, one-open-panel behavior, sample keyboard navigation, Escape focus return, and observed sample storage/history/admission/network counters passed their bounded observations. These receipts belong to that older diagnostic source. Its pixel-density emulation is not operating-system scaling or browser zoom evidence.
+
+The current source repairs the measured label cause and sample playback bounds. A fresh exact root build and identical rendered comparison remain pending. Unregistered motion-editor utilities are in a separately owned implementation slice; arbitrary font-axis and unsupported native motion behaviors remain explicitly unavailable in practice. The full 4,272-tuple GUI inventory, installed lifecycle, current release and live publication acceptance are not established by these source checks. No cleanup was performed by this task; earlier integration and cleanup entries below are historical records.
 ## Complete branch integration, 2026-10-13
 
 Every previously unmerged branch, local and remote (34 branches carrying about 330 commits that were not patch-equivalent to main), was merged into main through a reviewed integration branch. Every branch tip is now an ancestor of main, so main is the only remaining branch and checkout.
