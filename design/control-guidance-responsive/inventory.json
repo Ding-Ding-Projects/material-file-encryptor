@@ -1,0 +1,375 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "c92621ebd4ec6d8eb99dafb0e677c4686cf32b34",
+  "status": "design-only-awaiting-independent-review",
+  "runtimeAcceptance": "unverified",
+  "referenceAssets": [],
+  "scope": [
+    "shared-control-guidance",
+    "personalization-navigation",
+    "public-document-navigation",
+    "browser-workspace"
+  ],
+  "tupleExpansion": "Every applicable state by every language by every theme by every scale by both required viewports. Record explicit applicability reasons; do not silently omit a tuple.",
+  "languages": [
+    "en",
+    "yue",
+    "bilingual"
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "displayScalesPercent": [
+    100,
+    125,
+    150,
+    200
+  ],
+  "viewportsCssPixels": [
+    {
+      "id": "narrow",
+      "width": 320,
+      "height": 800,
+      "required": true
+    },
+    {
+      "id": "normal",
+      "width": 1280,
+      "height": 900,
+      "required": true
+    }
+  ],
+  "additionalViewportChecks": [
+    {
+      "id": "public-menu-breakpoint",
+      "widths": [
+        799,
+        800
+      ],
+      "height": 900
+    },
+    {
+      "id": "workspace-navigation-breakpoint",
+      "widths": [
+        839,
+        840
+      ],
+      "height": 900
+    },
+    {
+      "id": "personalization-breakpoint",
+      "widths": [
+        640,
+        641
+      ],
+      "height": 900
+    }
+  ],
+  "desktopMinimum": {
+    "status": "must-resolve-from-product-contract-before-capture",
+    "doNotInferFromWebMinimum": true
+  },
+  "practiceKinds": [
+    "text",
+    "multiline",
+    "search",
+    "regex",
+    "number",
+    "range",
+    "checkbox",
+    "switch",
+    "select",
+    "radio",
+    "color",
+    "typography",
+    "date",
+    "time",
+    "schedule",
+    "file",
+    "image",
+    "action",
+    "destructive-action",
+    "navigation",
+    "tab",
+    "read-only",
+    "credential-example"
+  ],
+  "controlIdentityCoverage": {
+    "status": "unresolved-required-before-implementation-acceptance",
+    "taxonomyIsNotCoverage": true,
+    "requiredSources": [
+      "all-guidance-consumers",
+      "all-rendered-capable-controls",
+      "read-only-explanation-targets",
+      "generated-control-helpers",
+      "each-personalization-tab"
+    ],
+    "requiredRowFields": [
+      "descriptorId",
+      "controlId",
+      "consumerPath",
+      "surfaceState",
+      "targetIdentity",
+      "conceptId",
+      "articleId",
+      "fixtureId",
+      "supportedStates",
+      "inapplicabilityReason"
+    ],
+    "dynamicIdentity": "Stable template ID plus explicit owner and instance key; never collapse distinct controls by kind or label.",
+    "sourceBindings": [
+      {
+        "path": "src/shared/local-ux/settings-guidance.js",
+        "inventory": "SETTINGS_GUIDANCE_INVENTORY",
+        "idTemplate": "settings.{action-prefix}{slug}.{optional-context}",
+        "includeVariants": [
+          "weekday",
+          "reset",
+          "clear"
+        ]
+      },
+      {
+        "path": "src/shared/local-ux/nested-appearance-guidance.js",
+        "inventory": "NESTED_APPEARANCE_GUIDANCE",
+        "idTemplate": "nested-appearance:{key}:{instance}"
+      },
+      {
+        "path": "src/renderer/features/personalization/font-guidance.js",
+        "inventory": "FONT_GUIDANCE_CONCEPTS",
+        "idTemplate": "typography:font:{kind}:{face-id-or-inventory}:{axis-tag-or-instance-name-or-default}"
+      },
+      {
+        "path": "src/renderer/features/personalization/motion-guidance.js",
+        "inventory": "MOTION_GUIDANCE",
+        "idTemplate": "motion:{selected-id-or-global}:{control-id}"
+      },
+      {
+        "path": "src/renderer/features/personalization/workbench-guidance.js",
+        "inventory": "WORKBENCH_GUIDANCE",
+        "idTemplate": "workbench:{key}:{context}"
+      },
+      {
+        "path": "src/renderer/features/personalization/motion-keyframe-inspector.js",
+        "inventory": "KEYFRAME_CONCEPTS",
+        "idTemplate": "keyframes:{track-id}:{index}:{registration-index}:{key}"
+      },
+      {
+        "path": "src/renderer/features/personalization/transition-property-inspector.js",
+        "inventory": "TRANSITION_CONCEPTS",
+        "idTemplate": "transition-property:{rule-id}:{index}:{registration-index}:{key}"
+      },
+      {
+        "path": "src/renderer/features/personalization/image-transform-inspector.js",
+        "inventory": "IMAGE_TRANSFORM_FIELDS and every bind invocation",
+        "idTemplate": "image-placement:{key}"
+      },
+      {
+        "path": "src/renderer/features/personalization/color-picker.js",
+        "inventory": "COLOR_CONTROL_CONTRACTS and every bind invocation",
+        "descriptorFactory": "colorPickerDescriptor"
+      },
+      {
+        "path": "src/renderer/features/personalization/typography-inspector.js",
+        "inventory": "TYPOGRAPHY_FIELDS and every search, clear, preset, reset and step helper registration"
+      },
+      {
+        "path": "src/renderer/features/personalization/logo.js",
+        "inventory": "every extra invocation",
+        "idTemplate": "logo.authoring.{normalized-label}"
+      },
+      {
+        "path": "src/renderer/features/server-manager/index.js",
+        "inventory": "every guide registration",
+        "idTemplate": "server-preparation:{key}:{context}"
+      }
+    ],
+    "requiredTabDescriptorIds": [
+      "settings.action.language-and-voice",
+      "settings.action.appearance",
+      "settings.action.schedules",
+      "settings.action.attention",
+      "settings.action.private-local-history"
+    ],
+    "requiredTabTargetTemplates": [
+      "{instanceId}-tab-language",
+      "{instanceId}-tab-appearance",
+      "{instanceId}-tab-schedules",
+      "{instanceId}-tab-attention",
+      "{instanceId}-tab-history"
+    ],
+    "expectedControlIds": null,
+    "actualRegisteredControlIds": null,
+    "comparison": "Exact bidirectional coverage, unique identities, target-specific explanations and explicit justified exclusions.",
+    "omissionNegativeCases": [
+      "add-capable-control-without-inventory-row",
+      "delete-required-descriptor-row",
+      "omit-one-tab-information-entry"
+    ],
+    "negativeEvidence": []
+  },
+  "states": [
+    {
+      "id": "guidance-collapsed",
+      "expected": "One information icon above the exact target, no persistent Guide or Explain labels; localized name and 48px touch target."
+    },
+    {
+      "id": "information-tooltip-hover-focus",
+      "expected": "Localized target-specific tooltip appears on hover and keyboard focus, fits viewport and dismisses on exit, Escape or panel opening; accessible name remains independent."
+    },
+    {
+      "id": "guidance-open",
+      "expected": "Non-modal full-width panel above target; title focused; direct control remains reachable."
+    },
+    {
+      "id": "explanation-expanded",
+      "expected": "All contextual explanation fields and authoritative help link resolve correctly."
+    },
+    {
+      "id": "worked-example",
+      "expected": "Explicit authored sample input, action and expected output describe the exact target concept."
+    },
+    {
+      "id": "practice-initial",
+      "repeatFor": "practiceKinds",
+      "expected": "Authored fixture only, with no live values or production callbacks."
+    },
+    {
+      "id": "practice-edited",
+      "repeatFor": "practiceKinds",
+      "expected": "Functional control-specific change and visible local result, without external effects."
+    },
+    {
+      "id": "practice-invalid",
+      "repeatFor": "applicable validating practiceKinds",
+      "expected": "Local validation identifies the sample field; real target is unchanged; recovery remains possible."
+    },
+    {
+      "id": "practice-reset",
+      "repeatFor": "practiceKinds",
+      "expected": "Reset restores the exact authored fixture without storage, history or original-control changes."
+    },
+    {
+      "id": "practice-concurrent-same-descriptor",
+      "expected": "Two instances own separate drafts, fixtures, popups, listeners and cancellation; editing or resetting one changes neither the other nor any real target."
+    },
+    {
+      "id": "practice-concurrent-different-descriptors",
+      "expected": "Different descriptor instances cannot share drafts or cross-route helper and admission calls."
+    },
+    {
+      "id": "practice-close-reopen",
+      "expected": "Closing disposes all sample state and reopening restores the authored fixture with no previous input."
+    },
+    {
+      "id": "practice-observed-side-effects",
+      "expected": "Observed production callback, network/IPC, storage/history and native-operation counters remain unchanged during sample edit, validation, reset and disposal."
+    },
+    {
+      "id": "target-disabled",
+      "expected": "Information and practice remain available; real action is unavailable with its specific reason."
+    },
+    {
+      "id": "target-readonly",
+      "expected": "Explanation remains accessible; practice is synthetic; original value cannot be changed."
+    },
+    {
+      "id": "real-action-first-step",
+      "expected": "Explicit entry opens real operation guidance with target availability and validation intact."
+    },
+    {
+      "id": "real-action-next-back",
+      "expected": "Progress and Back preserve valid drafts and appropriate focus."
+    },
+    {
+      "id": "real-action-invalid",
+      "expected": "Invalid real input prevents advancement and focuses the affected real field."
+    },
+    {
+      "id": "real-action-confirm",
+      "expected": "Only explicit final activation invokes the original admitted operation with its permissions and confirmations."
+    },
+    {
+      "id": "real-action-finished",
+      "expected": "Actual awaited outcome is announced; practice completion never implies real success."
+    },
+    {
+      "id": "real-action-cancelled",
+      "expected": "Pending work cancels safely; completed effects are not falsely described as rolled back."
+    },
+    {
+      "id": "guidance-closed",
+      "expected": "Focus returns to information button; all practice state and listeners are disposed."
+    },
+    {
+      "id": "personalization-tab-help",
+      "expected": "Every tab including inactive tabs retains its own above-control information entry; only the full-width expanded panel may be shared, with explicit originating-tab association and prior-instance disposal."
+    },
+    {
+      "id": "public-navigation-open",
+      "expected": "Menu follows actual header geometry, fits available viewport and supports Escape and destination focus."
+    },
+    {
+      "id": "workspace-navigation-open",
+      "expected": "Navigation and content remain reachable at narrow widths without document overflow."
+    },
+    {
+      "id": "preferences-dialog-open",
+      "expected": "Close and actions remain reachable; content wraps and scrolls within available visual viewport."
+    }
+  ],
+  "negativeChecks": [
+    "no-live-value-copy",
+    "no-target-cloning",
+    "no-production-callback-in-practice",
+    "no-network-or-ipc",
+    "no-storage-or-history",
+    "no-native-picker-or-download",
+    "no-clipboard-or-speech",
+    "no-recursive-guidance",
+    "no-production-command-registration",
+    "no-document-overflow-concealment",
+    "no-generic-success-only-practice",
+    "no-silent-descriptor-omission",
+    "no-shared-instance-draft",
+    "no-unscoped-helper-interface",
+    "no-production-admission-dispatch",
+    "no-missing-tab-information-entry"
+  ],
+  "isolationEvidence": {
+    "domFactoryIsSecurityBoundary": false,
+    "requiredInterfaces": [
+      "fixture-owned-choice-data",
+      "local-event-admission",
+      "local-popup-root",
+      "invocation-owned-disposers"
+    ],
+    "sourceChecks": "unrun",
+    "observedProductionSideEffectChecks": "unrun",
+    "sharedDraftNegativeCheck": "unrun"
+  },
+  "evidenceFields": [
+    "sourceCommit",
+    "buildReceipt",
+    "artifactSha256",
+    "screenState",
+    "language",
+    "theme",
+    "viewportCssPixels",
+    "displayScalePercent",
+    "captureRoute",
+    "privacyVerdict",
+    "capturePath",
+    "layoutProbeReceipt",
+    "verificationVerdict"
+  ],
+  "independentReview": {
+    "model": "gpt-6-astra",
+    "verdict": "accepted-to-begin-shared-implementation-with-control-coverage-and-runtime-evidence-pending",
+    "sourceCommit": "c92621ebd4ec6d8eb99dafb0e677c4686cf32b34",
+    "runtimeAcceptance": "unverified"
+  },
+  "implementation": {
+    "status": "not-performed-by-design-lane"
+  }
+}
