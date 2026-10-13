@@ -8,7 +8,7 @@ The affected owned run retains its five-process prepare-exit record, but confirm
 
 Package4840f931 and frozen269-file documentation remain separately source-bound. The genuine1280x900DPR1 and320x800DPR2 guides were inspected; promotion as newer source remains pending. That browser's seven processes and ports are absent, desktop closed, profile retained. Older shared-service desktop handle remains untouched. The packaged diagnostic needs a fresh exact root-build receipt with actual start/end cleanliness, exit result and three package hashes. New build is next on immutable source. Diagnostic source has11focused checks, runtime unrun, accepted:false.
 
-Instruction repair d8a1915d is dewed on its owning branch and exact corrected root build runs separately. Historical95discovered/91passed/3failed/1unverified result remains retained. Managed target readback, main integration, current README evidence, actual deployed content and complete native/layout/installer acceptance remain incomplete. Preserve every unrelated branch/worktree and ignored announcement variant. No real-data migration, security weakening, host power action or private publication authorized.
+Instruction repair d8a1915d is pushed on its owning branch and exact corrected root build runs separately. Historical95discovered/91passed/3failed/1unverified result remains retained. Managed target readback, main integration, current README evidence, actual deployed content and complete native/layout/installer acceptance remain incomplete. Preserve every unrelated branch/worktree and ignored announcement variant. No real-data migration, security weakening, host power action or private publication authorized.
 
 ## Earlier child source record
 
