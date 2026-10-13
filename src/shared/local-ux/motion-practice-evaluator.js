@@ -19,7 +19,7 @@ function samplePlaybackPosition(position,start,end,loop){
  return position<end?position:start+(position-start)%(end-start);
 }
 export function evaluateMotionPractice(fixture,state){
- const record=copy(fixture.record),key=fixture.key,input=state.value,invalid=message=>({valid:false,message}),result={};let value=input;
+ const record=copy(fixture.record),key=fixture.key,input=fixture.variant==='reset'&&state.applied?fixture.restored:state.value,invalid=message=>({valid:false,message}),result={};let value=input;
  try{
   if(fixture.control==='select'){if(!fixture.choices.some(row=>row.value===value))return invalid('Choose one of the authored sample options.');if(['true','false'].includes(value))value=value==='true';}
   if(fixture.numeric){if(fixture.optional&&value==='')value=null;else if(fixture.special?.includes(value)){}else{if(!finite(value)||Number(value)<fixture.min||Number(value)>fixture.max||fixture.integer&&!Number.isInteger(Number(value)))return invalid('Enter a valid sample motion value within the authored bounds.');value=Number(value);}}
