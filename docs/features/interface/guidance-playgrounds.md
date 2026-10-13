@@ -10,6 +10,8 @@ The panel contains purpose, availability, a worked sample, local practice, the e
 
 For tab strips, the optional `inlineGridColumn` mode keeps entry and panel in the same shadow root. The owning row and its cells must expose a shared CSS grid, with cells using `display:contents`; each entry occupies its assigned first-row column and an expanded panel occupies the full second row. The owner uses `onOpen` to close another open invocation. This structure requires actual built layout verification.
 
+The five section tabs use `settingsTabGuidance(key)` from the settings guidance module. Their stable IDs are `settings.navigation.language`, `settings.navigation.appearance`, `settings.navigation.schedules`, `settings.navigation.attention` and `settings.navigation.history`, distinct from setting fields and action descriptors. Each practice contains a real local `md-tabs` strip with five `md-primary-tab` elements, independently identified panels, localized sample content, selected state and focus. Material tab keyboard handling uses automatic activation. The parent tab consumer must bind these explicit navigation descriptors; the helper alone does not establish that integration or built keyboard acceptance.
+
 ## Authored fixture boundary
 
 `guidance-playground.js` accepts a fixture returned by `definePractice`. Fixtures contain immutable JSON data, an explicit identity, kind, label, initial value and worked input/action/expected result. Accessors, callbacks and non-plain objects are rejected. Practice receives only its local mount, translator and fixture. It receives no real target, callbacks, options, current draft, services or credentials.

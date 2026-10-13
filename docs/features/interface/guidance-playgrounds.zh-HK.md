@@ -10,6 +10,8 @@
 
 分頁列可使用 `inlineGridColumn`。入口同面板仍然留喺同一 shadow root，父層提供共用 CSS grid，儲存格使用 `display:contents`。入口佔指定欄，展開面板佔完整下一列；擁有者透過 `onOpen` 關閉其他已開啟面板。實際組建版面仍需驗證。
 
+五個分類分頁使用設定指引模組嘅 `settingsTabGuidance(key)`，穩定識別碼係 `settings.navigation.language`、`settings.navigation.appearance`、`settings.navigation.schedules`、`settings.navigation.attention` 同 `settings.navigation.history`，同欄位或操作描述分開。每個練習有真正本機 `md-tabs` 同五個 `md-primary-tab`，提供獨立面板識別碼、翻譯內容、選取狀態同焦點，Material 鍵盤處理採用自動啟動。父層分頁仍需明確綁定呢啲導覽描述；輔助函式存在唔代表已整合或完成實際鍵盤驗證。
+
 ## 預先編寫樣本邊界
 
 `guidance-playground.js` 只接收 `definePractice` 建立嘅不可變 JSON 樣本，必須明確列出識別碼、類型、標籤、起始值、輸入、操作同預期結果。存取函式、回呼及非普通物件會被拒絕。練習只接收本機容器、翻譯函式同樣本，唔會接收真實目標、選項、目前草稿、服務或憑證。

@@ -1,3 +1,4 @@
+export {settingsTabGuidance,SETTINGS_TAB_IDS} from './settings-tab-guidance.js';
 import {settingsPractice,SETTINGS_PRACTICE_COPY} from './settings-practice.js';
 import {ACTION_HELP,ACTION_HELP_COPY} from './settings-action-help.js';
 import {FIELD_HELP,FIELD_HELP_COPY} from './settings-field-help.js';
