@@ -1,3 +1,9 @@
+## Verified combined source delivery
+
+Combined source fac0a064458e39216d02bc979bd4791ad8a2c472 passed16focused source checks and exact build.bat /s with exit0. It is proved on both main and codex/lang-gui-responsive-20261013 through ls-remote. Root log SHA2568581791100d2eb816fbb3d1c543641cd908745d1ca624546476bce6dccfb4ce2; package privacy6059entries,0rejections, ASAR SHA25678e77432979b837137fff867243571656116b253f4815941e8916ad4ade19b6e. Actions38404372056 and38404700529 are running;38404700659 waiting, all same source. No remote terminal verdict or full runtime completion is claimed.
+
+The next bounded child diagnosis adds monotonic elapsed timing and instruments the actual Escape operation. Deadlines, later assertions and production behavior remain unchanged. Earlier2passed/1cancelled actual runs retain their original provenance. Account11percent remaining;10percent begins preservation. All unrelated branches, linked checkouts and the existing stash remain retained.
+
 ## Reviewed guidance integration, current source boundaries
 
 Integrate the four independently reviewed source units at6341649,8650ad5,5308d0f and776d354 with the reviewed two-image publication repair atb121aec. Common handoff history is retained once; the child lane's distinct authored explanations remain below. This integration does not claim complete GUI acceptance.
