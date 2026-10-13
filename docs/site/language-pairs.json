@@ -191,6 +191,12 @@
       "translationSha256": "4bb2d0a4137b7985782b84ff655bbc940c0b89ce33e2e09c7ace34b0202c5f0c"
     },
     {
+      "source": "docs/features/interface/local-tools-workspaces.md",
+      "translation": "docs/features/interface/local-tools-workspaces.zh-HK.md",
+      "sourceSha256": "23972d4bfc835ef7aadb77e567d70346cc30432eba700d4650181a548ebff599",
+      "translationSha256": "4bb2d0a4137b7985782b84ff655bbc940c0b89ce33e2e09c7ace34b0202c5f0c"
+    },
+    {
       "source": "docs/features/interface/modern-fields.md",
       "translation": "docs/features/interface/modern-fields.zh-HK.md",
       "sourceSha256": "bf2a3950c4f88e01123deb715136ebb1062ec6397bb8cbef296253b7ce08ec8a",
