@@ -84,4 +84,12 @@ Bezier and linear samples draw their computed curve; step samples show their dis
 
 Original field callbacks remain the operation owners. Button guidance dispatches the original admitted click and awaits the captured original promise. Contextual Reset guidance additionally awaits its original field consumer, so an asynchronous rejection cannot become a successful guided result. Opening or editing a sample does not read the real motion model. Tests cover all 38 rendered entry templates, exactly-once success, rejected and locked original actions, retired buttons, missing-entry negatives, independent Reset and disposal.
 
-Outside this assigned utility slice, unregistered track actions and switches, playback buttons and scrubber, search, Undo/Redo, import/export, portable settings and schedule add/remove still require their own guidance coverage. This inventory does not claim complete editor coverage or built visual acceptance.
+## Remaining motion controls
+
+A second slice adds 37 exact templates: track selection, two add actions, three eligibility switches, five track actions, eight playback commands, two frame steps, explicit trigger, scrubber, search, five history/copy/reset actions, portable settings and its reset, document input and its reset, import/export, and two schedule actions. Dynamic track and schedule identities remain distinct.
+
+Track samples change synthetic ordering, selected identity, duration and eligible playback lists. History moves within an authored three-state record. Copy and Paste use independent in-memory records. Schedule addition references a fixed saved sample preset, and removal keeps the other rule. Portable settings belong to the selected sample track. Both document resets visibly restore their captured authored values. Import validates an authored choice, without opening a file chooser; export displays serialized sample text without downloading. This sample schema is explicitly narrower than the original document validator.
+
+Playback samples expose simulated phase, signed rate and bounded position with an isolated ruler. Native playback remains explicitly unavailable. Material switches, slider, fields, select and tabs retain their appropriate semantics. Opening and changing these examples never reads the real model. Original guided actions dispatch the original event once, retain its admission and await its recorded promise, including field resets and switches.
+
+The remaining source inventory is 54 contextual helpers: 52 Reset value templates for the registered motion fields actually rendered, plus Choose value for Animated property and Global easing. Those helpers are not covered by this 37-template slice. Built visual and native acceptance remain pending.
