@@ -1,6 +1,5 @@
 import {createDocumentationCatalogService} from './documentation-catalog-service.js';
 import {createServerManagerHost} from './server-manager-host.js';
-import {createDocumentationCatalogService} from './documentation-catalog-service.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID, scrypt as scryptCallback, timingSafeEqual, randomBytes } from 'node:crypto';
