@@ -618,5 +618,5 @@
 
 - [x] Merge every unmerged local and remote branch into main with reviewed conflict resolution, keeping the suite at main's baseline.
 - [x] Verify a pre-cleanup archive that excludes Git-ignored files.
-- [ ] Remove every merged branch and checkout so only main remains.
+- [x] Remove every merged branch and checkout so only main remains.
 - [ ] Obtain actual runtime, GUI and installed acceptance for newly integrated branch work.

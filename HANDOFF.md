@@ -11,6 +11,8 @@ Resolution ledger:
 
 Verification at the integration source `b1de246691baa766263051259b384caf08bda4df`: the full JavaScript suite ran 1,634 tests with 1,608 passed, 24 skipped and 2 failed. The two failures are browser-driven renderer tests that need Playwright, which is unavailable on this host; main fails the same two. The exact `build.bat /s` exited 0 at the earlier integration source `a6bd47ca7db7cf152330b4b0964b3ba7678d8121` and is recorded separately for this source. No installer was produced locally.
 
+Cleanup result: after the verified archive and proof that all 99 local and remote branch tips were ancestors of main `6df629d68f643c45faa1c6081d55208e5d1139e6`, all 35 linked checkouts, 41 local branches and 58 remote branches were removed. Main is the only branch and checkout locally and on the remote, with no stashes. Main's Windows release delivery and documentation publication succeeded; release v1.424.1 is a normal release targeting that source with its Setup, full package, RELEASES and provenance assets.
+
 Not verified by this integration: actual GUI acceptance remains 0/4,272 tuples; native converter admission remains unavailable; frozen GUI production lifecycle closure and installer production remain unverified; merged branch work carries no runtime or installed verdict of its own.
 
 Preservation: a pre-cleanup archive of all 36 checkouts and the complete Git administrative directory was verified (562 MB, every entry count matching the tracked and non-ignored file lists, all hashes verified, all-refs bundle verified). Git-ignored files such as dependency trees, build output, local profiles and ignored evidence are excluded from the archive by the owner's instruction and are not retained after their checkouts are removed.
