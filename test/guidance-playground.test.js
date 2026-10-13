@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {definePractice,createPracticeSession,evaluatePractice,mountGuidancePlayground,practiceCoverage,assertPracticeCoverage} from '../src/shared/surface/guidance-playground.js';
-import {settingsPractice} from '../src/shared/local-ux/settings-practice.js';
+import {settingsOperationPractice,clearSettingPractice} from '../src/shared/local-ux/settings-operation-practice.js';
+import {settingsPractice,scheduledValuePractice} from '../src/shared/local-ux/settings-practice.js';
 import {settingsGuidance,SETTINGS_GUIDANCE_INVENTORY} from '../src/shared/local-ux/settings-guidance.js';
 import {NESTED_PRACTICE,FONT_PRACTICE,APPEARANCE_PRACTICE_COPY} from '../src/shared/local-ux/appearance-practice.js';
 import {createAccessDocument} from './helpers/local-access-dom.js';
@@ -41,7 +42,7 @@ test('practice inventory compares exact identities and refuses missing descripto
  assert.throws(()=>assertPracticeCoverage(ids,[...rows,rows[0]]),/Duplicate/);
  assert.throws(()=>assertPracticeCoverage(ids,rows.map((row,index)=>index?row:{...row,practice:null})),/Missing authored/);
  const actual=SETTINGS_GUIDANCE_INVENTORY.map(row=>settingsGuidance(row.label)),coverage=practiceCoverage(actual);
- assert.ok(coverage.some(row=>row.status==='missing'),'Incomplete families remain explicit, never falsely green');
+ assert.equal(coverage.filter(row=>row.status==='missing').length,0);assertPracticeCoverage(actual.map(row=>row.id),actual);
 });
 test('mounted practice retains input node and local result through edits and reset, then removes handlers',async()=>{
  const doc=createAccessDocument(),mount=doc.createElement('section');doc.body.append(mount);
@@ -70,7 +71,7 @@ test('every authored appearance choice preserves its Cantonese result including 
 });
 test('local Material selects change only the theme, density or font sample and reset the same field',async()=>{
  const doc=createAccessDocument(),prototype=Object.getPrototypeOf(doc.body),previous=Object.getOwnPropertyDescriptor(prototype,'style');Object.defineProperty(prototype,'style',{configurable:true,get(){return this._style||={};}});
- try{for(const[label,value,property,expected]of [['Theme','dark','backgroundColor','var(--md-sys-color-inverse-surface)'],['Density','compact','gap','8px'],['Font family','serif','fontFamily','serif']]){
+ try{for(const[label,value,property,expected]of [['Theme','dark','backgroundColor','#1c1b1f'],['Density','compact','gap','8px'],['Font family','serif','fontFamily','serif']]){
   const mount=doc.createElement('section'),other=doc.createElement('section');doc.body.append(mount,other);const first=mountGuidancePlayground(mount,{fixture:settingsPractice(label)}),second=mountGuidancePlayground(other,{fixture:settingsPractice(label)});
   const field=mount.querySelector('md-outlined-select'),preview=mount.querySelector('[data-practice-preview]'),otherPreview=other.querySelector('[data-practice-preview]');assert.ok(field,label);assert.equal(field.menuPositioning,'absolute');assert.equal(field.children.length,settingsPractice(label).choices.length);const before=preview.style[property],otherBefore=otherPreview.style[property];
   field.value=value;await field.dispatchEvent({type:'change'});assert.equal(preview.style[property],expected);assert.equal(otherPreview.style[property],otherBefore);assert.equal(doc.body.style[property],undefined);
@@ -82,4 +83,51 @@ test('radio samples have unique invocation ownership and reset without changing 
  const doc=createAccessDocument(),a=doc.createElement('section'),b=doc.createElement('section');doc.body.append(a,b);const fixture=NESTED_PRACTICE['logo-fit'],first=mountGuidancePlayground(a,{fixture}),second=mountGuidancePlayground(b,{fixture}),radios=a.querySelectorAll('md-radio'),other=b.querySelectorAll('md-radio');
  assert.equal(radios.length,2);assert.notEqual(radios[0].name,other[0].name);radios[1].checked=true;await radios[1].dispatchEvent({type:'change'});assert.equal(first.session.state.value,'cover');assert.equal(second.session.state.value,'contain');assert.equal(other[0].checked,true);assert.equal(radios[0].checked,false);
  await a.querySelectorAll('md-text-button').find(node=>node.textContent==='Reset example').click();assert.equal(radios[0].checked,true);assert.equal(radios[1].checked,false);first.destroy();second.destroy();assert.equal(radios[1].listeners.get('change').length,0);
+});
+
+test('all 88 static settings descriptors have distinct authored fixtures and omission remains red',()=>{
+ const rows=SETTINGS_GUIDANCE_INVENTORY.map(row=>settingsGuidance(row.label));assert.equal(rows.length,88);assertPracticeCoverage(rows.map(row=>row.id),rows);assert.equal(new Set(rows.map(row=>row.practice.id)).size,88);
+ const omitted=rows.map(row=>row.label==='Unlock history'?{...row,practice:null}:row);assert.throws(()=>assertPracticeCoverage(rows.map(row=>row.id),omitted),/Missing authored/);
+});
+test('synthetic dates validate the calendar without rollover and own independent drafts',()=>{
+ for(const label of ['Start date','End date','From date','To date']){const sample=createPracticeSession(settingsPractice(label));assert.equal(sample.result.text,'2030-01-15 UTC');assert.equal(sample.edit({year:2030,month:2,day:29}).valid,false);assert.equal(sample.edit({year:2032,month:2,day:29}).valid,true);assert.equal(sample.edit({year:2032,month:2,day:30}).valid,false);assert.equal(sample.reset().text,'2030-01-15 UTC');}
+});
+test('consequential sample actions produce specific local records and no unconditional success',()=>{
+ const expected={
+ 'Set local credential':['credentialConfigured',true],'Store credential':['credentialConfigured',true],'Enable mode':['restrictionEnabled',true],'Turn off mode':['restrictionEnabled',false],'Configure credential':['editor','open'],'Clear credential':['credentialConfigured',false],'Cancel':['draft',''],'Enable':['enabled',true],'Disable':['enabled',false],'Reset':['theme','system'],'Set up history password':['passwordConfigured',true],'Unlock history':['locked',false],'Lock history':['locked',true],'Set retention':['retentionDays',30],'Save label':['label','Before appearance change'],'Not now (one hour)':['reminderAfter','2030-01-15T11:00:00Z']};
+ for(const[label,[key,value]]of Object.entries(expected)){const fixture=settingsOperationPractice(label),sample=createPracticeSession(fixture);if(fixture.confirmation){assert.equal(sample.apply().valid,false);assert.equal(sample.state.applied,false);sample.edit({...sample.state.value,confirm:true});}const result=sample.apply();assert.equal(result.valid,true,label);assert.deepEqual(result.record[key],value,label);sample.reset();assert.deepEqual(sample.result.record,fixture.record,label+' reset');}
+ const auth=createPracticeSession(settingsOperationPractice('Unlock history'));auth.edit({demonstration:'different'});assert.equal(auth.apply().valid,false);assert.equal(auth.state.applied,false);
+ const voice=createPracticeSession(settingsOperationPractice('Test narration'));voice.edit({voice:'sample-yue',rate:1.5});const speech=voice.apply();assert.equal(speech.record.sequence[0].voice,'sample-yue');assert.equal(speech.record.audioPlayed,false);
+ const editor=createPracticeSession(settingsOperationPractice('Edit this surface'));editor.edit({layer:'background'});assert.equal(editor.apply().record.selectedLayer,'background');
+});
+test('history and settings previews redact, compare, prune, restore and validate authored imports',()=>{
+ const settings=createPracticeSession(settingsOperationPractice('Export settings')).apply();assert.deepEqual(settings.record,{version:1,settings:{theme:'dark',fontScale:1.25}});assert.ok(!settings.text.includes('privateDemo'));
+ const history=createPracticeSession(settingsOperationPractice('Export redacted history')).apply();assert.equal(history.record.entries.length,2);assert.ok(!history.text.includes('snapshot'));
+ const compare=createPracticeSession(settingsOperationPractice('Compare selected entries'));assert.equal(compare.apply().record.differences.length,2);compare.reset();compare.edit({first:'sample-a',second:'sample-a'});assert.equal(compare.apply().valid,false);
+ const prune=createPracticeSession(settingsOperationPractice('Prune expired entries'));prune.edit({days:365,confirm:true});assert.deepEqual(prune.apply().record.entries,[{id:'recent',ageDays:10}]);assert.equal(prune.reset().record.entries.length,2);
+ const restore=createPracticeSession(settingsOperationPractice('Restore'));restore.edit({confirm:true});assert.deepEqual(restore.apply().record.settings,{theme:'light',fontScale:1});
+ const imported=createPracticeSession(settingsOperationPractice('Import settings'));imported.edit({file:'invalid'});assert.equal(imported.apply().valid,false);assert.equal(imported.state.applied,false);imported.edit({file:'valid'});assert.deepEqual(imported.apply().record.settings,{theme:'dark',fontScale:1.25});
+});
+test('clear and every scalar scheduled value select authored metadata instead of live values',()=>{
+ const clear=createPracticeSession(clearSettingPractice('Search settings'));clear.edit({value:'Changed sample query'});assert.equal(clear.result.record.value,'Changed sample query');assert.equal(clear.apply().record.value,'');assert.equal(clear.reset().record.value,'Sample text');
+ for(const domain of ['language','theme','density','seed','fontFamily','fontScale','fontWeight','motion','displayName','emoji','funnyEnglish','funnyCantonese','appearance','logo']){const fixture=scheduledValuePractice(domain);assert.ok(fixture,domain);assert.equal(createPracticeSession(fixture).result.valid,true);}
+ assert.equal(scheduledValuePractice('unknown'),null);
+});
+test('authored font face choices change the sample weight and restore it on reset',async()=>{
+ const doc=createAccessDocument(),prototype=Object.getPrototypeOf(doc.body),previous=Object.getOwnPropertyDescriptor(prototype,'style');Object.defineProperty(prototype,'style',{configurable:true,get(){return this._style||={};}});
+ try{const mount=doc.createElement('section');doc.body.append(mount);const sample=mountGuidancePlayground(mount,{fixture:FONT_PRACTICE.face}),preview=mount.querySelector('[data-practice-preview]'),radios=mount.querySelectorAll('md-radio');assert.equal(preview.style.fontWeight,'400');radios[1].checked=true;await radios[1].dispatchEvent({type:'change'});assert.equal(preview.style.fontWeight,'700');await mount.querySelectorAll('md-text-button').find(node=>node.textContent==='Reset example').click();assert.equal(preview.style.fontWeight,'400');sample.destroy();}finally{if(previous)Object.defineProperty(prototype,'style',previous);else delete prototype.style;}
+});
+
+test('synthetic snapshot capture and removal retain authored properties and reject an in-use reference',()=>{
+ for(const label of ['Capture current appearance','Capture current logo']){const fixture=settingsOperationPractice(label),session=createPracticeSession(fixture);const result=session.apply();assert.equal(result.record.snapshots.length,1);assert.deepEqual(result.record.snapshots[0].snapshot,fixture.record.base);assert.equal(session.reset().record.snapshots.length,0);}
+ const removal=createPracticeSession(settingsOperationPractice('Remove local snapshot'));removal.edit({reference:'sample-used',confirm:true});assert.equal(removal.apply().valid,false);assert.equal(removal.state.applied,false);removal.edit({reference:'sample-unused',confirm:true});assert.deepEqual(removal.apply().record.snapshots,[{id:'sample-used',inUse:true}]);
+});
+test('mounted consequential preview edits, validates, applies and resets only its own synthetic record',async()=>{
+ const doc=createAccessDocument(),prototype=Object.getPrototypeOf(doc.body),previous=Object.getOwnPropertyDescriptor(prototype,'style');Object.defineProperty(prototype,'style',{configurable:true,get(){return this._style||={};}});
+ try{
+ const mount=doc.createElement('section'),other=doc.createElement('section');doc.body.append(mount,other);const fixture=settingsOperationPractice('Prune expired entries'),first=mountGuidancePlayground(mount,{fixture}),second=mountGuidancePlayground(other,{fixture});
+ const apply=mount.querySelector('md-filled-button'),confirm=mount.querySelector('md-checkbox');await apply.click();assert.equal(first.session.state.applied,false);assert.equal(doc.activeElement,confirm);assert.equal(confirm.getAttribute('aria-invalid'),'true');confirm.checked=true;await confirm.dispatchEvent({type:'change'});await apply.click();assert.equal(first.session.result.record.entries.length,1);assert.equal(second.session.result.record.entries.length,2);
+ await mount.querySelectorAll('md-text-button').find(node=>node.textContent==='Reset example').click();assert.equal(confirm.checked,false);assert.equal(first.session.result.record.entries.length,2);first.destroy();second.destroy();
+ const clearMount=doc.createElement('section');doc.body.append(clearMount);const cleared=mountGuidancePlayground(clearMount,{fixture:clearSettingPractice('Search settings')}),field=clearMount.querySelector('md-outlined-text-field');field.value='New sample';await field.dispatchEvent({type:'input'});assert.equal(cleared.session.result.record.value,'New sample');await clearMount.querySelector('md-filled-button').click();assert.equal(field.value,'');assert.equal(cleared.session.result.record.value,'');assert.equal(doc.activeElement,field);await clearMount.querySelectorAll('md-text-button').find(node=>node.textContent==='Reset example').click();assert.equal(field.value,'Sample text');cleared.destroy();
+ }finally{if(previous)Object.defineProperty(prototype,'style',previous);else delete prototype.style;}
 });

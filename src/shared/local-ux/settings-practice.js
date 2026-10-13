@@ -1,7 +1,8 @@
+import {settingsOperationPractice,SETTINGS_OPERATION_COPY,clearSettingPractice} from './settings-operation-practice.js';
 import {definePractice} from '../surface/guidance-playground.js';
 /** This catalog contains authored demonstration values, never saved settings.
  * Missing entries remain visible gaps instead of inferred live-control samples. */
-export const SETTINGS_PRACTICE_COPY={};
+export const SETTINGS_PRACTICE_COPY={...SETTINGS_OPERATION_COPY};
 const fixtures=new Map();
 const phrase=(en,yue)=>{SETTINGS_PRACTICE_COPY[en]=yue;return en;};
 function put(label,kind,initial,config,input,action,expected){
@@ -12,7 +13,7 @@ for(const[label,initial,example,yue]of [
  put(label,'text',initial,{},[`${label}: ${initial}`,`${label}：${initial}`],[`Replace the sample text with ${example}.`,`將樣本文字改為${yue}。`],[`Only the sample label becomes ${example}.`,`只有樣本標籤會變成${yue}。`]);
 }
 for(const[label,min,max,initial,unit,preview]of [
- ['English playfulness',1,5,5,' / 5'],['Cantonese playfulness',1,5,5,' / 5'],['Rate',0.1,10,1,'×'],['Pitch',0,2,1,'×'],['Font scale',0.75,2,1,'×'],['Font weight',100,900,400,'','font-weight'],['Priority',-1000,1000,0,''],['Retention days',1,3650,365,' days']]){
+ ['English playfulness',1,5,5,' / 5'],['Cantonese playfulness',1,5,5,' / 5'],['Rate',0.1,3,1,'×'],['Pitch',0,2,1,'×'],['Font scale',0.75,2,1,'×'],['Font weight',100,900,400,'','font-weight'],['Priority',-1000,1000,0,''],['Retention days',1,3650,365,' days']]){
  put(label,'number',initial,{min,max,unit,step:0.1,...(preview?{preview}:{})},[`${label}: ${initial}`,`${label}：${initial}`],[`Enter another ${label.toLowerCase()} value from ${min} to ${max}.`,`輸入另一個 ${min} 至 ${max} 範圍內嘅樣本數值。`],[`The sample readout changes; the real ${label.toLowerCase()} remains unchanged.`,`樣本讀數會改變，實際設定保持不變。`]);
 }
 for(const label of ['Show emojis in dialogs and message boxes','Narrator','Focus','Low stimulation','Time awareness','One thing at a time','Momentum','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']){
@@ -33,7 +34,7 @@ const choices={
  Source:[['local','Local','Sample value comes from an in-memory row.'],['external','External provider','Sample provider is unavailable; no request is sent.']],
  'Action filter':[['rename','Rename','Sample matches: rename'],['theme','Theme','Sample matches: theme']],
 };
-for(const[label,options]of Object.entries(choices))put(label,'choice',options[0][0],{primitive:'select',...({'Theme':'theme','Density':'density','Font family':'font-family'}[label]?{preview:{'Theme':'theme','Density':'density','Font family':'font-family'}[label]}:{}),choices:options.map(([value,label,result])=>({value,label,result}))},[`${label}: ${options[0][1]}`,`${label}：${options[0][1]}`],['Choose a different authored sample option.','選擇另一個預先編寫嘅樣本選項。'],['The local sample result names the selected choice. Real settings are retained.','本機樣本結果會列出所選項目，實際設定保持不變。']);
+for(const[label,options]of Object.entries(choices))put(label,'choice',options[0][0],{primitive:'select',...(label==='Theme'?{palette:{light:{surface:'#fffbfe',onSurface:'#1c1b1f'},dark:{surface:'#1c1b1f',onSurface:'#e6e1e5'}}}:{}),...({'Theme':'theme','Density':'density','Font family':'font-family'}[label]?{preview:{'Theme':'theme','Density':'density','Font family':'font-family'}[label]}:{}),choices:options.map(([value,label,result])=>({value,label,result}))},[`${label}: ${options[0][1]}`,`${label}：${options[0][1]}`],['Choose a different authored sample option.','選擇另一個預先編寫嘅樣本選項。'],['The local sample result names the selected choice. Real settings are retained.','本機樣本結果會列出所選項目，實際設定保持不變。']);
 for(const label of ['Search settings','Search history'])put(label,'search','theme',{rows:['Theme changed','Font scale changed','Theme restored']},['Query: theme; rows: Theme changed, Font scale changed, Theme restored.','查詢 theme，三個樣本列分別為 Theme changed、Font scale changed、Theme restored。'],['Replace theme with font.','將 theme 改為 font。'],['Only Font scale changed remains in the sample results.','樣本結果只剩 Font scale changed。']);
 put('Accent color','color','#52643f',{},['Sample color: #52643f.','樣本顏色：#52643f。'],['Enter #315da8 in the sample color field.','在樣本顏色欄輸入 #315da8。'],['The sample swatch becomes blue; other surfaces retain their colors.','樣本色板變成藍色，其他介面顏色保持不變。']);
 for(const label of ['Start time','End time'])put(label,'schedule',label==='Start time'?'09:00':'17:00',{date:'2030-01-15',timezone:'UTC'},['Sample date: 2030-01-15, timezone: UTC.','樣本日期為 2030-01-15，時區為 UTC。'],['Enter 10:30. This is a preview, not a scheduled task.','輸入 10:30。呢個只係預覽，唔會安排工作。'],['The occurrence preview reads 2030-01-15 10:30 UTC.','時間預覽顯示 2030-01-15 10:30 UTC。']);
@@ -42,5 +43,10 @@ for(const label of ['Language and voice','Appearance','Schedules','Attention','P
 for(const[label,initial,restored]of [['Reset English playfulness',2,5],['Reset Cantonese playfulness',2,5],['Reset name','Reading desk','Material File Encryptor']])put(label,'reset',initial,{restored},[`Sample current value: ${initial}.`,`樣本目前值：${initial}。`],['Apply the reset to the sample.','對樣本套用重設。'],[`Sample value becomes ${restored}; Reset example restores ${initial}.`,`樣本值變成 ${restored}，重設例子會還原 ${initial}。`]);
 put('Remove','remove','Sample morning',{item:'Sample morning'},['One synthetic schedule: Sample morning.','一個合成時間表：Sample morning。'],['Confirm sample removal, then Apply to sample.','確認移除樣本，再套用至樣本。'],['The sample list becomes empty. Reset example restores the item.','樣本清單變成空白，重設例子會還原項目。']);
 put('Add schedule','append','',{rows:['Sample morning'],item:'Sample evening 17:00 UTC'},['One synthetic schedule: Sample morning.','一個合成時間表：Sample morning。'],['Apply to sample to add Sample evening 17:00 UTC.','套用至樣本，加入 Sample evening 17:00 UTC。'],['Two sample schedules appear; no timer or stored schedule is created.','出現兩個樣本時間表，唔會建立計時器或已儲存時間表。']);
-export function settingsPractice(label){return fixtures.get(label)||null;}
+export function settingsPractice(label,{variant,domain}={}){if(variant==='clear')return clearSettingPractice(label);if(label==='Value'&&domain)return scheduledValuePractice(domain);return fixtures.get(label)||settingsOperationPractice(label)||null;}
 export const SETTINGS_PRACTICE_IDS=Object.freeze([...fixtures.values()].map(row=>row.id));
+
+const scheduledDomains={language:'Language',theme:'Theme',density:'Density',seed:'Accent color',fontFamily:'Font family',fontScale:'Font scale',fontWeight:'Font weight',motion:'Motion',displayName:'Display name',emoji:'Show emojis in dialogs and message boxes',funnyEnglish:'English playfulness',funnyCantonese:'Cantonese playfulness'};
+const scheduledFixtures=new Map(Object.entries(scheduledDomains).map(([domain,label])=>[domain,definePractice({...fixtures.get(label),id:'scheduled-value:'+domain})]));
+for(const domain of ['appearance','logo'])scheduledFixtures.set(domain,definePractice({id:'scheduled-value:'+domain,label:'Value',kind:'choice',primitive:'select',initial:'sample-first',choices:[{value:'sample-first',label:phrase('First synthetic snapshot','第一個合成快照'),result:phrase('Sample reference: version 1, sample-first','樣本參照：版本 1，sample-first')},{value:'sample-second',label:phrase('Second synthetic snapshot','第二個合成快照'),result:phrase('Sample reference: version 1, sample-second','樣本參照：版本 1，sample-second')}],input:phrase('Two authored snapshot references contain no image bytes.','兩個預先編寫快照參照唔包含圖片資料。'),action:phrase('Choose the second synthetic snapshot.','選擇第二個合成快照。'),expected:phrase('Only the local reference preview changes to sample-second.','只有本機參照預覽變成 sample-second。')}));
+export function scheduledValuePractice(domain){return scheduledFixtures.get(domain)||null;}

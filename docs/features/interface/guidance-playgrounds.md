@@ -20,15 +20,11 @@ Samples do not access network, storage, history, IPC, native pickers, clipboard,
 
 ## Current coverage and outstanding work
 
-The 88-row settings inventory currently has 60 authored fixtures. All five tab entries and all seven weekday entries are included. The 11 nested appearance concepts and six font concepts also have authored fixtures. The following settings descriptor IDs remain explicit missing practice support:
+The 88-row static settings inventory has 88 distinct authored fixtures, including all five tab entries, seven weekday entries and four date fields. Date practice uses three Material numeric fields and rejects invalid calendar dates without rollover. Consequential settings, credential, history, import/export and reminder actions transform only explicit synthetic records; confirmation and validation occur locally and every preview can reset. Credential examples accept only fixed public demonstration text and never create a credential or key. Export examples show redacted JSON without downloading; time examples never schedule timers.
 
-- `settings.start-date`, `settings.end-date`, `settings.from-date`, `settings.to-date`
-- `settings.action.set-local-credential`, `settings.action.enable-mode`, `settings.action.turn-off-mode`, `settings.action.test-narration`, `settings.action.edit-this-surface`
-- `settings.action.enable`, `settings.action.disable`, `settings.action.configure-credential`, `settings.action.clear-credential`, `settings.action.store-credential`, `settings.action.cancel`
-- `settings.action.export-settings`, `settings.action.reset`, `settings.action.set-up-history-password`, `settings.action.unlock-history`, `settings.action.lock-history`
-- `settings.action.compare-selected-entries`, `settings.action.export-redacted-history`, `settings.action.set-retention`, `settings.action.prune-expired-entries`, `settings.action.restore`, `settings.action.save-label`, `settings.action.import-settings`, `settings.action.not-now-one-hour-`
+Clear variants have their own synthetic editable field and local clear action. Fourteen scalar/snapshot scheduled value domains select a fixture from explicit setting metadata, not the live value. Narrator and attention retain their separately authored nested controls. Snapshot capture and removal have local record demonstrations, including refusal to remove an in-use synthetic reference.
 
-Generated reset/clear variants, schedule snapshot descriptors and nested motion, keyframe, transition, color, image, drawing/workbench, logo authoring and server-preparation registrations still require exact descriptor-to-fixture inventories. A kind taxonomy is not full control coverage. Unknown descriptors show an explicit unavailable practice message; no generic success-only exercise is substituted.
+The 11 nested appearance concepts and six font concepts have authored fixtures. Font face/instance examples change actual sample weight; non-weight font axes still require their own precise adapters. Nested motion, keyframe, transition, color, image, drawing/workbench, logo authoring and server-preparation registrations require their own exhaustive descriptor-to-fixture inventories. A kind taxonomy is not full control coverage. Unknown descriptors show an explicit unavailable practice message; no generic success-only exercise is substituted.
 
 ## Verification
 
