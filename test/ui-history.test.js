@@ -56,3 +56,16 @@ test('folder restoration offers only identity-linked descendants and preserves e
  assert.deepEqual(deletedDescendantCandidates(rows,['folder','child']).map(row=>row.id),['older']);
  assert.deepEqual(deletedDescendantCandidates(rows,['unrelated']),[]);
 });
+
+test('shared non-dialog error stays outside hidden views and bootstrap keeps that owner',async()=>{
+ const html=await fs.readFile(new URL('../src/renderer/index.html',import.meta.url),'utf8');
+ assert.ok(/<main>\s*<div id="main-error"[^>]*role="alert"[^>]*hidden>/.test(html),'Shared alert must be a direct workspace child before the view containers');
+ const source=await fs.readFile(new URL('../src/renderer/app.js',import.meta.url),'utf8');
+ const relocation=source.match(/^\$\('view-drive'\)\.prepend\([^\n]+/m)?.[0];assert.ok(relocation);
+ const operation={owner:'initial'},alert={owner:'main'};
+ const nodes={'operation':operation,'main-error':alert,'view-drive':{prepend(...items){for(const item of items)item.owner='view-drive';}}};
+ vm.runInNewContext(relocation,{$:id=>nodes[id]});assert.equal(operation.owner,'view-drive');assert.equal(alert.owner,'main','Bootstrap must not reparent the shared alert into a view');
+ const show=source.slice(source.indexOf('function showError('),source.indexOf('function toast('));
+ assert.match(show,/inDialog \? 'dialog-error' : 'main-error-text'/);assert.match(show,/inDialog \? 'dialog-error' : 'main-error'/);assert.doesNotMatch(show,/changeView|activate\(/);
+ assert.match(source,/listen\('dismiss-error','click',\(\) => \{ \$\('main-error'\)\.hidden = true; \}\)/);
+});

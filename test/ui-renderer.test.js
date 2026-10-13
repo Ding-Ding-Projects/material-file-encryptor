@@ -70,6 +70,11 @@ test('navigation fixture matches only complete supported localized menu names',a
 });
 const clearOf=field=>field.locator('md-icon-button[slot="trailing-icon"]');
 const activeWithin=el=>{let active=el.ownerDocument.activeElement;while(active){if(active===el)return true;active=active.shadowRoot?.activeElement;}return false;};
+const visibleAncestorChain=element=>{
+ for(let current=element;current;current=current.parentElement||current.getRootNode()?.host){
+  const style=getComputedStyle(current);if(current.hidden||current.inert||current.getAttribute('aria-hidden')==='true'||style.display==='none'||['hidden','collapse'].includes(style.visibility)||!current.getClientRects().length)return false;
+ }return true;
+};
 
 // This isolated bridge tests renderer behavior only. Real native-drive evidence is separate.
 async function fixture(page) {
@@ -193,9 +198,19 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   await page.selectOption('#history-retention','custom');
   await page.locator('#history-days').locator('md-icon-button[slot="trailing-icon"]').click();
   assert.equal(await page.locator('#history-days').inputValue(),'');
+  const retentionWritesBeforeInvalid=await page.evaluate(()=>window.calls.filter(call=>call.name==='setHistoryRetention').length);
   await page.click('#history-retention-apply');
   assert.match(await page.locator('#main-error-text').textContent(),/1 to 36500/);
-  await page.click('#dismiss-error');
+  const workspaceAlert=page.locator('#main-error'),dismissError=page.locator('#dismiss-error');
+  assert.equal(await workspaceAlert.getAttribute('role'),'alert');
+  assert.equal(await workspaceAlert.evaluate(visibleAncestorChain),true,'History error remains visible through every ancestor');
+  assert.equal(await dismissError.evaluate(visibleAncestorChain),true);
+  assert.equal(await page.locator('#view-history').isVisible(),true);assert.equal(await page.locator('#view-drive').isVisible(),false);
+  assert.equal(await page.evaluate(()=>window.calls.filter(call=>call.name==='setHistoryRetention').length),retentionWritesBeforeInvalid,'Invalid retention must not mutate preferences');
+  await dismissError.focus();assert.equal(await dismissError.evaluate(activeWithin),true);await page.keyboard.press('Enter');
+  await page.waitForFunction(()=>document.querySelector('#main-error').hidden);
+  assert.equal(await page.locator('#view-history').isVisible(),true,'Dismissing the shared alert must not navigate');
+  assert.equal(await page.evaluate(()=>window.calls.filter(call=>call.name==='setHistoryRetention').length),retentionWritesBeforeInvalid);
   const historyQuery=page.locator('#history-search-host mfe-search .query');
   await historyQuery.fill('missing-entry');await page.waitForFunction(()=>document.querySelectorAll('#history-list tr').length===0);
   await historyQuery.locator('md-icon-button[slot="trailing-icon"]').click();await page.waitForSelector('#history-list tr');
@@ -235,6 +250,8 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   await page.click('#resplit-button');assert.equal(await page.evaluate(() => window.calls.some(call => call.name === 'resplit')),false);await page.click('#confirm-action');await page.waitForFunction(() => window.calls.some(call => call.name === 'resplit'));
   await page.evaluate(() => window.pushState({files:[{id:'unsafe',path:'<img src=x onerror=alert(1)>.txt',size:12,modified:'2026-01-01',offline:false}]}));assert.equal(await page.locator('#file-list img').count(),0);assert.match(await page.locator('#file-list').textContent(),/<img src=x/);
   await page.evaluate(() => { window.blockLock = true; });await page.click('#lock-button');await page.waitForSelector('#main-error:not([hidden])');assert.match(await page.locator('#main-error').textContent(),/Close open files/);assert.equal(await page.locator('#vault-badge').textContent(),'Mounted');
+  assert.equal(await page.locator('#main-error').evaluate(visibleAncestorChain),true,'Drive errors use the same visible workspace alert');
+  await page.locator('#dismiss-error').focus();await page.keyboard.press('Enter');await page.waitForFunction(()=>document.querySelector('#main-error').hidden);assert.equal(await page.locator('#view-drive').isVisible(),true);
   await page.evaluate(() => window.pushState({locked:false,mounted:false}));await page.click('#mount-button');await page.waitForFunction(() => window.calls.some(call => call.name === 'mount'));
   await navigate(page,'settings');await page.uncheck('#startup-setting');await page.waitForFunction(() => window.calls.some(call => call.name === 'setStartup' && call.value === false));
   await page.check('#auto-unlock-setting');await page.click('#confirm-action');await page.waitForFunction(() => window.calls.some(call => call.name === 'setAutoUnlock' && call.value === true));await page.click('#forget-credential');

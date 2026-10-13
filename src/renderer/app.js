@@ -73,7 +73,7 @@ document.addEventListener('scroll', event => {
  clearTimeout(scrollTimers.get(surface));
  scrollTimers.set(surface, setTimeout(() => { surface.classList.remove('is-scrolling'); scrollTimers.delete(surface); }, 900));
 }, {capture:true,passive:true});
-$('view-drive').prepend($('operation'), $('main-error'));
+$('view-drive').prepend($('operation'));
 const translateWorkspace=createTranslator(()=>({...effectiveLocalSettings,...preferences,school:effectiveLocalSettings.school}),{dictionary:{...cantonese,...enhancedLabels}});
 function t(source,options) { return translateWorkspace(source,options); }
 const privateWordingView=createPrivateWordingView({root:document.body,replace:value=>replaceVocabulary(value,preferences.vocabulary),isActive:()=>featureMounts.get('access')?.authenticated===true&&!effectiveLocalSettings.school.enabled});
