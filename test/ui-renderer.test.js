@@ -35,7 +35,10 @@ function trackedControls(page){
  const methods=new Set(['click','fill','check','uncheck','selectOption','focus','press','goto','waitFor','waitForSelector','waitForFunction','scrollIntoViewIfNeeded','setViewportSize','evaluate']);
  const wrap=(target,label)=>new Proxy(target,{get(object,key){
   const value=object[key];if(['locator','getByRole'].includes(key))return(...args)=>wrap(value.apply(object,args),(label+'/'+key+':'+String(args[0])).slice(-120));
-  if(key==='keyboard')return wrap(value,'keyboard');
+  if(key==='keyboard')return new Proxy(value,{get(keyboard,method){
+   if(method!=='press')return typeof keyboard[method]==='function'?keyboard[method].bind(keyboard):keyboard[method];
+   return async(...args)=>{const record=page.__fixtureProgress,known=new Set(['Enter','Escape','Space','Tab','ArrowLeft','ArrowRight']),phase='keyboard.press:'+ (known.has(args[0])?args[0]:'other');if(record)await record({kind:'phase',state:'started',phase});const result=await keyboard.press(...args);if(record)await record({kind:'phase',state:'completed',phase});return result;};
+  }});
   if(typeof value!=='function')return value;
   if(!methods.has(key))return value.bind(object);
   return async(...args)=>{const record=page.__fixtureProgress,phase=(label+'.'+key+(label==='page'&&['click','fill','selectOption','waitForSelector'].includes(key)?':'+String(args[0]):'')).slice(0,160);if(record)await record({kind:'phase',state:'started',phase});const result=await value.apply(object,args);if(record)await record({kind:'phase',state:'completed',phase});return result;};
@@ -90,10 +93,10 @@ const visibleAncestorChain=element=>{
 };
 
 // This isolated bridge tests renderer behavior only. Real native-drive evidence is separate.
-async function fixture(page) {
+async function fixture(page,startedAt=performance.now()) {
  await verifyRendererFeatureFixture(createRendererFeatureFixture().bridge);
  const evidenceRoot=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-renderer-progress-'));
- const progress=createRendererFixtureProgress(async snapshot=>{const file=path.join(evidenceRoot,'progress.json');await fs.writeFile(file+'.pending',JSON.stringify(snapshot,null,2));await fs.rename(file+'.pending',file);});
+ const progress=createRendererFixtureProgress(async snapshot=>{const file=path.join(evidenceRoot,'progress.json');await fs.writeFile(file+'.pending',JSON.stringify(snapshot,null,2));await fs.rename(file+'.pending',file);},{startedAt});
  console.log(JSON.stringify({scope:'source-renderer-progress',evidenceRoot}));
  await page.exposeFunction('__recordRendererFixture',progress.record);
  page.__fixtureProgress=progress.record;
@@ -124,6 +127,7 @@ async function fixture(page) {
 }
 // Include bounded hidden-desktop launch and independent process-exit proof.
 test('real renderer interactions, error states, keyboard dialogs and responsive layouts', {timeout:120000}, async t => {
+ const startedAt=performance.now();
  await verifyRendererFeatureFixture(createRendererFeatureFixture().bridge);
  if (executable) { try { await fs.access(executable); } catch { return t.skip('Set CHROMIUM_PATH to an installed Chromium executable.'); } }
  const server = createServer(serveRendererFixture);
@@ -131,7 +135,7 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
  let browser,fixtureError;
  try {
   browser = await openRendererBrowser(`http://127.0.0.1:${server.address().port}/`,{runtime:{sourceCommit:process.env.MFE_TEST_SOURCE_COMMIT}});
-  const page = trackedControls(controls(browser.page)); await page.setViewportSize({width:1440,height:900}); await fixture(page);
+  const page = trackedControls(controls(browser.page)); await page.setViewportSize({width:1440,height:900}); await fixture(page,startedAt);
   const errors = []; page.on('pageerror',error => {errors.push(error.message);console.error(error.message);});
   await page.goto(`http://127.0.0.1:${server.address().port}`); await page.waitForFunction(() => document.querySelector('#vault-badge').textContent !== 'Checking drive…');
   assert.equal(await page.locator('#vault-badge').textContent(),'Locked'); assert.equal(await page.locator('#file-list tr').count(),0);
@@ -310,6 +314,7 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
 
 // This isolated DOM regression does not claim native-drive or installed acceptance.
 test('scoped clear-control selectors use their actual owning wrappers', {timeout:90000}, async () => {
+ const startedAt=performance.now();
  await verifyRendererFeatureFixture(createRendererFeatureFixture().bridge);
  const evidenceRoot = await fs.mkdtemp(path.join(os.tmpdir(),'mfe-scoped-clear-proof-'));
  const proof = {version:1,scope:'Actual renderer DOM selector regression',cases:[],passed:false};
@@ -320,7 +325,7 @@ test('scoped clear-control selectors use their actual owning wrappers', {timeout
  try {
   const url = `http://127.0.0.1:${server.address().port}/`;
   browser = await openRendererBrowser(url,{evidenceRoot:path.join(evidenceRoot,'owned-closure'),runtime:{sourceCommit:process.env.MFE_TEST_SOURCE_COMMIT}});
-  const page = trackedControls(controls(browser.page)); await page.setViewportSize({width:1180,height:850}); await fixture(page);
+  const page = trackedControls(controls(browser.page)); await page.setViewportSize({width:1180,height:850}); await fixture(page,startedAt);
   await page.goto(url);
   await page.waitForFunction(() => document.querySelector('#vault-badge').textContent !== 'Checking drive…');
   await page.evaluate(() => window.pushState({locked:false,mounted:true,storageFormat:2}));

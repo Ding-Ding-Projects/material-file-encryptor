@@ -1,3 +1,9 @@
+## Account-boundary preservation, October13
+
+Verified10percent remaining triggered preservation. Reviewed diagnosticb7bcf616ab225c7934fdf030b31fab33e25db996 is source-only:10focused checks passed and independent review accepted; no new runtime launched. The last full case remains2passed/1cancelled. Completed source unit is integrated while the unfinished product goal remains explicit.
+
+Live deploymentfac0a064458e39216d02bc979bd4791ad8a2c472 was observed2026-10-13T13:28:19–13:28:43Z. Publication run38404700659passed, exact About homepage read back,202article inventory and29directtargets/fonts returned200, both reviewed source83 PNG hashes matched. No fresh browser/fullmatrix/installed acceptance is inferred. One public capture-gallery preservation lane is underway; private generated announcements are excluded.
+
 ## Verified combined source delivery
 
 Combined source fac0a064458e39216d02bc979bd4791ad8a2c472 passed16focused source checks and exact build.bat /s with exit0. It is proved on both main and codex/lang-gui-responsive-20261013 through ls-remote. Root log SHA2568581791100d2eb816fbb3d1c543641cd908745d1ca624546476bce6dccfb4ce2; package privacy6059entries,0rejections, ASAR SHA25678e77432979b837137fff867243571656116b253f4815941e8916ad4ade19b6e. Actions38404372056 and38404700529 are running;38404700659 waiting, all same source. No remote terminal verdict or full runtime completion is claimed.
@@ -1204,3 +1210,10 @@ The existing History runtime case now requires alert and dismiss visibility thro
 The 5308d0f run progressed through the extended History alert assertions, then timed out with page.check pending after the file-list row appeared. The fixture requested a checkbox, while the production row creates a named file-selection radio. Replace only that obsolete selection action with the exact file-1 row radio. The helper checks the real control through the existing adapter, verifies checked state, selected-file name, selected row and notes.txt label, focuses it, presses Enter and observes exactly the file-1 open request. It does not assign checked state, call production selection directly or accept alternate primitives.
 
 The causal source test executes the actual action helper and control adapter against an inert radio-only page: the old checkbox selector fails and the exact radio passes. Nine fixture-contract checks pass. All later offline/release/resplit/lock/mount assertions, language/width loops and original deadlines remain unchanged. No production control changed and no browser/native rerun occurred. Independent review precedes the next assigned runtime run; retained 5308 journals and profiles keep their original identity.
+
+
+## Renderer elapsed-time and keyboard diagnostics
+
+The source-renderer run at 776d354 completed with 3 cases: 2 passed and 1 cancelled at the unchanged 120000 ms main deadline. Exact imported-file radio selection and open-request assertions completed, followed by offline selection and the release-dialog cancel focus evaluation at sequence 1022. The previous ledger does not establish whether the following Escape operation stalled or the total budget expired. Both owned process trees and desktops have closure proof, including a later saved-tree confirmation for the main case. Original profiles and receipts remain retained.
+
+The ledger now records monotonic elapsed milliseconds from each actual case start, including launch time. An explicit keyboard adapter records bounded key identities, pending operations and successful completion while forwarding the original arguments, receiver, promise result and rejection. It records no typed values. Ten focused fixture checks pass. Removing keyboard instrumentation makes the causal check fail; restoring it passes. Deadlines, operations, assertions, process ownership and production controls remain unchanged. This diagnostic source has not been launched; independent review and a separately assigned source-bound run remain required.

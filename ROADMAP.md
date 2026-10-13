@@ -700,3 +700,9 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 - [ ] Resolve the actual source-fixture timeout without weakening assertions or fabricating an action journal.
 - [ ] Complete combined instruction-root sweep and current installed readback.
 - [ ] Complete native/full visual matrix, main integration and live deployment acceptance.
+
+
+## October13 timing diagnostic preservation
+
+- [x] Add independently reviewed monotonic elapsed timing and keyboard operation diagnostics;10focused checks and causal negative passed.
+- [ ] Run the new source-bound diagnostic after allowance recovery; retained full runtime remains2passed/1cancelled.

@@ -53,7 +53,7 @@ test('both actual renderer case callbacks reject an invalid bridge before eviden
  for(const name of names){
   const cases=new Map(),calls=[];
   const server={listen(_port,_host,callback){calls.push('listen');callback();},address:()=>({port:19222}),closeAllConnections(){},close(callback){callback();}};
-  const context={assert,path,os,fileURLToPath,createHash,process,console:{log:()=>{calls.push('unit-log');}},
+  const context={assert,path,os,fileURLToPath,createHash,process,performance,console:{log:()=>{calls.push('unit-log');}},
    test:(name,options,callback)=>cases.set(name,typeof options==='function'?options:callback),
    fs:{access:async()=>{},mkdtemp:async()=>{calls.push('evidence');return path.join(os.tmpdir(),'unit-not-created');},readFile:async()=>Buffer.from('unit only'),writeFile:async()=>{calls.push('evidence-write');}},
    createServer:()=>{calls.push('server');return server;},serveRendererFixture:()=>{},
@@ -83,4 +83,21 @@ test('imported-file action uses the exact radio through the real renderer contro
  const api=vm.runInNewContext(executableSource+';({controls,selectImportedFile})',context);
  await api.selectImportedFile(api.controls(page));assert.deepEqual(actions,['radio-click','radio-focus','keyboard-enter']);assert.deepEqual(calls,[{name:'open',value:'file-1'}]);
  assert.equal(radio.checked,true);
+});
+
+
+test('actual keyboard adapter records pending, completion and rejection with monotonic case elapsed time',async()=>{
+ const source=await fs.readFile(new URL('./ui-renderer.test.js',import.meta.url),'utf8');
+ const body=source.slice(source.indexOf('function trackedControls('),source.indexOf('async function selectImportedFile('));
+ const tracked=vm.runInNewContext(body+';trackedControls');let clock=100,finish,calls=0;
+ const progress=createRendererFixtureProgress(()=>{}, {now:()=>clock,startedAt:20});
+ const keyboard={press(key){assert.equal(this,keyboard);assert.equal(key,'Escape');calls++;return new Promise(resolve=>{finish=resolve;});}};
+ const page=tracked({keyboard,__fixtureProgress:progress.record});const pending=page.keyboard.press('Escape');
+ await new Promise(resolve=>setImmediate(resolve));assert.equal(calls,1);
+ assert.equal(progress.snapshot().phase.lastStarted.phase,'keyboard.press:Escape');assert.equal(progress.snapshot().phase.lastStarted.elapsedMs,80);assert.equal(progress.snapshot().phase.lastCompleted,null);
+ clock=145;finish('original result');assert.equal(await pending,'original result');assert.equal(progress.snapshot().phase.lastCompleted.elapsedMs,125);
+ const rejected=Error('original keyboard rejection');keyboard.press=async()=>{throw rejected;};clock=160;
+ await assert.rejects(page.keyboard.press('Escape'),error=>error===rejected);
+ assert.equal(progress.snapshot().phase.lastStarted.elapsedMs,140);assert.equal(progress.snapshot().phase.lastCompleted.elapsedMs,125);
+ assert.match(source,/const startedAt=performance\.now\(\);[\s\S]*await fixture\(page,startedAt\)/);
 });
