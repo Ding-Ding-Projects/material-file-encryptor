@@ -1,3 +1,4 @@
+import {NESTED_PRACTICE} from './appearance-practice.js';
 /** Explicit coverage for layer navigation and local logo controls. Other editor
  * tools remain pending; these records do not claim complete editor guidance. */
 export const NESTED_APPEARANCE_GUIDANCE = Object.freeze([
@@ -31,7 +32,7 @@ export function nestedAppearanceGuidance(key,{language='en',instance='default',p
  const row=NESTED_APPEARANCE_GUIDANCE.find(row=>row.key===key);if(!row)throw Error(`Unregistered nested appearance guidance: ${key}`);
  const yue=language==='yue',pick=field=>row[field+(yue?'Yue':'')];
  const concept=`nested-${key}`;
- return {...row,id:`${row.id}:${instance}`,capable:true,concept,sourceId:'docs/features/interface/nested-appearance-guidance.md',help:`nested-appearance-guidance${yue?'.zh-HK':''}.md#${concept}`,purpose:pick('purpose'),effects:pick('effects'),example:pick('example'),validation:pick('validation'),recovery:pick('recovery'),options:OPTIONS[key][yue?1:0],default:JSON.stringify(row.defaultValue),provenance,steps:[pick('purpose'),pick('validation'),pick('effects')]};
+ return {...row,practice:NESTED_PRACTICE[key],id:`${row.id}:${instance}`,capable:true,concept,sourceId:'docs/features/interface/nested-appearance-guidance.md',help:`nested-appearance-guidance${yue?'.zh-HK':''}.md#${concept}`,purpose:pick('purpose'),effects:pick('effects'),example:pick('example'),validation:pick('validation'),recovery:pick('recovery'),options:OPTIONS[key][yue?1:0],default:JSON.stringify(row.defaultValue),provenance,steps:[pick('purpose'),pick('validation'),pick('effects')]};
 }
 
 /** A wizard invokes the existing event route and awaits its admitted consumer.

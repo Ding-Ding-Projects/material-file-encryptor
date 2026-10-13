@@ -1,3 +1,4 @@
+import {settingsPractice,SETTINGS_PRACTICE_COPY} from './settings-practice.js';
 import {ACTION_HELP,ACTION_HELP_COPY} from './settings-action-help.js';
 import {FIELD_HELP,FIELD_HELP_COPY} from './settings-field-help.js';
 /** Explicit control inventory. Values and choices come from each real consumer. */
@@ -94,7 +95,7 @@ export const SETTINGS_GUIDANCE_COPY={
  'The original action retains its validation, permissions and confirmation.':'原有操作會保留驗證、權限及確認要求。',
 };
 const pair=(en,yue)=>{SETTINGS_GUIDANCE_COPY[en]=yue;return en;};
-Object.assign(SETTINGS_GUIDANCE_COPY,FIELD_HELP_COPY,ACTION_HELP_COPY);
+Object.assign(SETTINGS_GUIDANCE_COPY,FIELD_HELP_COPY,ACTION_HELP_COPY,SETTINGS_PRACTICE_COPY);
 export const SETTINGS_GUIDANCE_INVENTORY=[...fields.map(row=>[...row,false]),...actions.map(row=>[...row,true])].map(([label,en,yue,action])=>({
  id:`settings.${action?'action.':''}${slug(label)}`,label,capable:true,complexity:action?'complicated':'simple',
  reason:action?'Invokes a workflow or changes retained state.':'Edits one explicit field through its original consumer.',
@@ -146,5 +147,5 @@ for(const label of ['Local unlock credential','History password','Source','Value
 }
 export function settingsGuidance(label,{context='',helpBase='docs/features/interface/settings-guidance.md',defaultValue,options}={}){
  const row=SETTINGS_GUIDANCE_INVENTORY.find(value=>value.label===label)||(label.startsWith('Reset ')?SETTINGS_GUIDANCE_INVENTORY.find(value=>value.label===label.slice(6)):null);if(!row)throw Error(`Unregistered settings guidance: ${label}`);
- return {...row,label,id:(label.startsWith('Reset ')?`settings.action.${slug(label)}`:row.id)+(context?`.${context}`:''),help:helpBase+row.help,default:defaultValue===undefined?row.default:defaultValue===''?'Empty':String(defaultValue),options:options||row.options};
+ return {...row,label,practice:settingsPractice(label),id:(label.startsWith('Reset ')?`settings.action.${slug(label)}`:row.id)+(context?`.${context}`:''),help:helpBase+row.help,default:defaultValue===undefined?row.default:defaultValue===''?'Empty':String(defaultValue),options:options||row.options};
 }
