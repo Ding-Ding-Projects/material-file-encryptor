@@ -252,13 +252,41 @@ class Recovery:
             time.sleep(0.2)
 
 
-def configured_base_interpreter(values, launcher, actual_base, actual_launcher):
+def executable_subsystem(path):
+    """Read the bounded PE subsystem without executing the selected image."""
+    with Path(path).open('rb') as stream:
+        header = stream.read(64)
+        if len(header) != 64 or header[:2] != b'MZ':
+            raise Error('Interpreter PE header is unavailable.')
+        offset = int.from_bytes(header[60:64], 'little')
+        if offset < 64 or offset > 1024 * 1024:
+            raise Error('Interpreter PE offset is outside the supported bound.')
+        stream.seek(offset)
+        pe = stream.read(94)
+        if len(pe) != 94 or pe[:4] != b'PE\x00\x00':
+            raise Error('Interpreter PE signature is unavailable.')
+        return int.from_bytes(pe[92:94], 'little')
+
+
+def configured_base_interpreter(values, launcher, actual_base, actual_launcher, role=None):
     """Bind supported venv metadata to the exact executing launcher and base."""
     launcher, actual = Path(launcher), Path(actual_base)
     declared = values.get('executable')
     if not declared and not (values.get('uv') and values.get('implementation') == 'CPython'):
         raise Error('Base interpreter metadata is unavailable.')
+    if role not in (None, 'gui-observer'):
+        raise Error('Unknown interpreter execution role.')
     base = Path(declared) if declared else actual
+    if role == 'gui-observer':
+        if launcher.name.lower() != 'pythonw.exe' or actual.name.lower() != 'pythonw.exe':
+            raise Error('GUI observer requires exact GUI launcher and base images.')
+        if base != actual:
+            if (not declared or base != actual.with_name('python.exe')
+                    or not base.is_file() or executable_subsystem(base) != 3):
+                raise Error('Declared console interpreter is not the verified GUI sibling.')
+            base = actual
+        if executable_subsystem(launcher) != 2 or executable_subsystem(base) != 2:
+            raise Error('GUI observer interpreter subsystem differs.')
     if (not base.is_absolute() or not base.is_file() or base != actual
             or Path(actual_launcher) != launcher or launcher.parent.name.lower() != 'scripts'
             or launcher.name.lower() not in ('python.exe', 'pythonw.exe')
@@ -275,7 +303,7 @@ def interpreter_commands(launcher, base, arguments, invocation=None):
 
 
 @contextmanager
-def owning_client(client_pid, expected=None, api=None, binding=None, configuration=None):
+def owning_client(client_pid, expected=None, api=None, binding=None, configuration=None, interpreter_role=None):
     """Hold exact self/optional venv launcher/Node identities across proof."""
     api, binding = api or snapshot.Native(), binding or NativeBinding()
     if type(client_pid) is not int or client_pid <= 0:
@@ -285,11 +313,14 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
         node = Path(os.environ['MFE_RENDERER_NODE_EXECUTABLE'])
         cfg = launcher.parent.parent / 'pyvenv.cfg'
         values = dict(line.split(' = ', 1) for line in cfg.read_text().splitlines() if ' = ' in line)
-        base = configured_base_interpreter(values, launcher, sys._base_executable, sys.executable)
+        base = configured_base_interpreter(values, launcher, sys._base_executable, sys.executable, interpreter_role)
         # Bind preserved launcher command spelling separately from the executing
         # base image. The optional intermediate launcher uses the same invocation.
         command, base_command = interpreter_commands(launcher, base, sys.argv, os.environ['MFE_LOWLEVEL_PYTHON'])
-        configuration = {'launcher': str(launcher), 'base': str(base), 'node': str(node), 'files': {str(p): digest(p) for p in [launcher, base, cfg, node]}, 'command': command, 'baseCommand': base_command, 'selfPid': os.getpid()}
+        bound_files = [launcher, base, cfg, node]
+        if values.get('executable') and Path(values['executable']) != base:
+            bound_files.append(Path(values['executable']))
+        configuration = {'launcher': str(launcher), 'base': str(base), 'node': str(node), 'files': {str(p): digest(p) for p in bound_files}, 'command': command, 'baseCommand': base_command, 'selfPid': os.getpid()}
     rows, chain = api.inventory(), []
     current = configuration['selfPid']
     with ExitStack() as stack:

@@ -73,7 +73,7 @@ def run(intent_path):
         life=load('launch_lifecycle',os.environ['MFE_LOWLEVEL_CLIENT'])
         life._reject_link_components(Path(intent_path));life._reject_link_components(Path(intent['statePath']))
         if Path(intent['statePath']).exists():raise RuntimeError('Fresh launch state already exists.')
-        with recovery.owning_client(intent['declaredClientPid']) as (client,chain):
+        with recovery.owning_client(intent['declaredClientPid'], interpreter_role='gui-observer') as (client,chain):
             journal.write('observer-bound',clientBinding=client,clientLaunchChain=chain)
         from lowlevel_computer_use_mcp import server,winio,native_win32
         distribution=importlib.metadata.distribution('lowlevel-computer-use-mcp')
@@ -89,7 +89,7 @@ def run(intent_path):
             def call_tool(self,name,params):
                 if name not in tools:raise RuntimeError('Launch observer tool is outside the exact allowlist.')
                 if source_hashes!={str(p):digest(p) for p in source_paths}:raise RuntimeError('Installed tool or verifier bytes changed before launch phase.')
-                with recovery.owning_client(intent['declaredClientPid'],client) as (actual,chain):
+                with recovery.owning_client(intent['declaredClientPid'],client, interpreter_role='gui-observer') as (actual,chain):
                     journal.write('tool-started',tool=name,parameters=params,observerIdentity=backend.proof.identity(os.getpid()),clientLaunchChain=chain)
                 function,model=tools[name]
                 result=json.loads(asyncio.run(function(model(**params))))

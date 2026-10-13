@@ -7,6 +7,7 @@ import {DEFAULTS} from '../src/shared/local-ux/store.js';
 // API/default/state display labels retain their established translations.
 // Exact product names remain literal. Every finite entry must exist and match.
 const literalCopy = new Map([
+ ['sample-release','sample-release'],['sample-previous','sample-previous'],['sample-archive','sample-archive'],
  ['HTTPS API','HTTPS API'],['Home Assistant','Home Assistant'],
  ['Web Animations','網頁動畫'],['KeyframeEffect','KeyframeEffect 關鍵影格效果'],
  ['normal.','一般。'],['none.','無。'],['linear.','線性。'],['opacity.','不透明度。'],
@@ -61,3 +62,5 @@ test('known shared validation messages have complete translation inventory',asyn
   for(const [,message]of source.matchAll(/(?:new )?Error\('([^']+)'\)/g))assert.ok(Object.hasOwn(COPY,message),`${path}: ${message}`);
  }
 });
+
+test('authored sample version identifiers retain exact finite spelling',()=>{for(const id of ['sample-release','sample-previous','sample-archive']){for(const change of [copy=>{delete copy[id];},copy=>{copy[id]='renamed-version';}]){const copy={...COPY};change(copy);assert.throws(()=>validateCopy(copy));}}});

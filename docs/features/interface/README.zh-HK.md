@@ -1,6 +1,7 @@
 # 介面
 
 - [私人歷史控制項](private-history-controls.zh-HK.md)
+- [指引示例同獨立練習區](guidance-playgrounds.zh-HK.md)
 
 - [語言、旁白、排程同注意力模式](local-personalization.md)
 - [元素外觀同標誌自訂](appearance-editor.md)
@@ -13,6 +14,8 @@
 呢啲渲染模組冇引入公開 HTTP API，唔適用 Postman collection。專項檢查同整合合約唔代表完整已建置介面或者語言矩陣驗收。
 
 ## 廣東話全文
+
+- [指引示例同獨立練習區](guidance-playgrounds.zh-HK.md)
 
 - [語言、旁白、時間表同專注模式](local-personalization.zh-HK.md)
 - [元素外觀同標誌自訂](appearance-editor.zh-HK.md)

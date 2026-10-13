@@ -145,8 +145,8 @@
     {
       "source": "docs/features/interface/README.md",
       "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "3e49992d14ff1e6f5315a5383532d3a4a0f2602f2bd11db301cc6af8a2355b65",
-      "translationSha256": "2f1f7d7c49a689038ba9f44a32c18ee08f507137086ab7d35b54b6efbe847dd9"
+      "sourceSha256": "b53ad416b50279d3b0476a13597e521b66dcecdb88298598bc4ec5a480da4037",
+      "translationSha256": "a55bfa5fbbc6fb668508e509c7a17681eea2f530fb83750eea09c82231832946"
     },
     {
       "source": "docs/features/interface/animation-transition.md",
@@ -591,6 +591,12 @@
       "translation": "docs/features/platform/renderer-task-timing.zh-HK.md",
       "sourceSha256": "84a26a80f3995927279bf06392823c3b5e537a047b2dc585470ffc1438634453",
       "translationSha256": "60f24418aaf7913bb1a6bab39cfceddd76d7cb12ea5f5f8ac2a4437ef745f566"
+    },
+    {
+      "source": "docs/features/interface/guidance-playgrounds.md",
+      "translation": "docs/features/interface/guidance-playgrounds.zh-HK.md",
+      "sourceSha256": "abb70173009fad41b08e66fa41c344e28dd5a5b095409bbfe152934ca60c5a95",
+      "translationSha256": "2eccf0921db7287a9e110ec3c23dbc41968d490d59db4d88f276cfa681510f60"
     }
   ]
 }

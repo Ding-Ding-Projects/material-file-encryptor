@@ -34,7 +34,23 @@
 
 ## 消費端清單
 
-十二個實際描述來源同穩定概念數目列喺同目錄 `guidance-playgrounds.md`：設定、巢狀外觀、字型、59 個動畫概念、19 個影格概念、16 個過渡概念、24 個顏色合約、圖片欄位及操作、12 個工作區概念、18 個文字樣式欄位及輔助項、六個額外標誌編輯入口，以及 11 個伺服器準備概念。呢個係原始碼清單，唔代表已驗證實際顯示實例或執行結果。
+十二個實際描述來源同穩定概念數目逐項列喺下面。呢個係原始碼清單，唔代表已驗證實際顯示實例或執行結果。
+
+| 實際來源 | 控制項範圍 | 樣本狀態 |
+| --- | --- | --- |
+| `src/shared/local-ux/settings-guidance.js` | 88 個靜態描述、14 個時間表數值範圍、清除同快照變體 | 靜態描述同已命名變體已有樣本 |
+| `src/shared/local-ux/nested-appearance-guidance.js` | 11 個概念 | 已有樣本 |
+| `src/renderer/features/personalization/font-guidance.js` | 6 個概念，動態字型、軸同實例識別 | 六個概念同 wght/wdth/CTGR 樣本已有實作；未知軸明確不可用 |
+| `src/renderer/features/personalization/motion-guidance.js` | 59 個概念 | 預先編寫時序、觸發、影格、預覽同固定時鐘時間表樣本 |
+| `src/renderer/features/personalization/motion-keyframe-inspector.js` | 19 個概念，軌道、影格同登記實例 | 已有樣本 |
+| `src/renderer/features/personalization/transition-property-inspector.js` | 16 個概念，規則、資料列同登記實例 | 已有樣本 |
+| `src/renderer/features/personalization/color-picker.js` | 24 個合約，色盤同通道實例 | 24 個預先編寫樣本同數值／滑桿色相變體 |
+| `src/renderer/features/personalization/image-transform-inspector.js` | 14 個數值欄、14 個清除、3 個配合、7 個混合、套用／重設／搜尋／清除搜尋 | 全部 42 個範本有本機幾何樣本 |
+| `src/renderer/features/personalization/workbench-guidance.js` | 12 個概念 | 預先編寫多邊形、參考線、狀態同指定範圍搜尋樣本 |
+| `src/renderer/features/personalization/typography-inspector.js` | 18 個欄位，各欄清除／重設、預設／步進輔助同搜尋 | 62 個預先編寫範本 |
+| `src/renderer/features/personalization/logo.js` | 5 個裁剪／安全範圍欄位同預設，以及組合巢狀／顏色控制項 | 六個額外樣本同組合顏色樣本 |
+| `src/renderer/features/server-manager/index.js` | 11 個準備概念 | 明確合成準備預覽 |
+
 
 十一個伺服器準備概念已有明確合成預覽，涵蓋主版本配對、確認同摘要不符、拒絕取消已完成操作、目錄身份及分頁、版本可用性、只檢視而唔接受授權，以及搜尋。全部狀態明確係合成樣本，唔會建立檔案、下載、執行 Java 或啟動伺服器。
 

@@ -105,6 +105,45 @@ class Tests(unittest.TestCase):
         with self.assertRaises(recovery.Error):
             recovery.configured_base_interpreter(values,launcher,str(base),str(launcher))
 
+    def test_explicit_gui_observer_role_verifies_declared_console_sibling(self):
+        launcher = self.base / 'isolated/Scripts/pythonw.exe'
+        base = self.base / 'runtime/pythonw.exe'
+        console = base.with_name('python.exe')
+        def image(target, subsystem):
+            target.parent.mkdir(parents=True, exist_ok=True)
+            data = bytearray(158)
+            data[:2] = b'MZ'
+            data[60:64] = (64).to_bytes(4, 'little')
+            data[64:68] = b'PE\x00\x00'
+            data[156:158] = subsystem.to_bytes(2, 'little')
+            target.write_bytes(data)
+        image(launcher, 2); image(base, 2); image(console, 3)
+        values = {'home':str(base.parent),'include-system-site-packages':'false','executable':str(console)}
+        self.assertEqual(recovery.configured_base_interpreter(values,launcher,str(base),str(launcher),'gui-observer'),base)
+        with self.assertRaises(recovery.Error):
+            recovery.configured_base_interpreter(values,launcher,str(base),str(launcher))
+        for role in ('gui', 'console', ''):
+            with self.assertRaises(recovery.Error):
+                recovery.configured_base_interpreter(values,launcher,str(base),str(launcher),role)
+        for changed in ({**values,'home':str(self.base)}, {**values,'include-system-site-packages':'true'}, {**values,'executable':str(base.parent/'other.exe')}):
+            with self.assertRaises(recovery.Error):
+                recovery.configured_base_interpreter(changed,launcher,str(base),str(launcher),'gui-observer')
+        for target, invalid, restored in ((launcher,3,2),(base,3,2),(console,2,3)):
+            image(target, invalid)
+            with self.assertRaises(recovery.Error):
+                recovery.configured_base_interpreter(values,launcher,str(base),str(launcher),'gui-observer')
+            image(target, restored)
+        console.unlink()
+        with self.assertRaises(recovery.Error):
+            recovery.configured_base_interpreter(values,launcher,str(base),str(launcher),'gui-observer')
+
+    def test_interpreter_pe_parser_rejects_malformed_and_unbounded_headers(self):
+        image = self.base / 'invalid.exe'
+        for data in (b'', b'MZ' + bytes(62), b'MZ' + bytes(58) + (2**31).to_bytes(4,'little')):
+            image.write_bytes(data)
+            with self.assertRaises(recovery.Error):
+                recovery.executable_subsystem(image)
+
     def test_runtime_launcher_and_missing_base_are_rejected(self):
         launcher = self.base / 'isolated/Scripts/python.exe'
         base = self.base / 'runtime/python.exe'

@@ -1,3 +1,11 @@
+## Current combined-suite repair, October 13
+
+- [x] Preserve the actual 1,733-test non-green result and separately verify the missing declarations, translated inventories and current wizard fixtures.
+- [x] Independently review exact interpreter-role source admission and verify positive and negative checks without relaxing default caller identity.
+- [ ] Run actual source-bound renderer interactions and verify owned closure after the admission repair.
+- [ ] Integrate and run the reviewed diagnostic entrypoint with exact package, verifier and lifecycle identities.
+- [ ] Promote genuine current captures, verify deployed documentation and integrate completed work into main.
+
 ## Active continuation, 2026-10-12
 
 - [x] Integrate reviewed permission-launcher retirement and fixture repairs through f0d95; all four original focused failures are corrected.
