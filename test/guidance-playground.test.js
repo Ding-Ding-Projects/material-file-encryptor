@@ -60,12 +60,14 @@ test('sample module has no production helper imports or external-effect capabili
  const adapterImport="import {evaluateColorPractice} from '../local-ux/color-practice-evaluator.js';",mathImport="import {parseColorEntry,parseColor,colorRepresentations,contrastRatio,rainbowDuration} from '../../renderer/features/personalization/color.js';";
  const typographyImport="import {evaluateTypographyPractice} from '../local-ux/typography-practice-evaluator.js';",typographyMathImport="import {parseColorEntry} from '../../renderer/features/personalization/color.js';";
  const motionImport="import {evaluateMotionPractice} from '../local-ux/motion-practice-evaluator.js';";
+ const remainingImport="import {evaluateMotionRemaining} from '../local-ux/motion-remaining-evaluator.js';";
  const utilityImport="import {evaluateMotionUtility} from '../local-ux/motion-utility-evaluator.js';";
- assert.ok(source.includes(adapterImport));assert.ok(source.includes(typographyImport));assert.ok(source.includes(motionImport));assert.ok(source.startsWith(utilityImport));const core=source.replace(adapterImport,'').replace(typographyImport,'').replace(motionImport,'').replace(utilityImport,'');verify(core);
+ assert.ok(source.includes(adapterImport));assert.ok(source.includes(typographyImport));assert.ok(source.includes(motionImport));assert.ok(source.includes(utilityImport));assert.ok(source.startsWith(remainingImport));const core=source.replace(adapterImport,'').replace(typographyImport,'').replace(motionImport,'').replace(utilityImport,'').replace(remainingImport,'');verify(core);
  const adapter=await fs.readFile(new URL('../src/shared/local-ux/color-practice-evaluator.js',import.meta.url),'utf8'),math=await fs.readFile(new URL('../src/renderer/features/personalization/color.js',import.meta.url),'utf8');assert.ok(adapter.startsWith(mathImport));verify(adapter.replace(mathImport,''));verify(math);
  const typography=await fs.readFile(new URL('../src/shared/local-ux/typography-practice-evaluator.js',import.meta.url),'utf8');assert.ok(typography.startsWith(typographyMathImport));verify(typography.replace(typographyMathImport,''));
  verify(await fs.readFile(new URL('../src/shared/local-ux/motion-practice-evaluator.js',import.meta.url),'utf8'));
  verify(await fs.readFile(new URL('../src/shared/local-ux/motion-utility-evaluator.js',import.meta.url),'utf8'));
+ verify(await fs.readFile(new URL('../src/shared/local-ux/motion-remaining-evaluator.js',import.meta.url),'utf8'));
  assert.throws(()=>verify(core+'\nimport original from "./controls.js";'),assert.AssertionError);assert.throws(()=>verify(math+'\nfetch("https://example.invalid")'),assert.AssertionError);assert.throws(()=>verify(adapter.replace(mathImport,'')+'\nlocalStorage.setItem("a","b")'),assert.AssertionError);
 });
 

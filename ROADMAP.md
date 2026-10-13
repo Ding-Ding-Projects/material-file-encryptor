@@ -628,3 +628,12 @@
 - [ ] Verify information icons, tab-panel geometry, actual examples, isolation and keyboard behavior in the current built application.
 - [ ] Verify public documentation controls and navigation at 320 px upward in English, Cantonese and bilingual, both themes and all four display scales.
 - [ ] Refresh genuine current captures and documentation, verify deployment and repository homepage, integrate verified work into main and verify remote delivery.
+
+## Integrated guidance source and focused diagnostic proof
+
+- [x] Implement and independently review38motion utility plus91remaining motion control/helper templates, including unavailable-runtime, promised completion, deferred menu focus and stale-selection source repairs; integrated85focused checks passed. This source item does not claim runtime acceptance.
+- [x] Repair actual outlined/filled caller selection at creation with retained callback/submit identity and observed red-to-green regressions.
+- [x] Verify the focused frozen8159470five-tab panel comparison at320x800CSS bilingual/light/DPR2, with genuine inspected images and recorded keyboard/sample isolation; retain its exact source and scale limits.
+- [ ] Build the complete integrated candidate through the exact root entrypoint and bind its new output hashes.
+- [ ] Verify the complete control/practice inventory in the new built application and public documentation, including real menu focus, keyboard behavior and supported language/theme/scale tuples.
+- [ ] Promote current genuine captures, complete live documentation and homepage readback, integrate verified source into main, and prove remote delivery.
