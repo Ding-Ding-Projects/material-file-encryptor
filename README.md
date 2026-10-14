@@ -158,6 +158,14 @@ Headless Microsoft Edge with the staged extension from source `45ccb91`, capture
 
 ![Models tab chat with a streamed reply rendered as safe rich text with copy actions, light theme, English](docs/images/captures/extension-models-45ccb91/models-chat-light-en.png)
 
+#### Browser extension status tab
+
+Headless Microsoft Edge with the staged extension from clean source `78e606f`, captured on October 14, 2026. Check releases read the live published releases: the newest, v1.570.1, carries the code name Classic Har Gow, and is labelled as not this build because the extension's version 0.1.0 has no release of its own. The narrow capture shows the inventory coverage list at 360 pixels with no horizontal overflow.
+
+![Status tab showing the newest published release, its food code name and dish photo, labelled as not this build, light theme, English](docs/images/captures/extension-status-78e606f/status-release-light-en.png)
+
+![Status tab feature coverage list filtered by a search at 360 pixels wide, light theme, English](docs/images/captures/extension-status-78e606f/status-coverage-narrow-light-en.png)
+
 #### Documentation site
 
 The following genuine documentation captures show the information entry, worked example and isolated playground from source `83e14d8627b9782d5acc12221c22ed4f0b8b2d4c`. Capture time: October 13, 2026, 11:50 UTC. They cover two bilingual/light tuples, not native-product or installed acceptance. The [source-bound inventory](docs/evidence/control-guidance-83-inventory.json) retains exact intervals, hashes and limitations.

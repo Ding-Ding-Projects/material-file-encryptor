@@ -14,6 +14,8 @@ export const publicImages=Object.freeze([
  {source:'docs/images/captures/material-2a9cb388/dialog-consent-dark-en.png',route:'images/captures/material-2a9cb388/dialog-consent-dark-en.png',sha256:'9e44ce0dd21480c5255e22f835e8b54ab0c33ee60274df740ed6299e85fa9b5c',bytes:46359,width:839,height:402},
  {source:'docs/images/captures/extension-models-45ccb91/models-connected-light-en.png',route:'images/captures/extension-models-45ccb91/models-connected-light-en.png',sha256:'b13f1a78797717b909170813643ff8952361b1c9a263e4a55e6028712dd81e7a',bytes:69834,width:1100,height:1000},
  {source:'docs/images/captures/extension-models-45ccb91/models-chat-light-en.png',route:'images/captures/extension-models-45ccb91/models-chat-light-en.png',sha256:'91635571627c8f40f91926348124d3ef46335d5f9a0b5c3471d605fc10a01973',bytes:86467,width:1100,height:1300},
+ {source:'docs/images/captures/extension-status-78e606f/status-release-light-en.png',route:'images/captures/extension-status-78e606f/status-release-light-en.png',sha256:'a0c4bece81a11da974966640f7196e70431c82ec45b5babc4f69b9fb02260565',bytes:258723,width:1100,height:1100},
+ {source:'docs/images/captures/extension-status-78e606f/status-coverage-narrow-light-en.png',route:'images/captures/extension-status-78e606f/status-coverage-narrow-light-en.png',sha256:'2b61170a468b506b36d6af055c129ed424ed08142c0a9e2bfb771ab7044f2578',bytes:69984,width:360,height:900},
 ].map(Object.freeze));
 
 export function resolvePublicImage(source,url,images) {
