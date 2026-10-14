@@ -11973,16 +11973,32 @@
     {
       "id": "school-mode",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/background.js",
+        "src/main/browser-school-mediation.js",
+        "src/main/browser-native-host.js",
+        "src/main/feature-services.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/design/browser-desktop-channel.md",
+        "docs/features/workflows/browser-native-host.md",
+        "docs/features/workflows/browser-extension-workspace.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/workflows/browser-native-host.zh-HK.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "tests": [
+        "test/browser-school-scopes.test.js",
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Enable one shared renamable mode through authenticated native mediation, hide excluded routes everywhere and enforce shared unlock arithmetic. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The desktop owns the one shared, renamable school mode. A paired extension reads its name and state with read-school-mode, and requests a change with set-school-mode, which needs a fresh native re-authentication in the unlocked desktop through the existing profile password dialog (Windows Hello is not integrated yet) and then writes the setting through the same writer the desktop uses, so excluded routes hide everywhere as when changed in the desktop. One prompt at a time, withdrawn after 30 seconds or on lock, disconnect or update preparation; disabling a mode that has its own local credential is refused from the browser. Verified with synthetic broker and extension tests; no installed desktop, real native-messaging registration or captured prompt.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -11996,7 +12012,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -12007,14 +12023,14 @@
         "action": "Enable one shared renamable mode through authenticated native mediation, hide excluded routes everywhere and enforce shared unlock arithmetic.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Enable one shared renamable mode through authenticated native mediation, hide excluded routes everywhere and enforce shared unlock arithmetic.",
-            "nextProof": "Exercise enable one shared renamable mode through authenticated native mediation, hide excluded routes everywhere and enforce shared unlock arithmetic on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Pair an installed extension with an installed desktop, change school mode from the browser after re-authentication, and confirm the excluded routes hide in the desktop window."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "The extension stores nothing; the desktop keeps the setting in its own preferences."
       }
     },
     {
@@ -17669,7 +17685,9 @@
     "src/main/browser-confirm-mediation.js": "1b407ff46b3b31d64fe3fead6f176e65ae297532",
     "src/main/browser-confirm-prompt.js": "1b407ff46b3b31d64fe3fead6f176e65ae297532",
     "docs/design/browser-desktop-channel.md": "1b407ff46b3b31d64fe3fead6f176e65ae297532",
-    "test/browser-confirm-scopes.test.js": "1b407ff46b3b31d64fe3fead6f176e65ae297532"
+    "test/browser-confirm-scopes.test.js": "1b407ff46b3b31d64fe3fead6f176e65ae297532",
+    "src/main/browser-school-mediation.js": "c193df3b93e64c409565d46689795a8481b7a062",
+    "test/browser-school-scopes.test.js": "c193df3b93e64c409565d46689795a8481b7a062"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",

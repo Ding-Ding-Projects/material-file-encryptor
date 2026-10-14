@@ -185,7 +185,7 @@ test('assessment provenance cannot disappear while independent verdicts remain a
 test('extension behavior evidence and gap verdicts reject causal contradictions', async () => {
  const manifest=await inventory();
  for(const mutate of [r=>r.evidenceVerdict='invented',r=>r.behaviorVerdict='missing',r=>r.completion.gaps=['proof'],r=>delete r.completion.persistence]) {const broken=structuredClone(manifest);mutate(broken.features.find(r=>r.surface==='extension'&&r.id==='language'));assert.ok(validateFeatureDelivery(broken).some(error=>error.startsWith('extension/language:')));}
- const missing=structuredClone(manifest);missing.features.find(r=>r.surface==='extension'&&r.id==='school-mode').status='unverified';assert.ok(validateFeatureDelivery(missing).some(error=>error.includes('verdicts disagree')));
+ const missing=structuredClone(manifest);const stillMissing=missing.features.find(r=>r.surface==='extension'&&r.status==='missing');assert.ok(stillMissing,'at least one extension row is still missing');stillMissing.status='unverified';assert.ok(validateFeatureDelivery(missing).some(error=>error.includes('verdicts disagree')));
  const present=structuredClone(manifest);present.features.find(r=>r.surface==='extension'&&r.id==='build-entrypoints').completion.gaps=['behavior','proof'];assert.ok(validateFeatureDelivery(present).some(error=>error.includes('gaps contradict')));
  const borrowed=structuredClone(manifest),row=borrowed.features.find(r=>r.surface==='extension'&&r.id==='build-entrypoints');row.completion.owner='browser-extension/options.js';row.implementation.push(row.completion.owner);assert.ok(validateFeatureDelivery(borrowed).some(error=>error.includes('repository obligation')));
  assert.deepEqual(validateFeatureDelivery(manifest),[]);
