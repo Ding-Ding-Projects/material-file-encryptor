@@ -4,6 +4,8 @@
 :where(.converter-suite,.ollama-suite,.server-preparation) :where(h2,h3,h4,p){margin:0;overflow-wrap:anywhere}
 :where(.converter-suite,.ollama-suite,.server-preparation) :where(pre){white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%;padding:16px;background:var(--md-sys-color-surface-container-low);border-radius:12px}
 :where(.converter-suite,.ollama-suite,.server-preparation) :where(md-outlined-text-field,md-outlined-select,mfe-file-picker,mfe-search){max-width:100%;min-width:0}
+/* Buttons that sit directly in a grid keep their own width instead of stretching. */
+:where(.converter-suite,.ollama-suite,.server-preparation) :is(md-filled-button,md-filled-tonal-button,md-outlined-button,md-text-button){justify-self:start}
 :where(.converter-suite,.ollama-suite,.server-preparation) :where(md-text-button,md-outlined-button,md-filled-button){min-height:44px;max-width:100%;white-space:normal;overflow-wrap:anywhere}
 :where(.converter-suite,.ollama-suite) nav{display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--md-sys-color-outline-variant);padding-block-end:12px}
 :where(.converter-suite,.ollama-suite) [role=tab][aria-selected=true]{--md-text-button-label-text-color:var(--md-sys-color-on-secondary-container);background:var(--md-sys-color-secondary-container);border-radius:22px}

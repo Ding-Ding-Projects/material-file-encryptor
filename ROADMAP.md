@@ -18,6 +18,11 @@
 - [ ] Capture each remaining message box individually (licence, pairing, credential, shutdown, import, update).
 - [x] Integrate the sweep into main.
 - [x] Refresh the README with current desktop captures and provenance.
+- [x] Seat the local access fieldset legend inside its outlined card (capture, main 862444b).
+- [x] Let data table header rows reach the right outline by dropping the reserved scrollbar gutter (History capture, main 4a30e82).
+- [x] Let workflow document name and content fields span their column (capture, main a36600b).
+- [x] Keep converter, local model and server preparation buttons at their own width instead of stretching across the grid (converter capture).
+- [ ] Place guidance information buttons inline beside the control they explain instead of on their own row (personalization, server preparation); this moves labels and helper text and needs its own layout pass.
 
 ## Current preservation boundary
 
