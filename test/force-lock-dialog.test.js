@@ -13,7 +13,8 @@ function fixture(response,result={busy:true,locked:false}) {
   const context=vm.createContext({window:{},state,Error,
     uiDialog:{showMessageBox:async(window,options)=>{shown=options;return {response};}},
     helper:{request:async method=>{calls.push(method);return method==='forceLock'?result:{mounted:false,locked:true};}},
-    nativeState:value=>value,publish:()=>calls.push('publish')});
+    nativeState:value=>value,publish:()=>calls.push('publish'),
+    browserHandoff:{revoke:()=>calls.push('revokeBrowser')}});
   const start=main.indexOf('async function forceLockDrive('),end=main.indexOf('async function request(',start);assert.ok(start>=0&&end>start);vm.runInContext(main.slice(start,end),context);
   return {context,calls,get shown(){return shown;}};
 }
@@ -37,13 +38,14 @@ test('busy response preserves mounted state and localizes retained-resource inst
       if(language==='bilingual')assert.match(error.message,/磁碟會保持掛載/);
       return true;
     });
-    assert.deepEqual(f.calls,['forceLock']);assert.equal(f.context.state.mounted,true);
+    assert.deepEqual(f.calls,['revokeBrowser','forceLock']);assert.equal(f.context.state.mounted,true);
   }
 });
 test('confirmed lock refreshes status and publishes once; omitted language stays English',async()=>{
   const f=fixture(1,{locked:true,busy:false});
   await f.context.forceLockDrive();
-  assert.deepEqual(f.calls,['forceLock','statusSummary','publish']);
+  // Browser authority ends before the drive is forced to lock.
+  assert.deepEqual(f.calls,['revokeBrowser','forceLock','statusSummary','publish']);
   assert.equal(f.context.state.locked,true);assert.equal(f.shown.title,'Force Lock');
 });
 test('current language and School mode reach validated preload request',async()=>{
