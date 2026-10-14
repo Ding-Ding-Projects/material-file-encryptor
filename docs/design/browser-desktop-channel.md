@@ -154,6 +154,8 @@ and the installed end-to-end path) is still outstanding for every scope.
 | `read-update-state` | Status | current version, available version, download progress | Implemented |
 | `read-profile-summary` | Re-authenticate | existing safe summary (already implemented) | Implemented |
 | `focus-authenticator` | Confirm | `shown`: the desktop authenticator window is brought forward; no code is returned | Implemented |
+| `read-school-mode` | Status | the school mode's display name and whether it is on | Implemented |
+| `set-school-mode` | Re-authenticate | `changed`, `unchanged`, `rejected`, `busy` or `unavailable`, and the resulting on/off state; Windows Hello is not used by this build, so the check is the vault password in the desktop | Implemented |
 | `request-unlock-step` | Re-authenticate | the new unlock level | Not implemented |
 | `open-in-editor` | Confirm | `opened` or a plain failure reason | Not implemented |
 | `convert-file` | Confirm | job id and status updates | Not implemented |

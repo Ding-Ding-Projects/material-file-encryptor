@@ -62,6 +62,25 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{if(sender.id!==c
    respond({schemaVersion:1,state:value.state});
   }).catch(()=>respond({error:'Authenticator request did not complete. Open and unlock the desktop, pair again and retry.'}));return true;
  }
+ if(message?.type==='school-mode-read'){
+  if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1){respond({error:'School mode request is unavailable.'});return false;}
+  if(!session){respond({paired:false});return false;}
+  const ownSession=session,epoch=connectionEpoch;
+  request({type:'read-school-mode',session:ownSession}).then(value=>{
+   if(session!==ownSession||connectionEpoch!==epoch||!value||Object.keys(value).sort().join(',')!=='enabled,name,schemaVersion,type'||value.type!=='school-mode'||value.schemaVersion!==1||typeof value.enabled!=='boolean'||typeof value.name!=='string'||!value.name||value.name.length>80||/\p{Cc}/u.test(value.name))throw Error('Invalid school mode response.');
+   respond({schemaVersion:1,enabled:value.enabled,name:value.name});
+  }).catch(()=>respond({error:'School mode could not be read. Open and unlock the desktop, pair again and retry.'}));return true;
+ }
+ if(message?.type==='school-mode-set'){
+  if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==2||typeof message.enabled!=='boolean'){respond({error:'School mode request is unavailable.'});return false;}
+  if(!session){respond({paired:false});return false;}
+  const ownSession=session,epoch=connectionEpoch,wanted=message.enabled;
+  // The desktop re-authenticates the person first. Only a fixed state word and the on/off state come back.
+  request({type:'set-school-mode',session:ownSession,enabled:wanted},40000).then(value=>{
+   if(session!==ownSession||connectionEpoch!==epoch||!value||Object.keys(value).sort().join(',')!=='enabled,schemaVersion,state,type'||value.type!=='school-mode-set'||value.schemaVersion!==1||!['changed','unchanged','rejected','busy','unavailable'].includes(value.state)||value.enabled!==null&&typeof value.enabled!=='boolean')throw Error('Invalid school mode response.');
+   respond({schemaVersion:1,state:value.state,enabled:value.enabled});
+  }).catch(()=>respond({error:'School mode request did not complete. Open and unlock the desktop, pair again and retry.'}));return true;
+ }
  if(message?.type==='protected-discover'){
   if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1||!session){respond({error:'Protected capabilities are unavailable.'});return false;}
   const ownSession=session,epoch=connectionEpoch;

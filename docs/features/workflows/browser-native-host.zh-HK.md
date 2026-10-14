@@ -129,9 +129,43 @@ adapter 呼叫會保持缺少 context，唔會借用目前畫面 frame。
 - 鎖定、中斷連線、離開同更新準備都會將待回答提示當作拒絕撤回，要求隨後因為
   配對已經冇咗而失敗。單單拒絕一次唔會撤銷配對。
 
-設計入面各範圍嘅狀態：`read-lock-state`、`read-update-state` 同
-`focus-authenticator` 已經喺主程序同擴充功能實作；`read-profile-summary` 由受保護
-中介處理；設計入面其餘候選範圍尚未實作。
+## 學校模式範圍：read-school-mode 同 set-school-mode
+
+兩個範圍令已配對嘅擴充功能可以查看，同要求更改桌面嘅學校模式。設定由桌面擁有：
+佢存放喺共用模式紀錄 `shared-settings.json`，擴充功能本身冇自己嘅學校模式。
+兩個範圍都由 `src/main/browser-school-mediation.js` 處理。
+
+- `read-school-mode` 係「狀態」範圍。已配對來源只會傳送
+  `{type:'read-school-mode', session}`，唔會出現提示。答案係 `school-mode`，
+  `schemaVersion` 為 1，帶有布林值 `enabled` 同模式目前嘅顯示 `name`。名稱係最多
+  80 個字元嘅純文字，控制、分隔同格式字元（包括雙向覆寫）都會被移除；如果冇剩低
+  可讀內容，就會用預設名稱。未配對嘅呼叫者會得到慣常嘅拒絕，紀錄讀唔到時要求會
+  失敗，而唔會估。
+- `set-school-mode` 係「重新驗證」範圍。已配對來源只會傳送
+  `{type:'set-school-mode', session, enabled}`，`enabled` 為布林值。已解鎖嘅桌面
+  隨後會即時做一次原生身份檢查：由主程序擁有嘅設定檔驗證對話框，你要喺桌面輸入
+  現有嘅保險庫密碼。呢個組建唔使用 Windows Hello，因為儲存庫入面冇 Windows Hello
+  整合。密碼喺原生層檢查，永遠唔會去到瀏覽器、擴充功能或者中介模組。檢查成功之後，
+  桌面先會寫入設定，而且用同桌面個人化畫面一樣嘅共用紀錄寫入器，亦會同桌面上更改
+  一樣通知已開啟嘅視窗。
+- 答案係 `school-mode-set`，`schemaVersion` 為 1，`state` 係 `changed`、
+  `unchanged`、`rejected`、`busy` 或者 `unavailable`，另有 `enabled`，即桌面目前嘅
+  開關狀態，讀唔到時為 `null`。答案唔包含憑證、設定檔資料或者路徑。
+- 呢個提示同「確認」模式共用：兩者加埋最多只有一個待回答提示，第二個要求會得到
+  `busy`，唔會排隊。桌面已鎖定、視窗隱藏或者縮到系統匣、桌面正在關閉、驗證模式，
+  或者組建冇提供驗證回呼，都會即時回答 `unavailable`。冇原生回呼，任何程序都冇辦法
+  更改設定。未回答嘅提示會喺 30 秒後、主機期限之前當作 `rejected` 撤回；鎖定、
+  中斷連線、離開同更新準備亦會撤回。單單拒絕一次唔會撤銷配對。
+- 已開啟而且有自己本機憑證保護嘅模式，只可以喺檢查嗰個憑證嘅桌面關閉：瀏覽器要求
+  會得到 `rejected`，紀錄原封不動。開啟模式，或者關閉冇記錄本機憑證嘅模式，只需要
+  保險庫密碼檢查。
+
+設計入面各範圍嘅狀態：`read-lock-state`、`read-update-state`、
+`focus-authenticator`、`read-school-mode` 同 `set-school-mode` 已經喺主程序同擴充功能
+實作；`read-profile-summary` 由受保護中介處理；設計入面其餘候選範圍尚未實作。
+學校模式範圍只用合成測試資料同假原生代理驗證，冇真實桌面對話框、已安裝組建、
+真實瀏覽器登記或者已擷取提示參與，所以未經端到端驗證，包括瀏覽器要求更改之後
+已開啟桌面視窗嘅重繪。
 
 ## 限制同驗證
 

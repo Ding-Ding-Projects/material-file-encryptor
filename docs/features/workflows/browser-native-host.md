@@ -156,10 +156,59 @@ button and Escape means Reject. It is handled by
   rejected, and the request then fails because the pairing is gone. A
   rejection on its own never revokes the pairing.
 
-Status of the design's scopes: `read-lock-state`, `read-update-state` and
-`focus-authenticator` are implemented in the main process and the extension,
-`read-profile-summary` is covered by the protected mediation, and the remaining
-candidate scopes in the design are not implemented.
+## School mode scopes: read-school-mode and set-school-mode
+
+Two scopes let a paired extension look at, and ask to change, the desktop's
+school mode. The desktop owns the setting: it lives in the shared mode record
+`shared-settings.json`, and the extension keeps no school mode of its own.
+Both scopes are handled by `src/main/browser-school-mediation.js`.
+
+- `read-school-mode` is a Status scope. The paired origin sends exactly
+  `{type:'read-school-mode', session}` and no prompt appears. The answer is
+  `school-mode` with `schemaVersion` 1, a boolean `enabled` and the mode's
+  current display `name`. The name is plain text of at most 80 characters, with
+  control, separator and format characters (including bidirectional overrides)
+  removed, and falls back to a default when nothing readable remains. An
+  unpaired caller gets the usual refusal, and an unreadable record fails the
+  request instead of guessing.
+- `set-school-mode` is a Re-authenticate scope. The paired origin sends exactly
+  `{type:'set-school-mode', session, enabled}` with a boolean `enabled`. The
+  unlocked desktop then runs a fresh native check of the person: the main-owned
+  profile authentication dialog, in which the person types the existing vault
+  password in the desktop. Windows Hello is not used by this build, because no
+  Windows Hello integration exists in the repository. The password is checked
+  in the native layer and never reaches the browser, the extension or the
+  mediation module. Only after the check succeeds does the desktop write the
+  setting, through the same shared record writer that the desktop's own
+  Personalization screen uses, and tell the open window about it exactly as it
+  does for a change made on the desktop.
+- The answer is `school-mode-set` with `schemaVersion` 1, a `state` of
+  `changed`, `unchanged`, `rejected`, `busy` or `unavailable`, and `enabled`,
+  the desktop's current on/off state, or `null` when it could not be read. It
+  contains no credential, profile data or path.
+- The prompt is shared with Confirm mode: at most one is pending across both,
+  and a second request is answered `busy` and is not queued. A locked desktop,
+  a hidden or tray-minimized window, a closing desktop, verification mode, or a
+  build with no authentication callback answers `unavailable` at once. Without
+  the native callback no process can change the setting. An unanswered prompt is
+  withdrawn as `rejected` after 30 seconds, before the host deadline, and lock,
+  disconnect, exit and update preparation withdraw it too. A rejection never
+  revokes the pairing.
+- A mode that is on and protected by its own local credential can be turned off
+  only on the desktop, where that credential is checked: the browser request is
+  answered `rejected` and the record is left untouched. Turning a mode on, or
+  turning off a mode that has no local credential recorded, needs only the
+  vault password check.
+
+Status of the design's scopes: `read-lock-state`, `read-update-state`,
+`focus-authenticator`, `read-school-mode` and `set-school-mode` are implemented
+in the main process and the extension, `read-profile-summary` is covered by the
+protected mediation, and the remaining candidate scopes in the design are not
+implemented. The school mode scopes are verified with synthetic fixtures and a
+fake native broker only. No real desktop dialog, installed build, real browser
+registration or captured prompt took part, so they are unverified end to end,
+including the repaint of an open desktop window after a browser-requested
+change.
 
 ## Bounds and verification
 

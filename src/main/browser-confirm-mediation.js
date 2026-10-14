@@ -16,7 +16,7 @@ const answer = state => ({type: 'authenticator-focused', schemaVersion: 1, state
 // The native host gives a request 35 seconds. An unanswered prompt is withdrawn as rejected before that, so the
 // browser always receives an answer and a forgotten prompt never leaves later requests stuck on busy.
 export const PROMPT_TIMEOUT_MS = 30000;
-export function createBrowserConfirmMediation({getPair, isUnlocked, canPrompt = () => true, confirm, focusAuthenticator, now = Date.now, promptTimeoutMs = PROMPT_TIMEOUT_MS} = {}) {
+export function createBrowserConfirmMediation({getPair, isUnlocked, canPrompt = () => true, confirm, focusAuthenticator, gate = {held: false}, now = Date.now, promptTimeoutMs = PROMPT_TIMEOUT_MS} = {}) {
   if (typeof getPair !== 'function' || typeof isUnlocked !== 'function') throw Error('Invalid browser confirmation configuration.');
   let closed = false, pending = null;
   const revoke = () => { pending?.abort(); };
@@ -32,9 +32,10 @@ export function createBrowserConfirmMediation({getPair, isUnlocked, canPrompt = 
       check();
       const admissible = () => { try { return !closed && isUnlocked() === true && canPrompt() === true; } catch { return false; } };
       if (typeof confirm !== 'function' || typeof focusAuthenticator !== 'function' || !admissible()) return answer('unavailable');
-      if (pending) return answer('busy');
+      if (pending || gate.held) return answer('busy');
       const controller = new AbortController();
       pending = controller;
+      gate.held = true;
       const deadline = setTimeout(() => controller.abort(), Math.max(1, promptTimeoutMs));
       try {
         let approved = false;
@@ -45,7 +46,7 @@ export function createBrowserConfirmMediation({getPair, isUnlocked, canPrompt = 
         try { await focusAuthenticator(); } catch { return answer('unavailable'); }
         check();
         return answer('shown');
-      } finally { clearTimeout(deadline); if (pending === controller) pending = null; }
+      } finally { clearTimeout(deadline); gate.held = false; if (pending === controller) pending = null; }
     },
   };
 }

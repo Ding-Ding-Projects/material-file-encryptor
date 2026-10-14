@@ -11,10 +11,10 @@ const renderNoteText=(host,markdown,renderer,translate)=>renderer(host,markdown,
 const mountBrowserConverter=()=>({setConnection(){},refreshLabels(){}});
 const source=await fs.readFile(new URL('../browser-extension/options.js',import.meta.url),'utf8'),html=await fs.readFile(new URL('../browser-extension/options.html',import.meta.url),'utf8');
 async function fixture(snapshot,language='en',{changelog={schemaVersion:1,entries:[{title:'Material sweep',date:'2026-10-14',items:['Converted tabs'],yue:'轉做 Material'},{title:'Startup',date:'2026-10-11',items:['Readiness'],yue:''}]},provenance={schemaVersion:1,version:'0.1.0',sourceCommit:'a'.repeat(40),sourceModified:false,stagedAtUtc:'2026-10-14T09:30:00.000Z'},records:seed=null,extras={},docsCatalog={schemaVersion:1,documents:[{id:'readme',source:'docs/features/README.md',title:'Features',markdown:'# Features\nSee [workspace](workflows/browser-extension-workspace.md).',headings:[]},{id:'workspace',source:'docs/features/workflows/browser-extension-workspace.md',title:'Browser extension workspace',markdown:'# Browser extension workspace\nNotes and schedules.',headings:[]},{id:'workspace-yue',source:'docs/features/workflows/browser-extension-workspace.zh-HK.md',title:'瀏覽器擴充功能工作區',markdown:'# 瀏覽器擴充功能工作區\n筆記。',headings:[]}],assets:[]}}={}){
- const nodes=new Map(),calls=[],attributes=new Map(),created=[];const node=id=>{if(!nodes.has(id))nodes.set(id,{id,textContent:'',dataset:{},listeners:{},setAttribute(name,value){attributes.set(id+':'+name,value);},replaceChildren(...children){this.textContent=children.map(child=>child.textContent??'').join('');},append(...children){for(const child of children)this.textContent+=child.textContent;},addEventListener(name,fn){this.listeners[name]=fn;},setLanguage(){},filter:async rows=>rows,focus(){},show(){this.open=true;return Promise.resolve();},close(){this.open=false;}});return nodes.get(id);};
+ const nodes=new Map(),calls=[],schoolRequests=[],attributes=new Map(),created=[];const node=id=>{if(!nodes.has(id))nodes.set(id,{id,textContent:'',dataset:{},listeners:{},setAttribute(name,value){attributes.set(id+':'+name,value);},replaceChildren(...children){this.textContent=children.map(child=>child.textContent??'').join('');},append(...children){for(const child of children)this.textContent+=child.textContent;},addEventListener(name,fn){this.listeners[name]=fn;},setLanguage(){},filter:async rows=>rows,focus(){},show(){this.open=true;return Promise.resolve();},close(){this.open=false;}});return nodes.get(id);};
  const copies=[...html.matchAll(/data-copy="([^"]+)"/g)].map((match,index)=>{const item=node('copy-'+index);item.dataset.copy=match[1];return item;});const permissionRequests=[];const tabs=['connection','personalization','changelog','notes','docs','support','dimsum','models','status'].map(tab=>{const item=node('tab-'+tab);item.dataset.tab=tab;return item;});const languages=['en','yue','bilingual'].map(value=>{const item=node('language-'+value);item.dataset.language=value;return item;});const themes=['system','light','dark'].map(value=>{const item=node('theme-'+value);item.dataset.theme=value;return item;});const stored={value:JSON.stringify({...defaults,language})};const history={value:null},records=seed??new Map();const storage={getItem:key=>key==='mfe-extension-history-v1'?history.value:key==='mfe-extension-preferences-v1'?stored.value:(records.get(key)??null),setItem(key,value){if(key==='mfe-extension-history-v1')history.value=value;else if(key==='mfe-extension-preferences-v1')stored.value=value;else records.set(key,value);},removeItem(key){if(key==='mfe-extension-history-v1')history.value=null;else records.delete(key);},stored,history,records};
  const win={listeners:{},addEventListener(name,fn){(this.listeners[name]??=[]).push(fn);}};const document={getElementById:node,documentElement:{dataset:{},style:{props:{},setProperty(name,value){this.props[name]=value;},removeProperty(name){delete this.props[name];}}},createTextNode:text=>({textContent:text}),createElement:tag=>{const made=node('generated-'+nodes.size);made.localName=tag;created.push(made);return made;},querySelectorAll:selector=>({'[data-copy]':copies,'[data-tab]':tabs,'[data-language]':languages,'[data-theme]':themes,'[data-guidance]':[]}[selector]||[])};
- vm.runInNewContext(source.replace(/^import [^\r\n]*;\r?\n/gm,''),{renderNoteText,mountBrowserConverter,changelog,provenance,EXPORT_FORMATS,exportChangelog,validateExport,readHistory,recordChanges,clearHistory,ACCENT_PRESETS,accentPalette,applyAccent,checkLogoFile,readLogo,saveLogo,clearLogo,readAttention,saveAttention,attentionDefaults,NOTE_LIMITS,checkNote,readNotes,addNote,deleteNotes,notesMarkdown,readDraft,saveDraft,clearDraft,linkParts,SCHEDULE_VALUES,readSchedules,addSchedule,cancelSchedule,takeDue,timeZoneLabel,readVocabulary,saveVocabulary,clearVocabulary,applyVocabulary,Intl,docsCatalog,readNarration,saveNarration,voicesFor,narrationScript,speak,stopSpeech,TICKET_CATEGORIES,TICKET_STATUSES,checkAttachment,saveTicket,readTickets,deleteTicket,diagnosticsText,ticketExport,CATALOG_URL,RELEASES_URL,normaliseCatalog,photoMap,categories,searchDishes,readFavourites,toggleFavourite,DEFAULT_PORT,ORIGIN_PATTERN,LIMITS,parsePort,modelName,validatePayload,callLocal,formatSize,installedModels,runningNames,pullProgress,chatDelta,parseRichText,AbortController,setTimeout,clearTimeout,RELEASES_API,parseReleaseCodeName,parsePhotoUrl,matchRelease,releasePageUrl,installerAsset,coverage:extras.coverage===undefined?defaultCoverage:extras.coverage,fetch:extras.fetch,caches:extras.caches,Response:class{constructor(body,init){this.body=body;this.headers=new Map(Object.entries(init?.headers||{}));}async json(){return JSON.parse(this.body);}},speechSynthesis:extras.speechSynthesis,navigator:extras.navigator,MediaRecorder:extras.MediaRecorder,SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},URL:{createObjectURL:()=>'blob:recording',revokeObjectURL(){}},Blob:class{constructor(parts,options){this.parts=parts;this.type=options?.type;}},renderMarkdown:(host,markdown,context)=>{host.textContent=markdown;host.context=context;},FileReader:class{readAsDataURL(file){this.result=file.dataUrl;queueMicrotask(()=>this.onload());}readAsText(file){this.result=file.text;queueMicrotask(()=>this.onload());}},defaults,document,window:win,readPreferences,applyPreferences,tabTarget,acquireStorage:()=>storage,styleExtensionMessage,chrome:{permissions:{request:async details=>{permissionRequests.push(details);return extras.grant!==false;}},runtime:{getManifest:()=>({version:'0.1.0'}),sendMessage:async message=>{calls.push(message.type);if(message.type==='desktop-status'){if(extras.desktop instanceof Error)throw extras.desktop;return extras.desktop??{paired:false};}if(extras.paired===false&&message.type==='status')return {paired:false};if(message.type==='authenticator-focus'){if(extras.authenticator instanceof Error)throw extras.authenticator;if(typeof extras.authenticator==='function')return extras.authenticator();return extras.authenticator??{schemaVersion:1,state:'shown'};}if(message.type==='protection-status'){if(snapshot instanceof Error)throw snapshot;return snapshot;}return {paired:true};}}}});await new Promise(resolve=>setTimeout(resolve,0));return{node,calls,permissionRequests,attributes,storage,win,document,nodesWith:text=>[...nodes.values()].filter(item=>String(item.textContent).includes(text)),find:(tag,name)=>[...created].reverse().find(item=>item.localName===tag&&attributes.get(item.id+':aria-label')===name),prefs:()=>JSON.parse(storage.stored.value)};
+ vm.runInNewContext(source.replace(/^import [^\r\n]*;\r?\n/gm,''),{renderNoteText,mountBrowserConverter,changelog,provenance,EXPORT_FORMATS,exportChangelog,validateExport,readHistory,recordChanges,clearHistory,ACCENT_PRESETS,accentPalette,applyAccent,checkLogoFile,readLogo,saveLogo,clearLogo,readAttention,saveAttention,attentionDefaults,NOTE_LIMITS,checkNote,readNotes,addNote,deleteNotes,notesMarkdown,readDraft,saveDraft,clearDraft,linkParts,SCHEDULE_VALUES,readSchedules,addSchedule,cancelSchedule,takeDue,timeZoneLabel,readVocabulary,saveVocabulary,clearVocabulary,applyVocabulary,Intl,docsCatalog,readNarration,saveNarration,voicesFor,narrationScript,speak,stopSpeech,TICKET_CATEGORIES,TICKET_STATUSES,checkAttachment,saveTicket,readTickets,deleteTicket,diagnosticsText,ticketExport,CATALOG_URL,RELEASES_URL,normaliseCatalog,photoMap,categories,searchDishes,readFavourites,toggleFavourite,DEFAULT_PORT,ORIGIN_PATTERN,LIMITS,parsePort,modelName,validatePayload,callLocal,formatSize,installedModels,runningNames,pullProgress,chatDelta,parseRichText,AbortController,setTimeout,clearTimeout,RELEASES_API,parseReleaseCodeName,parsePhotoUrl,matchRelease,releasePageUrl,installerAsset,coverage:extras.coverage===undefined?defaultCoverage:extras.coverage,fetch:extras.fetch,caches:extras.caches,Response:class{constructor(body,init){this.body=body;this.headers=new Map(Object.entries(init?.headers||{}));}async json(){return JSON.parse(this.body);}},speechSynthesis:extras.speechSynthesis,navigator:extras.navigator,MediaRecorder:extras.MediaRecorder,SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},URL:{createObjectURL:()=>'blob:recording',revokeObjectURL(){}},Blob:class{constructor(parts,options){this.parts=parts;this.type=options?.type;}},renderMarkdown:(host,markdown,context)=>{host.textContent=markdown;host.context=context;},FileReader:class{readAsDataURL(file){this.result=file.dataUrl;queueMicrotask(()=>this.onload());}readAsText(file){this.result=file.text;queueMicrotask(()=>this.onload());}},defaults,document,window:win,readPreferences,applyPreferences,tabTarget,acquireStorage:()=>storage,styleExtensionMessage,chrome:{permissions:{request:async details=>{permissionRequests.push(details);return extras.grant!==false;}},runtime:{getManifest:()=>({version:'0.1.0'}),sendMessage:async message=>{calls.push(message.type);if(message.type==='desktop-status'){if(extras.desktop instanceof Error)throw extras.desktop;return extras.desktop??{paired:false};}if(extras.paired===false&&message.type==='status')return {paired:false};if(message.type==='authenticator-focus'){if(extras.authenticator instanceof Error)throw extras.authenticator;if(typeof extras.authenticator==='function')return extras.authenticator();return extras.authenticator??{schemaVersion:1,state:'shown'};}if(message.type==='school-mode-read'||message.type==='school-mode-set'){const entry=message.type==='school-mode-read'?extras.schoolRead:extras.schoolSet;if(message.type==='school-mode-set')schoolRequests.push(message);if(entry instanceof Error)throw entry;if(typeof entry==='function')return entry(message);if(entry!==undefined)return entry;if(extras.paired===false)return {paired:false};return message.type==='school-mode-read'?{schemaVersion:1,enabled:false,name:'School mode'}:{schemaVersion:1,state:'changed',enabled:true};}if(message.type==='protection-status'){if(snapshot instanceof Error)throw snapshot;return snapshot;}return {paired:true};}}}});await new Promise(resolve=>setTimeout(resolve,0));return{node,calls,schoolRequests,permissionRequests,attributes,storage,win,document,nodesWith:text=>[...nodes.values()].filter(item=>String(item.textContent).includes(text)),find:(tag,name)=>[...created].reverse().find(item=>item.localName===tag&&attributes.get(item.id+':aria-label')===name),prefs:()=>JSON.parse(storage.stored.value)};
 }
 test('options separates paired connection from unavailable browser authority and localizes observed states',async()=>{const f=await fixture({schemaVersion:1,profile:'authenticated',sharedMode:'active',browserPermission:'unavailable'},'yue');assert.match(f.node('connection-state').textContent,/已配對/);assert.match(f.node('profile-state').textContent,/已驗證/);assert.match(f.node('shared-state').textContent,/已啟用/);assert.deepEqual(f.calls,['status','protection-status','workflow-discover']);assert.equal(f.attributes.get('workspace-tabs:aria-label'),'Material File Encryptor · 工作區');});
 test('options failed or malformed protection reads retain connection while clearing observations',async()=>{for(const snapshot of [new Error('fixture unavailable'),{schemaVersion:1,profile:'authenticated',sharedMode:'inactive',browserPermission:'granted'},{schemaVersion:2,profile:'authenticated',sharedMode:'inactive',browserPermission:'unavailable'}]){const f=await fixture(snapshot);assert.match(f.node('connection-state').textContent,/Paired/);assert.match(f.node('profile-state').textContent,/unavailable/);assert.match(f.node('shared-state').textContent,/unavailable/);}});
@@ -609,4 +609,96 @@ test('only one authenticator request is in flight and the button is disabled whi
   release(); await first; await settle();
   assert.match(f.node('authenticator-state').textContent, /now in front/);
   assert.equal(f.node('authenticator-open').disabled, false);
+});
+
+// School mode on the Status tab: nothing is sent until the person chooses a button.
+test('school mode sends nothing on load, explains pairing and is disabled when unpaired', async () => {
+  const f = await fixture(idle, 'en', {extras: {paired: false}});
+  assert.equal(f.node('school-read').disabled, true);
+  assert.equal(f.node('school-toggle').disabled, true);
+  assert.equal(f.node('school-state').textContent, 'Pair the browser first.');
+  await f.node('school-read').listeners.click();
+  await f.node('school-toggle').listeners.click();
+  assert.ok(!f.calls.includes('school-mode-read') && !f.calls.includes('school-mode-set'));
+  assert.match(html, /<md-outlined-button id="school-read"/);
+  assert.match(html, /id="school-state" role="status" aria-live="polite"/);
+  const paired = await fixture(idle, 'en');
+  assert.equal(paired.node('school-read').disabled, false);
+  assert.equal(paired.node('school-toggle').disabled, true, 'the button waits for a read');
+  assert.ok(!paired.calls.includes('school-mode-read') && !paired.calls.includes('school-mode-set'));
+  assert.equal(paired.node('school-state').textContent, 'School mode has not been read in this session.');
+});
+test('reading shows the mode name and state, and the button then offers the opposite change', async () => {
+  const f = await fixture(idle, 'en', {extras: {schoolRead: {schemaVersion: 1, enabled: true, name: 'Study time'}}});
+  await f.node('school-read').listeners.click(); await settle();
+  assert.equal(f.node('school-state').textContent, 'Mode name: Study time. State: on.');
+  assert.equal(f.node('school-toggle').textContent, 'Turn off school mode');
+  assert.equal(f.node('school-toggle').disabled, false);
+  assert.ok(!f.calls.includes('school-mode-set'), 'a read never changes anything');
+  const yue = await fixture(idle, 'yue', {extras: {schoolRead: {schemaVersion: 1, enabled: false, name: 'Study time'}}});
+  await yue.node('school-read').listeners.click(); await settle();
+  assert.equal(yue.node('school-state').textContent, '模式名稱：Study time。狀態：已關閉。');
+  assert.equal(yue.node('school-toggle').textContent, '開啟學校模式');
+  const both = await fixture(idle, 'bilingual', {extras: {schoolRead: {schemaVersion: 1, enabled: false, name: 'Study time'}}});
+  await both.node('school-read').listeners.click(); await settle();
+  assert.match(both.node('school-state').textContent, /Mode name: Study time\. State: off\..*模式名稱/);
+});
+test('each school mode outcome is rendered in plain words and only the click sends the change', async () => {
+  const expected = {
+    changed: [{schemaVersion: 1, state: 'changed', enabled: true}, /School mode is now on\./],
+    unchanged: [{schemaVersion: 1, state: 'unchanged', enabled: false}, /already off. Nothing changed/],
+    rejected: [{schemaVersion: 1, state: 'rejected', enabled: false}, /did not confirm the change.*not changed/],
+    busy: [{schemaVersion: 1, state: 'busy', enabled: null}, /already asking a question/],
+    unavailable: [{schemaVersion: 1, state: 'unavailable', enabled: null}, /cannot ask now/],
+  };
+  for (const [state, [answer, pattern]] of Object.entries(expected)) {
+    const f = await fixture(idle, 'en', {extras: {schoolSet: answer}});
+    await f.node('school-read').listeners.click(); await settle();
+    assert.equal(f.schoolRequests.length, 0);
+    await f.node('school-toggle').listeners.click(); await settle();
+    assert.deepEqual(JSON.parse(JSON.stringify(f.schoolRequests)), [{type: 'school-mode-set', enabled: true}], state);
+    assert.match(f.node('school-state').textContent, pattern, state);
+    assert.equal(f.node('school-toggle').disabled, false);
+  }
+  const yue = await fixture(idle, 'yue', {extras: {schoolSet: {schemaVersion: 1, state: 'rejected', enabled: false}}});
+  await yue.node('school-read').listeners.click(); await settle();
+  await yue.node('school-toggle').listeners.click(); await settle();
+  assert.match(yue.node('school-state').textContent, /桌面冇確認/);
+});
+test('a malformed, failed or unpaired school mode answer shows a plain failure and never a changed state', async () => {
+  for (const schoolSet of [{schemaVersion: 1, state: 'changed', enabled: true, token: 'x'}, {schemaVersion: 1, state: 'maybe', enabled: true}, {schemaVersion: 2, state: 'changed', enabled: true}, {schemaVersion: 1, state: 'changed', enabled: 'yes'}, {error: 'x'}, new Error('gone')]) {
+    const f = await fixture(idle, 'en', {extras: {schoolSet}});
+    await f.node('school-read').listeners.click(); await settle();
+    await f.node('school-toggle').listeners.click(); await settle();
+    assert.equal(f.node('school-state').textContent, 'The request did not complete. Refresh and try again.');
+  }
+  for (const schoolRead of [{schemaVersion: 1, enabled: 'yes', name: 'x'}, {schemaVersion: 1, enabled: true, name: ''}, {schemaVersion: 1, enabled: true, name: 'a'.repeat(81)}, {schemaVersion: 1, enabled: true, name: 'bad\u0007name'}, {schemaVersion: 1, enabled: true, name: 'x', path: 'C:'}, new Error('gone')]) {
+    const f = await fixture(idle, 'en', {extras: {schoolRead}});
+    await f.node('school-read').listeners.click(); await settle();
+    assert.match(f.node('school-state').textContent, /could not be read/);
+    assert.equal(f.node('school-toggle').disabled, true);
+  }
+  const late = await fixture(idle, 'en', {extras: {schoolRead: {paired: false}}});
+  await late.node('school-read').listeners.click(); await settle();
+  assert.equal(late.node('school-state').textContent, 'Pair the browser first.');
+});
+test('only one school mode change is in flight and the controls are disabled while waiting', async () => {
+  let release;
+  const f = await fixture(idle, 'en', {extras: {schoolSet: () => new Promise(resolve => { release = () => resolve({schemaVersion: 1, state: 'changed', enabled: true}); })}});
+  await f.node('school-read').listeners.click(); await settle();
+  const first = f.node('school-toggle').listeners.click();
+  await settle();
+  assert.equal(f.node('school-toggle').disabled, true);
+  assert.equal(f.node('school-read').disabled, true);
+  assert.equal(f.node('school-state').textContent, 'Waiting for you on the desktop.');
+  await f.node('school-toggle').listeners.click();
+  assert.equal(f.schoolRequests.length, 1);
+  release(); await first; await settle();
+  assert.match(f.node('school-state').textContent, /now on/);
+  assert.equal(f.node('school-toggle').textContent, 'Turn off school mode');
+});
+test('the school mode code writes no markup, storage or credential handling', () => {
+  const schoolCode = source.slice(source.indexOf('function renderSchoolMode'), source.indexOf('const VERSION_PATTERN'));
+  assert.ok(schoolCode.length > 500);
+  assert.doesNotMatch(schoolCode, /storage|innerHTML|insertAdjacentHTML|outerHTML|document\.write|password\b.*=|credential/i);
 });
