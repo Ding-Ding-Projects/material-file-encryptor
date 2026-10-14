@@ -28,6 +28,10 @@ export function changelogEntries(markdown){
  * identities and the counts by status. Throws when a row claims completion without the evidence a delivered row
  * needs, so the bundle can never ship an unsupported completion claim.
  */
+// A shortened reason ends with an ellipsis so the cut is visible rather than mid-word and silent.
+export function boundedReason(value, limit=240) {
+ const text=String(value||'');return text.length<=limit?text:text.slice(0,limit-1).trimEnd()+'…';
+}
 export function extensionCoverage(inventory, commit) {
  if(!inventory||!Array.isArray(inventory.features)||!Array.isArray(inventory.extensionTargets))throw new Error('The feature inventory is unavailable.');
  const rows=inventory.features.filter(row=>row?.surface==='extension');
@@ -35,7 +39,7 @@ export function extensionCoverage(inventory, commit) {
  const problems=unsupportedCompletionClaims(rows);
  if(problems.length)throw new Error('Unsupported completion claim in the feature inventory: '+problems.slice(0,5).join(' '));
  const counts={};for(const row of rows)counts[row.status]=(counts[row.status]||0)+1;
- return {schemaVersion:1,sourceCommit:commit,total:rows.length,counts,extensionTargets:inventory.extensionTargets.map(target=>({id:target.id,route:target.route,owner:target.owner,selector:target.selector})),rows:rows.map(row=>({id:String(row.id),status:String(row.status),behaviorVerdict:String(row.behaviorVerdict),evidenceVerdict:String(row.evidenceVerdict),reason:String(row.reason||'').slice(0,240)}))};
+ return {schemaVersion:1,sourceCommit:commit,total:rows.length,counts,extensionTargets:inventory.extensionTargets.map(target=>({id:target.id,route:target.route,owner:target.owner,selector:target.selector})),rows:rows.map(row=>({id:String(row.id),status:String(row.status),behaviorVerdict:String(row.behaviorVerdict),evidenceVerdict:String(row.evidenceVerdict),reason:boundedReason(row.reason)}))};
 }
 /** Source commit of the staged bundle, or null when it cannot be read. */
 function sourceCommit(root){const result=spawnSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'});const value=(result.stdout||'').trim();return /^[0-9a-f]{40}$/.test(value)?value:null;}
