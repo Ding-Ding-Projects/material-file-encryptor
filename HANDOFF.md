@@ -1,3 +1,7 @@
+# Preservation closeout, October 14
+
+Preservation review: eight real keyboard captures at source f77845127b457fb30692346aae591d9a3501237d show the inset outline along the sides and bottom, but the sticky table header still covers its top segment. This is a partial correction, not accepted complete focus visibility. The exact root build passed and all eight version-1 geometry probes passed, with unchanged dimensions. These are English light/dark viewport-emulation results at 1180×850 and 880×650, not physical display-scale proof. Owned process absence and hidden-desktop closure were verified. The final startup-restoration return payload was not persisted, so that receipt remains unavailable.
+
 ## Shared composition integration
 
 Reviewed composition source 61986fc and preserved build candidate 4959f2a are incorporated with the independently assessed extension inventory. Both handoff additions were retained during the merge. The combined local checks pass 59/59, with 959 concrete declarations and 230 public routes. The exact root build at frozen 4959f2a passed and its ASAR SHA-256 is beeb1df93e13624e0f622a668cb01356101321cb0c0dd94c142f247fb6d4420e. This older candidate remains frozen for actual hidden-desktop inspection and is not relabelled as acceptance for the merged source. Its initial process-membership admission failed; the exact same launch was subsequently revalidated after startup settled. Capture and owned closure results remain pending.

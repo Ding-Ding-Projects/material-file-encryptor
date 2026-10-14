@@ -1,3 +1,7 @@
+## Unfinished focus correction
+
+Preservation review: eight real keyboard captures at source f77845127b457fb30692346aae591d9a3501237d show the inset outline along the sides and bottom, but the sticky table header still covers its top segment. This is a partial correction, not accepted complete focus visibility. The exact root build passed and all eight version-1 geometry probes passed, with unchanged dimensions. These are English light/dark viewport-emulation results at 1180×850 and 880×650, not physical display-scale proof. Owned process absence and hidden-desktop closure were verified. The final startup-restoration return payload was not persisted, so that receipt remains unavailable.
+
 # Shared workspace compositions
 
 The desktop shell uses five registered components: `mfe-titlebar`, `mfe-main-workspace`, `mfe-content-panel`, `mfe-data-table`, and `mfe-selection-toolbar`. Each extends `SurfaceElement` and owns its shadow structure, stylesheet, connection lifecycle, and supported projected content. The shared top bar is a group inside the main workspace; the title bar is the single banner.
