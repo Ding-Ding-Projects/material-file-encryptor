@@ -42,5 +42,14 @@ test('dialog form submission closes once and permits immediate reopening', {time
   await page.keyboard.press('Escape');await page.waitForFunction(()=>window.observed.hostClose===3);
   assert.deepEqual(await page.evaluate(()=>window.observed.values),['confirm','cancel','']);
   assert.equal(await page.evaluate(()=>window.observed.materialClose),3);
+  const immediateFocus=await page.evaluate(()=>{
+   const cancel=window.dialog.querySelector('[value=cancel]');window.dialog.showModal();cancel.focus();
+   let active=document.activeElement;const chain=[];while(active){chain.push(active.localName);if(active===cancel)return{focused:true,chain};active=active.shadowRoot?.activeElement;}return{focused:false,chain};
+  });
+  await page.waitForFunction(()=>window.observed.opened===4);
+  const completedFocus=await page.evaluate(()=>{
+   const cancel=window.dialog.querySelector('[value=cancel]');let active=document.activeElement;const chain=[];while(active){chain.push(active.localName);if(active===cancel)return{focused:true,chain};active=active.shadowRoot?.activeElement;}return{focused:false,chain};
+  });
+  console.log(JSON.stringify({scope:'dialog-opening-focus-diagnostic',immediateFocus,completedFocus}));
  }finally{try{await browser?.close();}finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}}
 });
