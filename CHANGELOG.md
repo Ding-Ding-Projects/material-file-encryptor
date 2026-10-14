@@ -1,3 +1,13 @@
+# Material layout, motion and extension workspace, 2026-10-14
+
+- Fixed layout defects found in captures: legend inside its card, full-width table headers, full-width workflow fields, buttons at their own width and help buttons beside the control they explain.
+- Completed the Material colour roles from the theme, so focus rings and dialogs no longer fall back to the baseline purple scheme.
+- The navigation rail, table rows and help panels now animate between states; reduced motion turns this off.
+- Application dialogs follow the interface language in English, Cantonese and bilingual modes.
+- The browser extension workspace gained Material tabs, an offline changelog, build source details and a Ctrl+K command palette.
+
+版面、色彩同動態再執一輪：說明掣企返控制項隔籬，焦點框唔再變紫，對話框識講廣東話；瀏覽器擴充功能多咗離線更新記錄、組建來源同 Ctrl+K 指令面板。
+
 # Material conversion sweep, 2026-10-14
 
 - Converted generic controls found in hidden-desktop captures to Material components: tabs, in-field clear buttons, labelled selects, linear progress, disclosure buttons, chevron icon buttons, a navigation-style documentation index and a disabled list for unavailable server targets.

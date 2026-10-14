@@ -13023,16 +13023,25 @@
     {
       "id": "command-palette",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Discover and invoke every supported action from a searchable keyboard palette with contextual availability. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Ctrl+K or the Commands button opens a Material dialog listing every workspace action, filtered by typing, with actions that cannot run shown disabled. A headless browser capture shows the open palette; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13046,7 +13055,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -13057,14 +13066,14 @@
         "action": "Discover and invoke every supported action from a searchable keyboard palette with contextual availability.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Discover and invoke every supported action from a searchable keyboard palette with contextual availability.",
-            "nextProof": "Exercise discover and invoke every supported action from a searchable keyboard palette with contextual availability on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this options workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "No palette state is stored; actions use the existing preference record."
       }
     },
     {
@@ -13881,16 +13890,27 @@
     {
       "id": "changelog",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css",
+        "scripts/build-browser-extension.mjs"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js",
+        "test/browser-extension-bundle.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Browse versioned release changes offline with filters and current-source provenance. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The options Changelog tab shows the release changelog bundled at staging, filters it locally and shows Cantonese summaries in Cantonese and bilingual modes. Headless browser captures of the staged extension show it in light English and dark Cantonese; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13904,7 +13924,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -13915,14 +13935,14 @@
         "action": "Browse versioned release changes offline with filters and current-source provenance.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Browse versioned release changes offline with filters and current-source provenance.",
-            "nextProof": "Exercise browse versioned release changes offline with filters and current-source provenance on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this options workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Selected tab persists in the existing local preference record; the filter is not stored."
       }
     },
     {
@@ -14439,16 +14459,26 @@
     {
       "id": "front-provenance",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "scripts/build-browser-extension.mjs"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js",
+        "test/browser-extension-bundle.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Show current version and validated updated-at/source identity on the extension front screens. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The Status tab shows the manifest version, the staged source commit marked when tracked inputs had uncommitted changes, and the staging time, or says each is unavailable. A headless browser capture of the staged extension shows the values; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -14462,7 +14492,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -14473,14 +14503,14 @@
         "action": "Show current version and validated updated-at/source identity on the extension front screens.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Show current version and validated updated-at/source identity on the extension front screens.",
-            "nextProof": "Exercise show current version and validated updated-at/source identity on the extension front screens on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this options workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Values are generated at staging; nothing is stored at runtime."
       }
     },
     {
@@ -17073,7 +17103,8 @@
     "test/browser-extension-preferences.test.js": "5ea562423e90565e582cac67982aca965898e436",
     "test/browser-extension-background.test.js": "5ea562423e90565e582cac67982aca965898e436",
     "test/browser-protection-options.test.js": "5ea562423e90565e582cac67982aca965898e436",
-    "test/browser-native-host.test.js": "5ea562423e90565e582cac67982aca965898e436"
+    "test/browser-native-host.test.js": "5ea562423e90565e582cac67982aca965898e436",
+    "test/browser-extension-bundle.test.js": "1ca16f34ab3e155fc5d0c0805551380074826b0b"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
