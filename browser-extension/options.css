@@ -41,3 +41,6 @@ body{width:auto}main{max-width:1000px;margin:auto;max-height:none}section{paddin
 .docs-article{padding:16px 20px;border-radius:16px;background:var(--md-sys-color-surface);min-inline-size:0;overflow-wrap:anywhere;animation:mfe-panel-in 200ms cubic-bezier(.2,0,0,1) both}.docs-article h1{font-size:22px;margin:0 0 12px}.docs-article h2{font-size:18px;margin:20px 0 8px}.docs-article pre{white-space:pre-wrap;padding:12px;border-radius:12px;background:var(--md-sys-color-surface-container-low)}.docs-article a{color:var(--md-sys-color-primary)}
 @media(max-width:720px){.docs-layout{grid-template-columns:minmax(0,1fr)}.docs-list{max-block-size:30vh}}
 @media(prefers-reduced-motion:reduce){.docs-article{animation:none}}
+/* Support tickets and screen recording. */
+.ticket-form{display:grid;gap:8px;justify-items:start}.ticket-form md-outlined-text-field{inline-size:min(100%,560px)}.ticket-form md-outlined-select{min-width:12rem}#ticket-attachments,#ticket-list{justify-self:stretch}.ticket-entry{justify-content:space-between;flex-wrap:wrap}
+.recording-preview{inline-size:min(100%,640px);border-radius:12px;background:var(--md-sys-color-surface-container-low)}#narration-rate{width:min(100%,360px)}

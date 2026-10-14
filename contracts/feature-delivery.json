@@ -12020,16 +12020,25 @@
     {
       "id": "narration",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Choose narration language, voice and global rate, read all actionable content and stop speech consistently. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Narration offers voices filtered by interface language and a rate from 0.5 to 2, reads the open tab’s headings, statuses and controls with their roles, and stops on request, on Escape and on tab change. A headless browser run with trusted input confirmed speech started for the open tab; listening quality was not assessed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -12043,7 +12052,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -12054,14 +12063,14 @@
         "action": "Choose narration language, voice and global rate, read all actionable content and stop speech consistently.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Choose narration language, voice and global rate, read all actionable content and stop speech consistently.",
-            "nextProof": "Exercise choose narration language, voice and global rate, read all actionable content and stop speech consistently on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow, including refusal and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "A separate local record keeps the chosen voice and rate."
       }
     },
     {
@@ -13640,16 +13649,25 @@
     {
       "id": "support-tickets",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Create, edit and track support tickets with bounded attachments and safe diagnostic review. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Tickets are created, edited, tracked by status, exported as JSON and deleted after confirmation; attachments are bounded by count, type and size, and reviewed diagnostics are exported only when chosen. Nothing is sent automatically. Headless browser captures with trusted input show a saved ticket.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13663,7 +13681,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -13674,14 +13692,14 @@
         "action": "Create, edit and track support tickets with bounded attachments and safe diagnostic review.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Create, edit and track support tickets with bounded attachments and safe diagnostic review.",
-            "nextProof": "Exercise create, edit and track support tickets with bounded attachments and safe diagnostic review on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow, including refusal and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "A separate bounded local record of at most 30 tickets with up to three 200 KB attachments each."
       }
     },
     {
@@ -14729,16 +14747,25 @@
     {
       "id": "screen-recording",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Record an authorized task surface with explicit controls, privacy review and safe local save. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Recording starts only from the browser picker, stops on request or when sharing ends, shows a preview and keeps Save unavailable until the privacy review is confirmed. A headless browser run used a synthetic surface supplied to the page; the real browser picker was not exercised.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -14752,7 +14779,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -14763,14 +14790,14 @@
         "action": "Record an authorized task surface with explicit controls, privacy review and safe local save.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Record an authorized task surface with explicit controls, privacy review and safe local save.",
-            "nextProof": "Exercise record an authorized task surface with explicit controls, privacy review and safe local save on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow, including refusal and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Recordings are never stored by the workspace; Save writes a local file only after the privacy review."
       }
     },
     {

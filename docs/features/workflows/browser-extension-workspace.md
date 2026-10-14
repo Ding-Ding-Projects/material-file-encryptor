@@ -1,6 +1,6 @@
 # Browser extension workspace
 
-Open workspace in the popup opens the extension-owned options tab. Connection, Personalization, Changelog, Notes, Documentation and Status are Material tabs with Arrow Left/Right and Home/End navigation, and each panel fades in unless reduced motion is requested. Tab changes keep the same controls rather than replacing the focused element. Shared local Material components and the bundled regex search are used without remote executable assets.
+Open workspace in the popup opens the extension-owned options tab. Connection, Personalization, Changelog, Notes, Documentation, Support and Status are Material tabs with Arrow Left/Right and Home/End navigation, and each panel fades in unless reduced motion is requested. Tab changes keep the same controls rather than replacing the focused element. Shared local Material components and the bundled regex search are used without remote executable assets.
 
 Language (English, Cantonese or bilingual), theme (system, light or dark) and the selected tab use a versioned bounded extension-origin local store. No browser storage sync, broad host permission or additional storage permission is used. Invalid or oversized cached settings fall back to defaults. A failed write retains usable page state and explicitly reports that the change was not saved. Reset restores browser-local defaults only. Bilingual labels stack their secondary line.
 
@@ -24,7 +24,7 @@ About these settings, under Personalization, lists each setting with its current
 
 Reset browser settings asks for a deliberate confirmation: turn on both confirmation switches, move the slider fully right, then choose Execute. Emergency exit cancels with nothing changed. Individual playfulness resets stay one step, because they change a single value.
 
-Alt+1 to Alt+6 open Connection, Personalization, Changelog, Notes, Documentation and Status, and Ctrl+K opens the command palette, which lists these shortcuts beside their commands. Browser-reserved combinations such as Ctrl with a number, Ctrl+T and Ctrl+W are left to the browser.
+Alt+1 to Alt+7 open Connection, Personalization, Changelog, Notes, Documentation, Support and Status, and Ctrl+K opens the command palette, which lists these shortcuts beside their commands. Browser-reserved combinations such as Ctrl with a number, Ctrl+T and Ctrl+W are left to the browser.
 
 ## Name, accent, recent changes and filters
 
@@ -64,9 +64,17 @@ The workspace and popup use the Noto Sans font bundled inside the extension, che
 
 ## Offline documentation
 
-The Documentation tab (Alt+5; Status is Alt+6) reads the complete documentation set bundled with the extension, including every feature article and its Cantonese version, with no network connection. Search matches article titles and text. Links between articles open inside the tab, including links to a heading, and links to outside websites open in a new browser tab. Cantonese mode shows the Cantonese version of each article where one exists. The articles are rendered without running any HTML or script from the source text. Pages that exist only in the repository's online wiki are not bundled.
+The Documentation tab (Alt+5) reads the complete documentation set bundled with the extension, including every feature article and its Cantonese version, with no network connection. Search matches article titles and text. Links between articles open inside the tab, including links to a heading, and links to outside websites open in a new browser tab. Cantonese mode shows the Cantonese version of each article where one exists. The articles are rendered without running any HTML or script from the source text. Pages that exist only in the repository's online wiki are not bundled.
 
 The extension talks to the desktop only through browser native messaging. It has no HTTP API, so no Postman collection exists for it.
+
+## Narration, support tickets and screen recording
+
+Narration, under Personalization, uses the browser's own speech engine. Choose a voice that suits the interface language and a speaking rate from 0.5 to 2. Read this tab (Alt+R) reads the open tab's headings, statuses and controls, naming each control's role and saying when it is unavailable. Stop reading, Escape, or moving to another tab stops speech. A new reading always replaces the previous one. When the browser has no speech engine, the workspace says so and disables reading.
+
+The Support tab (Alt+6; Status is Alt+7) keeps support tickets in this browser. A ticket has a title, a category (problem, question or suggestion), a description and a status (open, waiting or closed), and can be edited later. Up to three PNG, JPEG, WebP, text or JSON files of 200 KB or less can be attached. The diagnostics block (extension version, source commit, interface language, theme and browser) is shown for review and goes into an exported ticket only when its checkbox is ticked. Notes, wording, logos and credentials are never included. Nothing is sent anywhere: Export saves the ticket as a JSON file for the user to share, and Delete asks for the deliberate confirmation.
+
+Screen recording starts only after the browser's own picker has been used to choose a tab or window. Stop recording, or stopping the share in the browser, ends it. The recording is then shown for review, and Save recording stays unavailable until the user confirms it shows nothing private. Saved recordings go to this computer only, and Discard recording removes it.
 
 Focused tests cover malformed/oversized cache, failed saves, persistence, keyboard tab routing, forged sender paths and staged local-only CSP. Source staging hashes every workspace file. Signing, installed identity, real browser interaction, visual parity and display scaling remain unverified.
 
