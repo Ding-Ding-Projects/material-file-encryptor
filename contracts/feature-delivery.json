@@ -12255,7 +12255,8 @@
         "browser-extension/options.js",
         "browser-extension/options.html",
         "browser-extension/options.css",
-        "scripts/build-browser-extension.mjs"
+        "scripts/build-browser-extension.mjs",
+        "browser-extension/dimsum.js"
       ],
       "documentation": [
         "docs/features/workflows/browser-extension-workspace.md",
@@ -12265,7 +12266,8 @@
         "browser-extension/options.js"
       ],
       "tests": [
-        "test/browser-protection-options.test.js"
+        "test/browser-protection-options.test.js",
+        "test/browser-extension-dimsum.test.js"
       ],
       "evidence": [],
       "persistence": [],
@@ -12309,7 +12311,8 @@
       "surface": "extension",
       "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/options.js",
+        "browser-extension/dimsum.js"
       ],
       "documentation": [
         "docs/features/workflows/browser-extension-workspace.md",
@@ -12319,7 +12322,8 @@
         "browser-extension/options.js"
       ],
       "tests": [
-        "test/browser-protection-options.test.js"
+        "test/browser-protection-options.test.js",
+        "test/browser-extension-dimsum.test.js"
       ],
       "evidence": [],
       "persistence": [],
@@ -17382,7 +17386,9 @@
     "test/browser-extension-wording.test.js": "1269c7bddf79d7cb2ee5e76126aa9f1969c9ecd5",
     "browser-extension/narration.js": "8a7306c19830b97c232648a77affbfd37bb5a91a",
     "browser-extension/tickets.js": "8a7306c19830b97c232648a77affbfd37bb5a91a",
-    "test/browser-extension-support.test.js": "8a7306c19830b97c232648a77affbfd37bb5a91a"
+    "test/browser-extension-support.test.js": "8a7306c19830b97c232648a77affbfd37bb5a91a",
+    "browser-extension/dimsum.js": "c0f5b8eb64cc0371f4b8b0771c175a8acc163ef4",
+    "test/browser-extension-dimsum.test.js": "c0f5b8eb64cc0371f4b8b0771c175a8acc163ef4"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
