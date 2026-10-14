@@ -40,6 +40,18 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{if(sender.id!==c
    }
   }).catch(()=>respond({error:'Native editor request did not complete. Refresh the connection and try again.'}));return true;
  }
+ if(message?.type==='desktop-status'){
+  if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1){respond({error:'Desktop status is unavailable.'});return false;}
+  if(!session){respond({paired:false});return false;}
+  const ownSession=session,epoch=connectionEpoch,exact=(row,keys)=>row&&typeof row==='object'&&Object.keys(row).sort().join(',')===keys.sort().join(','),version=value=>typeof value==='string'&&/^\d{1,9}\.\d{1,9}\.\d{1,9}(?:-[0-9A-Za-z.-]{1,32})?$/.test(value);
+  (async()=>{
+   const lock=await request({type:'read-lock-state',session:ownSession});
+   if(session!==ownSession||connectionEpoch!==epoch||!exact(lock,['type','schemaVersion','state'])||lock.type!=='lock-state'||lock.schemaVersion!==1||!['unlocked','locked','unavailable'].includes(lock.state))throw Error('Invalid lock state.');
+   const update=await request({type:'read-update-state',session:ownSession});
+   if(session!==ownSession||connectionEpoch!==epoch||!exact(update,['type','schemaVersion','desktopVersion','availableVersion','phase','progress'])||update.type!=='update-state'||update.schemaVersion!==1||update.desktopVersion!=='unknown'&&!version(update.desktopVersion)||update.availableVersion!==null&&!version(update.availableVersion)||!['idle','checking','downloading','ready','unavailable'].includes(update.phase)||update.progress!==null&&!(Number.isFinite(update.progress)&&update.progress>=0&&update.progress<=1))throw Error('Invalid update state.');
+   respond({schemaVersion:1,lock:lock.state,update:{desktopVersion:update.desktopVersion,availableVersion:update.availableVersion,phase:update.phase,progress:update.progress}});
+  })().catch(()=>respond({error:'Desktop status did not complete. Open and unlock the desktop, pair again and retry.'}));return true;
+ }
  if(message?.type==='protected-discover'){
   if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1||!session){respond({error:'Protected capabilities are unavailable.'});return false;}
   const ownSession=session,epoch=connectionEpoch;

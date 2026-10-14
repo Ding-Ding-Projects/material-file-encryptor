@@ -105,6 +105,31 @@ the real self-contained Windows executable, and records its source and executabl
 hashes in `out/evidence/browser-host-build.json`. It does not package or install the
 desktop. The full `build.bat /s` route publishes the same host before packaging.
 
+## Status scopes
+
+Two read-only scopes follow the Status approval mode of the approved
+browser-to-desktop channel design: `read-lock-state` and `read-update-state`.
+Both need a valid, live pairing from the same native connection, show no desktop
+prompt, and answer with fixed non-secret fields only. They are handled by
+`src/main/browser-status-mediation.js`, which rejects unknown fields, prototype
+tricks and wrong types before it reads anything.
+
+- `read-lock-state` returns `lock-state` with `state` set to `unlocked`,
+  `locked` or `unavailable`. Locking the desktop revokes every pairing, so a
+  paired caller normally sees `unlocked`; the first request after a lock fails
+  and the caller is unpaired again. An unpaired caller never learns the lock
+  state, because it receives the same refusal as for any other unpaired request.
+- `read-update-state` returns `update-state` with `desktopVersion`,
+  `availableVersion` (or `null`), a `phase` of `idle`, `checking`,
+  `downloading`, `ready` or `unavailable`, and a `progress` between 0 and 1 or
+  `null`. The phase is derived from the real update service state. The update
+  service does not report download byte counts, so `progress` is `null` while
+  downloading and 1 once an update is staged. No URL, tag, commit, path or feed
+  detail is copied into the answer.
+
+Both answers fit the existing 64 KiB frame and the 35-second request deadline.
+Nothing is stored and no grant is issued.
+
 ## Bounds and verification
 
 All transport frames use a four-byte little-endian length, strict UTF-8 JSON,
@@ -132,3 +157,10 @@ configuration, launches both real relay processes hidden, verifies explicit
 pairing, proposal, pending/active/completion status and replay rejection, then
 closes its owned processes and removes the fixture. These are transport and
 protocol results, not installed-browser or visible desktop acceptance evidence.
+
+`test/browser-status-scopes.test.js` covers the two status scopes: response
+shape, unpaired and expired refusal, unknown fields, absence of paths and URLs,
+revocation on lock, and the extension background validation. It uses synthetic
+fixtures only. No installed desktop, no real browser native-messaging
+registration and no real update feed took part, so the end-to-end path from a
+browser to a running desktop remains unverified.

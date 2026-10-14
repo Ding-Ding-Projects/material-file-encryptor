@@ -63,3 +63,4 @@ body{width:auto}main{max-width:1000px;margin:auto;max-height:none;grid-template-
 .status-chip{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;line-height:20px;text-align:center;background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface);border:1px solid var(--md-sys-color-outline-variant)}.status-chip[data-status=implemented]{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)}.status-chip[data-status=missing]{border-color:var(--md-sys-color-error);color:var(--md-sys-color-error)}
 #coverage-search,#coverage-status{min-inline-size:0;flex:1 1 12rem}
 @media(prefers-reduced-motion:reduce){.release-result,.coverage-row{animation:none}}
+#desktop-progress{justify-self:stretch;min-inline-size:0}

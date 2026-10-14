@@ -86,6 +86,28 @@ adapter 呼叫會保持缺少 context，唔會借用目前畫面 frame。
 同執行檔雜湊記錄到 `out/evidence/browser-host-build.json`。
 佢唔會封裝或者安裝桌面程式。完整 `build.bat /s` 路徑會喺封裝前發佈同一主機。
 
+## 狀態範圍
+
+兩個唯讀範圍跟足已核准嘅瀏覽器對桌面通道設計入面嘅「狀態」批准模式：
+`read-lock-state` 同 `read-update-state`。兩個都要求同一條原生連線有有效、
+仍然生效嘅配對，唔會喺桌面彈出提示，而且只回答固定嘅非機密欄位。處理者係
+`src/main/browser-status-mediation.js`，讀取任何嘢之前，會先拒絕未知欄位、
+原型花招同錯誤類型。
+
+- `read-lock-state` 回傳 `lock-state`，`state` 係 `unlocked`、`locked` 或
+  `unavailable`。桌面鎖定會撤銷所有配對，所以已配對嘅呼叫者通常見到
+  `unlocked`；鎖定之後第一個要求會失敗，呼叫者亦會變返未配對。未配對嘅
+  呼叫者永遠唔會知道鎖定狀態，因為佢收到嘅拒絕同其他未配對要求一樣。
+- `read-update-state` 回傳 `update-state`，包含 `desktopVersion`、
+  `availableVersion`（或者 `null`）、`phase`（`idle`、`checking`、
+  `downloading`、`ready` 或 `unavailable`），以及 0 至 1 之間或者 `null` 嘅
+  `progress`。階段取自真實嘅更新服務狀態。更新服務唔會回報下載位元組數，
+  所以下載中 `progress` 係 `null`，更新暫存完成後係 1。答案入面唔會抄入
+  任何網址、標籤、提交、路徑或更新來源細節。
+
+兩個答案都喺現有 64 KiB 訊框同 35 秒要求期限之內。唔會儲存任何嘢，亦唔會
+發出授權。
+
 ## 限制同驗證
 
 全部傳輸訊息使用四位元組小端序長度、嚴格 UTF-8 JSON，以及 64 KiB 上限。
@@ -108,3 +130,8 @@ adapter 呼叫會保持缺少 context，唔會借用目前畫面 frame。
 以隱藏模式啟動兩個真實轉送程序，核實明確配對、建議、等候／下載中／完成狀態
 同重播拒絕，然後關閉自行管理嘅程序並移除測試目錄。
 呢啲係傳輸同通訊協定結果，唔係已安裝瀏覽器或者可見桌面驗收證據。
+
+`test/browser-status-scopes.test.js` 涵蓋兩個狀態範圍：回應形狀、未配對同到期拒絕、未知欄位、
+冇路徑同網址、鎖定時撤銷，以及擴充功能背景頁驗證。佢只用合成測試資料。
+冇已安裝嘅桌面、冇真實瀏覽器原生訊息登記、冇真實更新來源參與，所以由瀏覽器到
+運行中桌面嘅端到端路徑仍然未驗證。

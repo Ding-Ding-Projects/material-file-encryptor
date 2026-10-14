@@ -14,7 +14,7 @@ async function fixture(snapshot,language='en',{changelog={schemaVersion:1,entrie
  const nodes=new Map(),calls=[],attributes=new Map(),created=[];const node=id=>{if(!nodes.has(id))nodes.set(id,{id,textContent:'',dataset:{},listeners:{},setAttribute(name,value){attributes.set(id+':'+name,value);},replaceChildren(...children){this.textContent=children.map(child=>child.textContent??'').join('');},append(...children){for(const child of children)this.textContent+=child.textContent;},addEventListener(name,fn){this.listeners[name]=fn;},setLanguage(){},filter:async rows=>rows,focus(){},show(){this.open=true;return Promise.resolve();},close(){this.open=false;}});return nodes.get(id);};
  const copies=[...html.matchAll(/data-copy="([^"]+)"/g)].map((match,index)=>{const item=node('copy-'+index);item.dataset.copy=match[1];return item;});const permissionRequests=[];const tabs=['connection','personalization','changelog','notes','docs','support','dimsum','models','status'].map(tab=>{const item=node('tab-'+tab);item.dataset.tab=tab;return item;});const languages=['en','yue','bilingual'].map(value=>{const item=node('language-'+value);item.dataset.language=value;return item;});const themes=['system','light','dark'].map(value=>{const item=node('theme-'+value);item.dataset.theme=value;return item;});const stored={value:JSON.stringify({...defaults,language})};const history={value:null},records=seed??new Map();const storage={getItem:key=>key==='mfe-extension-history-v1'?history.value:key==='mfe-extension-preferences-v1'?stored.value:(records.get(key)??null),setItem(key,value){if(key==='mfe-extension-history-v1')history.value=value;else if(key==='mfe-extension-preferences-v1')stored.value=value;else records.set(key,value);},removeItem(key){if(key==='mfe-extension-history-v1')history.value=null;else records.delete(key);},stored,history,records};
  const win={listeners:{},addEventListener(name,fn){(this.listeners[name]??=[]).push(fn);}};const document={getElementById:node,documentElement:{dataset:{},style:{props:{},setProperty(name,value){this.props[name]=value;},removeProperty(name){delete this.props[name];}}},createTextNode:text=>({textContent:text}),createElement:tag=>{const made=node('generated-'+nodes.size);made.localName=tag;created.push(made);return made;},querySelectorAll:selector=>({'[data-copy]':copies,'[data-tab]':tabs,'[data-language]':languages,'[data-theme]':themes,'[data-guidance]':[]}[selector]||[])};
- vm.runInNewContext(source.replace(/^import [^\r\n]*;\r?\n/gm,''),{renderNoteText,mountBrowserConverter,changelog,provenance,EXPORT_FORMATS,exportChangelog,validateExport,readHistory,recordChanges,clearHistory,ACCENT_PRESETS,accentPalette,applyAccent,checkLogoFile,readLogo,saveLogo,clearLogo,readAttention,saveAttention,attentionDefaults,NOTE_LIMITS,checkNote,readNotes,addNote,deleteNotes,notesMarkdown,readDraft,saveDraft,clearDraft,linkParts,SCHEDULE_VALUES,readSchedules,addSchedule,cancelSchedule,takeDue,timeZoneLabel,readVocabulary,saveVocabulary,clearVocabulary,applyVocabulary,Intl,docsCatalog,readNarration,saveNarration,voicesFor,narrationScript,speak,stopSpeech,TICKET_CATEGORIES,TICKET_STATUSES,checkAttachment,saveTicket,readTickets,deleteTicket,diagnosticsText,ticketExport,CATALOG_URL,RELEASES_URL,normaliseCatalog,photoMap,categories,searchDishes,readFavourites,toggleFavourite,DEFAULT_PORT,ORIGIN_PATTERN,LIMITS,parsePort,modelName,validatePayload,callLocal,formatSize,installedModels,runningNames,pullProgress,chatDelta,parseRichText,AbortController,setTimeout,clearTimeout,RELEASES_API,parseReleaseCodeName,parsePhotoUrl,matchRelease,releasePageUrl,installerAsset,coverage:extras.coverage===undefined?defaultCoverage:extras.coverage,fetch:extras.fetch,caches:extras.caches,Response:class{constructor(body,init){this.body=body;this.headers=new Map(Object.entries(init?.headers||{}));}async json(){return JSON.parse(this.body);}},speechSynthesis:extras.speechSynthesis,navigator:extras.navigator,MediaRecorder:extras.MediaRecorder,SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},URL:{createObjectURL:()=>'blob:recording',revokeObjectURL(){}},Blob:class{constructor(parts,options){this.parts=parts;this.type=options?.type;}},renderMarkdown:(host,markdown,context)=>{host.textContent=markdown;host.context=context;},FileReader:class{readAsDataURL(file){this.result=file.dataUrl;queueMicrotask(()=>this.onload());}readAsText(file){this.result=file.text;queueMicrotask(()=>this.onload());}},defaults,document,window:win,readPreferences,applyPreferences,tabTarget,acquireStorage:()=>storage,styleExtensionMessage,chrome:{permissions:{request:async details=>{permissionRequests.push(details);return extras.grant!==false;}},runtime:{getManifest:()=>({version:'0.1.0'}),sendMessage:async message=>{calls.push(message.type);if(message.type==='protection-status'){if(snapshot instanceof Error)throw snapshot;return snapshot;}return {paired:true};}}}});await new Promise(resolve=>setTimeout(resolve,0));return{node,calls,permissionRequests,attributes,storage,win,document,nodesWith:text=>[...nodes.values()].filter(item=>String(item.textContent).includes(text)),find:(tag,name)=>[...created].reverse().find(item=>item.localName===tag&&attributes.get(item.id+':aria-label')===name),prefs:()=>JSON.parse(storage.stored.value)};
+ vm.runInNewContext(source.replace(/^import [^\r\n]*;\r?\n/gm,''),{renderNoteText,mountBrowserConverter,changelog,provenance,EXPORT_FORMATS,exportChangelog,validateExport,readHistory,recordChanges,clearHistory,ACCENT_PRESETS,accentPalette,applyAccent,checkLogoFile,readLogo,saveLogo,clearLogo,readAttention,saveAttention,attentionDefaults,NOTE_LIMITS,checkNote,readNotes,addNote,deleteNotes,notesMarkdown,readDraft,saveDraft,clearDraft,linkParts,SCHEDULE_VALUES,readSchedules,addSchedule,cancelSchedule,takeDue,timeZoneLabel,readVocabulary,saveVocabulary,clearVocabulary,applyVocabulary,Intl,docsCatalog,readNarration,saveNarration,voicesFor,narrationScript,speak,stopSpeech,TICKET_CATEGORIES,TICKET_STATUSES,checkAttachment,saveTicket,readTickets,deleteTicket,diagnosticsText,ticketExport,CATALOG_URL,RELEASES_URL,normaliseCatalog,photoMap,categories,searchDishes,readFavourites,toggleFavourite,DEFAULT_PORT,ORIGIN_PATTERN,LIMITS,parsePort,modelName,validatePayload,callLocal,formatSize,installedModels,runningNames,pullProgress,chatDelta,parseRichText,AbortController,setTimeout,clearTimeout,RELEASES_API,parseReleaseCodeName,parsePhotoUrl,matchRelease,releasePageUrl,installerAsset,coverage:extras.coverage===undefined?defaultCoverage:extras.coverage,fetch:extras.fetch,caches:extras.caches,Response:class{constructor(body,init){this.body=body;this.headers=new Map(Object.entries(init?.headers||{}));}async json(){return JSON.parse(this.body);}},speechSynthesis:extras.speechSynthesis,navigator:extras.navigator,MediaRecorder:extras.MediaRecorder,SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},URL:{createObjectURL:()=>'blob:recording',revokeObjectURL(){}},Blob:class{constructor(parts,options){this.parts=parts;this.type=options?.type;}},renderMarkdown:(host,markdown,context)=>{host.textContent=markdown;host.context=context;},FileReader:class{readAsDataURL(file){this.result=file.dataUrl;queueMicrotask(()=>this.onload());}readAsText(file){this.result=file.text;queueMicrotask(()=>this.onload());}},defaults,document,window:win,readPreferences,applyPreferences,tabTarget,acquireStorage:()=>storage,styleExtensionMessage,chrome:{permissions:{request:async details=>{permissionRequests.push(details);return extras.grant!==false;}},runtime:{getManifest:()=>({version:'0.1.0'}),sendMessage:async message=>{calls.push(message.type);if(message.type==='desktop-status'){if(extras.desktop instanceof Error)throw extras.desktop;return extras.desktop??{paired:false};}if(message.type==='protection-status'){if(snapshot instanceof Error)throw snapshot;return snapshot;}return {paired:true};}}}});await new Promise(resolve=>setTimeout(resolve,0));return{node,calls,permissionRequests,attributes,storage,win,document,nodesWith:text=>[...nodes.values()].filter(item=>String(item.textContent).includes(text)),find:(tag,name)=>[...created].reverse().find(item=>item.localName===tag&&attributes.get(item.id+':aria-label')===name),prefs:()=>JSON.parse(storage.stored.value)};
 }
 test('options separates paired connection from unavailable browser authority and localizes observed states',async()=>{const f=await fixture({schemaVersion:1,profile:'authenticated',sharedMode:'active',browserPermission:'unavailable'},'yue');assert.match(f.node('connection-state').textContent,/已配對/);assert.match(f.node('profile-state').textContent,/已驗證/);assert.match(f.node('shared-state').textContent,/已啟用/);assert.deepEqual(f.calls,['status','protection-status','workflow-discover']);assert.equal(f.attributes.get('workspace-tabs:aria-label'),'Material File Encryptor · 工作區');});
 test('options failed or malformed protection reads retain connection while clearing observations',async()=>{for(const snapshot of [new Error('fixture unavailable'),{schemaVersion:1,profile:'authenticated',sharedMode:'inactive',browserPermission:'granted'},{schemaVersion:2,profile:'authenticated',sharedMode:'inactive',browserPermission:'unavailable'}]){const f=await fixture(snapshot);assert.match(f.node('connection-state').textContent,/Paired/);assert.match(f.node('profile-state').textContent,/unavailable/);assert.match(f.node('shared-state').textContent,/unavailable/);}});
@@ -479,4 +479,76 @@ test('status section styles respect reduced motion and keep rows inside a narrow
   assert.match(css, /\.coverage-list\{[^}]*overflow:auto[^}]*\}/);
   assert.match(css, /\.coverage-row \[slot=headline\][^}]*overflow-wrap:anywhere/);
   assert.match(css, /#coverage-search,#coverage-status\{min-inline-size:0;flex:1 1 12rem\}/);
+});
+
+// Desktop section of the Status tab: native messaging only, and only after the button.
+const desktopAnswer = (update = {}) => ({schemaVersion: 1, lock: 'unlocked', update: {desktopVersion: '0.2.0', availableVersion: null, phase: 'idle', progress: null, ...update}});
+const desktopProvenance = (desktopVersion) => ({schemaVersion: 1, version: '0.1.0', desktopVersion, sourceCommit: 'a'.repeat(40), sourceModified: false, stagedAtUtc: '2026-10-14T09:30:00.000Z'});
+test('the desktop section asks nothing before Refresh and offers the button', async () => {
+  const f = await fixture(idle, 'en', {extras: {desktop: desktopAnswer()}});
+  assert.ok(!f.calls.includes('desktop-status'));
+  assert.equal(f.node('desktop-state').textContent, 'Desktop status has not been read in this session.');
+  assert.equal(f.node('desktop-lock').textContent, 'Desktop lock state: not read');
+  assert.equal(f.node('desktop-progress').hidden, true);
+  assert.match(html, /<md-outlined-button id="desktop-refresh"/);
+  assert.match(html, /<md-linear-progress id="desktop-progress"[^>]*aria-label=/);
+});
+test('an unpaired browser is told to pair first and shows no desktop values', async () => {
+  const f = await fixture(idle, 'en', {extras: {desktop: {paired: false}}});
+  await f.node('desktop-refresh').listeners.click();
+  assert.deepEqual(f.calls.filter(type => type === 'desktop-status'), ['desktop-status']);
+  assert.equal(f.node('desktop-state').textContent, 'Pair the browser first, on the Connection tab.');
+  assert.equal(f.node('desktop-version').textContent, 'Desktop version: not read');
+  assert.equal(f.node('desktop-progress').hidden, true);
+});
+test('a matching desktop shows lock state, version and update phase with no mismatch warning', async () => {
+  const f = await fixture(idle, 'en', {provenance: desktopProvenance('0.2.0'), extras: {desktop: desktopAnswer()}});
+  await f.node('desktop-refresh').listeners.click();
+  assert.equal(f.node('desktop-lock').textContent, 'Desktop lock state: unlocked');
+  assert.equal(f.node('desktop-version').textContent, 'Desktop version: 0.2.0');
+  assert.equal(f.node('desktop-update').textContent, 'Update: nothing in progress');
+  assert.equal(f.node('desktop-compat').textContent, 'The extension and the desktop are the same version (0.2.0).');
+  assert.equal(f.node('desktop-progress').hidden, true);
+});
+test('a desktop update shows the progress bar and a version mismatch tells the person where to load the extension again', async () => {
+  const f = await fixture(idle, 'en', {provenance: desktopProvenance('0.2.0'), extras: {desktop: desktopAnswer({desktopVersion: '0.3.0', availableVersion: '0.4.0', phase: 'downloading', progress: 0.25})}});
+  await f.node('desktop-refresh').listeners.click();
+  const bar = f.node('desktop-progress');
+  assert.equal(bar.hidden, false);
+  assert.equal(bar.value, 0.25);
+  assert.equal(bar.indeterminate, false);
+  assert.equal(f.node('desktop-update').textContent, 'Update: downloading (version 0.4.0)');
+  assert.match(f.node('desktop-compat').textContent, /packaged with desktop 0\.2\.0 but the desktop is now 0\.3\.0/);
+  assert.ok(f.node('desktop-compat').textContent.includes('app-0.3.0\\resources\\browser-extension'));
+});
+test('an unknown progress is indeterminate unless reduced motion is requested, and an unknown packaged version is not guessed', async () => {
+  const f = await fixture(idle, 'en', {extras: {desktop: desktopAnswer({phase: 'downloading', progress: null})}});
+  await f.node('desktop-refresh').listeners.click();
+  assert.equal(f.node('desktop-progress').indeterminate, true);
+  assert.match(f.node('desktop-compat').textContent, /packaged with is unknown/);
+  const quiet = await fixture(idle, 'en', {extras: {desktop: desktopAnswer({phase: 'downloading', progress: null})}});
+  quiet.win.matchMedia = () => ({matches: true});
+  quiet.win.matchMedia = query => ({matches: query === '(prefers-reduced-motion: reduce)'});
+  await quiet.node('desktop-refresh').listeners.click();
+  assert.equal(quiet.node('desktop-progress').hidden, false);
+  assert.equal(quiet.node('desktop-progress').indeterminate, false);
+  assert.equal(quiet.node('desktop-progress').value, 0);
+});
+test('desktop answers with extra or malformed fields, and failures, show a plain error state', async () => {
+  for (const answer of [{...desktopAnswer(), path: 'C:\\private'}, desktopAnswer({url: 'https://example.invalid'}), desktopAnswer({phase: 'installing'}), desktopAnswer({progress: 3}), desktopAnswer({desktopVersion: '<b>x</b>'}), {...desktopAnswer(), lock: 'maybe'}, new Error('offline'), {error: 'Desktop status did not complete.'}]) {
+    const f = await fixture(idle, 'en', {extras: {desktop: answer}});
+    await f.node('desktop-refresh').listeners.click();
+    assert.equal(f.node('desktop-state').textContent, 'The desktop did not answer. Open and unlock it, pair again and refresh.');
+    assert.equal(f.node('desktop-version').textContent, 'Desktop version: not read');
+  }
+});
+test('the desktop section follows the chosen language and the source builds no markup strings', async () => {
+  const f = await fixture(idle, 'yue', {provenance: desktopProvenance('0.2.0'), extras: {desktop: desktopAnswer({desktopVersion: '0.3.0'})}});
+  await f.node('desktop-refresh').listeners.click();
+  assert.equal(f.node('desktop-lock').textContent, '桌面鎖定狀態：已解鎖');
+  assert.match(f.node('desktop-compat').textContent, /重新由 app-0\.3\.0/);
+  const both = await fixture(idle, 'bilingual', {extras: {desktop: {paired: false}}});
+  await both.node('desktop-refresh').listeners.click();
+  assert.match(both.node('desktop-state').textContent, /Pair the browser first.*請先喺/);
+  assert.doesNotMatch(source, /innerHTML|insertAdjacentHTML|outerHTML|document\.write/);
 });
