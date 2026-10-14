@@ -8,6 +8,7 @@
 - [x] Explain update reasons in words and show the unsigned warning as a Material card.
 - [x] Render application message boxes as Material dialogs in main-owned windows with a nonce-bound response (real consent prompt captured and cancelled with no change).
 - [x] Stop read-only requests from holding the application open at exit.
+- [x] Name the unfinished work in the shutdown prompt and keep workflow reads out of the shutdown guard (idle startup closes at 8, 15 and 22 seconds with no prompt).
 - [ ] Confirm the outlined select width, documentation active pill and workflow chevron in a rebuilt capture.
 - [ ] Capture every converted screen and dialog in dark theme, Cantonese, bilingual and 125 to 200 percent scaling.
 - [ ] Make Material dialogs follow the in-app theme setting instead of the system colour scheme.

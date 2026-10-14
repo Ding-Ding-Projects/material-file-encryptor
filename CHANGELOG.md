@@ -4,6 +4,7 @@
 - Message boxes now render as Material dialogs in main-owned windows. Only the dialog window, with its one-time value and a valid button, can answer; closing it cancels; the native message box remains the fallback.
 - Added Material easing and duration tokens with entrance motion for views, tab panels, cards, rows and disclosures. Reduced-motion settings turn it off.
 - Update reasons are explained in English and Cantonese, and read-only requests no longer hold the application open at exit.
+- The shutdown prompt names the unfinished work it waits for, and workflow reads no longer count as unfinished work, so an idle application closes without asking.
 
 介面入面嘅舊式控制項同系統彈窗，換晒做 Material 元件同對話框，並加入順滑動畫。暗色主題、廣東話、雙語同縮放擷取仍待完成。
 
