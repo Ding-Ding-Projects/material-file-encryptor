@@ -7,6 +7,7 @@ import {createBrowserProtectedMediation} from './browser-protected-mediation.js'
 import {createBrowserWorkflowMediation} from './browser-workflow-mediation.js';
 import {createBrowserConverterMediation} from './browser-converter.js';
 import {createBrowserStatusMediation} from './browser-status-mediation.js';
+import {createBrowserConfirmMediation} from './browser-confirm-mediation.js';
 
 const exact=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===keys.length&&keys.every(key=>Object.hasOwn(value,key));
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
@@ -22,7 +23,7 @@ async function readHostConfiguration(filename){
 }
 
 /** Desktop integration uses only bundled configuration, never renderer input. */
-export function createBrowserHandoffLifecycle({hostDirectory,platform=process.platform,verificationMode=false,readConfiguration=readHostConfiguration,createBroker=createBrowserNativeBroker,authorizePair,isUnlocked,canAdmit=()=>true,onProposal,readProtectionStatus,readUpdateState,openEditor,browserConversion,disposeBrowserConversion,authenticateProfile,validateAuthority,readProfileSummary,revokeProfileAuthority}={}){
+export function createBrowserHandoffLifecycle({hostDirectory,platform=process.platform,verificationMode=false,readConfiguration=readHostConfiguration,createBroker=createBrowserNativeBroker,authorizePair,isUnlocked,canAdmit=()=>true,onProposal,readProtectionStatus,readUpdateState,openEditor,browserConversion,disposeBrowserConversion,authenticateProfile,validateAuthority,readProfileSummary,revokeProfileAuthority,confirmAction,focusAuthenticator,hasVisibleWindow}={}){
  let broker=null,closed=false,starting=null,lastReceipt=null;let state={available:false,configured:false,reason:'NOT_INITIALIZED',installation:'not-performed'};
  const admitted=()=>!closed&&canAdmit()===true&&isUnlocked()===true;
  const status=()=>({...state,available:broker?.available===true&&!closed,closeReceipt:lastReceipt});
@@ -33,7 +34,7 @@ export function createBrowserHandoffLifecycle({hostDirectory,platform=process.pl
    let config;try{config=await readConfiguration(path.join(hostDirectory,'browser-host-config.json'));validateBrowserHostConfig(config);}catch{state={...state,reason:'REVIEWED_EXTENSION_IDENTITY_UNAVAILABLE'};return status();}
    if(closed)return status();
    state={...state,configured:true,reason:'STARTING'};
-   broker=createBroker({config,readProtectionStatus,readUpdateState,openEditor,browserConversion,disposeBrowserConversion,authenticateProfile,validateAuthority,readProfileSummary,revokeProfileAuthority,hostPath:path.join(hostDirectory,'MaterialFileEncryptor.BrowserHost.exe'),authorizePair:async context=>admitted()&&await authorizePair(context)===true&&admitted(),isUnlocked:admitted,onProposal:item=>{if(!admitted())throw Error('Unlock the desktop before receiving downloads.');return onProposal(item);}});
+   broker=createBroker({config,confirmAction,focusAuthenticator,hasVisibleWindow,readProtectionStatus,readUpdateState,openEditor,browserConversion,disposeBrowserConversion,authenticateProfile,validateAuthority,readProfileSummary,revokeProfileAuthority,hostPath:path.join(hostDirectory,'MaterialFileEncryptor.BrowserHost.exe'),authorizePair:async context=>admitted()&&await authorizePair(context)===true&&admitted(),isUnlocked:admitted,onProposal:item=>{if(!admitted())throw Error('Unlock the desktop before receiving downloads.');return onProposal(item);}});
    try{await broker.start();state={...state,reason:null};}catch{lastReceipt=await broker.close();state={...state,reason:'NATIVE_BROKER_START_UNVERIFIED'};}
    if(closed){lastReceipt=await broker.close();state={...state,reason:'CLOSED'};}return status();
   })();try{return await starting;}finally{starting=null;}
@@ -43,7 +44,7 @@ export function createBrowserHandoffLifecycle({hostDirectory,platform=process.pl
 
 /** Host-only transport. Its caller origin is an allowlist input, never proof of
  * browser provenance. Every pair still requires approval in the unlocked app. */
-export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnlocked,onProposal,readProtectionStatus,readUpdateState,authenticateProfile,validateAuthority,readProfileSummary,openEditor,browserConversion,disposeBrowserConversion,revokeProfileAuthority,spawnHost=spawn,now=Date.now,closeTimeoutMs=3000}={}){
+export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnlocked,onProposal,readProtectionStatus,readUpdateState,authenticateProfile,validateAuthority,readProfileSummary,openEditor,browserConversion,disposeBrowserConversion,revokeProfileAuthority,confirmAction,focusAuthenticator,hasVisibleWindow,spawnHost=spawn,now=Date.now,closeTimeoutMs=3000}={}){
  if(typeof authorizePair!=='function'||typeof isUnlocked!=='function'||typeof onProposal!=='function')throw Error('Native approval, unlocked admission and host proposal delivery are required.');
  if(!Number.isSafeInteger(closeTimeoutMs)||closeTimeoutMs<25||closeTimeoutMs>5000)throw Error('Native close timeout must be between 25 and 5000 milliseconds.');
  const allowedOrigins=validateBrowserHostConfig(config),sessions=new Map(),connections=new Map(),currentConnections=new Map(),proposals=new Map(),owners=new Set(),jobs=new Set();let child=null,closed=false,ready=false,active=0,starting=null,readyResolve,readyReject,closing=null;
@@ -52,7 +53,8 @@ export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnloc
  const workflows=createBrowserWorkflowMediation({getPair:origin=>sessions.get(origin),isUnlocked,openEditor,now});
  const conversions=createBrowserConverterMediation({getPair:origin=>sessions.get(origin),isUnlocked,adapter:browserConversion,dispose:disposeBrowserConversion,now});
  const statuses=createBrowserStatusMediation({getPair:origin=>sessions.get(origin),isUnlocked,readUpdateState,now});
- const revoke=()=>{revokeProfileAuthority?.();conversions.revoke();receiver.revoke();mediation.revoke();workflows.revoke();sessions.clear();currentConnections.clear();proposals.clear();};
+ const confirms=createBrowserConfirmMediation({getPair:origin=>sessions.get(origin),isUnlocked,canPrompt:()=>hasVisibleWindow?.()===true,confirm:confirmAction,focusAuthenticator,now});
+ const revoke=()=>{confirms.revoke();revokeProfileAuthority?.();conversions.revoke();receiver.revoke();mediation.revoke();workflows.revoke();sessions.clear();currentConnections.clear();proposals.clear();};
  function disconnectConnection(connectionId){
   const origin=connections.get(connectionId);connections.delete(connectionId);
   if(origin&&currentConnections.get(origin)===connectionId)revoke();
@@ -71,6 +73,10 @@ export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnloc
    if(statuses.supports(message?.type)){
     if(connectionId===null)throw Error('Native browser connection identity is unavailable.');
     const check=()=>{unlocked();liveConnection();if(sessions.get(origin)?.connectionId!==connectionId)throw Error('Pair the browser again.');};check();return await statuses.receive(origin,message,check);
+   }
+   if(confirms.supports(message?.type)){
+    if(connectionId===null)throw Error('Native browser connection identity is unavailable.');
+    const check=()=>{unlocked();liveConnection();if(sessions.get(origin)?.connectionId!==connectionId)throw Error('Pair the browser again.');};check();return await confirms.receive(origin,message,check);
    }
    if(workflows.supports(message?.type)){
     if(connectionId===null)throw Error('Native browser connection identity is unavailable.');
@@ -134,7 +140,7 @@ export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnloc
   finally{clearTimeout(timer);starting=null;readyResolve=null;readyReject=null;}
  }
  function close(){
-  if(closing)return closing;closed=true;receiver.close();mediation.close();workflows.close();statuses.close();conversions.close();stop();
+  if(closing)return closing;closed=true;receiver.close();mediation.close();workflows.close();statuses.close();confirms.close();conversions.close();stop();
   closing=(async()=>{
    let timer;try{await Promise.race([Promise.all([...owners].map(owner=>owner.promise).concat([...jobs],conversions.disposePending())),new Promise(resolve=>{timer=setTimeout(resolve,closeTimeoutMs);})]);}finally{clearTimeout(timer);}
    // A process 'close' event observes exit plus closure of all inherited stdio.

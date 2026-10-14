@@ -130,6 +130,37 @@ tricks and wrong types before it reads anything.
 Both answers fit the existing 64 KiB frame and the 35-second request deadline.
 Nothing is stored and no grant is issued.
 
+## Confirm scope: focus-authenticator
+
+The first scope of the Confirm approval mode is `focus-authenticator`. A paired
+origin sends exactly `{type:'focus-authenticator', session}`. The unlocked
+desktop then shows a native Material confirmation prompt, a main-owned modal
+window that neither the browser nor the application renderer can answer. The
+prompt names the requesting origin, the action and its exact target in the
+current interface language (English, Cantonese or both). Reject is the default
+button and Escape means Reject. It is handled by
+`src/main/browser-confirm-mediation.js`, with the prompt text in
+`src/main/browser-confirm-prompt.js`.
+
+- After an approval the desktop brings its window forward and opens the
+  authenticator view. The answer is `authenticator-focused` with
+  `schemaVersion` 1 and a `state` of `shown`, `rejected`, `busy` or
+  `unavailable`. It never contains a code, an account name, a secret or a path.
+- At most one prompt is pending. A second request while one is pending is
+  answered `busy` and is not queued.
+- A locked desktop, a window that is hidden or minimized to the tray, a closing
+  desktop, verification mode, or a build with no approval callback answers
+  `unavailable` at once and never queues the request. Without the native
+  approval callback no process can complete the scope.
+- Lock, disconnect, exit and update preparation withdraw a pending prompt as
+  rejected, and the request then fails because the pairing is gone. A
+  rejection on its own never revokes the pairing.
+
+Status of the design's scopes: `read-lock-state`, `read-update-state` and
+`focus-authenticator` are implemented in the main process and the extension,
+`read-profile-summary` is covered by the protected mediation, and the remaining
+candidate scopes in the design are not implemented.
+
 ## Bounds and verification
 
 All transport frames use a four-byte little-endian length, strict UTF-8 JSON,
@@ -164,3 +195,15 @@ revocation on lock, and the extension background validation. It uses synthetic
 fixtures only. No installed desktop, no real browser native-messaging
 registration and no real update feed took part, so the end-to-end path from a
 browser to a running desktop remains unverified.
+
+`test/browser-confirm-scopes.test.js` covers the Confirm scope with synthetic
+fixtures: the default Reject button and Escape, the localized prompt text, the
+single pending prompt and the busy answer, refusal without queuing when the
+desktop is locked, hidden or closing, cancellation on lock, disconnect and
+close, a rejection that keeps the pairing, a caller without the native approval
+callback, the fixed answer shape with no secret fields, and the extension
+background validation. No installed desktop, no real native-messaging
+registration and no captured native prompt took part. The prompt has not been
+captured in the real built desktop in English and Cantonese, light and dark, so
+the visual presentation is unverified, and so is the end-to-end path from a
+browser to a running desktop.

@@ -52,6 +52,16 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{if(sender.id!==c
    respond({schemaVersion:1,lock:lock.state,update:{desktopVersion:update.desktopVersion,availableVersion:update.availableVersion,phase:update.phase,progress:update.progress}});
   })().catch(()=>respond({error:'Desktop status did not complete. Open and unlock the desktop, pair again and retry.'}));return true;
  }
+ if(message?.type==='authenticator-focus'){
+  if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1){respond({error:'Authenticator request is unavailable.'});return false;}
+  if(!session){respond({paired:false});return false;}
+  const ownSession=session,epoch=connectionEpoch;
+  // The desktop asks its user first. Only a fixed state word comes back: no code, account name or secret.
+  request({type:'focus-authenticator',session:ownSession},40000).then(value=>{
+   if(session!==ownSession||connectionEpoch!==epoch||!value||Object.keys(value).sort().join(',')!=='schemaVersion,state,type'||value.type!=='authenticator-focused'||value.schemaVersion!==1||!['shown','rejected','busy','unavailable'].includes(value.state))throw Error('Invalid authenticator response.');
+   respond({schemaVersion:1,state:value.state});
+  }).catch(()=>respond({error:'Authenticator request did not complete. Open and unlock the desktop, pair again and retry.'}));return true;
+ }
  if(message?.type==='protected-discover'){
   if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1||!session){respond({error:'Protected capabilities are unavailable.'});return false;}
   const ownSession=session,epoch=connectionEpoch;

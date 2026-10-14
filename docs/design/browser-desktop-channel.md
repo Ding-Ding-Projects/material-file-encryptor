@@ -1,10 +1,9 @@
 # Authenticated browser-to-desktop channel (approved design)
 
 Status: **Approved by the maintainer on October 14, 2026**, with the decisions
-recorded under "Maintainer decisions". Nothing in this document is implemented
-beyond the existing transport and the single read-only mediation scope
-described under "Current baseline". Each scope below is built and verified on
-its own; approval of the design is not a claim that any scope works.
+recorded under "Maintainer decisions". The "Candidate scopes" table records which
+scopes are implemented so far. Each scope below is built and verified on its
+own; approval of the design is not a claim that any scope works.
 
 ## Purpose
 
@@ -145,17 +144,20 @@ queue them for later.
 ## Candidate scopes
 
 These are proposals for review, not commitments. Each needs its own approval.
+The last column records implementation status only; it is not a verification
+claim. Runtime verification (the compiled-host test, the native dialog captures
+and the installed end-to-end path) is still outstanding for every scope.
 
-| Scope | Mode | Returns |
-| --- | --- | --- |
-| `read-lock-state` | Status | `locked`, `unlocked` or `unavailable` |
-| `read-update-state` | Status | current version, available version, download progress |
-| `read-profile-summary` | Re-authenticate | existing safe summary (already implemented) |
-| `focus-authenticator` | Confirm | `shown`: the desktop authenticator window is brought forward; no code is returned |
-| `request-unlock-step` | Re-authenticate | the new unlock level |
-| `open-in-editor` | Confirm | `opened` or a plain failure reason |
-| `convert-file` | Confirm | job id and status updates |
-| `begin-qr-pairing` | Confirm | a short-lived pairing QR image for a phone |
+| Scope | Mode | Returns | Implementation |
+| --- | --- | --- | --- |
+| `read-lock-state` | Status | `locked`, `unlocked` or `unavailable` | Implemented |
+| `read-update-state` | Status | current version, available version, download progress | Implemented |
+| `read-profile-summary` | Re-authenticate | existing safe summary (already implemented) | Implemented |
+| `focus-authenticator` | Confirm | `shown`: the desktop authenticator window is brought forward; no code is returned | Implemented |
+| `request-unlock-step` | Re-authenticate | the new unlock level | Not implemented |
+| `open-in-editor` | Confirm | `opened` or a plain failure reason | Not implemented |
+| `convert-file` | Confirm | job id and status updates | Not implemented |
+| `begin-qr-pairing` | Confirm | a short-lived pairing QR image for a phone | Not implemented |
 
 ## Verification plan
 
