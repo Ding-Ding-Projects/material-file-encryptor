@@ -16,6 +16,16 @@ The Status tab shows the extension version, the source commit the bundle was sta
 
 Commands (Ctrl+K) opens a Material dialog listing every workspace action: opening each tab, pairing, disconnecting, refreshing observations, language and theme choices, the message preview and the settings reset. Typing filters the list, and actions that cannot run at that moment are shown disabled.
 
+## Exports, setting details, reset confirmation and shortcuts
+
+Preview export turns the currently filtered changelog into JSON, CSV or Markdown and shows the result before anything is saved. The export is read back first: the release and change counts must match, or no file is offered. CSV cells that begin with a formula character are prefixed with an apostrophe, so spreadsheets show the text instead of running it. Exports contain release notes only, never settings, pairing data or personal wording.
+
+About these settings, under Personalization, lists each setting with its current value, what it changes and how it returns to its default. The workspace search finds these explanations.
+
+Reset browser settings asks for a deliberate confirmation: turn on both confirmation switches, move the slider fully right, then choose Execute. Emergency exit cancels with nothing changed. Individual playfulness resets stay one step, because they change a single value.
+
+Alt+1 to Alt+4 open Connection, Personalization, Changelog and Status, and Ctrl+K opens the command palette, which lists these shortcuts beside their commands. Browser-reserved combinations such as Ctrl with a number, Ctrl+T and Ctrl+W are left to the browser.
+
 Focused tests cover malformed/oversized cache, failed saves, persistence, keyboard tab routing, forged sender paths and staged local-only CSP. Source staging hashes every workspace file. Signing, installed identity, real browser interaction, visual parity and display scaling remain unverified.
 
 ## Bundled copy measurement

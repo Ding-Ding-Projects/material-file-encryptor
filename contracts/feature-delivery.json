@@ -13163,16 +13163,23 @@
     {
       "id": "menu-shortcuts",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
+        "browser-extension/options.js"
+      ],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Expose documented keyboard shortcuts for menu commands and respect browser-reserved combinations. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Alt+1 to Alt+4 open the workspace tabs and Ctrl+K opens the command palette, which lists the shortcuts; browser-reserved combinations are not bound. Headless browser captures show the listed shortcuts; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13186,7 +13193,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -13197,14 +13204,14 @@
         "action": "Expose documented keyboard shortcuts for menu commands and respect browser-reserved combinations.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Expose documented keyboard shortcuts for menu commands and respect browser-reserved combinations.",
-            "nextProof": "Exercise expose documented keyboard shortcuts for menu commands and respect browser-reserved combinations on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this options workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Shortcuts are fixed; nothing is stored."
       }
     },
     {
@@ -13326,16 +13333,24 @@
     {
       "id": "settings-explanations",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Explain each setting with searchable help, current value, side effects and reset behavior. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "About these settings lists each setting with its current value, effect and reset behaviour, and the workspace search finds them. A headless browser capture shows the list; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13349,7 +13364,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -13360,14 +13375,14 @@
         "action": "Explain each setting with searchable help, current value, side effects and reset behavior.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Explain each setting with searchable help, current value, side effects and reset behavior.",
-            "nextProof": "Exercise explain each setting with searchable help, current value, side effects and reset behavior on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this options workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Explanations read the existing preference record; nothing new is stored."
       }
     },
     {
@@ -13420,16 +13435,24 @@
     {
       "id": "super-confirmation",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Require the specified deliberate confirmation for sensitive actions without making ordinary actions destructive. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Reset browser settings needs two confirmation switches and the slider at 100 percent before Execute is enabled; Emergency exit cancels with nothing changed. Headless browser captures show the locked and ready states; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13443,7 +13466,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -13454,14 +13477,14 @@
         "action": "Require the specified deliberate confirmation for sensitive actions without making ordinary actions destructive.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Require the specified deliberate confirmation for sensitive actions without making ordinary actions destructive.",
-            "nextProof": "Exercise require the specified deliberate confirmation for sensitive actions without making ordinary actions destructive on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this options workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Confirmation state is never stored; each request starts locked."
       }
     },
     {
@@ -13796,16 +13819,24 @@
     {
       "id": "exports",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Export selected records in the required formats with preview, redaction and validation. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Preview export serialises the filtered changelog as JSON, CSV or Markdown, validates release and change counts before offering a file, and neutralises spreadsheet formulas. Headless browser captures show the preview; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13819,7 +13850,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -13830,14 +13861,14 @@
         "action": "Export selected records in the required formats with preview, redaction and validation.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Export selected records in the required formats with preview, redaction and validation.",
-            "nextProof": "Exercise export selected records in the required formats with preview, redaction and validation on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this options workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Exports are saved only when the user chooses Save file; nothing is stored by the workspace."
       }
     },
     {

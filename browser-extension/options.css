@@ -7,3 +7,12 @@ body{width:auto}main{max-width:1000px;margin:auto;max-height:none}section{paddin
 #changelog-filter,#palette-filter{width:100%}#palette{max-inline-size:min(560px,calc(100vw - 48px));inline-size:100%}#palette-list{margin-top:8px;--md-list-container-color:transparent}
 @keyframes mfe-panel-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){[role=tabpanel]:not([hidden]),.changelog-entry{animation:none}}
+.setting-detail{padding:12px 16px;margin-top:8px;border-radius:12px;background:var(--md-sys-color-surface)}.setting-detail h4{margin:0 0 4px;font-size:14px}.setting-detail p{margin:2px 0;color:var(--md-sys-color-on-surface-variant)}
+.export-text{max-height:40vh;overflow:auto;padding:12px;border-radius:12px;background:var(--md-sys-color-surface-container-low);font:12px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+#export-dialog,#confirm-dialog{max-inline-size:min(640px,calc(100vw - 48px));inline-size:100%}.confirm-key{display:flex;align-items:center;gap:12px;min-height:48px}#confirm-slider{inline-size:100%}
+.shortcut{font:12px/1 ui-monospace,Consolas,monospace;color:var(--md-sys-color-on-surface-variant)}
+/* Dialog actions sit in one end-aligned row; export format keeps its own width beside its button. */
+.dialog-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+#export-format{width:auto;min-width:12rem}
+/* Personalization reads as rows: each label above its control, actions at their own width. */
+#panel-personalization{display:grid;gap:8px;justify-items:start}#panel-personalization>:is(h2,h3,p,#setting-details){justify-self:stretch}#panel-personalization md-slider{width:min(100%,360px)}#panel-personalization>h3{margin-top:12px}
