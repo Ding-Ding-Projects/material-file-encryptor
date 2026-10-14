@@ -6,6 +6,12 @@ import {createHash} from 'node:crypto';
 export const publicImages=Object.freeze([
  {source:'docs/images/captures/site-guidance-normal-83e14d86.png',route:'images/captures/site-guidance-normal-83e14d86.png',sha256:'78701c8aea8f8db63db13da2d11cf342817f8a841769efdc2f063ec8038a1f89',bytes:146518,width:1280,height:900},
  {source:'docs/images/captures/site-guidance-narrow-83e14d86.png',route:'images/captures/site-guidance-narrow-83e14d86.png',sha256:'5db524e0a6375aa4ee7385b5014a39f43e10b6bc1076a5af6d110bc2b0bacf99',bytes:210730,width:640,height:1600},
+ {source:'docs/images/captures/material-2a9cb388/drive-light-en.png',route:'images/captures/material-2a9cb388/drive-light-en.png',sha256:'2db466fd4da82ef74e7e39071ccee3640d5bba9da6b3a830262f29da7bbf2472',bytes:106874,width:1792,height:1139},
+ {source:'docs/images/captures/material-2a9cb388/converter-dark-en.png',route:'images/captures/material-2a9cb388/converter-dark-en.png',sha256:'b57f0af7bce88fe4175817b2e2cfece0cad6eb74d659cae6bdf5d9be8e2572d3',bytes:80536,width:1792,height:1139},
+ {source:'docs/images/captures/material-2a9cb388/workflow-light-yue.png',route:'images/captures/material-2a9cb388/workflow-light-yue.png',sha256:'ae0cb8eb2d05780eabd78ae192a7bf74aa40f5f7eac6762e6a2450e3a8064b5f',bytes:116022,width:1792,height:1139},
+ {source:'docs/images/captures/material-2a9cb388/converter-light-bilingual.png',route:'images/captures/material-2a9cb388/converter-light-bilingual.png',sha256:'cf54deb49bd40faedc90bd7aad3ea3a34ee7e8fccdb7cc835d57d296deaa0762',bytes:140294,width:1792,height:1139},
+ {source:'docs/images/captures/material-2a9cb388/dialog-consent-light-en.png',route:'images/captures/material-2a9cb388/dialog-consent-light-en.png',sha256:'a8595fed1676b3c17f7b9fa8a2b1afb5f22faa99e0f7397a77a53a47d7309026',bytes:46800,width:839,height:402},
+ {source:'docs/images/captures/material-2a9cb388/dialog-consent-dark-en.png',route:'images/captures/material-2a9cb388/dialog-consent-dark-en.png',sha256:'9e44ce0dd21480c5255e22f835e8b54ab0c33ee60274df740ed6299e85fa9b5c',bytes:46359,width:839,height:402},
 ].map(Object.freeze));
 
 export function resolvePublicImage(source,url,images) {
