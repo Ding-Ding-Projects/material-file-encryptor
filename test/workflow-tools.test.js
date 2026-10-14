@@ -13,7 +13,7 @@ class Node{
  get options(){return this.children;}
  async filter(rows){return rows.filter(row=>row.text.toLowerCase().includes(this.query.toLowerCase()));}
 }
-const doc={createElement:tag=>new Node(tag),createTreeWalker:()=>({nextNode:()=>false})};globalThis.document=doc;
+const doc={createElement:tag=>new Node(tag),createElementNS:(namespace,tag)=>new Node(tag),createTreeWalker:()=>({nextNode:()=>false})};globalThis.document=doc;
 const {mount}=await import('../src/shared/surface/workflow-tools.js');
 test('mounted document flow browses, clears and saves through opaque native grants',async()=>{
  const folder=await fs.mkdtemp(path.join(os.tmpdir(),'workflow-ui-')),file=path.join(folder,'notes.txt');await fs.writeFile(file,'Original');
@@ -21,9 +21,9 @@ test('mounted document flow browses, clears and saves through opaque native gran
  const find=label=>host.querySelectorAll('*').find(node=>node.textContent===label);
  try{await surface.refresh();await find('Browse document').listeners.click();
  const content=host.querySelectorAll('*').find(node=>node.label==='Document content');assert.equal(content.value,'Original');
- await find('Clear Document content').listeners.click();assert.equal(content.value,'');assert.equal(content.focused,true);
+ await host.querySelectorAll('*').find(node=>node['aria-label']==='Clear Document content').listeners.click();assert.equal(content.value,'');assert.equal(content.focused,true);
  await find('Save document').listeners.click();assert.equal(await fs.readFile(file,'utf8'),'');
- const name=host.querySelectorAll('*').find(node=>node.label==='Document name');assert.equal(name.readOnly,true);assert.equal(find('Clear Document name').disabled,true);
+ const name=host.querySelectorAll('*').find(node=>node.label==='Document name');assert.equal(name.readOnly,true);assert.equal(host.querySelectorAll('*').find(node=>node['aria-label']==='Clear Document name').disabled,true);
  }finally{surface.destroy();await backend.close();await fs.rm(folder,{recursive:true,force:true});}
 });
 test.after(()=>{for(const[key,value]of Object.entries(previous))if(value===undefined)delete globalThis[key];else globalThis[key]=value;});

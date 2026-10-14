@@ -23,3 +23,7 @@ md-outlined-text-field>md-icon-button[slot="trailing-icon"]{width:48px;height:48
 /* Keep the original select and its owned search action in one visual row. */
 .dialog-body>md-outlined-select[data-select-search-composition="adjacent"]:has(+md-icon-button[data-choice-search]){width:calc(100% - 56px);vertical-align:middle}
 .dialog-body>md-outlined-select[data-select-search-composition="adjacent"]+md-icon-button[data-choice-search]{vertical-align:middle;margin-inline:12px 4px}
+
+/* Outlined selects keep room for their floating label; the split-size unit select stays compact. */
+md-outlined-select{min-width:min(100%,14rem)}
+.split-form md-outlined-select{min-width:0}

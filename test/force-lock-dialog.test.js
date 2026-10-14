@@ -11,7 +11,7 @@ function fixture(response,result={busy:true,locked:false}) {
   const calls=[];let shown;
   const state={mounted:true,locked:false};
   const context=vm.createContext({window:{},state,Error,
-    dialog:{showMessageBox:async(window,options)=>{shown=options;return {response};}},
+    uiDialog:{showMessageBox:async(window,options)=>{shown=options;return {response};}},
     helper:{request:async method=>{calls.push(method);return method==='forceLock'?result:{mounted:false,locked:true};}},
     nativeState:value=>value,publish:()=>calls.push('publish')});
   const start=main.indexOf('async function forceLockDrive('),end=main.indexOf('async function request(',start);assert.ok(start>=0&&end>start);vm.runInContext(main.slice(start,end),context);

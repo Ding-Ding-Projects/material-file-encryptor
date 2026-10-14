@@ -9,7 +9,7 @@ export function mountDocumentation(host, { catalog, translate = value => value, 
   const searchHost = element('div'), navigation = element('nav'), article = element('article'), message = element('p');
   const actions = element('div'), exportButton = element('button', translate('Export article'));
   exportButton.type = 'button'; actions.append(exportButton);
-  navigation.setAttribute('aria-label', translate('Documentation articles')); article.tabIndex = -1;
+  navigation.setAttribute('aria-label', translate('Documentation articles')); navigation.className = 'docs-nav'; article.tabIndex = -1;
   const workspace = element('div'); workspace.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px;min-height:0;max-height:65dvh;overflow:auto';
   navigation.style.cssText = 'display:flex;flex-direction:column;min-width:0;overflow:auto'; article.style.cssText = 'min-width:0;overflow:auto;overflow-wrap:anywhere';
   workspace.append(navigation, article); host.append(searchHost, actions, message, workspace);
@@ -23,7 +23,7 @@ export function mountDocumentation(host, { catalog, translate = value => value, 
     if (disposed || request !== generation) return;
     if(result.outcome==='superseded')return;const rows=result.rows;
     navigation.replaceChildren();
-    for (const row of rows) { const button = element('button', row.title); button.type = 'button'; button.setAttribute('aria-current', String(active?.id === row.id)); button.addEventListener('click', () => open(row.id)); navigation.append(button); }
+    for (const row of rows) { const button = element('button', row.title); button.type = 'button'; button.setAttribute('aria-current', String(active?.id === row.id)); button.toggleAttribute('data-current', active?.id === row.id); button.addEventListener('click', () => open(row.id)); navigation.append(button); }
     message.textContent = rows.length ? '' : translate('No matching articles.');finishReady(result.outcome);
     }catch(error){if(!disposed&&request===generation)finishReady('failed');throw error;}
   }

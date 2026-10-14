@@ -93,3 +93,55 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;width:1
 dialog[aria-labelledby="descendant-dialog-title"] .dialog-body label{display:flex;align-items:flex-start;gap:12px;min-width:0}
 dialog[aria-labelledby="descendant-dialog-title"] .dialog-body input[type=checkbox]{width:18px;height:18px;flex:0 0 18px;margin:0}
 dialog[aria-labelledby="descendant-dialog-title"] .dialog-body label>span{min-width:0;overflow-wrap:anywhere;line-height:1.5}
+
+/* An empty preview block must not paint an unlabelled surface. */
+pre:empty{display:none}
+
+/* Material motion layer: shared tokens, plus enter motion for every view,
+   tab panel, disclosure, card and list row that the shell reveals by
+   removing the hidden attribute. Removing hidden restarts these animations,
+   so no script is involved. The reduced-motion rules above disable them. */
+:root{
+  --md-sys-motion-easing-standard:cubic-bezier(.2,0,0,1);
+  --md-sys-motion-easing-emphasized-decelerate:cubic-bezier(.05,.7,.1,1);
+  --md-sys-motion-easing-emphasized-accelerate:cubic-bezier(.3,0,.8,.15);
+  --md-sys-motion-duration-short4:200ms;
+  --md-sys-motion-duration-medium2:300ms;
+  --md-sys-motion-duration-medium4:400ms;
+}
+@keyframes md-fade-through-in{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:none}}
+@keyframes md-fade-up-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes md-expand-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.view:not([hidden]),[role="tabpanel"]:not([hidden]){
+  animation:md-fade-through-in var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate) both;
+}
+.workflow-filter>[id]:not([hidden]),.workflow-choice,.file-details-filters{
+  animation:md-expand-in var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard) both;
+}
+:where(main,[role="tabpanel"],.view) :is(article,.card,.server-operation,.entry):not([hidden]){
+  animation:md-fade-up-in var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate) both;
+}
+:where(main,[role="tabpanel"],.view) :is(article,.card,.server-operation,.entry):nth-child(2){animation-delay:30ms}
+:where(main,[role="tabpanel"],.view) :is(article,.card,.server-operation,.entry):nth-child(3){animation-delay:60ms}
+:where(main,[role="tabpanel"],.view) :is(article,.card,.server-operation,.entry):nth-child(n+4){animation-delay:90ms}
+tbody tr{animation:md-fade-up-in var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard) both}
+/* Labelled outlined selects need room for their floating label. */
+.workflow-tools>.row{display:flex;flex-wrap:wrap;gap:8px}
+.workflow-filter>md-text-button svg{transition:transform var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard)}
+.workflow-filter>md-text-button[aria-expanded="true"] svg{transform:rotate(180deg)}
+
+/* Documentation index reads as a navigation drawer: start-aligned items,
+   with the open article marked by a secondary-container pill. */
+.docs-nav{align-items:flex-start;gap:2px}
+.docs-nav>md-text-button{--md-text-button-label-text-color:var(--md-sys-color-on-surface-variant);border-radius:999px;transition:background-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard)}
+.docs-nav>md-text-button[data-current]{background:var(--md-sys-color-secondary-container);--md-text-button-label-text-color:var(--md-sys-color-on-secondary-container)}
+/* Native disclosures read as Material expansion panels: a tonal container,
+   a full-height header row and a chevron that turns as the panel opens. */
+details{border-radius:12px;background:var(--md-sys-color-surface-container-low);padding:0 16px;margin:8px 0}
+details>summary{list-style:none;min-height:48px;display:flex;align-items:center;gap:12px;font-weight:500;color:var(--md-sys-color-on-surface)}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:'';flex:none;margin-inline-start:auto;width:8px;height:8px;border:solid var(--md-sys-color-on-surface-variant);border-width:0 2px 2px 0;transform:translateY(-2px) rotate(45deg);transition:transform var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard)}
+details[open]>summary::after{transform:translateY(2px) rotate(-135deg)}
+details[open]>:not(summary){animation:md-expand-in var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard) both}
+details[open]{padding-bottom:12px}
+.settings-section summary{padding:0;color:var(--md-sys-color-on-surface)}

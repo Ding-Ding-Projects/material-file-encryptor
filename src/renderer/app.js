@@ -93,7 +93,7 @@ function applyPreferences() {
  for (const key of ['funnyEnglish','funnyCantonese']) { $(`${key}-setting`).value = preferences[key]; $(`${key}-output`).textContent = preferences[key]; $(`${key}-setting`).style.setProperty('--range-progress', `${(preferences[key]-1)*25}%`); }
  $('vocabulary-summary').textContent = preferences.language === 'yue' ? `${preferences.vocabulary.replacements.length} 個替換詞已啟用（${vocabularyPersisted ? '已儲存喺呢部裝置' : '只限今次使用，儲存失敗'}）。` : `${preferences.vocabulary.replacements.length} label replacements active (${vocabularyPersisted ? 'saved on this device' : 'this session only; saving failed'}).`;
  historySearch?.refresh(); recycleSearch?.refresh();historySelection?.refresh();
- $('history-retention')?.setAttribute('aria-label',t('Show history'));
+ if($('history-retention'))$('history-retention').label=t('Show history');$('history-retention')?.setAttribute('aria-label',t('Show history'));
  $('history-days')?.setAttribute('aria-label',t('Custom days'));
  clearFields.refresh();
  foundation?.setLanguage(preferences.language);fileSearch?.setLanguage(preferences.language);fileDetails?.setLanguage?.(preferences.language);renderedFilesKey='';
@@ -463,11 +463,11 @@ else {
 function initializeArchive() {
  const button=(id,text,handler)=>{const el=control('button',{class:'button outlined'});el.id=id;el.type='button';el.textContent=t(text);dictionary.set(el,text);el.onclick=handler;return el;};
  historySelection=createHistorySelection({host:$('view-history'),translate:t,formatDate,formatBytes,isBusy:()=>busy||!state||state.locked||$('view-history').dataset.archiveState!=='ready',onRestore:restoreHistoryVersion});
- const retentionLabel=document.createTextNode(t('Show history'));dictionary.set(retentionLabel,'Show history');
- $('history-actions').append(button('save-version','Save version now',()=>archiveMutation('history',()=>api.saveVersion())),retentionLabel);
- const retention=control('select');retention.id='history-retention';retention.setAttribute('aria-label',t('Show history'));
+ 
+ $('history-actions').append(button('save-version','Save version now',()=>archiveMutation('history',()=>api.saveVersion())));
+ const retention=control('select');retention.id='history-retention';retention.label=t('Show history');retention.setAttribute('aria-label',t('Show history'));
  for(const [value,text] of [['forever','Forever'],['30','Last 30 days'],['90','Last 90 days'],['custom','Custom days']]) {const option=control('option');option.value=value;option.textContent=t(text);dictionary.set(option,text);retention.append(option);}
- const days=control('input');days.id='history-days';days.type='number';days.min='1';days.max='36500';days.value='365';days.hidden=true;days.setAttribute('aria-label',t('Custom days'));
+ const days=control('input');days.id='history-days';days.type='number';days.min='1';days.max='36500';days.value='365';days.hidden=true;days.label=t('Custom days');days.setAttribute('aria-label',t('Custom days'));
  retention.onchange=()=>{historyRetentionDraft=true;historyRetentionRevision++;days.hidden=retention.value!=='custom';};days.oninput=days.onchange=()=>{historyRetentionDraft=true;historyRetentionRevision++;};
  $('history-actions').append(retention,days,button('history-retention-apply','Apply',()=>{const value=retention.value==='forever'?null:retention.value==='custom'?Number(days.value):Number(retention.value);if(value!==null&&(!Number.isInteger(value)||value<1||value>36500))return showError(t('Enter 1 to 36500 days.'));const editRevision=historyRetentionRevision;archiveMutation('history',async()=>{const result=await api.setHistoryRetention(value);if(historyRetentionRevision===editRevision)historyRetentionDraft=false;return result;});}));
  $('recycle-actions').append(button('select-recycled','Select all visible',()=>{for(const el of $('recycle-list').querySelectorAll('md-checkbox:not([disabled])')) {el.checked=true;recycledSelection.add(el.value);}renderAvailability();}),button('restore-recycled','Restore selected',()=>restoreRecycledSelection()),button('empty-recycle','Empty Recycle Bin',async()=>{if(await confirmAction('Empty Recycle Bin?','Deleted entries will disappear from the bin. Version history is retained. This does not promise to free storage space.','Empty Recycle Bin'))archiveMutation('recycle',()=>api.emptyRecycleBin());}));

@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
 
 const source = 'a'.repeat(40);
 const file = new URL('../.github/scripts/promote-release.ps1', import.meta.url);
@@ -40,7 +41,7 @@ test('promotion admission rejects a different run, future producer, malformed ta
 });
 
 test('downloaded producer provenance must match run, attempt, source, tag and package', {skip: process.platform !== 'win32'}, () => {
-  const sourcePath = file.pathname.replace(/^\/([A-Za-z]:)/, '$1').replaceAll("'", "''");
+  const sourcePath = fileURLToPath(file).replaceAll("'", "''");
   const command = `
     $ErrorActionPreference='Stop'
     $tokens=$null; $errors=$null

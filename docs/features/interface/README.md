@@ -7,6 +7,7 @@
 - [Element appearance and logo customization](appearance-editor.md)
 - [Local personal vocabulary](personal-vocabulary.md)
 - [Modern surfaces and clearable fields](modern-fields.md)
+- [Material dialogs, controls and motion](material-dialogs-and-motion.md)
 - [Startup registration readback](startup-registration.md)
 - [Shared navigation, search and notification foundation](../surface-foundation/README.md)
 - [Local authentication and access settings](../access/local-access.md)

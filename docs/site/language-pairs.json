@@ -197,6 +197,12 @@
       "translationSha256": "4bb2d0a4137b7985782b84ff655bbc940c0b89ce33e2e09c7ace34b0202c5f0c"
     },
     {
+      "source": "docs/features/interface/material-dialogs-and-motion.md",
+      "translation": "docs/features/interface/material-dialogs-and-motion.zh-HK.md",
+      "sourceSha256": "752ec76d358bdbe3d88c8a6f2fa2570e9237c2ba7486d2ec421965b1c7dfa9c8",
+      "translationSha256": "46d2fb875da0d128a57a962370e523f9086c5560d22cffc5c8408cd5fe7c880c"
+    },
+    {
       "source": "docs/features/interface/modern-fields.md",
       "translation": "docs/features/interface/modern-fields.zh-HK.md",
       "sourceSha256": "4b8921598ac19b7cba218e7cc8c4cd5bfad5bb044b9ae96650bc000be40c8edd",
@@ -241,8 +247,8 @@
     {
       "source": "docs/features/interface/README.md",
       "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "ef6b39050c8b477c88091ad7be1b6c9685ae71009201898773e42538d89d3a75",
-      "translationSha256": "c47a769c1bbdb85eb5fe4a9f38d6c2a0a8ae75eda5764aba84c24919e9ca43cf"
+      "sourceSha256": "62b3118495b543ee586b5aed193e55c96be87f432ab1e8ebf997fbd2ff3b86ce",
+      "translationSha256": "6c1c0e156debf2d55c457ab234a03998c24b1acab9bc79e002bf17a08a82be42"
     },
     {
       "source": "docs/features/interface/settings-completeness.md",
