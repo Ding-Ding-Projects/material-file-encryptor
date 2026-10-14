@@ -13821,6 +13821,7 @@
       "surface": "extension",
       "status": "unverified",
       "implementation": [
+        "browser-extension/exports.js",
         "browser-extension/options.js",
         "browser-extension/options.html"
       ],
@@ -17135,7 +17136,8 @@
     "test/browser-extension-background.test.js": "5ea562423e90565e582cac67982aca965898e436",
     "test/browser-protection-options.test.js": "5ea562423e90565e582cac67982aca965898e436",
     "test/browser-native-host.test.js": "5ea562423e90565e582cac67982aca965898e436",
-    "test/browser-extension-bundle.test.js": "1ca16f34ab3e155fc5d0c0805551380074826b0b"
+    "test/browser-extension-bundle.test.js": "1ca16f34ab3e155fc5d0c0805551380074826b0b",
+    "browser-extension/exports.js": "ab688b4a76b9e343bc90624b0d47366c7f869c85"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
