@@ -4,7 +4,7 @@ Hidden-desktop capture review of the built application found layout defects rath
 
 Later the same day: missing Material colour roles were completed from the theme, so focus rings no longer use the baseline purple (35a27ea); the navigation rail, table rows and guidance panels animate between states (a429430); main-process dialogs follow the interface language, captured for the credential prompt in English, Cantonese and bilingual modes (19d68e3).
 
-Required-feature inventory (contracts/feature-delivery.json, 315 rows): desktop 96 unverified and 9 not applicable; site 96 unverified and 9 not applicable; extension 35 unverified, 61 missing and 9 not applicable. Every missing row is a browser extension workflow. The full objective therefore remains incomplete: the extension needs those 61 workflows, and every unverified row needs its own evidence.
+Required-feature inventory (contracts/feature-delivery.json, 315 rows): desktop 96 unverified and 9 not applicable; site 96 unverified and 9 not applicable; extension 38 unverified, 58 missing and 9 not applicable after the extension workspace gained Material tabs, an offline changelog, build source details and a command palette (f8aadbe). Every missing row is a browser extension workflow. The full objective therefore remains incomplete: the extension needs those 58 workflows, and every unverified row needs its own evidence.
 
 Outstanding: captures at 100, 125 and 200 percent display scale (owner action); individual captures of the remaining message boxes; the separate protected settings reset branch.
 

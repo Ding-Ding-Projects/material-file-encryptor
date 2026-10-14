@@ -15,9 +15,9 @@ Verification:
 Not yet done:
 - Captures at 100, 125 and 200 percent display scale require the owner to change the host display scale.
 - Individual captures of the licence, pairing, import and update message boxes (credential, consent and shutdown are captured).
-- Required-feature inventory, 315 rows: desktop 96 unverified, site 96 unverified, extension 35 unverified and 61 missing; every missing row is a browser extension workflow.
+- Required-feature inventory, 315 rows: desktop 96 unverified, site 96 unverified, extension 38 unverified and 58 missing after the extension workspace gained Material tabs, an offline changelog, build source details and a command palette (f8aadbe); every missing row is a browser extension workflow.
 - Branch codex/feature-mediation-01a137ae (protected settings reset): native writer adoption and independent review outstanding.
 - Renderer browser tests cannot run on this host because package file redirection makes evidence paths non-canonical.
 
-Next safe steps: read back the release run for 19d68e3, then start the browser extension workflows from the missing rows in contracts/feature-delivery.json, and gather evidence for unverified desktop rows.
+Next safe steps: read back the release run for 19d68e3, then continue the browser extension workflows from the missing rows in contracts/feature-delivery.json, and gather evidence for unverified desktop rows.
 ````
