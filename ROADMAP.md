@@ -9,11 +9,15 @@
 - [x] Render application message boxes as Material dialogs in main-owned windows with a nonce-bound response (real consent prompt captured and cancelled with no change).
 - [x] Stop read-only requests from holding the application open at exit.
 - [x] Name the unfinished work in the shutdown prompt and keep workflow reads out of the shutdown guard (idle startup closes at 8, 15 and 22 seconds with no prompt).
-- [ ] Confirm the outlined select width, documentation active pill and workflow chevron in a rebuilt capture.
-- [ ] Capture every converted screen and dialog in dark theme, Cantonese, bilingual and 125 to 200 percent scaling.
-- [ ] Make Material dialogs follow the in-app theme setting instead of the system colour scheme.
+- [x] Confirm the outlined select width, documentation active pill and workflow chevron in a rebuilt capture.
+- [x] Capture all 19 views in light, dark, Cantonese and bilingual at 150 percent display scale, and the consent dialog in light and dark (main 2a9cb38).
+- [ ] Capture at 100, 125 and 200 percent display scale (changing the host display scale is an owner action).
+- [ ] Fix the bilingual "All tabs" label, which is clipped in the tab strip.
+- [ ] Use one bilingual separator in the converter, which joins languages with a slash while the rest of the application uses a middle dot.
+- [x] Make Material dialogs follow the in-app theme setting instead of the system colour scheme.
 - [ ] Capture each remaining message box individually (licence, pairing, credential, shutdown, import, update).
-- [ ] Integrate the sweep into main after the remaining capture checks.
+- [x] Integrate the sweep into main.
+- [x] Refresh the README with current desktop captures and provenance.
 
 ## Current preservation boundary
 

@@ -134,6 +134,24 @@ Material Design 3 applies to the desktop, documentation website, extension and n
 
 ### Current captures
 
+#### Desktop application
+
+These captures come from the built desktop application at source `2a9cb388718c3910f25ade90670758e81ddd2ce2` (executable SHA-256 `252a3fa6cf4c47dfa9d8d8f7ea1127c6f50cb1386ec01c1de6f006f37c1a4493`). Each run launched the application on a task-owned hidden desktop at 150 percent display scale, with a fresh synthetic profile, and captured the window by handle. Hashes, dimensions and capture times are in [the provenance record](docs/images/captures/material-2a9cb388/provenance.json). Drive mounting shows as unavailable because the capture host has no WinFsp driver installed.
+
+![Drive workspace in the light theme, English](docs/images/captures/material-2a9cb388/drive-light-en.png)
+
+![Converter with Material tabs in the dark theme, English](docs/images/captures/material-2a9cb388/converter-dark-en.png)
+
+![Document workflow with labelled selects and in-field clear buttons, Cantonese](docs/images/captures/material-2a9cb388/workflow-light-yue.png)
+
+![Converter in bilingual mode](docs/images/captures/material-2a9cb388/converter-light-bilingual.png)
+
+![Material consent dialog in the light theme](docs/images/captures/material-2a9cb388/dialog-consent-light-en.png)
+
+![Material consent dialog in the dark theme](docs/images/captures/material-2a9cb388/dialog-consent-dark-en.png)
+
+#### Documentation site
+
 The following genuine documentation captures show the information entry, worked example and isolated playground from source `83e14d8627b9782d5acc12221c22ed4f0b8b2d4c`. Capture time: October 13, 2026, 11:50 UTC. They cover two bilingual/light tuples, not native-product or installed acceptance. The [source-bound inventory](docs/evidence/control-guidance-83-inventory.json) retains exact intervals, hashes and limitations.
 
 ![Bilingual history guidance and isolated sample controls at 1280 by 900](docs/images/captures/site-guidance-normal-83e14d86.png)

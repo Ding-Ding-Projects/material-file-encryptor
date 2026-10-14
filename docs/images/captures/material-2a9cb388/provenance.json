@@ -1,0 +1,78 @@
+{
+  "sourceCommit": "2a9cb388718c3910f25ade90670758e81ddd2ce2",
+  "executableSha256": "252a3fa6cf4c47dfa9d8d8f7ea1127c6f50cb1386ec01c1de6f006f37c1a4493",
+  "platform": "windows",
+  "method": "Built application launched on a task-owned hidden desktop through the cheap Lowlevel route; navigation through the application command palette; window captured by handle with PrintWindow.",
+  "displayScale": 1.5,
+  "dpi": 144,
+  "profile": "Fresh synthetic verification profile per run; no user data, drive or credentials.",
+  "inspected": true,
+  "images": [
+    {
+      "file": "drive-light-en.png",
+      "sha256": "2db466fd4da82ef74e7e39071ccee3640d5bba9da6b3a830262f29da7bbf2472",
+      "width": 1792,
+      "height": 1139,
+      "view": "drive",
+      "state": "locked, no drive",
+      "theme": "light",
+      "language": "en",
+      "capturedAtUtc": "2026-10-14T08:15:46.594Z"
+    },
+    {
+      "file": "converter-dark-en.png",
+      "sha256": "b57f0af7bce88fe4175817b2e2cfece0cad6eb74d659cae6bdf5d9be8e2572d3",
+      "width": 1792,
+      "height": 1139,
+      "view": "converter",
+      "state": "source files tab",
+      "theme": "dark",
+      "language": "en",
+      "capturedAtUtc": "2026-10-14T08:18:04.025Z"
+    },
+    {
+      "file": "workflow-light-yue.png",
+      "sha256": "ae0cb8eb2d05780eabd78ae192a7bf74aa40f5f7eac6762e6a2450e3a8064b5f",
+      "width": 1792,
+      "height": 1139,
+      "view": "document workflow",
+      "state": "initial",
+      "theme": "light",
+      "language": "yue",
+      "capturedAtUtc": "2026-10-14T08:20:26.869Z"
+    },
+    {
+      "file": "converter-light-bilingual.png",
+      "sha256": "cf54deb49bd40faedc90bd7aad3ea3a34ee7e8fccdb7cc835d57d296deaa0762",
+      "width": 1792,
+      "height": 1139,
+      "view": "converter",
+      "state": "source files tab",
+      "theme": "light",
+      "language": "bilingual",
+      "capturedAtUtc": "2026-10-14T08:22:48.881Z"
+    },
+    {
+      "file": "dialog-consent-light-en.png",
+      "sha256": "a8595fed1676b3c17f7b9fa8a2b1afb5f22faa99e0f7397a77a53a47d7309026",
+      "width": 839,
+      "height": 402,
+      "view": "material dialog",
+      "state": "change local model connection prompt, client area",
+      "theme": "light",
+      "language": "en",
+      "capturedAtUtc": null
+    },
+    {
+      "file": "dialog-consent-dark-en.png",
+      "sha256": "9e44ce0dd21480c5255e22f835e8b54ab0c33ee60274df740ed6299e85fa9b5c",
+      "width": 839,
+      "height": 402,
+      "view": "material dialog",
+      "state": "change local model connection prompt, client area",
+      "theme": "dark",
+      "language": "en",
+      "capturedAtUtc": null
+    }
+  ]
+}
