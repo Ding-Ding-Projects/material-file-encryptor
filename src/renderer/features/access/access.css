@@ -2,7 +2,7 @@
 .access-workspace h2{font-size:var(--md-sys-typescale-headline-small-size,24px);font-weight:500;margin:0 0 8px}
 .access-tabs{width:100%;margin-block:16px;--md-primary-tab-container-color:var(--md-sys-color-surface)}
 .access-workspace fieldset{border:1px solid var(--md-sys-color-outline-variant);border-radius:20px;padding:20px;margin:16px 0;min-width:0;display:flex;flex-wrap:wrap;gap:12px;align-items:start;background:var(--md-sys-color-surface-container-low)}
-.access-workspace fieldset>legend{font-size:20px;font-weight:500;padding-inline:8px}
+.access-workspace fieldset>legend{float:left;flex-basis:100%;width:100%;padding:0;margin:0 0 4px;font-size:22px;line-height:28px;font-weight:500;color:var(--md-sys-color-on-surface)}
 .access-workspace fieldset>p,.access-workspace fieldset>fieldset,.access-record-list,.access-search{flex-basis:100%;min-width:0;width:100%}
 .access-field{display:flex;gap:8px;align-items:center;flex:1 1 280px;min-width:0;max-width:100%}
 .access-field>md-outlined-text-field{flex:1;min-width:0;width:100%}
