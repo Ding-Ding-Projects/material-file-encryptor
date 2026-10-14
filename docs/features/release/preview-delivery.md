@@ -8,6 +8,10 @@ The same job publishes one normal, non-draft, non-prerelease release named `v1.<
 
 ## Independent local verification
 
+### Producer-bound promotion retries
+
+A promotion-only retry retains the original producer tag in `promotion-input.json`; it does not create a tag from the retry attempt. Admission requires the same workflow run number, an original positive attempt no newer than the current execution, and the exact source. After all downloaded asset hashes match, `build-provenance.json` must also match the source, tag, workflow run ID, producer attempt and package version. The current-main check still runs immediately before promotion. A retry never overwrites a release or treats metadata as installed-runtime proof.
+
 After building, run `powershell -NoProfile -File scripts/verify-local.ps1` for native, mounted-filesystem, unit and packaged desktop checks. Driver installation is opt-in with `-InstallDriver` and requires native administrator consent.
 
 Installer verification is separate. On the required hidden desktop, with an exact clean commit and fresh current-user destination, invoke:

@@ -1,3 +1,10 @@
+## Resumed source-bound delivery
+
+- [x] Repair producer-tag retention for promotion retries and independently verify exact provenance admission.
+- [ ] Verify authenticated promotion on the repaired source.
+- [x] Verify downloaded v1.472.1 asset hashes, package CRC and866 extracted payload files.
+- [ ] Finish native reset authorization/recovery review, full-ring capture and original renderer sequence.
+
 ## Explicit preservation closeout, October 14
 
 - [x] Preserve unfinished focus and native reset candidates on their own remotely verified branches.

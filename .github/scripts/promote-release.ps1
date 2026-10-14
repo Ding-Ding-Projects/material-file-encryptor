@@ -1,6 +1,17 @@
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/../../scripts/squirrel-file-hash.ps1"
 function Assert([bool]$value, [string]$code) { if (!$value) { throw $code } }
+function Resolve-PromotionTag($Plan,[string]$Source,[string]$RunNumber,[string]$RunAttempt) {
+  Assert ($Plan.schemaVersion -eq 1 -and $Plan.sourceCommit -ceq $Source -and $Source -cmatch '^[a-f0-9]{40}$' -and $Plan.releaseId -cmatch '^[1-9][0-9]*$') 'PROMOTION_SOURCE_MISMATCH'
+  Assert ($RunNumber -cmatch '^[1-9][0-9]{0,9}$' -and $RunAttempt -cmatch '^[1-9][0-9]{0,8}$') 'PROMOTION_SOURCE_MISMATCH'
+  $identity=[regex]::Match([string]$Plan.tag,'^v1\.([1-9][0-9]{0,9})\.([1-9][0-9]{0,8})$')
+  Assert ($identity.Success -and $identity.Groups[1].Value -ceq $RunNumber -and [long]$identity.Groups[2].Value -le [long]$RunAttempt) 'PROMOTION_SOURCE_MISMATCH'
+  return [string]$Plan.tag
+}
+function Assert-PromotionProvenance($Provenance,[string]$Source,[string]$Tag,[string]$RunId) {
+  $producerAttempt=$Tag.Split('.')[-1]
+  Assert ($Provenance.schemaVersion -eq 1 -and $Provenance.sourceCommit -ceq $Source -and $Provenance.tag -ceq $Tag -and [string]$Provenance.runId -ceq $RunId -and [string]$Provenance.runAttempt -ceq $producerAttempt -and $Provenance.packageVersion -ceq $Tag.Substring(1)) 'PROMOTION_PROVENANCE_MISMATCH'
+}
 function Gh([string[]]$Arguments) {
   [Management.Automation.ApplicationInfo]$nativeGh = Get-Command gh.exe -CommandType Application -ErrorAction Stop | Select-Object -First 1
   $result = & $nativeGh.Source @Arguments
@@ -9,11 +20,10 @@ function Gh([string[]]$Arguments) {
 }
 Assert ($env:GITHUB_REF -eq 'refs/heads/main') 'PROMOTION_MAIN_ONLY'
 $repo=$env:GITHUB_REPOSITORY; $source=$env:GITHUB_SHA
-$tag="v1.$($env:GITHUB_RUN_NUMBER).$($env:GITHUB_RUN_ATTEMPT)"
 $inputPath='release-output/promotion-input.json'
 Assert ((Get-Item -LiteralPath $inputPath).Length -le 1048576) 'PROMOTION_INPUT_TOO_LARGE'
 $plan=Get-Content -LiteralPath $inputPath -Raw | ConvertFrom-Json
-Assert ($plan.schemaVersion -eq 1 -and $plan.sourceCommit -ceq $source -and $plan.tag -ceq $tag -and $plan.releaseId -match '^[1-9][0-9]*$') 'PROMOTION_SOURCE_MISMATCH'
+$tag=Resolve-PromotionTag $plan $source $env:GITHUB_RUN_NUMBER $env:GITHUB_RUN_ATTEMPT
 Assert (@($plan.assets).Count -ge 4 -and @($plan.assets).Count -le 100) 'PROMOTION_ASSET_SET_INVALID'
 $names=@{}
 $totalBytes=0L
@@ -39,6 +49,10 @@ foreach ($asset in $plan.assets) {
   $file=Join-Path $download $asset.name
   Assert ((Get-Item -LiteralPath $file).Length -eq $asset.bytes -and (Get-SquirrelFileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant() -ceq $asset.sha256) 'PROMOTION_ASSET_HASH_MISMATCH'
 }
+$provenancePath=Join-Path $download 'build-provenance.json'
+Assert ((Get-Item -LiteralPath $provenancePath).Length -le 1048576) 'PROMOTION_PROVENANCE_TOO_LARGE'
+$provenance=Get-Content -LiteralPath $provenancePath -Raw | ConvertFrom-Json
+Assert-PromotionProvenance $provenance $source $tag $env:GITHUB_RUN_ID
 $channelJson=& node scripts/release-channel.mjs $repo $plan.releaseId $env:GITHUB_REF $source
 Assert ($LASTEXITCODE -eq 0) 'RELEASE_CHANNEL_VERIFICATION_FAILED'
 @{tag=$tag;sourceCommit=$source;assetsVerified=$true;channel=($channelJson | ConvertFrom-Json);verifiedAtUtc=[DateTime]::UtcNow.ToString('o')} | ConvertTo-Json -Depth 5 | Set-Content release-output/promotion-receipt.json -Encoding utf8

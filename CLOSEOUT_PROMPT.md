@@ -1,3 +1,13 @@
+## Producer-bound promotion retry repair
+
+The owner resumed the complete implementation with preservation at 10 percent remaining account allowance, and requested prompt integration into main. The continuation retains the original scope and the remaining 11,607,405-token ceiling after the earlier 3,392,595 usage. The latest verified account reading was 21 percent remaining.
+
+Release run 38495468478 first failed after publication when the current-main API read returned an incomplete response. A bounded failed-job retry then reproduced PROMOTION_SOURCE_MISMATCH: the successful producer named v1.472.1, but the retry constructed v1.472.2. The repair retains the original tag only for the same run number and a nonfuture positive producer attempt. It verifies downloaded source, tag, run ID, producer attempt and package version after all asset hashes, before the current-main promotion check. Independent review accepted this scope. Three new actual PowerShell checks pass, including the causal case that failed before the repair. The combined release group has 11 passed, zero failed and one explicit host-script execution-policy skip. Four documentation checks pass. Authenticated end-to-end retry remains unverified on the repaired source; the prior failed run remains historical.
+
+All four v1.472.1 assets were independently downloaded and matched hosted/provenance hashes and sizes, tied to source622c1923cced5567b40cf469ff6331c29316723a. Package decompression and CRC passed;866 real payload files were extracted into the owned inventory checkout. Setup reports NotSigned. Runtime and installation remain unverified, and the existing installation is untouched.
+
+Native reset repair eaeea590 is undergoing independent review, including a newly identified in-memory authorization revocation boundary before final journal clearing. Full-ring GUI candidate56c61a6 is building and repeating its eight real keyboard tuples. The original renderer sequence now reaches Cancel focus; its Escape assertion requires synchronization with the actual asynchronous close event. Original deadlines remain unchanged. None of these pending units is represented as complete.
+
 ## Explicit pause requested after closeout
 
 The owner explicitly selected pausing the full implementation goal after closeout. No new implementation or verification lane will start. The goal-control pause will be applied after this preservation record is committed, pushed and remotely verified; this document does not claim a tool state before that call.
