@@ -9,7 +9,7 @@ function fixture(receipts,responses=[0]){
  const context=vm.createContext({Error,state:{locked:true,sync:{error:null}},window:{isDestroyed:()=>false},
   browserHandoff:{close:async()=>{calls.push('close');return receipts[Math.min(index++,receipts.length-1)];}},
   app:{exit:code=>calls.push('exit:'+code)},showWindow:()=>calls.push('show'),publish:()=>calls.push('publish'),console:{error:()=>calls.push('diagnostic')},
-  dialog:{showMessageBox:async(_window,options)=>{dialogs.push(options);return{response:responses.shift()??0};}}});
+  uiDialog:{showMessageBox:async(_window,options)=>{dialogs.push(options);return{response:responses.shift()??0};}}});
  const start=main.indexOf('async function closeBrowserHandoff()'),end=main.indexOf('\nasync function savePreferences',start);
  vm.runInContext(main.slice(start,end),context);
  if(typeof context.handleStartupFailure!=='function'){
@@ -30,5 +30,5 @@ test('startup shutdown retries only from the explicit native retry choice',async
  const f=fixture([{verified:false},{verified:true}],[1]);await f.context.handleStartupFailure();assert.equal(f.calls.filter(call=>call==='close').length,2);assert.equal(f.calls.filter(call=>call==='exit:1').length,1);assert.equal(f.dialogs.length,1);assert.match(f.dialogs[0].buttons[1],/Retry/);
 });
 test('a startup recovery surface failure still cannot terminate an unverified owned process',async()=>{
- const f=fixture([{verified:false}]);f.context.dialog.showMessageBox=async()=>{throw Error('Synthetic unavailable dialog');};await f.context.handleStartupFailure();assert.equal(f.calls.filter(call=>call.startsWith('exit:')).length,0);assert.equal(f.context.state.recoveryRequired,true);assert.ok(f.calls.includes('diagnostic'));
+ const f=fixture([{verified:false}]);f.context.uiDialog.showMessageBox=async()=>{throw Error('Synthetic unavailable dialog');};await f.context.handleStartupFailure();assert.equal(f.calls.filter(call=>call.startsWith('exit:')).length,0);assert.equal(f.context.state.recoveryRequired,true);assert.ok(f.calls.includes('diagnostic'));
 });
