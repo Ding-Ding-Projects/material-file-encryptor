@@ -3,8 +3,9 @@
 - [x] Preserve unfinished focus and native reset candidates on their own remotely verified branches.
 - [x] Record independent reset authority/recovery defects and the remaining focus top-edge occlusion.
 - [ ] Repair and independently verify those defects before integrating the unfinished candidates.
-- [ ] Verify archive and private evidence preservation before exact eligible cleanup.
-- [ ] Complete public capture-gallery delivery with reviewed pixels and accurate provenance.
+- [x] Verify complete archive, private evidence preservation and exact eligible ancestry.
+- [ ] Remove only eligible task-owned candidates through an approved route; the attempted removal was rejected before execution, so all remain.
+- [x] Publish and verify the 64-image public gallery, retaining explicit candidate and historical limits.
 
 ## Current complete-interface implementation
 
