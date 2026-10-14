@@ -27,3 +27,13 @@ Focused merge verification: shared-shell73/73; inventory/publication suite61 pas
 Combined converter/model main3a7307ee739da1ea141316d37c4347e9173ad608 was pushed and read back exactly. Reviewed cancellation repair94bbe88866c3bae15ea478ec837b06cb23f2bb64 is integrated here; actual adapter cancellation and translation checks17/17 passed with original deadlines unchanged. The runtime case still cancelled before interaction, so GUI acceptance remains incomplete. A separately reviewed persistent registered Lowlevel binding verified the retained desktop absent and all five saved identities absent before/after; readiness25367.7355ms, actual query58.4655ms under the unchanged20000ms bound. Final receipt SHA25640eb4d5fdad66590905b0fc6a52b96b662c80f9205a3ca84dd9022c094a397b7. Original negative lifecycle receipts remain unchanged. No browser was launched by recovery.
 
 Next bounded implementation is fresh native authorization for the existing read-profile-summary browser scope, in the existing isolated extension workflow branch. Broader credentials, mutation and installed acceptance are not implied.
+
+## Parallel extension lane, October 14
+
+Main c374e2d0392056e8edb2b1740ef1be61831abab9 was pushed and read back; its documentation and Windows release runs succeeded, and the four new extension captures resolve on the live site with their exact byte counts.
+
+- Models tab (local Ollama on 127.0.0.1 only, optional host permission, pull with progress and cancel, confirmed delete, streamed chat) and safe rich-text replies with copy actions: rows ollama-suite and rendered-provider-text moved to partial. Verified with tests and a headless run against a fake local server with the permission prompt stubbed; no real Ollama or installed build.
+- Status tab: release code name read from live published release notes (newest v1.570.1, Classic Har Gow, labelled as not this build because extension version 0.1.0 has no release) and an inventory coverage list; the extension build refuses rows that claim completion without evidence. Rows dim-sum-code-names and completeness-parity moved to partial. Extension rows still missing: 25.
+- Design proposal for an authenticated browser-to-desktop channel is in docs/design/browser-desktop-channel.md and awaits maintainer approval before any feature is built on it. It overlaps the native authorization work above; reconcile the two before implementing either further.
+- Review of the protected settings reset candidate is recorded in HANDOFF.md: do not merge until its protected-store lock file gains abandoned-lock recovery.
+- Owned isolated worktrees for this lane remain in place until an archive-first cleanup.
