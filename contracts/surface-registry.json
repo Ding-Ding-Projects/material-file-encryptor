@@ -12,7 +12,13 @@
     "src/renderer/index.html",
     "src/renderer/app.js",
     "docs/site/workspace.js",
-    "browser-extension/popup.html"
+    "browser-extension/popup.html",
+    "browser-extension/options.html",
+    "browser-extension/options.js",
+    "browser-extension/popup.js",
+    "browser-extension/preferences.js",
+    "browser-extension/background.js",
+    "browser-extension/manifest.json"
   ],
   "templates": {
     "required-families": {
@@ -8469,5 +8475,10 @@
       "template": "required-families",
       "proofs": {}
     }
-  ]
+  ],
+  "currentAssessment": {
+    "manifest": "contracts/feature-delivery.json",
+    "baseline": "5ea562423e90565e582cac67982aca965898e436",
+    "scope": "315 family assessment rows, including 105 independent extension rows. Concrete surface verdicts remain unverified."
+  }
 }

@@ -55,7 +55,7 @@ test('required inventory rejects omission and each missing proof dimension', asy
   assert.deepEqual(validateFeatureDelivery(manifest), []);
   for (const row of manifest.features) {
     const scope = expectedFeatureApplicability(row.id, row.surface);
-    assert.equal(row.status, scope.applies ? 'unverified' : 'not-applicable');
+    assert.equal(row.status, scope.applies ? (row.surface === 'extension' && row.behaviorVerdict === 'missing' ? 'missing' : 'unverified') : 'not-applicable');
     assert.equal(row.builtInteraction, 'unverified'); assert.equal(row.visualEvidence, 'unverified');
     for (const evidence of row.evidence) assert.match(manifest.referenceSources[evidence], /^[a-f0-9]{40}$/);
   }
@@ -127,15 +127,16 @@ test('repository-aware verifier proves blobs and reports absent Git access hones
   const revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repositoryPath, encoding: 'utf8', windowsHide: true }).trim();
   fixture.features[0].implementation = ['src/features/documentation/required-features.mjs'];
   fixture.referenceSources = { 'src/features/documentation/required-features.mjs': revision };
+  for (const row of fixture.features.filter(row => row.surface === 'extension' && row.applicability.applies)) { row.implementation = [row.completion.owner]; row.completion.targets = [{state:'missing',surface:null,selector:null,outcome:'Reference fixture target',nextProof:'Reference fixture verification'}]; fixture.referenceSources[row.completion.owner] = revision; }
   const actual = await verifyFeatureDeliveryReferences(fixture, { repositoryPath });
   assert.deepEqual(actual.errors, []); assert.equal(actual.referenceVerification, 'verified');
-  assert.equal(actual.checkedReferences, 1);
+  assert.equal(actual.checkedReferences, 2);
   // Keep one reference for a small deliberate missing-blob check.
-  const missing = structuredClone(manifest); for (const row of missing.features) for (const field of ['implementation','documentation','localization','tests','evidence','persistence']) row[field] = [];
-  missing.features[0].implementation = ['nonexistent-inventory-reference.md']; missing.referenceSources = { 'nonexistent-inventory-reference.md': revision };
+  const missing = structuredClone(fixture);
+  missing.features[0].implementation = ['nonexistent-inventory-reference.md']; missing.referenceSources = { ...fixture.referenceSources, 'nonexistent-inventory-reference.md': revision }; delete missing.referenceSources['src/features/documentation/required-features.mjs'];
   const rejected = await verifyFeatureDeliveryReferences(missing, { repositoryPath });
-  assert.equal(rejected.referenceVerification, 'failed'); assert.equal(rejected.checkedReferences, 0); assert.equal(rejected.errors.length, 1);
-  const directory = structuredClone(fixture); directory.features[0].implementation = ['src']; directory.referenceSources = { src: revision };
+  assert.equal(rejected.referenceVerification, 'failed'); assert.equal(rejected.checkedReferences, 1); assert.equal(rejected.errors.length, 1);
+  const directory = structuredClone(fixture); directory.features[0].implementation = ['src']; directory.referenceSources = {...fixture.referenceSources, src: revision }; delete directory.referenceSources['src/features/documentation/required-features.mjs'];
   const notFile = await verifyFeatureDeliveryReferences(directory, { repositoryPath });
   assert.equal(notFile.referenceVerification, 'failed'); assert.match(notFile.errors[0], /not a file/);
   const parentRepository = await mkdtemp(path.join(tmpdir(), 'inventory-parent-git-'));
@@ -146,7 +147,7 @@ test('repository-aware verifier proves blobs and reports absent Git access hones
     // An empty child alone discovers its parent, so it is not a no-repository fixture.
     const inherited = await verifyFeatureDeliveryReferences(fixture, { repositoryPath: noRepository });
     assert.equal(inherited.referenceVerification, 'failed');
-    assert.equal(inherited.errors.length, 1);
+    assert.equal(inherited.errors.length, 2);
     // A local discovery boundary is deterministic even when the temp directory
     // itself lives inside another checkout. No process-wide Git settings change.
     await writeFile(path.join(noRepository, '.git'), 'gitdir: ./absent-owned-metadata\n');
@@ -165,4 +166,10 @@ test('status without client is explicit and configured snapshots cannot expose s
   assert.deepEqual(Object.keys(service.snapshot()).sort(), ['lastSuccessAt', 'message', 'state']);
   await service.checkpoint('A step', { percent: 1 }); assert.equal(checkpoint.summary, 'A step');
   assert.equal(await service.finish('waiting'), 'waiting');
+});
+
+test('extension inventory rejects whole-family omission, borrowed ownership and missing completion evidence', async () => {
+ const manifest = await inventory(); assert.equal(manifest.features.length,315);
+ assert.equal(manifest.features.filter(row=>row.surface==='extension').length,105);
+ for(const mutate of [m=>m.features=m.features.filter(row=>row.surface!=='extension'),m=>m.features.push(structuredClone(m.features.find(row=>row.surface==='extension'))),m=>delete m.features.find(row=>row.surface==='extension').completion.owner,m=>delete m.features.find(row=>row.surface==='extension').completion.targets[0].nextProof,m=>m.features.find(row=>row.surface==='extension').completion.targets[0].surface='desktop:view-settings',m=>m.extensionTargets[0].route='src/renderer/index.html',m=>m.features.find(row=>row.surface==='extension').status='implemented']) {const broken=structuredClone(manifest);mutate(broken);assert.ok(validateFeatureDelivery(broken).length);}
 });

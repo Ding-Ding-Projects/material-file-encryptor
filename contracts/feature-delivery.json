@@ -2,7 +2,8 @@
   "schemaVersion": 1,
   "surfaces": [
     "desktop",
-    "site"
+    "site",
+    "extension"
   ],
   "features": [
     {
@@ -11773,6 +11774,4935 @@
         "visual": "unverified",
         "reason": "No complete current-source surface acceptance receipt. Native owner receipts and earlier defect captures are scoped separately in assessmentContext."
       }
+    },
+    {
+      "id": "language",
+      "surface": "extension",
+      "status": "unverified",
+      "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/popup.js",
+        "browser-extension/popup.html",
+        "browser-extension/preferences.js",
+        "browser-extension/background.js"
+      ],
+      "documentation": [],
+      "localization": [
+        "browser-extension/options.js",
+        "browser-extension/popup.js"
+      ],
+      "tests": [],
+      "evidence": [],
+      "persistence": [
+        "browser-extension/preferences.js"
+      ],
+      "reason": "Partial extension source exists; full behavior and current built/visual acceptance are unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "language",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "wiring",
+          "proof"
+        ],
+        "action": "Complete the extension language workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
+            "outcome": "Complete language behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension language interactions and retain source-bound build identity and visual receipt."
+          },
+          {
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
+            "outcome": "Complete language behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension language interactions and retain source-bound build identity and visual receipt."
+          }
+        ]
+      }
+    },
+    {
+      "id": "funny-emoji",
+      "surface": "extension",
+      "status": "unverified",
+      "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/popup.js",
+        "browser-extension/popup.html",
+        "browser-extension/preferences.js",
+        "browser-extension/background.js"
+      ],
+      "documentation": [],
+      "localization": [
+        "browser-extension/options.js",
+        "browser-extension/popup.js"
+      ],
+      "tests": [],
+      "evidence": [],
+      "persistence": [
+        "browser-extension/preferences.js"
+      ],
+      "reason": "Partial extension source exists; full behavior and current built/visual acceptance are unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "funny-emoji",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "wiring",
+          "proof"
+        ],
+        "action": "Complete the extension funny-emoji workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
+            "outcome": "Complete funny-emoji behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension funny-emoji interactions and retain source-bound build identity and visual receipt."
+          },
+          {
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
+            "outcome": "Complete funny-emoji behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension funny-emoji interactions and retain source-bound build identity and visual receipt."
+          }
+        ]
+      }
+    },
+    {
+      "id": "personal-vocabulary",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "personal-vocabulary",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension personal-vocabulary workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing personal-vocabulary target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "school-mode",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "school-mode",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension school-mode workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing school-mode target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "narration",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "narration",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension narration workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing narration target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "scheduled-settings",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "scheduled-settings",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension scheduled-settings workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing scheduled-settings target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "display-name",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "display-name",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension display-name workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing display-name target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "adhd-modes",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "adhd-modes",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension adhd-modes workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing adhd-modes target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "dim-sum",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "dim-sum",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension dim-sum workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing dim-sum target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "dim-sum-photo-source",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "dim-sum-photo-source",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension dim-sum-photo-source workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing dim-sum-photo-source target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "material-design",
+      "surface": "extension",
+      "status": "unverified",
+      "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/popup.js",
+        "browser-extension/popup.html",
+        "browser-extension/preferences.js",
+        "browser-extension/background.js"
+      ],
+      "documentation": [],
+      "localization": [
+        "browser-extension/options.js",
+        "browser-extension/popup.js"
+      ],
+      "tests": [],
+      "evidence": [],
+      "persistence": [
+        "browser-extension/preferences.js"
+      ],
+      "reason": "Partial extension source exists; full behavior and current built/visual acceptance are unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "material-design",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "wiring",
+          "proof"
+        ],
+        "action": "Complete the extension material-design workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
+            "outcome": "Complete material-design behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension material-design interactions and retain source-bound build identity and visual receipt."
+          },
+          {
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
+            "outcome": "Complete material-design behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension material-design interactions and retain source-bound build identity and visual receipt."
+          }
+        ]
+      }
+    },
+    {
+      "id": "workflow-navigation",
+      "surface": "extension",
+      "status": "unverified",
+      "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/popup.js",
+        "browser-extension/popup.html",
+        "browser-extension/preferences.js",
+        "browser-extension/background.js"
+      ],
+      "documentation": [],
+      "localization": [
+        "browser-extension/options.js",
+        "browser-extension/popup.js"
+      ],
+      "tests": [],
+      "evidence": [],
+      "persistence": [
+        "browser-extension/preferences.js"
+      ],
+      "reason": "Partial extension source exists; full behavior and current built/visual acceptance are unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "workflow-navigation",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "wiring",
+          "proof"
+        ],
+        "action": "Complete the extension workflow-navigation workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
+            "outcome": "Complete workflow-navigation behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension workflow-navigation interactions and retain source-bound build identity and visual receipt."
+          },
+          {
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
+            "outcome": "Complete workflow-navigation behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension workflow-navigation interactions and retain source-bound build identity and visual receipt."
+          }
+        ]
+      }
+    },
+    {
+      "id": "motion",
+      "surface": "extension",
+      "status": "unverified",
+      "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/popup.js",
+        "browser-extension/popup.html",
+        "browser-extension/preferences.js",
+        "browser-extension/background.js"
+      ],
+      "documentation": [],
+      "localization": [
+        "browser-extension/options.js",
+        "browser-extension/popup.js"
+      ],
+      "tests": [],
+      "evidence": [],
+      "persistence": [
+        "browser-extension/preferences.js"
+      ],
+      "reason": "Partial extension source exists; full behavior and current built/visual acceptance are unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "motion",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "wiring",
+          "proof"
+        ],
+        "action": "Complete the extension motion workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
+            "outcome": "Complete motion behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension motion interactions and retain source-bound build identity and visual receipt."
+          },
+          {
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
+            "outcome": "Complete motion behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension motion interactions and retain source-bound build identity and visual receipt."
+          }
+        ]
+      }
+    },
+    {
+      "id": "appearance-editor",
+      "surface": "extension",
+      "status": "unverified",
+      "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/popup.js",
+        "browser-extension/popup.html",
+        "browser-extension/preferences.js",
+        "browser-extension/background.js"
+      ],
+      "documentation": [],
+      "localization": [
+        "browser-extension/options.js",
+        "browser-extension/popup.js"
+      ],
+      "tests": [],
+      "evidence": [],
+      "persistence": [
+        "browser-extension/preferences.js"
+      ],
+      "reason": "Partial extension source exists; full behavior and current built/visual acceptance are unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "appearance-editor",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "wiring",
+          "proof"
+        ],
+        "action": "Complete the extension appearance-editor workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
+            "outcome": "Complete appearance-editor behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension appearance-editor interactions and retain source-bound build identity and visual receipt."
+          },
+          {
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
+            "outcome": "Complete appearance-editor behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension appearance-editor interactions and retain source-bound build identity and visual receipt."
+          }
+        ]
+      }
+    },
+    {
+      "id": "color-picker",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "color-picker",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension color-picker workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing color-picker target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "logo-customization",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "logo-customization",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension logo-customization workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing logo-customization target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "overlay-panels",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "overlay-panels",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension overlay-panels workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing overlay-panels target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "collapse-filters",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "collapse-filters",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension collapse-filters workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing collapse-filters target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "accessibility-sizing",
+      "surface": "extension",
+      "status": "unverified",
+      "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/popup.js",
+        "browser-extension/popup.html",
+        "browser-extension/preferences.js",
+        "browser-extension/background.js"
+      ],
+      "documentation": [],
+      "localization": [
+        "browser-extension/options.js",
+        "browser-extension/popup.js"
+      ],
+      "tests": [],
+      "evidence": [],
+      "persistence": [
+        "browser-extension/preferences.js"
+      ],
+      "reason": "Partial extension source exists; full behavior and current built/visual acceptance are unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "accessibility-sizing",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "wiring",
+          "proof"
+        ],
+        "action": "Complete the extension accessibility-sizing workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
+            "outcome": "Complete accessibility-sizing behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension accessibility-sizing interactions and retain source-bound build identity and visual receipt."
+          },
+          {
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
+            "outcome": "Complete accessibility-sizing behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension accessibility-sizing interactions and retain source-bound build identity and visual receipt."
+          }
+        ]
+      }
+    },
+    {
+      "id": "functional-ui",
+      "surface": "extension",
+      "status": "unverified",
+      "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/popup.js",
+        "browser-extension/popup.html",
+        "browser-extension/preferences.js",
+        "browser-extension/background.js"
+      ],
+      "documentation": [],
+      "localization": [
+        "browser-extension/options.js",
+        "browser-extension/popup.js"
+      ],
+      "tests": [],
+      "evidence": [],
+      "persistence": [
+        "browser-extension/preferences.js"
+      ],
+      "reason": "Partial extension source exists; full behavior and current built/visual acceptance are unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "functional-ui",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "wiring",
+          "proof"
+        ],
+        "action": "Complete the extension functional-ui workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
+            "outcome": "Complete functional-ui behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension functional-ui interactions and retain source-bound build identity and visual receipt."
+          },
+          {
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
+            "outcome": "Complete functional-ui behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension functional-ui interactions and retain source-bound build identity and visual receipt."
+          }
+        ]
+      }
+    },
+    {
+      "id": "tabs",
+      "surface": "extension",
+      "status": "unverified",
+      "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/popup.js",
+        "browser-extension/popup.html",
+        "browser-extension/preferences.js",
+        "browser-extension/background.js"
+      ],
+      "documentation": [],
+      "localization": [
+        "browser-extension/options.js",
+        "browser-extension/popup.js"
+      ],
+      "tests": [],
+      "evidence": [],
+      "persistence": [
+        "browser-extension/preferences.js"
+      ],
+      "reason": "Partial extension source exists; full behavior and current built/visual acceptance are unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "tabs",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "wiring",
+          "proof"
+        ],
+        "action": "Complete the extension tabs workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
+            "outcome": "Complete tabs behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension tabs interactions and retain source-bound build identity and visual receipt."
+          },
+          {
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
+            "outcome": "Complete tabs behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension tabs interactions and retain source-bound build identity and visual receipt."
+          }
+        ]
+      }
+    },
+    {
+      "id": "regex-search",
+      "surface": "extension",
+      "status": "unverified",
+      "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/popup.js",
+        "browser-extension/popup.html",
+        "browser-extension/preferences.js",
+        "browser-extension/background.js"
+      ],
+      "documentation": [],
+      "localization": [
+        "browser-extension/options.js",
+        "browser-extension/popup.js"
+      ],
+      "tests": [],
+      "evidence": [],
+      "persistence": [
+        "browser-extension/preferences.js"
+      ],
+      "reason": "Partial extension source exists; full behavior and current built/visual acceptance are unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "regex-search",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "wiring",
+          "proof"
+        ],
+        "action": "Complete the extension regex-search workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
+            "outcome": "Complete regex-search behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension regex-search interactions and retain source-bound build identity and visual receipt."
+          },
+          {
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
+            "outcome": "Complete regex-search behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension regex-search interactions and retain source-bound build identity and visual receipt."
+          }
+        ]
+      }
+    },
+    {
+      "id": "command-palette",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "command-palette",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension command-palette workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing command-palette target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "context-menus",
+      "surface": "extension",
+      "status": "unverified",
+      "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/popup.js",
+        "browser-extension/popup.html",
+        "browser-extension/preferences.js",
+        "browser-extension/background.js"
+      ],
+      "documentation": [],
+      "localization": [
+        "browser-extension/options.js",
+        "browser-extension/popup.js"
+      ],
+      "tests": [],
+      "evidence": [],
+      "persistence": [
+        "browser-extension/preferences.js"
+      ],
+      "reason": "Partial extension source exists; full behavior and current built/visual acceptance are unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "context-menus",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "wiring",
+          "proof"
+        ],
+        "action": "Complete the extension context-menus workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
+            "outcome": "Complete context-menus behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension context-menus interactions and retain source-bound build identity and visual receipt."
+          },
+          {
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
+            "outcome": "Complete context-menus behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension context-menus interactions and retain source-bound build identity and visual receipt."
+          }
+        ]
+      }
+    },
+    {
+      "id": "menu-shortcuts",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "menu-shortcuts",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension menu-shortcuts workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing menu-shortcuts target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "rich-controls",
+      "surface": "extension",
+      "status": "unverified",
+      "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/popup.js",
+        "browser-extension/popup.html",
+        "browser-extension/preferences.js",
+        "browser-extension/background.js"
+      ],
+      "documentation": [],
+      "localization": [
+        "browser-extension/options.js",
+        "browser-extension/popup.js"
+      ],
+      "tests": [],
+      "evidence": [],
+      "persistence": [
+        "browser-extension/preferences.js"
+      ],
+      "reason": "Partial extension source exists; full behavior and current built/visual acceptance are unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "rich-controls",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "wiring",
+          "proof"
+        ],
+        "action": "Complete the extension rich-controls workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
+            "outcome": "Complete rich-controls behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension rich-controls interactions and retain source-bound build identity and visual receipt."
+          },
+          {
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
+            "outcome": "Complete rich-controls behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension rich-controls interactions and retain source-bound build identity and visual receipt."
+          }
+        ]
+      }
+    },
+    {
+      "id": "guided-forms",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "guided-forms",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension guided-forms workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing guided-forms target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "settings-explanations",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "settings-explanations",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension settings-explanations workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing settings-explanations target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "blank-editors",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "blank-editors",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension blank-editors workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing blank-editors target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "super-confirmation",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "super-confirmation",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension super-confirmation workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing super-confirmation target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "element-locks",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "element-locks",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension element-locks workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing element-locks target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "support-tickets",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "support-tickets",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension support-tickets workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing support-tickets target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "unlock-ladder",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "unlock-ladder",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension unlock-ladder workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing unlock-ladder target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "authenticator",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "authenticator",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension authenticator workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing authenticator target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "qr-pairing",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "qr-pairing",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension qr-pairing workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing qr-pairing target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "honest-monetization",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "honest-monetization",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension honest-monetization workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing honest-monetization target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "local-history",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "local-history",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension local-history workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing local-history target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "exports",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "exports",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension exports workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing exports target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "bulk-actions",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "bulk-actions",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension bulk-actions workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing bulk-actions target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "changelog",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "changelog",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension changelog workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing changelog target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "offline-docs",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "offline-docs",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension offline-docs workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing offline-docs target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "rendered-provider-text",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "rendered-provider-text",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension rendered-provider-text workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing rendered-provider-text target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "notifications",
+      "surface": "extension",
+      "status": "unverified",
+      "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/popup.js",
+        "browser-extension/popup.html",
+        "browser-extension/preferences.js",
+        "browser-extension/background.js"
+      ],
+      "documentation": [],
+      "localization": [
+        "browser-extension/options.js",
+        "browser-extension/popup.js"
+      ],
+      "tests": [],
+      "evidence": [],
+      "persistence": [
+        "browser-extension/preferences.js"
+      ],
+      "reason": "Partial extension source exists; full behavior and current built/visual acceptance are unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "notifications",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "wiring",
+          "proof"
+        ],
+        "action": "Complete the extension notifications workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
+            "outcome": "Complete notifications behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension notifications interactions and retain source-bound build identity and visual receipt."
+          },
+          {
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
+            "outcome": "Complete notifications behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension notifications interactions and retain source-bound build identity and visual receipt."
+          }
+        ]
+      }
+    },
+    {
+      "id": "file-converter",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "file-converter",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension file-converter workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing file-converter target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "ollama-suite",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "ollama-suite",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension ollama-suite workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing ollama-suite target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "external-editor",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "external-editor",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension external-editor workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing external-editor target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "download-handoff",
+      "surface": "extension",
+      "status": "unverified",
+      "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/popup.js",
+        "browser-extension/popup.html",
+        "browser-extension/preferences.js",
+        "browser-extension/background.js"
+      ],
+      "documentation": [],
+      "localization": [
+        "browser-extension/options.js",
+        "browser-extension/popup.js"
+      ],
+      "tests": [],
+      "evidence": [],
+      "persistence": [
+        "browser-extension/preferences.js"
+      ],
+      "reason": "Partial extension source exists; full behavior and current built/visual acceptance are unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "download-handoff",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "wiring",
+          "proof"
+        ],
+        "action": "Complete the extension download-handoff workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
+            "outcome": "Complete download-handoff behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension download-handoff interactions and retain source-bound build identity and visual receipt."
+          },
+          {
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
+            "outcome": "Complete download-handoff behavior on this independently owned surface.",
+            "nextProof": "Exercise installed extension download-handoff interactions and retain source-bound build identity and visual receipt."
+          }
+        ]
+      }
+    },
+    {
+      "id": "forge-publishing",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "forge-publishing",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension forge-publishing workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing forge-publishing target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "progress-recovery",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "progress-recovery",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension progress-recovery workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing progress-recovery target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "completeness-parity",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "completeness-parity",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension completeness-parity workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing completeness-parity target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "front-provenance",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "front-provenance",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension front-provenance workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing front-provenance target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "product-evidence",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "product-evidence",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension product-evidence workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing product-evidence target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "screen-recording",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "screen-recording",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension screen-recording workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing screen-recording target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "design-reference-parity",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "design-reference-parity",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension design-reference-parity workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing design-reference-parity target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "design-folder",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "design-folder",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the design-folder product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing design-folder target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "cheap-jor-matrix",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "cheap-jor-matrix",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension cheap-jor-matrix workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing cheap-jor-matrix target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "public-screenshot-gallery",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "public-screenshot-gallery",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension public-screenshot-gallery workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing public-screenshot-gallery target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "landing-site",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "landing-site",
+          "declaredScope": "Named product surface with companion support"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the landing-site product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing landing-site target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "deen-wah-site",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "deen-wah-site",
+          "declaredScope": "Named product surface with companion support"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the deen-wah-site product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing deen-wah-site target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "installer-download-button",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "installer-download-button",
+          "declaredScope": "Named product surface with companion support"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the installer-download-button product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing installer-download-button target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "feature-articles",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "feature-articles",
+          "declaredScope": "Named product surface with companion support"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the feature-articles product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing feature-articles target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "vendored-fonts",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "vendored-fonts",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension vendored-fonts workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing vendored-fonts target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "shared-link-embed",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "shared-link-embed",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension shared-link-embed workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing shared-link-embed target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "homepage-link",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "homepage-link",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension homepage-link workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing homepage-link target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "vocabulary-unlock-boundary",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "vocabulary-unlock-boundary",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension vocabulary-unlock-boundary workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing vocabulary-unlock-boundary target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "status-hub",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "status-hub",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension status-hub workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing status-hub target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "discord-status-bridge",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "Independently reviewed scope: Status Hub server implementation only.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "The declared canonical scope excludes this extension product.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "discord-status-bridge",
+          "declaredScope": "Status Hub server implementation only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "panic-webhooks",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "Independently reviewed scope: Status Hub server implementation only.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "The declared canonical scope excludes this extension product.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "panic-webhooks",
+          "declaredScope": "Status Hub server implementation only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "tidbyt-displays",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "Independently reviewed scope: Status Hub server implementation only.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "The declared canonical scope excludes this extension product.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "tidbyt-displays",
+          "declaredScope": "Status Hub server implementation only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "build-entrypoints",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "build-entrypoints",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the build-entrypoints product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing build-entrypoints target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "fresh-build-run-command",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "fresh-build-run-command",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the fresh-build-run-command product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing fresh-build-run-command target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "dependency-fetcher",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "dependency-fetcher",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the dependency-fetcher product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing dependency-fetcher target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "bundled-dependencies",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "bundled-dependencies",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension bundled-dependencies workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing bundled-dependencies target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "squirrel-installer",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "squirrel-installer",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension squirrel-installer workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing squirrel-installer target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "self-signing",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "self-signing",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the self-signing product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing self-signing target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "auto-updates",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "auto-updates",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension auto-updates workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing auto-updates target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "app-icon",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "app-icon",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension app-icon workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing app-icon target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "release-workflow",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "release-workflow",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the release-workflow product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing release-workflow target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "release-timing",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "release-timing",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the release-timing product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing release-timing target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "release-line-counts",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "release-line-counts",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the release-line-counts product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing release-line-counts target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "release-dim-sum-photo",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "release-dim-sum-photo",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the release-dim-sum-photo product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing release-dim-sum-photo target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "dim-sum-code-names",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "dim-sum-code-names",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension dim-sum-code-names workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing dim-sum-code-names target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "ci-bootstrap",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "ci-bootstrap",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the ci-bootstrap product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing ci-bootstrap target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "runner-selection",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "runner-selection",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the runner-selection product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing runner-selection target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "encrypted-public-builder",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "Independently reviewed scope: Private repositories only.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "The declared canonical scope excludes this extension product.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "encrypted-public-builder",
+          "declaredScope": "Private repositories only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "tabbed-readme",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "tabbed-readme",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the tabbed-readme product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing tabbed-readme target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "human-time-estimate",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "human-time-estimate",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the human-time-estimate product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing human-time-estimate target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "sanitized-instruction-copy",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "sanitized-instruction-copy",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the sanitized-instruction-copy product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing sanitized-instruction-copy target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "agents-md-vocabulary-block",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "agents-md-vocabulary-block",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the agents-md-vocabulary-block product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing agents-md-vocabulary-block target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "vocabulary-hash-lock",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "vocabulary-hash-lock",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the vocabulary-hash-lock product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing vocabulary-hash-lock target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "roadmap-checklist",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "roadmap-checklist",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the roadmap-checklist product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing roadmap-checklist target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "feature-docs",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "feature-docs",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the feature-docs product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing feature-docs target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "postman-collections",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "postman-collections",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the postman-collections product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing postman-collections target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "wiki-documentation-sync",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "wiki-documentation-sync",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the extension wiki-documentation-sync workflow with accessible controls and persistence, then verify its own installed surfaces.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing wiki-documentation-sync target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "handoff-record",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "handoff-record",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the handoff-record product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing handoff-record target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "closeout-prompt",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "closeout-prompt",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the closeout-prompt product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing closeout-prompt target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "discussion-records",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "discussion-records",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the discussion-records product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing discussion-records target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "project-board",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "project-board",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the project-board product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing project-board target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "operational-skill",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "repository",
+        "applies": true,
+        "directSurface": false,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "operational-skill",
+          "declaredScope": "Repository obligation supporting the product"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Complete the operational-skill product or repository obligation supporting the extension and verify its extension-facing outcome.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing operational-skill target within its declared scope.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
+    },
+    {
+      "id": "readme-prompt-banner",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "Independently reviewed scope: Canonical instruction repository only.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "canonical-only",
+        "applies": false,
+        "directSurface": false,
+        "reason": "The declared canonical scope excludes this extension product.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "readme-prompt-banner",
+          "declaredScope": "Canonical instruction repository only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "uh-single-file-editions",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "Independently reviewed scope: Canonical instruction repository only.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "canonical-only",
+        "applies": false,
+        "directSurface": false,
+        "reason": "The declared canonical scope excludes this extension product.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "uh-single-file-editions",
+          "declaredScope": "Canonical instruction repository only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "project-profile",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "Independently reviewed scope: Canonical instruction repository only.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "canonical-only",
+        "applies": false,
+        "directSurface": false,
+        "reason": "The declared canonical scope excludes this extension product.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "project-profile",
+          "declaredScope": "Canonical instruction repository only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "roblox-model-catalogue",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "Independently reviewed scope: Roblox/game projects only.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "The declared canonical scope excludes this extension product.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "roblox-model-catalogue",
+          "declaredScope": "Roblox/game projects only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "roblox-visual-realism",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "Independently reviewed scope: Roblox/game projects only.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "The declared canonical scope excludes this extension product.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "roblox-visual-realism",
+          "declaredScope": "Roblox/game projects only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "minecraft-server-manager",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "No complete extension workflow exists for this family; desktop implementations are not extension proof.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing capability does not justify exemption.",
+        "source": "Canonical scope reviewed independently.",
+        "scopeReference": {
+          "entry": "minecraft-server-manager",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Implement minecraft-server-manager within its declared scope and verify independently.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Register and implement the missing minecraft-server-manager target.",
+            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+          }
+        ]
+      }
     }
   ],
   "referenceSources": {
@@ -11976,7 +16906,13 @@
     "src/main/protected-forge-accounts.js": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
     "src/main/protected-forge-device-transport.js": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
     "test/protected-forge-accounts.test.js": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
-    "docs/evidence/storage-packing-e06df2a.json": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c"
+    "docs/evidence/storage-packing-e06df2a.json": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
+    "browser-extension/options.js": "5ea562423e90565e582cac67982aca965898e436",
+    "browser-extension/options.html": "5ea562423e90565e582cac67982aca965898e436",
+    "browser-extension/popup.js": "5ea562423e90565e582cac67982aca965898e436",
+    "browser-extension/popup.html": "5ea562423e90565e582cac67982aca965898e436",
+    "browser-extension/preferences.js": "5ea562423e90565e582cac67982aca965898e436",
+    "browser-extension/background.js": "5ea562423e90565e582cac67982aca965898e436"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
@@ -12005,5 +16941,55 @@
       "installedLifecycle": "Actual installation, installed update and removal explicitly deferred.",
       "storageReceipt": "Owner reports dense synthetic writes passed; final detach timed out and reopen was not reached. No whole-lifecycle acceptance claimed."
     }
-  ]
+  ],
+  "extensionTargets": [
+    {
+      "id": "extension:options",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": ""
+    },
+    {
+      "id": "extension:options:connection",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#panel-connection"
+    },
+    {
+      "id": "extension:options:message-preview",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#message-preview"
+    },
+    {
+      "id": "extension:options:personalization",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#panel-personalization"
+    },
+    {
+      "id": "extension:options:status",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#panel-status"
+    },
+    {
+      "id": "extension:popup",
+      "family": "extension",
+      "route": "browser-extension/popup.html",
+      "owner": "browser-extension/popup.js",
+      "selector": ""
+    }
+  ],
+  "currentAssessmentContext": {
+    "baseline": "5ea562423e90565e582cac67982aca965898e436",
+    "scope": "Independent extension source assessment. Historical desktop and site rows and assessmentContext remain unchanged.",
+    "ownership": "browser-extension/options.js owns extension completion planning; existing routes retain their own exact owners.",
+    "gaps": "Behavior, native mediation wiring, source-bound built interaction and visual evidence remain incomplete. No runtime acceptance claimed."
+  }
 }
