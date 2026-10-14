@@ -15246,16 +15246,29 @@
     {
       "id": "installer-download-button",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/release-code-name.js",
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css",
+        "forge.config.cjs"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "tests": [
+        "test/browser-extension-release-code-name.test.js",
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Link the extension delivery instructions to verified current downloadable release assets. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The extension ships inside the desktop installer (packaged as an extra resource), and the workspace article explains where the files land and how to load them unpacked. After Check releases, the Status tab links the found release's MaterialFileEncryptor-Setup.exe only when GitHub reports that exact asset as uploaded with a size at its expected address; drafts and prereleases never qualify. A headless run against the live releases linked v1.580.1 at 402,864,128 bytes, matching the asset GitHub reports. The installed folder layout follows the Squirrel.Windows convention and was not checked on an installed copy.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -15269,7 +15282,7 @@
           "declaredScope": "Named product surface with companion support"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -15280,14 +15293,14 @@
         "action": "Link the extension delivery instructions to verified current downloadable release assets.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "#release-installer",
             "outcome": "Link the extension delivery instructions to verified current downloadable release assets.",
-            "nextProof": "Exercise link the extension delivery instructions to verified current downloadable release assets on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Install the linked release on a clean profile, load its resources\\browser-extension folder unpacked, and retain the installed-build identity and visual receipts."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Nothing is stored; the release list is read again each time Check releases is chosen."
       }
     },
     {
