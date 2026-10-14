@@ -127,6 +127,8 @@ pre:empty{display:none}
 tbody tr{animation:md-fade-up-in var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard) both}
 /* Labelled outlined selects need room for their floating label. */
 .workflow-tools>.row{display:flex;flex-wrap:wrap;gap:8px}
+/* Workflow text fields span the column instead of shrinking to their label. */
+.workflow-field{display:flex;min-width:0}.workflow-field>md-outlined-text-field{flex:1;min-width:0}
 .workflow-filter>md-text-button svg{transition:transform var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard)}
 .workflow-filter>md-text-button[aria-expanded="true"] svg{transform:rotate(180deg)}
 

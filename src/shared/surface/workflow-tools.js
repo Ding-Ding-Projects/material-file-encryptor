@@ -21,7 +21,7 @@ export function mount(host,{services={},translate=value=>value}={}){
  const button=(label,action)=>element('md-outlined-button',{text:t(label),onclick:()=>Promise.resolve().then(action).catch(showError)});
  const bindBusy=async(control,action)=>{if(loading)return;loading=true;control.disabled=true;try{return await action();}finally{loading=false;control.disabled=false;}};
  const field=(label,{multiline=false,value='',readOnly=false}={})=>{
-  const wrap=element('div'),input=element('md-outlined-text-field',{label:t(label),value,type:multiline?'textarea':'text',readOnly,rows:multiline?8:1,maxLength:262144});
+  const wrap=element('div',{class:'workflow-field'}),input=element('md-outlined-text-field',{label:t(label),value,type:multiline?'textarea':'text',readOnly,rows:multiline?8:1,maxLength:262144});
   // The clear action is the field's own trailing icon button rather than a
   // separate outlined button, so the shared field clear helper stays out.
   wrap.append(input);let clear;if(!readOnly){clear=element('md-icon-button',{'aria-label':t(`Clear ${label}`),slot:'trailing-icon',onclick:()=>{if(input.readOnly||input.disabled)return;input.value='';input.dispatchEvent(new Event('input'));input.focus();}});clear.append(controlIcon('clear',doc));input.append(clear);}return{wrap,input,clear};
