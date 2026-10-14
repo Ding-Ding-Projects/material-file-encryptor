@@ -136,3 +136,17 @@ test('desktop access validation admits the independent required action inventory
  for(const [action,payload]of Object.entries(required)){assert.equal(validateFeatureRequest('access',action,payload).action,action);assert.throws(()=>validateFeatureRequest('access',action,{...payload,actor:'forged'}));assert.throws(()=>validateFeatureRequest('access',action,payload,{browser:true}));}
  assert.throws(()=>validateFeatureRequest('access','execute',{}));
 });
+test('a read that never settles does not hold exit open while user-gated work still does',async t=>{
+ const directory=await fixture(t);let release;
+ const selecting=new Promise(resolve=>{release=resolve;});
+ const services=createFeatureServices({dataDirectory:directory,applicationRoot:directory,safeStorage,getMainFrame:()=>null,dialog:{showOpenDialog:()=>selecting},getWindow:()=>null,openPath:async()=>{},accessibilityState:()=>new Promise(()=>{})});
+ try{
+  void services.request('personalization','accessibilityState',{}).catch(()=>{});
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(await services.pending(),0,'a stuck passive read is not pending work');
+  const picking=services.request('workflow','pickDocument',{});
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.ok(await services.pending()>0,'a picker waiting on the user still blocks exit');
+  release({canceled:true,filePaths:[]});assert.equal(await picking,null);assert.equal(await services.pending(),0);
+ }finally{release({canceled:true,filePaths:[]});await services.close();}
+});
