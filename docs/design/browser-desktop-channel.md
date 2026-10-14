@@ -158,7 +158,8 @@ and the installed end-to-end path) is still outstanding for every scope.
 | `set-school-mode` | Re-authenticate | `changed`, `unchanged`, `rejected`, `busy` or `unavailable`, and the resulting on/off state; Windows Hello is not used by this build, so the check is the vault password in the desktop | Implemented |
 | `read-element-locks` | Status | the reviewed extension tab ids that currently have a desktop lock record; no record contents | Implemented |
 | `set-element-lock` | Re-authenticate | for locking and unlocking alike: `changed`, `unchanged`, `rejected`, `busy` or `unavailable`, the reviewed target and its resulting locked state; Windows Hello is not used by this build, so the check is the vault password in the desktop | Implemented |
-| `request-unlock-step` | Re-authenticate | the new unlock level | Not implemented |
+| `read-unlock-ladder` | Status | the current level id among the ordered level ids, the end of the shared cooldown or `null`, and the recovery state (`none`, `available` or `required`); no challenge or secret | Implemented |
+| `request-unlock-step` | Re-authenticate | `advanced`, `cooldown`, `complete`, `rejected`, `busy` or `unavailable`, with the level the desktop reports afterwards; a running cooldown is reported and never skipped, the desktop's waiting challenges stay in the desktop, and Windows Hello is not used by this build, so the check is the vault password in the desktop | Implemented |
 | `open-in-editor` | Confirm | `opened` or a plain failure reason | Not implemented |
 | `convert-file` | Confirm | job id and status updates | Not implemented |
 | `begin-qr-pairing` | Confirm | a short-lived pairing QR image for a phone | Not implemented |

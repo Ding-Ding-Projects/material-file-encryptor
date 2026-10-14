@@ -1,6 +1,9 @@
 const HOST='org.dingding.material_file_encryptor.downloads';
 // The reviewed list of lockable workspace tabs. src/shared/extension-lock-targets.js holds the same list; a test compares them.
 const LOCK_TABS=['connection','personalization','changelog','notes','docs','support','dimsum','models','status'];
+// Unlock ladder answers: the desktop sends ordered level ids and an optional end time for its shared cooldown.
+const ladderLevelsValid=levels=>Array.isArray(levels)&&levels.length>=2&&levels.length<=16&&levels.every(level=>typeof level==='string'&&/^[a-z0-9-]{1,24}$/.test(level))&&new Set(levels).size===levels.length;
+const ladderCooldownValid=value=>value===null||Number.isSafeInteger(value)&&value>0;
 let port=null,session=null,sequence=0,pending=null,captureId=null,connectionEpoch=0;
 function disconnect(){connectionEpoch++;port?.disconnect();port=null;session=null;captureId=null;if(pending){clearTimeout(pending.timer);pending.reject(new Error('Desktop connection closed.'));pending=null;}}
 function connect(){if(port)return port;port=chrome.runtime.connectNative(HOST);const ownPort=port;port.onDisconnect.addListener(()=>{if(port!==ownPort)return;connectionEpoch++;port=null;session=null;captureId=null;if(pending){clearTimeout(pending.timer);pending.reject(new Error('Desktop receiver is unavailable.'));pending=null;}});port.onMessage.addListener(message=>{if(port!==ownPort||!pending)return;const request=pending;pending=null;clearTimeout(request.timer);if(message?.type==='error')request.reject(new Error('Desktop did not accept the handoff.'));else request.resolve(message);});return port;}
@@ -101,6 +104,25 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{if(sender.id!==c
    if(session!==ownSession||connectionEpoch!==epoch||!value||Object.keys(value).sort().join(',')!=='locked,schemaVersion,state,target,type'||value.type!=='element-lock-set'||value.schemaVersion!==1||value.target!==target||!['changed','unchanged','rejected','busy','unavailable'].includes(value.state)||value.locked!==null&&typeof value.locked!=='boolean')throw Error('Invalid element lock response.');
    respond({schemaVersion:1,state:value.state,target,locked:value.locked});
   }).catch(()=>respond({error:'Lock request did not complete. Open and unlock the desktop, pair again and retry.'}));return true;
+ }
+ if(message?.type==='unlock-ladder-read'){
+  if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1){respond({error:'Unlock level request is unavailable.'});return false;}
+  if(!session){respond({paired:false});return false;}
+  const ownSession=session,epoch=connectionEpoch;
+  request({type:'read-unlock-ladder',session:ownSession}).then(value=>{
+   if(session!==ownSession||connectionEpoch!==epoch||!value||Object.keys(value).sort().join(',')!=='cooldownUntil,level,levels,recovery,schemaVersion,type'||value.type!=='unlock-ladder'||value.schemaVersion!==1||!ladderLevelsValid(value.levels)||!value.levels.includes(value.level)||!ladderCooldownValid(value.cooldownUntil)||!['none','available','required'].includes(value.recovery))throw Error('Invalid unlock level response.');
+   respond({schemaVersion:1,level:value.level,levels:value.levels.slice(),cooldownUntil:value.cooldownUntil,recovery:value.recovery});
+  }).catch(()=>respond({error:'The unlock level could not be read. Open and unlock the desktop, pair again and retry.'}));return true;
+ }
+ if(message?.type==='unlock-step-request'){
+  if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1){respond({error:'Unlock step request is unavailable.'});return false;}
+  if(!session){respond({paired:false});return false;}
+  const ownSession=session,epoch=connectionEpoch;
+  // The desktop re-authenticates the person first and runs its own challenge. Only fixed words and numbers come back.
+  request({type:'request-unlock-step',session:ownSession},40000).then(value=>{
+   if(session!==ownSession||connectionEpoch!==epoch||!value||Object.keys(value).sort().join(',')!=='cooldownUntil,level,schemaVersion,state,type'||value.type!=='unlock-step'||value.schemaVersion!==1||!['advanced','cooldown','complete','rejected','busy','unavailable'].includes(value.state)||value.level!==null&&(typeof value.level!=='string'||!/^[a-z0-9-]{1,24}$/.test(value.level))||!ladderCooldownValid(value.cooldownUntil))throw Error('Invalid unlock step response.');
+   respond({schemaVersion:1,state:value.state,level:value.level,cooldownUntil:value.cooldownUntil});
+  }).catch(()=>respond({error:'The unlock step did not complete. Open and unlock the desktop, pair again and retry.'}));return true;
  }
  if(message?.type==='protected-discover'){
   if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1||!session){respond({error:'Protected capabilities are unavailable.'});return false;}

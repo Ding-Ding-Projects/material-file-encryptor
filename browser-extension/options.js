@@ -40,6 +40,17 @@ const schoolOutcomes={
  busy:['The desktop is already asking a question. Answer it, then try again.','桌面已經喺度問緊另一條問題。請先回答，再試一次。'],
  unavailable:['The desktop cannot ask now. Unlock it, keep its window open and try again.','桌面暫時唔能夠提問。請解鎖、保持視窗開住，再試一次。'],
  pair:authenticatorOutcomes.pair,failed:['The request did not complete. Refresh and try again.','要求未完成，請重新讀取再試。']};
+// Unlock level (Status tab): state is declared here so the first render can read it. The section code sits with the lock code below.
+const LADDER_ID=/^[a-z0-9-]{1,24}$/,LADDER_STATES=['advanced','cooldown','complete','rejected','busy','unavailable'];
+const ladderLevelsOk=levels=>Array.isArray(levels)&&levels.length>=2&&levels.length<=16&&levels.every(item=>typeof item==='string'&&LADDER_ID.test(item))&&new Set(levels).size===levels.length;
+const ladderTimeOk=value=>value===null||Number.isSafeInteger(value)&&value>0;
+let ladder={known:false,level:null,levels:[],cooldownUntil:null,recovery:'none',stale:false,loading:false,failed:false},ladderPending=false,ladderOutcome=null,ladderTimer=null;
+const ladderOutcomes={
+ advanced:['The desktop confirmed you and the unlock level went down.','桌面已確認你，解鎖級別已經降低。'],
+ cooldown:['The desktop is cooling down. It takes no further step until the countdown ends.','桌面冷卻緊，倒數完結之前唔會處理下一步。'],
+ complete:['There is no further step. The desktop has not escalated.','冇更多步驟，桌面冇升級。'],
+ rejected:['The desktop did not confirm the step. Nothing was bypassed, and the level may have changed.','桌面冇確認呢一步。冇繞過任何嘢，級別可能已經改變。'],
+ busy:schoolOutcomes.busy,unavailable:schoolOutcomes.unavailable,pair:schoolOutcomes.pair,failed:schoolOutcomes.failed};
 const desktopLockCopy={unlocked:['Desktop lock state: unlocked','桌面鎖定狀態：已解鎖'],locked:['Desktop lock state: locked','桌面鎖定狀態：已鎖定'],unavailable:['Desktop lock state: unavailable','桌面鎖定狀態：未可用']};
 const desktopPhaseCopy={idle:['Update: nothing in progress','更新：冇進行中嘅工作'],checking:['Update: checking','更新：檢查緊'],downloading:['Update: downloading','更新：下載緊'],ready:['Update: ready to install on the desktop','更新：已可喺桌面安裝'],unavailable:['Update state unavailable','更新狀態未可用']};
 let loaded=readPreferences(storage),prefs=loaded.value,busy=false,generation=0,connection=null,capture=null,protection=null,editorAvailable=false,editorPending=false,editorOutcome=null,converterBusy=false,authenticatorPending=false,authenticatorOutcome=null;
@@ -48,7 +59,7 @@ const profileCopy={authenticated:['Desktop profile authenticated','桌面身份�
 const captureCopy={'awaiting-confirmation':['Awaiting desktop confirmation','等待桌面確認'],downloading:['Downloading','下載中'],completed:['Completed','已完成'],failed:['Failed','失敗'],cancelled:['Cancelled','已取消']};
 const t=pair=>applyVocabulary(prefs.language==='yue'?pair[1]:pair[0],vocabularyEntries());
 function label(node,pair,message=false){if(message)pair=messagePair(pair);node.replaceChildren(document.createTextNode(t(pair)));if(prefs.language==='bilingual'){const secondary=document.createElement('span');secondary.className='secondary';secondary.textContent=applyVocabulary(pair[1],vocabularyEntries());node.append(secondary);}}
-function render(){$('workspace-tabs').setAttribute('aria-label',t(['Workspace','工作區']));$('language-group').setAttribute('aria-label',t(['Language','語言']));$('theme-group').setAttribute('aria-label',t(copy.theme));document.documentElement.lang=prefs.language==='yue'?'zh-HK':'en';document.documentElement.dataset.theme=prefs.theme;document.documentElement.dataset.controlLanguage=prefs.language;for(const node of document.querySelectorAll('[data-copy]'))label(node,copy[node.dataset.copy]);for(const tab of document.querySelectorAll('[data-tab]')){const active=tab.dataset.tab===prefs.tab;tab.active=active;tab.setAttribute('aria-selected',String(active));$('panel-'+tab.dataset.tab).hidden=!active;}for(const item of document.querySelectorAll('[data-language]'))item.setAttribute('aria-pressed',String(item.dataset.language===prefs.language));for(const item of document.querySelectorAll('[data-theme]'))item.setAttribute('aria-pressed',String(item.dataset.theme===prefs.theme));label($('connection-state'),connection===true?['Paired browser connection','瀏覽器已配對']:connection===false?['Browser is not paired','瀏覽器未配對']:['Connection observation unavailable','連線狀態未可用']);label($('handoff-state'),capture&&captureCopy[capture.state]?['Desktop handoff: '+captureCopy[capture.state][0],'桌面交接：'+captureCopy[capture.state][1]]:['No current transfer observation. Pairing does not start a transfer.','目前冇傳輸狀態。配對唔會開始傳輸。']);label($('profile-state'),profileCopy[protection?.profile]||profileCopy.unknown);label($('shared-state'),sharedCopy[protection?.sharedMode]||sharedCopy.unknown);$('pair').disabled=busy||connection===true;$('disconnect').disabled=busy||connection!==true;$('refresh').disabled=busy;$('version').textContent=productName()+' '+chrome.runtime.getManifest().version;label($('source-commit'),provenance?.sourceCommit?(provenance.sourceModified===false?['Source commit: '+provenance.sourceCommit.slice(0,12),'來源提交：'+provenance.sourceCommit.slice(0,12)]:['Source commit: '+provenance.sourceCommit.slice(0,12)+' with uncommitted changes','來源提交：'+provenance.sourceCommit.slice(0,12)+'（另有未提交改動）']):['Source commit unavailable','來源提交未可用']);label($('staged-at'),provenance?.stagedAtUtc?['Staged: '+provenance.stagedAtUtc.slice(0,16).replace('T',' ')+' UTC','暫存時間：'+provenance.stagedAtUtc.slice(0,16).replace('T',' ')+' UTC']:['Staging time unavailable','暫存時間未可用']);renderChangelog();renderPalette();renderSettingDetails();renderIdentity();renderHistory();renderFilters();renderLogo();renderAttention();renderNotes();renderNoteReader();renderSheet();renderSchedules();renderWording();renderDocs();renderNarration();renderTickets();renderRecording();renderDimsum();renderModels();renderEditorWorkflow();renderAuthenticatorFocus();renderSchoolMode();renderLocks();converterView?.setConnection(connection===true);converterView?.refreshLabels();renderRelease();renderCoverage();renderDesktop();for(const key of ['funnyEnglish','funnyCantonese']){$(key).value=prefs[key];$(key).setAttribute('aria-label',t(copy[key]));} $('emoji').selected=prefs.emoji;$('emoji').setAttribute('aria-label',t(copy.emoji));$('preview-emoji').hidden=!prefs.emoji;label($('preview-message'),copy.instructions,true);label($('notice'),loaded.state==='write-failed'?['Change applied for this page but could not be saved.','呢頁已套用變更，但儲存唔到。']:loaded.state==='unavailable'?['Local settings unavailable; defaults are shown.','本機設定未可用，現正顯示預設值。']:['Settings apply only to this browser extension.','設定只適用於呢個瀏覽器擴充功能。'],true);$('search').setLanguage(prefs.language);$('search').setAttribute('label',t(['Find workspace guidance','搜尋工作區指引']));}
+function render(){$('workspace-tabs').setAttribute('aria-label',t(['Workspace','工作區']));$('language-group').setAttribute('aria-label',t(['Language','語言']));$('theme-group').setAttribute('aria-label',t(copy.theme));document.documentElement.lang=prefs.language==='yue'?'zh-HK':'en';document.documentElement.dataset.theme=prefs.theme;document.documentElement.dataset.controlLanguage=prefs.language;for(const node of document.querySelectorAll('[data-copy]'))label(node,copy[node.dataset.copy]);for(const tab of document.querySelectorAll('[data-tab]')){const active=tab.dataset.tab===prefs.tab;tab.active=active;tab.setAttribute('aria-selected',String(active));$('panel-'+tab.dataset.tab).hidden=!active;}for(const item of document.querySelectorAll('[data-language]'))item.setAttribute('aria-pressed',String(item.dataset.language===prefs.language));for(const item of document.querySelectorAll('[data-theme]'))item.setAttribute('aria-pressed',String(item.dataset.theme===prefs.theme));label($('connection-state'),connection===true?['Paired browser connection','瀏覽器已配對']:connection===false?['Browser is not paired','瀏覽器未配對']:['Connection observation unavailable','連線狀態未可用']);label($('handoff-state'),capture&&captureCopy[capture.state]?['Desktop handoff: '+captureCopy[capture.state][0],'桌面交接：'+captureCopy[capture.state][1]]:['No current transfer observation. Pairing does not start a transfer.','目前冇傳輸狀態。配對唔會開始傳輸。']);label($('profile-state'),profileCopy[protection?.profile]||profileCopy.unknown);label($('shared-state'),sharedCopy[protection?.sharedMode]||sharedCopy.unknown);$('pair').disabled=busy||connection===true;$('disconnect').disabled=busy||connection!==true;$('refresh').disabled=busy;$('version').textContent=productName()+' '+chrome.runtime.getManifest().version;label($('source-commit'),provenance?.sourceCommit?(provenance.sourceModified===false?['Source commit: '+provenance.sourceCommit.slice(0,12),'來源提交：'+provenance.sourceCommit.slice(0,12)]:['Source commit: '+provenance.sourceCommit.slice(0,12)+' with uncommitted changes','來源提交：'+provenance.sourceCommit.slice(0,12)+'（另有未提交改動）']):['Source commit unavailable','來源提交未可用']);label($('staged-at'),provenance?.stagedAtUtc?['Staged: '+provenance.stagedAtUtc.slice(0,16).replace('T',' ')+' UTC','暫存時間：'+provenance.stagedAtUtc.slice(0,16).replace('T',' ')+' UTC']:['Staging time unavailable','暫存時間未可用']);renderChangelog();renderPalette();renderSettingDetails();renderIdentity();renderHistory();renderFilters();renderLogo();renderAttention();renderNotes();renderNoteReader();renderSheet();renderSchedules();renderWording();renderDocs();renderNarration();renderTickets();renderRecording();renderDimsum();renderModels();renderEditorWorkflow();renderAuthenticatorFocus();renderSchoolMode();renderLocks();renderLadder();converterView?.setConnection(connection===true);converterView?.refreshLabels();renderRelease();renderCoverage();renderDesktop();for(const key of ['funnyEnglish','funnyCantonese']){$(key).value=prefs[key];$(key).setAttribute('aria-label',t(copy[key]));} $('emoji').selected=prefs.emoji;$('emoji').setAttribute('aria-label',t(copy.emoji));$('preview-emoji').hidden=!prefs.emoji;label($('preview-message'),copy.instructions,true);label($('notice'),loaded.state==='write-failed'?['Change applied for this page but could not be saved.','呢頁已套用變更，但儲存唔到。']:loaded.state==='unavailable'?['Local settings unavailable; defaults are shown.','本機設定未可用，現正顯示預設值。']:['Settings apply only to this browser extension.','設定只適用於呢個瀏覽器擴充功能。'],true);$('search').setLanguage(prefs.language);$('search').setAttribute('label',t(['Find workspace guidance','搜尋工作區指引']));}
 function update(change){const before=prefs;loaded=applyPreferences(storage,prefs,change);prefs=loaded.value;if(before.tab!==prefs.tab)stopSpeech(globalThis.speechSynthesis||null);if(loaded.state==='saved')recordChanges(storage,before,prefs);render();void filterGuidance();}
 async function observe(type='status'){if(busy)return;const own=++generation;protection=null;editorAvailable=false;busy=true;render();try{const result=await chrome.runtime.sendMessage({type});if(own!==generation)return;if(result?.error||typeof result?.paired!=='boolean'){connection=null;capture=null;protection=null;}else{connection=result.paired;capture=result.capture||null;protection=null;if(connection){const value=await chrome.runtime.sendMessage({type:'protection-status'}).catch(()=>null);if(own!==generation)return;const capabilities=await chrome.runtime.sendMessage({type:'workflow-discover'}).catch(()=>null);if(own!==generation)return;editorAvailable=capabilities?.schemaVersion===1&&capabilities.externalEditor===true&&Object.keys(capabilities).sort().join(',')==='externalEditor,schemaVersion';if(value&&Object.keys(value).sort().join(',')==='browserPermission,profile,schemaVersion,sharedMode'&&value.schemaVersion===1&&Object.hasOwn(profileCopy,value.profile)&&Object.hasOwn(sharedCopy,value.sharedMode)&&value.browserPermission==='unavailable')protection=value;}}}catch{if(own===generation){connection=null;capture=null;protection=null;}}finally{if(own===generation){busy=false;render();}}}
 // Material tabs own arrow-key focus; activating a tab selects its panel.
@@ -516,6 +527,70 @@ for(const tab of LOCK_TABS){
  $('lock-'+tab+'-lock').addEventListener('click',()=>changeLock(tab,true));
  $('lock-'+tab+'-unlock').addEventListener('click',()=>changeLock(tab,false));
 }
+
+// Unlock level (Status tab). The desktop owns the ladder, its cooldown and its credential check; this page only reads and asks.
+// Nothing is sent until the person chooses a button, and the last read stays in memory for this page session only.
+function ladderIndex(){return ladder.known?ladder.levels.indexOf(ladder.level):-1;}
+function ladderRemaining(){return ladder.cooldownUntil===null?0:Math.max(0,Math.ceil((ladder.cooldownUntil-Date.now())/1000));}
+function waitText(seconds){return Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');}
+function stopLadderTimer(){if(ladderTimer!==null){clearTimeout(ladderTimer);ladderTimer=null;}}
+function tickLadder(){ladderTimer=null;if(ladder.cooldownUntil!==null&&ladderRemaining()===0)ladder={...ladder,cooldownUntil:null};renderLadder();}
+function renderLadder(){
+ const paired=connection===true,stale=ladder.known&&(!paired||ladder.stale),index=ladderIndex(),top=ladder.levels.length-1,remaining=ladderRemaining();
+ $('ladder-section').hidden=prefs.tab!=='status';
+ label($('ladder-heading'),['Unlock level','解鎖級別']);
+ label($('ladder-help'),['Reads where the desktop sits on its unlock ladder. Requesting the next step asks you to re-enter your vault password in the desktop (Windows Hello is not used); the desktop runs its own checks and its own cooldown, and nothing is typed or shown here. A running cooldown is never skipped.','讀取桌面喺解鎖階梯嘅位置。要求下一步會請你喺桌面重新輸入保險庫密碼（唔使用 Windows Hello）；檢查同冷卻都由桌面自己處理，呢度唔會輸入或顯示任何嘢。進行中嘅冷卻永遠唔會被跳過。']);
+ label($('ladder-read'),['Read level','讀取級別']);
+ label($('ladder-step'),['Request next step','要求下一步']);
+ $('ladder-read').disabled=!paired||busy||ladderPending||ladder.loading;
+ $('ladder-step').disabled=!paired||!ladder.known||busy||ladderPending||ladder.loading||index<=0||remaining>0;
+ $('ladder-progress').hidden=!ladder.known;
+ if(ladder.known){
+  $('ladder-progress').max=1;$('ladder-progress').value=top>0&&index>=0?index/top:0;
+  $('ladder-progress').setAttribute('aria-label',plainName(['Unlock level '+index+' of '+top,'解鎖級別 '+index+' / '+top]));
+ }
+ let line;
+ if(ladderPending)line=['Waiting for you on the desktop.','等待你喺桌面操作。'];
+ else if(ladder.loading)line=['Asking the desktop…','問緊桌面…'];
+ else if(ladderOutcome)line=ladderOutcome;
+ else if(ladder.failed)line=['The unlock level could not be read. Open and unlock the desktop, pair again and refresh.','讀取唔到解鎖級別。請開啟並解鎖桌面，重新配對後再重新整理。'];
+ else if(!ladder.known&&!paired)line=schoolOutcomes.pair;
+ else if(ladder.known)line=['Unlock level '+index+' of '+top+'.','解鎖級別 '+index+' / '+top+'。'];
+ else line=['The unlock level has not been read in this session.','今次使用期間未讀取過解鎖級別。'];
+ label($('ladder-state'),line);
+ $('ladder-cooldown').hidden=!(ladder.known&&remaining>0);
+ if(ladder.known&&remaining>0)label($('ladder-cooldown'),['Cooling down: '+waitText(remaining)+' left.','冷卻中：仲有 '+waitText(remaining)+'。']);
+ $('ladder-recovery').hidden=!ladder.known;
+ if(ladder.known)label($('ladder-recovery'),ladder.recovery==='required'?['Recovery is required. Use the desktop.','需要復原。請使用桌面。']:ladder.recovery==='available'?['Recovery is available on the desktop.','桌面提供復原。']:['No recovery is needed.','唔需要復原。']);
+ $('ladder-stale').hidden=!stale;
+ if(stale)label($('ladder-stale'),['This reading comes from an earlier read and may be out of date because the desktop cannot be reached now. Pair the browser and read again.','呢個讀數來自較早嘅讀取，而家聯絡唔到桌面，所以可能已經過時。請配對瀏覽器再讀取。']);
+ // One timer at a time, and only while a countdown is visible. It does not keep a test runner or a closing page alive.
+ if(ladder.known&&remaining>0&&prefs.tab==='status'){if(ladderTimer===null){ladderTimer=setTimeout(tickLadder,1000);ladderTimer?.unref?.();}}else stopLadderTimer();
+}
+$('ladder-read').addEventListener('click',async()=>{
+ if(connection!==true||busy||ladderPending||ladder.loading)return;
+ busy=true;const own=++generation;ladder={...ladder,loading:true,failed:false};ladderOutcome=null;render();
+ try{
+  const result=await chrome.runtime.sendMessage({type:'unlock-ladder-read'});if(own!==generation)return;
+  if(result?.paired===false&&Object.keys(result).length===1){ladder={...ladder,loading:false,stale:true};ladderOutcome=ladderOutcomes.pair;}
+  else if(exactKeys(result,['schemaVersion','level','levels','cooldownUntil','recovery'])&&result.schemaVersion===1&&ladderLevelsOk(result.levels)&&result.levels.includes(result.level)&&ladderTimeOk(result.cooldownUntil)&&['none','available','required'].includes(result.recovery))ladder={known:true,level:result.level,levels:result.levels.slice(),cooldownUntil:result.cooldownUntil,recovery:result.recovery,stale:false,loading:false,failed:false};
+  else ladder={...ladder,loading:false,stale:true,failed:!ladder.known};
+ }catch{if(own===generation)ladder={...ladder,loading:false,stale:true,failed:!ladder.known};}
+ finally{if(own===generation){busy=false;render();$('ladder-read').focus?.();}}
+});
+$('ladder-step').addEventListener('click',async()=>{
+ if(connection!==true||busy||ladderPending||ladder.loading||!ladder.known||ladderIndex()<=0||ladderRemaining()>0)return;
+ ladderPending=true;busy=true;const own=++generation;ladderOutcome=null;render();
+ try{
+  const result=await chrome.runtime.sendMessage({type:'unlock-step-request'});if(own!==generation)return;
+  if(result?.paired===false&&Object.keys(result).length===1){ladderOutcome=ladderOutcomes.pair;ladder={...ladder,stale:true};}
+  else if(exactKeys(result,['schemaVersion','state','level','cooldownUntil'])&&result.schemaVersion===1&&LADDER_STATES.includes(result.state)&&(result.level===null||typeof result.level==='string'&&ladder.levels.includes(result.level))&&ladderTimeOk(result.cooldownUntil)){
+   ladder=result.level===null?{...ladder,stale:true}:{...ladder,level:result.level,cooldownUntil:result.cooldownUntil,stale:false};
+   ladderOutcome=ladderOutcomes[result.state];
+  }else{ladderOutcome=ladderOutcomes.failed;ladder={...ladder,stale:true};}
+ }catch{if(own===generation){ladderOutcome=ladderOutcomes.failed;ladder={...ladder,stale:true};}}
+ finally{if(own===generation){ladderPending=false;busy=false;render();$('ladder-read').focus?.();}}
+});
 
 const VERSION_PATTERN=/^\d{1,9}\.\d{1,9}\.\d{1,9}(?:-[0-9A-Za-z.-]{1,32})?$/;
 function readDesktop(result){

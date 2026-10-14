@@ -11,10 +11,10 @@ const renderNoteText=(host,markdown,renderer,translate)=>renderer(host,markdown,
 const mountBrowserConverter=()=>({setConnection(){},refreshLabels(){}});
 const source=await fs.readFile(new URL('../browser-extension/options.js',import.meta.url),'utf8'),html=await fs.readFile(new URL('../browser-extension/options.html',import.meta.url),'utf8');
 async function fixture(snapshot,language='en',{changelog={schemaVersion:1,entries:[{title:'Material sweep',date:'2026-10-14',items:['Converted tabs'],yue:'轉做 Material'},{title:'Startup',date:'2026-10-11',items:['Readiness'],yue:''}]},provenance={schemaVersion:1,version:'0.1.0',sourceCommit:'a'.repeat(40),sourceModified:false,stagedAtUtc:'2026-10-14T09:30:00.000Z'},records:seed=null,extras={},docsCatalog={schemaVersion:1,documents:[{id:'readme',source:'docs/features/README.md',title:'Features',markdown:'# Features\nSee [workspace](workflows/browser-extension-workspace.md).',headings:[]},{id:'workspace',source:'docs/features/workflows/browser-extension-workspace.md',title:'Browser extension workspace',markdown:'# Browser extension workspace\nNotes and schedules.',headings:[]},{id:'workspace-yue',source:'docs/features/workflows/browser-extension-workspace.zh-HK.md',title:'瀏覽器擴充功能工作區',markdown:'# 瀏覽器擴充功能工作區\n筆記。',headings:[]}],assets:[]}}={}){
- const nodes=new Map(),calls=[],schoolRequests=[],lockRequests=[],attributes=new Map(),created=[];const node=id=>{if(!nodes.has(id))nodes.set(id,{id,textContent:'',dataset:{},listeners:{},setAttribute(name,value){attributes.set(id+':'+name,value);},removeAttribute(name){attributes.delete(id+':'+name);},replaceChildren(...children){this.textContent=children.map(child=>child.textContent??'').join('');},append(...children){for(const child of children)this.textContent+=child.textContent;},addEventListener(name,fn){this.listeners[name]=fn;},setLanguage(){},filter:async rows=>rows,focus(){},show(){this.open=true;return Promise.resolve();},close(){this.open=false;}});return nodes.get(id);};
+ const nodes=new Map(),calls=[],schoolRequests=[],lockRequests=[],ladderRequests=[],attributes=new Map(),created=[];const node=id=>{if(!nodes.has(id))nodes.set(id,{id,textContent:'',dataset:{},listeners:{},setAttribute(name,value){attributes.set(id+':'+name,value);},removeAttribute(name){attributes.delete(id+':'+name);},replaceChildren(...children){this.textContent=children.map(child=>child.textContent??'').join('');},append(...children){for(const child of children)this.textContent+=child.textContent;},addEventListener(name,fn){this.listeners[name]=fn;},setLanguage(){},filter:async rows=>rows,focus(){},show(){this.open=true;return Promise.resolve();},close(){this.open=false;}});return nodes.get(id);};
  const copies=[...html.matchAll(/data-copy="([^"]+)"/g)].map((match,index)=>{const item=node('copy-'+index);item.dataset.copy=match[1];return item;});const permissionRequests=[];const tabs=['connection','personalization','changelog','notes','docs','support','dimsum','models','status'].map(tab=>{const item=node('tab-'+tab);item.dataset.tab=tab;return item;});const languages=['en','yue','bilingual'].map(value=>{const item=node('language-'+value);item.dataset.language=value;return item;});const themes=['system','light','dark'].map(value=>{const item=node('theme-'+value);item.dataset.theme=value;return item;});const stored={value:JSON.stringify({...defaults,language})};const history={value:null},records=seed??new Map();const storage={getItem:key=>key==='mfe-extension-history-v1'?history.value:key==='mfe-extension-preferences-v1'?stored.value:(records.get(key)??null),setItem(key,value){if(key==='mfe-extension-history-v1')history.value=value;else if(key==='mfe-extension-preferences-v1')stored.value=value;else records.set(key,value);},removeItem(key){if(key==='mfe-extension-history-v1')history.value=null;else records.delete(key);},stored,history,records};
  const win={listeners:{},addEventListener(name,fn){(this.listeners[name]??=[]).push(fn);}};const document={getElementById:node,documentElement:{dataset:{},style:{props:{},setProperty(name,value){this.props[name]=value;},removeProperty(name){delete this.props[name];}}},createTextNode:text=>({textContent:text}),createElement:tag=>{const made=node('generated-'+nodes.size);made.localName=tag;created.push(made);return made;},querySelectorAll:selector=>({'[data-copy]':copies,'[data-tab]':tabs,'[data-language]':languages,'[data-theme]':themes,'[data-guidance]':[]}[selector]||[])};
- vm.runInNewContext(source.replace(/^import [^\r\n]*;\r?\n/gm,''),{renderNoteText,mountBrowserConverter,changelog,provenance,EXPORT_FORMATS,exportChangelog,validateExport,readHistory,recordChanges,clearHistory,ACCENT_PRESETS,accentPalette,applyAccent,checkLogoFile,readLogo,saveLogo,clearLogo,readAttention,saveAttention,attentionDefaults,NOTE_LIMITS,checkNote,readNotes,addNote,deleteNotes,notesMarkdown,readDraft,saveDraft,clearDraft,linkParts,SCHEDULE_VALUES,readSchedules,addSchedule,cancelSchedule,takeDue,timeZoneLabel,readVocabulary,saveVocabulary,clearVocabulary,applyVocabulary,Intl,docsCatalog,readNarration,saveNarration,voicesFor,narrationScript,speak,stopSpeech,TICKET_CATEGORIES,TICKET_STATUSES,checkAttachment,saveTicket,readTickets,deleteTicket,diagnosticsText,ticketExport,CATALOG_URL,RELEASES_URL,normaliseCatalog,photoMap,categories,searchDishes,readFavourites,toggleFavourite,DEFAULT_PORT,ORIGIN_PATTERN,LIMITS,parsePort,modelName,validatePayload,callLocal,formatSize,installedModels,runningNames,pullProgress,chatDelta,parseRichText,AbortController,setTimeout,clearTimeout,RELEASES_API,parseReleaseCodeName,parsePhotoUrl,matchRelease,releasePageUrl,installerAsset,coverage:extras.coverage===undefined?defaultCoverage:extras.coverage,fetch:extras.fetch,caches:extras.caches,Response:class{constructor(body,init){this.body=body;this.headers=new Map(Object.entries(init?.headers||{}));}async json(){return JSON.parse(this.body);}},speechSynthesis:extras.speechSynthesis,navigator:extras.navigator,MediaRecorder:extras.MediaRecorder,SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},URL:{createObjectURL:()=>'blob:recording',revokeObjectURL(){}},Blob:class{constructor(parts,options){this.parts=parts;this.type=options?.type;}},renderMarkdown:(host,markdown,context)=>{host.textContent=markdown;host.context=context;},FileReader:class{readAsDataURL(file){this.result=file.dataUrl;queueMicrotask(()=>this.onload());}readAsText(file){this.result=file.text;queueMicrotask(()=>this.onload());}},defaults,document,window:win,readPreferences,applyPreferences,tabTarget,acquireStorage:()=>storage,styleExtensionMessage,chrome:{permissions:{request:async details=>{permissionRequests.push(details);return extras.grant!==false;}},runtime:{getManifest:()=>({version:'0.1.0'}),sendMessage:async message=>{calls.push(message.type);if(message.type==='desktop-status'){if(extras.desktop instanceof Error)throw extras.desktop;return extras.desktop??{paired:false};}if(extras.paired===false&&message.type==='status')return {paired:false};if(message.type==='authenticator-focus'){if(extras.authenticator instanceof Error)throw extras.authenticator;if(typeof extras.authenticator==='function')return extras.authenticator();return extras.authenticator??{schemaVersion:1,state:'shown'};}if(message.type==='school-mode-read'||message.type==='school-mode-set'){const entry=message.type==='school-mode-read'?extras.schoolRead:extras.schoolSet;if(message.type==='school-mode-set')schoolRequests.push(message);if(entry instanceof Error)throw entry;if(typeof entry==='function')return entry(message);if(entry!==undefined)return entry;if(extras.paired===false)return {paired:false};return message.type==='school-mode-read'?{schemaVersion:1,enabled:false,name:'School mode'}:{schemaVersion:1,state:'changed',enabled:true};}if(message.type==='element-locks-read'||message.type==='element-lock-set'){const entry=message.type==='element-locks-read'?extras.locksRead:extras.lockSet;if(message.type==='element-lock-set')lockRequests.push(message);if(entry instanceof Error)throw entry;if(typeof entry==='function')return entry(message);if(entry!==undefined)return entry;if(extras.paired===false)return {paired:false};return message.type==='element-locks-read'?{schemaVersion:1,locked:[]}:{schemaVersion:1,state:'changed',target:message.target,locked:message.locked};}if(message.type==='protection-status'){if(snapshot instanceof Error)throw snapshot;return snapshot;}return {paired:true};}}}});await new Promise(resolve=>setTimeout(resolve,0));return{node,calls,schoolRequests,lockRequests,permissionRequests,attributes,storage,win,document,nodesWith:text=>[...nodes.values()].filter(item=>String(item.textContent).includes(text)),find:(tag,name)=>[...created].reverse().find(item=>item.localName===tag&&attributes.get(item.id+':aria-label')===name),prefs:()=>JSON.parse(storage.stored.value)};
+ vm.runInNewContext(source.replace(/^import [^\r\n]*;\r?\n/gm,''),{renderNoteText,mountBrowserConverter,changelog,provenance,EXPORT_FORMATS,exportChangelog,validateExport,readHistory,recordChanges,clearHistory,ACCENT_PRESETS,accentPalette,applyAccent,checkLogoFile,readLogo,saveLogo,clearLogo,readAttention,saveAttention,attentionDefaults,NOTE_LIMITS,checkNote,readNotes,addNote,deleteNotes,notesMarkdown,readDraft,saveDraft,clearDraft,linkParts,SCHEDULE_VALUES,readSchedules,addSchedule,cancelSchedule,takeDue,timeZoneLabel,readVocabulary,saveVocabulary,clearVocabulary,applyVocabulary,Intl,docsCatalog,readNarration,saveNarration,voicesFor,narrationScript,speak,stopSpeech,TICKET_CATEGORIES,TICKET_STATUSES,checkAttachment,saveTicket,readTickets,deleteTicket,diagnosticsText,ticketExport,CATALOG_URL,RELEASES_URL,normaliseCatalog,photoMap,categories,searchDishes,readFavourites,toggleFavourite,DEFAULT_PORT,ORIGIN_PATTERN,LIMITS,parsePort,modelName,validatePayload,callLocal,formatSize,installedModels,runningNames,pullProgress,chatDelta,parseRichText,AbortController,setTimeout,clearTimeout,RELEASES_API,parseReleaseCodeName,parsePhotoUrl,matchRelease,releasePageUrl,installerAsset,coverage:extras.coverage===undefined?defaultCoverage:extras.coverage,fetch:extras.fetch,caches:extras.caches,Response:class{constructor(body,init){this.body=body;this.headers=new Map(Object.entries(init?.headers||{}));}async json(){return JSON.parse(this.body);}},speechSynthesis:extras.speechSynthesis,navigator:extras.navigator,MediaRecorder:extras.MediaRecorder,SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},URL:{createObjectURL:()=>'blob:recording',revokeObjectURL(){}},Blob:class{constructor(parts,options){this.parts=parts;this.type=options?.type;}},renderMarkdown:(host,markdown,context)=>{host.textContent=markdown;host.context=context;},FileReader:class{readAsDataURL(file){this.result=file.dataUrl;queueMicrotask(()=>this.onload());}readAsText(file){this.result=file.text;queueMicrotask(()=>this.onload());}},defaults,document,window:win,readPreferences,applyPreferences,tabTarget,acquireStorage:()=>storage,styleExtensionMessage,chrome:{permissions:{request:async details=>{permissionRequests.push(details);return extras.grant!==false;}},runtime:{getManifest:()=>({version:'0.1.0'}),sendMessage:async message=>{calls.push(message.type);if(message.type==='desktop-status'){if(extras.desktop instanceof Error)throw extras.desktop;return extras.desktop??{paired:false};}if(extras.paired===false&&message.type==='status')return {paired:false};if(message.type==='authenticator-focus'){if(extras.authenticator instanceof Error)throw extras.authenticator;if(typeof extras.authenticator==='function')return extras.authenticator();return extras.authenticator??{schemaVersion:1,state:'shown'};}if(message.type==='school-mode-read'||message.type==='school-mode-set'){const entry=message.type==='school-mode-read'?extras.schoolRead:extras.schoolSet;if(message.type==='school-mode-set')schoolRequests.push(message);if(entry instanceof Error)throw entry;if(typeof entry==='function')return entry(message);if(entry!==undefined)return entry;if(extras.paired===false)return {paired:false};return message.type==='school-mode-read'?{schemaVersion:1,enabled:false,name:'School mode'}:{schemaVersion:1,state:'changed',enabled:true};}if(message.type==='element-locks-read'||message.type==='element-lock-set'){const entry=message.type==='element-locks-read'?extras.locksRead:extras.lockSet;if(message.type==='element-lock-set')lockRequests.push(message);if(entry instanceof Error)throw entry;if(typeof entry==='function')return entry(message);if(entry!==undefined)return entry;if(extras.paired===false)return {paired:false};return message.type==='element-locks-read'?{schemaVersion:1,locked:[]}:{schemaVersion:1,state:'changed',target:message.target,locked:message.locked};}if(message.type==='unlock-ladder-read'||message.type==='unlock-step-request'){const entry=message.type==='unlock-ladder-read'?extras.ladderRead:extras.ladderStep;if(message.type==='unlock-step-request')ladderRequests.push(message);if(entry instanceof Error)throw entry;if(typeof entry==='function')return entry(message);if(entry!==undefined)return entry;if(extras.paired===false)return {paired:false};return message.type==='unlock-ladder-read'?{schemaVersion:1,level:'level-0',levels:['level-0','level-1','level-2'],cooldownUntil:null,recovery:'none'}:{schemaVersion:1,state:'complete',level:'level-0',cooldownUntil:null};}if(message.type==='protection-status'){if(snapshot instanceof Error)throw snapshot;return snapshot;}return {paired:true};}}}});await new Promise(resolve=>setTimeout(resolve,0));return{node,calls,schoolRequests,lockRequests,ladderRequests,permissionRequests,attributes,storage,win,document,nodesWith:text=>[...nodes.values()].filter(item=>String(item.textContent).includes(text)),find:(tag,name)=>[...created].reverse().find(item=>item.localName===tag&&attributes.get(item.id+':aria-label')===name),prefs:()=>JSON.parse(storage.stored.value)};
 }
 test('options separates paired connection from unavailable browser authority and localizes observed states',async()=>{const f=await fixture({schemaVersion:1,profile:'authenticated',sharedMode:'active',browserPermission:'unavailable'},'yue');assert.match(f.node('connection-state').textContent,/已配對/);assert.match(f.node('profile-state').textContent,/已驗證/);assert.match(f.node('shared-state').textContent,/已啟用/);assert.deepEqual(f.calls,['status','protection-status','workflow-discover']);assert.equal(f.attributes.get('workspace-tabs:aria-label'),'Material File Encryptor · 工作區');});
 test('options failed or malformed protection reads retain connection while clearing observations',async()=>{for(const snapshot of [new Error('fixture unavailable'),{schemaVersion:1,profile:'authenticated',sharedMode:'inactive',browserPermission:'granted'},{schemaVersion:2,profile:'authenticated',sharedMode:'inactive',browserPermission:'unavailable'}]){const f=await fixture(snapshot);assert.match(f.node('connection-state').textContent,/Paired/);assert.match(f.node('profile-state').textContent,/unavailable/);assert.match(f.node('shared-state').textContent,/unavailable/);}});
@@ -698,7 +698,7 @@ test('only one school mode change is in flight and the controls are disabled whi
   assert.equal(f.node('school-toggle').textContent, 'Turn off school mode');
 });
 test('the school mode code writes no markup, storage or credential handling', () => {
-  const schoolCode = source.slice(source.indexOf('function renderSchoolMode'), source.indexOf('const VERSION_PATTERN'));
+  const schoolCode = source.slice(source.indexOf('function renderSchoolMode'), Math.min(source.indexOf('const VERSION_PATTERN'), source.indexOf('// Unlock level (Status tab). The desktop owns')));
   assert.ok(schoolCode.length > 500);
   assert.doesNotMatch(schoolCode, /storage|innerHTML|insertAdjacentHTML|outerHTML|document\.write|password\b.*=|credential/i);
 });
@@ -827,9 +827,131 @@ test('only one lock change is in flight and the controls are disabled while wait
   assert.equal(f.node('lock-notes-state').textContent, 'Locked');
 });
 test('the lock code writes no markup, storage or credential handling and the extension never unlocks locally', () => {
-  const lockCode = source.slice(source.indexOf('function plainName'), source.indexOf('const VERSION_PATTERN'));
+  const lockCode = source.slice(source.indexOf('function plainName'), Math.min(source.indexOf('const VERSION_PATTERN'), source.indexOf('// Unlock level (Status tab). The desktop owns')));
   assert.ok(lockCode.length > 2000);
   assert.doesNotMatch(lockCode, /storage|innerHTML|insertAdjacentHTML|outerHTML|document\.write|password\b.*=|credential/i);
   const sends = lockCode.match(/sendMessage\(\{type:'[a-z-]+'/g) || [];
   assert.deepEqual(sends.sort(), ["sendMessage({type:'element-lock-set'", "sendMessage({type:'element-locks-read'"]);
+});
+
+// Unlock level on the Status tab: the desktop owns the ladder and nothing is sent until the person chooses a button.
+const ladderLevels = ['level-0', 'level-1', 'level-2', 'level-3', 'level-4'];
+const ladderRead = (level = 'level-2', cooldownUntil = null, recovery = 'none') => ({schemaVersion: 1, level, levels: ladderLevels, cooldownUntil, recovery});
+test('the unlock level sends nothing on load, belongs to the Status tab and is disabled when unpaired', async () => {
+  const f = await fixture(idle, 'en', {extras: {paired: false}});
+  assert.match(html, /<section id="ladder-section" aria-labelledby="ladder-heading" hidden>/);
+  assert.match(html, /<md-outlined-button id="ladder-read" disabled>/);
+  assert.match(html, /<md-outlined-button id="ladder-step" disabled>/);
+  assert.match(html, /<md-linear-progress id="ladder-progress" max="1" value="0" hidden>/);
+  assert.equal(f.node('ladder-section').hidden, true);
+  await openStatus(f);
+  assert.equal(f.node('ladder-section').hidden, false);
+  assert.equal(f.node('ladder-read').disabled, true); assert.equal(f.node('ladder-step').disabled, true);
+  assert.equal(f.node('ladder-state').textContent, 'Pair the browser first.');
+  await f.node('ladder-read').listeners.click(); await f.node('ladder-step').listeners.click();
+  assert.deepEqual(f.calls.filter(type => type.startsWith('unlock-')), []);
+  const paired = await fixture(idle, 'en'); await openStatus(paired);
+  assert.equal(paired.node('ladder-read').disabled, false); assert.equal(paired.node('ladder-step').disabled, true, 'the step waits for a read');
+  assert.deepEqual(paired.calls.filter(type => type.startsWith('unlock-')), [], 'nothing is sent by being paired or by opening the tab');
+  assert.equal(paired.node('ladder-state').textContent, 'The unlock level has not been read in this session.');
+});
+test('reading shows the level among the ladder with a linear progress position, and sending the step waits for the button', async () => {
+  const f = await fixture(idle, 'en', {extras: {ladderRead: ladderRead('level-3')}}); await openStatus(f);
+  await f.node('ladder-read').listeners.click(); await settle();
+  assert.equal(f.node('ladder-state').textContent, 'Unlock level 3 of 4.');
+  assert.equal(f.node('ladder-progress').hidden, false); assert.equal(f.node('ladder-progress').value, 0.75);
+  assert.equal(f.attributes.get('ladder-progress:aria-label'), 'Unlock level 3 of 4');
+  assert.equal(f.node('ladder-recovery').hidden, false); assert.equal(f.node('ladder-recovery').textContent, 'No recovery is needed.');
+  assert.equal(f.node('ladder-cooldown').hidden, true);
+  assert.equal(f.node('ladder-step').disabled, false);
+  assert.equal(f.ladderRequests.length, 0, 'a read never asks for a step');
+  await f.node('ladder-step').listeners.click(); await settle();
+  assert.deepEqual(JSON.parse(JSON.stringify(f.ladderRequests)), [{type: 'unlock-step-request'}]);
+  assert.equal(f.node('ladder-state').textContent, 'There is no further step. The desktop has not escalated.', 'the fixture default answer is complete');
+});
+test('a cooling desktop shows a countdown and the step stays disabled, and recovery states are shown', async () => {
+  const f = await fixture(idle, 'en', {extras: {ladderRead: ladderRead('level-2', Date.now() + 90000, 'available')}}); await openStatus(f);
+  await f.node('ladder-read').listeners.click(); await settle();
+  assert.equal(f.node('ladder-cooldown').hidden, false);
+  assert.match(f.node('ladder-cooldown').textContent, /^Cooling down: 1:(2\d|30) left\.$/);
+  assert.equal(f.node('ladder-step').disabled, true, 'a running cooldown is never skipped from the browser');
+  assert.equal(f.node('ladder-recovery').textContent, 'Recovery is available on the desktop.');
+  await f.node('ladder-step').listeners.click();
+  assert.equal(f.ladderRequests.length, 0);
+  const required = await fixture(idle, 'en', {extras: {ladderRead: ladderRead('level-1', null, 'required')}}); await openStatus(required);
+  await required.node('ladder-read').listeners.click(); await settle();
+  assert.equal(required.node('ladder-recovery').textContent, 'Recovery is required. Use the desktop.');
+  const yue = await fixture(idle, 'yue', {extras: {ladderRead: ladderRead('level-1', Date.now() + 61000, 'none')}}); await openStatus(yue);
+  await yue.node('ladder-read').listeners.click(); await settle();
+  assert.equal(yue.node('ladder-state').textContent, '解鎖級別 1 / 4。');
+  assert.match(yue.node('ladder-cooldown').textContent, /^冷卻中：仲有 1:0\d。$/);
+  assert.equal(yue.node('ladder-recovery').textContent, '唔需要復原。');
+});
+test('each step outcome is shown in plain words and the level follows the desktop answer', async () => {
+  const cases = [['advanced', 'level-0', null, /unlock level went down/], ['cooldown', 'level-3', Date.now() + 60000, /cooling down/], ['rejected', 'level-3', null, /did not confirm the step/], ['busy', null, null, /already asking a question/], ['unavailable', null, null, /cannot ask now/], ['complete', 'level-0', null, /no further step/]];
+  for (const [state, level, cooldownUntil, pattern] of cases) {
+    const f = await fixture(idle, 'en', {extras: {ladderRead: ladderRead('level-3'), ladderStep: {schemaVersion: 1, state, level, cooldownUntil}}}); await openStatus(f);
+    await f.node('ladder-read').listeners.click(); await settle();
+    await f.node('ladder-step').listeners.click(); await settle();
+    assert.match(f.node('ladder-state').textContent, pattern, state);
+    assert.equal(f.node('ladder-stale').hidden, level !== null, state + ' staleness');
+    if (level) assert.equal(f.node('ladder-progress').value, ladderLevels.indexOf(level) / 4, state + ' position');
+  }
+  const yue = await fixture(idle, 'yue', {extras: {ladderRead: ladderRead('level-3'), ladderStep: {schemaVersion: 1, state: 'rejected', level: 'level-3', cooldownUntil: null}}}); await openStatus(yue);
+  await yue.node('ladder-read').listeners.click(); await settle(); await yue.node('ladder-step').listeners.click(); await settle();
+  assert.match(yue.node('ladder-state').textContent, /桌面冇確認呢一步/);
+});
+test('malformed, mismatched or failed ladder answers show a plain failure and never an advanced state', async () => {
+  for (const ladderStep of [{schemaVersion: 1, state: 'advanced', level: 'level-0', cooldownUntil: null, token: 'x'}, {schemaVersion: 1, state: 'maybe', level: 'level-0', cooldownUntil: null}, {schemaVersion: 2, state: 'advanced', level: 'level-0', cooldownUntil: null}, {schemaVersion: 1, state: 'advanced', level: 'level-9', cooldownUntil: null}, {schemaVersion: 1, state: 'advanced', level: 'level-0', cooldownUntil: -4}, {schemaVersion: 1, state: 'advanced', level: 7, cooldownUntil: null}, {schemaVersion: 1, state: 'advanced', level: 'level-0'}, new Error('fixture unavailable')]) {
+    const f = await fixture(idle, 'en', {extras: {ladderRead: ladderRead('level-3'), ladderStep}}); await openStatus(f);
+    await f.node('ladder-read').listeners.click(); await settle();
+    await f.node('ladder-step').listeners.click(); await settle();
+    assert.equal(f.node('ladder-state').textContent, 'The request did not complete. Refresh and try again.', JSON.stringify(ladderStep));
+    assert.equal(f.node('ladder-progress').value, 0.75, 'the level is unchanged by a bad answer');
+  }
+  for (const reading of [{schemaVersion: 1, level: 'level-9', levels: ladderLevels, cooldownUntil: null, recovery: 'none'}, {schemaVersion: 1, level: 'level-1', levels: ['level-1'], cooldownUntil: null, recovery: 'none'}, {schemaVersion: 1, level: 'level-1', levels: ['level-1', 'level-1'], cooldownUntil: null, recovery: 'none'}, {schemaVersion: 1, level: 'level-1', levels: ladderLevels, cooldownUntil: 0, recovery: 'none'}, {schemaVersion: 1, level: 'level-1', levels: ladderLevels, cooldownUntil: null, recovery: 'maybe'}, {schemaVersion: 1, level: 'level-1', levels: ladderLevels, cooldownUntil: null, recovery: 'none', path: 'C:'}, {schemaVersion: 2, level: 'level-1', levels: ladderLevels, cooldownUntil: null, recovery: 'none'}, new Error('fixture unavailable')]) {
+    const f = await fixture(idle, 'en', {extras: {ladderRead: reading}}); await openStatus(f);
+    await f.node('ladder-read').listeners.click(); await settle();
+    assert.match(f.node('ladder-state').textContent, /could not be read/, JSON.stringify(reading));
+    assert.equal(f.node('ladder-step').disabled, true, 'no step without a successful read');
+    assert.equal(f.node('ladder-progress').hidden, true);
+  }
+  const late = await fixture(idle, 'en', {extras: {ladderRead: {paired: false}}}); await openStatus(late);
+  await late.node('ladder-read').listeners.click(); await settle();
+  assert.equal(late.node('ladder-state').textContent, 'Pair the browser first.');
+});
+test('when the desktop cannot be reached the last unlock level is kept in memory only and marked as possibly stale', async () => {
+  let reads = 0;
+  const f = await fixture(idle, 'en', {extras: {ladderRead: () => { reads++; if (reads > 1) throw new Error('desktop gone'); return ladderRead('level-2'); }}}); await openStatus(f);
+  await f.node('ladder-read').listeners.click(); await settle();
+  assert.equal(f.node('ladder-stale').hidden, true);
+  await f.node('ladder-read').listeners.click(); await settle();
+  assert.equal(f.node('ladder-stale').hidden, false);
+  assert.match(f.node('ladder-stale').textContent, /may be out of date/);
+  assert.equal(f.node('ladder-state').textContent, 'Unlock level 2 of 4.', 'the last read is kept');
+  assert.equal(f.node('ladder-read').disabled, false, 'a later successful read is still possible');
+  const stored = JSON.stringify([...f.storage.records.entries()]) + f.storage.stored.value + String(f.storage.history.value);
+  assert.ok(!/level-|ladder|cooldown/i.test(stored), 'nothing about the ladder is stored');
+});
+test('only one ladder request is in flight and the controls are disabled while waiting', async () => {
+  let release;
+  const f = await fixture(idle, 'en', {extras: {ladderRead: ladderRead('level-2'), ladderStep: () => new Promise(resolve => { release = () => resolve({schemaVersion: 1, state: 'advanced', level: 'level-0', cooldownUntil: null}); })}}); await openStatus(f);
+  await f.node('ladder-read').listeners.click(); await settle();
+  const first = f.node('ladder-step').listeners.click(); await settle();
+  assert.equal(f.node('ladder-read').disabled, true); assert.equal(f.node('ladder-step').disabled, true); assert.equal(f.node('lock-notes-lock').disabled, true);
+  assert.equal(f.node('ladder-state').textContent, 'Waiting for you on the desktop.');
+  await f.node('ladder-step').listeners.click();
+  assert.equal(f.ladderRequests.length, 1);
+  release(); await first; await settle();
+  assert.equal(f.node('ladder-state').textContent, 'The desktop confirmed you and the unlock level went down.');
+  assert.equal(f.node('ladder-step').disabled, true, 'nothing is left to climb at level 0');
+});
+test('the ladder code writes no markup, storage or credential handling and only the two reviewed messages are sent', () => {
+  const start = source.indexOf('function stopLadderTimer'), ladderCode = source.slice(start, start + 9000);
+  assert.ok(ladderCode.includes("sendMessage({type:'unlock-step-request'"));
+  const section = ladderCode.slice(0, ladderCode.indexOf("$('ladder-step').addEventListener") + 1800);
+  assert.doesNotMatch(section, /storage|innerHTML|insertAdjacentHTML|outerHTML|document\.write|password\b.*=|credential|setInterval/i);
+  const sends = section.match(/sendMessage\(\{type:'[a-z-]+'/g) || [];
+  assert.deepEqual([...new Set(sends)].sort(), ["sendMessage({type:'unlock-ladder-read'", "sendMessage({type:'unlock-step-request'"]);
+  assert.ok(source.includes('ladderTimer?.unref?.()'), 'the countdown timer does not keep a page alive');
 });

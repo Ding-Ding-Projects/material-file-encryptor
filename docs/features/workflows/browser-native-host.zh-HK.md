@@ -202,14 +202,60 @@ adapter 呼叫會保持缺少 context，唔會借用目前畫面 frame。
 紀錄係桌面對擴充功能必須保持鎖住嘅長久聲明；呢條路徑移除唔到嘅紀錄，目前要喺桌面端
 經受保護紀錄儲存庫處理，仍未有對應嘅桌面畫面。
 
+## 解鎖階梯範圍：read-unlock-ladder 同 request-unlock-step
+
+兩個範圍令已配對嘅擴充功能睇到桌面本機設定檔喺解鎖階梯嘅位置，並要求下一步。階梯、
+共用冷卻同每一個挑戰都由桌面擁有。傳輸層係
+`src/main/browser-unlock-ladder-mediation.js`；桌面狀態經 `src/main/access-integration.js`
+嘅 `readNativeWaitingLadder` 讀取，佢會向 `src/main/access-challenges.js` 現有嘅存取
+狀態機查詢設定檔目標。
+
+呢個組建入面階梯到底係乜，對理解範圍好重要。有序級別係桌面對設定檔憑證嘅升級級別：
+每輸入五次錯誤憑證加一級，每級將共用等候時間由 30 秒起逐級加倍，去到第 8 級就達到一
+小時上限。所以公開階梯有九個 id，`level-0` 至 `level-8`，任何更高嘅儲存級別都讀作
+`level-8`。輸入正確憑證會清除升級。桌面嘅等候挑戰（揀點心、算術同鼴鼠回合）由桌面視窗
+嘅渲染器回答；主程序冇可以執行挑戰嘅入口，呢條路徑亦冇自行發明一個。
+
+- `read-unlock-ladder` 係狀態範圍。已配對來源傳送剛好
+  `{type:'read-unlock-ladder', session}`，唔會出現提示。答案係 `unlock-ladder`，載有
+  `schemaVersion` 1、`level`（目前級別 id）、`levels`（有序 id）、`cooldownUntil`
+  （共用冷卻完結時間，以紀元毫秒計；冇冷卻進行中就係 `null`）同 `recovery`（`none`、
+  `available` 或者 `required`）。唔會返回憑證、挑戰、答案、失敗次數或者路徑。桌面對
+  設定檔憑證冇復原流程，所以呢個組建入面 `recovery` 永遠係 `none`；保留呢個欄位係令
+  擴充功能日後顯示新狀態時毋須改協定。
+- `request-unlock-step` 係重新驗證範圍。已配對來源傳送剛好
+  `{type:'request-unlock-step', session}`。答案係 `unlock-step`，載有 `schemaVersion`
+  1、`state`（`advanced`、`cooldown`、`complete`、`rejected`、`busy` 或者
+  `unavailable`）、桌面報告嘅 `level`（或者 `null`）同 `cooldownUntil`。
+- 進行中嘅冷卻只會被報告，永遠唔會被繞過：答案係 `cooldown`，唔會顯示提示，亦要等冷卻
+  完結先會試憑證。冇升級就冇嘢可以爬，答案係 `complete`，同樣冇提示。
+- 只有冷卻已完結而仍然記錄住級別，已解鎖嘅桌面先會對當事人做一次新鮮嘅原生檢查：
+  由主程序擁有嘅設定檔驗證對話框，當事人喺桌面輸入現有嘅保險庫密碼。呢個組建唔使用
+  Windows Hello，因為儲存庫冇 Windows Hello 整合。密碼永遠唔會去到瀏覽器、擴充功能
+  或者中介模組。憑證正確時，桌面自己嘅狀態機會清除升級，模組跟住再讀取一次狀態。
+  只有讀返嚟嘅級別低過之前，先會報告 `advanced`；檢查後級別冇變就係 `rejected`，之後
+  讀取失敗就係 `unavailable`，錯誤憑證就係 `rejected`，並附上桌面而家報告嘅級別同冷卻，
+  當中可能包括今次錯誤嘗試開始嘅冷卻。
+- 提示同確認模式、學校模式同元素鎖共用：四者之中同一時間最多一個等待中，第二個要求
+  會得到 `busy`，唔會排隊。已鎖定嘅桌面、隱藏或者縮到系統匣嘅視窗、正在關閉嘅桌面，
+  或者冇驗證回呼嘅組建，會即時得到 `unavailable`；冇原生回呼，任何程序都無法推進階梯。
+  冇人回答嘅提示會喺 30 秒後以 `rejected` 撤回，早過主機嘅期限，而鎖定、中斷連線、離開
+  同更新準備都會撤回佢。單單被拒絕唔會撤銷配對。
+
+所以呢條路徑唔會將桌面嘅等候挑戰帶去瀏覽器，亦唔會畀瀏覽器回答任何挑戰，更加唔會縮短
+冷卻。佢做得到嘅，只係喺冷卻完結之後，畀當事人喺桌面證明保險庫密碼，從而清除已記錄
+嘅升級，而桌面自己嘅登入同樣會做到呢件事。
+
 設計入面各範圍嘅狀態：`read-lock-state`、`read-update-state`、
 `focus-authenticator`、`read-school-mode`、`set-school-mode`、
-`read-element-locks` 同 `set-element-lock` 已經喺主程序同擴充功能實作；
-`read-profile-summary` 由受保護中介處理；設計入面其餘候選範圍尚未實作。學校模式同
-元素鎖範圍只用合成測試資料、假原生代理，以及（紀錄方面）真實嘅受保護紀錄儲存庫加上
-原生保險庫檢查嘅替身驗證，冇真實桌面對話框、已安裝組建、
+`read-element-locks`、`set-element-lock`、`read-unlock-ladder` 同
+`request-unlock-step` 已經喺主程序同擴充功能實作；
+`read-profile-summary` 由受保護中介處理；設計入面其餘候選範圍尚未實作。學校模式、
+元素鎖同解鎖階梯範圍只用合成測試資料、假原生代理，以及（紀錄同階梯狀態方面）真實嘅
+存取狀態機加上原生保險庫檢查嘅替身驗證，冇真實桌面對話框、已安裝組建、
 真實瀏覽器登記或者已擷取提示參與，所以未經端到端驗證，包括瀏覽器要求更改學校模式之後
-已開啟桌面視窗嘅重繪，以及桌面鎖定畫面會否顯示擴充功能紀錄。
+已開啟桌面視窗嘅重繪、桌面鎖定畫面會否顯示擴充功能紀錄，以及桌面解鎖畫面會否毋須重新
+載入就反映經呢條路徑清除嘅級別。
 
 ## 限制同驗證
 

@@ -150,6 +150,8 @@ export function createAccessIntegration({dataDirectory,toolsDirectory,credential
  }
  return {
   nativeProfileStatus,authenticateNativeProfile,validateNativeProfileAuthority,revokeNativeProfile,
+  /** Read-only view of the profile's waiting state for the browser channel: escalation level and end of the shared cooldown. */
+  async readNativeWaitingLadder(){return nativeRun(async()=>{const waiting=await host.request('waitStatus',{target:'profile'});return {level:waiting.level,until:waiting.until};});},
   async readNativeProfileSummary(context){if(!await validateNativeProfileAuthority(context))throw Error('Native profile authority expired.');return {schemaVersion:1,profile:'authenticated',protectedAccess:'granted'};},
   protectionStatus,
   request(senderFrame,action,payload={}){

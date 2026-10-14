@@ -258,18 +258,85 @@ desktop's durable statement of what the extension must keep locked, and removing
 one that this route cannot remove is currently a desktop-side task through the
 protected record store; a desktop screen for that is not built.
 
+## Unlock ladder scopes: read-unlock-ladder and request-unlock-step
+
+Two scopes let a paired extension see where the desktop's local profile sits on
+its unlock ladder and ask for the next step. The desktop owns the ladder, the
+shared cooldown and every challenge. The transport is
+`src/main/browser-unlock-ladder-mediation.js`; the desktop state is read through
+`readNativeWaitingLadder` in `src/main/access-integration.js`, which asks the
+existing access state machine in `src/main/access-challenges.js` for the profile
+target.
+
+What the ladder is in this build matters for reading the scopes. The ordered
+levels are the desktop's escalation levels for the profile credential: every
+five wrong credentials add a level, each level doubles the shared waiting
+period from 30 seconds, and the period reaches its one hour cap at level 8. The
+public ladder therefore has nine ids, `level-0` to `level-8`, and any higher
+stored level reads as `level-8`. A correct credential clears the escalation.
+The desktop's waiting challenges (the dish choice, arithmetic and mole rounds)
+are answered in the desktop window by its renderer; the main process has no
+entry point that runs one, and this route does not invent one.
+
+- `read-unlock-ladder` is a Status scope. The paired origin sends exactly
+  `{type:'read-unlock-ladder', session}` and no prompt appears. The answer is
+  `unlock-ladder` with `schemaVersion` 1, `level` (the current level id),
+  `levels` (the ordered ids), `cooldownUntil` (the end of the shared cooldown in
+  epoch milliseconds, or `null` when none is running) and `recovery` (`none`,
+  `available` or `required`). No credential, challenge, answer, counter of failed
+  attempts or path is returned. The desktop has no recovery workflow for the
+  profile credential, so `recovery` is always `none` in this build; the field
+  exists so the extension can show a future state without a protocol change.
+- `request-unlock-step` is a Re-authenticate scope. The paired origin sends
+  exactly `{type:'request-unlock-step', session}`. The answer is `unlock-step`
+  with `schemaVersion` 1, a `state` of `advanced`, `cooldown`, `complete`,
+  `rejected`, `busy` or `unavailable`, the `level` the desktop reports (or
+  `null`) and `cooldownUntil`.
+- A running cooldown is reported and never bypassed: the answer is `cooldown`,
+  no prompt is shown and the credential is not even tried until the cooldown
+  ends. With no escalation there is nothing to climb and the answer is
+  `complete`, again with no prompt.
+- Only when the cooldown has ended and a level is still recorded does the
+  unlocked desktop run a fresh native check of the person: the main-owned
+  profile authentication dialog, in which the person types the existing vault
+  password in the desktop. Windows Hello is not used by this build, because no
+  Windows Hello integration exists in the repository. The password never reaches
+  the browser, the extension or the mediation module. The desktop's own state
+  machine clears the escalation when the credential is correct, and the module
+  then reads the state again. `advanced` is reported only when the level read
+  back is lower than before; a check that left the level unchanged is
+  `rejected`, a failed read afterwards is `unavailable`, and a wrong credential
+  is `rejected` with the level and cooldown the desktop now reports, which may
+  include a cooldown the wrong attempt started.
+- The prompt is shared with Confirm mode, school mode and element locks: at most
+  one is pending across all four, and a second request is answered `busy` and is
+  not queued. A locked desktop, a hidden or tray-minimized window, a closing
+  desktop or a build with no authentication callback answers `unavailable` at
+  once; without the native callback no process can advance the ladder. An
+  unanswered prompt is withdrawn as `rejected` after 30 seconds, before the host
+  deadline, and lock, disconnect, exit and update preparation withdraw it too. A
+  rejection never revokes the pairing.
+
+This route therefore does not bring the desktop's waiting challenges to the
+browser and does not let the browser answer one. It never shortens a cooldown.
+What it can do is let the person clear a recorded escalation, after the cooldown
+has ended, by proving the vault password on the desktop, which the desktop's own
+sign-in would also do.
+
 Status of the design's scopes: `read-lock-state`, `read-update-state`,
 `focus-authenticator`, `read-school-mode`, `set-school-mode`,
-`read-element-locks` and `set-element-lock` are implemented in the main process
-and the extension, `read-profile-summary` is covered by the protected mediation,
-and the remaining candidate scopes in the design are not implemented. The school
-mode and element lock scopes are verified with synthetic fixtures, a fake native
-broker and, for the records, a real protected record store with a stand-in for
-the native vault check. No real desktop dialog, installed build, real browser
-registration or captured prompt took part, so they are unverified end to end,
-including the repaint of an open desktop window after a browser-requested school
-mode change, and whether the desktop's lock screens ever show the extension
-records.
+`read-element-locks`, `set-element-lock`, `read-unlock-ladder` and
+`request-unlock-step` are implemented in the main process and the extension,
+`read-profile-summary` is covered by the protected mediation, and the remaining
+candidate scopes in the design are not implemented. The school mode, element
+lock and unlock ladder scopes are verified with synthetic fixtures, a fake native
+broker and, for the records and the ladder state, a real access state machine
+with a stand-in for the native vault check. No real desktop dialog, installed
+build, real browser registration or captured prompt took part, so they are
+unverified end to end, including the repaint of an open desktop window after a
+browser-requested school mode change, whether the desktop's lock screens ever
+show the extension records, and whether the desktop's unlock screens reflect a
+level cleared through this route without a reload.
 
 ## Bounds and verification
 
