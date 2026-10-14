@@ -1,0 +1,4830 @@
+{
+ "schemaVersion": 1,
+ "sourceCommit": "cd5179629ff4b2594354052f1ebb3110476cfd1f",
+ "sourceModified": false,
+ "method": "Staged extension loaded unpacked in headless Microsoft Edge with a throwaway profile; each tuple sets the stored preferences, reloads the page and checks page overflow, visible elements leaving the viewport and clipped text.",
+ "dimensions": {
+  "surfaces": "nine options tabs and the popup",
+  "viewports": "normal 1280x900 physical window (CSS width divided by scale) and minimum 360x640 CSS",
+  "scales": [
+   1,
+   1.25,
+   1.5,
+   2
+  ],
+  "themes": [
+   "light",
+   "dark"
+  ],
+  "languages": [
+   "en",
+   "yue",
+   "bilingual"
+  ]
+ },
+ "limits": "Headless emulation, not an installed copy or a physical display. The check finds overflow and clipping; it does not judge visual quality, so representative captures were also inspected.",
+ "tuples": 480,
+ "failing": 0,
+ "results": [
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 900,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 1280,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 900,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 1024,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 720,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 853,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 600,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 450,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "normal",
+   "cssWidth": 640,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "normal",
+   "cssWidth": 400,
+   "height": 450,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.25,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 1.5,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "light",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "en",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "yue",
+   "issues": []
+  },
+  {
+   "surface": "options:connection",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:personalization",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:changelog",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:notes",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:docs",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:support",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:dimsum",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:models",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "options:status",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  },
+  {
+   "surface": "popup",
+   "viewport": "minimum",
+   "cssWidth": 360,
+   "height": 640,
+   "scale": 2,
+   "theme": "dark",
+   "language": "bilingual",
+   "issues": []
+  }
+ ]
+}
