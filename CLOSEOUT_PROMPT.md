@@ -1,3 +1,21 @@
+## Native helper transport reliability review — 2026-10-14
+
+This pull request is based on `b43d0223cdaf4e7b81de396427719f9e6856067b` and does not merge or change the existing product objective.
+
+Fixed in the proposed change: uncorrelated oversized/deep requests, leaked pending entries after serialization failures, malformed-response crashes and false successes, unhandled pipe errors, stale child ownership after failed startup, lost replies between process exit and pipe closure, reuse after disposal, and unbounded unterminated response buffering. Failed connections reject new admission until the exact child closes; submitted mutations are never replayed or forcibly terminated. Slow-operation warnings remain advisory, not cancellation.
+
+Verification used a source-only snapshot with the original native-client and existing integration-test Git blob hashes checked against the repository. On Linux with Node.js v22.16.0, the 40 new regression tests produced 11 passes and 29 failures against the original client, then 40 passes against the fix, with no cancellations or skips. The focused run including both existing test files passed all 43 tests. The lifetime fixture now advances its warning clock deterministically and distinguishes process exit from pipe closure. Real Node subprocess fixtures cover failed startup and buffered final output; they do not mount drives or use real data.
+
+Before merge, rerun the focused command on the supported Node.js 24-or-newer runtime in a complete checkout:
+
+```sh
+node --test test/native-client-regressions.test.js test/native-client-lifetime.test.js test/integration-native-client.test.js
+```
+
+The complete repository suite, Windows build, installer, GUI and WinFsp lifecycle were not executed in this source-only Linux verification. The existing Unix executable integration fixture explicitly skips on Windows. Read back CI separately; these results are not Windows acceptance or release proof. No encryption format, native storage implementation, installed application, profile, credential, mount or unrelated branch was modified by the review.
+
+### Previous product handoff (retained)
+
 ````text
 Material File Encryptor: continuation handoff (state as of the Material layout polish on main)
 
