@@ -15129,6 +15129,7 @@
       "surface": "extension",
       "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
         "docs/features/workflows/browser-extension-workspace.md",
         "docs/features/workflows/browser-extension-workspace.zh-HK.md",
         "docs/features/workflows/browser-extension-local-models.md",
@@ -15189,6 +15190,7 @@
       "surface": "extension",
       "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
         "docs/site/site.css",
         "docs/site/visitor-access.js",
         "src/renderer/features/access/index.js",
@@ -15295,7 +15297,7 @@
           {
             "state": "present",
             "surface": "extension:options",
-            "selector": "#release-installer",
+            "selector": "",
             "outcome": "Link the extension delivery instructions to verified current downloadable release assets.",
             "nextProof": "Install the linked release on a clean profile, load its resources\\browser-extension folder unpacked, and retain the installed-build identity and visual receipts."
           }
@@ -15308,6 +15310,7 @@
       "surface": "extension",
       "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
         "docs/features/workflows/browser-extension-workspace.md",
         "docs/features/workflows/browser-extension-workspace.zh-HK.md",
         "docs/features/workflows/browser-extension-local-models.md",
@@ -15858,6 +15861,7 @@
       "surface": "extension",
       "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
         "scripts/build-browser-extension.mjs",
         "browser-extension/manifest.json",
         "src/features/documentation/catalog.mjs"
