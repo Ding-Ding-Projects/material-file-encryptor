@@ -55,13 +55,16 @@ export function createCredentialStore({directory,safeStorage}){
   compareAndSetVersioned(key,expectedRevision,replacement){check(key);available();if(expectedRevision!==null&&(typeof expectedRevision!=='string'||!/^[a-f0-9-]{36}$/.test(expectedRevision)))throw Error('Invalid protected record revision.');bounded(replacement);const replacementText=encoded(replacement);return mutate(async()=>{available();const data=await read(),currentRevision=revisions(data)[key]||null;if(currentRevision!==expectedRevision)return{updated:false,revision:currentRevision};if(replacementText==='null')delete data[key];else data[key]=safeStorage.encryptString(replacementText).toString('base64');const revision=advanceRevision(data,key);await write(data);return{updated:true,revision};});},
   // Host-only atomic batch. The journal receives the exact installed revisions
   // in the same replacement file, so restart recovery has no ownership gap.
-  compareAndSetBatchVersioned(changes,journal){
+  compareAndSetBatchVersioned(changes,journal,conditions=[]){
    available();if(!Array.isArray(changes)||!changes.length||changes.length>32)throw Error('Invalid protected transaction.');
-   const rows=structuredClone(changes),intent=journal?structuredClone(journal):null,keys=new Set();
+   if(!Array.isArray(conditions)||conditions.length>32)throw Error('Invalid protected transaction conditions.');
+   const rows=structuredClone(changes),intent=journal?structuredClone(journal):null,guards=structuredClone(conditions),keys=new Set();
    for(const row of [...rows,...(intent?[intent]:[])]){check(row.key);if(keys.has(row.key)||row.expectedRevision!==null&&(typeof row.expectedRevision!=='string'||!/^[a-f0-9-]{36}$/.test(row.expectedRevision)))throw Error('Invalid protected transaction.');keys.add(row.key);bounded(row.replacement);}
-   return mutate(async()=>{available();const data=await read(),index=revisions(data);for(const row of [...rows,...(intent?[intent]:[])])if((index[row.key]||null)!==row.expectedRevision)return{updated:false};
+   for(const row of guards){check(row.key);if(keys.has(row.key)||row.expectedRevision!==null&&(typeof row.expectedRevision!=='string'||!/^[a-f0-9-]{36}$/.test(row.expectedRevision))||Object.keys(row).some(key=>!['key','expectedRevision'].includes(key)))throw Error('Invalid protected transaction condition.');keys.add(row.key);}
+   const receiptField=intent?.receiptField??'written';if(!['written','restored'].includes(receiptField))throw Error('Invalid protected journal receipt.');
+   return mutate(async()=>{available();const data=await read(),index=revisions(data);for(const row of [...rows,...(intent?[intent]:[]),...guards])if((index[row.key]||null)!==row.expectedRevision)return{updated:false};
     const installed={};for(const row of rows){if(row.replacement===null)delete data[row.key];else data[row.key]=safeStorage.encryptString(encoded(row.replacement)).toString('base64');installed[row.key]=advanceRevision(data,row.key);}
-    let journalRevision=null;if(intent){data[intent.key]=safeStorage.encryptString(encoded({...intent.replacement,written:installed})).toString('base64');journalRevision=advanceRevision(data,intent.key);}
+    let journalRevision=null;if(intent){const value={...intent.replacement,[receiptField]:{...intent.replacement?.[receiptField],...installed}};bounded(value);data[intent.key]=safeStorage.encryptString(encoded(value)).toString('base64');journalRevision=advanceRevision(data,intent.key);}
     await write(data);return{updated:true,revisions:installed,journalRevision};
    });
   },

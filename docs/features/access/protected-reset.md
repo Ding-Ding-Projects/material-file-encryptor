@@ -16,6 +16,8 @@ Preparation requires the current verified local profile and independently unlock
 
 Approval is bound to the actor, profile authorization lifetime, native preference revision, selected display-name revision, scope and expiration. A newer revision, including a same-value intervening write, invalidates the preview. Cancellation removes the actor's pending preview; closing the service removes all pending previews. Commit consumes its preview before any mutation, so a retry must obtain fresh approval.
 
+Reset authorization rereads the protected profile revision across asynchronous boundaries and retains the exact revision originally verified for that actor. The prepared-journal write, selected-record application and completion write also require that profile revision under the same protected-store writer lock. Replacing the profile with identical bytes still revokes the pending approval. The reset audit awaits these rechecks while retaining its separate history authorization.
+
 ## Journal and concurrent writers
 
 Before mutation, the coordinator persists an encrypted prepared journal. An atomic protected-store batch installs all selected records and the applied journal together, including the exact installed revision of each record. Protected-store replacement files are flushed before rename. Every protected-store writer obtains the same exclusive writer lock, including separate store instances and processes using this implementation. Competing writes fail visibly rather than guessing that another writer has stopped.
@@ -23,6 +25,8 @@ Before mutation, the coordinator persists an encrypted prepared journal. An atom
 After application, the coordinator uses the existing password-authorized encrypted access-history append, then clears the journal before reporting commit. It never deletes vault contents, profile credentials, authenticator entries, shared-mode state, personal vocabulary, custom images or unrelated history. Preference projection must subsequently adopt the returned native snapshot without turning browser storage into a second authority.
 
 If application or audit fails, compensation restores each record only when its current revision still belongs to that reset. A newer concurrent value survives. Conflict details remain in the encrypted journal and block another reset pending explicit local review. Recovery does not silently claim an audit succeeded. Recovery of a surviving prepared journal aborts that unperformed intent; recovery of an applied journal conditionally restores its owned revisions.
+
+Each compensation write and its new restored revision are saved atomically in the same journal update. After interruption, recovery skips an already restored record only while that exact restored revision remains current, then continues the remaining records. A later same-value write is a conflict rather than proof of ownership. Final journal removal is conditioned on all restored revisions so a concurrent writer cannot be missed between inspection and cleanup. The profile-conditioned completion write is the transaction's completion point; a later profile change does not retroactively change a completed transaction.
 
 ## Remaining recovery and delivery work
 

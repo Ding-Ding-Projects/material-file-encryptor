@@ -57,7 +57,11 @@ export function createAccessIntegration({dataDirectory,toolsDirectory,credential
  async function profileGrant(who){const id=identity(who,'profile'),grant=grants.get(id),epoch=generation(who,'profile');const check=()=>{current(who,'profile',epoch);if(!grant||grants.get(id)!==grant||grant.expires<=now())throw Error('Unlock the local profile before accessing private history.');};check();const record=await credentials.readVersioned('local-profile:v1');check();if(record.revision!==grant.revision){grants.delete(id);throw Error('Unlock the local profile before accessing private history.');}return check;}
  async function privateHistoryMutation(who,action,key,value){const check=await profileGrant(who),before=await credentials.readVersioned(key);check();const written=await credentials.compareAndSetVersioned(key,before.revision,action==='credentialSet'?value:null);if(!written.updated)throw Error('Protected access record changed concurrently.');try{check();return true;}catch(error){const restored=await credentials.compareAndSetVersioned(key,written.revision,before.value);if(!restored.updated)throw Error('Protected access record changed concurrently. Local recovery is required.');throw error;}}
  const settingsReset=typeof credentials.compareAndSetBatchVersioned==='function'?createProtectedSettingsReset({credentials,getActor:actor,now,
-  authorize:async who=>{const profile=await profileGrant(who),history=host.authorizeSettingsReset();return()=>{profile();history();};},
+  authorize:async who=>{
+   const profile=await profileGrant(who),history=host.authorizeSettingsReset(),grant=grants.get(identity(who,'profile')),revision=grant?.revision;
+   const check=async()=>{profile();history();const record=await credentials.readVersioned('local-profile:v1');profile();history();if(record.revision!==revision){grants.delete(identity(who,'profile'));throw Error('Unlock the local profile before resetting preferences.');}};
+   check.conditions=[{key:'local-profile:v1',expectedRevision:revision}];return check;
+  },
   audit:record=>host.auditSettingsReset(record),
  }):null;
  async function mutateCredential(who,action,key,value){
