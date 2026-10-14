@@ -15127,16 +15127,29 @@
     {
       "id": "landing-site",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md",
+        "docs/features/workflows/browser-extension-local-models.md",
+        "docs/features/workflows/browser-extension-local-models.zh-HK.md",
+        "scripts/build-site.mjs"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md",
+        "docs/features/workflows/browser-extension-local-models.zh-HK.md"
+      ],
+      "tests": [
+        "test/documentation-translations.test.js",
+        "test/site-publication.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Document the extension on the deployed documentation website with complete behavior and limitations. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The deployed documentation site publishes the extension workspace and local models articles, each with a Traditional Chinese twin, describing behavior, permissions and limitations. All four routes returned HTTP 200 on the live site after deploy 9a78fd3; installed-extension behavior is not claimed by documentation.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -15150,7 +15163,7 @@
           "declaredScope": "Named product surface with companion support"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -15161,29 +15174,41 @@
         "action": "Document the extension on the deployed documentation website with complete behavior and limitations.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Document the extension on the deployed documentation website with complete behavior and limitations.",
-            "nextProof": "Exercise document the extension on the deployed documentation website with complete behavior and limitations on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Keep the extension articles current with each extension change and read the live routes back after each deploy."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Documentation is static; nothing is stored for this workflow."
       }
     },
     {
       "id": "deen-wah-site",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "docs/site/site.css",
+        "docs/site/visitor-access.js",
+        "src/renderer/features/access/index.js",
+        "scripts/build-site.mjs"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md",
+        "docs/features/workflows/browser-extension-local-models.zh-HK.md"
+      ],
+      "tests": [
+        "test/site-document-tools-layout.test.js",
+        "test/local-access-deferred-load.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Verify the companion documentation website on supported narrow device widths with usable navigation. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "At 360 CSS pixels the live extension articles show no horizontal overflow and keep the page margin, after the document tools host became a block (3ef9a20). First visits no longer raise an unlock error over the article (9a78fd3); a live exception trace found none. Checked in headless Edge with mobile emulation, not on a physical phone.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -15197,7 +15222,7 @@
           "declaredScope": "Named product surface with companion support"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -15208,14 +15233,14 @@
         "action": "Verify the companion documentation website on supported narrow device widths with usable navigation.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Verify the companion documentation website on supported narrow device widths with usable navigation.",
-            "nextProof": "Exercise verify the companion documentation website on supported narrow device widths with usable navigation on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Capture the extension articles on a physical narrow device in Cantonese, bilingual and dark modes and confirm the navigation menu opens and closes."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Documentation is static; nothing is stored for this workflow."
       }
     },
     {
@@ -15268,16 +15293,30 @@
     {
       "id": "feature-articles",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md",
+        "docs/features/workflows/browser-extension-local-models.md",
+        "docs/features/workflows/browser-extension-local-models.zh-HK.md",
+        "docs/features/workflows/README.md",
+        "docs/features/workflows/README.zh-HK.md"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md",
+        "docs/features/workflows/browser-extension-local-models.zh-HK.md"
+      ],
+      "tests": [
+        "test/documentation-translations.test.js",
+        "test/site-publication.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Publish complete extension feature articles and translated twins with internal category navigation. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Extension feature articles and their translated twins are listed in the workflows category index and reached through internal category navigation on the live site. Articles for features the extension does not yet have are absent rather than invented.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -15291,7 +15330,7 @@
           "declaredScope": "Named product surface with companion support"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -15302,14 +15341,14 @@
         "action": "Publish complete extension feature articles and translated twins with internal category navigation.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Publish complete extension feature articles and translated twins with internal category navigation.",
-            "nextProof": "Exercise publish complete extension feature articles and translated twins with internal category navigation on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Add an article and its twin for each newly delivered extension feature, and verify its category link on the live site."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Documentation is static; nothing is stored for this workflow."
       }
     },
     {
@@ -17523,7 +17562,14 @@
     "test/extension-converter.test.js": "54656363047e108d54f16c3eab31dbb4b04997e6",
     "test/extension-converter-controls.test.js": "54656363047e108d54f16c3eab31dbb4b04997e6",
     "test/extension-converter-review.test.js": "54656363047e108d54f16c3eab31dbb4b04997e6",
-    "test/extension-converter-close.test.js": "54656363047e108d54f16c3eab31dbb4b04997e6"
+    "test/extension-converter-close.test.js": "54656363047e108d54f16c3eab31dbb4b04997e6",
+    "test/documentation-translations.test.js": "9a78fd3a5491f9b89db1c3778b08029e1b25883e",
+    "docs/features/workflows/README.md": "9a78fd3a5491f9b89db1c3778b08029e1b25883e",
+    "docs/features/workflows/README.zh-HK.md": "9a78fd3a5491f9b89db1c3778b08029e1b25883e",
+    "docs/site/site.css": "9a78fd3a5491f9b89db1c3778b08029e1b25883e",
+    "docs/site/visitor-access.js": "9a78fd3a5491f9b89db1c3778b08029e1b25883e",
+    "test/site-document-tools-layout.test.js": "9a78fd3a5491f9b89db1c3778b08029e1b25883e",
+    "test/local-access-deferred-load.test.js": "9a78fd3a5491f9b89db1c3778b08029e1b25883e"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
