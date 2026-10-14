@@ -1,3 +1,27 @@
+## Confirmation lifecycle incorporation
+
+Dialog incorporation: 19922ec removes duplicate submit-close ownership; d6a4048 waits for actual opening before Cancel focus and prevents stale continuations. Both received independent source acceptance. Causal checks reproduce prior defects; the real Material lifecycle check and three deterministic/accessibility checks pass. Helper e8c43bf retains bounded post-proof attachment diagnostics, six checks passed using verified Node 24.19.0. Full renderer remains incomplete after separate page-inventory and target-crash observations; original deadlines and ownership checks remain. All recorded owned browsers have closure proof. No full GUI or release acceptance is inferred.
+
+## Shared composition integration
+
+Reviewed composition source 61986fc and preserved build candidate 4959f2a are incorporated with the independently assessed extension inventory. Both handoff additions were retained during the merge. The combined local checks pass 59/59, with 959 concrete declarations and 230 public routes. The exact root build at frozen 4959f2a passed and its ASAR SHA-256 is beeb1df93e13624e0f622a668cb01356101321cb0c0dd94c142f247fb6d4420e. This older candidate remains frozen for actual hidden-desktop inspection and is not relabelled as acceptance for the merged source. Its initial process-membership admission failed; the exact same launch was subsequently revalidated after startup settled. Capture and owned closure results remain pending.
+
+Dialog focus source d6a4048 is separately preserved. Three deterministic/accessibility checks and one real Material lifecycle check pass, with a causal assertion failure against the older production function. Full renderer attempts remain incomplete: both browser cases stopped at client page-inventory admission before product actions, despite exact single-page CDP proof. Their owned closures completed normally. Independent source review and helper diagnosis are active.
+
+## Independent extension assessment incorporation
+
+Inventory incorporation: 9e59a70a is independently accepted for honest source inventory and deciding checks. All 210 historical rows/context remain unchanged. There are now 315 assessments; extension rows are 35 unverified, 61 missing and 9 inapplicable. All 220 source references resolve. Combined documentation, surface and inventory checks pass 33/33, with 951 declared surfaces and 228 public routes. None of these declarations proves completed runtime behavior.
+
+## Complete-interface continuation, October 14
+
+The active goal retains all 105 feature families across desktop, extension and documentation. Main locally contains reviewed interpreter admission 8f55865737474b55ac47d9f70c408d2aad4a54f7 with 17 focused checks. Its new English/Cantonese documentation passes 16 focused checks, with 935 concrete declarations and 224 public routes. These counts do not establish visual acceptance.
+
+Latest isolated renderer results are 3 cases, 2 passed and 1 failed. A bounded diagnostic and independent source refutation identify duplicate close ownership: one confirmation submit reaches both the Material dialog and its wrapper. A late close then hides a reopened confirmation. History was ready and the action enabled. The causal regression reproduces two close events instead of one; the correction remains pending. Original deadlines and assertions are unchanged.
+
+Separately preserved mediation source 1f0c5b67016745c301d75c4acf2d9b9fd7e575e5 has independent source acceptance, a successful exact root browser-host-only build and all 16 distinct focused checks passed, including 5 compiled transport checks. Disconnect during pending authentication, replacement pairing, late prior replies, replay rejection and verified broker closure use synthetic data. Production authentication composition remains incomplete. Source 61986fcaff88514903dc6f0a6602064d32361354 adds five genuine composition hosts, with 32 focused checks and independent source acceptance. Both await integration and current built GUI proof. Extension inventory de0e5cc6c4d0ab8addf3361302265fcdd0b1ae7c preserves historical rows but requires assessment-quality and validation corrections before integration.
+
+The existing installation, processes, mounted data and unrelated work remain untouched. Fresh installation/removal, physical scale proof and all 4,272 baseline tuples remain unverified. Status service enrollment is unavailable; Project access lacks read:project permission. Issue 1 and Discussion 2 carry progress. Active worktrees and private evidence remain retained. No cleanup is ready.
+
 ## Account-boundary preservation, October13
 
 Verified10percent remaining triggered preservation. Reviewed diagnosticb7bcf616ab225c7934fdf030b31fab33e25db996 is source-only:10focused checks passed and independent review accepted; no new runtime launched. The last full case remains2passed/1cancelled. Completed source unit is integrated while the unfinished product goal remains explicit.

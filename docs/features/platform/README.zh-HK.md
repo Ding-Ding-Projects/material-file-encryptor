@@ -14,3 +14,5 @@
 - [已封裝文件目錄重用](packaged-documentation-cache.zh-HK.md)
 
 - [本機介面工作計時](renderer-task-timing.zh-HK.md)
+
+- [擴充功能獨立評估](extension-assessment.zh-HK.md)

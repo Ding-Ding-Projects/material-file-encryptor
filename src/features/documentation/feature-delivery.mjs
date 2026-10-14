@@ -76,7 +76,7 @@ export async function discoverFeatureSurfaces(repositoryPath) {
 /** Templates inherit declarations only. Every surface/family verdict defaults to unverified. */
 export function expandSurfaceFeatureDelivery(registry) {
   return registry.surfaces.flatMap(surface => (registry.templates[surface.template]?.features || []).map(id => ({
-    surface: surface.id, id, applicability: expectedFeatureApplicability(id, surface.family === 'extension' ? 'desktop' : surface.family),
+    surface: surface.id, id, applicability: expectedFeatureApplicability(id, surface.family),
     status: surface.proofs?.[id]?.status || 'unverified', proof: surface.proofs?.[id] || null
   })));
 }
@@ -103,7 +103,7 @@ export function validateSurfaceRegistry(registry, expectedSurfaces) {
       if (!REQUIRED_FEATURE_IDS.includes(id) || !object(proof)) { errors.push(`${surface.id}: invalid proof family.`); continue; }
       if (Object.keys(proof).some(key => !['status', 'surface', 'route', 'selector', 'sourceCommit', 'builtSha256', 'builtInteraction', 'visualEvidence', 'evidence', 'reason'].includes(key))) errors.push(`${surface.id}/${id}: unknown proof field.`);
       for (const key of ['surface', 'route', 'selector']) if (Object.hasOwn(proof, key) && proof[key] !== (key === 'surface' ? surface.id : surface[key])) errors.push(`${surface.id}/${id}: mismatched proof ${key}.`);
-      const scope = expectedFeatureApplicability(id, surface.family === 'extension' ? 'desktop' : surface.family);
+      const scope = expectedFeatureApplicability(id, surface.family);
       if (!['implemented', 'unverified', 'missing', 'not-applicable'].includes(proof.status)) errors.push(`${surface.id}/${id}: invalid proof status.`);
       if (proof.status === 'not-applicable' && scope.applies) errors.push(`${surface.id}/${id}: applicable family cannot be exempted.`);
       if (proof.status === 'implemented') {
@@ -123,7 +123,7 @@ const GAME_ONLY = new Set(['roblox-model-catalogue', 'roblox-visual-realism']);
 const HUB_SERVER_ONLY = new Set(['discord-status-bridge', 'panic-webhooks', 'tidbyt-displays']);
 const SITE_ONLY = new Set(['landing-site', 'deen-wah-site', 'installer-download-button', 'feature-articles']);
 const APP_ONLY = new Set(['display-name', 'offline-docs', 'external-editor', 'download-handoff', 'forge-publishing', 'screen-recording', 'bundled-dependencies', 'auto-updates']);
-const SURFACES = ['desktop', 'site'];
+const SURFACES = ['desktop', 'site', 'extension'];
 const PATH_FIELDS = ['implementation', 'documentation', 'localization', 'tests', 'evidence', 'persistence'];
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const boundedText = (value, maximum = 2048) => typeof value === 'string' && value.trim().length > 0 && value.length <= maximum && !/[\u0000-\u001f\u007f]/u.test(value);
@@ -138,7 +138,7 @@ export function expectedFeatureApplicability(id, surface) {
   // This product is a public desktop application and a Status Hub client, not the server.
   if (id === 'encrypted-public-builder') return { kind: 'not-applicable', applies: false, directSurface: false, declaredScope: 'Private repositories only' };
   if (REPOSITORY_IDS.has(id)) return { kind: 'repository', applies: true, directSurface: false, declaredScope: 'Repository obligation supporting the product' };
-  if ((SITE_ONLY.has(id) && surface === 'desktop') || (APP_ONLY.has(id) && surface === 'site')) return { kind: 'product', applies: true, directSurface: false, declaredScope: 'Named product surface with companion support' };
+  if ((SITE_ONLY.has(id) && surface !== 'site') || (APP_ONLY.has(id) && surface === 'site')) return { kind: 'product', applies: true, directSurface: false, declaredScope: 'Named product surface with companion support' };
   return { kind: 'product', applies: true, directSurface: true, declaredScope: 'User-facing product surface' };
 }
 
@@ -147,8 +147,15 @@ export function validateFeatureDelivery(manifest, exists) {
   const errors = [];
   if (!object(manifest) || manifest.schemaVersion !== 1 || !Array.isArray(manifest.features)) return ['Invalid feature delivery schema.'];
   if (manifest.features.length > REQUIRED_FEATURE_IDS.length * SURFACES.length) return ['Feature row count exceeds the required inventory.'];
-  if (!Array.isArray(manifest.surfaces) || manifest.surfaces.length !== 2 || !SURFACES.every(surface => manifest.surfaces.includes(surface))) errors.push('Expected exactly the desktop and site surfaces.');
+  if (!Array.isArray(manifest.surfaces) || manifest.surfaces.length !== 3 || !SURFACES.every(surface => manifest.surfaces.includes(surface))) errors.push('Expected exactly the desktop, site and extension surfaces.');
   if (manifest.features.length !== REQUIRED_FEATURE_IDS.length * SURFACES.length) errors.push('Feature row count differs from the required inventory.');
+  const context = manifest.assessmentContext;
+  const current = manifest.currentAssessmentContext;
+  if (!object(context) || !commitId(context.baseline) || context.families !== REQUIRED_FEATURE_IDS.length || context.rows !== REQUIRED_FEATURE_IDS.length * 2 || !object(context.originalBaseline) || context.originalBaseline.families !== 104 || context.originalBaseline.rows !== 208 || ['scope', 'guiMatrix', 'builtCandidate', 'installedLifecycle', 'storageReceipt', 'pendingIntegration', 'externalLimits', 'accessReceipt'].some(key => !boundedText(context[key]))) errors.push('Complete historical assessmentContext required.');
+  if (!object(current) || !commitId(current.baseline) || ['scope', 'ownership', 'gaps'].some(key => !boundedText(current[key]))) errors.push('Complete currentAssessmentContext required.');
+  if (!Array.isArray(manifest.assessmentHistory) || !manifest.assessmentHistory.length || manifest.assessmentHistory.length > 64 || manifest.assessmentHistory.some(item => !object(item) || !commitId(item.baseline) || item.families !== 105 || item.rows !== 210 || ['scope', 'guiMatrix', 'installedLifecycle', 'storageReceipt'].some(key => !boundedText(item[key])))) errors.push('Complete assessmentHistory required.');
+  const extensionIdentities = ['popup', 'options', 'options:connection', 'options:personalization', 'options:status', 'options:message-preview'].map(name => ({id:`extension:${name}`,family:'extension',route:`browser-extension/${name === 'popup' ? 'popup' : 'options'}.html`,owner:`browser-extension/${name === 'popup' ? 'popup' : 'options'}.js`,selector:name.includes(':') ? (name.endsWith('message-preview') ? '#message-preview' : `#panel-${name.split(':')[1]}`) : ''}));
+  if (!Array.isArray(manifest.extensionTargets) || manifest.extensionTargets.length !== extensionIdentities.length || extensionIdentities.some(identity => manifest.extensionTargets.filter(target => JSON.stringify(target) === JSON.stringify(identity)).length !== 1)) errors.push('Exact independent extension target inventory required.');
   const expectedIds = new Set(REQUIRED_FEATURE_IDS), seen = new Map(), referenced = new Set();
   const references = object(manifest.referenceSources) ? manifest.referenceSources : {};
   if (!object(manifest.referenceSources)) errors.push('referenceSources must be an object.');
@@ -169,6 +176,42 @@ export function validateFeatureDelivery(manifest, exists) {
     }
     if (!required.applies && ['implemented', 'missing'].includes(row.status)) errors.push(`${label}: excluded scope cannot claim implemented or missing product behavior.`);
     if (required.applies && row.status === 'not-applicable') errors.push(`${label}: required scope cannot be exempted.`);
+    if (row.surface === 'extension' && !required.applies && (row.status !== 'not-applicable' || row.behaviorVerdict !== 'not-applicable' || row.evidenceVerdict !== 'current-runtime-unverified' || Object.hasOwn(row, 'completion'))) errors.push(`${label}: excluded extension scope requires an explicit independent verdict without a completion claim.`);
+    if (row.surface === 'extension' && required.applies) {
+      const completion = row.completion;
+      const completionKeys = row.id === 'context-menus' ? 'action,gaps,owner,persistence,platformEquivalent,targets' : 'action,gaps,owner,persistence,targets';
+      if (!object(completion) || Object.keys(completion).sort().join(',') !== completionKeys) errors.push(`${label}: bounded completion ownership required.`);
+      else {
+        if (!sourcePath(completion.owner) || !row.implementation?.includes(completion.owner)) errors.push(`${label}: completion owner must be a bound implementation reference.`);
+        if (!boundedText(completion.action) || !boundedText(completion.persistence) || !Array.isArray(completion.gaps) || !completion.gaps.length || new Set(completion.gaps).size !== completion.gaps.length || completion.gaps.some(gap => !['behavior', 'wiring', 'proof'].includes(gap))) errors.push(`${label}: explicit behavior, persistence, wiring or proof gaps required.`);
+        if (required.kind === 'repository' && completion.owner.startsWith('browser-extension/')) errors.push(`${label}: repository obligation cannot borrow a browser control owner.`);
+        if (row.id === 'context-menus') {
+          const equivalent = completion.platformEquivalent;
+          if (!object(equivalent) || Object.keys(equivalent).sort().join(',') !== 'actionId,api,owner,trigger' || equivalent.api !== 'chrome.contextMenus' || equivalent.actionId !== 'propose-download' || equivalent.owner !== 'browser-extension/background.js' || equivalent.trigger !== 'Browser-owned HTTPS link context-menu action' || completion.owner !== equivalent.owner || (!Array.isArray(completion.targets) || completion.targets.filter(target => target?.state === 'browser-owned').length !== 1)) errors.push(`${label}: exact browser-owned context-menu equivalent required.`);
+        }
+        if (row.id === 'squirrel-installer' && (completion.owner !== 'build-installer.bat' || !['build-installer.bat', 'scripts/build.ps1', 'scripts/browser-native-registration.mjs'].every(file => row.implementation.includes(file)) || row.behaviorVerdict !== 'partial' || !completion.gaps.includes('wiring'))) errors.push(`${label}: installer production and unfinished registration must retain their actual sources and gaps.`);
+        if (!Array.isArray(completion.targets) || !completion.targets.length || completion.targets.length > 16) errors.push(`${label}: bounded completion targets required.`);
+        else for (const target of completion.targets) {
+          const targetKeys = row.id === 'context-menus' ? 'nextProof,outcome,role,selector,state,surface' : 'nextProof,outcome,selector,state,surface';
+          if (!object(target) || Object.keys(target).sort().join(',') !== targetKeys || !boundedText(target.outcome) || !boundedText(target.nextProof)) { errors.push(`${label}: complete target evidence dimensions required.`); continue; }
+          if (row.id === 'context-menus' && target.role !== (target.state === 'browser-owned' ? 'trigger' : 'observation')) errors.push(`${label}: browser trigger and observation roles cannot be exchanged.`);
+          if (target.state === 'missing') {
+            if (target.surface !== null || target.selector !== null) errors.push(`${label}: missing targets cannot invent routes.`);
+          } else if (target.state === 'present') {
+            const identity = manifest.extensionTargets?.find(item => item.id === target.surface);
+            if (!identity || identity.family !== 'extension' || target.selector !== identity.selector || !row.implementation.includes(identity.owner)) errors.push(`${label}: unknown or borrowed extension target identity.`);
+          } else if (target.state === 'browser-owned') {
+            if (row.id !== 'context-menus' || target.surface !== 'chrome.contextMenus' || target.selector !== 'propose-download' || !row.implementation.includes('browser-extension/background.js')) errors.push(`${label}: unknown browser-owned platform target.`);
+          } else errors.push(`${label}: invalid target state.`);
+        }
+      }
+      if (!['partial', 'present', 'missing'].includes(row.behaviorVerdict)) errors.push(`${label}: independent behavior verdict required.`);
+      if (row.evidenceVerdict !== 'current-runtime-unverified') errors.push(`${label}: invalid independent evidence verdict.`);
+      if ((row.behaviorVerdict === 'missing' && row.status !== 'missing') || (['partial', 'present'].includes(row.behaviorVerdict) && row.status !== 'unverified')) errors.push(`${label}: behavior and delivery verdicts disagree.`);
+      if (object(completion) && Array.isArray(completion.gaps)) {
+        if (!completion.gaps.includes('proof') || (['partial', 'missing'].includes(row.behaviorVerdict) && !completion.gaps.includes('behavior')) || (row.behaviorVerdict === 'present' && completion.gaps.includes('behavior'))) errors.push(`${label}: gaps contradict behavior or evidence verdict.`);
+      }
+    }
     for (const key of ['builtInteraction', 'visualEvidence']) if (!['verified', 'unverified'].includes(row[key])) errors.push(`${label}: invalid ${key}.`);
     if (row.status === 'implemented' && (row.builtInteraction !== 'verified' || row.visualEvidence !== 'verified')) errors.push(`${label}: implemented claim requires verified built and visual evidence.`);
     for (const field of PATH_FIELDS) {

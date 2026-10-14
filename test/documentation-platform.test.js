@@ -55,7 +55,7 @@ test('required inventory rejects omission and each missing proof dimension', asy
   assert.deepEqual(validateFeatureDelivery(manifest), []);
   for (const row of manifest.features) {
     const scope = expectedFeatureApplicability(row.id, row.surface);
-    assert.equal(row.status, scope.applies ? 'unverified' : 'not-applicable');
+    assert.equal(row.status, scope.applies ? (row.surface === 'extension' && row.behaviorVerdict === 'missing' ? 'missing' : 'unverified') : 'not-applicable');
     assert.equal(row.builtInteraction, 'unverified'); assert.equal(row.visualEvidence, 'unverified');
     for (const evidence of row.evidence) assert.match(manifest.referenceSources[evidence], /^[a-f0-9]{40}$/);
   }
@@ -127,15 +127,16 @@ test('repository-aware verifier proves blobs and reports absent Git access hones
   const revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repositoryPath, encoding: 'utf8', windowsHide: true }).trim();
   fixture.features[0].implementation = ['src/features/documentation/required-features.mjs'];
   fixture.referenceSources = { 'src/features/documentation/required-features.mjs': revision };
+  for (const row of fixture.features.filter(row => row.surface === 'extension' && row.applicability.applies)) { row.implementation = row.id==='squirrel-installer' ? ['build-installer.bat','scripts/build.ps1','scripts/browser-native-registration.mjs'] : [row.completion.owner]; row.completion.targets = row.id==='context-menus' ? row.completion.targets.filter(target=>target.state==='browser-owned') : [{state:'missing',surface:null,selector:null,outcome:'Reference fixture target',nextProof:'Reference fixture verification'}]; for(const file of row.implementation) fixture.referenceSources[file] = revision; }
   const actual = await verifyFeatureDeliveryReferences(fixture, { repositoryPath });
   assert.deepEqual(actual.errors, []); assert.equal(actual.referenceVerification, 'verified');
-  assert.equal(actual.checkedReferences, 1);
+  assert.equal(actual.checkedReferences, Object.keys(fixture.referenceSources).length);
   // Keep one reference for a small deliberate missing-blob check.
-  const missing = structuredClone(manifest); for (const row of missing.features) for (const field of ['implementation','documentation','localization','tests','evidence','persistence']) row[field] = [];
-  missing.features[0].implementation = ['nonexistent-inventory-reference.md']; missing.referenceSources = { 'nonexistent-inventory-reference.md': revision };
+  const missing = structuredClone(fixture);
+  missing.features[0].implementation = ['nonexistent-inventory-reference.md']; missing.referenceSources = { ...fixture.referenceSources, 'nonexistent-inventory-reference.md': revision }; delete missing.referenceSources['src/features/documentation/required-features.mjs'];
   const rejected = await verifyFeatureDeliveryReferences(missing, { repositoryPath });
-  assert.equal(rejected.referenceVerification, 'failed'); assert.equal(rejected.checkedReferences, 0); assert.equal(rejected.errors.length, 1);
-  const directory = structuredClone(fixture); directory.features[0].implementation = ['src']; directory.referenceSources = { src: revision };
+  assert.equal(rejected.referenceVerification, 'failed'); assert.equal(rejected.checkedReferences, Object.keys(fixture.referenceSources).length - 1); assert.equal(rejected.errors.length, 1);
+  const directory = structuredClone(fixture); directory.features[0].implementation = ['src']; directory.referenceSources = {...fixture.referenceSources, src: revision }; delete directory.referenceSources['src/features/documentation/required-features.mjs'];
   const notFile = await verifyFeatureDeliveryReferences(directory, { repositoryPath });
   assert.equal(notFile.referenceVerification, 'failed'); assert.match(notFile.errors[0], /not a file/);
   const parentRepository = await mkdtemp(path.join(tmpdir(), 'inventory-parent-git-'));
@@ -146,7 +147,7 @@ test('repository-aware verifier proves blobs and reports absent Git access hones
     // An empty child alone discovers its parent, so it is not a no-repository fixture.
     const inherited = await verifyFeatureDeliveryReferences(fixture, { repositoryPath: noRepository });
     assert.equal(inherited.referenceVerification, 'failed');
-    assert.equal(inherited.errors.length, 1);
+    assert.equal(inherited.errors.length, Object.keys(fixture.referenceSources).length);
     // A local discovery boundary is deterministic even when the temp directory
     // itself lives inside another checkout. No process-wide Git settings change.
     await writeFile(path.join(noRepository, '.git'), 'gitdir: ./absent-owned-metadata\n');
@@ -165,4 +166,49 @@ test('status without client is explicit and configured snapshots cannot expose s
   assert.deepEqual(Object.keys(service.snapshot()).sort(), ['lastSuccessAt', 'message', 'state']);
   await service.checkpoint('A step', { percent: 1 }); assert.equal(checkpoint.summary, 'A step');
   assert.equal(await service.finish('waiting'), 'waiting');
+});
+
+test('extension inventory rejects whole-family omission, borrowed ownership and missing completion evidence', async () => {
+ const manifest = await inventory(); assert.equal(manifest.features.length,315);
+ assert.equal(manifest.features.filter(row=>row.surface==='extension').length,105);
+ for(const mutate of [m=>m.features=m.features.filter(row=>row.surface!=='extension'),m=>m.features.push(structuredClone(m.features.find(row=>row.surface==='extension'))),m=>delete m.features.find(row=>row.surface==='extension').completion.owner,m=>delete m.features.find(row=>row.surface==='extension').completion.targets[0].nextProof,m=>m.features.find(row=>row.surface==='extension').completion.targets[0].surface='desktop:view-settings',m=>m.extensionTargets[0].route='src/renderer/index.html',m=>m.features.find(row=>row.surface==='extension').status='implemented']) {const broken=structuredClone(manifest);mutate(broken);assert.ok(validateFeatureDelivery(broken).length);}
+});
+
+test('assessment provenance cannot disappear while independent verdicts remain admitted', async () => {
+ const manifest = await inventory();
+ for (const key of ['assessmentContext','assessmentHistory','currentAssessmentContext']) { const broken=structuredClone(manifest); delete broken[key]; assert.ok(validateFeatureDelivery(broken).some(error=>error.includes(key)), key); }
+ for(const [key,field] of [['assessmentContext','baseline'],['assessmentContext','storageReceipt'],['currentAssessmentContext','ownership']]) {const broken=structuredClone(manifest);delete broken[key][field];assert.ok(validateFeatureDelivery(broken).some(error=>error.includes(key)));}
+ const broken=structuredClone(manifest);delete broken.assessmentHistory[0].scope;assert.ok(validateFeatureDelivery(broken).some(error=>error.includes('assessmentHistory')));
+ assert.deepEqual(validateFeatureDelivery(manifest),[]);
+});
+
+test('extension behavior evidence and gap verdicts reject causal contradictions', async () => {
+ const manifest=await inventory();
+ for(const mutate of [r=>r.evidenceVerdict='invented',r=>r.behaviorVerdict='missing',r=>r.completion.gaps=['proof'],r=>delete r.completion.persistence]) {const broken=structuredClone(manifest);mutate(broken.features.find(r=>r.surface==='extension'&&r.id==='language'));assert.ok(validateFeatureDelivery(broken).some(error=>error.startsWith('extension/language:')));}
+ const missing=structuredClone(manifest);missing.features.find(r=>r.surface==='extension'&&r.id==='personal-vocabulary').status='unverified';assert.ok(validateFeatureDelivery(missing).some(error=>error.includes('verdicts disagree')));
+ const present=structuredClone(manifest);present.features.find(r=>r.surface==='extension'&&r.id==='build-entrypoints').completion.gaps=['behavior','proof'];assert.ok(validateFeatureDelivery(present).some(error=>error.includes('gaps contradict')));
+ const borrowed=structuredClone(manifest),row=borrowed.features.find(r=>r.surface==='extension'&&r.id==='build-entrypoints');row.completion.owner='browser-extension/options.js';row.implementation.push(row.completion.owner);assert.ok(validateFeatureDelivery(borrowed).some(error=>error.includes('repository obligation')));
+ assert.deepEqual(validateFeatureDelivery(manifest),[]);
+});
+
+test('extension persistence and root entrypoint ownership retain source-specific facts',async()=>{
+ const manifest=await inventory(),rows=manifest.features.filter(r=>r.surface==='extension');
+ const build=rows.find(r=>r.id==='build-entrypoints');assert.equal(build.completion.owner,'build.bat');assert.ok(build.implementation.includes('build-installer.bat'));assert.equal(build.behaviorVerdict,'present');assert.equal(build.status,'unverified');
+ for(const row of rows.filter(r=>r.applicability.applies)){assert.ok(row.completion.action.length>40);assert.ok(row.completion.persistence.length>30);assert.ok(row.id==='context-menus' || row.completion.targets.every(t=>t.outcome===row.completion.action));}
+ for(const id of ['motion','material-design','regex-search','rich-controls','notifications','context-menus','download-handoff']) assert.deepEqual(rows.find(r=>r.id===id).persistence,[],id);
+ assert.match(rows.find(r=>r.id==='appearance-editor').completion.persistence,/theme selection only/);
+});
+
+test('context-menu trigger belongs to the exact browser platform action rather than observation panels',async()=>{
+ const manifest=await inventory(),row=manifest.features.find(r=>r.surface==='extension'&&r.id==='context-menus');
+ assert.equal(row.completion.platformEquivalent.actionId,'propose-download');assert.equal(row.completion.owner,'browser-extension/background.js');
+ assert.equal(row.completion.targets.filter(t=>t.state==='browser-owned').length,1);assert.ok(row.completion.targets.filter(t=>t.state==='present').every(t=>/observations/.test(t.outcome)));
+ for(const mutate of [r=>delete r.completion.platformEquivalent,r=>r.completion.targets.find(t=>t.state==='present').role='trigger',r=>r.completion.targets.find(t=>t.state==='browser-owned').role='observation',r=>r.completion.platformEquivalent.api='invented',r=>r.completion.platformEquivalent.actionId='pair',r=>r.completion.targets=r.completion.targets.filter(t=>t.state!=='browser-owned'),r=>r.completion.targets.find(t=>t.state==='browser-owned').selector='pair']){const broken=structuredClone(manifest);mutate(broken.features.find(r=>r.surface==='extension'&&r.id==='context-menus'));assert.ok(validateFeatureDelivery(broken).some(error=>error.startsWith('extension/context-menus:')));}
+ assert.deepEqual(validateFeatureDelivery(manifest),[]);
+});
+test('installer production and registration planning do not imply an installed lifecycle',async()=>{
+ const manifest=await inventory(),row=manifest.features.find(r=>r.surface==='extension'&&r.id==='squirrel-installer');
+ assert.equal(row.status,'unverified');assert.equal(row.behaviorVerdict,'partial');assert.equal(row.completion.owner,'build-installer.bat');assert.match(row.reason,/installation and registry mutation not performed/);
+ for(const mutate of [r=>r.completion.owner='browser-extension/options.js',r=>r.implementation=r.implementation.filter(f=>f!=='scripts/browser-native-registration.mjs'),r=>r.completion.gaps=['behavior','proof'],r=>r.behaviorVerdict='present']){const broken=structuredClone(manifest);mutate(broken.features.find(r=>r.surface==='extension'&&r.id==='squirrel-installer'));assert.ok(validateFeatureDelivery(broken).some(error=>error.startsWith('extension/squirrel-installer:')));}
+ assert.deepEqual(validateFeatureDelivery(manifest),[]);
 });

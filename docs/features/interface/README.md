@@ -55,3 +55,7 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 - [Local tools workspaces](local-tools-workspaces.md)
 - [Storage maintenance](storage-maintenance.md)
 - [Verified startup photo host](startup-photo-host.md)
+
+- [Protected browser mediation](protected-browser-mediation.md)
+
+- [Registered shared compositions](shared-compositions.md)

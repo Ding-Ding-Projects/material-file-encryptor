@@ -3,9 +3,14 @@ import {IMAGE_TRANSFORM_SURFACE} from '../../renderer/features/personalization/i
 import { localized } from './localization.js';
 
 export const surfaceRegistry = Object.freeze([
+  { tag:'mfe-titlebar',role:'banner',module:'compositions.js',primitives:['md-icon-button'],parts:['chrome'] },
+  { tag:'mfe-main-workspace',role:'main',module:'compositions.js',primitives:['mfe-top-bar','mfe-workspace-shell','mfe-content-panel'],parts:['frame'] },
+  { tag:'mfe-content-panel',role:'region',module:'compositions.js',primitives:[],parts:['content'] },
+  { tag:'mfe-data-table',role:'group',module:'compositions.js',primitives:[],nativeInternals:['table','thead','tbody','tr','th','td','caption'],parts:['scroll'] },
+  { tag:'mfe-selection-toolbar',role:'toolbar',module:'compositions.js',primitives:['md-text-button'],parts:['actions'] },
   { tag: 'mfe-startup-surprise', role: 'region', module: '../../renderer/features/shell/startup-surprise.js', primitives: ['md-text-button'] },
   { tag: 'mfe-navigation-rail', role: 'navigation', module: '../../renderer/features/shell/navigation.js', primitives: ['md-text-button','md-filled-tonal-button'] },
-  { tag: 'mfe-top-bar', role: 'banner', module: '../../renderer/features/shell/navigation.js', primitives: ['md-icon-button','md-outlined-button'] },
+  { tag: 'mfe-top-bar', role: 'group', module: '../../renderer/features/shell/navigation.js', primitives: ['md-icon-button','md-outlined-button'] },
   { tag: 'mfe-date-field', role: 'group', module: 'controls.js', primitives: ['md-outlined-text-field','md-outlined-button'], nativeInternals: ['input[type=date]','input[type=time]','input[type=datetime-local]'] },
   { tag: 'mfe-file-picker', role: 'group', module: 'controls.js', primitives: ['md-outlined-text-field','md-outlined-button'], nativeInternals: ['input[type=file]'] },
   { tag: 'mfe-dialog', role: 'dialog', module: 'controls.js', primitives: ['md-dialog'] },

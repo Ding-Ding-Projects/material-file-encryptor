@@ -12,7 +12,13 @@
     "src/renderer/index.html",
     "src/renderer/app.js",
     "docs/site/workspace.js",
-    "browser-extension/popup.html"
+    "browser-extension/popup.html",
+    "browser-extension/options.html",
+    "browser-extension/options.js",
+    "browser-extension/popup.js",
+    "browser-extension/preferences.js",
+    "browser-extension/background.js",
+    "browser-extension/manifest.json"
   ],
   "templates": {
     "required-families": {
@@ -451,6 +457,24 @@
       "proofs": {}
     },
     {
+      "id": "desktop:document:docs/features/converter/media-source-review",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/converter/media-source-review",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/converter/media-source-review.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/converter/media-source-review.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "desktop:document:docs/features/converter/minimal-component",
       "family": "desktop",
       "route": "src/renderer/index.html",
@@ -573,6 +597,24 @@
       "route": "src/renderer/index.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/desktop/README.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/desktop/renderer-interpreter-admission",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/desktop/renderer-interpreter-admission",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/desktop/renderer-interpreter-admission.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/desktop/renderer-interpreter-admission.zh-HK",
       "template": "required-families",
       "proofs": {}
     },
@@ -721,6 +763,24 @@
       "proofs": {}
     },
     {
+      "id": "desktop:document:docs/features/interface/guidance-playgrounds",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/guidance-playgrounds",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/interface/guidance-playgrounds.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/guidance-playgrounds.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "desktop:document:docs/features/interface/local-personalization",
       "family": "desktop",
       "route": "src/renderer/index.html",
@@ -847,6 +907,24 @@
       "proofs": {}
     },
     {
+      "id": "desktop:document:docs/features/interface/protected-browser-mediation",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/protected-browser-mediation",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/interface/protected-browser-mediation.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/protected-browser-mediation.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "desktop:document:docs/features/interface/public-workspace-role",
       "family": "desktop",
       "route": "src/renderer/index.html",
@@ -915,6 +993,24 @@
       "route": "src/renderer/index.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/interface/settings-guidance.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/interface/shared-compositions",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/shared-compositions",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/interface/shared-compositions.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/shared-compositions.zh-HK",
       "template": "required-families",
       "proofs": {}
     },
@@ -1099,6 +1195,24 @@
       "proofs": {}
     },
     {
+      "id": "desktop:document:docs/features/ollama/managed-runtime-installation",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/ollama/managed-runtime-installation",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/ollama/managed-runtime-installation.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/ollama/managed-runtime-installation.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "desktop:document:docs/features/ollama/native-host",
       "family": "desktop",
       "route": "src/renderer/index.html",
@@ -1257,6 +1371,24 @@
       "route": "src/renderer/index.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/platform/documentation-and-status.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/platform/extension-assessment",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/platform/extension-assessment",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/platform/extension-assessment.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/platform/extension-assessment.zh-HK",
       "template": "required-families",
       "proofs": {}
     },
@@ -2053,42 +2185,6 @@
       "proofs": {}
     },
     {
-      "id": "desktop:document:docs/features/converter/media-source-review",
-      "family": "desktop",
-      "route": "src/renderer/index.html",
-      "owner": "src/renderer/features/documentation/index.js",
-      "selector": "document:docs/features/converter/media-source-review",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "desktop:document:docs/features/converter/media-source-review.zh-HK",
-      "family": "desktop",
-      "route": "src/renderer/index.html",
-      "owner": "src/renderer/features/documentation/index.js",
-      "selector": "document:docs/features/converter/media-source-review.zh-HK",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "desktop:document:docs/features/ollama/managed-runtime-installation",
-      "family": "desktop",
-      "route": "src/renderer/index.html",
-      "owner": "src/renderer/features/documentation/index.js",
-      "selector": "document:docs/features/ollama/managed-runtime-installation",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "desktop:document:docs/features/ollama/managed-runtime-installation.zh-HK",
-      "family": "desktop",
-      "route": "src/renderer/index.html",
-      "owner": "src/renderer/features/documentation/index.js",
-      "selector": "document:docs/features/ollama/managed-runtime-installation.zh-HK",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
       "id": "desktop:personalization:appearance",
       "family": "desktop",
       "route": "src/renderer/index.html",
@@ -2209,7 +2305,7 @@
       "id": "desktop:view-drive",
       "family": "desktop",
       "route": "src/renderer/index.html",
-      "owner": "src/renderer/index.html",
+      "owner": "src/renderer/app.js",
       "selector": "#view-drive",
       "template": "required-families",
       "proofs": {}
@@ -2218,7 +2314,7 @@
       "id": "desktop:view-help",
       "family": "desktop",
       "route": "src/renderer/index.html",
-      "owner": "src/renderer/index.html",
+      "owner": "src/renderer/app.js",
       "selector": "#view-help",
       "template": "required-families",
       "proofs": {}
@@ -2227,7 +2323,7 @@
       "id": "desktop:view-history",
       "family": "desktop",
       "route": "src/renderer/index.html",
-      "owner": "src/renderer/index.html",
+      "owner": "src/renderer/app.js",
       "selector": "#view-history",
       "template": "required-families",
       "proofs": {}
@@ -2263,7 +2359,7 @@
       "id": "desktop:view-recycle",
       "family": "desktop",
       "route": "src/renderer/index.html",
-      "owner": "src/renderer/index.html",
+      "owner": "src/renderer/app.js",
       "selector": "#view-recycle",
       "template": "required-families",
       "proofs": {}
@@ -2272,7 +2368,7 @@
       "id": "desktop:view-settings",
       "family": "desktop",
       "route": "src/renderer/index.html",
-      "owner": "src/renderer/index.html",
+      "owner": "src/renderer/app.js",
       "selector": "#view-settings",
       "template": "required-families",
       "proofs": {}
@@ -2380,24 +2476,6 @@
       "id": "site:article:DESIGN.md:preferences",
       "family": "site",
       "route": "articles/DESIGN.html",
-      "owner": "docs/site/preferences.js",
-      "selector": "#preferences-dialog",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:README.md",
-      "family": "site",
-      "route": "articles/README.html",
-      "owner": "docs/site/publication.mjs",
-      "selector": "",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:README.md:preferences",
-      "family": "site",
-      "route": "articles/README.html",
       "owner": "docs/site/preferences.js",
       "selector": "#preferences-dialog",
       "template": "required-families",
@@ -2836,6 +2914,42 @@
       "proofs": {}
     },
     {
+      "id": "site:article:docs/features/converter/media-source-review.md",
+      "family": "site",
+      "route": "articles/docs--features--converter--media-source-review.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/converter/media-source-review.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--converter--media-source-review.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/converter/media-source-review.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--converter--media-source-review.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/converter/media-source-review.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--converter--media-source-review.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:article:docs/features/converter/minimal-component.md",
       "family": "site",
       "route": "articles/docs--features--converter--minimal-component.html",
@@ -3082,6 +3196,42 @@
       "id": "site:article:docs/features/desktop/README.zh-HK.md:preferences",
       "family": "site",
       "route": "articles/docs--features--desktop--README.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/desktop/renderer-interpreter-admission.md",
+      "family": "site",
+      "route": "articles/docs--features--desktop--renderer-interpreter-admission.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/desktop/renderer-interpreter-admission.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--desktop--renderer-interpreter-admission.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/desktop/renderer-interpreter-admission.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--desktop--renderer-interpreter-admission.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/desktop/renderer-interpreter-admission.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--desktop--renderer-interpreter-admission.zh-HK.html",
       "owner": "docs/site/preferences.js",
       "selector": "#preferences-dialog",
       "template": "required-families",
@@ -3376,6 +3526,42 @@
       "proofs": {}
     },
     {
+      "id": "site:article:docs/features/interface/guidance-playgrounds.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--guidance-playgrounds.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/guidance-playgrounds.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--interface--guidance-playgrounds.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/guidance-playgrounds.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--guidance-playgrounds.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/guidance-playgrounds.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--interface--guidance-playgrounds.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:article:docs/features/interface/local-personalization.md",
       "family": "site",
       "route": "articles/docs--features--interface--local-personalization.html",
@@ -3628,6 +3814,42 @@
       "proofs": {}
     },
     {
+      "id": "site:article:docs/features/interface/protected-browser-mediation.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--protected-browser-mediation.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/protected-browser-mediation.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--interface--protected-browser-mediation.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/protected-browser-mediation.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--protected-browser-mediation.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/protected-browser-mediation.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--interface--protected-browser-mediation.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:article:docs/features/interface/public-workspace-role.md",
       "family": "site",
       "route": "articles/docs--features--interface--public-workspace-role.html",
@@ -3766,6 +3988,42 @@
       "id": "site:article:docs/features/interface/settings-guidance.zh-HK.md:preferences",
       "family": "site",
       "route": "articles/docs--features--interface--settings-guidance.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/shared-compositions.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--shared-compositions.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/shared-compositions.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--interface--shared-compositions.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/shared-compositions.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--shared-compositions.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/shared-compositions.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--interface--shared-compositions.zh-HK.html",
       "owner": "docs/site/preferences.js",
       "selector": "#preferences-dialog",
       "template": "required-families",
@@ -4132,6 +4390,42 @@
       "proofs": {}
     },
     {
+      "id": "site:article:docs/features/ollama/managed-runtime-installation.md",
+      "family": "site",
+      "route": "articles/docs--features--ollama--managed-runtime-installation.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/ollama/managed-runtime-installation.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--ollama--managed-runtime-installation.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/ollama/managed-runtime-installation.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--ollama--managed-runtime-installation.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/ollama/managed-runtime-installation.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--ollama--managed-runtime-installation.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:article:docs/features/ollama/native-host.md",
       "family": "site",
       "route": "articles/docs--features--ollama--native-host.html",
@@ -4456,6 +4750,42 @@
       "proofs": {}
     },
     {
+      "id": "site:article:docs/features/platform/extension-assessment.md",
+      "family": "site",
+      "route": "articles/docs--features--platform--extension-assessment.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/platform/extension-assessment.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--platform--extension-assessment.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/platform/extension-assessment.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--platform--extension-assessment.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/platform/extension-assessment.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--platform--extension-assessment.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:article:docs/features/platform/instruction-currency.md",
       "family": "site",
       "route": "articles/docs--features--platform--instruction-currency.html",
@@ -4702,78 +5032,6 @@
       "id": "site:article:docs/features/README.zh-HK.md:preferences",
       "family": "site",
       "route": "articles/docs--features--README.zh-HK.html",
-      "owner": "docs/site/preferences.js",
-      "selector": "#preferences-dialog",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:docs/features/converter/media-source-review.md",
-      "family": "site",
-      "route": "articles/docs--features--converter--media-source-review.html",
-      "owner": "docs/site/publication.mjs",
-      "selector": "",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:docs/features/converter/media-source-review.md:preferences",
-      "family": "site",
-      "route": "articles/docs--features--converter--media-source-review.html",
-      "owner": "docs/site/preferences.js",
-      "selector": "#preferences-dialog",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:docs/features/converter/media-source-review.zh-HK.md",
-      "family": "site",
-      "route": "articles/docs--features--converter--media-source-review.zh-HK.html",
-      "owner": "docs/site/publication.mjs",
-      "selector": "",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:docs/features/converter/media-source-review.zh-HK.md:preferences",
-      "family": "site",
-      "route": "articles/docs--features--converter--media-source-review.zh-HK.html",
-      "owner": "docs/site/preferences.js",
-      "selector": "#preferences-dialog",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:docs/features/ollama/managed-runtime-installation.md",
-      "family": "site",
-      "route": "articles/docs--features--ollama--managed-runtime-installation.html",
-      "owner": "docs/site/publication.mjs",
-      "selector": "",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:docs/features/ollama/managed-runtime-installation.md:preferences",
-      "family": "site",
-      "route": "articles/docs--features--ollama--managed-runtime-installation.html",
-      "owner": "docs/site/preferences.js",
-      "selector": "#preferences-dialog",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:docs/features/ollama/managed-runtime-installation.zh-HK.md",
-      "family": "site",
-      "route": "articles/docs--features--ollama--managed-runtime-installation.zh-HK.html",
-      "owner": "docs/site/publication.mjs",
-      "selector": "",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:docs/features/ollama/managed-runtime-installation.zh-HK.md:preferences",
-      "family": "site",
-      "route": "articles/docs--features--ollama--managed-runtime-installation.zh-HK.html",
       "owner": "docs/site/preferences.js",
       "selector": "#preferences-dialog",
       "template": "required-families",
@@ -5932,6 +6190,24 @@
       "proofs": {}
     },
     {
+      "id": "site:article:README.md",
+      "family": "site",
+      "route": "articles/README.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:README.md:preferences",
+      "family": "site",
+      "route": "articles/README.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:category:access",
       "family": "site",
       "route": "categories/access.html",
@@ -6670,6 +6946,24 @@
       "proofs": {}
     },
     {
+      "id": "site:workspace:document:docs/features/converter/media-source-review",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/converter/media-source-review",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/converter/media-source-review.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/converter/media-source-review.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:workspace:document:docs/features/converter/minimal-component",
       "family": "site",
       "route": "workspace.html",
@@ -6792,6 +7086,24 @@
       "route": "workspace.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/desktop/README.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/desktop/renderer-interpreter-admission",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/desktop/renderer-interpreter-admission",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/desktop/renderer-interpreter-admission.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/desktop/renderer-interpreter-admission.zh-HK",
       "template": "required-families",
       "proofs": {}
     },
@@ -6940,6 +7252,24 @@
       "proofs": {}
     },
     {
+      "id": "site:workspace:document:docs/features/interface/guidance-playgrounds",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/guidance-playgrounds",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/interface/guidance-playgrounds.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/guidance-playgrounds.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:workspace:document:docs/features/interface/local-personalization",
       "family": "site",
       "route": "workspace.html",
@@ -7066,6 +7396,24 @@
       "proofs": {}
     },
     {
+      "id": "site:workspace:document:docs/features/interface/protected-browser-mediation",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/protected-browser-mediation",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/interface/protected-browser-mediation.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/protected-browser-mediation.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:workspace:document:docs/features/interface/public-workspace-role",
       "family": "site",
       "route": "workspace.html",
@@ -7134,6 +7482,24 @@
       "route": "workspace.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/interface/settings-guidance.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/interface/shared-compositions",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/shared-compositions",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/interface/shared-compositions.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/shared-compositions.zh-HK",
       "template": "required-families",
       "proofs": {}
     },
@@ -7318,6 +7684,24 @@
       "proofs": {}
     },
     {
+      "id": "site:workspace:document:docs/features/ollama/managed-runtime-installation",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/ollama/managed-runtime-installation",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/ollama/managed-runtime-installation.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/ollama/managed-runtime-installation.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:workspace:document:docs/features/ollama/native-host",
       "family": "site",
       "route": "workspace.html",
@@ -7476,6 +7860,24 @@
       "route": "workspace.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/platform/documentation-and-status.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/platform/extension-assessment",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/platform/extension-assessment",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/platform/extension-assessment.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/platform/extension-assessment.zh-HK",
       "template": "required-families",
       "proofs": {}
     },
@@ -8272,42 +8674,6 @@
       "proofs": {}
     },
     {
-      "id": "site:workspace:document:docs/features/converter/media-source-review",
-      "family": "site",
-      "route": "workspace.html",
-      "owner": "src/renderer/features/documentation/index.js",
-      "selector": "document:docs/features/converter/media-source-review",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:workspace:document:docs/features/converter/media-source-review.zh-HK",
-      "family": "site",
-      "route": "workspace.html",
-      "owner": "src/renderer/features/documentation/index.js",
-      "selector": "document:docs/features/converter/media-source-review.zh-HK",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:workspace:document:docs/features/ollama/managed-runtime-installation",
-      "family": "site",
-      "route": "workspace.html",
-      "owner": "src/renderer/features/documentation/index.js",
-      "selector": "document:docs/features/ollama/managed-runtime-installation",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:workspace:document:docs/features/ollama/managed-runtime-installation.zh-HK",
-      "family": "site",
-      "route": "workspace.html",
-      "owner": "src/renderer/features/documentation/index.js",
-      "selector": "document:docs/features/ollama/managed-runtime-installation.zh-HK",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
       "id": "site:workspace:documentation",
       "family": "site",
       "route": "workspace.html",
@@ -8396,78 +8762,11 @@
       "selector": "view:status",
       "template": "required-families",
       "proofs": {}
-    },
-    {
-      "id": "desktop:document:docs/features/interface/guidance-playgrounds",
-      "family": "desktop",
-      "route": "src/renderer/index.html",
-      "owner": "src/renderer/features/documentation/index.js",
-      "selector": "document:docs/features/interface/guidance-playgrounds",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "desktop:document:docs/features/interface/guidance-playgrounds.zh-HK",
-      "family": "desktop",
-      "route": "src/renderer/index.html",
-      "owner": "src/renderer/features/documentation/index.js",
-      "selector": "document:docs/features/interface/guidance-playgrounds.zh-HK",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:docs/features/interface/guidance-playgrounds.md",
-      "family": "site",
-      "route": "articles/docs--features--interface--guidance-playgrounds.html",
-      "owner": "docs/site/publication.mjs",
-      "selector": "",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:docs/features/interface/guidance-playgrounds.md:preferences",
-      "family": "site",
-      "route": "articles/docs--features--interface--guidance-playgrounds.html",
-      "owner": "docs/site/preferences.js",
-      "selector": "#preferences-dialog",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:docs/features/interface/guidance-playgrounds.zh-HK.md",
-      "family": "site",
-      "route": "articles/docs--features--interface--guidance-playgrounds.zh-HK.html",
-      "owner": "docs/site/publication.mjs",
-      "selector": "",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:docs/features/interface/guidance-playgrounds.zh-HK.md:preferences",
-      "family": "site",
-      "route": "articles/docs--features--interface--guidance-playgrounds.zh-HK.html",
-      "owner": "docs/site/preferences.js",
-      "selector": "#preferences-dialog",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:workspace:document:docs/features/interface/guidance-playgrounds",
-      "family": "site",
-      "route": "workspace.html",
-      "owner": "src/renderer/features/documentation/index.js",
-      "selector": "document:docs/features/interface/guidance-playgrounds",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:workspace:document:docs/features/interface/guidance-playgrounds.zh-HK",
-      "family": "site",
-      "route": "workspace.html",
-      "owner": "src/renderer/features/documentation/index.js",
-      "selector": "document:docs/features/interface/guidance-playgrounds.zh-HK",
-      "template": "required-families",
-      "proofs": {}
     }
-  ]
+  ],
+  "currentAssessment": {
+    "manifest": "contracts/feature-delivery.json",
+    "baseline": "5ea562423e90565e582cac67982aca965898e436",
+    "scope": "315 family assessment rows, including 105 independent extension rows. Concrete surface verdicts remain unverified."
+  }
 }

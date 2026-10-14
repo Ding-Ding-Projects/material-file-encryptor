@@ -31,3 +31,9 @@ The enhancement never copies values into accessible names, attributes, logs or p
 ## Verification boundary
 
 `test/ui-renderer.test.js` covers keyboard clearing, all static dialog field groups, the 44 px target, focus restoration, no accidental creation, password masking, dynamic retention/search and read-only controls. It also exercises existing flows, localization, narrow layouts and reduced motion through an isolated renderer fixture. Native crypto, real drive behavior, packaged launch and built visual acceptance are separate evidence. The state inventory and required built matrix are in `design/modern-interface.md`.
+
+## Confirmation lifecycle
+
+Submitted confirmation forms use the inner Material dialog as their single close owner. The wrapper preserves the submitted value without starting a second closing animation. Its `showModal()` method returns the real opening promise. The confirmation workflow registers closure first, waits for that opening before focusing Cancel, and ignores stale opening continuations after closure or replacement. Opening rejection removes its listener and rejects that operation.
+
+The focused regression exercises actual Material submission, immediate reopening, Escape, deep Cancel focus and rejected opening. A separate deterministic check extracts the production confirmation function and reproduces premature focus against the previous implementation. Full renderer acceptance remains separate: recent attempts stopped at browser-client page inventory before the product sequence. Diagnostics preserve exact ownership checks and original deadlines, and tests use the pinned Node 24.19.0 runtime.
