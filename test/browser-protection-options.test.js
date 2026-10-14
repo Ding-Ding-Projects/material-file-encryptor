@@ -1,13 +1,19 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import vm from 'node:vm';
 import {defaults,readPreferences,applyPreferences,tabTarget} from '../browser-extension/preferences.js';import {styleExtensionMessage} from '../scripts/browser-extension-language-entry.js';import {EXPORT_FORMATS,exportChangelog,validateExport} from '../browser-extension/exports.js';import {readHistory,recordChanges,clearHistory} from '../browser-extension/history.js';import {ACCENT_PRESETS,accentPalette,applyAccent} from '../browser-extension/accent.js';import {checkLogoFile,readLogo,saveLogo,clearLogo,readAttention,saveAttention,attentionDefaults} from '../browser-extension/local-records.js';import {NOTE_LIMITS,checkNote,readNotes,addNote,deleteNotes,notesMarkdown,readDraft,saveDraft,clearDraft,linkParts} from '../browser-extension/notes.js';import {SCHEDULE_VALUES,readSchedules,addSchedule,cancelSchedule,takeDue,timeZoneLabel} from '../browser-extension/schedules.js';import {readVocabulary,saveVocabulary,clearVocabulary,applyVocabulary} from '../browser-extension/vocabulary.js';import {readNarration,saveNarration,voicesFor,narrationScript,speak,stopSpeech} from '../browser-extension/narration.js';import {TICKET_CATEGORIES,TICKET_STATUSES,checkAttachment,saveTicket,readTickets,deleteTicket,diagnosticsText,ticketExport} from '../browser-extension/tickets.js';import {CATALOG_URL,RELEASES_URL,normaliseCatalog,photoMap,categories,searchDishes,readFavourites,toggleFavourite} from '../browser-extension/dimsum.js';import {DEFAULT_PORT,ORIGIN_PATTERN,LIMITS,parsePort,modelName,validatePayload,callLocal,formatSize,installedModels,runningNames,pullProgress,chatDelta} from '../browser-extension/local-models.js';import {parseRichText} from '../browser-extension/rich-text.js';
+import {RELEASES_API,parseReleaseCodeName,parsePhotoUrl,matchRelease,releasePageUrl} from '../browser-extension/release-code-name.js';
+const defaultCoverage={schemaVersion:1,sourceCommit:'a'.repeat(40),total:4,counts:{missing:1,unverified:2,'not-applicable':1},extensionTargets:[],rows:[
+ {id:'language',status:'unverified',behaviorVerdict:'partial',evidenceVerdict:'current-runtime-unverified',reason:'English and Cantonese settings are wired. Runtime unverified.'},
+ {id:'regex-builder',status:'missing',behaviorVerdict:'missing',evidenceVerdict:'current-runtime-unverified',reason:'No regex builder in the popup.'},
+ {id:'notifications',status:'unverified',behaviorVerdict:'present',evidenceVerdict:'current-runtime-unverified',reason:'Non-blocking notices exist but are unverified.'},
+ {id:'landing-site',status:'not-applicable',behaviorVerdict:'not-applicable',evidenceVerdict:'current-runtime-unverified',reason:'Belongs to the site.'}]};
 // The shell fixture isolates formatting; dedicated note tests exercise the actual renderer.
 const renderNoteText=(host,markdown,renderer,translate)=>renderer(host,markdown,{translate});
 const source=await fs.readFile(new URL('../browser-extension/options.js',import.meta.url),'utf8'),html=await fs.readFile(new URL('../browser-extension/options.html',import.meta.url),'utf8');
 async function fixture(snapshot,language='en',{changelog={schemaVersion:1,entries:[{title:'Material sweep',date:'2026-10-14',items:['Converted tabs'],yue:'轉做 Material'},{title:'Startup',date:'2026-10-11',items:['Readiness'],yue:''}]},provenance={schemaVersion:1,version:'0.1.0',sourceCommit:'a'.repeat(40),sourceModified:false,stagedAtUtc:'2026-10-14T09:30:00.000Z'},records:seed=null,extras={},docsCatalog={schemaVersion:1,documents:[{id:'readme',source:'docs/features/README.md',title:'Features',markdown:'# Features\nSee [workspace](workflows/browser-extension-workspace.md).',headings:[]},{id:'workspace',source:'docs/features/workflows/browser-extension-workspace.md',title:'Browser extension workspace',markdown:'# Browser extension workspace\nNotes and schedules.',headings:[]},{id:'workspace-yue',source:'docs/features/workflows/browser-extension-workspace.zh-HK.md',title:'瀏覽器擴充功能工作區',markdown:'# 瀏覽器擴充功能工作區\n筆記。',headings:[]}],assets:[]}}={}){
- const nodes=new Map(),calls=[],attributes=new Map(),created=[];const node=id=>{if(!nodes.has(id))nodes.set(id,{id,textContent:'',dataset:{},listeners:{},setAttribute(name,value){attributes.set(id+':'+name,value);},replaceChildren(...children){this.textContent=children.map(child=>child.textContent??'').join('');},append(child){this.textContent+=child.textContent;},addEventListener(name,fn){this.listeners[name]=fn;},setLanguage(){},filter:async rows=>rows,focus(){},show(){this.open=true;return Promise.resolve();},close(){this.open=false;}});return nodes.get(id);};
+ const nodes=new Map(),calls=[],attributes=new Map(),created=[];const node=id=>{if(!nodes.has(id))nodes.set(id,{id,textContent:'',dataset:{},listeners:{},setAttribute(name,value){attributes.set(id+':'+name,value);},replaceChildren(...children){this.textContent=children.map(child=>child.textContent??'').join('');},append(...children){for(const child of children)this.textContent+=child.textContent;},addEventListener(name,fn){this.listeners[name]=fn;},setLanguage(){},filter:async rows=>rows,focus(){},show(){this.open=true;return Promise.resolve();},close(){this.open=false;}});return nodes.get(id);};
  const copies=[...html.matchAll(/data-copy="([^"]+)"/g)].map((match,index)=>{const item=node('copy-'+index);item.dataset.copy=match[1];return item;});const permissionRequests=[];const tabs=['connection','personalization','changelog','notes','docs','support','dimsum','models','status'].map(tab=>{const item=node('tab-'+tab);item.dataset.tab=tab;return item;});const languages=['en','yue','bilingual'].map(value=>{const item=node('language-'+value);item.dataset.language=value;return item;});const themes=['system','light','dark'].map(value=>{const item=node('theme-'+value);item.dataset.theme=value;return item;});const stored={value:JSON.stringify({...defaults,language})};const history={value:null},records=seed??new Map();const storage={getItem:key=>key==='mfe-extension-history-v1'?history.value:key==='mfe-extension-preferences-v1'?stored.value:(records.get(key)??null),setItem(key,value){if(key==='mfe-extension-history-v1')history.value=value;else if(key==='mfe-extension-preferences-v1')stored.value=value;else records.set(key,value);},removeItem(key){if(key==='mfe-extension-history-v1')history.value=null;else records.delete(key);},stored,history,records};
  const win={listeners:{},addEventListener(name,fn){(this.listeners[name]??=[]).push(fn);}};const document={getElementById:node,documentElement:{dataset:{},style:{props:{},setProperty(name,value){this.props[name]=value;},removeProperty(name){delete this.props[name];}}},createTextNode:text=>({textContent:text}),createElement:tag=>{const made=node('generated-'+nodes.size);made.localName=tag;created.push(made);return made;},querySelectorAll:selector=>({'[data-copy]':copies,'[data-tab]':tabs,'[data-language]':languages,'[data-theme]':themes,'[data-guidance]':[]}[selector]||[])};
- vm.runInNewContext(source.replace(/^import [^\r\n]*;\r?\n/gm,''),{renderNoteText,changelog,provenance,EXPORT_FORMATS,exportChangelog,validateExport,readHistory,recordChanges,clearHistory,ACCENT_PRESETS,accentPalette,applyAccent,checkLogoFile,readLogo,saveLogo,clearLogo,readAttention,saveAttention,attentionDefaults,NOTE_LIMITS,checkNote,readNotes,addNote,deleteNotes,notesMarkdown,readDraft,saveDraft,clearDraft,linkParts,SCHEDULE_VALUES,readSchedules,addSchedule,cancelSchedule,takeDue,timeZoneLabel,readVocabulary,saveVocabulary,clearVocabulary,applyVocabulary,Intl,docsCatalog,readNarration,saveNarration,voicesFor,narrationScript,speak,stopSpeech,TICKET_CATEGORIES,TICKET_STATUSES,checkAttachment,saveTicket,readTickets,deleteTicket,diagnosticsText,ticketExport,CATALOG_URL,RELEASES_URL,normaliseCatalog,photoMap,categories,searchDishes,readFavourites,toggleFavourite,DEFAULT_PORT,ORIGIN_PATTERN,LIMITS,parsePort,modelName,validatePayload,callLocal,formatSize,installedModels,runningNames,pullProgress,chatDelta,parseRichText,AbortController,fetch:extras.fetch,caches:extras.caches,Response:class{constructor(body,init){this.body=body;this.headers=new Map(Object.entries(init?.headers||{}));}async json(){return JSON.parse(this.body);}},speechSynthesis:extras.speechSynthesis,navigator:extras.navigator,MediaRecorder:extras.MediaRecorder,SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},URL:{createObjectURL:()=>'blob:recording',revokeObjectURL(){}},Blob:class{constructor(parts,options){this.parts=parts;this.type=options?.type;}},renderMarkdown:(host,markdown,context)=>{host.textContent=markdown;host.context=context;},FileReader:class{readAsDataURL(file){this.result=file.dataUrl;queueMicrotask(()=>this.onload());}readAsText(file){this.result=file.text;queueMicrotask(()=>this.onload());}},defaults,document,window:win,readPreferences,applyPreferences,tabTarget,acquireStorage:()=>storage,styleExtensionMessage,chrome:{permissions:{request:async details=>{permissionRequests.push(details);return extras.grant!==false;}},runtime:{getManifest:()=>({version:'0.1.0'}),sendMessage:async message=>{calls.push(message.type);if(message.type==='protection-status'){if(snapshot instanceof Error)throw snapshot;return snapshot;}return {paired:true};}}}});await new Promise(resolve=>setTimeout(resolve,0));return{node,calls,permissionRequests,attributes,storage,win,document,nodesWith:text=>[...nodes.values()].filter(item=>String(item.textContent).includes(text)),find:(tag,name)=>[...created].reverse().find(item=>item.localName===tag&&attributes.get(item.id+':aria-label')===name),prefs:()=>JSON.parse(storage.stored.value)};
+ vm.runInNewContext(source.replace(/^import [^\r\n]*;\r?\n/gm,''),{renderNoteText,changelog,provenance,EXPORT_FORMATS,exportChangelog,validateExport,readHistory,recordChanges,clearHistory,ACCENT_PRESETS,accentPalette,applyAccent,checkLogoFile,readLogo,saveLogo,clearLogo,readAttention,saveAttention,attentionDefaults,NOTE_LIMITS,checkNote,readNotes,addNote,deleteNotes,notesMarkdown,readDraft,saveDraft,clearDraft,linkParts,SCHEDULE_VALUES,readSchedules,addSchedule,cancelSchedule,takeDue,timeZoneLabel,readVocabulary,saveVocabulary,clearVocabulary,applyVocabulary,Intl,docsCatalog,readNarration,saveNarration,voicesFor,narrationScript,speak,stopSpeech,TICKET_CATEGORIES,TICKET_STATUSES,checkAttachment,saveTicket,readTickets,deleteTicket,diagnosticsText,ticketExport,CATALOG_URL,RELEASES_URL,normaliseCatalog,photoMap,categories,searchDishes,readFavourites,toggleFavourite,DEFAULT_PORT,ORIGIN_PATTERN,LIMITS,parsePort,modelName,validatePayload,callLocal,formatSize,installedModels,runningNames,pullProgress,chatDelta,parseRichText,AbortController,setTimeout,clearTimeout,RELEASES_API,parseReleaseCodeName,parsePhotoUrl,matchRelease,releasePageUrl,coverage:extras.coverage===undefined?defaultCoverage:extras.coverage,fetch:extras.fetch,caches:extras.caches,Response:class{constructor(body,init){this.body=body;this.headers=new Map(Object.entries(init?.headers||{}));}async json(){return JSON.parse(this.body);}},speechSynthesis:extras.speechSynthesis,navigator:extras.navigator,MediaRecorder:extras.MediaRecorder,SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},URL:{createObjectURL:()=>'blob:recording',revokeObjectURL(){}},Blob:class{constructor(parts,options){this.parts=parts;this.type=options?.type;}},renderMarkdown:(host,markdown,context)=>{host.textContent=markdown;host.context=context;},FileReader:class{readAsDataURL(file){this.result=file.dataUrl;queueMicrotask(()=>this.onload());}readAsText(file){this.result=file.text;queueMicrotask(()=>this.onload());}},defaults,document,window:win,readPreferences,applyPreferences,tabTarget,acquireStorage:()=>storage,styleExtensionMessage,chrome:{permissions:{request:async details=>{permissionRequests.push(details);return extras.grant!==false;}},runtime:{getManifest:()=>({version:'0.1.0'}),sendMessage:async message=>{calls.push(message.type);if(message.type==='protection-status'){if(snapshot instanceof Error)throw snapshot;return snapshot;}return {paired:true};}}}});await new Promise(resolve=>setTimeout(resolve,0));return{node,calls,permissionRequests,attributes,storage,win,document,nodesWith:text=>[...nodes.values()].filter(item=>String(item.textContent).includes(text)),find:(tag,name)=>[...created].reverse().find(item=>item.localName===tag&&attributes.get(item.id+':aria-label')===name),prefs:()=>JSON.parse(storage.stored.value)};
 }
 test('options separates paired connection from unavailable browser authority and localizes observed states',async()=>{const f=await fixture({schemaVersion:1,profile:'authenticated',sharedMode:'active',browserPermission:'unavailable'},'yue');assert.match(f.node('connection-state').textContent,/已配對/);assert.match(f.node('profile-state').textContent,/已驗證/);assert.match(f.node('shared-state').textContent,/已啟用/);assert.deepEqual(f.calls,['status','protection-status','workflow-discover']);assert.equal(f.attributes.get('workspace-tabs:aria-label'),'Material File Encryptor · 工作區');});
 test('options failed or malformed protection reads retain connection while clearing observations',async()=>{for(const snapshot of [new Error('fixture unavailable'),{schemaVersion:1,profile:'authenticated',sharedMode:'inactive',browserPermission:'granted'},{schemaVersion:2,profile:'authenticated',sharedMode:'inactive',browserPermission:'unavailable'}]){const f=await fixture(snapshot);assert.match(f.node('connection-state').textContent,/Paired/);assert.match(f.node('profile-state').textContent,/unavailable/);assert.match(f.node('shared-state').textContent,/unavailable/);}});
@@ -302,4 +308,174 @@ test('the tab bar, panel, whitelist and shortcut list all include the models tab
   for (const id of ['models-port', 'models-connect', 'models-refresh', 'models-list', 'models-pull-name', 'models-pull', 'models-pull-cancel', 'models-pull-progress', 'chat-model', 'chat-prompt', 'chat-send', 'chat-stop', 'models-delete-dialog']) assert.ok(html.includes('id="' + id + '"'), id);
   assert.match(html, /<md-linear-progress id="models-pull-progress"/);
   assert.match(html, /<md-dialog id="models-delete-dialog"/);
+});
+
+// Status tab: release code name (network only on request) and feature coverage (bundled record).
+const idle = {schemaVersion: 1, profile: 'authenticated', sharedMode: 'inactive', browserPermission: 'unavailable'};
+const photoUrl = 'https://github.com/Ding-Ding-Projects/dim-sum-photos/releases/download/catalog-v1/hk-dish-0001-har-gow.png';
+const releaseBody = (commit = 'c'.repeat(40), image = photoUrl) => `Unsigned release from \`${commit}\`.\n\nCode name: Classic Har Gow / 蝦餃. Photo is linked from the authoritative public catalog release.\n\n![Classic Har Gow 蝦餃](${image})\n`;
+const releaseFetch = (releases, log, status = 200) => async (url, options) => { log.push([url, options]); return {ok: status < 400, status, text: async () => JSON.stringify(releases)}; };
+const imageNodes = f => f.nodesWith('').filter(item => item.localName === 'img');
+
+test('the status tab fetches releases only after the button, with no cookies, referrer or redirects', async () => {
+  const log = [];
+  const f = await fixture(idle, 'en', {extras: {fetch: releaseFetch([{tag_name: 'v1.2.1', draft: false, prerelease: false, body: releaseBody()}], log)}});
+  assert.equal(log.length, 0);
+  assert.equal(f.node('release-status').textContent, 'Releases have not been checked in this session.');
+  assert.equal(f.node('release-result').hidden, true);
+  await f.node('release-check').listeners.click();
+  await settle();
+  assert.equal(log.length, 1);
+  assert.equal(log[0][0], 'https://api.github.com/repos/Ding-Ding-Projects/material-file-encryptor/releases?per_page=30');
+  assert.equal(log[0][1].credentials, 'omit');
+  assert.equal(log[0][1].referrerPolicy, 'no-referrer');
+  assert.equal(log[0][1].redirect, 'error');
+  assert.ok(log[0][1].signal, 'a timeout signal is attached');
+});
+
+test('a build with no matching release shows the latest release labelled as latest published, never as this build', async () => {
+  const log = [];
+  const releases = [
+    {tag_name: 'v1.9.1', draft: true, prerelease: false, published_at: '2026-10-10T00:00:00Z', body: releaseBody()},
+    {tag_name: 'v1.8.1', draft: false, prerelease: true, published_at: '2026-10-09T00:00:00Z', body: releaseBody()},
+    {tag_name: 'v1.7.1', draft: false, prerelease: false, published_at: '2026-10-08T00:00:00Z', body: releaseBody()},
+  ];
+  const f = await fixture(idle, 'en', {extras: {fetch: releaseFetch(releases, log)}});
+  await f.node('release-check').listeners.click();
+  await settle();
+  assert.match(f.node('release-status').textContent, /No published release matches this build \(version 0\.1\.0\)\..*not this build/);
+  assert.equal(f.node('release-tag').textContent, 'Latest published (not this build): v1.7.1');
+  assert.equal(f.node('release-name').textContent, 'Code name: Classic Har Gow / 蝦餃');
+  assert.equal(f.node('release-result').hidden, false);
+  assert.equal(f.node('release-link').href, 'https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.7.1');
+  const image = imageNodes(f).find(item => item.src === photoUrl);
+  assert.ok(image, 'the validated dish photo is shown');
+  assert.equal(image.referrerPolicy, 'no-referrer');
+  assert.equal(f.node('release-figure').hidden, false);
+});
+
+test('a release matching the staged commit is shown as this build, in the chosen language', async () => {
+  const log = [];
+  const f = await fixture(idle, 'yue', {extras: {fetch: releaseFetch([{tag_name: 'v1.5.1', draft: false, prerelease: false, body: releaseBody('a'.repeat(40))}], log)}});
+  await f.node('release-check').listeners.click();
+  await settle();
+  assert.equal(f.node('release-tag').textContent, '發行版本 v1.5.1');
+  assert.equal(f.node('release-name').textContent, '代號：Classic Har Gow / 蝦餃');
+  assert.match(f.node('release-status').textContent, /搵到呢個組建對應/);
+});
+
+test('an unsafe photo address is never loaded and a release without a code name says so', async () => {
+  const log = [];
+  const releases = [{tag_name: 'v1.3.1', draft: false, prerelease: false, body: releaseBody('b'.repeat(40), 'https://example.com/tracker.png')}, {tag_name: 'v1.2.1', draft: false, prerelease: false, body: 'No name.'}];
+  const f = await fixture(idle, 'en', {extras: {fetch: releaseFetch(releases, log)}});
+  await f.node('release-check').listeners.click();
+  await settle();
+  assert.equal(imageNodes(f).length, 0);
+  assert.equal(f.node('release-figure').hidden, true);
+  assert.equal(f.node('release-tag').textContent, 'Latest published (not this build): v1.3.1');
+  const none = await fixture(idle, 'en', {extras: {fetch: releaseFetch([{tag_name: 'v1.2.1', draft: false, prerelease: false, body: 'No name.'}], [])}});
+  await none.node('release-check').listeners.click();
+  await settle();
+  assert.equal(none.node('release-name').textContent, 'This release lists no code name.');
+});
+
+test('offline, rate limited and empty release checks show readable messages and leave the button usable', async () => {
+  const offline = await fixture(idle, 'en', {extras: {fetch: async () => { throw new Error('offline'); }}});
+  await offline.node('release-check').listeners.click();
+  await settle();
+  assert.match(offline.node('release-status').textContent, /could not be checked/);
+  assert.equal(offline.node('release-check').disabled, false);
+  assert.equal(offline.node('release-result').hidden, true);
+  const limited = await fixture(idle, 'en', {extras: {fetch: releaseFetch([], [], 429)}});
+  await limited.node('release-check').listeners.click();
+  await settle();
+  assert.match(limited.node('release-status').textContent, /limiting requests/);
+  const forbidden = await fixture(idle, 'yue', {extras: {fetch: releaseFetch([], [], 403)}});
+  await forbidden.node('release-check').listeners.click();
+  await settle();
+  assert.match(forbidden.node('release-status').textContent, /限制咗請求/);
+  const empty = await fixture(idle, 'en', {extras: {fetch: releaseFetch([], [])}});
+  await empty.node('release-check').listeners.click();
+  await settle();
+  assert.match(empty.node('release-status').textContent, /No published release was found/);
+  assert.equal(empty.node('release-result').hidden, true);
+  const malformed = await fixture(idle, 'en', {extras: {fetch: async () => ({ok: true, status: 200, text: async () => '{"not":"a list"}'})}});
+  await malformed.node('release-check').listeners.click();
+  await settle();
+  assert.match(malformed.node('release-status').textContent, /could not be checked/);
+});
+
+test('feature coverage shows counts, filters by status and searches ids and reasons', async () => {
+  const f = await fixture(idle);
+  assert.match(f.node('coverage-counts').textContent, /^4 records from commit aaaaaaaaaaaa: 1 missing, 1 not applicable, 2 unverified\.$/);
+  assert.equal(f.node('coverage-shown').textContent, 'Showing 4 of 4 records.');
+  const list = f.node('coverage-list');
+  assert.match(list.textContent, /languageEnglish and Cantonese settings are wired/);
+  f.node('coverage-search').value = 'regex';
+  f.node('coverage-search').listeners.input();
+  assert.equal(f.node('coverage-shown').textContent, 'Showing 1 of 4 records.');
+  assert.match(list.textContent, /regex-builder/);
+  assert.doesNotMatch(list.textContent, /notifications/);
+  f.node('coverage-search').value = 'NON-BLOCKING';
+  f.node('coverage-search').listeners.input();
+  assert.match(list.textContent, /notifications/);
+  f.node('coverage-search').value = '';
+  f.node('coverage-status').value = 'unverified';
+  f.node('coverage-status').listeners.change();
+  assert.equal(f.node('coverage-shown').textContent, 'Showing 2 of 4 records.');
+  assert.doesNotMatch(list.textContent, /regex-builder|landing-site/);
+  f.node('coverage-search').value = 'nothing matches this';
+  f.node('coverage-search').listeners.input();
+  assert.equal(f.node('coverage-shown').textContent, 'Showing 0 of 4 records.');
+});
+
+test('the coverage status select is populated and its chosen option is selected after it is connected', async () => {
+  const f = await fixture(idle);
+  const select = f.node('coverage-status');
+  const selected = [];
+  select.updateComplete = Promise.resolve();
+  select.selectIndex = index => selected.push(index);
+  select.replaceChildren = (...children) => { select.children = children; };
+  f.node('language-yue').listeners.click();
+  await settle();
+  assert.deepEqual(select.children.map(option => option.value), ['', 'missing', 'not-applicable', 'unverified']);
+  assert.deepEqual(selected, [0]);
+  select.value = 'missing';
+  select.listeners.change();
+  f.node('language-en').listeners.click();
+  await settle();
+  assert.equal(select.value, 'missing');
+  assert.deepEqual(selected.at(-1), 1);
+  assert.equal(f.node('coverage-shown').textContent, 'Showing 1 of 4 records.');
+});
+
+test('coverage statuses are labelled as records, localized, and the note says they are not proof of delivery', async () => {
+  const f = await fixture(idle, 'yue');
+  assert.match(f.node('coverage-counts').textContent, /4 項紀錄（提交 aaaaaaaaaaaa）/);
+  assert.match(f.node('coverage-list').textContent, /未驗證/);
+  const note = copyText => html.includes('data-copy="coverageNote"') && source.includes(copyText);
+  assert.ok(note('inventory records, not proof of delivery'));
+  assert.ok(source.includes('並非已交付嘅證明'));
+  const missing = await fixture(idle, 'en', {extras: {coverage: null}});
+  assert.equal(missing.node('coverage-counts').textContent, 'The coverage record is unavailable in this build.');
+  assert.equal(missing.node('coverage-list').textContent, '');
+});
+
+test('the new status sections build elements without markup strings and keep the controls reachable', () => {
+  assert.doesNotMatch(source, /innerHTML|insertAdjacentHTML|outerHTML|document\.write/);
+  for (const id of ['release-check', 'release-status', 'release-result', 'release-tag', 'release-name', 'release-figure', 'release-link', 'coverage-counts', 'coverage-search', 'coverage-status', 'coverage-shown', 'coverage-list']) assert.ok(html.includes('id="' + id + '"'), id);
+  assert.match(html, /<md-outlined-button id="release-check"/);
+  assert.match(html, /<md-outlined-select id="coverage-status"/);
+  assert.match(html, /<md-list id="coverage-list"[^>]*tabindex="0"/);
+  assert.match(html, /<a id="release-link"[^>]*rel="noopener noreferrer"/);
+  assert.match(source, /redirect:'error'/);
+  assert.match(source, /Array\.from\(select\.children\|\|\[\]\)/);
+});
+
+test('status section styles respect reduced motion and keep rows inside a narrow window', async () => {
+  const css = await fs.readFile(new URL('../browser-extension/options.css', import.meta.url), 'utf8');
+  assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{\.release-result,\.coverage-row\{animation:none\}\}/);
+  assert.match(css, /\.coverage-list\{[^}]*overflow:auto[^}]*\}/);
+  assert.match(css, /\.coverage-row \[slot=headline\][^}]*overflow-wrap:anywhere/);
+  assert.match(css, /#coverage-search,#coverage-status\{min-inline-size:0;flex:1 1 12rem\}/);
 });
