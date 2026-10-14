@@ -16867,16 +16867,27 @@
     {
       "id": "wiki-documentation-sync",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/options.js",
+        "docs/site/wiki/Browser-extension.md",
+        "docs/site/content-catalog.json",
+        "docs/site/publication.mjs"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/site/wiki/Browser-extension.md",
+        "docs/features/workflows/browser-extension-workspace.md"
+      ],
+      "localization": [
+        "docs/site/wiki/Browser-extension.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "tests": [
+        "test/site-publication.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Synchronize complete extension wiki articles into deployed internal documentation routes. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The project wiki has a Browser extension page (wiki revision 96ac4777b981dd342915cbf333ed4d2f5f2c794e) covering how to get the extension, each workspace tab and the limits that wait for the authenticated desktop channel, in English and Cantonese. The site keeps a byte-exact snapshot of every wiki page bound to that revision by SHA-256 and publishes it as an internal documentation route. Live readback of the deployed route is still required after each deploy.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -16890,7 +16901,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -16901,14 +16912,14 @@
         "action": "Synchronize complete extension wiki articles into deployed internal documentation routes.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Synchronize complete extension wiki articles into deployed internal documentation routes.",
-            "nextProof": "Exercise synchronize complete extension wiki articles into deployed internal documentation routes on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Read the deployed wiki route back after each deploy and resynchronize the snapshot whenever the wiki changes."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "The wiki snapshot is fixed per revision; nothing is stored at runtime for this workflow."
       }
     },
     {
@@ -17597,7 +17608,8 @@
     "docs/site/visitor-access.js": "9a78fd3a5491f9b89db1c3778b08029e1b25883e",
     "test/site-document-tools-layout.test.js": "9a78fd3a5491f9b89db1c3778b08029e1b25883e",
     "test/local-access-deferred-load.test.js": "9a78fd3a5491f9b89db1c3778b08029e1b25883e",
-    "test/documentation-catalog-labels.test.js": "0815968b86ad167496b9da57b9234dfa45a9b6e2"
+    "test/documentation-catalog-labels.test.js": "0815968b86ad167496b9da57b9234dfa45a9b6e2",
+    "docs/site/wiki/Browser-extension.md": "31c4c6b76121fb7ecec8c84171cb9f8339eac705"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",

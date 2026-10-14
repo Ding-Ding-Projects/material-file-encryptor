@@ -97,13 +97,13 @@ test('wiki underscore basename renders the actual continuation snapshot',async()
  await fs.mkdir(path.join(temp,'docs/site/wiki'),{recursive:true});
  await fs.mkdir(path.join(temp,'docs/features'),{recursive:true});
  const markdown=await fs.readFile('docs/site/wiki/CLOSEOUT_PROMPT.md','utf8');
- assert.deepEqual([...catalog.wiki.files].sort(),['CLOSEOUT_PROMPT.md','Home.md']);
+ assert.deepEqual([...catalog.wiki.files].sort(),['Browser-extension.md','CLOSEOUT_PROMPT.md','Home.md']);
  assert.deepEqual(Object.keys(catalog.wiki.fileSha256).sort(),catalog.wiki.files.slice().sort());
  for(const file of catalog.wiki.files){const bytes=await fs.readFile('docs/site/wiki/'+file);assert.equal(createHash('sha256').update(bytes).digest('hex'),catalog.wiki.fileSha256[file]);await fs.writeFile(path.join(temp,'docs/site/wiki',file),bytes);}
  await fs.writeFile(path.join(temp,'docs/site/content-catalog.json'),JSON.stringify({...catalog,articles:[],categories:[]}));
  const output=path.join(temp,'output');
  const articles=await buildDocumentation(temp,output,await fs.readFile('docs/site/index.html','utf8'));
- assert.equal(articles.length,2);assert.equal(articles.find(article=>article.source==='docs/site/wiki/CLOSEOUT_PROMPT.md')?.markdown,markdown);
+ assert.equal(articles.length,catalog.wiki.files.length);assert.equal(articles.find(article=>article.source==='docs/site/wiki/CLOSEOUT_PROMPT.md')?.markdown,markdown);
  const html=await fs.readFile(path.join(output,'articles/wiki--CLOSEOUT_PROMPT.html'),'utf8');
  assert.ok(html.includes('Verified typography and workbench delivery'));
  assert.ok(html.includes('Wiki CLOSEOUT_PROMPT'));
