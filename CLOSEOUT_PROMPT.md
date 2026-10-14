@@ -1,3 +1,11 @@
+## Explicit pause requested after closeout
+
+The owner explicitly selected pausing the full implementation goal after closeout. No new implementation or verification lane will start. The goal-control pause will be applied after this preservation record is committed, pushed and remotely verified; this document does not claim a tool state before that call.
+
+Read-only follow-up confirmed product main 7e215c1bd067a201a2aeadcafb26ce97cd7a20f1 and both unfinished preservation refs unchanged. Gallery main 181eb380a25fd9723d259b9c35483799e6099635 and deployment 38495009336 remain verified. Candidate releases v1.468.1 (focus 4c26daa) and v1.469.1 (reset d3b6356) are normal releases with the expected Setup, full package, RELEASES and provenance assets uploaded. These are metadata observations only, not downloaded-byte, runtime or installation acceptance. Current-main release run 38495187410 was confirmed active during its build step; it is left running normally. A documentation-only preservation push may start another producer under the existing branch trigger; its result remains unverified until separately observed.
+
+The full objective, remaining defects, source-bound evidence, private archive and current-machine boundaries below remain unchanged. All five product checkouts and all four task branches are retained. Automatic removal was rejected before execution; no alternate removal route was attempted. The latest account readback was 45 percent remaining. Resume only on an explicit owner request; do not treat a paused goal as completed.
+
 ## Verified preservation outcome
 
 The complete pre-cleanup archive at source main 5eb1ad242ac69ae8be584f1d24925c0519a618ea is verified: 161,019,518 bytes, 9,631 files, all five checkouts, 3,780 Git administrative files and 51 separately preserved private announcement files. Archive SHA-256: b65b200ef13983d9a56c415cf11cdf4d0e449fd31eb1848ee5e59059459e1d15. Every expected path and byte count matched the archive listing, the integrity test passed, and staged source/private copies passed content-hash readback. Ignored-entry counts are collapsed directory entries, not a claim to count every ignored file. Original runtime evidence and unfinished candidate captures remain in their existing private locations. The archive and copied private evidence have protected owner-only filesystem access.
