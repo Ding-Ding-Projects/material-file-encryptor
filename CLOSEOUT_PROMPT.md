@@ -49,3 +49,7 @@ Main c374e2d0392056e8edb2b1740ef1be61831abab9 was pushed and read back; its docu
 - Design proposal for an authenticated browser-to-desktop channel is in docs/design/browser-desktop-channel.md and awaits maintainer approval before any feature is built on it. It overlaps the native authorization work above; reconcile the two before implementing either further.
 - Review of the protected settings reset candidate is recorded in HANDOFF.md: do not merge until its protected-store lock file gains abandoned-lock recovery.
 - Owned isolated worktrees for this lane remain in place until an archive-first cleanup.
+
+## Blocked-state audit
+
+The same account-preservation boundary persisted for three consecutive goal turns. The latest verified allowance is7% remaining. All owned work is preserved on the remote, the primary and both task working trees are clean, and no producer remains active. The goal is being marked blocked, not complete, pending an account-allowance change. No new installation, implementation or capture was started. All26 screenshot replacements and the previously listed feature/runtime work remain unfinished.
