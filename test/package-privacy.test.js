@@ -5,8 +5,32 @@ import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { createPackage, createPackageWithOptions, getRawHeader, uncache } from '@electron/asar';
-import { inspectPackage, requirePrivateFreePackage } from '../scripts/package-privacy.mjs';
+import { inspectPackage, requirePrivateFreePackage, isPrivateEntry } from '../scripts/package-privacy.mjs';
 const config = createRequire(import.meta.url)('../forge.config.cjs');
+
+test('local assistant state is excluded at directory boundaries and rejected from archives', async () => {
+  for (const directory of ['.claude', '.codex']) {
+    for (const name of [`/${directory}`, `/nested/${directory}/worktrees/task/.git`, `\\nested\\${directory}\\session.json`]) {
+      assert.equal(isPrivateEntry(name), true, name);
+      assert.equal(config.packagerConfig.ignore.some(rule => rule.test(name)), true, name);
+    }
+    assert.equal(isPrivateEntry(`/nested/${directory}-example/readme.md`), false);
+    const temporary=await mkdtemp(path.join(os.tmpdir(),'assistant-package-boundary-'));
+    try {
+      const source=path.join(temporary,'source'),output=path.join(temporary,'output'),archive=path.join(output,'resources','app.asar');
+      await mkdir(path.join(source,directory,'worktrees'),{recursive:true});await mkdir(path.dirname(archive),{recursive:true});
+      await writeFile(path.join(source,'index.js'),'export const ready=true;');
+      await writeFile(path.join(source,directory,'worktrees','synthetic.txt'),'synthetic local state');
+      await createPackage(source,archive);
+      assert.equal((await inspectPackage(output)).code,'PACKAGE_PRIVACY_REJECTED');
+      await rm(path.join(source,directory),{recursive:true});await createPackage(source,archive);
+      assert.equal((await inspectPackage(output)).code,'PACKAGE_PRIVACY_OK');
+      await mkdir(path.join(output,'resources',directory),{recursive:true});
+      await writeFile(path.join(output,'resources',directory,'synthetic.txt'),'synthetic local state');
+      assert.equal((await inspectPackage(output)).code,'PACKAGE_PRIVACY_REJECTED');
+    } finally {await rm(temporary,{recursive:true,force:true});}
+  }
+});
 
 async function rewriteHeader(archive, mutate) {
   uncache(archive);

@@ -13,3 +13,6 @@ coverage/
 /src/shared/documentation-catalog.json
 
 /src/renderer/fonts/
+
+/.claude/
+/.codex/
