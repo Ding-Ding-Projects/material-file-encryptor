@@ -43,6 +43,27 @@ class InterpreterCommandTests(unittest.TestCase):
 
 
 class Tests(unittest.TestCase):
+    def test_evidence_digest_does_not_admit_interpreter_path_aliases(self):
+        runtime = self.base / 'strict-runtime'
+        runtime.mkdir()
+        image = runtime / 'python.exe'
+        image.write_bytes(b'original interpreter bytes')
+        original = recovery.digest(image)
+        with self.assertRaises(recovery.Error):
+            recovery.digest(runtime / '..' / runtime.name / image.name)
+        image.write_bytes(b'replacement interpreter bytes')
+        self.assertNotEqual(recovery.digest(image), original)
+        if os.name == 'nt':
+            alias = self.base / 'redirected-runtime'
+            result = subprocess.run(['cmd.exe', '/c', 'mklink', '/J', str(alias), str(runtime)],
+                                    capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            try:
+                with self.assertRaises(recovery.Error):
+                    recovery.digest(alias / image.name)
+            finally:
+                alias.rmdir()
+
     def test_default_configuration_admits_exact_redirected_commands_and_pins_form(self):
         for executable in ('python.exe', 'pythonw.exe'):
             with self.subTest(executable=executable):
