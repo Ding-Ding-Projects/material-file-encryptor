@@ -19,6 +19,7 @@
 - [x] Integrate the sweep into main.
 - [x] Refresh the README with current desktop captures and provenance.
 - [x] Seat the local access fieldset legend inside its outlined card (capture, main 862444b).
+- [x] Complete the Material colour roles (secondary, tertiary, inverse, error container, highest and lowest surfaces) from the theme, so focus rings and other component states no longer fall back to the baseline purple scheme (dialog capture).
 - [x] Animate the remaining state changes: the navigation rail fades between destinations, table rows fade between hover and selection, and guidance panels expand in; reduced motion disables each (live computed styles read from the built application).
 - [x] Let data table header rows reach the right outline by dropping the reserved scrollbar gutter (History capture, main 4a30e82).
 - [x] Let workflow document name and content fields span their column (capture, main a36600b).
