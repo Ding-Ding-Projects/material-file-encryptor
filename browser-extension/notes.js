@@ -77,3 +77,19 @@ export function readDraft(storage) {
 }
 export function saveDraft(storage, draft) { try { storage?.setItem(draftKey, JSON.stringify({title: String(draft.title || ''), body: String(draft.body || ''), step: draft.step})); } catch {} }
 export function clearDraft(storage) { try { storage?.removeItem(draftKey); } catch {} }
+
+// Use the shared DOM-only renderer without assets or relative document routes.
+// Restrict links before attaching the detached result to the live document.
+export function renderNoteText(host, text, renderer, translate = value => value) {
+  if (typeof text !== 'string' || text.length > NOTE_LIMITS.body) throw new Error('Use 4,000 characters or fewer.');
+  const draft = host.ownerDocument.createElement('div');
+  renderer(draft, text, {catalog: {documents: [], assets: []}, source: 'note.md', headings: [], open() {}, translate});
+  for (const link of draft.querySelectorAll('a')) {
+    let safe = false;
+    try { const url = new URL(link.href); safe = url.protocol === 'https:' && !url.username && !url.password; } catch {}
+    if (!safe) { const label = host.ownerDocument.createElement('span'); label.textContent = link.textContent; label.title = translate('Only HTTPS links without credentials can open.'); link.replaceWith(label); }
+    else { link.target = '_blank'; link.rel = 'noopener noreferrer'; link.referrerPolicy = 'no-referrer'; }
+  }
+  if (!text.trim()) draft.textContent = translate('No text was provided.');
+  host.replaceChildren(...draft.childNodes);
+}
