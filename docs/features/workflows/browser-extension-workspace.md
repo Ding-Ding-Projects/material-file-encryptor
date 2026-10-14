@@ -1,6 +1,6 @@
 # Browser extension workspace
 
-Open workspace in the popup opens the extension-owned options tab. Connection, Personalization, Changelog, Notes and Status are Material tabs with Arrow Left/Right and Home/End navigation, and each panel fades in unless reduced motion is requested. Tab changes keep the same controls rather than replacing the focused element. Shared local Material components and the bundled regex search are used without remote executable assets.
+Open workspace in the popup opens the extension-owned options tab. Connection, Personalization, Changelog, Notes, Documentation and Status are Material tabs with Arrow Left/Right and Home/End navigation, and each panel fades in unless reduced motion is requested. Tab changes keep the same controls rather than replacing the focused element. Shared local Material components and the bundled regex search are used without remote executable assets.
 
 Language (English, Cantonese or bilingual), theme (system, light or dark) and the selected tab use a versioned bounded extension-origin local store. No browser storage sync, broad host permission or additional storage permission is used. Invalid or oversized cached settings fall back to defaults. A failed write retains usable page state and explicitly reports that the change was not saved. Reset restores browser-local defaults only. Bilingual labels stack their secondary line.
 
@@ -24,7 +24,7 @@ About these settings, under Personalization, lists each setting with its current
 
 Reset browser settings asks for a deliberate confirmation: turn on both confirmation switches, move the slider fully right, then choose Execute. Emergency exit cancels with nothing changed. Individual playfulness resets stay one step, because they change a single value.
 
-Alt+1 to Alt+5 open Connection, Personalization, Changelog, Notes and Status, and Ctrl+K opens the command palette, which lists these shortcuts beside their commands. Browser-reserved combinations such as Ctrl with a number, Ctrl+T and Ctrl+W are left to the browser.
+Alt+1 to Alt+6 open Connection, Personalization, Changelog, Notes, Documentation and Status, and Ctrl+K opens the command palette, which lists these shortcuts beside their commands. Browser-reserved combinations such as Ctrl with a number, Ctrl+T and Ctrl+W are left to the browser.
 
 ## Name, accent, recent changes and filters
 
@@ -61,6 +61,12 @@ Scheduled changes, under Personalization, sets the theme or language to change a
 Personal wording imports a JSON file of the form {"schemaVersion":1,"entries":{"original":"replacement"}} with up to 200 plain-text entries of 60 characters or fewer. A file with any invalid entry is rejected whole and nothing changes. Wording changes interface text only, never notes, exports or anything sent to the desktop. Each original word is replaced once, so one entry's replacement is never rewritten by another. Clear wording restores the original text.
 
 The workspace and popup use the Noto Sans font bundled inside the extension, checked against the application's font receipt when the extension is staged. The Hong Kong Chinese face is too large to bundle, so Chinese text uses the system font. No font or other resource is requested from outside the extension.
+
+## Offline documentation
+
+The Documentation tab (Alt+5; Status is Alt+6) reads the complete documentation set bundled with the extension, including every feature article and its Cantonese version, with no network connection. Search matches article titles and text. Links between articles open inside the tab, including links to a heading, and links to outside websites open in a new browser tab. Cantonese mode shows the Cantonese version of each article where one exists. The articles are rendered without running any HTML or script from the source text. Pages that exist only in the repository's online wiki are not bundled.
+
+The extension talks to the desktop only through browser native messaging. It has no HTTP API, so no Postman collection exists for it.
 
 Focused tests cover malformed/oversized cache, failed saves, persistence, keyboard tab routing, forged sender paths and staged local-only CSP. Source staging hashes every workspace file. Signing, installed identity, real browser interaction, visual parity and display scaling remain unverified.
 

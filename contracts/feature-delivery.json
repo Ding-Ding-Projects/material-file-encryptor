@@ -14103,16 +14103,27 @@
     {
       "id": "offline-docs",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css",
+        "scripts/build-browser-extension.mjs"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js",
+        "test/browser-extension-bundle.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Read complete bundled articles and wiki content with internal routes and offline search. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The Documentation tab bundles the complete documentation catalogue and its DOM-only renderer, searches titles and text, routes internal links and heading anchors inside the tab and shows Cantonese versions in Cantonese mode. Headless browser captures with trusted input show search, an internal link and Cantonese mode with no external requests. Pages that exist only in the online wiki are not bundled.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -14126,7 +14137,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -14137,14 +14148,14 @@
         "action": "Read complete bundled articles and wiki content with internal routes and offline search.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Read complete bundled articles and wiki content with internal routes and offline search.",
-            "nextProof": "Exercise read complete bundled articles and wiki content with internal routes and offline search on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "The catalogue is packaged with the extension; nothing is stored at runtime."
       }
     },
     {
@@ -16560,16 +16571,16 @@
     {
       "id": "postman-collections",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "contracts/feature-delivery.json"
+        "docs/features/workflows/browser-extension-workspace.md"
       ],
       "documentation": [],
       "localization": [],
       "tests": [],
       "evidence": [],
       "persistence": [],
-      "reason": "No implementation record was established for this repository obligation in this assessment. The inventory is the planning owner, not proof of delivery.",
+      "reason": "The extension workspace article states that the extension talks to the desktop only through browser native messaging and exposes no HTTP API, so no Postman collection is created. No independent review of the messaging surface for HTTP endpoints has been recorded.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -16583,10 +16594,10 @@
           "declaredScope": "Repository obligation supporting the product"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
-        "owner": "contracts/feature-delivery.json",
+        "owner": "docs/features/workflows/browser-extension-workspace.md",
         "gaps": [
           "behavior",
           "proof"
@@ -16598,10 +16609,10 @@
             "surface": null,
             "selector": null,
             "outcome": "Document whether extension-native messaging has any HTTP API and create collections only for actual HTTP endpoints.",
-            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+            "nextProof": "Inspect and run the named repository entrypoints or records at the declared source; retain exact outputs and independently verify the extension-specific delivery obligations."
           }
         ],
-        "persistence": "Repository files or forge records provide durable state; no browser preference field implements this obligation."
+        "persistence": "Repository files provide durable state; no browser preference field implements this obligation."
       }
     },
     {
