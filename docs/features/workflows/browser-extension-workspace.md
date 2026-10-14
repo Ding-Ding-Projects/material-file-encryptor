@@ -54,6 +54,14 @@ The Notes tab (Alt+4) keeps short notes in this browser only, up to 50 of them. 
 
 Select several notes with their checkboxes to act on them together. Export selected saves them as one Markdown file. Delete selected asks for the same deliberate confirmation as the full reset, then reports how many were deleted, how many could not be deleted (those stay selected) and how many were already gone.
 
+## Scheduled changes, personal wording and fonts
+
+Scheduled changes, under Personalization, sets the theme or language to change at a chosen date and time. The section states the time zone the times use, for example America/Toronto (UTC-04:00). Times less than a minute away, and a second change to the same setting in the same minute, are refused. Each scheduled change can be cancelled. Changes that come due while the workspace is open are applied within 30 seconds. Changes missed while it was closed are applied in order the next time it opens, and the workspace says how many were missed and when the earliest was due.
+
+Personal wording imports a JSON file of the form {"schemaVersion":1,"entries":{"original":"replacement"}} with up to 200 plain-text entries of 60 characters or fewer. A file with any invalid entry is rejected whole and nothing changes. Wording changes interface text only, never notes, exports or anything sent to the desktop. Each original word is replaced once, so one entry's replacement is never rewritten by another. Clear wording restores the original text.
+
+The workspace and popup use the Noto Sans font bundled inside the extension, checked against the application's font receipt when the extension is staged. The Hong Kong Chinese face is too large to bundle, so Chinese text uses the system font. No font or other resource is requested from outside the extension.
+
 Focused tests cover malformed/oversized cache, failed saves, persistence, keyboard tab routing, forged sender paths and staged local-only CSP. Source staging hashes every workspace file. Signing, installed identity, real browser interaction, visual parity and display scaling remain unverified.
 
 ## Bundled copy measurement

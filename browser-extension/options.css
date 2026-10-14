@@ -34,3 +34,4 @@ body{width:auto}main{max-width:1000px;margin:auto;max-height:none}section{paddin
 .side-sheet[hidden]{display:none}.side-sheet md-outlined-text-field{inline-size:100%}.note-step{margin:0;color:var(--md-sys-color-on-surface-variant)}.note-review-body{white-space:pre-wrap;overflow-wrap:anywhere}#note-error{color:var(--md-sys-color-error);min-block-size:1.5em;margin:0}
 @keyframes mfe-sheet-in{from{opacity:0;transform:translateX(32px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.side-sheet,.note-entry{animation:none}}
+.schedule-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-self:stretch}.schedule-row md-outlined-select{min-width:10rem;width:auto}#schedule-list{justify-self:stretch}

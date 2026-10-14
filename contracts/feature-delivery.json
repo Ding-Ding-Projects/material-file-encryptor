@@ -11916,16 +11916,24 @@
     {
       "id": "personal-vocabulary",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Import, replace and clear bounded local JSON wording, reject malformed files atomically and restore original copy. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "A wording file is accepted all or nothing, replaces each original interface word once, never touches notes, exports or desktop messages, and clears back to the original text. Headless browser captures show replaced tab names and the cleared state; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -11939,7 +11947,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -11950,14 +11958,14 @@
         "action": "Import, replace and clear bounded local JSON wording, reject malformed files atomically and restore original copy.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Import, replace and clear bounded local JSON wording, reject malformed files atomically and restore original copy.",
-            "nextProof": "Exercise import, replace and clear bounded local JSON wording, reject malformed files atomically and restore original copy on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "A separate bounded local record holds the imported JSON; it applies to interface copy only and clearing it restores the original text."
       }
     },
     {
@@ -12057,16 +12065,24 @@
     {
       "id": "scheduled-settings",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Create and cancel dated setting changes with timezone disclosure, conflict handling and overdue recovery. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Theme and language changes can be scheduled with the time zone stated, past times and same-minute clashes refused, cancellation, and missed changes applied in order when the workspace next opens. Headless browser captures show the schedule list and time zone; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -12080,7 +12096,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -12091,14 +12107,14 @@
         "action": "Create and cancel dated setting changes with timezone disclosure, conflict handling and overdue recovery.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Create and cancel dated setting changes with timezone disclosure, conflict handling and overdue recovery.",
-            "nextProof": "Exercise create and cancel dated setting changes with timezone disclosure, conflict handling and overdue recovery on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "A separate bounded local record of at most 20 dated theme or language changes stored in UTC."
       }
     },
     {
@@ -15122,16 +15138,25 @@
     {
       "id": "vendored-fonts",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/popup.css",
+        "scripts/build-browser-extension.mjs",
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
+        "browser-extension/options.js"
+      ],
+      "tests": [
+        "test/browser-extension-bundle.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Bundle approved fonts locally and verify extension pages load without third-party font requests. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Staging copies the Latin Noto Sans face and its licence, checked against the font receipt, and the pages use it with no external font request; the Hong Kong Chinese face is not bundled because of its size, so Chinese text uses the system font. A headless browser check shows the font loaded and no external requests.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -15145,7 +15170,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -15156,14 +15181,14 @@
         "action": "Bundle approved fonts locally and verify extension pages load without third-party font requests.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Bundle approved fonts locally and verify extension pages load without third-party font requests.",
-            "nextProof": "Exercise bundle approved fonts locally and verify extension pages load without third-party font requests on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Fonts are packaged files; nothing is stored at runtime."
       }
     },
     {
