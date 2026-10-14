@@ -1,3 +1,12 @@
+## Current preservation boundary
+
+- [x] Integrate independently reviewed focus correction and preserve its measured limits.
+- [x] Preserve all four current task branch tips on the remote.
+- [ ] Repair reset final authorization at the writer-owned persistence boundary.
+- [ ] Resolve the later renderer failure and obtain an uninterrupted full sequence.
+- [ ] Verify the pending release producers and remaining installation lifecycle.
+- [ ] Complete eligible cleanup after all preservation and execution requirements permit it.
+
 ## Verified focus repair
 
 - [x] Restore the complete table keyboard-focus ring above sticky headers, with independent review and real English light/dark captures at both desktop sizes.
