@@ -65,16 +65,22 @@
       "translationSha256": "e96687badec75933ada1c0fda118fe045b48a6a6cf6f13bb22fb6ec02fe68ec9"
     },
     {
+      "source": "docs/features/browser/file-conversion.md",
+      "translation": "docs/features/browser/file-conversion.zh-HK.md",
+      "sourceSha256": "9b5f19715b425b0c497814ae264fd306c8233a665f82209a9cc212f9c3a54608",
+      "translationSha256": "8a7d4c67952fee24664c0b72161377112f5ed2e194541ed11e0df3e8cc263e68"
+    },
+    {
       "source": "docs/features/browser/README.md",
       "translation": "docs/features/browser/README.zh-HK.md",
-      "sourceSha256": "01ad4895220b55fcd8c969d14aa9cfe1237315b568c88b770cc5afff96c8f4d9",
-      "translationSha256": "b84a40ee596f22b9843daa7ee606c95813eb49441afb44fae1fa29ec6d53b059"
+      "sourceSha256": "6a330ea1f4230b6bdba7b3c39bb82db7108ac9b7c14ad303283f95484a1dea5e",
+      "translationSha256": "56675937acf0b11feb8244aa496869e634ebda6ba21524013ee60d07fd87233c"
     },
     {
       "source": "docs/features/browser/safe-note-reading.md",
       "translation": "docs/features/browser/safe-note-reading.zh-HK.md",
-      "sourceSha256": "8aae435b570d9a1dcaa84df0a968c2702cfed06c134cd8d84d819e6ac6023dc9",
-      "translationSha256": "1c3aa8917232ef11ee92b3cc50f3532c2b989505ad5ebe5c0bb694ff5efb2062"
+      "sourceSha256": "281bc51c6dfcccfda147f77e7591648faa6591c60202f849fe6afb1490d588fb",
+      "translationSha256": "522e977506da83ddb12858560e814fbdd1c9ecc88ffaad440f1d143afaff6290"
     },
     {
       "source": "docs/features/converter/archive-and-data.md",
@@ -451,8 +457,8 @@
     {
       "source": "docs/features/platform/renderer-task-timing.md",
       "translation": "docs/features/platform/renderer-task-timing.zh-HK.md",
-      "sourceSha256": "84a26a80f3995927279bf06392823c3b5e537a047b2dc585470ffc1438634453",
-      "translationSha256": "60f24418aaf7913bb1a6bab39cfceddd76d7cb12ea5f5f8ac2a4437ef745f566"
+      "sourceSha256": "31a6c0dfa0e57bb9db6ae74e523ac01fad8bfe86de5dd1740589fda09232e1a4",
+      "translationSha256": "556878b8c740d8401fb8ae75018732b042086df75d718991c120c96681dc0039"
     },
     {
       "source": "docs/features/README.md",

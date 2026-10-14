@@ -797,3 +797,15 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 - [ ] Pass current renderer and compiled-native acceptance under original deadlines after host pressure permits it.
 - [ ] Repair, review and integrate the bounded converter increment and verify actual conversion.
 - [ ] Complete remaining feature rows, installed lifecycle, visual evidence and public delivery.
+
+## Browser conversion source increment
+
+- [x] Implement and independently review four native-selected conversion adapters, bounded physical paging, shared request ownership and explicit disposal recovery.
+- [x] Verify focused causal admission, cancellation, ownership and recovery checks; preserve runtime limits.
+- [ ] Verify real packaged conversion, native isolation and output validity through the installed extension.
+- [ ] Complete remaining adapter options, batch controls and direct output opening/export.
+
+## Combined workflow acceptance
+
+- [ ] Verify combined converter and local-model workspace in the installed product; source merge checks73/73 pass, runtime evidence remains pending.
+- [ ] Integrate cancellation repair94bbe888 after its source-bound smoke and retain any remaining original-deadline limitation.

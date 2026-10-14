@@ -8,6 +8,24 @@ async function propose(link){if(!session)throw new Error('Pair this browser with
 chrome.runtime.onInstalled.addListener(()=>{chrome.contextMenus.create({id:'propose-download',title:'Download with Material File Encryptor…',contexts:['link'],targetUrlPatterns:['https://*/*']});});
 chrome.contextMenus.onClicked.addListener(info=>{if(info.menuItemId==='propose-download')void propose(info.linkUrl).catch(()=>{chrome.action.setBadgeText({text:'!'});chrome.action.setTitle({title:'Pair the browser and retry the download handoff.'});});});
 chrome.runtime.onMessage.addListener((message,sender,respond)=>{if(sender.id!==chrome.runtime.id||!['popup.html','options.html'].some(path=>sender.url===chrome.runtime.getURL(path))||sender.frameId!==undefined&&sender.frameId!==0)return false;
+ if(['converter-catalog','converter-prepare','converter-enqueue','converter-list','converter-control'].includes(message?.type)){
+  const fields={'converter-catalog':[],'converter-prepare':[],'converter-enqueue':['selection','adapterId'],'converter-list':['cursor'],'converter-control':['id','action']}[message.type];
+  const uuid=value=>typeof value==='string'&&/^[a-f0-9-]{36}$/.test(value);
+  if(!session||!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==fields.length+2||!['type','language',...fields].every(key=>Object.hasOwn(message,key))||!['en','yue','bilingual'].includes(message.language)||message.type==='converter-enqueue'&&(!uuid(message.selection)||!['json-format','text-utf8','base64','hex'].includes(message.adapterId))||message.type==='converter-list'&&message.cursor!==null&&!uuid(message.cursor)||message.type==='converter-control'&&(!uuid(message.id)||!['pause','resume','cancel'].includes(message.action))){respond({error:'Conversion request is invalid or unavailable.'});return false;}
+  const ownSession=session,epoch=connectionEpoch;
+  request({...message,session:ownSession},125000).then(value=>{
+   if(session!==ownSession||connectionEpoch!==epoch||!value||value.type!==message.type+'-result'||value.schemaVersion!==1||JSON.stringify(value).length>60000)throw Error('Conversion response unavailable.');
+   const exact=(row,keys)=>row&&Object.keys(row).sort().join(',')===keys.sort().join(',');
+   const job=row=>exact(row,['id','adapterId','state','progress'])&&uuid(row.id)&&['json-format','text-utf8','base64','hex'].includes(row.adapterId)&&['queued','running','paused','completed','failed','cancelled'].includes(row.state)&&Number.isFinite(row.progress)&&row.progress>=0&&row.progress<=100;
+   let valid=false;
+   if(message.type==='converter-catalog')valid=exact(value,['type','schemaVersion','formats'])&&Array.isArray(value.formats)&&value.formats.length<=128&&value.formats.every(row=>exact(row,['id','category','name','sources','target','metadata','encoding','lossy','enabled','reason'])&&['id','category','name','target','metadata','encoding','reason'].every(key=>typeof row[key]==='string'&&row[key].length<=2000)&&/^[a-z0-9-]{1,80}$/.test(row.id)&&Array.isArray(row.sources)&&row.sources.length<=16&&row.sources.every(item=>typeof item==='string'&&/^[a-z0-9*]{1,16}$/.test(item))&&typeof row.enabled==='boolean'&&typeof row.lossy==='boolean'&&['','browser-options-unavailable','native-adapter-unavailable'].includes(row.reason));
+   else if(message.type==='converter-list')valid=exact(value,['type','schemaVersion','rows','nextCursor'])&&(value.nextCursor===null||uuid(value.nextCursor))&&Array.isArray(value.rows)&&value.rows.length<=20&&value.rows.every(job);
+   else if(value.outcome==='cancelled')valid=exact(value,['type','schemaVersion','outcome']);
+   else if(message.type==='converter-prepare')valid=exact(value,['type','schemaVersion','outcome','selection','sourceType','bytes'])&&value.outcome==='selected'&&uuid(value.selection)&&['pdf','png','jpeg','zip','xlsx','ods','wav','flac','mp3','mp4','riff','7z','rar','binary','json','text'].includes(value.sourceType)&&Number.isSafeInteger(value.bytes)&&value.bytes>=0&&value.bytes<=67108864;
+   else valid=exact(value,['type','schemaVersion','outcome','job'])&&value.outcome===(message.type==='converter-enqueue'?'accepted':'updated')&&job(value.job);
+   if(!valid)throw Error('Invalid conversion response.');respond(value);
+  }).catch(()=>respond({error:'Conversion request did not complete. Check the desktop for work already accepted.'}));return true;
+ }
  if(['workflow-discover','workflow-editor-open'].includes(message?.type)){
   if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==(message.type==='workflow-editor-open'?2:1)||message.type==='workflow-editor-open'&&!['en','yue','bilingual'].includes(message.language)||!session){respond({error:'Native editor workflow unavailable.'});return false;}
   const ownSession=session,epoch=connectionEpoch;

@@ -31,17 +31,18 @@ function controls(page) {
   const value=target[key];return typeof value==='function'?value.bind(target):value;
  }});
 }
-function trackedControls(page){
- const methods=new Set(['click','fill','check','uncheck','selectOption','focus','press','goto','waitFor','waitForSelector','waitForFunction','scrollIntoViewIfNeeded','setViewportSize','evaluate']);
+function trackedControls(page,signal){
+ const methods=new Set(['click','fill','check','uncheck','selectOption','focus','press','goto','reload','waitFor','waitForSelector','waitForFunction','scrollIntoViewIfNeeded','setViewportSize','evaluate','count','isVisible','isEnabled','isDisabled','isChecked','inputValue','getAttribute','textContent','dispatchEvent','screenshot','emulateMedia','addInitScript','exposeFunction']);
+ const check=()=>signal?.throwIfAborted();
  const wrap=(target,label)=>new Proxy(target,{get(object,key){
   const value=object[key];if(['locator','getByRole'].includes(key))return(...args)=>wrap(value.apply(object,args),(label+'/'+key+':'+String(args[0])).slice(-120));
-  if(key==='keyboard')return new Proxy(value,{get(keyboard,method){
-   if(method!=='press')return typeof keyboard[method]==='function'?keyboard[method].bind(keyboard):keyboard[method];
-   return async(...args)=>{const record=page.__fixtureProgress,known=new Set(['Enter','Escape','Space','Tab','ArrowLeft','ArrowRight']),phase='keyboard.press:'+ (known.has(args[0])?args[0]:'other');if(record)await record({kind:'phase',state:'started',phase});const result=await keyboard.press(...args);if(record)await record({kind:'phase',state:'completed',phase});return result;};
+  if(key==='keyboard'||key==='mouse')return new Proxy(value,{get(input,method){
+   if(typeof input[method]!=='function')return input[method];
+   return async(...args)=>{check();const record=page.__fixtureProgress,known=new Set(['Enter','Escape','Space','Tab','ArrowLeft','ArrowRight']),phase=key+'.'+method+':'+(key==='keyboard'&&known.has(args[0])?args[0]:'other');if(record)await record({kind:'phase',state:'started',phase});check();const result=await input[method](...args);if(record)await record({kind:'phase',state:'completed',phase});check();return result;};
   }});
   if(typeof value!=='function')return value;
   if(!methods.has(key))return value.bind(object);
-  return async(...args)=>{const record=page.__fixtureProgress,phase=(label+'.'+key+(label==='page'&&['click','fill','selectOption','waitForSelector'].includes(key)?':'+String(args[0]):'')).slice(0,160);if(record)await record({kind:'phase',state:'started',phase});const result=await value.apply(object,args);if(record)await record({kind:'phase',state:'completed',phase});return result;};
+  return async(...args)=>{check();const record=page.__fixtureProgress,phase=(label+'.'+key+(label==='page'&&['click','fill','selectOption','waitForSelector'].includes(key)?':'+String(args[0]):'')).slice(0,160);if(record)await record({kind:'phase',state:'started',phase});check();const result=await value.apply(object,args);if(record)await record({kind:'phase',state:'completed',phase});check();return result;};
  }});return wrap(page,'page');
 }
 async function selectImportedFile(page){
@@ -93,11 +94,14 @@ const visibleAncestorChain=element=>{
 };
 
 // This isolated bridge tests renderer behavior only. Real native-drive evidence is separate.
-async function fixture(page,startedAt=performance.now()) {
- await verifyRendererFeatureFixture(createRendererFeatureFixture().bridge);
+async function caseProgress(startedAt,signal){
  const evidenceRoot=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-renderer-progress-'));
- const progress=createRendererFixtureProgress(async snapshot=>{const file=path.join(evidenceRoot,'progress.json');await fs.writeFile(file+'.pending',JSON.stringify(snapshot,null,2));await fs.rename(file+'.pending',file);},{startedAt});
+ const progress=createRendererFixtureProgress(async snapshot=>{const file=path.join(evidenceRoot,'progress.json');await fs.writeFile(file+'.pending',JSON.stringify(snapshot,null,2));await fs.rename(file+'.pending',file);},{startedAt,signal});
  console.log(JSON.stringify({scope:'source-renderer-progress',evidenceRoot}));
+ return progress;
+}
+async function fixture(page,progress) {
+ await verifyRendererFeatureFixture(createRendererFeatureFixture().bridge);
  await page.exposeFunction('__recordRendererFixture',progress.record);
  page.__fixtureProgress=progress.record;
  await page.addInitScript({content:rendererFeatureFixtureScript(featureFixture => {
@@ -130,12 +134,14 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
  const startedAt=performance.now();
  await verifyRendererFeatureFixture(createRendererFeatureFixture().bridge);
  if (executable) { try { await fs.access(executable); } catch { return t.skip('Set CHROMIUM_PATH to an installed Chromium executable.'); } }
+ const progress=await caseProgress(startedAt,t.signal);
  const server = createServer(serveRendererFixture);
  await new Promise(resolve => server.listen(0,'127.0.0.1',resolve));
  let browser,fixtureError;
  try {
+  t.signal.throwIfAborted();
   browser = await openRendererBrowser(`http://127.0.0.1:${server.address().port}/`,{runtime:{sourceCommit:process.env.MFE_TEST_SOURCE_COMMIT}});
-  const page = trackedControls(controls(browser.page)); await page.setViewportSize({width:1440,height:900}); await fixture(page,startedAt);
+  const page = controls(trackedControls(browser.page,t.signal)); await page.setViewportSize({width:1440,height:900}); await fixture(page,progress);
   await page.addInitScript(() => {
    window.confirmationTrace=[];
    const record=(event)=>{const dialog=document.querySelector('#confirm-dialog');const material=dialog?.shadowRoot?.querySelector('md-dialog');window.confirmationTrace.push({event,at:performance.now(),hostOpen:dialog?.open,materialOpen:material?.open,archiveState:document.querySelector('#view-history')?.dataset.archiveState,selectedDisabled:document.querySelector('[data-history-restore-selected]')?.disabled});if(window.confirmationTrace.length>24)window.confirmationTrace.shift();};
@@ -313,14 +319,15 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   await page.keyboard.press('Escape');await page.setViewportSize({width:720,height:450});await page.evaluate(() => {document.documentElement.style.zoom='2';});assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),true,'200% zoom has no page overflow');
   await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.locator('.view:not([hidden])').evaluate(el => getComputedStyle(el).animationName),'none');
   assert.deepEqual(errors,[]);
- } catch(error) { fixtureError=error;if(browser?.page)console.error(JSON.stringify({scope:'confirmation-lifecycle-diagnostic',trace:await browser.page.evaluate(()=>window.confirmationTrace||[]).catch(()=>[])}));throw error;
- } finally { try { try {await browser?.close();}catch(closureError){throw fixtureError?new AggregateError([fixtureError,closureError],'Renderer fixture assertion and closure failed.'):closureError;} } finally { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); } }
+ } catch(error) { fixtureError=error;if(browser?.page&&!t.signal.aborted)console.error(JSON.stringify({scope:'confirmation-lifecycle-diagnostic',trace:await browser.page.evaluate(()=>window.confirmationTrace||[]).catch(()=>[])}));throw error;
+ } finally { try { try {await browser?.close();}catch(closureError){throw fixtureError?new AggregateError([fixtureError,closureError],'Renderer fixture assertion and closure failed.'):closureError;} } finally { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); try{await progress.flush();}finally{progress.dispose();} } }
 });
 
 // This isolated DOM regression does not claim native-drive or installed acceptance.
-test('scoped clear-control selectors use their actual owning wrappers', {timeout:90000}, async () => {
+test('scoped clear-control selectors use their actual owning wrappers', {timeout:90000}, async t => {
  const startedAt=performance.now();
  await verifyRendererFeatureFixture(createRendererFeatureFixture().bridge);
+ const progress=await caseProgress(startedAt,t.signal);
  const evidenceRoot = await fs.mkdtemp(path.join(os.tmpdir(),'mfe-scoped-clear-proof-'));
  const proof = {version:1,scope:'Actual renderer DOM selector regression',cases:[],passed:false};
  for (const name of ['scoped-search.js','../shared/surface/controls.js','../shared/surface/search.js']) proof[name] = createHash('sha256').update(await fs.readFile(path.join(root,name))).digest('hex');
@@ -328,9 +335,10 @@ test('scoped clear-control selectors use their actual owning wrappers', {timeout
  await new Promise(resolve => server.listen(0,'127.0.0.1',resolve));
  let browser,primaryError;
  try {
+  t.signal.throwIfAborted();
   const url = `http://127.0.0.1:${server.address().port}/`;
   browser = await openRendererBrowser(url,{evidenceRoot:path.join(evidenceRoot,'owned-closure'),runtime:{sourceCommit:process.env.MFE_TEST_SOURCE_COMMIT}});
-  const page = trackedControls(controls(browser.page)); await page.setViewportSize({width:1180,height:850}); await fixture(page,startedAt);
+  const page = controls(trackedControls(browser.page,t.signal)); await page.setViewportSize({width:1180,height:850}); await fixture(page,progress);
   await page.goto(url);
   await page.waitForFunction(() => document.querySelector('#vault-badge').textContent !== 'Checking drive…');
   await page.evaluate(() => window.pushState({locked:false,mounted:true,storageFormat:2}));
@@ -377,6 +385,7 @@ test('scoped clear-control selectors use their actual owning wrappers', {timeout
   try { proof.ownedClosure=await browser?.close(); cleanupVerified=Boolean(browser); } catch(closureError) {if(primaryError)throw new AggregateError([primaryError,closureError],'DOM assertion and owned closure both failed.');throw closureError;} finally {
    proof.cleanupVerified=cleanupVerified;proof.passed=proof.domPassed===true && cleanupVerified;
    server.closeAllConnections(); await new Promise(resolve => server.close(resolve));
+   try {await progress.flush();}finally{progress.dispose();}
    await fs.writeFile(path.join(evidenceRoot,'dom-proof.json'),JSON.stringify(proof,null,2));
    console.log(JSON.stringify({scope:proof.scope,evidenceRoot,passed:proof.passed}));
   }

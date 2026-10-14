@@ -1427,3 +1427,29 @@ Incoming main commit `8031746` added a browser-to-desktop design proposal while 
 Documentation deployment run `38589298451` failed because the incoming design article was outside the publication validator namespace. The repair admits bounded `docs/design/` Markdown paths, verifies complete feature/design inventory, and preserves traversal and wiki checks. Three focused publication checks passed, including full current catalogue generation and a causal omitted-design case; independent source review accepted the repair. Live deployment remains pending its new run.
 
 Local assistant-state directories were found outside existing package exclusions before another local package was built. The source now excludes and independently rejects both namespaces at exact directory boundaries, preserving unrelated local state. The new regression failed before repair; all nine package-privacy checks passed afterward, and independent source review accepted the change. No publication of that state was observed. Both original compiled-native tests now pass sequentially after the baseline build settled, with their original five-second startup and twenty-second test limits. Live documentation at source93faa72 passed 221 source-hash comparisons,246 route/asset readbacks (one503 succeeded on bounded retry),14 exact image hashes and homepage readback.
+
+## Reviewed browser conversion integration
+
+Candidate `54656363047e108d54f16c3eab31dbb4b04997e6` implements four fixed-option adapters through native file/output choices and confirmation. It contains bounded owner-scoped physical cursors, publication-time admission, accepted-job durability, shared editor/converter request ownership, exact prepared-grant disposal, pending-disposal closure proof and explicit retry of unfinished disposal. The owner passed 58 initial repair checks, nine closure checks and sixteen final recovery checks; independent final closure/review execution passed 9/9. Actual installed conversion, native isolation, full format options, batch and output-open controls remain incomplete. The merge resolves only the options-shell fixture, retaining both the parent discovery assertion and the converter adapter stub.
+
+The converter root and four addressable stages are now independent inventory targets. The family ledger is 260 unverified,28 missing,27 not applicable. All newly enumerated concrete surfaces remain unverified. Source registration and translated article hashes do not imply real interaction.
+
+A controlled source-renderer main-only retry at `0c413e26` produced no ledger rename error but cancelled at its original120000ms deadline and settled at243729ms; actions continued beyond cancellation. Owned closure passed. A separate cancellation-handling repair is assigned; its new evidence must remain source-specific. Earlier scoped clear controls passed with two genuine private diagnostic captures, retained under local `out/evidence/renderer-0c413e26-20261014`. They are not current packaged-product presentation images.
+
+Combined converter integration validation ran 81 checks:80 passed and one exposed the missing handwritten translation-list entry. After registering that entry, all four translation checks passed. All implementation, authority, recovery, surface and source-reference checks were green; actual installed/runtime evidence remains separate.
+
+## Combined converter and local-model integration
+
+Local converter integration a07abb7 encountered incoming main dd833d4. The merge preserves the converter native grant/queue lifecycle and incoming Models tab, loopback controls, rich text, documentation and original captures. Five shared files were reconciled with73/73 focused checks passing. Required declarations now enumerate1038 concrete surfaces and108990 independent assessments, including23 extension targets;262 family rows remain unverified,26 missing and27 not applicable. No new visual or installed-product verdict is inferred. Cancellation repair94bbe888 is preserved on its remote task branch and receives a separate original-deadline smoke.
+
+### Cancellation smoke94bbe888
+
+One main-only case cancelled at120175.55ms before page interaction (total146814.79ms, exit1). Immutable version3 snapshot retained elapsed120140.4585 and null phase/request fields. Normal close acknowledged; saved processes absent. Two20s exact-desktop enumeration checks timed out. Desktop closure remains unverified and original negative receipts are retained; no third unchanged retry or PID-only termination. This is not current-main or installed acceptance.
+
+Focused merge verification: shared-shell73/73; inventory/publication suite61 passed with one npm-path staging failure; after selecting the existing pinned Node distribution, the single affected staging check passed1/1. Independent merge review resolved the four stale model-route paragraphs.
+
+## Cancellation integration and closure recovery
+
+Combined converter/model main3a7307ee739da1ea141316d37c4347e9173ad608 was pushed and read back exactly. Reviewed cancellation repair94bbe88866c3bae15ea478ec837b06cb23f2bb64 is integrated here; actual adapter cancellation and translation checks17/17 passed with original deadlines unchanged. The runtime case still cancelled before interaction, so GUI acceptance remains incomplete. A separately reviewed persistent registered Lowlevel binding verified the retained desktop absent and all five saved identities absent before/after; readiness25367.7355ms, actual query58.4655ms under the unchanged20000ms bound. Final receipt SHA25640eb4d5fdad66590905b0fc6a52b96b662c80f9205a3ca84dd9022c094a397b7. Original negative lifecycle receipts remain unchanged. No browser was launched by recovery.
+
+Next bounded implementation is fresh native authorization for the existing read-profile-summary browser scope, in the existing isolated extension workflow branch. Broader credentials, mutation and installed acceptance are not implied.

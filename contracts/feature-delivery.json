@@ -14341,16 +14341,36 @@
     {
       "id": "file-converter",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/options.js",
+        "browser-extension/converter.js",
+        "browser-extension/background.js",
+        "src/main/browser-converter.js",
+        "src/main/browser-native-host.js",
+        "src/main/feature-services.js",
+        "src/main/main.js",
+        "src/features/converter/service.mjs",
+        "scripts/build-browser-extension.mjs"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/browser/file-conversion.md",
+        "docs/features/browser/file-conversion.zh-HK.md"
+      ],
+      "localization": [
+        "browser-extension/converter.js",
+        "src/main/browser-converter.js"
+      ],
+      "tests": [
+        "test/extension-converter.test.js",
+        "test/extension-converter-controls.test.js",
+        "test/extension-converter-review.test.js",
+        "test/extension-converter-close.test.js",
+        "test/extension-editor-transport.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Choose input files, output format and conversion options, monitor progress and validate resulting files through native mediation. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Four fixed-option adapters use native source/output selection, consent, bounded owner paging and explicit recovery. Other adapters, batch controls, output-open/export, installed isolation and runtime/visual acceptance remain incomplete.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -14364,7 +14384,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -14372,17 +14392,38 @@
           "behavior",
           "proof"
         ],
-        "action": "Choose input files, output format and conversion options, monitor progress and validate resulting files through native mediation.",
+        "action": "Choose source and output natively, confirm one of four supported fixed adapters, inspect owned jobs and explicitly control accepted work.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
-            "outcome": "Choose input files, output format and conversion options, monitor progress and validate resulting files through native mediation.",
-            "nextProof": "Exercise choose input files, output format and conversion options, monitor progress and validate resulting files through native mediation on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "state": "present",
+            "surface": "extension:options:converter:source",
+            "selector": "#browser-converter-panel-0",
+            "outcome": "Choose source and output natively, confirm one of four supported fixed adapters, inspect owned jobs and explicitly control accepted work.",
+            "nextProof": "Verify packaged conversion, actual native dialogs, isolation, output validity, restart recovery, keyboard/language/scale behavior and genuine source-bound captures."
+          },
+          {
+            "state": "present",
+            "surface": "extension:options:converter:formats",
+            "selector": "#browser-converter-panel-1",
+            "outcome": "Choose source and output natively, confirm one of four supported fixed adapters, inspect owned jobs and explicitly control accepted work.",
+            "nextProof": "Verify packaged conversion, actual native dialogs, isolation, output validity, restart recovery, keyboard/language/scale behavior and genuine source-bound captures."
+          },
+          {
+            "state": "present",
+            "surface": "extension:options:converter:review",
+            "selector": "#browser-converter-panel-2",
+            "outcome": "Choose source and output natively, confirm one of four supported fixed adapters, inspect owned jobs and explicitly control accepted work.",
+            "nextProof": "Verify packaged conversion, actual native dialogs, isolation, output validity, restart recovery, keyboard/language/scale behavior and genuine source-bound captures."
+          },
+          {
+            "state": "present",
+            "surface": "extension:options:converter:jobs",
+            "selector": "#browser-converter-panel-3",
+            "outcome": "Choose source and output natively, confirm one of four supported fixed adapters, inspect owned jobs and explicitly control accepted work.",
+            "nextProof": "Verify packaged conversion, actual native dialogs, isolation, output validity, restart recovery, keyboard/language/scale behavior and genuine source-bound captures."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Accepted jobs and native grants persist in the existing durable queue. Browser selection and physical cursors are session-scoped; expired connections do not erase accepted recovery data."
       }
     },
     {
@@ -17222,7 +17263,7 @@
   ],
   "referenceSources": {
     "src/renderer/features/personalization/index.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
-    "src/main/feature-services.js": "284b8509cd2c312196ab9092f0f7f50f66d54172",
+    "src/main/feature-services.js": "54656363047e108d54f16c3eab31dbb4b04997e6",
     "docs/features/interface/local-personalization.md": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "test/local-personalization.test.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "test/local-language.test.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
@@ -17299,9 +17340,9 @@
     "test/ollama-runtime.test.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "test/ollama-regex.test.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "src/shared/surface/notification-audio.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
-    "src/main/main.js": "284b8509cd2c312196ab9092f0f7f50f66d54172",
+    "src/main/main.js": "54656363047e108d54f16c3eab31dbb4b04997e6",
     "test/notification-audio.test.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
-    "src/features/converter/service.mjs": "37fa47a209057f08a60f85510f6852ad7f8823c7",
+    "src/features/converter/service.mjs": "54656363047e108d54f16c3eab31dbb4b04997e6",
     "src/features/converter/windows-sandbox.mjs": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "src/renderer/features/converter/index.js": "37fa47a209057f08a60f85510f6852ad7f8823c7",
     "docs/features/converter/README.md": "37fa47a209057f08a60f85510f6852ad7f8823c7",
@@ -17416,19 +17457,19 @@
     "test/local-access-integration.test.js": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
     "src/shared/local-ux/record-export.js": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
     "test/record-export.test.js": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
-    "src/main/browser-native-host.js": "284b8509cd2c312196ab9092f0f7f50f66d54172",
+    "src/main/browser-native-host.js": "54656363047e108d54f16c3eab31dbb4b04997e6",
     "scripts/browser-native-registration.mjs": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
     "src/main/protected-forge-accounts.js": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
     "src/main/protected-forge-device-transport.js": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
     "test/protected-forge-accounts.test.js": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
     "docs/evidence/storage-packing-e06df2a.json": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
-    "browser-extension/options.js": "284b8509cd2c312196ab9092f0f7f50f66d54172",
+    "browser-extension/options.js": "54656363047e108d54f16c3eab31dbb4b04997e6",
     "browser-extension/options.html": "284b8509cd2c312196ab9092f0f7f50f66d54172",
     "browser-extension/popup.js": "5ea562423e90565e582cac67982aca965898e436",
     "browser-extension/popup.html": "5ea562423e90565e582cac67982aca965898e436",
     "browser-extension/preferences.js": "5ea562423e90565e582cac67982aca965898e436",
-    "browser-extension/background.js": "284b8509cd2c312196ab9092f0f7f50f66d54172",
-    "scripts/build-browser-extension.mjs": "5ea562423e90565e582cac67982aca965898e436",
+    "browser-extension/background.js": "54656363047e108d54f16c3eab31dbb4b04997e6",
+    "scripts/build-browser-extension.mjs": "54656363047e108d54f16c3eab31dbb4b04997e6",
     "scripts/test-release-photo-reference.ps1": "5ea562423e90565e582cac67982aca965898e436",
     "test/browser-extension-popup.test.js": "5ea562423e90565e582cac67982aca965898e436",
     "docs/features/workflows/browser-extension-workspace.md": "5ea562423e90565e582cac67982aca965898e436",
@@ -17465,7 +17506,7 @@
     "docs/features/browser/external-editor.md": "284b8509cd2c312196ab9092f0f7f50f66d54172",
     "docs/features/browser/external-editor.zh-HK.md": "284b8509cd2c312196ab9092f0f7f50f66d54172",
     "test/extension-editor-workflow.test.js": "284b8509cd2c312196ab9092f0f7f50f66d54172",
-    "test/extension-editor-transport.test.js": "284b8509cd2c312196ab9092f0f7f50f66d54172",
+    "test/extension-editor-transport.test.js": "54656363047e108d54f16c3eab31dbb4b04997e6",
     "test/extension-editor-focus.test.js": "284b8509cd2c312196ab9092f0f7f50f66d54172",
     "browser-extension/local-models.js": "427670e910d91f396863e4c5c2ca16e07ff768f6",
     "browser-extension/rich-text.js": "427670e910d91f396863e4c5c2ca16e07ff768f6",
@@ -17474,7 +17515,15 @@
     "test/browser-extension-local-models.test.js": "427670e910d91f396863e4c5c2ca16e07ff768f6",
     "test/browser-extension-rich-text.test.js": "427670e910d91f396863e4c5c2ca16e07ff768f6",
     "browser-extension/release-code-name.js": "78e606fa068eb224e788fca944bb38bb1efafcd2",
-    "test/browser-extension-release-code-name.test.js": "78e606fa068eb224e788fca944bb38bb1efafcd2"
+    "test/browser-extension-release-code-name.test.js": "78e606fa068eb224e788fca944bb38bb1efafcd2",
+    "browser-extension/converter.js": "54656363047e108d54f16c3eab31dbb4b04997e6",
+    "src/main/browser-converter.js": "54656363047e108d54f16c3eab31dbb4b04997e6",
+    "docs/features/browser/file-conversion.md": "54656363047e108d54f16c3eab31dbb4b04997e6",
+    "docs/features/browser/file-conversion.zh-HK.md": "54656363047e108d54f16c3eab31dbb4b04997e6",
+    "test/extension-converter.test.js": "54656363047e108d54f16c3eab31dbb4b04997e6",
+    "test/extension-converter-controls.test.js": "54656363047e108d54f16c3eab31dbb4b04997e6",
+    "test/extension-converter-review.test.js": "54656363047e108d54f16c3eab31dbb4b04997e6",
+    "test/extension-converter-close.test.js": "54656363047e108d54f16c3eab31dbb4b04997e6"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
@@ -17527,6 +17576,41 @@
       "selector": "#panel-connection"
     },
     {
+      "id": "extension:options:converter",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#browser-converter"
+    },
+    {
+      "id": "extension:options:converter:formats",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/converter.js",
+      "selector": "#browser-converter-panel-1"
+    },
+    {
+      "id": "extension:options:converter:jobs",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/converter.js",
+      "selector": "#browser-converter-panel-3"
+    },
+    {
+      "id": "extension:options:converter:review",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/converter.js",
+      "selector": "#browser-converter-panel-2"
+    },
+    {
+      "id": "extension:options:converter:source",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/converter.js",
+      "selector": "#browser-converter-panel-0"
+    },
+    {
       "id": "extension:options:dimsum",
       "family": "extension",
       "route": "browser-extension/options.html",
@@ -17553,6 +17637,13 @@
       "route": "browser-extension/options.html",
       "owner": "browser-extension/options.js",
       "selector": "#message-preview"
+    },
+    {
+      "id": "extension:options:models",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#panel-models"
     },
     {
       "id": "extension:options:note-reader",

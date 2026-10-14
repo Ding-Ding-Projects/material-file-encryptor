@@ -1,6 +1,6 @@
 # Current continuation snapshot, 2026-10-14
 
-The family inventory has 315 rows: 259 unverified, 29 missing and 27 recorded not applicable. External editor changed from missing to partial source implementation; installed behavior and preferred-editor/project/export integration remain unfinished. The concrete inventory contains 1,016 surfaces and 106,680 independent assessments. New rows remain unverified. Historical inventories and evidence below retain their original source boundaries.
+The family inventory has 315 rows: 260 unverified, 28 missing and 27 recorded not applicable. External editor and four-adapter file conversion changed from missing to partial source implementation; installed behavior and preferred-editor/project/export integration remain unfinished. The concrete inventory contains 1,029 surfaces and 108,045 independent assessments. New rows remain unverified. Historical inventories and evidence below retain their original source boundaries.
 
 # Current completion criteria, 2026-10-12 UTC
 

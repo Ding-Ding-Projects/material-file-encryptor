@@ -430,6 +430,24 @@
       "proofs": {}
     },
     {
+      "id": "desktop:document:docs/features/browser/file-conversion",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/browser/file-conversion",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/browser/file-conversion.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/browser/file-conversion.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "desktop:document:docs/features/browser/README",
       "family": "desktop",
       "route": "src/renderer/index.html",
@@ -2122,60 +2140,6 @@
       "proofs": {}
     },
     {
-      "id": "site:article:docs/features/workflows/browser-extension-local-models.md",
-      "family": "site",
-      "route": "articles/docs--features--workflows--browser-extension-local-models.html",
-      "owner": "docs/site/publication.mjs",
-      "selector": "",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:docs/features/workflows/browser-extension-local-models.md:preferences",
-      "family": "site",
-      "route": "articles/docs--features--workflows--browser-extension-local-models.html",
-      "owner": "docs/site/preferences.js",
-      "selector": "#preferences-dialog",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:docs/features/workflows/browser-extension-local-models.zh-HK.md",
-      "family": "site",
-      "route": "articles/docs--features--workflows--browser-extension-local-models.zh-HK.html",
-      "owner": "docs/site/publication.mjs",
-      "selector": "",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:docs/features/workflows/browser-extension-local-models.zh-HK.md:preferences",
-      "family": "site",
-      "route": "articles/docs--features--workflows--browser-extension-local-models.zh-HK.html",
-      "owner": "docs/site/preferences.js",
-      "selector": "#preferences-dialog",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:workspace:document:docs/features/workflows/browser-extension-local-models",
-      "family": "site",
-      "route": "workspace.html",
-      "owner": "src/renderer/features/documentation/index.js",
-      "selector": "document:docs/features/workflows/browser-extension-local-models",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:workspace:document:docs/features/workflows/browser-extension-local-models.zh-HK",
-      "family": "site",
-      "route": "workspace.html",
-      "owner": "src/renderer/features/documentation/index.js",
-      "selector": "document:docs/features/workflows/browser-extension-local-models.zh-HK",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
       "id": "desktop:document:docs/features/workflows/browser-extension-workspace",
       "family": "desktop",
       "route": "src/renderer/index.html",
@@ -2608,6 +2572,51 @@
       "proofs": {}
     },
     {
+      "id": "extension:options:converter",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#browser-converter",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:converter:formats",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/converter.js",
+      "selector": "#browser-converter-panel-1",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:converter:jobs",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/converter.js",
+      "selector": "#browser-converter-panel-3",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:converter:review",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/converter.js",
+      "selector": "#browser-converter-panel-2",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:converter:source",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/converter.js",
+      "selector": "#browser-converter-panel-0",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "extension:options:dimsum",
       "family": "extension",
       "route": "browser-extension/options.html",
@@ -2640,6 +2649,15 @@
       "route": "browser-extension/options.html",
       "owner": "browser-extension/options.js",
       "selector": "#message-preview",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:models",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#panel-models",
       "template": "required-families",
       "proofs": {}
     },
@@ -3124,6 +3142,42 @@
       "id": "site:article:docs/features/browser/external-editor.zh-HK.md:preferences",
       "family": "site",
       "route": "articles/docs--features--browser--external-editor.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/browser/file-conversion.md",
+      "family": "site",
+      "route": "articles/docs--features--browser--file-conversion.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/browser/file-conversion.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--browser--file-conversion.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/browser/file-conversion.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--browser--file-conversion.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/browser/file-conversion.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--browser--file-conversion.zh-HK.html",
       "owner": "docs/site/preferences.js",
       "selector": "#preferences-dialog",
       "template": "required-families",
@@ -6478,6 +6532,42 @@
       "proofs": {}
     },
     {
+      "id": "site:article:docs/features/workflows/browser-extension-local-models.md",
+      "family": "site",
+      "route": "articles/docs--features--workflows--browser-extension-local-models.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/workflows/browser-extension-local-models.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--workflows--browser-extension-local-models.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/workflows/browser-extension-local-models.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--workflows--browser-extension-local-models.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/workflows/browser-extension-local-models.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--workflows--browser-extension-local-models.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:article:docs/features/workflows/browser-extension-workspace.md",
       "family": "site",
       "route": "articles/docs--features--workflows--browser-extension-workspace.html",
@@ -7401,6 +7491,24 @@
       "route": "workspace.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/browser/external-editor.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/browser/file-conversion",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/browser/file-conversion",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/browser/file-conversion.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/browser/file-conversion.zh-HK",
       "template": "required-families",
       "proofs": {}
     },
@@ -9075,6 +9183,24 @@
       "route": "workspace.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/workflows/browser-download-handoff.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/workflows/browser-extension-local-models",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/workflows/browser-extension-local-models",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/workflows/browser-extension-local-models.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/workflows/browser-extension-local-models.zh-HK",
       "template": "required-families",
       "proofs": {}
     },
