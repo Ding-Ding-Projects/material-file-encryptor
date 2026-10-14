@@ -24,10 +24,14 @@ const safeJob=row=>{
 /** Host-only adapter. Native source/destination grants never cross the boundary. */
 export function createBrowserConverterAdapter({getService,pickSource,pickDestination,confirm,releaseGrant}={}){
  const sessions=new Map();
- const state=pair=>{let value=sessions.get(pair);if(!value){value={owner:randomUUID(),selection:null,disposed:false,service:null};sessions.set(pair,value);}return value;};
+ const state=pair=>{let value=sessions.get(pair);if(!value){value={owner:randomUUID(),selection:null,disposed:false,service:null,tasks:new Set(),releases:new Map(),scanClosed:false};sessions.set(pair,value);}return value;};
  const available=async()=>{const service=await getService();return {service,actual:await service.catalog()};};
- async function receive(message,{pair,check,signal}){
-  const local=state(pair),language=message.language;check();const {service,actual}=await available();local.service=service;check();
+ async function releaseOwned(local,id){
+  let action=local.releases.get(id);if(!action){action={done:false,running:null};local.releases.set(id,action);}if(action.done)return;if(action.running)return action.running;
+  action.running=Promise.resolve().then(()=>releaseGrant(id)).then(()=>{action.done=true;}).finally(()=>{action.running=null;});return action.running;
+ }
+ async function perform(message,{pair,check,signal},local){
+  const language=message.language;check();const {service,actual}=await available();local.service=service;check();
   const formats=declaredCatalog().map(row=>{const native=actual.find(item=>item.id===row.id);return {id:row.id,category:row.category,name:row.name,sources:row.sources,target:row.target,metadata:row.metadata,encoding:row.encoding,lossy:row.lossy,enabled:FORMATS.has(row.id)&&native?.enabled===true,reason:!FORMATS.has(row.id)?'browser-options-unavailable':native?.enabled===true?'':'native-adapter-unavailable'};});
   if(message.type==='converter-catalog')return {type:'converter-catalog-result',schemaVersion:1,formats};
   if(message.type==='converter-list'){const page=await service.scanOwned({cursor:message.cursor},{owner:local.owner,checkAdmission:check});check();return {type:'converter-list-result',schemaVersion:1,rows:page.rows.map(safeJob),nextCursor:page.nextCursor};}
@@ -41,10 +45,10 @@ export function createBrowserConverterAdapter({getService,pickSource,pickDestina
    try{check();if(!source)return {type:'converter-prepare-result',schemaVersion:1,outcome:'cancelled'};
     const inspected=await service.inspect({sourceIds:[source]});check();const row=inspected[0];
     if(inspected.length!==1||typeof row.type!=='string'||!['pdf','png','jpeg','zip','xlsx','ods','wav','flac','mp3','mp4','riff','7z','rar','binary','json','text'].includes(row.type)||!Number.isSafeInteger(row.bytes)||row.bytes<0)throw Error('Invalid conversion inspection.');
-    if(local.selection){const old=local.selection;local.selection=null;await releaseGrant(old.source);}check();
+    if(local.selection){const old=local.selection;local.selection=null;await releaseOwned(local,old.source);}check();
     local.selection={id:randomUUID(),source};retained=true;
     return {type:'converter-prepare-result',schemaVersion:1,outcome:'selected',selection:local.selection.id,sourceType:row.type,bytes:row.bytes};
-   }finally{if(source&&!retained)await releaseGrant(source);}
+   }finally{if(source&&!retained)await releaseOwned(local,source);}
   }
   const format=formats.find(row=>row.id===message.adapterId);
   if(!format?.enabled||!local.selection||local.selection.id!==message.selection)throw Error('Choose a supported format and source again.');
@@ -55,17 +59,33 @@ export function createBrowserConverterAdapter({getService,pickSource,pickDestina
    // durable work belongs to the desktop and is not tied to a transient browser.
    const row=await service.enqueue({sourceIds:[selected.source],destinationId:destination,adapterId:format.id,options:{},lossyConfirmed:true,overwriteConfirmed:false},{owner:local.owner,checkAdmission:check});accepted=true;local.selection=null;
    return {type:'converter-enqueue-result',schemaVersion:1,outcome:'accepted',job:safeJob(row)};
-  }finally{if(destination&&!accepted)await releaseGrant(destination);selected.inUse=false;if(!accepted&&local.disposed){local.selection=null;await releaseGrant(selected.source);}}
+  }finally{try{if(destination&&!accepted)await releaseOwned(local,destination);}finally{selected.inUse=false;}}
  }
- receive.dispose=async pair=>{const local=sessions.get(pair);if(!local)return;sessions.delete(pair);local.disposed=true;const selected=local.selection;if(selected&&!selected.inUse){local.selection=null;await releaseGrant(selected.source);}await local.service?.closeOwnedScan(local.owner);};
+ function receive(message,context){const local=state(context.pair);if(local.disposed)return Promise.reject(Error('Browser conversion session disposed.'));const task=perform(message,context,local);local.tasks.add(task);return task.finally(()=>local.tasks.delete(task));}
+ receive.dispose=async pair=>{
+  const local=sessions.get(pair);if(!local)return;local.disposed=true;
+  // An operation may still be deciding whether its grants belong to accepted
+  // durable work. Wait for that decision before selecting disposal actions.
+  await Promise.allSettled([...local.tasks]);
+  const selected=local.selection;if(selected&&!local.releases.has(selected.source))local.releases.set(selected.source,{done:false,running:null});
+  let failed=null;for(const [id,action]of local.releases)if(!action.done)try{await releaseOwned(local,id);}catch(error){failed=error;}
+  if(selected&&local.releases.get(selected.source)?.done)local.selection=null;
+  if(!local.scanClosed)try{await local.service?.closeOwnedScan(local.owner);local.scanClosed=true;}catch(error){failed=error;}
+  if(failed)throw failed;
+  sessions.delete(pair);
+ };
  return receive;
 }
 
 export function createBrowserConverterMediation({getPair,isUnlocked,adapter,now=Date.now,timeoutMs=120000,dispose=adapter?.dispose}={}){
- const pairs=new Set(),disposals=new Set();let disposalError=null;
- let epoch=0,closed=false,active=null;
- const revoke=()=>{epoch++;active?.abort();for(const pair of pairs){pairs.delete(pair);if(typeof dispose==='function'){const pending=Promise.resolve().then(()=>dispose(pair)).catch(error=>{disposalError=error;}).finally(()=>disposals.delete(pending));disposals.add(pending);}}};
- return {supports:type=>Object.hasOwn(keys,type),revoke,get pendingDisposals(){return disposals.size;},async disposePending(){await Promise.all([...disposals]);if(disposalError)throw disposalError;},close(){closed=true;revoke();},
+ const pairs=new Set(),disposals=new Map();let epoch=0,closed=false,active=null;
+ const schedule=(pair,retry=false)=>{
+  if(typeof dispose!=='function')return;let action=disposals.get(pair);
+  if(action?.running||action&&!retry)return;if(!action){action={running:null,error:null};disposals.set(pair,action);}action.error=null;
+  action.running=Promise.resolve().then(()=>dispose(pair)).then(()=>{disposals.delete(pair);},error=>{action.error=error;}).finally(()=>{action.running=null;});
+ };
+ const revoke=()=>{epoch++;active?.abort();for(const pair of pairs){pairs.delete(pair);schedule(pair);}};
+ return {supports:type=>Object.hasOwn(keys,type),revoke,get pendingDisposals(){return disposals.size;},async disposePending(){await Promise.all([...disposals.values()].map(action=>action.running));const failed=[...disposals.values()].find(action=>action.error);if(failed)throw failed.error;},close(){closed=true;revoke();for(const [pair,action]of disposals)if(action.error&&!action.running)schedule(pair,true);},
  async receive(origin,message,checkConnection){
   validateBrowserConverterRequest(message);if(typeof adapter!=='function')throw Error('Browser conversion unavailable.');
   const pair=getPair(origin),generation=epoch;
