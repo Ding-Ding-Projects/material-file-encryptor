@@ -14,7 +14,7 @@
 
 只有 `authenticateProfile`、`validateAuthority` 同 `readProfileSummary` 三個原生回呼全部已安裝，查詢先會公布 `local-profile` 目標 `profile-summary` 嘅單一 `read-profile-summary` 操作。呼叫方提供嘅狀態或布林值唔可以啟用能力。
 
-`authenticateProfile({origin, profileId, operation, target, signal})` 必須重新進行明確個人設定檔驗證同原生同意。回傳結構只可以係 `{profileId, revision, expiresAt, authority}`。`authority` 係保留喺原生程序內嘅不透明物件。瀏覽器唔會收到密碼、私人用語 JSON、設定檔修訂、actor 身分或由憑證推算嘅資料。
+`authenticateProfile({origin, profileId, operation, target, signal})` 必須重新進行明確個人設定檔驗證同原生同意。回傳結構只可以係 `{profileId, revision, expiresAt, authority}`。authority 係保留喺原生程序內嘅不透明物件。瀏覽器唔會收到密碼、私人用語 JSON、設定檔修訂、actor 身分或由憑證推算嘅資料。
 
 `validateAuthority({authority, profileId, revision, signal})` 必須重新核對即時原生 actor、憑證修訂同取消代次，只有授權仍然有效先回傳 `true`。唔可以用唯讀保護狀態取代驗證。`readProfileSummary` 接收相同內容，只可以回傳 `{schemaVersion: 1, profile: authenticated, protectedAccess: granted}`。中介喺回傳固定摘要前會再次核對授權。
 
@@ -29,8 +29,8 @@
 ## 未完成接駁同驗收
 
 - 原生 GUI 回呼需要獨立審核，提供重新驗證、明確同意同不透明 actor 綁定。目前預設不可用。
-- 原生 pipe 轉送喺同一使用者 pipe 獲准連線後產生連線識別碼，加入代理封套，並發出嚴格中斷通知。EOF 監察會喺等候同意期間偵測失去連線，並拒絕提前傳送下一則訊息。更換配對會取消舊同意；舊連線結束唔會撤銷新配對。模擬通道測試已涵蓋呢啲邊界。聲稱實際 port 中斷證據之前，仍然需要編譯後原生驗收。
+- 原生 pipe 轉送喺同一使用者 pipe 獲准連線後產生連線識別碼，加入代理封套，並發出嚴格中斷通知。EOF 監察會喺等候同意期間偵測失去連線，並拒絕提前傳送下一則訊息。更換配對會取消舊同意；舊連線結束唔會撤銷新配對。模擬通道測試已涵蓋呢啲邊界。原始碼 1f0c5b67016745c301d75c4acf2d9b9fd7e575e5 嘅根目錄 browser-host-only 建置同五項編譯後通道檢查已通過，以自有模擬客戶端驗證等候同意期間中斷、更換配對同遲到嘅舊回覆。呢個結果唔代表真實瀏覽器擴充功能 port 行為已通過。
 - 呢個基礎未接駁擴充功能驗證及操作控制、公開工作區中介或原生回呼組裝。
-- 專項模擬測試涵蓋偽造來源及會話、只有配對、錯誤範圍、到期、重播、修訂改變、撤銷、取消、無效結構、過大訊息同遲到結果。呢啲測試唔代表已證實真實瀏覽器配對、編譯後主機執行、設定檔同意、版面或安裝。
+- 專項模擬測試涵蓋偽造來源及會話、只有配對、錯誤範圍、到期、重播、修訂改變、撤銷、取消、無效結構、過大訊息同遲到結果。呢啲測試唔代表已證實真實瀏覽器配對、正式設定檔同意、版面或安裝。上面獨立嘅編譯後通道結果只涵蓋嗰批模擬原生客戶端。
 
 參閱 [English article](protected-browser-mediation.md)。

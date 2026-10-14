@@ -55,3 +55,5 @@
 - [本機工具工作區](local-tools-workspaces.zh-HK.md)
 - [儲存空間維護](storage-maintenance.zh-HK.md)
 - [已驗證啟動照片主機](startup-photo-host.zh-HK.md)
+
+- [受保護瀏覽器中介](protected-browser-mediation.zh-HK.md)
