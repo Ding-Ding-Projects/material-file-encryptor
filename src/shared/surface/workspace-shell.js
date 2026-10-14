@@ -7,7 +7,7 @@ export class WorkspaceShell extends SurfaceElement {
   configure({model,language,labels,onActivate,onContext}){Object.assign(this,{model,language,labels,onActivate,onContext});this.render();}
   render(){
     const offset=this.tabsHost?.scrollLeft||0;
-    this.style(`.bar{display:flex;align-items:center;gap:2px;min-width:0}.tabs{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}md-tabs{min-width:max-content}md-primary-tab{max-width:240px} .tab-name{display:block;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}md-text-button{flex:none;min-width:40px}.all{max-width:120px}`);
+    this.style(`.bar{display:flex;align-items:center;gap:2px;min-width:0}.tabs{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}md-tabs{min-width:max-content}md-primary-tab{max-width:240px} .tab-name{display:block;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}md-text-button{flex:none;min-width:40px}.all{max-width:none;flex:none}`);
     if(!this.model)return;
     this.selected??=new Set();
     this.tabsHost=element('div',{class:'tabs'});

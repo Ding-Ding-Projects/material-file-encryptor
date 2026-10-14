@@ -12,8 +12,8 @@
 - [x] Confirm the outlined select width, documentation active pill and workflow chevron in a rebuilt capture.
 - [x] Capture all 19 views in light, dark, Cantonese and bilingual at 150 percent display scale, and the consent dialog in light and dark (main 2a9cb38).
 - [ ] Capture at 100, 125 and 200 percent display scale (changing the host display scale is an owner action).
-- [ ] Fix the bilingual "All tabs" label, which is clipped in the tab strip.
-- [ ] Use one bilingual separator in the converter, which joins languages with a slash while the rest of the application uses a middle dot.
+- [x] Fix the bilingual "All tabs" label, which is clipped in the tab strip (bilingual capture, build c341036c).
+- [x] Use one bilingual separator: the converter, local models and image transform copy now use the middle dot like the rest of the application.
 - [x] Make Material dialogs follow the in-app theme setting instead of the system colour scheme.
 - [ ] Capture each remaining message box individually (licence, pairing, credential, shutdown, import, update).
 - [x] Integrate the sweep into main.
