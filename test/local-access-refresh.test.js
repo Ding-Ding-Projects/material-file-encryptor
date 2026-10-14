@@ -17,7 +17,7 @@ test('access refresh rerenders composite labels without clearing input or profil
   for(const [language,clearLabel,promptName]of [['en','Clear Password','Unlock stable-target'],['yue','清除 密碼','解鎖 stable-target'],['bilingual','Clear · 清除 Password · 密碼','Unlock · 解鎖 stable-target']]){
    settings.language=language;access.refresh();
    assert.equal(prompt.getAttribute('aria-label'),promptName);
-   assert.ok(prompt.querySelectorAll('button').some(button=>button.textContent===clearLabel),`${language}: ${prompt.textContent}`);
+   assert.ok(prompt.querySelectorAll('md-icon-button').some(button=>button.getAttribute('aria-label')===clearLabel),`${language}: ${prompt.textContent}`);
    assert.equal(input.value,'keep this unlock input');assert.equal(profileInput.value,'keep this input');assert.equal(access.authenticated,true);
   }
  }finally{access.destroy();}

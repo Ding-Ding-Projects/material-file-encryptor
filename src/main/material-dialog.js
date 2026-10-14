@@ -28,7 +28,7 @@ export function dialogView(options = {}) {
  * the window settles it with the cancel button. If the window cannot be
  * created the native dialog is used, so a consent prompt never disappears.
  */
-export function createMaterialDialogs({BrowserWindow, ipcMain, nativeDialog, preloadPath, pagePath, onError = () => {}}) {
+export function createMaterialDialogs({BrowserWindow, ipcMain, nativeDialog, preloadPath, pagePath, getTheme = async () => null, onError = () => {}}) {
   const pending = new Map();
   ipcMain.handle('material-dialog:view', event => {
     const entry = pending.get(event.sender.id);
@@ -51,11 +51,14 @@ export function createMaterialDialogs({BrowserWindow, ipcMain, nativeDialog, pre
     if (options === undefined) { options = parent; parent = null; }
     const view = dialogView(options);
     const owner = parent && typeof parent.isDestroyed === 'function' && !parent.isDestroyed() ? parent : null;
+    // The dialog follows the application's own theme; anything else falls back to the system scheme.
+    const theme = await Promise.race([Promise.resolve().then(() => getTheme(owner)).catch(() => null), new Promise(resolve => setTimeout(() => resolve(null), 1000))]);
+    view.theme = theme === 'dark' || theme === 'light' ? theme : null;
     let window;
     try {
       window = new BrowserWindow({
         parent: owner ?? undefined, modal: Boolean(owner), width: 560, height: 260, useContentSize: true,
-        resizable: false, minimizable: false, maximizable: false, fullscreenable: false, show: false, frame: false, backgroundColor: '#e8ece9',
+        resizable: false, minimizable: false, maximizable: false, fullscreenable: false, show: false, frame: false, backgroundColor: view.theme === 'dark' ? '#20261e' : '#e8ece9',
         title: view.title || ' ', autoHideMenuBar: true,
         webPreferences: {preload: preloadPath, contextIsolation: true, sandbox: true, nodeIntegration: false, webSecurity: true},
       });

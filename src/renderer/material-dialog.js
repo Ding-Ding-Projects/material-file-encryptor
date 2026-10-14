@@ -11,6 +11,7 @@ const ICONS = {
 async function start() {
   const api = window.materialDialog;
   const view = await api.view();
+  document.documentElement.dataset.theme = view.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   document.title = view.title || view.message;
   const title = document.getElementById('dialog-title');
   title.textContent = view.title;

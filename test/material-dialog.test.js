@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createMaterialDialogs, dialogView} from '../src/main/material-dialog.js';
 
-function harness({failWindow = false} = {}) {
+function harness({failWindow = false, theme} = {}) {
   const handles = new Map(), listeners = new Map(), windows = [];
   let nextId = 100;
   class FakeWindow {
@@ -22,7 +22,7 @@ function harness({failWindow = false} = {}) {
   }
   const ipcMain = {handle: (name, fn) => handles.set(name, fn), on: (name, fn) => listeners.set(name, fn)};
   const native = {calls: [], showMessageBox(...args) { this.calls.push(args); return Promise.resolve({response: 1, checkboxChecked: false}); }};
-  const dialogs = createMaterialDialogs({BrowserWindow: FakeWindow, ipcMain, nativeDialog: native, preloadPath: 'preload.cjs', pagePath: 'page.html'});
+  const dialogs = createMaterialDialogs({BrowserWindow: FakeWindow, ipcMain, nativeDialog: native, preloadPath: 'preload.cjs', pagePath: 'page.html', getTheme: async () => theme});
   const tick = () => new Promise(resolve => setImmediate(resolve));
   return {dialogs, windows, native, tick,
     view: id => handles.get('material-dialog:view')({sender: {id}}),
@@ -60,6 +60,17 @@ test('a window that cannot open falls back to the native dialog instead of dropp
   const result = await h.dialogs.showMessageBox({message: 'Accept?', buttons: ['Cancel', 'Accept']});
   assert.equal(result.response, 1);
   assert.equal(h.native.calls.length, 1);
+});
+
+test('the dialog follows the application theme and ignores anything that is not a theme', async () => {
+  for (const [reported, expected] of [['dark', 'dark'], ['light', 'light'], ['<script>', null], [undefined, null]]) {
+    const h = harness({theme: reported});
+    const result = h.dialogs.showMessageBox({message: 'Theme?'});
+    await h.tick(); await h.tick();
+    const view = await h.view(h.windows[0].webContents.id);
+    assert.equal(view.theme, expected, String(reported));
+    h.respond(h.windows[0].webContents.id, view.nonce, 0); await result;
+  }
 });
 
 test('dialog views are bounded and keep valid indices', () => {

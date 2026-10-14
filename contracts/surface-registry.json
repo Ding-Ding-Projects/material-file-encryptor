@@ -817,11 +817,29 @@
       "proofs": {}
     },
     {
+      "id": "desktop:document:docs/features/interface/material-dialogs-and-motion",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/material-dialogs-and-motion",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "desktop:document:docs/features/interface/modern-fields",
       "family": "desktop",
       "route": "src/renderer/index.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/interface/modern-fields",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/interface/material-dialogs-and-motion.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/material-dialogs-and-motion.zh-HK",
       "template": "required-families",
       "proofs": {}
     },
@@ -3634,11 +3652,29 @@
       "proofs": {}
     },
     {
+      "id": "site:article:docs/features/interface/material-dialogs-and-motion.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--material-dialogs-and-motion.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:article:docs/features/interface/modern-fields.md",
       "family": "site",
       "route": "articles/docs--features--interface--modern-fields.html",
       "owner": "docs/site/publication.mjs",
       "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/material-dialogs-and-motion.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--interface--material-dialogs-and-motion.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
       "template": "required-families",
       "proofs": {}
     },
@@ -3652,11 +3688,29 @@
       "proofs": {}
     },
     {
+      "id": "site:article:docs/features/interface/material-dialogs-and-motion.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--material-dialogs-and-motion.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:article:docs/features/interface/modern-fields.zh-HK.md",
       "family": "site",
       "route": "articles/docs--features--interface--modern-fields.zh-HK.html",
       "owner": "docs/site/publication.mjs",
       "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/material-dialogs-and-motion.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--interface--material-dialogs-and-motion.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
       "template": "required-families",
       "proofs": {}
     },
@@ -7306,11 +7360,29 @@
       "proofs": {}
     },
     {
+      "id": "site:workspace:document:docs/features/interface/material-dialogs-and-motion",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/material-dialogs-and-motion",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:workspace:document:docs/features/interface/modern-fields",
       "family": "site",
       "route": "workspace.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/interface/modern-fields",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/interface/material-dialogs-and-motion.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/material-dialogs-and-motion.zh-HK",
       "template": "required-families",
       "proofs": {}
     },
