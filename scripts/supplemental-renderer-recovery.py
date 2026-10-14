@@ -302,6 +302,11 @@ def interpreter_commands(launcher, base, arguments, invocation=None):
     return command, command
 
 
+def redirected_interpreter_command(base, arguments):
+    """Exact CPython redirector spelling, including its always-quoted image."""
+    return '"' + str(base) + '" ' + subprocess.list2cmdline(arguments)
+
+
 @contextmanager
 def owning_client(client_pid, expected=None, api=None, binding=None, configuration=None, interpreter_role=None):
     """Hold exact self/optional venv launcher/Node identities across proof."""
@@ -320,7 +325,7 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
         bound_files = [launcher, base, cfg, node]
         if values.get('executable') and Path(values['executable']) != base:
             bound_files.append(Path(values['executable']))
-        configuration = {'launcher': str(launcher), 'base': str(base), 'node': str(node), 'files': {str(p): digest(p) for p in bound_files}, 'command': command, 'baseCommand': base_command, 'selfPid': os.getpid()}
+        configuration = {'launcher': str(launcher), 'base': str(base), 'node': str(node), 'files': {str(p): digest(p) for p in bound_files}, 'command': command, 'baseCommand': base_command, 'redirectedBaseCommand': redirected_interpreter_command(base, sys.argv), 'selfPid': os.getpid()}
     rows, chain = api.inventory(), []
     current = configuration['selfPid']
     with ExitStack() as stack:
@@ -338,7 +343,13 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
             raise Error('Client is not a direct parent or one supported launcher ancestor.')
         if len(chain) not in (2, 3) or chain[-1][0]['pid'] != client_pid or chain[-1][0]['executablePath'] != configuration['node']:
             raise Error('Actual Node client ancestry differs.')
-        if chain[0][0]['executablePath'] != configuration['base'] or chain[0][1] != configuration['baseCommand']:
+        # Only these two complete producer-derived spellings are supported.
+        # Neither argument normalization nor an image-only match grants admission.
+        actual_base_command = chain[0][1]
+        command_form = ('preserved-launcher' if actual_base_command == configuration['baseCommand']
+                        else 'redirected-base' if 'redirectedBaseCommand' in configuration and actual_base_command == configuration['redirectedBaseCommand']
+                        else None)
+        if chain[0][0]['executablePath'] != configuration['base'] or command_form is None:
             error = Error('Actual Python execution image or command differs.')
             actual_identity, actual_command, _ = chain[0]
             expected_command = configuration['baseCommand']
@@ -370,7 +381,7 @@ def owning_client(client_pid, expected=None, api=None, binding=None, configurati
             raise error
         if any(chain[i][0]['creationDate'] < chain[i+1][0]['creationDate'] for i in range(len(chain)-1)):
             raise Error('Client launcher creation ancestry differs.')
-        observed = {'clientIdentity': chain[-1][0], 'clientCommand': chain[-1][1], 'routeFiles': configuration['files']}
+        observed = {'clientIdentity': chain[-1][0], 'clientCommand': chain[-1][1], 'routeFiles': configuration['files'], 'interpreterCommandForm': command_form}
         if expected is not None and observed != expected:
             raise Error('Pinned client or Python route identity changed.')
         yield observed, [{'identity': identity, 'command': command} for identity, command, _ in chain]
