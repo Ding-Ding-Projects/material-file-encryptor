@@ -19,3 +19,9 @@
 .converter-suite section section,.converter-suite article{display:grid;gap:12px;padding:16px;background:var(--md-sys-color-surface-container-low);border:1px solid var(--md-sys-color-outline-variant);border-radius:16px;min-width:0}
 .converter-suite [aria-pressed=true]{background:var(--md-sys-color-secondary-container);--md-text-button-label-text-color:var(--md-sys-color-on-secondary-container)}
 .converter-suite article>md-text-button{justify-self:start}
+
+/* Server preparation guidance sits right after the action it explains. */
+.server-preparation{grid-template-columns:auto minmax(0,1fr);grid-auto-flow:row dense;--guidance-tooltip-position:absolute;--guidance-tooltip-width:max-content;--guidance-tooltip-max-width:min(320px,70vw)}
+.server-preparation>*{grid-column:1/-1}
+.server-preparation>mfe-control-guidance:not([data-open]){grid-column:2;justify-self:start;align-self:center;position:relative;margin-block:0}
+.server-preparation>mfe-control-guidance:not([data-open])+*{grid-column:1}
