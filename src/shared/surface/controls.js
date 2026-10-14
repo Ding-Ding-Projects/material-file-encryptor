@@ -37,7 +37,7 @@ export function control(tag, props = {}, children = [], doc = document) {
   const type=String(props.type||'text').toLowerCase();
   const mapped=tag==='button'?(String(props.class||props.className||'').includes('primary')?'md-filled-button':String(props.class||props.className||'').includes('outlined')?'md-outlined-button':'md-text-button'):
     tag==='input'?({checkbox:'md-checkbox',radio:'md-radio',range:'md-slider',date:'mfe-date-field',time:'mfe-date-field','datetime-local':'mfe-date-field',file:'mfe-file-picker'}[type]||'md-outlined-text-field'):
-    tag==='textarea'?'md-outlined-text-field':tag==='select'?'md-outlined-select':tag==='option'?'md-select-option':tag==='dialog'?'mfe-dialog':tag;
+    tag==='textarea'?'md-outlined-text-field':tag==='select'?'md-outlined-select':tag==='option'?'md-select-option':tag==='dialog'?'mfe-dialog':tag==='progress'?'md-linear-progress':tag;
   const node=prepareControl(nativeCreate(mapped,doc));
   if((tag==='button'||/^md-.*button$/.test(mapped))&&!Object.hasOwn(props,'type'))node.type='button';
   for(const [key,value] of Object.entries(props)) {
@@ -100,12 +100,12 @@ export function upgradeControls(root) {
 }
 const fieldClearOwners=new WeakMap();
 /** Local SVG content uses the registered icon button's icon-size role, not a text glyph. */
-function controlIcon(name,doc){
+export function controlIcon(name,doc){
   const namespace='http://www.w3.org/2000/svg',svg=doc.createElementNS(namespace,'svg');
   svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('width','24');svg.setAttribute('height','24');svg.setAttribute('aria-hidden','true');svg.setAttribute('focusable','false');
   const path=doc.createElementNS(namespace,'path');
   path.setAttribute('fill','currentColor');
-  path.setAttribute('d',name==='clear'?'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12Z':'M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16a6.47 6.47 0 0 0 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5ZM9.5 14a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Z');
+  path.setAttribute('d',name==='chevron-left'?'M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12Z':name==='chevron-right'?'M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6Z':name==='clear'?'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12Z':'M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16a6.47 6.47 0 0 0 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5ZM9.5 14a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Z');
   svg.append(path);return svg;
 }
 function connectFieldClear(field){if(field.closest?.('[data-guidance-sandbox]')||fieldClearOwners.has(field)||field.readOnly||field.querySelector('[slot="trailing-icon"]'))return;const button=field.ownerDocument.createElement('md-icon-button');button.type='button';button.slot='trailing-icon';button.append(controlIcon('clear',field.ownerDocument));const refresh=()=>{const label=field.label||field.getAttribute('aria-label')||'Text field';button.setAttribute('aria-label',controlText(field,'Clear field: '+label,'清除欄位：'+label));button.disabled=!!(field.disabled||field.readOnly);};helperOwners.set(button,field);fieldClearOwners.set(field,{button,refresh});refresh();button.addEventListener('pointerdown',refresh);field.addEventListener('focusin',refresh);button.addEventListener('click',()=>{if(field.disabled||field.readOnly||!requestControlAdmission(field))return;field.value='';field.setCustomValidity?.('');field.dispatchEvent(new Event('input',{bubbles:true,composed:true}));field.dispatchEvent(new Event('change',{bubbles:true,composed:true}));field.focus();});field.append(button);}

@@ -46,13 +46,12 @@ function fixture() {
 
 test('existing history retention text and accessible name follow every language change',()=>{
  const {context,get,preferences}=fixture();
- const label=get('history-actions').children[1];
  const retention=get('history-retention');
  for(const [language,expected] of [['en','Show history'],['yue','顯示記錄'],['bilingual','Show history · 顯示記錄'],['en','Show history']]) {
   preferences.language=language;vm.runInContext('applyPreferences()',context);
-  assert.equal(label.textContent,expected,`${language}: visible label`);
+  assert.equal(retention.label,expected,`${language}: visible field label`);
   assert.equal(retention.attributes['aria-label'],expected,`${language}: accessible name`);
-  assert.equal(get('history-actions').children[1],label,'language changes preserve the existing control');
+  assert.equal(get('history-actions').children[1],retention,'language changes preserve the existing control');
  }
 });
 

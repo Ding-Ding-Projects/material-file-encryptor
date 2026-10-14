@@ -9,9 +9,9 @@ export function mountChangelog(host, { entries = [], translate = value => value,
   let resolveReady;const ready=new Promise(resolve=>resolveReady=resolve);const finishReady=outcome=>{resolveReady?.(outcome);resolveReady=null;};
   host.replaceChildren();setControlLanguage(host,language); let generation = 0, selected = [], disposed = false;
   const searchHost = document.createElement('div'), controls = document.createElement('div'), content = document.createElement('div');
-  const date = label => { const wrap = document.createElement('label'), input = control('input', {type:'date',label:translate(label),'aria-label':translate(label)}); wrap.textContent = translate(label); input.type = 'date'; wrap.append(input); controls.append(wrap); return input; };
+  const date = label => { const wrap = document.createElement('div'), input = control('input', {type:'date',label:translate(label),'aria-label':translate(label)}); wrap.className = 'changelog-date'; input.type = 'date'; wrap.append(input); controls.append(wrap); return input; };
   const from = date('From date'), to = date('To date');
-  const category = control('select'); category.setAttribute('aria-label', translate('Category'));
+  const category = control('select'); category.label = translate('Category'); category.setAttribute('aria-label', translate('Category'));
   for (const value of ['', ...new Set(entries.map(row => row.category).filter(Boolean))]) { const option = control('option'); option.value = value; option.textContent = value || translate('All categories'); category.append(option); }
   const exportButton = control('button', {type:'button'}); exportButton.type = 'button'; exportButton.textContent = translate('Export filtered changes');
   const stopSelectSearch = connectSelectSearch(category, {language});
@@ -35,5 +35,5 @@ export function mountChangelog(host, { entries = [], translate = value => value,
     if (onExport) return onExport(data);
     const url = URL.createObjectURL(new Blob([data.text], { type: data.mime })); const link = document.createElement('a'); link.href = url; link.download = data.name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
-  render(); return { ready,setLanguage(value){language=value;for(const [field,label]of [[from,'From date'],[to,'To date']]){field.label=translate(label);field.setAttribute('aria-label',translate(label));if(field.parentNode?.firstChild?.nodeType===3)field.parentNode.firstChild.nodeValue=translate(label);}category.setAttribute('aria-label',translate('Category'));exportButton.textContent=translate('Export filtered changes');setControlLanguage(host,language);}, refresh: render, destroy() { disposed = true; generation++;finishReady('disposed'); stopSelectSearch(); search.destroy(); host.replaceChildren(); } };
+  render(); return { ready,setLanguage(value){language=value;for(const [field,label]of [[from,'From date'],[to,'To date']]){field.label=translate(label);field.setAttribute('aria-label',translate(label));if(field.parentNode?.firstChild?.nodeType===3)field.parentNode.firstChild.nodeValue=translate(label);}category.label=translate('Category');category.setAttribute('aria-label',translate('Category'));exportButton.textContent=translate('Export filtered changes');setControlLanguage(host,language);}, refresh: render, destroy() { disposed = true; generation++;finishReady('disposed'); stopSelectSearch(); search.destroy(); host.replaceChildren(); } };
 }

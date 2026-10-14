@@ -1,5 +1,6 @@
 import {mountPublicationPanel} from './publication-panel.js';
 import {element} from './registry.js';
+import {controlIcon} from './controls.js';
 import {WORKFLOW_COPY} from './workflow-copy.js';
 import './search.js';
 import {validateDocument,downloadProgress,validCollection} from './workflow-model.js';
@@ -21,13 +22,18 @@ export function mount(host,{services={},translate=value=>value}={}){
  const bindBusy=async(control,action)=>{if(loading)return;loading=true;control.disabled=true;try{return await action();}finally{loading=false;control.disabled=false;}};
  const field=(label,{multiline=false,value='',readOnly=false}={})=>{
   const wrap=element('div'),input=element('md-outlined-text-field',{label:t(label),value,type:multiline?'textarea':'text',readOnly,rows:multiline?8:1,maxLength:262144});
-  wrap.append(input);let clear;if(!readOnly){clear=button(`Clear ${label}`,()=>{if(input.readOnly||input.disabled)return;input.value='';input.dispatchEvent(new Event('input'));input.focus();});wrap.append(clear);}return{wrap,input,clear};
+  // The clear action is the field's own trailing icon button rather than a
+  // separate outlined button, so the shared field clear helper stays out.
+  wrap.append(input);let clear;if(!readOnly){clear=element('md-icon-button',{'aria-label':t(`Clear ${label}`),slot:'trailing-icon',onclick:()=>{if(input.readOnly||input.disabled)return;input.value='';input.dispatchEvent(new Event('input'));input.focus();}});clear.append(controlIcon('clear',doc));input.append(clear);}return{wrap,input,clear};
  };
- const choice=(label,explanation)=>{const wrap=element('section'),select=element('select',{'aria-label':t(label)}),details=element('details',{},[element('summary',{text:t('Help')}),element('p',{text:t(explanation)})]),provenance=element('p');wrap.append(element('label',{text:t(label)}),select,details,provenance);return{wrap,select,provenance};};
+ const choice=(label,explanation)=>{const wrap=element('section',{class:'workflow-choice'}),select=element('select',{label:t(label),'aria-label':t(label),supportingText:t(explanation)}),provenance=element('p',{class:'workflow-provenance'});wrap.append(select,provenance);return{wrap,select,provenance};};
  const fill=(select,items,label=item=>item.name||item.label)=>{const previous=select.value;select.replaceChildren(element('option',{value:'',text:t('Choose an available item')}),...items.map(item=>element('option',{value:item.id,text:label(item)})));if(items.some(item=>item.id===previous))select.value=previous;};
  const setting=(control,key)=>{let saved;try{saved=storage?.getItem(`mfe.workflow.${key}`);}catch{}const available=saved&&Array.from(control.select.options).some(option=>option.value===saved);if(available)control.select.value=saved;control.provenance.textContent=saved&&!available?t('Saved editor unavailable. Choose again.'):saved?`${t('Saved value')}: ${saved}`:t('Built-in default: no item selected');control.select.addEventListener('change',()=>{try{storage?.setItem(`mfe.workflow.${key}`,control.select.value);}catch{}control.provenance.textContent=`${t('Saved value')}: ${control.select.value||t('none')}`;});};
- const filterPanel=element('details'),filterSummary=element('summary',{text:t('Find documents')}),search=element('mfe-search',{label:t('Find documents'),scope:'workflow-documents'});
- try{filterPanel.open=storage?.getItem('mfe.workflow.filters')==='open';}catch{}filterPanel.append(filterSummary,search);filterPanel.addEventListener('toggle',()=>{try{storage?.setItem('mfe.workflow.filters',filterPanel.open?'open':'closed');}catch{}});
+ // A Material text button discloses the filter section instead of a native
+ // details element; the open state is still remembered locally.
+ const filterPanel=element('section',{class:'workflow-filter'}),filterBody=element('div',{id:'workflow-filter-body'}),filterSummary=element('md-text-button',{text:t('Find documents'),'aria-controls':'workflow-filter-body','aria-expanded':'false'}),search=element('mfe-search',{label:t('Find documents'),scope:'workflow-documents'});
+ const setFilterOpen=open=>{filterBody.hidden=!open;filterSummary.setAttribute('aria-expanded',String(open));};
+ let filterOpen=false;try{filterOpen=storage?.getItem('mfe.workflow.filters')==='open';}catch{}setFilterOpen(filterOpen);filterBody.append(search);filterPanel.append(filterSummary,filterBody);filterSummary.addEventListener('click',()=>{filterOpen=!filterOpen;setFilterOpen(filterOpen);try{storage?.setItem('mfe.workflow.filters',filterOpen?'open':'closed');}catch{}});
  const list=element('div'),name=field('Document name',{value:'document.txt'}),content=field('Document content',{multiline:true});
  const presets=choice('Starting preset','Presets insert local starting content. Custom edits remain unchanged until you explicitly choose a preset.');
  const editor=choice('External editor','Only host-detected or natively selected trusted editors can open the selected file or project. Editor choice is stored locally.');

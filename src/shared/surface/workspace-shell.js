@@ -1,4 +1,5 @@
 import { SurfaceElement, element, register, localized, text } from './registry.js';
+import { controlIcon } from './controls.js';
 import './context-menu.js';
 import './group-manager.js';
 export class WorkspaceShell extends SurfaceElement {
@@ -11,8 +12,8 @@ export class WorkspaceShell extends SurfaceElement {
     this.selected??=new Set();
     this.tabsHost=element('div',{class:'tabs'});
     this.manager=element('mfe-group-manager');this.manager.model=this.model;this.manager.language=this.language;this.manager.changed=()=>this.renderTabs();
-    this.previous=element('md-text-button',{text:'‹','aria-label':this.t('Scroll workspace tabs left','向左捲動工作區分頁'),title:this.t('Scroll workspace tabs left','向左捲動工作區分頁'),onclick:()=>this.scrollTabs(-1)});
-    this.next=element('md-text-button',{text:'›','aria-label':this.t('Scroll workspace tabs right','向右捲動工作區分頁'),title:this.t('Scroll workspace tabs right','向右捲動工作區分頁'),onclick:()=>this.scrollTabs(1)});
+    this.previous=element('md-icon-button',{'aria-label':this.t('Scroll workspace tabs left','向左捲動工作區分頁'),title:this.t('Scroll workspace tabs left','向左捲動工作區分頁'),onclick:()=>this.scrollTabs(-1)});
+    this.next=element('md-icon-button',{'aria-label':this.t('Scroll workspace tabs right','向右捲動工作區分頁'),title:this.t('Scroll workspace tabs right','向右捲動工作區分頁'),onclick:()=>this.scrollTabs(1)});this.previous.append(controlIcon('chevron-left',document));this.next.append(controlIcon('chevron-right',document));
     this.allTabs=element('md-text-button',{class:'all',text:this.t('All tabs','所有分頁'),'aria-label':this.t('Search all open and available tabs','搜尋所有已開啟及可用分頁'),'aria-haspopup':'menu',onclick:event=>this.openAllTabs(event.currentTarget,event)});
     this.tabsHost.addEventListener('scroll',()=>this.updateOverflow());
     this.shadowRoot.append(element('div',{class:'bar'},[this.previous,this.tabsHost,this.next,this.allTabs]),this.manager);

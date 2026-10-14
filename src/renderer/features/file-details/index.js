@@ -15,18 +15,18 @@ export function mountFileDetails(root, { services, translate = value => value, l
  };
  const shell = element('section', null, { class: 'file-details', 'aria-label': translate('Selected file details') });
  const title = element('h2', 'Select a file');
- const tabs = element('div', null, { role: 'tablist', 'aria-label': translate('File details') });
- const versionTab = element('button', 'Versions', { type: 'button', role: 'tab' });
- const activityTab = element('button', 'Activity', { type: 'button', role: 'tab' });
+ const tabs = element('md-tabs', null, { role: 'tablist', 'aria-label': translate('File details') });
+ const versionTab = element('md-primary-tab', 'Versions', { role: 'tab' });
+ const activityTab = element('md-primary-tab', 'Activity', { role: 'tab' });
  tabs.append(versionTab, activityTab);
  const controls = element('div', null, { class: 'file-details-filters' });
  function input(label, type, key) {
-  const wrapper = element('label', label), field = element('input', null, { type, label: translate(label), 'aria-label': translate(label) });
+  const wrapper = element('div', null, { class: 'file-details-field' }), field = element('input', null, { type, label: translate(label), 'aria-label': translate(label) });
   labelFields.push({field,label,wrapper});field.addEventListener('change', () => { filters[key] = field.value; void refresh(); }); wrapper.append(field); controls.append(wrapper); return field;
  }
  input('From date (UTC)', 'date', 'from'); input('Through date (UTC)', 'date', 'to');
  input('Regular expression', 'search', 'pattern').maxLength = 256;
- const action = element('select', null, { 'aria-label': translate('Activity type') });
+ const action = element('select', null, { label: translate('Activity type'), 'aria-label': translate('Activity type') });
  for (const type of ['', 'import', 'edit', 'rename', 'restore', 'cancel', 'sync', 'delete', 'create', 'export', 'label']) action.append(element('option', type || 'All activity', { value: type }));
  const selectSearch = connectSelectSearch(action, {language});
  action.addEventListener('change', () => { filters.action = action.value; void refresh(); }); controls.append(action);
@@ -57,6 +57,7 @@ export function mountFileDetails(root, { services, translate = value => value, l
   if (destroyed) return;
   title.textContent = entry ? `${translate('File details')}: ${entry.path || entry.name || entry.entryId}` : translate('Select a file');
   versionTab.tabIndex = tab === 'versions' ? 0 : -1; activityTab.tabIndex = tab === 'activity' ? 0 : -1;
+  versionTab.active = tab === 'versions'; activityTab.active = tab === 'activity';
   versionTab.setAttribute('aria-selected', String(tab === 'versions')); activityTab.setAttribute('aria-selected', String(tab === 'activity'));
   action.hidden = tab !== 'activity'; toolbar.replaceChildren(); list.replaceChildren();
   more.hidden = tab !== 'activity' || !cursor; more.disabled = busy;
@@ -111,5 +112,5 @@ export function mountFileDetails(root, { services, translate = value => value, l
  versionTab.addEventListener('click', () => { tab = 'versions'; preview.textContent = ''; render(); void refresh(); });
  activityTab.addEventListener('click', () => { tab = 'activity'; preview.textContent = ''; render(); void refresh(); });
  more.addEventListener('click', () => void refresh(true)); render();
- return { setLanguage(value){language=value;versionTab.textContent=translate('Versions');activityTab.textContent=translate('Activity');more.textContent=translate('Load more activity');for(const {field,label,wrapper} of labelFields){field.label=translate(label);field.setAttribute('aria-label',translate(label));if(wrapper.firstChild?.nodeType===3)wrapper.firstChild.nodeValue=translate(label);}action.setAttribute('aria-label',translate('Activity type'));setControlLanguage(root,language);}, selectEntry(value) { generation++; versionSearch.cancel(); entry = value; chosen.clear(); versions = []; visibleVersions = []; activity = []; cursor = null; preview.textContent = ''; render(); return refresh(); }, refresh, destroy() { destroyed = true; generation++; versionSearch.cancel(); selectSearch?.(); root.replaceChildren(); } };
+ return { setLanguage(value){language=value;versionTab.textContent=translate('Versions');activityTab.textContent=translate('Activity');more.textContent=translate('Load more activity');for(const {field,label,wrapper} of labelFields){field.label=translate(label);field.setAttribute('aria-label',translate(label));if(wrapper.firstChild?.nodeType===3)wrapper.firstChild.nodeValue=translate(label);}action.label=translate('Activity type');action.setAttribute('aria-label',translate('Activity type'));setControlLanguage(root,language);}, selectEntry(value) { generation++; versionSearch.cancel(); entry = value; chosen.clear(); versions = []; visibleVersions = []; activity = []; cursor = null; preview.textContent = ''; render(); return refresh(); }, refresh, destroy() { destroyed = true; generation++; versionSearch.cancel(); selectSearch?.(); root.replaceChildren(); } };
 }
