@@ -809,3 +809,10 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 
 - [ ] Verify combined converter and local-model workspace in the installed product; source merge checks73/73 pass, runtime evidence remains pending.
 - [ ] Integrate cancellation repair94bbe888 after its source-bound smoke and retain any remaining original-deadline limitation.
+
+## Current screenshot replacement continuation
+
+- [ ] Reconcile the24-row replacement map with the2incoming Status images, for26 current displayed originals.
+- [ ] Install the verified bundled WinFsp prerequisite through native consent and independently verify readiness; not started.
+- [ ] Capture and inspect genuine replacements for every current reference; zero replacements completed in this pass.
+- [ ] Integrate preserved native authorization88fe663 and presentation validationcc87409 only after their remaining source/runtime acceptance requirements.

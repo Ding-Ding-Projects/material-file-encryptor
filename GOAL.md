@@ -59,3 +59,7 @@ The roadmap tracks preview delivery. Earlier Windows run `37863451177` remains h
 - [ ] Replace every current presentation screenshot with inspected genuine rebuilt captures, and add coverage for new features. Preserve historical originals and their exact provenance.
 - [ ] Fully rewrite README.md with accurate public-safe contribution instructions and architecture, encrypted-file workflow and verification diagrams.
 - [ ] Preserve every branch and working tree, integrate independently complete verified contributions into main, verify remote refs, and remove only archive-backed, inactive, fully merged candidates with proven ownership and ancestry.
+
+## Latest continuation boundary
+
+The user requires every displayed screenshot replaced.26 source images are now in scope after incoming mainc374e2d. No replacement was completed: real native fixture admission stopped at missing WinFsp installation. Preserved source branches and exact next steps are recorded in CLOSEOUT_PROMPT.md. Account preservation began at verified10% remaining; the objective remains incomplete.
