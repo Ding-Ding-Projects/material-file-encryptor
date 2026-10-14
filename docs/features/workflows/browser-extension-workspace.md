@@ -1,6 +1,6 @@
 # Browser extension workspace
 
-Open workspace in the popup opens the extension-owned options tab. Connection, Personalization, Changelog, Notes, Documentation, Support and Status are Material tabs with Arrow Left/Right and Home/End navigation, and each panel fades in unless reduced motion is requested. Tab changes keep the same controls rather than replacing the focused element. Shared local Material components and the bundled regex search are used without remote executable assets.
+Open workspace in the popup opens the extension-owned options tab. Connection, Personalization, Changelog, Notes, Documentation, Support, Dim sum and Status are Material tabs with Arrow Left/Right and Home/End navigation, and each panel fades in unless reduced motion is requested. Tab changes keep the same controls rather than replacing the focused element. Shared local Material components and the bundled regex search are used without remote executable assets.
 
 Language (English, Cantonese or bilingual), theme (system, light or dark) and the selected tab use a versioned bounded extension-origin local store. No browser storage sync, broad host permission or additional storage permission is used. Invalid or oversized cached settings fall back to defaults. A failed write retains usable page state and explicitly reports that the change was not saved. Reset restores browser-local defaults only. Bilingual labels stack their secondary line.
 
@@ -10,7 +10,7 @@ Pairing does not authenticate a local profile. Personal wording application, sha
 
 ## Changelog, build source and commands
 
-The Changelog tab shows the release changelog without a network connection. Staging turns the repository changelog into a bundled module, because the page policy blocks every fetch; a filter narrows the releases locally. Cantonese mode shows each release's Cantonese summary, and bilingual mode shows the English items and the summary together.
+The Changelog tab shows the release changelog without a network connection. Staging turns the repository changelog into a bundled module, because the page policy does not allow fetching the extension's own files; a filter narrows the releases locally. Cantonese mode shows each release's Cantonese summary, and bilingual mode shows the English items and the summary together.
 
 The Status tab shows the extension version, the source commit the bundle was staged from and the staging time. When tracked extension inputs differed from that commit at staging, the commit is marked as having uncommitted changes. If either value cannot be read, the tab says it is unavailable rather than guessing.
 
@@ -24,7 +24,7 @@ About these settings, under Personalization, lists each setting with its current
 
 Reset browser settings asks for a deliberate confirmation: turn on both confirmation switches, move the slider fully right, then choose Execute. Emergency exit cancels with nothing changed. Individual playfulness resets stay one step, because they change a single value.
 
-Alt+1 to Alt+7 open Connection, Personalization, Changelog, Notes, Documentation, Support and Status, and Ctrl+K opens the command palette, which lists these shortcuts beside their commands. Browser-reserved combinations such as Ctrl with a number, Ctrl+T and Ctrl+W are left to the browser.
+Alt+1 to Alt+8 open Connection, Personalization, Changelog, Notes, Documentation, Support, Dim sum and Status, and Ctrl+K opens the command palette, which lists these shortcuts beside their commands. Browser-reserved combinations such as Ctrl with a number, Ctrl+T and Ctrl+W are left to the browser.
 
 ## Name, accent, recent changes and filters
 
@@ -60,7 +60,7 @@ Scheduled changes, under Personalization, sets the theme or language to change a
 
 Personal wording imports a JSON file of the form {"schemaVersion":1,"entries":{"original":"replacement"}} with up to 200 plain-text entries of 60 characters or fewer. A file with any invalid entry is rejected whole and nothing changes. Wording changes interface text only, never notes, exports or anything sent to the desktop. Each original word is replaced once, so one entry's replacement is never rewritten by another. Clear wording restores the original text.
 
-The workspace and popup use the Noto Sans font bundled inside the extension, checked against the application's font receipt when the extension is staged. The Hong Kong Chinese face is too large to bundle, so Chinese text uses the system font. No font or other resource is requested from outside the extension.
+The workspace and popup use the Noto Sans font bundled inside the extension, checked against the application's font receipt when the extension is staged. The Hong Kong Chinese face is too large to bundle, so Chinese text uses the system font. No font or other resource is requested from outside the extension, apart from the dim sum catalogue when the user asks to load it.
 
 ## Offline documentation
 
@@ -76,9 +76,15 @@ The Status tab also states the price plainly: Material File Encryptor and this e
 
 Narration, under Personalization, uses the browser's own speech engine. Choose a voice that suits the interface language and a speaking rate from 0.5 to 2. Read this tab (Alt+R) reads the open tab's headings, statuses and controls, naming each control's role and saying when it is unavailable. Stop reading, Escape, or moving to another tab stops speech. A new reading always replaces the previous one. When the browser has no speech engine, the workspace says so and disables reading.
 
-The Support tab (Alt+6; Status is Alt+7) keeps support tickets in this browser. A ticket has a title, a category (problem, question or suggestion), a description and a status (open, waiting or closed), and can be edited later. Up to three PNG, JPEG, WebP, text or JSON files of 200 KB or less can be attached. The diagnostics block (extension version, source commit, interface language, theme and browser) is shown for review and goes into an exported ticket only when its checkbox is ticked. Notes, wording, logos and credentials are never included. Nothing is sent anywhere: Export saves the ticket as a JSON file for the user to share, and Delete asks for the deliberate confirmation.
+The Support tab (Alt+6) keeps support tickets in this browser. A ticket has a title, a category (problem, question or suggestion), a description and a status (open, waiting or closed), and can be edited later. Up to three PNG, JPEG, WebP, text or JSON files of 200 KB or less can be attached. The diagnostics block (extension version, source commit, interface language, theme and browser) is shown for review and goes into an exported ticket only when its checkbox is ticked. Notes, wording, logos and credentials are never included. Nothing is sent anywhere: Export saves the ticket as a JSON file for the user to share, and Delete asks for the deliberate confirmation.
 
 Screen recording starts only after the browser's own picker has been used to choose a tab or window. Stop recording, or stopping the share in the browser, ends it. The recording is then shown for review, and Save recording stays unavailable until the user confirms it shows nothing private. Saved recordings go to this computer only, and Discard recording removes it.
+
+## Dim sum catalogue
+
+The Dim sum tab (Alt+7; Status is Alt+8) shows the public catalogue of about 2,900 dim sum and other Hong Kong dishes. It is far too large to ship inside the extension, so it is loaded from GitHub only when Load catalogue from GitHub is chosen. The tab names the hosts it contacts before anything loads: raw.githubusercontent.com for the catalogue, api.github.com for the list of published illustrations, and github.com for an illustration that is opened. Requests carry no cookies and no referrer. The extension's page policy allows network access to the first two hosts only, and the catalogue is kept for a day, with Refresh catalogue fetching it again. Everything else in the workspace works without a network connection.
+
+Search matches English and Chinese names, Jyutping and the dish's short name, and a category filter narrows the list. Each dish shows its description in the interface language, ingredients, allergens and dietary notes. Catalogue images are generated illustrations, published as assets on the catalogue's normal releases, and they are labelled as illustrations rather than photographs of real dishes. A dish with no published illustration says so instead of showing a stand-in picture. Add to my list keeps up to 200 dishes in this browser, and Show my list narrows the view to them.
 
 Focused tests cover malformed/oversized cache, failed saves, persistence, keyboard tab routing, forged sender paths and staged local-only CSP. Source staging hashes every workspace file. Signing, installed identity, real browser interaction, visual parity and display scaling remain unverified.
 

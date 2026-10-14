@@ -45,3 +45,6 @@ body{width:auto}main{max-width:1000px;margin:auto;max-height:none}section{paddin
 .ticket-form{display:grid;gap:8px;justify-items:start}.ticket-form md-outlined-text-field{inline-size:min(100%,560px)}.ticket-form md-outlined-select{min-width:12rem}#ticket-attachments,#ticket-list{justify-self:stretch}.ticket-entry{justify-content:space-between;flex-wrap:wrap}
 .recording-preview{inline-size:min(100%,640px);border-radius:12px;background:var(--md-sys-color-surface-container-low)}#narration-rate{width:min(100%,360px)}
 .link-unavailable{color:var(--md-sys-color-on-surface-variant);font-style:italic}.note-entry a{color:var(--md-sys-color-primary);overflow-wrap:anywhere}
+/* Dim sum illustrations stay inside their card. */
+.dimsum-figure{margin:12px 0}.dimsum-figure img{display:block;inline-size:100%;max-inline-size:480px;block-size:auto;border-radius:16px;animation:mfe-panel-in 300ms cubic-bezier(.05,.7,.1,1) both}.dimsum-figure figcaption{margin-top:6px;font-size:12px;color:var(--md-sys-color-on-surface-variant)}.dimsum-missing{padding:24px;border-radius:16px;border:1px dashed var(--md-sys-color-outline-variant);color:var(--md-sys-color-on-surface-variant)}#dimsum-search{min-width:min(100%,16rem)}
+@media(prefers-reduced-motion:reduce){.dimsum-figure img{animation:none}}

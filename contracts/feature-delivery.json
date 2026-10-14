@@ -12250,16 +12250,26 @@
     {
       "id": "dim-sum",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css",
+        "scripts/build-browser-extension.mjs"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Select and manage the required food catalogue with descriptions, photos and localized navigation. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The Dim sum tab loads the public catalogue from GitHub only on request, searches English and Chinese names, Jyutping and categories, shows descriptions in the interface language with ingredients and allergens, and keeps a local list. A headless browser run with trusted input loaded all 2,866 dishes and searched them; installed-build identity is not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -12273,7 +12283,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -12284,29 +12294,36 @@
         "action": "Select and manage the required food catalogue with descriptions, photos and localized navigation.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Select and manage the required food catalogue with descriptions, photos and localized navigation.",
-            "nextProof": "Exercise select and manage the required food catalogue with descriptions, photos and localized navigation on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow, including offline and missing-illustration states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "The catalogue is cached for a day in browser cache storage; my list keeps up to 200 dish ids in a separate local record."
       }
     },
     {
       "id": "dim-sum-photo-source",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
+        "browser-extension/options.js"
+      ],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Resolve real food photos from reviewed provenance and show missing-photo states without invented pixels. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Illustrations are taken only from uploaded assets on normal catalog-v1 releases with exact download addresses, labelled as generated illustrations rather than photographs, loaded one at a time without a referrer, and dishes without a published illustration say so. A headless browser run loaded a 1254 pixel illustration from catalog-v1.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -12320,7 +12337,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -12331,14 +12348,14 @@
         "action": "Resolve real food photos from reviewed provenance and show missing-photo states without invented pixels.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Resolve real food photos from reviewed provenance and show missing-photo states without invented pixels.",
-            "nextProof": "Exercise resolve real food photos from reviewed provenance and show missing-photo states without invented pixels on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow, including offline and missing-illustration states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Illustrations are not stored; the release asset list is cached with the catalogue."
       }
     },
     {
