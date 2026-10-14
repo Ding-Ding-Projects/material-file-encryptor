@@ -11919,7 +11919,8 @@
       "status": "unverified",
       "implementation": [
         "browser-extension/options.js",
-        "browser-extension/options.html"
+        "browser-extension/options.html",
+        "browser-extension/vocabulary.js"
       ],
       "documentation": [
         "docs/features/workflows/browser-extension-workspace.md",
@@ -11929,7 +11930,8 @@
         "browser-extension/options.js"
       ],
       "tests": [
-        "test/browser-protection-options.test.js"
+        "test/browser-protection-options.test.js",
+        "test/browser-extension-wording.test.js"
       ],
       "evidence": [],
       "persistence": [],
@@ -12068,7 +12070,8 @@
       "status": "unverified",
       "implementation": [
         "browser-extension/options.js",
-        "browser-extension/options.html"
+        "browser-extension/options.html",
+        "browser-extension/schedules.js"
       ],
       "documentation": [
         "docs/features/workflows/browser-extension-workspace.md",
@@ -12078,7 +12081,8 @@
         "browser-extension/options.js"
       ],
       "tests": [
-        "test/browser-protection-options.test.js"
+        "test/browser-protection-options.test.js",
+        "test/browser-extension-wording.test.js"
       ],
       "evidence": [],
       "persistence": [],
@@ -17295,7 +17299,10 @@
     "browser-extension/icons/icon-48.png": "f65ef52811dde30fc124dcd0e6d543096713439e",
     "browser-extension/icons/icon-128.png": "f65ef52811dde30fc124dcd0e6d543096713439e",
     "browser-extension/notes.js": "c895df19387d4ee6a3a3ed4916f4ed36c8007a87",
-    "test/browser-extension-notes.test.js": "c895df19387d4ee6a3a3ed4916f4ed36c8007a87"
+    "test/browser-extension-notes.test.js": "c895df19387d4ee6a3a3ed4916f4ed36c8007a87",
+    "browser-extension/schedules.js": "1269c7bddf79d7cb2ee5e76126aa9f1969c9ecd5",
+    "browser-extension/vocabulary.js": "1269c7bddf79d7cb2ee5e76126aa9f1969c9ecd5",
+    "test/browser-extension-wording.test.js": "1269c7bddf79d7cb2ee5e76126aa9f1969c9ecd5"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
