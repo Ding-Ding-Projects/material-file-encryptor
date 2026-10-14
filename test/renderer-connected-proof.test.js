@@ -59,3 +59,24 @@ test('supported CDP transport close disconnects only its socket',async()=>{
  await connection.disconnect();
  assert.deepEqual(events,[['socket','ws://127.0.0.1:49150/devtools/browser/owned'],['socket-disconnect']]);
 });
+test('CDP diagnostics retain attachment identity and codes without protocol payloads',async()=>{
+ const observations=[],forwarded=[];let socket;
+ class Socket {
+  listeners=new Map();
+  constructor(){socket=this;queueMicrotask(()=>this.emit('open',{}));}
+  addEventListener(name,fn){const list=this.listeners.get(name)||[];list.push(fn);this.listeners.set(name,list);}
+  emit(name,event){for(const fn of this.listeners.get(name)||[])fn(event);}
+  send(){}
+  close(){this.emit('close',{});}
+ }
+ const connection=await createRendererCdpTransport('http://127.0.0.1:49150',{observe:value=>observations.push(value),fetchImpl:async()=>({text:async()=>JSON.stringify({webSocketDebuggerUrl:'ws://127.0.0.1:49150/devtools/browser/owned'})}),WebSocketImpl:Socket});
+ connection.transport.onmessage=value=>forwarded.push(value);
+ connection.transport.send({id:1,method:'Target.setAutoAttach',params:{synthetic:'excluded'}});
+ const messages=[{method:'Target.attachedToTarget',params:{targetInfo:{targetId:'owned',type:'page',url:'synthetic-private-url'},sessionId:'excluded'}},{id:1,error:{code:-32000,message:'synthetic-private-message',data:'excluded'}},{method:'Inspector.targetCrashed',params:{synthetic:'excluded'}}];
+ for(const message of messages)socket.emit('message',{data:JSON.stringify(message)});
+ assert.deepEqual(forwarded,messages,'Observations must not alter delivery');
+ const normalized=JSON.parse(JSON.stringify(observations));
+ assert.deepEqual(normalized,[{direction:'send',method:'Target.setAutoAttach',id:1},{direction:'receive',method:'Target.attachedToTarget',targetId:'owned',targetType:'page'},{direction:'receive',method:'Target.setAutoAttach',id:1,errorCode:-32000},{direction:'receive',method:'Inspector.targetCrashed'}]);
+ assert.doesNotMatch(JSON.stringify(normalized),/synthetic-private|excluded/);
+ await connection.disconnect();
+});
