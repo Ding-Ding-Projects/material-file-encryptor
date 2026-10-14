@@ -1,0 +1,982 @@
+{
+  "schemaVersion": 1,
+  "intendedSource": "96ea35efb396b7fa91d4f219983b984d04e702a4",
+  "scope": "Every currently displayed screenshot, including legacy gallery tiles. Recordings and workflow diagrams are excluded.",
+  "historicalRetention": "Preserve original bytes and provenance in history or an archive outside current presentation. A historical caption does not exempt a displayed old tile.",
+  "tuplePolicy": "Targets are planned capture configurations, not observed proof. The target tuple may be refined before capture with explicit current-state mapping. No new Linux support is claimed.",
+  "records": [
+    {
+      "id": "linux-locked",
+      "old": {
+        "path": "docs/images/captures/desktop-locked.png",
+        "sha256": "32e094af6b113302868ec7b72e9d04faabe835dec03e4212d739ef95316512b2",
+        "sourceCommit": "2a9887009f3bb2b64a3e5be37754d1d6612b6fd1",
+        "recordedTuple": {
+          "width": 1180,
+          "height": 850,
+          "scale": 1,
+          "theme": "light",
+          "language": null
+        }
+      },
+      "currentConsumers": [
+        "docs/site/index.html",
+        "docs/site/gallery-review.json",
+        "docs/site/publication.mjs -> gallery.html",
+        "docs/site/publication.mjs -> gallery-inventory.json"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "drive",
+        "state": "drive-locked",
+        "theme": "light",
+        "language": "en",
+        "viewport": {
+          "width": 1180,
+          "height": 850,
+          "scale": 1
+        }
+      },
+      "caption": "Current Windows locked Drive workspace.",
+      "dedupKey": "drive-locked-en-light-1180x850-1",
+      "status": "pending",
+      "replacement": null,
+      "reason": null,
+      "mappingReason": "Explicit current supported equivalent; historical platform/state captions do not carry over. Pending actual capture."
+    },
+    {
+      "id": "linux-create",
+      "old": {
+        "path": "docs/images/captures/desktop-create.png",
+        "sha256": "d0b0a15f63ede89b44af929d0e0ef551c8d98c8e4c7544f6e34db1b871eeca04",
+        "sourceCommit": "2a9887009f3bb2b64a3e5be37754d1d6612b6fd1",
+        "recordedTuple": {
+          "width": 1180,
+          "height": 850,
+          "scale": 1,
+          "theme": "light",
+          "language": null
+        }
+      },
+      "currentConsumers": [
+        "docs/site/index.html",
+        "docs/site/gallery-review.json",
+        "docs/site/publication.mjs -> gallery.html",
+        "docs/site/publication.mjs -> gallery-inventory.json"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "drive",
+        "state": "create-password",
+        "theme": "light",
+        "language": "en",
+        "viewport": {
+          "width": 1180,
+          "height": 850,
+          "scale": 1
+        }
+      },
+      "caption": "Current Windows create-drive password form.",
+      "dedupKey": "create-password-en-light-1180x850-1",
+      "status": "pending",
+      "replacement": null,
+      "reason": null,
+      "mappingReason": "Explicit current supported equivalent; historical platform/state captions do not carry over. Pending actual capture."
+    },
+    {
+      "id": "linux-key-file-choice",
+      "old": {
+        "path": "docs/images/captures/desktop-keyfile-choice.png",
+        "sha256": "416d4812a2a4796f59121a2990cfebc7c39dc2ec6371f0c0a38595897f16414f",
+        "sourceCommit": "2a9887009f3bb2b64a3e5be37754d1d6612b6fd1",
+        "recordedTuple": {
+          "width": 1180,
+          "height": 850,
+          "scale": 1,
+          "theme": "light",
+          "language": null
+        }
+      },
+      "currentConsumers": [
+        "docs/site/index.html",
+        "docs/site/gallery-review.json",
+        "docs/site/publication.mjs -> gallery.html",
+        "docs/site/publication.mjs -> gallery-inventory.json"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "drive",
+        "state": "key-file-choice",
+        "theme": "light",
+        "language": "en",
+        "viewport": {
+          "width": 1180,
+          "height": 850,
+          "scale": 1
+        }
+      },
+      "caption": "Key-file selection on the current Windows build.",
+      "dedupKey": "drive-key-file-choice-light-en-1180x850-1",
+      "status": "pending",
+      "replacement": null,
+      "reason": null
+    },
+    {
+      "id": "linux-settings-dark",
+      "old": {
+        "path": "docs/images/captures/desktop-settings-dark.png",
+        "sha256": "32f9800e39c0df2c3e3095ba9b0ca97b2f193338ca661799e45519521973ff59",
+        "sourceCommit": "2a9887009f3bb2b64a3e5be37754d1d6612b6fd1",
+        "recordedTuple": {
+          "width": 1168,
+          "height": 1360,
+          "scale": 1,
+          "theme": "dark",
+          "language": null
+        }
+      },
+      "currentConsumers": [
+        "docs/site/index.html",
+        "docs/site/gallery-review.json",
+        "docs/site/publication.mjs -> gallery.html",
+        "docs/site/publication.mjs -> gallery-inventory.json"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "settings",
+        "state": "settings-default",
+        "theme": "dark",
+        "language": "en",
+        "viewport": {
+          "width": 1180,
+          "height": 850,
+          "scale": 1
+        }
+      },
+      "caption": "Current Windows settings workspace in dark theme.",
+      "dedupKey": "settings-default-en-dark-1180x850-1",
+      "status": "pending",
+      "replacement": null,
+      "reason": null,
+      "mappingReason": "Explicit current supported equivalent; historical platform/state captions do not carry over. Pending actual capture."
+    },
+    {
+      "id": "linux-help",
+      "old": {
+        "path": "docs/images/captures/desktop-help.png",
+        "sha256": "a02fd3f5c74f2c8737949f6a4c3c276a9adde5c9482bb888b9d910b6d268e52e",
+        "sourceCommit": "2a9887009f3bb2b64a3e5be37754d1d6612b6fd1",
+        "recordedTuple": {
+          "width": 1168,
+          "height": 1014,
+          "scale": 1,
+          "theme": "light",
+          "language": null
+        }
+      },
+      "currentConsumers": [
+        "docs/site/index.html",
+        "docs/site/gallery-review.json",
+        "docs/site/publication.mjs -> gallery.html",
+        "docs/site/publication.mjs -> gallery-inventory.json"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "help",
+        "state": "help-default",
+        "theme": "light",
+        "language": "en",
+        "viewport": {
+          "width": 1180,
+          "height": 850,
+          "scale": 1
+        }
+      },
+      "caption": "Current Windows Help workspace.",
+      "dedupKey": "help-default-en-light-1180x850-1",
+      "status": "pending",
+      "replacement": null,
+      "reason": null,
+      "mappingReason": "Explicit current supported equivalent; historical platform/state captions do not carry over. Pending actual capture."
+    },
+    {
+      "id": "windows-locked",
+      "old": {
+        "path": "docs/images/captures/windows/desktop-locked.png",
+        "sha256": "13e57820eff14a3dffac727ccd879b9cfe46ecee58bcc33a2a515d7de05247e7",
+        "sourceCommit": "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
+        "recordedTuple": {
+          "width": 1024,
+          "height": 728,
+          "scale": 1,
+          "theme": "light",
+          "language": null
+        }
+      },
+      "currentConsumers": [
+        "docs/site/index.html",
+        "docs/site/gallery-review.json",
+        "docs/site/publication.mjs -> gallery.html",
+        "docs/site/publication.mjs -> gallery-inventory.json"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "drive",
+        "state": "drive-locked",
+        "theme": "light",
+        "language": "en",
+        "viewport": {
+          "width": 1180,
+          "height": 850,
+          "scale": 1
+        }
+      },
+      "caption": "Current Windows locked Drive workspace.",
+      "dedupKey": "drive-locked-en-light-1180x850-1",
+      "status": "pending",
+      "replacement": null,
+      "reason": null,
+      "mappingReason": "Explicit current supported equivalent; historical platform/state captions do not carry over. Pending actual capture."
+    },
+    {
+      "id": "windows-create",
+      "old": {
+        "path": "docs/images/captures/windows/desktop-create.png",
+        "sha256": "14d16d03df62fa3e40c1baf961b960f360e26c2ac4cde1b58196d51a6725b225",
+        "sourceCommit": "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
+        "recordedTuple": {
+          "width": 1024,
+          "height": 728,
+          "scale": 1,
+          "theme": "light",
+          "language": null
+        }
+      },
+      "currentConsumers": [
+        "docs/site/index.html",
+        "docs/site/gallery-review.json",
+        "docs/site/publication.mjs -> gallery.html",
+        "docs/site/publication.mjs -> gallery-inventory.json"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "drive",
+        "state": "create-password",
+        "theme": "light",
+        "language": "en",
+        "viewport": {
+          "width": 1180,
+          "height": 850,
+          "scale": 1
+        }
+      },
+      "caption": "Current Windows create-drive password form.",
+      "dedupKey": "create-password-en-light-1180x850-1",
+      "status": "pending",
+      "replacement": null,
+      "reason": null,
+      "mappingReason": "Explicit current supported equivalent; historical platform/state captions do not carry over. Pending actual capture."
+    },
+    {
+      "id": "windows-keyfile-choice",
+      "old": {
+        "path": "docs/images/captures/windows/desktop-keyfile-choice.png",
+        "sha256": "1e7181b307bcd872f3cac709c54505ae8e3cf15837ad140db645ea4a04325480",
+        "sourceCommit": "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
+        "recordedTuple": {
+          "width": 1024,
+          "height": 728,
+          "scale": 1,
+          "theme": "light",
+          "language": null
+        }
+      },
+      "currentConsumers": [
+        "docs/site/index.html",
+        "docs/site/gallery-review.json",
+        "docs/site/publication.mjs -> gallery.html",
+        "docs/site/publication.mjs -> gallery-inventory.json"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "drive",
+        "state": "key-file-choice",
+        "theme": "light",
+        "language": "en",
+        "viewport": {
+          "width": 1180,
+          "height": 850,
+          "scale": 1
+        }
+      },
+      "caption": "Key-file selection on the current Windows build.",
+      "dedupKey": "drive-key-file-choice-light-en-1180x850-1",
+      "status": "pending",
+      "replacement": null,
+      "reason": null
+    },
+    {
+      "id": "windows-settings-dark",
+      "old": {
+        "path": "docs/images/captures/windows/desktop-settings-dark.png",
+        "sha256": "1a265c9736bf38f908e0b549f5db5b2d2867d725049642e36f9eeeda5406d8ee",
+        "sourceCommit": "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
+        "recordedTuple": {
+          "width": 1024,
+          "height": 728,
+          "scale": 1,
+          "theme": "dark",
+          "language": null
+        }
+      },
+      "currentConsumers": [
+        "docs/site/index.html",
+        "docs/site/gallery-review.json",
+        "docs/site/publication.mjs -> gallery.html",
+        "docs/site/publication.mjs -> gallery-inventory.json"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "settings",
+        "state": "settings-default",
+        "theme": "dark",
+        "language": "en",
+        "viewport": {
+          "width": 1180,
+          "height": 850,
+          "scale": 1
+        }
+      },
+      "caption": "Current Windows settings workspace in dark theme.",
+      "dedupKey": "settings-default-en-dark-1180x850-1",
+      "status": "pending",
+      "replacement": null,
+      "reason": null,
+      "mappingReason": "Explicit current supported equivalent; historical platform/state captions do not carry over. Pending actual capture."
+    },
+    {
+      "id": "windows-help",
+      "old": {
+        "path": "docs/images/captures/windows/desktop-help.png",
+        "sha256": "79d2b260758f82ec73d6b100dfeed4a62242d4018e55cf2947ed5b37fe0e171c",
+        "sourceCommit": "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
+        "recordedTuple": {
+          "width": 1024,
+          "height": 728,
+          "scale": 1,
+          "theme": "light",
+          "language": null
+        }
+      },
+      "currentConsumers": [
+        "docs/site/index.html",
+        "docs/site/gallery-review.json",
+        "docs/site/publication.mjs -> gallery.html",
+        "docs/site/publication.mjs -> gallery-inventory.json"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "help",
+        "state": "help-default",
+        "theme": "light",
+        "language": "en",
+        "viewport": {
+          "width": 1180,
+          "height": 850,
+          "scale": 1
+        }
+      },
+      "caption": "Current Windows Help workspace.",
+      "dedupKey": "help-default-en-light-1180x850-1",
+      "status": "pending",
+      "replacement": null,
+      "reason": null,
+      "mappingReason": "Explicit current supported equivalent; historical platform/state captions do not carry over. Pending actual capture."
+    },
+    {
+      "id": "history-preview",
+      "old": {
+        "path": "docs/images/captures/preview/history-preview.png",
+        "sha256": "01bfaec0707df62eeaf2ab72dc123f9c1a7369fc27af37c60eebfeccd6d4a4f6",
+        "sourceCommit": "1e16dea8edb66ea5e6cf31009b0dbcc953f18d74",
+        "recordedTuple": {
+          "width": 1770,
+          "height": 1128,
+          "viewportWidth": 1180,
+          "viewportHeight": 752,
+          "scale": 1.5,
+          "theme": "light",
+          "language": null
+        }
+      },
+      "currentConsumers": [
+        "docs/site/index.html",
+        "docs/site/gallery-review.json",
+        "docs/site/publication.mjs -> gallery.html",
+        "docs/site/publication.mjs -> gallery-inventory.json"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "history",
+        "state": "retained-version",
+        "theme": "light",
+        "language": "en",
+        "viewport": {
+          "width": 1180,
+          "height": 752,
+          "scale": 1.5
+        }
+      },
+      "caption": "Current Windows history showing retained-version.",
+      "dedupKey": "history-retained-version-light-en-1180x752-1.5",
+      "status": "pending",
+      "replacement": null,
+      "reason": null
+    },
+    {
+      "id": "recycle-preview",
+      "old": {
+        "path": "docs/images/captures/preview/recycle-preview.png",
+        "sha256": "cc8bb0501a386226f0e4750657ab96e1b069ec283d0c4b3785e5c7a7b878c852",
+        "sourceCommit": "1e16dea8edb66ea5e6cf31009b0dbcc953f18d74",
+        "recordedTuple": {
+          "width": 1770,
+          "height": 1128,
+          "viewportWidth": 1180,
+          "viewportHeight": 752,
+          "scale": 1.5,
+          "theme": "light",
+          "language": null
+        }
+      },
+      "currentConsumers": [
+        "docs/site/index.html",
+        "docs/site/gallery-review.json",
+        "docs/site/publication.mjs -> gallery.html",
+        "docs/site/publication.mjs -> gallery-inventory.json"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "recycle-bin",
+        "state": "deleted-file-available",
+        "theme": "light",
+        "language": "en",
+        "viewport": {
+          "width": 1180,
+          "height": 752,
+          "scale": 1.5
+        }
+      },
+      "caption": "Current Windows recycle-bin showing deleted-file-available.",
+      "dedupKey": "recycle-bin-deleted-file-available-light-en-1180x752-1.5",
+      "status": "pending",
+      "replacement": null,
+      "reason": null
+    },
+    {
+      "id": "descendant-preview",
+      "old": {
+        "path": "docs/images/captures/preview/descendant-preview.png",
+        "sha256": "893bec80cc965b618fca80603aa5d9f0a003b7a3c8f444921bc65bfc1426043d",
+        "sourceCommit": "1e16dea8edb66ea5e6cf31009b0dbcc953f18d74",
+        "recordedTuple": {
+          "width": 1770,
+          "height": 1128,
+          "viewportWidth": 1180,
+          "viewportHeight": 752,
+          "scale": 1.5,
+          "theme": "light",
+          "language": null
+        }
+      },
+      "currentConsumers": [
+        "docs/site/index.html",
+        "docs/site/gallery-review.json",
+        "docs/site/publication.mjs -> gallery.html",
+        "docs/site/publication.mjs -> gallery-inventory.json"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "recycle-bin",
+        "state": "explicit-descendant-dialog",
+        "theme": "light",
+        "language": "en",
+        "viewport": {
+          "width": 1180,
+          "height": 752,
+          "scale": 1.5
+        }
+      },
+      "caption": "Current Windows recycle-bin showing explicit-descendant-dialog.",
+      "dedupKey": "recycle-bin-explicit-descendant-dialog-light-en-1180x752-1.5",
+      "status": "pending",
+      "replacement": null,
+      "reason": null
+    },
+    {
+      "id": "dark-settings-preview",
+      "old": {
+        "path": "docs/images/captures/preview/dark-settings-preview.png",
+        "sha256": "7a28deb679398b6521156d179c8ce7a7fcc643840de34cf5bdd0afa0905904ab",
+        "sourceCommit": "1e16dea8edb66ea5e6cf31009b0dbcc953f18d74",
+        "recordedTuple": {
+          "width": 1770,
+          "height": 1128,
+          "viewportWidth": 1180,
+          "viewportHeight": 752,
+          "scale": 1.5,
+          "theme": "dark",
+          "language": null
+        }
+      },
+      "currentConsumers": [
+        "docs/site/index.html",
+        "docs/site/gallery-review.json",
+        "docs/site/publication.mjs -> gallery.html",
+        "docs/site/publication.mjs -> gallery-inventory.json"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "settings",
+        "state": "appearance-dark",
+        "theme": "dark",
+        "language": "en",
+        "viewport": {
+          "width": 1180,
+          "height": 752,
+          "scale": 1.5
+        }
+      },
+      "caption": "Current Windows settings showing appearance-dark.",
+      "dedupKey": "settings-appearance-dark-dark-en-1180x752-1.5",
+      "status": "pending",
+      "replacement": null,
+      "reason": null
+    },
+    {
+      "id": "drive-light-en",
+      "old": {
+        "path": "docs/images/captures/material-2a9cb388/drive-light-en.png",
+        "sha256": "2db466fd4da82ef74e7e39071ccee3640d5bba9da6b3a830262f29da7bbf2472",
+        "sourceCommit": "2a9cb388718c3910f25ade90670758e81ddd2ce2",
+        "recordedTuple": {
+          "width": 1792,
+          "height": 1139,
+          "displayScale": 1.5,
+          "cssViewport": null,
+          "theme": "light",
+          "language": "en"
+        }
+      },
+      "currentConsumers": [
+        "README.md",
+        "docs/site/public-images.mjs",
+        "docs/site/publication.mjs -> articles/README.html",
+        "src/features/documentation/catalog.mjs -> desktop documentation README",
+        "scripts/build-browser-extension.mjs -> vendor/docs-catalog.js README"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "drive",
+        "state": "drive-populated",
+        "theme": "light",
+        "language": "en",
+        "viewport": {
+          "width": 1180,
+          "height": 850,
+          "scale": 1
+        }
+      },
+      "caption": "Current Windows Drive workspace with synthetic populated records.",
+      "dedupKey": "drive-populated-en-light-1180x850-1",
+      "status": "pending",
+      "replacement": null,
+      "reason": null,
+      "mappingReason": "Explicit current supported equivalent; historical platform/state captions do not carry over. Pending actual capture."
+    },
+    {
+      "id": "converter-dark-en",
+      "old": {
+        "path": "docs/images/captures/material-2a9cb388/converter-dark-en.png",
+        "sha256": "b57f0af7bce88fe4175817b2e2cfece0cad6eb74d659cae6bdf5d9be8e2572d3",
+        "sourceCommit": "2a9cb388718c3910f25ade90670758e81ddd2ce2",
+        "recordedTuple": {
+          "width": 1792,
+          "height": 1139,
+          "displayScale": 1.5,
+          "cssViewport": null,
+          "theme": "dark",
+          "language": "en"
+        }
+      },
+      "currentConsumers": [
+        "README.md",
+        "docs/site/public-images.mjs",
+        "docs/site/publication.mjs -> articles/README.html",
+        "src/features/documentation/catalog.mjs -> desktop documentation README",
+        "scripts/build-browser-extension.mjs -> vendor/docs-catalog.js README"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "converter",
+        "state": "tools-default",
+        "theme": "dark",
+        "language": "en",
+        "viewport": {
+          "width": 1180,
+          "height": 850,
+          "scale": 1
+        }
+      },
+      "caption": "Current Windows empty converter workspace in dark theme.",
+      "dedupKey": "tools-default-en-dark-1180x850-1",
+      "status": "pending",
+      "replacement": null,
+      "reason": null,
+      "mappingReason": "Explicit current supported equivalent; historical platform/state captions do not carry over. Pending actual capture."
+    },
+    {
+      "id": "workflow-light-yue",
+      "old": {
+        "path": "docs/images/captures/material-2a9cb388/workflow-light-yue.png",
+        "sha256": "ae0cb8eb2d05780eabd78ae192a7bf74aa40f5f7eac6762e6a2450e3a8064b5f",
+        "sourceCommit": "2a9cb388718c3910f25ade90670758e81ddd2ce2",
+        "recordedTuple": {
+          "width": 1792,
+          "height": 1139,
+          "displayScale": 1.5,
+          "cssViewport": null,
+          "theme": "light",
+          "language": "yue"
+        }
+      },
+      "currentConsumers": [
+        "README.md",
+        "docs/site/public-images.mjs",
+        "docs/site/publication.mjs -> articles/README.html",
+        "src/features/documentation/catalog.mjs -> desktop documentation README",
+        "scripts/build-browser-extension.mjs -> vendor/docs-catalog.js README"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "document workflow",
+        "state": "initial",
+        "theme": "light",
+        "language": "yue",
+        "viewport": {
+          "width": 1792,
+          "height": 1139,
+          "scale": 1.5
+        }
+      },
+      "caption": "Current Windows document workflow showing initial in yue and light theme.",
+      "dedupKey": "document workflow-initial-light-yue-1792x1139-1.5",
+      "status": "pending",
+      "replacement": null,
+      "reason": null
+    },
+    {
+      "id": "converter-light-bilingual",
+      "old": {
+        "path": "docs/images/captures/material-2a9cb388/converter-light-bilingual.png",
+        "sha256": "cf54deb49bd40faedc90bd7aad3ea3a34ee7e8fccdb7cc835d57d296deaa0762",
+        "sourceCommit": "2a9cb388718c3910f25ade90670758e81ddd2ce2",
+        "recordedTuple": {
+          "width": 1792,
+          "height": 1139,
+          "displayScale": 1.5,
+          "cssViewport": null,
+          "theme": "light",
+          "language": "bilingual"
+        }
+      },
+      "currentConsumers": [
+        "README.md",
+        "docs/site/public-images.mjs",
+        "docs/site/publication.mjs -> articles/README.html",
+        "src/features/documentation/catalog.mjs -> desktop documentation README",
+        "scripts/build-browser-extension.mjs -> vendor/docs-catalog.js README"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "converter",
+        "state": "tools-default",
+        "theme": "light",
+        "language": "bilingual",
+        "viewport": {
+          "width": 1180,
+          "height": 850,
+          "scale": 1
+        }
+      },
+      "caption": "Current Windows empty converter workspace in bilingual light theme.",
+      "dedupKey": "tools-default-bilingual-light-1180x850-1",
+      "status": "pending",
+      "replacement": null,
+      "reason": null,
+      "mappingReason": "Explicit current supported equivalent; historical platform/state captions do not carry over. Pending actual capture."
+    },
+    {
+      "id": "dialog-consent-light-en",
+      "old": {
+        "path": "docs/images/captures/material-2a9cb388/dialog-consent-light-en.png",
+        "sha256": "a8595fed1676b3c17f7b9fa8a2b1afb5f22faa99e0f7397a77a53a47d7309026",
+        "sourceCommit": "2a9cb388718c3910f25ade90670758e81ddd2ce2",
+        "recordedTuple": {
+          "width": 839,
+          "height": 402,
+          "displayScale": 1.5,
+          "cssViewport": null,
+          "theme": "light",
+          "language": "en"
+        }
+      },
+      "currentConsumers": [
+        "README.md",
+        "docs/site/public-images.mjs",
+        "docs/site/publication.mjs -> articles/README.html",
+        "src/features/documentation/catalog.mjs -> desktop documentation README",
+        "scripts/build-browser-extension.mjs -> vendor/docs-catalog.js README"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "material dialog",
+        "state": "change local model connection prompt, client area",
+        "theme": "light",
+        "language": "en",
+        "viewport": {
+          "width": 839,
+          "height": 402,
+          "scale": 1.5
+        }
+      },
+      "caption": "Current Windows material dialog showing change local model connection prompt, client area in en and light theme.",
+      "dedupKey": "material dialog-change local model connection prompt, client area-light-en-839x402-1.5",
+      "status": "pending",
+      "replacement": null,
+      "reason": null
+    },
+    {
+      "id": "dialog-consent-dark-en",
+      "old": {
+        "path": "docs/images/captures/material-2a9cb388/dialog-consent-dark-en.png",
+        "sha256": "9e44ce0dd21480c5255e22f835e8b54ab0c33ee60274df740ed6299e85fa9b5c",
+        "sourceCommit": "2a9cb388718c3910f25ade90670758e81ddd2ce2",
+        "recordedTuple": {
+          "width": 839,
+          "height": 402,
+          "displayScale": 1.5,
+          "cssViewport": null,
+          "theme": "dark",
+          "language": "en"
+        }
+      },
+      "currentConsumers": [
+        "README.md",
+        "docs/site/public-images.mjs",
+        "docs/site/publication.mjs -> articles/README.html",
+        "src/features/documentation/catalog.mjs -> desktop documentation README",
+        "scripts/build-browser-extension.mjs -> vendor/docs-catalog.js README"
+      ],
+      "target": {
+        "surface": "desktop-app",
+        "platform": "windows",
+        "screen": "material dialog",
+        "state": "change local model connection prompt, client area",
+        "theme": "dark",
+        "language": "en",
+        "viewport": {
+          "width": 839,
+          "height": 402,
+          "scale": 1.5
+        }
+      },
+      "caption": "Current Windows material dialog showing change local model connection prompt, client area in en and dark theme.",
+      "dedupKey": "material dialog-change local model connection prompt, client area-dark-en-839x402-1.5",
+      "status": "pending",
+      "replacement": null,
+      "reason": null
+    },
+    {
+      "id": "models-connected-light-en",
+      "old": {
+        "path": "docs/images/captures/extension-models-45ccb91/models-connected-light-en.png",
+        "sha256": "b13f1a78797717b909170813643ff8952361b1c9a263e4a55e6028712dd81e7a",
+        "sourceCommit": "45ccb91",
+        "recordedTuple": {
+          "width": 1100,
+          "height": 1000,
+          "scale": null,
+          "theme": "light",
+          "language": "en",
+          "limitation": "Original README discloses a fake local server and stubbed permission; not installed runtime proof."
+        }
+      },
+      "currentConsumers": [
+        "README.md",
+        "docs/site/public-images.mjs",
+        "docs/site/publication.mjs -> articles/README.html",
+        "src/features/documentation/catalog.mjs -> desktop documentation README",
+        "scripts/build-browser-extension.mjs -> vendor/docs-catalog.js README"
+      ],
+      "target": {
+        "surface": "browser-extension",
+        "platform": "windows",
+        "screen": "models",
+        "state": "connected-installed-and-running",
+        "theme": "light",
+        "language": "en",
+        "viewport": {
+          "width": 1100,
+          "height": 1000,
+          "scale": 1
+        }
+      },
+      "caption": "Current browser extension Models connected-installed-and-running with actual local service and permission.",
+      "dedupKey": "models-connected-installed-and-running-light-en-1100x1000-1",
+      "status": "pending",
+      "replacement": null,
+      "reason": null
+    },
+    {
+      "id": "models-chat-light-en",
+      "old": {
+        "path": "docs/images/captures/extension-models-45ccb91/models-chat-light-en.png",
+        "sha256": "91635571627c8f40f91926348124d3ef46335d5f9a0b5c3471d605fc10a01973",
+        "sourceCommit": "45ccb91",
+        "recordedTuple": {
+          "width": 1100,
+          "height": 1300,
+          "scale": null,
+          "theme": "light",
+          "language": "en",
+          "limitation": "Original README discloses a fake local server and stubbed permission; not installed runtime proof."
+        }
+      },
+      "currentConsumers": [
+        "README.md",
+        "docs/site/public-images.mjs",
+        "docs/site/publication.mjs -> articles/README.html",
+        "src/features/documentation/catalog.mjs -> desktop documentation README",
+        "scripts/build-browser-extension.mjs -> vendor/docs-catalog.js README"
+      ],
+      "target": {
+        "surface": "browser-extension",
+        "platform": "windows",
+        "screen": "models",
+        "state": "chat-rich-response",
+        "theme": "light",
+        "language": "en",
+        "viewport": {
+          "width": 1100,
+          "height": 1300,
+          "scale": 1
+        }
+      },
+      "caption": "Current browser extension Models chat-rich-response with actual local service and permission.",
+      "dedupKey": "models-chat-rich-response-light-en-1100x1300-1",
+      "status": "pending",
+      "replacement": null,
+      "reason": null
+    },
+    {
+      "id": "site-guidance-normal-83e14d86",
+      "old": {
+        "path": "docs/images/captures/site-guidance-normal-83e14d86.png",
+        "sha256": "78701c8aea8f8db63db13da2d11cf342817f8a841769efdc2f063ec8038a1f89",
+        "sourceCommit": "83e14d8627b9782d5acc12221c22ed4f0b8b2d4c",
+        "recordedTuple": {
+          "width": 1280,
+          "height": 900,
+          "scale": 1,
+          "theme": "light",
+          "language": "bilingual"
+        }
+      },
+      "currentConsumers": [
+        "README.md",
+        "docs/site/public-images.mjs",
+        "docs/site/publication.mjs -> articles/README.html",
+        "src/features/documentation/catalog.mjs -> desktop documentation README",
+        "scripts/build-browser-extension.mjs -> vendor/docs-catalog.js README"
+      ],
+      "target": {
+        "surface": "documentation-site",
+        "platform": "windows",
+        "screen": "preferences-history-guidance",
+        "state": "bilingual-isolated-sample",
+        "theme": "light",
+        "language": "bilingual",
+        "viewport": {
+          "width": 1280,
+          "height": 900,
+          "scale": 1
+        }
+      },
+      "caption": "Current bilingual history guidance at 1280 by 900 CSS pixels.",
+      "dedupKey": "preferences-history-guidance-bilingual-isolated-sample-light-bilingual-1280x900-1",
+      "status": "pending",
+      "replacement": null,
+      "reason": null
+    },
+    {
+      "id": "site-guidance-narrow-83e14d86",
+      "old": {
+        "path": "docs/images/captures/site-guidance-narrow-83e14d86.png",
+        "sha256": "5db524e0a6375aa4ee7385b5014a39f43e10b6bc1076a5af6d110bc2b0bacf99",
+        "sourceCommit": "83e14d8627b9782d5acc12221c22ed4f0b8b2d4c",
+        "recordedTuple": {
+          "width": 320,
+          "height": 800,
+          "scale": 2,
+          "theme": "light",
+          "language": "bilingual"
+        }
+      },
+      "currentConsumers": [
+        "README.md",
+        "docs/site/public-images.mjs",
+        "docs/site/publication.mjs -> articles/README.html",
+        "src/features/documentation/catalog.mjs -> desktop documentation README",
+        "scripts/build-browser-extension.mjs -> vendor/docs-catalog.js README"
+      ],
+      "target": {
+        "surface": "documentation-site",
+        "platform": "windows",
+        "screen": "preferences-history-guidance",
+        "state": "bilingual-isolated-sample",
+        "theme": "light",
+        "language": "bilingual",
+        "viewport": {
+          "width": 320,
+          "height": 800,
+          "scale": 2
+        }
+      },
+      "caption": "Current bilingual history guidance at 320 by 800 CSS pixels.",
+      "dedupKey": "preferences-history-guidance-bilingual-isolated-sample-light-bilingual-320x800-2",
+      "status": "pending",
+      "replacement": null,
+      "reason": null
+    }
+  ]
+}
