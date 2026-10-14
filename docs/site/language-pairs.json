@@ -623,10 +623,16 @@
       "translationSha256": "c4a3815522811c941240e6d166628aeae9e5ee9526ed9d904177f7742de95ba4"
     },
     {
+      "source": "docs/features/workflows/browser-extension-local-models.md",
+      "translation": "docs/features/workflows/browser-extension-local-models.zh-HK.md",
+      "sourceSha256": "5b72b45894aa5b0a6a8ad512d757a83e70d4941d83b4cbff4a27a87a4fc5208a",
+      "translationSha256": "6485dd0a9ead1f1b5f0386e4433c31da77ee44641d82aaf9206dcf2baab7a179"
+    },
+    {
       "source": "docs/features/workflows/browser-extension-workspace.md",
       "translation": "docs/features/workflows/browser-extension-workspace.zh-HK.md",
-      "sourceSha256": "fa70035ac64e1eec6ad9b821dcae8cc3aede64902df41c218997309a339135ab",
-      "translationSha256": "0d9be4afcc208683916354117b61e87fed01756a0de65b74cf7e5d1e14523de0"
+      "sourceSha256": "065eded73889d7f7f08d2e13f2c074f403f8b57a3ed7dd08eb0572a482b098bb",
+      "translationSha256": "000112a5d827d1417008345e3a773157e1e502f5909f38a757ff1b8f57d80d24"
     },
     {
       "source": "docs/features/workflows/browser-native-host.md",
@@ -649,8 +655,8 @@
     {
       "source": "docs/features/workflows/README.md",
       "translation": "docs/features/workflows/README.zh-HK.md",
-      "sourceSha256": "f69aff963f8a79532a9c25f61fae2de97cd33d8fd21f23b7abf1d0d8d71e78b9",
-      "translationSha256": "4451254ad22bf969e927aefd468d6e8fe1afc1150e394d87b660591204f16921"
+      "sourceSha256": "e240248f1ed3364570763da30eca6cd6b0864f5ee5da5ea5e54e1245a0e087f9",
+      "translationSha256": "e9fbc82f8a3c69e7c0a948a45d7aa75a5a9091b465f3d46d4461bd18bfd0b7dc"
     }
   ]
 }
