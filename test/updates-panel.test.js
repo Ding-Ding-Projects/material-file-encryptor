@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 class Node{constructor(){this.children=[];this.listeners={};this.attributes={};}append(...nodes){this.children.push(...nodes);}replaceChildren(...nodes){this.children=nodes;}attachShadow(){return this.shadowRoot=new Node();}addEventListener(name,fn){this.listeners[name]=fn;}setAttribute(name,value){this.attributes[name]=value;}remove(){this.removed=true;}}
 Object.defineProperty(Node.prototype,'translate',{get(){return this.attributes.translate!=='no';},set(value){this.attributes.translate=value?'yes':'no';}});
-globalThis.HTMLElement=Node;globalThis.CSSStyleSheet=class{replaceSync(){}};globalThis.customElements={items:new Map(),get(name){return this.items.get(name);},define(name,type){this.items.set(name,type);}};globalThis.document={createElement:name=>{const Type=customElements.get(name)||Node;return new Type();}};
+globalThis.HTMLElement=Node;globalThis.CSSStyleSheet=class{replaceSync(){}};globalThis.customElements={items:new Map(),get(name){return this.items.get(name);},define(name,type){this.items.set(name,type);}};globalThis.document={createElement:name=>{const Type=customElements.get(name)||Node;return new Type();},createElementNS:(namespace,name)=>new Node()};
 const {UpdatesPanel,mountUpdates}=await import('../src/renderer/features/updates/index.js');
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 test('translation callback does not overwrite the native boolean translate property',()=>{
@@ -41,4 +41,13 @@ test('busy desktop and install capability do not imply missing desktop applicati
  const panel=new UpdatesPanel();panel.request=async()=>({});panel.update({state:'ready',desktopAvailable:true,canInstall:false,activeWork:true});assert.equal(panel.limit.textContent,'Finish active work before installing.');
  panel.update({state:'ready',desktopAvailable:true,canInstall:false});assert.equal(panel.limit.textContent,'Installation is not available in the current state.');
  panel.update({state:'ready',desktopAvailable:false});assert.equal(panel.limit.textContent,'Installation requires the desktop application.');
+});
+test('known update reason codes are explained in every language and unknown codes stay visible',()=>{
+ const panel=new UpdatesPanel();panel.request=async()=>({});
+ panel.update({state:'unavailable',reason:'INSTALLED_WINDOWS_SQUIRREL_REQUIRED'});
+ assert.equal(panel.reason.hidden,false);assert.doesNotMatch(panel.reason.textContent,/INSTALLED_WINDOWS_SQUIRREL_REQUIRED/);assert.match(panel.reason.textContent,/installed application/);
+ panel.setLanguage('yue');assert.match(panel.reason.textContent,/安裝程式/);
+ panel.setLanguage('bilingual');assert.match(panel.reason.textContent,/installed application/);assert.match(panel.reason.textContent,/安裝程式/);
+ panel.setLanguage('en');panel.update({state:'unavailable',reason:'SOME_NEW_CODE'});assert.equal(panel.reason.textContent,'Reason: SOME_NEW_CODE');
+ panel.update({state:'unavailable',unsigned:true});assert.equal(panel.reason.hidden,true);assert.equal(panel.warningText.textContent,'This update is unsigned. Review the source and save your work before installation.');
 });
