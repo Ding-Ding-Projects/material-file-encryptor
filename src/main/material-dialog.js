@@ -80,6 +80,9 @@ export function createMaterialDialogs({BrowserWindow, ipcMain, nativeDialog, pre
         resolve({response, checkboxChecked: false});
       };
       pending.set(id, {view, nonce, window, finish});
+      // A caller may withdraw a prompt (for example when the drive locks); it settles as the cancel button.
+      const signal = options?.signal;
+      if (signal) { const withdraw = () => finish(view.cancelId); if (signal.aborted) withdraw(); else signal.addEventListener('abort', withdraw, {once: true}); }
       window.on('closed', () => finish(view.cancelId));
       window.webContents.on('will-navigate', event => event.preventDefault());
       window.webContents.setWindowOpenHandler(() => ({action: 'deny'}));
