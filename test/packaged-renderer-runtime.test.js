@@ -38,7 +38,7 @@ test('packaged binding reads actual archive metadata and rejects wrong bytes, so
 
 function runtimeFixture(target,events,{unknownClose=false,failedAbsence=false,failedConnection=false}={}){
  let port;
- const browser={contexts:()=>[{pages:()=>[{}]}],async newBrowserCDPSession(){return {async send(method){events.push(method);if(method==='Browser.close'&&unknownClose)return new Promise(()=>{});return method==='Target.getTargets'?{targetInfos:[{type:'page',url:target.expectedUrl,targetId:'owned'}]}:{};},async detach(){}};}};
+ const browser={contexts:()=>[{pages:()=>[{isClosed:()=>false,url:()=>'about:blank'}]}],async newBrowserCDPSession(){return {async send(method){events.push(method);if(method==='Browser.close'&&unknownClose)return new Promise(()=>{});return method==='Target.getTargets'?{targetInfos:[{type:'page',url:target.expectedUrl,targetId:'owned'}]}:{};},async detach(){}};}};
  return {chromium:{executablePath:()=>process.execPath,async connectOverCDP(){return browser;}},async createTransport(){return {transport:{},async disconnect(){events.push('socket-disconnect');}};},async fetch(){return {async json(){return [{id:'owned',type:'page',url:target.expectedUrl,webSocketDebuggerUrl:`ws://127.0.0.1:${port}/devtools/page/owned`}];}};},async command(executable,args,input){
   const operation=args[1];events.push({operation,input,args});
   if(operation==='bind-client')return {client_ok:true,clientBinding:{clientIdentity:{pid:process.pid}}};
