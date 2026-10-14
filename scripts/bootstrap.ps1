@@ -81,6 +81,33 @@ $node = Join-Path $tools "node-v$($manifest.node.version)-win-x64"
 if (!(Test-Path (Join-Path $node 'node.exe'))) { Write-Host 'Extracting Node.'; Expand-Archive $nodeArchive $tools -Force }
 $dotnetArchive = Join-Path $tools "dotnet-$($manifest.dotnet.version).zip"
 Get-Verified $manifest.dotnet $dotnetArchive
+# Build-time native Node modules import VCRUNTIME140.dll. A fresh Windows
+# installation may not have the Visual C++ runtime, so place one verified,
+# Microsoft-signed copy next to the pinned node.exe instead of requiring an
+# elevated system-wide installation. An existing system runtime is used as is.
+if (!(Test-Path -LiteralPath (Join-Path $env:SystemRoot "System32\$($manifest.vcRuntime.member)")) -and !(Test-Path -LiteralPath (Join-Path $node $manifest.vcRuntime.member))) {
+  Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.psd1') -ErrorAction Stop
+  $runtimeArchive = Join-Path $tools "vc-runtime-$($manifest.vcRuntime.version).zip"
+  Get-Verified $manifest.vcRuntime $runtimeArchive
+  $runtimeStage = Join-Path $tools ('vc-runtime.stage-' + [Guid]::NewGuid().ToString('N'))
+  New-Item -ItemType Directory $runtimeStage | Out-Null
+  try {
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $zip = [IO.Compression.ZipFile]::OpenRead($runtimeArchive)
+    try {
+      $member = @($zip.Entries | Where-Object { $_.FullName -ceq $manifest.vcRuntime.member })
+      if ($member.Count -ne 1) { throw 'Pinned Visual C++ runtime archive does not contain exactly one runtime library.' }
+      $staged = Join-Path $runtimeStage $manifest.vcRuntime.member
+      [IO.Compression.ZipFileExtensions]::ExtractToFile($member[0], $staged)
+    } finally { $zip.Dispose() }
+    $runtimeSignature = Get-AuthenticodeSignature $staged
+    if ($runtimeSignature.Status -ne 'Valid' -or $runtimeSignature.SignerCertificate.Subject -notmatch [regex]::Escape($manifest.vcRuntime.publisher)) {
+      throw 'Visual C++ runtime library does not have a valid trusted Microsoft signature.'
+    }
+    Move-Item -LiteralPath $staged -Destination (Join-Path $node $manifest.vcRuntime.member)
+    Write-Host "Placed the verified Microsoft-signed $($manifest.vcRuntime.member) beside the pinned Node runtime. No administrator rights required."
+  } finally { Remove-Item -LiteralPath $runtimeStage -Recurse -Force -ErrorAction SilentlyContinue }
+}
 $dotnet = Join-Path $tools "dotnet-$($manifest.dotnet.version)"
 if (!(Test-Path (Join-Path $dotnet 'dotnet.exe'))) { Write-Host 'Extracting the .NET SDK.'; Expand-Archive $dotnetArchive $dotnet -Force }
 $driverFolder = Join-Path $root '.cache\driver'

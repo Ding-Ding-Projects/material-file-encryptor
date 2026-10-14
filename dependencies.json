@@ -41,5 +41,12 @@
     "url": "https://dist.nuget.org/win-x86-commandline/v7.9.0/nuget.exe",
     "sha256": "992d70cac5b06c38efec91806caba64cdcc07e6d963a0959dbbbaf264d33b800",
     "fileVersion": "7.9.0.83"
+  },
+  "vcRuntime": {
+    "version": "14.0-app-local",
+    "url": "https://www.python.org/ftp/python/3.13.15/python-3.13.15-embed-amd64.zip",
+    "sha256": "d1f04d990aee1253d8569e8e5104e30fa9f5fa830899f14843448872d936a2cf",
+    "member": "vcruntime140.dll",
+    "publisher": "Microsoft Corporation"
   }
 }
