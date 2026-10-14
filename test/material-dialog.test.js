@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createMaterialDialogs, dialogView} from '../src/main/material-dialog.js';
+import {localizeDialogView} from '../src/main/dialog-copy.js';
 
-function harness({failWindow = false, theme} = {}) {
+function harness({failWindow = false, theme, language} = {}) {
   const handles = new Map(), listeners = new Map(), windows = [];
   let nextId = 100;
   class FakeWindow {
@@ -22,7 +23,7 @@ function harness({failWindow = false, theme} = {}) {
   }
   const ipcMain = {handle: (name, fn) => handles.set(name, fn), on: (name, fn) => listeners.set(name, fn)};
   const native = {calls: [], showMessageBox(...args) { this.calls.push(args); return Promise.resolve({response: 1, checkboxChecked: false}); }};
-  const dialogs = createMaterialDialogs({BrowserWindow: FakeWindow, ipcMain, nativeDialog: native, preloadPath: 'preload.cjs', pagePath: 'page.html', getTheme: async () => theme});
+  const dialogs = createMaterialDialogs({BrowserWindow: FakeWindow, ipcMain, nativeDialog: native, preloadPath: 'preload.cjs', pagePath: 'page.html', getTheme: async () => theme, getLanguage: async () => language});
   const tick = () => new Promise(resolve => setImmediate(resolve));
   return {dialogs, windows, native, tick,
     view: id => handles.get('material-dialog:view')({sender: {id}}),
@@ -81,4 +82,37 @@ test('dialog views are bounded and keep valid indices', () => {
   assert.equal(view.cancelId, 0);
   assert.equal(view.message.length, 2000);
   assert.deepEqual(dialogView({}).buttons, ['OK']);
+});
+
+test('dialog copy follows the interface language and keeps data as written', () => {
+  const view = dialogView({title: 'Home Assistant credential', message: 'Clear this schedule credential?', detail: 'Schedule: kitchen\nOrigin: https://ha.example.test\nUnknown sentence stays.', buttons: ['Cancel', 'Clear credential'], cancelId: 0});
+  const yue = localizeDialogView(view, 'yue');
+  assert.equal(yue.title, 'Home Assistant 憑證');
+  assert.equal(yue.message, '清除呢個排程憑證？');
+  assert.deepEqual(yue.buttons, ['取消', '清除憑證']);
+  assert.equal(yue.detail, '排程：kitchen\n來源：https://ha.example.test\nUnknown sentence stays.');
+  assert.equal(yue.cancelId, 0);
+  const both = localizeDialogView(view, 'bilingual');
+  assert.equal(both.message, 'Clear this schedule credential? · 清除呢個排程憑證？');
+  assert.equal(both.detail.split('\n')[0], 'Schedule · 排程: kitchen');
+  assert.deepEqual(localizeDialogView(view, 'en'), {...view, language: 'en'});
+  assert.equal(localizeDialogView(view, '<script>').language, 'en');
+});
+
+test('prompts written bilingually show one language in a single-language mode', () => {
+  const view = dialogView({message: 'Allow download proposals from this origin? · 允許此來源提出下載建議？', buttons: ['Reject · 拒絕', 'Pair downloads · 配對下載']});
+  assert.equal(localizeDialogView(view, 'en').message, 'Allow download proposals from this origin?');
+  assert.deepEqual(localizeDialogView(view, 'yue').buttons, ['拒絕', '配對下載']);
+  assert.equal(localizeDialogView(view, 'bilingual').message, view.message);
+});
+
+test('the dialog window receives the language the application reports', async () => {
+  const h = harness({language: 'yue'});
+  const result = h.dialogs.showMessageBox({message: 'Change local model connection', buttons: ['Cancel', 'Change port']});
+  await h.tick(); await h.tick();
+  const view = await h.view(h.windows[0].webContents.id);
+  assert.equal(view.language, 'yue');
+  assert.deepEqual(view.buttons, ['取消', '更改埠']);
+  h.respond(h.windows[0].webContents.id, view.nonce, 0);
+  assert.equal((await result).response, 0);
 });

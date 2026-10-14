@@ -1,5 +1,6 @@
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
+import {localizeDialogView} from './dialog-copy.js';
 
 const TYPES = new Set(['none', 'info', 'error', 'question', 'warning']);
 const clean = (value, limit) => typeof value === 'string' ? value.slice(0, limit) : '';
@@ -28,7 +29,7 @@ export function dialogView(options = {}) {
  * the window settles it with the cancel button. If the window cannot be
  * created the native dialog is used, so a consent prompt never disappears.
  */
-export function createMaterialDialogs({BrowserWindow, ipcMain, nativeDialog, preloadPath, pagePath, getTheme = async () => null, onError = () => {}}) {
+export function createMaterialDialogs({BrowserWindow, ipcMain, nativeDialog, preloadPath, pagePath, getTheme = async () => null, getLanguage = async () => null, onError = () => {}}) {
   const pending = new Map();
   ipcMain.handle('material-dialog:view', event => {
     const entry = pending.get(event.sender.id);
@@ -49,10 +50,12 @@ export function createMaterialDialogs({BrowserWindow, ipcMain, nativeDialog, pre
 
   async function showMessageBox(parent, options) {
     if (options === undefined) { options = parent; parent = null; }
-    const view = dialogView(options);
     const owner = parent && typeof parent.isDestroyed === 'function' && !parent.isDestroyed() ? parent : null;
-    // The dialog follows the application's own theme; anything else falls back to the system scheme.
-    const theme = await Promise.race([Promise.resolve().then(() => getTheme(owner)).catch(() => null), new Promise(resolve => setTimeout(() => resolve(null), 1000))]);
+    // The dialog follows the application's own theme and interface language;
+    // anything unreadable within a second falls back to the system scheme and English.
+    const bounded = read => Promise.race([Promise.resolve().then(() => read(owner)).catch(() => null), new Promise(resolve => setTimeout(() => resolve(null), 1000))]);
+    const [theme, language] = await Promise.all([bounded(getTheme), bounded(getLanguage)]);
+    const view = localizeDialogView(dialogView(options), language);
     view.theme = theme === 'dark' || theme === 'light' ? theme : null;
     let window;
     try {

@@ -15,7 +15,8 @@
 - [x] Fix the bilingual "All tabs" label, which is clipped in the tab strip (bilingual capture, build c341036c).
 - [x] Use one bilingual separator: the converter, local models and image transform copy now use the middle dot like the rest of the application.
 - [x] Make Material dialogs follow the in-app theme setting instead of the system colour scheme.
-- [ ] Capture each remaining message box individually (licence, pairing, credential, shutdown, import, update).
+- [x] Show main-process dialogs in the interface language: Cantonese and bilingual copy for every reviewed prompt, labelled detail lines keep their values, prompts written bilingually show one language in single-language modes (credential prompt captured in English, Cantonese and bilingual).
+- [ ] Capture each remaining message box individually (licence, pairing, import, update); the credential, consent and shutdown prompts are captured.
 - [x] Integrate the sweep into main.
 - [x] Refresh the README with current desktop captures and provenance.
 - [x] Seat the local access fieldset legend inside its outlined card (capture, main 862444b).

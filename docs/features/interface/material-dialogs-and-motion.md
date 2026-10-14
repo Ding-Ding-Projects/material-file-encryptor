@@ -36,8 +36,13 @@ Shared Material easing and duration tokens drive screen and tab panel entrances 
 
 Read-only requests, such as catalogue, status and font list reads, no longer keep the application open at exit. Mutating, transferring and user-gated work still blocks exit and still offers the shutdown choices.
 
+## Language
+
+Dialog text follows the interface language. In Cantonese mode the title, message, explanation and buttons are shown in Cantonese; in bilingual mode each line shows English and Cantonese together. Labelled detail lines translate only their label, so file names, addresses and other values stay exactly as written. Text without a reviewed translation stays in English rather than being guessed.
+
 ## Verification
 
 - Focused tests cover the dialog trust boundary, including a check that fails if the one-time value is not enforced, plus update reason wording and the shutdown pending rules.
 - Hidden-desktop captures of the built application show the converted screens and a real consent prompt rendered as a Material dialog, cancelled by Escape with no change applied.
-- Dark theme, Cantonese and bilingual layouts, display scaling and every individual prompt have not yet been captured. Dialogs follow the system colour scheme rather than the in-app theme setting.
+- Hidden-desktop captures show dialogs in light and dark themes, following the in-app theme setting, and a credential prompt in English, Cantonese and bilingual modes, each cancelled with no change.
+- Display scales other than 150 percent and the remaining individual prompts have not yet been captured.
