@@ -57,3 +57,5 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 - [Verified startup photo host](startup-photo-host.md)
 
 - [Protected browser mediation](protected-browser-mediation.md)
+
+- [Registered shared compositions](shared-compositions.md)

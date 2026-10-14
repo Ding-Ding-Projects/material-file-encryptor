@@ -1,3 +1,4 @@
+import '../../../shared/surface/compositions.js';
 import {getContextOverlay,openContextMenu,closeContextMenu,registerContextActions} from '../../../shared/surface/overlay.js';
 import {mountNavigationFrame} from './navigation.js';
 import {registerOwnedCommands} from '../../../shared/surface/control-guidance.js';

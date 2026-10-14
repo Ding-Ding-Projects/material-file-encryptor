@@ -1,3 +1,9 @@
+## Shared composition integration
+
+Reviewed composition source 61986fc and preserved build candidate 4959f2a are incorporated with the independently assessed extension inventory. Both handoff additions were retained during the merge. The combined local checks pass 59/59, with 959 concrete declarations and 230 public routes. The exact root build at frozen 4959f2a passed and its ASAR SHA-256 is beeb1df93e13624e0f622a668cb01356101321cb0c0dd94c142f247fb6d4420e. This older candidate remains frozen for actual hidden-desktop inspection and is not relabelled as acceptance for the merged source. Its initial process-membership admission failed; the exact same launch was subsequently revalidated after startup settled. Capture and owned closure results remain pending.
+
+Dialog focus source d6a4048 is separately preserved. Three deterministic/accessibility checks and one real Material lifecycle check pass, with a causal assertion failure against the older production function. Full renderer attempts remain incomplete: both browser cases stopped at client page-inventory admission before product actions, despite exact single-page CDP proof. Their owned closures completed normally. Independent source review and helper diagnosis are active.
+
 ## Independent extension assessment incorporation
 
 Inventory incorporation: 9e59a70a is independently accepted for honest source inventory and deciding checks. All 210 historical rows/context remain unchanged. There are now 315 assessments; extension rows are 35 unverified, 61 missing and 9 inapplicable. All 220 source references resolve. Combined documentation, surface and inventory checks pass 33/33, with 951 declared surfaces and 228 public routes. None of these declarations proves completed runtime behavior.

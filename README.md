@@ -6,6 +6,14 @@
 
 > **Historical verified baseline:** `411ce5d55b96958799d996713374b7b683552234` records verified PDF packaging and documentation catalogue caching, plus the updater controller and future release-index repair. This is a fixed evidence reference, not the latest main revision. The exact root builds and bounded component results are recorded below. Complete required features, current Material Design 3 acceptance, installed startup, automatic updating and restart continuity remain unfinished. A successful build or release does not certify those outcomes.
 
+## Current interface implementation
+
+The shared titlebar, main workspace, content panel, data table and selection toolbar now use registered components with their own structure, styles and connection lifecycle. Original record rows and action nodes remain in place. The combined source inventory and component checks pass 59 tests. The exact root build of composition candidate `4959f2af4a2ced2980b2a68d2ba9fb4056458e35` passed; its package contains 6,066 entries with zero privacy rejections. Current rendered composition acceptance remains in progress. Existing images retain their historical source and do not certify this newer candidate.
+
+The feature ledger now contains 315 assessments, preserving the original 210 desktop and documentation records and adding 105 independently scoped extension assessments. The extension records distinguish 35 unverified, 61 missing and nine inapplicable items. The combined catalogue declares 959 concrete surfaces and 230 public routes; these are inventory counts, not completed workflows.
+
+Protected browser mediation has focused source and compiled synthetic pipe verification. Production profile authentication controls remain unavailable until their native callbacks and real extension interactions are implemented and accepted. [Shared compositions](docs/features/interface/shared-compositions.md) · [Extension assessments](docs/features/platform/extension-assessment.md) · [Protected mediation boundaries](docs/features/interface/protected-browser-mediation.md)
+
 ## Choose a workflow
 
 | Workflow | Behavior and guide |

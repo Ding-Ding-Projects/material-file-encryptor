@@ -241,8 +241,8 @@
     {
       "source": "docs/features/interface/README.md",
       "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "888f6993691b68b37aba0e8647a2051e19ad87fdc3140b6ce13e677fdc2bf0a7",
-      "translationSha256": "1e4e5ee0b7d6a313b6746bb229080701d91836fcb62df9b19b446703dbb343e0"
+      "sourceSha256": "ef6b39050c8b477c88091ad7be1b6c9685ae71009201898773e42538d89d3a75",
+      "translationSha256": "c47a769c1bbdb85eb5fe4a9f38d6c2a0a8ae75eda5764aba84c24919e9ca43cf"
     },
     {
       "source": "docs/features/interface/settings-completeness.md",
@@ -255,6 +255,12 @@
       "translation": "docs/features/interface/settings-guidance.zh-HK.md",
       "sourceSha256": "44c760739960bc49e79193fd2c2bbe0182abd3ec44d9ed76e9103cdc1927c808",
       "translationSha256": "1a8b9ed617698f86a47bb74c51bc45ada2cdb40568680397a69651e103aebf44"
+    },
+    {
+      "source": "docs/features/interface/shared-compositions.md",
+      "translation": "docs/features/interface/shared-compositions.zh-HK.md",
+      "sourceSha256": "a428ca8430e3b2afa2d602c0f40bd6f0fef70e019e481e78ec5f31301eeb62e5",
+      "translationSha256": "472438c0338e138e2a67acea302e356756e9da2fd58518856c41a3fb82cc8323"
     },
     {
       "source": "docs/features/interface/startup-photo-host.md",

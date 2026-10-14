@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import vm from 'node:vm';
 
 const styles=await Promise.all(['style.css','modern.css'].map(name=>fs.readFile(new URL('../src/renderer/'+name,import.meta.url),'utf8')));
+const compositions=await fs.readFile(new URL('../src/shared/surface/compositions.js',import.meta.url),'utf8');
 const shell=await fs.readFile(new URL('../src/renderer/features/shell/index.js',import.meta.url),'utf8');
 
 // Source-level cascade guards. Actual geometry is verified in the packaged renderer.
@@ -13,7 +14,7 @@ function assertNativeLegacySelectors(css){
  for(const selector of selectors)assert.doesNotMatch(selector.replaceAll('button.button',''),/\.button(?![-\w])/,'Legacy button declarations must not target registered custom-element hosts');
 }
 function announcerDeclarations(css){
- const match=/main>mfe-live-notification\s*\{([^}]+)\}/.exec(css);
+ const match=/::slotted\(mfe-live-notification\)\s*\{([^}]+)\}/.exec(css);
  assert.ok(match,'The desktop announcer owns an explicit visual treatment');
  return Object.fromEntries(match[1].split(';').filter(Boolean).map(part=>{const at=part.indexOf(':');return [part.slice(0,at).trim(),part.slice(at+1).trim()];}));
 }
@@ -33,13 +34,13 @@ test('legacy button selectors stay native and leave registered primitive shape a
 });
 
 test('desktop live announcer remains accessible without consuming a visible workspace row',()=>{
- assertAccessibleHidden(styles[1]);
+ assertAccessibleHidden(compositions);
  const statement=shell.match(/const live=element\('mfe-live-notification',[^;]+;/)?.[0];
  assert.ok(statement,'Use the actual shell composition statement');
  const live=vm.runInNewContext(statement+'live',{element:(tag,properties)=>({tag,properties})});
  assert.equal(live.tag,'mfe-live-notification');assert.equal(live.properties.role,'status');assert.equal(live.properties['aria-live'],'polite');
  assert.equal(live.properties['aria-hidden'],undefined);assert.equal(live.properties.hidden,undefined);
  assert.match(shell,/live\.textContent=/,'Notifications still update the live text');
- assert.throws(()=>assertAccessibleHidden(styles[1].replace('clip-path:inset(50%);','')),assert.AssertionError);
- assert.throws(()=>assertAccessibleHidden(styles[1].replace('main>mfe-live-notification{','main>mfe-live-notification{display:none;')),assert.AssertionError);
+ assert.throws(()=>assertAccessibleHidden(compositions.replace('clip-path:inset(50%);','')),assert.AssertionError);
+ assert.throws(()=>assertAccessibleHidden(compositions.replace('::slotted(mfe-live-notification){','::slotted(mfe-live-notification){display:none;')),assert.AssertionError);
 });

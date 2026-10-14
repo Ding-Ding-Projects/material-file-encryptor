@@ -997,6 +997,24 @@
       "proofs": {}
     },
     {
+      "id": "desktop:document:docs/features/interface/shared-compositions",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/shared-compositions",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/interface/shared-compositions.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/shared-compositions.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "desktop:document:docs/features/interface/startup-photo-host",
       "family": "desktop",
       "route": "src/renderer/index.html",
@@ -2287,7 +2305,7 @@
       "id": "desktop:view-drive",
       "family": "desktop",
       "route": "src/renderer/index.html",
-      "owner": "src/renderer/index.html",
+      "owner": "src/renderer/app.js",
       "selector": "#view-drive",
       "template": "required-families",
       "proofs": {}
@@ -2296,7 +2314,7 @@
       "id": "desktop:view-help",
       "family": "desktop",
       "route": "src/renderer/index.html",
-      "owner": "src/renderer/index.html",
+      "owner": "src/renderer/app.js",
       "selector": "#view-help",
       "template": "required-families",
       "proofs": {}
@@ -2305,7 +2323,7 @@
       "id": "desktop:view-history",
       "family": "desktop",
       "route": "src/renderer/index.html",
-      "owner": "src/renderer/index.html",
+      "owner": "src/renderer/app.js",
       "selector": "#view-history",
       "template": "required-families",
       "proofs": {}
@@ -2341,7 +2359,7 @@
       "id": "desktop:view-recycle",
       "family": "desktop",
       "route": "src/renderer/index.html",
-      "owner": "src/renderer/index.html",
+      "owner": "src/renderer/app.js",
       "selector": "#view-recycle",
       "template": "required-families",
       "proofs": {}
@@ -2350,7 +2368,7 @@
       "id": "desktop:view-settings",
       "family": "desktop",
       "route": "src/renderer/index.html",
-      "owner": "src/renderer/index.html",
+      "owner": "src/renderer/app.js",
       "selector": "#view-settings",
       "template": "required-families",
       "proofs": {}
@@ -3970,6 +3988,42 @@
       "id": "site:article:docs/features/interface/settings-guidance.zh-HK.md:preferences",
       "family": "site",
       "route": "articles/docs--features--interface--settings-guidance.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/shared-compositions.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--shared-compositions.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/shared-compositions.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--interface--shared-compositions.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/shared-compositions.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--shared-compositions.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/shared-compositions.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--interface--shared-compositions.zh-HK.html",
       "owner": "docs/site/preferences.js",
       "selector": "#preferences-dialog",
       "template": "required-families",
@@ -7428,6 +7482,24 @@
       "route": "workspace.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/interface/settings-guidance.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/interface/shared-compositions",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/shared-compositions",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/interface/shared-compositions.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/shared-compositions.zh-HK",
       "template": "required-families",
       "proofs": {}
     },
