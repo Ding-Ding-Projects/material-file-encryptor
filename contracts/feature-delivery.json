@@ -12024,7 +12024,8 @@
       "implementation": [
         "browser-extension/options.js",
         "browser-extension/options.html",
-        "browser-extension/options.css"
+        "browser-extension/options.css",
+        "browser-extension/narration.js"
       ],
       "documentation": [
         "docs/features/workflows/browser-extension-workspace.md",
@@ -12034,7 +12035,8 @@
         "browser-extension/options.js"
       ],
       "tests": [
-        "test/browser-protection-options.test.js"
+        "test/browser-protection-options.test.js",
+        "test/browser-extension-support.test.js"
       ],
       "evidence": [],
       "persistence": [],
@@ -13653,7 +13655,8 @@
       "implementation": [
         "browser-extension/options.js",
         "browser-extension/options.html",
-        "browser-extension/options.css"
+        "browser-extension/options.css",
+        "browser-extension/tickets.js"
       ],
       "documentation": [
         "docs/features/workflows/browser-extension-workspace.md",
@@ -13663,7 +13666,8 @@
         "browser-extension/options.js"
       ],
       "tests": [
-        "test/browser-protection-options.test.js"
+        "test/browser-protection-options.test.js",
+        "test/browser-extension-support.test.js"
       ],
       "evidence": [],
       "persistence": [],
@@ -14761,7 +14765,8 @@
         "browser-extension/options.js"
       ],
       "tests": [
-        "test/browser-protection-options.test.js"
+        "test/browser-protection-options.test.js",
+        "test/browser-extension-support.test.js"
       ],
       "evidence": [],
       "persistence": [],
@@ -17340,7 +17345,10 @@
     "test/browser-extension-notes.test.js": "c895df19387d4ee6a3a3ed4916f4ed36c8007a87",
     "browser-extension/schedules.js": "1269c7bddf79d7cb2ee5e76126aa9f1969c9ecd5",
     "browser-extension/vocabulary.js": "1269c7bddf79d7cb2ee5e76126aa9f1969c9ecd5",
-    "test/browser-extension-wording.test.js": "1269c7bddf79d7cb2ee5e76126aa9f1969c9ecd5"
+    "test/browser-extension-wording.test.js": "1269c7bddf79d7cb2ee5e76126aa9f1969c9ecd5",
+    "browser-extension/narration.js": "8a7306c19830b97c232648a77affbfd37bb5a91a",
+    "browser-extension/tickets.js": "8a7306c19830b97c232648a77affbfd37bb5a91a",
+    "test/browser-extension-support.test.js": "8a7306c19830b97c232648a77affbfd37bb5a91a"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
