@@ -6,7 +6,7 @@ import { createScopedSearch } from '../../scoped-search.js';
 /** Local-only UI. The host supplies an authenticated request and event bridge. */
 export function mountOllama(root,{services,translate=(s)=>s,confirm:confirmAction=async()=>false}={}) {
   const bridge=services?.ollama;if(!root||!bridge?.request)throw new Error('The authenticated local model bridge is required.');
-  let language=services.getLanguage?.()||'en';const t=value=>{const translated=translate(value);if(translated!==value)return translated;const yue=ollamaCantonese[value];return yue&&language==='yue'?yue:yue&&language==='bilingual'?value+' / '+yue:value;}, request=(action,p={})=>bridge.request(action,p);
+  let language=services.getLanguage?.()||'en';const t=value=>{const translated=translate(value);if(translated!==value)return translated;const yue=ollamaCantonese[value];return yue&&language==='yue'?yue:yue&&language==='bilingual'?value+' · '+yue:value;}, request=(action,p={})=>bridge.request(action,p);
   let models=[],cart=[],catalog={},sessions=[],profiles=[],hardware=null,selected=null,operation=null,sessionId=null,disposed=false,sessionGeneration=0,requestPending=false;
   let searchRevision=0;const disposers=[];const doc=root.ownerDocument||document;
   const labels=createLiveLabels(root,t),selectSearches=new Map(),scopedSearches=[];const section=doc.createElement('section');section.className='ollama-suite';labels.attribute(section,'aria-label','Local models');root.append(section);
