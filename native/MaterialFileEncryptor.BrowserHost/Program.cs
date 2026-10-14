@@ -141,6 +141,8 @@ public static class Program
         using var shutdown = new CancellationTokenSource(); var cancel = shutdown.Token;
         var input = Console.OpenStandardInput(); var output = Console.OpenStandardOutput();
         var replies = new ConcurrentDictionary<string, TaskCompletionSource<JsonElement>>();
+        var abandonedReplies = new ConcurrentDictionary<string, byte>();
+        var responseState = new object();
         using var writer = new SemaphoreSlim(1);
         async Task Send(object value)
         { await writer.WaitAsync(cancel); try { await NativeFrames.Write(output, value, cancel); } finally { writer.Release(); } }
@@ -154,6 +156,8 @@ public static class Program
                 if (first) { await Send(new { type = "ready", aclVerified = true }); }
                 first = false;
                 await server.WaitForConnectionAsync(cancel);
+                // This identity belongs to the admitted pipe, never browser JSON.
+                var connectionId = Guid.NewGuid().ToString();
                 try
                 {
                     for (var count = 0; count < 256; count++)
@@ -163,16 +167,33 @@ public static class Program
                         if (!NativeFrames.Exact(envelope.Value, "origin", "message") || !allowed.Contains(envelope.Value.GetProperty("origin").GetString() ?? ""))
                             throw new InvalidDataException("Browser caller is not allowed.");
                         var id = Guid.NewGuid().ToString(); var pending = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);
+                        if (abandonedReplies.Count >= 256) throw new InvalidDataException("Native pending response limit reached.");
                         if (!replies.TryAdd(id, pending)) throw new InvalidDataException("Duplicate broker request.");
                         try
                         {
-                            await Send(new { requestId = id, origin = envelope.Value.GetProperty("origin"), message = envelope.Value.GetProperty("message") });
-                            var result = await pending.Task.WaitAsync(deadline.Token); await NativeFrames.Write(server, result, deadline.Token);
+                            await Send(new { requestId = id, connectionId, origin = envelope.Value.GetProperty("origin"), message = envelope.Value.GetProperty("message") });
+                            // Requests are sequential. Detect an EOF while consent
+                            // is pending; pipelined bytes are rejected rather than
+                            // interpreted as another request under this authority.
+                            using var monitor = CancellationTokenSource.CreateLinkedTokenSource(deadline.Token);
+                            var disconnected = server.ReadAsync(new byte[1], monitor.Token).AsTask();
+                            try
+                            {
+                                await Task.WhenAny(pending.Task, disconnected).WaitAsync(deadline.Token);
+                                if (disconnected.IsCompleted) { await disconnected; throw new IOException("Native connection closed or pipelined."); }
+                                var result = await pending.Task.WaitAsync(deadline.Token);
+                                monitor.Cancel();
+                                try { await disconnected; throw new IOException("Native connection closed or pipelined."); }
+                                catch (OperationCanceledException) when (!deadline.IsCancellationRequested) { }
+                                await NativeFrames.Write(server, result, deadline.Token);
+                            }
+                            finally { monitor.Cancel(); }
                         }
-                        finally { replies.TryRemove(id, out _); }
+                        finally { lock (responseState) { if (!pending.Task.IsCompleted) abandonedReplies.TryAdd(id, 0); replies.TryRemove(id, out _); } }
                     }
                 }
                 catch (Exception error) when (error is IOException or InvalidDataException or OperationCanceledException or JsonException) { }
+                finally { if (!cancel.IsCancellationRequested) await Send(new { type = "disconnected", connectionId }); }
             }
         }
         var firstListener = Listen(true);
@@ -187,8 +208,16 @@ public static class Program
                     var response = await NativeFrames.Read(input, cancel); if (response is null) break;
                     if (!NativeFrames.Exact(response.Value, "requestId", "response")) throw new InvalidDataException("Invalid broker reply.");
                     var id = response.Value.GetProperty("requestId").GetString();
-                    if (id is null || !replies.TryGetValue(id, out var pending)) throw new InvalidDataException("Unmatched broker reply.");
-                    pending.TrySetResult(response.Value.GetProperty("response"));
+                    lock (responseState)
+                    {
+                        if (id is null) throw new InvalidDataException("Unmatched broker reply.");
+                        if (!replies.TryGetValue(id, out var pending))
+                        {
+                            if (abandonedReplies.TryRemove(id, out _)) continue;
+                            throw new InvalidDataException("Unmatched broker reply.");
+                        }
+                        pending.TrySetResult(response.Value.GetProperty("response"));
+                    }
                 }
             }
             finally { shutdown.Cancel(); }

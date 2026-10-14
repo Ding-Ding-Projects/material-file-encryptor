@@ -3,6 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import {timingSafeEqual} from 'node:crypto';
 import {createBrowserDownloadReceiver,createNativeMessageDecoder} from './browser-download-receiver.js';
+import {createBrowserProtectedMediation} from './browser-protected-mediation.js';
 
 const exact=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===keys.length&&keys.every(key=>Object.hasOwn(value,key));
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
@@ -39,16 +40,29 @@ export function createBrowserHandoffLifecycle({hostDirectory,platform=process.pl
 
 /** Host-only transport. Its caller origin is an allowlist input, never proof of
  * browser provenance. Every pair still requires approval in the unlocked app. */
-export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnlocked,onProposal,readProtectionStatus,spawnHost=spawn,now=Date.now,closeTimeoutMs=3000}={}){
+export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnlocked,onProposal,readProtectionStatus,authenticateProfile,validateAuthority,readProfileSummary,spawnHost=spawn,now=Date.now,closeTimeoutMs=3000}={}){
  if(typeof authorizePair!=='function'||typeof isUnlocked!=='function'||typeof onProposal!=='function')throw Error('Native approval, unlocked admission and host proposal delivery are required.');
  if(!Number.isSafeInteger(closeTimeoutMs)||closeTimeoutMs<25||closeTimeoutMs>5000)throw Error('Native close timeout must be between 25 and 5000 milliseconds.');
- const allowedOrigins=validateBrowserHostConfig(config),sessions=new Map(),proposals=new Map(),owners=new Set(),jobs=new Set();let child=null,closed=false,ready=false,active=0,starting=null,readyResolve,readyReject,closing=null;
+ const allowedOrigins=validateBrowserHostConfig(config),sessions=new Map(),connections=new Map(),currentConnections=new Map(),proposals=new Map(),owners=new Set(),jobs=new Set();let child=null,closed=false,ready=false,active=0,starting=null,readyResolve,readyReject,closing=null;
  const receiver=createBrowserDownloadReceiver({allowedOrigins,authorizePair,isUnlocked,now,onProposal:async item=>{if(closed)throw Error('Native browser broker is closed.');await onProposal(item);unlocked();proposals.set(item.id,{origin:item.origin,state:'awaiting-confirmation',received:0,total:null});}});
- const revoke=()=>{receiver.revoke();sessions.clear();proposals.clear();};
+ const mediation=createBrowserProtectedMediation({allowedOrigins,getPair:origin=>sessions.get(origin),isUnlocked,authenticateProfile,validateAuthority,readProfileSummary,now});
+ const revoke=()=>{receiver.revoke();mediation.revoke();sessions.clear();currentConnections.clear();proposals.clear();};
+ function disconnectConnection(connectionId){
+  const origin=connections.get(connectionId);connections.delete(connectionId);
+  if(origin&&currentConnections.get(origin)===connectionId)revoke();
+ }
  const unlocked=()=>{if(closed||isUnlocked()!==true){revoke();throw Error('Unlock the desktop before receiving downloads.');}};
- async function receive(origin,message){
+ async function receive(origin,message,connectionId=null){
   if(!allowedOrigins.includes(origin)||active>=2)throw Error('Browser caller unavailable or not allowed.');unlocked();active++;
   try{
+   if(connectionId!==null&&(!uuid(connectionId)||connections.get(connectionId)!==origin))throw Error('Native browser connection is unavailable.');
+   if(connectionId!==null&&exact(message,['type'])&&message.type==='pair'&&currentConnections.get(origin)!==connectionId){revoke();currentConnections.set(origin,connectionId);}
+   const liveConnection=()=>{if(connectionId!==null&&(connections.get(connectionId)!==origin||currentConnections.get(origin)!==connectionId))throw Error('Native browser connection is unavailable.');};
+   if(mediation.supports(message?.type)){
+    if(connectionId===null){if(exact(message,['type','session'])&&message.type==='protected-discover'){const pair=sessions.get(origin);if(!pair||pair.expires<=now()||!same(message.session,pair.session))throw Error('Pair the browser again.');return{type:'protected-capabilities',schemaVersion:1,authentication:'unavailable',operations:[]};}throw Error('Protected browser connection identity is unavailable.');}
+    liveConnection();if(sessions.get(origin)?.connectionId!==connectionId)throw Error('Pair the browser again.');return await mediation.receive(origin,message);
+   }
+   if(message?.type!=='pair')liveConnection();
    if(exact(message,['type','session'])&&message.type==='protection-status'){
     const pair=sessions.get(origin);if(!pair||pair.expires<=now()||!same(message.session,pair.session))throw Error('Pair the browser again.');
     if(typeof readProtectionStatus!=='function')throw Error('Protection observations are unavailable.');
@@ -61,7 +75,7 @@ export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnloc
     const pair=sessions.get(origin);if(!pair||pair.expires<=now()||!same(message.session,pair.session))throw Error('Pair the browser again.');if(!uuid(message.id))throw Error('Invalid browser proposal identifier.');
     const item=proposals.get(message.id);if(!item||item.origin!==origin)throw Error('Browser proposal unavailable.');return{type:'status',id:message.id,state:item.state,received:item.received,total:item.total};
    }
-   try{const result=await receiver.receive(origin,message);if(result.type==='paired'){proposals.clear();sessions.set(origin,{session:result.session,expires:now()+result.expiresInSeconds*1000});}return result;}
+   try{const result=await receiver.receive(origin,message);liveConnection();if(result.type==='paired'){mediation.revoke();proposals.clear();sessions.set(origin,{session:result.session,expires:now()+result.expiresInSeconds*1000,connectionId});}return result;}
    catch(error){if(isUnlocked()!==true)revoke();throw error;}
   }finally{active--;}
  }
@@ -71,7 +85,7 @@ export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnloc
   const state={ready:'awaiting-confirmation',downloading:'downloading',completed:'completed',failed:'failed',cancelled:'cancelled'}[row.state];if(!state)return;
   item.state=state;item.received=Number.isSafeInteger(row.received)&&row.received>=0?row.received:0;item.total=Number.isSafeInteger(row.total)&&row.total>=0?row.total:null;
  }
- function stop(error){ready=false;revoke();readyReject?.(error??Error('Native browser broker closed.'));if(child){const owned=child;child=null;owned.stdin.destroy();if(owned.exitCode===null||owned.exitCode===undefined)owned.kill();}}
+ function stop(error){ready=false;revoke();connections.clear();readyReject?.(error??Error('Native browser broker closed.'));if(child){const owned=child;child=null;owned.stdin.destroy();if(owned.exitCode===null||owned.exitCode===undefined)owned.kill();}}
  async function start(){
   if(closed)throw Error('Native browser broker is closed.');if(ready)return{started:true,aclVerified:true};if(starting)return starting;
   if(typeof hostPath!=='string'||!path.win32.isAbsolute(hostPath)||path.win32.basename(hostPath)!=='MaterialFileEncryptor.BrowserHost.exe')throw Error('A bundled native browser host is required.');
@@ -85,8 +99,11 @@ export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnloc
    const decoder=createNativeMessageDecoder(envelope=>{
     if(child!==launched||closed)return;
     if(exact(envelope,['type','aclVerified'])&&envelope.type==='ready'&&envelope.aclVerified===true&&!ready){ready=true;readyResolve({started:true,aclVerified:true});return;}
-    if(!ready||!exact(envelope,['requestId','origin','message'])||!uuid(envelope.requestId))throw Error('Invalid native broker envelope.');
-    const job=receive(envelope.origin,envelope.message).then(response=>write(envelope.requestId,response),()=>write(envelope.requestId,{type:'error',code:'HANDOFF_NOT_ACCEPTED'})).catch(()=>stop(Error('Native broker write failed.')));jobs.add(job);job.finally(()=>jobs.delete(job));
+    if(ready&&exact(envelope,['type','connectionId'])&&envelope.type==='disconnected'&&uuid(envelope.connectionId)){disconnectConnection(envelope.connectionId);return;}
+    const identified=exact(envelope,['requestId','connectionId','origin','message'])&&uuid(envelope.connectionId);
+    if(!ready||!(identified||exact(envelope,['requestId','origin','message']))||!uuid(envelope.requestId))throw Error('Invalid native broker envelope.');
+    if(identified){if(!allowedOrigins.includes(envelope.origin)||connections.has(envelope.connectionId)&&connections.get(envelope.connectionId)!==envelope.origin||!connections.has(envelope.connectionId)&&connections.size>=2)throw Error('Invalid native connection identity.');connections.set(envelope.connectionId,envelope.origin);}
+    const job=receive(envelope.origin,envelope.message,identified?envelope.connectionId:null).then(response=>write(envelope.requestId,response),()=>write(envelope.requestId,{type:'error',code:'HANDOFF_NOT_ACCEPTED'})).catch(()=>stop(Error('Native broker write failed.')));jobs.add(job);job.finally(()=>jobs.delete(job));
    });
    function write(requestId,response){return new Promise((resolve,reject)=>{if(child!==launched||closed)return reject(Error('Native broker closed.'));try{launched.stdin.write(nativeFrame({requestId,response}),error=>error?reject(error):resolve());}catch(error){reject(error);}});}
    launched.stdout.on('data',chunk=>{if(child!==launched||closed)return;try{decoder.push(chunk);}catch{stop(Error('Invalid native broker frame.'));}});
@@ -99,7 +116,7 @@ export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnloc
   finally{clearTimeout(timer);starting=null;readyResolve=null;readyReject=null;}
  }
  function close(){
-  if(closing)return closing;closed=true;receiver.close();stop();
+  if(closing)return closing;closed=true;receiver.close();mediation.close();stop();
   closing=(async()=>{
    let timer;try{await Promise.race([Promise.all([...owners].map(owner=>owner.promise).concat([...jobs])),new Promise(resolve=>{timer=setTimeout(resolve,closeTimeoutMs);})]);}finally{clearTimeout(timer);}
    // A process 'close' event observes exit plus closure of all inherited stdio.
