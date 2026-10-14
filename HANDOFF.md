@@ -1,3 +1,9 @@
+# Material layout polish, 2026-10-14
+
+Hidden-desktop capture review of the built application found layout defects rather than generic controls; the remaining raw inputs the scan reports are the visually hidden native internals of the Material date and file picker composites. Fixed and captured on main: the local access legend sits inside its outlined card (862444b), data table headers reach the right outline (4a30e82), workflow document fields span their column (a36600b), and converter, local model and server preparation buttons keep their own width (9eb2ffa). Release workflow runs for 862444b, 4a30e82 and a36600b completed successfully.
+
+Outstanding: guidance information buttons still sit on their own row in personalization and server preparation; captures at 100, 125 and 200 percent display scale (owner action); individual captures of the remaining message boxes; the separate protected settings reset branch.
+
 # Material conversion integration, 2026-10-14
 
 Main now carries the Material conversion sweep and the fresh-host Visual C++ runtime bootstrap fix. Message boxes render as Material dialogs in main-owned frameless windows answered only through a one-time nonce, controls found generic in hidden-desktop captures were converted, shared Material motion tokens drive entrance motion, and read-only requests no longer block exit.
