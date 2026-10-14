@@ -334,10 +334,19 @@ function openVaultDialog(mode) {
  updateDialog(); renderAvailability(); $('vault-dialog').showModal(); $('storage-input').focus();
 }
 function closeVaultDialog() { if (busy) return; closeDrivePicker(); $('vault-dialog').close(); $('password-input').value = ''; $('confirm-password').value = ''; $('key-path').value = ''; }
+let confirmationGeneration=0;
 async function confirmAction(title, description, action) {
  setText('confirm-title',title); setText('confirm-description',description); setText('confirm-action',action);
- const dialog = $('confirm-dialog'); dialog.returnValue = ''; dialog.showModal(); dialog.querySelector('[value=cancel]').focus();
- return new Promise(resolve => dialog.addEventListener('close',() => resolve(dialog.returnValue === 'confirm'),{once:true}));
+ const dialog = $('confirm-dialog'), generation=++confirmationGeneration; dialog.returnValue = '';
+ return new Promise((resolve,reject)=>{
+  let settled=false;
+  const closed=()=>{settled=true;resolve(dialog.returnValue==='confirm');};
+  const failed=error=>{dialog.removeEventListener('close',closed);if(!settled){settled=true;reject(error);}};
+  dialog.addEventListener('close',closed,{once:true});
+  try {Promise.resolve(dialog.showModal()).then(()=>{
+   if(!settled&&generation===confirmationGeneration&&dialog.isConnected&&dialog.open&&dialog.shadowRoot.querySelector('md-dialog').open)dialog.querySelector('[value=cancel]').focus();
+  }).catch(failed);}catch(error){failed(error);}
+ });
 }
 async function importFiles() { const paths = await api.chooseFiles(); if (paths?.length) await run('Importing files…',() => api.startImport?api.startImport(paths):api.importFiles(paths),api.startImport?'Import queued.':'Files imported.'); }
 async function openSelected() { if (selected && state.mounted) await run('Working…',() => api.open(selected)); }

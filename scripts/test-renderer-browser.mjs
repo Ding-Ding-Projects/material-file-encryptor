@@ -86,7 +86,7 @@ export async function proveStableRendererTree(prove,{wait=ms=>new Promise(resolv
   }
  }
 }
-export async function createRendererCdpTransport(endpoint,{fetchImpl=fetch,WebSocketImpl=WebSocket}={}) {
+export async function createRendererCdpTransport(endpoint,{fetchImpl=fetch,WebSocketImpl=WebSocket,observe=()=>{}}={}) {
  const response=await fetchImpl(`${endpoint}/json/version`,{signal:AbortSignal.timeout(3000),headers:{Connection:'close'}});
  const text=await response.text();
  if(text.length>65536)throw new Error('CDP version response exceeds limit.');
@@ -95,8 +95,9 @@ export async function createRendererCdpTransport(endpoint,{fetchImpl=fetch,WebSo
  if(address.protocol!=='ws:'||address.hostname!=='127.0.0.1'||address.port!==expected.port||address.username||address.password||!address.pathname.startsWith('/devtools/browser/'))throw new Error('CDP transport endpoint is not the exact loopback browser.');
  const socket=new WebSocketImpl(address.href);
  let disconnected=false;
- const transport={send(message){socket.send(JSON.stringify(message));},close(){socket.close();},onmessage:undefined,onclose:undefined};
- socket.addEventListener('message',event=>{try{if(typeof event.data!=='string'||event.data.length>1048576)throw new Error('Invalid CDP transport message.');transport.onmessage?.(JSON.parse(event.data));}catch{socket.close();}});
+ const sent=new Map();
+ const transport={send(message){sent.set(message.id,message.method);if(message.method.startsWith('Target.'))observe({direction:'send',method:message.method,id:message.id});socket.send(JSON.stringify(message));},close(){socket.close();},onmessage:undefined,onclose:undefined};
+ socket.addEventListener('message',event=>{try{if(typeof event.data!=='string'||event.data.length>1048576)throw new Error('Invalid CDP transport message.');const message=JSON.parse(event.data);if(message.method?.startsWith('Target.')||message.method==='Inspector.targetCrashed'||message.error)observe({direction:'receive',method:message.method||sent.get(message.id),id:message.id,errorCode:message.error?.code,targetId:message.params?.targetInfo?.targetId||message.params?.targetId,targetType:message.params?.targetInfo?.type});if(message.id)sent.delete(message.id);transport.onmessage?.(message);}catch{socket.close();}});
  socket.addEventListener('close',()=>{disconnected=true;transport.onclose?.();});
  await new Promise((resolve,reject)=>{
   const timer=setTimeout(()=>{socket.close();reject(new Error('CDP transport open timed out.'));},10000);
@@ -249,10 +250,12 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
   if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await proveStableRendererTree(()=>lifecycleCommand([adapter,'prove-cdp',state]));
   const clientBinding=(await lifecycleCommand([adapter,'bind-client',state],{clientPid:process.pid})).clientBinding;
   if(clientBinding?.clientIdentity?.pid!==process.pid)throw new Error('Fresh renderer client ancestry binding is unavailable.');
-  cdpTransport=await (runtime.createTransport||createRendererCdpTransport)(endpoint);
+  cdpTransport=await (runtime.createTransport||createRendererCdpTransport)(endpoint,{observe:result=>{if(outcomes.filter(item=>item.operation==='cdp-attachment-observation').length<100)outcomes.push({operation:'cdp-attachment-observation',result});}});
   browser=await chromium.connectOverCDP(cdpTransport.transport);
+  const observePages=stage=>{const contexts=browser.contexts();outcomes.push({operation:'playwright-page-inventory',result:{stage,contextCount:contexts.length,contexts:contexts.map(context=>({pageCount:context.pages().length,pages:context.pages().map(page=>({closed:page.isClosed(),exactUrl:page.url()===expectedUrl,blank:page.url()==='about:blank'||page.url()===''}))}))}});};
   if(env.MFE_RENDERER_PROCESS_BACKEND==='native-v1')await verifyConnectedRenderer(browser,{expectedUrl,targetId:targets[0].id},input=>proveStableRendererTree(()=>lifecycleCommand([adapter,'prove-cdp',state],{...input,clientBinding})));
   connectionOwned=true;
+  observePages('ownership-proved');
   const page=browser.contexts()[0].pages()[0];
   if(!page||browser.contexts()[0].pages().length!==1)throw new Error('Renderer fixture page inventory changed.');
   if(packagedTarget)await packagedTarget.revalidate();
