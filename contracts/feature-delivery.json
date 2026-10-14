@@ -12162,16 +12162,25 @@
     {
       "id": "adhd-modes",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Configure focus, reduced stimulus and guided attention modes with reversible shared settings. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Focus, reduced stimulus and guided attention switches change presentation locally and can all be turned off together. Sharing these modes with the desktop through authenticated mediation is not implemented. Headless browser captures show focus and guided modes.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -12185,7 +12194,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -12196,14 +12205,14 @@
         "action": "Configure focus, reduced stimulus and guided attention modes with reversible shared settings.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Configure focus, reduced stimulus and guided attention modes with reversible shared settings.",
-            "nextProof": "Exercise configure focus, reduced stimulus and guided attention modes with reversible shared settings on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "A separate local record of three booleans; the modes are local to this browser and not shared with the desktop."
       }
     },
     {
@@ -12634,16 +12643,25 @@
     {
       "id": "logo-customization",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/popup.js"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Import, preview, replace and reset a local logo with type and size validation. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Choose logo checks type and size before reading, shows the logo beside the workspace heading and in the popup, and Remove logo restores the built-in mark. Headless browser captures show the logo in both places; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -12657,7 +12675,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -12668,14 +12686,14 @@
         "action": "Import, preview, replace and reset a local logo with type and size validation.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Import, preview, replace and reset a local logo with type and size validation.",
-            "nextProof": "Exercise import, preview, replace and reset a local logo with type and size validation on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "A separate bounded local record holds one PNG, JPEG or WebP data URL of at most 64 KB."
       }
     },
     {
@@ -15152,16 +15170,24 @@
     {
       "id": "homepage-link",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Expose and verify the exact deployed documentation home URL from extension help. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The Status tab links to the exact deployed documentation home page and shows the address as text. A headless browser capture shows the link; whether the address serves the current site is checked separately from the extension.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -15175,7 +15201,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -15186,14 +15212,14 @@
         "action": "Expose and verify the exact deployed documentation home URL from extension help.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Expose and verify the exact deployed documentation home URL from extension help.",
-            "nextProof": "Exercise expose and verify the exact deployed documentation home URL from extension help on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "The address is fixed in the page; nothing is stored."
       }
     },
     {
@@ -15713,16 +15739,24 @@
     {
       "id": "app-icon",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/popup.js",
+        "browser-extension/popup.html",
+        "browser-extension/manifest.json",
+        "scripts/build-browser-extension.mjs"
       ],
-      "documentation": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
       "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-extension-bundle.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Ship valid extension manifest icons at required sizes and inspect toolbar and management presentation. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The manifest declares 16, 32, 48 and 128 pixel icons and the toolbar icon that opens the popup; staging accepts only small PNG files inside the icons folder. The staged icons are inspected as files; browser toolbar and management presentation have not been captured.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -15736,10 +15770,10 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
-        "owner": "browser-extension/options.js",
+        "owner": "browser-extension/popup.js",
         "gaps": [
           "behavior",
           "proof"
@@ -15747,14 +15781,14 @@
         "action": "Ship valid extension manifest icons at required sizes and inspect toolbar and management presentation.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
             "outcome": "Ship valid extension manifest icons at required sizes and inspect toolbar and management presentation.",
-            "nextProof": "Exercise ship valid extension manifest icons at required sizes and inspect toolbar and management presentation on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Icons are packaged files; nothing is stored at runtime."
       }
     },
     {
@@ -17178,7 +17212,8 @@
     "test/browser-extension-bundle.test.js": "1ca16f34ab3e155fc5d0c0805551380074826b0b",
     "browser-extension/exports.js": "ab688b4a76b9e343bc90624b0d47366c7f869c85",
     "browser-extension/history.js": "5c5713dd289b4b4796a35758476482251b924b52",
-    "browser-extension/accent.js": "5c5713dd289b4b4796a35758476482251b924b52"
+    "browser-extension/accent.js": "5c5713dd289b4b4796a35758476482251b924b52",
+    "browser-extension/manifest.json": "4b8fb2c4bd3c2bf98e62f45650e590350896de08"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",

@@ -38,6 +38,16 @@ The Filters button collapses the changelog filter and export controls. Collapsin
 
 Settings stored by version 2 of the workspace gain an empty product name and accent when they are first read, keeping every earlier choice.
 
+## Icon, logo, attention modes and documentation link
+
+The extension ships its own icon at 16, 32, 48 and 128 pixels: the folder-and-lock mark in the application's green. Staging accepts only small PNG files inside the icons folder.
+
+Choose logo, under Personalization, accepts a PNG, JPEG or WebP image of 64 KB or less. The type and size are checked before the file is read. The logo is kept in its own local record and appears beside the workspace heading and in the popup. Remove logo returns to the built-in mark.
+
+Attention offers three local switches. Focus hides explanatory text. Reduced stimulus turns off motion and emoji decoration. Guided attention outlines the open panel. Turn off attention modes switches all three off. These switches change only presentation in this browser; they are not shared with the desktop application.
+
+The Status tab links to the documentation website at its exact address, https://ding-ding-projects.github.io/material-file-encryptor/, and shows the address as text.
+
 Focused tests cover malformed/oversized cache, failed saves, persistence, keyboard tab routing, forged sender paths and staged local-only CSP. Source staging hashes every workspace file. Signing, installed identity, real browser interaction, visual parity and display scaling remain unverified.
 
 ## Bundled copy measurement
