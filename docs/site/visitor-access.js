@@ -44,7 +44,7 @@ export function mountVisitorAccess(container,{storage=globalThis.localStorage,fo
     const heading=bind(doc.createElement('h2'),'Visitor local access');root.append(heading);
     for(const copy of Object.keys(COPY).slice(1,5)){const note=bind(doc.createElement('p'),copy);root.append(note);}
     const host=doc.createElement('div');root.append(host);
-    access=mountAccess(host,{storage:sessionStorage,credentialStore:records.authenticationStore,waitBudget:createWaitBudget({storage:waitStorage,withLock,now:Date.now}),schoolMode,translate:source=>translate(source),notify,
+    access=mountAccess(host,{storage:sessionStorage,credentialStore:records.authenticationStore,deferAuthenticatorLoad:true,waitBudget:createWaitBudget({storage:waitStorage,withLock,now:Date.now}),schoolMode,translate:source=>translate(source),notify,
       onAuthenticatedChange(value){
         if(rebuilding||destroyed)return;
         if(!value){endAuthentication();queueMicrotask(rebuild);return;}
