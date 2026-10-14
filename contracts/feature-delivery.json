@@ -13763,16 +13763,33 @@
     {
       "id": "unlock-ladder",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css",
+        "browser-extension/background.js",
+        "src/main/browser-unlock-ladder-mediation.js",
+        "src/main/access-integration.js",
+        "src/main/feature-services.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/design/browser-desktop-channel.md",
+        "docs/features/workflows/browser-native-host.md",
+        "docs/features/workflows/browser-extension-workspace.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/workflows/browser-native-host.zh-HK.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "tests": [
+        "test/browser-unlock-ladder-scopes.test.js",
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Complete the required progressive unlock challenges with shared cooldown and recovery state. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The extension reads the desktop's real waiting ladder (escalation level, shared cooldown and recovery state) with read-unlock-ladder, and request-unlock-step lets the person clear a recorded escalation by proving the vault password in the desktop's own native dialog after the cooldown has ended, through the desktop's own state machine. A cooldown is reported and never shortened, the browser never sees or answers a challenge, and the renderer-only challenges are not driven from the browser. Windows Hello is not integrated. Verified with synthetic broker and extension tests and one test against the real access state machine; no installed desktop or captured prompt.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13786,7 +13803,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -13797,14 +13814,14 @@
         "action": "Complete the required progressive unlock challenges with shared cooldown and recovery state.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Complete the required progressive unlock challenges with shared cooldown and recovery state.",
-            "nextProof": "Exercise complete the required progressive unlock challenges with shared cooldown and recovery state on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Pair an installed extension with an installed desktop, trigger a cooldown, confirm the countdown and refusal, then clear the escalation after the cooldown with the vault password."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "The ladder state is the desktop's own access record; the extension stores nothing."
       }
     },
     {
@@ -17707,7 +17724,9 @@
     "test/browser-school-scopes.test.js": "c193df3b93e64c409565d46689795a8481b7a062",
     "src/main/browser-element-lock-mediation.js": "e945baadfc88d82df73eb71787fa437bb7a8331b",
     "src/shared/extension-lock-targets.js": "e945baadfc88d82df73eb71787fa437bb7a8331b",
-    "test/browser-element-lock-scopes.test.js": "e945baadfc88d82df73eb71787fa437bb7a8331b"
+    "test/browser-element-lock-scopes.test.js": "e945baadfc88d82df73eb71787fa437bb7a8331b",
+    "src/main/browser-unlock-ladder-mediation.js": "ae6d15aa5f105a30332e030813e9fd232cd4f532",
+    "test/browser-unlock-ladder-scopes.test.js": "ae6d15aa5f105a30332e030813e9fd232cd4f532"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
