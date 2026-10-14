@@ -1,3 +1,11 @@
+# Material conversion integration, 2026-10-14
+
+Main now carries the Material conversion sweep and the fresh-host Visual C++ runtime bootstrap fix. Message boxes render as Material dialogs in main-owned frameless windows answered only through a one-time nonce, controls found generic in hidden-desktop captures were converted, shared Material motion tokens drive entrance motion, and read-only requests no longer block exit.
+
+Verified: hidden-desktop captures of the built application in English light, English dark and Cantonese across 19 views; a real consent prompt rendered as a Material dialog and cancelled with no change; the branch full suite shows no failure absent from main; 88 focused tests pass on merged main.
+
+Outstanding: display-scale and bilingual captures, a dark dialog capture, per-prompt captures, the public screenshot refresh, and the separate protected settings reset branch. Renderer browser tests remain blocked on this host by package path redirection.
+
 ## Current terminal state: blocked after preservation
 
 The goal control returned blocked after the same account-allowance boundary persisted across three consecutive goal turns. The latest account reading remains 2 percent. New implementation stopped at the requested 10 percent threshold, and all recoverable source work is already preserved. Goal usage at the transition was 1,540,335 of the 11,607,405-token continuation ceiling. The full objective is unchanged and incomplete.

@@ -1,51 +1,25 @@
-## Current terminal state: blocked after preservation
+````text
+Material File Encryptor: continuation handoff (state as of the Material conversion integration on main)
 
-The goal control returned blocked after the same account-allowance boundary persisted across three consecutive goal turns. The latest account reading remains 2 percent. New implementation stopped at the requested 10 percent threshold, and all recoverable source work is already preserved. Goal usage at the transition was 1,540,335 of the 11,607,405-token continuation ceiling. The full objective is unchanged and incomplete.
+Objective: every element of the desktop application uses Material Design 3 components with Material transitions and motion, and every required feature is implemented and verified.
 
-Further implementation requires renewed owner direction or an external allowance change. The gallery history-repair proposal still requires explicit authorization; no force push or deletion occurred. Product producer 38500495060 and earlier producers 38499653922 and 38499832970 remain in progress at the latest readback. They were not cancelled. Existing release v1.474.1 is a normal release bound to 622c1923cced5567b40cf469ff6331c29316723a, with all four expected assets present; only its metadata was verified in the previous continuation.
+Landed on main (this pre-dew):
+- Fresh-host build fix: the bootstrap places one Microsoft-signed vcruntime140.dll beside the pinned Node runtime when the system Visual C++ runtime is absent (build.bat /s exit 0 on a fresh host).
+- Material conversion sweep (branch codex/lang-gui-sweep-20261014, merged): Material tabs, in-field clear buttons, labelled selects, linear progress, expansion panels, chevron icon buttons, a navigation-style documentation index, a disabled list for unavailable server targets, worded update reasons, a Material warning card.
+- Message boxes render as Material dialogs in main-owned frameless windows. Only the dialog window with its one-time nonce and a valid button index can answer; closing or Escape cancels; the native message box is the fallback. Dialogs follow the in-app theme.
+- Shared Material easing and duration tokens with entrance motion for views, tab panels, cards, table rows and disclosures; reduced-motion settings disable it.
+- Read-only feature requests no longer hold the application open at exit; mutating and user-gated work still does.
+- Bilingual article docs/features/interface/material-dialogs-and-motion(.zh-HK).md, registered in the inventory, language pairs, catalogue, route contracts and surface registry.
 
-This is the current state. Earlier active or pending-transition statements below are historical observations. Do not resume implementation automatically, create a replacement goal, or treat this handoff as full acceptance.
+Verification:
+- Hidden-desktop captures of the built application (English light, English dark, Cantonese) across 19 views, with clean owned teardown; a real consent prompt captured as a Material dialog and cancelled with no change.
+- Full suite on the branch: 1766 passed, 11 failed, every failure also present on main (host package-path redirection and timing-sensitive checks). Focused suite on merged main: 88 passed.
 
-## Final publication readback and pending decisions
+Not yet done:
+- Captures at 125 to 200 percent display scale and in bilingual mode; dark-theme capture of a Material dialog; individual captures of the licence, pairing, credential, shutdown, import and update prompts.
+- Refresh README, documentation site, wiki and gallery screenshots from the rebuilt application.
+- Branch codex/feature-mediation-01a137ae (protected settings reset) remains separate: the writer-lock finalization fix is pushed, but native writer adoption and the independent review are outstanding; the renderer entry point stays disabled.
+- Renderer browser tests cannot run on this host because package file redirection makes evidence paths non-canonical.
 
-The gallery is publicly verified at b2c659129036c13e2123efb6a59c24ad908c2e8c. Deployment 38500359431 succeeded. Five live routes and all 76 images returned HTTP 200; all 76 image hashes match the inventory. The exact About homepage is https://ding-ding-projects.github.io/material-file-encryptor-captures/. Eight new captures have validated UTC times and four explicitly have unavailable times.
-
-The current gallery text is corrected and all 25 tracked text files pass the public-boundary scan. A 27-record public sweep corrected two earlier editable comments and verified readback. Historical commit d40c6ba still contains removed session-only wording. An exact replacement with byte-identical corrected files is prepared and locally preserved, but public history rewriting awaits explicit owner authorization. No force push was performed. The complete gallery history and proposal are preserved in a verified private 4,643,626-byte Git bundle with SHA-256 a62bb98c62b4f95219fa41fde6f5371b8f788f598d9f641f654dbb934bb7f4b2.
-
-The latest verified account allowance is 3 percent remaining. Implementation stopped at 10 percent. The goal remains active because the requested explicit pause decision has not yet arrived. Product main was verified at 9aa5a152af7b0099403c5b9ef7dcd6d130979b7d before this final record. Release runs 38499653922 and 38499832970 were still in progress at their latest readback. No release success, full acceptance or cleanup completion is claimed.
-
-# Preservation handoff after the requested allowance boundary
-
-The owner requested continued implementation until 10 percent account allowance remained, work on main, and preservation followed by eligible cleanup. That threshold was reached and new implementation stopped. The latest recorded allowance is 6 percent remaining while preservation finishes. The goal is active and incomplete; an explicit pause decision is pending. Its continuation ceiling is 11,607,405 tokens after the previous goal consumed 3,392,595 of the original 15,000,000. No completion or installed-lifecycle acceptance is claimed.
-
-## Integrated and verified source
-
-- Main 2d870053ced0d9fc49cf3bbfd140308638f7156c fixes producer identity on promotion retries and validates downloaded provenance. Three new actual PowerShell checks passed. The combined release group recorded 11 passed and one explicit host-script execution-policy skip. Authenticated end-to-end retry remains unverified; failed run 38495468478 remains historical.
-- Main 6d6f48ec45a0be25f13f2ce9da2d2e5735fe85ed integrates focus candidate 56c61a606e28a5c12968eef567a52fc2ad035ebb. The table keyboard-focus overlay stays above sticky headers without changing measured geometry or input semantics. Independent source and pixel review accepted twelve genuine captures and eight layout probes. Exact build.bat /s passed with 6066 package entries and zero privacy rejections. The integrated checks passed 27 component/inventory and 24 documentation/publication tests. ASAR SHA-256: 06f1c01ecc1886cf099e96be21cfda015a338fef2fa5bfd6808ed44ce0dd834a.
-- Focus evidence is English, light/dark, scale 1, at 1180x850 and 880x650. Four wide captures and four additionally scrolled narrow captures show all four edges. Initial narrow captures preserve their genuine viewport limits. Other languages, physical scaling and populated records remain unverified. Saved startup-restoration and supported final closure receipts passed.
-- Documentation deployment 38499832961 succeeded for 6d6f48e. The live home, four changed English/Cantonese articles, library and wiki indexes, and font stylesheet returned 200. The stored About homepage is exactly https://ding-ding-projects.github.io/material-file-encryptor/. This is eight-route readback, not a new full browser accessibility or all-route audit.
-
-## Preserved unfinished work
-
-- codex/feature-mediation-01a137ae is remotely preserved at eaeea590ccae8f15d3259bc430b2a3e6048343d7. Profile-revision binding and atomic compensation receipts passed 82 focused checks, and independent recovery probes passed. A later independent review reproduced expiry, history-lock revocation and detached-frame changes during final writer-lock acquisition still committing the reset. No follow-up finalization repair was written. Retain this branch separately; renderer reset is disabled. Native writer adoption, abandoned-lock recovery, complete audit recovery and installed proof remain incomplete.
-- codex/lang-gui-runtime-01a137ae is remotely preserved at 25f441c8c4e01a1138f20c7e3f0dfe55dcdc228b. Its one-file fixture change registers the real host close event before Escape and preserves the original assertion and 120000/90000ms deadlines. In the real full sequence, Cancel focus passed; Escape close occurred at 45025.300000000745ms and the unchanged closed-state assertion passed at 45060.5ms. A later interaction failed after 76277.5121ms; navigation and scoped-clear cases passed. Retained Node handles prevented the exact later assertion and final summary from being emitted. The owned session was interrupted after bounded waiting, so the terminal verdict is interrupted. Do not integrate or claim the full sequence accepted from the earlier Escape result alone.
-- The current renderer browser execution has supported closure proof and the recorded Node/shell processes are absent. An earlier execution remains closure-unverified after three attempts, ending with a held-execution-identity mismatch despite all recorded PIDs being absent. Preserve both outcomes without targeting reused PIDs.
-- codex/feature-inventory-01a137ae remains at 622c1923cced5567b40cf469ff6331c29316723a. All four v1.472.1 assets were downloaded and matched hosted/provenance hashes and sizes for that source. Package decompression and CRC passed; 866 payload files were extracted; Setup reports NotSigned. No installer was launched. Downloaded bytes do not prove installed lifecycle.
-
-## Preservation and retained inventory
-
-The fresh private source snapshot is verified: 167109290 bytes, 9911 archive files, 5 checkouts, 3893 Git administrative files and 53 separately preserved private announcement files. SHA-256:927c465b4d5af314f2734dea346b09b6695b10c121f1eb283e2f8547211621e4. It is bound to main 6d6f48e before this final text-only handoff commit, and includes the current composition evidence and selected renderer closure/outcome receipts. The manifest records exact source revisions and excluded ignored paths. Build caches and installed/user data are not included. The archive is not published.
-
-All five product checkouts and four task branches remain. Foundation 56c61a6 and inventory 622c192 are proven ancestors of remotely verified main 6d6f48e. Reset and renderer candidates remain incomplete and unmerged. No stashes were present. The previous removal action was rejected before execution with the returned reason 'blocked by policy'; no alternate removal route or deletion occurred. Existing historical remote branches remain untouched. The four existing product processes and their original start times were rechecked and preserved.
-
-The existing public capture gallery is https://ding-ding-projects.github.io/material-file-encryptor-captures/. Its previously verified state is 181eb380a25fd9723d259b9c35483799e6099635 with 64 images. The sole existing publication worker is updating it with the twelve independently reviewed focus captures; that update needs its own final source, visibility, live-route and image-hash verdict. Do not infer publication from this pending record.
-
-## Remaining scope and next safe action
-
-All 105 feature families, 315 assessments preserving 210 historical rows, 959 concrete surfaces and 230 routes remain an inventory, not a completion claim. All 4272 baseline visual tuples remain unaccepted. Finish the writer-owned final authorization check, independently review it, and resolve the later renderer failure with exact diagnostic output before further integration. Continue the remaining access, personalization, converter/Ollama, four server-target, extension and documentation workflows only after the owner resumes beyond this preservation boundary.
-
-Preserve encryption/data formats, real profiles, credentials, installation, mounted writes and unrelated data. Use hidden desktops and synthetic isolated fixtures. No host restart, shutdown, sign-out, forced unmount, real-data migration, private publication, unapproved licence acceptance or external-account creation. Fresh installation and removal remain unverified until safe isolation exists. No new local installer-production run occurred during this continuation. Existing release producers remain running at the last observation and must be read back separately; no release completion is inferred.
-
-Status Hub enrollment remains unavailable and Projects lacks read:project. Existing issue 1 and Discussion 2 contain the verified milestone: https://github.com/Ding-Ding-Projects/material-file-encryptor/issues/1#issuecomment-6159357093 and https://github.com/Ding-Ding-Projects/material-file-encryptor/discussions/2#discussioncomment-18913393.
-
-This document records state before its own commit. Verify the new main hash with git ls-remote. Preserve the active unfinished goal unless an explicit pause response arrives; never mark it complete to end the session.
+Next safe steps: dew main, read back the release workflow run for this commit, then capture the remaining scale, bilingual and per-dialog states and refresh the public screenshots.
+````
