@@ -17,6 +17,7 @@
 - [x] Make Material dialogs follow the in-app theme setting instead of the system colour scheme.
 - [x] Show main-process dialogs in the interface language: Cantonese and bilingual copy for every reviewed prompt, labelled detail lines keep their values, prompts written bilingually show one language in single-language modes (credential prompt captured in English, Cantonese and bilingual).
 - [ ] Capture each remaining message box individually (licence, pairing, import, update); the credential, consent and shutdown prompts are captured.
+- [x] Browser extension workspace, third batch: local product name, contrast-checked accent colour with opacity, recent changes with restore and confirmed clearing, collapsible changelog filters and version 2 to 3 settings migration (headless browser captures).
 - [x] Browser extension workspace, second batch: validated changelog exports, setting explanations, a deliberate reset confirmation, Alt+1 to Alt+4 tab shortcuts and end-aligned dialog actions (headless browser captures).
 - [x] Browser extension workspace: Material tabs with panel motion, an offline changelog with filtering, build source details, a Ctrl+K command palette and complete derived colour roles (headless browser captures of the staged extension; installed acceptance not claimed).
 - [x] Integrate the sweep into main.

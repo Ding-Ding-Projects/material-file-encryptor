@@ -26,6 +26,18 @@ Reset browser settings asks for a deliberate confirmation: turn on both confirma
 
 Alt+1 to Alt+4 open Connection, Personalization, Changelog and Status, and Ctrl+K opens the command palette, which lists these shortcuts beside their commands. Browser-reserved combinations such as Ctrl with a number, Ctrl+T and Ctrl+W are left to the browser.
 
+## Name, accent, recent changes and filters
+
+Name and accent, under Personalization, lets this browser use its own product name. The name, up to 60 characters without angle brackets or line breaks, replaces Material File Encryptor in the workspace heading, page title, version line, tab list name and popup. Leaving it empty restores the original name.
+
+The accent colour comes from six presets or a typed #rrggbb value, with an opacity slider. Opacity is blended with the page surface, and text on the accent uses whichever of white or black reads better. The workspace states the resulting contrast and offers Apply accent only when it reaches 4.5:1. Use default accent returns to the built-in palette.
+
+Recent changes lists up to 50 changes to language, theme, playfulness, emoji, product name and accent, with the time and a button that restores the earlier value. Tab moves, pairing state and anything secret are never recorded. Clear history uses the same deliberate confirmation as the full reset and leaves current settings unchanged.
+
+The Filters button collapses the changelog filter and export controls. Collapsing keeps the filter text and its effect, and the button reads Filters (active) while a hidden filter still applies.
+
+Settings stored by version 2 of the workspace gain an empty product name and accent when they are first read, keeping every earlier choice.
+
 Focused tests cover malformed/oversized cache, failed saves, persistence, keyboard tab routing, forged sender paths and staged local-only CSP. Source staging hashes every workspace file. Signing, installed identity, real browser interaction, visual parity and display scaling remain unverified.
 
 ## Bundled copy measurement

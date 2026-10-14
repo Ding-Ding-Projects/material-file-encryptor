@@ -16,3 +16,9 @@ body{width:auto}main{max-width:1000px;margin:auto;max-height:none}section{paddin
 #export-format{width:auto;min-width:12rem}
 /* Personalization reads as rows: each label above its control, actions at their own width. */
 #panel-personalization{display:grid;gap:8px;justify-items:start}#panel-personalization>:is(h2,h3,p,#setting-details){justify-self:stretch}#panel-personalization md-slider{width:min(100%,360px)}#panel-personalization>h3{margin-top:12px}
+/* Accent swatches, history rows and the collapsible changelog filters. */
+.accent-swatches{display:flex;flex-wrap:wrap;gap:4px}.accent-swatches md-icon-button[aria-pressed=true]{outline:2px solid var(--md-sys-color-on-surface);outline-offset:2px;border-radius:50%}.swatch{display:block;inline-size:24px;block-size:24px;border-radius:50%;border:1px solid var(--md-sys-color-outline-variant)}
+#display-name,#accent-hex{width:min(100%,360px)}#accent-alpha{width:min(100%,360px)}
+.history-entry{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:8px 16px;margin-top:6px;border-radius:12px;background:var(--md-sys-color-surface);animation:mfe-panel-in 200ms cubic-bezier(.2,0,0,1) both}.history-entry p{margin:0}
+#history-list{justify-self:stretch}#changelog-filters{display:grid;gap:8px;animation:mfe-panel-in 200ms cubic-bezier(.2,0,0,1) both}#changelog-filters[hidden]{display:none}
+@media(prefers-reduced-motion:reduce){.history-entry,#changelog-filters{animation:none}}

@@ -12104,16 +12104,27 @@
     {
       "id": "display-name",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/popup.js",
+        "browser-extension/preferences.js"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js",
+        "test/browser-extension-preferences.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Rename the product locally and propagate the chosen name through extension headings and accessible labels. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "A local product name replaces the original name in the workspace heading, page title, version line, tab list name and popup; markup and line breaks are rejected. Headless browser captures show the applied name; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -12127,7 +12138,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -12138,14 +12149,14 @@
         "action": "Rename the product locally and propagate the chosen name through extension headings and accessible labels.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Rename the product locally and propagate the chosen name through extension headings and accessible labels.",
-            "nextProof": "Exercise rename the product locally and propagate the chosen name through extension headings and accessible labels on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this options workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Stored as displayName in the existing versioned preference record, migrated from version 2."
       }
     },
     {
@@ -12565,16 +12576,26 @@
     {
       "id": "color-picker",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/preferences.js"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js",
+        "test/browser-extension-preferences.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Choose arbitrary colors with text values, alpha, contrast feedback and keyboard controls. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Presets, a typed hexadecimal value and an opacity slider choose the accent; contrast is reported and Apply is offered only at 4.5:1 or better. Headless browser captures show the applied accent and the contrast feedback; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -12588,7 +12609,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -12599,14 +12620,14 @@
         "action": "Choose arbitrary colors with text values, alpha, contrast feedback and keyboard controls.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Choose arbitrary colors with text values, alpha, contrast feedback and keyboard controls.",
-            "nextProof": "Exercise choose arbitrary colors with text values, alpha, contrast feedback and keyboard controls on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this options workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Stored as accent (#rrggbb or #rrggbbaa) in the existing versioned preference record."
       }
     },
     {
@@ -12706,16 +12727,24 @@
     {
       "id": "collapse-filters",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Collapse and expand grouped filters without losing active criteria. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The changelog Filters button collapses filter and export controls without clearing them and reads Filters (active) while a hidden filter applies. A headless browser capture shows the collapsed state; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -12729,7 +12758,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -12740,14 +12769,14 @@
         "action": "Collapse and expand grouped filters without losing active criteria.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Collapse and expand grouped filters without losing active criteria.",
-            "nextProof": "Exercise collapse and expand grouped filters without losing active criteria on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this options workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "The collapsed state lasts for the page; filter text is kept while collapsed."
       }
     },
     {
@@ -13772,16 +13801,24 @@
     {
       "id": "local-history",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Inspect, restore and clear local action history while excluding secret values and private wording. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Recent changes lists named setting changes with time, restores an earlier value and clears only after the deliberate confirmation. Headless browser captures show the list; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13795,7 +13832,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -13806,14 +13843,14 @@
         "action": "Inspect, restore and clear local action history while excluding secret values and private wording.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Inspect, restore and clear local action history while excluding secret values and private wording.",
-            "nextProof": "Exercise inspect, restore and clear local action history while excluding secret values and private wording on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this options workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "A separate bounded extension-origin record of at most 50 named setting changes; tab moves, pairing state and secrets are excluded."
       }
     },
     {
