@@ -200,15 +200,76 @@ Both scopes are handled by `src/main/browser-school-mediation.js`.
   turning off a mode that has no local credential recorded, needs only the
   vault password check.
 
+## Element lock scopes: read-element-locks and set-element-lock
+
+Two scopes let a paired extension see, and ask the desktop to change, the locks
+on its own workspace tabs. The desktop owns every lock: it keeps them as the same
+protected `element-lock:` records that its own element locks use, under the
+identities `extension:connection`, `extension:personalization`,
+`extension:changelog`, `extension:notes`, `extension:docs`, `extension:support`,
+`extension:dimsum`, `extension:models` and `extension:status`. That fixed list,
+one entry per options tab, lives in `src/shared/extension-lock-targets.js`; the
+extension keeps an identical copy and a test compares the two. Any other target
+is refused before anything else happens. The transport is
+`src/main/browser-element-lock-mediation.js` and the record handling is in
+`src/main/access-integration.js`.
+
+- `read-element-locks` is a Status scope. The paired origin sends exactly
+  `{type:'read-element-locks', session}` and no prompt appears. The answer is
+  `element-locks` with `schemaVersion` 1 and `locked`, the list of tab ids that
+  currently have a record, in the fixed order. No record contents, factor
+  details or path are returned.
+- `set-element-lock` is a Re-authenticate scope for locking and for unlocking.
+  The paired origin sends exactly
+  `{type:'set-element-lock', session, target, locked}` with a reviewed tab id
+  as `target` and a boolean `locked`. The unlocked desktop then runs a fresh
+  native check of the person: the main-owned profile authentication dialog, in
+  which the person types the existing vault password in the desktop. Windows
+  Hello is not used by this build, because no Windows Hello integration exists
+  in the repository. The password never reaches the browser, the extension or
+  the mediation module. Only after the check succeeds does the desktop write or
+  remove the record.
+- The answer is `element-lock-set` with `schemaVersion` 1, a `state` of
+  `changed`, `unchanged`, `rejected`, `busy` or `unavailable`, the `target` and
+  `locked`, the desktop's current state for that target or `null` when it could
+  not be read. It contains no credential, record or path.
+- Locking writes a single-factor password lock whose verifier is a copy of the
+  local profile verifier, so the person opens it with the vault password they
+  already have and no new secret is created. An existing lock is never replaced
+  (`unchanged`), and locking with no usable local profile is `rejected`.
+  Unlocking removes a record only while it is still a single-factor password
+  lock that matches the current profile verifier. A stronger policy, a lock with
+  another password, or a profile that has changed since is `rejected` and left
+  untouched, so it can only be removed on the desktop. Writes use the protected
+  store's revision check, so a concurrent change is `rejected` rather than
+  overwritten.
+- The prompt is shared with Confirm mode and school mode: at most one is pending
+  across all three, and a second request is answered `busy` and is not queued. A
+  locked desktop, a hidden or tray-minimized window, a closing desktop or a
+  build with no authentication callback answers `unavailable` at once; without
+  the native callback no process can change or remove a lock. An unanswered
+  prompt is withdrawn as `rejected` after 30 seconds, before the host deadline,
+  and lock, disconnect, exit and update preparation withdraw it too. A rejection
+  never revokes the pairing.
+
+The desktop's own screens do not display or enforce the `extension:` records,
+because no desktop control carries those identities. The records are the
+desktop's durable statement of what the extension must keep locked, and removing
+one that this route cannot remove is currently a desktop-side task through the
+protected record store; a desktop screen for that is not built.
+
 Status of the design's scopes: `read-lock-state`, `read-update-state`,
-`focus-authenticator`, `read-school-mode` and `set-school-mode` are implemented
-in the main process and the extension, `read-profile-summary` is covered by the
-protected mediation, and the remaining candidate scopes in the design are not
-implemented. The school mode scopes are verified with synthetic fixtures and a
-fake native broker only. No real desktop dialog, installed build, real browser
+`focus-authenticator`, `read-school-mode`, `set-school-mode`,
+`read-element-locks` and `set-element-lock` are implemented in the main process
+and the extension, `read-profile-summary` is covered by the protected mediation,
+and the remaining candidate scopes in the design are not implemented. The school
+mode and element lock scopes are verified with synthetic fixtures, a fake native
+broker and, for the records, a real protected record store with a stand-in for
+the native vault check. No real desktop dialog, installed build, real browser
 registration or captured prompt took part, so they are unverified end to end,
-including the repaint of an open desktop window after a browser-requested
-change.
+including the repaint of an open desktop window after a browser-requested school
+mode change, and whether the desktop's lock screens ever show the extension
+records.
 
 ## Bounds and verification
 

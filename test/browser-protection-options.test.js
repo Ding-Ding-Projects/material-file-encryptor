@@ -11,10 +11,10 @@ const renderNoteText=(host,markdown,renderer,translate)=>renderer(host,markdown,
 const mountBrowserConverter=()=>({setConnection(){},refreshLabels(){}});
 const source=await fs.readFile(new URL('../browser-extension/options.js',import.meta.url),'utf8'),html=await fs.readFile(new URL('../browser-extension/options.html',import.meta.url),'utf8');
 async function fixture(snapshot,language='en',{changelog={schemaVersion:1,entries:[{title:'Material sweep',date:'2026-10-14',items:['Converted tabs'],yue:'轉做 Material'},{title:'Startup',date:'2026-10-11',items:['Readiness'],yue:''}]},provenance={schemaVersion:1,version:'0.1.0',sourceCommit:'a'.repeat(40),sourceModified:false,stagedAtUtc:'2026-10-14T09:30:00.000Z'},records:seed=null,extras={},docsCatalog={schemaVersion:1,documents:[{id:'readme',source:'docs/features/README.md',title:'Features',markdown:'# Features\nSee [workspace](workflows/browser-extension-workspace.md).',headings:[]},{id:'workspace',source:'docs/features/workflows/browser-extension-workspace.md',title:'Browser extension workspace',markdown:'# Browser extension workspace\nNotes and schedules.',headings:[]},{id:'workspace-yue',source:'docs/features/workflows/browser-extension-workspace.zh-HK.md',title:'瀏覽器擴充功能工作區',markdown:'# 瀏覽器擴充功能工作區\n筆記。',headings:[]}],assets:[]}}={}){
- const nodes=new Map(),calls=[],schoolRequests=[],attributes=new Map(),created=[];const node=id=>{if(!nodes.has(id))nodes.set(id,{id,textContent:'',dataset:{},listeners:{},setAttribute(name,value){attributes.set(id+':'+name,value);},replaceChildren(...children){this.textContent=children.map(child=>child.textContent??'').join('');},append(...children){for(const child of children)this.textContent+=child.textContent;},addEventListener(name,fn){this.listeners[name]=fn;},setLanguage(){},filter:async rows=>rows,focus(){},show(){this.open=true;return Promise.resolve();},close(){this.open=false;}});return nodes.get(id);};
+ const nodes=new Map(),calls=[],schoolRequests=[],lockRequests=[],attributes=new Map(),created=[];const node=id=>{if(!nodes.has(id))nodes.set(id,{id,textContent:'',dataset:{},listeners:{},setAttribute(name,value){attributes.set(id+':'+name,value);},removeAttribute(name){attributes.delete(id+':'+name);},replaceChildren(...children){this.textContent=children.map(child=>child.textContent??'').join('');},append(...children){for(const child of children)this.textContent+=child.textContent;},addEventListener(name,fn){this.listeners[name]=fn;},setLanguage(){},filter:async rows=>rows,focus(){},show(){this.open=true;return Promise.resolve();},close(){this.open=false;}});return nodes.get(id);};
  const copies=[...html.matchAll(/data-copy="([^"]+)"/g)].map((match,index)=>{const item=node('copy-'+index);item.dataset.copy=match[1];return item;});const permissionRequests=[];const tabs=['connection','personalization','changelog','notes','docs','support','dimsum','models','status'].map(tab=>{const item=node('tab-'+tab);item.dataset.tab=tab;return item;});const languages=['en','yue','bilingual'].map(value=>{const item=node('language-'+value);item.dataset.language=value;return item;});const themes=['system','light','dark'].map(value=>{const item=node('theme-'+value);item.dataset.theme=value;return item;});const stored={value:JSON.stringify({...defaults,language})};const history={value:null},records=seed??new Map();const storage={getItem:key=>key==='mfe-extension-history-v1'?history.value:key==='mfe-extension-preferences-v1'?stored.value:(records.get(key)??null),setItem(key,value){if(key==='mfe-extension-history-v1')history.value=value;else if(key==='mfe-extension-preferences-v1')stored.value=value;else records.set(key,value);},removeItem(key){if(key==='mfe-extension-history-v1')history.value=null;else records.delete(key);},stored,history,records};
  const win={listeners:{},addEventListener(name,fn){(this.listeners[name]??=[]).push(fn);}};const document={getElementById:node,documentElement:{dataset:{},style:{props:{},setProperty(name,value){this.props[name]=value;},removeProperty(name){delete this.props[name];}}},createTextNode:text=>({textContent:text}),createElement:tag=>{const made=node('generated-'+nodes.size);made.localName=tag;created.push(made);return made;},querySelectorAll:selector=>({'[data-copy]':copies,'[data-tab]':tabs,'[data-language]':languages,'[data-theme]':themes,'[data-guidance]':[]}[selector]||[])};
- vm.runInNewContext(source.replace(/^import [^\r\n]*;\r?\n/gm,''),{renderNoteText,mountBrowserConverter,changelog,provenance,EXPORT_FORMATS,exportChangelog,validateExport,readHistory,recordChanges,clearHistory,ACCENT_PRESETS,accentPalette,applyAccent,checkLogoFile,readLogo,saveLogo,clearLogo,readAttention,saveAttention,attentionDefaults,NOTE_LIMITS,checkNote,readNotes,addNote,deleteNotes,notesMarkdown,readDraft,saveDraft,clearDraft,linkParts,SCHEDULE_VALUES,readSchedules,addSchedule,cancelSchedule,takeDue,timeZoneLabel,readVocabulary,saveVocabulary,clearVocabulary,applyVocabulary,Intl,docsCatalog,readNarration,saveNarration,voicesFor,narrationScript,speak,stopSpeech,TICKET_CATEGORIES,TICKET_STATUSES,checkAttachment,saveTicket,readTickets,deleteTicket,diagnosticsText,ticketExport,CATALOG_URL,RELEASES_URL,normaliseCatalog,photoMap,categories,searchDishes,readFavourites,toggleFavourite,DEFAULT_PORT,ORIGIN_PATTERN,LIMITS,parsePort,modelName,validatePayload,callLocal,formatSize,installedModels,runningNames,pullProgress,chatDelta,parseRichText,AbortController,setTimeout,clearTimeout,RELEASES_API,parseReleaseCodeName,parsePhotoUrl,matchRelease,releasePageUrl,installerAsset,coverage:extras.coverage===undefined?defaultCoverage:extras.coverage,fetch:extras.fetch,caches:extras.caches,Response:class{constructor(body,init){this.body=body;this.headers=new Map(Object.entries(init?.headers||{}));}async json(){return JSON.parse(this.body);}},speechSynthesis:extras.speechSynthesis,navigator:extras.navigator,MediaRecorder:extras.MediaRecorder,SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},URL:{createObjectURL:()=>'blob:recording',revokeObjectURL(){}},Blob:class{constructor(parts,options){this.parts=parts;this.type=options?.type;}},renderMarkdown:(host,markdown,context)=>{host.textContent=markdown;host.context=context;},FileReader:class{readAsDataURL(file){this.result=file.dataUrl;queueMicrotask(()=>this.onload());}readAsText(file){this.result=file.text;queueMicrotask(()=>this.onload());}},defaults,document,window:win,readPreferences,applyPreferences,tabTarget,acquireStorage:()=>storage,styleExtensionMessage,chrome:{permissions:{request:async details=>{permissionRequests.push(details);return extras.grant!==false;}},runtime:{getManifest:()=>({version:'0.1.0'}),sendMessage:async message=>{calls.push(message.type);if(message.type==='desktop-status'){if(extras.desktop instanceof Error)throw extras.desktop;return extras.desktop??{paired:false};}if(extras.paired===false&&message.type==='status')return {paired:false};if(message.type==='authenticator-focus'){if(extras.authenticator instanceof Error)throw extras.authenticator;if(typeof extras.authenticator==='function')return extras.authenticator();return extras.authenticator??{schemaVersion:1,state:'shown'};}if(message.type==='school-mode-read'||message.type==='school-mode-set'){const entry=message.type==='school-mode-read'?extras.schoolRead:extras.schoolSet;if(message.type==='school-mode-set')schoolRequests.push(message);if(entry instanceof Error)throw entry;if(typeof entry==='function')return entry(message);if(entry!==undefined)return entry;if(extras.paired===false)return {paired:false};return message.type==='school-mode-read'?{schemaVersion:1,enabled:false,name:'School mode'}:{schemaVersion:1,state:'changed',enabled:true};}if(message.type==='protection-status'){if(snapshot instanceof Error)throw snapshot;return snapshot;}return {paired:true};}}}});await new Promise(resolve=>setTimeout(resolve,0));return{node,calls,schoolRequests,permissionRequests,attributes,storage,win,document,nodesWith:text=>[...nodes.values()].filter(item=>String(item.textContent).includes(text)),find:(tag,name)=>[...created].reverse().find(item=>item.localName===tag&&attributes.get(item.id+':aria-label')===name),prefs:()=>JSON.parse(storage.stored.value)};
+ vm.runInNewContext(source.replace(/^import [^\r\n]*;\r?\n/gm,''),{renderNoteText,mountBrowserConverter,changelog,provenance,EXPORT_FORMATS,exportChangelog,validateExport,readHistory,recordChanges,clearHistory,ACCENT_PRESETS,accentPalette,applyAccent,checkLogoFile,readLogo,saveLogo,clearLogo,readAttention,saveAttention,attentionDefaults,NOTE_LIMITS,checkNote,readNotes,addNote,deleteNotes,notesMarkdown,readDraft,saveDraft,clearDraft,linkParts,SCHEDULE_VALUES,readSchedules,addSchedule,cancelSchedule,takeDue,timeZoneLabel,readVocabulary,saveVocabulary,clearVocabulary,applyVocabulary,Intl,docsCatalog,readNarration,saveNarration,voicesFor,narrationScript,speak,stopSpeech,TICKET_CATEGORIES,TICKET_STATUSES,checkAttachment,saveTicket,readTickets,deleteTicket,diagnosticsText,ticketExport,CATALOG_URL,RELEASES_URL,normaliseCatalog,photoMap,categories,searchDishes,readFavourites,toggleFavourite,DEFAULT_PORT,ORIGIN_PATTERN,LIMITS,parsePort,modelName,validatePayload,callLocal,formatSize,installedModels,runningNames,pullProgress,chatDelta,parseRichText,AbortController,setTimeout,clearTimeout,RELEASES_API,parseReleaseCodeName,parsePhotoUrl,matchRelease,releasePageUrl,installerAsset,coverage:extras.coverage===undefined?defaultCoverage:extras.coverage,fetch:extras.fetch,caches:extras.caches,Response:class{constructor(body,init){this.body=body;this.headers=new Map(Object.entries(init?.headers||{}));}async json(){return JSON.parse(this.body);}},speechSynthesis:extras.speechSynthesis,navigator:extras.navigator,MediaRecorder:extras.MediaRecorder,SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},URL:{createObjectURL:()=>'blob:recording',revokeObjectURL(){}},Blob:class{constructor(parts,options){this.parts=parts;this.type=options?.type;}},renderMarkdown:(host,markdown,context)=>{host.textContent=markdown;host.context=context;},FileReader:class{readAsDataURL(file){this.result=file.dataUrl;queueMicrotask(()=>this.onload());}readAsText(file){this.result=file.text;queueMicrotask(()=>this.onload());}},defaults,document,window:win,readPreferences,applyPreferences,tabTarget,acquireStorage:()=>storage,styleExtensionMessage,chrome:{permissions:{request:async details=>{permissionRequests.push(details);return extras.grant!==false;}},runtime:{getManifest:()=>({version:'0.1.0'}),sendMessage:async message=>{calls.push(message.type);if(message.type==='desktop-status'){if(extras.desktop instanceof Error)throw extras.desktop;return extras.desktop??{paired:false};}if(extras.paired===false&&message.type==='status')return {paired:false};if(message.type==='authenticator-focus'){if(extras.authenticator instanceof Error)throw extras.authenticator;if(typeof extras.authenticator==='function')return extras.authenticator();return extras.authenticator??{schemaVersion:1,state:'shown'};}if(message.type==='school-mode-read'||message.type==='school-mode-set'){const entry=message.type==='school-mode-read'?extras.schoolRead:extras.schoolSet;if(message.type==='school-mode-set')schoolRequests.push(message);if(entry instanceof Error)throw entry;if(typeof entry==='function')return entry(message);if(entry!==undefined)return entry;if(extras.paired===false)return {paired:false};return message.type==='school-mode-read'?{schemaVersion:1,enabled:false,name:'School mode'}:{schemaVersion:1,state:'changed',enabled:true};}if(message.type==='element-locks-read'||message.type==='element-lock-set'){const entry=message.type==='element-locks-read'?extras.locksRead:extras.lockSet;if(message.type==='element-lock-set')lockRequests.push(message);if(entry instanceof Error)throw entry;if(typeof entry==='function')return entry(message);if(entry!==undefined)return entry;if(extras.paired===false)return {paired:false};return message.type==='element-locks-read'?{schemaVersion:1,locked:[]}:{schemaVersion:1,state:'changed',target:message.target,locked:message.locked};}if(message.type==='protection-status'){if(snapshot instanceof Error)throw snapshot;return snapshot;}return {paired:true};}}}});await new Promise(resolve=>setTimeout(resolve,0));return{node,calls,schoolRequests,lockRequests,permissionRequests,attributes,storage,win,document,nodesWith:text=>[...nodes.values()].filter(item=>String(item.textContent).includes(text)),find:(tag,name)=>[...created].reverse().find(item=>item.localName===tag&&attributes.get(item.id+':aria-label')===name),prefs:()=>JSON.parse(storage.stored.value)};
 }
 test('options separates paired connection from unavailable browser authority and localizes observed states',async()=>{const f=await fixture({schemaVersion:1,profile:'authenticated',sharedMode:'active',browserPermission:'unavailable'},'yue');assert.match(f.node('connection-state').textContent,/已配對/);assert.match(f.node('profile-state').textContent,/已驗證/);assert.match(f.node('shared-state').textContent,/已啟用/);assert.deepEqual(f.calls,['status','protection-status','workflow-discover']);assert.equal(f.attributes.get('workspace-tabs:aria-label'),'Material File Encryptor · 工作區');});
 test('options failed or malformed protection reads retain connection while clearing observations',async()=>{for(const snapshot of [new Error('fixture unavailable'),{schemaVersion:1,profile:'authenticated',sharedMode:'inactive',browserPermission:'granted'},{schemaVersion:2,profile:'authenticated',sharedMode:'inactive',browserPermission:'unavailable'}]){const f=await fixture(snapshot);assert.match(f.node('connection-state').textContent,/Paired/);assert.match(f.node('profile-state').textContent,/unavailable/);assert.match(f.node('shared-state').textContent,/unavailable/);}});
@@ -701,4 +701,135 @@ test('the school mode code writes no markup, storage or credential handling', ()
   const schoolCode = source.slice(source.indexOf('function renderSchoolMode'), source.indexOf('const VERSION_PATTERN'));
   assert.ok(schoolCode.length > 500);
   assert.doesNotMatch(schoolCode, /storage|innerHTML|insertAdjacentHTML|outerHTML|document\.write|password\b.*=|credential/i);
+});
+
+// Locks on the Status tab: the desktop owns every lock and nothing is sent until the person chooses a button.
+const openStatus = async (f) => { await f.node('tab-status').listeners.click(); await settle(); };
+test('locks send nothing on load, are shown on the Status tab only and are disabled when unpaired', async () => {
+  const f = await fixture(idle, 'en', {extras: {paired: false}});
+  assert.match(html, /<section id="locks-section" aria-labelledby="locks-heading" hidden>/);
+  assert.match(html, /<md-outlined-button id="locks-read" disabled>/);
+  assert.match(html, /id="locks-state" role="status" aria-live="polite"/);
+  for (const tab of ['connection', 'personalization', 'changelog', 'notes', 'docs', 'support', 'dimsum', 'models', 'status']) assert.match(html, new RegExp('<md-outlined-button id="lock-' + tab + '-lock" disabled>'));
+  assert.equal(f.node('locks-section').hidden, true, 'the Locks section belongs to the Status tab');
+  await openStatus(f);
+  assert.equal(f.node('locks-section').hidden, false);
+  assert.equal(f.node('locks-read').disabled, true);
+  assert.equal(f.node('locks-state').textContent, 'Pair the browser first.');
+  await f.node('locks-read').listeners.click();
+  await f.node('lock-notes-lock').listeners.click();
+  assert.deepEqual(f.calls.filter(type => type.startsWith('element-lock')), []);
+  const paired = await fixture(idle, 'en'); await openStatus(paired);
+  assert.equal(paired.node('locks-read').disabled, false);
+  for (const tab of ['connection', 'notes', 'status']) { assert.equal(paired.node('lock-' + tab + '-lock').disabled, true, 'locking waits for a read'); assert.equal(paired.node('lock-' + tab + '-unlock').disabled, true); }
+  assert.deepEqual(paired.calls.filter(type => type.startsWith('element-lock')), [], 'nothing is sent by being paired or by opening the tab');
+  assert.equal(paired.node('locks-state').textContent, 'Locks have not been read in this session.');
+});
+test('reading marks locked tabs disabled with an accessible name, and only a button press sends a change', async () => {
+  const f = await fixture(idle, 'en', {extras: {locksRead: {schemaVersion: 1, locked: ['notes', 'docs']}}}); await openStatus(f);
+  await f.node('locks-read').listeners.click(); await settle();
+  assert.equal(f.node('locks-state').textContent, 'Locked tabs: 2 of 9.');
+  assert.equal(f.node('lock-notes-state').textContent, 'Locked'); assert.equal(f.node('lock-models-state').textContent, 'Unlocked');
+  assert.equal(f.attributes.get('tab-notes:aria-disabled'), 'true'); assert.equal(f.attributes.get('tab-models:aria-disabled'), 'false');
+  assert.equal(f.attributes.get('tab-notes:aria-label'), 'Notes, locked by the desktop');
+  assert.ok(f.node('tab-notes').textContent.includes('🔒'), 'a visible lock indicator'); assert.ok(!f.node('tab-models').textContent.includes('🔒'));
+  assert.equal(f.attributes.has('tab-models:aria-label'), false);
+  assert.equal(f.node('lock-notes-lock').disabled, true); assert.equal(f.node('lock-notes-unlock').disabled, false);
+  assert.equal(f.node('lock-models-lock').disabled, false); assert.equal(f.node('lock-models-unlock').disabled, true);
+  assert.equal(f.node('lock-status-lock').disabled, true, 'the tab that holds the controls cannot be locked from here');
+  assert.equal(f.attributes.get('lock-models-lock:aria-label'), 'Lock the Models tab');
+  assert.equal(f.attributes.get('lock-notes-unlock:aria-label'), 'Unlock the Notes tab');
+  assert.equal(f.lockRequests.length, 0, 'a read never changes anything');
+  await f.node('lock-models-lock').listeners.click(); await settle();
+  assert.deepEqual(JSON.parse(JSON.stringify(f.lockRequests)), [{type: 'element-lock-set', target: 'models', locked: true}]);
+  assert.equal(f.node('lock-models-state').textContent, 'Locked');
+  assert.equal(f.node('locks-state').textContent, 'The Models tab is now locked by the desktop.');
+  await f.node('lock-docs-unlock').listeners.click(); await settle();
+  assert.deepEqual(JSON.parse(JSON.stringify(f.lockRequests.at(-1))), {type: 'element-lock-set', target: 'docs', locked: false});
+  assert.equal(f.lockRequests.length, 2);
+});
+test('selecting a locked tab shows the explanation instead of its panel, and the Locks section stays reachable when Status itself is locked', async () => {
+  const f = await fixture(idle, 'en', {extras: {locksRead: {schemaVersion: 1, locked: ['notes', 'status']}}}); await openStatus(f);
+  await f.node('locks-read').listeners.click(); await settle();
+  assert.equal(f.node('locked-note').hidden, false, 'Status is locked, so it shows the explanation');
+  assert.equal(f.node('panel-status').hidden, true);
+  assert.equal(f.node('locks-section').hidden, false, 'the Locks section is not inside the locked panel');
+  assert.match(f.node('locked-text').textContent, /Locks section stays available/);
+  assert.equal(f.node('locks-read').disabled, false);
+  await f.node('tab-notes').listeners.click(); await settle();
+  assert.equal(f.node('locked-note').hidden, false); assert.equal(f.node('panel-notes').hidden, true);
+  assert.equal(f.node('locked-heading').textContent, 'Notes is locked');
+  assert.match(f.node('locked-text').textContent, /Open the Status tab/);
+  assert.equal(f.node('locks-section').hidden, true);
+  await f.node('tab-changelog').listeners.click(); await settle();
+  assert.equal(f.node('locked-note').hidden, true); assert.equal(f.node('panel-changelog').hidden, false);
+  const yue = await fixture(idle, 'yue', {extras: {locksRead: {schemaVersion: 1, locked: ['notes']}}}); await openStatus(yue);
+  await yue.node('locks-read').listeners.click(); await settle();
+  assert.equal(yue.attributes.get('tab-notes:aria-label'), '筆記，已由桌面鎖定');
+  assert.equal(yue.node('locks-state').textContent, '已鎖定分頁：1 / 9。');
+});
+test('each lock outcome is shown in plain words and a refused change leaves the list as the desktop reported it', async () => {
+  const cases = [['unchanged', true, /was already locked\. Nothing changed/], ['rejected', false, /did not confirm|only be changed on the desktop/], ['busy', null, /already asking a question/], ['unavailable', null, /cannot ask now/]];
+  for (const [state, locked, pattern] of cases) {
+    const f = await fixture(idle, 'en', {extras: {locksRead: {schemaVersion: 1, locked: []}, lockSet: {schemaVersion: 1, state, target: 'dimsum', locked}}}); await openStatus(f);
+    await f.node('locks-read').listeners.click(); await settle();
+    await f.node('lock-dimsum-lock').listeners.click(); await settle();
+    assert.match(f.node('locks-state').textContent, pattern, state);
+    assert.equal(f.node('lock-dimsum-state').textContent, locked === true ? 'Locked' : 'Unlocked', state);
+    assert.equal(f.node('locks-stale').hidden, locked !== null, state + ' staleness');
+  }
+  const yue = await fixture(idle, 'yue', {extras: {locksRead: {schemaVersion: 1, locked: ['support']}, lockSet: {schemaVersion: 1, state: 'rejected', target: 'support', locked: true}}}); await openStatus(yue);
+  await yue.node('locks-read').listeners.click(); await settle(); await yue.node('lock-support-unlock').listeners.click(); await settle();
+  assert.match(yue.node('locks-state').textContent, /桌面冇確認/);
+});
+test('malformed, mismatched or failed lock answers show a plain failure and never a changed state', async () => {
+  for (const lockSet of [{schemaVersion: 1, state: 'changed', target: 'notes', locked: true, token: 'x'}, {schemaVersion: 1, state: 'maybe', target: 'notes', locked: true}, {schemaVersion: 2, state: 'changed', target: 'notes', locked: true}, {schemaVersion: 1, state: 'changed', target: 'docs', locked: true}, {schemaVersion: 1, state: 'changed', target: 'notes', locked: null}, {schemaVersion: 1, state: 'changed', target: 'notes', locked: 'yes'}, {schemaVersion: 1, state: 'changed', target: 'notes'}, new Error('fixture unavailable')]) {
+    const f = await fixture(idle, 'en', {extras: {locksRead: {schemaVersion: 1, locked: []}, lockSet}}); await openStatus(f);
+    await f.node('locks-read').listeners.click(); await settle();
+    await f.node('lock-notes-lock').listeners.click(); await settle();
+    assert.equal(f.node('locks-state').textContent, 'The request did not complete. Refresh and try again.', JSON.stringify(lockSet));
+    assert.equal(f.node('lock-notes-state').textContent, 'Unlocked'); assert.equal(f.attributes.get('tab-notes:aria-disabled'), 'false');
+  }
+  for (const locksRead of [{schemaVersion: 1, locked: ['popup']}, {schemaVersion: 1, locked: ['notes', 'notes']}, {schemaVersion: 1, locked: 'notes'}, {schemaVersion: 1, locked: [], path: 'C:'}, {schemaVersion: 2, locked: []}, new Error('fixture unavailable')]) {
+    const f = await fixture(idle, 'en', {extras: {locksRead}}); await openStatus(f);
+    await f.node('locks-read').listeners.click(); await settle();
+    assert.match(f.node('locks-state').textContent, /Locks could not be read/);
+    assert.equal(f.node('lock-notes-lock').disabled, true, 'no lock controls without a successful read');
+  }
+  const late = await fixture(idle, 'en', {extras: {locksRead: {paired: false}}}); await openStatus(late);
+  await late.node('locks-read').listeners.click(); await settle();
+  assert.equal(late.node('locks-state').textContent, 'Pair the browser first.');
+});
+test('when the desktop cannot be reached the last read is kept in memory only and is marked as possibly stale', async () => {
+  let reads = 0;
+  const f = await fixture(idle, 'en', {extras: {locksRead: () => { reads++; if (reads > 1) throw new Error('desktop gone'); return {schemaVersion: 1, locked: ['support']}; }}}); await openStatus(f);
+  await f.node('locks-read').listeners.click(); await settle();
+  assert.equal(f.node('locks-stale').hidden, true);
+  await f.node('locks-read').listeners.click(); await settle();
+  assert.equal(f.node('locks-stale').hidden, false);
+  assert.match(f.node('locks-stale').textContent, /may be out of date/);
+  assert.equal(f.node('lock-support-state').textContent, 'Locked', 'the last read is kept');
+  assert.equal(f.attributes.get('tab-support:aria-disabled'), 'true');
+  assert.equal(f.node('lock-support-unlock').disabled, false, 'a later successful read is still possible');
+  const stored = JSON.stringify([...f.storage.records.entries()]) + f.storage.stored.value + String(f.storage.history.value);
+  assert.ok(!/support|element-lock|lock/i.test(stored.replace(/"tab":"[a-z]+"/g, '')), 'nothing about locks is stored');
+});
+test('only one lock change is in flight and the controls are disabled while waiting', async () => {
+  let release;
+  const f = await fixture(idle, 'en', {extras: {locksRead: {schemaVersion: 1, locked: []}, lockSet: () => new Promise(resolve => { release = () => resolve({schemaVersion: 1, state: 'changed', target: 'notes', locked: true}); })}}); await openStatus(f);
+  await f.node('locks-read').listeners.click(); await settle();
+  const first = f.node('lock-notes-lock').listeners.click(); await settle();
+  assert.equal(f.node('locks-read').disabled, true); assert.equal(f.node('lock-docs-lock').disabled, true); assert.equal(f.node('lock-notes-lock').disabled, true);
+  assert.equal(f.node('locks-state').textContent, 'Waiting for you on the desktop.');
+  await f.node('lock-docs-lock').listeners.click();
+  assert.equal(f.lockRequests.length, 1);
+  release(); await first; await settle();
+  assert.equal(f.node('lock-notes-state').textContent, 'Locked');
+});
+test('the lock code writes no markup, storage or credential handling and the extension never unlocks locally', () => {
+  const lockCode = source.slice(source.indexOf('function plainName'), source.indexOf('const VERSION_PATTERN'));
+  assert.ok(lockCode.length > 2000);
+  assert.doesNotMatch(lockCode, /storage|innerHTML|insertAdjacentHTML|outerHTML|document\.write|password\b.*=|credential/i);
+  const sends = lockCode.match(/sendMessage\(\{type:'[a-z-]+'/g) || [];
+  assert.deepEqual(sends.sort(), ["sendMessage({type:'element-lock-set'", "sendMessage({type:'element-locks-read'"]);
 });

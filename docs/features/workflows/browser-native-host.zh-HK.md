@@ -160,12 +160,56 @@ adapter 呼叫會保持缺少 context，唔會借用目前畫面 frame。
   會得到 `rejected`，紀錄原封不動。開啟模式，或者關閉冇記錄本機憑證嘅模式，只需要
   保險庫密碼檢查。
 
+## 元素鎖範圍：read-element-locks 同 set-element-lock
+
+兩個範圍令已配對嘅擴充功能可以查看，同要求桌面更改自己工作區分頁嘅鎖。每一個鎖都
+由桌面擁有：佢哋存放喺桌面自己元素鎖用嘅同一類受保護 `element-lock:` 紀錄，身分係
+`extension:connection`、`extension:personalization`、
+`extension:changelog`、`extension:notes`、`extension:docs`、`extension:support`、
+`extension:dimsum`、`extension:models` 同 `extension:status`。呢份固定清單，每個選項
+分頁一項，放喺 `src/shared/extension-lock-targets.js`；擴充功能保留一份一模一樣
+嘅副本，並有測試比對兩者。其他目標一律喺做任何嘢之前就被拒絕。傳輸由
+`src/main/browser-element-lock-mediation.js` 負責，紀錄處理喺
+`src/main/access-integration.js`。
+
+- `read-element-locks` 係「狀態」範圍。已配對來源只會傳送
+  `{type:'read-element-locks', session}`，唔會出現提示。答案係
+  `element-locks`，`schemaVersion` 為 1，加上 `locked`，即係目前有紀錄嘅分頁編號清單，
+  次序固定。唔會返回紀錄內容、因素細節或者路徑。
+- `set-element-lock` 係「重新驗證」範圍，鎖定同解鎖都適用。
+  已配對來源只會傳送
+  `{type:'set-element-lock', session, target, locked}`，`target` 係已審核嘅分頁編號，
+  `locked` 為布林值。已解鎖嘅桌面隨後會即時做原生人身檢查：由主程序擁有嘅設定檔驗證
+  對話框，你要喺桌面輸入現有嘅保險庫密碼。呢個版本唔使用 Windows
+  Hello，因為儲存庫入面冇 Windows Hello 整合。密碼永遠唔會去到瀏覽器、擴充功能或者中介模組。
+  檢查成功之後，桌面先會寫入或者移除紀錄。
+- 答案係 `element-lock-set`，`schemaVersion` 為 1，`state` 係
+  `changed`、`unchanged`、`rejected`、`busy` 或 `unavailable`，加上 `target` 同
+  `locked`，即係桌面對嗰個目標嘅目前狀態，讀唔到就係 `null`。答案唔包含憑證、紀錄或者路徑。
+- 鎖定會寫入單一因素嘅密碼鎖，驗證器係本機設定檔驗證器嘅副本，所以你用現有嘅保險庫密碼
+  就開到，亦唔會產生新秘密。已有嘅鎖永遠唔會被取代
+  （`unchanged`），冇可用本機設定檔嘅鎖定會得到 `rejected`。
+  解鎖只會移除仍然係單一因素密碼鎖，而且同目前設定檔驗證器吻合嘅紀錄。較強嘅政策、用
+  另一個密碼嘅鎖，或者之後已更改嘅設定檔都會得到 `rejected`，紀錄原封不動，所以只可以喺
+  桌面移除。寫入使用受保護儲存庫嘅修訂檢查，所以同時更改會得到 `rejected`，而唔會被覆寫。
+- 提示同確認模式同學校模式共用：三者之間最多只有一個等待中，第二個要求會得到 `busy`，
+  唔會排隊。已鎖定嘅桌面、隱藏或者縮到系統匣嘅視窗、正在關閉嘅桌面，或者冇驗證回呼嘅
+  組建，會即時得到 `unavailable`；冇原生回呼，任何程序都無法更改或者移除鎖。
+  冇人回答嘅提示會喺 30 秒後以 `rejected` 撤回，早過主機嘅期限，而鎖定、中斷連線、離開
+  同更新準備都會撤回佢。單單被拒絕唔會撤銷配對。
+
+桌面自己嘅畫面唔會顯示或者執行 `extension:` 紀錄，因為冇桌面控制項帶有呢啲身分。
+紀錄係桌面對擴充功能必須保持鎖住嘅長久聲明；呢條路徑移除唔到嘅紀錄，目前要喺桌面端
+經受保護紀錄儲存庫處理，仍未有對應嘅桌面畫面。
+
 設計入面各範圍嘅狀態：`read-lock-state`、`read-update-state`、
-`focus-authenticator`、`read-school-mode` 同 `set-school-mode` 已經喺主程序同擴充功能
-實作；`read-profile-summary` 由受保護中介處理；設計入面其餘候選範圍尚未實作。
-學校模式範圍只用合成測試資料同假原生代理驗證，冇真實桌面對話框、已安裝組建、
-真實瀏覽器登記或者已擷取提示參與，所以未經端到端驗證，包括瀏覽器要求更改之後
-已開啟桌面視窗嘅重繪。
+`focus-authenticator`、`read-school-mode`、`set-school-mode`、
+`read-element-locks` 同 `set-element-lock` 已經喺主程序同擴充功能實作；
+`read-profile-summary` 由受保護中介處理；設計入面其餘候選範圍尚未實作。學校模式同
+元素鎖範圍只用合成測試資料、假原生代理，以及（紀錄方面）真實嘅受保護紀錄儲存庫加上
+原生保險庫檢查嘅替身驗證，冇真實桌面對話框、已安裝組建、
+真實瀏覽器登記或者已擷取提示參與，所以未經端到端驗證，包括瀏覽器要求更改學校模式之後
+已開啟桌面視窗嘅重繪，以及桌面鎖定畫面會否顯示擴充功能紀錄。
 
 ## 限制同驗證
 

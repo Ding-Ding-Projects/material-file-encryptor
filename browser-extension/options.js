@@ -29,6 +29,10 @@ const authenticatorOutcomes={shown:['The desktop authenticator is now in front.'
 let desktop={state:'idle'};
 // School mode (Status tab). Nothing is sent until the person chooses Read or the on/off button.
 let school={state:'idle',enabled:false,name:''},schoolPending=false,schoolOutcome=null;
+// Locks (Status tab). The desktop owns every lock; this page only asks. Nothing is sent until the person chooses a button.
+// The last list read is kept in memory for this page session only and is never stored.
+const LOCK_TABS=['connection','personalization','changelog','notes','docs','support','dimsum','models','status'];
+let locks={known:false,locked:[],stale:false,loading:false,failed:false},lockPending=null,lockOutcome=null;
 const schoolOutcomes={
  'changed-on':['School mode is now on.','學校模式已開啟。'],'changed-off':['School mode is now off.','學校模式已關閉。'],
  'unchanged-on':['School mode was already on. Nothing changed.','學校模式本身已開啟，冇改動。'],'unchanged-off':['School mode was already off. Nothing changed.','學校模式本身已關閉，冇改動。'],
@@ -44,7 +48,7 @@ const profileCopy={authenticated:['Desktop profile authenticated','桌面身份�
 const captureCopy={'awaiting-confirmation':['Awaiting desktop confirmation','等待桌面確認'],downloading:['Downloading','下載中'],completed:['Completed','已完成'],failed:['Failed','失敗'],cancelled:['Cancelled','已取消']};
 const t=pair=>applyVocabulary(prefs.language==='yue'?pair[1]:pair[0],vocabularyEntries());
 function label(node,pair,message=false){if(message)pair=messagePair(pair);node.replaceChildren(document.createTextNode(t(pair)));if(prefs.language==='bilingual'){const secondary=document.createElement('span');secondary.className='secondary';secondary.textContent=applyVocabulary(pair[1],vocabularyEntries());node.append(secondary);}}
-function render(){$('workspace-tabs').setAttribute('aria-label',t(['Workspace','工作區']));$('language-group').setAttribute('aria-label',t(['Language','語言']));$('theme-group').setAttribute('aria-label',t(copy.theme));document.documentElement.lang=prefs.language==='yue'?'zh-HK':'en';document.documentElement.dataset.theme=prefs.theme;document.documentElement.dataset.controlLanguage=prefs.language;for(const node of document.querySelectorAll('[data-copy]'))label(node,copy[node.dataset.copy]);for(const tab of document.querySelectorAll('[data-tab]')){const active=tab.dataset.tab===prefs.tab;tab.active=active;tab.setAttribute('aria-selected',String(active));$('panel-'+tab.dataset.tab).hidden=!active;}for(const item of document.querySelectorAll('[data-language]'))item.setAttribute('aria-pressed',String(item.dataset.language===prefs.language));for(const item of document.querySelectorAll('[data-theme]'))item.setAttribute('aria-pressed',String(item.dataset.theme===prefs.theme));label($('connection-state'),connection===true?['Paired browser connection','瀏覽器已配對']:connection===false?['Browser is not paired','瀏覽器未配對']:['Connection observation unavailable','連線狀態未可用']);label($('handoff-state'),capture&&captureCopy[capture.state]?['Desktop handoff: '+captureCopy[capture.state][0],'桌面交接：'+captureCopy[capture.state][1]]:['No current transfer observation. Pairing does not start a transfer.','目前冇傳輸狀態。配對唔會開始傳輸。']);label($('profile-state'),profileCopy[protection?.profile]||profileCopy.unknown);label($('shared-state'),sharedCopy[protection?.sharedMode]||sharedCopy.unknown);$('pair').disabled=busy||connection===true;$('disconnect').disabled=busy||connection!==true;$('refresh').disabled=busy;$('version').textContent=productName()+' '+chrome.runtime.getManifest().version;label($('source-commit'),provenance?.sourceCommit?(provenance.sourceModified===false?['Source commit: '+provenance.sourceCommit.slice(0,12),'來源提交：'+provenance.sourceCommit.slice(0,12)]:['Source commit: '+provenance.sourceCommit.slice(0,12)+' with uncommitted changes','來源提交：'+provenance.sourceCommit.slice(0,12)+'（另有未提交改動）']):['Source commit unavailable','來源提交未可用']);label($('staged-at'),provenance?.stagedAtUtc?['Staged: '+provenance.stagedAtUtc.slice(0,16).replace('T',' ')+' UTC','暫存時間：'+provenance.stagedAtUtc.slice(0,16).replace('T',' ')+' UTC']:['Staging time unavailable','暫存時間未可用']);renderChangelog();renderPalette();renderSettingDetails();renderIdentity();renderHistory();renderFilters();renderLogo();renderAttention();renderNotes();renderNoteReader();renderSheet();renderSchedules();renderWording();renderDocs();renderNarration();renderTickets();renderRecording();renderDimsum();renderModels();renderEditorWorkflow();renderAuthenticatorFocus();renderSchoolMode();converterView?.setConnection(connection===true);converterView?.refreshLabels();renderRelease();renderCoverage();renderDesktop();for(const key of ['funnyEnglish','funnyCantonese']){$(key).value=prefs[key];$(key).setAttribute('aria-label',t(copy[key]));} $('emoji').selected=prefs.emoji;$('emoji').setAttribute('aria-label',t(copy.emoji));$('preview-emoji').hidden=!prefs.emoji;label($('preview-message'),copy.instructions,true);label($('notice'),loaded.state==='write-failed'?['Change applied for this page but could not be saved.','呢頁已套用變更，但儲存唔到。']:loaded.state==='unavailable'?['Local settings unavailable; defaults are shown.','本機設定未可用，現正顯示預設值。']:['Settings apply only to this browser extension.','設定只適用於呢個瀏覽器擴充功能。'],true);$('search').setLanguage(prefs.language);$('search').setAttribute('label',t(['Find workspace guidance','搜尋工作區指引']));}
+function render(){$('workspace-tabs').setAttribute('aria-label',t(['Workspace','工作區']));$('language-group').setAttribute('aria-label',t(['Language','語言']));$('theme-group').setAttribute('aria-label',t(copy.theme));document.documentElement.lang=prefs.language==='yue'?'zh-HK':'en';document.documentElement.dataset.theme=prefs.theme;document.documentElement.dataset.controlLanguage=prefs.language;for(const node of document.querySelectorAll('[data-copy]'))label(node,copy[node.dataset.copy]);for(const tab of document.querySelectorAll('[data-tab]')){const active=tab.dataset.tab===prefs.tab;tab.active=active;tab.setAttribute('aria-selected',String(active));$('panel-'+tab.dataset.tab).hidden=!active;}for(const item of document.querySelectorAll('[data-language]'))item.setAttribute('aria-pressed',String(item.dataset.language===prefs.language));for(const item of document.querySelectorAll('[data-theme]'))item.setAttribute('aria-pressed',String(item.dataset.theme===prefs.theme));label($('connection-state'),connection===true?['Paired browser connection','瀏覽器已配對']:connection===false?['Browser is not paired','瀏覽器未配對']:['Connection observation unavailable','連線狀態未可用']);label($('handoff-state'),capture&&captureCopy[capture.state]?['Desktop handoff: '+captureCopy[capture.state][0],'桌面交接：'+captureCopy[capture.state][1]]:['No current transfer observation. Pairing does not start a transfer.','目前冇傳輸狀態。配對唔會開始傳輸。']);label($('profile-state'),profileCopy[protection?.profile]||profileCopy.unknown);label($('shared-state'),sharedCopy[protection?.sharedMode]||sharedCopy.unknown);$('pair').disabled=busy||connection===true;$('disconnect').disabled=busy||connection!==true;$('refresh').disabled=busy;$('version').textContent=productName()+' '+chrome.runtime.getManifest().version;label($('source-commit'),provenance?.sourceCommit?(provenance.sourceModified===false?['Source commit: '+provenance.sourceCommit.slice(0,12),'來源提交：'+provenance.sourceCommit.slice(0,12)]:['Source commit: '+provenance.sourceCommit.slice(0,12)+' with uncommitted changes','來源提交：'+provenance.sourceCommit.slice(0,12)+'（另有未提交改動）']):['Source commit unavailable','來源提交未可用']);label($('staged-at'),provenance?.stagedAtUtc?['Staged: '+provenance.stagedAtUtc.slice(0,16).replace('T',' ')+' UTC','暫存時間：'+provenance.stagedAtUtc.slice(0,16).replace('T',' ')+' UTC']:['Staging time unavailable','暫存時間未可用']);renderChangelog();renderPalette();renderSettingDetails();renderIdentity();renderHistory();renderFilters();renderLogo();renderAttention();renderNotes();renderNoteReader();renderSheet();renderSchedules();renderWording();renderDocs();renderNarration();renderTickets();renderRecording();renderDimsum();renderModels();renderEditorWorkflow();renderAuthenticatorFocus();renderSchoolMode();renderLocks();converterView?.setConnection(connection===true);converterView?.refreshLabels();renderRelease();renderCoverage();renderDesktop();for(const key of ['funnyEnglish','funnyCantonese']){$(key).value=prefs[key];$(key).setAttribute('aria-label',t(copy[key]));} $('emoji').selected=prefs.emoji;$('emoji').setAttribute('aria-label',t(copy.emoji));$('preview-emoji').hidden=!prefs.emoji;label($('preview-message'),copy.instructions,true);label($('notice'),loaded.state==='write-failed'?['Change applied for this page but could not be saved.','呢頁已套用變更，但儲存唔到。']:loaded.state==='unavailable'?['Local settings unavailable; defaults are shown.','本機設定未可用，現正顯示預設值。']:['Settings apply only to this browser extension.','設定只適用於呢個瀏覽器擴充功能。'],true);$('search').setLanguage(prefs.language);$('search').setAttribute('label',t(['Find workspace guidance','搜尋工作區指引']));}
 function update(change){const before=prefs;loaded=applyPreferences(storage,prefs,change);prefs=loaded.value;if(before.tab!==prefs.tab)stopSpeech(globalThis.speechSynthesis||null);if(loaded.state==='saved')recordChanges(storage,before,prefs);render();void filterGuidance();}
 async function observe(type='status'){if(busy)return;const own=++generation;protection=null;editorAvailable=false;busy=true;render();try{const result=await chrome.runtime.sendMessage({type});if(own!==generation)return;if(result?.error||typeof result?.paired!=='boolean'){connection=null;capture=null;protection=null;}else{connection=result.paired;capture=result.capture||null;protection=null;if(connection){const value=await chrome.runtime.sendMessage({type:'protection-status'}).catch(()=>null);if(own!==generation)return;const capabilities=await chrome.runtime.sendMessage({type:'workflow-discover'}).catch(()=>null);if(own!==generation)return;editorAvailable=capabilities?.schemaVersion===1&&capabilities.externalEditor===true&&Object.keys(capabilities).sort().join(',')==='externalEditor,schemaVersion';if(value&&Object.keys(value).sort().join(',')==='browserPermission,profile,schemaVersion,sharedMode'&&value.schemaVersion===1&&Object.hasOwn(profileCopy,value.profile)&&Object.hasOwn(sharedCopy,value.sharedMode)&&value.browserPermission==='unavailable')protection=value;}}}catch{if(own===generation){connection=null;capture=null;protection=null;}}finally{if(own===generation){busy=false;render();}}}
 // Material tabs own arrow-key focus; activating a tab selects its panel.
@@ -426,6 +430,92 @@ $('school-toggle').addEventListener('click',async()=>{
  }catch{if(own===generation)schoolOutcome=schoolOutcomes.failed;}
  finally{if(own===generation){schoolPending=false;busy=false;render();$('school-toggle').focus?.();}}
 });
+
+function plainName(pair){return prefs.language==='bilingual'?pair[0]+' · '+pair[1]:t(pair);}
+function isTabLocked(tab){return locks.known&&locks.locked.includes(tab);}
+function lockResultText(state,tab,locked){
+ const n=copy[tab];
+ if(state==='changed')return locked?['The '+n[0]+' tab is now locked by the desktop.',n[1]+'分頁已由桌面鎖定。']:['The '+n[0]+' tab is now unlocked.',n[1]+'分頁已解鎖。'];
+ if(state==='unchanged')return locked?['The '+n[0]+' tab was already locked. Nothing changed.',n[1]+'分頁本身已鎖定，冇改動。']:['The '+n[0]+' tab was already unlocked. Nothing changed.',n[1]+'分頁本身未鎖定，冇改動。'];
+ if(state==='rejected')return ['The desktop did not confirm the change, or this lock can only be changed on the desktop. Nothing was changed.','桌面冇確認呢個更改，或者呢個鎖只可以喺桌面更改。冇任何改動。'];
+ return schoolOutcomes[state]||schoolOutcomes.failed;
+}
+function renderLocks(){
+ const paired=connection===true,stale=locks.known&&(!paired||locks.stale),active=prefs.tab;
+ $('locks-section').hidden=active!=='status';
+ label($('locks-heading'),['Locks','鎖']);
+ label($('locks-help'),['Reads which workspace tabs the paired desktop has locked. Locking or unlocking a tab asks you to re-enter your vault password in the desktop (Windows Hello is not used); nothing is typed or shown here. This page never unlocks anything by itself. The Status tab holds these controls, so it cannot be locked from the browser.','讀取已配對桌面鎖咗邊啲工作區分頁。鎖定或解鎖分頁會要求你喺桌面重新輸入保險庫密碼（唔使用 Windows Hello），呢度唔會輸入或顯示任何嘢。呢頁永遠唔會自己解鎖。狀態分頁載有呢啲控制項，所以唔可以喺瀏覽器鎖定。']);
+ label($('locks-read'),['Read locks','讀取鎖定']);
+ $('locks-read').disabled=!paired||busy||lockPending!==null||locks.loading;
+ let line;
+ if(lockPending)line=['Waiting for you on the desktop.','等待你喺桌面操作。'];
+ else if(locks.loading)line=['Asking the desktop…','問緊桌面…'];
+ else if(lockOutcome)line=lockOutcome;
+ else if(locks.failed)line=['Locks could not be read. Open and unlock the desktop, pair again and refresh.','讀取唔到鎖定狀態。請開啟並解鎖桌面，重新配對後再重新整理。'];
+ else if(!locks.known&&!paired)line=schoolOutcomes.pair;
+ else if(locks.known)line=locks.locked.length?['Locked tabs: '+locks.locked.length+' of '+LOCK_TABS.length+'.','已鎖定分頁：'+locks.locked.length+' / '+LOCK_TABS.length+'。']:['No tab is locked.','冇分頁被鎖定。'];
+ else line=['Locks have not been read in this session.','今次使用期間未讀取過鎖定狀態。'];
+ label($('locks-state'),line);
+ $('locks-stale').hidden=!stale;
+ if(stale)label($('locks-stale'),['This list comes from an earlier read and may be out of date because the desktop cannot be reached now. Pair the browser and read again.','呢份清單來自較早嘅讀取，而家聯絡唔到桌面，所以可能已經過時。請配對瀏覽器再讀取。']);
+ const ready=paired&&locks.known&&!busy&&lockPending===null&&!locks.loading;
+ for(const tab of LOCK_TABS){
+  const locked=isTabLocked(tab),name=copy[tab];
+  label($('lock-'+tab+'-name'),name);
+  label($('lock-'+tab+'-state'),!locks.known?['Not read','未讀取']:locked?['Locked','已鎖定']:['Unlocked','未鎖定']);
+  label($('lock-'+tab+'-lock'),['Lock','鎖定']);
+  label($('lock-'+tab+'-unlock'),['Unlock','解鎖']);
+  $('lock-'+tab+'-lock').setAttribute('aria-label',plainName(['Lock the '+name[0]+' tab','鎖定'+name[1]+'分頁']));
+  $('lock-'+tab+'-unlock').setAttribute('aria-label',plainName(['Unlock the '+name[0]+' tab','解鎖'+name[1]+'分頁']));
+  $('lock-'+tab+'-lock').disabled=!ready||locked||tab==='status';
+  $('lock-'+tab+'-unlock').disabled=!ready||!locked;
+ }
+ // A locked tab stays in the tab bar but is marked disabled, and choosing it shows an explanation instead of its panel.
+ for(const item of document.querySelectorAll('[data-tab]')){
+  const locked=isTabLocked(item.dataset.tab);
+  item.setAttribute('aria-disabled',String(locked));
+  if(locked){
+   item.setAttribute('aria-label',plainName([copy[item.dataset.tab][0]+', locked by the desktop',copy[item.dataset.tab][1]+'，已由桌面鎖定']));
+   const mark=document.createElement('span');mark.className='lock-mark';mark.setAttribute('aria-hidden','true');mark.textContent=' 🔒';item.append(mark);
+  }else item.removeAttribute?.('aria-label');
+ }
+ const showNote=isTabLocked(active);
+ $('locked-note').hidden=!showNote;
+ if(showNote){
+  $('panel-'+active).hidden=true;
+  label($('locked-heading'),[copy[active][0]+' is locked',copy[active][1]+'已鎖定']);
+  label($('locked-text'),active==='status'?['The desktop has locked this tab. The Locks section stays available so you can ask the desktop to unlock it; you will be asked for your vault password there.','桌面已鎖定呢個分頁。「鎖」部分保持可用，你可以要求桌面解鎖，到時要喺桌面輸入保險庫密碼。']:['The desktop has locked this tab. Open the Status tab, find Locks and ask the desktop to unlock it; you will be asked for your vault password there.','桌面已鎖定呢個分頁。請開啟狀態分頁，喺「鎖」部分要求桌面解鎖，到時要喺桌面輸入保險庫密碼。']);
+ }
+}
+$('locks-read').addEventListener('click',async()=>{
+ if(connection!==true||busy||lockPending!==null||locks.loading)return;
+ busy=true;const own=++generation;locks={...locks,loading:true,failed:false};lockOutcome=null;render();
+ try{
+  const result=await chrome.runtime.sendMessage({type:'element-locks-read'});if(own!==generation)return;
+  if(result?.paired===false&&Object.keys(result).length===1){locks={...locks,loading:false,stale:true};lockOutcome=schoolOutcomes.pair;}
+  else if(exactKeys(result,['schemaVersion','locked'])&&result.schemaVersion===1&&Array.isArray(result.locked)&&result.locked.length<=LOCK_TABS.length&&result.locked.every(tab=>LOCK_TABS.includes(tab))&&new Set(result.locked).size===result.locked.length)locks={known:true,locked:LOCK_TABS.filter(tab=>result.locked.includes(tab)),stale:false,loading:false,failed:false};
+  else locks={...locks,loading:false,stale:true,failed:!locks.known};
+ }catch{if(own===generation)locks={...locks,loading:false,stale:true,failed:!locks.known};}
+ finally{if(own===generation){busy=false;render();$('locks-read').focus?.();}}
+});
+async function changeLock(tab,wanted){
+ if(connection!==true||busy||lockPending!==null||locks.loading||!locks.known||wanted&&tab==='status')return;
+ lockPending={tab,wanted};busy=true;const own=++generation;lockOutcome=null;render();
+ try{
+  const result=await chrome.runtime.sendMessage({type:'element-lock-set',target:tab,locked:wanted});if(own!==generation)return;
+  if(result?.paired===false&&Object.keys(result).length===1){lockOutcome=schoolOutcomes.pair;locks={...locks,stale:true};}
+  else if(exactKeys(result,['schemaVersion','state','target','locked'])&&result.schemaVersion===1&&result.target===tab&&['changed','unchanged','rejected','busy','unavailable'].includes(result.state)&&(result.locked===null||typeof result.locked==='boolean')&&(result.locked!==null||!['changed','unchanged'].includes(result.state))){
+   if(typeof result.locked==='boolean')locks={...locks,locked:LOCK_TABS.filter(name=>name===tab?result.locked:locks.locked.includes(name))};
+   else locks={...locks,stale:true};
+   lockOutcome=lockResultText(result.state,tab,result.locked);
+  }else{lockOutcome=schoolOutcomes.failed;locks={...locks,stale:true};}
+ }catch{if(own===generation){lockOutcome=schoolOutcomes.failed;locks={...locks,stale:true};}}
+ finally{if(own===generation){lockPending=null;busy=false;render();$('locks-read').focus?.();}}
+}
+for(const tab of LOCK_TABS){
+ $('lock-'+tab+'-lock').addEventListener('click',()=>changeLock(tab,true));
+ $('lock-'+tab+'-unlock').addEventListener('click',()=>changeLock(tab,false));
+}
 
 const VERSION_PATTERN=/^\d{1,9}\.\d{1,9}\.\d{1,9}(?:-[0-9A-Za-z.-]{1,32})?$/;
 function readDesktop(result){

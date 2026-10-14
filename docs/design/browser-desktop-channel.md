@@ -156,6 +156,8 @@ and the installed end-to-end path) is still outstanding for every scope.
 | `focus-authenticator` | Confirm | `shown`: the desktop authenticator window is brought forward; no code is returned | Implemented |
 | `read-school-mode` | Status | the school mode's display name and whether it is on | Implemented |
 | `set-school-mode` | Re-authenticate | `changed`, `unchanged`, `rejected`, `busy` or `unavailable`, and the resulting on/off state; Windows Hello is not used by this build, so the check is the vault password in the desktop | Implemented |
+| `read-element-locks` | Status | the reviewed extension tab ids that currently have a desktop lock record; no record contents | Implemented |
+| `set-element-lock` | Re-authenticate | for locking and unlocking alike: `changed`, `unchanged`, `rejected`, `busy` or `unavailable`, the reviewed target and its resulting locked state; Windows Hello is not used by this build, so the check is the vault password in the desktop | Implemented |
 | `request-unlock-step` | Re-authenticate | the new unlock level | Not implemented |
 | `open-in-editor` | Confirm | `opened` or a plain failure reason | Not implemented |
 | `convert-file` | Confirm | job id and status updates | Not implemented |

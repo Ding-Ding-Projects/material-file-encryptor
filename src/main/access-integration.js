@@ -9,6 +9,7 @@ import {createForgeToolResolver} from './forge-transport.js';
 import {accessGitEnvironment} from './access-git-environment.js';
 import {LOCK_POLICIES} from '../renderer/features/access/locks.js';
 import {validateOtp} from '../renderer/features/access/crypto.js';
+import {EXTENSION_LOCK_TABS,extensionLockId,isExtensionLockTab} from '../shared/extension-lock-targets.js';
 
 const executeFile=promisify(execFile),credentialActions=new Set(['credentialGet','credentialSet','credentialDelete','credentialList']);
 const keyAllowed=key=>typeof key==='string'&&(/^(?:authenticator:|history:)[a-zA-Z0-9:_.-]{1,160}$/.test(key)||key==='local-profile:v1'||/^element-lock:[^\x00-\x1f\x7f]{1,256}$/.test(key));
@@ -29,6 +30,32 @@ function validateCredentialRequest(action,payload){
  if(action==='credentialList'){if(!['element-lock:','authenticator:','history:'].includes(payload.prefix))throw Error('This protected record prefix is reserved for the native process.');}
  else if(!keyAllowed(payload.key))throw Error('This protected record is reserved for the native process.');
  if(action==='credentialSet')validateRecord(payload.key,payload.value);
+}
+
+/** Element locks for the reviewed browser extension targets, kept in the same protected `element-lock:` records the
+ * desktop's own locks use. A lock created here is a single-factor password lock whose verifier is a copy of the local
+ * profile verifier, so the person opens it with the credential they already have and no new secret is created or
+ * transmitted. Removal only touches a record that is still such a copy; any other record (a stronger policy, another
+ * password, a profile that has since changed) is left alone and the request is rejected. */
+const extensionLockKey=tab=>'element-lock:'+extensionLockId(tab);
+export async function readExtensionElementLocks(credentials){const locked=[];for(const tab of EXTENSION_LOCK_TABS)if(await credentials.get(extensionLockKey(tab))!==null)locked.push(tab);return locked;}
+export async function setExtensionElementLock(credentials,{target,locked,newRevision=randomUUID}={}){
+ if(!isExtensionLockTab(target)||typeof locked!=='boolean')throw Error('Invalid element lock request.');
+ const key=extensionLockKey(target),current=await credentials.readVersioned(key);
+ if(locked){
+  if(current.value!==null)return{state:'unchanged',locked:true};
+  const profile=await credentials.readVersioned('local-profile:v1');
+  if(!verifier(profile.value))return{state:'rejected',locked:false};
+  const record={version:1,id:extensionLockId(target),policy:'password',factors:{password:structuredClone(profile.value)},sessionMode:'timed',duration:0,revision:newRevision()};
+  validateRecord(key,record);
+  const written=await credentials.compareAndSetVersioned(key,current.revision,record);
+  return written.updated?{state:'changed',locked:true}:{state:'rejected',locked:await credentials.get(key)!==null};
+ }
+ if(current.value===null)return{state:'unchanged',locked:false};
+ const profile=await credentials.readVersioned('local-profile:v1'),value=current.value;
+ if(!object(value)||value.policy!=='password'||!object(value.factors)||Object.keys(value.factors).length!==1||!verifier(profile.value)||!same(value.factors.password,profile.value))return{state:'rejected',locked:true};
+ const removed=await credentials.compareAndSetVersioned(key,current.revision,null);
+ return removed.updated?{state:'changed',locked:false}:{state:'rejected',locked:await credentials.get(key)!==null};
 }
 
 /** Main-process adapter. senderFrame is an opaque trusted transport identity,

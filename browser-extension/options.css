@@ -25,6 +25,16 @@ body{width:auto}main{max-width:1000px;margin:auto;max-height:none;grid-template-
 /* Header logo, documentation link and attention modes. */
 .workspace-header{display:flex;align-items:center;gap:12px}.workspace-logo{inline-size:40px;block-size:40px;border-radius:12px;object-fit:cover}
 .logo-row{display:flex;align-items:center;gap:12px}.logo-preview{inline-size:64px;block-size:64px;border-radius:16px;object-fit:cover;border:1px solid var(--md-sys-color-outline-variant)}.docs-url{font-size:12px;color:var(--md-sys-color-on-surface-variant);overflow-wrap:anywhere}
+#locks-section,#locked-note{min-inline-size:0}
+#locks-section :is(md-filled-button,md-outlined-button,md-text-button){max-inline-size:100%;white-space:normal;block-size:auto;min-block-size:40px;text-align:center}
+.lock-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.lock-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-inline-size:0;padding:8px 12px;border:1px solid var(--md-sys-color-outline-variant);border-radius:12px;background:var(--md-sys-color-surface-container-low)}
+.lock-name{flex:1 1 10rem;min-inline-size:0;overflow-wrap:anywhere;font-weight:500}
+.lock-state{flex:0 1 auto;min-inline-size:0;overflow-wrap:anywhere;color:var(--md-sys-color-on-surface-variant)}
+.locked-note{padding:12px 16px;border:1px solid var(--md-sys-color-outline);border-radius:12px;background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface);overflow-wrap:anywhere}
+.locked-note h2{margin:0 0 8px;font-size:1.1rem}
+md-primary-tab[aria-disabled=true]{opacity:.62}
+.lock-mark{margin-inline-start:4px}
 :root[data-focus=true] [data-guidance]{display:none}
 :root[data-reduced-stimulus=true] *,:root[data-reduced-stimulus=true] *::before,:root[data-reduced-stimulus=true] *::after{animation:none!important;transition:none!important}
 :root[data-guided=true] [role=tabpanel]:not([hidden]){outline:3px solid var(--md-sys-color-primary);outline-offset:4px}

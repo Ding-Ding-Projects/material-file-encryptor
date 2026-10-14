@@ -1,4 +1,6 @@
 const HOST='org.dingding.material_file_encryptor.downloads';
+// The reviewed list of lockable workspace tabs. src/shared/extension-lock-targets.js holds the same list; a test compares them.
+const LOCK_TABS=['connection','personalization','changelog','notes','docs','support','dimsum','models','status'];
 let port=null,session=null,sequence=0,pending=null,captureId=null,connectionEpoch=0;
 function disconnect(){connectionEpoch++;port?.disconnect();port=null;session=null;captureId=null;if(pending){clearTimeout(pending.timer);pending.reject(new Error('Desktop connection closed.'));pending=null;}}
 function connect(){if(port)return port;port=chrome.runtime.connectNative(HOST);const ownPort=port;port.onDisconnect.addListener(()=>{if(port!==ownPort)return;connectionEpoch++;port=null;session=null;captureId=null;if(pending){clearTimeout(pending.timer);pending.reject(new Error('Desktop receiver is unavailable.'));pending=null;}});port.onMessage.addListener(message=>{if(port!==ownPort||!pending)return;const request=pending;pending=null;clearTimeout(request.timer);if(message?.type==='error')request.reject(new Error('Desktop did not accept the handoff.'));else request.resolve(message);});return port;}
@@ -80,6 +82,25 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{if(sender.id!==c
    if(session!==ownSession||connectionEpoch!==epoch||!value||Object.keys(value).sort().join(',')!=='enabled,schemaVersion,state,type'||value.type!=='school-mode-set'||value.schemaVersion!==1||!['changed','unchanged','rejected','busy','unavailable'].includes(value.state)||value.enabled!==null&&typeof value.enabled!=='boolean')throw Error('Invalid school mode response.');
    respond({schemaVersion:1,state:value.state,enabled:value.enabled});
   }).catch(()=>respond({error:'School mode request did not complete. Open and unlock the desktop, pair again and retry.'}));return true;
+ }
+ if(message?.type==='element-locks-read'){
+  if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1){respond({error:'Element lock request is unavailable.'});return false;}
+  if(!session){respond({paired:false});return false;}
+  const ownSession=session,epoch=connectionEpoch;
+  request({type:'read-element-locks',session:ownSession}).then(value=>{
+   if(session!==ownSession||connectionEpoch!==epoch||!value||Object.keys(value).sort().join(',')!=='locked,schemaVersion,type'||value.type!=='element-locks'||value.schemaVersion!==1||!Array.isArray(value.locked)||value.locked.length>LOCK_TABS.length||value.locked.some(tab=>!LOCK_TABS.includes(tab))||new Set(value.locked).size!==value.locked.length)throw Error('Invalid element lock response.');
+   respond({schemaVersion:1,locked:value.locked.slice()});
+  }).catch(()=>respond({error:'Locks could not be read. Open and unlock the desktop, pair again and retry.'}));return true;
+ }
+ if(message?.type==='element-lock-set'){
+  if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==3||!LOCK_TABS.includes(message.target)||typeof message.locked!=='boolean'){respond({error:'Element lock request is unavailable.'});return false;}
+  if(!session){respond({paired:false});return false;}
+  const ownSession=session,epoch=connectionEpoch,target=message.target,wanted=message.locked;
+  // The desktop re-authenticates the person first, for locking and unlocking alike. Only a fixed state word comes back.
+  request({type:'set-element-lock',session:ownSession,target,locked:wanted},40000).then(value=>{
+   if(session!==ownSession||connectionEpoch!==epoch||!value||Object.keys(value).sort().join(',')!=='locked,schemaVersion,state,target,type'||value.type!=='element-lock-set'||value.schemaVersion!==1||value.target!==target||!['changed','unchanged','rejected','busy','unavailable'].includes(value.state)||value.locked!==null&&typeof value.locked!=='boolean')throw Error('Invalid element lock response.');
+   respond({schemaVersion:1,state:value.state,target,locked:value.locked});
+  }).catch(()=>respond({error:'Lock request did not complete. Open and unlock the desktop, pair again and retry.'}));return true;
  }
  if(message?.type==='protected-discover'){
   if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1||!session){respond({error:'Protected capabilities are unavailable.'});return false;}
