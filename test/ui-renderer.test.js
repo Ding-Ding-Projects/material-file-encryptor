@@ -136,6 +136,11 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
  try {
   browser = await openRendererBrowser(`http://127.0.0.1:${server.address().port}/`,{runtime:{sourceCommit:process.env.MFE_TEST_SOURCE_COMMIT}});
   const page = trackedControls(controls(browser.page)); await page.setViewportSize({width:1440,height:900}); await fixture(page,startedAt);
+  await page.addInitScript(() => {
+   window.confirmationTrace=[];
+   const record=(event)=>{const dialog=document.querySelector('#confirm-dialog');const material=dialog?.shadowRoot?.querySelector('md-dialog');window.confirmationTrace.push({event,at:performance.now(),hostOpen:dialog?.open,materialOpen:material?.open,archiveState:document.querySelector('#view-history')?.dataset.archiveState,selectedDisabled:document.querySelector('[data-history-restore-selected]')?.disabled});if(window.confirmationTrace.length>24)window.confirmationTrace.shift();};
+   document.addEventListener('DOMContentLoaded',()=>{const dialog=document.querySelector('#confirm-dialog');for(const event of ['opening','opened','closing','closed','cancel','close']){dialog.addEventListener(event,()=>record(event));dialog.shadowRoot.querySelector('md-dialog').addEventListener(event,()=>record('material:'+event));}document.addEventListener('click',event=>{if(event.composedPath().some(node=>node?.id==='confirm-action'||node?.hasAttribute?.('data-history-restore-selected')))record('confirmation-click');},true);});
+  });
   const errors = []; page.on('pageerror',error => {errors.push(error.message);console.error(error.message);});
   await page.goto(`http://127.0.0.1:${server.address().port}`); await page.waitForFunction(() => document.querySelector('#vault-badge').textContent !== 'Checking drive…');
   assert.equal(await page.locator('#vault-badge').textContent(),'Locked'); assert.equal(await page.locator('#file-list tr').count(),0);
@@ -308,7 +313,7 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   await page.keyboard.press('Escape');await page.setViewportSize({width:720,height:450});await page.evaluate(() => {document.documentElement.style.zoom='2';});assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),true,'200% zoom has no page overflow');
   await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.locator('.view:not([hidden])').evaluate(el => getComputedStyle(el).animationName),'none');
   assert.deepEqual(errors,[]);
- } catch(error) { fixtureError=error;throw error;
+ } catch(error) { fixtureError=error;if(browser?.page)console.error(JSON.stringify({scope:'confirmation-lifecycle-diagnostic',trace:await browser.page.evaluate(()=>window.confirmationTrace||[]).catch(()=>[])}));throw error;
  } finally { try { try {await browser?.close();}catch(closureError){throw fixtureError?new AggregateError([fixtureError,closureError],'Renderer fixture assertion and closure failed.'):closureError;} } finally { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); } }
 });
 
