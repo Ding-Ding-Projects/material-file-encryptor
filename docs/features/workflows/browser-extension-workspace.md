@@ -8,6 +8,12 @@ Connection and transfer observations are separate. Pairing never starts a transf
 
 Pairing does not authenticate a local profile. Personal wording application, shared mode, credentials, native settings, server management, converter and desktop-owned model controls remain unavailable until a reviewed authenticated mediation path exists. Independent English and Cantonese playfulness sliders run from 1 to 5 and default to 5, with independent resets. Popup status and options notices use the actual shared message translator. The emoji switch defaults off and decorates the local message preview dialog with one inaccessible decorative mark. It never alters button labels or state facts. Broader copy coverage and runtime acceptance remain pending. The displayed version comes from the extension manifest, and the build source and staging time come from the staged bundle, as described below. Status Hub enrollment is unavailable.
 
+## Get the extension
+
+The extension is not published to a browser store and has no download of its own. It ships inside the desktop installer: download `MaterialFileEncryptor-Setup.exe` from the [latest release](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/latest) and install it. The Squirrel.Windows installer places the application under `%LOCALAPPDATA%\MaterialFileEncryptor\app-<version>\`, and the extension files are in its `resources\browser-extension` folder. In Microsoft Edge or Google Chrome, open the extensions page, turn on developer mode, choose **Load unpacked** and select that folder. Each desktop update installs a new `app-<version>` folder, so load the folder again after an update.
+
+After **Check releases** on the Status tab finds a release, it also offers that release's desktop installer, but only when GitHub reports the exact `MaterialFileEncryptor-Setup.exe` asset as uploaded with a size at its expected download address. Drafts and prereleases are never offered. The installer and the extension are unsigned. This page does not verify an installation, and the folder layout above follows the Squirrel.Windows convention rather than a check on an installed copy.
+
 ## Changelog, build source and commands
 
 The Changelog tab shows the release changelog without a network connection. Staging turns the repository changelog into a bundled module, because the page policy does not allow fetching the extension's own files; a filter narrows the releases locally. Cantonese mode shows each release's Cantonese summary, and bilingual mode shows the English items and the summary together.

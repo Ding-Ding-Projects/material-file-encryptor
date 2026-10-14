@@ -17,7 +17,7 @@ import {renderMarkdown} from './vendor/markdown.js';
 import {readNarration,saveNarration,voicesFor,narrationScript,speak,stopSpeech} from './narration.js';
 import {TICKET_CATEGORIES,TICKET_STATUSES,checkAttachment,saveTicket,readTickets,deleteTicket,diagnosticsText,ticketExport} from './tickets.js';
 import {CATALOG_URL,RELEASES_URL,normaliseCatalog,photoMap,categories,searchDishes,readFavourites,toggleFavourite} from './dimsum.js';
-import {RELEASES_API,parseReleaseCodeName,parsePhotoUrl,matchRelease,releasePageUrl} from './release-code-name.js';
+import {RELEASES_API,parseReleaseCodeName,parsePhotoUrl,matchRelease,releasePageUrl,installerAsset} from './release-code-name.js';
 import coverage from './vendor/coverage.js';
 import {DEFAULT_PORT,ORIGIN_PATTERN,LIMITS,parsePort,modelName,validatePayload,callLocal,formatSize,installedModels,runningNames,pullProgress,chatDelta} from './local-models.js';
 import {parseRichText} from './rich-text.js';
@@ -244,6 +244,7 @@ function releaseDetail(release,heading){
  const figure=$('release-figure');figure.replaceChildren();figure.hidden=!photo;
  if(photo){const image=document.createElement('img');image.src=photo;image.alt=name?(prefs.language==='yue'?name.chinese:name.english):'';image.referrerPolicy='no-referrer';image.loading='lazy';image.decoding='async';const caption=document.createElement('figcaption');label(caption,['Dish photo linked from the release notes; it is not a photograph of this build.','菜式相片連結自發行說明，並非呢個組建嘅相片。']);image.addEventListener('error',()=>{figure.replaceChildren();const missing=document.createElement('p');label(missing,['The photo could not be loaded.','相片載入唔到。']);figure.append(missing);});figure.append(image,caption);}
  const link=$('release-link');link.hidden=!page;if(page){link.href=page;label(link,['Open the release on GitHub','喺 GitHub 打開發行頁面']);}
+ const installer=installerAsset(release),download=$('release-installer');download.hidden=!installer;if(installer){const megabytes=(installer.size/1048576).toFixed(1);download.href=installer.url;label(download,['Download the desktop installer for '+release.tag_name+' ('+megabytes+' MB). It also carries these extension files.','下載 '+release.tag_name+' 嘅桌面安裝程式（'+megabytes+' MB），入面亦都有呢套擴充功能檔案。']);}
 }
 function renderRelease(){
  const check=$('release-check');if(!check)return;const state=releaseState;

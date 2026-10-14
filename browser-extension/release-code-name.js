@@ -60,4 +60,17 @@ export function releasePageUrl(release) {
   return typeof tag === 'string' && /^v?\d+(?:\.\d+){1,3}[A-Za-z0-9._-]*$/.test(tag) ? 'https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/' + tag : null;
 }
 
+/**
+ * The desktop installer asset of a published release, which also carries the browser extension files. Returned
+ * only when GitHub reports the exact asset as uploaded with a size and its address is the expected download path.
+ */
+export function installerAsset(release) {
+  const tag = release?.tag_name;
+  if (!published(release) || typeof tag !== 'string' || !/^v?\d+(?:\.\d+){1,3}[A-Za-z0-9._-]*$/.test(tag) || !Array.isArray(release.assets)) return null;
+  const expected = 'https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/download/' + tag + '/MaterialFileEncryptor-Setup.exe';
+  const asset = release.assets.find(item => item && item.name === 'MaterialFileEncryptor-Setup.exe');
+  if (!asset || asset.state !== 'uploaded' || !Number.isSafeInteger(asset.size) || asset.size <= 0 || asset.browser_download_url !== expected) return null;
+  return {url: expected, size: asset.size};
+}
+
 export const RELEASES_API = 'https://api.github.com/repos/Ding-Ding-Projects/material-file-encryptor/releases?per_page=30';

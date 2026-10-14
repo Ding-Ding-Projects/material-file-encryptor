@@ -1,6 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseReleaseCodeName, parsePhotoUrl, matchRelease, releaseSourceCommit, releasePageUrl} from '../browser-extension/release-code-name.js';
+import {parseReleaseCodeName, parsePhotoUrl, matchRelease, releaseSourceCommit, releasePageUrl, installerAsset} from '../browser-extension/release-code-name.js';
+
+test('the installer link appears only for an uploaded setup asset at its exact download address', () => {
+  const url = 'https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/download/v1.580.1/MaterialFileEncryptor-Setup.exe';
+  const release = {tag_name: 'v1.580.1', assets: [{name: 'RELEASES', state: 'uploaded', size: 90, browser_download_url: 'x'}, {name: 'MaterialFileEncryptor-Setup.exe', state: 'uploaded', size: 180000000, browser_download_url: url}]};
+  assert.deepEqual(installerAsset(release), {url, size: 180000000});
+  const asset = release.assets[1];
+  for (const broken of [{...asset, state: 'starter'}, {...asset, size: 0}, {...asset, browser_download_url: 'https://example.test/MaterialFileEncryptor-Setup.exe'}, {...asset, name: 'Other-Setup.exe'}]) {
+    assert.equal(installerAsset({...release, assets: [broken]}), null);
+  }
+  assert.equal(installerAsset({...release, draft: true}), null, 'a draft is never offered');
+  assert.equal(installerAsset({...release, prerelease: true}), null, 'a prerelease is never offered');
+  assert.equal(installerAsset({...release, tag_name: '../x'}), null);
+  assert.equal(installerAsset({tag_name: 'v1.580.1'}), null, 'no assets, no link');
+});
 
 const photo = 'https://github.com/Ding-Ding-Projects/dim-sum-photos/releases/download/catalog-v1/hk-dish-0001-har-gow.png';
 const body = commit => `Unsigned release from \`${commit}\`. Package version 0.2.0.\n\nCode name: Classic Har Gow / 蝦餃. Photo is linked from the authoritative public catalog release, not copied into this release.\n\n![Classic Har Gow 蝦餃](${photo})\n`;
