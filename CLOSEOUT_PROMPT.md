@@ -1,3 +1,11 @@
+## Current terminal state: blocked after preservation
+
+The goal control returned blocked after the same account-allowance boundary persisted across three consecutive goal turns. The latest account reading remains 2 percent. New implementation stopped at the requested 10 percent threshold, and all recoverable source work is already preserved. Goal usage at the transition was 1,540,335 of the 11,607,405-token continuation ceiling. The full objective is unchanged and incomplete.
+
+Further implementation requires renewed owner direction or an external allowance change. The gallery history-repair proposal still requires explicit authorization; no force push or deletion occurred. Product producer 38500495060 and earlier producers 38499653922 and 38499832970 remain in progress at the latest readback. They were not cancelled. Existing release v1.474.1 is a normal release bound to 622c1923cced5567b40cf469ff6331c29316723a, with all four expected assets present; only its metadata was verified in the previous continuation.
+
+This is the current state. Earlier active or pending-transition statements below are historical observations. Do not resume implementation automatically, create a replacement goal, or treat this handoff as full acceptance.
+
 ## Final publication readback and pending decisions
 
 The gallery is publicly verified at b2c659129036c13e2123efb6a59c24ad908c2e8c. Deployment 38500359431 succeeded. Five live routes and all 76 images returned HTTP 200; all 76 image hashes match the inventory. The exact About homepage is https://ding-ding-projects.github.io/material-file-encryptor-captures/. Eight new captures have validated UTC times and four explicitly have unavailable times.
