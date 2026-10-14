@@ -15,7 +15,7 @@ Verification:
 Not yet done:
 - Captures at 100, 125 and 200 percent display scale require the owner to change the host display scale.
 - Individual captures of the licence, pairing, import and update message boxes (credential, consent and shutdown are captured).
-- Required-feature inventory, 315 rows: desktop 96 unverified, site 96 unverified, extension 46 unverified and 50 missing after the extension workspace gained Material tabs, an offline changelog, build source details and a command palette (f8aadbe), then exports, setting explanations, reset confirmation and shortcuts (39637ef), then product name, accent colour, recent changes and collapsible filters (08474e0); every missing row is a browser extension workflow.
+- Required-feature inventory, 315 rows: desktop 96 unverified, site 96 unverified, extension 50 unverified and 46 missing after the extension workspace gained Material tabs, an offline changelog, build source details and a command palette (f8aadbe), then exports, setting explanations, reset confirmation and shortcuts (39637ef), then product name, accent colour, recent changes and collapsible filters (08474e0), then icons, local logo, attention modes and documentation link (2aa56d3); every missing row is a browser extension workflow.
 - Branch codex/feature-mediation-01a137ae (protected settings reset): native writer adoption and independent review outstanding.
 - Renderer browser tests cannot run on this host because package file redirection makes evidence paths non-canonical.
 
