@@ -3,7 +3,8 @@ import { selectVerificationRestartContext } from './verification-restart-context
 import { readFileSync } from 'node:fs';
 import squirrelStartup from 'electron-squirrel-startup';
 import { app, autoUpdater, BrowserWindow, dialog, ipcMain, Menu, nativeImage, safeStorage, shell, Tray } from 'electron'
-import { createMaterialDialogs, materialDialogPaths } from './material-dialog.js';
+import { createMaterialDialogs, materialDialogPaths } from './material-dialog.js'
+import { describePending, shutdownPrompt } from './shutdown-pending.js';
 import { randomBytes, createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -322,7 +323,9 @@ async function quit() {
   try {
     let active=helper?await helper.request('operations'):[];
     if (operation || await features.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state))) {
-      const answer=await uiDialog.showMessageBox(window,{type:'question',buttons:['Keep running','Finish then quit','Cancel unfinished work then quit'],defaultId:0,cancelId:0,title:'Transfers are still active',message:'What should happen to unfinished work?',detail:'Completed files remain available. The application exits only after pending work settles and the drive locks successfully.'});
+      const transfers=(operation?1:0)+active.filter(item=>['queued','running','cancelling'].includes(item.state)).length;
+      const prompt=shutdownPrompt(describePending(await features.pendingDetail(),transfers));
+      const answer=await uiDialog.showMessageBox(window,{type:'question',buttons:['Keep running','Finish then quit','Cancel unfinished work then quit'],defaultId:0,cancelId:0,title:prompt.title,message:'What should happen to unfinished work?',detail:prompt.detail});
       if(answer.response===0)return;
       features.beginExit();
       if(answer.response===2)await Promise.all(active.filter(item=>['queued','running','cancelling'].includes(item.state)).map(item=>helper.request('cancelOperation',{operationId:item.operationId})));

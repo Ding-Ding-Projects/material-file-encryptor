@@ -150,3 +150,19 @@ test('a read that never settles does not hold exit open while user-gated work st
   release({canceled:true,filePaths:[]});assert.equal(await picking,null);assert.equal(await services.pending(),0);
  }finally{release({canceled:true,filePaths:[]});await services.close();}
 });
+test('pending detail reports each kind of unfinished work and pending is its sum',async t=>{
+ const directory=await fixture(t);let release;
+ const selecting=new Promise(resolve=>{release=resolve;});
+ const services=createFeatureServices({dataDirectory:directory,applicationRoot:directory,safeStorage,getMainFrame:()=>null,dialog:{showOpenDialog:()=>selecting},getWindow:()=>null,openPath:async()=>{}});
+ try{
+  const idle=await services.pendingDetail();
+  assert.deepEqual(Object.keys(idle).sort(),['converter','models','requests','servers','workflows']);
+  assert.equal(await services.pending(),0);
+  const picking=services.request('workflow','pickDocument',{});
+  await new Promise(resolve=>setImmediate(resolve));
+  const busy=await services.pendingDetail();
+  assert.equal(busy.requests,1);
+  assert.equal(await services.pending(),Object.values(busy).reduce((sum,value)=>sum+value,0));
+  release({canceled:true,filePaths:[]});assert.equal(await picking,null);
+ }finally{release({canceled:true,filePaths:[]});await services.close();}
+});
