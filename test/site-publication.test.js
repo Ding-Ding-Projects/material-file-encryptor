@@ -55,6 +55,26 @@ test('documentation catalogue rejects duplicate entries, traversal and unbound w
  }
 });
 
+test('reviewed design articles publish complete local content and cannot be omitted',async()=>{
+ const temp=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-design-article-'));
+ const source='docs/design/browser-desktop-channel.md',output=path.join(temp,'output');
+ try{
+  for(const folder of ['docs/site/wiki','docs/features','docs/design'])await fs.mkdir(path.join(temp,folder),{recursive:true});
+  await fs.writeFile(path.join(temp,source),'# Channel proposal\n\nStatus: proposed.\n\n## Native consent\n\nA local approval remains required.\n');
+  const value={...catalog,articles:[source],categories:[],wiki:{...catalog.wiki,files:[],fileSha256:{}}};
+  await fs.writeFile(path.join(temp,'docs/site/content-catalog.json'),JSON.stringify(value));
+  const articles=await buildDocumentation(temp,output,await fs.readFile('docs/site/index.html','utf8'));
+  assert.equal(articles.length,1);
+  const html=await fs.readFile(path.join(output,route(source)),'utf8');
+  assert.match(html,/A local approval remains required/);assert.match(html,/id="native-consent"/);
+  assert.ok((await fs.readFile(path.join(output,'library.html'),'utf8')).includes(route(source)));
+  value.articles=[];await fs.writeFile(path.join(temp,'docs/site/content-catalog.json'),JSON.stringify(value));
+  await assert.rejects(buildDocumentation(temp,output,''),/Documentation inventory differs/);
+  value.articles=['docs/design/../../private.md'];await fs.writeFile(path.join(temp,'docs/site/content-catalog.json'),JSON.stringify(value));
+  await assert.rejects(buildDocumentation(temp,output,''),/Invalid documentation catalogue/);
+ }finally{await fs.rm(temp,{recursive:true,force:true});}
+});
+
 test('fresh staging excludes withheld originals, stale files and raw receipts',async()=>{
  const {stageSite}=await import('../scripts/build-site.mjs');
  const temp=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-stage-'));const output=path.join(temp,'site');
