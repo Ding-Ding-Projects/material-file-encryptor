@@ -14212,16 +14212,32 @@
     {
       "id": "rendered-provider-text",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css",
+        "browser-extension/manifest.json",
+        "scripts/build-browser-extension.mjs",
+        "browser-extension/local-models.js",
+        "browser-extension/rich-text.js"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-local-models.md",
+        "docs/features/workflows/browser-extension-local-models.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js",
+        "test/browser-extension-local-models.test.js",
+        "test/browser-extension-rich-text.test.js",
+        "test/browser-extension-bundle.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Render provider responses as safe readable rich text with links and copy actions. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Model replies render as paragraphs, headings, lists, inline and fenced code, bold, italics and links built with text nodes only, never HTML parsing. Only http and https links become links and open with noopener and noreferrer; other schemes stay plain text. Each reply and each code block has a copy action with a non-blocking confirmation. The headless run showed a javascript: address left as plain text and the one https link carrying noopener noreferrer; the clipboard write itself was not observed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -14235,7 +14251,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -14246,14 +14262,14 @@
         "action": "Render provider responses as safe readable rich text with links and copy actions.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Render provider responses as safe readable rich text with links and copy actions.",
-            "nextProof": "Exercise render provider responses as safe readable rich text with links and copy actions on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain installed-build visual and interaction receipts of a real model reply, including the copy confirmation and a reply with an unsafe link."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Rendered replies are not stored; they exist only for the open page."
       }
     },
     {
@@ -14372,16 +14388,32 @@
     {
       "id": "ollama-suite",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css",
+        "browser-extension/manifest.json",
+        "scripts/build-browser-extension.mjs",
+        "browser-extension/local-models.js",
+        "browser-extension/rich-text.js"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-local-models.md",
+        "docs/features/workflows/browser-extension-local-models.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js",
+        "test/browser-extension-local-models.test.js",
+        "test/browser-extension-rich-text.test.js",
+        "test/browser-extension-bundle.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Configure local model providers, manage models and invoke the required workflows with streamed progress. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The Models tab connects only to 127.0.0.1 on a chosen port after the optional host permission is granted, lists installed and running models, pulls a tag with streamed progress and cancel, deletes only after a dialog naming the exact tag, and streams chat replies kept in memory for the session. A headless browser run against a fake local server exercised connect, pull, cancel and chat; the permission prompt was stubbed for that run, a real Ollama server was not used, and installed-build identity is not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -14395,7 +14427,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -14406,14 +14438,14 @@
         "action": "Configure local model providers, manage models and invoke the required workflows with streamed progress.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Configure local model providers, manage models and invoke the required workflows with streamed progress.",
-            "nextProof": "Exercise configure local model providers, manage models and invoke the required workflows with streamed progress on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain installed-build identity, interaction and visual receipts against a real local Ollama server, including a granted and a refused permission prompt and a server that is not running."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Only the chosen port is kept with the workspace state; conversations stay in page memory and are never written to storage."
       }
     },
     {
@@ -17410,7 +17442,13 @@
     "docs/features/browser/external-editor.zh-HK.md": "284b8509cd2c312196ab9092f0f7f50f66d54172",
     "test/extension-editor-workflow.test.js": "284b8509cd2c312196ab9092f0f7f50f66d54172",
     "test/extension-editor-transport.test.js": "284b8509cd2c312196ab9092f0f7f50f66d54172",
-    "test/extension-editor-focus.test.js": "284b8509cd2c312196ab9092f0f7f50f66d54172"
+    "test/extension-editor-focus.test.js": "284b8509cd2c312196ab9092f0f7f50f66d54172",
+    "browser-extension/local-models.js": "427670e910d91f396863e4c5c2ca16e07ff768f6",
+    "browser-extension/rich-text.js": "427670e910d91f396863e4c5c2ca16e07ff768f6",
+    "docs/features/workflows/browser-extension-local-models.md": "427670e910d91f396863e4c5c2ca16e07ff768f6",
+    "docs/features/workflows/browser-extension-local-models.zh-HK.md": "427670e910d91f396863e4c5c2ca16e07ff768f6",
+    "test/browser-extension-local-models.test.js": "427670e910d91f396863e4c5c2ca16e07ff768f6",
+    "test/browser-extension-rich-text.test.js": "427670e910d91f396863e4c5c2ca16e07ff768f6"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
