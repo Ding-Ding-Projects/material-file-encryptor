@@ -13641,16 +13641,33 @@
     {
       "id": "element-locks",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css",
+        "browser-extension/background.js",
+        "src/main/browser-element-lock-mediation.js",
+        "src/main/access-integration.js",
+        "src/shared/extension-lock-targets.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/design/browser-desktop-channel.md",
+        "docs/features/workflows/browser-native-host.md",
+        "docs/features/workflows/browser-extension-workspace.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/workflows/browser-native-host.zh-HK.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "tests": [
+        "test/browser-element-lock-scopes.test.js",
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Lock, inspect and unlock individual controls using shared native authorization and clear pending states. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Each extension tab is a reviewed lock target. A paired extension reads its locks with read-element-locks; set-element-lock locks or unlocks a tab only after a fresh native re-authentication in the unlocked desktop (the existing profile password dialog; Windows Hello is not integrated), stored as the desktop's own protected element-lock record through its compare-and-set path. The browser can remove only a password lock that still matches the current profile, so it never downgrades a stronger desktop lock. Locked tabs show disabled with an explanation; the extension never unlocks anything locally and marks a stale reading. Verified with synthetic broker, protected-store and extension tests; no installed desktop or captured prompt.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13664,7 +13681,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -13675,14 +13692,14 @@
         "action": "Lock, inspect and unlock individual controls using shared native authorization and clear pending states.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Lock, inspect and unlock individual controls using shared native authorization and clear pending states.",
-            "nextProof": "Exercise lock, inspect and unlock individual controls using shared native authorization and clear pending states on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Pair an installed extension with an installed desktop, lock and unlock a tab after re-authentication, and confirm the locked tab is disabled and explained."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Locks are protected desktop records; the extension keeps only the last reading in page memory."
       }
     },
     {
@@ -17687,7 +17704,10 @@
     "docs/design/browser-desktop-channel.md": "1b407ff46b3b31d64fe3fead6f176e65ae297532",
     "test/browser-confirm-scopes.test.js": "1b407ff46b3b31d64fe3fead6f176e65ae297532",
     "src/main/browser-school-mediation.js": "c193df3b93e64c409565d46689795a8481b7a062",
-    "test/browser-school-scopes.test.js": "c193df3b93e64c409565d46689795a8481b7a062"
+    "test/browser-school-scopes.test.js": "c193df3b93e64c409565d46689795a8481b7a062",
+    "src/main/browser-element-lock-mediation.js": "e945baadfc88d82df73eb71787fa437bb7a8331b",
+    "src/shared/extension-lock-targets.js": "e945baadfc88d82df73eb71787fa437bb7a8331b",
+    "test/browser-element-lock-scopes.test.js": "e945baadfc88d82df73eb71787fa437bb7a8331b"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
