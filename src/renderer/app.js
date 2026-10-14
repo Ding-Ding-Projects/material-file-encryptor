@@ -542,7 +542,7 @@ function attachEnhancedSearch(input,area) {
  search.addEventListener('search-change',update);return()=>{generation++;restore();search.remove();input.hidden=false;};
 }
 function addFeatureRoot(id,label,labelYue) {
- const root=document.createElement('section');root.id=`view-${id}`;root.className='view enhanced-feature-view';root.hidden=true;root.setAttribute('aria-label',label);document.querySelector('main').append(root);featureRoots.set(id,root);
+ const root=document.createElement('mfe-content-panel');root.id=`view-${id}`;root.className='view enhanced-feature-view';root.hidden=true;root.setAttribute('aria-label',label);document.querySelector('mfe-main-workspace').append(root);featureRoots.set(id,root);
  foundation.model.registerCanonicalTab(id,label);foundation.registerViews([{id,label:{en:label,yue:labelYue},root}]);return root;
 }
 async function mountFeature(id,label,labelYue,loader,mount) {
@@ -567,7 +567,7 @@ function workspaceCommands() {
 function refreshPaletteInventory() {
  if(!foundation)return;
  const commands=workspaceCommands();
- for(const root of document.querySelectorAll('main > .view')){
+ for(const root of document.querySelectorAll('mfe-main-workspace > .view')){
   const id=root.id.replace(/^view-/,'');const title=canonicalViewLabels[id]||id;
   commands.push({id:`destination:${id}`,label:title,run:()=>{foundation.model.openTab({id,label:title});foundation.shell.activate(id);}});
   [...root.querySelectorAll(CONTROL_SELECTOR)].forEach((control,index)=>{
@@ -584,7 +584,7 @@ function refreshPaletteInventory() {
 function guardControl(control,action){const access=featureMounts.get('access');return access?access.guardControl(ensureLockId(control),control,action):action();}
 function ensureLockId(element){if(element.dataset.lockId)return element.dataset.lockId;const parts=[];for(let node=element;node&&node!==document.body;node=node.parentElement){parts.unshift(node.id?`id:${node.id}`:`${node.tagName.toLowerCase()}:${[...node.parentElement.children].indexOf(node)}`);if(node.id)break;}const id=parts.join('/').slice(0,180);element.dataset.lockId=id;return id;}
 function setupEnhancedWorkspace() {
- const main=document.querySelector('main');foundation=mountSurfaceFoundation({host:main,before:main.firstChild,storage:localStorage,language:preferences.language,tabs:[{id:'drive',label:'My drive',labelYue:'我的磁碟'},{id:'offline',label:'Available offline',labelYue:'可離線使用'},{id:'history',label:'History',labelYue:'歷史記錄'},{id:'recycle',label:'Recycle Bin',labelYue:'資源回收筒'},{id:'settings',label:'Settings',labelYue:'設定'},{id:'help',label:'How it works',labelYue:'使用方法'}],onActivate:changeView,commands:workspaceCommands(),onExport:exportText,renderText:t,onNotification:(record,options)=>narrationEvents.notify(record,options),onNotificationAction:async action=>{if(action==='retry-files'){filePageRevision=null;return loadFilePage();}if(action.startsWith('cancel-operation:'))return api.cancelOperation(action.slice('cancel-operation:'.length));if(action==='open-operations'){foundation.shell.activate('drive');$('active-operations').scrollIntoView({block:'center'});return;}throw Error('This recovery action is no longer available.');}});
+ const main=document.querySelector('mfe-main-workspace');foundation=mountSurfaceFoundation({host:main,before:main.firstChild,storage:localStorage,language:preferences.language,tabs:[{id:'drive',label:'My drive',labelYue:'我的磁碟'},{id:'offline',label:'Available offline',labelYue:'可離線使用'},{id:'history',label:'History',labelYue:'歷史記錄'},{id:'recycle',label:'Recycle Bin',labelYue:'資源回收筒'},{id:'settings',label:'Settings',labelYue:'設定'},{id:'help',label:'How it works',labelYue:'使用方法'}],onActivate:changeView,commands:workspaceCommands(),onExport:exportText,renderText:t,onNotification:(record,options)=>narrationEvents.notify(record,options),onNotificationAction:async action=>{if(action==='retry-files'){filePageRevision=null;return loadFilePage();}if(action.startsWith('cancel-operation:'))return api.cancelOperation(action.slice('cancel-operation:'.length));if(action==='open-operations'){foundation.shell.activate('drive');$('active-operations').scrollIntoView({block:'center'});return;}throw Error('This recovery action is no longer available.');}});
  // Offline filtering reuses the drive panel and its persisted layout.
  for(const id of ['drive','history','recycle','settings','help'])foundation.registerPanel(id,$(`view-${id}`));
  for(const [id,label]of Object.entries(canonicalViewLabels))foundation.model.registerCanonicalTab(id,label);

@@ -190,10 +190,21 @@ export async function assertFilePickerBehavior(page,{host='mfe-file-picker[label
 // Traverses open shadow roots, but does not misclassify private native internals
 // inside registered Material components as generic product controls.
 export function inspectSurface(root=document) {
- const generic=[],unregistered=[],clipped=[];
+ const generic=[],unregistered=[],clipped=[],compositionIssues=[];
+ const compositionTags=['mfe-titlebar','mfe-main-workspace','mfe-content-panel','mfe-data-table','mfe-selection-toolbar'];
+ const required=[['.titlebar','mfe-titlebar'],['.app-shell > mfe-main-workspace','mfe-main-workspace'],['.view','mfe-content-panel'],['.table-scroll','mfe-data-table'],['.selection-toolbar','mfe-selection-toolbar']];
+ for(const [selector,tag] of required)for(const node of root.querySelectorAll(selector))if(node.localName!==tag)compositionIssues.push({tag,id:node.id,reason:'generic-replacement'});
+ // A removed workspace must fail even when its classes were removed with it.
+ if(root.querySelector('.app-shell')&&!root.querySelector('mfe-main-workspace'))compositionIssues.push({tag:'mfe-main-workspace',reason:'missing-workspace'});
+ if(root.querySelector('.app-shell')&&!root.querySelector('mfe-titlebar'))compositionIssues.push({tag:'mfe-titlebar',reason:'missing-titlebar'});
  const walk=(container,owned=false)=>{
   for(const node of container.children||[]){
    const material=node.localName.startsWith('md-');
+   if(compositionTags.includes(node.localName)){
+    const Type=customElements.get(node.localName);
+    const issues=Type&&node instanceof Type&&typeof Type.inspect==='function'?Type.inspect(node):['unregistered-composition'];
+    for(const reason of issues)compositionIssues.push({tag:node.localName,id:node.id,reason});
+   }
    const visible=node.getClientRects().length>0&&getComputedStyle(node).visibility!=='hidden';
    if(visible&&!owned&&/^(button|input|select|textarea|dialog)$/.test(node.localName))generic.push(node.id||node.localName);
    if(visible&&(material||node.localName.startsWith('mfe-'))&&!customElements.get(node.localName))unregistered.push(node.localName);
@@ -204,7 +215,10 @@ export function inspectSurface(root=document) {
  };
  walk(root);
  const scrolling=document.scrollingElement;
- return {genericControls:generic,unregisteredControls:unregistered,clipped,outerFrameScroll:scrolling.scrollHeight>innerHeight+1||scrolling.scrollWidth>innerWidth+1};
+ // Existing acquisition admits only an empty genericControls list. Composition
+ // violations must fail that same gate, not merely appear in an ignored report.
+ generic.push(...compositionIssues.map(issue=>'composition:'+issue.tag+':'+issue.reason));
+ return {genericControls:generic,unregisteredControls:unregistered,compositionIssues,clipped,outerFrameScroll:scrolling.scrollHeight>innerHeight+1||scrolling.scrollWidth>innerWidth+1};
 }
 
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
