@@ -14,8 +14,8 @@ const summary=value=>({language:value.language,theme:value.theme,density:value.d
  scheduleCount:value.schedules.length,textValuesOmitted:true});
 
 /** Native coordinator, deliberately not a localStorage transaction.
- * authorize returns a recheck function bound to the trusted actor and profile
- * revision. audit must append the authorized encrypted display-name history.
+ * authorize returns an async recheck function bound to the trusted actor and
+ * profile revision, with a synchronous check.sync for use under the writer lock. audit must append the authorized encrypted display-name history.
  * The caller must adopt native preferences for ALL desktop preference writers
  * before exposing this capability in a production renderer. */
 export function createProtectedSettingsReset({credentials,getActor,authorize,audit,now=Date.now,ttl=120000}={}){
@@ -57,7 +57,7 @@ export function createProtectedSettingsReset({credentials,getActor,authorize,aud
  return {
   recover:()=>serial(recover),
   prepare({includeDisplayName=false}={}){return serial(async()=>{
-   const who=actor(),check=await authorize(who);await check();
+   const who=actor(),check=await authorize(who);if(typeof check!=='function'||typeof check.sync!=='function')throw Error('Protected settings reset is unavailable.');await check();
    const recovery=await recover();await check();if(recovery.state==='conflict')throw Error('Settings reset recovery has a concurrent change. Review preferences before retrying.');
    const prefs=await credentials.readVersioned(RESET_PREFERENCES_KEY);await check();
    if(prefs.value===null)throw Error('Native preferences have not been adopted. Coordinated settings reset is unavailable.');
@@ -75,20 +75,25 @@ export function createProtectedSettingsReset({credentials,getActor,authorize,aud
   abort(id){const entry=prepared.get(id);if(entry&&entry.who===actor()){prepared.delete(id);return {state:'aborted'};}return {state:'unavailable'};},
   commit(id){return serial(async()=>{
    const who=actor(),entry=prepared.get(id);if(!entry||entry.who!==who)throw Error('Settings reset approval is unavailable.');prepared.delete(id);
-   const check=async()=>{if(actor()!==who||now()>=entry.expires)throw Error('Settings reset approval expired or was cancelled.');await entry.check();if(actor()!==who||now()>=entry.expires)throw Error('Settings reset approval expired or was cancelled.');};await check();
+   const live=()=>{if(actor()!==who||now()>=entry.expires)throw Error('Settings reset approval expired or was cancelled.');};
+   // Rechecked inside the native writer lock immediately before each commit
+   // write. Expiry, a revoked history unlock or a detached frame while the
+   // lock is pending must not install, apply or finalize the reset.
+   const guard=()=>{live();entry.check.sync();live();};
+   const check=async()=>{live();await entry.check();live();};await check();
    const prefs=await credentials.readVersioned(RESET_PREFERENCES_KEY);await check();if(prefs.revision!==entry.preferencesRevision)throw Error('Preferences changed after the reset preview.');
    if(entry.includeDisplayName){const name=await credentials.readVersioned(RESET_DISPLAY_KEY);await check();if(name.revision!==entry.displayRevision)throw Error('Display name changed after the reset preview.');}
    if(!entry.changes.length)return {state:'unchanged'};
    const journal=await credentials.readVersioned(JOURNAL);await check();if(journal.value!==null)throw Error('Settings reset recovery is pending.');
    const intent={version:1,id,state:'prepared',changes:entry.changes};
-   const saved=await credentials.compareAndSetBatchVersioned([{key:JOURNAL,expectedRevision:journal.revision,replacement:intent}],null,entry.conditions);if(!saved.updated)throw Error('Settings reset recovery or profile authorization changed concurrently.');
+   const saved=await credentials.compareAndSetBatchVersioned([{key:JOURNAL,expectedRevision:journal.revision,replacement:intent}],null,entry.conditions,guard);if(!saved.updated)throw Error('Settings reset recovery or profile authorization changed concurrently.');
    try{
-    await check();const installed=await credentials.compareAndSetBatchVersioned(entry.changes.map(({key,expectedRevision,replacement})=>({key,expectedRevision,replacement})),{key:JOURNAL,expectedRevision:saved.revisions[JOURNAL],replacement:{...intent,state:'applied'}},entry.conditions);
+    await check();const installed=await credentials.compareAndSetBatchVersioned(entry.changes.map(({key,expectedRevision,replacement})=>({key,expectedRevision,replacement})),{key:JOURNAL,expectedRevision:saved.revisions[JOURNAL],replacement:{...intent,state:'applied'}},entry.conditions,guard);
     if(!installed.updated)throw Error('Settings or profile authorization changed after the reset preview.');await check();
     await audit({id,changes:clone(entry.changes),check});await check();
     // This atomic, revision-conditioned clear is the completion point. A
     // subsequent profile change does not retroactively authorize or undo it.
-    const cleared=await credentials.compareAndSetBatchVersioned([{key:JOURNAL,expectedRevision:installed.journalRevision,replacement:null}],null,entry.conditions);if(!cleared.updated)throw Error('Settings reset recovery or profile authorization changed concurrently.');
+    const cleared=await credentials.compareAndSetBatchVersioned([{key:JOURNAL,expectedRevision:installed.journalRevision,replacement:null}],null,entry.conditions,guard);if(!cleared.updated)throw Error('Settings reset recovery or profile authorization changed concurrently.');
     return {state:'committed',preferences:clone(entry.changes.find(row=>row.key===RESET_PREFERENCES_KEY)?.replacement??prefs.value)};
    }catch(error){const result=await recover();if(result.state==='conflict')throw Error('Settings reset encountered a concurrent change. Newer records were preserved; local review is required.');throw error;}
   });},

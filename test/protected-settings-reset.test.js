@@ -18,7 +18,7 @@ async function fixture(t){
  const key=randomBytes(32),safeStorage={isEncryptionAvailable:()=>true,encryptString(text){const iv=randomBytes(12),cipher=createCipheriv('aes-256-gcm',key,iv);return Buffer.concat([iv,cipher.update(text),cipher.final(),cipher.getAuthTag()]);},decryptString(data){const cipher=createDecipheriv('aes-256-gcm',key,data.subarray(0,12));cipher.setAuthTag(data.subarray(-16));return Buffer.concat([cipher.update(data.subarray(12,-16)),cipher.final()]).toString();}};
  const credentials=createCredentialStore({directory,safeStorage}),state={actor:'synthetic-actor',allowed:true,time:1000},audits=[];
  await credentials.set(RESET_PREFERENCES_KEY,{...structuredClone(DEFAULTS),theme:'dark',displayName:'Synthetic name'});await credentials.set(RESET_DISPLAY_KEY,{value:'Synthetic name'});await credentials.set('authenticator:unrelated',{synthetic:'untouched'});
- const options={credentials,getActor:()=>state.actor,authorize:async who=>()=>{if(!state.allowed||state.actor!==who)throw Error('authorization revoked');},audit:async row=>audits.push(row.id),now:()=>state.time};
+ const options={credentials,getActor:()=>state.actor,authorize:async who=>{const check=()=>{if(!state.allowed||state.actor!==who)throw Error('authorization revoked');};check.sync=check;return check;},audit:async row=>audits.push(row.id),now:()=>state.time};
  return{credentials,state,audits,options,directory,safeStorage,reset:createProtectedSettingsReset(options)};
 }
 async function integrationFixture(t){
@@ -118,4 +118,31 @@ test('recovery finalization preserves a concurrent write after the restored row 
  const original=f.credentials.compareAndSetBatchVersioned;let replaced=false;
  f.credentials.compareAndSetBatchVersioned=async(rows,receipt,conditions)=>{if(rows.some(row=>row.key===JOURNAL&&row.replacement===null)&&!replaced){replaced=true;await f.credentials.set(RESET_PREFERENCES_KEY,before.value);}return original.call(f.credentials,rows,receipt,conditions);};
  const result=await f.reset.recover();assert.equal(result.state,'conflict');assert.deepEqual(result.conflicts,[RESET_PREFERENCES_KEY]);assert.equal((await f.credentials.get(JOURNAL)).state,'conflict');assert.deepEqual(await f.credentials.get(RESET_PREFERENCES_KEY),before.value);
+});
+
+test('approval loss while each commit write waits for the writer lock never commits the reset',async t=>{
+ for(const step of ['prepared','applied','clear'])for(const when of ['before-lock','in-lock'])for(const kind of ['expiry','history-lock','detached-frame']){
+  if(when==='in-lock'&&kind==='history-lock')continue;
+  const label=[step,when,kind].join(':'),f=await integrationFixture(t),preview=await f.service.requestSettingsReset(f.frame,'prepare',{includeDisplayName:true}),original=f.credentials.compareAndSetBatchVersioned;let changed=false;
+  const lose=async()=>{if(kind==='expiry')f.state.time=preview.expires;else if(kind==='detached-frame')f.frame.detached=true;else await f.service.request(f.frame,'historyLock',{});changed=true;};
+  const matches=(rows,journal)=>step==='prepared'?rows.some(row=>row.key===JOURNAL&&row.replacement?.state==='prepared'):step==='applied'?journal?.replacement?.state==='applied':!journal&&rows.some(row=>row.key===JOURNAL&&row.replacement===null);
+  f.credentials.compareAndSetBatchVersioned=async(rows,journal,conditions,guard)=>{
+   if(!changed&&matches(rows,journal)){if(when==='before-lock')await lose();else{const inner=guard;guard=()=>{changed=true;if(kind==='expiry')f.state.time=preview.expires;else f.frame.detached=true;return inner?.();};}}
+   return original.call(f.credentials,rows,journal,conditions,guard);
+  };
+  await assert.rejects(f.service.requestSettingsReset(f.frame,'commit',{id:preview.id}),/expired|cancelled|unavailable|own password/i,label);
+  assert.equal(changed,true,label);f.frame.detached=false;
+  assert.equal((await f.credentials.get(RESET_PREFERENCES_KEY)).theme,'dark',label);assert.equal((await f.credentials.get(RESET_DISPLAY_KEY)).value,'Synthetic name',label);assert.equal(await f.credentials.get(JOURNAL),null,label);
+ }
+});
+test('the writer-lock guard aborts a batch without any partial write and rejects a non-function guard',async t=>{
+ const f=await fixture(t),prefs=await f.credentials.readVersioned(RESET_PREFERENCES_KEY),row=()=>[{key:RESET_PREFERENCES_KEY,expectedRevision:prefs.revision,replacement:structuredClone(DEFAULTS)}];
+ await assert.rejects(f.credentials.compareAndSetBatchVersioned(row(),null,[],()=>{throw Error('synthetic guard loss');}),/synthetic guard loss/);
+ assert.deepEqual(await f.credentials.readVersioned(RESET_PREFERENCES_KEY),prefs);
+ assert.throws(()=>f.credentials.compareAndSetBatchVersioned(row(),null,[],'not a guard'),/guard/);
+ await assert.rejects(f.credentials.compareAndSetBatchVersioned(row(),null,[],()=>Promise.resolve()),/guard/);
+ assert.deepEqual(await f.credentials.readVersioned(RESET_PREFERENCES_KEY),prefs);
+});
+test('an authorization without a synchronous lock-time check is unavailable',async t=>{
+ const f=await fixture(t),reset=createProtectedSettingsReset({...f.options,authorize:async()=>async()=>{}});await assert.rejects(reset.prepare(),/unavailable/);assert.equal(await f.credentials.get(JOURNAL),null);
 });

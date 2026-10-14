@@ -60,7 +60,7 @@ export function createAccessIntegration({dataDirectory,toolsDirectory,credential
   authorize:async who=>{
    const profile=await profileGrant(who),history=host.authorizeSettingsReset(),grant=grants.get(identity(who,'profile')),revision=grant?.revision;
    const check=async()=>{profile();history();const record=await credentials.readVersioned('local-profile:v1');profile();history();if(record.revision!==revision){grants.delete(identity(who,'profile'));throw Error('Unlock the local profile before resetting preferences.');}};
-   check.conditions=[{key:'local-profile:v1',expectedRevision:revision}];return check;
+   check.sync=()=>{profile();history();};check.conditions=[{key:'local-profile:v1',expectedRevision:revision}];return check;
   },
   audit:record=>host.auditSettingsReset(record),
  }):null;
