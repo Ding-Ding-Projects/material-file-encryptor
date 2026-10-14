@@ -13777,16 +13777,32 @@
     {
       "id": "authenticator",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/background.js",
+        "src/main/browser-confirm-mediation.js",
+        "src/main/browser-confirm-prompt.js",
+        "src/main/browser-native-host.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/design/browser-desktop-channel.md",
+        "docs/features/workflows/browser-native-host.md",
+        "docs/features/workflows/browser-extension-workspace.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/workflows/browser-native-host.zh-HK.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "tests": [
+        "test/browser-confirm-scopes.test.js",
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Enroll and verify authenticator factors with recovery and cancellation through authorized native controls. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "By the maintainer's decision, authenticator codes never appear in the browser. The extension's Open authenticator on desktop button sends the focus-authenticator scope; after a native Confirm prompt in the unlocked desktop (Reject by default, one pending prompt, withdrawn after 30 seconds or on lock, disconnect or update preparation) the desktop brings its authenticator view forward, and the browser receives only a fixed state word. Enrollment, verification and recovery happen in the desktop. Verified with synthetic broker and extension tests; no installed desktop, real native-messaging registration or captured native prompt.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13800,7 +13816,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -13811,14 +13827,14 @@
         "action": "Enroll and verify authenticator factors with recovery and cancellation through authorized native controls.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Enroll and verify authenticator factors with recovery and cancellation through authorized native controls.",
-            "nextProof": "Exercise enroll and verify authenticator factors with recovery and cancellation through authorized native controls on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Pair an installed extension with an installed desktop, approve and reject the prompt, and capture the prompt in English and Cantonese, light and dark."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Nothing is stored in the browser; the desktop authenticator keeps its own protected records."
       }
     },
     {
@@ -15089,16 +15105,25 @@
     {
       "id": "public-screenshot-gallery",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "docs/site/extension-gallery.json",
+        "docs/site/publication.mjs"
+      ],
+      "documentation": [
+        "docs/site/extension-gallery.json"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/site-extension-gallery.test.js",
+        "test/site-publication.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Publish only reviewed genuine extension captures with validated provenance and working image routes. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The public capture gallery has a separate Browser extension captures section built from its own reviewed inventory: ten genuine headless captures, each bound to its source revision, SHA-256 and dimensions and checked against the file at build time, with capture times left unavailable because none was validated. They never take a desktop gallery role. After deploy 1dd3cbc all ten image routes returned HTTP 200 at their exact sizes on the live site.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -15112,7 +15137,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -15123,14 +15148,14 @@
         "action": "Publish only reviewed genuine extension captures with validated provenance and working image routes.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Publish only reviewed genuine extension captures with validated provenance and working image routes.",
-            "nextProof": "Exercise publish only reviewed genuine extension captures with validated provenance and working image routes on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Add captures from an installed copy loaded unpacked from the desktop resources folder, with validated capture times, and read the live routes back after each deploy."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "The gallery inventory is fixed per reviewed revision; nothing is stored at runtime."
       }
     },
     {
@@ -17638,7 +17663,13 @@
     "src/main/browser-status-mediation.js": "8b6d493fa76f33088a5f50cad3c7940b95f492bd",
     "docs/features/workflows/browser-native-host.md": "8b6d493fa76f33088a5f50cad3c7940b95f492bd",
     "docs/features/workflows/browser-native-host.zh-HK.md": "8b6d493fa76f33088a5f50cad3c7940b95f492bd",
-    "test/browser-status-scopes.test.js": "8b6d493fa76f33088a5f50cad3c7940b95f492bd"
+    "test/browser-status-scopes.test.js": "8b6d493fa76f33088a5f50cad3c7940b95f492bd",
+    "docs/site/extension-gallery.json": "1dd3cbcae3af7ab2b2373e5ba66885df1416871f",
+    "test/site-extension-gallery.test.js": "1dd3cbcae3af7ab2b2373e5ba66885df1416871f",
+    "src/main/browser-confirm-mediation.js": "1b407ff46b3b31d64fe3fead6f176e65ae297532",
+    "src/main/browser-confirm-prompt.js": "1b407ff46b3b31d64fe3fead6f176e65ae297532",
+    "docs/design/browser-desktop-channel.md": "1b407ff46b3b31d64fe3fead6f176e65ae297532",
+    "test/browser-confirm-scopes.test.js": "1b407ff46b3b31d64fe3fead6f176e65ae297532"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
