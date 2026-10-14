@@ -6,7 +6,7 @@ import {promisify} from 'node:util';
 import {passwordVerifier,verifyPassword} from '../renderer/features/access/crypto.js';
 
 const execute=promisify(execFile),VAULT_KEY='lock:access-history:v1',TAIL_KEY='lock:access-history-tail:v1',PENDING_KEY='lock:access-history-pending:v1',DISPLAY_KEY='profile:access-display-name:v1';
-const actionNames=new Set(['display-name-changed','authenticator-created','authenticator-updated','authenticator-removed','authenticator-index-updated','authenticator-restored','history-labelled','history-retention-changed','history-pruned','mutation-rolled-back']);
+const actionNames=new Set(['display-name-changed','preferences-reset','authenticator-created','authenticator-updated','authenticator-removed','authenticator-index-updated','authenticator-restored','history-labelled','history-retention-changed','history-pruned','mutation-rolled-back']);
 const clone=value=>structuredClone(value),hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const metadata=(record)=>({id:record.id,at:record.at,action:record.action,label:record.label||'',source:record.source||null,omitted:'Credential values and encrypted snapshots are omitted.'});
 const validKey=key=>typeof key==='string'&&(key===DISPLAY_KEY||/^authenticator:[a-zA-Z0-9:_.-]{1,160}$/.test(key));
@@ -52,6 +52,8 @@ export function createAccessHistory({dataDirectory,credentials,getActor,now=Date
  }
  async function mutation(action,transform,{source}={}){const who=actor(),check=authorization(who);return serial(async()=>{check();const k=await key();try{const before=await snapshot(),after=transform(clone(before));check();const transaction=await writeSnapshot(after,before);try{check();if(transaction.changed)await append(typeof action==='function'?action(before):action,after,k,source?{source}:{});check();return true;}catch(error){await transaction.rollback();if(transaction.changed)await append('mutation-rolled-back',before,k).catch(()=>{});throw error;}}finally{k.fill(0);}});}
  const api={
+  authorizeSettingsReset(){return authorization(actor());},
+  auditSettingsReset({id,check}){const own=authorization(actor());return serial(async()=>{own();check();const k=await key();try{const current=await snapshot();own();check();await append('preferences-reset',current,k,{source:id});own();check();}finally{k.fill(0);}});},
   setCredential(id,value){if(!validKey(id))throw Error('Invalid authenticator record identifier.');return mutation(before=>id===DISPLAY_KEY?'display-name-changed':id==='authenticator:index:v1'?'authenticator-index-updated':Object.hasOwn(before,id)?'authenticator-updated':'authenticator-created',before=>({...before,[id]:clone(value)}));},
   deleteCredential(id){if(!validKey(id))throw Error('Invalid authenticator record identifier.');return mutation('authenticator-removed',before=>{delete before[id];return before;});},
   request(action,payload={}){
