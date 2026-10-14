@@ -27,7 +27,7 @@ test('vault omission is rejected even when the extracted expected inventory also
 });
 
 test('extension note and editor workflows cannot disappear from both inventories', () => {
-  for (const id of ['extension:options:notes', 'extension:options:note-reader', 'extension:options:external-editor', 'extension:options:note-sheet', 'extension:options:note-step-1', 'extension:options:note-step-2', 'extension:options:note-step-3']) {
+  for (const id of ['extension:options:notes', 'extension:options:note-reader', 'extension:options:external-editor', 'extension:options:note-sheet', 'extension:options:note-step-1', 'extension:options:note-step-2', 'extension:options:note-step-3', 'extension:options:converter', 'extension:options:converter:source', 'extension:options:converter:formats', 'extension:options:converter:review', 'extension:options:converter:jobs']) {
     const broken = structuredClone(registry);
     broken.surfaces = broken.surfaces.filter(row => row.id !== id);
     assert.ok(validateSurfaceRegistry(broken, expected.filter(row => row.id !== id)).includes(`Missing handwritten required surface: ${id}.`));
