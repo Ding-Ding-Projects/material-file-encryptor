@@ -45,6 +45,8 @@
     "docs/features/desktop/owned-exit-handles.zh-HK.md",
     "docs/features/desktop/package-integrity.md",
     "docs/features/desktop/package-integrity.zh-HK.md",
+    "docs/features/desktop/renderer-interpreter-admission.md",
+    "docs/features/desktop/renderer-interpreter-admission.zh-HK.md",
     "docs/features/desktop/runtime-evidence.md",
     "docs/features/desktop/runtime-evidence.zh-HK.md",
     "docs/features/drive/README.md",

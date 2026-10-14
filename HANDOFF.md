@@ -1,3 +1,13 @@
+## Complete-interface continuation, October 14
+
+The active goal retains all 105 feature families across desktop, extension and documentation. Main locally contains reviewed interpreter admission 8f55865737474b55ac47d9f70c408d2aad4a54f7 with 17 focused checks. Its new English/Cantonese documentation passes 16 focused checks, with 935 concrete declarations and 224 public routes. These counts do not establish visual acceptance.
+
+Latest isolated renderer results are 3 cases, 2 passed and 1 failed. A bounded diagnostic and independent source refutation identify duplicate close ownership: one confirmation submit reaches both the Material dialog and its wrapper. A late close then hides a reopened confirmation. History was ready and the action enabled. The causal regression reproduces two close events instead of one; the correction remains pending. Original deadlines and assertions are unchanged.
+
+Separately preserved mediation source 1f0c5b67016745c301d75c4acf2d9b9fd7e575e5 has independent source acceptance, a successful exact root browser-host-only build and all 16 distinct focused checks passed, including 5 compiled transport checks. Disconnect during pending authentication, replacement pairing, late prior replies, replay rejection and verified broker closure use synthetic data. Production authentication composition remains incomplete. Source 61986fcaff88514903dc6f0a6602064d32361354 adds five genuine composition hosts, with 32 focused checks and independent source acceptance. Both await integration and current built GUI proof. Extension inventory de0e5cc6c4d0ab8addf3361302265fcdd0b1ae7c preserves historical rows but requires assessment-quality and validation corrections before integration.
+
+The existing installation, processes, mounted data and unrelated work remain untouched. Fresh installation/removal, physical scale proof and all 4,272 baseline tuples remain unverified. Status service enrollment is unavailable; Project access lacks read:project permission. Issue 1 and Discussion 2 carry progress. Active worktrees and private evidence remain retained. No cleanup is ready.
+
 ## Account-boundary preservation, October13
 
 Verified10percent remaining triggered preservation. Reviewed diagnosticb7bcf616ab225c7934fdf030b31fab33e25db996 is source-only:10focused checks passed and independent review accepted; no new runtime launched. The last full case remains2passed/1cancelled. Completed source unit is integrated while the unfinished product goal remains explicit.
