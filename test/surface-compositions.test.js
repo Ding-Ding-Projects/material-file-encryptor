@@ -73,3 +73,27 @@ test('production shell imports compositions and narrowly migrates every main/vie
   for(const tag of Object.keys(compositionDefinitions))assert.ok(html.includes('<'+tag));
   assert.ok(!html.includes('<main>'));assert.ok(!html.includes('<section id="view-'));assert.ok(!app.includes("document.querySelector('main')"));assert.ok(!app.includes("querySelectorAll('main > .view')"));assert.ok(app.includes("createElement('mfe-content-panel')"));assert.match(shell,/import .*compositions[.]js/);assert.match(audit,/generic\.push\(\.\.\.compositionIssues/);
 });
+
+test('table focus overlay stays above sticky headers without changing layout or hit testing',async()=>{
+  const host=fixture('mfe-data-table');
+  const css=host.shadowRoot.adoptedStyleSheets[0].cssRules[0].cssText;
+  const rule=selector=>{
+    const start=css.lastIndexOf(selector+'{');
+    assert.notEqual(start,-1,'Missing rule: '+selector);
+    return Object.fromEntries(css.slice(start+selector.length+1,css.indexOf('}',start)).split(';').filter(Boolean).map(pair=>{const colon=pair.indexOf(':');return[pair.slice(0,colon).trim(),pair.slice(colon+1).trim()];}));
+  };
+  const frame=rule(':host'),focus=rule('.scroll:focus-visible'),overlay=rule('.scroll:focus-visible::after');
+  assert.equal(frame.position,'relative');
+  assert.equal(frame.isolation,'isolate');
+  assert.equal(overlay.position,'absolute');
+  assert.equal(overlay.inset,'0');
+  assert.equal(overlay['pointer-events'],'none');
+  assert.equal(overlay.outline,'inherit');
+  assert.equal(overlay['outline-offset'],'inherit');
+  assert.equal(focus['outline-offset'],'-3px');
+  const style=await fs.readFile(new URL('../src/renderer/style.css',import.meta.url),'utf8');
+  const headerZ=Number(/th\{[^}]*z-index:(\d+)/.exec(style)?.[1]);
+  assert.ok(Number(overlay['z-index'])>headerZ,'Overlay must paint above sticky headers');
+  assert.equal(rule('.scroll').position,undefined,'Scroller must not become overlay containing block');
+  assert.deepEqual(inspect(host),[]);
+});

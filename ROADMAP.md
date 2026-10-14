@@ -1,3 +1,8 @@
+## Verified focus repair
+
+- [x] Restore the complete table keyboard-focus ring above sticky headers, with independent review and real English light/dark captures at both desktop sizes.
+- [ ] Complete other language, display-scale and populated-state acceptance.
+
 ## Resumed source-bound delivery
 
 - [x] Repair producer-tag retention for promotion retries and independently verify exact provenance admission.

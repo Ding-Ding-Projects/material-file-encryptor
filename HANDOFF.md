@@ -1,3 +1,7 @@
+## Verified table-focus integration
+
+Candidate 56c61a606e28a5c12968eef567a52fc2ad035ebb restores the top keyboard-focus edge above sticky table headers. Independent review accepted the source, seven focused checks, twelve genuine captures and eight validated layout probes. Exact build.bat /s passed with 6,066 package entries and zero privacy rejections. ASAR SHA-256: 06f1c01ecc1886cf099e96be21cfda015a338fef2fa5bfd6808ed44ce0dd834a. All measured dimensions and scroll metrics were unchanged. Four wide captures and four additionally scrolled narrow captures show all four edges; initial narrow views retain their genuine viewport boundaries. Evidence covers English, light/dark, scale 1, at 1180x850 and 880x650. Other languages, physical scaling and populated records remain unverified. Startup restoration was saved and verified; the final supported closure receipt confirms all six owned executions absent and the hidden desktop closed.
+
 ## Producer-bound promotion retry repair
 
 The owner resumed the complete implementation with preservation at 10 percent remaining account allowance, and requested prompt integration into main. The continuation retains the original scope and the remaining 11,607,405-token ceiling after the earlier 3,392,595 usage. The latest verified account reading was 21 percent remaining.
@@ -7,6 +11,14 @@ Release run 38495468478 first failed after publication when the current-main API
 All four v1.472.1 assets were independently downloaded and matched hosted/provenance hashes and sizes, tied to source622c1923cced5567b40cf469ff6331c29316723a. Package decompression and CRC passed;866 real payload files were extracted into the owned inventory checkout. Setup reports NotSigned. Runtime and installation remain unverified, and the existing installation is untouched.
 
 Native reset repair eaeea590 is undergoing independent review, including a newly identified in-memory authorization revocation boundary before final journal clearing. Full-ring GUI candidate56c61a6 is building and repeating its eight real keyboard tuples. The original renderer sequence now reaches Cancel focus; its Escape assertion requires synchronization with the actual asynchronous close event. Original deadlines remain unchanged. None of these pending units is represented as complete.
+
+## Resumed implementation, October 14
+
+The owner explicitly resumed the full implementation and requested work until verified account allowance reaches 10 percent remaining, followed by preservation and eligible cleanup. The first current reading is 31 percent remaining. Work integrates into main as independently reviewed units finish; unfinished candidates remain isolated while being repaired. The previous pause is historical, not current direction.
+
+The prior goal used 3,392,595 of its 15,000,000-token ceiling. The goal tool exposed no existing goal on resumption, so the continuation uses the remaining 11,607,405 ceiling without increasing the cumulative allowance. The account threshold controls earlier preservation. The existing failed removal attempt remains recorded and is not retried through another route.
+
+Main baseline is 622c1923cced5567b40cf469ff6331c29316723a. The active bounded repairs are native reset authority/compensation, complete table focus visibility, and the original full renderer sequence. Existing evidence and all current-machine safety boundaries remain unchanged.
 
 ## Explicit pause requested after closeout
 
@@ -65,6 +77,12 @@ Resume by repairing the two reset causal defects and the table focus top-edge pa
 ## Confirmation lifecycle incorporation
 
 Dialog incorporation: 19922ec removes duplicate submit-close ownership; d6a4048 waits for actual opening before Cancel focus and prevents stale continuations. Both received independent source acceptance. Causal checks reproduce prior defects; the real Material lifecycle check and three deterministic/accessibility checks pass. Helper e8c43bf retains bounded post-proof attachment diagnostics, six checks passed using verified Node 24.19.0. Full renderer remains incomplete after separate page-inventory and target-crash observations; original deadlines and ownership checks remain. All recorded owned browsers have closure proof. No full GUI or release acceptance is inferred.
+
+## Retained candidate-specific evidence
+
+# Preservation closeout, October 14
+
+Preservation review: eight real keyboard captures at source f77845127b457fb30692346aae591d9a3501237d show the inset outline along the sides and bottom, but the sticky table header still covers its top segment. This is a partial correction, not accepted complete focus visibility. The exact root build passed and all eight version-1 geometry probes passed, with unchanged dimensions. These are English light/dark viewport-emulation results at 1180×850 and 880×650, not physical display-scale proof. Owned process absence and hidden-desktop closure were verified. The final startup-restoration return payload was not persisted, so that receipt remains unavailable.
 
 ## Shared composition integration
 
