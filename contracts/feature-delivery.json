@@ -12166,7 +12166,8 @@
       "implementation": [
         "browser-extension/options.js",
         "browser-extension/options.html",
-        "browser-extension/options.css"
+        "browser-extension/options.css",
+        "browser-extension/local-records.js"
       ],
       "documentation": [
         "docs/features/workflows/browser-extension-workspace.md",
@@ -12647,7 +12648,8 @@
       "implementation": [
         "browser-extension/options.js",
         "browser-extension/options.html",
-        "browser-extension/popup.js"
+        "browser-extension/popup.js",
+        "browser-extension/local-records.js"
       ],
       "documentation": [
         "docs/features/workflows/browser-extension-workspace.md",
@@ -15744,7 +15746,11 @@
         "browser-extension/popup.js",
         "browser-extension/popup.html",
         "browser-extension/manifest.json",
-        "scripts/build-browser-extension.mjs"
+        "scripts/build-browser-extension.mjs",
+        "browser-extension/icons/icon-16.png",
+        "browser-extension/icons/icon-32.png",
+        "browser-extension/icons/icon-48.png",
+        "browser-extension/icons/icon-128.png"
       ],
       "documentation": [
         "docs/features/workflows/browser-extension-workspace.md",
@@ -17213,7 +17219,12 @@
     "browser-extension/exports.js": "ab688b4a76b9e343bc90624b0d47366c7f869c85",
     "browser-extension/history.js": "5c5713dd289b4b4796a35758476482251b924b52",
     "browser-extension/accent.js": "5c5713dd289b4b4796a35758476482251b924b52",
-    "browser-extension/manifest.json": "4b8fb2c4bd3c2bf98e62f45650e590350896de08"
+    "browser-extension/manifest.json": "4b8fb2c4bd3c2bf98e62f45650e590350896de08",
+    "browser-extension/local-records.js": "f65ef52811dde30fc124dcd0e6d543096713439e",
+    "browser-extension/icons/icon-16.png": "f65ef52811dde30fc124dcd0e6d543096713439e",
+    "browser-extension/icons/icon-32.png": "f65ef52811dde30fc124dcd0e6d543096713439e",
+    "browser-extension/icons/icon-48.png": "f65ef52811dde30fc124dcd0e6d543096713439e",
+    "browser-extension/icons/icon-128.png": "f65ef52811dde30fc124dcd0e6d543096713439e"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
