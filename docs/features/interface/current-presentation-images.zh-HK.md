@@ -14,6 +14,10 @@ accepted 列嘅 `replacement` 提供儲存庫相對 `path`、`sha256`、證據�
 
 組建收據必須證明精確 `build.bat /s` 成功、來源起止一致、兩端都冇未提交改動，並提供執行檔、介面封裝同原生主機雜湊。正規化收據必須追溯到雜湊驗證過嘅原始根目錄組建收據，唔可以隨便提供一份雜湊正確嘅 JSON。擷取收據 `source` 另需 `rendererAsarPath`、`rendererAsarSha256`、`nativeHostPath` 同 `nativeHostSha256`，作獨立位元組核對。各使用位置清單由獨立定義固定，唔受可編輯清單控制。首頁／圖集／README 路由同說明、圖集中繼資料、桌面 README 同擴充功能文件內容，都要保留已接受替換。
 
+驗證器解碼非交錯 8-bit RGB／RGBA PNG 掃描列，核對每個區塊 CRC、以有界精確輸出長度解壓 IDAT，並還原五種掃描列濾鏡。未支援 PNG 格式唔通過，唔可以重新壓縮真實擷圖去改證據位元組。舊圖片雜湊獨立固定喺基線 `96ea35e`，改清單雜湊唔會重新定義舊內容。產生嘅 HTML／CSS／JavaScript／JSON 同交付文件亦會檢查以資料網址內嵌嘅舊 PNG 位元組。
+
+執行收據必須引用獨立雜湊嘅 `geometryReceiptPath` 同 `geometryReceiptSha256`。觀察旁證使用 `schemaVersion: 1`、精確 `sourceCommit` 同 `hwnd`、`method: "observed-native-client-and-browser-geometry"`、`observedAt`、`viewportCss`、`devicePixelRatio`、`rendererZoom`、`nativeClientPixels` 同 `capturePixels`。寬高物件必須係獨立觀察幾何資料，擷取尺寸要同解碼 PNG 相符。頁面擷取等於原生用戶區像素，視窗擷取可以包括邊框。`scaleKind` 只可以係 `device-pixel-ratio` 或者 `physical-display`，後者另需獨立觀察嘅 `physicalDisplayScale` 同 `physicalDisplayScaleObserved: true`。介面縮放唔能夠代替實體縮放或者 DPR。缺少量度就保留驗收缺口，唔可以由圖片標頭抄數字補上。
+
 ## 交付檢查同回歸測試
 
 只喺產生程序完成、公開輸出已備妥之後執行：
