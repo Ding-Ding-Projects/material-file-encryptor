@@ -1,3 +1,11 @@
+## Final publication readback and pending decisions
+
+The gallery is publicly verified at b2c659129036c13e2123efb6a59c24ad908c2e8c. Deployment 38500359431 succeeded. Five live routes and all 76 images returned HTTP 200; all 76 image hashes match the inventory. The exact About homepage is https://ding-ding-projects.github.io/material-file-encryptor-captures/. Eight new captures have validated UTC times and four explicitly have unavailable times.
+
+The current gallery text is corrected and all 25 tracked text files pass the public-boundary scan. A 27-record public sweep corrected two earlier editable comments and verified readback. Historical commit d40c6ba still contains removed session-only wording. An exact replacement with byte-identical corrected files is prepared and locally preserved, but public history rewriting awaits explicit owner authorization. No force push was performed. The complete gallery history and proposal are preserved in a verified private 4,643,626-byte Git bundle with SHA-256 a62bb98c62b4f95219fa41fde6f5371b8f788f598d9f641f654dbb934bb7f4b2.
+
+The latest verified account allowance is 3 percent remaining. Implementation stopped at 10 percent. The goal remains active because the requested explicit pause decision has not yet arrived. Product main was verified at 9aa5a152af7b0099403c5b9ef7dcd6d130979b7d before this final record. Release runs 38499653922 and 38499832970 were still in progress at their latest readback. No release success, full acceptance or cleanup completion is claimed.
+
 # Preservation handoff after the requested allowance boundary
 
 The owner requested continued implementation until 10 percent account allowance remained, work on main, and preservation followed by eligible cleanup. That threshold was reached and new implementation stopped. The latest recorded allowance is 6 percent remaining while preservation finishes. The goal is active and incomplete; an explicit pause decision is pending. Its continuation ceiling is 11,607,405 tokens after the previous goal consumed 3,392,595 of the original 15,000,000. No completion or installed-lifecycle acceptance is claimed.
