@@ -56,3 +56,9 @@ The pinned Windows runner invokes `build.bat /s` and `build-installer.bat /s`, b
 ## PDF debug-map exclusion
 
 Packaging excludes only `.map` files below `node_modules/pdf-lib/`. Executable modules and legal notices remain included, and the source installation keeps the upstream debug maps. Runtime debugging therefore loses those upstream source mappings. This main-baseline adaptation preserves the existing resource list. At `a0239c91d517ca06d9725f36dd76874f5ab33ece`, the exact root build exited 0, all 994 retained PDF files matched source hashes, 560 maps were absent, and five extracted-runtime PDF checks passed. The existing packager omission of `yarn.lock` is separate. Selected ASAR hashes and verification limits are in [the public proof](../../evidence/main-performance-20261012.json). These results do not certify installed or GUI behavior. Package size is separate from application speed.
+
+## Local assistant state exclusion
+
+Local `.claude` and `.codex` directories, including nested worktrees and session state, are excluded from packaging at complete directory boundaries. The package inspector independently rejects them in actual archives and loose resources. Similar public names with suffixes are not excluded. Root-local ignore rules preserve this state outside source tracking; they do not delete another session.
+
+`node --test test/package-privacy.test.js` includes a regression that failed against the previous checker, then verifies packed and loose rejection, restored-package acceptance and precise boundaries. Nine focused checks passed after the repair. A new full package still requires its own production receipt.
