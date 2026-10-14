@@ -22,7 +22,7 @@
 - [x] Let data table header rows reach the right outline by dropping the reserved scrollbar gutter (History capture, main 4a30e82).
 - [x] Let workflow document name and content fields span their column (capture, main a36600b).
 - [x] Keep converter, local model and server preparation buttons at their own width instead of stretching across the grid (converter capture).
-- [ ] Place guidance information buttons inline beside the control they explain instead of on their own row (personalization, server preparation); this moves labels and helper text and needs its own layout pass.
+- [x] Place guidance information buttons in a trailing column beside the field, action or search they explain; an open guidance panel takes the full row (personalization captures, closed and open). Tab guidance stays aligned above its tab, since a tab cannot contain a button.
 
 ## Current preservation boundary
 

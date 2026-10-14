@@ -21,3 +21,15 @@
 .local-ux-field{grid-template-columns:minmax(0,1fr) auto;min-inline-size:0}.local-ux-field :is(md-outlined-text-field,md-outlined-select,mfe-date-field,mfe-file-picker){grid-column:1/-1;inline-size:100%;min-inline-size:0;max-inline-size:100%}.local-ux-field>label{font-weight:500}.local-ux-field>md-slider{grid-column:1/-1;inline-size:100%}.local-ux-field>mfe-control-guidance{grid-column:1/-1}.local-ux-field>small{color:var(--md-sys-color-on-surface-variant,#49454f)}
 .local-ux-color-details{border-radius:12px;border:1px solid var(--md-sys-color-outline-variant,#cac4d0);padding:12px}.local-ux-color-details>summary{cursor:pointer;min-block-size:32px}.local-ux [hidden]{display:none!important}.local-ux :is(mfe-date-field,mfe-file-picker){--md-outlined-text-field-container-shape:12px}.appearance-logo{display:grid;gap:12px;min-inline-size:0}.appearance-logo md-slider{inline-size:100%}.local-ux-history{display:grid;gap:12px;min-inline-size:0}
 @media(max-width:640px){.local-ux-section{padding:12px}.local-ux-field{grid-template-columns:minmax(0,1fr)}}
+/* Closed guidance sits in a trailing column beside the label or control it
+   explains; an open guidance panel takes the full row underneath. */
+.local-ux-field{grid-auto-flow:row dense;--guidance-tooltip-position:absolute;--guidance-tooltip-width:max-content;--guidance-tooltip-max-width:min(320px,70vw)}
+.local-ux-field>:is(md-outlined-button,md-text-button,md-filled-tonal-button){justify-self:start}
+.local-ux-field>mfe-control-guidance:not([data-open]){grid-column:2;align-self:center;justify-self:end;position:relative;margin-block:0}
+.local-ux-field:has(>mfe-control-guidance:not([data-open]))>:is(md-outlined-text-field,md-outlined-select,mfe-date-field,mfe-file-picker,md-slider){grid-column:1}
+.local-ux :is(.local-ux-section,:has(>mfe-search+mfe-control-guidance)){display:grid;grid-template-columns:minmax(0,1fr) auto;grid-auto-flow:row dense;column-gap:8px;--guidance-tooltip-position:absolute;--guidance-tooltip-width:max-content;--guidance-tooltip-max-width:min(320px,70vw)}
+.local-ux :is(.local-ux-section,:has(>mfe-search+mfe-control-guidance))>*{grid-column:1/-1}
+.local-ux :is(.local-ux-section,:has(>mfe-search+mfe-control-guidance))>mfe-control-guidance:not([data-open]){grid-column:2;align-self:center;position:relative;margin-block:0}
+.local-ux :is(.local-ux-section,:has(>mfe-search+mfe-control-guidance))>mfe-control-guidance:not([data-open])+*{grid-column:1;justify-self:start;max-width:100%}
+.local-ux :is(.local-ux-section,:has(>mfe-search+mfe-control-guidance))>mfe-search{grid-column:1}
+.local-ux :is(.local-ux-section,:has(>mfe-search+mfe-control-guidance))>mfe-search+mfe-control-guidance:not([data-open]){align-self:start;margin-block-start:16px}
