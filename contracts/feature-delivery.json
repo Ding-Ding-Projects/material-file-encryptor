@@ -13850,16 +13850,24 @@
     {
       "id": "honest-monetization",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Explain prices, limitations and payment effects before confirmation without invented entitlement claims. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The Status tab states that the product and extension are free, with no purchases, subscriptions, paid features or payment requests; no price, entitlement or payment flow exists to confirm. A headless browser capture shows the statement.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13873,7 +13881,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -13884,14 +13892,14 @@
         "action": "Explain prices, limitations and payment effects before confirmation without invented entitlement claims.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Explain prices, limitations and payment effects before confirmation without invented entitlement claims.",
-            "nextProof": "Exercise explain prices, limitations and payment effects before confirmation without invented entitlement claims on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Nothing is stored; no purchase or entitlement record exists."
       }
     },
     {
@@ -15241,16 +15249,25 @@
     {
       "id": "shared-link-embed",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/notes.js"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js",
+        "test/browser-extension-notes.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Embed safe shared links with honest unavailable states and no private identity disclosure. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Links in notes open only over https without credentials, in a new tab with no referrer or opener; other addresses stay plain text marked as not opened. A headless browser capture shows a safe link and a refused http link. Rich previews of linked pages are not fetched.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -15264,7 +15281,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -15275,14 +15292,14 @@
         "action": "Embed safe shared links with honest unavailable states and no private identity disclosure.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Embed safe shared links with honest unavailable states and no private identity disclosure.",
-            "nextProof": "Exercise embed safe shared links with honest unavailable states and no private identity disclosure on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Links live inside notes; nothing else is stored."
       }
     },
     {

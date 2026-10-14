@@ -49,6 +49,26 @@ export function deleteNotes(storage, ids) {
   return results;
 }
 
+/** Splits note text into plain parts and links; only https links are marked safe to open. */
+export function linkParts(text) {
+  const parts = [], pattern = /\b((?:https?|ftp|file|javascript|data):[^\s<>"']+)/gi;
+  let last = 0, match;
+  const value = String(text);
+  while ((match = pattern.exec(value))) {
+    if (match.index > last) parts.push({text: value.slice(last, match.index)});
+    // Trailing punctuation belongs to the sentence; a closing bracket only when the link itself has no matching opener.
+    let raw = match[1].replace(/[.,;:!?]+$/, '');
+    while (raw.endsWith(')') && (raw.match(/\)/g) || []).length > (raw.match(/\(/g) || []).length) raw = raw.slice(0, -1).replace(/[.,;:!?]+$/, '');
+    let safe = false;
+    try { const url = new URL(raw); safe = url.protocol === 'https:' && !url.username && !url.password; } catch {}
+    parts.push({link: raw, safe});
+    last = match.index + raw.length;
+    pattern.lastIndex = last;
+  }
+  if (last < value.length) parts.push({text: value.slice(last)});
+  return parts;
+}
+
 export function notesMarkdown(notes) { return notes.map(note => `## ${note.title}\n\n${note.body}\n`).join('\n'); }
 
 export function readDraft(storage) {

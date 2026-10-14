@@ -44,3 +44,4 @@ body{width:auto}main{max-width:1000px;margin:auto;max-height:none}section{paddin
 /* Support tickets and screen recording. */
 .ticket-form{display:grid;gap:8px;justify-items:start}.ticket-form md-outlined-text-field{inline-size:min(100%,560px)}.ticket-form md-outlined-select{min-width:12rem}#ticket-attachments,#ticket-list{justify-self:stretch}.ticket-entry{justify-content:space-between;flex-wrap:wrap}
 .recording-preview{inline-size:min(100%,640px);border-radius:12px;background:var(--md-sys-color-surface-container-low)}#narration-rate{width:min(100%,360px)}
+.link-unavailable{color:var(--md-sys-color-on-surface-variant);font-style:italic}.note-entry a{color:var(--md-sys-color-primary);overflow-wrap:anywhere}

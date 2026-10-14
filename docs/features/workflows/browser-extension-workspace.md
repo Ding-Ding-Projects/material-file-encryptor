@@ -68,6 +68,10 @@ The Documentation tab (Alt+5) reads the complete documentation set bundled with 
 
 The extension talks to the desktop only through browser native messaging. It has no HTTP API, so no Postman collection exists for it.
 
+Links written in a note become links only when they use https and carry no user name or password. They open in a new tab without sending a referrer or giving the opened page access back to the workspace. Other addresses, such as http or javascript ones, stay as plain text marked as not opened.
+
+The Status tab also states the price plainly: Material File Encryptor and this extension are free, with no purchases, subscriptions or paid features, and nothing in the workspace asks for payment details.
+
 ## Narration, support tickets and screen recording
 
 Narration, under Personalization, uses the browser's own speech engine. Choose a voice that suits the interface language and a speaking rate from 0.5 to 2. Read this tab (Alt+R) reads the open tab's headings, statuses and controls, naming each control's role and saying when it is unavailable. Stop reading, Escape, or moving to another tab stops speech. A new reading always replaces the previous one. When the browser has no speech engine, the workspace says so and disables reading.

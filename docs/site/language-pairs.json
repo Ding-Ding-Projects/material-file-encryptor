@@ -601,8 +601,8 @@
     {
       "source": "docs/features/workflows/browser-extension-workspace.md",
       "translation": "docs/features/workflows/browser-extension-workspace.zh-HK.md",
-      "sourceSha256": "9774d69a62e7326b6d910c7b83837cf1c6ec435d7ece43e7a9847a2c2b536ee8",
-      "translationSha256": "60e398074d27822984b96735dcd83e8aa47a4dcf53a7fc501c821219407e319d"
+      "sourceSha256": "1b8f8a6adc0a6f0878b80c5c110a5d488db61ba347fc18558ea3466730a01316",
+      "translationSha256": "1f76523233f09ca9a0ccd4749922707c7911b4beb9faaac131e522bc36bfdda4"
     },
     {
       "source": "docs/features/workflows/browser-native-host.md",
