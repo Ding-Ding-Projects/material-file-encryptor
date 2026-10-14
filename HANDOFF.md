@@ -2,6 +2,10 @@
 
 Hidden-desktop capture review of the built application found layout defects rather than generic controls; the remaining raw inputs the scan reports are the visually hidden native internals of the Material date and file picker composites. Fixed and captured on main: the local access legend sits inside its outlined card (862444b), data table headers reach the right outline (4a30e82), workflow document fields span their column (a36600b), converter, local model and server preparation buttons keep their own width (9eb2ffa), and guidance information buttons sit beside the field, action or search they explain, with an open panel taking the full row (3dd5a52, 07daa65). A full dark-theme sweep of all 19 views after these changes shows no generic controls beyond semantic tables, fieldsets and disclosures. Release workflow runs for 862444b, 4a30e82 and a36600b completed successfully.
 
+Later the same day: missing Material colour roles were completed from the theme, so focus rings no longer use the baseline purple (35a27ea); the navigation rail, table rows and guidance panels animate between states (a429430); main-process dialogs follow the interface language, captured for the credential prompt in English, Cantonese and bilingual modes (19d68e3).
+
+Required-feature inventory (contracts/feature-delivery.json, 315 rows): desktop 96 unverified and 9 not applicable; site 96 unverified and 9 not applicable; extension 35 unverified, 61 missing and 9 not applicable. Every missing row is a browser extension workflow. The full objective therefore remains incomplete: the extension needs those 61 workflows, and every unverified row needs its own evidence.
+
 Outstanding: captures at 100, 125 and 200 percent display scale (owner action); individual captures of the remaining message boxes; the separate protected settings reset branch.
 
 # Material conversion integration, 2026-10-14

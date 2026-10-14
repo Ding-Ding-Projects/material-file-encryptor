@@ -5,7 +5,7 @@ Objective: every element of the desktop application uses Material Design 3 compo
 
 Landed on main:
 - Material conversion sweep, Material dialogs in main-owned windows with nonce-bound answers, shared motion tokens, shutdown prompt that names unfinished work, README desktop captures with provenance, unified bilingual separator.
-- Layout polish from hidden-desktop capture review: local access legend inside its card (862444b), data table headers reach the right outline (4a30e82), workflow document fields span their column (a36600b), suite buttons keep their own width (9eb2ffa), guidance buttons sit beside the control they explain (3dd5a52, 07daa65).
+- Layout polish from hidden-desktop capture review: local access legend inside its card (862444b), data table headers reach the right outline (4a30e82), workflow document fields span their column (a36600b), suite buttons keep their own width (9eb2ffa), guidance buttons sit beside the control they explain (3dd5a52, 07daa65), complete Material colour roles (35a27ea), rail, row and guidance panel motion (a429430), dialogs in the interface language (19d68e3).
 
 Verification:
 - Hidden-desktop captures of the built application across 19 views in English light, English dark, Cantonese and bilingual at 150 percent display scale; Material dialogs captured in light and dark and cancelled with no change; each layout fix captured after rebuild.
@@ -14,9 +14,10 @@ Verification:
 
 Not yet done:
 - Captures at 100, 125 and 200 percent display scale require the owner to change the host display scale.
-- Individual captures of the licence, pairing, credential, import and update message boxes.
+- Individual captures of the licence, pairing, import and update message boxes (credential, consent and shutdown are captured).
+- Required-feature inventory, 315 rows: desktop 96 unverified, site 96 unverified, extension 35 unverified and 61 missing; every missing row is a browser extension workflow.
 - Branch codex/feature-mediation-01a137ae (protected settings reset): native writer adoption and independent review outstanding.
 - Renderer browser tests cannot run on this host because package file redirection makes evidence paths non-canonical.
 
-Next safe steps: read back the release runs for 9eb2ffa onward, then capture the remaining message boxes individually.
+Next safe steps: read back the release run for 19d68e3, then start the browser extension workflows from the missing rows in contracts/feature-delivery.json, and gather evidence for unverified desktop rows.
 ````
