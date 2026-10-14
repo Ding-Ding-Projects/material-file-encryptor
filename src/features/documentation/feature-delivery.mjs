@@ -143,6 +143,24 @@ export function expectedFeatureApplicability(id, surface) {
   return { kind: 'product', applies: true, directSurface: true, declaredScope: 'User-facing product surface' };
 }
 
+/**
+ * Rows that claim delivery without the evidence validateFeatureDelivery demands for a delivered row: an
+ * "implemented" (or "verified") status needs verified built interaction, verified visual evidence, listed evidence
+ * files and a "present" behavior verdict. Returns one message per unsupported claim.
+ */
+export function unsupportedCompletionClaims(rows) {
+  const problems = [];
+  for (const row of Array.isArray(rows) ? rows : []) {
+    if (!object(row) || !['implemented', 'verified'].includes(row.status)) continue;
+    const label = `${row.surface}/${row.id}`;
+    if (!Array.isArray(row.evidence) || row.evidence.length === 0) problems.push(`${label}: completion claimed without evidence files.`);
+    if (row.builtInteraction !== 'verified' || row.visualEvidence !== 'verified') problems.push(`${label}: completion claimed without verified built and visual evidence.`);
+    if (!['present', 'verified', 'complete'].includes(row.behaviorVerdict)) problems.push(`${label}: completion claimed while the behavior verdict is ${String(row.behaviorVerdict)}.`);
+    if (row.evidenceVerdict === 'current-runtime-unverified') problems.push(`${label}: completion claimed while the evidence verdict says runtime is unverified.`);
+  }
+  return problems;
+}
+
 /** Structural validation only. This function never claims to have queried Git objects. */
 export function validateFeatureDelivery(manifest, exists) {
   const errors = [];

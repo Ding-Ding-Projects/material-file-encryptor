@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import path from 'node:path';import os from 'node:os';
-import {stageBrowserExtension,changelogEntries} from '../scripts/build-browser-extension.mjs';import {pathToFileURL} from 'node:url';
+import {stageBrowserExtension,changelogEntries,extensionCoverage} from '../scripts/build-browser-extension.mjs';import {pathToFileURL} from 'node:url';
 async function fixture(t){const root=await fs.mkdtemp(path.join(os.tmpdir(),'extension-source-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));await fs.mkdir(path.join(root,'browser-extension'),{recursive:true});await fs.mkdir(path.join(root,'src/shared/surface'),{recursive:true});const manifest={manifest_version:3,action:{default_popup:'popup.html'},background:{service_worker:'background.js',type:'module'},permissions:['contextMenus','nativeMessaging']};await fs.writeFile(path.join(root,'browser-extension/manifest.json'),JSON.stringify(manifest));await fs.writeFile(path.join(root,'browser-extension/popup.html'),'<script type="module" src="popup.js"></script>');await fs.writeFile(path.join(root,'browser-extension/popup.js'),"import './vendor/material.js'; import './vendor/search.js';");await fs.writeFile(path.join(root,'browser-extension/background.js'),'const host="fixed";');for(const shared of ['preferences.js','accent.js','local-records.js'])await fs.writeFile(path.join(root,'browser-extension',shared),'export{};');await fs.writeFile(path.join(root,'src/shared/surface/material.js'),'// Vendor source: @material/web 2.5.0; esbuild 0.25.11.\nexport{};');const compile=async({entry,output})=>fs.writeFile(output,entry.endsWith('search-entry.js')?'new URL("./regex-worker.js",import.meta.url);':'self.onmessage=()=>{};');return{root,manifest,compile};}
 test('extension stage contains local Material/shared search/worker and truthful unsigned receipt',async t=>{const{root,compile}=await fixture(t),receipt=await stageBrowserExtension({root,compile});assert.equal(receipt.signature,'not-produced');assert.equal(receipt.installation,'not-performed');assert.deepEqual(receipt.files.filter(row=>row.path.startsWith('vendor/')).map(row=>row.path),['vendor/material.js','vendor/search.js','vendor/regex-worker.js']);const manifest=JSON.parse(await fs.readFile(path.join(root,'out/browser-extension/manifest.json'),'utf8'));assert.match(manifest.content_security_policy.extension_pages,/worker-src 'self'/);});
 test('extension staging rejects elevated permissions and remote popup scripts',async t=>{const{root,manifest,compile}=await fixture(t);await fs.writeFile(path.join(root,'browser-extension/manifest.json'),JSON.stringify({...manifest,permissions:[...manifest.permissions,'downloads']}));await assert.rejects(stageBrowserExtension({root,compile}),/permissions/);await fs.writeFile(path.join(root,'browser-extension/manifest.json'),JSON.stringify(manifest));await fs.writeFile(path.join(root,'browser-extension/popup.html'),'<script src="https://example.com/code.js"></script>');await assert.rejects(stageBrowserExtension({root,compile}),/external/);});
@@ -22,4 +22,60 @@ test('extension staging allows only the optional loopback host permission and no
   assert.deepEqual(staged.optional_host_permissions, ['http://127.0.0.1/*']);
   assert.ok(staged.content_security_policy.extension_pages.includes('http://127.0.0.1:*'));
   assert.equal(receipt.signature, 'not-produced');
+});
+
+// Feature coverage record generated from the inventory at build time.
+const fakeCompile = async ({entry, output}) => fs.writeFile(output, entry.endsWith('search-entry.js') ? 'new URL("./regex-worker.js",import.meta.url);' : 'self.onmessage=()=>{};');
+const inventoryPath = new URL('../contracts/feature-delivery.json', import.meta.url);
+
+test('the staged coverage module lists every extension inventory row with its verdicts and a bounded reason', async t => {
+  const destination = await fs.mkdtemp(path.join(os.tmpdir(), 'extension-coverage-'));
+  t.after(() => fs.rm(destination, {recursive: true, force: true}));
+  const receipt = await stageBrowserExtension({root: process.cwd(), destination: path.join(destination, 'stage'), compile: fakeCompile});
+  assert.ok(receipt.files.some(row => row.path === 'vendor/coverage.js' && row.sha256.length === 64));
+  assert.ok(receipt.files.some(row => row.path === 'release-code-name.js' && row.sha256.length === 64));
+  assert.ok(receipt.sourceFiles.some(row => row.path === 'contracts/feature-delivery.json' && row.sha256.length === 64));
+  const inventory = JSON.parse(await fs.readFile(inventoryPath, 'utf8'));
+  const expected = inventory.features.filter(row => row.surface === 'extension');
+  const coverage = (await import(pathToFileURL(path.join(destination, 'stage/vendor/coverage.js')).href)).default;
+  assert.equal(coverage.schemaVersion, 1);
+  assert.equal(coverage.total, expected.length);
+  assert.deepEqual(coverage.rows.map(row => row.id).sort(), expected.map(row => row.id).sort());
+  assert.equal(Object.values(coverage.counts).reduce((sum, value) => sum + value, 0), expected.length);
+  assert.deepEqual(coverage.extensionTargets.map(target => target.id).sort(), inventory.extensionTargets.map(target => target.id).sort());
+  for (const row of coverage.rows) {
+    const original = expected.find(item => item.id === row.id);
+    assert.deepEqual(Object.keys(row).sort(), ['behaviorVerdict', 'evidenceVerdict', 'id', 'reason', 'status']);
+    assert.equal(row.status, original.status);
+    assert.equal(row.behaviorVerdict, original.behaviorVerdict);
+    assert.equal(row.evidenceVerdict, original.evidenceVerdict);
+    assert.equal(row.reason, original.reason.slice(0, 240));
+    assert.ok(row.reason.length <= 240);
+  }
+  assert.ok(coverage.sourceCommit === null || /^[0-9a-f]{40}$/.test(coverage.sourceCommit));
+});
+
+test('a completion claim without evidence makes the build fail and leaves nothing staged', async t => {
+  const destination = await fs.mkdtemp(path.join(os.tmpdir(), 'extension-coverage-claim-'));
+  t.after(() => fs.rm(destination, {recursive: true, force: true}));
+  const inventory = JSON.parse(await fs.readFile(inventoryPath, 'utf8'));
+  const row = inventory.features.find(item => item.surface === 'extension');
+  Object.assign(row, {status: 'implemented', evidence: [], builtInteraction: 'unverified', visualEvidence: 'unverified'});
+  assert.throws(() => extensionCoverage(inventory, null), /Unsupported completion claim/);
+  await assert.rejects(stageBrowserExtension({root: process.cwd(), destination: path.join(destination, 'stage'), compile: fakeCompile, inventory}), /Unsupported completion claim/);
+  await assert.rejects(fs.lstat(path.join(destination, 'stage')), {code: 'ENOENT'});
+});
+
+test('each missing piece of evidence is reported, and an honest unverified inventory is accepted', async () => {
+  const inventory = JSON.parse(await fs.readFile(inventoryPath, 'utf8'));
+  assert.doesNotThrow(() => extensionCoverage(inventory, null));
+  const claim = overrides => ({...inventory, features: inventory.features.map((item, index) => index === inventory.features.findIndex(other => other.surface === 'extension') ? {...item, status: 'implemented', evidence: ['test/a.js'], builtInteraction: 'verified', visualEvidence: 'verified', behaviorVerdict: 'present', evidenceVerdict: 'verified', ...overrides} : item)});
+  assert.doesNotThrow(() => extensionCoverage(claim({}), null));
+  assert.throws(() => extensionCoverage(claim({evidence: []}), null), /without evidence files/);
+  assert.throws(() => extensionCoverage(claim({builtInteraction: 'unverified'}), null), /built and visual/);
+  assert.throws(() => extensionCoverage(claim({visualEvidence: 'unverified'}), null), /built and visual/);
+  assert.throws(() => extensionCoverage(claim({behaviorVerdict: 'partial'}), null), /behavior verdict is partial/);
+  assert.throws(() => extensionCoverage(claim({evidenceVerdict: 'current-runtime-unverified'}), null), /runtime is unverified/);
+  assert.throws(() => extensionCoverage({features: [], extensionTargets: []}, null), /no extension rows/);
+  assert.throws(() => extensionCoverage(null, null), /unavailable/);
 });

@@ -3,6 +3,7 @@ import path from 'node:path';
 import {createHash,randomUUID} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
+import {unsupportedCompletionClaims} from '../src/features/documentation/feature-delivery.mjs';
 
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 export async function compileExtensionSource({root,entry,output}){
@@ -22,17 +23,31 @@ export function changelogEntries(markdown){
  }
  return entries.slice(0,400);
 }
+/**
+ * Builds the coverage record shipped with the extension: every extension inventory row, the extension target
+ * identities and the counts by status. Throws when a row claims completion without the evidence a delivered row
+ * needs, so the bundle can never ship an unsupported completion claim.
+ */
+export function extensionCoverage(inventory, commit) {
+ if(!inventory||!Array.isArray(inventory.features)||!Array.isArray(inventory.extensionTargets))throw new Error('The feature inventory is unavailable.');
+ const rows=inventory.features.filter(row=>row?.surface==='extension');
+ if(!rows.length)throw new Error('The feature inventory has no extension rows.');
+ const problems=unsupportedCompletionClaims(rows);
+ if(problems.length)throw new Error('Unsupported completion claim in the feature inventory: '+problems.slice(0,5).join(' '));
+ const counts={};for(const row of rows)counts[row.status]=(counts[row.status]||0)+1;
+ return {schemaVersion:1,sourceCommit:commit,total:rows.length,counts,extensionTargets:inventory.extensionTargets.map(target=>({id:target.id,route:target.route,owner:target.owner,selector:target.selector})),rows:rows.map(row=>({id:String(row.id),status:String(row.status),behaviorVerdict:String(row.behaviorVerdict),evidenceVerdict:String(row.evidenceVerdict),reason:String(row.reason||'').slice(0,240)}))};
+}
 /** Source commit of the staged bundle, or null when it cannot be read. */
 function sourceCommit(root){const result=spawnSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'});const value=(result.stdout||'').trim();return /^[0-9a-f]{40}$/.test(value)?value:null;}
 /** Whether tracked extension inputs differ from that commit; null when it cannot be read. */
 function sourceModified(root){const result=spawnSync('git',['status','--porcelain','--untracked-files=no','--','browser-extension','scripts','src/shared','CHANGELOG.md'],{cwd:root,encoding:'utf8'});return result.status===0?result.stdout.trim().length>0:null;}
-export async function stageBrowserExtension({root=process.cwd(),destination=path.join(root,'out/browser-extension'),compile=compileExtensionSource}={}){
+export async function stageBrowserExtension({root=process.cwd(),destination=path.join(root,'out/browser-extension'),compile=compileExtensionSource,inventory=null}={}){
  root=await fs.realpath(root);destination=path.resolve(destination);const parent=path.dirname(destination);await fs.mkdir(parent,{recursive:true});const stage=path.join(parent,'.browser-extension-stage-'+randomUUID());await fs.mkdir(path.join(stage,'vendor'),{recursive:true});const sourceFiles=[];
  try{
   const manifest=JSON.parse(await fs.readFile(path.join(root,'browser-extension/manifest.json'),'utf8'));if(manifest.manifest_version!==3||manifest.action?.default_popup!=='popup.html'||manifest.background?.service_worker!=='background.js'||JSON.stringify([...manifest.permissions].sort())!==JSON.stringify(['contextMenus','nativeMessaging'].sort())||manifest.host_permissions?.length||(manifest.optional_host_permissions&&JSON.stringify(manifest.optional_host_permissions)!==JSON.stringify(['http://127.0.0.1/*']))||manifest.options_ui&& (manifest.options_ui.page!=='options.html'||manifest.options_ui.open_in_tab!==true))throw new Error('Unsupported browser extension permissions or entrypoints.');
   manifest.content_security_policy={extension_pages:"script-src 'self'; object-src 'none'; worker-src 'self'; connect-src https://raw.githubusercontent.com https://api.github.com http://127.0.0.1:*; base-uri 'none';"};
   await fs.writeFile(path.join(stage,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');
-  const extensionFiles=['background.js','popup.html','popup.js','popup.css','preferences.js','accent.js','local-records.js',...(manifest.options_ui?['options.html','options.js','options.css','exports.js','history.js','notes.js','schedules.js','vocabulary.js','narration.js','tickets.js','dimsum.js','local-models.js','rich-text.js']:[])];
+  const extensionFiles=['background.js','popup.html','popup.js','popup.css','preferences.js','accent.js','local-records.js',...(manifest.options_ui?['options.html','options.js','options.css','exports.js','history.js','notes.js','schedules.js','vocabulary.js','narration.js','tickets.js','dimsum.js','release-code-name.js','local-models.js','rich-text.js']:[])];
   // Icons come from the manifest; only icons/icon-<size>.png files with a PNG signature are staged.
   const iconFiles=[...new Set([...Object.values(manifest.icons||{}),...Object.values(manifest.action?.default_icon||{})])];
   for(const icon of iconFiles){if(!/^icons\/icon-\d{2,3}\.png$/.test(icon))throw new Error('Unsupported extension icon path.');const bytes=await fs.readFile(path.join(root,'browser-extension',icon));if(bytes.length>65536||bytes.readUInt32BE(0)!==0x89504e47)throw new Error('Extension icons must be small PNG files.');await fs.mkdir(path.join(stage,'icons'),{recursive:true});await fs.writeFile(path.join(stage,icon),bytes);sourceFiles.push({path:'browser-extension/'+icon,sha256:digest(bytes)});}
@@ -49,7 +64,9 @@ export async function stageBrowserExtension({root=process.cwd(),destination=path
   if(manifest.options_ui){const {buildDocumentationCatalog}=await import(pathToFileURL(path.join(root,'src/features/documentation/catalog.mjs')).href);const catalog=await buildDocumentationCatalog(root);await fs.writeFile(path.join(stage,'vendor/docs-catalog.js'),'export default '+JSON.stringify(catalog)+';\n');const renderer=await fs.readFile(path.join(root,'src/renderer/features/documentation/markdown.js'));if(/^\s*import\s/m.test(renderer.toString()))throw new Error('The Markdown renderer must stay free of imports.');await fs.writeFile(path.join(stage,'vendor/markdown.js'),renderer);sourceFiles.push({path:'src/renderer/features/documentation/markdown.js',sha256:digest(renderer)});docsFiles=['vendor/docs-catalog.js','vendor/markdown.js'];}
   // The workspace reads the changelog and its own provenance as modules, because the page policy blocks fetch.
   if(manifest.options_ui){const markdown=await fs.readFile(path.join(root,'CHANGELOG.md'),'utf8');sourceFiles.push({path:'CHANGELOG.md',sha256:digest(markdown)});await fs.writeFile(path.join(stage,'vendor/changelog.js'),'export default '+JSON.stringify({schemaVersion:1,entries:changelogEntries(markdown)})+';\n');await fs.writeFile(path.join(stage,'vendor/provenance.js'),'export default '+JSON.stringify({schemaVersion:1,version:manifest.version,sourceCommit:sourceCommit(root),sourceModified:sourceModified(root),stagedAtUtc:new Date().toISOString()})+';\n');}
-  const files=[];for(const relative of ['manifest.json',...iconFiles,...fontFiles,...docsFiles,...extensionFiles.filter(name=>sourceFiles.some(row=>row.path==='browser-extension/'+name)),'vendor/material.js','vendor/search.js','vendor/regex-worker.js',...(manifest.options_ui?['vendor/language.js','vendor/changelog.js','vendor/provenance.js']:[])]){const bytes=await fs.readFile(path.join(stage,relative));if(!bytes.length)throw new Error('An extension output is empty.');files.push({path:relative,sha256:digest(bytes),bytes:bytes.length});}
+  // The coverage record is generated from the feature inventory; a completion claim without evidence fails the build.
+  if(manifest.options_ui){const raw=inventory?null:await fs.readFile(path.join(root,'contracts/feature-delivery.json'));const source=inventory||JSON.parse(raw.toString('utf8'));if(raw)sourceFiles.push({path:'contracts/feature-delivery.json',sha256:digest(raw)});await fs.writeFile(path.join(stage,'vendor/coverage.js'),'export default '+JSON.stringify(extensionCoverage(source,sourceCommit(root)))+';\n');}
+  const files=[];for(const relative of ['manifest.json',...iconFiles,...fontFiles,...docsFiles,...extensionFiles.filter(name=>sourceFiles.some(row=>row.path==='browser-extension/'+name)),'vendor/material.js','vendor/search.js','vendor/regex-worker.js',...(manifest.options_ui?['vendor/language.js','vendor/changelog.js','vendor/provenance.js','vendor/coverage.js']:[])]){const bytes=await fs.readFile(path.join(stage,relative));if(!bytes.length)throw new Error('An extension output is empty.');files.push({path:relative,sha256:digest(bytes),bytes:bytes.length});}
   const search=await fs.readFile(path.join(stage,'vendor/search.js'),'utf8');if(!search.includes('regex-worker.js'))throw new Error('The shared regex worker route was not retained.');
   for(const relative of ['browser-extension/manifest.json','scripts/browser-extension-search-entry.js','scripts/browser-extension-language-entry.js','src/shared/surface/search.js','src/shared/surface/regex-worker.js','src/shared/surface/regex-workbench.js','src/shared/surface/workbench-tools.js','src/shared/surface/registry.js','src/shared/surface/controls.js','src/shared/surface/localization.js','src/shared/local-ux/language.js','src/shared/local-ux/message-styles.js','src/shared/local-ux/local-copy.js','src/renderer/features/access/copy.js','src/renderer/features/personalization/appearance-copy.js']){try{sourceFiles.push({path:relative,sha256:digest(await fs.readFile(path.join(root,relative)))});}catch(error){if(compile===compileExtensionSource)throw error;}}
   const receipt={schemaVersion:1,materialVersion:'2.5.0',bundlerVersion:'0.25.11',materialSourceSha256:digest(material),sourceFiles,files,signature:'not-produced',installation:'not-performed',runtimeVerification:'not-performed'};await fs.writeFile(path.join(stage,'bundle-receipt.json'),JSON.stringify(receipt,null,2)+'\n');
