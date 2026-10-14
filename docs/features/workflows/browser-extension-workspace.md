@@ -1,6 +1,6 @@
 # Browser extension workspace
 
-Open workspace in the popup opens the extension-owned options tab. Connection, Personalization, Changelog and Status are Material tabs with Arrow Left/Right and Home/End navigation, and each panel fades in unless reduced motion is requested. Tab changes keep the same controls rather than replacing the focused element. Shared local Material components and the bundled regex search are used without remote executable assets.
+Open workspace in the popup opens the extension-owned options tab. Connection, Personalization, Changelog, Notes and Status are Material tabs with Arrow Left/Right and Home/End navigation, and each panel fades in unless reduced motion is requested. Tab changes keep the same controls rather than replacing the focused element. Shared local Material components and the bundled regex search are used without remote executable assets.
 
 Language (English, Cantonese or bilingual), theme (system, light or dark) and the selected tab use a versioned bounded extension-origin local store. No browser storage sync, broad host permission or additional storage permission is used. Invalid or oversized cached settings fall back to defaults. A failed write retains usable page state and explicitly reports that the change was not saved. Reset restores browser-local defaults only. Bilingual labels stack their secondary line.
 
@@ -24,7 +24,7 @@ About these settings, under Personalization, lists each setting with its current
 
 Reset browser settings asks for a deliberate confirmation: turn on both confirmation switches, move the slider fully right, then choose Execute. Emergency exit cancels with nothing changed. Individual playfulness resets stay one step, because they change a single value.
 
-Alt+1 to Alt+4 open Connection, Personalization, Changelog and Status, and Ctrl+K opens the command palette, which lists these shortcuts beside their commands. Browser-reserved combinations such as Ctrl with a number, Ctrl+T and Ctrl+W are left to the browser.
+Alt+1 to Alt+5 open Connection, Personalization, Changelog, Notes and Status, and Ctrl+K opens the command palette, which lists these shortcuts beside their commands. Browser-reserved combinations such as Ctrl with a number, Ctrl+T and Ctrl+W are left to the browser.
 
 ## Name, accent, recent changes and filters
 
@@ -47,6 +47,12 @@ Choose logo, under Personalization, accepts a PNG, JPEG or WebP image of 64 KB o
 Attention offers three local switches. Focus hides explanatory text. Reduced stimulus turns off motion and emoji decoration. Guided attention outlines the open panel. Turn off attention modes switches all three off. These switches change only presentation in this browser; they are not shared with the desktop application.
 
 The Status tab links to the documentation website at its exact address, https://ding-ding-projects.github.io/material-file-encryptor/, and shows the address as text.
+
+## Notes
+
+The Notes tab (Alt+4) keeps short notes in this browser only, up to 50 of them. New note opens a side sheet above the current tab, so whatever was open underneath stays as it was. The sheet has three steps: a title, then an empty page for the note itself, then a review. Next checks each step before moving on, Back returns to the previous step, and Cancel or Escape keeps a draft that is restored the next time New note is opened. Closing the sheet returns focus to the button that opened it.
+
+Select several notes with their checkboxes to act on them together. Export selected saves them as one Markdown file. Delete selected asks for the same deliberate confirmation as the full reset, then reports how many were deleted, how many could not be deleted (those stay selected) and how many were already gone.
 
 Focused tests cover malformed/oversized cache, failed saves, persistence, keyboard tab routing, forged sender paths and staged local-only CSP. Source staging hashes every workspace file. Signing, installed identity, real browser interaction, visual parity and display scaling remain unverified.
 

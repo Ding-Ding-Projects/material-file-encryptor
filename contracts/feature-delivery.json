@@ -12701,16 +12701,25 @@
     {
       "id": "overlay-panels",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Open contextual panels above active work, return focus and preserve underlying task state. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The new-note side sheet opens above the current tab, keeps the tab state underneath and returns focus to its opener when closed. Headless browser captures show the sheet over the Notes tab; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -12724,7 +12733,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -12735,14 +12744,14 @@
         "action": "Open contextual panels above active work, return focus and preserve underlying task state.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Open contextual panels above active work, return focus and preserve underlying task state.",
-            "nextProof": "Exercise open contextual panels above active work, return focus and preserve underlying task state on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "The side sheet holds no state of its own beyond the draft; the tab underneath is unchanged."
       }
     },
     {
@@ -13336,16 +13345,25 @@
     {
       "id": "guided-forms",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Complete multistep forms with inline validation, back navigation and recoverable drafts. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "New note runs as three steps with inline validation, Back navigation and a draft restored after Cancel or Escape. Headless browser captures with trusted input show each step; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13359,7 +13377,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -13370,14 +13388,14 @@
         "action": "Complete multistep forms with inline validation, back navigation and recoverable drafts.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Complete multistep forms with inline validation, back navigation and recoverable drafts.",
-            "nextProof": "Exercise complete multistep forms with inline validation, back navigation and recoverable drafts on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "A draft record keeps the title, text and step until the note is saved."
       }
     },
     {
@@ -13438,16 +13456,25 @@
     {
       "id": "blank-editors",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Open truly empty editors with contextual guidance and validate user-entered content before saving. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "The note text step starts from an empty field with contextual guidance and is validated for length and control characters before saving. Headless browser captures with trusted input show the empty editor, validation and saving; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13461,7 +13488,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -13472,14 +13499,14 @@
         "action": "Open truly empty editors with contextual guidance and validate user-entered content before saving.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Open truly empty editors with contextual guidance and validate user-entered content before saving.",
-            "nextProof": "Exercise open truly empty editors with contextual guidance and validate user-entered content before saving on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Notes live in a separate bounded local record of at most 50 notes."
       }
     },
     {
@@ -13934,16 +13961,25 @@
     {
       "id": "bulk-actions",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/options.css"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
         "browser-extension/options.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Select multiple records, preview shared actions and report per-record progress and failures. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Notes are selected with checkboxes and exported together as Markdown or deleted together after confirmation, with a summary of deleted, failed and already missing notes. Headless browser captures with trusted input show selection and the confirmation; installed-build identity and independent acceptance are not claimed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13957,7 +13993,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -13968,14 +14004,14 @@
         "action": "Select multiple records, preview shared actions and report per-record progress and failures.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Select multiple records, preview shared actions and report per-record progress and failures.",
-            "nextProof": "Exercise select multiple records, preview shared actions and report per-record progress and failures on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this workflow, including invalid and reset states."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Selection lasts for the page; notes are deleted only after the deliberate confirmation."
       }
     },
     {
