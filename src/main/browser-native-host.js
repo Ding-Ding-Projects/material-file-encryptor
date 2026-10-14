@@ -37,7 +37,7 @@ export function createBrowserHandoffLifecycle({hostDirectory,platform=process.pl
    if(closed){lastReceipt=await broker.close();state={...state,reason:'CLOSED'};}return status();
   })();try{return await starting;}finally{starting=null;}
  }
- return{initialize,status,observeDownload:event=>broker?.observeDownload(event),revoke(){broker?.revoke();},get pending(){return broker?.pending||0;},async close(){closed=true;broker?.revoke();if(starting)await starting;if(broker)lastReceipt=await broker.close();else lastReceipt={closed:true,processExited:true,stdioClosed:true,pendingRequests:0,pendingResponses:0,verified:true,deadlineMs:0};state={...state,reason:'CLOSED'};return lastReceipt;}};
+ return{initialize,status,observeDownload:event=>broker?.observeDownload(event),revoke(){broker?.revoke();},get pending(){return broker?.pending||0;},async close(){closed=true;broker?.revoke();if(starting)await starting;if(broker)lastReceipt=await broker.close();else lastReceipt={closed:true,processExited:true,stdioClosed:true,pendingRequests:0,pendingResponses:0,pendingDisposals:0,verified:true,deadlineMs:0};state={...state,reason:'CLOSED'};return lastReceipt;}};
 }
 
 /** Host-only transport. Its caller origin is an allowlist input, never proof of
@@ -134,9 +134,9 @@ export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnloc
    // A process 'close' event observes exit plus closure of all inherited stdio.
    // Drain completed response jobs without waiting indefinitely on native consent.
    await Promise.resolve();
-   const processExited=[...owners].every(owner=>owner.processExited||owner.spawnFailed),stdioClosed=[...owners].every(owner=>owner.stdioClosed),pendingRequests=active,pendingResponses=jobs.size;
-   return{closed:true,processExited,stdioClosed,pendingRequests,pendingResponses,verified:processExited&&stdioClosed&&pendingRequests===0&&pendingResponses===0,deadlineMs:closeTimeoutMs};
-  })();const current=closing;current.then(receipt=>{if(!receipt.verified&&closing===current)closing=null;});return current;
+   const processExited=[...owners].every(owner=>owner.processExited||owner.spawnFailed),stdioClosed=[...owners].every(owner=>owner.stdioClosed),pendingRequests=active,pendingResponses=jobs.size,pendingDisposals=conversions.pendingDisposals;
+   return{closed:true,processExited,stdioClosed,pendingRequests,pendingResponses,pendingDisposals,verified:processExited&&stdioClosed&&pendingRequests===0&&pendingResponses===0&&pendingDisposals===0,deadlineMs:closeTimeoutMs};
+  })();const current=closing;current.then(receipt=>{if(!receipt.verified&&closing===current)closing=null;},()=>{if(closing===current)closing=null;});return current;
  }
  return{start,receive,observeDownload,revoke,get available(){return ready&&!closed;},get pending(){return active;},close};
 }

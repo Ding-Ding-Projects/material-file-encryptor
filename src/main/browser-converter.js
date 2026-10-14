@@ -65,7 +65,7 @@ export function createBrowserConverterMediation({getPair,isUnlocked,adapter,now=
  const pairs=new Set(),disposals=new Set();let disposalError=null;
  let epoch=0,closed=false,active=null;
  const revoke=()=>{epoch++;active?.abort();for(const pair of pairs){pairs.delete(pair);if(typeof dispose==='function'){const pending=Promise.resolve().then(()=>dispose(pair)).catch(error=>{disposalError=error;}).finally(()=>disposals.delete(pending));disposals.add(pending);}}};
- return {supports:type=>Object.hasOwn(keys,type),revoke,async disposePending(){await Promise.all([...disposals]);if(disposalError)throw disposalError;},close(){closed=true;revoke();},
+ return {supports:type=>Object.hasOwn(keys,type),revoke,get pendingDisposals(){return disposals.size;},async disposePending(){await Promise.all([...disposals]);if(disposalError)throw disposalError;},close(){closed=true;revoke();},
  async receive(origin,message,checkConnection){
   validateBrowserConverterRequest(message);if(typeof adapter!=='function')throw Error('Browser conversion unavailable.');
   const pair=getPair(origin),generation=epoch;
