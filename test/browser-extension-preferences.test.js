@@ -8,3 +8,14 @@ test('storage write failure retains usable in-memory tab and language state with
 test('blocked browser storage access falls back without crashing the workspace',()=>{const root={get localStorage(){throw new Error('storage blocked');}};assert.equal(acquireStorage(root),null);assert.equal(readPreferences(acquireStorage(root)).state,'unavailable');});
 test('version two preferences gain an empty display name and accent without losing settings',()=>{const old=JSON.stringify({version:2,language:'bilingual',theme:'dark',tab:'changelog',funnyEnglish:3,funnyCantonese:4,emoji:true});const result=readPreferences({getItem:()=>old});assert.equal(result.state,'saved');assert.deepEqual(result.value,{version:3,language:'bilingual',theme:'dark',tab:'changelog',funnyEnglish:3,funnyCantonese:4,emoji:true,displayName:'',accent:''});});
 test('display names and accent colours are bounded plain values',()=>{assert.equal(validDisplayName('Family vault'),true);assert.equal(validDisplayName('x'.repeat(61)),false);assert.equal(validDisplayName('line\nbreak'),false);assert.equal(validAccent(''),true);assert.equal(validAccent('#3a7d44'),true);assert.equal(validAccent('#3a7d4480'),true);assert.equal(validAccent('#3A7D44'),false);assert.equal(validAccent('rgb(1,2,3)'),false);});
+test('the models tab is a valid saved tab, unknown tabs are still refused and older versions keep working', () => {
+  const store = {value: null, getItem: () => store.value, setItem: (key, next) => { store.value = next; }};
+  assert.equal(savePreferences(store, {...defaults, tab: 'models'}).tab, 'models');
+  assert.equal(readPreferences(store).value.tab, 'models');
+  assert.equal(readPreferences(store).state, 'saved');
+  assert.throws(() => savePreferences(store, {...defaults, tab: 'chat'}), /Invalid local preferences/);
+  assert.equal(applyPreferences(store, defaults, {tab: 'models'}).value.tab, 'models');
+  const old = JSON.stringify({version: 2, language: 'yue', theme: 'dark', tab: 'models', funnyEnglish: 3, funnyCantonese: 4, emoji: true});
+  assert.equal(readPreferences({getItem: () => old}).value.tab, 'models');
+  assert.equal(defaults.version, 3);
+});

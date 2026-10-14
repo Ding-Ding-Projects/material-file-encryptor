@@ -1,14 +1,14 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import vm from 'node:vm';
-import {defaults,readPreferences,applyPreferences,tabTarget} from '../browser-extension/preferences.js';import {styleExtensionMessage} from '../scripts/browser-extension-language-entry.js';import {EXPORT_FORMATS,exportChangelog,validateExport} from '../browser-extension/exports.js';import {readHistory,recordChanges,clearHistory} from '../browser-extension/history.js';import {ACCENT_PRESETS,accentPalette,applyAccent} from '../browser-extension/accent.js';import {checkLogoFile,readLogo,saveLogo,clearLogo,readAttention,saveAttention,attentionDefaults} from '../browser-extension/local-records.js';import {NOTE_LIMITS,checkNote,readNotes,addNote,deleteNotes,notesMarkdown,readDraft,saveDraft,clearDraft,linkParts} from '../browser-extension/notes.js';import {SCHEDULE_VALUES,readSchedules,addSchedule,cancelSchedule,takeDue,timeZoneLabel} from '../browser-extension/schedules.js';import {readVocabulary,saveVocabulary,clearVocabulary,applyVocabulary} from '../browser-extension/vocabulary.js';import {readNarration,saveNarration,voicesFor,narrationScript,speak,stopSpeech} from '../browser-extension/narration.js';import {TICKET_CATEGORIES,TICKET_STATUSES,checkAttachment,saveTicket,readTickets,deleteTicket,diagnosticsText,ticketExport} from '../browser-extension/tickets.js';import {CATALOG_URL,RELEASES_URL,normaliseCatalog,photoMap,categories,searchDishes,readFavourites,toggleFavourite} from '../browser-extension/dimsum.js';
-// This options-shell fixture isolates feature mounts. Production note rendering and converter controls have dedicated executable tests.
+import {defaults,readPreferences,applyPreferences,tabTarget} from '../browser-extension/preferences.js';import {styleExtensionMessage} from '../scripts/browser-extension-language-entry.js';import {EXPORT_FORMATS,exportChangelog,validateExport} from '../browser-extension/exports.js';import {readHistory,recordChanges,clearHistory} from '../browser-extension/history.js';import {ACCENT_PRESETS,accentPalette,applyAccent} from '../browser-extension/accent.js';import {checkLogoFile,readLogo,saveLogo,clearLogo,readAttention,saveAttention,attentionDefaults} from '../browser-extension/local-records.js';import {NOTE_LIMITS,checkNote,readNotes,addNote,deleteNotes,notesMarkdown,readDraft,saveDraft,clearDraft,linkParts} from '../browser-extension/notes.js';import {SCHEDULE_VALUES,readSchedules,addSchedule,cancelSchedule,takeDue,timeZoneLabel} from '../browser-extension/schedules.js';import {readVocabulary,saveVocabulary,clearVocabulary,applyVocabulary} from '../browser-extension/vocabulary.js';import {readNarration,saveNarration,voicesFor,narrationScript,speak,stopSpeech} from '../browser-extension/narration.js';import {TICKET_CATEGORIES,TICKET_STATUSES,checkAttachment,saveTicket,readTickets,deleteTicket,diagnosticsText,ticketExport} from '../browser-extension/tickets.js';import {CATALOG_URL,RELEASES_URL,normaliseCatalog,photoMap,categories,searchDishes,readFavourites,toggleFavourite} from '../browser-extension/dimsum.js';import {DEFAULT_PORT,ORIGIN_PATTERN,LIMITS,parsePort,modelName,validatePayload,callLocal,formatSize,installedModels,runningNames,pullProgress,chatDelta} from '../browser-extension/local-models.js';import {parseRichText} from '../browser-extension/rich-text.js';
+// This shell fixture isolates feature mounts; dedicated tests exercise production note, converter and model behavior.
 const renderNoteText=(host,markdown,renderer,translate)=>renderer(host,markdown,{translate});
 const mountBrowserConverter=()=>({setConnection(){},refreshLabels(){}});
 const source=await fs.readFile(new URL('../browser-extension/options.js',import.meta.url),'utf8'),html=await fs.readFile(new URL('../browser-extension/options.html',import.meta.url),'utf8');
 async function fixture(snapshot,language='en',{changelog={schemaVersion:1,entries:[{title:'Material sweep',date:'2026-10-14',items:['Converted tabs'],yue:'轉做 Material'},{title:'Startup',date:'2026-10-11',items:['Readiness'],yue:''}]},provenance={schemaVersion:1,version:'0.1.0',sourceCommit:'a'.repeat(40),sourceModified:false,stagedAtUtc:'2026-10-14T09:30:00.000Z'},records:seed=null,extras={},docsCatalog={schemaVersion:1,documents:[{id:'readme',source:'docs/features/README.md',title:'Features',markdown:'# Features\nSee [workspace](workflows/browser-extension-workspace.md).',headings:[]},{id:'workspace',source:'docs/features/workflows/browser-extension-workspace.md',title:'Browser extension workspace',markdown:'# Browser extension workspace\nNotes and schedules.',headings:[]},{id:'workspace-yue',source:'docs/features/workflows/browser-extension-workspace.zh-HK.md',title:'瀏覽器擴充功能工作區',markdown:'# 瀏覽器擴充功能工作區\n筆記。',headings:[]}],assets:[]}}={}){
  const nodes=new Map(),calls=[],attributes=new Map(),created=[];const node=id=>{if(!nodes.has(id))nodes.set(id,{id,textContent:'',dataset:{},listeners:{},setAttribute(name,value){attributes.set(id+':'+name,value);},replaceChildren(...children){this.textContent=children.map(child=>child.textContent??'').join('');},append(child){this.textContent+=child.textContent;},addEventListener(name,fn){this.listeners[name]=fn;},setLanguage(){},filter:async rows=>rows,focus(){},show(){this.open=true;return Promise.resolve();},close(){this.open=false;}});return nodes.get(id);};
- const copies=[...html.matchAll(/data-copy="([^"]+)"/g)].map((match,index)=>{const item=node('copy-'+index);item.dataset.copy=match[1];return item;});const tabs=['connection','personalization','changelog','notes','docs','support','dimsum','status'].map(tab=>{const item=node('tab-'+tab);item.dataset.tab=tab;return item;});const languages=['en','yue','bilingual'].map(value=>{const item=node('language-'+value);item.dataset.language=value;return item;});const themes=['system','light','dark'].map(value=>{const item=node('theme-'+value);item.dataset.theme=value;return item;});const stored={value:JSON.stringify({...defaults,language})};const history={value:null},records=seed??new Map();const storage={getItem:key=>key==='mfe-extension-history-v1'?history.value:key==='mfe-extension-preferences-v1'?stored.value:(records.get(key)??null),setItem(key,value){if(key==='mfe-extension-history-v1')history.value=value;else if(key==='mfe-extension-preferences-v1')stored.value=value;else records.set(key,value);},removeItem(key){if(key==='mfe-extension-history-v1')history.value=null;else records.delete(key);},stored,history,records};
+ const copies=[...html.matchAll(/data-copy="([^"]+)"/g)].map((match,index)=>{const item=node('copy-'+index);item.dataset.copy=match[1];return item;});const permissionRequests=[];const tabs=['connection','personalization','changelog','notes','docs','support','dimsum','models','status'].map(tab=>{const item=node('tab-'+tab);item.dataset.tab=tab;return item;});const languages=['en','yue','bilingual'].map(value=>{const item=node('language-'+value);item.dataset.language=value;return item;});const themes=['system','light','dark'].map(value=>{const item=node('theme-'+value);item.dataset.theme=value;return item;});const stored={value:JSON.stringify({...defaults,language})};const history={value:null},records=seed??new Map();const storage={getItem:key=>key==='mfe-extension-history-v1'?history.value:key==='mfe-extension-preferences-v1'?stored.value:(records.get(key)??null),setItem(key,value){if(key==='mfe-extension-history-v1')history.value=value;else if(key==='mfe-extension-preferences-v1')stored.value=value;else records.set(key,value);},removeItem(key){if(key==='mfe-extension-history-v1')history.value=null;else records.delete(key);},stored,history,records};
  const win={listeners:{},addEventListener(name,fn){(this.listeners[name]??=[]).push(fn);}};const document={getElementById:node,documentElement:{dataset:{},style:{props:{},setProperty(name,value){this.props[name]=value;},removeProperty(name){delete this.props[name];}}},createTextNode:text=>({textContent:text}),createElement:tag=>{const made=node('generated-'+nodes.size);made.localName=tag;created.push(made);return made;},querySelectorAll:selector=>({'[data-copy]':copies,'[data-tab]':tabs,'[data-language]':languages,'[data-theme]':themes,'[data-guidance]':[]}[selector]||[])};
- vm.runInNewContext(source.replace(/^import [^\r\n]*;\r?\n/gm,''),{renderNoteText,mountBrowserConverter,changelog,provenance,EXPORT_FORMATS,exportChangelog,validateExport,readHistory,recordChanges,clearHistory,ACCENT_PRESETS,accentPalette,applyAccent,checkLogoFile,readLogo,saveLogo,clearLogo,readAttention,saveAttention,attentionDefaults,NOTE_LIMITS,checkNote,readNotes,addNote,deleteNotes,notesMarkdown,readDraft,saveDraft,clearDraft,linkParts,SCHEDULE_VALUES,readSchedules,addSchedule,cancelSchedule,takeDue,timeZoneLabel,readVocabulary,saveVocabulary,clearVocabulary,applyVocabulary,Intl,docsCatalog,readNarration,saveNarration,voicesFor,narrationScript,speak,stopSpeech,TICKET_CATEGORIES,TICKET_STATUSES,checkAttachment,saveTicket,readTickets,deleteTicket,diagnosticsText,ticketExport,CATALOG_URL,RELEASES_URL,normaliseCatalog,photoMap,categories,searchDishes,readFavourites,toggleFavourite,fetch:extras.fetch,caches:extras.caches,Response:class{constructor(body,init){this.body=body;this.headers=new Map(Object.entries(init?.headers||{}));}async json(){return JSON.parse(this.body);}},speechSynthesis:extras.speechSynthesis,navigator:extras.navigator,MediaRecorder:extras.MediaRecorder,SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},URL:{createObjectURL:()=>'blob:recording',revokeObjectURL(){}},Blob:class{constructor(parts,options){this.parts=parts;this.type=options?.type;}},renderMarkdown:(host,markdown,context)=>{host.textContent=markdown;host.context=context;},FileReader:class{readAsDataURL(file){this.result=file.dataUrl;queueMicrotask(()=>this.onload());}readAsText(file){this.result=file.text;queueMicrotask(()=>this.onload());}},defaults,document,window:win,readPreferences,applyPreferences,tabTarget,acquireStorage:()=>storage,styleExtensionMessage,chrome:{runtime:{getManifest:()=>({version:'0.1.0'}),sendMessage:async message=>{calls.push(message.type);if(message.type==='protection-status'){if(snapshot instanceof Error)throw snapshot;return snapshot;}return {paired:true};}}}});await new Promise(resolve=>setTimeout(resolve,0));return{node,calls,attributes,storage,win,document,nodesWith:text=>[...nodes.values()].filter(item=>String(item.textContent).includes(text)),find:(tag,name)=>[...created].reverse().find(item=>item.localName===tag&&attributes.get(item.id+':aria-label')===name),prefs:()=>JSON.parse(storage.stored.value)};
+ vm.runInNewContext(source.replace(/^import [^\r\n]*;\r?\n/gm,''),{renderNoteText,mountBrowserConverter,changelog,provenance,EXPORT_FORMATS,exportChangelog,validateExport,readHistory,recordChanges,clearHistory,ACCENT_PRESETS,accentPalette,applyAccent,checkLogoFile,readLogo,saveLogo,clearLogo,readAttention,saveAttention,attentionDefaults,NOTE_LIMITS,checkNote,readNotes,addNote,deleteNotes,notesMarkdown,readDraft,saveDraft,clearDraft,linkParts,SCHEDULE_VALUES,readSchedules,addSchedule,cancelSchedule,takeDue,timeZoneLabel,readVocabulary,saveVocabulary,clearVocabulary,applyVocabulary,Intl,docsCatalog,readNarration,saveNarration,voicesFor,narrationScript,speak,stopSpeech,TICKET_CATEGORIES,TICKET_STATUSES,checkAttachment,saveTicket,readTickets,deleteTicket,diagnosticsText,ticketExport,CATALOG_URL,RELEASES_URL,normaliseCatalog,photoMap,categories,searchDishes,readFavourites,toggleFavourite,DEFAULT_PORT,ORIGIN_PATTERN,LIMITS,parsePort,modelName,validatePayload,callLocal,formatSize,installedModels,runningNames,pullProgress,chatDelta,parseRichText,AbortController,fetch:extras.fetch,caches:extras.caches,Response:class{constructor(body,init){this.body=body;this.headers=new Map(Object.entries(init?.headers||{}));}async json(){return JSON.parse(this.body);}},speechSynthesis:extras.speechSynthesis,navigator:extras.navigator,MediaRecorder:extras.MediaRecorder,SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},URL:{createObjectURL:()=>'blob:recording',revokeObjectURL(){}},Blob:class{constructor(parts,options){this.parts=parts;this.type=options?.type;}},renderMarkdown:(host,markdown,context)=>{host.textContent=markdown;host.context=context;},FileReader:class{readAsDataURL(file){this.result=file.dataUrl;queueMicrotask(()=>this.onload());}readAsText(file){this.result=file.text;queueMicrotask(()=>this.onload());}},defaults,document,window:win,readPreferences,applyPreferences,tabTarget,acquireStorage:()=>storage,styleExtensionMessage,chrome:{permissions:{request:async details=>{permissionRequests.push(details);return extras.grant!==false;}},runtime:{getManifest:()=>({version:'0.1.0'}),sendMessage:async message=>{calls.push(message.type);if(message.type==='protection-status'){if(snapshot instanceof Error)throw snapshot;return snapshot;}return {paired:true};}}}});await new Promise(resolve=>setTimeout(resolve,0));return{node,calls,permissionRequests,attributes,storage,win,document,nodesWith:text=>[...nodes.values()].filter(item=>String(item.textContent).includes(text)),find:(tag,name)=>[...created].reverse().find(item=>item.localName===tag&&attributes.get(item.id+':aria-label')===name),prefs:()=>JSON.parse(storage.stored.value)};
 }
 test('options separates paired connection from unavailable browser authority and localizes observed states',async()=>{const f=await fixture({schemaVersion:1,profile:'authenticated',sharedMode:'active',browserPermission:'unavailable'},'yue');assert.match(f.node('connection-state').textContent,/已配對/);assert.match(f.node('profile-state').textContent,/已驗證/);assert.match(f.node('shared-state').textContent,/已啟用/);assert.deepEqual(f.calls,['status','protection-status','workflow-discover']);assert.equal(f.attributes.get('workspace-tabs:aria-label'),'Material File Encryptor · 工作區');});
 test('options failed or malformed protection reads retain connection while clearing observations',async()=>{for(const snapshot of [new Error('fixture unavailable'),{schemaVersion:1,profile:'authenticated',sharedMode:'inactive',browserPermission:'granted'},{schemaVersion:2,profile:'authenticated',sharedMode:'inactive',browserPermission:'unavailable'}]){const f=await fixture(snapshot);assert.match(f.node('connection-state').textContent,/Paired/);assert.match(f.node('profile-state').textContent,/unavailable/);assert.match(f.node('shared-state').textContent,/unavailable/);}});
@@ -19,7 +19,7 @@ test('export formats serialise, neutralise spreadsheet formulas and validate the
 test('workspace export previews the filtered releases and offers only a validated file',async()=>{const f=await fixture(new Error('x'));f.node('changelog-filter').value='readiness';f.node('changelog-filter').listeners.input();f.node('export-format').value='csv';f.node('export-preview').listeners.click();assert.equal(f.node('export-dialog').open,true);assert.match(f.node('export-summary').textContent,/^1 releases as CSV/);assert.match(f.node('export-text').textContent,/Startup,Readiness/);assert.equal(f.node('export-save').disabled,false);});
 test('setting details show current values and follow changes',async()=>{const f=await fixture(new Error('x'));assert.match(f.node('setting-details').textContent,/Language: English/);assert.match(f.node('setting-details').textContent,/Theme: System/);f.node('theme-dark').listeners.click();assert.match(f.node('setting-details').textContent,/Theme: Dark/);});
 test('resetting every setting needs both confirmation keys and the full slider',async()=>{const f=await fixture(new Error('x'));f.node('theme-dark').listeners.click();assert.equal(f.prefs().theme,'dark');f.node('reset').listeners.click();assert.equal(f.node('confirm-dialog').open,true);assert.equal(f.node('confirm-execute').disabled,true);f.node('confirm-execute').listeners.click();assert.equal(f.prefs().theme,'dark');f.node('confirm-first').selected=true;f.node('confirm-first').listeners.change();assert.equal(f.node('confirm-slider').disabled,true);f.node('confirm-second').selected=true;f.node('confirm-second').listeners.change();assert.equal(f.node('confirm-slider').disabled,false);f.node('confirm-slider').value=60;f.node('confirm-slider').listeners.change();assert.equal(f.node('confirm-execute').disabled,true);f.node('confirm-slider').value=100;f.node('confirm-slider').listeners.change();assert.equal(f.node('confirm-execute').disabled,false);f.node('confirm-execute').listeners.click();assert.equal(f.prefs().theme,'system');assert.equal(f.node('confirm-dialog').open,false);f.node('theme-light').listeners.click();f.node('reset').listeners.click();f.node('confirm-cancel').listeners.click();assert.equal(f.prefs().theme,'light');});
-test('tab shortcuts use Alt and a digit and leave browser-reserved combinations alone',async()=>{const f=await fixture(new Error('x'));const press=init=>{const event={altKey:false,ctrlKey:false,metaKey:false,prevented:false,preventDefault(){this.prevented=true;},...init};for(const fn of f.win.listeners.keydown)fn(event);return event;};assert.equal(press({key:'3',altKey:true}).prevented,true);assert.equal(f.prefs().tab,'changelog');assert.equal(press({key:'2',ctrlKey:true}).prevented,false);assert.equal(f.prefs().tab,'changelog');assert.equal(press({key:'k',ctrlKey:true}).prevented,true);assert.ok(f.node('palette-list').textContent.includes('Open NotesAlt+4'));assert.ok(f.node('palette-list').textContent.includes('Open DocumentationAlt+5'));assert.ok(f.node('palette-list').textContent.includes('Open SupportAlt+6'));assert.ok(f.node('palette-list').textContent.includes('Open Dim sumAlt+7'));assert.ok(f.node('palette-list').textContent.includes('Open StatusAlt+8'));assert.equal(press({key:'8',altKey:true}).prevented,true);assert.equal(f.prefs().tab,'status');});
+test('tab shortcuts use Alt and a digit and leave browser-reserved combinations alone',async()=>{const f=await fixture(new Error('x'));const press=init=>{const event={altKey:false,ctrlKey:false,metaKey:false,prevented:false,preventDefault(){this.prevented=true;},...init};for(const fn of f.win.listeners.keydown)fn(event);return event;};assert.equal(press({key:'3',altKey:true}).prevented,true);assert.equal(f.prefs().tab,'changelog');assert.equal(press({key:'2',ctrlKey:true}).prevented,false);assert.equal(f.prefs().tab,'changelog');assert.equal(press({key:'k',ctrlKey:true}).prevented,true);assert.ok(f.node('palette-list').textContent.includes('Open NotesAlt+4'));assert.ok(f.node('palette-list').textContent.includes('Open DocumentationAlt+5'));assert.ok(f.node('palette-list').textContent.includes('Open SupportAlt+6'));assert.ok(f.node('palette-list').textContent.includes('Open Dim sumAlt+7'));assert.ok(f.node('palette-list').textContent.includes('Open ModelsAlt+8'));assert.ok(f.node('palette-list').textContent.includes('Open StatusAlt+9'));assert.equal(press({key:'8',altKey:true}).prevented,true);assert.equal(f.prefs().tab,'models');assert.equal(press({key:'9',altKey:true}).prevented,true);assert.equal(f.prefs().tab,'status');});
 test('a local product name reaches the title, version line and tab list name, and rejects markup',async()=>{const f=await fixture(new Error('x'));const name=f.node('display-name');name.value='Family vault';name.listeners.change();assert.equal(f.prefs().displayName,'Family vault');assert.equal(f.document.title,'Family vault · Extension workspace');assert.equal(f.node('version').textContent,'Family vault 0.1.0');assert.equal(f.node('workspace-heading').textContent,'Family vault · Extension workspace');assert.equal(f.attributes.get('workspace-tabs:aria-label'),'Family vault · Workspace');name.value='<b>bold</b>';name.listeners.change();assert.equal(name.error,true);assert.equal(f.prefs().displayName,'Family vault');});
 test('an accent is applied only when its text contrast passes, with opacity composited',async()=>{const f=await fixture(new Error('x'));const hex=f.node('accent-hex');hex.value='#f5f5a0';hex.listeners.input();assert.match(f.node('accent-contrast').textContent,/Text contrast/);hex.value='#2f6b5e';hex.listeners.input();assert.match(f.node('accent-contrast').textContent,/meets the 4.5:1 minimum/);assert.equal(f.node('accent-apply').disabled,false);f.node('accent-apply').listeners.click();assert.equal(f.prefs().accent,'#2f6b5e');assert.equal(f.document.documentElement.style.props['--md-sys-color-primary'],'#2f6b5e');f.node('accent-reset').listeners.click();assert.equal(f.prefs().accent,'');assert.equal(f.document.documentElement.style.props['--md-sys-color-primary'],undefined);const pale=accentPalette('#2f6b5e33',false),solid=accentPalette('#2f6b5e',false);assert.notEqual(pale.primary,solid.primary);assert.equal(solid.onPrimary,'#ffffff');assert.equal(pale.onPrimary,'#000000');});
 test('recent changes record setting changes, restore one value and clear only after confirmation',async()=>{const f=await fixture(new Error('x'));f.node('theme-dark').listeners.click();f.node('tab-status').listeners.click();const entries=readHistory(f.storage);assert.equal(entries.length,1);assert.deepEqual([entries[0].field,entries[0].from,entries[0].to],['theme','system','dark']);assert.match(f.node('history-list').textContent,/Theme: System → Dark/);recordChanges(f.storage,{...defaults},{...defaults,emoji:true});f.node('history-clear').listeners.click();assert.equal(f.node('confirm-dialog').open,true);f.node('confirm-cancel').listeners.click();assert.equal(readHistory(f.storage).length,2);f.node('history-clear').listeners.click();f.node('confirm-first').selected=true;f.node('confirm-first').listeners.change();f.node('confirm-second').selected=true;f.node('confirm-second').listeners.change();f.node('confirm-slider').value=100;f.node('confirm-slider').listeners.change();f.node('confirm-execute').listeners.click();assert.equal(readHistory(f.storage).length,0);assert.equal(f.prefs().theme,'dark');});
@@ -40,3 +40,267 @@ test('a screen recording starts only from the browser picker and can be saved on
 test('links in notes open only over https, without referrer or opener, and other links say why they stay text',async()=>{const f=await fixture(new Error('x'));addNote(f.storage,{title:'Links',body:'Guide https://example.org/help. Old http://example.org and javascript:alert(1)'});f.node('tab-notes').listeners.click();const link=[...f.nodesWith('https://example.org/help')].find(item=>item.localName==='a');assert.equal(link.href,'https://example.org/help');assert.equal(link.rel,'noopener noreferrer');assert.equal(link.referrerPolicy,'no-referrer');assert.ok(f.nodesWith('http://example.org (only secure https links open)').length>0);assert.ok(f.nodesWith('javascript:alert(1) (only secure https links open)').length>0);assert.ok(!f.nodesWith('javascript:alert(1)').some(item=>item.localName==='a'));});
 test('the status tab states plainly that nothing is for sale',()=>{assert.ok(html.includes('There are no purchases, subscriptions or paid features'));});
 test('the dim sum catalogue loads only on request without cookies or referrer, labels illustrations honestly and shows missing ones',async()=>{const requests=[];const catalog={title:'Catalog',dishes:[{id:'hk-dish-0001',slug:'har-gow',name:{en:'Classic Har Gow',zhHant:'蝦餃'},jyutping:'haa1 gaau2',category:'steamed-dim-sum',description:{en:'Shrimp dumpling.',yue:'蒸餃。'},ingredients:['shrimp'],allergens:['shellfish'],image:{path:'images/hk-dish-0001-har-gow.png',alt:{en:'Har gow',yue:'蝦餃'}}},{id:'hk-dish-0002',slug:'siu-mai',name:{en:'Siu Mai',zhHant:'燒賣'},jyutping:'siu1 maai2',category:'steamed-dim-sum',description:{en:'Pork dumpling.',yue:'燒賣。'},image:{path:'images/hk-dish-0002-siu-mai.png'}}]};const releases=[{tag_name:'catalog-v1',draft:false,prerelease:false,assets:[{name:'hk-dish-0001-har-gow.png',state:'uploaded',size:10,browser_download_url:'https://github.com/Ding-Ding-Projects/dim-sum-photos/releases/download/catalog-v1/hk-dish-0001-har-gow.png'}]}];const fetch=async(url,options)=>{requests.push([url,options.credentials,options.referrerPolicy]);return {ok:true,text:async()=>JSON.stringify(url===CATALOG_URL?catalog:releases)};};const f=await fixture(new Error('x'),'en',{extras:{fetch}});assert.equal(requests.length,0);assert.equal(f.node('dimsum-browser').hidden,true);await f.node('dimsum-load').listeners.click();await new Promise(resolve=>setTimeout(resolve,0));await new Promise(resolve=>setTimeout(resolve,0));assert.deepEqual(requests,[[CATALOG_URL,'omit','no-referrer'],[RELEASES_URL,'omit','no-referrer']]);assert.equal(f.node('dimsum-status').textContent,'2 dishes loaded from GitHub.');assert.equal(f.node('dimsum-count').textContent,'2 of 2 dishes');const harGow=[...f.nodesWith('Classic Har Gow')].find(item=>item.localName==='md-list-item');harGow.listeners.click();assert.ok(f.nodesWith('Generated illustration from the public dim sum catalogue (catalog-v1), not a photograph of a real dish.').length>0);const image=[...f.nodesWith('')].find(item=>item.localName==='img'&&item.src?.endsWith('hk-dish-0001-har-gow.png'));assert.equal(image.referrerPolicy,'no-referrer');const siuMai=[...f.nodesWith('Siu Mai')].find(item=>item.localName==='md-list-item');siuMai.listeners.click();assert.ok(f.nodesWith('No illustration has been published for this dish yet.').length>0);f.node('dimsum-search').value='蝦餃';f.node('dimsum-search').listeners.input();assert.equal(f.node('dimsum-count').textContent,'1 of 2 dishes');const offline=await fixture(new Error('x'),'en',{extras:{fetch:async()=>{throw new Error('offline');}}});await offline.node('dimsum-load').listeners.click();await new Promise(resolve=>setTimeout(resolve,0));assert.match(offline.node('dimsum-status').textContent,/could not be loaded/);});
+
+
+// Models tab: a fake local server stands in for Ollama; nothing here talks to a real installation.
+const settle = async () => { for (let i = 0; i < 12; i++) await new Promise(resolve => setTimeout(resolve, 0)); };
+const encoded = new TextEncoder();
+const finished = chunks => ({ok: true, status: 200, body: new ReadableStream({start(controller) { for (const chunk of chunks) controller.enqueue(encoded.encode(chunk)); controller.close(); }})});
+const openStream = () => { let controller; const body = new ReadableStream({start(c) { controller = c; }}); return {response: {ok: true, status: 200, body}, push: text => controller.enqueue(encoded.encode(text)), end: () => controller.close()}; };
+const modelServer = ({tags = [{name: 'alpha:latest', size: 4200000000}, {name: 'beta:2b', size: 1500000000}], running = [{name: 'alpha:latest'}], chat = () => finished(['{"message":{"content":"ok"},"done":true}']), pull = () => finished(['{"status":"success"}'])} = {}) => {
+  const calls = [];
+  const fetch = async (url, init) => { calls.push({url, method: init.method, body: init.body ? JSON.parse(init.body) : null});
+    const path = new URL(url).pathname;
+    if (path === '/api/version') return finished(['{"version":"0.5.1"}']);
+    if (path === '/api/tags') return finished([JSON.stringify({models: tags})]);
+    if (path === '/api/ps') return finished([JSON.stringify({models: running})]);
+    if (path === '/api/chat') return chat(init);
+    if (path === '/api/pull') return pull(init);
+    if (path === '/api/delete') return finished([]);
+    throw new Error('unexpected request ' + url); };
+  return {fetch, calls};
+};
+const connected = async (server, language = 'en', extras = {}) => { const f = await fixture(new Error('x'), language, {extras: {fetch: server.fetch, ...extras}}); f.node('models-connect').listeners.click(); await settle(); return f; };
+const elements = (f, tag) => f.nodesWith('').filter(item => item.localName === tag);
+
+test('the models tab is reachable, remembered and starts without any network request', async () => {
+  const server = modelServer();
+  const f = await fixture(new Error('x'), 'en', {extras: {fetch: server.fetch}});
+  f.node('tab-models').listeners.click();
+  assert.equal(f.prefs().tab, 'models');
+  assert.equal(f.node('panel-models').hidden, false);
+  assert.equal(f.node('models-status').textContent, 'Not connected. Choose Connect to allow access to 127.0.0.1 and check the server.');
+  assert.equal(f.node('chat-send').disabled, true);
+  assert.equal(f.node('models-pull').disabled, true);
+  assert.equal(server.calls.length, 0);
+  assert.equal(f.permissionRequests.length, 0);
+});
+
+test('connecting asks for the loopback permission first, and a refusal changes nothing and sends nothing', async () => {
+  const server = modelServer();
+  const f = await fixture(new Error('x'), 'en', {extras: {fetch: server.fetch, grant: false}});
+  f.node('models-port').value = '8080';
+  f.node('models-connect').listeners.click();
+  await settle();
+  assert.equal(JSON.stringify(f.permissionRequests), JSON.stringify([{origins: [ORIGIN_PATTERN]}]));
+  assert.equal(ORIGIN_PATTERN, 'http://127.0.0.1/*');
+  assert.equal(server.calls.length, 0);
+  assert.match(f.node('models-status').textContent, /Permission to reach 127\.0\.0\.1 was not granted, so nothing was changed\./);
+  assert.equal(f.node('models-refresh').disabled, true);
+  assert.equal(f.node('chat-send').disabled, true);
+});
+
+test('a bad port is refused before any permission request', async () => {
+  const f = await fixture(new Error('x'), 'en', {extras: {fetch: modelServer().fetch}});
+  for (const bad of ['80', 'abc', '70000']) { f.node('models-port').value = bad; f.node('models-connect').listeners.click(); await settle(); assert.equal(f.node('models-status').textContent, 'Use a port from 1024 to 65535.'); }
+  assert.equal(f.permissionRequests.length, 0);
+});
+
+test('a granted connection reads the version, installed and running models from 127.0.0.1 only', async () => {
+  const server = modelServer();
+  const f = await connected(server);
+  assert.equal(f.node('models-status').textContent, 'Connected: server version 0.5.1 on port 11434.');
+  assert.ok(server.calls.length >= 3 && server.calls.every(call => call.url.startsWith('http://127.0.0.1:11434/api/')));
+  assert.deepEqual(server.calls.map(call => call.method), server.calls.map(() => 'GET'));
+  const list = f.node('models-list').textContent;
+  assert.ok(list.includes('alpha:latest') && list.includes('4.2 GB') && list.includes('running'));
+  assert.ok(list.includes('beta:2b') && list.includes('1.5 GB'));
+  assert.equal(list.match(/running/g).length, 1);
+  assert.equal(f.node('chat-send').disabled, false);
+  assert.equal(f.node('models-refresh').disabled, false);
+  assert.equal(f.node('chat-model').value, 'alpha:latest');
+});
+
+test('a server that is not running shows a readable state, and the port in use follows the field', async () => {
+  const f = await fixture(new Error('x'), 'en', {extras: {fetch: async () => { throw new TypeError('Failed to fetch'); }}});
+  f.node('models-port').value = '9090';
+  f.node('models-connect').listeners.click();
+  await settle();
+  assert.equal(f.node('models-status').textContent, 'The local model server is not running on port 9090. Start it, then choose Connect.');
+  assert.equal(f.node('chat-send').disabled, true);
+  const cantonese = await fixture(new Error('x'), 'yue', {extras: {fetch: async () => { throw new TypeError('Failed to fetch'); }}});
+  cantonese.node('models-connect').listeners.click();
+  await settle();
+  assert.match(cantonese.node('models-status').textContent, /本機模型伺服器冇喺埠 11434 運行/);
+});
+
+test('models copy shows Cantonese when chosen and both languages when bilingual', async () => {
+  const yue = await connected(modelServer(), 'yue');
+  assert.equal(yue.node('models-status').textContent, '已連線：伺服器版本 0.5.1（埠 11434）。');
+  assert.ok(yue.node('models-list').textContent.includes('運行中'));
+  const both = await connected(modelServer(), 'bilingual');
+  assert.ok(both.node('models-status').textContent.includes('Connected: server version 0.5.1'));
+  assert.ok(both.node('models-status').textContent.includes('已連線'));
+});
+
+test('a pull streams its progress, can be cancelled, and refuses cloud tags', async () => {
+  const stream = openStream();
+  const server = modelServer({pull: () => stream.response});
+  const f = await connected(server);
+  f.node('models-pull-name').value = 'llama3.2:3b-cloud';
+  f.node('models-pull').listeners.click();
+  await settle();
+  assert.match(f.node('models-pull-status').textContent, /Cloud models are not supported/);
+  assert.equal(server.calls.filter(call => call.url.endsWith('/api/pull')).length, 0);
+  f.node('models-pull-name').value = 'llama3.2:3b';
+  f.node('models-pull').listeners.click();
+  await settle();
+  assert.equal(f.node('models-pull-progress').hidden, false);
+  assert.equal(f.node('models-pull').disabled, true);
+  assert.equal(f.node('models-pull-cancel').disabled, false);
+  stream.push('{"status":"pulling abc","total":200,"completed":50}\n');
+  await settle();
+  assert.equal(f.node('models-pull-progress').value, 0.25);
+  assert.equal(f.node('models-pull-progress').indeterminate, false);
+  assert.equal(f.node('models-pull-status').textContent, 'Pulling “llama3.2:3b”: pulling abc (25%).');
+  stream.push('{"status":"pulling abc","total":200,"completed":150}\n');
+  await settle();
+  assert.equal(f.node('models-pull-progress').value, 0.75);
+  f.node('models-pull-cancel').listeners.click();
+  await settle();
+  assert.match(f.node('models-pull-status').textContent, /Pull cancelled/);
+  assert.equal(f.node('models-pull-progress').hidden, true);
+  assert.equal(f.node('models-pull').disabled, false);
+  assert.deepEqual(server.calls.find(call => call.url.endsWith('/api/pull')).body, {model: 'llama3.2:3b', stream: true});
+  const done = openStream();
+  const second = await connected(modelServer({pull: () => done.response}));
+  second.node('models-pull-name').value = 'mistral';
+  second.node('models-pull').listeners.click();
+  await settle();
+  done.push('{"status":"success"}\n');
+  done.end();
+  await settle();
+  assert.equal(second.node('models-pull-status').textContent, 'Pulled “mistral”.');
+});
+
+test('deleting needs a dialog that names the exact tag, and Cancel is the default action', async () => {
+  assert.match(html, /<md-filled-button id="models-delete-cancel"[^>]* autofocus>/);
+  const server = modelServer();
+  const f = await connected(server);
+  const deleteButton = () => f.find('md-text-button', 'Delete alpha:latest');
+  deleteButton().listeners.click();
+  assert.equal(f.node('models-delete-dialog').open, true);
+  assert.ok(f.node('models-delete-text').textContent.includes('“alpha:latest”'));
+  assert.equal(server.calls.some(call => call.method === 'DELETE'), false);
+  f.node('models-delete-cancel').listeners.click();
+  await settle();
+  assert.equal(f.node('models-delete-dialog').open, false);
+  assert.equal(server.calls.some(call => call.method === 'DELETE'), false);
+  f.node('models-delete-confirm').listeners.click();
+  await settle();
+  assert.equal(server.calls.some(call => call.method === 'DELETE'), false);
+  deleteButton().listeners.click();
+  f.node('models-delete-confirm').listeners.click();
+  await settle();
+  const removal = server.calls.find(call => call.method === 'DELETE');
+  assert.deepEqual(removal.body, {model: 'alpha:latest'});
+  assert.equal(removal.url, 'http://127.0.0.1:11434/api/delete');
+  assert.equal(f.node('models-status').textContent, 'Deleted “alpha:latest”.');
+});
+
+test('chat streams a reply into safe rich text, with copy actions and a session-only history', async () => {
+  const stream = openStream();
+  const copied = [];
+  const server = modelServer({chat: () => stream.response});
+  const f = await connected(server, 'en', {navigator: {clipboard: {writeText: async text => { copied.push(text); }}}});
+  f.node('chat-prompt').value = 'Say hello';
+  f.node('chat-send').listeners.click();
+  await settle();
+  assert.equal(f.node('chat-send').disabled, true);
+  assert.equal(f.node('chat-stop').disabled, false);
+  assert.equal(f.node('chat-prompt').value, '');
+  assert.deepEqual(server.calls.find(call => call.url.endsWith('/api/chat')).body, {model: 'alpha:latest', messages: [{role: 'user', content: 'Say hello'}], stream: true});
+  stream.push('{"message":{"content":"**Hel"},"done":false}\n');
+  await settle();
+  stream.push('{"message":{"content":"lo** see [docs](https://example.com/a) and [bad](javascript:alert(1)) <b>x</b>\\n```js\\nlet a = 1;\\n```"},"done":false}\n{"message":{"content":""},"done":true}\n');
+  stream.end();
+  await settle();
+  assert.equal(f.node('chat-send').disabled, false);
+  assert.equal(f.node('chat-stop').disabled, true);
+  assert.equal(f.node('chat-status').textContent, '2 messages in this conversation. It is kept in this page only and is never saved.');
+  assert.ok(elements(f, 'strong').some(item => item.textContent === 'Hello'));
+  const anchors = elements(f, 'a');
+  assert.ok(anchors.length >= 1);
+  assert.deepEqual([...new Set(anchors.map(item => [item.href, item.target, item.rel, item.referrerPolicy, item.textContent].join('|')))], ['https://example.com/a|_blank|noopener noreferrer|no-referrer|docs']);
+  assert.ok(f.node('chat-log').textContent.includes('[bad](javascript:alert(1))'));
+  assert.ok(f.node('chat-log').textContent.includes('<b>x</b>'));
+  assert.equal(elements(f, 'b').length, 0);
+  assert.ok(elements(f, 'code').some(item => item.textContent === 'let a = 1;'));
+  const copyReply = f.nodesWith('Copy response').find(item => item.localName === 'md-text-button');
+  copyReply.listeners.click();
+  await settle();
+  assert.equal(copied.at(-1), '**Hello** see [docs](https://example.com/a) and [bad](javascript:alert(1)) <b>x</b>\n```js\nlet a = 1;\n```');
+  assert.equal(f.node('models-copy-status').textContent, 'Copied to the clipboard.');
+  const copyCode = f.nodesWith('Copy code').find(item => item.localName === 'md-text-button');
+  copyCode.listeners.click();
+  await settle();
+  assert.equal(copied.at(-1), 'let a = 1;');
+  const stored = [...f.storage.records.values(), f.storage.stored.value, f.storage.history.value ?? ''].join('\n');
+  assert.ok(!stored.includes('Say hello') && !stored.includes('Hello'));
+  f.node('chat-clear').listeners.click();
+  assert.equal(f.node('chat-log').textContent, '');
+  assert.equal(f.node('chat-clear').disabled, true);
+});
+
+test('a follow-up message sends the whole conversation, Stop keeps the partial reply, and a failed first reply restores the prompt', async () => {
+  let stream = openStream();
+  const server = modelServer({chat: () => stream.response});
+  const f = await connected(server);
+  f.node('chat-prompt').value = 'one';
+  f.node('chat-send').listeners.click();
+  await settle();
+  stream.push('{"message":{"content":"partial"},"done":false}\n');
+  await settle();
+  f.node('chat-stop').listeners.click();
+  await settle();
+  assert.equal(f.node('chat-status').textContent, 'Stopped. The partial reply is kept.');
+  assert.ok(f.node('chat-log').textContent.includes('partial'));
+  assert.equal(f.node('chat-send').disabled, false);
+  stream = openStream();
+  f.node('chat-prompt').value = 'two';
+  f.node('chat-send').listeners.click();
+  await settle();
+  const chats = server.calls.filter(call => call.url.endsWith('/api/chat'));
+  assert.deepEqual(chats[1].body.messages, [{role: 'user', content: 'one'}, {role: 'assistant', content: 'partial'}, {role: 'user', content: 'two'}]);
+  f.node('chat-stop').listeners.click();
+  await settle();
+  const broken = await connected(modelServer({chat: () => ({ok: false, status: 503, body: null})}));
+  broken.node('chat-prompt').value = 'keep me';
+  broken.node('chat-send').listeners.click();
+  await settle();
+  assert.match(broken.node('chat-status').textContent, /HTTP 503/);
+  assert.equal(broken.node('chat-prompt').value, 'keep me');
+  assert.equal(broken.node('chat-log').textContent, '');
+});
+
+test('chat refuses an empty message and a missing connection before sending anything', async () => {
+  const server = modelServer();
+  const f = await connected(server);
+  const before = server.calls.length;
+  f.node('chat-prompt').value = '   ';
+  f.node('chat-send').listeners.click();
+  await settle();
+  assert.equal(f.node('chat-status').textContent, 'Write a message first.');
+  assert.equal(server.calls.length, before);
+});
+
+test('the renderer builds every node with createElement and textContent, never from markup strings', () => {
+  for (const pattern of [/innerHTML/, /outerHTML/, /insertAdjacentHTML/, /document\.write/, /DOMParser/, /createContextualFragment/, /\.srcdoc/]) assert.doesNotMatch(source, pattern, String(pattern));
+  const start = source.indexOf('function richInline'), end = source.indexOf('function copyText');
+  assert.ok(start > 0 && end > start);
+  const renderer = source.slice(start, end);
+  assert.match(renderer, /createElement/);
+  assert.match(renderer, /textContent/);
+  assert.match(renderer, /rel='noopener noreferrer'/);
+  assert.match(renderer, /target='_blank'/);
+  assert.match(source, /navigator\.clipboard\.writeText/);
+});
+
+test('the tab bar, panel, whitelist and shortcut list all include the models tab', () => {
+  assert.match(html, /<md-primary-tab id="tab-models" aria-controls="panel-models" data-tab="models"/);
+  assert.match(html, /<section role="tabpanel" id="panel-models"/);
+  assert.match(source, /const TAB_SHORTCUTS=\['connection','personalization','changelog','notes','docs','support','dimsum','models','status'\]/);
+  for (const id of ['models-port', 'models-connect', 'models-refresh', 'models-list', 'models-pull-name', 'models-pull', 'models-pull-cancel', 'models-pull-progress', 'chat-model', 'chat-prompt', 'chat-send', 'chat-stop', 'models-delete-dialog']) assert.ok(html.includes('id="' + id + '"'), id);
+  assert.match(html, /<md-linear-progress id="models-pull-progress"/);
+  assert.match(html, /<md-dialog id="models-delete-dialog"/);
+});

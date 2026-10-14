@@ -1437,3 +1437,13 @@ The converter root and four addressable stages are now independent inventory tar
 A controlled source-renderer main-only retry at `0c413e26` produced no ledger rename error but cancelled at its original120000ms deadline and settled at243729ms; actions continued beyond cancellation. Owned closure passed. A separate cancellation-handling repair is assigned; its new evidence must remain source-specific. Earlier scoped clear controls passed with two genuine private diagnostic captures, retained under local `out/evidence/renderer-0c413e26-20261014`. They are not current packaged-product presentation images.
 
 Combined converter integration validation ran 81 checks:80 passed and one exposed the missing handwritten translation-list entry. After registering that entry, all four translation checks passed. All implementation, authority, recovery, surface and source-reference checks were green; actual installed/runtime evidence remains separate.
+
+## Combined converter and local-model integration
+
+Local converter integration a07abb7 encountered incoming main dd833d4. The merge preserves the converter native grant/queue lifecycle and incoming Models tab, loopback controls, rich text, documentation and original captures. Five shared files were reconciled with73/73 focused checks passing. Required declarations now enumerate1038 concrete surfaces and108990 independent assessments, including23 extension targets;262 family rows remain unverified,26 missing and27 not applicable. No new visual or installed-product verdict is inferred. Cancellation repair94bbe888 is preserved on its remote task branch and receives a separate original-deadline smoke.
+
+### Cancellation smoke94bbe888
+
+One main-only case cancelled at120175.55ms before page interaction (total146814.79ms, exit1). Immutable version3 snapshot retained elapsed120140.4585 and null phase/request fields. Normal close acknowledged; saved processes absent. Two20s exact-desktop enumeration checks timed out. Desktop closure remains unverified and original negative receipts are retained; no third unchanged retry or PID-only termination. This is not current-main or installed acceptance.
+
+Focused merge verification: shared-shell73/73; inventory/publication suite61 passed with one npm-path staging failure; after selecting the existing pinned Node distribution, the single affected staging check passed1/1. Independent merge review resolved the four stale model-route paragraphs.

@@ -150,6 +150,14 @@ These captures come from the built desktop application at source `2a9cb388718c39
 
 ![Material consent dialog in the dark theme](docs/images/captures/material-2a9cb388/dialog-consent-dark-en.png)
 
+#### Browser extension models tab
+
+Headless Microsoft Edge with the staged extension from source `45ccb91`, captured on October 14, 2026, against a fake local model server; the permission prompt was stubbed for the connected states, and no real Ollama server or installed build was used. The chat capture shows a `javascript:` address left as plain text and the one https link opening with `noopener noreferrer`.
+
+![Models tab connected to a local server, listing installed and running models, light theme, English](docs/images/captures/extension-models-45ccb91/models-connected-light-en.png)
+
+![Models tab chat with a streamed reply rendered as safe rich text with copy actions, light theme, English](docs/images/captures/extension-models-45ccb91/models-chat-light-en.png)
+
 #### Documentation site
 
 The following genuine documentation captures show the information entry, worked example and isolated playground from source `83e14d8627b9782d5acc12221c22ed4f0b8b2d4c`. Capture time: October 13, 2026, 11:50 UTC. They cover two bilingual/light tuples, not native-product or installed acceptance. The [source-bound inventory](docs/evidence/control-guidance-83-inventory.json) retains exact intervals, hashes and limitations.
