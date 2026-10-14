@@ -26,7 +26,44 @@ export function createConverterService({stateDirectory,resolveGrant,bundledProof
  function enqueue(request,context){const promise=enqueueWork(request,context);admissions.add(promise);promise.finally(()=>admissions.delete(promise)).catch(()=>{});return promise;}
  const publicRecord=r=>({id:r.id,adapterId:r.adapterId,state:r.state,progress:r.progress,createdAt:r.createdAt,error:r.error,outputs:r.outputs,details:r.details});
  async function list({offset=0,limit=50}={}, {owner}={}){if(!Number.isSafeInteger(offset)||offset<0||!Number.isSafeInteger(limit)||limit<1||limit>LIMITS.queuePage)throw new Error('Invalid queue page.');const rows=[];let index=0;for await(const r of records()){if(owner&&r.browserOwner!==owner)continue;if(index++>=offset&&rows.length<limit)rows.push(publicRecord(r));if(rows.length===limit)break;}return rows;}
- async function control({id,action},{owner,checkAdmission=()=>{}}={}){if(action==='resume'&&(cancelling||closed))throw new Error('The converter is stopping.');if(!['pause','resume','cancel'].includes(action))throw new Error('Invalid queue action.');const result=await locked(id,async r=>{if(owner&&r.browserOwner!==owner)throw Error('Conversion job is outside this session.');checkAdmission();if(['completed','failed','cancelled'].includes(r.state))return publicRecord(r);r.state=action==='pause'?'paused':action==='cancel'?'cancelled':'queued';await save(r);return publicRecord(r);});if(action!=='resume')await workers.get(id)?.terminate();else void run();return result;}
+ const scans=new Map();
+ async function closeOwnedScan(owner){for(const [key,value]of [...scans])if(value.owner===owner){scans.delete(key);await value.dir.close().catch(()=>{});}}
+ async function scanOwned({cursor=null}={}, {owner,checkAdmission=()=>{}}={}){
+  if(typeof owner!=='string'||!/^[a-f0-9-]{36}$/.test(owner)||cursor!==null&&(typeof cursor!=='string'||!/^[a-f0-9-]{36}$/.test(cursor)))throw Error('Invalid owner scan.');
+  checkAdmission();await init;checkAdmission();let scan;
+  if(cursor===null){await closeOwnedScan(owner);checkAdmission();if(scans.size>=8)throw Error('Too many active queue scans.');scan={owner,dir:await fs.opendir(stateDirectory),pending:null};}
+  else{scan=scans.get(cursor);if(!scan||scan.owner!==owner)throw Error('Queue cursor expired. Restart the list.');scans.delete(cursor);}
+  let inspected=0,bytes=0,complete=false;const rows=[];
+  try{
+   while(inspected<64&&bytes<262144&&rows.length<20){
+    checkAdmission();const entry=scan.pending||await scan.dir.read();checkAdmission();if(!entry){complete=true;break;}if(!scan.pending)inspected++;scan.pending=null;
+    if(!entry.isFile()||!/^[a-f0-9-]{36}\.json$/.test(entry.name))continue;
+    const handle=await fs.open(path.join(stateDirectory,entry.name),'r');
+    try{checkAdmission();const info=await handle.stat();checkAdmission();if(!info.isFile()||info.size>32768)throw Error('Queue record exceeds the bounded scan limit.');
+     if(bytes+info.size+1>262144){scan.pending=entry;break;}
+     const buffer=Buffer.alloc(info.size+1);let used=0;
+     while(used<buffer.length){checkAdmission();const chunk=await handle.read(buffer,used,buffer.length-used,used);checkAdmission();if(!chunk.bytesRead)break;used+=chunk.bytesRead;}
+     bytes+=used;if(used!==info.size)throw Error('Queue record changed during scan.');const record=JSON.parse(buffer.subarray(0,used).toString('utf8'));if(record.browserOwner===owner)rows.push(publicRecord(record));
+    }finally{await handle.close();}
+   }
+   checkAdmission();if(complete){await scan.dir.close();return {rows,nextCursor:null,inspected,bytes};}
+   const nextCursor=randomUUID();scans.set(nextCursor,scan);return {rows,nextCursor,inspected,bytes};
+  }catch(error){await scan.dir.close().catch(()=>{});throw error;}
+ }
+ async function control({id,action},{owner,checkAdmission=()=>{}}={}){
+  if(action==='resume'&&(cancelling||closed))throw Error('The converter is stopping.');if(!['pause','resume','cancel'].includes(action))throw Error('Invalid queue action.');
+  return locked(id,async r=>{
+   if(owner&&r.browserOwner!==owner)throw Error('Conversion job is outside this session.');checkAdmission();
+   if(['completed','failed','cancelled'].includes(r.state))return publicRecord(r);
+   r.state=action==='pause'?'paused':action==='cancel'?'cancelled':'queued';await save(r,checkAdmission);
+   // Publication is acceptance. Recheck the caller before side effects, but a
+   // revoked caller cannot undo accepted durable control. Reconcile under the
+   // same record lock so worker state cannot remain inconsistent with the record.
+   try{checkAdmission();}catch{/* Accepted native control still must settle. */}
+   if(action!=='resume')await workers.get(id)?.terminate();else void run();
+   return publicRecord(r);
+  });
+ }
  async function publish(r,result){const staged=[],published=[];let total=0;const root=await destinationRoot(r);const sourcePaths=[];for(const id of r.sourceIds)sourcePaths.push(await resolveGrant(id,'read'));
  try{for(let i=0;i<result.outputs.length;i++){const output=result.outputs[i];total+=output.bytes.length;if(total>LIMITS.outputBytes||result.outputs.length>LIMITS.pages)throw new Error('Output budget exceeded.');let target;if(r.destinationDirectoryId){target=await outputLocation(root,output.name);}else{if(result.outputs.length!==1)throw new Error('Multiple outputs require a folder grant.');target=await resolveGrant(r.destinationId,'write');if(!samePath(await fs.realpath(path.dirname(target)),root))throw new Error('Destination changed.');}if(sourcePaths.some(p=>samePath(p,target)))throw new Error('Output would replace a source.');if(!r.overwriteConfirmed){try{await fs.lstat(target);throw new Error('Output already exists.');}catch(e){if(e.code!=='ENOENT')throw e;}}staged.push({target,tmp:target+'.'+r.id+'.tmp',bytes:output.bytes});}
  // Validate the complete destination set before creating or publishing any output.
@@ -43,5 +80,5 @@ export function createConverterService({stateDirectory,resolveGrant,bundledProof
  async function run(){if(closed||cancelling)return;if(running){requested=true;return;}running=true;requested=false;runFinished=new Promise(resolve=>settleRun=resolve);try{for await(const record of records()){if(closed||cancelling)break;if(record.state==='running'){await locked(record.id,async current=>{if(current.state==='running'){current.state='paused';current.error='Interrupted conversion recovered. Resume to revalidate the source and restart.';await save(current);}});continue;}if(record.state!=='queued'||!isolated)continue;try{await execute(record);}catch{await locked(record.id,async current=>{if(['running','queued'].includes(current.state)){current.state='failed';current.error=current.error||'Conversion could not complete. Check the source format, capacity, and adapter limits.';await save(current);}});}}}finally{running=false;settleRun?.();if(requested&&!closed&&!cancelling)void run();}}
  async function pending(){let count=previewWorkers.size;for await(const record of records())if(record.state==='queued'||record.state==='running')count++;return count;}
  async function cancelAll(){if(cancellationFinished)return cancellationFinished;const action=(async()=>{cancelling=true;admissionEpoch++;let cancelled=0;try{await Promise.allSettled([...previewWorkers.values()].map(async worker=>{await worker.terminate();await worker.result.catch(()=>{});}));await Promise.allSettled([...admissions]);for await(const record of records())if(record.state==='queued'||record.state==='running'){const outcome=await control({id:record.id,action:'cancel'});if(outcome.state==='cancelled')cancelled++;}await runFinished;return {cancelled,remaining:await pending()};}finally{cancelling=false;}})();cancellationFinished=action;try{return await action;}finally{cancellationFinished=undefined;}}
- return {pending,cancelAll,catalog:adapters,inspect,enqueue,list,control,run,close:async()=>{closed=true;await cancelAll();}};
+ return {pending,cancelAll,scanOwned,closeOwnedScan,catalog:adapters,inspect,enqueue,list,control,run,close:async()=>{closed=true;for(const value of [...scans.values()])await closeOwnedScan(value.owner);await cancelAll();}};
 }
