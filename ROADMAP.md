@@ -1,3 +1,19 @@
+## Material conversion sweep, 2026-10-14
+
+- [x] Replace hand-built section tabs with Material tabs in the converter, local models and file details (hidden-desktop captures, English, light theme).
+- [x] Move clear actions inside workflow and local access fields as trailing icon buttons.
+- [x] Label selects on the select itself and remove duplicated external labels.
+- [x] Replace native disclosures in the document workflow filter with a Material text button.
+- [x] Replace tab-strip scroll glyphs with chevron icon buttons.
+- [x] Explain update reasons in words and show the unsigned warning as a Material card.
+- [x] Render application message boxes as Material dialogs in main-owned windows with a nonce-bound response (real consent prompt captured and cancelled with no change).
+- [x] Stop read-only requests from holding the application open at exit.
+- [ ] Confirm the outlined select width, documentation active pill and workflow chevron in a rebuilt capture.
+- [ ] Capture every converted screen and dialog in dark theme, Cantonese, bilingual and 125 to 200 percent scaling.
+- [ ] Make Material dialogs follow the in-app theme setting instead of the system colour scheme.
+- [ ] Capture each remaining message box individually (licence, pairing, credential, shutdown, import, update).
+- [ ] Integrate the sweep into main after the remaining capture checks.
+
 ## Current preservation boundary
 
 - [x] Integrate independently reviewed focus correction and preserve its measured limits.

@@ -8,7 +8,7 @@ import { createHash } from 'node:crypto';
 const REQUIRED = [
   'workflows/README', 'workflows/forge-publication', 'workflows/browser-download-handoff', 'workflows/browser-native-host', 'workflows/browser-extension-workspace', 'workflows/browser-protection-observations',
   'interface/storage-maintenance', 'interface/startup-photo-host',
-  'interface/local-tools-workspaces',
+  'interface/local-tools-workspaces', 'interface/material-dialogs-and-motion',
   'schedules/customization',
   'README', 'access-local', 'appearance-editor', 'local-personalization',
   'access/README', 'access/access-host', 'access/local-access', 'access/visitor-local-access', 'appearance/README', 'appearance/image-placement', 'appearance/raster-workflows',

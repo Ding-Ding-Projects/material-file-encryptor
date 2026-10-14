@@ -23,7 +23,7 @@ export function mountDocumentation(host, { catalog, translate = value => value, 
     if (disposed || request !== generation) return;
     if(result.outcome==='superseded')return;const rows=result.rows;
     navigation.replaceChildren();
-    for (const row of rows) { const button = element('button', row.title); button.type = 'button'; button.setAttribute('aria-current', String(active?.id === row.id)); button.addEventListener('click', () => open(row.id)); navigation.append(button); }
+    for (const row of rows) { const button = element('button', row.title); button.type = 'button'; button.setAttribute('aria-current', String(active?.id === row.id)); button.toggleAttribute('data-current', active?.id === row.id); button.addEventListener('click', () => open(row.id)); navigation.append(button); }
     message.textContent = rows.length ? '' : translate('No matching articles.');finishReady(result.outcome);
     }catch(error){if(!disposed&&request===generation)finishReady('failed');throw error;}
   }

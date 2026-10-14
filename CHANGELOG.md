@@ -1,3 +1,12 @@
+# Material conversion sweep, 2026-10-14
+
+- Converted generic controls found in hidden-desktop captures to Material components: tabs, in-field clear buttons, labelled selects, linear progress, disclosure buttons, chevron icon buttons, a navigation-style documentation index and a disabled list for unavailable server targets.
+- Message boxes now render as Material dialogs in main-owned windows. Only the dialog window, with its one-time value and a valid button, can answer; closing it cancels; the native message box remains the fallback.
+- Added Material easing and duration tokens with entrance motion for views, tab panels, cards, rows and disclosures. Reduced-motion settings turn it off.
+- Update reasons are explained in English and Cantonese, and read-only requests no longer hold the application open at exit.
+
+介面入面嘅舊式控制項同系統彈窗，換晒做 Material 元件同對話框，並加入順滑動畫。暗色主題、廣東話、雙語同縮放擷取仍待完成。
+
 # Context action targeting and startup readiness, 2026-10-11
 
 - Preserve each context action provider’s resolved target while retaining the original menu anchor, focus and admission checks.
