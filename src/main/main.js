@@ -1,3 +1,4 @@
+import {createProfileAuthenticationDialog} from './profile-authentication-dialog.js';
 import {readRuntimeAccessibility} from './startup-photo-service.js';
 import { selectVerificationRestartContext } from './verification-restart-context.js';
 import { readFileSync } from 'node:fs';
@@ -24,6 +25,7 @@ const rendererPath = path.resolve(directory, '../renderer/index.html');
 // Message boxes render as Material dialogs in main-owned windows; file pickers stay native.
 const materialDialogs = createMaterialDialogs({ BrowserWindow, ipcMain, nativeDialog: dialog, ...materialDialogPaths(directory), getTheme: async parent => { const source = parent ?? window; if (!source || source.isDestroyed()) return null; return source.webContents.executeJavaScript('document.documentElement.dataset.theme || ""', true); }, getLanguage: async parent => { const source = parent ?? window; if (!source || source.isDestroyed()) return null; return source.webContents.executeJavaScript('document.documentElement.getAttribute("data-control-language") || ""', true); }, onError: error => console.error('Material dialog fell back to the native dialog:', error?.message) });
 const uiDialog = Object.freeze({ showMessageBox: (...args) => materialDialogs.showMessageBox(...args), showOpenDialog: (...args) => dialog.showOpenDialog(...args), showSaveDialog: (...args) => dialog.showSaveDialog(...args), showErrorBox: (...args) => dialog.showErrorBox(...args) });
+const nativeProfileDialog=createProfileAuthenticationDialog({BrowserWindow,ipcMain,directory,getWindow:()=>window,getLanguage:async()=>window&&!window.isDestroyed()?window.webContents.executeJavaScript('document.documentElement.getAttribute("data-control-language")',true):'en',getTheme:async()=>window&&!window.isDestroyed()?window.webContents.executeJavaScript('document.documentElement.dataset.theme',true):'system'});
 const rendererURL = pathToFileURL(rendererPath).href;
 const testMode = !app.isPackaged && process.argv.includes('--desktop-check');
 const restartContext = selectVerificationRestartContext({ executable: process.execPath, packaged: app.isPackaged, version: app.getVersion(), readBuildMetadata: () => JSON.parse(readFileSync(path.resolve(directory, '../shared/build-metadata.json'), 'utf8')) });
@@ -143,6 +145,7 @@ async function forceLockDrive(language = 'en') {
     detail: text('Save and close open files and release mapped views first. Retained file handles, mapped views, active or queued transfers, and filesystem activity prevent locking and leave the drive mounted. Finish or cancel transfers, then retry. Other applications may retain plaintext they already read.', '請先儲存並關閉開啟的檔案，以及釋放記憶體映射。仍被持有的檔案控制代碼、記憶體映射、執行中或排隊傳輸，以及檔案系統活動都會阻止鎖定，磁碟會保持掛載。請完成或取消傳輸後再試。其他程式可能仍保留之前讀取的明文。'),
   });
   if (answer.response !== 1) return {cancelled: true};
+  browserHandoff?.revoke();
   const result = await helper.request('forceLock');
   if (result.locked) { state = nativeState(await helper.request('statusSummary')); publish(); }
   else if (result.busy) throw new Error(text('Force Lock is busy. Close retained file handles and mapped views, and finish or cancel active or queued transfers. Filesystem activity must finish before locking. The drive remains mounted; retry after these resources are released.', '強制鎖定忙碌中。請關閉仍被持有的檔案控制代碼及記憶體映射，並完成或取消執行中或排隊傳輸。檔案系統活動亦須先完成。磁碟會保持掛載，資源釋放後請再試。'));
@@ -236,6 +239,7 @@ async function request(method, params, context) {
     });
   }
   const commands = { mount: 'mount', unmount: 'unmount', lockVault: 'lock', keepOffline: 'keepOffline', releaseOffline: 'releaseOffline', setPartSize: 'setPartSize', resplit: 'resplit', sync: 'sync' };
+  if(['lockVault','unmount'].includes(method))browserHandoff?.revoke();
   return perform(['lockVault', 'unmount'].includes(method) ? 'unmounting' : method === 'mount' ? 'mounting' : method, () => backend(commands[method], params));
 }
 async function currentFileInventory() {
@@ -282,7 +286,7 @@ async function featureRequest(feature,action,payload,context) {
 }
 async function acquireUpdateLease() {
   if(quitPending||shuttingDown||updateInstallLease)return null;
-  updateInstallLease=true;quitPending=true;features.beginExit();
+  updateInstallLease=true;quitPending=true;browserHandoff?.revoke();features.beginExit();
   const release=()=>{updateInstallLease=false;if(!shuttingDown){quitPending=false;features.endExit();}};
   try {
     if(await hasActiveWork())throw new Error('Active work prevents update installation.');
@@ -319,7 +323,7 @@ async function quit() {
     return;
   }
   if (quitPending || shuttingDown) return;
-  quitPending=true;
+  quitPending=true;browserHandoff?.revoke();
   try {
     let active=helper?await helper.request('operations'):[];
     if (operation || await features.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state))) {
@@ -363,7 +367,7 @@ else {
     applyStartup(preferences.startup);
     cachedStartupRegistration=startupRegistration();
     try { Object.assign(buildMetadata, JSON.parse(await fs.readFile(path.resolve(directory,'../shared/build-metadata.json'),'utf8'))); } catch { /* Development builds have no invented build date. */ }
-    features=createFeatureServices({isPackaged:app.isPackaged,nativeRequest:(method,params)=>{if(verificationMode||testMode||!helper)throw Error('Protected native server supervision is unavailable.');if(typeof method==='string'&&method.startsWith('managedOllama.')&&!['managedOllama.start','managedOllama.status','managedOllama.stop','managedOllama.close'].includes(method))throw new Error('The native runtime ownership service is unavailable.');return helper.request(method,params);},accessibilityState:()=>readRuntimeAccessibility(app),dataDirectory:app.getPath('userData'),applicationRoot:path.resolve(directory,'../..'),sandboxDirectory:app.isPackaged?path.join(process.resourcesPath,'converter'):path.resolve('out/converter'),safeStorage,dialog:uiDialog,getWindow:()=>window,getMainFrame:()=>window?.webContents.mainFrame,openPath,openExternal:url=>shell.openExternal(url),onConverterDiagnostic:record=>console.warn('Converter initialization:',JSON.stringify(record)),emit:(feature,data)=>{if(feature==='workflow')browserHandoff?.observeDownload(data);window?.webContents.send('feature:event',feature,data);}});
+    features=createFeatureServices({nativeProfilePrompt:context=>nativeProfileDialog.authenticate(context),cancelNativeProfilePrompt:()=>nativeProfileDialog.cancelAll(),isPackaged:app.isPackaged,nativeRequest:(method,params)=>{if(verificationMode||testMode||!helper)throw Error('Protected native server supervision is unavailable.');if(typeof method==='string'&&method.startsWith('managedOllama.')&&!['managedOllama.start','managedOllama.status','managedOllama.stop','managedOllama.close'].includes(method))throw new Error('The native runtime ownership service is unavailable.');return helper.request(method,params);},accessibilityState:()=>readRuntimeAccessibility(app),dataDirectory:app.getPath('userData'),applicationRoot:path.resolve(directory,'../..'),sandboxDirectory:app.isPackaged?path.join(process.resourcesPath,'converter'):path.resolve('out/converter'),safeStorage,dialog:uiDialog,getWindow:()=>window,getMainFrame:()=>window?.webContents.mainFrame,openPath,openExternal:url=>shell.openExternal(url),onConverterDiagnostic:record=>console.warn('Converter initialization:',JSON.stringify(record)),emit:(feature,data)=>{if(feature==='workflow')browserHandoff?.observeDownload(data);window?.webContents.send('feature:event',feature,data);}});
     app.on('accessibility-support-changed', () => { if(!shuttingDown)window?.webContents.send('feature:event','personalization',{type:'accessibilityState',state:readRuntimeAccessibility(app)}); });
     updates=createUpdateService({app,autoUpdater,dialog:uiDialog,isActiveWork:hasActiveWork,acquireInstallLease:acquireUpdateLease,prepareRestart:prepareUpdateRestart,getLanguage:()=>updateLanguage});
     updates.on('status',()=>{void updateStatus().then(snapshot=>window?.webContents.send('feature:event','updates',{snapshot})).catch(()=>{});});
@@ -375,7 +379,7 @@ else {
     let rendererRecoveries=0;
     window.webContents.on('render-process-gone',()=>{if(!shuttingDown&&rendererRecoveries++<3)void window.loadFile(rendererPath);});
     window.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
-    browserHandoff=createBrowserHandoffLifecycle({disposeBrowserConversion:pair=>features.disposeBrowserConversion(pair),browserConversion:(message,context)=>features.browserConversion(message,context),openEditor:context=>features.openBrowserEditor(context),readProtectionStatus:()=>features.readBrowserProtectionStatus(),hostDirectory:app.isPackaged?path.join(process.resourcesPath,'browser-host'):path.resolve('out/browser-host'),verificationMode:verificationMode||testMode,isUnlocked:()=>!state.locked&&state.lockVerified!==false,canAdmit:()=>!quitPending&&!shuttingDown&&!updateInstallLease,onProposal:item=>features.receiveBrowserProposal(item),authorizePair:async({origin})=>{
+    browserHandoff=createBrowserHandoffLifecycle({...features.browserProfileAdapters,revokeProfileAuthority:()=>features.revokeBrowserProfileAuthority(),disposeBrowserConversion:pair=>features.disposeBrowserConversion(pair),browserConversion:(message,context)=>features.browserConversion(message,context),openEditor:context=>features.openBrowserEditor(context),readProtectionStatus:()=>features.readBrowserProtectionStatus(),hostDirectory:app.isPackaged?path.join(process.resourcesPath,'browser-host'):path.resolve('out/browser-host'),verificationMode:verificationMode||testMode,isUnlocked:()=>!state.locked&&state.lockVerified!==false,canAdmit:()=>!quitPending&&!shuttingDown&&!updateInstallLease,onProposal:item=>features.receiveBrowserProposal(item),authorizePair:async({origin})=>{
       if(!window||window.isDestroyed())return false;
       const answer=await uiDialog.showMessageBox(window,{type:'question',buttons:['Reject · 拒絕','Pair downloads · 配對下載'],defaultId:0,cancelId:0,title:'Pair browser downloads · 配對瀏覽器下載',message:'Allow download proposals from this origin? · 允許此來源提出下載建議？',detail:origin+'\nThis origin allowlist cannot authenticate a manually launched same-user process. Pairing lasts up to 15 minutes and ends when the drive locks. Each download still needs its own destination choice and Start confirmation.\n來源允許清單無法驗證手動啟動嘅同用戶程序。配對最多維持 15 分鐘，磁碟鎖定就撤銷。每次下載仍要獨立選擇目的地同確認開始。'});return answer.response===1;
     }});
