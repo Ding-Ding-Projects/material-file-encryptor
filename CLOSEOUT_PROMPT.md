@@ -21,3 +21,9 @@ Preserve unrelated local assistant worktrees and existing installations/settings
 Merge validation: combined options, local-model, rich-text and translation checks73/73 passed. Incoming local-model screenshots retain their original source identity; they are not proof for this combined candidate. Converter and local-model installed behavior remain unverified.
 
 Focused merge verification: shared-shell73/73; inventory/publication suite61 passed with one npm-path staging failure; after selecting the existing pinned Node distribution, the single affected staging check passed1/1. Independent merge review resolved the four stale model-route paragraphs.
+
+## Cancellation integration and closure recovery
+
+Combined converter/model main3a7307ee739da1ea141316d37c4347e9173ad608 was pushed and read back exactly. Reviewed cancellation repair94bbe88866c3bae15ea478ec837b06cb23f2bb64 is integrated here; actual adapter cancellation and translation checks17/17 passed with original deadlines unchanged. The runtime case still cancelled before interaction, so GUI acceptance remains incomplete. A separately reviewed persistent registered Lowlevel binding verified the retained desktop absent and all five saved identities absent before/after; readiness25367.7355ms, actual query58.4655ms under the unchanged20000ms bound. Final receipt SHA25640eb4d5fdad66590905b0fc6a52b96b662c80f9205a3ca84dd9022c094a397b7. Original negative lifecycle receipts remain unchanged. No browser was launched by recovery.
+
+Next bounded implementation is fresh native authorization for the existing read-profile-summary browser scope, in the existing isolated extension workflow branch. Broader credentials, mutation and installed acceptance are not implied.

@@ -99,5 +99,58 @@ test('actual keyboard adapter records pending, completion and rejection with mon
  const rejected=Error('original keyboard rejection');keyboard.press=async()=>{throw rejected;};clock=160;
  await assert.rejects(page.keyboard.press('Escape'),error=>error===rejected);
  assert.equal(progress.snapshot().phase.lastStarted.elapsedMs,140);assert.equal(progress.snapshot().phase.lastCompleted.elapsedMs,125);
- assert.match(source,/const startedAt=performance\.now\(\);[\s\S]*await fixture\(page,startedAt\)/);
+ assert.match(source,/const progress=await caseProgress\(startedAt,t.signal\)/);assert.match(source,/await fixture\(page,progress\)/);
+});
+
+test('actual adapter refuses new operations after abort and retains settled in-flight truth',async()=>{
+ const source=await fs.readFile(new URL('./ui-renderer.test.js',import.meta.url),'utf8');
+ const body=source.slice(source.indexOf('function controls('),source.indexOf('async function selectImportedFile('));
+ const {controls,trackedControls}=vm.runInNewContext(body+';({controls,trackedControls})',{assert});
+ const controller=new AbortController(),reason=Error('original test deadline');let clock=0,finish;
+ const saved=[],progress=createRendererFixtureProgress(value=>saved.push(value),{signal:controller.signal,now:()=>clock,startedAt:0});
+ const calls=[],locator={evaluate:async()=>{calls.push('evaluate');return 'md-outlined-text-field';},fill:async()=>calls.push('fill'),click:async()=>calls.push('click'),locator(){return this;}};
+ const raw={__fixtureProgress:progress.record,locator:()=>locator,keyboard:{press:()=>{calls.push('press');return new Promise(resolve=>{finish=resolve;});}},mouse:{click:async()=>calls.push('mouse')},evaluate:async()=>calls.push('page-evaluate')};
+ const page=controls(trackedControls(raw,controller.signal));
+ const pending=page.keyboard.press('Escape');await new Promise(resolve=>setImmediate(resolve));
+ clock=120000;controller.abort(reason);const deadline=progress.snapshot().deadline;
+ assert.equal(deadline.elapsedMs,120000);assert.equal(deadline.phase.lastStarted.phase,'keyboard.press:Escape');assert.equal(deadline.phase.lastCompleted,null);
+ clock=120005;finish('settled result');await assert.rejects(pending,error=>error===reason);
+ assert.equal(progress.snapshot().phase.lastCompleted.elapsedMs,120005);
+ for(const action of [()=>page.evaluate(()=>{}),()=>page.locator('#owned').click(),()=>page.locator('#owned').fill('value'),()=>page.mouse.click(1,2),()=>page.keyboard.press('Enter')])await assert.rejects(action(),error=>error===reason);
+ assert.deepEqual(calls,['press']);
+ for(let i=0;i<140;i++)await progress.record({kind:'request',state:'completed',pair:'status/status'});
+ assert.deepEqual(progress.snapshot().deadline,deadline);assert.deepEqual(saved.at(-1).deadline,deadline);assert.equal(progress.snapshot().recent.length,128);
+ await progress.flush();progress.dispose();
+});
+
+test('actual adapter checks cancellation again after progress persistence and before chained Material input',async()=>{
+ const source=await fs.readFile(new URL('./ui-renderer.test.js',import.meta.url),'utf8');
+ const body=source.slice(source.indexOf('function controls('),source.indexOf('async function selectImportedFile('));
+ const {controls,trackedControls}=vm.runInNewContext(body+';({controls,trackedControls})',{assert});
+ for(const abortAt of ['progress','evaluation']){
+  const controller=new AbortController(),reason=Error('cancel '+abortAt),calls=[];
+  const locator={evaluate:async()=>{calls.push('evaluate');controller.abort(reason);return 'md-outlined-text-field';},fill:async()=>calls.push('fill'),locator(){return this;}};
+  const raw={locator:()=>locator,__fixtureProgress:async row=>{if(abortAt==='progress'&&row.state==='started')controller.abort(reason);}};
+  const page=controls(trackedControls(raw,controller.signal));
+  await assert.rejects(page.locator('#owned').fill('value'),error=>error===reason);
+  assert.deepEqual(calls,abortAt==='progress'?[]:['evaluate']);
+ }
+});
+
+test('actual renderer cancellation still closes its owned browser and server without diagnostic evaluation',async()=>{
+ const source=await fs.readFile(new URL('./ui-renderer.test.js',import.meta.url),'utf8');
+ const {default:path}=await import('node:path'),{default:os}=await import('node:os'),{fileURLToPath}=await import('node:url'),{createHash}=await import('node:crypto');
+ for(const name of ['real renderer interactions, error states, keyboard dialogs and responsive layouts','scoped clear-control selectors use their actual owning wrappers']){
+ const cases=new Map(),calls=[],controller=new AbortController(),reason=Error('actual callback abort');
+ const raw={setViewportSize:async()=>{calls.push('viewport');controller.abort(reason);},evaluate:async()=>{calls.push('unexpected diagnostic');},};
+ const server={listen(_p,_h,callback){callback();},address:()=>({port:19222}),closeAllConnections(){calls.push('server-connections');},close(callback){calls.push('server-close');callback();}};
+ const context={assert,path,os,fileURLToPath,createHash,process,performance,console:{log(){},error(){}},
+  test:(name,options,callback)=>cases.set(name,typeof options==='function'?options:callback),
+  fs:{access:async()=>{},mkdtemp:async()=>path.join(os.tmpdir(),'unit-not-created'),readFile:async()=>Buffer.from('unit only'),writeFile:async()=>{},rename:async()=>{}},
+  createServer:()=>server,serveRendererFixture:()=>{},createRendererFeatureFixture,verifyRendererFeatureFixture,createRendererFixtureProgress,
+  openRendererBrowser:async()=>({page:raw,close:async()=>calls.push('browser-close')})};
+ vm.runInNewContext(source.replace(/^import .*;\r?\n/gm,'').replaceAll('import.meta.url',JSON.stringify(new URL('./ui-renderer.test.js',import.meta.url).href)),context);
+ await assert.rejects(cases.get(name)({signal:controller.signal}),error=>error===reason);
+ assert.deepEqual(calls,['viewport','browser-close','server-connections','server-close']);
+ }
 });
