@@ -15,3 +15,9 @@ test('production restored review draft over the limit returns to editing without
  const context={$: $,storage,readDraft,checkNote,noteErrors:{},copy:{noteNext:['Next','下一步']},label(){},t:p=>p[0],renderNoteText(){throw Error('Oversized draft reached renderer');},sheet:null};
  vm.createContext(context);vm.runInContext(['function sheetDraft()','function renderSheet()','function openSheet('].map(line).join('\n'),context);context.openSheet(null);assert.equal(context.sheet.step,2);assert.equal($('note-body').value.length,4001);assert.match(context.sheet.error[0],/4,000/);
 });
+test('restored review step focuses its visible save control',()=>{
+ const $=nodes(),values=new Map(),storage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};saveDraft(storage,{title:'Draft',body:'Ready',step:3});
+ let focused;for(const id of ['note-title','note-body','note-next'])$(id).focus=()=>{focused=id;};
+ const context={$: $,storage,readDraft,checkNote,noteErrors:{},copy:{noteNext:['Next','下一步']},label(){},t:p=>p[0],renderNoteText(){},renderMarkdown(){},noteReaderTranslation(){},sheet:null};
+ vm.createContext(context);vm.runInContext(['function sheetDraft()','function renderSheet()','function openSheet('].map(line).join('\n'),context);context.openSheet(null);assert.equal(context.sheet.step,3);assert.equal(focused,'note-next');
+});

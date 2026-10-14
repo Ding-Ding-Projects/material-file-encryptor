@@ -2,12 +2,26 @@ const HOST='org.dingding.material_file_encryptor.downloads';
 let port=null,session=null,sequence=0,pending=null,captureId=null,connectionEpoch=0;
 function disconnect(){connectionEpoch++;port?.disconnect();port=null;session=null;captureId=null;if(pending){clearTimeout(pending.timer);pending.reject(new Error('Desktop connection closed.'));pending=null;}}
 function connect(){if(port)return port;port=chrome.runtime.connectNative(HOST);const ownPort=port;port.onDisconnect.addListener(()=>{if(port!==ownPort)return;connectionEpoch++;port=null;session=null;captureId=null;if(pending){clearTimeout(pending.timer);pending.reject(new Error('Desktop receiver is unavailable.'));pending=null;}});port.onMessage.addListener(message=>{if(port!==ownPort||!pending)return;const request=pending;pending=null;clearTimeout(request.timer);if(message?.type==='error')request.reject(new Error('Desktop did not accept the handoff.'));else request.resolve(message);});return port;}
-function request(message){if(pending)return Promise.reject(new Error('Resolve the current desktop handoff first.'));return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{pending=null;disconnect();reject(new Error('Desktop handoff timed out.'));},30000);pending={resolve,reject,timer};try{connect().postMessage(message);}catch(error){clearTimeout(timer);pending=null;disconnect();reject(new Error('Install and open the desktop receiver first.'));}});}
+function request(message,timeoutMs=30000){if(pending)return Promise.reject(new Error('Resolve the current desktop handoff first.'));return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{pending=null;disconnect();reject(new Error('Desktop handoff timed out.'));},timeoutMs);pending={resolve,reject,timer};try{connect().postMessage(message);}catch(error){clearTimeout(timer);pending=null;disconnect();reject(new Error('Install and open the desktop receiver first.'));}});}
 async function pair(){const result=await request({type:'pair'});if(result?.type!=='paired'||typeof result.session!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(result.session))throw new Error('Desktop pairing response is invalid.');session=result.session;return{paired:true};}
 async function propose(link){if(!session)throw new Error('Pair this browser with the unlocked desktop first.');const url=new URL(link);if(url.protocol!=='https:'||url.username||url.password||url.port&&url.port!=='443'||link.length>2048)throw new Error('Choose a public HTTPS link without credentials.');let filename;try{filename=decodeURIComponent(url.pathname.split('/').pop()||'download.bin');}catch{throw new Error('The download file name is invalid.');}filename=filename.replace(/[\\/<>:"|?*\x00-\x1f\x7f]/g,'_').slice(0,180)||'download.bin';if(['.','..'].includes(filename))filename='download.bin';const result=await request({type:'propose',session,proposal:{url:url.href,filename,browserDownloadId:++sequence}});if(result?.type!=='proposed'||result.state!=='awaiting-confirmation'||typeof result.id!=='string'||!/^[a-f0-9-]{36}$/.test(result.id))throw new Error('Desktop proposal response is invalid.');captureId=result.id;return{proposed:true,id:captureId,state:result.state};}
 chrome.runtime.onInstalled.addListener(()=>{chrome.contextMenus.create({id:'propose-download',title:'Download with Material File Encryptor…',contexts:['link'],targetUrlPatterns:['https://*/*']});});
 chrome.contextMenus.onClicked.addListener(info=>{if(info.menuItemId==='propose-download')void propose(info.linkUrl).catch(()=>{chrome.action.setBadgeText({text:'!'});chrome.action.setTitle({title:'Pair the browser and retry the download handoff.'});});});
 chrome.runtime.onMessage.addListener((message,sender,respond)=>{if(sender.id!==chrome.runtime.id||!['popup.html','options.html'].some(path=>sender.url===chrome.runtime.getURL(path))||sender.frameId!==undefined&&sender.frameId!==0)return false;
+ if(['workflow-discover','workflow-editor-open'].includes(message?.type)){
+  if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1||!session){respond({error:'Native editor workflow unavailable.'});return false;}
+  const ownSession=session,epoch=connectionEpoch;
+  request({type:message.type,session:ownSession},message.type==='workflow-editor-open'?125000:30000).then(value=>{
+   if(session!==ownSession||connectionEpoch!==epoch)throw Error('Browser connection changed.');
+   if(message.type==='workflow-discover'){
+    if(!value||Object.keys(value).sort().join(',')!=='externalEditor,schemaVersion,type'||value.type!=='workflow-capabilities'||value.schemaVersion!==1||typeof value.externalEditor!=='boolean')throw Error('Invalid capabilities.');
+    respond({schemaVersion:1,externalEditor:value.externalEditor});
+   }else{
+    if(!value||Object.keys(value).sort().join(',')!=='outcome,schemaVersion,type'||value.type!=='workflow-editor-result'||value.schemaVersion!==1||!['opened','cancelled'].includes(value.outcome))throw Error('Invalid editor result.');
+    respond({schemaVersion:1,outcome:value.outcome});
+   }
+  }).catch(()=>respond({error:'Native editor request did not complete. Refresh the connection and try again.'}));return true;
+ }
  if(message?.type==='protected-discover'){
   if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1||!session){respond({error:'Protected capabilities are unavailable.'});return false;}
   const ownSession=session,epoch=connectionEpoch;
