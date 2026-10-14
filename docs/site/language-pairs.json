@@ -71,10 +71,16 @@
       "translationSha256": "8a7d4c67952fee24664c0b72161377112f5ed2e194541ed11e0df3e8cc263e68"
     },
     {
+      "source": "docs/features/browser/native-profile-summary.md",
+      "translation": "docs/features/browser/native-profile-summary.zh-HK.md",
+      "sourceSha256": "fba0d827135f97a5646f22b8b356b987678587806a6cab95e17fc2a58f0bb6b3",
+      "translationSha256": "86c5c0839eecb03aa5cb4fcd87fb6929a8848a6e9de66f2e2bfa3cd49822f096"
+    },
+    {
       "source": "docs/features/browser/README.md",
       "translation": "docs/features/browser/README.zh-HK.md",
-      "sourceSha256": "6a330ea1f4230b6bdba7b3c39bb82db7108ac9b7c14ad303283f95484a1dea5e",
-      "translationSha256": "56675937acf0b11feb8244aa496869e634ebda6ba21524013ee60d07fd87233c"
+      "sourceSha256": "6927af3e57700fd5ad969fc84a38485041fa39363c4b771232086cc6667aa19b",
+      "translationSha256": "8800f77c668d9a3b8255ce9296d56c04bca1b68769067f6695a3121b99269797"
     },
     {
       "source": "docs/features/browser/safe-note-reading.md",

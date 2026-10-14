@@ -36,7 +36,8 @@ function validateCredentialRequest(action,payload){
 export function createAccessIntegration({dataDirectory,toolsDirectory,credentials,getMainFrame,recordMutation,execute=executeFile,now=Date.now}={}){
  if(!path.isAbsolute(dataDirectory||'')||typeof getMainFrame!=='function'||!credentials||['get','set','delete','list','readVersioned','compareAndSetVersioned'].some(name=>typeof credentials[name]!=='function'))throw Error('Protected access integration is unavailable.');
  const lifetime=new AbortController(),context=new AsyncLocalStorage(),actors=new WeakMap(),grants=new Map(),creations=new Map(),epochs=new Map(),resolveTool=createForgeToolResolver(toolsDirectory);let closed=false,queue=Promise.resolve();
- const actor=()=>{const entry=context.getStore(),frame=getMainFrame();if(closed||!entry||entry.frame!==frame||frame?.detached===true||typeof frame?.isDestroyed==='function'&&frame.isDestroyed())throw Error('Trusted access actor is unavailable.');return entry.actor;};
+ const nativeMarker=Object.freeze({}),nativeActor='native-profile:'+randomUUID();let nativeEpoch=0,nativeAuthorities=new WeakMap();
+ const actor=()=>{const entry=context.getStore();if(entry?.native===nativeMarker){if(closed||entry.actor!==nativeActor||entry.epoch!==nativeEpoch)throw Error('Native profile actor is unavailable.');return nativeActor;}const frame=getMainFrame();if(closed||!entry||entry.frame!==frame||frame?.detached===true||typeof frame?.isDestroyed==='function'&&frame.isDestroyed())throw Error('Trusted access actor is unavailable.');return entry.actor;};
  const identity=(who,key)=>JSON.stringify([who,key]),targetFor=key=>key==='local-profile:v1'?'profile':key.startsWith('element-lock:')?'element:'+key.slice(13):null;
  const generation=(who,target)=>epochs.get(identity(who,target))||0;
  const current=(who,target,version)=>{if(actor()!==who||generation(who,target)!==version)throw Error('Protected access operation was cancelled.');};
@@ -64,7 +65,7 @@ export function createAccessIntegration({dataDirectory,toolsDirectory,credential
   if(action==='credentialDelete'&&before.value===null)return true;
   if(action==='credentialDelete'){const verified=grants.get(identity(who,target)),created=creations.get(identity(who,key));if(!(verified&&verified.expires>now()&&verified.revision===before.revision)&&!(created&&created.expires>now()&&created.revision===before.revision))throw Error('Verify the current credential before removing it.');}
   // Revoke old profile verification before a supported write can reach storage or await its audit.
-  if(target==='profile'){epoch++;epochs.set(identity(who,target),epoch);grants.delete(identity(who,target));}
+  if(target==='profile'){revokeNativeProfile();epoch++;epochs.set(identity(who,target),epoch);grants.delete(identity(who,target));}
   const result=await credentials.compareAndSetVersioned(key,before.revision,action==='credentialSet'?value:null);if(!result.updated)throw Error('Protected access record changed concurrently.');
   try{current(who,target,epoch);await recordMutation({version:1,action:action==='credentialSet'?'access-credential-created':'access-credential-removed',target:target,at:new Date(now()).toISOString()});current(who,target,epoch);}
   catch(error){const restored=await credentials.compareAndSetVersioned(key,result.revision,before.value);if(!restored.updated)throw Error('Protected access record changed concurrently. Local recovery is required.');try{await recordMutation({version:1,action:'access-credential-rolled-back',target,at:new Date(now()).toISOString()});}catch{throw Error('Local mutation history is unavailable.');}throw error;}
@@ -97,7 +98,32 @@ export function createAccessIntegration({dataDirectory,toolsDirectory,credential
   if(!live()||who&&generation(who,'profile')!==epoch)return {schemaVersion:1,profile:'unknown',sharedMode:'unknown',browserPermission:'unavailable'};
   return {schemaVersion:1,profile,sharedMode,browserPermission:'unavailable'};
  }
+ const nativeRun=fn=>context.run({native:nativeMarker,actor:nativeActor,epoch:nativeEpoch},fn);
+ function revokeNativeProfile(){nativeEpoch++;nativeAuthorities=new WeakMap();if(!closed)void nativeRun(()=>host.request('waitCancel',{target:'profile'})).catch(()=>{});}
+ function nativeCheck(signal,epoch){if(closed||signal?.aborted||epoch!==nativeEpoch)throw Error('Native profile authentication cancelled.');actor();}
+ async function nativeProfileStatus({signal}={}){const epoch=nativeEpoch;return nativeRun(async()=>{nativeCheck(signal,epoch);const record=await credentials.readVersioned('local-profile:v1');nativeCheck(signal,epoch);const waiting=await host.request('waitStatus',{target:'profile'});nativeCheck(signal,epoch);return {configured:verifier(record.value),until:waiting.until};});}
+ async function authenticateNativeProfile(password,{signal}={}){
+  if(typeof password!=='string'||password.length<1||password.length>4096)throw Error('Enter the local profile credential.');
+  const epoch=nativeEpoch;let supplied=password;password='';
+  return nativeRun(async()=>{
+   const cancelled=()=>revokeNativeProfile();signal?.addEventListener('abort',cancelled,{once:true});
+   try{nativeCheck(signal,epoch);const before=await credentials.readVersioned('local-profile:v1');nativeCheck(signal,epoch);if(!verifier(before.value))throw Error('Create a local profile in the desktop first.');
+    const payload={target:'profile',credentials:{password:supplied}};supplied='';let result;try{result=await host.request('localVerify',payload);}finally{payload.credentials.password='';}nativeCheck(signal,epoch);
+    if(!result.ok)return {ok:false,until:result.until};
+    const after=await credentials.readVersioned('local-profile:v1');nativeCheck(signal,epoch);if(typeof after.revision!=='string'||!after.revision||before.revision!==after.revision||!same(before.value,after.value))throw Error('Local profile changed during authentication.');
+    const authority=Object.freeze({}),expiresAt=now()+60000;nativeAuthorities.set(authority,{revision:after.revision,expiresAt,epoch});
+    return {ok:true,proof:{profileId:'local-profile',revision:after.revision,expiresAt,authority}};
+   }finally{supplied='';signal?.removeEventListener('abort',cancelled);}
+  });
+ }
+ async function validateNativeProfileAuthority({authority,profileId,revision,signal}={}){
+  const known=authority&&typeof authority==='object'?nativeAuthorities.get(authority):null,epoch=nativeEpoch;
+  if(!known||profileId!=='local-profile'||revision!==known.revision||known.expiresAt<=now()||known.epoch!==epoch||signal?.aborted||closed)return false;
+  return nativeRun(async()=>{try{nativeCheck(signal,epoch);const current=await credentials.readVersioned('local-profile:v1');nativeCheck(signal,epoch);return nativeAuthorities.get(authority)===known&&known.expiresAt>now()&&current.revision===known.revision&&verifier(current.value);}catch{return false;}});
+ }
  return {
+  nativeProfileStatus,authenticateNativeProfile,validateNativeProfileAuthority,revokeNativeProfile,
+  async readNativeProfileSummary(context){if(!await validateNativeProfileAuthority(context))throw Error('Native profile authority expired.');return {schemaVersion:1,profile:'authenticated',protectedAccess:'granted'};},
   protectionStatus,
   request(senderFrame,action,payload={}){
    if(closed||!senderFrame||typeof senderFrame!=='object'||senderFrame!==getMainFrame())return Promise.reject(Error('Trusted access actor is unavailable.'));
@@ -114,6 +140,6 @@ export function createAccessIntegration({dataDirectory,toolsDirectory,credential
    });
   },
   supports(action){return credentialActions.has(action)||ACCESS_HOST_ACTIONS.includes(action);},
-  close(){closed=true;lifetime.abort();host.close();grants.clear();creations.clear();epochs.clear();},
+  close(){revokeNativeProfile();closed=true;lifetime.abort();host.close();grants.clear();creations.clear();epochs.clear();},
  };
 }
