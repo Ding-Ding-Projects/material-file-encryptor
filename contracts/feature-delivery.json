@@ -13092,7 +13092,7 @@
       ],
       "evidence": [],
       "persistence": [],
-      "reason": "The background creates one HTTPS download-link action and routes it through native pairing. Full contextual action coverage is absent. No independent installed interaction or visual acceptance is claimed.",
+      "reason": "chrome.contextMenus creates the browser-owned propose-download action for HTTPS links in background.js. Popup and options expose pairing and read-only observations, not the link trigger. The registered DOM target catalogue has no selector for the browser-owned menu, so this exact platform equivalent is recorded separately. Installed action and handoff acceptance remain unverified.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13118,21 +13118,37 @@
         "action": "Propose a public HTTPS link from the browser context menu, reject disallowed URLs and report pairing failures.",
         "targets": [
           {
-            "state": "present",
-            "surface": "extension:options",
-            "selector": "",
-            "outcome": "Propose a public HTTPS link from the browser context menu, reject disallowed URLs and report pairing failures.",
-            "nextProof": "Exercise propose a public HTTPS link from the browser context menu, reject disallowed URLs and report pairing failures on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "state": "browser-owned",
+            "surface": "chrome.contextMenus",
+            "selector": "propose-download",
+            "outcome": "The browser-owned HTTPS link menu invokes propose-download in background.js, validates the URL and sends a paired native proposal; it never starts the transfer.",
+            "nextProof": "Install the exact extension build, right-click an allowed public HTTPS link, invoke propose-download and inspect the native proposal. Verify invalid URL and unpaired states, then retain browser-menu and desktop-confirmation receipts.",
+            "role": "trigger"
           },
           {
             "state": "present",
             "surface": "extension:popup",
             "selector": "",
-            "outcome": "Propose a public HTTPS link from the browser context menu, reject disallowed URLs and report pairing failures.",
-            "nextProof": "Exercise propose a public HTTPS link from the browser context menu, reject disallowed URLs and report pairing failures on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "outcome": "Show pairing and connection observations and explain the browser-owned link action; this popup does not trigger a link proposal.",
+            "nextProof": "Verify popup pairing and status observations before and after invoking the actual browser context menu; do not count popup clicks as menu-action proof.",
+            "role": "observation"
+          },
+          {
+            "state": "present",
+            "surface": "extension:options:connection",
+            "selector": "#panel-connection",
+            "outcome": "Show connection and transfer observations following a browser-owned proposal without claiming that the options panel invoked the link action.",
+            "nextProof": "Invoke propose-download in the browser-owned menu, then refresh the connection panel and validate bounded transfer observations.",
+            "role": "observation"
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences.",
+        "platformEquivalent": {
+          "api": "chrome.contextMenus",
+          "actionId": "propose-download",
+          "owner": "browser-extension/background.js",
+          "trigger": "Browser-owned HTTPS link context-menu action"
+        }
       }
     },
     {
@@ -15451,16 +15467,18 @@
     {
       "id": "squirrel-installer",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "build-installer.bat",
+        "scripts/build.ps1",
+        "scripts/browser-native-registration.mjs"
       ],
       "documentation": [],
       "localization": [],
       "tests": [],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Verify the desktop Squirrel installer registers the reviewed browser native host and extension handoff lifecycle. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Root installer production invokes scripts/build.ps1. browser-native-registration.mjs verifies reviewed CRX3 identity and generates the native manifest and HKCU registration plan, explicitly declaring installation and registry mutation not performed. Real installed registration, update/removal and browser-to-installed-desktop handoff acceptance remain missing.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -15474,25 +15492,26 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
-        "owner": "browser-extension/options.js",
+        "owner": "build-installer.bat",
         "gaps": [
           "behavior",
+          "wiring",
           "proof"
         ],
-        "action": "Verify the desktop Squirrel installer registers the reviewed browser native host and extension handoff lifecycle.",
+        "action": "Complete installed native-host registration, update and removal using the reviewed extension identity, then verify browser-to-installed-desktop download handoff with the real Squirrel package.",
         "targets": [
           {
             "state": "missing",
             "surface": null,
             "selector": null,
-            "outcome": "Verify the desktop Squirrel installer registers the reviewed browser native host and extension handoff lifecycle.",
-            "nextProof": "Exercise verify the desktop Squirrel installer registers the reviewed browser native host and extension handoff lifecycle on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "outcome": "Complete installed native-host registration, update and removal using the reviewed extension identity, then verify browser-to-installed-desktop download handoff with the real Squirrel package.",
+            "nextProof": "Produce the exact Squirrel package through build-installer.bat, install it on an owned hidden target, read back Chrome and Edge native-host registration, drive the reviewed extension handoff, update and remove, and retain source-bound lifecycle receipts. A generated plan is not installation proof."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "The generated registration plan and native manifest are file outputs; HKCU changes and installed lifecycle state are not performed by the planner. Verify actual persisted registration and removal separately."
       }
     },
     {

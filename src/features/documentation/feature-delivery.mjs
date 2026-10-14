@@ -179,19 +179,29 @@ export function validateFeatureDelivery(manifest, exists) {
     if (row.surface === 'extension' && !required.applies && (row.status !== 'not-applicable' || row.behaviorVerdict !== 'not-applicable' || row.evidenceVerdict !== 'current-runtime-unverified' || Object.hasOwn(row, 'completion'))) errors.push(`${label}: excluded extension scope requires an explicit independent verdict without a completion claim.`);
     if (row.surface === 'extension' && required.applies) {
       const completion = row.completion;
-      if (!object(completion) || Object.keys(completion).sort().join(',') !== 'action,gaps,owner,persistence,targets') errors.push(`${label}: bounded completion ownership required.`);
+      const completionKeys = row.id === 'context-menus' ? 'action,gaps,owner,persistence,platformEquivalent,targets' : 'action,gaps,owner,persistence,targets';
+      if (!object(completion) || Object.keys(completion).sort().join(',') !== completionKeys) errors.push(`${label}: bounded completion ownership required.`);
       else {
         if (!sourcePath(completion.owner) || !row.implementation?.includes(completion.owner)) errors.push(`${label}: completion owner must be a bound implementation reference.`);
         if (!boundedText(completion.action) || !boundedText(completion.persistence) || !Array.isArray(completion.gaps) || !completion.gaps.length || new Set(completion.gaps).size !== completion.gaps.length || completion.gaps.some(gap => !['behavior', 'wiring', 'proof'].includes(gap))) errors.push(`${label}: explicit behavior, persistence, wiring or proof gaps required.`);
         if (required.kind === 'repository' && completion.owner.startsWith('browser-extension/')) errors.push(`${label}: repository obligation cannot borrow a browser control owner.`);
+        if (row.id === 'context-menus') {
+          const equivalent = completion.platformEquivalent;
+          if (!object(equivalent) || Object.keys(equivalent).sort().join(',') !== 'actionId,api,owner,trigger' || equivalent.api !== 'chrome.contextMenus' || equivalent.actionId !== 'propose-download' || equivalent.owner !== 'browser-extension/background.js' || equivalent.trigger !== 'Browser-owned HTTPS link context-menu action' || completion.owner !== equivalent.owner || (!Array.isArray(completion.targets) || completion.targets.filter(target => target?.state === 'browser-owned').length !== 1)) errors.push(`${label}: exact browser-owned context-menu equivalent required.`);
+        }
+        if (row.id === 'squirrel-installer' && (completion.owner !== 'build-installer.bat' || !['build-installer.bat', 'scripts/build.ps1', 'scripts/browser-native-registration.mjs'].every(file => row.implementation.includes(file)) || row.behaviorVerdict !== 'partial' || !completion.gaps.includes('wiring'))) errors.push(`${label}: installer production and unfinished registration must retain their actual sources and gaps.`);
         if (!Array.isArray(completion.targets) || !completion.targets.length || completion.targets.length > 16) errors.push(`${label}: bounded completion targets required.`);
         else for (const target of completion.targets) {
-          if (!object(target) || Object.keys(target).sort().join(',') !== 'nextProof,outcome,selector,state,surface' || !boundedText(target.outcome) || !boundedText(target.nextProof)) { errors.push(`${label}: complete target evidence dimensions required.`); continue; }
+          const targetKeys = row.id === 'context-menus' ? 'nextProof,outcome,role,selector,state,surface' : 'nextProof,outcome,selector,state,surface';
+          if (!object(target) || Object.keys(target).sort().join(',') !== targetKeys || !boundedText(target.outcome) || !boundedText(target.nextProof)) { errors.push(`${label}: complete target evidence dimensions required.`); continue; }
+          if (row.id === 'context-menus' && target.role !== (target.state === 'browser-owned' ? 'trigger' : 'observation')) errors.push(`${label}: browser trigger and observation roles cannot be exchanged.`);
           if (target.state === 'missing') {
             if (target.surface !== null || target.selector !== null) errors.push(`${label}: missing targets cannot invent routes.`);
           } else if (target.state === 'present') {
             const identity = manifest.extensionTargets?.find(item => item.id === target.surface);
             if (!identity || identity.family !== 'extension' || target.selector !== identity.selector || !row.implementation.includes(identity.owner)) errors.push(`${label}: unknown or borrowed extension target identity.`);
+          } else if (target.state === 'browser-owned') {
+            if (row.id !== 'context-menus' || target.surface !== 'chrome.contextMenus' || target.selector !== 'propose-download' || !row.implementation.includes('browser-extension/background.js')) errors.push(`${label}: unknown browser-owned platform target.`);
           } else errors.push(`${label}: invalid target state.`);
         }
       }

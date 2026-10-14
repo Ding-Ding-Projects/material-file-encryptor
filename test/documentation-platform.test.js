@@ -127,7 +127,7 @@ test('repository-aware verifier proves blobs and reports absent Git access hones
   const revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repositoryPath, encoding: 'utf8', windowsHide: true }).trim();
   fixture.features[0].implementation = ['src/features/documentation/required-features.mjs'];
   fixture.referenceSources = { 'src/features/documentation/required-features.mjs': revision };
-  for (const row of fixture.features.filter(row => row.surface === 'extension' && row.applicability.applies)) { row.implementation = [row.completion.owner]; row.completion.targets = [{state:'missing',surface:null,selector:null,outcome:'Reference fixture target',nextProof:'Reference fixture verification'}]; fixture.referenceSources[row.completion.owner] = revision; }
+  for (const row of fixture.features.filter(row => row.surface === 'extension' && row.applicability.applies)) { row.implementation = row.id==='squirrel-installer' ? ['build-installer.bat','scripts/build.ps1','scripts/browser-native-registration.mjs'] : [row.completion.owner]; row.completion.targets = row.id==='context-menus' ? row.completion.targets.filter(target=>target.state==='browser-owned') : [{state:'missing',surface:null,selector:null,outcome:'Reference fixture target',nextProof:'Reference fixture verification'}]; for(const file of row.implementation) fixture.referenceSources[file] = revision; }
   const actual = await verifyFeatureDeliveryReferences(fixture, { repositoryPath });
   assert.deepEqual(actual.errors, []); assert.equal(actual.referenceVerification, 'verified');
   assert.equal(actual.checkedReferences, Object.keys(fixture.referenceSources).length);
@@ -194,7 +194,21 @@ test('extension behavior evidence and gap verdicts reject causal contradictions'
 test('extension persistence and root entrypoint ownership retain source-specific facts',async()=>{
  const manifest=await inventory(),rows=manifest.features.filter(r=>r.surface==='extension');
  const build=rows.find(r=>r.id==='build-entrypoints');assert.equal(build.completion.owner,'build.bat');assert.ok(build.implementation.includes('build-installer.bat'));assert.equal(build.behaviorVerdict,'present');assert.equal(build.status,'unverified');
- for(const row of rows.filter(r=>r.applicability.applies)){assert.ok(row.completion.action.length>40);assert.ok(row.completion.persistence.length>30);assert.ok(row.completion.targets.every(t=>t.outcome===row.completion.action));}
+ for(const row of rows.filter(r=>r.applicability.applies)){assert.ok(row.completion.action.length>40);assert.ok(row.completion.persistence.length>30);assert.ok(row.id==='context-menus' || row.completion.targets.every(t=>t.outcome===row.completion.action));}
  for(const id of ['motion','material-design','regex-search','rich-controls','notifications','context-menus','download-handoff']) assert.deepEqual(rows.find(r=>r.id===id).persistence,[],id);
  assert.match(rows.find(r=>r.id==='appearance-editor').completion.persistence,/theme selection only/);
+});
+
+test('context-menu trigger belongs to the exact browser platform action rather than observation panels',async()=>{
+ const manifest=await inventory(),row=manifest.features.find(r=>r.surface==='extension'&&r.id==='context-menus');
+ assert.equal(row.completion.platformEquivalent.actionId,'propose-download');assert.equal(row.completion.owner,'browser-extension/background.js');
+ assert.equal(row.completion.targets.filter(t=>t.state==='browser-owned').length,1);assert.ok(row.completion.targets.filter(t=>t.state==='present').every(t=>/observations/.test(t.outcome)));
+ for(const mutate of [r=>delete r.completion.platformEquivalent,r=>r.completion.targets.find(t=>t.state==='present').role='trigger',r=>r.completion.targets.find(t=>t.state==='browser-owned').role='observation',r=>r.completion.platformEquivalent.api='invented',r=>r.completion.platformEquivalent.actionId='pair',r=>r.completion.targets=r.completion.targets.filter(t=>t.state!=='browser-owned'),r=>r.completion.targets.find(t=>t.state==='browser-owned').selector='pair']){const broken=structuredClone(manifest);mutate(broken.features.find(r=>r.surface==='extension'&&r.id==='context-menus'));assert.ok(validateFeatureDelivery(broken).some(error=>error.startsWith('extension/context-menus:')));}
+ assert.deepEqual(validateFeatureDelivery(manifest),[]);
+});
+test('installer production and registration planning do not imply an installed lifecycle',async()=>{
+ const manifest=await inventory(),row=manifest.features.find(r=>r.surface==='extension'&&r.id==='squirrel-installer');
+ assert.equal(row.status,'unverified');assert.equal(row.behaviorVerdict,'partial');assert.equal(row.completion.owner,'build-installer.bat');assert.match(row.reason,/installation and registry mutation not performed/);
+ for(const mutate of [r=>r.completion.owner='browser-extension/options.js',r=>r.implementation=r.implementation.filter(f=>f!=='scripts/browser-native-registration.mjs'),r=>r.completion.gaps=['behavior','proof'],r=>r.behaviorVerdict='present']){const broken=structuredClone(manifest);mutate(broken.features.find(r=>r.surface==='extension'&&r.id==='squirrel-installer'));assert.ok(validateFeatureDelivery(broken).some(error=>error.startsWith('extension/squirrel-installer:')));}
+ assert.deepEqual(validateFeatureDelivery(manifest),[]);
 });
