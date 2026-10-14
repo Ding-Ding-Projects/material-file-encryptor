@@ -7,3 +7,6 @@
 .material-dialog p{grid-column:2;margin:0 0 20px;font-size:14px;line-height:20px;color:var(--md-sys-color-on-surface-variant,#49454f);white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto}
 .material-dialog-actions{grid-column:1 / -1;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
 @media(prefers-reduced-motion:reduce){.material-dialog{animation:none}}
+html,body.material-dialog-body{height:100%;margin:0;background:var(--md-sys-color-surface-container-high,#e8ece9)}
+.material-dialog-title{grid-column:1 / -1;margin:-8px -8px 12px;padding:4px 8px;font-size:12px;line-height:16px;letter-spacing:.5px;color:var(--md-sys-color-on-surface-variant,#49454f);-webkit-app-region:drag;user-select:none}
+.material-dialog-actions,.material-dialog p{-webkit-app-region:no-drag}

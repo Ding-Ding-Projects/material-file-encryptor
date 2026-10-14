@@ -12,6 +12,9 @@ async function start() {
   const api = window.materialDialog;
   const view = await api.view();
   document.title = view.title || view.message;
+  const title = document.getElementById('dialog-title');
+  title.textContent = view.title;
+  title.hidden = !view.title;
   document.body.dataset.type = view.type;
   document.getElementById('dialog-message').textContent = view.message;
   const detail = document.getElementById('dialog-detail');

@@ -55,7 +55,7 @@ export function createMaterialDialogs({BrowserWindow, ipcMain, nativeDialog, pre
     try {
       window = new BrowserWindow({
         parent: owner ?? undefined, modal: Boolean(owner), width: 560, height: 260, useContentSize: true,
-        resizable: false, minimizable: false, maximizable: false, fullscreenable: false, show: false,
+        resizable: false, minimizable: false, maximizable: false, fullscreenable: false, show: false, frame: false, backgroundColor: '#e8ece9',
         title: view.title || ' ', autoHideMenuBar: true,
         webPreferences: {preload: preloadPath, contextIsolation: true, sandbox: true, nodeIntegration: false, webSecurity: true},
       });
