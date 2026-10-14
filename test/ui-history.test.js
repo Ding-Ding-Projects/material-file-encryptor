@@ -59,7 +59,8 @@ test('folder restoration offers only identity-linked descendants and preserves e
 
 test('shared non-dialog error stays outside hidden views and bootstrap keeps that owner',async()=>{
  const html=await fs.readFile(new URL('../src/renderer/index.html',import.meta.url),'utf8');
- assert.ok(/<main>\s*<div id="main-error"[^>]*role="alert"[^>]*hidden>/.test(html),'Shared alert must be a direct workspace child before the view containers');
+ // The workspace host became the mfe-main-workspace component; the shared alert must still be its first child.
+ assert.ok(/<(?:main|mfe-main-workspace)>\s*<div id="main-error"[^>]*role="alert"[^>]*hidden>/.test(html),'Shared alert must be a direct workspace child before the view containers');
  const source=await fs.readFile(new URL('../src/renderer/app.js',import.meta.url),'utf8');
  const relocation=source.match(/^\$\('view-drive'\)\.prepend\([^\n]+/m)?.[0];assert.ok(relocation);
  const operation={owner:'initial'},alert={owner:'main'};
