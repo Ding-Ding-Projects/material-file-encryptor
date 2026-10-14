@@ -147,3 +147,5 @@ details[open]>summary::after{transform:translateY(2px) rotate(-135deg)}
 details[open]>:not(summary){animation:md-expand-in var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard) both}
 details[open]{padding-bottom:12px}
 .settings-section summary{padding:0;color:var(--md-sys-color-on-surface)}
+/* Table rows fade between hover and selection states instead of switching. */
+tbody tr{transition:background-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard)}
