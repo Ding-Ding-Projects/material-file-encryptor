@@ -16,6 +16,21 @@ export function documentHeadings(markdown) {
     return [{ level: match[1].length, text: match[2], anchor: base + (duplicate ? `-${duplicate}` : '') }];
   });
 }
+// Feature articles take their category from their folder; files directly under docs/features (the index and
+// old-location pages) belong to the general features group rather than to a category named after the file.
+export function documentCategory(source) {
+  if (source.includes('/wiki/')) return 'wiki';
+  if (!source.startsWith('docs/features/')) return 'project';
+  const parts = source.split('/');
+  return parts.length > 3 ? parts[2] : 'features';
+}
+// A page that only says its article has moved keeps its old link working but must not read as a second copy.
+const MOVED = /^(?:This article has moved to \[|本文已移至 \[)/m;
+export function documentTitle(title, markdown) {
+  const body = markdown.replace(/^#[^\n]*\n/, '').trim();
+  if (!MOVED.test(body.split(/\r?\n\r?\n/)[0] || '')) return title;
+  return /[㐀-鿿]/.test(title) ? title + '（已移至新位置）' : title + ' (moved)';
+}
 export async function buildDocumentationCatalog(root) {
   const files = [];
   async function walk(directory) {
@@ -33,7 +48,7 @@ export async function buildDocumentationCatalog(root) {
   const documents = await Promise.all(files.map(async source => {
     const markdown = await readFile(path.join(root, source), 'utf8');
     const headings = documentHeadings(markdown);
-    return { id: documentId(source), source, title: headings[0]?.text || path.basename(source), category: source.includes('/wiki/') ? 'wiki' : source.startsWith('docs/features/') ? source.split('/')[2] : 'project', markdown, headings, sha256: createHash('sha256').update(markdown).digest('hex') };
+    return { id: documentId(source), source, title: documentTitle(headings[0]?.text || path.basename(source), markdown), category: documentCategory(source), markdown, headings, sha256: createHash('sha256').update(markdown).digest('hex') };
   }));
   const assets = [], referenced = new Set(), rootReal = await realpath(root);
   for (const document of documents) for (const match of document.markdown.matchAll(/!\[[^\]]*\]\(([^\s)]+)(?:\s+[^)]*)?\)/g)) {
