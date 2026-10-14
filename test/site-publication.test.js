@@ -83,7 +83,7 @@ test('fresh staging excludes withheld originals, stale files and raw receipts',a
  await fs.writeFile(path.join(output,'images/captures/windows/desktop-mounted.png'),'stale private pixels');
  await fs.writeFile(path.join(output,'raw-receipt.json'),'stale private receipt');
  await fs.writeFile(path.join(output,'images/captures/windows/unapproved.png'),'unapproved original');
- const result=await stageSite(root,output);assert.equal(result.images,approvedPaths.length);assert.equal(result.articles,articleCount);assert.ok(result.preservedPrevious);
+ const result=await stageSite(root,output);const extensionCaptures=JSON.parse(await fs.readFile(path.join(root,'docs/site/extension-gallery.json'),'utf8')).records.length;assert.equal(result.images,approvedPaths.length+extensionCaptures);assert.equal(result.articles,articleCount);assert.ok(result.preservedPrevious);
  for(const file of ['images/captures/windows/desktop-mounted.png','images/captures/windows/desktop-offline.png','raw-receipt.json','images/captures/desktop-linux.webm','images/captures/windows/unapproved.png','images/captures/windows/provenance.json','images/captures/preview/inventory.json','images/captures/preview/verification-summary.json','publication.mjs','wiki/Home.md'])await assert.rejects(fs.access(path.join(output,file)));
  await fs.access(path.join(output,'images/captures/windows/desktop-locked.png'));await fs.access(path.join(output,'gallery-inventory.json'));
  const html=await fs.readFile(path.join(output,'index.html'),'utf8');assert.ok(!html.includes('desktop-mounted.png'));assert.ok(!html.includes('desktop-offline.png'));

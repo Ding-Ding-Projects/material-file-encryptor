@@ -241,11 +241,41 @@ export function renderGallery(records,review) {
  const figures=group=>group.images.map(({original:r,occurrences})=>`<figure class="guide" id="capture-${r.id}" data-search="${escapeHtml(occurrences.map(o=>[labels.get(o.workflow),o.state,o.theme,o.method,o.sourceCommit].join(' ')).join(' '))}"><a href="${r.path}"><img src="${r.path}" alt="${escapeHtml(r.state+'  /  '+r.method)}" width="${r.width}" height="${r.height}" loading="lazy" decoding="async"></a><figcaption><h3>${escapeHtml(r.state.replaceAll('-',' '))}</h3><p><span>Recorded occurrences</span>: ${occurrences.length}</p><details><summary>Image provenance and originals</summary><dl><dt>Original image SHA-256</dt><dd><code>${r.sha256}</code></dd></dl>${occurrences.map(provenance).join('')}</details></figcaption></figure>`).join('');
  return `<h1>Capture gallery</h1><p>Original application images with exact source, dimensions, method and recorded time provenance. Native operation, renderer emulation and physical display scaling are different claims. Missing timestamps stay unavailable.</p><p class="development-note">New candidate images remain pending review and approval. They are not silently added to this historical catalogue.</p><p><span>Unique original images</span>: ${groups.reduce((n,g)=>n+g.images.length,0)}  /  <span>Recorded occurrences</span>: ${records.length}</p><nav class="publication-nav gallery-workflow-nav" aria-label="Capture workflows">${groups.map(g=>`<a href="#workflow-${g.id}" data-gallery-group-link="workflow-${g.id}">${escapeHtml(g.title)}</a>`).join('')}<a href="#withheld">Withheld originals</a></nav>${groups.map(g=>`<section class="gallery-workflow" id="workflow-${g.id}" data-gallery-group><h2>${escapeHtml(g.title)}</h2><div class="capture-gallery publication-gallery">${figures(g)}</div></section>`).join('')}<section id="withheld"><h2>Withheld originals</h2><p>${escapeHtml(review.historicalBoundary)}</p><ul>${review.withheld.map(item=>`<li>${escapeHtml(item.reason)} SHA-256 <code>${item.sha256}</code></li>`).join('')}</ul></section>`;
 }
+// Browser extension captures are a separate reviewed inventory. They never take a desktop gallery role and
+// are published only when every file, hash, dimension and source binding checks out.
+const EXTENSION_KEYS=['capturedAt','height','id','inspectionStatus','language','method','path','privacy','scale','scope','sha256','sourceCommit','surface','theme','timeZone','width'];
+export async function extensionGalleryRecords(root) {
+ const inventory=JSON.parse(await fs.readFile(path.join(root,'docs/site/extension-gallery.json'),'utf8'));
+ if(inventory.version!==1||!Array.isArray(inventory.records)||typeof inventory.boundary!=='string'||!inventory.boundary.trim())throw new Error('Invalid extension gallery inventory');
+ const ids=new Set(),paths=new Set();
+ for(const record of inventory.records){
+  if(!record||typeof record!=='object'||JSON.stringify(Object.keys(record).sort())!==JSON.stringify(EXTENSION_KEYS))throw new Error('Extension gallery record fields differ');
+  if(!/^extension-[a-z0-9-]+$/.test(record.id)||ids.has(record.id))throw new Error('Invalid extension gallery identity');ids.add(record.id);
+  if(!/^images\/captures\/extension-[A-Za-z0-9_./-]+\.png$/.test(record.path)||record.path.split('/').includes('..')||paths.has(record.path))throw new Error('Invalid extension gallery asset');paths.add(record.path);
+  if(!/^[a-f0-9]{40}$/.test(record.sourceCommit)||!/^[a-f0-9]{64}$/.test(record.sha256))throw new Error('Missing extension gallery source/hash');
+  if(record.privacy!=='public-safe'||record.inspectionStatus!=='inspected')throw new Error('Unreviewed extension gallery record');
+  if(!['light','dark'].includes(record.theme)||!['en','yue','bilingual'].includes(record.language)||!Number.isFinite(record.scale)||record.scale<=0)throw new Error('Invalid extension gallery tuple');
+  if(record.capturedAt!==null||record.timeZone!==null)throw new Error('Extension capture time requires validated provenance');
+  for(const key of ['surface','method','scope'])if(typeof record[key]!=='string'||!record[key].trim()||record[key].length>600||/[\u0000-\u001f\u007f]/u.test(record[key]))throw new Error('Invalid extension gallery text');
+  const bytes=await fs.readFile(path.join(root,'docs',record.path));
+  if(digest(bytes)!==record.sha256)throw new Error('Extension gallery image hash mismatch');
+  if(bytes.length<24||bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a'||bytes.readUInt32BE(16)!==record.width||bytes.readUInt32BE(20)!==record.height)throw new Error('Extension gallery image dimensions mismatch');
+ }
+ return {boundary:inventory.boundary,records:inventory.records};
+}
+const LANGUAGE_NAMES={en:'English',yue:'Cantonese',bilingual:'Bilingual'};
+export function renderExtensionGallery({boundary,records}) {
+ if(!records.length)return '';
+ const items=records.map(r=>`<figure class="guide" id="capture-${r.id}" data-search="${escapeHtml(['browser extension',r.surface,r.theme,LANGUAGE_NAMES[r.language],r.sourceCommit].join(' '))}"><a href="${r.path}"><img src="${r.path}" alt="${escapeHtml('Browser extension, '+r.surface+', '+r.theme+' theme, '+LANGUAGE_NAMES[r.language])}" width="${r.width}" height="${r.height}" loading="lazy" decoding="async"></a><figcaption><h3>${escapeHtml(r.surface)}</h3><p>${escapeHtml(r.scope)}</p><details><summary>Image provenance</summary><dl><dt>Method</dt><dd>${escapeHtml(r.method)}</dd><dt>Source revision</dt><dd><a href="${repository}/commit/${r.sourceCommit}"><code>${r.sourceCommit}</code></a></dd><dt>Theme / language / recorded scale</dt><dd>${escapeHtml(r.theme)} / ${escapeHtml(LANGUAGE_NAMES[r.language])} / ${r.scale}</dd><dt>Image dimensions</dt><dd>${r.width} × ${r.height} pixels</dd><dt>SHA-256</dt><dd><code>${r.sha256}</code></dd><dt>Capture time</dt><dd>Unavailable</dd></dl></details></figcaption></figure>`).join('');
+ return `<section class="extension-gallery" id="browser-extension-captures" aria-labelledby="browser-extension-captures-title"><h2 id="browser-extension-captures-title">Browser extension captures</h2><p>${escapeHtml(boundary)}</p>${items}</section>`;
+}
 export async function buildGallery(root,output,home) {
  const records=await galleryRecords(root);
  assertGalleryPresentation(home,records);
+ const extension=await extensionGalleryRecords(root);
  const review=JSON.parse(await fs.readFile(path.join(root,'docs/site/gallery-review.json'),'utf8'));
  const withheld=review.withheld.map(({path,sha256,reason})=>({path,sha256,reason}));
- await fs.writeFile(path.join(output,'gallery.html'),pageShell(home,'Capture gallery',renderGallery(records,review)));
- await fs.writeFile(path.join(output,'gallery-inventory.json'),JSON.stringify({version:1,records,workflows:review.workflows.map(({id,title})=>({id,title})),withheld,historicalBoundary:review.historicalBoundary},null,2));return records;
+ await fs.writeFile(path.join(output,'gallery.html'),pageShell(home,'Capture gallery',renderGallery(records,review)+renderExtensionGallery(extension)));
+ await fs.writeFile(path.join(output,'gallery-inventory.json'),JSON.stringify({version:1,records,workflows:review.workflows.map(({id,title})=>({id,title})),withheld,historicalBoundary:review.historicalBoundary,extension:{boundary:extension.boundary,records:extension.records.map(({privacy,inspectionStatus,...rest})=>rest)}},null,2));
+ return [...records,...extension.records.map(({path})=>({path}))];
 }
