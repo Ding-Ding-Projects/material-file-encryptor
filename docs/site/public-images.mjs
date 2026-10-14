@@ -12,6 +12,8 @@ export const publicImages=Object.freeze([
  {source:'docs/images/captures/material-2a9cb388/converter-light-bilingual.png',route:'images/captures/material-2a9cb388/converter-light-bilingual.png',sha256:'cf54deb49bd40faedc90bd7aad3ea3a34ee7e8fccdb7cc835d57d296deaa0762',bytes:140294,width:1792,height:1139},
  {source:'docs/images/captures/material-2a9cb388/dialog-consent-light-en.png',route:'images/captures/material-2a9cb388/dialog-consent-light-en.png',sha256:'a8595fed1676b3c17f7b9fa8a2b1afb5f22faa99e0f7397a77a53a47d7309026',bytes:46800,width:839,height:402},
  {source:'docs/images/captures/material-2a9cb388/dialog-consent-dark-en.png',route:'images/captures/material-2a9cb388/dialog-consent-dark-en.png',sha256:'9e44ce0dd21480c5255e22f835e8b54ab0c33ee60274df740ed6299e85fa9b5c',bytes:46359,width:839,height:402},
+ {source:'docs/images/captures/extension-models-45ccb91/models-connected-light-en.png',route:'images/captures/extension-models-45ccb91/models-connected-light-en.png',sha256:'b13f1a78797717b909170813643ff8952361b1c9a263e4a55e6028712dd81e7a',bytes:69834,width:1100,height:1000},
+ {source:'docs/images/captures/extension-models-45ccb91/models-chat-light-en.png',route:'images/captures/extension-models-45ccb91/models-chat-light-en.png',sha256:'91635571627c8f40f91926348124d3ef46335d5f9a0b5c3471d605fc10a01973',bytes:86467,width:1100,height:1300},
 ].map(Object.freeze));
 
 export function resolvePublicImage(source,url,images) {
