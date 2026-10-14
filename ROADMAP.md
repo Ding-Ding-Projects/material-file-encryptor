@@ -1,3 +1,13 @@
+## Current complete-interface implementation
+
+- [x] Independently review exact interpreter redirector admission at 8f558657, with 17 focused checks and causal negative coverage.
+- [x] Register its English/Cantonese documentation, 935 concrete declarations and 224 public routes; 16 focused documentation checks pass.
+- [ ] Repair the independently confirmed confirmation double-close race and complete the unchanged renderer sequence, including release-dialog Escape.
+- [ ] Integrate reviewed protected browser mediation and five registered composition hosts with their documentation and source-bound runtime proof.
+- [x] Independently review and register extension assessment ownership and validation while preserving all 210 historical rows; 33 combined checks pass.
+- [ ] Complete remaining feature groups, current builds, native outcomes, three-surface visual matrix and current publication.
+- [ ] Verify fresh installation/removal only with safe isolation; preserve the existing installation.
+
 ## Reviewed guidance source integration
 
 - [x] Retain the finite28-pair fixture, causal prelaunch ordering and exact radio-action source checks, with independent reviews.

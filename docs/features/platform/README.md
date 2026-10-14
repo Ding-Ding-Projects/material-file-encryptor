@@ -14,3 +14,5 @@ The documentation catalog is generated locally from all Markdown files under `do
 - [Packaged documentation catalogue reuse](packaged-documentation-cache.md)
 
 - [Local renderer task timing](renderer-task-timing.md)
+
+- [Independent extension assessments](extension-assessment.md)

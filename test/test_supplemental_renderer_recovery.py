@@ -43,6 +43,58 @@ class InterpreterCommandTests(unittest.TestCase):
 
 
 class Tests(unittest.TestCase):
+    def test_default_configuration_admits_exact_redirected_commands_and_pins_form(self):
+        for executable in ('python.exe', 'pythonw.exe'):
+            with self.subTest(executable=executable):
+                launcher = self.base / executable / 'venv/Scripts' / executable
+                base = self.base / executable / 'runtime' / executable
+                node_file = base.with_name('node.exe')
+                cfg = launcher.parent.parent / 'pyvenv.cfg'
+                for item in (launcher, base, node_file):
+                    item.parent.mkdir(parents=True, exist_ok=True)
+                    item.write_bytes(b'fixed fixture executable')
+                cfg.write_text('home = ' + str(base.parent) + '\ninclude-system-site-packages = false\nexecutable = ' + str(base) + '\n')
+                arguments = [str(self.base / 'space containing scripts/worker.py'), str(self.base / 'space containing intent/000-intent.json')]
+                original = subprocess.list2cmdline([str(launcher), *arguments])
+                redirected = '"' + str(base) + '" ' + subprocess.list2cmdline(arguments)
+                self.assertEqual(recovery.redirected_interpreter_command(base, arguments), redirected)
+                node = {**self.root, 'pid':80, 'parentPid':1, 'executablePath':str(node_file), 'creationDate':'2026-10-09T12:00:00.1234560Z'}
+                intermediate = {**self.root, 'pid':79, 'parentPid':80, 'executablePath':str(launcher), 'creationDate':'2026-10-09T12:00:00.1234561Z'}
+                own = {**self.root, 'pid':77, 'parentPid':79, 'executablePath':str(base)}
+                api = Fake(rows={77:79,79:80,80:1}, observations={77:own,79:intermediate,80:node})
+                commands = {77:redirected,79:original,80:'exact node invocation'}
+                class Commands:
+                    def command(self, handle): return commands[handle]
+                patches = (patch.dict(recovery.os.environ, {'MFE_LOWLEVEL_PYTHON':str(launcher), 'MFE_RENDERER_NODE_EXECUTABLE':str(node_file)}), patch.object(recovery.sys,'_base_executable',str(base)), patch.object(recovery.sys,'executable',str(launcher)), patch.object(recovery.sys,'argv',arguments), patch.object(recovery.os,'getpid',return_value=77))
+                with patches[0], patches[1], patches[2], patches[3], patches[4]:
+                    with recovery.owning_client(80, api=api, binding=Commands()) as (client, chain):
+                        self.assertEqual(client['interpreterCommandForm'], 'redirected-base')
+                        self.assertEqual(chain[0]['command'], redirected)
+                        self.assertEqual(chain[1]['command'], original)
+                    with recovery.owning_client(80, client, api=api, binding=Commands()): pass
+                    commands[77] = original
+                    with self.assertRaises(recovery.Error), recovery.owning_client(80, client, api=api, binding=Commands()): pass
+                    with recovery.owning_client(80, api=api, binding=Commands()) as (preserved, _):
+                        self.assertEqual(preserved['interpreterCommandForm'], 'preserved-launcher')
+                    for changed in [redirected+' extra', redirected.replace('worker.py','other.py'), redirected.replace('000-intent.json','other.json'), redirected.replace(str(base),str(base.with_name('other.exe'))), redirected.replace('"', '', 1)]:
+                        commands[77] = changed
+                        with self.assertRaises(recovery.Error), recovery.owning_client(80, api=api, binding=Commands()): pass
+                    commands[77] = redirected
+                    commands[79] = redirected
+                    with self.assertRaises(recovery.Error), recovery.owning_client(80, api=api, binding=Commands()): pass
+                    commands[79] = original
+                    with self.assertRaises(recovery.Error):
+                        with recovery.owning_client(80, api=api, binding=Commands()): commands[77] = original
+                    commands[77] = redirected
+                    direct = Fake(rows={77:80,80:1}, observations={77:{**own,'parentPid':80},80:node})
+                    with recovery.owning_client(80, api=direct, binding=Commands()) as (client, chain):
+                        self.assertEqual(len(chain), 2)
+                        self.assertEqual(client['interpreterCommandForm'], 'redirected-base')
+                    commands[77] = original
+                    with self.assertRaises(recovery.Error), recovery.owning_client(80, client, api=direct, binding=Commands()): pass
+                    with recovery.owning_client(80, api=direct, binding=Commands()) as (preserved, _):
+                        self.assertEqual(preserved['interpreterCommandForm'], 'preserved-launcher')
+
     def test_default_configuration_binds_exact_preserved_launcher_command(self):
         launcher = self.base / 'venv/Scripts/python.exe'
         base = self.base / 'runtime/python.exe'
