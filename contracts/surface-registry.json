@@ -403,6 +403,60 @@
       "proofs": {}
     },
     {
+      "id": "desktop:document:docs/features/browser/external-editor",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/browser/external-editor",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/browser/external-editor.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/browser/external-editor.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/browser/README",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/browser/README",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/browser/README.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/browser/README.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/browser/safe-note-reading",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/browser/safe-note-reading",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/browser/safe-note-reading.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/browser/safe-note-reading.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "desktop:document:docs/features/converter/archive-and-data",
       "family": "desktop",
       "route": "src/renderer/index.html",
@@ -826,20 +880,20 @@
       "proofs": {}
     },
     {
-      "id": "desktop:document:docs/features/interface/modern-fields",
-      "family": "desktop",
-      "route": "src/renderer/index.html",
-      "owner": "src/renderer/features/documentation/index.js",
-      "selector": "document:docs/features/interface/modern-fields",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
       "id": "desktop:document:docs/features/interface/material-dialogs-and-motion.zh-HK",
       "family": "desktop",
       "route": "src/renderer/index.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/interface/material-dialogs-and-motion.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/interface/modern-fields",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/modern-fields",
       "template": "required-families",
       "proofs": {}
     },
@@ -1497,6 +1551,24 @@
       "route": "src/renderer/index.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/platform/README.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/platform/renderer-runtime-identity",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/platform/renderer-runtime-identity",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/platform/renderer-runtime-identity.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/platform/renderer-runtime-identity.zh-HK",
       "template": "required-families",
       "proofs": {}
     },
@@ -2437,6 +2509,15 @@
       "proofs": {}
     },
     {
+      "id": "extension:options:changelog",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#panel-changelog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "extension:options:connection",
       "family": "extension",
       "route": "browser-extension/options.html",
@@ -2446,11 +2527,92 @@
       "proofs": {}
     },
     {
+      "id": "extension:options:dimsum",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#panel-dimsum",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:docs",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#panel-docs",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:external-editor",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#editor-open",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "extension:options:message-preview",
       "family": "extension",
       "route": "browser-extension/options.html",
       "owner": "browser-extension/options.js",
       "selector": "#message-preview",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:note-reader",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#note-reader",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:note-sheet",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#note-sheet",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:note-step-1",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#note-step-1",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:note-step-2",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#note-step-2",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:note-step-3",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#note-step-3",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:notes",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#panel-notes",
       "template": "required-families",
       "proofs": {}
     },
@@ -2469,6 +2631,15 @@
       "route": "browser-extension/options.html",
       "owner": "browser-extension/options.js",
       "selector": "#panel-status",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "extension:options:support",
+      "family": "extension",
+      "route": "browser-extension/options.html",
+      "owner": "browser-extension/options.js",
+      "selector": "#panel-support",
       "template": "required-families",
       "proofs": {}
     },
@@ -2818,6 +2989,114 @@
       "id": "site:article:docs/features/appearance/README.zh-HK.md:preferences",
       "family": "site",
       "route": "articles/docs--features--appearance--README.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/browser/external-editor.md",
+      "family": "site",
+      "route": "articles/docs--features--browser--external-editor.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/browser/external-editor.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--browser--external-editor.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/browser/external-editor.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--browser--external-editor.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/browser/external-editor.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--browser--external-editor.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/browser/README.md",
+      "family": "site",
+      "route": "articles/docs--features--browser--README.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/browser/README.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--browser--README.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/browser/README.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--browser--README.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/browser/README.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--browser--README.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/browser/safe-note-reading.md",
+      "family": "site",
+      "route": "articles/docs--features--browser--safe-note-reading.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/browser/safe-note-reading.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--browser--safe-note-reading.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/browser/safe-note-reading.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--browser--safe-note-reading.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/browser/safe-note-reading.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--browser--safe-note-reading.zh-HK.html",
       "owner": "docs/site/preferences.js",
       "selector": "#preferences-dialog",
       "template": "required-families",
@@ -3661,27 +3940,9 @@
       "proofs": {}
     },
     {
-      "id": "site:article:docs/features/interface/modern-fields.md",
-      "family": "site",
-      "route": "articles/docs--features--interface--modern-fields.html",
-      "owner": "docs/site/publication.mjs",
-      "selector": "",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
       "id": "site:article:docs/features/interface/material-dialogs-and-motion.md:preferences",
       "family": "site",
       "route": "articles/docs--features--interface--material-dialogs-and-motion.html",
-      "owner": "docs/site/preferences.js",
-      "selector": "#preferences-dialog",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
-      "id": "site:article:docs/features/interface/modern-fields.md:preferences",
-      "family": "site",
-      "route": "articles/docs--features--interface--modern-fields.html",
       "owner": "docs/site/preferences.js",
       "selector": "#preferences-dialog",
       "template": "required-families",
@@ -3697,20 +3958,38 @@
       "proofs": {}
     },
     {
-      "id": "site:article:docs/features/interface/modern-fields.zh-HK.md",
+      "id": "site:article:docs/features/interface/material-dialogs-and-motion.zh-HK.md:preferences",
       "family": "site",
-      "route": "articles/docs--features--interface--modern-fields.zh-HK.html",
+      "route": "articles/docs--features--interface--material-dialogs-and-motion.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/modern-fields.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--modern-fields.html",
       "owner": "docs/site/publication.mjs",
       "selector": "",
       "template": "required-families",
       "proofs": {}
     },
     {
-      "id": "site:article:docs/features/interface/material-dialogs-and-motion.zh-HK.md:preferences",
+      "id": "site:article:docs/features/interface/modern-fields.md:preferences",
       "family": "site",
-      "route": "articles/docs--features--interface--material-dialogs-and-motion.zh-HK.html",
+      "route": "articles/docs--features--interface--modern-fields.html",
       "owner": "docs/site/preferences.js",
       "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/modern-fields.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--modern-fields.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
       "template": "required-families",
       "proofs": {}
     },
@@ -5020,6 +5299,42 @@
       "proofs": {}
     },
     {
+      "id": "site:article:docs/features/platform/renderer-runtime-identity.md",
+      "family": "site",
+      "route": "articles/docs--features--platform--renderer-runtime-identity.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/platform/renderer-runtime-identity.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--platform--renderer-runtime-identity.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/platform/renderer-runtime-identity.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--platform--renderer-runtime-identity.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/platform/renderer-runtime-identity.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--platform--renderer-runtime-identity.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:article:docs/features/platform/renderer-task-timing.md",
       "family": "site",
       "route": "articles/docs--features--platform--renderer-task-timing.html",
@@ -6298,6 +6613,24 @@
       "proofs": {}
     },
     {
+      "id": "site:category:browser",
+      "family": "site",
+      "route": "categories/browser.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:category:browser:preferences",
+      "family": "site",
+      "route": "categories/browser.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:category:converter",
       "family": "site",
       "route": "categories/converter.html",
@@ -6946,6 +7279,60 @@
       "proofs": {}
     },
     {
+      "id": "site:workspace:document:docs/features/browser/external-editor",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/browser/external-editor",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/browser/external-editor.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/browser/external-editor.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/browser/README",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/browser/README",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/browser/README.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/browser/README.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/browser/safe-note-reading",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/browser/safe-note-reading",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/browser/safe-note-reading.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/browser/safe-note-reading.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:workspace:document:docs/features/converter/archive-and-data",
       "family": "site",
       "route": "workspace.html",
@@ -7369,20 +7756,20 @@
       "proofs": {}
     },
     {
-      "id": "site:workspace:document:docs/features/interface/modern-fields",
-      "family": "site",
-      "route": "workspace.html",
-      "owner": "src/renderer/features/documentation/index.js",
-      "selector": "document:docs/features/interface/modern-fields",
-      "template": "required-families",
-      "proofs": {}
-    },
-    {
       "id": "site:workspace:document:docs/features/interface/material-dialogs-and-motion.zh-HK",
       "family": "site",
       "route": "workspace.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/interface/material-dialogs-and-motion.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/interface/modern-fields",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/modern-fields",
       "template": "required-families",
       "proofs": {}
     },
@@ -8040,6 +8427,24 @@
       "route": "workspace.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/platform/README.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/platform/renderer-runtime-identity",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/platform/renderer-runtime-identity",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/platform/renderer-runtime-identity.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/platform/renderer-runtime-identity.zh-HK",
       "template": "required-families",
       "proofs": {}
     },

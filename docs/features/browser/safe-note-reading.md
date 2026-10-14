@@ -8,4 +8,4 @@ This is local note support, not a provider connection or model execution feature
 
 ## Verification
 
-Run `node --test test/extension-note-rendering.test.js test/browser-extension-notes.test.js` for format, full-length, rejected-input and link-boundary checks. These are deterministic DOM-model checks, not installed-browser or visual acceptance. Built extension and genuine runtime capture remain required separately.
+Run `node --test test/extension-note-rendering.test.js test/extension-note-lifecycle.test.js test/browser-extension-notes.test.js` for format, full-length, rejected-input and link-boundary checks. These are deterministic DOM-model checks, not installed-browser or visual acceptance. Built extension and genuine runtime capture remain required separately.

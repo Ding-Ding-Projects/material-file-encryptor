@@ -15,4 +15,6 @@ The documentation catalog is generated locally from all Markdown files under `do
 
 - [Local renderer task timing](renderer-task-timing.md)
 
+- [Physical interpreter identity and isolated renderer recovery](renderer-runtime-identity.md)
+
 - [Independent extension assessments](extension-assessment.md)

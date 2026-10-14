@@ -11,7 +11,10 @@ recovery = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(recovery)
 output = Path(os.environ['MFE_BINDING_PROBE_OUTPUT'])
 try:
-    with recovery.owning_client(int(sys.argv[1])) as (binding, chain):
+    # Match the production observer's explicit GUI role. Console probes retain
+    # the ordinary strict configuration, including no console/GUI substitution.
+    role = 'gui-observer' if Path(sys.executable).name.lower() == 'pythonw.exe' else None
+    with recovery.owning_client(int(sys.argv[1]), interpreter_role=role) as (binding, chain):
         result = {'ok': True, 'targetLaunchAttempted': False, 'binding': binding, 'chain': chain}
 except recovery.Error as error:
     result = {'ok': False, 'targetLaunchAttempted': False, 'error': str(error),

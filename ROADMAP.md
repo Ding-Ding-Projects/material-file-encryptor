@@ -787,3 +787,13 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 
 - [x] Add independently reviewed monotonic elapsed timing and keyboard operation diagnostics;10focused checks and causal negative passed.
 - [ ] Run the new source-bound diagnostic after allowance recovery; retained full runtime remains2passed/1cancelled.
+
+## October 14 scoped continuation
+
+- [x] Independently review safe note reading, draft recovery and native-confirmed editor source with focused checks.
+- [x] Restore an isolated physical-path interpreter and verify native binding probes without weakening admission.
+- [x] Run the exact baseline root build and package privacy check; keep later-source acceptance separate.
+- [x] Verify closure of all admitted browser attempts and preserve negative receipts.
+- [ ] Pass current renderer and compiled-native acceptance under original deadlines after host pressure permits it.
+- [ ] Repair, review and integrate the bounded converter increment and verify actual conversion.
+- [ ] Complete remaining feature rows, installed lifecycle, visual evidence and public delivery.

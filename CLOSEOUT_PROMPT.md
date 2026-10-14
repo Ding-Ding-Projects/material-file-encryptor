@@ -1,23 +1,17 @@
-````text
-Material File Encryptor: continuation handoff (state as of the Material layout polish on main)
+# Continuation handoff
 
-Objective: every element of the desktop application uses Material Design 3 components with Material transitions and motion, and every required feature is implemented and verified.
+Objective: finish the approved smoke-testing and required-feature plan across desktop, browser extension and documentation.
 
-Landed on main:
-- Material conversion sweep, Material dialogs in main-owned windows with nonce-bound answers, shared motion tokens, shutdown prompt that names unfinished work, README desktop captures with provenance, unified bilingual separator.
-- Layout polish from hidden-desktop capture review: local access legend inside its card (862444b), data table headers reach the right outline (4a30e82), workflow document fields span their column (a36600b), suite buttons keep their own width (9eb2ffa), guidance buttons sit beside the control they explain (3dd5a52, 07daa65), complete Material colour roles (35a27ea), rail, row and guidance panel motion (a429430), dialogs in the interface language (19d68e3).
+Current integration includes reviewed browser candidate 284b8509cd2c312196ab9092f0f7f50f66d54172 and interpreter candidate 0c413e26cecb35df369c0d901a227ac4f4101d33, plus translated documentation and independent surface registration. Both task refs were pushed and read back. This file records state before its own integration commit. Default-branch delivery is verified separately afterward.
 
-Verification:
-- Hidden-desktop captures of the built application across 19 views in English light, English dark, Cantonese and bilingual at 150 percent display scale; Material dialogs captured in light and dark and cancelled with no change; each layout fix captured after rebuild.
-- Focused suites for each change pass; release workflow runs for 862444b, 4a30e82 and a36600b succeeded.
-- A full dark-theme sweep after the guidance change and a generic-control scan of all 19 views reports only data tables, styled disclosures, semantic fieldsets and the hidden native internals of the Material date and file picker composites.
+Baseline b43d0223 passed exact build.bat /s, package privacy 6111 entries/0 rejected, archive SHA-256 270645927e6331917b5a65a5bc18f9881995dfd82e01b9241bf3b810b8e4f655. This does not prove the current integration. Source tests verify bounded note/editor behavior and strict interpreter admission; installed extension, native dialogs, current package, visual and update acceptance remain unverified.
 
-Not yet done:
-- Captures at 100, 125 and 200 percent display scale require the owner to change the host display scale.
-- Individual captures of the licence, pairing, import and update message boxes (credential, consent and shutdown are captured).
-- Required-feature inventory, 315 rows: desktop 96 unverified, site 96 unverified, extension 66 unverified and 30 missing after the extension workspace gained Material tabs, an offline changelog, build source details and a command palette (f8aadbe), then exports, setting explanations, reset confirmation and shortcuts (39637ef), then product name, accent colour, recent changes and collapsible filters (08474e0), then icons, local logo, attention modes and documentation link (2aa56d3), then notes with a guided side-sheet form and bulk actions (c895df1), then scheduled changes, personal wording and a bundled font (1269c7b), then offline documentation (2d6f33c), then narration, support tickets and screen recording (8a7306c), then safe note links, a price statement and the dim sum catalogue loaded from GitHub on request (c0f5b8e); every missing row is a browser extension workflow.
-- Branch codex/feature-mediation-01a137ae (protected settings reset): native writer adoption and independent review outstanding.
-- Renderer browser tests cannot run on this host because package file redirection makes evidence paths non-canonical.
+Renderer retries failed or timed out; all admitted owned browser processes and desktops have verified closure, with negative evidence preserved. Two native transport tests reached original deadlines. Diagnostic startup took 11.9 seconds, then communication worked; the longer diagnostic was not acceptance. Host memory pressure was measured. Resume acceptance sequentially under original deadlines after resources permit it.
 
-Next safe steps: read back the release run for 19d68e3, then continue the browser extension workflows from the missing rows in contracts/feature-delivery.json, and gather evidence for unverified desktop rows.
-````
+Inventory: 315 family rows, 259 unverified, 29 missing, 27 recorded not applicable; 1012 concrete surfaces and 106260 independent assessments. Source presence is not accepted runtime evidence.
+
+Pending converter source2c563a6 and fixture91a9042 need reviewed repairs for control authorization, bounded listing, unaccepted-grant disposal and shared busy state. The older reset branch has a finalization authorization race and remains separate. Preserve all active and historical work.
+
+Next: complete focused integration checks, commit and verify main delivery; verify current built extension/editor and conversion behavior; continue remaining feature rows; complete installer/update and live documentation/wiki/homepage evidence; archive and clean only owned fully merged candidates. Preserve deadlines, source identity and unrelated processes.
+
+The shared instruction checkout has unrelated overlapping uncommitted work and is behind its remote, so accompanying synchronization remains blocked. Project discovery lacks read:project. The status comment attempt hit a TLS handshake timeout and is not claimed delivered. Full completion and cleanup remain pending.

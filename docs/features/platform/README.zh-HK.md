@@ -15,4 +15,6 @@
 
 - [本機介面工作計時](renderer-task-timing.zh-HK.md)
 
+- [實際解譯器身份同獨立介面復原](renderer-runtime-identity.zh-HK.md)
+
 - [擴充功能獨立評估](extension-assessment.zh-HK.md)

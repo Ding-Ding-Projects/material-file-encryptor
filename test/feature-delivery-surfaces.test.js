@@ -25,6 +25,14 @@ test('vault omission is rejected even when the extracted expected inventory also
   const broken = structuredClone(registry); broken.surfaces = broken.surfaces.filter(row => row.id !== 'desktop:vault-dialog');
   assert.ok(validateSurfaceRegistry(broken, expected.filter(row => row.id !== 'desktop:vault-dialog')).some(error => error === 'Missing handwritten required surface: desktop:vault-dialog.'));
 });
+
+test('extension note and editor workflows cannot disappear from both inventories', () => {
+  for (const id of ['extension:options:notes', 'extension:options:note-reader', 'extension:options:external-editor', 'extension:options:note-sheet', 'extension:options:note-step-1', 'extension:options:note-step-2', 'extension:options:note-step-3']) {
+    const broken = structuredClone(registry);
+    broken.surfaces = broken.surfaces.filter(row => row.id !== id);
+    assert.ok(validateSurfaceRegistry(broken, expected.filter(row => row.id !== id)).includes(`Missing handwritten required surface: ${id}.`));
+  }
+});
 test('publication catalogue omission of an actual feature article fails before route extraction', async () => {
   const catalog = JSON.parse(await fs.readFile(new URL('../docs/site/content-catalog.json', import.meta.url), 'utf8'));
   const bundled = await buildDocumentationCatalog(fileURLToPath(root));
