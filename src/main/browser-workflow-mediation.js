@@ -1,5 +1,5 @@
 import {timingSafeEqual} from 'node:crypto';
-const exact=value=>value&&Object.getPrototypeOf(value)===Object.prototype&&Reflect.ownKeys(value).length===2&&Object.hasOwn(value,'type')&&Object.hasOwn(value,'session');
+const exact=value=>value&&Object.getPrototypeOf(value)===Object.prototype&&Reflect.ownKeys(value).length===(value.type==='workflow-editor-open'?3:2)&&Object.hasOwn(value,'type')&&Object.hasOwn(value,'session')&&(value.type!=='workflow-editor-open'||Object.hasOwn(value,'language')&&['en','yue','bilingual'].includes(value.language));
 const same=(a,b)=>typeof a==='string'&&typeof b==='string'&&/^[A-Za-z0-9_-]{43}$/.test(a)&&a.length===b.length&&timingSafeEqual(Buffer.from(a),Buffer.from(b));
 
 /** A single native-picked editor operation. No browser path, executable, document
@@ -20,7 +20,7 @@ export function createBrowserWorkflowMediation({getPair,isUnlocked,openEditor,no
   const live=()=>{check();if(controller.signal.aborted)throw Error('Browser workflow cancelled.');};
   let timer,abort;
   const cancelled=new Promise((_,reject)=>{abort=()=>reject(Error('Browser workflow cancelled.'));controller.signal.addEventListener('abort',abort,{once:true});timer=setTimeout(()=>controller.abort(),timeoutMs);});
-  let settled=false;const task=Promise.resolve().then(()=>{live();return openEditor({origin,signal:controller.signal,check:live});}).finally(()=>{settled=true;if(controller.signal.aborted&&active===controller)active=null;});
+  let settled=false;const task=Promise.resolve().then(()=>{live();return openEditor({origin,language:message.language,signal:controller.signal,check:live});}).finally(()=>{settled=true;if(controller.signal.aborted&&active===controller)active=null;});
   try{
    const result=await Promise.race([task,cancelled]);live();
    if(!result||Object.keys(result).join(',')!=='outcome'||!['opened','cancelled'].includes(result.outcome))throw Error('Invalid native editor result.');

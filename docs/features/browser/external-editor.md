@@ -11,3 +11,5 @@ The request has a two-minute deadline. **Cancel request and disconnect** revokes
 `test/extension-editor-workflow.test.js` checks the typed request allowlist, pair replacement, revocation, deadlines, native selection and confirmation, and cancellation during signature verification before spawn. `test/extension-editor-transport.test.js` exercises framed native requests and the extension background relay, including extra-field rejection and suppression of native path-bearing responses.
 
 These checks use deterministic native-process and picker fixtures. Actual signed extension installation, native dialogs, editor launch, return and save acceptance remain unverified. No conversion, model management or School mode capability is advertised by this workflow.
+
+Native confirmations and pickers use the validated extension language (English, Cantonese or bilingual). Keyboard focus moves to cancellation while waiting, and returns to the launch or refresh control after completion or cancellation.

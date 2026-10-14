@@ -9,9 +9,9 @@ chrome.runtime.onInstalled.addListener(()=>{chrome.contextMenus.create({id:'prop
 chrome.contextMenus.onClicked.addListener(info=>{if(info.menuItemId==='propose-download')void propose(info.linkUrl).catch(()=>{chrome.action.setBadgeText({text:'!'});chrome.action.setTitle({title:'Pair the browser and retry the download handoff.'});});});
 chrome.runtime.onMessage.addListener((message,sender,respond)=>{if(sender.id!==chrome.runtime.id||!['popup.html','options.html'].some(path=>sender.url===chrome.runtime.getURL(path))||sender.frameId!==undefined&&sender.frameId!==0)return false;
  if(['workflow-discover','workflow-editor-open'].includes(message?.type)){
-  if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1||!session){respond({error:'Native editor workflow unavailable.'});return false;}
+  if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==(message.type==='workflow-editor-open'?2:1)||message.type==='workflow-editor-open'&&!['en','yue','bilingual'].includes(message.language)||!session){respond({error:'Native editor workflow unavailable.'});return false;}
   const ownSession=session,epoch=connectionEpoch;
-  request({type:message.type,session:ownSession},message.type==='workflow-editor-open'?125000:30000).then(value=>{
+  request({type:message.type,session:ownSession,...(message.type==='workflow-editor-open'?{language:message.language}:{})},message.type==='workflow-editor-open'?125000:30000).then(value=>{
    if(session!==ownSession||connectionEpoch!==epoch)throw Error('Browser connection changed.');
    if(message.type==='workflow-discover'){
     if(!value||Object.keys(value).sort().join(',')!=='externalEditor,schemaVersion,type'||value.type!=='workflow-capabilities'||value.schemaVersion!==1||typeof value.externalEditor!=='boolean')throw Error('Invalid capabilities.');

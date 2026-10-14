@@ -87,16 +87,17 @@ export function createWorkflowServices({dataDirectory,toolsDirectory,dialog,getW
   finally{clearTimeout(timeout);await file?.close();await fs.rm(temporary,{force:true});item.controller=null;activeDownload=null;}
   return downloadView(item);
  }
+ const editorCopy=(language,en,yue)=>language==='yue'?yue:language==='bilingual'?en+' · '+yue:en;
  const actions={
   async documents(){return[...documents].map(([id,item])=>({id,name:path.basename(item.path),kind:item.kind}));},
-  async pickDocument(){const result=await picker('showOpenDialog',{title:'Open text document',properties:['openFile']});return result.canceled?null:grant(result.filePaths[0]);},
+  async pickDocument({language='en'}={}){const result=await picker('showOpenDialog',{title:editorCopy(language,'Open text document','開啟文字文件'),properties:['openFile']});return result.canceled?null:grant(result.filePaths[0]);},
   async pickProject(){const result=await picker('showOpenDialog',{title:'Open project folder',properties:['openDirectory']});return result.canceled?null:grant(result.filePaths[0],'folder');},
   async readDocument({id}){return read(id);},
   async saveDocument({id,text,revision}){if(typeof text!=='string')throw new Error('Text is required.');const item=get(id);await atomicWrite(item.path,Buffer.from(text,'utf8'),{revision});return read(id);},
   async createDocument({name='document.txt',text=''}){if(typeof name!=='string'||!name||name.length>200||/[\\/\x00-\x1f]/.test(name)||typeof text!=='string')throw new Error('Choose a valid file name and text.');const result=await picker('showSaveDialog',{title:'Create text document',defaultPath:name});if(result.canceled)return null;await atomicWrite(result.filePath,Buffer.from(text,'utf8'),{newOnly:true});const item=await grant(result.filePath);return read(item.id);},
   async templates(){return[{id:'blank',name:'Blank text',nameSuggestion:'document.txt',text:''},{id:'markdown',name:'Markdown notes',nameSuggestion:'notes.md',text:'# Notes\n\n'},{id:'json',name:'JSON object',nameSuggestion:'document.json',text:'{}\n'}];},
   async editors(){for(const file of [env.LOCALAPPDATA&&path.join(env.LOCALAPPDATA,'Programs','Microsoft VS Code','Code.exe'),env.ProgramFiles&&path.join(env.ProgramFiles,'Microsoft VS Code','Code.exe'),env['ProgramFiles(x86)']&&path.join(env['ProgramFiles(x86)'],'Microsoft VS Code','Code.exe'),...(env.PATH||'').split(path.delimiter).filter(Boolean).slice(0,128).map(folder=>path.join(folder,'Code.exe')),env.LOCALAPPDATA&&path.join(env.LOCALAPPDATA,'Programs','Microsoft VS Code Insiders','Code - Insiders.exe'),env.SystemRoot&&path.join(env.SystemRoot,'System32','notepad.exe')].filter(Boolean))try{await rememberEditor(file);}catch{}return[...editors].map(([id,item])=>({id,name:item.name}));},
-  async pickEditor(){const result=await picker('showOpenDialog',{title:'Select signed supported editor',properties:['openFile'],filters:[{name:'Editor executable',extensions:['exe']}]});return result.canceled?null:rememberEditor(result.filePaths[0]);},
+  async pickEditor({language='en'}={}){const result=await picker('showOpenDialog',{title:editorCopy(language,'Select signed supported editor','揀選已簽署嘅支援編輯器'),properties:['openFile'],filters:[{name:editorCopy(language,'Editor executable','編輯器執行檔'),extensions:['exe']}]});return result.canceled?null:rememberEditor(result.filePaths[0]);},
   async openEditor({editorId,documentId},check=()=>{}){check();const editor=editors.get(editorId);if(!editor)throw new Error('Choose an installed editor first.');const identity=await editorIdentity(editor.path);if(identity.sha256!==editor.sha256)throw new Error('The editor changed. Detect it again.');const document=get(documentId);if(document.kind==='folder'&&path.basename(editor.path).toLowerCase()==='notepad.exe')throw new Error('Choose Visual Studio Code to open a project folder.');check();const child=spawnEditor(editor.path,[document.path],{shell:false,windowsHide:false,detached:false,stdio:'ignore'});await new Promise((resolve,reject)=>{child.once('spawn',resolve);child.once('error',reject);});child.unref?.();return{opened:true};},
   async openInCode({documentId}){await actions.editors();const editor=[...editors].find(([,item])=>/^code(?: - insiders)?\.exe$/i.test(item.name));if(!editor)throw new Error('Visual Studio Code is unavailable. Use Get Visual Studio Code.');return actions.openEditor({editorId:editor[0],documentId});},
   async editorDownload(){if(!openExternal)throw new Error('External browser unavailable.');await openExternal('https://code.visualstudio.com/download');return{opened:true};},
@@ -121,15 +122,16 @@ export function createWorkflowServices({dataDirectory,toolsDirectory,dialog,getW
   async exportHandoff({id}){const item=handoffs.get(id);if(!item)throw new Error('Prepare a handoff first.');const result=await picker('showSaveDialog',{title:'Export publication handoff',defaultPath:'publication-handoff.txt'});if(result.canceled)return null;await atomicWrite(result.filePath,Buffer.from(item.summary),{newOnly:true});const document=await grant(result.filePath);return{exported:true,documentId:document.id};},
   async openHandoff({id}){const item=handoffs.get(id);if(!item||!dataDirectory||!openPath)throw new Error('Local handoff opening unavailable.');const folder=path.join(dataDirectory,'workflow-handoffs');await fs.mkdir(folder,{recursive:true,mode:0o700});const target=path.join(folder,`${id}.txt`);await fs.writeFile(target,item.summary,{flag:'wx',mode:0o600});const error=await openPath(target);if(error)throw new Error('The handoff could not be opened.');return{opened:true};}
  };
- async function openBrowserEditor({origin,signal,check}){
-  if(typeof check!=='function'||!signal||typeof origin!=='string')throw Error('Native browser context required.');
+ async function openBrowserEditor({origin,signal,check,language='en'}){
+  if(typeof check!=='function'||!signal||typeof origin!=='string'||!['en','yue','bilingual'].includes(language))throw Error('Native browser context required.');
+  const text=(en,yue)=>editorCopy(language,en,yue);
   const live=()=>{if(closed||signal.aborted)throw Error('Browser editor request cancelled.');check();};
   return operation(async()=>{
-   live();const allow=await picker('showMessageBox',{type:'question',buttons:['Cancel · 取消','Choose file · 揀選檔案'],defaultId:0,cancelId:0,title:'Browser editor request · 瀏覽器編輯器要求',message:'Choose a local file and editor for this request? · 為今次要求揀選本機檔案同編輯器？',detail:origin+'\nOnly your desktop selections are used. No file content or path is returned to the browser.\n只使用你喺桌面揀選嘅項目，唔會將檔案內容或路徑傳返瀏覽器。'});live();if(allow.response!==1)return {outcome:'cancelled'};
-   const document=await actions.pickDocument();
+   live();const allow=await picker('showMessageBox',{type:'question',buttons:[text('Cancel','取消'),text('Choose file','揀選檔案')],defaultId:0,cancelId:0,title:text('Browser editor request','瀏覽器編輯器要求'),message:text('Choose a local file and editor for this request?','為今次要求揀選本機檔案同編輯器？'),detail:origin+'\n'+text('Only your desktop selections are used. No file content or path is returned to the browser.','只使用你喺桌面揀選嘅項目，唔會將檔案內容或路徑傳返瀏覽器。')});live();if(allow.response!==1)return {outcome:'cancelled'};
+   const document=await actions.pickDocument({language});
    try{live();if(!document)return {outcome:'cancelled'};
-    const editor=await actions.pickEditor();live();if(!editor)return {outcome:'cancelled'};
-    const answer=await picker('showMessageBox',{type:'question',buttons:['Cancel · 取消','Open editor · 開啟編輯器'],defaultId:0,cancelId:0,title:'Open selected file · 開啟所選檔案',message:'Open this file in the selected editor? · 用所選編輯器開啟呢個檔案？',detail:'File: '+get(document.id).path+'\nEditor: '+editors.get(editor.id).path});live();if(answer.response!==1)return {outcome:'cancelled'};
+    const editor=await actions.pickEditor({language});live();if(!editor)return {outcome:'cancelled'};
+    const answer=await picker('showMessageBox',{type:'question',buttons:[text('Cancel','取消'),text('Open editor','開啟編輯器')],defaultId:0,cancelId:0,title:text('Open selected file','開啟所選檔案'),message:text('Open this file in the selected editor?','用所選編輯器開啟呢個檔案？'),detail:text('File','檔案')+': '+get(document.id).path+'\n'+text('Editor','編輯器')+': '+editors.get(editor.id).path});live();if(answer.response!==1)return {outcome:'cancelled'};
     await actions.openEditor({editorId:editor.id,documentId:document.id},live);live();return {outcome:'opened'};
    }finally{if(document)documents.delete(document.id);}
   });
