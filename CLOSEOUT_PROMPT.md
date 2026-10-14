@@ -8,7 +8,7 @@ Baseline b43d0223 passed exact build.bat /s, package privacy 6111 entries/0 reje
 
 Renderer retries failed or timed out; all admitted owned browser processes and desktops have verified closure, with negative evidence preserved. Two native transport tests reached original deadlines. Diagnostic startup took 11.9 seconds, then communication worked; the longer diagnostic was not acceptance. Host memory pressure was measured. Resume acceptance sequentially under original deadlines after resources permit it.
 
-Inventory: 315 family rows, 259 unverified, 29 missing, 27 recorded not applicable; 1012 concrete surfaces and 106260 independent assessments. Source presence is not accepted runtime evidence.
+Inventory: 315 family rows, 259 unverified, 29 missing, 27 recorded not applicable; 1016 concrete surfaces and 106680 independent assessments. Source presence is not accepted runtime evidence.
 
 Pending converter source2c563a6 and fixture91a9042 need reviewed repairs for control authorization, bounded listing, unaccepted-grant disposal and shared busy state. The older reset branch has a finalization authorization race and remains separate. Preserve all active and historical work.
 

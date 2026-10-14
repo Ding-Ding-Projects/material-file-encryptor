@@ -3,6 +3,7 @@
   "articles": [
     "DESIGN.md",
     "README.md",
+    "docs/design/browser-desktop-channel.md",
     "docs/features/README.md",
     "docs/features/README.zh-HK.md",
     "docs/features/access-local.md",
