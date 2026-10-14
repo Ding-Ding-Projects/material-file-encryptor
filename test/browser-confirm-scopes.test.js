@@ -201,3 +201,18 @@ test('extension background relays the scope, validates the answer and rejects ex
 test('the confirmation scope adds no storage, network or secret handling to the desktop modules',async()=>{
  for(const name of ['browser-confirm-mediation.js','browser-confirm-prompt.js']){const source=await fs.readFile(new URL('../src/main/'+name,import.meta.url),'utf8');assert.doesNotMatch(source,/localStorage|writeFile|randomBytes|fetch\(|process\.env|child_process|credential/);}
 });
+
+test('an unanswered prompt is withdrawn as rejected before the host deadline and frees the next request',async()=>{
+ const m=mediation({overrides:{promptTimeoutMs:50}});
+ const first=await m.send();
+ assert.deepEqual(first,{type:'authenticator-focused',schemaVersion:1,state:'rejected'});
+ assert.equal(m.prompts[0].context.signal.aborted,true,'the native prompt is withdrawn, not left open');
+ assert.equal(m.focused,0);assert.equal(m.service.pending,0);
+ const second=m.send();await flush();assert.equal(m.prompts.length,2,'a later request prompts again instead of answering busy');
+ m.prompts[1].resolve(true);assert.equal((await second).state,'shown');
+});
+
+test('the default prompt deadline answers before the native host request deadline',async()=>{
+ const {PROMPT_TIMEOUT_MS}=await import('../src/main/browser-confirm-mediation.js');
+ assert.ok(PROMPT_TIMEOUT_MS<35000,'the host drops a request after 35 seconds');
+});
