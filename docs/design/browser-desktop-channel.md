@@ -1,9 +1,10 @@
-# Authenticated browser-to-desktop channel (design proposal)
+# Authenticated browser-to-desktop channel (approved design)
 
-Status: **Proposed, awaiting maintainer review.** Nothing in this document is
-implemented beyond the existing transport and the single read-only mediation
-scope described under "Current baseline". No feature may be built on this
-channel until the design is approved.
+Status: **Approved by the maintainer on October 14, 2026**, with the decisions
+recorded under "Maintainer decisions". Nothing in this document is implemented
+beyond the existing transport and the single read-only mediation scope
+described under "Current baseline". Each scope below is built and verified on
+its own; approval of the design is not a claim that any scope works.
 
 ## Purpose
 
@@ -125,8 +126,10 @@ queue them for later.
 
 - At most one pending desktop prompt at a time. Further requests are refused
   with "busy" until it is answered.
-- After three rejected prompts from one origin within ten minutes, that
-  origin's pairing is revoked and must be approved again.
+- Rejected prompts never revoke a pairing on their own. A pairing ends only
+  when the desktop locks or exits, or when the person disconnects it in the
+  desktop or the extension. The one-pending-prompt rule above is what keeps a
+  noisy caller from stacking prompts.
 - The existing per-connection cap of 256 requests and the 35-second request
   deadline still apply.
 
@@ -148,7 +151,7 @@ These are proposals for review, not commitments. Each needs its own approval.
 | `read-lock-state` | Status | `locked`, `unlocked` or `unavailable` |
 | `read-update-state` | Status | current version, available version, download progress |
 | `read-profile-summary` | Re-authenticate | existing safe summary (already implemented) |
-| `show-authenticator-code` | Re-authenticate | one code and its expiry, for one named account |
+| `focus-authenticator` | Confirm | `shown`: the desktop authenticator window is brought forward; no code is returned |
 | `request-unlock-step` | Re-authenticate | the new unlock level |
 | `open-in-editor` | Confirm | `opened` or a plain failure reason |
 | `convert-file` | Confirm | job id and status updates |
@@ -169,13 +172,18 @@ No scope is called working until each of these exists:
 5. An extension-side test proving no grant or sensitive response reaches
    persistent extension storage.
 
-## Open questions for the reviewer
+## Maintainer decisions
 
-1. Should Status scopes need a pairing at all, or should lock state be readable
-   without one? This proposal says pairing is required.
-2. Is Windows Hello acceptable as the Re-authenticate method when it is
-   available, or should the vault credential always be required?
-3. Should `show-authenticator-code` be allowed at all, given that it puts a
-   one-time code in a browser surface? The alternative is to show the code only
-   in the desktop and have the browser just bring that window forward.
-4. Is a three-rejections revocation threshold reasonable, or too strict?
+The four open questions were answered on October 14, 2026:
+
+1. **Status scopes require a pairing.** Lock and update state are readable only
+   by a paired extension, so an unpaired process cannot learn whether the
+   desktop is unlocked.
+2. **Re-authenticate uses Windows Hello when it is available, otherwise the
+   vault password.** Either is checked in the desktop and never crosses to the
+   browser.
+3. **Authenticator codes never appear in a browser surface.** The former
+   `show-authenticator-code` scope is replaced by `focus-authenticator`, which
+   only brings the desktop authenticator window forward after a Confirm prompt.
+4. **Rejections never revoke a pairing automatically.** Only lock, exit or an
+   explicit disconnect end it (section 5).
