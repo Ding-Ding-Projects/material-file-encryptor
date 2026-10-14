@@ -11,3 +11,5 @@
 
 - [特權主機挑戰同加密修改歷史（英文）](access-host.md)
 - [特權存取主機同加密修改歷史](access-host.zh-HK.md)
+
+- [受保護偏好重設基礎同待處理檢視結果](protected-reset.zh-HK.md)

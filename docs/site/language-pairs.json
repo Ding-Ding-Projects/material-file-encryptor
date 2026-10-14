@@ -23,10 +23,16 @@
       "translationSha256": "b600d0a1a3536c51a20e5d73f92afb51aae82f54cec685417c2262c52e9043b1"
     },
     {
+      "source": "docs/features/access/protected-reset.md",
+      "translation": "docs/features/access/protected-reset.zh-HK.md",
+      "sourceSha256": "17ca8bf61e75ae40be24299dbaab36d047a08f0e2aff020f12f38c7f29d35f33",
+      "translationSha256": "aef4741b26d24bbd2d230684489e016717f9f6dcc6511b6f21833dd943732013"
+    },
+    {
       "source": "docs/features/access/README.md",
       "translation": "docs/features/access/README.zh-HK.md",
-      "sourceSha256": "0a95190a274fa987d9b47cb1f22d4ef0260a336da2ca9d3a1d192ee565b6b748",
-      "translationSha256": "77094f7c3d7104c8fc65c8616abe47e957c6c296614e23b286743404c629c791"
+      "sourceSha256": "7070dac19afaceb9ce920f6290ef42323bb52cda23bc1f079c7374060dada3d3",
+      "translationSha256": "b7622ae47f1213382355b802ed963a1aebf624d4ab70a9d70fb57c9868ce2a8c"
     },
     {
       "source": "docs/features/access/visitor-local-access.md",

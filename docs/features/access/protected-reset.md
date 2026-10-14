@@ -1,3 +1,7 @@
+## Blocking independent review findings
+
+Independent review found two defects in this inactive foundation. First, replacing the native local profile after preparation does not invalidate the retained authorization closure: a synthetic causal run changed that profile revision and the old reset still committed. Approval must recheck the exact authenticated revision across commit and asynchronous mutation boundaries. Second, interruption after a compensating record restore but before journal progress is saved causes recovery to interpret its own new revision as a concurrent conflict. Compensation and journal progress need atomic persistence, without weakening concurrent-write or ABA protection. Do not enable or integrate this candidate until both causal scenarios pass independent review. Renderer reset actions remain unavailable.
+
 # Protected preference reset transaction
 
 ## Native coordinator and current boundary

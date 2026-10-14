@@ -1,3 +1,9 @@
+# Preservation closeout, October 14
+
+Independent review found two defects in this inactive foundation. First, replacing the native local profile after preparation does not invalidate the retained authorization closure: a synthetic causal run changed that profile revision and the old reset still committed. Approval must recheck the exact authenticated revision across commit and asynchronous mutation boundaries. Second, interruption after a compensating record restore but before journal progress is saved causes recovery to interpret its own new revision as a concurrent conflict. Compensation and journal progress need atomic persistence, without weakening concurrent-write or ABA protection. Do not enable or integrate this candidate until both causal scenarios pass independent review. Renderer reset actions remain unavailable.
+
+Candidate f574f940 remains separate from main; no production reset acceptance is claimed.
+
 ## Shared composition integration
 
 Reviewed composition source 61986fc and preserved build candidate 4959f2a are incorporated with the independently assessed extension inventory. Both handoff additions were retained during the merge. The combined local checks pass 59/59, with 959 concrete declarations and 230 public routes. The exact root build at frozen 4959f2a passed and its ASAR SHA-256 is beeb1df93e13624e0f622a668cb01356101321cb0c0dd94c142f247fb6d4420e. This older candidate remains frozen for actual hidden-desktop inspection and is not relabelled as acceptance for the merged source. Its initial process-membership admission failed; the exact same launch was subsequently revalidated after startup settled. Capture and owned closure results remain pending.
