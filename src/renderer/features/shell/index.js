@@ -6,6 +6,7 @@ import '../../../shared/surface/material.js';
 import {createSurfaceModel} from '../../../shared/surface/model.js';
 import {element,localized,text} from '../../../shared/surface/registry.js';
 import '../../../shared/surface/workspace-shell.js';
+import {homeEntries,isNewTabShortcut,HOME_ID,HOME_LABEL} from '../../../shared/surface/home.js';
 import '../../../shared/surface/command-palette.js';
 import '../../../shared/surface/notification-center.js';
 import {createNotificationAudio} from '../../../shared/surface/notification-audio.js';
@@ -26,6 +27,10 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
   const panels=new Map();
   const registerPanel=(id,root)=>{if(panels.has(id))return panels.get(id);const panel=mountPanelLayout(root,{id,storage,language:activeLanguage,registerContextActions});panels.set(id,panel);return panel;};
   const views=new Map();let activeLanguage=language;let hostCommands=commands;
+  // Home lists every destination as a card; it is a view of the shell like any other and opens only when asked.
+  const homeRoot=element('section',{class:'home-view',hidden:true});const homeGrid=element('mfe-home-grid');homeRoot.append(homeGrid);
+  views.set(HOME_ID,{id:HOME_ID,root:homeRoot,label:HOME_LABEL,layout:false});labels.set(HOME_ID,HOME_LABEL);model.registerCanonicalTab(HOME_ID,'Home');
+  const renderHome=()=>{homeRoot.setAttribute('aria-label',localized(HOME_LABEL,activeLanguage));homeGrid.configure({entries:homeEntries(labels,model.getState()),language:activeLanguage,onOpen:entry=>shell.activate(entry.id)});};
   let frame;
   const audio=createNotificationAudio();
   let messageTimer;
@@ -34,25 +39,26 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
   if(!customElements.get('mfe-live-notification'))customElements.define('mfe-live-notification',class extends HTMLElement{});
   // Upgrade newly defined elements before accessing their component internals.
   customElements.upgrade(toolbar);
-  const showView=id=>{closeContextMenu('navigation',{restoreFocus:false});frame?.setActive(id);for(const [key,view]of views){view.root.hidden=key!==id;}onActivate(id);};
+  const showView=id=>{closeContextMenu('navigation',{restoreFocus:false});frame?.setActive(id);if(id===HOME_ID)renderHome();for(const [key,view]of views){view.root.hidden=key!==id;}onActivate(id);if(id===HOME_ID)homeGrid.focusFirst?.();};
   const configure=()=>{
     shell.configure({model,language:activeLanguage,labels,onActivate:showView,onContext:openContextMenu});
     build.language=activeLanguage;build.value=provenance;
-    palette.language=activeLanguage;palette.render();palette.setCommands([...tabs.map(tab=>({id:`view:${tab.id}`,label:labels.get(tab.id),run:()=>{model.openTab({id:tab.id,label:localized(labels.get(tab.id),'en')});shell.activate(tab.id);}})),...hostCommands]);
+    palette.language=activeLanguage;palette.render();renderHome();palette.setCommands([{id:'view:home',label:HOME_LABEL,run:()=>shell.openHome()},{id:'tab:new',label:text('New tab','新分頁'),shortcut:'Control+t',run:()=>shell.openNewTab()},...tabs.map(tab=>({id:`view:${tab.id}`,label:labels.get(tab.id),run:()=>{model.openTab({id:tab.id,label:localized(labels.get(tab.id),'en')});shell.activate(tab.id);}})),...hostCommands]);
     notifications.configure({model,language:activeLanguage,onExport,renderText,onAction:onNotificationAction,onAudio:enabled=>audio.enable(enabled)});
     const sheet=new CSSStyleSheet();sheet.replaceSync(':host{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}');toolbar.shadowRoot.adoptedStyleSheets=[sheet];
     toolbar.shadowRoot.replaceChildren(element('md-outlined-button',{text:localized(text('Commands · Ctrl+Shift+F','指令 · Ctrl+Shift+F'),activeLanguage),onclick:()=>palette.open()}),element('md-outlined-button',{text:localized(text('Notifications','通知'),activeLanguage),onclick:()=>{notifications.hidden=!notifications.hidden;}}));
   };
-  host.insertBefore(shell,before);host.append(live);document.body.append(palette);configure();frame=mountNavigationFrame({navigationHost,host,shell,build,toolbar,notifications,labels,language:activeLanguage,onActivate:id=>shell.activate(id),onCommands:()=>palette.open(),onNotifications:()=>{notifications.hidden=!notifications.hidden;}});frame.setActive(model.getState().activeTabId);
+  host.insertBefore(shell,before);host.insertBefore(homeRoot,shell.nextSibling);host.append(live);document.body.append(palette);configure();frame=mountNavigationFrame({navigationHost,host,shell,build,toolbar,notifications,labels,language:activeLanguage,onActivate:id=>shell.activate(id),onCommands:()=>palette.open(),onNotifications:()=>{notifications.hidden=!notifications.hidden;}});frame.setActive(model.getState().activeTabId);
   const keydown=event=>{
     if(!(event.ctrlKey||event.metaKey))return;
     if(event.shiftKey&&event.key.toLowerCase()==='f'){event.preventDefault();palette.open();}
+    else if(isNewTabShortcut(event)){event.preventDefault();shell.openNewTab(shell.newButton);}
     else if(event.shiftKey&&event.key.toLowerCase()==='t'){event.preventDefault();const id=model.restoreTab();if(id)shell.activate(id);}
     else if(!event.shiftKey&&event.key.toLowerCase()==='w'){event.preventDefault();if(model.closeTab(model.getState().activeTabId)){showView(model.getState().activeTabId);shell.render();}}
     else {const match=hostCommands.find(c=>c.shortcut?.toLowerCase()===[event.ctrlKey?'control':'meta',event.shiftKey?'shift':null,event.key.toLowerCase()].filter(Boolean).join('+'));if(match&&!match.disabled){event.preventDefault();Promise.resolve(match.run()).catch(error=>api.notify({title:'Command failed',message:error.message,level:'error'}));}}
   };
   document.addEventListener('keydown',keydown);
-  const api={model,shell,palette,notifications,context,openContextMenu,closeContextMenu,
+  const api={model,shell,home:homeGrid,palette,notifications,context,openContextMenu,closeContextMenu,
     notify(input){const id=model.addNotification(input);if(model.getState().notificationAudio)audio.play();notifications.renderEntries();live.textContent=`${renderText(input.title)}: ${renderText(input.message||'')}`;clearTimeout(messageTimer);messageTimer=setTimeout(()=>{live.textContent='';},8000);const record=model.getState().notifications.find(row=>row.id===id);onNotification?.(record,{narrate:input.narration!==false});return id;},
     updateNotification(id,patch){const changed=model.updateNotification(id,patch);if(changed){notifications.renderEntries();onNotification?.(model.getState().notifications.find(row=>row.id===id),{narrate:patch.narration!==false});}return changed;},
     setLanguage(value){const next=['en','yue','bilingual'].includes(value)?value:'en';if(next===activeLanguage)return;const roots=[shell,palette,notifications];const states=roots.map(captureSurfaceState);activeLanguage=next;configure();frame?.setLanguage(next);roots.forEach((root,index)=>restoreSurfaceState(root,states[index]));shell.renderTabs();palette.renderResults();notifications.renderEntries();for(const panel of panels.values())panel.setLanguage(next);},
@@ -62,7 +68,7 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
     setProvenance(value){provenance=value;build.value=value;},
     registerCommands(value){return registerOwnedCommands({get:()=>hostCommands,set:value=>{hostCommands=value;},refresh:configure},value);},
     registerViews(value){const active=model.getState().activeTabId;for(const view of value){if(!view.id||!(view.root instanceof HTMLElement))throw new TypeError('A view id and root are required');views.set(view.id,view);if(view.layout!==false)registerPanel(view.id,view.root);if(!tabs.some(t=>t.id===view.id))tabs.push(view);labels.set(view.id,view.label);model.registerCanonicalTab(view.id,localized(view.label,'en'));if(shouldOpenRegisteredView(model.getState(),view.id))model.openTab({id:view.id,label:localized(view.label,'en')});}model.activateTab(active);configure();frame?.refreshNavigation();showView(model.getState().activeTabId);},
-    destroy(){frame?.destroy();getContextOverlay(host.ownerDocument).destroy();audio.destroy();for(const panel of panels.values())panel.destroy();panels.clear();clearTimeout(messageTimer);document.removeEventListener('keydown',keydown);for(const node of[shell,build,toolbar,notifications,live,palette,context])node.remove();}
+    destroy(){frame?.destroy();getContextOverlay(host.ownerDocument).destroy();audio.destroy();for(const panel of panels.values())panel.destroy();panels.clear();clearTimeout(messageTimer);document.removeEventListener('keydown',keydown);for(const node of[homeRoot,shell,build,toolbar,notifications,live,palette,context])node.remove();}
   };
   context.addEventListener('context-action-error',event=>api.notify({title:localized(text('Action unavailable','操作無法使用'),activeLanguage),message:event.detail.error.message,level:'warning'}));
   palette.addEventListener('command-error',event=>api.notify({title:localized(text('Command failed','指令未能完成'),activeLanguage),message:event.detail.error.message,level:'error'}));

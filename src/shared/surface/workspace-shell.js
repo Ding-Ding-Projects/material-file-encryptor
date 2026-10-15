@@ -2,21 +2,23 @@ import { SurfaceElement, element, register, localized, text } from './registry.j
 import { controlIcon } from './controls.js';
 import './context-menu.js';
 import './group-manager.js';
+import {homeEntries,homeGlyph,HOME_ID,HOME_LABEL,HOME_DESCRIPTION} from './home.js';
 export class WorkspaceShell extends SurfaceElement {
   connectedCallback(){this.render();}
   configure({model,language,labels,onActivate,onContext}){Object.assign(this,{model,language,labels,onActivate,onContext});this.render();}
   render(){
     const offset=this.tabsHost?.scrollLeft||0;
-    this.style(`.bar{display:flex;align-items:center;gap:2px;min-width:0}.tabs{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}md-tabs{min-width:max-content}md-primary-tab{max-width:240px} .tab-name{display:block;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}md-text-button{flex:none;min-width:40px}.all{max-width:none;flex:none}`);
+    this.style(`.bar{display:flex;align-items:center;gap:2px;min-width:0}.tabs{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}md-tabs{min-width:max-content}md-primary-tab{max-width:240px} .tab-name{display:block;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}md-text-button{flex:none;min-width:40px}md-icon-button{flex:none}md-icon-button[hidden]{display:none}.tabs[data-empty]{min-height:48px}`);
     if(!this.model)return;
     this.selected??=new Set();
     this.tabsHost=element('div',{class:'tabs'});
     this.manager=element('mfe-group-manager');this.manager.model=this.model;this.manager.language=this.language;this.manager.changed=()=>this.renderTabs();
     this.previous=element('md-icon-button',{'aria-label':this.t('Scroll workspace tabs left','向左捲動工作區分頁'),title:this.t('Scroll workspace tabs left','向左捲動工作區分頁'),onclick:()=>this.scrollTabs(-1)});
     this.next=element('md-icon-button',{'aria-label':this.t('Scroll workspace tabs right','向右捲動工作區分頁'),title:this.t('Scroll workspace tabs right','向右捲動工作區分頁'),onclick:()=>this.scrollTabs(1)});this.previous.append(controlIcon('chevron-left',document));this.next.append(controlIcon('chevron-right',document));
-    this.allTabs=element('md-text-button',{class:'all',text:this.t('All tabs','所有分頁'),'aria-label':this.t('Search all open and available tabs','搜尋所有已開啟及可用分頁'),'aria-haspopup':'menu',onclick:event=>this.openAllTabs(event.currentTarget,event)});
+    this.homeButton=element('md-icon-button',{class:'home-button','aria-label':this.t('Home','首頁'),title:this.t('Home: every section in one place','首頁：所有區段集中一頁'),onclick:()=>this.openHome()});this.homeButton.append(homeGlyph(HOME_ID));
+    this.newButton=element('md-icon-button',{class:'new-tab','aria-label':this.t('New tab','新分頁'),title:this.t('New tab (Ctrl+T)','新分頁 (Ctrl+T)'),'aria-haspopup':'menu','aria-keyshortcuts':'Control+T',onclick:event=>this.openNewTab(event.currentTarget,event)});this.newButton.append(homeGlyph('add'));
     this.tabsHost.addEventListener('scroll',()=>this.updateOverflow());
-    this.shadowRoot.append(element('div',{class:'bar'},[this.previous,this.tabsHost,this.next,this.allTabs]),this.manager);
+    this.shadowRoot.append(element('div',{class:'bar'},[this.homeButton,this.previous,this.tabsHost,this.next,this.newButton]),this.manager);
     this.renderTabs();this.tabsHost.scrollLeft=offset;
     this.resizeObserver?.disconnect();if(typeof ResizeObserver!=='undefined'){this.resizeObserver=new ResizeObserver(()=>this.updateOverflow());this.resizeObserver.observe(this.tabsHost);}
   }
@@ -38,7 +40,24 @@ export class WorkspaceShell extends SurfaceElement {
   }
   activateView(tab){this.pendingFocusId=tab.id;return this.activate(tab.id);}
   scrollTabs(direction){this.tabsHost.scrollBy({left:direction*Math.max(120,this.tabsHost.clientWidth*.75),behavior:'auto'});this.updateOverflow();}
-  updateOverflow(){if(!this.tabsHost)return;const max=this.tabsHost.scrollWidth-this.tabsHost.clientWidth;if(this.previous)this.previous.disabled=this.tabsHost.scrollLeft<=1;if(this.next)this.next.disabled=this.tabsHost.scrollLeft>=max-1;}
+  updateOverflow(){if(!this.tabsHost)return;const max=this.tabsHost.scrollWidth-this.tabsHost.clientWidth,overflowing=max>1;if(this.previous){this.previous.disabled=this.tabsHost.scrollLeft<=1;this.previous.hidden=!overflowing;}if(this.next){this.next.disabled=this.tabsHost.scrollLeft>=max-1;this.next.hidden=!overflowing;}}
+  /** Opens or focuses the Home tab, which lists every destination as a card. */
+  openHome(){if(this.labels&&!this.labels.has(HOME_ID))this.labels.set(HOME_ID,HOME_LABEL);return this.activateView({id:HOME_ID});}
+  /** The compact "mini home": a searchable menu of every destination plus tab management, anchored to the New tab button. */
+  openNewTab(anchor=this.newButton,event){
+    const state=this.model.getState();
+    this.onContext?.({anchor,event,target:this,language:this.language,items:[
+      {label:HOME_LABEL,description:HOME_DESCRIPTION,run:()=>this.openHome()},
+      ...homeEntries(this.labels,state).map(entry=>({label:entry.label,description:entry.description,run:()=>this.activateView(entry)})),
+      ...this.managementItems(state)
+    ]});
+  }
+  managementItems(state){return [
+      {label:text('Restore closed tab','還原已關閉分頁'),disabled:!state.closedTabs.length,run:()=>{const id=this.model.restoreTab();if(id)this.activate(id);}},
+      {label:text('Manage groups','管理群組'),run:()=>this.manager.open()},
+      {label:text('Close selected tabs','關閉所選分頁'),disabled:!this.selected.size,run:()=>{this.model.closeTabs([...this.selected]);this.selected.clear();this.onActivate?.(this.model.getState().activeTabId);this.render();}},
+      ...state.groups.map(group=>({label:text(`${group.collapsed?'Expand':'Collapse'} group: ${group.label}`,`${group.collapsed?'展開':'收合'}群組：${group.label}`),run:()=>{this.model.collapseGroup(group.id,!group.collapsed);this.renderTabs();}}))
+  ];}
   renderTabs(){
     if(!this.model||!this.tabsHost)return;
     const state=this.model.getState(),offset=this.tabsHost.scrollLeft;
@@ -61,10 +80,7 @@ export class WorkspaceShell extends SurfaceElement {
     const state=this.model.getState();
     this.onContext?.({anchor,event,target:this,language:this.language,items:[
       ...this.viewRows(state,true).map(tab=>({label:text(`${localized(this.labels?.get(tab.id)||tab.label,'en')} · ${tab.closed?'Closed':'Open'}`,`${localized(this.labels?.get(tab.id)||tab.label,'yue')} · ${tab.closed?'已關閉':'已開啟'}`),run:()=>this.activateView(tab)})),
-      {label:text('Restore closed tab','還原已關閉分頁'),disabled:!state.closedTabs.length,run:()=>{const id=this.model.restoreTab();if(id)this.activate(id);}},
-      {label:text('Manage groups','管理群組'),run:()=>this.manager.open()},
-      {label:text('Close selected tabs','關閉所選分頁'),disabled:!this.selected.size,run:()=>{this.model.closeTabs([...this.selected]);this.selected.clear();this.onActivate?.(this.model.getState().activeTabId);this.render();}},
-      ...state.groups.map(group=>({label:text(`${group.collapsed?'Expand':'Collapse'} group: ${group.label}`,`${group.collapsed?'展開':'收合'}群組：${group.label}`),run:()=>{this.model.collapseGroup(group.id,!group.collapsed);this.renderTabs();}}))
+      ...this.managementItems(state)
     ]});
   }
   openTabMenu(tab,anchor,event){this.onContext?.({anchor,event,target:tab,language:this.language,items:[

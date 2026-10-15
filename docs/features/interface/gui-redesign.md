@@ -2,7 +2,15 @@
 
 The desktop workspace uses a sage Material Design 3 frame. The title bar, grouped navigation, compact top bar and open-work tabs remain stationary. Each destination owns a bounded scrolling content pane. Tables and editors have their own bounded overflow. Below 840 CSS pixels the navigation becomes a dismissible drawer. Settings and Help remain at the bottom of the navigation.
 
-Only the initial Drive tab opens for a new profile. Saved open tabs, pinned state, groups and closed tabs are preserved. Registering a destination makes it discoverable without opening it. Previous and next controls scroll the strip; All tabs opens the shared searchable contextual menu. Its search includes the adjacent regular-expression workbench. Tab management and keyboard panel layout controls live in contextual actions instead of permanent helper rows.
+Only the initial Drive tab opens for a new profile. Saved open tabs, pinned state, groups and closed tabs are preserved. Registering a destination makes it discoverable without opening it. The strip shows only open tabs, a Home button before them and a New tab button after them. Previous and next scroll controls appear only while the tabs overflow. Tab management and keyboard panel layout controls live in contextual actions instead of permanent helper rows.
+
+## Home and New tab
+
+Home is a tab that shows one Material card for every destination: an icon, the name and a one-line description in the active language mode, plus an Open badge for destinations that already have a tab. Choosing a card opens that destination or focuses its existing tab. Arrow keys, `Home` and `End` move between cards, and a card reads as a button with its name, description and open state.
+
+New tab opens a compact searchable menu, the mini home, anchored to the New tab button. It lists Home, every destination with its description, and the tab management actions that used to sit behind All tabs: restore a closed tab, manage groups, close selected tabs and collapse or expand a group. Its search includes the adjacent regular-expression workbench. Press `Ctrl+T` (or `Cmd+T`) to open it from the keyboard; `Ctrl+Shift+T` still restores the last closed tab. `Escape` or a click outside closes the menu and returns focus to the New tab button.
+
+Cards and the menu use the shared motion tokens. Cards fade up on entry and show a state layer on hover, focus and press; under `prefers-reduced-motion` the entry animation and transitions are removed. The logic lives in `src/shared/surface/home.js`, the tab strip in `src/shared/surface/workspace-shell.js`, and the `mfe-home-grid` element is registered in the surface registry.
 
 ## Control API
 
