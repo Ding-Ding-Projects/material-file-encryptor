@@ -14677,10 +14677,11 @@
         "test/browser-native-host.test.js"
       ],
       "evidence": [
-        "docs/evidence/installed-proof-1.657.1.json"
+        "docs/evidence/installed-proof-1.657.1.json",
+        "docs/evidence/installed-proof-1.692.1.json"
       ],
       "persistence": [],
-      "reason": "The background pairs, proposes one HTTPS URL and queries transfer status. Reviewed installed native registration and real transfer acceptance are absent. No independent installed interaction or visual acceptance is claimed. Installed proof (release 1.657.1): the staged extension paired with the installed desktop through the real desktop prompt. The paired session did not survive the extension service worker going idle; a fix is in progress. A real download handoff was not exercised.",
+      "reason": "The background pairs, proposes one HTTPS URL and queries transfer status. Reviewed installed native registration and real transfer acceptance are absent. No independent installed interaction or visual acceptance is claimed. Installed proof (release 1.657.1): the staged extension paired with the installed desktop through the real desktop prompt. A real download handoff was not exercised. Installed proof (release 1.692.1): pairing survives the extension worker going idle; a normal quit or desktop lock shows pairing expired within about a second, and only a crash leaves the extension reconnecting.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -17968,7 +17969,8 @@
     "src/main/browser-publish-adapter.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
     "src/main/browser-status-enrollment.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
     "test/browser-desktop-adapters.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
-    "docs/evidence/installed-proof-1.657.1.json": "8eb6cd8afec664d3ecbeab41619fcb2ef9048978"
+    "docs/evidence/installed-proof-1.657.1.json": "8eb6cd8afec664d3ecbeab41619fcb2ef9048978",
+    "docs/evidence/installed-proof-1.692.1.json": "b8408947a90da839267fc8d508f185e8e09a9689"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
