@@ -162,7 +162,7 @@ and the installed end-to-end path) is still outstanding for every scope.
 | `request-unlock-step` | Re-authenticate | `advanced`, `cooldown`, `complete`, `rejected`, `busy` or `unavailable`, with the level the desktop reports afterwards; a running cooldown is reported and never skipped, the desktop's waiting challenges stay in the desktop, and Windows Hello is not used by this build, so the check is the vault password in the desktop | Implemented |
 | `open-in-editor` | Confirm | `opened` or a plain failure reason | Not implemented |
 | `convert-file` | Confirm | job id and status updates | Not implemented |
-| `begin-qr-pairing` | Confirm | a short-lived pairing QR image for a phone | Not implemented |
+| `begin-qr-pairing` | Confirm | retargeted by decision 5 from a phone to the browser: an optional `code` on the `pair` message, checked against the one-time code the unlocked desktop shows as text and QR; the native approval prompt still decides, says whether a matching code was entered, and the code is never echoed | Implemented (camera scanning not tried with real hardware) |
 
 ## Verification plan
 
@@ -194,3 +194,12 @@ The four open questions were answered on October 14, 2026:
    only brings the desktop authenticator window forward after a Confirm prompt.
 4. **Rejections never revoke a pairing automatically.** Only lock, exit or an
    explicit disconnect end it (section 5).
+5. **`begin-qr-pairing` pairs the browser by QR, not a phone** (October 14,
+   2026). The unlocked desktop shows a one-time pairing code, as text and as a
+   QR image, and the extension can scan or type it. The code is an extra proof
+   that the person at the desktop is the person at the browser. It never
+   replaces the native approval prompt, which stays mandatory. The code is 8
+   characters from an unambiguous alphabet, valid for 2 minutes, single use,
+   and only one is active at a time. Five wrong codes in a row clear the active
+   code. Lock, exit and update preparation clear it. The QR holds exactly the
+   code and nothing else.
