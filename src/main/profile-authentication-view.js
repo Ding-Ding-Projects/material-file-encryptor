@@ -1,4 +1,6 @@
 import '../shared/surface/material.js';
+import {installShadowReducedMotion} from '../shared/surface/reduced-motion.js';
+if(typeof document!=='undefined')installShadowReducedMotion(document);
 const $=id=>document.getElementById(id),bridge=globalThis.profileAuthentication;
 let view=null,busy=false,until=0,unavailable=false;
 const copy={heading:['Local profile verification','本機身份驗證'],scope:['Allow this browser to read one fixed profile summary?','允許呢個瀏覽器讀取一次固定身份摘要？'],disclosure:['Enter the desktop local-profile password. Drive unlock and download pairing do not verify this credential. No password, profile record or private history is returned to the browser.','請輸入桌面本機身份密碼。磁碟解鎖同下載配對唔會驗證呢個密碼。密碼、身份記錄同私人歷史都唔會傳返瀏覽器。'],password:['Local profile password','本機身份密碼'],clear:['Clear password','清除密碼'],cancel:['Cancel','取消'],verify:['Verify and allow summary','驗證並允許摘要'],missing:['Create a local profile in the desktop before using this request.','請先喺桌面建立本機身份，再提出要求。'],failed:['Verification did not succeed. Try again when the waiting period ends.','驗證未成功，請等候期結束後再試。'],ready:['This grants only one fixed summary for up to 60 seconds.','只允許讀取一次固定摘要，有效期最多 60 秒。'],unavailable:['This request is no longer available. Close it and retry from the browser.','呢個要求已經未可用，請關閉並由瀏覽器再試。']};

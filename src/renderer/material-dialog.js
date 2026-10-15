@@ -1,4 +1,6 @@
 import '../shared/surface/material.js';
+import {installShadowReducedMotion} from '../shared/surface/reduced-motion.js';
+if(typeof document!=='undefined')installShadowReducedMotion(document);
 
 const ICONS = {
   info: 'M11 17h2v-6h-2v6Zm1-15a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm-1-11h2V7h-2v2Z',

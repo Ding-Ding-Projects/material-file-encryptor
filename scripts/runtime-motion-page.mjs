@@ -124,7 +124,7 @@ export function pageAudit(options = {}) {
   if (mode === 'reduced') {
     // Reduced motion: no visible element may keep a transition or animation of any real length.
     const leaks = [];
-    const libraryTags = new Map();
+    const shadowTags = new Map();
     for (const element of all) {
       if (!isVisible(element)) continue;
       for (const pseudo of [null, '::before', '::after']) {
@@ -135,15 +135,18 @@ export function pageAudit(options = {}) {
         const chain = hostChain(element);
         const materialHost = chain.find(host => host.localName.startsWith('md-'));
         const record = { path: pathOf(element) + (pseudo || ''), kind: animation > NEAR_ZERO ? 'animation' : 'transition', seconds: Number(worst.toFixed(3)) };
-        if (materialHost) { const tag = materialHost.localName; libraryTags.set(tag, (libraryTags.get(tag) || 0) + 1); continue; }
+        if (materialHost) { const tag = materialHost.localName; shadowTags.set(tag, (shadowTags.get(tag) || 0) + 1); record.shadowHost = tag; }
         leaks.push(record);
       }
     }
-    const running = document.getAnimations().filter(animation => {
+    // Document.getAnimations() leaves out animations whose target lives in a shadow tree, so ask every shadow root too.
+    const animations = [...document.getAnimations()];
+    for (const element of all) if (element.shadowRoot && element.shadowRoot.getAnimations) animations.push(...element.shadowRoot.getAnimations());
+    const running = animations.filter(animation => {
       const timing = animation.effect && animation.effect.getTiming ? animation.effect.getTiming() : null;
       return timing && typeof timing.duration === 'number' && timing.duration > NEAR_ZERO * 1000 && animation.playState === 'running';
     }).length;
-    return { mode, counts: { examined: all.length }, leaks: leaks.slice(0, 200), leakTotal: leaks.length, libraryInternal: Object.fromEntries([...libraryTags.entries()].sort()), runningAnimations: running };
+    return { mode, counts: { examined: all.length }, leaks: leaks.slice(0, 1000), leakTotal: leaks.length, shadowRootLeakTags: Object.fromEntries([...shadowTags.entries()].sort()), runningAnimations: running };
   }
 
   for (const element of all) {

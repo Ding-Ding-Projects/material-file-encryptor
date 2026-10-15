@@ -3,6 +3,7 @@ import {getContextOverlay,openContextMenu,closeContextMenu,registerContextAction
 import {mountNavigationFrame} from './navigation.js';
 import {registerOwnedCommands} from '../../../shared/surface/control-guidance.js';
 import '../../../shared/surface/material.js';
+import {installShadowReducedMotion} from '../../../shared/surface/reduced-motion.js';
 import {createSurfaceModel} from '../../../shared/surface/model.js';
 import {element,localized,text} from '../../../shared/surface/registry.js';
 import '../../../shared/surface/workspace-shell.js';
@@ -13,6 +14,8 @@ import {createNotificationAudio} from '../../../shared/surface/notification-audi
 import {mountPanelLayout} from '../../../shared/surface/panel-layout.js';
 import {captureSurfaceState,restoreSurfaceState} from '../../../shared/surface/transient-state.js';
 import {shouldOpenRegisteredView} from '../../../shared/surface/view-registration.js';
+
+if(typeof document!=='undefined')installShadowReducedMotion(document);
 
 /** Mounts reusable chrome without mutating host content or acquiring host capabilities. */
 export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport,renderText=value=>value,onNotificationAction,onNotification,navigationHost}={}) {

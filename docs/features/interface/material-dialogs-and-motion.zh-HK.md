@@ -43,9 +43,11 @@
 - 每個可見嘅互動元素（包括開放 shadow root 入面嘅元素）都會分類為 Material Web 控制項、有記錄嘅原生例外，或者發現項。位於 Material 元件自己 shadow root 內嘅部件，算係該元件嘅一部分。
 - 每個互動元素都要有過渡、動畫、水波紋或者狀態層。超連結同展開摘要亦都要有過渡。
 - 打開嘅對話框、選單、側邊面板同分頁面板必須有進場動畫，透過運行中嘅 Web Animations、CSS 動畫同過渡觀察。
-- 模擬 `prefers-reduced-motion: reduce` 之後，頁面自己擁有嘅元素唔可以仍然保留過渡或動畫。Material Web shadow root 入面嘅過渡，頁面無法改寫，所以佢哋按元素標籤列喺收據入面，並當作限制披露，唔計做發現項。
+- 模擬 `prefers-reduced-motion: reduce`，或者開咗應用程式內嘅動態或注意力設定之後，任何可見元素都唔可以仍然保留過渡或動畫，包括 Material Web shadow root 入面嘅元素。頁面樣式表去唔到呢啲 shadow root，所以 `src/shared/surface/reduced-motion.js` 會喺要求減少動態效果期間（媒體查詢、文件元素上嘅 `data-motion="reduced"` 或者 `data-low-stimulation="true"`），將一份細小嘅樣式表套入每個 `md-*` 元素嘅 shadow root，關閉減少動態效果時移除，亦涵蓋之後先加入嘅元素，並且即時完成 Material Web 用腳本啟動、有限長度嘅 Web Animations，例如按壓水波紋。瀏覽器擴充功能、文件網站同桌面畫面全部都會安裝。shadow root 入面嘅殘留動態會當作發現項計算，並列出所屬嘅 `md-*` 宿主。
 
-執行時例外清單比靜態嘅短：隱藏嘅檔案輸入、`mfe-date-field` 同 `mfe-file-picker` 入面嘅平台選擇器輸入，以及主頁目的地卡片，每項都喺程式碼入面列明原因。文件網站唔需要任何例外，因為佢嘅基線標記喺審核讀取之前已經升級。先用 `node scripts/build-browser-extension.mjs` 同 `node scripts/build-site.mjs` 暫存，再執行 `node scripts/audit-runtime-motion.mjs --surface all --out receipt.json`。提交嘅收據 `docs/evidence/runtime-motion-<shortsha>.json` 按畫面記錄元素數量、發現項、進場探測同減少動態效果嘅結果。桌面畫面嘅執行係原始碼替身證據，並唔涵蓋已安裝嘅應用程式。`test/runtime-motion-audit.test.js` 會對靜態測試頁執行頁面端分類器，並要求冇過渡嘅原生按鈕被標記、Material 控制項通過。
+執行時例外清單比靜態嘅短：隱藏嘅檔案輸入、`mfe-date-field` 同 `mfe-file-picker` 入面嘅平台選擇器輸入，以及主頁目的地卡片，每項都喺程式碼入面列明原因。文件網站唔需要任何例外，因為佢嘅基線標記喺審核讀取之前已經升級。先用 `node scripts/build-browser-extension.mjs` 同 `node scripts/build-site.mjs` 暫存，再執行 `node scripts/audit-runtime-motion.mjs --surface all --out receipt.json`。提交嘅收據 `docs/evidence/runtime-motion-<shortsha>.json` 按畫面記錄元素數量、發現項、進場探測同減少動態效果嘅結果。桌面畫面嘅執行係原始碼替身證據，並唔涵蓋已安裝嘅應用程式。`test/runtime-motion-audit.test.js` 會對靜態測試頁執行頁面端分類器，並要求冇過渡嘅原生按鈕被標記、Material 控制項通過。測試亦要求 shadow root 測試頁入面嘅殘留動態被標記，同埋共用輔助程式可以正確套用同移除佢嘅樣式表。
+
+涵蓋範圍：瀏覽器擴充功能同桌面畫面會分別以英文（`en`）、廣東話（`yue`）同雙語（`bilingual`）模式審核，各自作為獨立畫面報告，例如 `extension/yue`。網站審核涵蓋每一個分類頁同每一個文章頁（亮色，寬度 1280 同 360 像素），兩者各抽樣一部分用暗色再審核，另外亦涵蓋 wiki 同工作區頁面嘅內部狀態：每個分頁、每篇 wiki 文章、展開摘要、wiki 搜尋，以及工作區第一份、中間同最後一份文件。`node scripts/audit-runtime-motion.mjs --surface all --without-shadow-reduction` 係負面對照，必須報告 shadow root 殘留動態。每個程序可以各自執行一個畫面並行審核，再用 `--merge a.json,b.json --out merged.json` 合併收據。
 
 ## 關閉程式
 
