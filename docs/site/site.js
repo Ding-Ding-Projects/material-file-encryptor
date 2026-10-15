@@ -179,7 +179,15 @@ function updateNavigationLayout() {
   header.classList.remove('is-compact');
   exploreLinks.hidden = true;
   const row = header.querySelector('.header-inner');
-  const compact = window.innerWidth <= 1100 || row.scrollWidth > row.clientWidth || menu.scrollWidth > menu.clientWidth;
+  const navigationBounds = menu.getBoundingClientRect();
+  const brandBounds = header.querySelector('.brand').getBoundingClientRect();
+  const requiredStart = Math.max(navigationBounds.left, brandBounds.right + (parseFloat(getComputedStyle(row).columnGap) || 0));
+  const childOverflow = [...menu.children].some(child => {
+    if (!child.getClientRects().length) return false;
+    const bounds = child.getBoundingClientRect();
+    return bounds.left < requiredStart - .5 || bounds.right > navigationBounds.right + .5;
+  });
+  const compact = window.innerWidth <= 1100 || row.scrollWidth > row.clientWidth || menu.scrollWidth > menu.clientWidth || childOverflow;
   header.classList.toggle('is-compact', compact);
   if (compact !== wasCompact) {
     closeMenu();
