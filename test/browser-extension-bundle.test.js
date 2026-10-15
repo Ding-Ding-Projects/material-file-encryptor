@@ -81,3 +81,12 @@ test('each missing piece of evidence is reported, and an honest unverified inven
   assert.throws(() => extensionCoverage({features: [], extensionTargets: []}, null), /no extension rows/);
   assert.throws(() => extensionCoverage(null, null), /unavailable/);
 });
+test('staged manifest keeps the reviewed key and a mismatched key is rejected',async t=>{
+ const identity=JSON.parse(await fs.readFile(new URL('../browser-extension/reviewed-identity.json',import.meta.url),'utf8'));
+ const{root,manifest,compile}=await fixture(t);await fs.writeFile(path.join(root,'browser-extension/reviewed-identity.json'),JSON.stringify(identity));
+ await fs.writeFile(path.join(root,'browser-extension/manifest.json'),JSON.stringify({...manifest,key:identity.publicKeyDerBase64}));
+ const destination=path.join(root,'out/browser-extension');await stageBrowserExtension({root,compile,destination});
+ assert.equal(JSON.parse(await fs.readFile(path.join(destination,'manifest.json'),'utf8')).key,identity.publicKeyDerBase64);
+ await fs.writeFile(path.join(root,'browser-extension/manifest.json'),JSON.stringify({...manifest,key:Buffer.from('other').toString('base64')}));
+ await assert.rejects(stageBrowserExtension({root,compile,destination:path.join(root,'out/second')}),/reviewed extension identity/);
+});

@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "Material File Encryptor Download Handoff",
   "version": "0.1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAylelC02fvJLdyBfsQSM40rj8roJoCL9tOCIiVYQsaag0RN5yCmYJYtTQVhiqFIH8EiR2cBDyWUi9Ne7kfliGjvZxIwAfpMnVV5bN6JgeP13ZrKz9MknOpmqMHHwVMf3CjV+ZtuTc5Uq/T/xkoTVtor/MiInw7yBmDnUt+Rjg//cEdSyBGcTQZjwvYIVrcWNoAazibpDXeURqWMrRuymlur9rcAmb6kCyZfYHqHBJYbYj4CgZWf71hfdVaiOHBWLDmvcQBjRrxXCSwrLsTfFu2KQJdzebPh9E2pLccL6k2ShRjyhCUWY4HvK4MMen+j0pop8TdhL3d5gvpPu3BStkhwIDAQAB",
   "description": "Propose a link download to the paired desktop. Transfers start only after desktop confirmation.",
   "icons": {
     "16": "icons/icon-16.png",

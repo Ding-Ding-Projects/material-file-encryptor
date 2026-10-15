@@ -20,6 +20,7 @@ import { explorerCopyPath, registerExplorerCommand } from './explorer-command.js
 import { createUpdateService } from './update-service.js';
 import { createRestartPreparation } from './restart-preparation.js';
 import { createBrowserHandoffLifecycle } from './browser-native-host.js';
+import { handleNativeHostSquirrelEvent } from './browser-host-squirrel.js';
 import { DEFAULT_DRIVE_NAME, normalizeDriveName } from '../shared/drive-name.js';
 import { createPairingCodes } from './browser-pairing-code.js';
 
@@ -362,6 +363,7 @@ if (process.platform === 'win32' && process.argv.includes('--squirrel-uninstall'
   registerExplorerCommand(process.execPath,{remove:true});
 }
 if(process.platform==='win32'&&process.argv.some(arg=>['--squirrel-install','--squirrel-updated'].includes(arg)))registerExplorerCommand(process.execPath);
+if (process.platform === 'win32' && app.isPackaged) handleNativeHostSquirrelEvent({ argv: process.argv, execPath: process.execPath, resourcesPath: process.resourcesPath, userData: app.getPath('userData') });
 if (squirrelStartup || !app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', (_event,args) => {if(window){showWindow();void handleExplorerCopy(args);}});

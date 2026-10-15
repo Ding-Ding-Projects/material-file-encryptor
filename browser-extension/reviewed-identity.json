@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "extensionId": "hfabajdjnmccemhokjnipmaabdpljbbg",
+  "publicKeyDerBase64": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAylelC02fvJLdyBfsQSM40rj8roJoCL9tOCIiVYQsaag0RN5yCmYJYtTQVhiqFIH8EiR2cBDyWUi9Ne7kfliGjvZxIwAfpMnVV5bN6JgeP13ZrKz9MknOpmqMHHwVMf3CjV+ZtuTc5Uq/T/xkoTVtor/MiInw7yBmDnUt+Rjg//cEdSyBGcTQZjwvYIVrcWNoAazibpDXeURqWMrRuymlur9rcAmb6kCyZfYHqHBJYbYj4CgZWf71hfdVaiOHBWLDmvcQBjRrxXCSwrLsTfFu2KQJdzebPh9E2pLccL6k2ShRjyhCUWY4HvK4MMen+j0pop8TdhL3d5gvpPu3BStkhwIDAQAB",
+  "publicKeySha256": "75010939dc224c7ea9d8fc0013fb9116465ad7de9e0102b5874259719b622c7f",
+  "note": "Reviewed identity of the unpacked extension. The matching private key was discarded and is not needed to load an unpacked extension."
+}

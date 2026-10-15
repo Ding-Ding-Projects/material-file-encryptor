@@ -12,6 +12,7 @@ if (!(Test-Path Env:PRIVATE_INSTRUCTIONS_SOURCE)) {
 Invoke-Checked { node scripts/check-vocabulary.mjs }
 function Publish-BrowserHost {
   Invoke-Checked { dotnet publish native/MaterialFileEncryptor.BrowserHost -c Release -r win-x64 --self-contained true -o out/browser-host }
+  Invoke-Checked { node scripts/write-browser-host-config.mjs out/browser-host }
   $browserHostReceipt = @{
     schemaVersion=1; sourceCommit=((& git rev-parse HEAD).Trim()); sourceTree=((& git rev-parse 'HEAD^{tree}').Trim())
     projectSha256=(Get-BootstrapDigest 'native/MaterialFileEncryptor.BrowserHost/MaterialFileEncryptor.BrowserHost.csproj')

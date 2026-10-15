@@ -3,6 +3,7 @@ import path from 'node:path';
 import {createHash,randomUUID} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
+import {computeExtensionId} from '../src/main/browser-host-registration.js';
 import {unsupportedCompletionClaims} from '../src/features/documentation/feature-delivery.mjs';
 
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -53,6 +54,9 @@ export async function stageBrowserExtension({root=process.cwd(),destination=path
  root=await fs.realpath(root);destination=path.resolve(destination);const parent=path.dirname(destination);await fs.mkdir(parent,{recursive:true});const stage=path.join(parent,'.browser-extension-stage-'+randomUUID());await fs.mkdir(path.join(stage,'vendor'),{recursive:true});const sourceFiles=[];let provenanceRecord=null;
  try{
   const manifest=JSON.parse(await fs.readFile(path.join(root,'browser-extension/manifest.json'),'utf8'));if(manifest.manifest_version!==3||manifest.action?.default_popup!=='popup.html'||manifest.background?.service_worker!=='background.js'||JSON.stringify([...manifest.permissions].sort())!==JSON.stringify(['contextMenus','nativeMessaging'].sort())||manifest.host_permissions?.length||(manifest.optional_host_permissions&&JSON.stringify(manifest.optional_host_permissions)!==JSON.stringify(['http://127.0.0.1/*']))||manifest.options_ui&& (manifest.options_ui.page!=='options.html'||manifest.options_ui.open_in_tab!==true))throw new Error('Unsupported browser extension permissions or entrypoints.');
+  // The shipped extension (anything with a workspace page or a pinned key) must carry the reviewed key; minimal fixtures are exempt.
+  if(manifest.options_ui||manifest.key){const reviewedIdentity=JSON.parse(await fs.readFile(path.join(root,'browser-extension/reviewed-identity.json'),'utf8'));
+  if(typeof manifest.key!=='string'||manifest.key!==reviewedIdentity.publicKeyDerBase64||computeExtensionId(Buffer.from(manifest.key,'base64'))!==reviewedIdentity.extensionId)throw new Error('The extension manifest key does not match the reviewed extension identity.');}
   manifest.content_security_policy={extension_pages:"script-src 'self'; object-src 'none'; worker-src 'self'; connect-src https://raw.githubusercontent.com https://api.github.com http://127.0.0.1:*; base-uri 'none';"};
   await fs.writeFile(path.join(stage,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');
   const extensionFiles=['background.js','popup.html','popup.js','popup.css','preferences.js','accent.js','local-records.js',...(manifest.options_ui?['options.html','options.js','options.css','exports.js','history.js','notes.js','schedules.js','vocabulary.js','narration.js','tickets.js','dimsum.js','converter.js','release-code-name.js','local-models.js','rich-text.js','pairing-code.js','publishing.js','publishing-entry.js','servers.js','extension-operations.js','operations-panel.js','operation-journal.js','procedures.js','status-client.js','vocabulary-boundary.js']:[])];
