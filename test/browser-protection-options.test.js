@@ -973,7 +973,7 @@ const home = f => ({home: f.node('home-view').hidden === false, back: f.node('ho
 test('the page has a Home grid with one card per section and no tab bar', () => {
   assert.doesNotMatch(html, /<md-tabs|<md-primary-tab/);
   const cards = [...html.matchAll(/<button type="button" class="home-card" id="tab-([a-z]+)" data-tab="([a-z]+)"[^>]*>(.*?)<\/button>/g)];
-  assert.deepEqual(cards.map(match => match[1]), SECTIONS, 'cards follow the Alt+1 to Alt+9 order');
+  assert.deepEqual(cards.map(match => match[1]), [...SECTIONS, 'publishing'], 'cards follow the Alt+1 to Alt+9 order, then the section without a shortcut');
   for (const [, id, tab, body] of cards) {
     assert.equal(id, tab);
     assert.match(body, /<svg viewBox="0 0 24 24"[^>]*><path d="[^"]+"\/><\/svg>/, id + ' has an icon');

@@ -1,3 +1,7 @@
+// Shape check for a publication request. The page sanitizes the note and the desktop validates it again in full; this worker
+// only refuses a malformed request before it reaches the native channel. browser-extension/publishing.js holds the full validator.
+const PUBLISH_DESTINATIONS=['discussion-comment','project-item-status','publication-draft'],PUBLISH_STATUSES=['todo','in-progress','done'];
+const validatePublishRequest=value=>({ok:Boolean(value)&&typeof value==='object'&&Object.getPrototypeOf(value)===Object.prototype&&Object.keys(value).sort().join(',')==='destination,links,note,projectStatus'&&PUBLISH_DESTINATIONS.includes(value.destination)&&typeof value.note==='string'&&value.note.length>=1&&value.note.length<=2000&&Array.isArray(value.links)&&value.links.length<=5&&value.links.every(link=>typeof link==='string'&&link.length<=500&&link.startsWith('https://'))&&(value.destination==='project-item-status'?PUBLISH_STATUSES.includes(value.projectStatus):value.projectStatus===null)});
 const HOST='org.dingding.material_file_encryptor.downloads';
 // The reviewed list of lockable workspace tabs. src/shared/extension-lock-targets.js holds the same list; a test compares them.
 const LOCK_TABS=['connection','personalization','changelog','notes','docs','support','dimsum','models','status'];
@@ -67,6 +71,17 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{if(sender.id!==c
    if(session!==ownSession||connectionEpoch!==epoch||!value||Object.keys(value).sort().join(',')!=='schemaVersion,state,type'||value.type!=='authenticator-focused'||value.schemaVersion!==1||!['shown','rejected','busy','unavailable'].includes(value.state))throw Error('Invalid authenticator response.');
    respond({schemaVersion:1,state:value.state});
   }).catch(()=>respond({error:'Authenticator request did not complete. Open and unlock the desktop, pair again and retry.'}));return true;
+ }
+ if(message?.type==='publish-progress-request'){
+  if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==2||!validatePublishRequest(message.request).ok){respond({error:'Publication request is unavailable.'});return false;}
+  if(!session){respond({paired:false});return false;}
+  const ownSession=session,epoch=connectionEpoch,wanted=message.request;
+  // The browser sends only the sanitized request. The desktop validates it again, asks its user in a native prompt and
+  // answers with a fixed state word. This worker never contacts a forge and never keeps the note.
+  request({type:'publish-progress',session:ownSession,request:wanted},40000).then(value=>{
+   if(session!==ownSession||connectionEpoch!==epoch||!value||Object.keys(value).sort().join(',')!=='schemaVersion,state,type'||value.type!=='publish-progress-result'||value.schemaVersion!==1||!['approved','rejected','busy','unavailable'].includes(value.state))throw Error('Invalid publication response.');
+   respond({schemaVersion:1,state:value.state});
+  }).catch(()=>respond({error:'Publication request did not complete. Open and unlock the desktop, pair again and retry.'}));return true;
  }
  if(message?.type==='school-mode-read'){
   if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1){respond({error:'School mode request is unavailable.'});return false;}

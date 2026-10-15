@@ -129,6 +129,37 @@ adapter 呼叫會保持缺少 context，唔會借用目前畫面 frame。
 - 鎖定、中斷連線、離開同更新準備都會將待回答提示當作拒絕撤回，要求隨後因為
   配對已經冇咗而失敗。單單拒絕一次唔會撤銷配對。
 
+## 確認範圍：publish-progress
+
+「確認」批准模式嘅第二個範圍係 `publish-progress`。已配對來源只會傳送
+`{type:'publish-progress', session, request}`，其中 `request` 剛好有
+`destination`（`discussion-comment`、`project-item-status` 或者
+`publication-draft`）、`note`、`links` 同 `projectStatus` 呢幾個鍵。擴充功能
+傳送前會先清理備註，桌面亦會喺 `src/shared/publication-request.js`（即擴充功能
+`browser-extension/publishing.js` 嘅副本，有測試比較兩者）再驗證一次。1 至 2000 字元
+但清理器仍然會改動嘅備註、超過五個連結、唔係 https 地址或者主機唔公開、帶帳密或者
+查詢似秘密嘅連結，以及同目的地唔配合嘅狀態，都會喺顯示任何提示之前當作錯誤拒絕。
+處理者係 `src/main/browser-publish-mediation.js`，同其他確認範圍共用唯一嘅提示閘門。
+
+- 原生提示（`src/main/browser-confirm-prompt.js`）會用目前介面語言寫明來源、目的地、
+  相關時嘅項目狀態、已清理備註（顯示時縮短至 600 字元）同每個連結。「拒絕」係預設按鈕，
+  按 Escape 亦代表拒絕。
+- 答案係 `publish-progress-result`，`schemaVersion` 為 1，`state` 係 `approved`、
+  `rejected`、`busy` 或者 `unavailable`。答案永遠唔會包含備註、連結、帳戶名稱、
+  機密或者路徑。`approved` 表示使用者批准之後，桌面嘅發佈途徑剛好回傳 `true`；
+  任何其他途徑結果、錯誤或者冇途徑，都係 `unavailable`。
+- 桌面而家冇討論留言、專案項目或者草稿嘅發佈途徑：`publishProgress` 係可選轉接器，
+  `src/main/main.js` 冇提供。冇轉接器時要求會即時答 `unavailable`，亦唔會顯示提示，
+  所以桌面永遠唔會假裝發佈。專案項目另外需要主機權限，冇權限同樣係 `unavailable`。
+- 同一時間最多只有一個待回答提示。第二個要求會得到 `busy`，唔會排隊。桌面已鎖定、
+  視窗隱藏或者正在關閉，會即時答 `unavailable`。鎖定、中斷連線、離開、更新準備同
+  30 秒期限都會將待回答提示當作拒絕撤回，撤回之後先到嘅批准唔算批准。
+- 擴充功能頁面會將缺少、格式錯誤或者太遲嘅答案當作已逾時，並用淺白文字顯示。
+  呢種情況下冇發佈任何嘢。
+
+呢個範圍只用合成測試資料、假原生程序同替身發佈途徑驗證。冇已安裝桌面、真實代碼平台、
+實際專案或者已擷取嘅原生提示參與，所以未經端到端驗證。
+
 ## 學校模式範圍：read-school-mode 同 set-school-mode
 
 兩個範圍令已配對嘅擴充功能可以查看，同要求更改桌面嘅學校模式。設定由桌面擁有：
@@ -247,7 +278,7 @@ adapter 呼叫會保持缺少 context，唔會借用目前畫面 frame。
 嘅升級，而桌面自己嘅登入同樣會做到呢件事。
 
 設計入面各範圍嘅狀態：`read-lock-state`、`read-update-state`、
-`focus-authenticator`、`read-school-mode`、`set-school-mode`、
+`focus-authenticator`、`publish-progress`、`read-school-mode`、`set-school-mode`、
 `read-element-locks`、`set-element-lock`、`read-unlock-ladder` 同
 `request-unlock-step` 已經喺主程序同擴充功能實作；
 `read-profile-summary` 由受保護中介處理；設計入面其餘候選範圍尚未實作。學校模式、
