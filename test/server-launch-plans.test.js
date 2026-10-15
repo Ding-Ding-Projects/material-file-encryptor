@@ -84,7 +84,8 @@ test('remote command strings are built only from validated, single-quoted substi
   assert.throws(() => remote.logs(ID, 0), /Invalid server command input/);
   assert.throws(() => remote.digest(ID, '../../etc/passwd'), /Invalid server command input/);
   const start = remote.start(ID, javaServerArgs({id: ID, memoryMb: 1024}));
-  assert.match(start, /^cd 'mfe-servers\/managed-[^']+\/data' && setsid nohup java '-Dmfe\.server=managed-/);
+  assert.match(start, /^cd 'mfe-servers\/managed-[^']+\/data' \|\| exit 1; nohup java '-Dmfe\.server=managed-/);
+  assert.ok(start.includes('& echo $! > ../server.pid;'), 'the pid recorded is the pid of java itself, not of a wrapper shell');
   assert.ok(start.includes("'-jar' 'server.jar' 'nogui'"));
   assert.match(remote.status(ID), /grep -qF -- '-Dmfe\.server=managed-/, 'status and stop prove the pid belongs to this server before acting');
   assert.match(remote.stop(ID), /kill -TERM/);

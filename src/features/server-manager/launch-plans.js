@@ -98,18 +98,19 @@ export function sshArgs(endpoint, remoteCommand) {
 export const remote = Object.freeze({
   probe: () => 'echo mfe-ok',
   prepare: id => { const root = shellQuote(remoteRoot(id)); return 'mkdir -p ' + root + '/data && cd ' + root + '/data && test -f eula.txt || printf ' + shellQuote('eula=false\\n') + ' > eula.txt'; },
-  upload: (id, name) => { if (!validRemoteName(name)) refuse(); return 'cd ' + shellQuote(remoteRoot(id) + '/data') + ' && cat > ' + shellQuote(name + '.part') + ' && mv ' + shellQuote(name + '.part') + ' ' + shellQuote(name); },
-  uploadTo: (id, directory, name) => { if (!['plugins', 'mods'].includes(directory) || !validRemoteName(name)) refuse(); return 'cd ' + shellQuote(remoteRoot(id) + '/data') + ' && mkdir -p ' + directory + ' && cat > ' + shellQuote(directory + '/' + name + '.part') + ' && mv ' + shellQuote(directory + '/' + name + '.part') + ' ' + shellQuote(directory + '/' + name); },
+  upload: (id, name) => { if (!validRemoteName(name)) refuse(); return 'cd ' + shellQuote(remoteRoot(id) + '/data') + ' && tee -- ' + shellQuote(name + '.part') + ' > /dev/null && mv ' + shellQuote(name + '.part') + ' ' + shellQuote(name); },
+  uploadTo: (id, directory, name) => { if (!['plugins', 'mods'].includes(directory) || !validRemoteName(name)) refuse(); return 'cd ' + shellQuote(remoteRoot(id) + '/data') + ' && mkdir -p ' + directory + ' && tee -- ' + shellQuote(directory + '/' + name + '.part') + ' > /dev/null && mv ' + shellQuote(directory + '/' + name + '.part') + ' ' + shellQuote(directory + '/' + name); },
   digest: (id, relative) => { if (!/^(?:plugins\/|mods\/)?[A-Za-z0-9._+-]{1,128}$/.test(relative) || relative.includes('..')) refuse(); return 'cd ' + shellQuote(remoteRoot(id) + '/data') + ' && sha256sum -- ' + shellQuote(relative); },
   install: (id, args) => 'cd ' + shellQuote(remoteRoot(id) + '/data') + ' && java ' + args.map(shellQuote).join(' ') + ' > install.log 2>&1',
-  readFile: (id, name) => { if (!validRemoteName(name)) refuse(); return 'cd ' + shellQuote(remoteRoot(id) + '/data') + ' && cat -- ' + shellQuote(name); },
-  writeFile: (id, name) => { if (!validRemoteName(name)) refuse(); return 'cd ' + shellQuote(remoteRoot(id) + '/data') + ' && cat > ' + shellQuote(name + '.part') + ' && mv ' + shellQuote(name + '.part') + ' ' + shellQuote(name); },
+  readFile: (id, name) => { if (!validRemoteName(name)) refuse(); return 'cd ' + shellQuote(remoteRoot(id) + '/data') + ' && head -c 1048576 -- ' + shellQuote(name); },
+  writeFile: (id, name) => { if (!validRemoteName(name)) refuse(); return 'cd ' + shellQuote(remoteRoot(id) + '/data') + ' && tee -- ' + shellQuote(name + '.part') + ' > /dev/null && mv ' + shellQuote(name + '.part') + ' ' + shellQuote(name); },
   findArgsFile: id => 'cd ' + shellQuote(remoteRoot(id) + '/data') + ' && find libraries -name unix_args.txt -print -quit 2>/dev/null',
   javaVersion: () => 'java -version 2>&1',
-  /** Starts detached and records the pid. The -Dmfe.server marker lets stop and status prove the pid is this server. */
-  start: (id, javaArgs) => { const root = shellQuote(remoteRoot(id) + '/data'); return 'cd ' + root + ' && setsid nohup java ' + javaArgs.map(shellQuote).join(' ') + ' > console.log 2>&1 < /dev/null & echo $! > ../server.pid; sleep 1; cat ../server.pid'; },
-  status: id => 'pid=$(cat ' + shellQuote(remoteRoot(id) + '/server.pid') + ' 2>/dev/null); if [ -n "$pid" ] && ps -o args= -p "$pid" 2>/dev/null | grep -qF -- ' + shellQuote(markerFor(id)) + '; then echo running; else echo stopped; fi',
-  stop: id => 'pid=$(cat ' + shellQuote(remoteRoot(id) + '/server.pid') + ' 2>/dev/null); if [ -n "$pid" ] && ps -o args= -p "$pid" 2>/dev/null | grep -qF -- ' + shellQuote(markerFor(id)) + '; then kill -TERM "$pid" && echo stopping; else echo stopped; fi',
+  /** Starts detached and records the pid of java itself (nohup execs java, so `$!` is its pid). The -Dmfe.server marker lets
+   * stop and status prove a pid belongs to this server before acting on it. */
+  start: (id, javaArgs) => { const root = shellQuote(remoteRoot(id) + '/data'); return 'cd ' + root + ' || exit 1; nohup java ' + javaArgs.map(shellQuote).join(' ') + ' > console.log 2>&1 < /dev/null & echo $! > ../server.pid; sleep 1; head -n 1 ../server.pid'; },
+  status: id => 'pid=$(head -n 1 ' + shellQuote(remoteRoot(id) + '/server.pid') + ' 2>/dev/null); if [ -n "$pid" ] && ps -o args= -p "$pid" 2>/dev/null | grep -qF -- ' + shellQuote(markerFor(id)) + '; then echo running; else echo stopped; fi',
+  stop: id => 'pid=$(head -n 1 ' + shellQuote(remoteRoot(id) + '/server.pid') + ' 2>/dev/null); if [ -n "$pid" ] && ps -o args= -p "$pid" 2>/dev/null | grep -qF -- ' + shellQuote(markerFor(id)) + '; then kill -TERM "$pid" && echo stopping; else echo stopped; fi',
   logs: (id, lines) => { if (!Number.isSafeInteger(lines) || lines < 1 || lines > 500) refuse(); return 'cd ' + shellQuote(remoteRoot(id) + '/data') + ' && tail -n ' + lines + ' -- logs/latest.log 2>/dev/null || tail -n ' + lines + ' -- console.log'; },
   docker: args => 'docker ' + args.map(shellQuote).join(' '),
   /** The container needs an absolute bind source, so the remote shell expands $PWD of the server directory. */

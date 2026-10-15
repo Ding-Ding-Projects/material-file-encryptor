@@ -51,7 +51,7 @@ async function harness({fetchRoutes = routes(), license = true, key = null, exte
       if (cmd === 'echo mfe-ok') return {stdout: 'mfe-ok\n', stderr: ''};
       if (cmd.includes('sha256sum')) return {stdout: world.remoteDigest + '  file\n', stderr: ''};
       if (cmd.startsWith('java -version')) return {stdout: '', stderr: world.javaStderr};
-      if (cmd.includes('setsid nohup')) { world.remoteRunning = true; return {stdout: '321\n', stderr: ''}; }
+      if (cmd.includes('nohup java')) { world.remoteRunning = true; return {stdout: '321\n', stderr: ''}; }
       if (cmd.includes('kill -TERM')) { world.remoteRunning = false; return {stdout: 'stopping\n', stderr: ''}; }
       if (cmd.includes('echo running')) return {stdout: (world.remoteRunning ? 'running' : 'stopped') + '\n', stderr: ''};
       if (cmd.includes('find libraries')) return {stdout: 'libraries/net/minecraftforge/forge/' + FORGE_ID + '/unix_args.txt\n', stderr: ''};
@@ -230,7 +230,7 @@ test('ssh process: key chosen in a native chooser stays in the main process, hos
     assert.match(text, /StrictHostKeyChecking=yes/); assert.match(text, /BatchMode=yes/); assert.ok(call.args.includes(keyFile)); assert.ok(!call.options.shell);
     assert.equal(call.args.at(-2), 'play.example.org');
   }
-  const upload = h.spawn.calls.find(call => call.file === 'ssh' && /cat > 'server\.jar\.part'/.test(call.args.at(-1)));
+  const upload = h.spawn.calls.find(call => call.file === 'ssh' && /tee -- 'server\.jar\.part'/.test(call.args.at(-1)));
   assert.ok(upload, 'the verified jar is streamed over the ssh stdin');
   await h.call('acceptServerLicense', {serverId: server.serverId});
   assert.equal((await h.call('startServer', {serverId: server.serverId})).state, 'running');
@@ -265,7 +265,7 @@ test('ssh process with Forge runs the documented installer remotely and launches
   assert.match(install.args.at(-1), /^cd 'mfe-servers\/managed-[^']+\/data' && java '-jar' 'installer\.jar' '--installServer' > install\.log 2>&1$/);
   await h.call('acceptServerLicense', {serverId: server.serverId});
   await h.call('startServer', {serverId: server.serverId});
-  const start = h.execFile.calls.find(call => call.file === 'ssh' && /setsid nohup/.test(call.args.at(-1)));
+  const start = h.execFile.calls.find(call => call.file === 'ssh' && /nohup java/.test(call.args.at(-1)));
   assert.match(start.args.at(-1), /'@user_jvm_args\.txt' '@libraries\/net\/minecraftforge\/forge\/1\.21\.1-52\.0\.2\/unix_args\.txt' 'nogui'/);
 });
 
