@@ -1,4 +1,5 @@
 import {ACCESS_HOST_ACTIONS,validateAccessHostRequest} from './access-host.js';
+import {normalizeDriveName} from '../shared/drive-name.js';
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
 export const WORKFLOW_DESKTOP_ACTIONS = Object.freeze(['owners','accountState','signInAccount','refreshAccount','setActiveAccount','signOutAccount','preparePublication','publishPublication','cancelPublication','browserProposals','prepareCapturedDownload','cancelBrowserProposal']);
 export function validateWorkflowAdmission(action, {locked,lockVerified,quitPending,shuttingDown,updateInstallLease} = {}) {
@@ -63,8 +64,8 @@ export function validateRequest(method, value = {}) {
     return validateFeatureRequest(value.feature, value.action, value.payload, { browser: true });
   }
   const schemas = {
-    getState: {}, buildMetadata: {}, browserPairing: {}, mount: { driveLetter: 'drive?' }, unmount: {}, chooseFiles: {}, chooseExport: { name: 'path' }, importSelected: { paths: 'paths' }, startImport: { paths: 'paths' }, operations: {}, storageDiagnostics: {}, startPacking: { path: 'relative?', partSizeBytes: 'size?' }, cancelOperation: { operationId: 'path' }, forceLock: { language: 'language?' }, quit: {}, listFiles: { cursor: 'nonnegative?', limit: 'page?', revision: 'nonnegative?' }, listVersionLabels: { entryId: 'path' }, listActivity: { entryId: 'path?', cursor: 'path?', limit: 'page?', action: 'short?', from: 'short?', to: 'short?', fromUtc:'short?',toUtc:'short?',pattern:'short?' }, previewVersion: { versionId: 'path' }, labelVersion: { versionId: 'path', label: 'short' }, exportVersion: { versionId: 'path' }, exportText: { name: 'filename', mime: 'mime', content: 'text' }, fileAction: { id: 'path', action: 'fileAction', destination: 'path?' }, resplitAll: {}, createVault: { storageDir: 'path', cacheDir: 'path', driveLetter: 'drive', password: 'password?', keyFilePath: 'path?', partSizeBytes: 'size', transport: 'transport?', remoteRepository: 'repository?', autoUnlock: 'boolean?' },
-    unlockVault: { storageDir: 'path', cacheDir: 'path', driveLetter: 'drive', password: 'password?', keyFilePath: 'path?', transport: 'transport?', remoteRepository: 'repository?', autoUnlock: 'boolean?' },
+    getState: {}, buildMetadata: {}, browserPairing: {}, mount: { driveLetter: 'drive?', driveName: 'driveName?' }, unmount: {}, chooseFiles: {}, chooseExport: { name: 'path' }, importSelected: { paths: 'paths' }, startImport: { paths: 'paths' }, operations: {}, storageDiagnostics: {}, startPacking: { path: 'relative?', partSizeBytes: 'size?' }, cancelOperation: { operationId: 'path' }, forceLock: { language: 'language?' }, quit: {}, listFiles: { cursor: 'nonnegative?', limit: 'page?', revision: 'nonnegative?' }, listVersionLabels: { entryId: 'path' }, listActivity: { entryId: 'path?', cursor: 'path?', limit: 'page?', action: 'short?', from: 'short?', to: 'short?', fromUtc:'short?',toUtc:'short?',pattern:'short?' }, previewVersion: { versionId: 'path' }, labelVersion: { versionId: 'path', label: 'short' }, exportVersion: { versionId: 'path' }, exportText: { name: 'filename', mime: 'mime', content: 'text' }, fileAction: { id: 'path', action: 'fileAction', destination: 'path?' }, resplitAll: {}, createVault: { storageDir: 'path', cacheDir: 'path', driveLetter: 'drive', password: 'password?', keyFilePath: 'path?', partSizeBytes: 'size', transport: 'transport?', remoteRepository: 'repository?', autoUnlock: 'boolean?', driveName: 'driveName?' },
+    unlockVault: { storageDir: 'path', cacheDir: 'path', driveLetter: 'drive', driveName: 'driveName?',password: 'password?', keyFilePath: 'path?', transport: 'transport?', remoteRepository: 'repository?', autoUnlock: 'boolean?' },
     lockVault: {}, selectFolder: { kind: 'kind' }, selectKeyFile: {}, createKeyFile: { storageDir: 'path?', cacheDir: 'path?' },
     importFiles: {}, openExplorer: {}, openFile: { path: 'relative' }, exportFile: { path: 'relative' },
     keepOffline: { path: 'relative' }, releaseOffline: { path: 'relative' }, setPartSize: { partSizeBytes: 'size' },
@@ -96,6 +97,7 @@ export function validateRequest(method, value = {}) {
     else if (type === 'performance') valid = ['responsive','throughput'].includes(item);
     else if (type === 'size') valid = Number.isSafeInteger(item) && item >= 1024 && item <= 90000000;
     else if (type === 'drive') valid = typeof item === 'string' && /^[D-Z]:?$/i.test(item);
+    else if (type === 'driveName') valid = normalizeDriveName(item) !== null;
     else if (type === 'kind') valid = ['storage', 'cache'].includes(item);
     else if (type === 'window') valid = ['minimize', 'maximize', 'close'].includes(item);
     else if (type === 'url') valid = ['https://github.com/Ding-Ding-Projects/material-file-encryptor', 'https://winfsp.dev/', 'https://ding-ding-projects.github.io/material-file-encryptor/'].includes(item);
@@ -108,7 +110,11 @@ export function validateRequest(method, value = {}) {
   }
   if (['createVault', 'unlockVault', 'upgradeVault'].includes(method) && Boolean(value.password) === Boolean(value.keyFilePath)) throw new Error('Choose either a password or a key file.');
   if (['createVault','unlockVault','upgradeVault'].includes(method) && value.transport === 'privateGit' && !value.remoteRepository) throw new Error('Enter the private repository as owner/repository.');
-  return value.driveLetter === undefined ? value : { ...value, driveLetter: value.driveLetter[0].toUpperCase() + ':' };
+  const normalized = { ...value };
+  if (value.driveLetter !== undefined) normalized.driveLetter = value.driveLetter[0].toUpperCase() + ':';
+  if (value.driveName === undefined || value.driveName === null) delete normalized.driveName;
+  else normalized.driveName = normalizeDriveName(value.driveName);
+  return normalized;
 }
 export function trustedFrame(event, window, rendererURL) {
   return Boolean(window && event.sender === window.webContents && event.senderFrame === window.webContents.mainFrame && event.senderFrame.url === rendererURL);

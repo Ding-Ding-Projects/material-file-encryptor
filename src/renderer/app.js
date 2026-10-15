@@ -1,5 +1,6 @@
 import {createStartupSurprise,observeStartupInteraction} from '../shared/local-ux/surprise.js';
 import {plainErrorMessage} from '../shared/ipc-error.js';
+import {DEFAULT_DRIVE_NAME,DRIVE_NAME_MAX_LENGTH,normalizeDriveName} from '../shared/drive-name.js';
 import {createStartupPresentation} from './features/shell/startup-surprise.js';
 import {createNotificationNarration} from './features/shell/notification-narration.js';
 import {control,prepareControl,controlKind,CONTROL_SELECTOR,setControlLanguage} from '../shared/surface/controls.js';
@@ -164,7 +165,11 @@ function renderAvailability() {
  const upgradingOwnedLetter = dialogMode === 'upgrade' && state?.storageFormat === 1 && state?.locked === false && state?.mounted === true && letter === normalizedDriveLetter(state.driveLetter);
  const validLetter = /^[D-Z]$/.test(letter) && !state?.driver?.checking && (!available.length || available.includes(letter) || upgradingOwnedLetter);
  $('drive-letter').setCustomValidity(validLetter ? '' : t('Choose an available drive letter'));
- $('dialog-submit').disabled = busy || !validLetter;
+ const validName = normalizeDriveName($('drive-name').value) !== null;
+ $('drive-name').setCustomValidity(validName ? '' : t(DRIVE_NAME_ERROR));
+ $('drive-name-error').hidden = validName; setText('drive-name-error',DRIVE_NAME_ERROR);
+ $('drive-name-count').textContent = `${$('drive-name').value.trim().length} / ${DRIVE_NAME_MAX_LENGTH}`;
+ $('dialog-submit').disabled = busy || !validLetter || !validName;
  for (const id of ['save-version','empty-recycle','restore-recycled','history-retention-apply']) if ($(id)) $(id).disabled = busy || !unlocked;
  if ($('restore-recycled')) $('restore-recycled').disabled ||= !recycledSelection.size;
 }
@@ -273,6 +278,7 @@ function updateDialog() {
  $('password-input').required = !isKey; $('confirm-password').required = creating && !isKey; $('key-path').required = isKey;
  $('password-input').autocomplete = creating ? 'new-password' : 'current-password';
 }
+const DRIVE_NAME_ERROR = 'Use 1 to 32 characters. Slashes, colons, asterisks, question marks, quotes, angle brackets, vertical bars and control characters are not allowed.';
 const normalizedDriveLetter = value => /^[A-Z]:?$/i.test(String(value || '')) ? String(value)[0].toUpperCase() : '';
 function closeDrivePicker() {
  $('drive-letter-options').hidden = true;
@@ -332,6 +338,7 @@ function openVaultDialog(mode) {
  $('transport-mode').value=state?.transport?.mode || 'folder'; $('remote-repository').value=state?.transport?.remoteRepository || ''; $('private-git-fields').hidden=$('transport-mode').value!=='privateGit';
  $('password-input').type = 'password'; $('show-password').setAttribute('aria-pressed','false'); setText('show-password','Show');
  updateDriveLetters(false);
+ $('drive-name').value = normalizeDriveName(state?.driveName) || normalizeDriveName(state?.defaults?.driveName) || DEFAULT_DRIVE_NAME;
  updateDialog(); renderAvailability(); $('vault-dialog').showModal(); $('storage-input').focus();
 }
 function closeVaultDialog() { if (busy) return; closeDrivePicker(); $('vault-dialog').close(); $('password-input').value = ''; $('confirm-password').value = ''; $('key-path').value = ''; }
@@ -365,6 +372,7 @@ listen('drive-letter','input',() => {
  driveLetterEdited = true; $('drive-letter').value = $('drive-letter').value.toUpperCase();
  activeDriveLetter = normalizedDriveLetter($('drive-letter').value); markDriveOption(); renderAvailability();
 });
+listen('drive-name','input',() => renderAvailability());
 listen('drive-letter-toggle','click',() => { if ($('drive-letter-options').hidden) openDrivePicker(); else { closeDrivePicker(); $('drive-letter').focus(); } });
 $('drive-letter-options').addEventListener('mousedown',event => event.preventDefault());
 listen('drive-letter-options','click',event => { const option = event.target.closest('[data-letter]'); if (option) chooseDriveLetter(option.dataset.letter); });
@@ -389,6 +397,9 @@ listen('vault-form','submit',async event => {
  const isKey = [...document.querySelectorAll('[name=credential-mode]')].find(node=>node.checked).value === 'keyFile';
  if (!isKey && dialogMode !== 'unlock' && $('password-input').value !== $('confirm-password').value) return showError('The passwords do not match.',true);
  const options = {transport:$('transport-mode').value,storageDir:$('storage-input').value,cacheDir:$('cache-input').value,driveLetter:`${normalizedDriveLetter($('drive-letter').value)}:`};
+ const driveName = normalizeDriveName($('drive-name').value);
+ if (driveName === null) return showError(t(DRIVE_NAME_ERROR),true);
+ options.driveName = driveName;
  if (options.transport === 'privateGit') { options.remoteRepository = $('remote-repository').value.trim(); if (!/^[A-Za-z0-9][A-Za-z0-9-]{0,38}\/[A-Za-z0-9_.-]{1,100}$/.test(options.remoteRepository)) return showError(t('Enter owner/repository.'),true); }
  if (isKey) options.keyFilePath = $('key-path').value; else options.password = $('password-input').value;
  if (dialogMode !== 'unlock') { try { options.partSizeBytes = parsePartSize($('create-split-value').value,$('create-split-unit').value); } catch(error) { return showError(error,true); } }
@@ -397,7 +408,7 @@ listen('vault-form','submit',async event => {
  if (result?.ok) closeVaultDialog();
 });
 listen('lock-button','click',() => run('Locking drive…',() => api.lock(),'Drive locked.'));
-listen('mount-button','click',() => run('Mounting drive…',() => api.mount({driveLetter:state.driveLetter || state.defaults?.driveLetter}),'Drive unlocked.'));
+listen('mount-button','click',() => run('Mounting drive…',() => api.mount({driveLetter:state.driveLetter || state.defaults?.driveLetter,...(normalizeDriveName(state.driveName) ? {driveName:normalizeDriveName(state.driveName)} : {})}),'Drive unlocked.'));
 listen('project-website-link','click',() => api.openExternal('https://ding-ding-projects.github.io/material-file-encryptor/'));
 listen('winfsp-link','click',() => api.openExternal('https://winfsp.dev/'));
 listen('install-driver','click',() => run('Working…',() => api.installDriver()));

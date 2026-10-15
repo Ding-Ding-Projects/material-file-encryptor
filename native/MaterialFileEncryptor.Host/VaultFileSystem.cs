@@ -32,8 +32,13 @@ internal sealed class VaultFileSystem : FileSystemBase
     public int ActiveIoSnapshot => Volatile.Read(ref activeIo);
     public int ActiveHandles { get { lock (gate) return activeHandles; } }
 
-    public VaultFileSystem(VaultEngine vault, object gate)
+    private readonly string volumeLabel;
+
+    public VaultFileSystem(VaultEngine vault, object gate) : this(vault, gate, "Material Files") { }
+
+    public VaultFileSystem(VaultEngine vault, object gate, string volumeLabel)
     {
+        this.volumeLabel = volumeLabel;
         this.vault = vault;
         this.gate = gate;
         cacheVolumeRoot = System.IO.Path.GetPathRoot(vault.CacheRoot) ?? throw new InvalidOperationException("Cache volume root is unavailable.");
@@ -154,7 +159,7 @@ internal sealed class VaultFileSystem : FileSystemBase
             info.FreeSize = (ulong)drive.AvailableFreeSpace;
         }
         catch { return STATUS_DEVICE_NOT_READY; }
-        info.SetVolumeLabel("Material Files");
+        info.SetVolumeLabel(volumeLabel);
         return STATUS_SUCCESS;
     }
     public override int GetSecurityByName(string name, out uint attributes, ref byte[] descriptor)

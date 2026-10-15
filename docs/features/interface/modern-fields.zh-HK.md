@@ -14,6 +14,7 @@
 | 儲存資料夾 | `storage-input` | 文字 |
 | 快取資料夾 | `cache-input` | 文字 |
 | 磁碟代號 | `drive-letter` | 文字組合框 |
+| 磁碟名稱 | `drive-name` | 文字 |
 | 密碼 | `password-input` | 密碼，可用既有控制顯示 |
 | 確認 | `confirm-password` | 密碼 |
 | 金鑰檔路徑 | `key-path` | 文字 |

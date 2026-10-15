@@ -1,4 +1,5 @@
 import {CONTROL_SELECTOR} from '../src/shared/surface/controls.js';
+import {DRIVE_NAME_MAX_LENGTH,normalizeDriveName} from '../src/shared/drive-name.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -15,7 +16,8 @@ function fixture() {
   if (!elements.has(id)) elements.set(id, {value: '', setCustomValidity(value) { this.validationMessage = value; }, querySelectorAll: () => []});
   return elements.get(id);
  };
- const context = vm.createContext({CONTROL_SELECTOR,historySelection:null,$, document: {querySelectorAll: () => []}, t: value => value, api: {}, pagedFiles: null, selected: null, busy: false, dialogMode: 'upgrade', recycledSelection: new Set(), state: {locked: false, mounted: true, storageFormat: 1, driveLetter: 'M:', availableDriveLetters: ['N:'], driver: {checking: false}}});
+ $('drive-name').value = 'Material Files';
+ const context = vm.createContext({CONTROL_SELECTOR,normalizeDriveName,DRIVE_NAME_MAX_LENGTH,DRIVE_NAME_ERROR:'Invalid drive name',setText(id,text) { $(id).textContent = text; },historySelection:null,$, document: {querySelectorAll: () => []}, t: value => value, api: {}, pagedFiles: null, selected: null, busy: false, dialogMode: 'upgrade', recycledSelection: new Set(), state: {locked: false, mounted: true, storageFormat: 1, driveLetter: 'M:', availableDriveLetters: ['N:'], driver: {checking: false}}});
  vm.runInContext(normalize + '\n' + render, context);
  return {context, check(letter, enabled, valid = enabled) {
   $('drive-letter').value = letter;
@@ -48,4 +50,17 @@ test('busy upgrade stays disabled and free letters retain normal create and unlo
   f.context.dialogMode = mode;
   f.check('N:', true); f.check('M:', false);
  }
+});
+
+test('an invalid drive name blocks submit and shows the inline error, a valid one restores it', () => {
+ const f = fixture(); f.context.dialogMode = 'create';
+ const name = f.context.$('drive-name');
+ for (const bad of ['', '   ', 'x'.repeat(33), 'a|b', 'a:b', 'a\u0001b']) {
+  name.value = bad; f.check('N:', false, true);
+  assert.equal(name.validationMessage, 'Invalid drive name');
+  assert.equal(f.context.$('drive-name-error').hidden, false);
+ }
+ name.value = 'x'.repeat(32); f.check('N:', true);
+ assert.equal(f.context.$('drive-name-error').hidden, true);
+ assert.equal(f.context.$('drive-name-count').textContent, '32 / 32');
 });

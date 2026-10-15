@@ -169,8 +169,8 @@
     {
       "source": "docs/features/drive/README.md",
       "translation": "docs/features/drive/README.zh-HK.md",
-      "sourceSha256": "1788fa2997b0a4fb0ffed2fe8f784ac615a39628a498fbd9a0031c88db1dced0",
-      "translationSha256": "10016a8d600c196166f9b047db2ea773c6dfac9d7033f6a0b8d2670f0ae7a63d"
+      "sourceSha256": "22f98f0c296d7dccb81b7e5a2b4b403d4a73d04248a21b1f717104f9876a7c79",
+      "translationSha256": "2ea664c8f3f9603c66b7ec89022a182b1d8b14283162c35cac4142c5d3c20a57"
     },
     {
       "source": "docs/features/interface/animation-transition.md",
@@ -235,8 +235,8 @@
     {
       "source": "docs/features/interface/modern-fields.md",
       "translation": "docs/features/interface/modern-fields.zh-HK.md",
-      "sourceSha256": "4b8921598ac19b7cba218e7cc8c4cd5bfad5bb044b9ae96650bc000be40c8edd",
-      "translationSha256": "2bbdb02f5962a690fce0d34e9b098c1a0ac5ee7ddbd91eda53831c2ceedb907e"
+      "sourceSha256": "fa52794cc59b29cc412bbe46a235ff5f4bf9ca6f3f5bf6d1aa5f01ca7db29565",
+      "translationSha256": "028a30a5b3a8df0805c0119c15e7ec00a17ada74abd546f5285076b0528928b3"
     },
     {
       "source": "docs/features/interface/motion-keyframes.md",

@@ -287,7 +287,23 @@ static class Regression
         }
         finally { ((IDisposable)controller).Dispose(); foreach(var file in Directory.EnumerateFiles(root,"*",SearchOption.AllDirectories))File.SetAttributes(file,FileAttributes.Normal); Directory.Delete(root,true); }
     }
-    public static async Task Main() { Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); await PartialHistoryRetry(); await OfflineUnlock(); await HistorySubprocessCallback(); await FilesystemHydrationCallback(); await RestoreBackgroundHistory(); }
+    static string? DriveName(string? value)
+    {
+        try { return (string?)ControllerType.GetMethod("ValidateDriveName",BindingFlags.Static|BindingFlags.NonPublic|BindingFlags.Public)!.Invoke(null,new object?[]{value}); }
+        catch(TargetInvocationException error) when(error.InnerException is ArgumentException) { return null; }
+    }
+    static void DriveNames()
+    {
+        Assert(DriveName(null)=="Material Files","Absent drive name did not default");
+        Assert(DriveName("  Work Vault  ")=="Work Vault","Valid drive name was not trimmed and accepted");
+        Assert(DriveName("A")=="A" && DriveName(new string('x',32))!=null,"Boundary drive names were rejected");
+        Assert(DriveName("")==null && DriveName("   ")==null,"Empty drive name was accepted");
+        Assert(DriveName(new string('x',33))==null,"A 33 character drive name was accepted");
+        foreach(char bad in "\\/:*?\"<>|") Assert(DriveName("a"+bad+"b")==null,$"Forbidden character {bad} was accepted");
+        Assert(DriveName("a\u0001b")==null && DriveName("a\nb")==null,"Control character was accepted");
+        Console.WriteLine("PASS drive name defaults, trims, and rejects empty, long, control, and forbidden values");
+    }
+    public static async Task Main() { DriveNames(); Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); await PartialHistoryRetry(); await OfflineUnlock(); await HistorySubprocessCallback(); await FilesystemHydrationCallback(); await RestoreBackgroundHistory(); }
     sealed class ImmediateTransport : IVaultTransport
     {
         public Task InitializeAsync(CancellationToken ct=default)=>Task.CompletedTask;

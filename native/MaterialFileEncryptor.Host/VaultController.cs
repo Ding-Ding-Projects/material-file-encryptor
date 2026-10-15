@@ -17,6 +17,7 @@ internal sealed partial class VaultController : IDisposable
     private VaultFileSystem? fileSystem;
     private string? storageDir, cacheDir, identity;
     private string driveLetter = "M:";
+    private string driveName = DefaultDriveName;
     private string? registeredDriveLetter;
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern uint QueryDosDeviceW(string deviceName, StringBuilder targetPath, uint maximum);
@@ -105,7 +106,7 @@ internal sealed partial class VaultController : IDisposable
             }
             var snapshot = new
             {
-                locked = vault is null, mounted = host is not null, unmountBusy, driveLetter, storageDir, cacheDir, files, revision = vault?.Revision ?? -1, filesRevision = vault?.Revision ?? -1, historyRevision = revision, operations = operations.Snapshot(),
+                locked = vault is null, mounted = host is not null, unmountBusy, driveLetter, driveName, storageDir, cacheDir, files, revision = vault?.Revision ?? -1, filesRevision = vault?.Revision ?? -1, historyRevision = revision, operations = operations.Snapshot(),
                 packing = PackingInfo(),
                 partSizeBytes = vault?.PartSizeBytes ?? 80L * 1024 * 1024, lastOfflineRelease, mountDiagnostic = cachedMountDiagnostic,
                 sync = new { running = syncing, lastSync, error = fileSystem?.LastError ?? syncError ?? (vault?.Status.LastError is null ? null : "Encrypted storage synchronization needs attention."), pendingCommits = vault?.Status.PendingCommits ?? 0, pendingLocalFrames = vault?.JournalStatistics.PendingFrames ?? 0, sourceAvailable = vault?.Status.IsSourceAvailable ?? false },
@@ -303,6 +304,7 @@ internal sealed partial class VaultController : IDisposable
         if (selectedTransport is not ("folder" or "privateGit")) throw new ArgumentException("Choose a supported transfer method.");
         var options = new VaultOptions { StorageRoot = System.IO.Path.GetFullPath(RequiredString(args, "storageDir")), CacheRoot = System.IO.Path.GetFullPath(RequiredString(args, "cacheDir")), PartSizeBytes = OptionalLong(args, "partSizeBytes") ?? 80L * 1024 * 1024 };
         string chosenDrive = ValidateDrive(OptionalString(args, "driveLetter") ?? driveLetter);
+        string chosenName = ValidateDriveName(OptionalString(args, "driveName") ?? driveName);
         string? selectedRepository = OptionalString(args, "remoteRepository");
         string historyIdentity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(options.StorageRoot.ToUpperInvariant() + "|" + selectedTransport + "|" + selectedRepository))).ToLowerInvariant();
         string historyRoot = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MaterialFileEncryptor-Data", "History", historyIdentity);
@@ -367,7 +369,7 @@ internal sealed partial class VaultController : IDisposable
         }
         engineGeneration++;
         cachedFileRevision = -2; cachedHistoryRevision = -2;
-        vault = opened; storageDir = options.StorageRoot; cacheDir = options.CacheRoot; identity = opened.VaultId; driveLetter = chosenDrive;
+        vault = opened; storageDir = options.StorageRoot; cacheDir = options.CacheRoot; identity = opened.VaultId; driveLetter = chosenDrive; driveName = chosenName;
         transportMode = selectedTransport; remoteRepository = OptionalString(args, "remoteRepository");
         transportAvailable = connected; pendingPrivatePublication = selectedTransport == "privateGit";
         transport = selectedBackend; historyStore = selectedHistory; historyPending = true;
@@ -397,6 +399,7 @@ internal sealed partial class VaultController : IDisposable
             foreach (string existing in new[] { storageDir!, cacheDir! })
                 if (IsWithin(target, existing) || IsWithin(existing, target)) throw new ArgumentException("Upgrade folders must be separate from both original folders.");
         _ = ValidateDrive(OptionalString(args, "driveLetter") ?? driveLetter);
+        _ = ValidateDriveName(OptionalString(args, "driveName") ?? driveName);
         string selectedTransport = OptionalString(args, "transport") ?? "folder";
         if (selectedTransport is not ("folder" or "privateGit")) throw new ArgumentException("Choose a supported transfer method.");
         string? password = OptionalString(args, "password"), keyPath = OptionalString(args, "keyFilePath");
@@ -429,7 +432,8 @@ internal sealed partial class VaultController : IDisposable
         if (!driverAvailable) throw new InvalidOperationException(driverError);
         string selected = ValidateDrive(OptionalString(args, "driveLetter") ?? driveLetter);
         if (!FreeDriveLetters().Contains(selected, StringComparer.OrdinalIgnoreCase)) throw new InvalidOperationException("That drive letter is already in use.");
-        var adapter = new VaultFileSystem(Engine, gate);
+        string selectedName = ValidateDriveName(OptionalString(args, "driveName") ?? driveName);
+        var adapter = new VaultFileSystem(Engine, gate, selectedName);
         var mountedHost = new FileSystemHost(adapter);
         try
         {
@@ -439,7 +443,7 @@ internal sealed partial class VaultController : IDisposable
             if (result < 0) throw new InvalidOperationException("WinFsp could not mount the encrypted drive. Check the driver installation and drive letter.");
             string actualMountPoint = mountedHost.MountPoint();
             registeredDriveLetter = actualMountPoint is { Length: 2 } && actualMountPoint[0] is >= 'A' and <= 'Z' && actualMountPoint[1] == ':' ? actualMountPoint : null;
-            host = mountedHost; fileSystem = adapter; driveLetter = selected; unmountBusy = false;
+            host = mountedHost; fileSystem = adapter; driveLetter = selected; driveName = selectedName; unmountBusy = false;
         }
         catch { mountedHost.Dispose(); throw; }
     }
@@ -635,6 +639,17 @@ internal sealed partial class VaultController : IDisposable
         finally { historyOperations.Release(); }
     }
     private static bool IsWithin(string child, string parent) => child.Equals(parent, StringComparison.OrdinalIgnoreCase) || child.StartsWith(parent.TrimEnd(System.IO.Path.DirectorySeparatorChar) + System.IO.Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+    internal const string DefaultDriveName = "Material Files";
+    // The NTFS and WinFsp volume label limit is 32 characters. The renderer checks the same rules, but this is the check that counts.
+    internal static string ValidateDriveName(string? value)
+    {
+        if (value is null) return DefaultDriveName;
+        value = value.Trim();
+        if (value.Length is < 1 or > 32) throw new ArgumentException("The drive name must be 1 to 32 characters.");
+        foreach (char c in value)
+            if (char.IsControl(c) || "\\/:*?\"<>|".IndexOf(c) >= 0) throw new ArgumentException("The drive name cannot contain control characters or any of \\ / : * ? \" < > |.");
+        return value;
+    }
     private static string ValidateDrive(string value)
     {
         value = value.Trim().TrimEnd('\\').ToUpperInvariant();

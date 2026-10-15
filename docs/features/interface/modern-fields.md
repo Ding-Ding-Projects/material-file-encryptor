@@ -14,6 +14,7 @@ Every editable text field receives a clear button, including fields inserted aft
 | Storage folder | `storage-input` | Text |
 | Cache folder | `cache-input` | Text |
 | Drive letter | `drive-letter` | Text combobox |
+| Drive name | `drive-name` | Text |
 | Password | `password-input` | Password, optionally shown by existing control |
 | Confirmation | `confirm-password` | Password |
 | Key file path | `key-path` | Text |

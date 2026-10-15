@@ -36,9 +36,9 @@ https://github.com/winfsp/winfsp
 | 方法 | 參數 |
 | --- | --- |
 | `status` | 無 |
-| `create`, `unlock` | `storageDir`, `cacheDir`, `driveLetter`；`password` 同 `keyFilePath` 恰好一個；可選 `autoUnlock`, `partSizeBytes` |
+| `create`, `unlock` | `storageDir`, `cacheDir`, `driveLetter`；`password` 同 `keyFilePath` 恰好一個；可選 `driveName`, `autoUnlock`, `partSizeBytes` |
 | `autoUnlock` | `storageDir`, `cacheDir`, `driveLetter`；使用目前使用者保存嘅 DPAPI 金鑰 |
-| `mount` | 可選 `driveLetter`；需要已解鎖保管庫同可用驅動 |
+| `mount` | 可選 `driveLetter`, `driveName`；需要已解鎖保管庫同可用驅動 |
 | `unmount` | 無；保留已解鎖引擎 |
 | `lock` | 無；正常卸載、flush，同清除引擎金鑰 |
 | `importFiles` | `paths`：使用者選定原檔路徑陣列 |
@@ -51,7 +51,9 @@ https://github.com/winfsp/winfsp
 
 Create 同 unlock 驗證保管庫；mount 係另一個請求。掛載後桌面經 Explorer 開啟 `driveLetter + "\\"`。
 
-狀態包含 `locked`、`mounted`、`unmountBusy`、`driveLetter`、`storageDir`、`cacheDir`、`files`、`partSizeBytes`、`sync`、`driver`、`autoUnlock`、`availableDriveLetters` 同 `lastOfflineRelease`。成功離線釋放記錄虛擬 `path` 同實際 `bytesFreed`；零代表冇移除合適本機密文。針對性釋放會保留有修改、待處理、釘選、開啟同共享內容，刪除前驗證來源副本。每個檔案回報 `id`、虛擬 `path`、邏輯 `size`、`modified`、實際加密 `partCount`、其 `partSizeBytes` 同 `offline`。分片大小包括驗證記錄額外開銷，加密分片唔會超過上限。
+保管庫對話框亦提供磁碟名稱，即係檔案總管喺磁碟代號旁邊顯示嘅磁碟標籤。預設係 `Material Files`，去除前後空白後必須係 1 至 32 個字元（NTFS 同 WinFsp 磁碟標籤上限），而且唔可以包含控制字元或者 `\ / : * ? " < > |` 當中任何一個。欄位會即時驗證，名稱無效時會阻止提交。可選嘅 `driveName` 請求欄位會由主程序同原生控制器再檢查一次；欠缺時原生控制器會用 `Material Files`。最後使用嘅名稱同磁碟代號一齊存放喺本機偏好設定檔，下次開啟對話框會自動填返。名稱喺掛載時套用，所以已掛載嘅磁碟要鎖定再解鎖先可以改名。
+
+狀態包含 `locked`、`mounted`、`unmountBusy`、`driveLetter`、`driveName`、`storageDir`、`cacheDir`、`files`、`partSizeBytes`、`sync`、`driver`、`autoUnlock`、`availableDriveLetters` 同 `lastOfflineRelease`。成功離線釋放記錄虛擬 `path` 同實際 `bytesFreed`；零代表冇移除合適本機密文。針對性釋放會保留有修改、待處理、釘選、開啟同共享內容，刪除前驗證來源副本。每個檔案回報 `id`、虛擬 `path`、邏輯 `size`、`modified`、實際加密 `partCount`、其 `partSizeBytes` 同 `offline`。分片大小包括驗證記錄額外開銷，加密分片唔會超過上限。
 
 ## 驗證
 

@@ -3,16 +3,16 @@ export interface DriveFile { id: string; path: string; size: number; modified: s
 export interface DriveState {
   storageFormat?: 1 | 2;
   packing?: {pendingFiles:number;running:boolean;paused:boolean;activeWriters:number;lastError:string|null;targetPartSizeBytes:number};
-  locked: boolean; mounted: boolean; driveLetter?: string; storageDir?: string; cacheDir: string;
+  locked: boolean; mounted: boolean; driveLetter?: string; driveName?: string; storageDir?: string; cacheDir: string;
   files: DriveFile[]; availableDriveLetters: string[]; partSizeBytes?: number; autoUnlock?: boolean;
   history?: { versionCount: number; recycledCount: number; pendingVersionCount: number; retentionDays: number | null; gitAvailable: boolean };
   transport?: { mode: 'folder' | 'privateGit'; remoteRepository?: string; available: boolean; pendingPublication?: boolean; pendingSynchronization?: boolean; lastError?: string };
   operation: string | null; driver: { available: boolean; checking?: boolean; error?: string | null };
-  defaults: { cacheDir: string; driveLetter: string };
-  preferences: { historyRetentionDays?: number | null; transport?: string; remoteRepository?: string; startup: boolean; autoUnlock: boolean; driveLetter: string; storageDir?: string; cacheDir?: string };
+  defaults: { cacheDir: string; driveLetter: string; driveName: string };
+  preferences: { historyRetentionDays?: number | null; transport?: string; remoteRepository?: string; startup: boolean; autoUnlock: boolean; driveLetter: string; driveName?: string; storageDir?: string; cacheDir?: string };
   sync: { running: boolean; lastSync: string | null; error: string | null; pendingCommits?: number };
 }
-export type VaultOptions = { storageDir: string; cacheDir: string; driveLetter: string; transport?: 'folder' | 'privateGit'; remoteRepository?: string; autoUnlock?: boolean } & ({ password: string; keyFilePath?: never } | { password?: never; keyFilePath: string });
+export type VaultOptions = { storageDir: string; cacheDir: string; driveLetter: string; driveName?: string; transport?: 'folder' | 'privateGit'; remoteRepository?: string; autoUnlock?: boolean } & ({ password: string; keyFilePath?: never } | { password?: never; keyFilePath: string });
 export interface DriveBridge {
   featureRequest<T=unknown>(feature:'workflow',action:string,payload?:Record<string,unknown>):Promise<T>;
   storageDiagnostics(): Promise<StorageDiagnostics>;
@@ -20,7 +20,7 @@ export interface DriveBridge {
   status(): Promise<DriveState>; create(options: VaultOptions & { partSizeBytes: number }): Promise<DriveState>;
   upgrade(options: VaultOptions & { partSizeBytes: number }): Promise<DriveState>;
   unlock(options: VaultOptions): Promise<DriveState>; lock(): Promise<DriveState>;
-  mount(options?: { driveLetter?: string }): Promise<DriveState>; unmount(): Promise<DriveState>;
+  mount(options?: { driveLetter?: string; driveName?: string }): Promise<DriveState>; unmount(): Promise<DriveState>;
   chooseFolder(kind?: 'storage' | 'cache'): Promise<string | null>; chooseFiles(): Promise<string[]>;
   chooseExport(name: string): Promise<string | null>; chooseKeyFile(): Promise<string | null>;
   generateKeyFile(options?: { storageDir?: string; cacheDir?: string }): Promise<string | null>;

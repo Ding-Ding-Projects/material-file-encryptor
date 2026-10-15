@@ -20,6 +20,7 @@ import { explorerCopyPath, registerExplorerCommand } from './explorer-command.js
 import { createUpdateService } from './update-service.js';
 import { createRestartPreparation } from './restart-preparation.js';
 import { createBrowserHandoffLifecycle } from './browser-native-host.js';
+import { DEFAULT_DRIVE_NAME, normalizeDriveName } from '../shared/drive-name.js';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const rendererPath = path.resolve(directory, '../renderer/index.html');
@@ -87,11 +88,11 @@ const selectedExports = new Set();
 let window, tray, helper, features, localAdapter, browserHandoff, updates, shuttingDown = false, operation = null, quitPending = false, updateInstallLease = false, updateLanguage = 'en', interruptedSession = false;
 let cachedStartupRegistration = { enabled: false, verificationOnly: false, restored: false };
 const buildMetadata = { version: app.getVersion(), builtAt: null };
-let preferences = { startup: true, autoUnlock: false, driveLetter: 'M:', transport: 'folder', historyRetentionDays: null, performanceMode: 'responsive' };
+let preferences = { startup: true, autoUnlock: false, driveLetter: 'M:', driveName: DEFAULT_DRIVE_NAME, transport: 'folder', historyRetentionDays: null, performanceMode: 'responsive' };
 let state = { locked: true, mounted: false, files: [], availableDriveLetters: [], sync: { running: false, lastSync: null, error: null }, driver: { available: false, checking: true, error: 'Checking WinFsp availability.' } };
 const inside = (parent, child) => { const rel = path.relative(parent, child); return rel === '' || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel)); };
 const nativeState = value => ({ ...value, driver: { ...value.driver, checking: false } });
-const snapshot = () => ({ ...state, operation, build: buildMetadata, browserDownloadHandoff:browserHandoff?.status()||{available:false,configured:false,reason:'NOT_INITIALIZED',installation:'not-performed'},startupRegistration: cachedStartupRegistration, defaults: { cacheDir: preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache'), driveLetter: preferences.driveLetter }, preferences: { ...preferences }, cacheDir: state.cacheDir || preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache') });
+const snapshot = () => ({ ...state, operation, build: buildMetadata, browserDownloadHandoff:browserHandoff?.status()||{available:false,configured:false,reason:'NOT_INITIALIZED',installation:'not-performed'},startupRegistration: cachedStartupRegistration, defaults: { cacheDir: preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache'), driveLetter: preferences.driveLetter, driveName: preferences.driveName }, preferences: { ...preferences }, cacheDir: state.cacheDir || preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache') });
 function publish() { if(state.locked||state.lockVerified===false)browserHandoff?.revoke();updateTray(); if (window && !window.isDestroyed()) window.webContents.send('vault:state', snapshot()); }
 async function closeBrowserHandoff(){const receipt=await browserHandoff?.close();if(receipt&&receipt.verified!==true)throw new Error('Native browser handoff exit is unverified. Resolve pending pairing approval and retry Quit.');return receipt;}
 async function handleStartupFailure(){
@@ -233,10 +234,10 @@ async function request(method, params, context) {
     return perform(method === 'upgradeVault' ? 'upgrading' : 'mounting', async () => {
       if (params.keyFilePath) await safeDestination(params.keyFilePath, [params.storageDir, params.cacheDir]);
       await backend(method === 'upgradeVault' ? 'copyUpgrade' : method === 'createVault' ? 'create' : 'unlock', params);
-      preferences = { ...preferences, storageDir: params.storageDir, cacheDir: params.cacheDir, driveLetter: params.driveLetter, autoUnlock: Boolean(params.autoUnlock), transport: params.transport || 'folder', remoteRepository: params.remoteRepository };
+      preferences = { ...preferences, storageDir: params.storageDir, cacheDir: params.cacheDir, driveLetter: params.driveLetter, driveName: params.driveName ?? preferences.driveName ?? DEFAULT_DRIVE_NAME, autoUnlock: Boolean(params.autoUnlock), transport: params.transport || 'folder', remoteRepository: params.remoteRepository };
       await savePreferences();
       await backend('setHistoryRetention', { days: preferences.historyRetentionDays });
-      const response = await backend('mount', { driveLetter: params.driveLetter });
+      const response = await backend('mount', { driveLetter: params.driveLetter, driveName: preferences.driveName });
       return { ...response, preferences: { ...preferences } };
     });
   }
@@ -362,6 +363,7 @@ else {
       const saved = JSON.parse(await fs.readFile(configPath(), 'utf8'));
       for (const key of ['startup', 'autoUnlock']) if (typeof saved[key] === 'boolean') preferences[key] = saved[key];
       for (const key of ['storageDir', 'cacheDir', 'driveLetter', 'remoteRepository']) if (typeof saved[key] === 'string') preferences[key] = saved[key];
+      if (normalizeDriveName(saved.driveName) !== null) preferences.driveName = normalizeDriveName(saved.driveName);
       if (['folder', 'privateGit'].includes(saved.transport)) preferences.transport = saved.transport;
       if (['responsive', 'throughput'].includes(saved.performanceMode)) preferences.performanceMode = saved.performanceMode;
       if (saved.historyRetentionDays === null || (Number.isInteger(saved.historyRetentionDays) && saved.historyRetentionDays >= 1 && saved.historyRetentionDays <= 36500)) preferences.historyRetentionDays = saved.historyRetentionDays;

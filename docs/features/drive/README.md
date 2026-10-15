@@ -36,9 +36,9 @@ Responses are `{ "id": 1, "result": ... }` or `{ "id": 1, "error": "..." }`. The
 | Method | Parameters |
 | --- | --- |
 | `status` | None |
-| `create`, `unlock` | `storageDir`, `cacheDir`, `driveLetter`; exactly one of `password` or `keyFilePath`; optional `autoUnlock`, `partSizeBytes` |
+| `create`, `unlock` | `storageDir`, `cacheDir`, `driveLetter`; exactly one of `password` or `keyFilePath`; optional `driveName`, `autoUnlock`, `partSizeBytes` |
 | `autoUnlock` | `storageDir`, `cacheDir`, `driveLetter`; uses the current user's saved DPAPI key |
-| `mount` | Optional `driveLetter`; requires an unlocked vault and available driver |
+| `mount` | Optional `driveLetter`, `driveName`; requires an unlocked vault and available driver |
 | `unmount` | None; retains the unlocked engine |
 | `lock` | None; gracefully unmounts, flushes, and clears the engine key |
 | `importFiles` | `paths`: array of user-selected original file paths |
@@ -51,7 +51,9 @@ Responses are `{ "id": 1, "result": ... }` or `{ "id": 1, "error": "..." }`. The
 
 Create and unlock authenticate the vault; mount is a separate request. The desktop opens `driveLetter + "\\"` through Explorer after mounting.
 
-Status contains `locked`, `mounted`, `unmountBusy`, `driveLetter`, `storageDir`, `cacheDir`, `files`, `partSizeBytes`, `sync`, `driver`, `autoUnlock`, `availableDriveLetters`, and `lastOfflineRelease`. A successful offline release records its virtual `path` and actual `bytesFreed`; zero means no eligible local ciphertext was removed. Targeted eviction retains dirty, pending, pinned, open, and shared content, and verifies the source copy before deletion. Each file reports `id`, virtual `path`, logical `size`, `modified`, actual encrypted `partCount`, its `partSizeBytes`, and `offline`. Part size includes authenticated-record overhead; encrypted parts do not exceed their cap.
+The vault dialog also offers a drive name, the volume label that File Explorer shows next to the drive letter. It defaults to `Material Files`, must be 1 to 32 characters after trimming (the NTFS and WinFsp volume label limit), and cannot contain control characters or any of `\ / : * ? " < > |`. The field validates inline and blocks submit until the name is valid. The optional `driveName` request field is checked again by the main process and by the native controller, which falls back to `Material Files` when it is absent. The last used name is stored in the local preferences file beside the drive letter and fills the field the next time the dialog opens. The name is applied when the drive mounts, so changing it for an already mounted drive requires locking and unlocking it.
+
+Status contains `locked`, `mounted`, `unmountBusy`, `driveLetter`, `driveName`, `storageDir`, `cacheDir`, `files`, `partSizeBytes`, `sync`, `driver`, `autoUnlock`, `availableDriveLetters`, and `lastOfflineRelease`. A successful offline release records its virtual `path` and actual `bytesFreed`; zero means no eligible local ciphertext was removed. Targeted eviction retains dirty, pending, pinned, open, and shared content, and verifies the source copy before deletion. Each file reports `id`, virtual `path`, logical `size`, `modified`, actual encrypted `partCount`, its `partSizeBytes`, and `offline`. Part size includes authenticated-record overhead; encrypted parts do not exceed their cap.
 
 ## Verification
 
