@@ -46,7 +46,7 @@ export class WorkspaceShell extends SurfaceElement {
   /** The compact "mini home": a searchable menu of every destination plus tab management, anchored to the New tab button. */
   openNewTab(anchor=this.newButton,event){
     const state=this.model.getState();
-    this.onContext?.({anchor,event,target:this,language:this.language,items:[
+    this.onContext?.({anchor,event,target:this,language:this.language,align:'end',items:[
       {label:HOME_LABEL,description:HOME_DESCRIPTION,run:()=>this.openHome()},
       ...homeEntries(this.labels,state).map(entry=>({label:entry.label,description:entry.description,run:()=>this.activateView(entry)})),
       ...this.managementItems(state)

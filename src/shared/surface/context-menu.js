@@ -1,6 +1,7 @@
 import {requestControlAdmission} from './controls.js';
 import { SurfaceElement, element, register, localized } from './registry.js';
 import './search.js';
+import {placeMenu,menuCorner} from './menu-placement.js';
 // Per-event action ownership is private metadata, not a mutable provider item field.
 const actionTargets=new WeakMap();
 export function bindContextActionTarget(item,target){const bound={...item};actionTargets.set(bound,target);return bound;}
@@ -10,18 +11,22 @@ export class ContextMenu extends SurfaceElement {
   connectedCallback(){this.hidden=true;this.render();}
   disconnectedCallback(){this.close('teardown',{restoreFocus:false});}
   render(){
-    this.style(':host{position:fixed;inset:0;margin:0;padding:0;border:0;background:transparent;width:auto;height:auto;z-index:10000;pointer-events:none}:host([hidden]){display:none!important}.point{position:fixed;width:1px;height:1px;pointer-events:none}md-menu{pointer-events:auto;max-width:min(440px,calc(100vw - 24px));--md-menu-container-color:var(--md-sys-color-surface-container-high,var(--md-sys-color-surface-container));--md-menu-container-shape:12px}mfe-search{display:block;padding:8px 12px;width:min(400px,calc(100vw - 32px))}md-menu-item{max-width:420px}.empty{padding:12px 16px}.shortcut{margin-inline-start:20px}');
-    this.point=element('span',{class:'point','aria-hidden':'true'});this.menu=element('md-menu',{positioning:'fixed',quick:true,hasOverflow:true,'aria-label':this.t('Context actions','操作選單')});
+    this.style(':host{position:fixed;inset:0;margin:0;padding:0;border:0;background:transparent;width:auto;height:auto;z-index:10000;pointer-events:none}:host([hidden]){display:none!important}.point{position:fixed;width:1px;height:1px;pointer-events:none}md-menu{pointer-events:auto;max-width:min(440px,calc(100vw - 24px));--md-menu-container-color:var(--md-sys-color-surface-container-high,var(--md-sys-color-surface-container));--md-menu-container-shape:12px}mfe-search{display:block;box-sizing:border-box;position:sticky;inset-block-start:0;z-index:1;padding:8px 12px;width:min(400px,calc(100vw - 32px));background:var(--md-sys-color-surface-container-high,var(--md-sys-color-surface-container,#fff))}md-menu-item{max-width:420px}.empty{padding:12px 16px}.shortcut{margin-inline-start:20px}');
+    this.point=element('span',{class:'point','aria-hidden':'true'});this.menu=element('md-menu',{positioning:'fixed',quick:true,'aria-label':this.t('Context actions','操作選單')});
     this.menu.noNavigationWrap=false;this.menu.typeaheadActive=false;this.menu.stayOpenOnOutsideClick=true;this.menu.stayOpenOnFocusout=true;
     this.search=element('mfe-search',{label:this.t('Filter actions','篩選操作')});this.search.language=this.language;this.search.setAttribute('data-menu-search','');
     this.itemsHost=this.menu;this.menu.append(this.search);this.shadowRoot.append(this.point,this.menu);
     this.search.addEventListener('search-change',()=>this.renderItems());this.search.addEventListener('keydown',event=>event.stopPropagation());
     const ownedMenu=this.menu;this.menu.addEventListener('closed',()=>{if(this.hidden||this.menu!==ownedMenu||this.menu.open)return;this.close('dismiss');});
   }
-  open({items=[],anchor,event,target,language='en',onClose,onError}={}) {
+  open({items=[],anchor,event,target,language='en',align='start',onClose,onError}={}) {
     this.close('replace',{restoreFocus:false});this.language=language;this.render();this.items=items.slice();this.target=target||anchor||event?.composedPath?.().find(node=>node instanceof Element);this.anchor=anchor||this.target;this.returnFocus=this.ownerDocument.activeElement;this.onClose=onClose;this.onError=onError;this.hidden=false;this.setAttribute('popover','manual');this.showPopover?.();const epoch=++this.epoch;
-    const rect=this.anchor?.getBoundingClientRect?.();const pointer=event&&event.type==='contextmenu'&&(event.clientX||event.clientY);const x=pointer?event.clientX:rect?.left??12,y=pointer?event.clientY:rect?.bottom??12;
-    this.point.style.left=Math.max(8,Math.min(x,innerWidth-16))+'px';this.point.style.top=Math.max(8,Math.min(y,innerHeight-16))+'px';this.menu.anchorElement=this.point;
+    const rect=this.anchor?.getBoundingClientRect?.();const pointer=event&&event.type==='contextmenu'&&(event.clientX||event.clientY);
+    const anchorRect=pointer?{left:event.clientX,right:event.clientX,top:event.clientY,bottom:event.clientY}:rect?{left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom}:{left:12,right:12,top:12,bottom:12};
+    const placement=placeMenu(anchorRect,{width:innerWidth,height:innerHeight},{align:pointer?'start':align,gap:pointer?0:undefined});this.placement=placement;
+    this.point.style.left=placement.x+'px';this.point.style.top=placement.y+'px';
+    if(this.menu.style){this.menu.style.maxHeight=placement.maxHeight+'px';this.menu.style.maxWidth=placement.maxWidth+'px';}
+    this.menu.anchorCorner='start-start';this.menu.menuCorner=menuCorner(placement);this.menu.anchorElement=this.point;
     this.controller=new AbortController();const options={capture:true,signal:this.controller.signal};
     this.ownerDocument.addEventListener('pointerdown',e=>{if(!e.composedPath().includes(this))this.close('outside');},options);
     this.ownerDocument.addEventListener('keydown',e=>this.handleKey(e),options);

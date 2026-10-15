@@ -48,6 +48,7 @@ export const HOME_CATALOG = Object.freeze([
   ['help', text('A short guide to how the encrypted drive works.', '簡短講解加密磁碟點樣運作。')],
   ['documentation', text('Read the full documentation offline.', '離線閱讀完整文件。')],
   ['changelog', text('See what changed in each release.', '睇每個版本改咗啲乜。')],
+  ['browser-pairing', text('Show a one-time code to link the browser extension to this drive.', '顯示一次性代碼，將瀏覽器擴充功能連結到呢個磁碟。')],
   ['connection', text('Pair the browser extension and check the link.', '配對瀏覽器擴充功能同檢查連線。')]
 ]);
 
