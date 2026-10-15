@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 2,
+  "kind": "runtime-motion-audit",
+  "sourceCommit": "9c8191a56e07dc317eee0265f5bb62f678f8341d",
+  "quick": true,
+  "shadowReduction": "enabled",
+  "generatedAtUtc": "2026-10-15T20:29:37.865Z",
+  "allowlist": [
+    {
+      "id": "hidden-file-input",
+      "selector": "input[type=file]",
+      "reason": "A file input only backs the Material button that opens the system file picker."
+    },
+    {
+      "id": "platform-picker-input",
+      "selector": "input",
+      "host": "mfe-date-field,mfe-file-picker",
+      "reason": "The one-pixel, tab-order-free input inside mfe-date-field and mfe-file-picker is the platform date and file picker engine; the visible control is the Material outlined field and button drawn over it."
+    },
+    {
+      "id": "home-card",
+      "selector": "button.home-card",
+      "reason": "Home destination cards are tab buttons drawn as Material outlined cards with a hand-built state layer, because Material Web has no card-button component."
+    }
+  ],
+  "meta": {
+    "site": {
+      "browser": "Edg/155.0.4283.45",
+      "routes": {
+        "topLevel": 5,
+        "categoriesAvailable": 16,
+        "categoriesAudited": 2,
+        "articlesAvailable": 230,
+        "articlesAudited": 3,
+        "darkSample": {
+          "categories": 2,
+          "articles": 3,
+          "sampling": "evenly spaced over the sorted file list, first and last included"
+        },
+        "viewports": [
+          "1280x800",
+          "360x780"
+        ]
+      },
+      "innerStates": {
+        "tabs": 36,
+        "wikiArticles": 6,
+        "wikiDisclosures": 2,
+        "wikiSearch": 2,
+        "wikiSearchEmpty": 2,
+        "workspaceDocuments": 6
+      },
+      "scriptErrors": 0
+    }
+  },
+  "surfaces": [
+    {
+      "name": "site",
+      "states": 82,
+      "examinedElements": 1828508,
+      "interactiveElementsChecked": 11283,
+      "classification": {
+        "hyperlink": 4302,
+        "material": 6853,
+        "material-part": 6897,
+        "focus-target": 36,
+        "focus-stop": 44,
+        "disclosure": 128
+      },
+      "findings": [],
+      "enterAnimations": {
+        "probed": 8,
+        "animated": 8,
+        "missing": [],
+        "probes": [
+          {
+            "state": "page tools index.html light 1280x800",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools library.html light 1280x800",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools wiki.html light 1280x800",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools gallery.html light 1280x800",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools index.html light 360x780",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools library.html light 360x780",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools wiki.html light 360x780",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools gallery.html light 360x780",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          }
+        ]
+      },
+      "reducedMotion": {
+        "states": 82,
+        "shadowRootNote": "Leaks inside Material Web shadow roots are counted like any other leak. The shared reduced-motion stylesheet adopted into md-* shadow roots (src/shared/surface/reduced-motion.js) is what removes them; shadowRootLeakTags counts remaining leaks per md-* host tag.",
+        "leaks": [],
+        "shadowRootLeakTags": {},
+        "runningAnimationsAfterEmulation": 0
+      }
+    }
+  ],
+  "totalFailures": 0,
+  "verdict": "clean"
+}
