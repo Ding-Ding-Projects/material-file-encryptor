@@ -162,6 +162,7 @@ body:has(mfe-dialog[open]){overflow:hidden}
 .homepage-header .brand{flex:none;max-width:240px}
 .homepage-header #navigation{flex:0 1 auto;flex-wrap:nowrap;gap:16px;min-width:0;padding-block:12px}
 .navigation-primary{display:flex;align-items:center;gap:20px}
+.homepage-header:not(.is-compact) .navigation-primary{flex-shrink:0}
 .homepage-header #navigation a:not(.button){display:flex;align-items:center;min-height:44px;padding:10px 4px;color:var(--muted);font-size:14px;text-decoration:none;white-space:normal;overflow-wrap:anywhere}
 .homepage-header #navigation a:not(.button):hover{color:var(--primary);background:var(--surface-container);border-radius:8px}
 .navigation-group-label{display:none}
