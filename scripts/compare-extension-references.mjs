@@ -109,7 +109,7 @@ export async function compareExtensionReferences({extension = 'out/browser-exten
     }
     record.verdict = record.comparisons.length && record.comparisons.every(row => row.difference.comparable) ? 'measured' : 'not-comparable';
   } catch (error) {
-    record.error = String(error?.message || error).slice(0, 600);
+    record.error = String(error?.stack || error).slice(0, 900);
   } finally {
     await session.close();
     server.close();

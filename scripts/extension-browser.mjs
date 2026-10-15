@@ -110,6 +110,8 @@ export async function launchWithExtension({browser, extensionDirectory}) {
 
 /** Sets the viewport at a fixed device scale and returns a PNG capture with its hash. */
 export async function capture(page, {width, height, scale = 1}) {
+  // A background tab may not paint, so the captured page is brought to the front first.
+  await page.send('Page.bringToFront');
   await page.send('Emulation.setDeviceMetricsOverride', {width, height, deviceScaleFactor: scale, mobile: false});
   await sleep(150);
   const shot = await page.send('Page.captureScreenshot', {format: 'png'});
