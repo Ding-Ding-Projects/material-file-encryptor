@@ -7,11 +7,19 @@ export function otpUri(entry) {
   const params=new URLSearchParams({secret:entry.secret,issuer:entry.issuer||'',algorithm:entry.algorithm,digits:String(entry.digits),period:String(entry.period)});
   return `otpauth://totp/${encodeURIComponent(label)}?${params}`;
 }
+function matrixOf(text) {
+  const qr=qrcode(0,'M');qr.addData(text,'Byte');qr.make();
+  return Array.from({length:qr.getModuleCount()},(_,y)=>Array.from({length:qr.getModuleCount()},(_,x)=>qr.isDark(y,x)));
+}
 export function qrMatrix(uri) {
   if(typeof uri!=='string'||uri.length>2048)throw new Error('Registration URI is too large.');
   parseOtpUri(uri);
-  const qr=qrcode(0,'M');qr.addData(uri,'Byte');qr.make();
-  return Array.from({length:qr.getModuleCount()},(_,y)=>Array.from({length:qr.getModuleCount()},(_,x)=>qr.isDark(y,x)));
+  return matrixOf(uri);
+}
+/** Short plain text only, such as a browser pairing code. It never accepts a URI. */
+export function textQrMatrix(text) {
+  if(typeof text!=='string'||!/^[A-Z0-9]{4,32}$/.test(text))throw new Error('Only a short pairing code can be drawn this way.');
+  return matrixOf(text);
 }
 export function qrPixels(uri,scale=6) {
   const matrix=qrMatrix(uri),width=(matrix.length+8)*scale,data=new Uint8ClampedArray(width*width*4);data.fill(255);
