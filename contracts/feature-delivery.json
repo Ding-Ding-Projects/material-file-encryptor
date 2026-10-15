@@ -14705,16 +14705,31 @@
     {
       "id": "forge-publishing",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/publishing.js",
+        "browser-extension/publishing-entry.js",
+        "browser-extension/background.js",
+        "src/shared/publication-request.js",
+        "src/main/browser-native-host.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-native-host.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md",
+        "docs/features/workflows/browser-native-host.zh-HK.md"
+      ],
+      "tests": [
+        "test/browser-publishing-scope.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Review sanitized publication content, select a forge destination and confirm before external publication. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "A Progress and publication section composes a note, shows a sanitized preview (local paths, user names, email addresses, token-like strings and personal wording removed, with a count), validates up to five https evidence links and requires a reviewed checkbox before sending. The page makes no network request; the paired desktop receives it through the publish-progress Confirm scope behind the single prompt gate. The desktop has no forge adapter wired, so every request is answered unavailable and nothing is published. Synthetic tests only.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -14728,7 +14743,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -14739,29 +14754,43 @@
         "action": "Review sanitized publication content, select a forge destination and confirm before external publication.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Review sanitized publication content, select a forge destination and confirm before external publication.",
-            "nextProof": "Exercise review sanitized publication content, select a forge destination and confirm before external publication on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Wire a reviewed desktop forge adapter, then publish one sanitized note to a test destination through the native prompt and capture both sides."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Nothing beyond existing local preferences is stored in the browser; desktop records stay on the desktop."
       }
     },
     {
       "id": "progress-recovery",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/extension-operations.js",
+        "browser-extension/operations-panel.js",
+        "browser-extension/operation-journal.js",
+        "browser-extension/converter.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-native-host.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md",
+        "docs/features/workflows/browser-native-host.zh-HK.md"
+      ],
+      "tests": [
+        "test/extension-operation-journal.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Resume interrupted operations from durable source-bound records without replaying completed destructive steps. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "A small journal in extension storage (fixed words and ids only, bound to the extension version and source commit) records changelog export, converter enqueue, school-mode and tab-lock operations. Status lists interrupted records with Resume and Discard; Resume skips finished steps, never replays a destructive step whose outcome is unknown (it asks the desktop instead) and is refused when the binding changed. Schedules are not journaled. Synthetic tests only.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -14775,7 +14804,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -14786,14 +14815,14 @@
         "action": "Resume interrupted operations from durable source-bound records without replaying completed destructive steps.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Resume interrupted operations from durable source-bound records without replaying completed destructive steps.",
-            "nextProof": "Exercise resume interrupted operations from durable source-bound records without replaying completed destructive steps on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Interrupt each journaled operation in a staged extension with a paired desktop and resume it, capturing the refusal after a version change."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "A bounded operation journal in extension storage holds fixed words and ids only, bound to the extension version and source commit."
       }
     },
     {
@@ -15656,16 +15685,31 @@
     {
       "id": "vocabulary-unlock-boundary",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/extension-operations.js",
+        "browser-extension/operations-panel.js",
+        "browser-extension/vocabulary-boundary.js",
+        "browser-extension/vocabulary.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-native-host.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md",
+        "docs/features/workflows/browser-native-host.zh-HK.md"
+      ],
+      "tests": [
+        "test/extension-vocabulary-boundary.test.js",
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Keep original copy before authenticated authorization and prevent imported private wording from public boundaries. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Imported wording applies only while the desktop pairing is active; before that the original copy is shown and the wording is kept but not used. The page title always uses the original copy, and exports, notes, diagnostics, copied text, status reports, the journal and desktop messages are built from data, with tests asserting none carries wording. The outbound boundary is enforced structurally (source-pattern tests and schema validation), not by scanning every message at run time.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -15679,7 +15723,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -15690,29 +15734,45 @@
         "action": "Keep original copy before authenticated authorization and prevent imported private wording from public boundaries.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Keep original copy before authenticated authorization and prevent imported private wording from public boundaries.",
-            "nextProof": "Exercise keep original copy before authenticated authorization and prevent imported private wording from public boundaries on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Import a wording file in an installed extension, pair and unpair, and capture the original and replaced copy plus an export."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Nothing beyond existing local preferences is stored in the browser; desktop records stay on the desktop."
       }
     },
     {
       "id": "status-hub",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/extension-operations.js",
+        "browser-extension/operations-panel.js",
+        "browser-extension/status-client.js",
+        "browser-extension/background.js",
+        "src/main/browser-status-mediation.js",
+        "src/main/browser-native-host.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-native-host.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md",
+        "docs/features/workflows/browser-native-host.zh-HK.md"
+      ],
+      "tests": [
+        "test/browser-status-client-scope.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Enroll an independent extension client through authorized mediation and report truthful bounded state. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "After pairing, Status offers enrollment as an independent status client through the enroll-status-client scope; the bounded report carries the version, paired state, last refresh to the minute and four counts. The shipped desktop has no enrollment function wired, so it answers unavailable; the enrolled and pending paths are verified only against an injected fake.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -15726,7 +15786,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -15737,14 +15797,14 @@
         "action": "Enroll an independent extension client through authorized mediation and report truthful bounded state.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Enroll an independent extension client through authorized mediation and report truthful bounded state.",
-            "nextProof": "Exercise enroll an independent extension client through authorized mediation and report truthful bounded state on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Wire desktop enrollment, enroll an installed extension and capture the enrolled state and the bounded report."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Nothing beyond existing local preferences is stored in the browser; desktop records stay on the desktop."
       }
     },
     {
@@ -17151,16 +17211,31 @@
     {
       "id": "discussion-records",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "contracts/feature-delivery.json"
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/publishing.js",
+        "browser-extension/publishing-entry.js",
+        "browser-extension/background.js",
+        "src/shared/publication-request.js",
+        "src/main/browser-native-host.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-native-host.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md",
+        "docs/features/workflows/browser-native-host.zh-HK.md"
+      ],
+      "tests": [
+        "test/browser-publishing-scope.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "No implementation record was established for this repository obligation in this assessment. The inventory is the planning owner, not proof of delivery.",
+      "reason": "The Progress and publication section offers a discussion comment destination with validated evidence links and a sanitized preview, sent only through the desktop Confirm prompt. With no desktop forge adapter wired the answer is a fixed unavailable and no comment is posted. Synthetic tests only.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -17174,10 +17249,10 @@
           "declaredScope": "Repository obligation supporting the product"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
-        "owner": "contracts/feature-delivery.json",
+        "owner": "src/shared/publication-request.js",
         "gaps": [
           "behavior",
           "proof"
@@ -17185,29 +17260,44 @@
         "action": "Record extension progress in the existing scoped discussion with exact evidence links.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Record extension progress in the existing scoped discussion with exact evidence links.",
-            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+            "nextProof": "Post one sanitized progress comment to a test discussion through an installed desktop and record its link."
           }
         ],
-        "persistence": "Repository files or forge records provide durable state; no browser preference field implements this obligation."
+        "persistence": "Nothing beyond existing local preferences is stored in the browser; desktop records stay on the desktop."
       }
     },
     {
       "id": "project-board",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "contracts/feature-delivery.json"
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/publishing.js",
+        "browser-extension/publishing-entry.js",
+        "browser-extension/background.js",
+        "src/shared/publication-request.js",
+        "src/main/browser-native-host.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-native-host.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md",
+        "docs/features/workflows/browser-native-host.zh-HK.md"
+      ],
+      "tests": [
+        "test/browser-publishing-scope.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "No implementation record was established for this repository obligation in this assessment. The inventory is the planning owner, not proof of delivery.",
+      "reason": "The Progress and publication section offers a project item status destination with a status field. Without a desktop adapter or host permission the request is answered unavailable and the page says so; nothing is changed on any project. Synthetic tests only.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -17221,10 +17311,10 @@
           "declaredScope": "Repository obligation supporting the product"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
-        "owner": "contracts/feature-delivery.json",
+        "owner": "src/shared/publication-request.js",
         "gaps": [
           "behavior",
           "proof"
@@ -17232,29 +17322,43 @@
         "action": "Track the owned extension task in a formally linked project when host permissions support it.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Track the owned extension task in a formally linked project when host permissions support it.",
-            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+            "nextProof": "Wire a desktop project adapter, move one test item through the native prompt and capture the result."
           }
         ],
-        "persistence": "Repository files or forge records provide durable state; no browser preference field implements this obligation."
+        "persistence": "Nothing beyond existing local preferences is stored in the browser; desktop records stay on the desktop."
       }
     },
     {
       "id": "operational-skill",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "contracts/feature-delivery.json"
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/extension-operations.js",
+        "browser-extension/operations-panel.js",
+        "browser-extension/procedures.js",
+        "docs/features/workflows/browser-extension-workspace.md"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-native-host.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md",
+        "docs/features/workflows/browser-native-host.zh-HK.md"
+      ],
+      "tests": [
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "No implementation record was established for this repository obligation in this assessment. The inventory is the planning owner, not proof of delivery.",
+      "reason": "Status lists the pair, refresh, convert, export, recover and verify-build procedures in English and Cantonese, each marked available or unavailable from the current state, and the workspace article documents them. Availability is computed from local state only.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -17268,10 +17372,10 @@
           "declaredScope": "Repository obligation supporting the product"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
-        "owner": "contracts/feature-delivery.json",
+        "owner": "docs/features/workflows/browser-extension-workspace.md",
         "gaps": [
           "behavior",
           "proof"
@@ -17279,14 +17383,14 @@
         "action": "Maintain reusable documented extension operation and verification procedures with truthful availability.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Maintain reusable documented extension operation and verification procedures with truthful availability.",
-            "nextProof": "First register the actual target, then verify its behavior with independent source-bound built and visual evidence."
+            "nextProof": "Follow each procedure in an installed extension and confirm the availability marks match the real state."
           }
         ],
-        "persistence": "Repository files or forge records provide durable state; no browser preference field implements this obligation."
+        "persistence": "Nothing beyond existing local preferences is stored in the browser; desktop records stay on the desktop."
       }
     },
     {
@@ -17427,16 +17531,31 @@
     {
       "id": "minecraft-server-manager",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/servers.js",
+        "browser-extension/background.js",
+        "src/main/browser-server-mediation.js",
+        "src/main/browser-server-adapters.js",
+        "src/main/browser-native-host.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-native-host.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md",
+        "docs/features/workflows/browser-native-host.zh-HK.md"
+      ],
+      "tests": [
+        "test/browser-server-scopes.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Create, configure and manage all supported server versions and flavors across local process, local container, SSH process and SSH container targets through rich controls. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "A Servers section (Home card, popup launcher and palette entry) lists servers with target and state filter chips and offers a create dialog with Material selects for type, target and version, through read-servers, read-server-catalog (paged) and the re-authenticated manage-server scope. No host, key, password, path or URL passes through the browser. The desktop manager supports only Vanilla on the local process target; settings, plugins, container and SSH targets and other flavors are answered unavailable without a prompt. Synthetic tests and staged-build captures only; no real server, container or SSH host took part.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -17450,7 +17569,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -17461,14 +17580,14 @@
         "action": "Create, configure and manage all supported server versions and flavors across local process, local container, SSH process and SSH container targets through rich controls.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Create, configure and manage all supported server versions and flavors across local process, local container, SSH process and SSH container targets through rich controls.",
-            "nextProof": "Exercise create, configure and manage all supported server versions and flavors across local process, local container, SSH process and SSH container targets through rich controls on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Create and start a Vanilla server from an installed extension through the native prompt, then add the container and SSH targets in the desktop manager."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Nothing beyond existing local preferences is stored in the browser; desktop records stay on the desktop."
       }
     }
   ],
@@ -17771,7 +17890,24 @@
     "scripts/compare-extension-references.mjs": "2a9da7ef7fc1e284a76c6934db2ee266afb187fe",
     "test/browser-extension-evidence.test.js": "2a9da7ef7fc1e284a76c6934db2ee266afb187fe",
     "docs/features/workflows/browser-extension-evidence.md": "2a9da7ef7fc1e284a76c6934db2ee266afb187fe",
-    "docs/features/workflows/browser-extension-evidence.zh-HK.md": "2a9da7ef7fc1e284a76c6934db2ee266afb187fe"
+    "docs/features/workflows/browser-extension-evidence.zh-HK.md": "2a9da7ef7fc1e284a76c6934db2ee266afb187fe",
+    "browser-extension/publishing.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "browser-extension/publishing-entry.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "src/shared/publication-request.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "test/browser-publishing-scope.test.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "browser-extension/extension-operations.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "browser-extension/operations-panel.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "browser-extension/operation-journal.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "test/extension-operation-journal.test.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "browser-extension/procedures.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "browser-extension/vocabulary-boundary.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "test/extension-vocabulary-boundary.test.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "browser-extension/status-client.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "test/browser-status-client-scope.test.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "browser-extension/servers.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "src/main/browser-server-mediation.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "src/main/browser-server-adapters.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "test/browser-server-scopes.test.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
