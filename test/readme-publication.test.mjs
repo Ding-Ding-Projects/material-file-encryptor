@@ -59,9 +59,9 @@ test('diagram labels have no inherited stroke and end panning retains the full t
 test('reviewed image staging preserves exact bytes and excludes neighboring files',async t=>{
  const temp=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-reviewed-images-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  await fs.mkdir(path.join(temp,'docs/images/captures'),{recursive:true});
- for(const image of publicImages)await fs.copyFile(image.source,path.join(temp,image.source));
+ for(const image of publicImages){await fs.mkdir(path.dirname(path.join(temp,image.source)),{recursive:true});await fs.copyFile(image.source,path.join(temp,image.source));}
  await fs.writeFile(path.join(temp,'docs/images/captures/private-neighbor.png'),'private');
- const output=path.join(temp,'output');const images=await stagePublicImages(temp,output);assert.equal(images.size,2);
+ const output=path.join(temp,'output');const images=await stagePublicImages(temp,output);assert.equal(images.size,publicImages.length);
  for(const image of publicImages)assert.deepEqual(await fs.readFile(path.join(output,image.route)),await fs.readFile(image.source));
  await assert.rejects(fs.access(path.join(output,'images/captures/private-neighbor.png')));
  const changed=await fs.readFile(path.join(temp,publicImages[0].source));changed[changed.length-1]^=1;await fs.writeFile(path.join(temp,publicImages[0].source),changed);
@@ -75,7 +75,7 @@ test('actual README publishes only registered image routes with reviewed dimensi
  await buildDocumentation(process.cwd(),output,await fs.readFile('docs/site/index.html','utf8'));
  const html=await fs.readFile(path.join(output,'articles/README.html'),'utf8');
  for(const image of publicImages){assert.ok(html.includes('src="../'+image.route+'"'));assert.ok(html.includes('width="'+image.width+'" height="'+image.height+'"'));assert.deepEqual(await fs.readFile(path.join(output,image.route)),await fs.readFile(image.source));}
- const escaped=renderMarkdown('![<unsafe>](docs/images/captures/site-guidance-normal-83e14d86.png)','README.md',new Map(),'../',new Map(publicImages.map(image=>[image.source,image])));assert.match(escaped,/alt="&lt;unsafe&gt;"/);
+ const escaped=renderMarkdown('![<unsafe>]('+publicImages[0].source+')','README.md',new Map(),'../',new Map(publicImages.map(image=>[image.source,image])));assert.match(escaped,/alt="&lt;unsafe&gt;"/);
 });
 
 

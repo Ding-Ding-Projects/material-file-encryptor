@@ -45,7 +45,7 @@ export async function verifyStagedExtension(directory) {
   return {receipt, provenance, manifest};
 }
 
-class Cdp {
+export class Cdp {
   constructor(url) {
     this.ws = new WebSocket(url); this.id = 0; this.pending = new Map(); this.events = [];
     this.ws.onmessage = event => {
@@ -68,14 +68,14 @@ class Cdp {
   close() { try { this.ws.close(); } catch {} }
 }
 
-const freePort = () => new Promise((resolve, reject) => { const server = net.createServer(); server.once('error', reject); server.listen(0, '127.0.0.1', () => { const {port} = server.address(); server.close(() => resolve(port)); }); });
+export const freePort = () => new Promise((resolve, reject) => { const server = net.createServer(); server.once('error', reject); server.listen(0, '127.0.0.1', () => { const {port} = server.address(); server.close(() => resolve(port)); }); });
 
 /** Launches the browser with only the staged extension loaded, in a new temporary profile. */
-export async function launchWithExtension({browser, extensionDirectory}) {
+export async function launchWithExtension({browser, extensionDirectory, extraArgs = []}) {
   const profile = await fs.mkdtemp(path.join(os.tmpdir(), 'mfe-extension-evidence-'));
   const port = await freePort();
   const absolute = path.resolve(extensionDirectory);
-  const child = spawn(browser, ['--headless=new', `--user-data-dir=${profile}`, `--remote-debugging-port=${port}`, `--load-extension=${absolute}`, `--disable-extensions-except=${absolute}`, '--no-first-run', '--no-default-browser-check', '--disable-sync', '--force-device-scale-factor=1', 'about:blank'], {stdio: 'ignore'});
+  const child = spawn(browser, ['--headless=new', `--user-data-dir=${profile}`, `--remote-debugging-port=${port}`, `--load-extension=${absolute}`, `--disable-extensions-except=${absolute}`, '--no-first-run', '--no-default-browser-check', '--disable-sync', '--force-device-scale-factor=1', ...extraArgs, 'about:blank'], {stdio: 'ignore'});
   const base = `http://127.0.0.1:${port}`;
   let extensionId = null;
   for (let attempt = 0; attempt < 40 && !extensionId; attempt++) {

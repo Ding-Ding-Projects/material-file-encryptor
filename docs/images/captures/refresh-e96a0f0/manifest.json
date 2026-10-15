@@ -1,0 +1,610 @@
+{
+  "schemaVersion": 1,
+  "captures": [
+    {
+      "kind": "extension",
+      "name": "home-1280x900-light-en",
+      "file": "extension/home-1280x900-light-en.png",
+      "sha256": "a079a525d4177227165f21e355b186b1973154b4ed9c535de55a05a41863072b",
+      "bytes": 77522,
+      "width": 1280,
+      "height": 900,
+      "surface": "options: home",
+      "theme": "light",
+      "language": "en",
+      "scale": 1,
+      "viewport": [
+        1280,
+        900
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "light",
+        "view": "home",
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "home-360x780-dark-bilingual",
+      "file": "extension/home-360x780-dark-bilingual.png",
+      "sha256": "4fb66b82e767273ccea6eaa542cdb0583742b75973ef4d430096cfc5dc18d368",
+      "bytes": 46678,
+      "width": 360,
+      "height": 780,
+      "surface": "options: home",
+      "theme": "dark",
+      "language": "bilingual",
+      "scale": 1,
+      "viewport": [
+        360,
+        780
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "dark",
+        "view": "home",
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "matrix-options-connection_minimum_1x_light_yue",
+      "file": "extension/matrix-options-connection_minimum_1x_light_yue.png",
+      "sha256": "5efc5bf0ca2b749cafa7414a88ed934b876346cd97af3a897f3fe3e8676cd4ca",
+      "bytes": 33770,
+      "width": 360,
+      "height": 640,
+      "surface": "options: connection",
+      "theme": "light",
+      "language": "yue",
+      "scale": 1,
+      "viewport": [
+        360,
+        640
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "zh-HK",
+        "theme": "light",
+        "view": "section",
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "matrix-options-models_minimum_2x_dark_bilingual",
+      "file": "extension/matrix-options-models_minimum_2x_dark_bilingual.png",
+      "sha256": "a695c54b44cb30391712e86aa0c145587487adffd8bb8aff14c842a199fbe174",
+      "bytes": 102739,
+      "width": 720,
+      "height": 1280,
+      "surface": "options: models",
+      "theme": "dark",
+      "language": "bilingual",
+      "scale": 2,
+      "viewport": [
+        360,
+        640
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "dark",
+        "view": "section",
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "matrix-popup_minimum_2x_dark_bilingual",
+      "file": "extension/matrix-popup_minimum_2x_dark_bilingual.png",
+      "sha256": "26161def6f6bffb907b03519373250b0f03cebccc5c240ea1548bc4d33dd72bf",
+      "bytes": 105960,
+      "width": 720,
+      "height": 1280,
+      "surface": "popup",
+      "theme": "dark",
+      "language": "bilingual",
+      "scale": 2,
+      "viewport": [
+        360,
+        640
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "dark",
+        "view": null,
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "models-chat-light-en",
+      "file": "extension/models-chat-light-en.png",
+      "sha256": "66f20c093816bd293cdd4bd4a153f2fdd5d8607f071542364117ef4a43be1060",
+      "bytes": 88820,
+      "width": 1100,
+      "height": 1300,
+      "surface": "options: models",
+      "theme": "light",
+      "language": "en",
+      "scale": 1,
+      "viewport": [
+        1100,
+        1300
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "light",
+        "view": "section",
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "models-connected-light-en",
+      "file": "extension/models-connected-light-en.png",
+      "sha256": "151028e8bdb683456dc0620f8b8a9d28370b0a29a72eecf4c1ff7b8c6a6d3b6d",
+      "bytes": 65006,
+      "width": 1100,
+      "height": 1000,
+      "surface": "options: models",
+      "theme": "light",
+      "language": "en",
+      "scale": 1,
+      "viewport": [
+        1100,
+        1000
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "light",
+        "view": "section",
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "offline-documentation-search-light-en",
+      "file": "extension/offline-documentation-search-light-en.png",
+      "sha256": "f8ff9a61511a477a188a118c811abd986ab977610ab089e70844090fee3b65c8",
+      "bytes": 126092,
+      "width": 1100,
+      "height": 900,
+      "surface": "options: docs",
+      "theme": "light",
+      "language": "en",
+      "scale": 1,
+      "viewport": [
+        1100,
+        900
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "light",
+        "view": "section",
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "popup-380-dark-bilingual",
+      "file": "extension/popup-380-dark-bilingual.png",
+      "sha256": "c6305fe2caa66c37763b5d190d5941323c6872b275d7ef47efe6a755fab2bb93",
+      "bytes": 47396,
+      "width": 380,
+      "height": 760,
+      "surface": "popup",
+      "theme": "dark",
+      "language": "bilingual",
+      "scale": 1,
+      "viewport": [
+        380,
+        760
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "dark",
+        "view": null,
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "popup-380-light-en",
+      "file": "extension/popup-380-light-en.png",
+      "sha256": "d00158d05af0fe62dc33fd8e24d3f0779e27039089753f5a5c7005453e32b1ab",
+      "bytes": 37806,
+      "width": 380,
+      "height": 760,
+      "surface": "popup",
+      "theme": "light",
+      "language": "en",
+      "scale": 1,
+      "viewport": [
+        380,
+        760
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "light",
+        "view": null,
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "section-connection-1280x900-light-en",
+      "file": "extension/section-connection-1280x900-light-en.png",
+      "sha256": "cd80d80d4ee0561aede935c27bc371ee7e75e6d1fe090a734a75129ec26cc4c0",
+      "bytes": 92197,
+      "width": 1280,
+      "height": 900,
+      "surface": "options: connection",
+      "theme": "light",
+      "language": "en",
+      "scale": 1,
+      "viewport": [
+        1280,
+        900
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "light",
+        "view": "section",
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "section-personalization-360x780-dark-bilingual",
+      "file": "extension/section-personalization-360x780-dark-bilingual.png",
+      "sha256": "1261fc607c60df9c4bbeea0b8a0c64e37627d2d88bd4d1c9f1a43e8b6ea46061",
+      "bytes": 43031,
+      "width": 360,
+      "height": 780,
+      "surface": "options: personalization",
+      "theme": "dark",
+      "language": "bilingual",
+      "scale": 1,
+      "viewport": [
+        360,
+        780
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "dark",
+        "view": "section",
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "section-publishing-1280x900-light-en",
+      "file": "extension/section-publishing-1280x900-light-en.png",
+      "sha256": "f3cb6dbf91cb189f6a447e150db9b3632def8f68918b910f99d5a04731bd8025",
+      "bytes": 63622,
+      "width": 1280,
+      "height": 900,
+      "surface": "options: publishing",
+      "theme": "light",
+      "language": "en",
+      "scale": 1,
+      "viewport": [
+        1280,
+        900
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "light",
+        "view": "section",
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "section-servers-1280x900-light-en",
+      "file": "extension/section-servers-1280x900-light-en.png",
+      "sha256": "c3e807559bc62a97f255d4a1d4590f60b4b312e366a296103a3506d51e4b8340",
+      "bytes": 49874,
+      "width": 1280,
+      "height": 900,
+      "surface": "options: servers",
+      "theme": "light",
+      "language": "en",
+      "scale": 1,
+      "viewport": [
+        1280,
+        900
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "light",
+        "view": "section",
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "status-coverage-narrow-light-en",
+      "file": "extension/status-coverage-narrow-light-en.png",
+      "sha256": "a38ac6f438d67b699e816212d7a29f0aea6322471d8947e238f2cc5e5ef3e24f",
+      "bytes": 67207,
+      "width": 360,
+      "height": 900,
+      "surface": "options: status",
+      "theme": "light",
+      "language": "en",
+      "scale": 1,
+      "viewport": [
+        360,
+        900
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "light",
+        "view": "section",
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "status-desktop-unpaired-light-en",
+      "file": "extension/status-desktop-unpaired-light-en.png",
+      "sha256": "194eb8170f5315704a66943f7d4a3bdebe95f7f3970bd3dc1889af27f16e6ae5",
+      "bytes": 97932,
+      "width": 1100,
+      "height": 900,
+      "surface": "options: status",
+      "theme": "light",
+      "language": "en",
+      "scale": 1,
+      "viewport": [
+        1100,
+        900
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "light",
+        "view": "section",
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "status-installer-link-light-en",
+      "file": "extension/status-installer-link-light-en.png",
+      "sha256": "5eaa3ee50cfd42cf7a2e8835fa43aa08825b453982e6032761bf0eb2ae76a60c",
+      "bytes": 254343,
+      "width": 1100,
+      "height": 900,
+      "surface": "options: status",
+      "theme": "light",
+      "language": "en",
+      "scale": 1,
+      "viewport": [
+        1100,
+        900
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "light",
+        "view": "section",
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "extension",
+      "name": "status-release-light-en",
+      "file": "extension/status-release-light-en.png",
+      "sha256": "1023a36ec6bd4b6a24259056f419b3e0d0c06a09484db54dee0830dede93b14a",
+      "bytes": 309288,
+      "width": 1100,
+      "height": 1100,
+      "surface": "options: status",
+      "theme": "light",
+      "language": "en",
+      "scale": 1,
+      "viewport": [
+        1100,
+        1100
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "buildIdentity": "4c5c4e094d58dfc09a854c35b10f1dc287b99f8a8919a61fb824776de1a742d5",
+      "extensionVersion": "0.1.0",
+      "checks": {
+        "language": "en",
+        "theme": "light",
+        "view": "section",
+        "overflow": false,
+        "version": "0.1.0"
+      },
+      "errors": []
+    },
+    {
+      "kind": "site",
+      "name": "article-local-models-360x800-light-en",
+      "file": "site/article-local-models-360x800-light-en.png",
+      "sha256": "1aa11bac8c93e764a1b9a9f03b595c6050ee57967b2906efd8c21dc3158c03a6",
+      "bytes": 37381,
+      "width": 360,
+      "height": 800,
+      "surface": "documentation site: /articles/docs--features--workflows--browser-extension-local-models.html",
+      "theme": "light",
+      "language": "en",
+      "scale": 1,
+      "viewport": [
+        360,
+        800
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "siteBuiltFrom": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "siteSourceDirty": false,
+      "checks": {
+        "title": "Browser extension local models · Material File Encryptor",
+        "overflow": false,
+        "language": "en"
+      }
+    },
+    {
+      "kind": "site",
+      "name": "home-1280x900-light-en",
+      "file": "site/home-1280x900-light-en.png",
+      "sha256": "4265be11ad891cec56b7fe300ddcc411435fd3629a1317305ce9324a3625bda4",
+      "bytes": 89679,
+      "width": 1280,
+      "height": 900,
+      "surface": "documentation site: /index.html",
+      "theme": "light",
+      "language": "en",
+      "scale": 1,
+      "viewport": [
+        1280,
+        900
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "siteBuiltFrom": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "siteSourceDirty": false,
+      "checks": {
+        "title": "Material File Encryptor · Your files, your folder",
+        "overflow": false,
+        "language": "en"
+      }
+    },
+    {
+      "kind": "site",
+      "name": "home-320x800-dpr2-light-en",
+      "file": "site/home-320x800-dpr2-light-en.png",
+      "sha256": "dfbb0107c4f3fd1015caa7fd2fc686442030a86793f70673217e120cfc358ca5",
+      "bytes": 111481,
+      "width": 640,
+      "height": 1600,
+      "surface": "documentation site: /index.html",
+      "theme": "light",
+      "language": "en",
+      "scale": 2,
+      "viewport": [
+        320,
+        800
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "siteBuiltFrom": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "siteSourceDirty": false,
+      "checks": {
+        "title": "Material File Encryptor · Your files, your folder",
+        "overflow": false,
+        "language": "en"
+      }
+    },
+    {
+      "kind": "site",
+      "name": "library-1280x900-light-en",
+      "file": "site/library-1280x900-light-en.png",
+      "sha256": "d240574ca4b62c9fbf065a7479a390186b786cb302d1ecf39850019eb5a93e1d",
+      "bytes": 64943,
+      "width": 1280,
+      "height": 900,
+      "surface": "documentation site: /library.html",
+      "theme": "light",
+      "language": "en",
+      "scale": 1,
+      "viewport": [
+        1280,
+        900
+      ],
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "siteBuiltFrom": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "siteSourceDirty": false,
+      "checks": {
+        "title": "Documentation library · Material File Encryptor",
+        "overflow": false,
+        "language": "en"
+      }
+    }
+  ],
+  "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276"
+}

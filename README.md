@@ -152,35 +152,49 @@ These captures come from the built desktop application at source `2a9cb388718c39
 
 #### Browser extension Home page and popup launcher
 
-Headless Microsoft Edge with the staged extension from source `cfc5e00`, captured on October 14, 2026. The workspace opens on a grid of section cards instead of a tab bar, and the popup keeps the pairing controls above a launcher with one button per section. No desktop was paired, so the connection states read as unavailable.
+Headless Microsoft Edge with the staged extension from source `e96a0f0` (staged October 15, 2026 UTC), loaded unpacked into a disposable profile. The workspace opens on a grid of section cards instead of a tab bar, and the popup keeps the pairing controls above a launcher with one button per section. No desktop was paired, so the connection states read as unavailable.
 
-![Extension workspace Home page with one card per section, light theme, English](docs/images/captures/extension-home-cfc5e00/home-1280x900-light-en.png)
+![Extension workspace Home page with one card per section, light theme, English](docs/images/captures/refresh-e96a0f0/extension/home-1280x900-light-en.png)
 
-![Extension popup with pairing controls above the section launcher, light theme, English](docs/images/captures/extension-home-cfc5e00/popup-380-light-en.png)
+![Extension popup with pairing controls above the section launcher, light theme, English](docs/images/captures/refresh-e96a0f0/extension/popup-380-light-en.png)
 
-#### Browser extension models tab
+#### Browser extension Models tab
 
-Headless Microsoft Edge with the staged extension from source `45ccb91`, captured on October 14, 2026, against a fake local model server; the permission prompt was stubbed for the connected states, and no real Ollama server or installed build was used. The chat capture shows a `javascript:` address left as plain text and the one https link opening with `noopener noreferrer`.
+The same staged extension against a fake local model server; the permission prompt was stubbed for the connected states, and no real Ollama server or installed build was used. The chat capture shows a `javascript:` address left as plain text and the one https link opening with `noopener noreferrer`.
 
-![Models tab connected to a local server, listing installed and running models, light theme, English](docs/images/captures/extension-models-45ccb91/models-connected-light-en.png)
+![Models tab connected to a local server, listing installed and running models, light theme, English](docs/images/captures/refresh-e96a0f0/extension/models-connected-light-en.png)
 
-![Models tab chat with a streamed reply rendered as safe rich text with copy actions, light theme, English](docs/images/captures/extension-models-45ccb91/models-chat-light-en.png)
+![Models tab chat with a streamed reply rendered as safe rich text with copy actions, light theme, English](docs/images/captures/refresh-e96a0f0/extension/models-chat-light-en.png)
 
-#### Browser extension status tab
+#### Browser extension Status tab
 
-Headless Microsoft Edge with the staged extension from clean source `78e606f`, captured on October 14, 2026. Check releases read the live published releases: the newest, v1.570.1, carries the code name Classic Har Gow, and is labelled as not this build because the extension's version 0.1.0 has no release of its own. The narrow capture shows the inventory coverage list at 360 pixels with no horizontal overflow.
+The same staged extension. Check releases read the live published releases at capture time and found the release for this build, v1.657.1, with the code name Classic Har Gow. The narrow capture shows the inventory coverage list at 360 pixels with no horizontal overflow.
 
-![Status tab showing the newest published release, its food code name and dish photo, labelled as not this build, light theme, English](docs/images/captures/extension-status-78e606f/status-release-light-en.png)
+![Status tab showing the published release, its food code name and dish photo, light theme, English](docs/images/captures/refresh-e96a0f0/extension/status-release-light-en.png)
 
-![Status tab feature coverage list filtered by a search at 360 pixels wide, light theme, English](docs/images/captures/extension-status-78e606f/status-coverage-narrow-light-en.png)
+![Status tab feature coverage list filtered by a search at 360 pixels wide, light theme, English](docs/images/captures/refresh-e96a0f0/extension/status-coverage-narrow-light-en.png)
+
+#### Browser extension Progress and publication, and Servers
+
+Both sections before pairing: the progress note form keeps its send action disabled until the preview is reviewed and nothing was sent, and the Servers section shows its disabled reads and the four target types without any server data.
+
+![Progress and publication section with the send action disabled, light theme, English](docs/images/captures/refresh-e96a0f0/extension/section-publishing-1280x900-light-en.png)
+
+![Servers section before pairing, light theme, English](docs/images/captures/refresh-e96a0f0/extension/section-servers-1280x900-light-en.png)
 
 #### Documentation site
 
-The following genuine documentation captures show the information entry, worked example and isolated playground from source `83e14d8627b9782d5acc12221c22ed4f0b8b2d4c`. Capture time: October 13, 2026, 11:50 UTC. They cover two bilingual/light tuples, not native-product or installed acceptance. The [source-bound inventory](docs/evidence/control-guidance-83-inventory.json) retains exact intervals, hashes and limitations.
+Genuine captures of the staged documentation site built from source `e96a0f0`, served from loopback and captured in a disposable headless Microsoft Edge profile, light theme, English. The narrow captures use a 320 pixel and a 360 pixel CSS viewport. They show public pages only, not native-product or installed acceptance. The earlier history-guidance captures needed a paired local profile and are no longer shown; they remain in Git history.
 
-![Bilingual history guidance and isolated sample controls at 1280 by 900](docs/images/captures/site-guidance-normal-83e14d86.png)
+![Documentation site home page at 1280 by 900](docs/images/captures/refresh-e96a0f0/site/home-1280x900-light-en.png)
 
-![Bilingual history guidance at a 320 pixel CSS viewport with DPR 2](docs/images/captures/site-guidance-narrow-83e14d86.png)
+![Documentation library at 1280 by 900](docs/images/captures/refresh-e96a0f0/site/library-1280x900-light-en.png)
+
+![Documentation site home page at a 320 pixel CSS viewport with DPR 2](docs/images/captures/refresh-e96a0f0/site/home-320x800-dpr2-light-en.png)
+
+![Browser extension local models article at a 360 pixel CSS viewport](docs/images/captures/refresh-e96a0f0/site/article-local-models-360x800-light-en.png)
+
+The refresh folder holds a [manifest](docs/images/captures/refresh-e96a0f0/manifest.json) with each image's hash, size, viewport and source commit; `node scripts/refresh-screenshots.mjs capture` regenerates it.
 
 Historical originals remain available in the [reviewed historical gallery](https://ding-ding-projects.github.io/material-file-encryptor/gallery.html), [original preview inventory](docs/images/captures/preview/inventory.json), [preview verification summary](docs/images/captures/preview/verification-summary.json), [Linux capture provenance](docs/images/captures/provenance.json), and [Windows capture provenance](docs/images/captures/windows/provenance.json). Their original dates, sources, hashes, exclusions and incomplete verdicts remain unchanged. The diagrams here explain behavior; they are not screenshots or runtime evidence.
 

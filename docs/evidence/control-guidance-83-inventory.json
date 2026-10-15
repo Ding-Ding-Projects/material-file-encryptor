@@ -5,7 +5,8 @@
   "records": [
     {
       "id": "site-guidance-normal-83e14d86",
-      "active": true,
+      "active": false,
+      "supersededBy": "docs/images/captures/refresh-e96a0f0/manifest.json",
       "path": "docs/images/captures/site-guidance-normal-83e14d86.png",
       "sourceCommit": "83e14d8627b9782d5acc12221c22ed4f0b8b2d4c",
       "artifactSha256": "f761cbf9c4d7dc456601f49c9f5e2997d90cbb67975a38f764a1096627556798",
@@ -32,7 +33,8 @@
     },
     {
       "id": "site-guidance-narrow-83e14d86",
-      "active": true,
+      "active": false,
+      "supersededBy": "docs/images/captures/refresh-e96a0f0/manifest.json",
       "path": "docs/images/captures/site-guidance-narrow-83e14d86.png",
       "sourceCommit": "83e14d8627b9782d5acc12221c22ed4f0b8b2d4c",
       "artifactSha256": "f761cbf9c4d7dc456601f49c9f5e2997d90cbb67975a38f764a1096627556798",

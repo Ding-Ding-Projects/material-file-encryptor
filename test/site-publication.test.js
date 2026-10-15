@@ -231,8 +231,8 @@ test('actual publication shell resolves local font registration for root, articl
 
 test('documentation image admission is separate from article links and rejects unsafe references',()=>{
  const image=publicImages[0],images=new Map(publicImages.map(item=>[item.source,item]));
- for(const url of ['https://example.com/image.png','//example.com/image.png','/docs/images/captures/site-guidance-normal-83e14d86.png','C:/image.png','../'+image.source,'docs/images/captures/unknown.png',image.source+'#fragment',image.source+'?query','docs%2fimages/image.png',String.raw`docs\images\image.png`])assert.throws(()=>renderMarkdown('![image]('+url+')','README.md',new Map(),'../',images),/explicit local/);
+ for(const url of ['https://example.com/image.png','//example.com/image.png','/'+image.source,'C:/image.png','../'+image.source,'docs/images/captures/unknown.png',image.source+'#fragment',image.source+'?query','docs%2fimages/image.png',String.raw`docs\images\image.png`])assert.throws(()=>renderMarkdown('![image]('+url+')','README.md',new Map(),'../',images),/explicit local/);
  assert.throws(()=>renderMarkdown('![image]('+image.source+')','README.md',new Map([[image.source,image.route]])),/explicit local/);
  assert.throws(()=>renderMarkdown('![image]('+image.source+')','README.md',new Map(),'../',new Map([[image.source,{...image}]])),/explicit local/);
- assert.match(renderMarkdown('![image](../../images/captures/site-guidance-normal-83e14d86.png)','docs/features/interface/example.md',new Map(),'../',images),/src="..\/images\/captures\/site-guidance-normal-83e14d86.png"/);
+ assert.ok(renderMarkdown('![image](../../'+image.route+')','docs/features/interface/example.md',new Map(),'../',images).includes('src="../'+image.route+'"'));
 });

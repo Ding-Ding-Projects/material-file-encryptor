@@ -251,7 +251,7 @@ export async function extensionGalleryRecords(root) {
  for(const record of inventory.records){
   if(!record||typeof record!=='object'||JSON.stringify(Object.keys(record).sort())!==JSON.stringify(EXTENSION_KEYS))throw new Error('Extension gallery record fields differ');
   if(!/^extension-[a-z0-9-]+$/.test(record.id)||ids.has(record.id))throw new Error('Invalid extension gallery identity');ids.add(record.id);
-  if(!/^images\/captures\/extension-[A-Za-z0-9_./-]+\.png$/.test(record.path)||record.path.split('/').includes('..')||paths.has(record.path))throw new Error('Invalid extension gallery asset');paths.add(record.path);
+  if(!/^images\/captures\/(?:extension-[A-Za-z0-9_.-]+|refresh-[a-f0-9]{7,40}\/extension)\/[A-Za-z0-9_./-]+\.png$/.test(record.path)||record.path.split('/').includes('..')||paths.has(record.path))throw new Error('Invalid extension gallery asset');paths.add(record.path);
   if(!/^[a-f0-9]{40}$/.test(record.sourceCommit)||!/^[a-f0-9]{64}$/.test(record.sha256))throw new Error('Missing extension gallery source/hash');
   if(record.privacy!=='public-safe'||record.inspectionStatus!=='inspected')throw new Error('Unreviewed extension gallery record');
   if(!['light','dark'].includes(record.theme)||!['en','yue','bilingual'].includes(record.language)||!Number.isFinite(record.scale)||record.scale<=0)throw new Error('Invalid extension gallery tuple');
