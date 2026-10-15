@@ -34,6 +34,7 @@ var cases = new (string,Action)[] {
     ("format 3 bounded authenticated blocks and unchanged block reuse",FixedChunks),
     ("random access, sparse growth, truncate, atomic rename and stable handles",RandomAccess),
     ("credential wrapping, key file and raw master restore",Credentials),
+    ("a cache left by another vault is moved aside, never deleted",ForeignCache),
     ("case folding, traversal and Windows reserved names",Paths),
     ("physical ciphertext caps, packed records and explicit resplit",Caps),
     ("authenticated record tamper is rejected",Tamper),
@@ -86,6 +87,26 @@ static void Credentials() {
         Throws<CryptographicException>(()=>VaultEngine.OpenWithMasterKey(Options(root,"bad-master"),RandomNumberGenerator.GetBytes(32)));
         foreach(var file in Directory.EnumerateFiles(root,"*",SearchOption.AllDirectories)) {var raw=File.ReadAllBytes(file);Assert(!Encoding.UTF8.GetString(raw).Contains("secret-name.txt")&&!Encoding.UTF8.GetString(raw).Contains("secret plaintext marker"),"Plaintext leaked to filesystem.");}
         var keyRoot=Path.Combine(root,"keyvault");var bytes=VaultCredentials.GenerateKeyFile();using var cred=VaultCredentials.KeyFile(bytes);using(var v=VaultEngine.Create(Options(keyRoot),cred)){v.CreateFile("key.bin");v.FlushAsync().GetAwaiter().GetResult();}using var opened=VaultEngine.Open(Options(keyRoot),cred);Assert(opened.GetInfo("key.bin")!=null);Throws<ArgumentException>(()=>VaultCredentials.KeyFile(new byte[31]));
+    } finally{Directory.Delete(root,true);}}
+static void ForeignCache() {
+    var root=Temp();
+    VaultOptions At(string storage,string cache)=>new(){StorageRoot=Path.Combine(root,storage),CacheRoot=Path.Combine(root,cache),PartSizeBytes=1024};
+    VaultEngine New(string storage,string cache){using var c=VaultCredentials.Password("strong test credential");return VaultEngine.Create(At(storage,cache),c);}
+    VaultEngine Reopen(string storage,string cache){using var c=VaultCredentials.Password("strong test credential");return VaultEngine.Open(At(storage,cache),c);}
+    try {
+        // Vault A writes through the shared cache folder.
+        using(var a=New("a-source","cache")){Assert(a.PreviousCacheMovedTo==null,"a clean cache is not moved");a.CreateFile("a.txt");a.WriteRange("a.txt",0,"vault a"u8);a.FlushAsync().GetAwaiter().GetResult();}
+        // A new vault B on the same cache folder succeeds; A's cache is kept beside it.
+        string? keptA;
+        using(var b=New("b-source","cache")){keptA=b.PreviousCacheMovedTo;Assert(keptA!=null&&File.Exists(Path.Combine(keptA,"vault.json")),"the earlier vault cache is kept aside");b.CreateFile("b.txt");b.WriteRange("b.txt",0,"vault b"u8);b.FlushAsync().GetAwaiter().GetResult();}
+        // Reopening A on the cache that now belongs to B also recovers, and A's data comes back from its storage.
+        using(var a=Reopen("a-source","cache")){Assert(a.PreviousCacheMovedTo!=null&&a.PreviousCacheMovedTo!=keptA,"the other vault cache is moved aside on open");Equal("vault a"u8.ToArray(),Read(a,"a.txt"));}
+        // A configuration too damaged to identify is moved aside rather than reported as damage.
+        var damaged=Path.Combine(root,"damaged");Directory.CreateDirectory(damaged);File.WriteAllText(Path.Combine(damaged,"vault.json"),"not a vault");
+        using(var c=New("c-source","damaged"))Assert(c.PreviousCacheMovedTo!=null&&File.ReadAllText(Path.Combine(c.PreviousCacheMovedTo,"vault.json"))=="not a vault","damaged cache is preserved, not deleted");
+        // A folder with only unrelated files is used as before and never moved.
+        var plain=Path.Combine(root,"plain");Directory.CreateDirectory(plain);File.WriteAllText(Path.Combine(plain,"notes.txt"),"keep me");
+        using(var d=New("d-source","plain"))Assert(d.PreviousCacheMovedTo==null&&File.ReadAllText(Path.Combine(plain,"notes.txt"))=="keep me","unrelated files stay in place");
     } finally{Directory.Delete(root,true);}}
 static void Paths() {foreach(var path in new[]{"../a","a/../b","a//b","C:/a","con.txt","LPT1","com².dat","a.","a ","a?b","//server/a"})Throws<ArgumentException>(()=>VaultPath.Normalize(path));Assert(VaultPath.Normalize("\\docs\\a")=="docs/a");var root=Temp();try{using var v=Create(root);v.CreateFile("Readme.txt");Throws<IOException>(()=>v.CreateFile("README.TXT"));}finally{Directory.Delete(root,true);}}
 static void Caps() {var root=Temp();try{using var v=Create(root,140000);v.CreateFile("cap.bin");var bytes=RandomNumberGenerator.GetBytes(300000);v.WriteRange("cap.bin",0,bytes);v.FlushAsync().GetAwaiter().GetResult();Assert(v.GetInfo("cap.bin")!.PartCount<5,"Records were not packed.");foreach(var p in Directory.EnumerateFiles(Path.Combine(root,"source","parts")))Assert(new FileInfo(p).Length<=140000);v.SetPartSize(1024);Assert(v.GetInfo("cap.bin")!.PartSizeBytes==140000);v.WriteRange("cap.bin",0,new byte[]{42});bytes[0]=42;Assert(v.GetInfo("cap.bin")!.PartSizeBytes==140000,"Lazy cap change must retain legacy part metadata until resplit.");v.FlushAsync().GetAwaiter().GetResult();Equal(bytes,Read(v,"cap.bin"));var prior=Directory.GetFiles(Path.Combine(root,"source","parts")).Length;v.ResplitAsync("cap.bin",4096).GetAwaiter().GetResult();Assert(v.GetInfo("cap.bin")!.PartSizeBytes==4096);Equal(bytes,Read(v,"cap.bin"));Assert(Directory.GetFiles(Path.Combine(root,"source","parts")).Length>prior,"Previous objects were deleted.");foreach(var p in Directory.EnumerateFiles(Path.Combine(root,"source","parts")))Assert(new FileInfo(p).Length<=140000);Throws<ArgumentOutOfRangeException>(()=>v.SetPartSize(1023));Throws<ArgumentOutOfRangeException>(()=>v.SetPartSize(1073741825));}finally{Directory.Delete(root,true);}}

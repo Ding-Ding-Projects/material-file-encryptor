@@ -1,4 +1,5 @@
 import {createStartupSurprise,observeStartupInteraction} from '../shared/local-ux/surprise.js';
+import {plainErrorMessage} from '../shared/ipc-error.js';
 import {createStartupPresentation} from './features/shell/startup-surprise.js';
 import {createNotificationNarration} from './features/shell/notification-narration.js';
 import {control,prepareControl,controlKind,CONTROL_SELECTOR,setControlLanguage} from '../shared/surface/controls.js';
@@ -104,7 +105,7 @@ function applyPreferences() {
 }
 colorQuery.addEventListener('change', applyPreferences);
 function showError(error, inDialog = false) {
- const message = error instanceof Error ? error.message : String(error || 'The operation could not be completed.');
+ const message = plainErrorMessage(error);
  const target = $(inDialog ? 'dialog-error' : 'main-error-text'); target.textContent = t(message,{message:true});
  $(inDialog ? 'dialog-error' : 'main-error').hidden = false;
  if (!inDialog) $('main-error').scrollIntoView({block:'nearest'});

@@ -35,10 +35,12 @@ public sealed partial class VaultEngine : IDisposable
         this.config = config; this.key = key; device = options.DeviceId ?? Guid.NewGuid().ToString("N");
         var check = VaultCrypto.Unseal(config.KeyCheck,key,Domain("key-check"),64);
         try { if(System.Text.Encoding.UTF8.GetString(check)!=config.VaultId)throw new CryptographicException("Invalid master key."); } finally { CryptographicOperations.ZeroMemory(check); }
+        var cachedConfig = Path.Combine(cache, "vault.json");
+        // A cache left by a different vault (or one too damaged to identify) is moved aside intact, never deleted;
+        // this vault then rebuilds its cache from encrypted storage.
+        if (File.Exists(cachedConfig) && CachedVaultId(cachedConfig) != config.VaultId) PreviousCacheMovedTo = MovePreviousVaultCache(cache);
         Directory.CreateDirectory(cache); Directory.CreateDirectory(Path.Combine(cache, "parts")); Directory.CreateDirectory(Path.Combine(cache, "commits"));
         foreach(var root in new[]{source,cache})foreach(var folder in new[]{"parts","commits"})VaultCrypto.ValidatePhysicalPath(Path.Combine(root,folder));
-        var cachedConfig = Path.Combine(cache, "vault.json");
-        if (File.Exists(cachedConfig) && VaultCrypto.Deserialize<Config>(VaultCrypto.ReadBounded(cachedConfig,65536)).VaultId != config.VaultId) throw new InvalidDataException("Cache belongs to another vault.");
         VaultCrypto.AtomicWrite(cachedConfig, VaultCrypto.Serialize(config));
         var journalPath = Path.Combine(cache,"journal.mfe");
         long checkpointSequence=0;string checkpointDigest="";
@@ -71,11 +73,40 @@ public sealed partial class VaultEngine : IDisposable
         VaultEngine? engine = null;
         try
         {
+            var moved = MovePreviousVaultCache(options.CacheRoot);
             engine = new(options,configuration,master);
+            engine.PreviousCacheMovedTo = moved ?? engine.PreviousCacheMovedTo;
             Directory.CreateDirectory(source); Directory.CreateDirectory(Path.Combine(source,"parts")); Directory.CreateDirectory(Path.Combine(source,"commits"));
             VaultCrypto.AtomicWrite(Path.Combine(source,"vault.json"),VaultCrypto.Serialize(configuration)); engine.sourceAvailable = true; engine.SaveJournal(); return engine;
         }
         catch { engine?.Dispose(); CryptographicOperations.ZeroMemory(master); throw; }
+    }
+    /// <summary>Where a new vault moved a previous vault's cache aside, or null when the cache folder was clean.</summary>
+    public string? PreviousCacheMovedTo { get; private set; }
+    /// <summary>
+    /// A brand-new vault has a random identity, so a cache folder that already holds a vault configuration or journal
+    /// always belongs to some earlier vault. Rather than failing with "invalid or damaged", the whole folder is moved
+    /// aside to a sibling named "previous-..." and never deleted, so any unsynchronized work of that earlier vault is
+    /// kept. Folders with only unrelated files are left alone, as before.
+    /// </summary>
+    private static string? CachedVaultId(string path)
+    {
+        try { return VaultCrypto.Deserialize<Config>(VaultCrypto.ReadBounded(path,65536)).VaultId; }
+        catch (Exception error) when (error is InvalidDataException or System.Text.Json.JsonException or IOException) { return null; }
+    }
+    internal static string? MovePreviousVaultCache(string cacheRoot)
+    {
+        var cache = Path.GetFullPath(cacheRoot).TrimEnd(Path.DirectorySeparatorChar);
+        if (!Directory.Exists(cache)) return null;
+        if (!File.Exists(Path.Combine(cache,"vault.json")) && !File.Exists(Path.Combine(cache,"journal.mfe"))) return null;
+        RejectReparseAncestors(cache);
+        if (Path.GetPathRoot(cache)?.TrimEnd(Path.DirectorySeparatorChar).Equals(cache,StringComparison.OrdinalIgnoreCase) == true)
+            throw new InvalidOperationException("The cache folder holds data from another vault and is a drive root, so it cannot be moved aside. Choose an empty cache folder.");
+        var target = $"{cache}.previous-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid().ToString("N")[..8]}";
+        try { Directory.Move(cache,target); }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        { throw new InvalidOperationException("The cache folder holds data from another vault and could not be moved aside. Close anything using it, or choose an empty cache folder.", error); }
+        return target;
     }
     private static Config LoadConfig(VaultOptions options)
     {
