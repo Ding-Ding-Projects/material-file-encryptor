@@ -50,7 +50,7 @@ export function renderReleaseDownload(document, record) {
   if (!eligible) {
     // Keep even a previously enabled control inert if its proof is replaced.
     if (control.tagName === 'A') {
-      const disabled = document.createElement('button');
+      const disabled = document.createElement('md-filled-button');
       disabled.id = 'preview-download'; disabled.type = 'button'; disabled.disabled = true;
       disabled.className = 'button button-disabled'; disabled.setAttribute('aria-describedby', 'download-help');
       disabled.textContent = 'Download verified preview for Windows'; control.replaceWith(disabled);
