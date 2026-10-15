@@ -58,7 +58,7 @@ export class Cdp {
   open() { return new Promise((resolve, reject) => { this.ws.onopen = resolve; this.ws.onerror = reject; }); }
   send(method, params = {}) {
     const id = ++this.id; this.ws.send(JSON.stringify({id, method, params}));
-    return new Promise((resolve, reject) => { this.pending.set(id, {resolve, reject}); setTimeout(() => { if (this.pending.delete(id)) reject(new Error(method + ' timed out')); }, 30000); });
+    return new Promise((resolve, reject) => { this.pending.set(id, {resolve, reject}); setTimeout(() => { if (this.pending.delete(id)) reject(new Error(method + ' timed out')); }, this.timeoutMs || 30000); });
   }
   async eval(expression) {
     const result = await this.send('Runtime.evaluate', {expression, awaitPromise: true, returnByValue: true});

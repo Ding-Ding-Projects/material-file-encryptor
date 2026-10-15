@@ -324,6 +324,7 @@ export async function auditSite(report,{site = path.join(root, 'out/site'), brow
     meta.routes = {topLevel: top.length, categoriesAvailable: categories.length, categoriesAudited: auditedCategories.length, articlesAvailable: articles.length, articlesAudited: auditedArticles.length, darkSample: {categories: darkCategories.length, articles: darkArticles.length, sampling: 'evenly spaced over the sorted file list, first and last included'}, viewports: ['1280x800', '360x780']};
     const page = await session.open('about:blank');
     if (control.withoutShadowReduction) await neutralizeShadowReduction(page);
+    page.timeoutMs = 120000; // the workspace page rebuilds hundreds of tabs per interaction and can stall a call for a while
     for (const [width, height] of [[1280, 800], [360, 780]]) {
       await setViewport(page, width, height);
       const routes = [...top.map(route => ({route, themes: quick ? ['light'] : THEMES})), ...[...auditedCategories, ...auditedArticles].map(route => ({route, themes: quick || !darkRoutes.has(route) ? ['light'] : THEMES}))];
