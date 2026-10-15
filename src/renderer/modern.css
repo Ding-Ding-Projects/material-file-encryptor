@@ -39,3 +39,12 @@ md-outlined-select{min-width:min(100%,14rem)}
 .home-view[hidden]{display:none}
 .home-view:not([hidden]){animation:md-fade-through-in var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate) both}
 @media(prefers-reduced-motion:reduce){.home-view:not([hidden]){animation:none}}
+
+/* Drive file table: the selection column must hold the full Material radio and its state layer without clipping. */
+.table-scroll th.select-column,#file-list>tr>td:first-child{width:56px;min-width:56px;max-width:56px;padding-inline:4px;overflow:visible;text-overflow:clip;text-align:center}
+#file-list>tr>td:first-child md-radio{display:inline-flex;vertical-align:middle;margin:0}
+
+/* Pair a browser: the issued code and QR fade in like any other section, and not at all under reduced motion. */
+.browser-pairing-display{display:grid;justify-items:start;gap:8px;margin-block:12px}
+.browser-pairing-display:not([hidden]){animation:md-fade-through-in var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate) both}
+@media(prefers-reduced-motion:reduce){.browser-pairing-display:not([hidden]){animation:none}}

@@ -18,3 +18,8 @@ details[open]>:not(summary){animation:workspace-surface-in var(--md-sys-motion-d
 
 /* Documentation list entries are Material buttons: they take the workspace font through the typeface tokens above and never exceed their column. */
 .docs-nav>md-text-button,.workspace-list md-text-button{min-width:0;max-width:100%}
+
+/* The article list reads as a list: entries hug the start edge, take the Material pill shape, and the open article is highlighted. */
+.docs-nav{align-items:flex-start;gap:2px}
+.docs-nav>md-text-button{--md-text-button-label-text-color:var(--md-sys-color-on-surface-variant);--md-text-button-container-shape:999px;border-radius:999px;transition:background-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard)}
+.docs-nav>md-text-button[data-current]{background:var(--md-sys-color-primary-container);--md-text-button-label-text-color:var(--md-sys-color-on-primary-container)}
