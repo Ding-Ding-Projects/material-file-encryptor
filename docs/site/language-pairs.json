@@ -223,8 +223,8 @@
     {
       "source": "docs/features/interface/local-tools-workspaces.md",
       "translation": "docs/features/interface/local-tools-workspaces.zh-HK.md",
-      "sourceSha256": "23972d4bfc835ef7aadb77e567d70346cc30432eba700d4650181a548ebff599",
-      "translationSha256": "4bb2d0a4137b7985782b84ff655bbc940c0b89ce33e2e09c7ace34b0202c5f0c"
+      "sourceSha256": "451b7914e30dad4aae052fb9ac5ce2144a44cb8ed04ae2a486e93b684159cf11",
+      "translationSha256": "6fe15f37261a91b873b37ce536fc31ee505a6d9aecf50269c6955ba65f191023"
     },
     {
       "source": "docs/features/interface/material-dialogs-and-motion.md",
@@ -643,14 +643,14 @@
     {
       "source": "docs/features/workflows/browser-extension-workspace.md",
       "translation": "docs/features/workflows/browser-extension-workspace.zh-HK.md",
-      "sourceSha256": "239bcc186c50c8340dae146dcccab6a474b73b14ac39e67767cb6d393efe7b29",
-      "translationSha256": "d752a80eaf360d59afea9d9550134dfcbabbde35cf8b205d885cc48de27cd433"
+      "sourceSha256": "33de736b49eda3631726a6893b98a831bfc6daa9e39231defb922fc9c6fbc8d4",
+      "translationSha256": "0b968fc7bd5cbf2ba5a387643da939ffad1d5e7d1885d33704ce5b25431385a2"
     },
     {
       "source": "docs/features/workflows/browser-native-host.md",
       "translation": "docs/features/workflows/browser-native-host.zh-HK.md",
-      "sourceSha256": "b816d29786f62688c7b914fb688f54371f7d8b343b0ab0ab4c7f4b704cfa2604",
-      "translationSha256": "3804142abd6be84b5174f8384ee7e5fd14f470080a001b1a7824dd00bcd26dac"
+      "sourceSha256": "146749ecfda06efd171004ecc7b12faf53d1d67d144aa0a82dbb2a28c31dc6fa",
+      "translationSha256": "1abc65106ce5e5e41c0ea1b6963c3fdbb5697065ce90d726dd3424a285e6122c"
     },
     {
       "source": "docs/features/workflows/browser-protection-observations.md",

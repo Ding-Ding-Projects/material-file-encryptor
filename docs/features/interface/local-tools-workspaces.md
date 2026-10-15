@@ -14,6 +14,10 @@ Model Store, Pull cart, Local chat, Profiles and Help are distinct keyboard-navi
 
 The preparation view separates the bounded version list, current selection and operation cards. Download byte progress is labelled as unverified until the existing SHA-256 verification completes. It continues to state that server startup, other execution targets and license acceptance are not provided.
 
+## Pair a browser
+
+The Pair a browser tab has one job: show a one-time pairing code for the browser extension. Nothing is issued when the tab opens. **Show pairing code** asks the main process for a code, then the tab shows it as large text, as a QR image that holds exactly the code, and with the seconds left. The text is also announced letter by letter to assistive technology and the QR image has a text label. **Hide pairing code**, the two-minute expiry and leaving the page clear it. A locked drive, an update in preparation or a receiver that is not running makes the desktop refuse and the tab says so plainly. The code is never stored, logged or sent in a notification, and it never replaces the native approval prompt that every pairing still needs. See the native host article for the rules of the code itself. The tab is checked with a stub document and by decoding its QR image; it has not been captured in a real built desktop in either language or theme, so its visual presentation is unverified.
+
 ## Verification
 
 Focused synthetic component checks cover adapter-category inventory, actual control construction, tab navigation, existing native payloads and teardown. These checks do not prove built layout, installation, runtime services, network availability or real model downloads. Built visual acceptance remains separate.
