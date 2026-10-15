@@ -119,6 +119,8 @@ md-primary-tab[aria-disabled=true]{opacity:.62}
 @media(prefers-reduced-motion:reduce){[role=status],[role=alert],.coverage-list,.docs-list md-list-item{animation:none;transition:none}}
 /* Progress and publication: fields stack inside 360px; the preview collapses and expands, and the state line follows the answer. */
 .publishing{display:grid;gap:12px;max-inline-size:720px}.publishing md-outlined-select,.publishing md-outlined-text-field{inline-size:100%}.publishing h3,.publishing h4,.publishing p{margin:0}
+/* A select and its adjacent choice-search button share one row in the publishing grid. */
+.publishing{grid-template-columns:minmax(0,1fr) auto}.publishing>*{grid-column:1/-1}.publishing>md-outlined-select[data-select-search-composition=adjacent]{grid-column:1;min-inline-size:0}.publishing>md-icon-button[data-choice-search]{grid-column:2;align-self:center}
 .publishing-project-status:not([hidden]){animation:mfe-panel-in var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard) both}
 .publishing-preview{display:grid;grid-template-rows:1fr;opacity:1;transition:grid-template-rows var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-standard),opacity var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),visibility 0s}
 .publishing-preview[data-state=hidden]{grid-template-rows:0fr;opacity:0;visibility:hidden;transition:grid-template-rows var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-standard),opacity 150ms var(--md-sys-motion-easing-standard),visibility 0s var(--md-sys-motion-duration-medium1)}
