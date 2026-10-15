@@ -220,28 +220,46 @@ async function captureSite({site, browser, directory, record, sourceCommit}) {
 async function readManifest(file) { try { return JSON.parse(await fs.readFile(file, 'utf8')); } catch { return null; } }
 async function writeManifest(file, manifest) { await fs.writeFile(file, JSON.stringify(manifest, null, 2) + '\n'); }
 
-/** Imports desktop captures from another lane's manifest, proving each file against the hash the manifest records. */
-export async function importDesktop({manifestPath, directory}) {
+/** Frames that show a private path or private data are never imported, whatever the manifest says about them. */
+export const DESKTOP_EXCLUDED_PREFIXES = ['03-drive', '04-offline', '21-lock-holder-message', '24-create-drive-dialog', '25-unlock-drive-dialog'];
+
+/** The desktop frames kept in the repository: screen, theme and language, as named in the capture manifest. */
+export const DESKTOP_SELECTION = [
+  '01-home__light__en', '02-newtab-popover__light__en', '23-drive-locked__light__en', '05-history__light__en', '06-recycle-bin__light__en',
+  '07-tools-converter__dark__en', '07-tools-converter__light__bilingual', '08-tools-documents__light__yue', '14-settings__dark__en',
+  '18-help-how-it-works__light__en', '22-force-lock-dialog__light__en', '22-force-lock-dialog__dark__en',
+];
+
+/** `01-home__light__en.png` becomes `home-light-en`. */
+export const desktopName = file => file.replace(/\.png$/, '').replace(/^\d+-/, '').replaceAll('__', '-');
+
+/** Imports the selected desktop captures from another lane's manifest, proving each file against the hash the manifest records. */
+export async function importDesktop({manifestPath, directory, selection = DESKTOP_SELECTION}) {
   const source = JSON.parse(await fs.readFile(manifestPath, 'utf8'));
-  const rows = source.captures || source.images || source.records;
+  const rows = source.captures;
   if (!Array.isArray(rows) || !rows.length) throw new Error('The desktop manifest lists no captures.');
-  const baseDirectory = path.dirname(path.resolve(manifestPath));
+  const baseDirectory = path.join(path.dirname(path.resolve(manifestPath)), 'captures');
   const manifestFile = path.join(directory, 'manifest.json');
   const manifest = (await readManifest(manifestFile)) || {schemaVersion: 1, sourceCommit: git('rev-parse', 'HEAD'), captures: []};
   manifest.captures = manifest.captures.filter(row => row.kind !== 'desktop');
-  for (const row of rows) {
-    const from = path.resolve(baseDirectory, row.file || row.path);
-    const bytes = await fs.readFile(from);
-    const expected = row.sha256 || row.captureSha256;
-    if (expected && digest(bytes) !== expected) throw new Error(`Desktop capture ${row.file || row.path} differs from its manifest hash.`);
-    if (bytes.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') throw new Error(`Desktop capture ${row.file || row.path} is not a PNG.`);
-    const name = path.basename(from);
-    const target = path.join(directory, 'desktop', name);
+  for (const stem of selection) {
+    const row = rows.find(item => item.file === stem + '.png');
+    if (!row) throw new Error(`The desktop manifest has no capture ${stem}.`);
+    if (row.privatePathVisible || DESKTOP_EXCLUDED_PREFIXES.some(prefix => row.file.startsWith(prefix))) throw new Error(`Desktop capture ${row.file} shows a private path and cannot be used.`);
+    const bytes = await fs.readFile(path.join(baseDirectory, row.file));
+    if (digest(bytes) !== row.sha256) throw new Error(`Desktop capture ${row.file} differs from its manifest hash.`);
+    if (bytes.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') throw new Error(`Desktop capture ${row.file} is not a PNG.`);
+    const name = desktopName(row.file);
+    const target = path.join(directory, 'desktop', name + '.png');
     await fs.mkdir(path.dirname(target), {recursive: true});
     await fs.writeFile(target, bytes);
-    manifest.captures.push({kind: 'desktop', name: name.replace(/\.png$/, ''), file: 'desktop/' + name, sha256: digest(bytes), bytes: bytes.length, ...pngSize(bytes), theme: row.theme ?? null, language: row.language ?? null, scale: row.scale ?? row.dpiScale ?? null, state: row.state ?? row.id ?? null, sourceManifest: path.basename(manifestPath)});
+    manifest.captures.push({kind: 'desktop', name, file: 'desktop/' + name + '.png', sha256: digest(bytes), bytes: bytes.length, ...pngSize(bytes), screen: row.screen, theme: row.theme, language: row.language, scale: 1.5,
+      sourceCommit: row.sourceCommit, appVersion: row.appVersion, window: row.appWindowDip, originalFile: row.file});
   }
-  manifest.desktopSource = {manifest: path.basename(manifestPath), sourceCommit: source.sourceCommit ?? null, executableSha256: source.executableSha256 ?? source.buildSha256 ?? null};
+  // The capture manifest is kept beside the images, with line endings normalized, so its hash can serve as a stable reference.
+  const raw = (await fs.readFile(manifestPath, 'utf8')).replace(/\r\n/g, '\n');
+  await fs.writeFile(path.join(directory, 'desktop-capture-manifest.json'), raw);
+  manifest.desktopSource = {manifest: 'desktop-capture-manifest.json', manifestSha256: digest(Buffer.from(raw)), route: source.route, count: source.count};
   await writeManifest(manifestFile, manifest);
   return manifest;
 }

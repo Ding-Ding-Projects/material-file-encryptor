@@ -39,12 +39,12 @@ export const REPLACEMENTS = {
   'extension-matrix-cd51796/options-models_minimum_2x_dark_bilingual.png': ['extension', 'matrix-options-models_minimum_2x_dark_bilingual'],
   'extension-matrix-cd51796/popup_minimum_2x_dark_bilingual.png': ['extension', 'matrix-popup_minimum_2x_dark_bilingual'],
   // Desktop images: replaced only when the desktop manifest holds a capture of the same name.
-  'material-2a9cb388/drive-light-en.png': ['desktop', 'drive-light-en'],
-  'material-2a9cb388/converter-dark-en.png': ['desktop', 'converter-dark-en'],
-  'material-2a9cb388/workflow-light-yue.png': ['desktop', 'workflow-light-yue'],
-  'material-2a9cb388/converter-light-bilingual.png': ['desktop', 'converter-light-bilingual'],
-  'material-2a9cb388/dialog-consent-light-en.png': ['desktop', 'dialog-consent-light-en'],
-  'material-2a9cb388/dialog-consent-dark-en.png': ['desktop', 'dialog-consent-dark-en'],
+  'material-2a9cb388/drive-light-en.png': ['desktop', 'drive-locked-light-en'],
+  'material-2a9cb388/converter-dark-en.png': ['desktop', 'tools-converter-dark-en'],
+  'material-2a9cb388/workflow-light-yue.png': ['desktop', 'tools-documents-light-yue'],
+  'material-2a9cb388/converter-light-bilingual.png': ['desktop', 'tools-converter-light-bilingual'],
+  'material-2a9cb388/dialog-consent-light-en.png': ['desktop', 'force-lock-dialog-light-en'],
+  'material-2a9cb388/dialog-consent-dark-en.png': ['desktop', 'force-lock-dialog-dark-en'],
 };
 
 /** New images that older documentation did not show; they are added to the public image allowlist when they exist. */
