@@ -649,14 +649,14 @@
     {
       "source": "docs/features/workflows/browser-extension-workspace.md",
       "translation": "docs/features/workflows/browser-extension-workspace.zh-HK.md",
-      "sourceSha256": "d95eea5f4af53249efea239fba9217b43b9a514818d245833e39196694fd3859",
-      "translationSha256": "041a849ad3fe2f9c714b4a05367c99f6ecc620881879a94da663e7d5dacee9f2"
+      "sourceSha256": "55553a53167d1ec78d4b756d9662d65c824c26c83235da47348e7396948f9c8b",
+      "translationSha256": "721f6215cbceeb79911c4730b30204b9e3e99ee1f72c8a9e149f4170a2bcd90b"
     },
     {
       "source": "docs/features/workflows/browser-native-host.md",
       "translation": "docs/features/workflows/browser-native-host.zh-HK.md",
-      "sourceSha256": "f0e137aea35f76d85ee7ae77a70a27b01bf6bfc79549c973380160c8a802aa68",
-      "translationSha256": "24cb2dce10019fdda9f6b48c5357f03c7d9363ad77c405048ec28de4458d5fbc"
+      "sourceSha256": "a538b1f50d798dceed97b5441ae52358ca68a82b73ba7af476220f17cde3060e",
+      "translationSha256": "41bb5152ac4e955f8faf0bc7feeff98bb5b906cf1d2102eb0ba863ba0e49b4b4"
     },
     {
       "source": "docs/features/workflows/browser-protection-observations.md",

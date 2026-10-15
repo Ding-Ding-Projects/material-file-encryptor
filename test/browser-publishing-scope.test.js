@@ -375,7 +375,7 @@ test('the options page registers the section with a Home card, a panel and a mou
   assert.match(html, /<button type="button" class="home-card" id="tab-publishing" data-tab="publishing" aria-controls="panel-publishing" aria-labelledby="title-publishing" aria-describedby="desc-publishing">/);
   assert.match(html, /<section role="tabpanel" id="panel-publishing" aria-labelledby="section-title" hidden>/); assert.match(html, /id="publishing-root"/); assert.match(html, /id="lock-mark-publishing"/);
   assert.match(html, /<script type="module" src="publishing-entry\.js"><\/script>/);
-  assert.match(source, /publishingDesc:\['[^']+','[^']+'\]/); assert.match(source, /PUBLISHING_TAB\]/);
+  assert.match(source, /publishingDesc:\['[^']+','[^']+'\]/); assert.match(source, /PUBLISHING_TAB[,\]]/);
   assert.doesNotMatch(source.slice(source.indexOf('PUBLISHING_TAB')), /publish-progress/, 'options.js carries only the section registration');
   assert.equal(applyPreferences({getItem: () => null, setItem() {}}, defaults, {tab: 'publishing'}).value.tab, 'publishing');
   for (const name of ['publishing.js', 'publishing-entry.js']) { const code = await fs.readFile(new URL('../browser-extension/' + name, import.meta.url), 'utf8'); assert.doesNotMatch(code, /fetch\(|XMLHttpRequest|WebSocket|sendBeacon|innerHTML|insertAdjacentHTML|eval\(|localStorage\.setItem/, name); }

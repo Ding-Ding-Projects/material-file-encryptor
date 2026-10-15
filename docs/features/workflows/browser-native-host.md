@@ -367,13 +367,81 @@ What it can do is let the person clear a recorded escalation, after the cooldown
 has ended, by proving the vault password on the desktop, which the desktop's own
 sign-in would also do.
 
+## Server manager scopes: read-servers, read-server-catalog and manage-server
+
+Three scopes let a paired extension show, and ask the desktop to change, the
+Minecraft servers that the desktop server manager owns. The extension never runs
+a server and never holds a target credential. SSH keys, SSH passwords, container
+sockets and addresses stay in the desktop, and a request can only name one of
+four fixed target ids: `local-process`, `local-container`, `ssh-process` and
+`ssh-container`. The transport is `src/main/browser-server-mediation.js` and the
+mapping onto the desktop manager is `src/main/browser-server-adapters.js`.
+
+- `read-servers` is a Status scope. The paired origin sends exactly
+  `{type:'read-servers', session}` and no prompt appears. The answer is
+  `servers` with `schemaVersion` 1, `manager` (`available` or `unavailable`),
+  `targets` (the four ids in fixed order, each with a boolean `available`) and
+  at most 100 `servers`. A server has exactly `id`, `name`, `target`, `flavor`,
+  `version` and `state`, and the state is one of `preparing`, `prepared`,
+  `starting`, `running`, `stopping`, `stopped`, `failed` or `unavailable`. No path,
+  address, port, log line or credential is returned. A desktop build with no
+  server manager answers `unavailable` with no servers.
+- `read-server-catalog` is a Status scope. The paired origin sends exactly
+  `{type:'read-server-catalog', session, cursor}`, where `cursor` is `null` or a
+  string of up to five digits. The answer is `server-catalog` with `catalogue`
+  (`ready`, `not-loaded` or `unavailable`), `flavors` (an id, a display name and
+  the target ids it supports), `versions` (at most 100 per page, each an id and
+  a channel of `release`, `snapshot`, `old_beta` or `old_alpha`), `total` and `next`,
+  the cursor for the following page or `null`. Only flavors the desktop can
+  really prepare are listed; today that is Vanilla on `local-process`. The
+  extension cannot make the desktop download a catalogue, so a desktop that has
+  not loaded one answers `not-loaded` and the extension says so.
+- `manage-server` is a Re-authenticate scope. The paired origin sends exactly
+  `{type:'manage-server', session, action, server, options}`. The `action` is
+  `create`, `start`, `stop`, `restart`, `change-setting` or `install-plugin`. For
+  `create`, `server` is `null` and `options` has exactly `target`, `flavor` and
+  `version`. For `start`, `stop` and `restart`, `server` is a server id and `options`
+  is `null`. For `change-setting`, `options` has exactly `key` and `value`, where the
+  value is a boolean, a whole number or a short text without control characters.
+  For `install-plugin`, `options` has exactly `plugin`, an identifier that is never
+  a URL, a path or a file. A request with any other field, including a host, a
+  key, a password or a path, is refused before anything else happens.
+- The unlocked desktop then runs a fresh native check of the person: the
+  main-owned profile authentication dialog, in which the person types the
+  existing vault password in the desktop. Windows Hello is not used by this
+  build. The password never reaches the browser, the extension or the mediation
+  module. Only after the check succeeds does the desktop manager act.
+- The answer is `server-managed` with `schemaVersion` 1, a `state` of `changed`,
+  `unchanged`, `rejected`, `busy` or `unavailable`, the `action` and the `server` id,
+  which for `create` is the id of the new server and otherwise echoes the request.
+  `changed` means the desktop accepted the request, not that a server is now
+  running; the extension reads the servers again for the real state.
+- What the desktop manager does today: `create` for Vanilla on `local-process`
+  resolves the chosen version in the loaded catalogue and starts the same
+  verified preparation the desktop uses; `start` and `stop` call its lifecycle,
+  and `restart` is a stop followed by a start. `start` still needs the exact
+  server license accepted in the desktop and native process supervision, and
+  answers `unavailable` while either is missing. `change-setting`,
+  `install-plugin`, the three other targets and every other flavor have no desktop
+  implementation. Those requests are answered `unavailable` at once, without a
+  prompt, so nobody is asked to approve something that cannot happen. A failing
+  or malformed desktop answer is also `unavailable` and never a success.
+- The prompt is shared with Confirm mode, school mode, element locks and the
+  unlock ladder: at most one is pending across all of them, and a second request
+  is answered `busy` and is not queued. A locked desktop, a hidden or
+  tray-minimized window, a closing desktop or a build with no authentication
+  callback answers `unavailable` at once. An unanswered prompt is withdrawn as
+  `rejected` after 30 seconds, and lock, disconnect, exit and update preparation
+  withdraw it too. A rejection never revokes the pairing.
+
 Status of the design's scopes: `read-lock-state`, `read-update-state`,
 `focus-authenticator`, `publish-progress`, `read-school-mode`, `set-school-mode`,
 `read-element-locks`, `set-element-lock`, `read-unlock-ladder` and
-`request-unlock-step` are implemented in the main process and the extension,
+`request-unlock-step` are implemented in the main process and the extension, as are
+`read-servers`, `read-server-catalog` and `manage-server`,
 `read-profile-summary` is covered by the protected mediation, and the remaining
 candidate scopes in the design are not implemented. The school mode, element
-lock and unlock ladder scopes are verified with synthetic fixtures, a fake native
+lock, unlock ladder and server manager scopes are verified with synthetic fixtures, a fake native
 broker and, for the records and the ladder state, a real access state machine
 with a stand-in for the native vault check. No real desktop dialog, installed
 build, real browser registration or captured prompt took part, so they are
@@ -459,6 +527,18 @@ revocation on lock, and the extension background validation. It uses synthetic
 fixtures only. No installed desktop, no real browser native-messaging
 registration and no real update feed took part, so the end-to-end path from a
 browser to a running desktop remains unverified.
+
+`test/browser-server-scopes.test.js` covers the server manager scopes with synthetic
+fixtures: the fixed target, action, state and channel lists in the desktop, the
+page and the background, strict request and answer shapes, the refusal of any
+host, key, password, path or URL field, the fresh native check before every
+change, the shared single prompt and the busy answer, refusal without a prompt
+for actions the desktop manager lacks, withdrawal on lock, disconnect and close,
+the adapters over a fake desktop manager, the native broker framing, the
+background validation, and the page's filters, create dialog and localization.
+No real desktop server manager, real server, container, SSH host, installed
+desktop or captured prompt took part, so the whole path from a browser to a
+running server is unverified.
 
 `test/browser-confirm-scopes.test.js` covers the Confirm scope with synthetic
 fixtures: the default Reject button and Escape, the localized prompt text, the
