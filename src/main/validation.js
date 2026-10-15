@@ -3,7 +3,7 @@ import {normalizeDriveName} from '../shared/drive-name.js';
 
 // Managed-server (flavor, container and SSH target) requests. Only fixed identifiers and bounded plain values are accepted: no
 // path, URL, command, key path or password can be expressed here. File and key choosers run in the main process.
-const MANAGED_SERVER_ACTIONS = ['targets','flavorVersions','chooseSshKey','createServer','cancelServer','acceptServerLicense','startServer','stopServer','restartServer','serverStatus','serverLogs','serverSettings','changeServerSetting','searchExtensions','installExtension','listExtensions'];
+const MANAGED_SERVER_ACTIONS = ['targets','servers','flavorVersions','chooseSshKey','createServer','cancelServer','acceptServerLicense','startServer','stopServer','restartServer','serverStatus','serverLogs','serverSettings','changeServerSetting','searchExtensions','installExtension','listExtensions'];
 function managedServerSchemas() {
   const id = value => typeof value === 'string' && /^managed-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
   const optional = valid => value => value === undefined || valid(value);
@@ -13,7 +13,7 @@ function managedServerSchemas() {
   const ssh = value => plain(value) && Object.keys(value).every(key => ['host', 'port', 'user', 'keyId'].includes(key)) && label(253)(value.host) && /^[a-z_][a-z0-9_-]{0,31}$/.test(value.user) && optional(int(1, 65535))(value.port) && optional(item => typeof item === 'string' && /^key-[a-f0-9-]{36}$/.test(item))(value.keyId);
   const server = {serverId: id};
   return {
-    targets: {}, chooseSshKey: {},
+    targets: {}, servers: {}, chooseSshKey: {},
     flavorVersions: {flavor: value => typeof value === 'string' && /^[a-z]{3,12}$/.test(value)},
     createServer: {target: value => ['local-process','local-container','ssh-process','ssh-container'].includes(value), flavor: value => typeof value === 'string' && /^[a-z]{3,12}$/.test(value), version: value => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._+-]{0,31}$/.test(value), name: optional(label(80)), port: optional(int(1024, 65535)), memoryMb: optional(int(512, 32768)), containerMode: optional(value => ['itzg', 'jar'].includes(value)), ssh: optional(ssh)},
     cancelServer: server, acceptServerLicense: server, startServer: server, stopServer: server, restartServer: server, serverStatus: server, serverSettings: server, listExtensions: server,

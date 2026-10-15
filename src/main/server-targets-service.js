@@ -10,7 +10,7 @@ import {extensionKind, inspectLocalExtension, resolveModrinthFile, searchExtensi
 import {createTargetDrivers, defaultDeps} from '../features/server-manager/target-drivers.js';
 import {TARGET_IDS} from '../features/server-manager/targets.js';
 
-export const MANAGED_ACTIONS = Object.freeze(['targets', 'flavorVersions', 'chooseSshKey', 'createServer', 'cancelServer', 'acceptServerLicense', 'startServer', 'stopServer', 'restartServer', 'serverStatus', 'serverLogs', 'serverSettings', 'changeServerSetting', 'searchExtensions', 'installExtension', 'listExtensions']);
+export const MANAGED_ACTIONS = Object.freeze(['targets', 'servers', 'flavorVersions', 'chooseSshKey', 'createServer', 'cancelServer', 'acceptServerLicense', 'startServer', 'stopServer', 'restartServer', 'serverStatus', 'serverLogs', 'serverSettings', 'changeServerSetting', 'searchExtensions', 'installExtension', 'listExtensions']);
 const EULA = 'https://www.minecraft.net/en-us/eula';
 const LIVE = new Set(['starting', 'running', 'stopping']);
 const MAX_SERVERS = 50, MAX_EXTENSIONS = 100, MAX_KEYS = 16;
@@ -187,6 +187,7 @@ export function createServerTargetsService({
       const targets = await probeTargets(controller.signal);
       return {targets, flavors: FLAVOR_IDS.map(id => ({id, name: FLAVOR_NAMES[id], extensions: extensionKind(id)?.directory ?? null})), servers: [...records.values()].map(view), acceptedLicenseUrl: EULA};
     }
+    if (action === 'servers') { record(payload, []); return {servers: [...records.values()].map(view)}; }
     if (action === 'flavorVersions') {
       record(payload, ['flavor']);
       if (!FLAVOR_IDS.includes(payload.flavor)) throw Error('Unsupported server flavor.');

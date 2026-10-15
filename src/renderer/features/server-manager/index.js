@@ -3,6 +3,7 @@ import { control } from '../../../shared/surface/controls.js';
 import {surfaceRegistry} from '../../../shared/surface/registry.js';
 import {mountControlGuidance} from '../../../shared/surface/control-guidance.js';
 import {PREPARATION_GUIDANCE,preparationTranslator} from './copy.js';
+import {mountServerTargets} from './targets-panel.js';
 
 export function registerServerPreparation(view,registry=surfaceRegistry){
  const row=registry.find(row=>row.tag==='mfe-server-preparation');
@@ -60,9 +61,10 @@ export function mountServerPreparation(host,services={}){
    if(runtimeCandidate){const details=node('p');details.textContent=runtimeCandidate.available?t('Reviewed portable Java')+': '+runtimeCandidate.release+' · '+runtimeCandidate.bytes+' · '+runtimeCandidate.sha256:t('No reviewed runtime matches this exact major and architecture.');card.append(details);if(runtimeCandidate.available&&!operation.runtime)action(card,'Prepare reviewed Java runtime','runtimePrepare',async()=>{await request('prepareRuntime',{serverId:operation.serverId});await refreshState();return true;},{context:operation.serverId});}
    if(operation.runtime){const runtime=node('p');runtime.textContent=t('Runtime preparation')+': '+t(operation.runtime.status)+' · '+operation.runtime.receivedBytes+' / '+operation.runtime.expectedBytes;card.append(runtime,node('p','Java execution and server startup remain unverified.'));if(['downloading','validating'].includes(operation.runtime.status))action(card,'Cancel runtime preparation','runtimeCancel',async()=>{await request('cancelRuntime',{operationId:operation.runtime.id});await refreshState();return true;},{context:operation.runtime.id});if(operation.runtime.recoveryRequired)card.append(node('p','Retained owned files require explicit recovery. Nothing was deleted or adopted.'));}
   }
-  root.append(node('p','Other execution targets remain unavailable.'));{const targets=node('md-list');targets.setAttribute('aria-label',t('Other execution targets remain unavailable.'));for(const label of ['Local container','SSH process','SSH container']){const item=node('md-list-item',label);item.setAttribute('disabled','');const note=doc.createElement('span');note.slot='supporting-text';note.textContent=t('Unavailable');item.append(note);targets.append(item);}root.append(targets);}
  }
- if(services.subscribeLanguage){const off=services.subscribeLanguage(()=>{if(available())render();});if(typeof off==='function')life.push(off);}
- render();if(services.subscribe){const off=services.subscribe(()=>{void refreshState();});if(typeof off==='function')life.push(off);}void refreshState();
- return{refresh:refreshState,setLanguage(){render();},destroy(){if(!alive)return;alive=false;queryGeneration++;mounted.splice(0).forEach(dispose=>dispose());life.splice(0).forEach(dispose=>dispose());root.remove();}};
+ // Flavors, containers, SSH, settings and plugins live in their own panel below the verified-download preparation above.
+ const targetsModule=mountServerTargets(host,services);
+ if(services.subscribeLanguage){const off=services.subscribeLanguage(()=>{if(available()){render();targetsModule.setLanguage();}});if(typeof off==='function')life.push(off);}
+ render();if(services.subscribe){const off=services.subscribe(()=>{void refreshState();void targetsModule.refresh();});if(typeof off==='function')life.push(off);}void refreshState();
+ return{refresh:refreshState,setLanguage(){render();targetsModule.setLanguage();},destroy(){if(!alive)return;alive=false;targetsModule.destroy();queryGeneration++;mounted.splice(0).forEach(dispose=>dispose());life.splice(0).forEach(dispose=>dispose());root.remove();}};
 }

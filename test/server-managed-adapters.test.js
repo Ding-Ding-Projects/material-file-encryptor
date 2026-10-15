@@ -100,7 +100,7 @@ test('a second operation on the same server is answered busy', async () => {
 test('the renderer channel accepts only fixed identifiers and bounded values for the new actions', () => {
   const id = MANAGED;
   const ok = [
-    ['targets', {}], ['chooseSshKey', {}], ['flavorVersions', {flavor: 'paper'}],
+    ['targets', {}], ['servers', {}], ['chooseSshKey', {}], ['flavorVersions', {flavor: 'paper'}],
     ['createServer', {target: 'ssh-process', flavor: 'paper', version: '1.21.4', ssh: {host: 'h.example', user: 'mc', port: 2222, keyId: 'key-0d3f5b2a-1111-4222-8333-444455556666'}}],
     ['createServer', {target: 'local-container', flavor: 'fabric', version: '1.21.4', name: 'Mine', port: 25570, memoryMb: 4096, containerMode: 'jar'}],
     ['cancelServer', {serverId: id}], ['acceptServerLicense', {serverId: id}], ['startServer', {serverId: id}], ['stopServer', {serverId: id}], ['restartServer', {serverId: id}], ['serverStatus', {serverId: id}],
