@@ -113,7 +113,9 @@ test('a rejected or non-true answer changes nothing and the pairing stays usable
 });
 
 test('an action the desktop manager does not implement is answered unavailable without any prompt', async () => {
-  const m = mediation({supports: action => SUPPORTED_SERVER_ACTIONS.includes(action)});
+  // The gate is generic: whichever actions the manager reports as unsupported are answered without a prompt.
+  const m = mediation({supports: action => ['create', 'start', 'stop', 'restart'].includes(action)});
+  assert.deepEqual([...SUPPORTED_SERVER_ACTIONS].sort(), ['change-setting', 'create', 'install-plugin', 'restart', 'start', 'stop'], 'the desktop manager now offers every action');
   for (const [action, options] of [['change-setting', {key: 'motd', value: 'hi'}], ['install-plugin', {plugin: 'worldedit'}]]) {
     assert.deepEqual(await m.send(manage(action, 'server-1', options)), {type: 'server-managed', schemaVersion: 1, state: 'unavailable', action, server: 'server-1'});
   }
@@ -216,12 +218,13 @@ test('the adapters map the desktop manager to fixed rows and offer only what it 
   assert.equal(mediationView.servers.length, 4, 'the rows pass the strict channel validation');
   const page = await adapters.readServerCatalog({cursor: '0'});
   assert.deepEqual(page.versions, [{id: '1.21.4', channel: 'release'}]); assert.equal(page.next, '100');
-  assert.deepEqual(page.flavors.map(item => item.id), ['vanilla'], 'only the one flavor the desktop can prepare is offered');
+  assert.deepEqual(page.flavors.map(item => item.id), ['vanilla', 'paper', 'purpur', 'fabric', 'forge', 'neoforge'], 'every flavor the desktop can prepare is offered');
+  assert.ok(page.flavors.every(item => item.targets.join() === 'local-process,local-container'), 'only targets a browser may create are listed');
   assert.equal((await mediation({readServerCatalog: adapters.readServerCatalog}).send({type: 'read-server-catalog', session, cursor: null})).catalogue, 'ready');
-  assert.deepEqual([adapters.supportsServerAction('create'), adapters.supportsServerAction('restart'), adapters.supportsServerAction('change-setting'), adapters.supportsServerAction('install-plugin')], [true, true, false, false]);
+  assert.deepEqual([adapters.supportsServerAction('create'), adapters.supportsServerAction('restart'), adapters.supportsServerAction('change-setting'), adapters.supportsServerAction('install-plugin')], [true, true, true, true]);
   calls.length = 0;
-  assert.deepEqual(await adapters.applyServerAction({action: 'create', server: null, options: {target: 'local-process', flavor: 'vanilla', version: '1.21.4'}}), {state: 'changed', server: 'server-9'});
-  assert.deepEqual(calls.map(item => item[0]), ['snapshot', 'resolveVersion', 'prepare']);
+  assert.deepEqual(await adapters.applyServerAction({action: 'create', server: null, options: {target: 'local-process', flavor: 'vanilla', version: '1.21.4'}}), {state: 'unavailable', server: null}, 'a create is unavailable until the managed service reports the target available');
+  assert.deepEqual(calls.map(item => item[0]), ['targets']);
   for (const options of [{target: 'ssh-process', flavor: 'vanilla', version: '1.21.4'}, {target: 'local-container', flavor: 'vanilla', version: '1.21.4'}, {target: 'local-process', flavor: 'paper', version: '1.21.4'}, {target: 'local-process', flavor: 'vanilla', version: 'too-big'}]) assert.deepEqual(await adapters.applyServerAction({action: 'create', server: null, options}), {state: 'unavailable', server: null}, JSON.stringify(options));
   calls.length = 0;
   assert.deepEqual(await adapters.applyServerAction({action: 'restart', server: 'server-1', options: null}), {state: 'changed', server: 'server-1'});

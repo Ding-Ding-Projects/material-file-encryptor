@@ -1,5 +1,28 @@
 import {ACCESS_HOST_ACTIONS,validateAccessHostRequest} from './access-host.js';
 import {normalizeDriveName} from '../shared/drive-name.js';
+
+// Managed-server (flavor, container and SSH target) requests. Only fixed identifiers and bounded plain values are accepted: no
+// path, URL, command, key path or password can be expressed here. File and key choosers run in the main process.
+const MANAGED_SERVER_ACTIONS = ['targets','flavorVersions','chooseSshKey','createServer','cancelServer','acceptServerLicense','startServer','stopServer','restartServer','serverStatus','serverLogs','serverSettings','changeServerSetting','searchExtensions','installExtension','listExtensions'];
+function managedServerSchemas() {
+  const id = value => typeof value === 'string' && /^managed-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
+  const optional = valid => value => value === undefined || valid(value);
+  const int = (min, max) => value => Number.isSafeInteger(value) && value >= min && value <= max;
+  const plain = value => value !== null && typeof value === 'object' && !Array.isArray(value) && [Object.prototype, null].includes(Object.getPrototypeOf(value));
+  const label = (max, min = 1) => value => typeof value === 'string' && value.length >= min && value.length <= max && !/[\u0000-\u001f\u007f-\u009f]/.test(value);
+  const ssh = value => plain(value) && Object.keys(value).every(key => ['host', 'port', 'user', 'keyId'].includes(key)) && label(253)(value.host) && /^[a-z_][a-z0-9_-]{0,31}$/.test(value.user) && optional(int(1, 65535))(value.port) && optional(item => typeof item === 'string' && /^key-[a-f0-9-]{36}$/.test(item))(value.keyId);
+  const server = {serverId: id};
+  return {
+    targets: {}, chooseSshKey: {},
+    flavorVersions: {flavor: value => typeof value === 'string' && /^[a-z]{3,12}$/.test(value)},
+    createServer: {target: value => ['local-process','local-container','ssh-process','ssh-container'].includes(value), flavor: value => typeof value === 'string' && /^[a-z]{3,12}$/.test(value), version: value => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._+-]{0,31}$/.test(value), name: optional(label(80)), port: optional(int(1024, 65535)), memoryMb: optional(int(512, 32768)), containerMode: optional(value => ['itzg', 'jar'].includes(value)), ssh: optional(ssh)},
+    cancelServer: server, acceptServerLicense: server, startServer: server, stopServer: server, restartServer: server, serverStatus: server, serverSettings: server, listExtensions: server,
+    serverLogs: {...server, lines: optional(int(1, 500))},
+    changeServerSetting: {...server, key: value => typeof value === 'string' && /^[a-z0-9][a-z0-9._-]{0,63}$/.test(value), value: value => typeof value === 'boolean' || Number.isSafeInteger(value) || label(256, 0)(value)},
+    searchExtensions: {...server, query: label(64, 0)},
+    installExtension: {...server, source: value => ['modrinth', 'file'].includes(value), project: optional(value => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9_-]{1,63}$/.test(value)), version: optional(value => typeof value === 'string' && /^[A-Za-z0-9]{6,16}$/.test(value))},
+  };
+}
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
 export const WORKFLOW_DESKTOP_ACTIONS = Object.freeze(['owners','accountState','signInAccount','refreshAccount','setActiveAccount','signOutAccount','preparePublication','publishPublication','cancelPublication','browserProposals','prepareCapturedDownload','cancelBrowserProposal']);
 export function validateWorkflowAdmission(action, {locked,lockVerified,quitPending,shuttingDown,updateInstallLease} = {}) {
@@ -27,7 +50,7 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
     documentation: ['catalog','changelog'], status: ['status'],
     ...(!browser?{'browser-pairing':['issue','clear']}:{}),
     personalization: [...(!browser?['accessibilityState']:[]),'sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts',...(!browser?['setScheduleCredential','clearScheduleCredential','normalizeImage','fontMetadata','cancelFontMetadata']:[])],
-    ...(!browser ? { 'server-manager': ['snapshot','refreshCatalogue','versions','resolveVersion','prepare','cancel','reviewLicense','capabilities','acceptLicense','start','status','stop','runtimeCandidate','prepareRuntime','runtimeStatus','cancelRuntime'] } : {}),
+    ...(!browser ? { 'server-manager': ['snapshot','refreshCatalogue','versions','resolveVersion','prepare','cancel','reviewLicense','capabilities','acceptLicense','start','status','stop','runtimeCandidate','prepareRuntime','runtimeStatus','cancelRuntime',...MANAGED_SERVER_ACTIONS] } : {}),
     ...(!browser ? { access: ['credentialGet','credentialSet','credentialDelete','credentialList','openDataFolder','dataFolder',...ACCESS_HOST_ACTIONS] } : {}),
   };
   const limit=!browser&&feature==='personalization'&&action==='normalizeImage'?Math.ceil(4*1024*1024*4/3)+256:262144;
@@ -51,6 +74,7 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
       reviewLicense: { serverId: value => typeof value === 'string' && value.startsWith('server-') && uuid(value.slice(7)) },
       ...Object.fromEntries(['acceptLicense','start','status','stop','runtimeCandidate','prepareRuntime','runtimeStatus'].map(action=>[action,{serverId:value=>typeof value==='string'&&value.startsWith('server-')&&uuid(value.slice(7))}])),
       cancelRuntime:{operationId:uuid},
+      ...managedServerSchemas(),
     };
     const schema = schemas[action];
     const prototype = Object.getPrototypeOf(payload);
