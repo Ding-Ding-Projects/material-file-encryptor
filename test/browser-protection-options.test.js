@@ -1132,3 +1132,65 @@ test('a camera scan sends the scanned code once, stops the camera and keeps no f
   assert.equal(video.srcObject, null);
   assert.equal(f.node('pair-code').value, '');
 });
+
+// Operations features: the personal wording boundary, the journal around state-changing requests and the Status section panel.
+import {extensionOperations} from '../browser-extension/extension-operations.js';
+import {journalKey} from '../browser-extension/operation-journal.js';
+const withOps = extras => ({...extras, pairingGlobals: {extensionOperations}});
+const importWording = async (f, entries) => { f.node('wording-file').files = [{size: 60, text: JSON.stringify({schemaVersion: 1, entries})}]; f.node('wording-file').listeners.change(); await new Promise(resolve => setTimeout(resolve, 0)); };
+test('imported wording applies only while paired, and the page title always keeps the original copy', async () => {
+  const entries = {Changelog: 'Release notes', 'Extension workspace': 'My private hub'};
+  const paired = await fixture(idle, 'en', {extras: withOps({})});
+  await importWording(paired, entries);
+  assert.ok(paired.nodesWith('Release notes').filter(item => item.id.startsWith('copy-')).length > 0, 'applied while paired');
+  assert.equal(paired.document.title, 'Material File Encryptor · Extension workspace', 'the title never carries imported wording');
+  const unpaired = await fixture(idle, 'en', {extras: withOps({paired: false})});
+  await importWording(unpaired, entries);
+  assert.equal(unpaired.nodesWith('Release notes').filter(item => item.id.startsWith('copy-')).length, 0, 'original copy before pairing');
+  assert.equal(unpaired.nodesWith('My private hub').length, 0);
+  const reopened = await fixture(idle, 'en', {records: unpaired.storage.records, extras: withOps({paired: false})});
+  assert.match(reopened.node('wording-status').textContent, /saved\. They apply only while this browser is paired/);
+  assert.equal(reopened.node('wording-clear').disabled, false, 'saved wording can still be cleared');
+  assert.equal(reopened.nodesWith('Release notes').length, 0);
+  unpaired.node('wording-clear').listeners.click();
+  assert.equal(unpaired.node('wording-status').textContent, 'Original wording restored.');
+});
+test('imported wording never reaches a message to the desktop or the saved journal', async () => {
+  const f = await fixture(idle, 'en', {extras: withOps({schoolRead: {schemaVersion: 1, enabled: false, name: 'Study time'}, schoolSet: new Error('closed')})});
+  await importWording(f, {School: 'Secretword', Pair: 'Secretpair'});
+  await f.node('school-read').listeners.click(); await settle();
+  await f.node('school-toggle').listeners.click(); await settle();
+  const journal = f.storage.records.get(journalKey);
+  assert.ok(journal, 'an unconfirmed state-changing request stays recorded');
+  assert.ok(JSON.parse(journal).operations[0].kind === 'school-mode-set');
+  for (const text of [journal, ...f.sentMessages]) assert.ok(!/Secret/.test(text));
+});
+test('a state-changing request that gets a definite answer leaves no journal record', async () => {
+  const f = await fixture(idle, 'en', {extras: withOps({schoolRead: {schemaVersion: 1, enabled: false, name: 'Study time'}, schoolSet: {schemaVersion: 1, state: 'changed', enabled: true}})});
+  await f.node('school-read').listeners.click(); await settle();
+  await f.node('school-toggle').listeners.click(); await settle();
+  assert.equal(f.storage.records.get(journalKey) ?? null, null);
+});
+test('the Status section shows procedures, interrupted operations and a truthful enrollment state', async () => {
+  assert.match(html, /<div id="operations" class="operations"><\/div>/);
+  const f = await fixture(idle, 'en', {extras: withOps({})});
+  f.node('tab-status').listeners.click();
+  const text = f.node('operations').textContent;
+  assert.match(text, /Procedures/);
+  assert.match(text, /Recover an interrupted operation/);
+  assert.match(text, /Interrupted operations/);
+  assert.match(text, /Status Hub enrollment/);
+  assert.match(text, /Not enrolled/);
+  assert.ok(!f.calls.includes('status-client-enroll'), 'nothing is sent until the person chooses it');
+});
+test('outbound paths never pass through personal wording', () => {
+  const outbound = [/function openExport\(\)\{.*?\n/s, /function saveExport\(\)\{.*?\n/s, /function ticketDiagnostics\(\)\{.*?\n/, /\$\('notes-export'\)\.addEventListener.*?\n/, /async function copyText\(text\)\{.*?\n/];
+  for (const pattern of outbound) {
+    const match = source.match(pattern);
+    assert.ok(match, String(pattern));
+    const body = match[0].replace(/label\(\$\('export-summary'\)[^;]*;/, '');
+    assert.doesNotMatch(body, /applyVocabulary|vocabularyEntries|\bt\(/, String(pattern));
+  }
+  assert.doesNotMatch(source, /console\.(log|info|warn|error|debug)/);
+  assert.match(source, /document\.title=productName\(\)\+' · '\+\(ops\?ops\.publicCopy\(copy\.heading,prefs\.language\):t\(copy\.heading\)\)/);
+});

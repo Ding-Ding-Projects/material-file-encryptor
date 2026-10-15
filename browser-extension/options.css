@@ -110,3 +110,4 @@ md-primary-tab[aria-disabled=true]{opacity:.62}
 .pair-video{display:block;inline-size:min(100%,320px);max-inline-size:100%;block-size:auto;margin-block:8px;border-radius:12px;background:var(--md-sys-color-surface-container)}
 .pair-video[hidden]{display:none}
 #pair-code-state,#pair-identity,#pair-code-help{min-inline-size:0;overflow-wrap:anywhere}
+.operations{display:grid;gap:8px}.ops-card{padding:12px 16px;margin-top:8px;border-radius:12px;background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-outline-variant,var(--md-sys-color-outline));animation:mfe-panel-in 200ms cubic-bezier(.2,0,0,1) both}.ops-card h4{margin:0 0 4px;font-size:15px}.ops-card ol{margin:4px 0 8px;padding-inline-start:20px}.ops-card[data-available=false]{opacity:.82}.ops-chip{display:inline-block;margin:0 0 4px;padding:2px 10px;border-radius:8px;font-size:12px;background:var(--md-sys-color-surface-container)}@media(prefers-reduced-motion:reduce){.ops-card{animation:none}}

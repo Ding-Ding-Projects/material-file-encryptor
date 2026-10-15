@@ -108,6 +108,12 @@ adapter 呼叫會保持缺少 context，唔會借用目前畫面 frame。
 兩個答案都喺現有 64 KiB 訊框同 35 秒要求期限之內。唔會儲存任何嘢，亦唔會
 發出授權。
 
+### 狀態用戶端範圍：enroll-status-client
+
+第三個狀態模式範圍 `enroll-status-client` 讓已配對嘅擴充功能登記為獨立狀態用戶端。規則同兩個讀取範圍一樣：要有同一條原生連線上有效而且仍然存在嘅配對、唔會彈出桌面提示，亦唔會發出授權。要求只可以有 `type`、`session` 同 `report`。報告只可以有 `version`、`connection`（一定係 `paired`）、`lastRefresh`（去到分鐘嘅 UTC 時間，或者 `null`）同四個 0 至 9999 嘅數量：`notes`、`schedules`、`tickets` 同 `operations`。任何其他欄位、類型或範圍都會喺執行任何嘢之前被拒絕，所以內容、名稱、連結或路徑都夾帶唔到。
+
+中介層會將報告嘅凍結副本交俾注入嘅 `enrollStatusClient` 函式，並回覆 `status-client`，`state` 係 `enrolled`、`pending` 或 `unavailable`。冇呢個函式、函式拋出錯誤，或者回覆其他嘢，答案都係 `unavailable`。現時出貨嘅桌面版本仍未注入狀態功能，所以今日回覆 `unavailable`；實際登記成功嘅路徑未經驗證。
+
 ## 確認範圍：focus-authenticator
 
 「確認」批准模式嘅第一個範圍係 `focus-authenticator`。已配對來源只會傳送

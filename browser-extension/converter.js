@@ -1,6 +1,6 @@
 // Narrow native-mediated conversion workspace. No source bytes or paths are read here.
 export function mountBrowserConverter(root,{send,getLanguage=()=> 'en',acquire=()=>true,release=()=>{},isExternallyBusy=()=>false,disconnect=()=>{}}){
- const doc=root.ownerDocument;let connected=false,busy=false,generation=0,formats=[],selection=null,chosen=null,cursor=null,nextCursor=null,rows=[],message=null,stage=0;
+ const doc=root.ownerDocument;let sendRequest=send,connected=false,busy=false,generation=0,formats=[],selection=null,chosen=null,cursor=null,nextCursor=null,rows=[],message=null,stage=0;
  const text=pair=>getLanguage()==='yue'?pair[1]:getLanguage()==='bilingual'?pair.join(' · '):pair[0];
  const node=(tag,pair)=>{const n=doc.createElement(tag);if(pair)n.textContent=text(pair);return n;};
  const heading=node('h3'),help=node('p'),status=node('p');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
@@ -15,7 +15,7 @@ export function mountBrowserConverter(root,{send,getLanguage=()=> 'en',acquire=(
  const copy=(element,pair)=>element.textContent=text(pair);
  async function request(type,payload={}){
   if(!connected||busy||isExternallyBusy()||!acquire())return null;const own=++generation;busy=true;render();cancel.focus?.();
-  try{const result=await send({type,language:getLanguage(),...payload});if(own!==generation)return null;if(result?.error)throw Error();return result;}
+  try{const result=await sendRequest({type,language:getLanguage(),...payload});if(own!==generation)return null;if(result?.error)throw Error();return result;}
   catch{if(own===generation)message=['Request did not complete. Check the desktop for work already accepted.','要求未完成，請喺桌面檢查已接受嘅工作。'];return null;}
   finally{if(own===generation){busy=false;release();render();[pick,load,start,refresh][stage].focus?.();}}
  }
@@ -42,5 +42,5 @@ export function mountBrowserConverter(root,{send,getLanguage=()=> 'en',acquire=(
  async function refreshJobs(){const result=await request('converter-list',{cursor});if(result?.rows){rows=result.rows;nextCursor=result.nextCursor;render();}}
  refresh.addEventListener('click',()=>{cursor=null;void refreshJobs();});previous.addEventListener('click',()=>{cursor=null;void refreshJobs();});next.addEventListener('click',()=>{cursor=nextCursor;void refreshJobs();});
  cancel.addEventListener('click',()=>{generation++;busy=false;release();disconnect();connected=false;selection=null;chosen=null;rows=[];cursor=null;nextCursor=null;message=['Disconnected. Check the desktop for accepted jobs; this did not cancel them.','已中斷連線，請喺桌面檢查已接受工作，呢個動作冇取消佢哋。'];render();});
- render();return {setConnection(value){if(connected!==value){connected=value;if(!value){generation++;busy=false;selection=null;chosen=null;rows=[];formats=[];}render();}},refreshLabels:render};
+ render();return {setSend(next){if(typeof next==='function')sendRequest=next;},setConnection(value){if(connected!==value){connected=value;if(!value){generation++;busy=false;selection=null;chosen=null;rows=[];formats=[];}render();}},refreshLabels:render};
 }

@@ -4,6 +4,10 @@ const LOCK_TABS=['connection','personalization','changelog','notes','docs','supp
 // Unlock ladder answers: the desktop sends ordered level ids and an optional end time for its shared cooldown.
 const ladderLevelsValid=levels=>Array.isArray(levels)&&levels.length>=2&&levels.length<=16&&levels.every(level=>typeof level==='string'&&/^[a-z0-9-]{1,24}$/.test(level))&&new Set(levels).size===levels.length;
 const ladderCooldownValid=value=>value===null||Number.isSafeInteger(value)&&value>0;
+// Status client report: the same bounded shape src/main/browser-status-mediation.js accepts and browser-extension/status-client.js builds.
+const REPORT_COUNTS=['notes','schedules','tickets','operations'];
+const reportExact=(row,keys)=>row!==null&&typeof row==='object'&&!Array.isArray(row)&&Object.keys(row).sort().join(',')===[...keys].sort().join(',');
+const reportValid=report=>reportExact(report,['version','connection','lastRefresh','counts'])&&typeof report.version==='string'&&/^\d{1,9}\.\d{1,9}\.\d{1,9}(?:-[0-9A-Za-z.-]{1,32})?$/.test(report.version)&&report.connection==='paired'&&(report.lastRefresh===null||typeof report.lastRefresh==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$/.test(report.lastRefresh))&&reportExact(report.counts,REPORT_COUNTS)&&REPORT_COUNTS.every(key=>Number.isSafeInteger(report.counts[key])&&report.counts[key]>=0&&report.counts[key]<=9999);
 let port=null,session=null,sequence=0,pending=null,captureId=null,connectionEpoch=0;
 function disconnect(){connectionEpoch++;port?.disconnect();port=null;session=null;captureId=null;if(pending){clearTimeout(pending.timer);pending.reject(new Error('Desktop connection closed.'));pending=null;}}
 function connect(){if(port)return port;port=chrome.runtime.connectNative(HOST);const ownPort=port;port.onDisconnect.addListener(()=>{if(port!==ownPort)return;connectionEpoch++;port=null;session=null;captureId=null;if(pending){clearTimeout(pending.timer);pending.reject(new Error('Desktop receiver is unavailable.'));pending=null;}});port.onMessage.addListener(message=>{if(port!==ownPort||!pending)return;const request=pending;pending=null;clearTimeout(request.timer);if(message?.type==='error')request.reject(new Error('Desktop did not accept the handoff.'));else request.resolve(message);});return port;}
@@ -45,6 +49,16 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{if(sender.id!==c
     respond({schemaVersion:1,outcome:value.outcome});
    }
   }).catch(()=>respond({error:'Native editor request did not complete. Refresh the connection and try again.'}));return true;
+ }
+ if(message?.type==='status-client-enroll'){
+  if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==2||!reportValid(message.report)){respond({error:'Status report is unavailable.'});return false;}
+  if(!session){respond({paired:false});return false;}
+  const ownSession=session,epoch=connectionEpoch,report={version:message.report.version,connection:'paired',lastRefresh:message.report.lastRefresh,counts:Object.fromEntries(REPORT_COUNTS.map(key=>[key,message.report.counts[key]]))};
+  // The desktop is the mediator. It answers with one fixed state word; nothing else comes back.
+  request({type:'enroll-status-client',session:ownSession,report},30000).then(value=>{
+   if(session!==ownSession||connectionEpoch!==epoch||!reportExact(value,['type','schemaVersion','state'])||value.type!=='status-client'||value.schemaVersion!==1||!['pending','enrolled','unavailable'].includes(value.state))throw Error('Invalid status client response.');
+   respond({schemaVersion:1,state:value.state});
+  }).catch(()=>respond({error:'Status enrollment did not complete. Open and unlock the desktop, pair again and retry.'}));return true;
  }
  if(message?.type==='desktop-status'){
   if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1){respond({error:'Desktop status is unavailable.'});return false;}
