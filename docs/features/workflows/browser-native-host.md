@@ -39,6 +39,14 @@ The correlation ID stays attached to the queue item as `browserCaptureId`.
 Status responses never include a destination path, URL, plaintext, or credentials.
 The desktop must revoke the broker on lock and close the owned child on exit.
 
+### Resuming a pairing after the browser stops the extension worker
+
+The browser stops an idle extension service worker after about 30 seconds, which closes its native port. A pairing is not tied to that one port. When a port closes, the broker withdraws everything bound to it (pending prompts, protected grants, conversions and workflow authority) but keeps the pairing session itself, detached and unusable, until its original 15-minute expiry.
+
+The extension keeps the session value only in `chrome.storage.session`: browser memory, cleared when the browser closes, never synced, and never written to disk or to `chrome.storage.local`. A new worker presents it on a new port with exactly `{type:"resume",session}`. The broker answers `{type:"resumed",expiresInSeconds}` only when all of these hold: the desktop is unlocked, the caller is the single allowed extension origin on a live native connection, the session is the exact unexpired value the receiver issued for that origin (compared in constant time), and it has not been revoked. Anything else gets the generic not-accepted error, and a refusal never spends or revokes the genuine session. A successful resume shows no desktop prompt, never extends the original expiry, and replaces any earlier port for the same origin, so late messages from the stale port are refused.
+
+An explicit Disconnect in the extension sends exactly `{type:"unpair",session}` on the live port, which ends the session at once. Desktop lock, a desktop Disconnect, update preparation and exit still call `revoke()`, which discards the session entirely, so a later resume is refused and the extension reports that pairing expired. The extension shows one of four states: paired, reconnecting (the grant is kept and the next request resumes it), pairing expired (pair again) or not paired. Approving a new pairing on the desktop must still happen within 35 seconds.
+
 `close()` revokes admission immediately and concurrent callers share its asynchronous
 receipt. Within a three-second deadline it observes the owned process exit,
 closure of all inherited standard-I/O streams, and outstanding response callbacks.

@@ -30,7 +30,9 @@ not replace them.
   64 KiB. See `docs/features/workflows/browser-native-host.md`.
 - **Pairing.** A new extension origin is paired only after explicit approval in
   the unlocked desktop. Reject is the default. A pairing session lasts at most
-  15 minutes, is held in memory only, and is revoked on lock or exit.
+  15 minutes, is held in memory only, and is revoked on lock, update preparation,
+  exit or an explicit disconnect. A lost native port detaches the session instead
+  of revoking it, so the same extension can resume it on a new port (section 4).
 - **Protected mediation.** `src/main/browser-protected-mediation.js` already
   implements one scope, `read-profile-summary`. It issues a single-use grant of
   32 random bytes, bound to origin, pairing session and revocation generation,
@@ -112,6 +114,13 @@ queue them for later.
 
 - The extension keeps the pairing session only in `chrome.storage.session`
   (memory, cleared when the browser closes), never in `storage.local` or sync.
+  The browser stops an idle extension worker after about 30 seconds, so a new
+  worker presents the stored session with `{type:"resume",session}` on a new
+  native port. The desktop accepts it only for the same extension origin, on a
+  live connection, while the session is unexpired and unrevoked, shows no prompt,
+  and never extends the original expiry. An explicit disconnect in the extension
+  sends `{type:"unpair",session}` and clears the stored value. The extension
+  reports paired, reconnecting, pairing expired or not paired.
 - Grants are held in a local variable for the single follow-up request and then
   dropped.
 - Responses that contain a sensitive value, such as an authenticator code, are
@@ -126,8 +135,9 @@ queue them for later.
 - At most one pending desktop prompt at a time. Further requests are refused
   with "busy" until it is answered.
 - Rejected prompts never revoke a pairing on their own. A pairing ends only
-  when the desktop locks or exits, or when the person disconnects it in the
-  desktop or the extension. The one-pending-prompt rule above is what keeps a
+  when the desktop locks or exits, update preparation begins, or the person
+  disconnects it in the desktop or the extension. Losing the native port alone
+  detaches the session; it can be resumed only until its original expiry. The one-pending-prompt rule above is what keeps a
   noisy caller from stacking prompts.
 - The existing per-connection cap of 256 requests and the 35-second request
   deadline still apply.
