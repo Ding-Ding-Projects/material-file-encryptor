@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace MaterialFileEncryptor.Host;
@@ -12,7 +13,8 @@ internal sealed partial class VaultController
     private BackgroundPriorityScope BackgroundPriority()=>new(Volatile.Read(ref performanceMode)==0);
     private long admittedBytes;
     private const long MaximumQueuedBytes = 64L * 1024 * 1024 - 65536;
-    private bool forceLocking;
+    private bool forceLocking, forceDraining;
+    private int releasedHandles;
     private object? cachedStatus;
     private object? cachedStatusSummary;
     private string? summarySignature;
@@ -33,13 +35,13 @@ internal sealed partial class VaultController
     {
         if (method == "status") return Task.FromResult<object?>(Volatile.Read(ref cachedStatus) ?? new { busy = true });
         if (method == "statusSummary") return Task.FromResult<object?>(StatusSummary());
-        if (method == "forceLock") return Task.Run(() => Execute(method,args));
+        if (method is "forceLock" or "flushJournal") return Task.Run(() => Execute(method,args));
         if (method is "operations" or "cancelOperation")
             return Task.FromResult(Execute(method, args));
         long requestBytes = args.ValueKind == JsonValueKind.Undefined ? 0 : System.Text.Encoding.UTF8.GetByteCount(args.GetRawText());
         lock (admissionGate)
         {
-            if (forceLocking) throw new InvalidOperationException("The vault is locking. Retry after it is locked.");
+            if (ForceBusy) throw new InvalidOperationException("The vault is locking. Retry after it is locked.");
             if (queuedCommands >= 64 || requestBytes > MaximumQueuedBytes - admittedBytes) throw new InvalidOperationException("The command queue is full.");
             ++queuedCommands; admittedBytes += requestBytes;
         }
@@ -71,7 +73,7 @@ internal sealed partial class VaultController
         MaterialFileEncryptor.Core.VaultEngine.ValidatePartSize(cap);
         lock(admissionGate)
         {
-            if(forceLocking)throw new InvalidOperationException("The vault is locking.");
+            if(ForceBusy)throw new InvalidOperationException("The vault is locking.");
             MaterialFileEncryptor.Core.VaultEngine captured;
             lock(gate)captured=Engine;
             return operations.StartWithPhases(path==null?[]:[path],"packing",async(_,cancellation,progress,phase)=>
@@ -106,7 +108,7 @@ internal sealed partial class VaultController
         string[] paths;
         lock (admissionGate)
         {
-            if (forceLocking) throw new InvalidOperationException("The vault is locking.");
+            if (ForceBusy) throw new InvalidOperationException("The vault is locking.");
             if (!args.TryGetProperty("paths", out var values) || values.ValueKind != JsonValueKind.Array || values.GetArrayLength() is < 1 or > 1000)
                 throw new ArgumentException("Select between one and 1000 files to import.");
             paths = values.EnumerateArray().Select(value => Path.GetFullPath(value.GetString() ?? throw new ArgumentException("Invalid import path."))).ToArray();
@@ -190,7 +192,7 @@ internal sealed partial class VaultController
         JsonElement capturedArgs=args.Clone();
         lock(admissionGate)
         {
-            if(forceLocking)throw new InvalidOperationException("The vault is locking.");
+            if(ForceBusy)throw new InvalidOperationException("The vault is locking.");
             return operations.Start([RequiredString(args,"destination")],(_,cancellation,progress)=>Task.Run(()=>
             { if(current)ExportCurrentFile(capturedArgs,cancellation,progress);else {ExportVersionFile(capturedArgs,cancellation);progress(0,0,1,1);} },cancellation),"export");
         }
@@ -291,6 +293,8 @@ internal sealed partial class VaultController
     private object ForceLockResult(bool locked, bool busy, string code, int activeOperations, int queuedOperations) => new
     {
         locked, busy, code, activeOperations, queuedOperations,
+        releasedHandles,
+        openHandles = fileSystem?.ActiveHandlesSnapshot ?? 0,
         activeFilesystemIo = fileSystem?.ActiveIoSnapshot ?? 0,
         activePreparedOperations = Volatile.Read(ref activePreparedOperations),
         activeSynchronization = Volatile.Read(ref syncFlight)
@@ -299,35 +303,78 @@ internal sealed partial class VaultController
     {
         lock(admissionGate)
         {
-            if(forceLocking||syncFlight!=0)return false;
+            if(ForceBusy||syncFlight!=0)return false;
             Volatile.Write(ref syncFlight,1);return true;
         }
     }
     internal void EndBackgroundWork(){lock(admissionGate)Volatile.Write(ref syncFlight,0);}
-    internal void EndForceLock(){lock(admissionGate)forceLocking=false;}
-    internal object? TryReserveForceLock()
+    private bool ForceBusy => forceLocking || forceDraining;
+    internal void EndForceLock(){lock(admissionGate){forceLocking=false;forceDraining=false;}}
+    // Admission for a forced detach. With closeHandles false (the original
+    // contract) any retained descriptor vetoes it. A forced lock passes true: it
+    // has already cancelled and drained the controller's own work, and the
+    // descriptors other programs still hold are released rather than awaited.
+    // gateWaitMilliseconds bounds the wait for the crypto lock, which the status
+    // poller holds for a moment every second; a busy answer is only given when
+    // that lock stays unavailable for the whole bounded wait.
+    internal object? TryReserveForceLock(bool closeHandles = false, int gateWaitMilliseconds = 0, bool ownsDraining = false)
     {
         lock (admissionGate)
         {
             int transfers = operations.Outstanding;
-            if (forceLocking || queuedCommands != 0 || activeCommands != 0 || transfers != 0)
+            if (forceLocking || (forceDraining && !ownsDraining) || queuedCommands != 0 || activeCommands != 0 || transfers != 0)
                 return ForceLockResult(false, true, "operations-active", activeCommands + transfers, queuedCommands);
-            if (!Monitor.TryEnter(gate)) return ForceLockResult(false, true, "crypto-active", 1, 0);
+            if (!Monitor.TryEnter(gate, Math.Max(0, gateWaitMilliseconds))) return ForceLockResult(false, true, "crypto-active", 1, 0);
             try
             {
                 if (activePreparedOperations != 0 || Volatile.Read(ref syncFlight) != 0 || (fileSystem?.ActiveIo ?? 0) != 0)
                     return ForceLockResult(false, true, "crypto-active", activePreparedOperations + (fileSystem?.ActiveIo ?? 0) + Volatile.Read(ref syncFlight), 0);
-                if (fileSystem is not null && !fileSystem.BeginForceUnmount())
-                    return ForceLockResult(false, true, "filesystem-handles-active", fileSystem.ActiveHandles, 0);
-                forceLocking = true;
+                if (fileSystem is not null)
+                {
+                    int released = 0;
+                    bool admitted = closeHandles ? fileSystem.BeginForcedRelease(out released) : fileSystem.BeginForceUnmount();
+                    if (!admitted) return ForceLockResult(false, true, "filesystem-handles-active", fileSystem.ActiveHandles, 0);
+                    releasedHandles = released;
+                }
+                forceLocking = true; forceDraining = false;
             }
             finally { Monitor.Exit(gate); }
         }
         return null;
     }
-    private object ForceLock()
+    private void CancelActiveWork()
     {
-        object? busy=TryReserveForceLock();if(busy is not null)return busy;
+        operations.CancelAll();
+        // The token source is disposed when synchronization ends; a cancel that
+        // loses that race has nothing left to cancel.
+        try { syncCancellation?.Cancel(); } catch (ObjectDisposedException) { }
+    }
+    // Force lock cancels what can be cancelled, waits a bounded time for it to
+    // settle, then releases the descriptors other programs hold and dismounts.
+    // It is never counted as one of the commands it waits for.
+    private object ForceLock(JsonElement args)
+    {
+        int timeoutMilliseconds = (int)Math.Clamp(OptionalLong(args, "timeoutMs") ?? 15000, 0, 60000);
+        var clock = Stopwatch.StartNew();
+        lock (admissionGate)
+        {
+            if (ForceBusy) return ForceLockResult(false, true, "force-lock-in-progress", 0, 0);
+            forceDraining = true; releasedHandles = 0;
+        }
+        object? busy;
+        try
+        {
+            while (true)
+            {
+                CancelActiveWork();
+                int remaining = (int)Math.Max(0, timeoutMilliseconds - clock.ElapsedMilliseconds);
+                busy = TryReserveForceLock(closeHandles: true, gateWaitMilliseconds: Math.Min(remaining, 250), ownsDraining: true);
+                if (busy is null || remaining == 0) break;
+                Thread.Sleep(Math.Min(remaining, 20));
+            }
+        }
+        catch { lock (admissionGate) forceDraining = false; throw; }
+        if (busy is not null) { lock (admissionGate) forceDraining = false; return busy; }
         try
         {
             // Stopping the dispatcher may wait for callbacks and must never own
@@ -338,6 +385,14 @@ internal sealed partial class VaultController
             return ForceLockResult(true, false, "locked", 0, 0);
         }
         finally { EndForceLock(); }
+    }
+    // Commits the encrypted journal without dismounting. Used before the machine
+    // suspends, so a power loss during sleep replays from a committed journal.
+    private object FlushJournal()
+    {
+        if (!Monitor.TryEnter(gate, 2000)) return new { flushed = false, code = "crypto-active" };
+        try { vault?.FlushLocalOnly(); return new { flushed = vault is not null, code = vault is null ? "locked" : "flushed" }; }
+        finally { Monitor.Exit(gate); }
     }
     private void FileSystemHostDetach()
     {

@@ -61,13 +61,20 @@ try
     await helper.Call("create",new{storageDir=storage,cacheDir=cache,password,partSizeBytes=1048576});await Mount();
     string mountedRoot=drive+"\\";
     string idleFile=Path.Combine(mountedRoot,"idle.bin");File.WriteAllBytes(idleFile,new byte[]{1,2,3,4});
-    using(var idle=new FileStream(idleFile,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete))
+    var idle=new FileStream(idleFile,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete);
+    try
     {
+        // Force lock releases descriptors that other programs still hold: an idle
+        // open handle must not make it report busy or refuse to dismount.
         var result=await helper.Call("forceLock",new{});bool locked=result.GetProperty("locked").GetBoolean();
-        Require(!locked&&result.GetProperty("busy").GetBoolean(),"Retained idle handle did not veto force lock.");
-        Require(Directory.Exists(mountedRoot),"Busy force lock detached the owned drive.");
-        checks.Add(new{name="idle-open-handle-force-lock-busy",verified=true,locked});
+        Require(locked&&!result.GetProperty("busy").GetBoolean(),"Force lock refused to release an idle open handle.");
+        mounted=false;
+        Require(result.GetProperty("releasedHandles").GetInt32()>=1,"Force lock reported no released handle.");
+        checks.Add(new{name="idle-open-handle-force-lock-releases",verified=true,locked,releasedHandles=result.GetProperty("releasedHandles").GetInt32()});
     }
+    finally { try { idle.Dispose(); } catch(IOException) { /* The volume is already gone. */ } }
+    await Unlock();await Mount();mountedRoot=drive+"\\";
+    Require(File.ReadAllBytes(Path.Combine(mountedRoot,"idle.bin")).SequenceEqual(new byte[]{1,2,3,4}),"Bytes were lost across a forced lock with an idle handle.");
     OrdinaryOperations.Run(root,mountedRoot,checks);
     if(packingWorkload)packedResult=await PackingWorkload.Run(mountedRoot,helper.ProcessId,(method,value)=>helper.Call(method,value),checks,PersistProgress,task=>packingIo=task);
     File.WriteAllText(Path.Combine(mountedRoot,"prior.bin"),"existing destination stays intact");
@@ -113,20 +120,17 @@ try
             var readyWait=Stopwatch.StartNew();
             while(!File.Exists(ready)&&!writer.HasExited&&readyWait.Elapsed<TimeSpan.FromSeconds(15))await Task.Delay(10);
             Require(File.Exists(ready)&&!writer.HasExited,"Mapped writer did not become ready.");
-            bool busyObserved=false;
-            for(int attempt=0;attempt<3;attempt++)
-            {
-                var response=await helper.Call("forceLock",new{});
-                checks.Add(new{name="mapped-force-lock-response",attempt,response});
-                await PersistProgress();
-                bool locked=response.GetProperty("locked").GetBoolean();
-                if(locked)mounted=false;
-                checks.Add(new{name="retained-mapped-descriptor-force-lock",attempt,verified=!locked&&response.GetProperty("busy").GetBoolean(),locked,code=response.GetProperty("code").GetString(),activeFilesystemIo=response.GetProperty("activeFilesystemIo").GetInt32()});
-                await PersistProgress();
-                Require(!locked&&response.GetProperty("busy").GetBoolean(),"Force lock detached a retained mapped descriptor.");
-                busyObserved=true;
-            }
-            exactOverlap=busyObserved;
+            // A mapped view keeps a descriptor open between Cleanup and Close.
+            // Force lock must still dismount; the writer then loses its view.
+            var response=await helper.Call("forceLock",new{});
+            checks.Add(new{name="mapped-force-lock-response",response});
+            await PersistProgress();
+            bool locked=response.GetProperty("locked").GetBoolean();
+            if(locked)mounted=false;
+            checks.Add(new{name="retained-mapped-descriptor-force-lock",verified=locked&&!response.GetProperty("busy").GetBoolean(),locked,code=response.GetProperty("code").GetString(),releasedHandles=response.GetProperty("releasedHandles").GetInt32(),activeFilesystemIo=response.GetProperty("activeFilesystemIo").GetInt32()});
+            await PersistProgress();
+            Require(locked&&!response.GetProperty("busy").GetBoolean(),"Force lock did not dismount while a mapped descriptor was retained.");
+            exactOverlap=true;
         }
         catch(Exception error)
         {
@@ -140,18 +144,20 @@ try
             var stdout=await writerStdout.Finish(TimeSpan.FromSeconds(5));var stderr=await writerStderr.Finish(TimeSpan.FromSeconds(5));
             if(stdout.drainTimedOut||stderr.drainTimedOut||stdout.readError is not null||stderr.readError is not null)writerStop=writerStop with{Errors=writerStop.Errors.Append("child-diagnostic-drain-incomplete").ToArray()};
             writerExitEstablished=writerStop.ExitEstablished;
-            checks.Add(new{name="mapped-writer-child-exit",verified=writerExitEstablished&&writer.ExitCode==0&&writerStop.Errors.Length==0&&!stdout.drainTimedOut&&!stderr.drainTimedOut&&stdout.readError is null&&stderr.readError is null,writerId,writerStartedUtc,writerStop,stdout,stderr,exitCode=writerExitEstablished?(int?)writer.ExitCode:null,exitCodeHex=writerExitEstablished?"0x"+unchecked((uint)writer.ExitCode).ToString("X8"):null,viewsReleased=writerExitEstablished&&writer.ExitCode==0});
+            checks.Add(new{name="mapped-writer-child-exit",verified=writerExitEstablished&&writerStop.Errors.Length==0&&!stdout.drainTimedOut&&!stderr.drainTimedOut&&stdout.readError is null&&stderr.readError is null,writerId,writerStartedUtc,writerStop,stdout,stderr,exitCode=writerExitEstablished?(int?)writer.ExitCode:null,exitCodeHex=writerExitEstablished?"0x"+unchecked((uint)writer.ExitCode).ToString("X8"):null,viewsReleased=writerExitEstablished&&writer.ExitCode==0});
         }
         Require(writerExitEstablished&&writerStop!.Errors.Length==0,"Mapped writer teardown did not complete normally; fixture retained.");
-        Require(writer.ExitCode==0,"Mapped writer exited abnormally; mapped persistence is unverified.");
+        // The writer's view ends when the drive is force-locked, so its exit code
+        // is recorded above but is not a pass condition. Byte-exact mapped
+        // persistence is not claimed across a forced dismount.
     }
-    Require(exactOverlap,"No retained mapping force-lock busy response was observed.");
+    Require(exactOverlap,"Force lock was not exercised while a mapped descriptor was retained.");
     }
     if(mounted)await SettleDetach("after-workload");
     Require(!mounted,"Owned mount did not detach after workload stopped.");
     await Unlock();await Mount();mountedRoot=drive+"\\";
     Require(File.ReadAllBytes(Path.Combine(mountedRoot,"idle.bin")).SequenceEqual(new byte[]{1,2,3,4}),"Authenticated reopen lost idle bytes.");
-    if(!ordinaryOnly)MappedWriter.Verify(Path.Combine(mountedRoot,"mapped.bin"));
+    if(!ordinaryOnly)Require(new FileInfo(Path.Combine(mountedRoot,"mapped.bin")).Length==64L*1024*1024,"The mapped file did not authenticate and reopen at its full length after a forced lock.");
     if(packedResult!=null){PackingWorkload.VerifyReopened(mountedRoot,packedResult);checks.Add(new{name="packing-authenticated-mounted-reopen",verified=true,packedResult.Length,packedResult.Sha256});}
     checks.Add(new{name="authenticated-reopen-after-all-views-release",verified=true});
     if(mounted)await SettleDetach("after-authenticated-reopen");

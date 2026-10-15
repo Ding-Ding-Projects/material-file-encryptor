@@ -7,7 +7,7 @@
 - `startImport` 接受 `paths`，即一至 1000 個位於保管庫資料夾外的絕對來源路徑，立即回傳 `operationId`。
 - `operations` 最多回傳 128 筆保留操作記錄，各含 `operationId`、`state`、`bytesCompleted`、`totalBytes`、`completedFiles`、`totalFiles`，以及適用時的安全 `error`。
 - `cancelOperation` 接受 `operationId`。取消獨立於控制器及加密鎖。`accepted: false` 表示操作已終止。完成檔案保留安裝，未完成暫存檔丟棄。
-- `forceLock` 回傳 `locked`、`busy`、`code`、`activeOperations` 及 `queuedOperations`。仍被持有的檔案控制代碼、記憶體映射、執行中或排隊命令及傳輸、準備、同步或檔案系統 I/O 都會回傳忙碌並保持磁碟掛載。閒置開啟的控制代碼亦會阻止鎖定，回呼之間暫時冇工作並不代表描述符已釋放。重試之前，請儲存並關閉檔案、釋放記憶體映射，以及完成或取消排隊傳輸。分派器卸離前阻止新接納，只有引擎釋放並清除自有金鑰後才回傳成功。
+- `forceLock` 回傳 `locked`、`busy`、`code`、`activeOperations`、`queuedOperations` 及 `releasedHandles`。佢先阻止新接納，取消執行中嘅傳輸同同步，並最多等 `timeoutMs`（預設 15 秒）等佢哋，以及加密鎖嘅短暫持有，清走。之後釋放其他程式仍然持有嘅檔案同資料夾描述符、提交日誌、卸載磁碟並清除自有金鑰。只有引擎釋放並清除金鑰之後先回傳成功。只有喺無法取消嘅工作（例如排隊命令）超過限期嗰陣先會留低忙碌結果，磁碟亦會保持掛載。
 - `listFiles` 接受數值 `cursor`、`limit`（1 至 1000）及選用 `revision`，回傳 `items`、`nextCursor`、`revision` 及 `resetRequired`。revision 改變時從零重新分頁。
 
 命令共用一個有界消費者。命令執行期間仍持續讀取控制訊息。已接納要求中繼資料的位元組上限低於 64 MiB；受管檔案內容不排隊，只用一個 64 KiB 明文緩衝區。傳輸要求最多 64 個未完成操作。終止記錄會從有界保留歷史移除。
@@ -24,7 +24,7 @@
 
 `native/MaterialFileEncryptor.Lifecycle.Tests` 以可拋棄合成保管庫測試排隊接納、取消、強制鎖定忙碌結果、原子受管匯入、延後取消語意及 revision 分頁。正式根建置使用 `build.bat /s`。Windows Explorer 互動及安裝程式行為需另作執行驗證；原生協定檢查不證明這些結果。
 
-父程序正常 EOF 會等候已接納要求，受管傳輸仍執行時拒絕釋放引擎。一般鎖定及強制鎖定都會拒絕仍被持有的磁碟控制代碼或記憶體映射。強制鎖定是另一操作，仍有描述符或加密工作時絕不報告成功。
+父程序正常 EOF 會等候已接納要求，受管傳輸仍執行時拒絕釋放引擎。一般鎖定喺有程式持有磁碟控制代碼時會拒絕並講出持有者類型；強制鎖定則取消、排空並釋放佢哋。輔助程序嘅父程序消失之後，輔助程序會等 30 秒畀控制代碼關閉，然後強制鎖定，因為之後已經冇嘢可以再鎖定磁碟。
 
 ## 增量日誌及活動
 

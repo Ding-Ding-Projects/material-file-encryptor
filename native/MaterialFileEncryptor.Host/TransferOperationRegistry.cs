@@ -78,6 +78,21 @@ internal sealed class TransferOperationRegistry
             return new { operationId = id, accepted, state = item.State };
         }
     }
+    // Requests cancellation of every unfinished operation. Completed work keeps
+    // its result; the caller waits on Outstanding for the operations to settle.
+    public int CancelAll()
+    {
+        int requested = 0;
+        lock (gate)
+        {
+            foreach (var item in entries.Values)
+            {
+                if (item.State is not ("queued" or "running" or "cancelling")) continue;
+                item.State = "cancelling"; item.Cancellation.Cancel(); ++requested;
+            }
+        }
+        return requested;
+    }
     public object Snapshot()
     {
         lock (gate) return order.Select(id => entries[id]).Select(item => new

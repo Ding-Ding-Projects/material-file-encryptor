@@ -17,7 +17,28 @@ https://github.com/winfsp/winfsp
 - Optional saved unlock stores the 32-byte master key under current-user Windows DPAPI, bound to the vault identity. The protected file lives in `%LOCALAPPDATA%\\MaterialFileEncryptor-Data\\Credentials`, with a protected owner/System ACL, separately from the Squirrel installation directory. Passwords and key-file paths are not persisted there. Forgetting saved unlock deletes that protected credential. Uninstalling the application retains this credential data; use Forget saved unlock before uninstalling to remove it.
 - Windows kernel share modes and byte-range locks are enforced by WinFsp. Open handles refer to stable entry identities; rename, replacement, and deletion retain the content associated with an existing handle until its final descriptor closes, including retained memory-mapped views. Extended Windows rename requests with POSIX semantics permit shared-delete open replacement; legacy `MoveFileEx` requests follow Windows open-handle restrictions and can return access denied until the affected handles close.
 
-A busy unmount fails with a clear message and keeps the drive unlocked. Close applications and Explorer windows using that drive, then retry. The helper does not force-unmount automatically. During orderly pipe shutdown it waits for live handles to close. Abrupt process termination cannot run a graceful unmount; acknowledged writes are retained in the encrypted journal for the next unlock.
+## Locking, Force lock and restarts
+
+**Lock** unmounts the drive gracefully, commits the encrypted journal and clears the key. It refuses while a program still has a file or folder on the drive open, because dismounting under that program would pull the drive out from under it. The refusal keeps the drive unlocked and names the kind of holder it can identify without exposing any file name or program path: data still being read or written, Windows Explorer (a window or preview pane showing the drive), Windows Search or a security scan, or another program. Every message points at Force lock. Status carries the same kinds in `unmountHolders` while `unmountBusy` is true. No file name is recorded or logged.
+
+**Force lock** is the way out when something keeps the drive busy. It does not refuse because work is running or because a program has a file open. It proceeds in this order:
+
+1. It blocks new commands, transfers and synchronization from starting.
+2. It cancels running transfers and the running synchronization, and waits up to 15 seconds (`timeoutMs`, at most 60 seconds) for them to stop. Cancelling a transfer discards its unfinished staged file and keeps files that were already installed. Commands that cannot be cancelled are waited for, not interrupted.
+3. It waits briefly for the encryption lock, which the status refresh also uses for a moment every second. That momentary hold used to make Force lock report busy while nothing was using the drive.
+4. It releases every file and folder descriptor that other programs still hold, commits the encrypted journal, dismounts the drive through WinFsp, and clears the key. Programs that had files open lose access to the drive; anything they had already written was acknowledged only after it reached the journal.
+
+If something still cannot stop within the deadline, the result is `busy` with a code (`operations-active`, `crypto-active` or `filesystem-handles-active`) and the drive stays mounted. A successful result reports `releasedHandles`, the number of descriptors it closed.
+
+### What happens if you restart while the drive is mounted
+
+- **Windows shutdown, restart or sign-out (clean).** When Windows announces the session is ending, the desktop application revokes browser access, force locks the drive with a short deadline (about three seconds of waiting, four in total) so shutdown is never held up, removes its interrupted-session marker, and exits. Before that, when Windows first asks whether the session may end, the application only commits the journal, because another program can still cancel the shutdown and a lock then would pull the drive away from work the user keeps doing.
+- **If the lock does not finish in time.** The marker stays. Every acknowledged write is already in the encrypted journal, so nothing is lost; the next start opens locked, reports that an interrupted session was detected, and replays the journal when you unlock.
+- **Sleep or hibernate.** The drive stays mounted so work continues on resume. The application commits the journal when the machine suspends, so a power loss while asleep replays from a committed state.
+- **Power loss or a crash.** Nothing runs. A write is acknowledged only after its encrypted frame and journal entry are durable, so on the next unlock the journal replays every acknowledged write and ignores a torn final frame. A write that had not been acknowledged yet may be absent; a partly written one is never exposed.
+- **The desktop application closes first.** The helper process sees its pipe close. It waits 30 seconds for programs to close their files and then force locks, because nothing is left that could unlock or lock the drive again.
+
+Abrupt process termination cannot run a graceful unmount; acknowledged writes are retained in the encrypted journal for the next unlock.
 
 Credentials saved by earlier development builds inside `%LOCALAPPDATA%\\MaterialFileEncryptor\\Credentials` are ignored and never migrated automatically. Unlock manually and enable saved unlock again to use the independent data directory. Existing development-build credential files are left untouched; forgetting a current credential cannot restore one from the old location.
 
@@ -40,7 +61,9 @@ Responses are `{ "id": 1, "result": ... }` or `{ "id": 1, "error": "..." }`. The
 | `autoUnlock` | `storageDir`, `cacheDir`, `driveLetter`; uses the current user's saved DPAPI key |
 | `mount` | Optional `driveLetter`, `driveName`; requires an unlocked vault and available driver |
 | `unmount` | None; retains the unlocked engine |
-| `lock` | None; gracefully unmounts, flushes, and clears the engine key |
+| `lock` | None; gracefully unmounts, flushes, and clears the engine key; refuses with the kind of holder while a program still has the drive open |
+| `forceLock` | Optional `timeoutMs` (0 to 60000, default 15000); cancels transfers and synchronization, releases other programs' open files, flushes, dismounts, and clears the engine key |
+| `flushJournal` | None; commits the encrypted journal without locking, used before the machine suspends |
 | `importFiles` | `paths`: array of user-selected original file paths |
 | `keepOffline`, `releaseOffline` | `path`: virtual vault path |
 | `setPartSize` | `partSizeBytes`: default cap for new and subsequently edited files (initially 10 MiB) |
@@ -53,7 +76,7 @@ Create and unlock authenticate the vault; mount is a separate request. The deskt
 
 The vault dialog also offers a drive name, the volume label that File Explorer shows next to the drive letter. It defaults to `Material Files`, must be 1 to 32 characters after trimming (the NTFS and WinFsp volume label limit), and cannot contain control characters or any of `\ / : * ? " < > |`. The field validates inline and blocks submit until the name is valid. The optional `driveName` request field is checked again by the main process and by the native controller, which falls back to `Material Files` when it is absent. The last used name is stored in the local preferences file beside the drive letter and fills the field the next time the dialog opens. The name is applied when the drive mounts, so changing it for an already mounted drive requires locking and unlocking it.
 
-Status contains `locked`, `mounted`, `unmountBusy`, `driveLetter`, `driveName`, `storageDir`, `cacheDir`, `files`, `partSizeBytes`, `sync`, `driver`, `autoUnlock`, `availableDriveLetters`, and `lastOfflineRelease`. A successful offline release records its virtual `path` and actual `bytesFreed`; zero means no eligible local ciphertext was removed. Targeted eviction retains dirty, pending, pinned, open, and shared content, and verifies the source copy before deletion. Each file reports `id`, virtual `path`, logical `size`, `modified`, actual encrypted `partCount`, its `partSizeBytes`, and `offline`. Part size includes authenticated-record overhead; encrypted parts do not exceed their cap.
+Status contains `locked`, `mounted`, `unmountBusy`, `unmountHolders`, `driveLetter`, `driveName`, `storageDir`, `cacheDir`, `files`, `partSizeBytes`, `sync`, `driver`, `autoUnlock`, `availableDriveLetters`, and `lastOfflineRelease`. A successful offline release records its virtual `path` and actual `bytesFreed`; zero means no eligible local ciphertext was removed. Targeted eviction retains dirty, pending, pinned, open, and shared content, and verifies the source copy before deletion. Each file reports `id`, virtual `path`, logical `size`, `modified`, actual encrypted `partCount`, its `partSizeBytes`, and `offline`. Part size includes authenticated-record overhead; encrypted parts do not exceed their cap.
 
 ## Verification
 

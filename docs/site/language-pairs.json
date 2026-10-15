@@ -169,8 +169,8 @@
     {
       "source": "docs/features/drive/README.md",
       "translation": "docs/features/drive/README.zh-HK.md",
-      "sourceSha256": "22f98f0c296d7dccb81b7e5a2b4b403d4a73d04248a21b1f717104f9876a7c79",
-      "translationSha256": "2ea664c8f3f9603c66b7ec89022a182b1d8b14283162c35cac4142c5d3c20a57"
+      "sourceSha256": "4bb3a745b7f69de6e9be7138ccc1cc4c29dc7b61e6ca355b75d7c6acee09bb66",
+      "translationSha256": "5cc2c07950c33bd94d6b2571e28aaa5009a660ebfbfca4a8094c200c749d1a0b"
     },
     {
       "source": "docs/features/interface/animation-transition.md",
@@ -397,8 +397,8 @@
     {
       "source": "docs/features/performance/native-lifecycle-performance.md",
       "translation": "docs/features/performance/native-lifecycle-performance.zh-HK.md",
-      "sourceSha256": "b8572b1312bd4c8b410a69d32f925ccbdc98d52805d004178e4d50d764c5a232",
-      "translationSha256": "808a5f7caeb0ca00e4f06b86c771aee6bf7726b67a6addd494062a4a1bad5f13"
+      "sourceSha256": "4e7786a0d4cb9a7bf1890f3b233969b69bd6641c648cb48e2eb4842a80a0e453",
+      "translationSha256": "d659c4a979444caea8336eab274645465e3ae8f78e5f8bf712572a2d6f1fb03c"
     },
     {
       "source": "docs/features/performance/README.md",
@@ -589,8 +589,8 @@
     {
       "source": "docs/features/storage/transfer-lifecycle.md",
       "translation": "docs/features/storage/transfer-lifecycle.zh-HK.md",
-      "sourceSha256": "b8dd28e2150e5fe202e48c50467480e4957ce1796cc27545ca58e6c5da404a84",
-      "translationSha256": "1dd92d96eb9e107a51c5564b70e7bc717837b7d18d4cbd10aadd2485235c6e58"
+      "sourceSha256": "9cb211ea77b0c6365bd655776d083924f5d1224cf5046449619fdda1ba9d7f6a",
+      "translationSha256": "089e13b74a9e121a291b4f8efa388e31a03bbcc64b0bf9217345c68670106a05"
     },
     {
       "source": "docs/features/surface-foundation/coverage.md",
