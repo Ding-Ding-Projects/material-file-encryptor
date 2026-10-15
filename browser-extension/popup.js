@@ -3,7 +3,7 @@ import {readPreferences,applyPreferences,acquireStorage} from './preferences.js'
 import {applyAccent} from './accent.js';
 import {readLogo} from './local-records.js';
 import './vendor/material.js';
-installShadowReducedMotion(document);
+if(typeof installShadowReducedMotion==='function')installShadowReducedMotion(document);
 import './vendor/search.js';
 const $=id=>document.getElementById(id);
 const copy={heading:['Download handoff','下載交接'],'connection-label':['Browser connection','瀏覽器連線'],'next-heading':['Next download','下一個下載'],'step-one':['Open and unlock the installed desktop application.','開啟並解鎖已安裝嘅桌面應用程式。'],'step-two':['Pair this browser and approve the request in the desktop.','配對瀏覽器，然後喺桌面批准要求。'],'step-three':['Right-click a public HTTPS link and choose Download with Material File Encryptor.','右按公開 HTTPS 連結，揀使用 Material File Encryptor 下載。'],disclosure:['Only the link URL and suggested filename are sent. Review the source, choose a native destination, then confirm Start download in the desktop. No transfer starts from this popup.','只會傳送連結網址及建議檔名。喺桌面檢閱來源、揀原生目的地，再確認開始下載。呢個彈出視窗唔會開始傳輸。'],pair:['Pair browser','配對瀏覽器'],disconnect:['Disconnect','中斷連線'],workspace:['Open workspace','開啟工作區']};

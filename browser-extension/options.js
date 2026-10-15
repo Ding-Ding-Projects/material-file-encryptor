@@ -2,7 +2,7 @@ import {mountBrowserConverter} from './converter.js';
 import {mountBrowserServers} from './servers.js';
 import {styleExtensionMessage,installShadowReducedMotion} from './vendor/language.js';
 import './vendor/material.js';
-installShadowReducedMotion(document);
+if(typeof installShadowReducedMotion==='function')installShadowReducedMotion(document);
 import './vendor/search.js';
 import {defaults,readPreferences,applyPreferences,tabTarget,acquireStorage} from './preferences.js';
 import changelog from './vendor/changelog.js';
