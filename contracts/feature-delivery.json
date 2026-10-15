@@ -14915,16 +14915,27 @@
     {
       "id": "product-evidence",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "scripts/build-browser-extension.mjs",
+        "scripts/extension-browser.mjs",
+        "scripts/capture-extension-evidence.mjs"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-evidence.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/workflows/browser-extension-evidence.zh-HK.md"
+      ],
+      "tests": [
+        "test/browser-extension-evidence.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Retain independent installed-extension interaction and visual receipts bound to exact built bytes. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "Staging computes a build identity over every output file and the Status section shows it as the Build fingerprint. scripts/capture-extension-evidence.mjs refuses a build whose bytes changed after staging, loads it unpacked into a disposable headless profile and captures Home, every section and the popup in two themes, three languages and two viewports each, with page-reported checks. Run for build 55402a5cb336481f at source 2a9da7ef7fc1: 132 captures, 132 passing every check. Captures stay in out/ and are not committed; an unpacked headless load is not a store installation or a paired desktop.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -14938,7 +14949,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -14949,14 +14960,14 @@
         "action": "Retain independent installed-extension interaction and visual receipts bound to exact built bytes.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Retain independent installed-extension interaction and visual receipts bound to exact built bytes.",
-            "nextProof": "Exercise retain independent installed-extension interaction and visual receipts bound to exact built bytes on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Repeat the capture against a store-installed extension paired with an installed desktop, and retain the receipts with the release."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Receipts and captures are written under out/ for review; nothing is stored in the browser."
       }
     },
     {
@@ -15019,16 +15030,25 @@
     {
       "id": "design-reference-parity",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/options.js",
+        "scripts/extension-browser.mjs",
+        "scripts/compare-extension-references.mjs"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-extension-evidence.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/workflows/browser-extension-evidence.zh-HK.md"
+      ],
+      "tests": [
+        "test/browser-extension-evidence.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Compare genuine extension captures with checked-in references at identical viewport, scale, theme and language tuples. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "scripts/compare-extension-references.mjs renders each checked-in reference state that has an extension route and the staged extension at identical viewport, scale, theme and language, and measures the share of differing pixels. Run for build 55402a5cb336481f: 180 comparisons measured, 74 reference states with no extension route recorded. The receipt reports differences only and never declares the designs equivalent; desktop-dependent states are compared with what the extension shows on its own.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -15042,7 +15062,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -15053,14 +15073,14 @@
         "action": "Compare genuine extension captures with checked-in references at identical viewport, scale, theme and language tuples.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Compare genuine extension captures with checked-in references at identical viewport, scale, theme and language tuples.",
-            "nextProof": "Exercise compare genuine extension captures with checked-in references at identical viewport, scale, theme and language tuples on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Give the remaining reference states an extension route or a recorded exemption, and review each measured difference with a person."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Receipts and captures are written under out/ for review; nothing is stored in the browser."
       }
     },
     {
@@ -17745,7 +17765,13 @@
     "browser-extension/pairing-code.js": "d5189dd6ea49175a5c5126bd7daaf118e29ec594",
     "test/browser-extension-pairing-code.test.js": "d5189dd6ea49175a5c5126bd7daaf118e29ec594",
     "test/browser-extension-pairing-background.test.js": "d5189dd6ea49175a5c5126bd7daaf118e29ec594",
-    "test/browser-pairing-code.test.js": "d5189dd6ea49175a5c5126bd7daaf118e29ec594"
+    "test/browser-pairing-code.test.js": "d5189dd6ea49175a5c5126bd7daaf118e29ec594",
+    "scripts/extension-browser.mjs": "2a9da7ef7fc1e284a76c6934db2ee266afb187fe",
+    "scripts/capture-extension-evidence.mjs": "2a9da7ef7fc1e284a76c6934db2ee266afb187fe",
+    "scripts/compare-extension-references.mjs": "2a9da7ef7fc1e284a76c6934db2ee266afb187fe",
+    "test/browser-extension-evidence.test.js": "2a9da7ef7fc1e284a76c6934db2ee266afb187fe",
+    "docs/features/workflows/browser-extension-evidence.md": "2a9da7ef7fc1e284a76c6934db2ee266afb187fe",
+    "docs/features/workflows/browser-extension-evidence.zh-HK.md": "2a9da7ef7fc1e284a76c6934db2ee266afb187fe"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
