@@ -120,7 +120,17 @@ queue them for later.
   live connection, while the session is unexpired and unrevoked, shows no prompt,
   and never extends the original expiry. An explicit disconnect in the extension
   sends `{type:"unpair",session}` and clears the stored value. The extension
-  reports paired, reconnecting, pairing expired or not paired.
+  reports paired, reconnecting, pairing expired or not paired. Reconnecting
+  means only that the desktop is unreachable, because exit and lock revoke the
+  pairing and the extension must not promise a recovery the desktop will not
+  honor. A refused resume, or a refused request that a follow-up resume confirms
+  as revoked, clears the stored value and records a secret-free
+  `pairing-expired` marker in `chrome.storage.session` so the state survives a
+  worker restart. The extension pages poll the worker every few seconds so a
+  lock or exit shows promptly, and requests to the desktop are serialized so
+  concurrent callers wait for an in-flight resume instead of failing.
+- The installer hook registers the native host first and exits quickly, and
+  every normal start rewrites a manifest that names another version's host.
 - Grants are held in a local variable for the single follow-up request and then
   dropped.
 - Responses that contain a sensitive value, such as an authenticator code, are

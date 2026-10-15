@@ -35,7 +35,8 @@ const inside = (root, target) => {
 const cleanAbsolute = value => typeof value === 'string' && value.length < 1024 && path.win32.isAbsolute(value) && /^[A-Za-z]:\\/.test(value) && !/[\x00-\x1f"<>|?*]/.test(value) && path.win32.normalize(value) === value;
 
 function runner(run) {
-  return args => run('reg.exe', args, {windowsHide: true, stdio: 'ignore'});
+  // A bounded wait keeps an installer hook inside Squirrel's time budget even if the registry tool stalls.
+  return args => run('reg.exe', args, {windowsHide: true, stdio: 'ignore', timeout: 5000});
 }
 
 /**
@@ -58,6 +59,25 @@ export function registerNativeHost({hostDirectory, installRoot, manifestDirector
   const invoke = runner(run);
   for (const key of REGISTRY_KEYS) invoke(['add', key, '/ve', '/t', 'REG_SZ', '/d', manifestPath, '/f']);
   return {manifestPath, hostPath, keys: REGISTRY_KEYS.slice()};
+}
+
+/**
+ * Startup self-healing: when the registered manifest is missing, or does not describe exactly this
+ * installation's host, write it again through the same checked registration. A matching manifest is left alone
+ * so a normal start costs two small file reads.
+ */
+export function repairNativeHostRegistration({hostDirectory, installRoot, manifestDirectory, register = registerNativeHost, fileSystem = fs, ...rest}) {
+  if (![hostDirectory, installRoot, manifestDirectory].every(cleanAbsolute)) throw new Error('Repair needs normalized absolute Windows paths.');
+  const hostPath = path.win32.join(hostDirectory, HOST_EXECUTABLE);
+  const manifestPath = path.win32.join(manifestDirectory, `${NATIVE_HOST_NAME}.json`);
+  let current = null;
+  try { current = JSON.parse(fileSystem.readFileSync(manifestPath, 'utf8')); } catch { current = null; }
+  let allowed = null;
+  try { allowed = validateBrowserHostConfig(JSON.parse(fileSystem.readFileSync(path.win32.join(hostDirectory, 'browser-host-config.json'), 'utf8'))); } catch { allowed = null; }
+  const matches = Boolean(current) && typeof current === 'object' && current.name === NATIVE_HOST_NAME && current.path === hostPath && current.type === 'stdio'
+    && Array.isArray(current.allowed_origins) && allowed !== null && JSON.stringify(current.allowed_origins) === JSON.stringify(allowed);
+  if (matches) return {repaired: false, manifestPath, hostPath};
+  return {repaired: true, ...register({hostDirectory, installRoot, manifestDirectory, fileSystem, ...rest})};
 }
 
 /**

@@ -5,7 +5,7 @@ export function explorerCopyPath(argumentsList){const index=argumentsList.indexO
 export function registerExplorerCommand(executable,{remove=false,run=execFileSync}={}){
  if(process.platform!=='win32')return false;
  if(!path.isAbsolute(executable)||executable.includes('"'))throw Error('Invalid application executable.');
- const invoke=args=>run('reg.exe',args,{windowsHide:true,stdio:'ignore'});
+ const invoke=args=>run('reg.exe',args,{windowsHide:true,stdio:'ignore',timeout:5000});
  if(remove){try{invoke(['delete',key,'/f']);}catch{}return true;}
  invoke(['add',key,'/ve','/t','REG_SZ','/d','Copy to encrypted drive','/f']);
  invoke(['add',key,'/v','Icon','/t','REG_SZ','/d',executable,'/f']);

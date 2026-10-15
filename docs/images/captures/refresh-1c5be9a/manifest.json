@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "captures": [
+    {
+      "kind": "desktop",
+      "name": "newtab-popover-light-en",
+      "file": "desktop/newtab-popover-light-en.png",
+      "sha256": "078bddbcd61d36c6b043f79bcf5a080cd25630648302f1e74a191cbbb644dbc6",
+      "bytes": 140149,
+      "width": 1920,
+      "height": 1200,
+      "screen": "newtab-popover",
+      "theme": "light",
+      "language": "en",
+      "scale": 1.5,
+      "sourceCommit": "1c5be9a8cf6322469e99b019f1cf83893034425c",
+      "appVersion": "1.683.1",
+      "window": "1280x800 at 150% display scale (PNG is physical pixels)"
+    },
+    {
+      "kind": "desktop",
+      "name": "newtab-popover-dark-en",
+      "file": "desktop/newtab-popover-dark-en.png",
+      "sha256": "4d2d75e0e59faf8d26aafe2c3a099c788bfded8da567f29e8566461f8ed0ccf1",
+      "bytes": 137943,
+      "width": 1920,
+      "height": 1200,
+      "screen": "newtab-popover",
+      "theme": "dark",
+      "language": "en",
+      "scale": 1.5,
+      "sourceCommit": "1c5be9a8cf6322469e99b019f1cf83893034425c",
+      "appVersion": "1.683.1",
+      "window": "1280x800 at 150% display scale (PNG is physical pixels)"
+    },
+    {
+      "kind": "desktop",
+      "name": "newtab-popover-light-bilingual",
+      "file": "desktop/newtab-popover-light-bilingual.png",
+      "sha256": "88ba49caf83bd53da381a32c0a77fa5838ec9ace5b27c5307b9746a3667fa3d7",
+      "bytes": 262303,
+      "width": 1920,
+      "height": 1200,
+      "screen": "newtab-popover",
+      "theme": "light",
+      "language": "bilingual",
+      "scale": 1.5,
+      "sourceCommit": "1c5be9a8cf6322469e99b019f1cf83893034425c",
+      "appVersion": "1.683.1",
+      "window": "1280x800 at 150% display scale (PNG is physical pixels)"
+    }
+  ],
+  "sourceCommit": "1c5be9a8cf6322469e99b019f1cf83893034425c",
+  "desktopSource": {
+    "manifest": "desktop-capture-receipt.json",
+    "manifestSha256": "f35c58bfa0d1c454d0af2355b4a579f90cded8ce323bef55e0c40c5637b8f71c",
+    "route": "cheap Lowlevel capture by window handle on a hidden desktop, installed v1.683.1 release, isolated profile",
+    "count": 3
+  },
+  "note": "Recaptured from the installed v1.683.1 release after the New tab popover was fitted inside the window and anchored to the plus button. These three captures supersede the earlier popover capture in refresh-e96a0f0. All other desktop captures remain those listed in refresh-e96a0f0."
+}

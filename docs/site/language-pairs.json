@@ -631,8 +631,8 @@
     {
       "source": "docs/features/workflows/browser-download-handoff.md",
       "translation": "docs/features/workflows/browser-download-handoff.zh-HK.md",
-      "sourceSha256": "318ceffacffc62238fad31405edefc9274a9614e9c9cf33c1cf0a0a9ededb14a",
-      "translationSha256": "bfc966a93301d1087e2911f5b953100199faa05bf5724ab212538f2541d6f46f"
+      "sourceSha256": "749bc0e5f355af111f3d103779eaaaefa55df34acb81de99ecaecef751e032c3",
+      "translationSha256": "8a3c3aabac8be7755e9594cd7c33d4dc9240ef0d9c73226b8bd2f32854658072"
     },
     {
       "source": "docs/features/workflows/browser-extension-evidence.md",
@@ -655,8 +655,8 @@
     {
       "source": "docs/features/workflows/browser-native-host.md",
       "translation": "docs/features/workflows/browser-native-host.zh-HK.md",
-      "sourceSha256": "a9d432d82cbfd135320ee1ccf6fb835bad6b52edc00fb796b436f38dc9c2bd20",
-      "translationSha256": "5dceb8b6eea09566fb23f0e410ae04318fd8a4d99ec63df7016f59dad8ed9a97"
+      "sourceSha256": "c09aa0bdf72430684229c1683850a936ca71bdbface5f93f06bb53d832f74549",
+      "translationSha256": "2834654a550764b757a2f51723f4d09478b2043f9783c1ba4b1dea97714df1cb"
     },
     {
       "source": "docs/features/workflows/browser-protection-observations.md",

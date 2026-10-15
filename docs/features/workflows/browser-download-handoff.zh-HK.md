@@ -14,7 +14,7 @@
 
 ## 安裝時配對設定
 
-已安裝嘅應用程式會喺 `--squirrel-install` 同 `--squirrel-updated` 為目前用戶登記原生主機，並喺 `--squirrel-uninstall` 移除該登記。配套擴充功能係由應用程式資源入面嘅 `browser-extension` 資料夾以未封裝方式載入。佢嘅資訊清單 `key` 將擴充功能 ID 固定為 `hfabajdjnmccemhokjnipmaabdpljbbg`，呢個係主機唯一接受嘅來源。詳情見原生主機文章。已安裝嘅配對仍然未端到端試過。
+已安裝嘅應用程式會喺 `--squirrel-install` 同 `--squirrel-updated` 為目前用戶登記原生主機，並喺 `--squirrel-uninstall` 移除該登記。配套擴充功能係由應用程式資源入面嘅 `browser-extension` 資料夾以未封裝方式載入。佢嘅資訊清單 `key` 將擴充功能 ID 固定為 `hfabajdjnmccemhokjnipmaabdpljbbg`，呢個係主機唯一接受嘅來源。掛鉤會先行而且好快完成，而且每次正常啟動都會修復指向另一個版本主機嘅登記。桌面離開或者鎖定時會撤銷配對，所以擴充功能只會喺連唔到桌面期間顯示「重新連接中」，一旦桌面唔再認得配對就顯示「配對已過期」同「配對」操作，幾秒內就會知道。詳情見原生主機文章。已安裝嘅 v1.683.1 測試發現咗更新時同配對狀態嘅問題，呢度描述嘅係已修復嘅行為，仍然未喺已安裝版本重新驗證。
 
 ## 驗證
 

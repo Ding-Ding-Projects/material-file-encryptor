@@ -85,7 +85,8 @@ test('the first request after a restart lazily reconnects and the answer still a
   const next = worker(d, rows);
   d.seen.length = 0;
   const reply = await next.ask({type: 'desktop-status'});
-  assert.deepEqual(d.seen.map(item => item.type), ['resume', 'read-lock-state']);
+  // The model refuses read-lock-state, so the worker confirms with one more resume that the grant is still honored.
+  assert.deepEqual(d.seen.map(item => item.type), ['resume', 'read-lock-state', 'resume']);
   assert.notEqual(reply, undefined);
 });
 
@@ -97,7 +98,7 @@ test('a grant the desktop no longer accepts ends as pairing expired and is forgo
     const next = worker(d, rows);
     const status = await next.ask({type: 'status'});
     assert.deepEqual(status, {paired: false, link: 'expired'}, cause);
-    assert.deepEqual(rows, {}, 'the refused grant is removed from session storage');
+    assert.deepEqual(rows, {'pairing-expired': true}, 'the refused grant is removed; only the secret-free expired marker remains');
     d.seen.length = 0;
     assert.deepEqual(await next.ask({type: 'status'}), {paired: false, link: 'expired'});
     assert.deepEqual(d.seen, [], 'an expired grant is not presented again');

@@ -1,3 +1,11 @@
+# Installed pairing fixes, 2026-10-15
+
+- The Squirrel hooks now run from the first import of the main module, bound each registry call, and exit under a watchdog, so an update no longer leaves the native host manifest naming the removed version. Every normal start repairs a stale manifest.
+- The browser extension keeps "Pairing expired" across worker restarts, learns about a lock or exit within a few seconds, serializes desktop requests so the first Refresh after an idle worker succeeds, and no longer promises a recovery the desktop will not honor.
+- The New tab popover filter field keeps room for its bilingual label. The New tab popover captures are replaced by captures of the installed v1.683.1 release.
+
+更新之後原生主機登記會即時刷新，配對過期狀態喺背景程序重啟之後都保留，鎖定同離開幾秒內就會顯示，閒置後第一次重新整理亦唔會失敗。
+
 # Website navigation and reading, 2026-10-15
 
 - Grouped secondary destinations under Explore and existing toolbar/tab controls under Page tools, preserving every capability and shortcut.

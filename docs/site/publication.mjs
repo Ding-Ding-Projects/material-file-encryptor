@@ -100,6 +100,8 @@ export async function buildDocumentation(root,output,home) {
 // Capture promotion may follow this application revision. Never derive it from
 // the documentation checkout's moving HEAD.
 export const INTENDED_CAPTURE_UI_SOURCE = 'e96a0f01994344e293f8e7a980bcd9ab64a4d276';
+// A capture refreshed from a later installed release is admitted by listing its exact source here; every other source is refused.
+export const ADDITIONAL_CAPTURE_UI_SOURCES = Object.freeze(['1c5be9a8cf6322469e99b019f1cf83893034425c']);
 function canonicalPresentationAttributes(tag){
  const match=tag.match(/^<([a-z][a-z0-9-]*)([\s\S]*?)\/?\s*>$/);if(!match)throw Error('Noncanonical capture presentation tag');
  const attributes={};let rest=match[2];
@@ -119,7 +121,7 @@ function presentationMeaning(text){
   return {amp:'&',lt:'<',gt:'>',quot:'"',apos:"'"}[entity.toLowerCase()];
  }).replace(/&[a-z0-9#]+;/gi,()=>{throw Error('Unsupported capture text entity');});
 }
-export function assertGalleryPresentation(home,records,{intendedSource=INTENDED_CAPTURE_UI_SOURCE}={}) {
+export function assertGalleryPresentation(home,records,{intendedSource=INTENDED_CAPTURE_UI_SOURCE,additionalSources=ADDITIONAL_CAPTURE_UI_SOURCES}={}) {
  if(!/^[a-f0-9]{40}$/.test(intendedSource))throw Error('Invalid intended capture source');
  const byPath=new Map(records.map(record=>[record.path,record]));
  let presented=0;
@@ -130,7 +132,7 @@ export function assertGalleryPresentation(home,records,{intendedSource=INTENDED_
   const attributes=canonicalPresentationAttributes(match[0]);
   if(presentationMeaning(attributes.src||'').startsWith('images/captures/'))captureImages.push(attributes.src);
  }
- for(const record of records)if(!record.historical&&(record.sourceCommit!==intendedSource||!record.promotionReceiptSha256))throw Error('Current capture does not match intended UI source');
+ for(const record of records)if(!record.historical&&(record.sourceCommit!==intendedSource&&!additionalSources.includes(record.sourceCommit)||!record.promotionReceiptSha256))throw Error('Current capture does not match intended UI source');
  for(const section of home.matchAll(/<section\b[^>]*>[\s\S]*?<\/section>/g)){
   if(!section[0].includes('src="images/captures/'))continue;
   for(const tag of section[0].matchAll(/<(?:h[1-6]|p|figcaption)\b[^>]*>/gi))canonicalPresentationAttributes(tag[0]);

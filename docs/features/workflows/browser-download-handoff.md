@@ -14,7 +14,7 @@ The desktop must display separate always-on-top Start and completion surfaces, p
 
 ## Installation-time pairing setup
 
-The installed application registers the native host for the current user during `--squirrel-install` and `--squirrel-updated`, and removes that registration during `--squirrel-uninstall`. The companion extension is loaded unpacked from the `browser-extension` folder in the application resources. Its manifest `key` fixes the extension id to `hfabajdjnmccemhokjnipmaabdpljbbg`, which is the only origin the host accepts. Details are in the native host article. Installed pairing has not yet been exercised end to end.
+The installed application registers the native host for the current user during `--squirrel-install` and `--squirrel-updated`, and removes that registration during `--squirrel-uninstall`. The companion extension is loaded unpacked from the `browser-extension` folder in the application resources. Its manifest `key` fixes the extension id to `hfabajdjnmccemhokjnipmaabdpljbbg`, which is the only origin the host accepts. The hook runs first and quickly, and every normal start repairs a registration that names another version's host. When the desktop exits or locks it revokes the pairing, so the extension shows Reconnecting only while the desktop is unreachable and shows Pairing expired, with the Pair action, once the desktop no longer knows the pairing; it learns this within a few seconds. Details are in the native host article. An installed v1.683.1 test exposed the update-time and pairing-state problems that this describes as fixed; the fixed behavior has not yet been re-verified on an installed build.
 
 ## Verification
 

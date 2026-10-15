@@ -45,7 +45,11 @@ The browser stops an idle extension service worker after about 30 seconds, which
 
 The extension keeps the session value only in `chrome.storage.session`: browser memory, cleared when the browser closes, never synced, and never written to disk or to `chrome.storage.local`. A new worker presents it on a new port with exactly `{type:"resume",session}`. The broker answers `{type:"resumed",expiresInSeconds}` only when all of these hold: the desktop is unlocked, the caller is the single allowed extension origin on a live native connection, the session is the exact unexpired value the receiver issued for that origin (compared in constant time), and it has not been revoked. Anything else gets the generic not-accepted error, and a refusal never spends or revokes the genuine session. A successful resume shows no desktop prompt, never extends the original expiry, and replaces any earlier port for the same origin, so late messages from the stale port are refused.
 
-An explicit Disconnect in the extension sends exactly `{type:"unpair",session}` on the live port, which ends the session at once. Desktop lock, a desktop Disconnect, update preparation and exit still call `revoke()`, which discards the session entirely, so a later resume is refused and the extension reports that pairing expired. The extension shows one of four states: paired, reconnecting (the grant is kept and the next request resumes it), pairing expired (pair again) or not paired. Approving a new pairing on the desktop must still happen within 35 seconds.
+An explicit Disconnect in the extension sends exactly `{type:"unpair",session}` on the live port, which ends the session at once. Desktop lock, a desktop Disconnect, update preparation and exit still call `revoke()`, which discards the session entirely, so a later resume is refused and the extension reports that pairing expired. The extension shows one of four states: paired, reconnecting (the desktop cannot be reached right now: open and unlock it, and if it was closed or locked since you paired, pair again), pairing expired (the desktop no longer knows the pairing: pair again) or not paired. Reconnecting is shown only while the desktop is unreachable, and it never promises a recovery that the desktop will not honor, because exit and lock still revoke the pairing. Approving a new pairing on the desktop must still happen within 35 seconds.
+
+The extension learns about a revocation in three ways, all of which end in pairing expired. First, a refused `resume` removes the stored value and records a secret-free `pairing-expired` marker in `chrome.storage.session`, so the state survives a worker restart instead of falling back to not paired; the marker is cleared when the person pairs again or disconnects. Second, when the desktop refuses a request that carried the session, for example after a lock, the extension asks once with `resume`: a refused `resume` means the desktop revoked the pairing and the extension clears it at once, while an accepted one leaves the pairing alone. Third, the options page and the popup send `{type:"verify-pairing"}` to the worker about every four seconds while visible (every ten seconds while not paired), and the worker answers by sending `resume` for the held session, so a lock, an exit or an update shows within a few seconds without pressing Refresh.
+
+Requests from the worker to the desktop run one at a time with a bounded wait of 45 seconds and a limit of 16 waiting requests. Callers that arrive while one is in flight, such as the first Refresh after the worker idled, wait for the single resume and then proceed instead of failing as busy.
 
 `close()` revokes admission immediately and concurrent callers share its asynchronous
 receipt. Within a three-second deadline it observes the owned process exit,
@@ -137,6 +141,19 @@ manifest are removed. On `--squirrel-obsolete` the removal happens only when the
 manifest still points into the obsolete installation, so an update never erases
 the registration written by the new version. A failed hook is reported in its
 result and never fails the installer.
+
+The hooks run from `src/main/squirrel-hook-entry.js`, which is the first import of
+the main module, so the registration happens before any other start-up work.
+`src/main/squirrel-lifecycle.js` does only the registrations and the shortcut
+change, then exits. Each `reg.exe` call is bounded to 5 seconds and a watchdog ends
+the process after 6 seconds, so the hook stays inside the installer's time budget
+even on a cold first start; an earlier arrangement could pass that budget and left
+the manifest naming the removed version's host. The shortcut helper is started with
+its output discarded and no longer holds the exit. As a second line of defence,
+every normal start of the installed application calls `repairNativeHostRegistration`
+in `src/main/browser-host-registration.js`. It compares the registered manifest with
+this installation's host and allowed origin, leaves a matching one alone, and
+otherwise rewrites it through the same checked registration.
 
 To pair, open the browser extensions page, enable developer mode, choose load
 unpacked, and select the `browser-extension` folder shipped in the installed

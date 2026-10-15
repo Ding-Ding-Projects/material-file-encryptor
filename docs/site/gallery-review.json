@@ -7,7 +7,9 @@
     "images/captures/refresh-e96a0f0/desktop/help-how-it-works-light-en.png",
     "images/captures/refresh-e96a0f0/desktop/history-light-en.png",
     "images/captures/refresh-e96a0f0/desktop/home-light-en.png",
-    "images/captures/refresh-e96a0f0/desktop/newtab-popover-light-en.png",
+    "images/captures/refresh-1c5be9a/desktop/newtab-popover-light-en.png",
+    "images/captures/refresh-1c5be9a/desktop/newtab-popover-dark-en.png",
+    "images/captures/refresh-1c5be9a/desktop/newtab-popover-light-bilingual.png",
     "images/captures/refresh-e96a0f0/desktop/recycle-bin-light-en.png",
     "images/captures/refresh-e96a0f0/desktop/settings-dark-en.png",
     "images/captures/refresh-e96a0f0/desktop/tools-converter-dark-en.png",
@@ -94,6 +96,11 @@
       "path": "images/captures/preview/dark-settings-preview.png",
       "sha256": "7a28deb679398b6521156d179c8ce7a7fcc643840de34cf5bdd0afa0905904ab",
       "reason": "Superseded by a refreshed capture of the installed application. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-e96a0f0/desktop/newtab-popover-light-en.png",
+      "sha256": "d3d48403696b564e3a832cea8e438334ef09c38cb5f4c0b2f470aae8e6c50d28",
+      "reason": "Superseded by a recapture of the installed v1.683.1 release. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
     }
   ],
   "historicalBoundary": "Removing an image from the current tree and deployment does not undo its historical publication. No history is rewritten.",
@@ -134,12 +141,6 @@
       "workflow": "workspace-tools",
       "metadataSha256": "c93dc7487d47ed100e5a1c00d939e8aa1e0ad4955bbd0f88e2409c01583eb60e"
     },
-    "images/captures/refresh-e96a0f0/desktop/newtab-popover-light-en.png": {
-      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
-      "sha256": "d3d48403696b564e3a832cea8e438334ef09c38cb5f4c0b2f470aae8e6c50d28",
-      "workflow": "workspace-tools",
-      "metadataSha256": "59fa4c35394e53f9caed5c343b3dc709ffb80ae63e838c0c3e8f130ceb040115"
-    },
     "images/captures/refresh-e96a0f0/desktop/recycle-bin-light-en.png": {
       "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
       "sha256": "f627395b33b837e940b606e2b8fd3aa0c5b4fb9fed420dfa975469dc001ac53c",
@@ -169,6 +170,24 @@
       "sha256": "3f5fc7ca1029782ea3efdcd1235002af22e51d26d4724a6b03a3e4af6da675dc",
       "workflow": "workspace-tools",
       "metadataSha256": "960b4946f45757fb881e51f9162d1bb5ab0e13ea63fedf0501c016be924e8abc"
+    },
+    "images/captures/refresh-1c5be9a/desktop/newtab-popover-light-en.png": {
+      "sourceCommit": "1c5be9a8cf6322469e99b019f1cf83893034425c",
+      "sha256": "078bddbcd61d36c6b043f79bcf5a080cd25630648302f1e74a191cbbb644dbc6",
+      "workflow": "workspace-tools",
+      "metadataSha256": "226932d58d08b5a56a7ad971ebb77e96439a14194e8227749a951c34206a175e"
+    },
+    "images/captures/refresh-1c5be9a/desktop/newtab-popover-dark-en.png": {
+      "sourceCommit": "1c5be9a8cf6322469e99b019f1cf83893034425c",
+      "sha256": "4d2d75e0e59faf8d26aafe2c3a099c788bfded8da567f29e8566461f8ed0ccf1",
+      "workflow": "workspace-tools",
+      "metadataSha256": "2634e40e4ed831483d108e8a4ec3e3eadb528ddde78939dc2102dd82d4c5a6c1"
+    },
+    "images/captures/refresh-1c5be9a/desktop/newtab-popover-light-bilingual.png": {
+      "sourceCommit": "1c5be9a8cf6322469e99b019f1cf83893034425c",
+      "sha256": "88ba49caf83bd53da381a32c0a77fa5838ec9ace5b27c5307b9746a3667fa3d7",
+      "workflow": "workspace-tools",
+      "metadataSha256": "a44e8a520fb1439a18ec774fad52f3a8d165ef64fb8c82d41543e01cf352af24"
     }
   },
   "workflows": [

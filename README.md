@@ -140,7 +140,13 @@ These are genuine captures of the installed desktop application, version 1.657.1
 
 ![Home page with one card per section, light theme, English](docs/images/captures/refresh-e96a0f0/desktop/home-light-en.png)
 
-![New tab popover listing every section, light theme, English](docs/images/captures/refresh-e96a0f0/desktop/newtab-popover-light-en.png)
+The New tab popover captures below were taken from the installed v1.683.1 release, built from source `1c5be9a`, in a 1280 by 800 window at 150 percent display scale. The bilingual capture shows a truncated filter label that is fixed in later source.
+
+![New tab popover listing every destination, light theme, English](docs/images/captures/refresh-1c5be9a/desktop/newtab-popover-light-en.png)
+
+![New tab popover listing every destination, dark theme, English](docs/images/captures/refresh-1c5be9a/desktop/newtab-popover-dark-en.png)
+
+![New tab popover with bilingual labels, light theme](docs/images/captures/refresh-1c5be9a/desktop/newtab-popover-light-bilingual.png)
 
 ![Locked drive screen with create and unlock actions, light theme, English](docs/images/captures/refresh-e96a0f0/desktop/drive-locked-light-en.png)
 
