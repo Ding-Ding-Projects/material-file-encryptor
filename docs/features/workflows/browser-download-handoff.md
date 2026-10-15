@@ -12,6 +12,10 @@ Receiving a proposal emits the desktop Start download state, with the source and
 
 The desktop must display separate always-on-top Start and completion surfaces, plus the active Downloading surface. The extension-originated installed flow must be driven and captured before these three surfaces are claimed verified. Source tests and injected messages do not prove installed browser handoff or those presentation states.
 
+## Installation-time pairing setup
+
+The installed application registers the native host for the current user during `--squirrel-install` and `--squirrel-updated`, and removes that registration during `--squirrel-uninstall`. The companion extension is loaded unpacked from the `browser-extension` folder in the application resources. Its manifest `key` fixes the extension id to `hfabajdjnmccemhokjnipmaabdpljbbg`, which is the only origin the host accepts. Details are in the native host article. Installed pairing has not yet been exercised end to end.
+
 ## Verification
 
 `test/browser-download-receiver.test.js` verifies native approval, session revocation, caller allowlisting, strict proposal shape, URL/path checks, replay admission, lock during consent and bounded split-frame decoding. Existing download-service tests verify the actual queue's network and destination protections separately.

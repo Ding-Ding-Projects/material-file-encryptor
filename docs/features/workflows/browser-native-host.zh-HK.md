@@ -81,6 +81,37 @@ adapter 呼叫會保持缺少 context，唔會借用目前畫面 frame。
 已安裝呼叫者可信、主機登記成功、擴充功能已發佈、已安裝更新成功，或者移除成功。
 實際安裝同已安裝更新／移除流程仍然延後。
 
+## 安裝時登記
+
+未封裝嘅配套擴充功能有固定而且已審閱嘅身分。佢嘅資訊清單帶有 `key` 屬性，
+入面係 base64 DER 公開金鑰，所以瀏覽器喺每部機都會導出同一個擴充功能 ID：
+`hfabajdjnmccemhokjnipmaabdpljbbg`。金鑰同 ID 記錄喺
+`browser-extension/reviewed-identity.json`；對應嘅私密金鑰已經銷毀，因為未封裝擴充功能唔需要。
+`scripts/build-browser-extension.mjs` 嘅暫存步驟喺資訊清單 `key` 同呢個檔案唔一致時會失敗，
+而且會喺暫存資訊清單保留 `key`。
+
+`scripts/write-browser-host-config.mjs` 喺發佈主機嗰步執行，按呢個身分喺主機執行檔旁邊
+寫出 `browser-host-config.json`。未封裝擴充功能冇 CRX3 套件，所以佢嘅 `packageSha256`
+欄位就係字面值 `unpacked`。
+
+`src/main/browser-host-squirrel.js` 入面嘅 Squirrel 掛鉤會呼叫
+`src/main/browser-host-registration.js`。喺 `--squirrel-install` 同 `--squirrel-updated`，
+應用程式會將主機資訊清單（名稱、說明、已安裝主機執行檔路徑、`stdio`，同唯一允許嘅來源）
+寫入每位用戶資料目錄嘅 `native-messaging` 資料夾，再用 `reg.exe` 同參數陣列設定兩個每用戶機碼嘅預設值：
+`HKCU\Software\Microsoft\Edge\NativeMessagingHosts\org.dingding.material_file_encryptor.downloads` 同
+`HKCU\Software\Google\Chrome\NativeMessagingHosts\org.dingding.material_file_encryptor.downloads`。
+如果主機執行檔喺安裝根目錄之外，登記會拒絕，而且唔需要管理員權限。
+喺 `--squirrel-uninstall` 只會移除嗰兩個機碼同資訊清單。喺 `--squirrel-obsolete`，
+只有資訊清單仍然指向過時安裝時先會移除，所以更新唔會抹走新版本寫好嘅登記。
+掛鉤失敗會記入結果，但係唔會令安裝程式失敗。
+
+配對時，開啟瀏覽器嘅擴充功能頁面，啟用開發人員模式，選擇載入未封裝項目，
+再揀已安裝應用程式資源入面嘅 `browser-extension` 資料夾。顯示嘅 ID 必須等於上面已審閱嘅 ID。
+
+驗證狀態：用假登錄執行器嘅單元測試涵蓋參數陣列、機碼路徑、解除安裝移除、安裝根目錄拒絕、
+ID 導出同暫存金鑰。已安裝嘅配對仍然未端到端試過；未有真正嘅 Squirrel 安裝、
+瀏覽器登錄讀回或者已配對下載參與。
+
 `build.bat /s /browser-host-only` 係此傳輸層嘅聚焦正式建置入口。
 佢會執行現有相依項目啟動同詞彙檢查、發佈真正獨立 Windows 執行檔，並將原始碼
 同執行檔雜湊記錄到 `out/evidence/browser-host-build.json`。

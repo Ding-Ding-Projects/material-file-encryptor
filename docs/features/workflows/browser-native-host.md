@@ -99,6 +99,46 @@ transport does not prove installed caller trust, successful host registration,
 extension publication, installed updates, or removal. Actual installation and
 the installed update/removal lifecycle are deferred.
 
+## Installation-time registration
+
+The unpacked companion extension has a stable, reviewed identity. Its manifest
+carries a `key` property holding the base64 DER public key, so the browser
+derives the same extension id on every machine:
+`hfabajdjnmccemhokjnipmaabdpljbbg`. The key and id are recorded in
+`browser-extension/reviewed-identity.json`; the matching private key was
+discarded because an unpacked extension does not need it. Staging in
+`scripts/build-browser-extension.mjs` fails when the manifest `key` and that file
+disagree, and it keeps the `key` in the staged manifest.
+
+`scripts/write-browser-host-config.mjs` runs as part of the host publish step and
+writes `browser-host-config.json` next to the host executable from that identity.
+Because there is no packaged CRX3 for an unpacked extension, its `packageSha256`
+field holds the literal `unpacked`.
+
+The Squirrel hooks in `src/main/browser-host-squirrel.js` call
+`src/main/browser-host-registration.js`. On `--squirrel-install` and
+`--squirrel-updated` the app writes the host manifest (name, description, path to
+the installed host executable, `stdio`, and the single allowed origin) into the
+`native-messaging` folder of the per-user data directory. It then sets the default
+value of two per-user keys with `reg.exe` and argument arrays:
+`HKCU\Software\Microsoft\Edge\NativeMessagingHosts\org.dingding.material_file_encryptor.downloads` and
+`HKCU\Software\Google\Chrome\NativeMessagingHosts\org.dingding.material_file_encryptor.downloads`.
+Registration refuses a host executable outside the installation root and needs no
+administrator rights. On `--squirrel-uninstall` exactly those two keys and the
+manifest are removed. On `--squirrel-obsolete` the removal happens only when the
+manifest still points into the obsolete installation, so an update never erases
+the registration written by the new version. A failed hook is reported in its
+result and never fails the installer.
+
+To pair, open the browser extensions page, enable developer mode, choose load
+unpacked, and select the `browser-extension` folder shipped in the installed
+application resources. The id shown must equal the reviewed id above.
+
+Verification status: unit tests with a fake registry runner cover the argument
+arrays, key paths, uninstall removal, the install-root refusal, the id derivation
+and the staged key. Installed pairing has not yet been exercised end to end; no
+real Squirrel install, browser registry read-back or paired download took part.
+
 `build.bat /s /browser-host-only` is the focused production entrypoint for this
 transport. It runs the existing dependency bootstrap and vocabulary check, publishes
 the real self-contained Windows executable, and records its source and executable
