@@ -80,7 +80,7 @@ for(const language of ['yue','bilingual'])test(`preference results follow persis
 
 test('Page tools keeps commands, new-tab shortcut, Home and notification surfaces available',async t=>{
  const page=await pageFor(t);assert.equal(await page.locator('#page-tools-panel').isVisible(),false);
- await page.keyboard.press('Control+Shift+f');await page.getByRole('dialog',{name:'Command palette',exact:true}).waitFor({state:'visible'});
+ await page.keyboard.press('Control+Shift+f');await page.waitForFunction(()=>document.querySelector('mfe-command-palette').dialog.open);
  await page.getByRole('button',{name:'Close',exact:true}).click();
  await page.keyboard.press('Control+t');await page.waitForFunction(()=>!document.getElementById('page-tools-panel').hidden);
  await page.keyboard.press('Escape');
@@ -100,4 +100,14 @@ test('filtered guide fragments restore disclosure and focus, including registere
  assert.equal(await page.locator('[data-site-search="content"]').getByRole('textbox').first().inputValue(),'');
  await page.evaluate(async()=>{const link=document.createElement('md-outlined-button');link.href='#%73ecurity';link.textContent='Security component link';link.id='test-shadow-anchor';document.body.prepend(link);await link.updateComplete;});
  await page.locator('#test-shadow-anchor').click();await page.waitForFunction(()=>!document.getElementById('security').hidden&&document.activeElement.id==='security');
+});
+
+test('palette dismissal restores the visible Page tools trigger when its launcher is collapsed',async t=>{
+ const page=await pageFor(t);await page.locator('#page-tools-toggle').click();
+ await page.locator('mfe-top-bar').getByRole('button',{name:'Search commands and workspaces',exact:true}).click();
+ await page.waitForFunction(()=>document.querySelector('mfe-command-palette').dialog.open);
+ await page.locator('#page-tools-toggle').evaluate(button=>button.click());
+ await page.keyboard.press('Escape');
+ await page.waitForFunction(()=>!document.querySelector('mfe-command-palette').dialog.open&&document.activeElement.id==='page-tools-toggle');
+ assert.equal(await page.evaluate(()=>document.activeElement.id),'page-tools-toggle');
 });

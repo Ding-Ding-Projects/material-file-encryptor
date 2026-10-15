@@ -1,3 +1,15 @@
+## Website preservation checkpoint, 2026-10-15
+
+The owner requested immediate preservation and task-scoped cleanup. Work stopped with the website objective incomplete. This request is not an account-allowance measurement.
+
+Modernized navigation, the Page tools disclosure, repeated-fragment navigation, article spacing and localized preference search were delivered on main through `75d3ce36193c2504945286dca3554fa8a14a413d`. All 86 website source tests passed before the final translation correction, followed by 20 relevant passing checks. The staged browser interaction suite passed 7 of 8 cases. The remaining case is palette focus restoration after its original launcher is collapsed: Escape closes the palette but leaves focus on the document body. In `site-foundation.js`, the pending repair is to restore focus when the saved return target is the visible tools button itself, then rerun the failing case.
+
+The layout run is partial: 43 of 48 homepage tuples completed on source `da4a0cb`, using 1280/320 CSS-pixel widths, English/Cantonese/bilingual, light/dark, and persisted font scales 1/1.25/1.5/2. Device scale was fixed at 1; this is not browser-zoom or Windows display-scale proof. All 24 wide tuples passed. All 19 completed narrow tuples exposed an unintended second navigation column despite no document-level horizontal overflow. The saved CSS correction gives compact navigation children one explicit column and the preferences control a sufficiently specific fourth-row rule. That correction has passed diff inspection only; no rebuilt browser verification was run before preservation. Five narrow bilingual tuples, article probes, and the 1100-pixel threshold check remain incomplete.
+
+Live delivery at `75d3ce3` passed: deployment `38690449479`, 326 reachable files, 230 complete article/wiki routes, exact runtime/content hashes, and the exact repository homepage. Only provenance build timestamps differ between local and hosted production. The existing approved gallery remains 32 records; new verification captures were not promoted or relabelled. A subsequent preservation push does not extend these live or runtime verdicts to its source.
+
+All work stayed on main. No task branch, linked worktree or stash was created. Existing remote branches belong to other work and were retained. Both primary checkouts and all verification evidence were retained; owned browser/server processes were closed. No deletion pass was needed. Continue with the palette-focus repair, rebuild, verify the compact grid and remaining layout/article states, then recheck live delivery. Earlier product/native/installer and capture-replacement backlog below remains unchanged.
+
 # Protected settings reset candidate review, 2026-10-14
 
 Reviewed `codex/feature-mediation-01a137ae` at `ec6156c` (79 commits behind main, not merged). Verdict: do not merge yet.

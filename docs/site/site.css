@@ -178,10 +178,11 @@ body:has(mfe-dialog[open]){overflow:hidden}
 .homepage-header.is-compact .menu-button{display:inline-flex}
 .homepage-header.is-compact #navigation{display:none;position:absolute;top:100%;left:0;right:0;padding:20px;max-height:calc(100dvh - var(--site-header-height,72px));overflow:auto;background:var(--surface);border-bottom:1px solid var(--line);box-shadow:0 10px 16px #0000000c}
 .homepage-header.is-compact #navigation.is-open{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;justify-content:stretch}
+.homepage-header.is-compact #navigation>*{grid-column:1/-1;min-width:0;max-width:100%}
 .homepage-header.is-compact .navigation-primary{display:block;grid-row:1}
 .homepage-header.is-compact #navigation>.button{grid-row:2;justify-self:start}
 .homepage-header.is-compact .navigation-explore{grid-row:3;border-top:1px solid var(--line);padding-top:16px}
-.homepage-header.is-compact #preferences-open{grid-row:4;justify-self:start}
+.homepage-header.is-compact #navigation>#preferences-open{grid-row:4;justify-self:start}
 .homepage-header.is-compact .navigation-group-label{display:block;font-size:12px;font-weight:600;color:var(--primary);margin-bottom:8px}
 .homepage-header.is-compact #explore-toggle{display:none}
 .homepage-header.is-compact #explore-links{position:static;width:auto;max-width:none;padding:0;background:transparent;border:0;border-radius:0;box-shadow:none}

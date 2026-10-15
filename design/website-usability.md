@@ -1,6 +1,6 @@
 # Homepage navigation and entry-point refinement
 
-Status: design handoff, awaiting independent review and built-site verification.
+Status: independently reviewed and implemented; partial built-site verification recorded in HANDOFF.md. Compact-navigation repair and palette focus restoration remain unfinished at the preservation checkpoint.
 
 Source baseline: `4d24ad3dda2152968d372c4e24543d959fb61bb7`.
 Target: the existing static homepage in `docs/site/index.html`, its shared styles, localization dictionary, homepage controller, and `site-foundation.js` navigation/control integration. Preserve GitHub Pages at `https://ding-ding-projects.github.io/material-file-encryptor/`.
