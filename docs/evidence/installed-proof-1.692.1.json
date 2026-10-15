@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "kind": "installed-application-proof",
+  "recordedAtUtc": "2026-10-15",
+  "host": "One physical Windows 11 host; an off-screen desktop was used for every launch, interaction and capture. Machine names, user names and local paths are omitted.",
+  "release": {
+    "tag": "v1.692.1",
+    "sourceCommit": "d8092ece51c578e36b0603716ebb14a0949acc6b",
+    "fullPackage": {"bytes": 406412018, "sha1": "410e9a8b8fbbf1dea077e8be5c53bc16caffa8c0", "matchesReleasesRow": true},
+    "provenanceBindsCommit": true,
+    "setupSignature": "NotSigned"
+  },
+  "updateHook": {"from": "1.686.1", "result": "the native messaging host manifest pointed into the new version before the application started", "approximateDurationSeconds": 10, "timeout": false},
+  "pairingEndStates": {
+    "normalQuit": {"observed": "paired, then pairing expired", "secondsAfterQuit": 0.9, "reconnectingShown": false},
+    "desktopLock": {"observed": "paired, then pairing expired", "secondsAfterLockCallReturned": 0.46, "secondsAfterClickBegan": 2.8, "reconnectingShown": false},
+    "applicationCrashSimulated": {"route": "the application process the test started was stopped by its exact process id", "observed": "reconnecting", "secondsAfterStop": 9, "pairingExpiredShown": false}
+  },
+  "pollingIntervalMilliseconds": 150,
+  "notVerified": ["store-installed extension", "live forge publication", "session-end auto lock", "server start after license acceptance", "uninstall and rollback"]
+}
