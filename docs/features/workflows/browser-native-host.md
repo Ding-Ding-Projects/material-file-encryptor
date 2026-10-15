@@ -156,6 +156,50 @@ button and Escape means Reject. It is handled by
   rejected, and the request then fails because the pairing is gone. A
   rejection on its own never revokes the pairing.
 
+## Confirm scope: publish-progress
+
+The second scope of the Confirm approval mode is `publish-progress`. A paired
+origin sends exactly `{type:'publish-progress', session, request}`, where
+`request` has exactly the keys `destination` (`discussion-comment`,
+`project-item-status` or `publication-draft`), `note`, `links` and
+`projectStatus`. The extension sanitizes the note before sending, and the
+desktop validates the request again in `src/shared/publication-request.js`
+(a copy of the extension's `browser-extension/publishing.js`; a test compares
+the two). A note of 1 to 2000 characters that the sanitizer would still change,
+more than five links, a link that is not an https address with a public host,
+no credentials and no secret-like query, or a status that does not match the
+destination is refused as an error before any prompt appears. It is handled by
+`src/main/browser-publish-mediation.js` and shares the single prompt gate with
+the other Confirm scopes.
+
+- The native prompt (`src/main/browser-confirm-prompt.js`) names the origin, the
+  destination, the item status when relevant, the sanitized note (shortened to
+  600 characters for display) and every link, in the current interface language.
+  Reject is the default button and Escape means Reject.
+- The answer is `publish-progress-result` with `schemaVersion` 1 and a
+  `state` of `approved`, `rejected`, `busy` or `unavailable`. It never
+  contains the note, a link, an account name, a secret or a path.
+  `approved` means the desktop's publishing route returned exactly `true`
+  after the person approved; any other route result, an error or a missing
+  route is `unavailable`.
+- The desktop has no publishing route for discussion comments, project items or
+  drafts: `publishProgress` is an optional adapter and `src/main/main.js` does
+  not provide one. Without it the request is answered `unavailable` at once
+  and no prompt is shown, so the desktop never pretends to publish. A project
+  item additionally needs host permission, which also makes it `unavailable`
+  when absent.
+- At most one prompt is pending. A second request is answered `busy` and is not
+  queued. A locked desktop, a hidden window or a closing desktop answers
+  `unavailable` at once. Lock, disconnect, exit, update preparation and the
+  30-second deadline withdraw a pending prompt as rejected, and an approval that
+  arrives after the withdrawal is not an approval.
+- The extension page treats a missing, malformed or late answer as expired and
+  shows it in plain words. Nothing is published in that case.
+
+This scope is verified with synthetic fixtures, a fake native process and a
+stubbed publishing route only. No installed desktop, real forge, live project or
+captured native prompt took part, so it is unverified end to end.
+
 ## School mode scopes: read-school-mode and set-school-mode
 
 Two scopes let a paired extension look at, and ask to change, the desktop's
@@ -324,7 +368,7 @@ has ended, by proving the vault password on the desktop, which the desktop's own
 sign-in would also do.
 
 Status of the design's scopes: `read-lock-state`, `read-update-state`,
-`focus-authenticator`, `read-school-mode`, `set-school-mode`,
+`focus-authenticator`, `publish-progress`, `read-school-mode`, `set-school-mode`,
 `read-element-locks`, `set-element-lock`, `read-unlock-ladder` and
 `request-unlock-step` are implemented in the main process and the extension,
 `read-profile-summary` is covered by the protected mediation, and the remaining
