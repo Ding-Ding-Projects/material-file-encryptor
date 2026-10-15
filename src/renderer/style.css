@@ -149,3 +149,6 @@ details[open]{padding-bottom:12px}
 .settings-section summary{padding:0;color:var(--md-sys-color-on-surface)}
 /* Table rows fade between hover and selection states instead of switching. */
 tbody tr{transition:background-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard)}
+
+/* State-layer transitions for hover, focus and press on labels, navigation items and icon buttons. */
+label,.nav-item,.icon-button{transition:background-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),outline-offset var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard)}

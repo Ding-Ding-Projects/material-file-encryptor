@@ -39,7 +39,7 @@ test('Home cards have state layers and a visible focus ring, and motion respects
   assert.match(css, /\.home-card:hover::before\{opacity:\.08\}/); assert.match(css, /\.home-card:active::before\{opacity:\.12\}/);
   assert.match(rule(css, '.home-card:focus-visible'), /outline:3px solid var\(--md-sys-color-primary\)/);
   assert.match(css, /@keyframes mfe-axis-forward/); assert.match(css, /@keyframes mfe-axis-back/);
-  assert.match(css, /#home-view:not\(\[hidden\]\)\{animation:mfe-axis-back 250ms cubic-bezier\(\.05,\.7,\.1,1\) both\}/);
+  assert.match(css, /#home-view:not\(\[hidden\]\)\{animation:mfe-axis-back 250ms var\(--md-sys-motion-easing-emphasized-decelerate\) both\}/);
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{#home-view:not\(\[hidden\]\)\{animation:none\}\.home-card,\.home-card::before\{transition:none\}\}/);
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{\[role=tabpanel\]:not\(\[hidden\]\),\.changelog-entry\{animation:none\}\}/);
 });
