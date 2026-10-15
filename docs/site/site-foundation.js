@@ -71,7 +71,7 @@ export function mountSiteFoundation({document,storage,getPreferences,onPreferenc
  const toolsEscape=event=>{if(event.key==='Escape'&&!toolsPanel.hidden&&event.composedPath().includes(toolsPanel)){setToolsOpen(false);toolsButton.focus();}};
  toolsPanel.addEventListener('keydown',toolsEscape);
  const paletteReturn=()=>{const target=foundation.palette.returnFocus;if(target&&(target===toolsButton||!target.isConnected||toolsPanel.hidden&&toolsPanel.contains(target)))toolsButton.focus();};
- foundation.palette.shadowRoot.addEventListener('closed',paletteReturn);
+ foundation.palette.shadowRoot.addEventListener('closed',paletteReturn,true);
 
  async function openPreferenceControl(resolveControl){
   const dialog=document.getElementById('preferences-dialog'),inner=dialog.dialog;
@@ -182,7 +182,7 @@ export function mountSiteFoundation({document,storage,getPreferences,onPreferenc
  settings=commands.filter(command=>command.id.startsWith('setting:'));foundation.palette.setCommands(visibleCommands());
  const accessLanguage=event=>visitorAccess.setLanguage(schoolEnabled?'en':event.detail.language);window.addEventListener('site-language',accessLanguage);
  fetch(new URL('site-provenance.json',base),{credentials:'omit',cache:'no-store'}).then(response=>{if(!response.ok)throw Error('Build provenance unavailable');return response.json();}).then(value=>foundation.setProvenance(value)).catch(()=>foundation.setProvenance(null));
- const destroy=()=>{if(destroyed)return;destroyed=true;++generation;++settingsGeneration;cancelAnimationFrame(anchorFrame);toolsPanel.removeEventListener('keydown',toolsEscape);foundation.palette.shadowRoot.removeEventListener('closed',paletteReturn);foundation.shell.openNewTab=newTab;foundation.shell.activateView=activateView;toolsButton.remove();toolsPanel.remove();for(const restore of temporaryFocus.values())restore();visitorPersonalization?.destroy();visitorAccess?.destroy();window.removeEventListener('site-language',accessLanguage);foundation.destroy();window.removeEventListener('site-language',handleLanguage);window.removeEventListener('site-shared-settings',shared);window.removeEventListener('hashchange',hash);document.removeEventListener('click',anchorClick);settingsSearch.removeEventListener('search-change',refreshSettings);dialog.removeEventListener('change',changed);window.removeEventListener('pagehide',pagehide);};
+ const destroy=()=>{if(destroyed)return;destroyed=true;++generation;++settingsGeneration;cancelAnimationFrame(anchorFrame);toolsPanel.removeEventListener('keydown',toolsEscape);foundation.palette.shadowRoot.removeEventListener('closed',paletteReturn,true);foundation.shell.openNewTab=newTab;foundation.shell.activateView=activateView;toolsButton.remove();toolsPanel.remove();for(const restore of temporaryFocus.values())restore();visitorPersonalization?.destroy();visitorAccess?.destroy();window.removeEventListener('site-language',accessLanguage);foundation.destroy();window.removeEventListener('site-language',handleLanguage);window.removeEventListener('site-shared-settings',shared);window.removeEventListener('hashchange',hash);document.removeEventListener('click',anchorClick);settingsSearch.removeEventListener('search-change',refreshSettings);dialog.removeEventListener('change',changed);window.removeEventListener('pagehide',pagehide);};
  const pagehide=event=>{if(!event.persisted)destroy();};window.addEventListener('pagehide',pagehide);
  return {...foundation,visitorAccess,visitorPersonalization,destroy};
 }
