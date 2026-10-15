@@ -22,11 +22,11 @@ test.before(async()=>{
 test.after(async()=>{await browser?.close();await new Promise(resolve=>server?server.close(resolve):resolve());});
 async function pageFor(t,fragment='',language='en'){
  const context=await browser.newContext();await context.addInitScript(language=>localStorage.setItem('material-file-encryptor.site.messages',JSON.stringify({language,emoji:false,funnyEnglish:5,funnyCantonese:5})),language);t.after(()=>context.close());const page=await context.newPage();page.setDefaultTimeout(8000);page.on('pageerror',error=>console.error(error.message));
- await page.goto(base+fragment);await page.waitForSelector('[data-site-search="settings"]',{state:'attached'});
- await page.waitForFunction(()=>!!document.querySelector('mfe-workspace-shell')?.shadowRoot);
+ await page.route('https://**/*',route=>route.abort());await page.goto(base+fragment,{waitUntil:'domcontentloaded'});await page.waitForSelector('[data-site-search="settings"]',{state:'attached'});
+ await page.waitForFunction(()=>!!document.querySelector('[data-visitor-personalization]')?.querySelector('[data-setting]'));
  return page;
 }
-async function overview(page){if(await page.locator('#page-tools-panel').isHidden())await page.locator('#page-tools-toggle').click();await page.getByRole('tab',{name:'Overview',exact:true}).click();await page.waitForFunction(()=>!document.getElementById('overview').hidden);}
+async function overview(page){if(await page.locator('#page-tools-panel').isHidden())await page.locator('#page-tools-toggle').click();await page.locator('mfe-workspace-shell md-primary-tab[aria-label="Overview"]').click();await page.waitForFunction(()=>!document.getElementById('overview').hidden);}
 
 test('same-document links reveal repeated and encoded fragments with native history and keyboard focus',async t=>{
  const page=await pageFor(t);

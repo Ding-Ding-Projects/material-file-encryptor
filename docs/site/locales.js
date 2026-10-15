@@ -1,5 +1,9 @@
 // Public Cantonese translations. Product names, commands and revision IDs stay exact.
 export const cantonese = Object.freeze({
+'Show emojis in dialogs and message boxes':'對話框及訊息框顯示表情符號',
+'Theme':'主題','System':'跟隨系統','Density':'密度','Compact':'緊密','Comfortable':'舒適','Spacious':'寬鬆',
+'Font family':'字型','Font scale':'字體比例','Font weight':'字體粗幼','Motion':'動畫','Full':'完整','Reduced':'減少','Display name':'顯示名稱',
+'English':'英文','Cantonese':'廣東話','Bilingual':'雙語',
 'On this page':'本頁內容',
 'Explore':'探索',
 'Read the documentation':'閱讀說明文件',

@@ -14,6 +14,20 @@ The Windows application build also stages the website through `build.bat /s`. In
 
 Run the content and behavior checks with `node --test test/site*.test.js` from the repository root. Check 320px layouts, keyboard navigation, light/dark/system appearance, the mobile menu, documentation search, guide links, FAQ, and the preferences dialog in a real browser before publishing.
 
+## Navigation and reading
+
+The header keeps workflow, security, documentation, and release status prominent. Explore groups the complete documentation library, wiki, browser workspace, and capture gallery. Compact navigation presents the same destinations in named groups. The opening links directly to the documentation; the source link remains available below it.
+
+Page tools expands the existing search, notifications, tabs, and tab actions. It starts collapsed, preserves keyboard shortcuts, and leaves active Home content and notification delivery available. Section links reveal their content even when the URL already contains the same fragment. Preference search matches English and Cantonese labels. Documentation articles use scoped paragraph, list, and heading spacing that follows the visitor's font scale.
+
+After staging, run the optional browser interaction checks with a Playwright Chromium installation or `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`:
+
+```sh
+SITE_NAVIGATION_ROOT="$PWD/out/site" node --test scripts/check-site-navigation.mjs
+```
+
+These browser checks are separate from the platform-independent source suite. They do not verify Windows drive mounting, an installer, or historical capture replacement. The reviewed design and affected-state inventory are in [`design/website-usability.md`](../../design/website-usability.md).
+
 The site identifies the published preview in `release.js`, but its direct installer CTA stays disabled until independently downloaded, packaged, installed and uninstall receipts are all verified for the exact release source and installer hash. Each receipt also records its actual verification time. `verifiedDownload` rejects missing, pending, draft, mismatched and malformed records. The browser reads this checked-in public summary; it does not independently verify installer bytes. Update it only from completed source-bound receipts. Workflow images are explanatory diagrams, not proof of native integration.
 
 Personal vocabulary files use the canonical `schemaVersion: 1` contract with an `entries` object mapping source strings to replacement strings. Legacy `version: 1` files with a `replacements` array of exact `from`/`to` pairs remain accepted. Files are limited to 256 KiB, source strings to 1–160 Unicode code points, replacement strings to 1,000 Unicode code points, and JSON nesting to depth 8. There is no separate entry-count ceiling. Duplicate keys, unsafe keys, control characters, extra fields, and invalid entries are rejected. Valid wording is applied after the private profile is unlocked and saved locally when browser storage is available. Storage failure leaves wording active for the current session only. Invalid files preserve the prior valid mapping. Reset restores original wording and removes saved wording when storage permits. Nothing is uploaded. Public and locked text stays unchanged; links, technical identifiers, markup, and user input remain canonical. No personal vocabulary file, mapping, or user path belongs in the repository.
