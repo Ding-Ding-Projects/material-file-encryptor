@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "kind": "installed-application-proof",
+  "recordedAtUtc": "2026-10-15",
+  "host": "One physical Windows 11 host; an off-screen desktop was used for every launch, interaction and capture. Machine names, user names and local paths are omitted.",
+  "release": {
+    "tag": "v1.686.1",
+    "sourceCommit": "07157965fe56d97566fdbfb6dae8e48eb499e5be",
+    "fullPackage": {"bytes": 406404005, "sha1": "de3e69de478db9a3394674d774c45b4f36c3bffc", "matchesReleasesRow": true},
+    "provenanceBindsCommit": true,
+    "setupSignature": "NotSigned",
+    "installedExecutableSha256": "05b0bae17126258f1428756cc9724fe1898fe550067e34ba479678137902466f"
+  },
+  "updateHook": {
+    "from": "1.683.1",
+    "route": "Setup.exe run once; the hook was not re-run by hand",
+    "result": "the native messaging host manifest pointed into the new version before the application started",
+    "approximateDurationSeconds": 10,
+    "timeout": false
+  },
+  "pairing": {
+    "extensionId": "hfabajdjnmccemhokjnipmaabdpljbbg",
+    "firstRequestAfterIdle": "succeeded after about 115 seconds without interaction, with no new prompt; the worker target was still listed, so a stopped worker was not proven in this round",
+    "afterDesktopLock": "the options page showed pairing expired within about 2 seconds, without a refresh",
+    "afterApplicationExit": "the extension showed reconnecting while the desktop was closed and pairing expired after it was reopened; showing pairing expired immediately is being fixed",
+    "afterReopen": "a new pairing was required, as designed"
+  },
+  "newTabPopover": {"languages": ["bilingual", "yue"], "result": "filter label shown in full; search field pinned; top entries visible"},
+  "notVerified": ["store-installed extension", "live forge publication", "session-end auto lock", "server start after license acceptance", "uninstall and rollback"]
+}
