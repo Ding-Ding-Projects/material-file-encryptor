@@ -2149,11 +2149,29 @@
       "proofs": {}
     },
     {
+      "id": "desktop:document:docs/features/workflows/browser-extension-evidence",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/workflows/browser-extension-evidence",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "desktop:document:docs/features/workflows/browser-extension-local-models.zh-HK",
       "family": "desktop",
       "route": "src/renderer/index.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/workflows/browser-extension-local-models.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/workflows/browser-extension-evidence.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/workflows/browser-extension-evidence.zh-HK",
       "template": "required-families",
       "proofs": {}
     },
@@ -6604,9 +6622,27 @@
       "proofs": {}
     },
     {
+      "id": "site:article:docs/features/workflows/browser-extension-evidence.md",
+      "family": "site",
+      "route": "articles/docs--features--workflows--browser-extension-evidence.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:article:docs/features/workflows/browser-extension-local-models.md:preferences",
       "family": "site",
       "route": "articles/docs--features--workflows--browser-extension-local-models.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/workflows/browser-extension-evidence.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--workflows--browser-extension-evidence.html",
       "owner": "docs/site/preferences.js",
       "selector": "#preferences-dialog",
       "template": "required-families",
@@ -6622,9 +6658,27 @@
       "proofs": {}
     },
     {
+      "id": "site:article:docs/features/workflows/browser-extension-evidence.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--workflows--browser-extension-evidence.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:article:docs/features/workflows/browser-extension-local-models.zh-HK.md:preferences",
       "family": "site",
       "route": "articles/docs--features--workflows--browser-extension-local-models.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/workflows/browser-extension-evidence.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--workflows--browser-extension-evidence.zh-HK.html",
       "owner": "docs/site/preferences.js",
       "selector": "#preferences-dialog",
       "template": "required-families",
@@ -9295,11 +9349,29 @@
       "proofs": {}
     },
     {
+      "id": "site:workspace:document:docs/features/workflows/browser-extension-evidence",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/workflows/browser-extension-evidence",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:workspace:document:docs/features/workflows/browser-extension-local-models.zh-HK",
       "family": "site",
       "route": "workspace.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/workflows/browser-extension-local-models.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/workflows/browser-extension-evidence.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/workflows/browser-extension-evidence.zh-HK",
       "template": "required-families",
       "proofs": {}
     },

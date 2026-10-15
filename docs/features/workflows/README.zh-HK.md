@@ -8,5 +8,6 @@
 
 - [瀏覽器擴充功能工作區](browser-extension-workspace.md)
 - [瀏覽器擴充功能本機模型](browser-extension-local-models.md)：「模型」分頁、可選嘅迴環權限、串流對話同安全豐富文字。
+- [瀏覽器擴充功能證據同參考比對](browser-extension-evidence.md)：綁定已暫存組件身份嘅擷圖，同埋同設計參考嘅量度比對。
 
 - [瀏覽器保護狀態觀察](browser-protection-observations.md)

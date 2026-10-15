@@ -635,6 +635,12 @@
       "translationSha256": "c4a3815522811c941240e6d166628aeae9e5ee9526ed9d904177f7742de95ba4"
     },
     {
+      "source": "docs/features/workflows/browser-extension-evidence.md",
+      "translation": "docs/features/workflows/browser-extension-evidence.zh-HK.md",
+      "sourceSha256": "d6bcb43cd600a5871037fa2a218b8405b069a7c5afacbbea4c788ec78491ec50",
+      "translationSha256": "c8ec458f9268ea30a71aea4ae3c51859e3f65cf45073e62bbc76f8a5e205840d"
+    },
+    {
       "source": "docs/features/workflows/browser-extension-local-models.md",
       "translation": "docs/features/workflows/browser-extension-local-models.zh-HK.md",
       "sourceSha256": "5b72b45894aa5b0a6a8ad512d757a83e70d4941d83b4cbff4a27a87a4fc5208a",
@@ -667,8 +673,8 @@
     {
       "source": "docs/features/workflows/README.md",
       "translation": "docs/features/workflows/README.zh-HK.md",
-      "sourceSha256": "e240248f1ed3364570763da30eca6cd6b0864f5ee5da5ea5e54e1245a0e087f9",
-      "translationSha256": "e9fbc82f8a3c69e7c0a948a45d7aa75a5a9091b465f3d46d4461bd18bfd0b7dc"
+      "sourceSha256": "2273779748dba26f3b288018bc21caf9d3087f5c854f5f03e964d7796203fe64",
+      "translationSha256": "42dcc613ebef4c2cf614ba474aa4729f5ede3c0297ff8a6585d9b0eec471079a"
     }
   ]
 }

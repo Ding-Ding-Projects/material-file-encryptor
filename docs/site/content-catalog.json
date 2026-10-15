@@ -216,6 +216,8 @@
     "docs/features/workflows/README.zh-HK.md",
     "docs/features/workflows/browser-download-handoff.md",
     "docs/features/workflows/browser-download-handoff.zh-HK.md",
+    "docs/features/workflows/browser-extension-evidence.md",
+    "docs/features/workflows/browser-extension-evidence.zh-HK.md",
     "docs/features/workflows/browser-extension-local-models.md",
     "docs/features/workflows/browser-extension-local-models.zh-HK.md",
     "docs/features/workflows/browser-extension-workspace.md",

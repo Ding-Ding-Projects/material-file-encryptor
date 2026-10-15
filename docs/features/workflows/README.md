@@ -8,5 +8,6 @@ These workflows use local native service entrypoints rather than an HTTP API. Po
 
 - [Browser extension workspace](browser-extension-workspace.md)
 - [Browser extension local models](browser-extension-local-models.md): the Models tab, an optional loopback permission, streamed chat and safe rich text.
+- [Browser extension evidence and reference comparison](browser-extension-evidence.md): captures bound to the staged build identity, and measured comparison with the design references.
 
 - [Browser protection observations](browser-protection-observations.md)
