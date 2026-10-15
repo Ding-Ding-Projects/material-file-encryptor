@@ -34,6 +34,11 @@ export function renderMarkdown(markdown,source,routeMap,prefix='../',images=new 
  for(let i=0;i<lines.length;i++) {
   const line=lines[i];
   if(line.startsWith('```')){flush();const language=line.slice(3).trim(),code=[];while(++i<lines.length&&!lines[i].startsWith('```'))code.push(lines[i]);if(i===lines.length)throw new Error('Unclosed documentation fence');const body=code.join('\n');output+=source==='README.md'&&language==='mermaid'?renderReadmeFlowchart(body,diagramOrdinal++):`<pre><code>${escapeHtml(body)}</code></pre>`;continue;}
+  // Collapsible groups: only these exact standalone lines become real elements; any other raw HTML stays escaped text.
+  if(line.trim()==='<details>'){flush();output+='<details>';continue;}
+  if(line.trim()==='</details>'){flush();output+='</details>';continue;}
+  const summary=/^<summary>([^<>]+)<\/summary>$/.exec(line.trim());
+  if(summary){flush();output+=`<summary>${escapeHtml(summary[1])}</summary>`;continue;}
   const heading=/^(#{1,6})\s+(.+)$/.exec(line);
   if(heading){flush();const base=slug(heading[2]),count=headings.get(base)||0;headings.set(base,count+1);const id=base+(count?'-'+count:'');const level=Math.min(6,heading[1].length+1);output+=`<h${level} id="${id}">${inline(heading[2])}<a class="heading-link" href="#${id}" aria-label="Link to this section">#</a></h${level}>`;continue;}
   if(line.includes('|')&&/^\s*\|?\s*:?-{3,}/.test(lines[i+1]||'')) {
@@ -99,9 +104,9 @@ export async function buildDocumentation(root,output,home) {
 }
 // Capture promotion may follow this application revision. Never derive it from
 // the documentation checkout's moving HEAD.
-export const INTENDED_CAPTURE_UI_SOURCE = 'e96a0f01994344e293f8e7a980bcd9ab64a4d276';
+export const INTENDED_CAPTURE_UI_SOURCE = '9394b351469d26c795c5ee48d8ebf1c2ddbe6618';
 // A capture refreshed from a later installed release is admitted by listing its exact source here; every other source is refused.
-export const ADDITIONAL_CAPTURE_UI_SOURCES = Object.freeze(['1c5be9a8cf6322469e99b019f1cf83893034425c']);
+export const ADDITIONAL_CAPTURE_UI_SOURCES = Object.freeze([]);
 function canonicalPresentationAttributes(tag){
  const match=tag.match(/^<([a-z][a-z0-9-]*)([\s\S]*?)\/?\s*>$/);if(!match)throw Error('Noncanonical capture presentation tag');
  const attributes={};let rest=match[2];

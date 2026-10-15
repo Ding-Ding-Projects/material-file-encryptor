@@ -89,7 +89,7 @@ test('preview download copy has complete language mappings',async()=>{
     assert.ok(cantonese[text],text);assert.equal(localized(text,'en'),text);assert.equal(localized(text,'yue'),cantonese[text]);assert.equal(localized(text,'bilingual'),`${text} / ${cantonese[text]}`);
   }
   const html=await readFile(new URL('../docs/site/index.html',import.meta.url),'utf8');
-  for(const name of ['history','recycle-bin','settings-dark','help-how-it-works','home','drive-locked'])assert.ok(html.includes(`images/captures/refresh-e96a0f0/desktop/${name}-`));
+  for(const name of ['history','recycle-bin','help-how-it-works','home','drive-unlocked-files','tools-local-models'])assert.match(html,new RegExp(`images/captures/refresh-[a-f0-9]+/desktop/${name}-`));
   assert.ok(html.includes('Installer and native-operation verification are separate'));
   assert.ok(html.includes(previewRelease.releaseUrl));assert.ok(html.includes(previewRelease.sourceCommit));
 });
@@ -131,9 +131,9 @@ test('interactive part illustration counts overhead and rejects unusable limits'
 
 test('capture gallery shows installed-application captures with their source and conceptual controls', async () => {
   const html = await readFile(new URL('../docs/site/index.html', import.meta.url), 'utf8');
-  for (const capture of ['drive-locked', 'home', 'history', 'recycle-bin', 'settings-dark', 'help-how-it-works']) assert.match(html, new RegExp(`src="images/captures/refresh-[a-f0-9]+/desktop/${capture}-`));
+  for (const capture of ['drive-unlocked-files', 'home', 'history', 'recycle-bin', 'tools-local-models', 'help-how-it-works']) assert.match(html, new RegExp(`src="images/captures/refresh-[a-f0-9]+/desktop/${capture}-`));
   assert.match(html, /Installed desktop application v[0-9.]+ · source <code>[a-f0-9]+<\/code>/);
-  assert.match(html, /A mounted drive is not shown/);
+  assert.match(html, /Installer and native-operation verification are separate/);
   assert.doesNotMatch(html, /<video[^>]*autoplay/);
   assert.doesNotMatch(html, /src="images\/captures\/desktop-linux\.webm"/);
   assert.match(html, /Conceptual demonstration only/);

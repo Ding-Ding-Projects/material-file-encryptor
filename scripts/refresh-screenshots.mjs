@@ -36,6 +36,16 @@ export const EXTENSION_STATES = [
   {name: 'section-personalization-360x780-dark-bilingual', page: 'options', section: 'personalization', theme: 'dark', language: 'bilingual', width: 360, height: 780},
   {name: 'section-publishing-1280x900-light-en', page: 'options', section: 'publishing', theme: 'light', language: 'en', width: 1280, height: 900},
   {name: 'section-servers-1280x900-light-en', page: 'options', section: 'servers', theme: 'light', language: 'en', width: 1280, height: 900},
+  {name: 'section-personalization-1280x900-light-en', page: 'options', section: 'personalization', theme: 'light', language: 'en', width: 1280, height: 900},
+  {name: 'section-changelog-1280x900-light-en', page: 'options', section: 'changelog', theme: 'light', language: 'en', width: 1280, height: 900},
+  {name: 'section-notes-1280x900-light-en', page: 'options', section: 'notes', theme: 'light', language: 'en', width: 1280, height: 900},
+  {name: 'section-documentation-1280x900-light-en', page: 'options', section: 'docs', theme: 'light', language: 'en', width: 1280, height: 900},
+  {name: 'section-support-1280x900-light-en', page: 'options', section: 'support', theme: 'light', language: 'en', width: 1280, height: 900},
+  {name: 'section-dimsum-1280x900-light-en', page: 'options', section: 'dimsum', theme: 'light', language: 'en', width: 1280, height: 900},
+  {name: 'home-1280x900-dark-en', page: 'options', section: 'home', theme: 'dark', language: 'en', width: 1280, height: 900},
+  {name: 'home-1280x900-light-yue', page: 'options', section: 'home', theme: 'light', language: 'yue', width: 1280, height: 900},
+  {name: 'section-servers-1280x900-dark-bilingual', page: 'options', section: 'servers', theme: 'dark', language: 'bilingual', width: 1280, height: 900},
+  {name: 'popup-380-light-yue', page: 'popup', theme: 'light', language: 'yue', width: 380, height: 760},
   {name: 'models-connected-light-en', page: 'options', section: 'models', theme: 'light', language: 'en', width: 1100, height: 1000, step: 'models-connected'},
   {name: 'models-chat-light-en', page: 'options', section: 'models', theme: 'light', language: 'en', width: 1100, height: 1300, step: 'models-chat'},
   {name: 'status-release-light-en', page: 'options', section: 'status', theme: 'light', language: 'en', width: 1100, height: 1100, step: 'status-release'},
@@ -52,6 +62,8 @@ export const EXTENSION_STATES = [
 export const SITE_STATES = [
   {name: 'home-1280x900-light-en', url: '/index.html', width: 1280, height: 900},
   {name: 'library-1280x900-light-en', url: '/library.html', width: 1280, height: 900},
+  {name: 'wiki-1280x900-light-en', url: '/wiki.html', width: 1280, height: 900},
+  {name: 'gallery-1280x900-light-en', url: '/gallery.html', width: 1280, height: 900},
   {name: 'home-320x800-dpr2-light-en', url: '/index.html', width: 320, height: 800, scale: 2},
   {name: 'article-local-models-360x800-light-en', url: '/articles/docs--features--workflows--browser-extension-local-models.html', width: 360, height: 800},
 ];
@@ -221,30 +233,43 @@ async function readManifest(file) { try { return JSON.parse(await fs.readFile(fi
 async function writeManifest(file, manifest) { await fs.writeFile(file, JSON.stringify(manifest, null, 2) + '\n'); }
 
 /** Frames that show a private path or private data are never imported, whatever the manifest says about them. */
-export const DESKTOP_EXCLUDED_PREFIXES = ['03-drive', '04-offline', '21-lock-holder-message', '24-create-drive-dialog', '25-unlock-drive-dialog'];
+export const DESKTOP_EXCLUDED_PREFIXES = [];
 
-/** The desktop frames kept in the repository: screen, theme and language, as named in the capture manifest. */
-export const DESKTOP_SELECTION = [
-  '01-home__light__en', '02-newtab-popover__light__en', '23-drive-locked__light__en', '05-history__light__en', '06-recycle-bin__light__en',
-  '07-tools-converter__dark__en', '07-tools-converter__light__bilingual', '08-tools-documents__light__yue', '14-settings__dark__en',
-  '18-help-how-it-works__light__en', '22-force-lock-dialog__light__en', '22-force-lock-dialog__dark__en',
-];
+/** Dark, Cantonese and bilingual variants kept beside the light English frame of every screen. */
+export const DESKTOP_VARIANTS = {
+  'dark__en': ['home', 'drive-unlocked-files', 'history', 'tools-converter', 'tools-local-models', 'tools-server-targets-panel', 'settings-personalization', 'tools-status', 'update-page', 'help-how-it-works', 'force-lock-confirm', 'create-drive-dialog', 'newtab-popover'],
+  'light__yue': ['home', 'offline', 'history', 'tools-server-preparation', 'settings', 'help-how-it-works', 'create-drive-dialog'],
+  'light__bilingual': ['home', 'drive-locked', 'recycle-bin', 'tools-local-models', 'settings-local-access', 'unlock-drive-dialog', 'newtab-popover', 'tools-status'],
+};
+
+/** Every screen in light English, plus the listed variants. */
+export function selectDesktop(rows) {
+  return rows.filter(row => !skipDesktop(row) && ((row.theme === 'light' && row.language === 'en') || (DESKTOP_VARIANTS[`${row.theme}__${row.language}`] || []).includes(row.screen)));
+}
+
+/**
+ * Frames that are left out: a blank page, an unscrolled copy of Home, the first tab of a tabbed screen (it matches the screen's own
+ * frame), and server frames that are byte-identical to the targets panel frame.
+ */
+export function skipDesktop(row) {
+  return ['pair-a-browser', 'home-scrolled', 'tools-server-card', 'tools-converter-tab1', 'tools-local-models-tab1', 'settings-local-access-tab1', 'settings-personalization-tab1'].includes(row.screen)
+    || (row.screen === 'tools-server-preparation' && row.language === 'en');
+}
 
 /** `01-home__light__en.png` becomes `home-light-en`. */
 export const desktopName = file => file.replace(/\.png$/, '').replace(/^\d+-/, '').replaceAll('__', '-');
 
 /** Imports the selected desktop captures from another lane's manifest, proving each file against the hash the manifest records. */
-export async function importDesktop({manifestPath, directory, selection = DESKTOP_SELECTION}) {
+export async function importDesktop({manifestPath, directory}) {
   const source = JSON.parse(await fs.readFile(manifestPath, 'utf8'));
   const rows = source.captures;
   if (!Array.isArray(rows) || !rows.length) throw new Error('The desktop manifest lists no captures.');
+  if (source.privateFrames) throw new Error('The desktop manifest reports private frames.');
   const baseDirectory = path.join(path.dirname(path.resolve(manifestPath)), 'captures');
   const manifestFile = path.join(directory, 'manifest.json');
   const manifest = (await readManifest(manifestFile)) || {schemaVersion: 1, sourceCommit: git('rev-parse', 'HEAD'), captures: []};
   manifest.captures = manifest.captures.filter(row => row.kind !== 'desktop');
-  for (const stem of selection) {
-    const row = rows.find(item => item.file === stem + '.png');
-    if (!row) throw new Error(`The desktop manifest has no capture ${stem}.`);
+  for (const row of selectDesktop(rows)) {
     if (row.privatePathVisible || DESKTOP_EXCLUDED_PREFIXES.some(prefix => row.file.startsWith(prefix))) throw new Error(`Desktop capture ${row.file} shows a private path and cannot be used.`);
     const bytes = await fs.readFile(path.join(baseDirectory, row.file));
     if (digest(bytes) !== row.sha256) throw new Error(`Desktop capture ${row.file} differs from its manifest hash.`);
@@ -253,7 +278,7 @@ export async function importDesktop({manifestPath, directory, selection = DESKTO
     const target = path.join(directory, 'desktop', name + '.png');
     await fs.mkdir(path.dirname(target), {recursive: true});
     await fs.writeFile(target, bytes);
-    manifest.captures.push({kind: 'desktop', name, file: 'desktop/' + name + '.png', sha256: digest(bytes), bytes: bytes.length, ...pngSize(bytes), screen: row.screen, theme: row.theme, language: row.language, scale: 1.5,
+    manifest.captures.push({kind: 'desktop', name, file: 'desktop/' + name + '.png', sha256: digest(bytes), bytes: bytes.length, ...pngSize(bytes), screen: row.screen, order: row.order, theme: row.theme, language: row.language, scale: 1.5,
       sourceCommit: row.sourceCommit, appVersion: row.appVersion, window: row.appWindowDip, originalFile: row.file});
   }
   // The capture manifest is kept beside the images, with line endings normalized, so its hash can serve as a stable reference.

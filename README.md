@@ -134,87 +134,255 @@ Material Design 3 applies to the desktop, documentation website, extension and n
 
 ### Current captures
 
+Every image below is a genuine capture of a real build; none is a mock, design preview or edited image. Each group is collapsed: choose its heading to open it. Capture times are unavailable because no validated timestamp was recorded, and earlier captures were withdrawn when these replaced them. They remain unchanged in Git history and are listed with their hashes in [the gallery review](docs/site/gallery-review.json).
+
 #### Desktop application
 
-These are genuine captures of the installed desktop application, version 1.657.1, built from source `e96a0f0`. Each was taken by window handle on a task-owned hidden desktop at 150 percent display scale (a 1280 by 800 window), with an isolated profile and a throwaway vault holding test files only. Frames that show a private folder path were excluded, so no mounted-drive or offline-folder screen is shown. The capture manifest, kept as [desktop-capture-manifest.json](docs/images/captures/refresh-e96a0f0/desktop-capture-manifest.json), records every frame's hash and size. Capture times are unavailable.
+72 captures of the installed desktop application, version 1.702.1, built from source `9394b35`. Each was taken by window handle on a task-owned hidden desktop at 150 percent display scale (a 1280 by 800 window, saved at 1920 by 1200 pixels) with an isolated profile and a throwaway vault that holds test files only and uses neutral folder names. The capture host reported no frame showing a private path. The run captured 312 frames in all, covering 52 screens in light and dark themes and in English, Cantonese and bilingual modes; these are the ones published. A tabbed screen's own frame shows the tab named in its caption, and a few dark and bilingual frames show the last tab visited. Home is the first group. The [capture manifest](docs/images/captures/refresh-b4cbf0e/desktop-capture-manifest.json) records every frame's hash.
 
-![Home page with one card per section, light theme, English](docs/images/captures/refresh-e96a0f0/desktop/home-light-en.png)
+<details>
+<summary>Home and navigation (7)</summary>
 
-The New tab popover captures below were taken from the installed v1.683.1 release, built from source `1c5be9a`, in a 1280 by 800 window at 150 percent display scale. The bilingual capture shows a truncated filter label that is fixed in later source.
+| Home | Home, dark | Home, Cantonese |
+|---|---|---|
+| ![Home](docs/images/captures/refresh-b4cbf0e/desktop/home-light-en.png) | ![Home, dark](docs/images/captures/refresh-b4cbf0e/desktop/home-dark-en.png) | ![Home, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/home-light-yue.png) |
 
-![New tab popover listing every destination, light theme, English](docs/images/captures/refresh-1c5be9a/desktop/newtab-popover-light-en.png)
+| Home, bilingual | New tab popover | New tab popover, dark |
+|---|---|---|
+| ![Home, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/home-light-bilingual.png) | ![New tab popover](docs/images/captures/refresh-b4cbf0e/desktop/newtab-popover-light-en.png) | ![New tab popover, dark](docs/images/captures/refresh-b4cbf0e/desktop/newtab-popover-dark-en.png) |
 
-![New tab popover listing every destination, dark theme, English](docs/images/captures/refresh-1c5be9a/desktop/newtab-popover-dark-en.png)
+| New tab popover, bilingual |
+|---|
+| ![New tab popover, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/newtab-popover-light-bilingual.png) |
 
-![New tab popover with bilingual labels, light theme](docs/images/captures/refresh-1c5be9a/desktop/newtab-popover-light-bilingual.png)
+</details>
 
-![Locked drive screen with create and unlock actions, light theme, English](docs/images/captures/refresh-e96a0f0/desktop/drive-locked-light-en.png)
+<details>
+<summary>Drive, offline and dialogs (14)</summary>
 
-![History listing synthetic test files with restore actions, light theme, English](docs/images/captures/refresh-e96a0f0/desktop/history-light-en.png)
+| Drive, locked | Drive, locked, bilingual | Drive, unlocked with files |
+|---|---|---|
+| ![Drive, locked](docs/images/captures/refresh-b4cbf0e/desktop/drive-locked-light-en.png) | ![Drive, locked, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/drive-locked-light-bilingual.png) | ![Drive, unlocked with files](docs/images/captures/refresh-b4cbf0e/desktop/drive-unlocked-files-light-en.png) |
 
-![Recycle Bin with its actions and search, light theme, English](docs/images/captures/refresh-e96a0f0/desktop/recycle-bin-light-en.png)
+| Drive, unlocked, dark | Available offline | Available offline, Cantonese |
+|---|---|---|
+| ![Drive, unlocked, dark](docs/images/captures/refresh-b4cbf0e/desktop/drive-unlocked-files-dark-en.png) | ![Available offline](docs/images/captures/refresh-b4cbf0e/desktop/offline-light-en.png) | ![Available offline, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/offline-light-yue.png) |
 
-![Local file converter in the dark theme, English](docs/images/captures/refresh-e96a0f0/desktop/tools-converter-dark-en.png)
+| Create a drive dialog | Create a drive dialog, dark | Create a drive dialog, Cantonese |
+|---|---|---|
+| ![Create a drive dialog](docs/images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-light-en.png) | ![Create a drive dialog, dark](docs/images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-dark-en.png) | ![Create a drive dialog, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-light-yue.png) |
 
-![Local file converter in bilingual mode, light theme](docs/images/captures/refresh-e96a0f0/desktop/tools-converter-light-bilingual.png)
+| Unlock a drive dialog | Unlock a drive dialog, bilingual | Lock message when a program still has files open |
+|---|---|---|
+| ![Unlock a drive dialog](docs/images/captures/refresh-b4cbf0e/desktop/unlock-drive-dialog-light-en.png) | ![Unlock a drive dialog, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/unlock-drive-dialog-light-bilingual.png) | ![Lock message when a program still has files open](docs/images/captures/refresh-b4cbf0e/desktop/lock-holder-message-light-en.png) |
 
-![Document workspace in Cantonese, light theme](docs/images/captures/refresh-e96a0f0/desktop/tools-documents-light-yue.png)
+| Force Lock confirmation | Force Lock confirmation, dark |
+|---|---|
+| ![Force Lock confirmation](docs/images/captures/refresh-b4cbf0e/desktop/force-lock-confirm-light-en.png) | ![Force Lock confirmation, dark](docs/images/captures/refresh-b4cbf0e/desktop/force-lock-confirm-dark-en.png) |
 
-![Settings in the dark theme, English](docs/images/captures/refresh-e96a0f0/desktop/settings-dark-en.png)
+</details>
 
-![How it works help page, light theme, English](docs/images/captures/refresh-e96a0f0/desktop/help-how-it-works-light-en.png)
+<details>
+<summary>History and Recycle Bin (5)</summary>
 
-![Force Lock confirmation dialog, light theme](docs/images/captures/refresh-e96a0f0/desktop/force-lock-dialog-light-en.png)
+| History | History, dark | History, Cantonese |
+|---|---|---|
+| ![History](docs/images/captures/refresh-b4cbf0e/desktop/history-light-en.png) | ![History, dark](docs/images/captures/refresh-b4cbf0e/desktop/history-dark-en.png) | ![History, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/history-light-yue.png) |
 
-![Force Lock confirmation dialog, dark theme](docs/images/captures/refresh-e96a0f0/desktop/force-lock-dialog-dark-en.png)
+| Recycle Bin | Recycle Bin, bilingual |
+|---|---|
+| ![Recycle Bin](docs/images/captures/refresh-b4cbf0e/desktop/recycle-bin-light-en.png) | ![Recycle Bin, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/recycle-bin-light-bilingual.png) |
 
-#### Browser extension Home page and popup launcher
+</details>
 
-Headless Microsoft Edge with the staged extension from source `e96a0f0` (staged October 15, 2026 UTC), loaded unpacked into a disposable profile. The workspace opens on a grid of section cards instead of a tab bar, and the popup keeps the pairing controls above a launcher with one button per section. No desktop was paired, so the connection states read as unavailable.
+<details>
+<summary>Tools: converter, documents and storage (11)</summary>
 
-![Extension workspace Home page with one card per section, light theme, English](docs/images/captures/refresh-e96a0f0/extension/home-1280x900-light-en.png)
+| Converter, Source files | Converter, Formats | Converter, Options |
+|---|---|---|
+| ![Converter, Source files](docs/images/captures/refresh-b4cbf0e/desktop/tools-converter-light-en.png) | ![Converter, Formats](docs/images/captures/refresh-b4cbf0e/desktop/tools-converter-tab2-light-en.png) | ![Converter, Options](docs/images/captures/refresh-b4cbf0e/desktop/tools-converter-tab3-light-en.png) |
 
-![Extension popup with pairing controls above the section launcher, light theme, English](docs/images/captures/refresh-e96a0f0/extension/popup-380-light-en.png)
+| Converter, Queue and result history | Converter, Queue and result history, dark | Documents and downloads |
+|---|---|---|
+| ![Converter, Queue and result history](docs/images/captures/refresh-b4cbf0e/desktop/tools-converter-tab4-light-en.png) | ![Converter, Queue and result history, dark](docs/images/captures/refresh-b4cbf0e/desktop/tools-converter-dark-en.png) | ![Documents and downloads](docs/images/captures/refresh-b4cbf0e/desktop/tools-documents-light-en.png) |
 
-#### Browser extension Models tab
+| Storage maintenance | Status | Status, dark |
+|---|---|---|
+| ![Storage maintenance](docs/images/captures/refresh-b4cbf0e/desktop/tools-storage-maintenance-light-en.png) | ![Status](docs/images/captures/refresh-b4cbf0e/desktop/tools-status-light-en.png) | ![Status, dark](docs/images/captures/refresh-b4cbf0e/desktop/tools-status-dark-en.png) |
 
-The same staged extension against a fake local model server; the permission prompt was stubbed for the connected states, and no real Ollama server or installed build was used. The chat capture shows a `javascript:` address left as plain text and the one https link opening with `noopener noreferrer`.
+| Status, bilingual | File details |
+|---|---|
+| ![Status, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/tools-status-light-bilingual.png) | ![File details](docs/images/captures/refresh-b4cbf0e/desktop/tools-file-details-light-en.png) |
 
-![Models tab connected to a local server, listing installed and running models, light theme, English](docs/images/captures/refresh-e96a0f0/extension/models-connected-light-en.png)
+</details>
 
-![Models tab chat with a streamed reply rendered as safe rich text with copy actions, light theme, English](docs/images/captures/refresh-e96a0f0/extension/models-chat-light-en.png)
+<details>
+<summary>Tools: local models (7)</summary>
 
-#### Browser extension Status tab
+| Local models, Model Store | Local models, Pull cart | Local models, Local chat |
+|---|---|---|
+| ![Local models, Model Store](docs/images/captures/refresh-b4cbf0e/desktop/tools-local-models-light-en.png) | ![Local models, Pull cart](docs/images/captures/refresh-b4cbf0e/desktop/tools-local-models-tab2-light-en.png) | ![Local models, Local chat](docs/images/captures/refresh-b4cbf0e/desktop/tools-local-models-tab3-light-en.png) |
 
-The same staged extension. Check releases read the live published releases at capture time and found the release for this build, v1.657.1, with the code name Classic Har Gow. The narrow capture shows the inventory coverage list at 360 pixels with no horizontal overflow.
+| Local models, Profiles | Local models, Help | Local models, Help, dark |
+|---|---|---|
+| ![Local models, Profiles](docs/images/captures/refresh-b4cbf0e/desktop/tools-local-models-tab4-light-en.png) | ![Local models, Help](docs/images/captures/refresh-b4cbf0e/desktop/tools-local-models-tab5-light-en.png) | ![Local models, Help, dark](docs/images/captures/refresh-b4cbf0e/desktop/tools-local-models-dark-en.png) |
 
-![Status tab showing the published release, its food code name and dish photo, light theme, English](docs/images/captures/refresh-e96a0f0/extension/status-release-light-en.png)
+| Local models, Help, bilingual |
+|---|
+| ![Local models, Help, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/tools-local-models-light-bilingual.png) |
 
-![Status tab feature coverage list filtered by a search at 360 pixels wide, light theme, English](docs/images/captures/refresh-e96a0f0/extension/status-coverage-narrow-light-en.png)
+</details>
 
-#### Browser extension Progress and publication, and Servers
+<details>
+<summary>Tools: server targets and server card (7)</summary>
 
-Both sections before pairing: the progress note form keeps its send action disabled until the preview is reviewed and nothing was sent, and the Servers section shows its disabled reads and the four target types without any server data.
+| Server preparation, create a server on any target | Server preparation, scrolled to the server card, dark | Server preparation, Cantonese |
+|---|---|---|
+| ![Server preparation, create a server on any target](docs/images/captures/refresh-b4cbf0e/desktop/tools-server-targets-panel-light-en.png) | ![Server preparation, scrolled to the server card, dark](docs/images/captures/refresh-b4cbf0e/desktop/tools-server-targets-panel-dark-en.png) | ![Server preparation, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/tools-server-preparation-light-yue.png) |
 
-![Progress and publication section with the send action disabled, light theme, English](docs/images/captures/refresh-e96a0f0/extension/section-publishing-1280x900-light-en.png)
+| Server card, Overview | Server card, Logs | Server card, Settings |
+|---|---|---|
+| ![Server card, Overview](docs/images/captures/refresh-b4cbf0e/desktop/tools-server-card-tab1-light-en.png) | ![Server card, Logs](docs/images/captures/refresh-b4cbf0e/desktop/tools-server-card-tab2-light-en.png) | ![Server card, Settings](docs/images/captures/refresh-b4cbf0e/desktop/tools-server-card-tab3-light-en.png) |
 
-![Servers section before pairing, light theme, English](docs/images/captures/refresh-e96a0f0/extension/section-servers-1280x900-light-en.png)
+| Server card, Plugins and mods |
+|---|
+| ![Server card, Plugins and mods](docs/images/captures/refresh-b4cbf0e/desktop/tools-server-card-tab4-light-en.png) |
+
+</details>
+
+<details>
+<summary>Settings, personalization and local access (16)</summary>
+
+| Settings | Settings, Cantonese | Personalization, Language and voice |
+|---|---|---|
+| ![Settings](docs/images/captures/refresh-b4cbf0e/desktop/settings-light-en.png) | ![Settings, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/settings-light-yue.png) | ![Personalization, Language and voice](docs/images/captures/refresh-b4cbf0e/desktop/settings-personalization-light-en.png) |
+
+| Personalization, Appearance | Personalization, Schedules | Personalization, Attention |
+|---|---|---|
+| ![Personalization, Appearance](docs/images/captures/refresh-b4cbf0e/desktop/settings-personalization-tab2-light-en.png) | ![Personalization, Schedules](docs/images/captures/refresh-b4cbf0e/desktop/settings-personalization-tab3-light-en.png) | ![Personalization, Attention](docs/images/captures/refresh-b4cbf0e/desktop/settings-personalization-tab4-light-en.png) |
+
+| Personalization, Private local history | Personalization, Private local history, dark | Local access, Local profile |
+|---|---|---|
+| ![Personalization, Private local history](docs/images/captures/refresh-b4cbf0e/desktop/settings-personalization-tab5-light-en.png) | ![Personalization, Private local history, dark](docs/images/captures/refresh-b4cbf0e/desktop/settings-personalization-dark-en.png) | ![Local access, Local profile](docs/images/captures/refresh-b4cbf0e/desktop/settings-local-access-light-en.png) |
+
+| Local access, Element locks | Local access, Authenticator | Local access, Support Tickets |
+|---|---|---|
+| ![Local access, Element locks](docs/images/captures/refresh-b4cbf0e/desktop/settings-local-access-tab2-light-en.png) | ![Local access, Authenticator](docs/images/captures/refresh-b4cbf0e/desktop/settings-local-access-tab3-light-en.png) | ![Local access, Support Tickets](docs/images/captures/refresh-b4cbf0e/desktop/settings-local-access-tab4-light-en.png) |
+
+| Local access, Access history | Local access, Access history, bilingual | Updates |
+|---|---|---|
+| ![Local access, Access history](docs/images/captures/refresh-b4cbf0e/desktop/settings-local-access-tab5-light-en.png) | ![Local access, Access history, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/settings-local-access-light-bilingual.png) | ![Updates](docs/images/captures/refresh-b4cbf0e/desktop/update-page-light-en.png) |
+
+| Updates, dark |
+|---|
+| ![Updates, dark](docs/images/captures/refresh-b4cbf0e/desktop/update-page-dark-en.png) |
+
+</details>
+
+<details>
+<summary>Help (5)</summary>
+
+| Help, How it works | Help, How it works, dark | Help, How it works, Cantonese |
+|---|---|---|
+| ![Help, How it works](docs/images/captures/refresh-b4cbf0e/desktop/help-how-it-works-light-en.png) | ![Help, How it works, dark](docs/images/captures/refresh-b4cbf0e/desktop/help-how-it-works-dark-en.png) | ![Help, How it works, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/help-how-it-works-light-yue.png) |
+
+| Help, Documentation | Help, Changelog |
+|---|---|
+| ![Help, Documentation](docs/images/captures/refresh-b4cbf0e/desktop/help-documentation-light-en.png) | ![Help, Changelog](docs/images/captures/refresh-b4cbf0e/desktop/help-changelog-light-en.png) |
+
+</details>
+
+#### Browser extension
+
+Headless Microsoft Edge with the staged extension from source `b4cbf0e`, loaded unpacked into a disposable profile. No desktop was paired, so connection states read as unavailable; the Models captures use a fake local model server and the Status captures read the live published releases.
+
+<details>
+<summary>Home and popup (7)</summary>
+
+| Workspace Home | Workspace Home, dark | Workspace Home, Cantonese |
+|---|---|---|
+| ![Workspace Home](docs/images/captures/refresh-b4cbf0e/extension/home-1280x900-light-en.png) | ![Workspace Home, dark](docs/images/captures/refresh-b4cbf0e/extension/home-1280x900-dark-en.png) | ![Workspace Home, Cantonese](docs/images/captures/refresh-b4cbf0e/extension/home-1280x900-light-yue.png) |
+
+| Workspace Home at 360 pixels, dark, bilingual | Popup with the section launcher | Popup, dark, bilingual |
+|---|---|---|
+| ![Workspace Home at 360 pixels, dark, bilingual](docs/images/captures/refresh-b4cbf0e/extension/home-360x780-dark-bilingual.png) | ![Popup with the section launcher](docs/images/captures/refresh-b4cbf0e/extension/popup-380-light-en.png) | ![Popup, dark, bilingual](docs/images/captures/refresh-b4cbf0e/extension/popup-380-dark-bilingual.png) |
+
+| Popup, Cantonese |
+|---|
+| ![Popup, Cantonese](docs/images/captures/refresh-b4cbf0e/extension/popup-380-light-yue.png) |
+
+</details>
+
+<details>
+<summary>Sections (12)</summary>
+
+| Connection | Personalization | Personalization at 360 pixels, dark, bilingual |
+|---|---|---|
+| ![Connection](docs/images/captures/refresh-b4cbf0e/extension/section-connection-1280x900-light-en.png) | ![Personalization](docs/images/captures/refresh-b4cbf0e/extension/section-personalization-1280x900-light-en.png) | ![Personalization at 360 pixels, dark, bilingual](docs/images/captures/refresh-b4cbf0e/extension/section-personalization-360x780-dark-bilingual.png) |
+
+| Changelog | Notes | Documentation |
+|---|---|---|
+| ![Changelog](docs/images/captures/refresh-b4cbf0e/extension/section-changelog-1280x900-light-en.png) | ![Notes](docs/images/captures/refresh-b4cbf0e/extension/section-notes-1280x900-light-en.png) | ![Documentation](docs/images/captures/refresh-b4cbf0e/extension/section-documentation-1280x900-light-en.png) |
+
+| Documentation search while offline | Support | Dim sum |
+|---|---|---|
+| ![Documentation search while offline](docs/images/captures/refresh-b4cbf0e/extension/offline-documentation-search-light-en.png) | ![Support](docs/images/captures/refresh-b4cbf0e/extension/section-support-1280x900-light-en.png) | ![Dim sum](docs/images/captures/refresh-b4cbf0e/extension/section-dimsum-1280x900-light-en.png) |
+
+| Progress and publication | Servers | Servers, dark, bilingual |
+|---|---|---|
+| ![Progress and publication](docs/images/captures/refresh-b4cbf0e/extension/section-publishing-1280x900-light-en.png) | ![Servers](docs/images/captures/refresh-b4cbf0e/extension/section-servers-1280x900-light-en.png) | ![Servers, dark, bilingual](docs/images/captures/refresh-b4cbf0e/extension/section-servers-1280x900-dark-bilingual.png) |
+
+</details>
+
+<details>
+<summary>Models (2)</summary>
+
+| Models connected to a local server | Models chat with a streamed reply |
+|---|---|
+| ![Models connected to a local server](docs/images/captures/refresh-b4cbf0e/extension/models-connected-light-en.png) | ![Models chat with a streamed reply](docs/images/captures/refresh-b4cbf0e/extension/models-chat-light-en.png) |
+
+</details>
+
+<details>
+<summary>Status (4)</summary>
+
+| Status with the published release | Status with the installer link | Status coverage list at 360 pixels |
+|---|---|---|
+| ![Status with the published release](docs/images/captures/refresh-b4cbf0e/extension/status-release-light-en.png) | ![Status with the installer link](docs/images/captures/refresh-b4cbf0e/extension/status-installer-link-light-en.png) | ![Status coverage list at 360 pixels](docs/images/captures/refresh-b4cbf0e/extension/status-coverage-narrow-light-en.png) |
+
+| Status without a paired desktop |
+|---|
+| ![Status without a paired desktop](docs/images/captures/refresh-b4cbf0e/extension/status-desktop-unpaired-light-en.png) |
+
+</details>
+
+<details>
+<summary>Layout tuples (3)</summary>
+
+| Connection at the 360 pixel minimum, Cantonese | Models at the 360 pixel minimum, 2x, dark, bilingual | Popup at 360 by 640, 2x, dark, bilingual |
+|---|---|---|
+| ![Connection at the 360 pixel minimum, Cantonese](docs/images/captures/refresh-b4cbf0e/extension/matrix-options-connection_minimum_1x_light_yue.png) | ![Models at the 360 pixel minimum, 2x, dark, bilingual](docs/images/captures/refresh-b4cbf0e/extension/matrix-options-models_minimum_2x_dark_bilingual.png) | ![Popup at 360 by 640, 2x, dark, bilingual](docs/images/captures/refresh-b4cbf0e/extension/matrix-popup_minimum_2x_dark_bilingual.png) |
+
+</details>
 
 #### Documentation site
 
-Genuine captures of the staged documentation site built from source `f801c56` (the main branch at `3262874` with the new navigation), served from loopback and captured in a disposable headless Microsoft Edge profile, light theme, English. The narrow captures use a 320 pixel and a 360 pixel CSS viewport. They show public pages only, not native-product or installed acceptance. The earlier history-guidance captures needed a paired local profile and are no longer shown; they remain in Git history.
+Captures of the documentation site staged from source `b4cbf0e` and served from loopback in a disposable headless Microsoft Edge profile, light theme, English. They show public pages only, not native-product or installed acceptance. The workspace page was not captured because its article list renders unstyled.
 
-![Documentation site home page at 1280 by 900](docs/images/captures/refresh-e96a0f0/site/home-1280x900-light-en.png)
+<details>
+<summary>Documentation site (6)</summary>
 
-![Documentation library at 1280 by 900](docs/images/captures/refresh-e96a0f0/site/library-1280x900-light-en.png)
+| Home page | Home page at 320 pixels, DPR 2 | Documentation library |
+|---|---|---|
+| ![Home page](docs/images/captures/refresh-b4cbf0e/site/home-1280x900-light-en.png) | ![Home page at 320 pixels, DPR 2](docs/images/captures/refresh-b4cbf0e/site/home-320x800-dpr2-light-en.png) | ![Documentation library](docs/images/captures/refresh-b4cbf0e/site/library-1280x900-light-en.png) |
 
-![Documentation site home page at a 320 pixel CSS viewport with DPR 2](docs/images/captures/refresh-e96a0f0/site/home-320x800-dpr2-light-en.png)
+| Wiki | Capture gallery | Browser extension local models article at 360 pixels |
+|---|---|---|
+| ![Wiki](docs/images/captures/refresh-b4cbf0e/site/wiki-1280x900-light-en.png) | ![Capture gallery](docs/images/captures/refresh-b4cbf0e/site/gallery-1280x900-light-en.png) | ![Browser extension local models article at 360 pixels](docs/images/captures/refresh-b4cbf0e/site/article-local-models-360x800-light-en.png) |
 
-![Browser extension local models article at a 360 pixel CSS viewport](docs/images/captures/refresh-e96a0f0/site/article-local-models-360x800-light-en.png)
+</details>
 
-The refresh folder holds a [manifest](docs/images/captures/refresh-e96a0f0/manifest.json) with each image's hash, size, viewport and source commit; `node scripts/refresh-screenshots.mjs capture` regenerates it.
-
-The earlier original captures, including the history-guidance and packaged Windows images, were removed from the current tree when every screenshot was refreshed. They remain unchanged in Git history and their records stay in the [preview inventory](docs/images/captures/preview/inventory.json), [preview verification summary](docs/images/captures/preview/verification-summary.json), [Linux capture provenance](docs/images/captures/provenance.json) and [Windows capture provenance](docs/images/captures/windows/provenance.json). The diagrams here explain behavior; they are not screenshots or runtime evidence.
+The refresh folder holds a [manifest](docs/images/captures/refresh-b4cbf0e/manifest.json) with each image's hash, size, viewport and source commit. `node scripts/refresh-screenshots.mjs capture` and `node scripts/refresh-screenshots.mjs desktop` regenerate it, and `node scripts/apply-screenshot-refresh.mjs` rewrites every reference. The earlier original captures, including the history-guidance and packaged Windows images, were removed from the current tree and remain in Git history; their records stay in the [preview inventory](docs/images/captures/preview/inventory.json), [preview verification summary](docs/images/captures/preview/verification-summary.json), [Linux capture provenance](docs/images/captures/provenance.json) and [Windows capture provenance](docs/images/captures/windows/provenance.json). The diagrams here explain behavior; they are not screenshots or runtime evidence.
 
 ## Build, package and verify
 
