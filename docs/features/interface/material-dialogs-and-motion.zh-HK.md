@@ -36,6 +36,17 @@
 
 瀏覽器擴充功能頁面、桌面畫面、文件網站（包括原始頁面、產生頁面範本同暫存輸出）同設定檔驗證頁面共用同一份規範。每個互動元素都用 Material Web 元件，或者有記錄嘅狀態層，懸停、聚焦同按下都會經過渡改變。對話框、側邊面板、分頁面板、展開區域同狀態訊息進場時，都用共用標記 `--md-sys-motion-easing-standard`、`--md-sys-motion-easing-emphasized-decelerate` 同 `--md-sys-motion-duration-short4`，唔會直接寫緩動曲線。每個過渡同動畫都有 `prefers-reduced-motion` 覆寫。`scripts/audit-material-motion.mjs` 會靜態檢查呢份規範，而 `test/material-motion-audit.test.js` 要求零項發現。唯一允許嘅原生控制項係隱藏嘅檔案輸入、主頁目的地卡片同文件網站嘅無腳本基線標記，每項都喺程式碼入面列明原因。文件網站嘅例外只會喺 `scripts/audit-material-motion.mjs` 確認 `preparePublicDocumentControls` 會喺綁定任何監聽器之前，將每個原生控制項升級做已註冊嘅 Material 控制項時先被接受。由腳本建立嘅控制項直接用 Material Web 元件。`node scripts/audit-material-motion.mjs --site out/site` 會審核暫存網站，而測試亦會暫存一份並要求嗰度同樣零項發現。
 
+### 執行時審核
+
+`scripts/audit-runtime-motion.mjs` 會喺真正渲染出嚟嘅畫面上驗證同一份規範。佢透過 DevTools 協定驅動一個用完即棄嘅無頭 Edge 或 Chrome 設定檔，載入暫存嘅瀏覽器擴充功能、暫存嘅文件網站同桌面畫面（由原始碼提供，預載橋接用替身），並喺每個狀態執行 `scripts/runtime-motion-page.mjs` 入面嘅頁面端審核：
+
+- 每個可見嘅互動元素（包括開放 shadow root 入面嘅元素）都會分類為 Material Web 控制項、有記錄嘅原生例外，或者發現項。位於 Material 元件自己 shadow root 內嘅部件，算係該元件嘅一部分。
+- 每個互動元素都要有過渡、動畫、水波紋或者狀態層。超連結同展開摘要亦都要有過渡。
+- 打開嘅對話框、選單、側邊面板同分頁面板必須有進場動畫，透過運行中嘅 Web Animations、CSS 動畫同過渡觀察。
+- 模擬 `prefers-reduced-motion: reduce` 之後，頁面自己擁有嘅元素唔可以仍然保留過渡或動畫。Material Web shadow root 入面嘅過渡，頁面無法改寫，所以佢哋按元素標籤列喺收據入面，並當作限制披露，唔計做發現項。
+
+執行時例外清單比靜態嘅短：隱藏嘅檔案輸入、`mfe-date-field` 同 `mfe-file-picker` 入面嘅平台選擇器輸入，以及主頁目的地卡片，每項都喺程式碼入面列明原因。文件網站唔需要任何例外，因為佢嘅基線標記喺審核讀取之前已經升級。先用 `node scripts/build-browser-extension.mjs` 同 `node scripts/build-site.mjs` 暫存，再執行 `node scripts/audit-runtime-motion.mjs --surface all --out receipt.json`。提交嘅收據 `docs/evidence/runtime-motion-<shortsha>.json` 按畫面記錄元素數量、發現項、進場探測同減少動態效果嘅結果。桌面畫面嘅執行係原始碼替身證據，並唔涵蓋已安裝嘅應用程式。`test/runtime-motion-audit.test.js` 會對靜態測試頁執行頁面端分類器，並要求冇過渡嘅原生按鈕被標記、Material 控制項通過。
+
 ## 關閉程式
 
 唯讀請求，例如讀取目錄、狀態同字型清單，唔會再阻止程式關閉。修改資料、傳輸同等待用家操作嘅工作，仍然會阻止關閉並顯示關閉選項。

@@ -26,4 +26,4 @@
 :root{--md-sys-motion-easing-standard:cubic-bezier(.2,0,0,1);--md-sys-motion-easing-emphasized-decelerate:cubic-bezier(.05,.7,.1,1);--md-sys-motion-duration-short4:200ms}
 @keyframes popup-status-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 [role=status]:not([hidden]),[role=alert]:not([hidden]){animation:popup-status-in var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-emphasized-decelerate) both}
-@media(prefers-reduced-motion:reduce){[role=status],[role=alert]{animation:none}}
+@media(prefers-reduced-motion:reduce){[role=status]:not([hidden]),[role=alert]:not([hidden]){animation:none}}
