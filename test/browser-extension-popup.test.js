@@ -7,7 +7,7 @@ test('popup only invokes explicit pairing transport and renders authoritative co
 test('popup transport failures never print raw host details',async()=>{const f=await fixture(()=>({error:'private-host-diagnostic'}));assert.match(f.node('status').textContent,/Open the installed desktop/);assert.ok(!f.node('status').textContent.includes('private-host-diagnostic'));});
 test('popup uses local Material and shared regex search with no raw external controls or CDN',async()=>{const html=await fs.readFile(new URL('../browser-extension/popup.html',import.meta.url),'utf8');assert.doesNotMatch(html,/<(?:button|input|select|textarea)\b/i);assert.match(html,/<mfe-search/);assert.match(source,/vendor\/search\.js/);assert.doesNotMatch(html,/<script[^>]+https?:/i);assert.match(html,/No transfer starts from this popup/);});
 
-const SECTIONS=['connection','personalization','changelog','notes','docs','support','dimsum','models','status'];
+const SECTIONS=['connection','personalization','changelog','notes','docs','support','dimsum','models','status','servers'];
 const settle=()=>new Promise(resolve=>setTimeout(resolve,0));
 test('the mini home page has one icon button per section in workspace order, inside the 380 pixel popup',async()=>{
  const html=await fs.readFile(new URL('../browser-extension/popup.html',import.meta.url),'utf8'),css=await fs.readFile(new URL('../browser-extension/popup.css',import.meta.url),'utf8');

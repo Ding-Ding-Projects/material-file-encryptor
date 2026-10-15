@@ -246,12 +246,66 @@ adapter 呼叫會保持缺少 context，唔會借用目前畫面 frame。
 冷卻。佢做得到嘅，只係喺冷卻完結之後，畀當事人喺桌面證明保險庫密碼，從而清除已記錄
 嘅升級，而桌面自己嘅登入同樣會做到呢件事。
 
+## 伺服器管理範圍：read-servers、read-server-catalog 同 manage-server
+
+三個範圍俾已配對嘅擴充功能顯示由桌面伺服器管理器擁有嘅 Minecraft 伺服器，
+亦可以要求桌面更改。擴充功能自己永遠唔會運行伺服器，亦唔會持有任何目標憑證。
+SSH 金鑰、SSH 密碼、容器端點同地址全部留喺桌面，要求只可以指明四個固定目標
+識別碼之一：`local-process`、`local-container`、`ssh-process` 同
+`ssh-container`。傳輸由 `src/main/browser-server-mediation.js` 負責，對應桌面
+管理器嘅部分喺 `src/main/browser-server-adapters.js`。
+
+- `read-servers` 係狀態範圍。已配對來源只會傳送
+  `{type:'read-servers', session}`，唔會出現提示。答案係 `servers`，包含
+  `schemaVersion` 1、`manager`（`available` 或 `unavailable`）、
+  `targets`（四個識別碼按固定次序排列，各有布林值 `available`）同最多 100 個
+  `servers`。每個伺服器剛好有 `id`、`name`、`target`、`flavor`、`version` 同
+  `state`，狀態係 `preparing`、`prepared`、`starting`、`running`、`stopping`、
+  `stopped`、`failed` 或 `unavailable` 其中之一。唔會返回路徑、地址、埠號、日誌行
+  或者憑證。冇伺服器管理器嘅桌面組建會答 `unavailable`，而且冇列出伺服器。
+- `read-server-catalog` 係狀態範圍。已配對來源只會傳送
+  `{type:'read-server-catalog', session, cursor}`，`cursor` 係 `null` 或者最多五位
+  數字嘅字串。答案係 `server-catalog`，包含 `catalogue`（`ready`、`not-loaded` 或
+  `unavailable`）、`flavors`（識別碼、顯示名稱同支援嘅目標識別碼）、`versions`（每頁
+  最多 100 個，各有識別碼同頻道 `release`、`snapshot`、`old_beta` 或 `old_alpha`）、
+  `total` 同 `next`（下一頁嘅游標或者 `null`）。只會列出桌面真正可以準備嘅類型，
+  而家就係 `local-process` 上面嘅 Vanilla。擴充功能唔可以叫桌面下載目錄，所以桌面未載入目錄
+  時會答 `not-loaded`，擴充功能亦會照直講。
+- `manage-server` 係重新驗證範圍。已配對來源只會傳送
+  `{type:'manage-server', session, action, server, options}`。`action` 係
+  `create`、`start`、`stop`、`restart`、`change-setting` 或 `install-plugin`。
+  `create` 嘅 `server` 係 `null`，`options` 剛好有 `target`、`flavor` 同
+  `version`。`start`、`stop` 同 `restart` 嘅 `server` 係伺服器識別碼，`options`
+  係 `null`。`change-setting` 嘅 `options` 剛好有 `key` 同 `value`，值係布林值、
+  整數或者冇控制字元嘅短文字。`install-plugin` 嘅 `options` 剛好有 `plugin`，係識別碼，
+  永遠唔係網址、路徑或者檔案。多咗任何欄位（包括主機、金鑰、密碼或者路徑）嘅要求，
+  會喺做任何嘢之前被拒絕。
+- 已解鎖嘅桌面之後會進行全新嘅原生身份檢查：由主程序擁有嘅設定檔驗證對話框，
+  你要喺桌面輸入現有嘅保險庫密碼。呢個組建唔使用 Windows Hello。密碼永遠唔會去到
+  瀏覽器、擴充功能或者中介模組。檢查成功之後，桌面管理器先會動作。
+- 答案係 `server-managed`，包含 `schemaVersion` 1、`state`（`changed`、
+  `unchanged`、`rejected`、`busy` 或 `unavailable`）、`action` 同 `server` 識別碼；
+  `create` 返回新伺服器嘅識別碼，其他動作就照返要求嘅識別碼。`changed` 只表示桌面
+  接受咗要求，並唔表示伺服器已經運行；擴充功能要再讀取伺服器先知道真正狀態。
+- 桌面管理器而家做到啲乜：`create`（`local-process` 上面嘅 Vanilla）會喺已載入嘅目錄
+  解析所揀版本，再啟動桌面本身使用嘅已驗證準備流程；`start` 同 `stop` 會呼叫佢嘅
+  生命週期，`restart` 就係先停止再啟動。`start` 仍然要喺桌面接受確實嘅伺服器
+  授權，同埋有原生程序監督，缺少其中一樣時答 `unavailable`。`change-setting`、
+  `install-plugin`、其餘三個目標同所有其他類型，桌面都未有實作，所以呢啲要求會即時答
+  `unavailable`，唔會出現提示，免得有人要批准一樣做唔到嘅嘢。桌面答失敗或者格式錯誤，
+  同樣答 `unavailable`，永遠唔會當成功。
+- 提示同確認模式、學校模式、元素鎖同解鎖階梯共用：所有範圍加埋最多只有一個待回答，
+  第二個要求會答 `busy`，唔會排隊。桌面已鎖定、視窗隱藏或者縮到系統匣、桌面正在關閉，
+  或者組建冇驗證回呼，都會即時答 `unavailable`。冇人回答嘅提示會喺 30 秒後以
+  `rejected` 撤回，鎖定、中斷連線、結束同準備更新亦會撤回。拒絕永遠唔會撤銷配對。
+
 設計入面各範圍嘅狀態：`read-lock-state`、`read-update-state`、
 `focus-authenticator`、`read-school-mode`、`set-school-mode`、
-`read-element-locks`、`set-element-lock`、`read-unlock-ladder` 同
-`request-unlock-step` 已經喺主程序同擴充功能實作；
+`read-element-locks`、`set-element-lock`、`read-unlock-ladder`、
+`request-unlock-step`、`read-servers`、`read-server-catalog` 同
+`manage-server` 已經喺主程序同擴充功能實作；
 `read-profile-summary` 由受保護中介處理；設計入面其餘候選範圍尚未實作。學校模式、
-元素鎖同解鎖階梯範圍只用合成測試資料、假原生代理，以及（紀錄同階梯狀態方面）真實嘅
+元素鎖、解鎖階梯同伺服器管理範圍只用合成測試資料、假原生代理，以及（紀錄同階梯狀態方面）真實嘅
 存取狀態機加上原生保險庫檢查嘅替身驗證，冇真實桌面對話框、已安裝組建、
 真實瀏覽器登記或者已擷取提示參與，所以未經端到端驗證，包括瀏覽器要求更改學校模式之後
 已開啟桌面視窗嘅重繪、桌面鎖定畫面會否顯示擴充功能紀錄，以及桌面解鎖畫面會否毋須重新
@@ -315,6 +369,8 @@ adapter 呼叫會保持缺少 context，唔會借用目前畫面 frame。
 冇路徑同網址、鎖定時撤銷，以及擴充功能背景頁驗證。佢只用合成測試資料。
 冇已安裝嘅桌面、冇真實瀏覽器原生訊息登記、冇真實更新來源參與，所以由瀏覽器到
 運行中桌面嘅端到端路徑仍然未驗證。
+
+`test/browser-server-scopes.test.js` 用合成測試資料涵蓋伺服器管理範圍：桌面、頁面同背景頁入面固定嘅目標、動作、狀態同頻道清單、嚴格嘅要求同答案形狀、拒絕任何主機、金鑰、密碼、路徑或者網址欄位、每次更改前嘅全新原生檢查、共用嘅單一提示同 busy 答案、桌面管理器欠缺嘅動作唔出提示就拒絕、鎖定／中斷連線／關閉時撤回、喺假桌面管理器上面運作嘅轉接器、原生代理訊息、背景頁驗證，以及頁面嘅篩選、建立對話框同本地化。冇真實桌面伺服器管理器、真實伺服器、容器、SSH 主機、已安裝桌面或者已擷取提示參與，所以由瀏覽器到運行中伺服器嘅整條路徑都未驗證。
 
 `test/browser-confirm-scopes.test.js` 用合成測試資料涵蓋確認範圍：預設「拒絕」按鈕同
 Escape、本地化提示文字、單一待回答提示同 busy 答案、桌面鎖定、隱藏或者關閉時

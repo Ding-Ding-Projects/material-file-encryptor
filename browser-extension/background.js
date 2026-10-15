@@ -4,6 +4,30 @@ const LOCK_TABS=['connection','personalization','changelog','notes','docs','supp
 // Unlock ladder answers: the desktop sends ordered level ids and an optional end time for its shared cooldown.
 const ladderLevelsValid=levels=>Array.isArray(levels)&&levels.length>=2&&levels.length<=16&&levels.every(level=>typeof level==='string'&&/^[a-z0-9-]{1,24}$/.test(level))&&new Set(levels).size===levels.length;
 const ladderCooldownValid=value=>value===null||Number.isSafeInteger(value)&&value>0;
+// Server manager scopes. browser-extension/servers.js and src/main/browser-server-mediation.js hold the same lists; a test compares them.
+const SERVER_TARGETS=['local-process','local-container','ssh-process','ssh-container'];
+const SERVER_ACTIONS=['create','start','stop','restart','change-setting','install-plugin'];
+const SERVER_STATES=['preparing','prepared','starting','running','stopping','stopped','failed','unavailable'];
+const SERVER_RESULTS=['changed','unchanged','rejected','busy','unavailable'];
+const SERVER_CHANNELS=['release','snapshot','old_beta','old_alpha'];
+const serverPlain=value=>{if(value===null||typeof value!=='object'||Array.isArray(value))return false;const proto=Object.getPrototypeOf(value);return proto===null||Object.getPrototypeOf(proto)===null;};
+const serverKeys=(value,list)=>serverPlain(value)&&Reflect.ownKeys(value).length===list.length&&list.every(key=>Object.hasOwn(value,key));
+const serverId=value=>typeof value==='string'&&/^[A-Za-z0-9_-]{1,64}$/.test(value);
+const serverFlavor=value=>typeof value==='string'&&/^[a-z0-9][a-z0-9-]{0,23}$/.test(value);
+const serverVersion=value=>typeof value==='string'&&/^[A-Za-z0-9][A-Za-z0-9._ -]{0,31}$/.test(value);
+const serverKey=value=>typeof value==='string'&&/^[a-z0-9][a-z0-9._-]{0,63}$/.test(value);
+const serverText=(value,max)=>typeof value==='string'&&value.length>0&&value.length<=max&&!/[\u0000-\u001f\u007f-\u009f]/.test(value);
+const serverSettingValue=value=>typeof value==='boolean'||Number.isSafeInteger(value)||typeof value==='string'&&value.length<=256&&!/[\u0000-\u001f\u007f-\u009f]/.test(value);
+const serverCursor=value=>value===null||typeof value==='string'&&/^\d{1,5}$/.test(value);
+function serverManageOk(message){
+ if(!serverKeys(message,['type','action','server','options'])||!SERVER_ACTIONS.includes(message.action))return false;
+ const {action,server,options}=message;
+ if(action==='create')return server===null&&serverKeys(options,['target','flavor','version'])&&SERVER_TARGETS.includes(options.target)&&serverFlavor(options.flavor)&&serverVersion(options.version);
+ if(!serverId(server))return false;
+ if(action==='change-setting')return serverKeys(options,['key','value'])&&serverKey(options.key)&&serverSettingValue(options.value);
+ if(action==='install-plugin')return serverKeys(options,['plugin'])&&serverKey(options.plugin);
+ return options===null;
+}
 let port=null,session=null,sequence=0,pending=null,captureId=null,connectionEpoch=0;
 function disconnect(){connectionEpoch++;port?.disconnect();port=null;session=null;captureId=null;if(pending){clearTimeout(pending.timer);pending.reject(new Error('Desktop connection closed.'));pending=null;}}
 function connect(){if(port)return port;port=chrome.runtime.connectNative(HOST);const ownPort=port;port.onDisconnect.addListener(()=>{if(port!==ownPort)return;connectionEpoch++;port=null;session=null;captureId=null;if(pending){clearTimeout(pending.timer);pending.reject(new Error('Desktop receiver is unavailable.'));pending=null;}});port.onMessage.addListener(message=>{if(port!==ownPort||!pending)return;const request=pending;pending=null;clearTimeout(request.timer);if(message?.type==='error')request.reject(new Error('Desktop did not accept the handoff.'));else request.resolve(message);});return port;}
@@ -105,6 +129,34 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{if(sender.id!==c
    if(session!==ownSession||connectionEpoch!==epoch||!value||Object.keys(value).sort().join(',')!=='locked,schemaVersion,state,target,type'||value.type!=='element-lock-set'||value.schemaVersion!==1||value.target!==target||!['changed','unchanged','rejected','busy','unavailable'].includes(value.state)||value.locked!==null&&typeof value.locked!=='boolean')throw Error('Invalid element lock response.');
    respond({schemaVersion:1,state:value.state,target,locked:value.locked});
   }).catch(()=>respond({error:'Lock request did not complete. Open and unlock the desktop, pair again and retry.'}));return true;
+ }
+ if(message?.type==='servers-read'){
+  if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1){respond({error:'Server request is unavailable.'});return false;}
+  if(!session){respond({paired:false});return false;}
+  const ownSession=session,epoch=connectionEpoch;
+  request({type:'read-servers',session:ownSession}).then(value=>{
+   if(session!==ownSession||connectionEpoch!==epoch||!serverKeys(value,['type','schemaVersion','manager','targets','servers'])||value.type!=='servers'||value.schemaVersion!==1||!['available','unavailable'].includes(value.manager)||!Array.isArray(value.targets)||value.targets.length!==SERVER_TARGETS.length||!SERVER_TARGETS.every((id,index)=>serverKeys(value.targets[index],['id','available'])&&value.targets[index].id===id&&typeof value.targets[index].available==='boolean')||!Array.isArray(value.servers)||value.servers.length>100||!value.servers.every(row=>serverKeys(row,['id','name','target','flavor','version','state'])&&serverId(row.id)&&serverText(row.name,80)&&SERVER_TARGETS.includes(row.target)&&serverFlavor(row.flavor)&&serverVersion(row.version)&&SERVER_STATES.includes(row.state))||new Set(value.servers.map(row=>row.id)).size!==value.servers.length)throw Error('Invalid server response.');
+   respond({schemaVersion:1,manager:value.manager,targets:value.targets.map(row=>({id:row.id,available:row.available})),servers:value.servers.map(row=>({id:row.id,name:row.name,target:row.target,flavor:row.flavor,version:row.version,state:row.state}))});
+  }).catch(()=>respond({error:'Servers could not be read. Open and unlock the desktop, pair again and retry.'}));return true;
+ }
+ if(message?.type==='server-catalog-read'){
+  if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==2||!serverCursor(message.cursor)){respond({error:'Server catalogue request is unavailable.'});return false;}
+  if(!session){respond({paired:false});return false;}
+  const ownSession=session,epoch=connectionEpoch,cursor=message.cursor;
+  request({type:'read-server-catalog',session:ownSession,cursor}).then(value=>{
+   if(session!==ownSession||connectionEpoch!==epoch||!serverKeys(value,['type','schemaVersion','catalogue','flavors','versions','total','next'])||value.type!=='server-catalog'||value.schemaVersion!==1||!['ready','not-loaded','unavailable'].includes(value.catalogue)||!Array.isArray(value.flavors)||value.flavors.length>32||!value.flavors.every(row=>serverKeys(row,['id','name','targets'])&&serverFlavor(row.id)&&serverText(row.name,40)&&Array.isArray(row.targets)&&row.targets.length<=SERVER_TARGETS.length&&row.targets.every(id=>SERVER_TARGETS.includes(id))&&new Set(row.targets).size===row.targets.length)||new Set(value.flavors.map(row=>row.id)).size!==value.flavors.length||!Array.isArray(value.versions)||value.versions.length>100||!value.versions.every(row=>serverKeys(row,['id','channel'])&&serverVersion(row.id)&&SERVER_CHANNELS.includes(row.channel))||!Number.isSafeInteger(value.total)||value.total<0||!serverCursor(value.next))throw Error('Invalid server catalogue response.');
+   respond({schemaVersion:1,catalogue:value.catalogue,flavors:value.flavors.map(row=>({id:row.id,name:row.name,targets:row.targets.slice()})),versions:value.versions.map(row=>({id:row.id,channel:row.channel})),total:value.total,next:value.next});
+  }).catch(()=>respond({error:'The server catalogue could not be read. Open and unlock the desktop, pair again and retry.'}));return true;
+ }
+ if(message?.type==='server-manage'){
+  if(!serverManageOk(message)){respond({error:'Server request is unavailable.'});return false;}
+  if(!session){respond({paired:false});return false;}
+  const ownSession=session,epoch=connectionEpoch,action=message.action,named=message.server;
+  // The desktop re-authenticates the person first. Only a fixed state word and a server identifier come back.
+  request({type:'manage-server',session:ownSession,action,server:named,options:message.options},40000).then(value=>{
+   if(session!==ownSession||connectionEpoch!==epoch||!serverKeys(value,['type','schemaVersion','state','action','server'])||value.type!=='server-managed'||value.schemaVersion!==1||!SERVER_RESULTS.includes(value.state)||value.action!==action||value.server!==null&&!serverId(value.server)||action!=='create'&&value.server!==null&&value.server!==named)throw Error('Invalid server response.');
+   respond({schemaVersion:1,state:value.state,action,server:value.server});
+  }).catch(()=>respond({error:'The server request did not complete. Open and unlock the desktop, pair again and retry.'}));return true;
  }
  if(message?.type==='unlock-ladder-read'){
   if(!message||Object.getPrototypeOf(message)!==Object.prototype||Reflect.ownKeys(message).length!==1){respond({error:'Unlock level request is unavailable.'});return false;}
