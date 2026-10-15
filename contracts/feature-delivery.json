@@ -4235,8 +4235,10 @@
       "tests": [
         "scripts/test-package-integrity.ps1"
       ],
-      "evidence": [],
-      "reason": "Genuine unsigned Squirrel packaging source exists. Actual installation, installed update and removal are explicitly deferred; final package and release proof are separate.",
+      "evidence": [
+        "docs/evidence/installed-proof-1.657.1.json"
+      ],
+      "reason": "Genuine unsigned Squirrel packaging source exists. Actual installation, installed update and removal are explicitly deferred; final package and release proof are separate. Installed proof (release 1.657.1, one physical host): the per-user Squirrel update installed the exact package, the installer registered the Edge and Chrome native messaging hosts for the reviewed extension id, and the host started with ACL verification. Uninstall and rollback are not yet exercised.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -11692,8 +11694,10 @@
         "test/server-managed-adapters.test.js",
         "test/server-targets-panel.test.js"
       ],
-      "evidence": [],
-      "reason": "Servers are created and managed on the local process, local container, SSH process and SSH container targets in Vanilla, Paper, Purpur, Fabric, Forge and NeoForge, from each official API with HTTPS-only exact-host bounded fetches. Hashes are verified where published (Purpur MD5 labelled weak; Fabric and some Forge builds recorded unverified-upstream with the received bytes pinned). Start requires native license acceptance; SSH uses BatchMode with host key checking and a natively chosen key whose path never leaves the main process; containers publish on 127.0.0.1 only. A typed server.properties form and Modrinth plugin installs (SHA-512 required) are included. Verified with fakes only: no real server, container, SSH host, Java runtime, Docker daemon or download was exercised, and the new panel has not been captured in a built app.",
+      "evidence": [
+        "docs/evidence/installed-proof-1.657.1.json"
+      ],
+      "reason": "Servers are created and managed on the local process, local container, SSH process and SSH container targets in Vanilla, Paper, Purpur, Fabric, Forge and NeoForge, from each official API with HTTPS-only exact-host bounded fetches. Hashes are verified where published (Purpur MD5 labelled weak; Fabric and some Forge builds recorded unverified-upstream with the received bytes pinned). Start requires native license acceptance; SSH uses BatchMode with host key checking and a natively chosen key whose path never leaves the main process; containers publish on 127.0.0.1 only. A typed server.properties form and Modrinth plugin installs (SHA-512 required) are included. Verified with fakes only: no real server, container, SSH host, Java runtime, Docker daemon or download was exercised, and the new panel has not been captured in a built app. Installed proof (release 1.642.1): the installed app downloaded Vanilla 26.3 for the local process target and verified it against the published SHA-1; the license was not accepted and the server was not started.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -14672,9 +14676,11 @@
         "test/browser-extension-background.test.js",
         "test/browser-native-host.test.js"
       ],
-      "evidence": [],
+      "evidence": [
+        "docs/evidence/installed-proof-1.657.1.json"
+      ],
       "persistence": [],
-      "reason": "The background pairs, proposes one HTTPS URL and queries transfer status. Reviewed installed native registration and real transfer acceptance are absent. No independent installed interaction or visual acceptance is claimed.",
+      "reason": "The background pairs, proposes one HTTPS URL and queries transfer status. Reviewed installed native registration and real transfer acceptance are absent. No independent installed interaction or visual acceptance is claimed. Installed proof (release 1.657.1): the staged extension paired with the installed desktop through the real desktop prompt. The paired session did not survive the extension service worker going idle; a fix is in progress. A real download handoff was not exercised.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -14746,9 +14752,11 @@
         "test/browser-publishing-scope.test.js",
         "test/browser-desktop-adapters.test.js"
       ],
-      "evidence": [],
+      "evidence": [
+        "docs/evidence/installed-proof-1.657.1.json"
+      ],
       "persistence": [],
-      "reason": "A Progress and publication section composes a note, shows a sanitized preview, validates up to five https evidence links and requires a reviewed checkbox; the page makes no network request. After the native Confirm prompt the desktop adapter posts through the existing forge workflow with the active signed-in account and the bundled gh, token only in the child environment. A discussion comment goes to the \"Browser extension progress\" discussion when it exists; project items and drafts answer unavailable because no project target is configured. The browser receives only a fixed state word. Synthetic tests only; no live post has been made.",
+      "reason": "A Progress and publication section composes a note, shows a sanitized preview, validates up to five https evidence links and requires a reviewed checkbox; the page makes no network request. After the native Confirm prompt the desktop adapter posts through the existing forge workflow with the active signed-in account and the bundled gh, token only in the child environment. A discussion comment goes to the \"Browser extension progress\" discussion when it exists; project items and drafts answer unavailable because no project target is configured. The browser receives only a fixed state word. Synthetic tests only; no live post has been made. Installed proof (release 1.657.1): the native Confirm prompt for a progress note appeared with the exact sanitized text and was approved; the desktop answered unavailable because the test profile had no signed-in forge account, so nothing was published.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -16127,9 +16135,11 @@
       "documentation": [],
       "localization": [],
       "tests": [],
-      "evidence": [],
+      "evidence": [
+        "docs/evidence/installed-proof-1.657.1.json"
+      ],
       "persistence": [],
-      "reason": "Root installer production invokes scripts/build.ps1. browser-native-registration.mjs verifies reviewed CRX3 identity and generates the native manifest and HKCU registration plan, explicitly declaring installation and registry mutation not performed. Real installed registration, update/removal and browser-to-installed-desktop handoff acceptance remain missing.",
+      "reason": "Root installer production invokes scripts/build.ps1. browser-native-registration.mjs verifies reviewed CRX3 identity and generates the native manifest and HKCU registration plan, explicitly declaring installation and registry mutation not performed. Real installed registration, update/removal and browser-to-installed-desktop handoff acceptance remain missing. Installed proof (release 1.657.1, one physical host): the per-user Squirrel update installed the exact package, the installer registered the Edge and Chrome native messaging hosts for the reviewed extension id, and the host started with ACL verification. Uninstall and rollback are not yet exercised.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -17957,7 +17967,8 @@
     "test/server-targets-panel.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
     "src/main/browser-publish-adapter.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
     "src/main/browser-status-enrollment.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
-    "test/browser-desktop-adapters.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf"
+    "test/browser-desktop-adapters.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "docs/evidence/installed-proof-1.657.1.json": "8eb6cd8afec664d3ecbeab41619fcb2ef9048978"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
