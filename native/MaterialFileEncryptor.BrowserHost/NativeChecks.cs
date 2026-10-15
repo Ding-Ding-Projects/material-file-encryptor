@@ -44,6 +44,35 @@ public static class NativeChecks
         await NativeFrames.Write(client, new { fixture = true }, timeout.Token);
         if ((await reading)?.GetProperty("fixture").GetBoolean() != true) throw new InvalidDataException("Same-user pipe round trip failed.");
         checks++;
+        // The revoke notice: only the exact secret-free shape with a known reason is recognized.
+        JsonElement Parse(string text) { using var document = JsonDocument.Parse(text); return document.RootElement.Clone(); }
+        foreach (var reason in new[] { "exit", "lock", "update" })
+            if (!NativeFrames.IsRevokedNotice(Parse("{\"type\":\"revoked\",\"reason\":\"" + reason + "\"}"))) throw new InvalidDataException("Valid revoke notice was refused.");
+        foreach (var bad in new[] { "{\"type\":\"revoked\"}", "{\"type\":\"revoked\",\"reason\":\"crash\"}", "{\"type\":\"revoked\",\"reason\":\"exit\",\"session\":\"x\"}", "{\"type\":\"resumed\",\"reason\":\"exit\"}", "{\"type\":\"revoked\",\"reason\":7}" })
+            if (NativeFrames.IsRevokedNotice(Parse(bad))) throw new InvalidDataException("Invalid revoke notice was accepted.");
+        checks++;
+        // A notice written on the pipe while the browser is idle reaches the browser output without any request in flight, and a request
+        // afterwards still gets exactly its own reply.
+        using var browserInput = new AnonymousPipeServerStream(PipeDirection.Out); using var relayInput = new AnonymousPipeClientStream(PipeDirection.In, browserInput.ClientSafePipeHandle);
+        using var browserOutput = new AnonymousPipeServerStream(PipeDirection.In); using var relayOutput = new AnonymousPipeClientStream(PipeDirection.Out, browserOutput.ClientSafePipeHandle);
+        var relaying = Program.Relay(relayInput, client, relayOutput, "chrome-extension://fixture/");
+        await NativeFrames.Write(server, new { type = "revoked", reason = "exit" }, timeout.Token);
+        var relayed = await NativeFrames.Read(browserOutput, timeout.Token);
+        if (relayed is null || !NativeFrames.IsRevokedNotice(relayed.Value) || relayed.Value.GetProperty("reason").GetString() != "exit") throw new InvalidDataException("Idle revoke notice was not relayed.");
+        checks++;
+        await NativeFrames.Write(browserInput, new { type = "status" }, timeout.Token);
+        var asked = await NativeFrames.Read(server, timeout.Token);
+        if (asked is null || asked.Value.GetProperty("message").GetProperty("type").GetString() != "status") throw new InvalidDataException("Relay request was not forwarded.");
+        await NativeFrames.Write(server, new { type = "revoked", reason = "lock" }, timeout.Token);
+        await NativeFrames.Write(server, new { type = "status", state = "ok" }, timeout.Token);
+        var secondNotice = await NativeFrames.Read(browserOutput, timeout.Token);
+        var reply = await NativeFrames.Read(browserOutput, timeout.Token);
+        if (secondNotice is null || !NativeFrames.IsRevokedNotice(secondNotice.Value) || reply is null || reply.Value.GetProperty("state").GetString() != "ok")
+            throw new InvalidDataException("A notice during a request must not replace its reply.");
+        checks++;
+        browserInput.Dispose();
+        if (await relaying.WaitAsync(TimeSpan.FromSeconds(10), timeout.Token) != 0) throw new InvalidDataException("Relay did not end cleanly.");
+        checks++;
         // Host configuration: an unpacked extension is accepted only when its id is derived from the reviewed public key.
         const string keyHash = "75010939dc224c7ea9d8fc0013fb9116465ad7de9e0102b5874259719b622c7f", extensionId = "hfabajdjnmccemhokjnipmaabdpljbbg";
         byte[] Config(string id, string package, string key) => Encoding.UTF8.GetBytes(

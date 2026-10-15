@@ -44,12 +44,14 @@ export function createBrowserHandoffLifecycle({hostDirectory,pairingCodes,platfo
    if(closed){lastReceipt=await broker.close();state={...state,reason:'CLOSED'};}return status();
   })();try{return await starting;}finally{starting=null;}
  }
- return{initialize,status,observeDownload:event=>broker?.observeDownload(event),revoke(){pairingCodes?.clear();broker?.revoke();},get pending(){return broker?.pending||0;},async close(){closed=true;pairingCodes?.clear();broker?.revoke();if(starting)await starting;if(broker)lastReceipt=await broker.close();else lastReceipt={closed:true,processExited:true,stdioClosed:true,pendingRequests:0,pendingResponses:0,pendingDisposals:0,verified:true,deadlineMs:0};state={...state,reason:'CLOSED'};return lastReceipt;}};
+ return{initialize,status,observeDownload:event=>broker?.observeDownload(event),// With a reason (exit, lock or update) every live native port first receives a secret-free final notice; the returned promise
+// settles within the bounded notice deadline and never rejects. Without a reason the pairing is simply discarded.
+revoke(reason){const notice=reason===undefined?undefined:broker?.notifyRevoked?.(reason);pairingCodes?.clear();broker?.revoke();return notice;},get pending(){return broker?.pending||0;},async close(){closed=true;pairingCodes?.clear();broker?.revoke();if(starting)await starting;if(broker)lastReceipt=await broker.close();else lastReceipt={closed:true,processExited:true,stdioClosed:true,pendingRequests:0,pendingResponses:0,pendingDisposals:0,verified:true,deadlineMs:0};state={...state,reason:'CLOSED'};return lastReceipt;}};
 }
 
 /** Host-only transport. Its caller origin is an allowlist input, never proof of
  * browser provenance. Every pair still requires approval in the unlocked app. */
-export function createBrowserNativeBroker({config,hostPath,pairingCodes,authorizePair,isUnlocked,onProposal,readProtectionStatus,readUpdateState,authenticateProfile,validateAuthority,readProfileSummary,openEditor,browserConversion,disposeBrowserConversion,revokeProfileAuthority,confirmAction,focusAuthenticator,publishProgress,hasVisibleWindow,readSchoolMode,authenticateSchoolMode,applySchoolMode,readElementLocks,authenticateElementLock,applyElementLock,readUnlockLadder,authenticateUnlockStep,readServers,readServerCatalog,supportsServerAction,authenticateServerAction,applyServerAction,enrollStatusClient,spawnHost=spawn,now=Date.now,closeTimeoutMs=3000}={}){
+export function createBrowserNativeBroker({config,hostPath,pairingCodes,authorizePair,isUnlocked,onProposal,readProtectionStatus,readUpdateState,authenticateProfile,validateAuthority,readProfileSummary,openEditor,browserConversion,disposeBrowserConversion,revokeProfileAuthority,confirmAction,focusAuthenticator,publishProgress,hasVisibleWindow,readSchoolMode,authenticateSchoolMode,applySchoolMode,readElementLocks,authenticateElementLock,applyElementLock,readUnlockLadder,authenticateUnlockStep,readServers,readServerCatalog,supportsServerAction,authenticateServerAction,applyServerAction,enrollStatusClient,spawnHost=spawn,now=Date.now,closeTimeoutMs=3000,noticeTimeoutMs=200}={}){
  if(typeof authorizePair!=='function'||typeof isUnlocked!=='function'||typeof onProposal!=='function')throw Error('Native approval, unlocked admission and host proposal delivery are required.');
  if(!Number.isSafeInteger(closeTimeoutMs)||closeTimeoutMs<25||closeTimeoutMs>5000)throw Error('Native close timeout must be between 25 and 5000 milliseconds.');
  const allowedOrigins=validateBrowserHostConfig(config),sessions=new Map(),connections=new Map(),currentConnections=new Map(),proposals=new Map(),owners=new Set(),jobs=new Set();let child=null,closed=false,ready=false,active=0,starting=null,readyResolve,readyReject,closing=null;
@@ -161,6 +163,18 @@ export function createBrowserNativeBroker({config,hostPath,pairingCodes,authoriz
   const state={ready:'awaiting-confirmation',downloading:'downloading',completed:'completed',failed:'failed',cancelled:'cancelled'}[row.state];if(!state)return;
   item.state=state;item.received=Number.isSafeInteger(row.received)&&row.received>=0?row.received:0;item.total=Number.isSafeInteger(row.total)&&row.total>=0?row.total:null;
  }
+ // Tells every live browser port that the desktop is ending the pairing, then waits for the host to confirm delivery, but never longer
+ // than noticeTimeoutMs. It runs before revoke() clears the sessions, carries no secret, and is skipped when no pairing is held.
+ const NOTICE_REASONS=['exit','lock','update'];let noticeAck=null;
+ function notifyRevoked(reason){
+  if(!NOTICE_REASONS.includes(reason)||closed||!ready||!child||sessions.size===0||connections.size===0)return Promise.resolve(false);
+  return new Promise(resolve=>{
+   const owned=child;let timer;const finish=value=>{clearTimeout(timer);if(noticeAck===finish)noticeAck=null;resolve(value);};
+   timer=setTimeout(()=>finish(false),noticeTimeoutMs);timer.unref?.();
+   noticeAck=()=>finish(true);
+   try{owned.stdin.write(nativeFrame({type:'revoked',reason}),error=>{if(error)finish(false);});}catch{finish(false);}
+  });
+ }
  function stop(error){ready=false;revoke();connections.clear();readyReject?.(error??Error('Native browser broker closed.'));if(child){const owned=child;child=null;owned.stdin.destroy();if(owned.exitCode===null||owned.exitCode===undefined)owned.kill();}}
  async function start(){
   if(closed)throw Error('Native browser broker is closed.');if(ready)return{started:true,aclVerified:true};if(starting)return starting;
@@ -175,6 +189,7 @@ export function createBrowserNativeBroker({config,hostPath,pairingCodes,authoriz
    const decoder=createNativeMessageDecoder(envelope=>{
     if(child!==launched||closed)return;
     if(exact(envelope,['type','aclVerified'])&&envelope.type==='ready'&&envelope.aclVerified===true&&!ready){ready=true;readyResolve({started:true,aclVerified:true});return;}
+    if(ready&&exact(envelope,['type','count'])&&envelope.type==='notified'&&Number.isSafeInteger(envelope.count)&&envelope.count>=0){const done=noticeAck;noticeAck=null;done?.();return;}
     if(ready&&exact(envelope,['type','connectionId'])&&envelope.type==='disconnected'&&uuid(envelope.connectionId)){disconnectConnection(envelope.connectionId);return;}
     const identified=exact(envelope,['requestId','connectionId','origin','message'])&&uuid(envelope.connectionId);
     if(!ready||!(identified||exact(envelope,['requestId','origin','message']))||!uuid(envelope.requestId))throw Error('Invalid native broker envelope.');
@@ -202,5 +217,5 @@ export function createBrowserNativeBroker({config,hostPath,pairingCodes,authoriz
    return{closed:true,processExited,stdioClosed,pendingRequests,pendingResponses,pendingDisposals,verified:processExited&&stdioClosed&&pendingRequests===0&&pendingResponses===0&&pendingDisposals===0,deadlineMs:closeTimeoutMs};
   })();const current=closing;current.then(receipt=>{if(!receipt.verified&&closing===current)closing=null;},()=>{if(closing===current)closing=null;});return current;
  }
- return{start,receive,observeDownload,revoke,get available(){return ready&&!closed;},get pending(){return active;},close};
+ return{start,receive,observeDownload,revoke,notifyRevoked,get available(){return ready&&!closed;},get pending(){return active;},close};
 }

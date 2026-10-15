@@ -128,7 +128,14 @@ queue them for later.
   `pairing-expired` marker in `chrome.storage.session` so the state survives a
   worker restart. The extension pages poll the worker every few seconds so a
   lock or exit shows promptly, and requests to the desktop are serialized so
-  concurrent callers wait for an in-flight resume instead of failing.
+  concurrent callers wait for an in-flight resume instead of failing. A normal
+  exit, a lock and update preparation also send one secret-free final notice,
+  `{type:"revoked",reason}`, on every live native port before the pairing is
+  discarded, waiting at most 200 milliseconds for the host to confirm delivery.
+  The extension treats it as authoritative only on its own current port: it
+  clears the grant, stores the expired marker and tells open pages to re-read
+  the state, so pairing expired shows at once. A crash or kill sends no notice
+  and keeps the reconnecting behavior until a refused resume confirms expiry.
 - The installer hook registers the native host first and exits quickly, and
   every normal start rewrites a manifest that names another version's host.
 - Grants are held in a local variable for the single follow-up request and then

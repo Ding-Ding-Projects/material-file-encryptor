@@ -85,7 +85,17 @@ function ensureSession(){
  })().finally(()=>{resuming=null;});
  return resuming;
 }
-function connect(){if(port)return port;port=chrome.runtime.connectNative(HOST);const ownPort=port;port.onDisconnect.addListener(()=>{if(port!==ownPort)return;connectionEpoch++;port=null;if(session)link='reconnecting';session=null;captureId=null;if(pending){clearTimeout(pending.timer);pending.reject(fail('Desktop receiver is unavailable.','unavailable'));pending=null;}});port.onMessage.addListener(message=>{if(port!==ownPort||!pending)return;const request=pending;pending=null;clearTimeout(request.timer);if(message?.type==='error')request.reject(fail('Desktop did not accept the handoff.','refused'));else request.resolve(message);});return port;}
+// The desktop sends this secret-free final notice on every live port just before it revokes the pairing (exit, lock or update). It is
+// authoritative only on this worker's own current port with exactly this shape; a crash sends nothing and stays Reconnecting.
+// The in-memory state flips first so a status read between the awaits already says expired; open pages are then told to re-read it.
+async function revokedByDesktop(){
+ dropPort();session=null;link='expired';grantExpires=0;
+ await clearGrant();await markExpired();
+ try{chrome.runtime.sendMessage({type:'pairing-state-changed'},()=>{void chrome.runtime.lastError;});}catch{}
+}
+const REVOKE_REASONS=['exit','lock','update'];
+const isRevokedNotice=message=>Boolean(message)&&typeof message==='object'&&Object.getPrototypeOf(message)===Object.prototype&&Object.keys(message).sort().join(',')==='reason,type'&&message.type==='revoked'&&REVOKE_REASONS.includes(message.reason);
+function connect(){if(port)return port;port=chrome.runtime.connectNative(HOST);const ownPort=port;port.onDisconnect.addListener(()=>{if(port!==ownPort)return;connectionEpoch++;port=null;if(session)link='reconnecting';session=null;captureId=null;if(pending){clearTimeout(pending.timer);pending.reject(fail('Desktop receiver is unavailable.','unavailable'));pending=null;}});port.onMessage.addListener(message=>{if(port!==ownPort)return;if(isRevokedNotice(message)){void revokedByDesktop();return;}if(!pending)return;const request=pending;pending=null;clearTimeout(request.timer);if(message?.type==='error')request.reject(fail('Desktop did not accept the handoff.','refused'));else request.resolve(message);});return port;}
 // Desktop requests are strictly one at a time on the port. Callers that arrive while one is in flight (several extension pages, or the
 // reply to a resume that a second page also waited for) queue behind it instead of failing, with a bounded wait and queue length.
 let queueTail=Promise.resolve(),queued=0;

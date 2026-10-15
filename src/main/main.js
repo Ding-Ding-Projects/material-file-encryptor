@@ -96,7 +96,7 @@ let state = { locked: true, mounted: false, files: [], availableDriveLetters: []
 const inside = (parent, child) => { const rel = path.relative(parent, child); return rel === '' || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel)); };
 const nativeState = value => ({ ...value, driver: { ...value.driver, checking: false } });
 const snapshot = () => ({ ...state, operation, build: buildMetadata, browserDownloadHandoff:browserHandoff?.status()||{available:false,configured:false,reason:'NOT_INITIALIZED',installation:'not-performed'},startupRegistration: cachedStartupRegistration, defaults: { cacheDir: preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache'), driveLetter: preferences.driveLetter, driveName: preferences.driveName }, preferences: { ...preferences }, cacheDir: state.cacheDir || preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache') });
-function publish() { if(state.locked||state.lockVerified===false)browserHandoff?.revoke();updateTray(); if (window && !window.isDestroyed()) window.webContents.send('vault:state', snapshot()); }
+function publish() { if(state.locked||state.lockVerified===false)browserHandoff?.revoke('lock');updateTray(); if (window && !window.isDestroyed()) window.webContents.send('vault:state', snapshot()); }
 async function closeBrowserHandoff(){const receipt=await browserHandoff?.close();if(receipt&&receipt.verified!==true)throw new Error('Native browser handoff exit is unverified. Resolve pending pairing approval and retry Quit.');return receipt;}
 async function handleStartupFailure(){
   try{await closeBrowserHandoff();app.exit(1);return{exited:true};}
@@ -151,7 +151,7 @@ async function forceLockDrive(language = 'en') {
     detail: text('Force lock cancels active transfers and synchronization, closes the files and folders that other programs still have open on this drive, and then locks it. Save your work in those programs first, because they lose access to the drive. Everything already saved stays safe in the encrypted journal. Other programs may keep plaintext they already read.', '強制鎖定會取消進行緊嘅傳輸同同步，關閉其他程式仍然開住嘅檔案同資料夾，然後鎖定磁碟。請先喺嗰啲程式儲存你嘅工作，否則佢哋會失去磁碟存取。已經儲存嘅內容會安全留喺加密日誌入面。其他程式可能仍保留之前讀取過嘅明文。'),
   });
   if (answer.response !== 1) return {cancelled: true};
-  browserHandoff?.revoke();
+  browserHandoff?.revoke('lock');
   const result = await helper.request('forceLock');
   if (result.locked) { state = nativeState(await helper.request('statusSummary')); publish(); }
   else if (result.busy) {
@@ -251,7 +251,7 @@ async function request(method, params, context) {
     });
   }
   const commands = { mount: 'mount', unmount: 'unmount', lockVault: 'lock', keepOffline: 'keepOffline', releaseOffline: 'releaseOffline', setPartSize: 'setPartSize', resplit: 'resplit', sync: 'sync' };
-  if(['lockVault','unmount'].includes(method))browserHandoff?.revoke();
+  if(['lockVault','unmount'].includes(method))browserHandoff?.revoke('lock');
   return perform(['lockVault', 'unmount'].includes(method) ? 'unmounting' : method === 'mount' ? 'mounting' : method, () => backend(commands[method], params));
 }
 async function currentFileInventory() {
@@ -308,7 +308,7 @@ async function featureRequest(feature,action,payload,context) {
 }
 async function acquireUpdateLease() {
   if(quitPending||shuttingDown||updateInstallLease)return null;
-  updateInstallLease=true;quitPending=true;browserHandoff?.revoke();features.beginExit();
+  updateInstallLease=true;quitPending=true;await browserHandoff?.revoke('update');features.beginExit();
   const release=()=>{updateInstallLease=false;if(!shuttingDown){quitPending=false;features.endExit();}};
   try {
     if(await hasActiveWork())throw new Error('Active work prevents update installation.');
@@ -345,7 +345,7 @@ async function quit() {
     return;
   }
   if (quitPending || shuttingDown) return;
-  quitPending=true;browserHandoff?.revoke();
+  quitPending=true;await browserHandoff?.revoke('exit');
   try {
     let active=helper?await helper.request('operations'):[];
     if (operation || await features.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state))) {
@@ -431,7 +431,7 @@ else {
       flushJournal: () => helper.request('flushJournal'),
       isMounted: () => Boolean(helper) && !state.locked,
       clearMarker: () => fs.rm(sessionMarkerPath(), { force: true }),
-      beforeLock: () => { browserHandoff?.revoke(); localAdapter?.revoke(); }
+      beforeLock: () => { browserHandoff?.revoke('lock'); localAdapter?.revoke(); }
     });
     window.on('query-session-end', () => { void sessionEnd.suspend(); });
     window.on('session-end', () => { void sessionEnd.end(); });

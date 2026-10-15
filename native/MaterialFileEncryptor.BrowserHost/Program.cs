@@ -53,6 +53,11 @@ public static class NativeFrames
     }
     public static bool Exact(JsonElement value, params string[] fields) => value.ValueKind == JsonValueKind.Object
         && value.EnumerateObject().Count() == fields.Length && fields.All(field => value.TryGetProperty(field, out _));
+    // The secret-free final notice the desktop sends before it ends a pairing. Exactly this shape and these reasons, nothing else.
+    public static readonly string[] RevokeReasons = { "exit", "lock", "update" };
+    public static bool IsRevokedNotice(JsonElement value) => Exact(value, "type", "reason")
+        && value.GetProperty("type").ValueKind == JsonValueKind.String && value.GetProperty("type").GetString() == "revoked"
+        && value.GetProperty("reason").ValueKind == JsonValueKind.String && RevokeReasons.Contains(value.GetProperty("reason").GetString());
 }
 
 public static class PipeIdentity
@@ -125,16 +130,7 @@ public static class Program
                 throw new InvalidDataException("Browser caller is not allowed.");
             using var pipe = new NamedPipeClientStream(".", name, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
             using var connecting = new CancellationTokenSource(TimeSpan.FromSeconds(5)); await pipe.ConnectAsync(connecting.Token);
-            var input = Console.OpenStandardInput(); var output = Console.OpenStandardOutput();
-            for (var count = 0; count < 256; count++)
-            {
-                using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(16));
-                var message = await NativeFrames.Read(input, deadline.Token); if (message is null) return 0;
-                await NativeFrames.Write(pipe, new { origin = args[0], message = message.Value }, deadline.Token);
-                var reply = await NativeFrames.Read(pipe, deadline.Token) ?? throw new EndOfStreamException();
-                await NativeFrames.Write(output, reply, deadline.Token);
-            }
-            throw new InvalidDataException("Native connection request limit reached.");
+            return await Relay(Console.OpenStandardInput(), pipe, Console.OpenStandardOutput(), args[0]);
         }
         catch (Exception error)
         {
@@ -144,6 +140,51 @@ public static class Program
         }
     }
 
+    // Browser side of one native connection. Requests stay strictly sequential: one request, then its one reply. A desktop revoke notice
+    // can arrive at any time, including while the browser is idle, so a pump reads the pipe continuously and forwards a notice straight
+    // to the browser while handing every other frame to the request that is waiting for it.
+    public static async Task<int> Relay(Stream input, Stream pipe, Stream output, string origin)
+    {
+        using var outputLock = new SemaphoreSlim(1); using var stop = new CancellationTokenSource();
+        TaskCompletionSource<JsonElement>? waiting = null;
+        var pump = Task.Run(async () =>
+        {
+            try
+            {
+                while (true)
+                {
+                    var frame = await NativeFrames.Read(pipe, stop.Token);
+                    if (frame is null) break;
+                    if (NativeFrames.IsRevokedNotice(frame.Value))
+                    {
+                        await outputLock.WaitAsync(stop.Token);
+                        try { await NativeFrames.Write(output, frame.Value, stop.Token); } finally { outputLock.Release(); }
+                        continue;
+                    }
+                    var owner = Interlocked.Exchange(ref waiting, null) ?? throw new InvalidDataException("Unexpected desktop frame.");
+                    owner.TrySetResult(frame.Value);
+                }
+                Interlocked.Exchange(ref waiting, null)?.TrySetException(new EndOfStreamException());
+            }
+            catch (Exception error) { Interlocked.Exchange(ref waiting, null)?.TrySetException(error); }
+        });
+        try
+        {
+            for (var count = 0; count < 256; count++)
+            {
+                using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(16));
+                var message = await NativeFrames.Read(input, deadline.Token); if (message is null) return 0;
+                var reply = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously); waiting = reply;
+                await NativeFrames.Write(pipe, new { origin, message = message.Value }, deadline.Token);
+                var answer = await reply.Task.WaitAsync(deadline.Token);
+                await outputLock.WaitAsync(deadline.Token);
+                try { await NativeFrames.Write(output, answer, deadline.Token); } finally { outputLock.Release(); }
+            }
+            throw new InvalidDataException("Native connection request limit reached.");
+        }
+        finally { stop.Cancel(); try { await pump; } catch { } }
+    }
+
     static async Task<int> Broker(HashSet<string> allowed, string sid, string name)
     {
         using var shutdown = new CancellationTokenSource(); var cancel = shutdown.Token;
@@ -151,6 +192,8 @@ public static class Program
         var replies = new ConcurrentDictionary<string, TaskCompletionSource<JsonElement>>();
         var abandonedReplies = new ConcurrentDictionary<string, byte>();
         var responseState = new object();
+        // Every admitted browser pipe with the lock that serializes its writes, so a revoke notice never interleaves with a reply frame.
+        var live = new ConcurrentDictionary<string, (NamedPipeServerStream Pipe, SemaphoreSlim Lock)>();
         using var writer = new SemaphoreSlim(1);
         async Task Send(object value)
         { await writer.WaitAsync(cancel); try { await NativeFrames.Write(output, value, cancel); } finally { writer.Release(); } }
@@ -166,6 +209,7 @@ public static class Program
                 await server.WaitForConnectionAsync(cancel);
                 // This identity belongs to the admitted pipe, never browser JSON.
                 var connectionId = Guid.NewGuid().ToString();
+                using var pipeLock = new SemaphoreSlim(1); live[connectionId] = (server, pipeLock);
                 try
                 {
                     for (var count = 0; count < 256; count++)
@@ -193,7 +237,8 @@ public static class Program
                                 monitor.Cancel();
                                 try { await disconnected; throw new IOException("Native connection closed or pipelined."); }
                                 catch (OperationCanceledException) when (!deadline.IsCancellationRequested) { }
-                                await NativeFrames.Write(server, result, deadline.Token);
+                                await pipeLock.WaitAsync(deadline.Token);
+                                try { await NativeFrames.Write(server, result, deadline.Token); } finally { pipeLock.Release(); }
                             }
                             finally { monitor.Cancel(); }
                         }
@@ -201,7 +246,7 @@ public static class Program
                     }
                 }
                 catch (Exception error) when (error is IOException or InvalidDataException or OperationCanceledException or JsonException) { }
-                finally { if (!cancel.IsCancellationRequested) await Send(new { type = "disconnected", connectionId }); }
+                finally { live.TryRemove(connectionId, out _); if (!cancel.IsCancellationRequested) await Send(new { type = "disconnected", connectionId }); }
             }
         }
         var firstListener = Listen(true);
@@ -214,6 +259,24 @@ public static class Program
                 while (!cancel.IsCancellationRequested)
                 {
                     var response = await NativeFrames.Read(input, cancel); if (response is null) break;
+                    if (NativeFrames.IsRevokedNotice(response.Value))
+                    {
+                        // Deliver the notice to every live browser pipe, each within a short bound, then confirm to the desktop how many received it.
+                        var reason = response.Value.GetProperty("reason").GetString();
+                        var delivered = await Task.WhenAll(live.Values.ToArray().Select(async item =>
+                        {
+                            using var limit = CancellationTokenSource.CreateLinkedTokenSource(cancel); limit.CancelAfter(TimeSpan.FromMilliseconds(150));
+                            try
+                            {
+                                await item.Lock.WaitAsync(limit.Token);
+                                try { await NativeFrames.Write(item.Pipe, new { type = "revoked", reason }, limit.Token); } finally { item.Lock.Release(); }
+                                return 1;
+                            }
+                            catch (Exception error) when (error is IOException or ObjectDisposedException or OperationCanceledException or InvalidOperationException) { return 0; }
+                        }));
+                        await Send(new { type = "notified", count = delivered.Sum() });
+                        continue;
+                    }
                     if (!NativeFrames.Exact(response.Value, "requestId", "response")) throw new InvalidDataException("Invalid broker reply.");
                     var id = response.Value.GetProperty("requestId").GetString();
                     lock (responseState)

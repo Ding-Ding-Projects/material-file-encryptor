@@ -27,6 +27,8 @@ async function verifyPairing(){
  const next=result.paired?'paired':result.link==='reconnecting'||result.link==='expired'?result.link:'unpaired';
  if(next!==state){paired=result.paired;state=next;render();}
 }
+// The worker announces the moment the desktop ends the pairing (it quit, locked or is updating), so the state changes without waiting for the next probe.
+try{chrome.runtime.onMessage.addListener((message,sender)=>{if(sender.id===chrome.runtime.id&&message?.type==='pairing-state-changed')void verifyPairing();});}catch{}
 (function scheduleVerification(){const timer=setTimeout(async()=>{await verifyPairing();scheduleVerification();},state==='paired'?4000:10000);timer?.unref?.();})();
 
 $('workspace').addEventListener('click',()=>chrome.runtime.openOptionsPage());
