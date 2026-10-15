@@ -98,7 +98,7 @@ Two inspected source-bound documentation screenshots now appear below. Current n
 
 ### Verified preview captures
 
-Historical originals retain their dates, sources, hashes and exclusions in the [preview inventory](docs/images/captures/preview/inventory.json), [preview summary](docs/images/captures/preview/verification-summary.json), [Linux provenance](docs/images/captures/provenance.json), [Windows provenance](docs/images/captures/windows/provenance.json) and [historical gallery](https://ding-ding-projects.github.io/material-file-encryptor/gallery.html). These diagrams explain workflows; they are not screenshots.
+Earlier captures were replaced by the current ones listed below and remain unchanged in Git history, with their original dates, sources and hashes in the [preview inventory](docs/images/captures/preview/inventory.json), [preview summary](docs/images/captures/preview/verification-summary.json), [Linux provenance](docs/images/captures/provenance.json) and [Windows provenance](docs/images/captures/windows/provenance.json). These diagrams explain workflows; they are not screenshots.
 
 Updater source and future BOM-free release-index production are delivered on main. Local installer production passed at `ab975`; main `411ce5d` retains the same complete source tree after a preserved unpublished message correction. Hosted release [v1.344.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.344.1) passed the older installed-controller metadata check with an available verdict, and its independently downloaded Setup/package bytes passed archive and embedding checks. [Selected update proof](docs/evidence/hosted-update-1344-20261012.json) keeps those results separate from pending installed GUI and actual native apply acceptance. Installed startup, ready/Later interaction, restart continuity and removal are not certified. Local models must follow the documented one-click application-managed Ollama runtime procedure. The shared instructions may be updated only after actual installation and runtime proof; no shared physical directory is implied, existing installations remain untouched, and this documentation change starts no model service. See [local model boundaries](docs/features/ollama/local-models.md).
 
@@ -136,19 +136,31 @@ Material Design 3 applies to the desktop, documentation website, extension and n
 
 #### Desktop application
 
-These captures come from the built desktop application at source `2a9cb388718c3910f25ade90670758e81ddd2ce2` (executable SHA-256 `252a3fa6cf4c47dfa9d8d8f7ea1127c6f50cb1386ec01c1de6f006f37c1a4493`). Each run launched the application on a task-owned hidden desktop at 150 percent display scale, with a fresh synthetic profile, and captured the window by handle. Hashes, dimensions and capture times are in [the provenance record](docs/images/captures/material-2a9cb388/provenance.json). Drive mounting shows as unavailable because the capture host has no WinFsp driver installed.
+These are genuine captures of the installed desktop application, version 1.657.1, built from source `e96a0f0`. Each was taken by window handle on a task-owned hidden desktop at 150 percent display scale (a 1280 by 800 window), with an isolated profile and a throwaway vault holding test files only. Frames that show a private folder path were excluded, so no mounted-drive or offline-folder screen is shown. The capture manifest, kept as [desktop-capture-manifest.json](docs/images/captures/refresh-e96a0f0/desktop-capture-manifest.json), records every frame's hash and size. Capture times are unavailable.
 
-![Drive workspace in the light theme, English](docs/images/captures/material-2a9cb388/drive-light-en.png)
+![Home page with one card per section, light theme, English](docs/images/captures/refresh-e96a0f0/desktop/home-light-en.png)
 
-![Converter with Material tabs in the dark theme, English](docs/images/captures/material-2a9cb388/converter-dark-en.png)
+![New tab popover listing every section, light theme, English](docs/images/captures/refresh-e96a0f0/desktop/newtab-popover-light-en.png)
 
-![Document workflow with labelled selects and in-field clear buttons, Cantonese](docs/images/captures/material-2a9cb388/workflow-light-yue.png)
+![Locked drive screen with create and unlock actions, light theme, English](docs/images/captures/refresh-e96a0f0/desktop/drive-locked-light-en.png)
 
-![Converter in bilingual mode](docs/images/captures/material-2a9cb388/converter-light-bilingual.png)
+![History listing synthetic test files with restore actions, light theme, English](docs/images/captures/refresh-e96a0f0/desktop/history-light-en.png)
 
-![Material consent dialog in the light theme](docs/images/captures/material-2a9cb388/dialog-consent-light-en.png)
+![Recycle Bin with its actions and search, light theme, English](docs/images/captures/refresh-e96a0f0/desktop/recycle-bin-light-en.png)
 
-![Material consent dialog in the dark theme](docs/images/captures/material-2a9cb388/dialog-consent-dark-en.png)
+![Local file converter in the dark theme, English](docs/images/captures/refresh-e96a0f0/desktop/tools-converter-dark-en.png)
+
+![Local file converter in bilingual mode, light theme](docs/images/captures/refresh-e96a0f0/desktop/tools-converter-light-bilingual.png)
+
+![Document workspace in Cantonese, light theme](docs/images/captures/refresh-e96a0f0/desktop/tools-documents-light-yue.png)
+
+![Settings in the dark theme, English](docs/images/captures/refresh-e96a0f0/desktop/settings-dark-en.png)
+
+![How it works help page, light theme, English](docs/images/captures/refresh-e96a0f0/desktop/help-how-it-works-light-en.png)
+
+![Force Lock confirmation dialog, light theme](docs/images/captures/refresh-e96a0f0/desktop/force-lock-dialog-light-en.png)
+
+![Force Lock confirmation dialog, dark theme](docs/images/captures/refresh-e96a0f0/desktop/force-lock-dialog-dark-en.png)
 
 #### Browser extension Home page and popup launcher
 
@@ -184,7 +196,7 @@ Both sections before pairing: the progress note form keeps its send action disab
 
 #### Documentation site
 
-Genuine captures of the staged documentation site built from source `e96a0f0`, served from loopback and captured in a disposable headless Microsoft Edge profile, light theme, English. The narrow captures use a 320 pixel and a 360 pixel CSS viewport. They show public pages only, not native-product or installed acceptance. The earlier history-guidance captures needed a paired local profile and are no longer shown; they remain in Git history.
+Genuine captures of the staged documentation site built from source `f801c56` (the main branch at `3262874` with the new navigation), served from loopback and captured in a disposable headless Microsoft Edge profile, light theme, English. The narrow captures use a 320 pixel and a 360 pixel CSS viewport. They show public pages only, not native-product or installed acceptance. The earlier history-guidance captures needed a paired local profile and are no longer shown; they remain in Git history.
 
 ![Documentation site home page at 1280 by 900](docs/images/captures/refresh-e96a0f0/site/home-1280x900-light-en.png)
 
@@ -196,7 +208,7 @@ Genuine captures of the staged documentation site built from source `e96a0f0`, s
 
 The refresh folder holds a [manifest](docs/images/captures/refresh-e96a0f0/manifest.json) with each image's hash, size, viewport and source commit; `node scripts/refresh-screenshots.mjs capture` regenerates it.
 
-Historical originals remain available in the [reviewed historical gallery](https://ding-ding-projects.github.io/material-file-encryptor/gallery.html), [original preview inventory](docs/images/captures/preview/inventory.json), [preview verification summary](docs/images/captures/preview/verification-summary.json), [Linux capture provenance](docs/images/captures/provenance.json), and [Windows capture provenance](docs/images/captures/windows/provenance.json). Their original dates, sources, hashes, exclusions and incomplete verdicts remain unchanged. The diagrams here explain behavior; they are not screenshots or runtime evidence.
+The earlier original captures, including the history-guidance and packaged Windows images, were removed from the current tree when every screenshot was refreshed. They remain unchanged in Git history and their records stay in the [preview inventory](docs/images/captures/preview/inventory.json), [preview verification summary](docs/images/captures/preview/verification-summary.json), [Linux capture provenance](docs/images/captures/provenance.json) and [Windows capture provenance](docs/images/captures/windows/provenance.json). The diagrams here explain behavior; they are not screenshots or runtime evidence.
 
 ## Build, package and verify
 

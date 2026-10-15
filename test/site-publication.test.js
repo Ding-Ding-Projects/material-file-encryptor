@@ -85,7 +85,7 @@ test('fresh staging excludes withheld originals, stale files and raw receipts',a
  await fs.writeFile(path.join(output,'images/captures/windows/unapproved.png'),'unapproved original');
  const result=await stageSite(root,output);const extensionCaptures=JSON.parse(await fs.readFile(path.join(root,'docs/site/extension-gallery.json'),'utf8')).records.length;assert.equal(result.images,approvedPaths.length+extensionCaptures);assert.equal(result.articles,articleCount);assert.ok(result.preservedPrevious);
  for(const file of ['images/captures/windows/desktop-mounted.png','images/captures/windows/desktop-offline.png','raw-receipt.json','images/captures/desktop-linux.webm','images/captures/windows/unapproved.png','images/captures/windows/provenance.json','images/captures/preview/inventory.json','images/captures/preview/verification-summary.json','publication.mjs','wiki/Home.md'])await assert.rejects(fs.access(path.join(output,file)));
- await fs.access(path.join(output,'images/captures/windows/desktop-locked.png'));await fs.access(path.join(output,'gallery-inventory.json'));
+ await fs.access(path.join(output,approvedPaths[0]));await fs.access(path.join(output,'gallery-inventory.json'));
  const html=await fs.readFile(path.join(output,'index.html'),'utf8');assert.ok(!html.includes('desktop-mounted.png'));assert.ok(!html.includes('desktop-offline.png'));
  const inventory=JSON.parse(await fs.readFile(path.join(output,'gallery-inventory.json'),'utf8'));assert.deepEqual(inventory.records.map(r=>r.path).sort(),approvedPaths);assert.deepEqual(inventory.withheld,reviewed.withheld);
  }finally{await fs.rm(temp,{recursive:true,force:true});}
@@ -148,9 +148,9 @@ test('public projection drops all unknown fields and validates explicit provenan
  const projected=projectGalleryRecord({...record,rawReceipt:{secret:'PRIVATE_MARKER'},machinePath:'PRIVATE_MARKER',processIdentity:'PRIVATE_MARKER',approval:'approved'});
  assert.equal(JSON.stringify(projected).includes('PRIVATE_MARKER'),false);
  assert.equal('approval' in projected,false);
- assert.throws(()=>projectGalleryRecord({...record,historical:false}),/promotion receipt/);
+ assert.throws(()=>projectGalleryRecord({...record,historical:false,promotionReceiptSha256:undefined}),/promotion receipt/);
  assert.throws(()=>projectGalleryRecord({...record,artifactSha256:'invalid'}),/provenance hash/);
- assert.throws(()=>projectGalleryRecord({...record,viewportWidth:320}),/viewport/);
+ assert.throws(()=>projectGalleryRecord({...record,viewportWidth:320,viewportHeight:undefined}),/viewport/);
 });
 
 test('review inventory rejects extra bindings, overlapping exclusions and duplicate workflows',()=>{
@@ -197,13 +197,13 @@ test('gallery additions cannot publish unreviewed metadata or raw receipt fields
   const addition={...base,id:'new-approved',path:'images/captures/new-approved.png',historical:false,promotionReceiptSha256:'a'.repeat(64),approval:'approved',privacy:'public-safe',inspectionStatus:'inspected',rawReceipt:{private:'PRIVATE_MARKER'}};
   await fs.copyFile(path.join(temp,'docs',base.path),path.join(temp,'docs',addition.path));
   const review=structuredClone(reviewed);review.approvedOriginals.push(addition.path);review.reviewedBindings[addition.path]={sourceCommit:addition.sourceCommit,sha256:addition.sha256,workflow:addition.workflow};
-  await fs.writeFile(path.join(temp,'docs/site/gallery-additions.json'),JSON.stringify({...original,records:[addition]}));
+  await fs.writeFile(path.join(temp,'docs/site/gallery-additions.json'),JSON.stringify({...original,records:[...original.records,addition]}));
   await fs.writeFile(path.join(temp,'docs/site/gallery-review.json'),JSON.stringify(review));
   await assert.rejects(galleryRecords(temp),/metadata differs/);
   const {createHash}=await import('node:crypto');review.reviewedBindings[addition.path].metadataSha256=createHash('sha256').update(JSON.stringify(projectGalleryRecord(addition))).digest('hex');
   await fs.writeFile(path.join(temp,'docs/site/gallery-review.json'),JSON.stringify(review));
   const records=await galleryRecords(temp);assert.equal(records.length,approvedPaths.length+1);assert.equal(JSON.stringify(records).includes('PRIVATE_MARKER'),false);
-  addition.scope='Changed after review';await fs.writeFile(path.join(temp,'docs/site/gallery-additions.json'),JSON.stringify({...original,records:[addition]}));await assert.rejects(galleryRecords(temp),/metadata differs/);
+  addition.scope='Changed after review';await fs.writeFile(path.join(temp,'docs/site/gallery-additions.json'),JSON.stringify({...original,records:[...original.records,addition]}));await assert.rejects(galleryRecords(temp),/metadata differs/);
  }finally{await fs.rm(temp,{recursive:true,force:true});}
 });
 

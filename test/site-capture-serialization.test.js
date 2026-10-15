@@ -1,22 +1,18 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';
 import {assertGalleryPresentation,galleryRecords} from '../docs/site/publication.mjs';
 const home=await fs.readFile('docs/site/index.html','utf8'),records=await galleryRecords(process.cwd());
-test('alternate serialization and decoded accessibility claims cannot evade historical capture admission',()=>{
+const first=home.match(/src="(images\/captures\/[^"]+)"/)[1];
+test('alternate serialization cannot evade current capture admission',()=>{
  const cases=[
- home.replace('alt="Actual packaged Windows History view','alt="Current packaged Windows History view'),
- home.replace('alt="Actual packaged Windows History view','title="Current rebuilt interface" alt="Actual packaged Windows History view'),
- home.replace('aria-label="Open the historical History capture at full size"',"aria-label='Open the current History capture at full size'"),
- home.replace('aria-label="Open the historical History capture','ARIA-LABEL="Open the current History capture'),
- home.replace('src="images/captures/desktop-locked.png"',"src='images/captures/unreviewed.png'"),
- home.replace('src="images/captures/desktop-locked.png"','src = "images/captures/unreviewed.png"'),
- home.replace('Historical packaged Windows interface · source','Curr&#101;nt packaged Windows interface · source'),
- home.replace('alt="Actual packaged Windows History view','alt="Cu&#114rent packaged Windows History view'),
- home.replace('Historical packaged Windows interface · source','Cur<strong>rent</strong> packaged Windows interface · source'),
- home.replace('aria-label="Open the historical History capture','title="Current rebuilt interface" aria-label="Open the historical History capture'),
- home.replace('<h2 id="screenshots-heading">Historical interface captures.</h2>','<H2 id="screenshots-heading">Current interface captures.</H2>'),
- home.replace('<figcaption><strong>History</strong>','<FIGCAPTION>Current interface<strong>History</strong>'),
- home.replace('<p class="eyebrow">Historical Windows interface captures</p>','<P CLASS="EYEBROW">Current Windows evidence</P>')
+ home.replace(`src="${first}"`,"src='images/captures/unreviewed.png'"),
+ home.replace(`src="${first}"`,'src = "images/captures/unreviewed.png"'),
+ home.replace(`src="${first}"`,'src="images/captures/unreviewed.png"'),
+ home.replace('<h2 id="screenshots-heading">Interface captures.</h2>','<H2 id="screenshots-heading">Interface captures.</H2>'),
+ home.replace('<figcaption><strong>History</strong>','<FIGCAPTION><strong>History</strong>'),
+ home.replace('<p class="eyebrow">Inside the application</p>','<P CLASS="EYEBROW">Inside the application</P>'),
+ home.replace('data-gallery-role="current"','data-gallery-role="historical"'),
+ home.replace('data-gallery-role="current"','DATA-GALLERY-ROLE="current"')
  ];
- for(const [index,damaged]of cases.entries()){assert.notEqual(damaged,home);assert.throws(()=>assertGalleryPresentation(damaged,records),/Historical|Noncanonical|absent|outside|Unsupported/,String(index));}
+ for(const [index,damaged]of cases.entries()){assert.notEqual(damaged,home);assert.throws(()=>assertGalleryPresentation(damaged,records),/role|Noncanonical|absent|outside|Unsupported/,String(index));}
  assert.equal(assertGalleryPresentation(home,records),true);
 });

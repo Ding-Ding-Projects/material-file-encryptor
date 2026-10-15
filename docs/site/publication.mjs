@@ -99,7 +99,7 @@ export async function buildDocumentation(root,output,home) {
 }
 // Capture promotion may follow this application revision. Never derive it from
 // the documentation checkout's moving HEAD.
-export const INTENDED_CAPTURE_UI_SOURCE = '617320a910a86cf685241e544c0f93fb6794c714';
+export const INTENDED_CAPTURE_UI_SOURCE = 'e96a0f01994344e293f8e7a980bcd9ab64a4d276';
 function canonicalPresentationAttributes(tag){
  const match=tag.match(/^<([a-z][a-z0-9-]*)([\s\S]*?)\/?\s*>$/);if(!match)throw Error('Noncanonical capture presentation tag');
  const attributes={};let rest=match[2];

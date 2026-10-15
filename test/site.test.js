@@ -83,17 +83,14 @@ test('download remains inert for missing, draft, mismatched or incomplete releas
   const document=downloadDocumentFixture();assert.equal(renderReleaseDownload(document,complete),true);assert.equal(document.querySelector('#preview-download').href,complete.installer.url);
   assert.equal(renderReleaseDownload(document,pending),false);assert.equal(document.querySelector('#preview-download').disabled,true);assert.equal(document.querySelector('#preview-download').href,undefined);
 });
-test('preview download copy and historical capture labels have complete language mappings',async()=>{
+test('preview download copy has complete language mappings',async()=>{
   const {cantonese,localized}=await import('../docs/site/locales.js');
   for(const text of ['Published preview · verification pending','Verified Windows preview','Download verified preview for Windows','Direct download stays disabled until the downloaded installer, installed application and uninstall checks pass.','The downloaded installer, packaged application, installation and removal passed source-bound local checks.','View published preview','Read source-bound verification','Historical Windows interface captures','History','Recycle Bin','Explicit descendant selection','Dark appearance','Historical packaged Windows interface · source']) {
     assert.ok(cantonese[text],text);assert.equal(localized(text,'en'),text);assert.equal(localized(text,'yue'),cantonese[text]);assert.equal(localized(text,'bilingual'),`${text} / ${cantonese[text]}`);
   }
   const html=await readFile(new URL('../docs/site/index.html',import.meta.url),'utf8');
-  for(const name of ['history','recycle','descendant','dark-settings'])assert.ok(html.includes(`images/captures/preview/${name}-preview.png`));
-  assert.ok(html.includes('Current rebuilt capture acceptance is pending'));
-  assert.doesNotMatch(html,/Current Windows evidence|Open the current (?:History|Recycle Bin|descendant chooser|dark settings) capture/);
-  assert.equal(cantonese['Current Windows evidence'],undefined);
-  assert.equal(cantonese['Packaged Windows interface · source'],undefined);
+  for(const name of ['history','recycle-bin','settings-dark','help-how-it-works','home','drive-locked'])assert.ok(html.includes(`images/captures/refresh-e96a0f0/desktop/${name}-`));
+  assert.ok(html.includes('Installer and native-operation verification are separate'));
   assert.ok(html.includes(previewRelease.releaseUrl));assert.ok(html.includes(previewRelease.sourceCommit));
 });
 
@@ -132,13 +129,11 @@ test('interactive part illustration counts overhead and rejects unusable limits'
   for (const [value, unit] of [['0', 'MB'], ['-1', 'MB'], ['abc', 'GB'], ['2', 'GB'], ['1', 'TB'], ['0.00001', 'KB'], ['1e3', 'KB']]) assert.equal(exampleParts(value, unit), null);
 });
 
-test('capture gallery identifies historical Linux evidence, pending current acceptance and conceptual controls', async () => {
+test('capture gallery shows installed-application captures with their source and conceptual controls', async () => {
   const html = await readFile(new URL('../docs/site/index.html', import.meta.url), 'utf8');
-  for (const capture of ['locked', 'create', 'keyfile-choice', 'settings-dark', 'help']) assert.match(html, new RegExp(`src="images/captures/desktop-${capture}\\.png"`));
-  assert.match(html, /Historical application captures from Linux/);
-  assert.match(html, /do not prove the current rebuilt interface or a Windows filesystem mount/);
-  assert.match(html, /Historical Linux Electron interface · source <code>[a-f0-9]+<\/code>/);
-  assert.match(html, /historical interface recording is withheld pending individual privacy review/);
+  for (const capture of ['drive-locked', 'home', 'history', 'recycle-bin', 'settings-dark', 'help-how-it-works']) assert.match(html, new RegExp(`src="images/captures/refresh-[a-f0-9]+/desktop/${capture}-`));
+  assert.match(html, /Installed desktop application v[0-9.]+ · source <code>[a-f0-9]+<\/code>/);
+  assert.match(html, /A mounted drive is not shown/);
   assert.doesNotMatch(html, /<video[^>]*autoplay/);
   assert.doesNotMatch(html, /src="images\/captures\/desktop-linux\.webm"/);
   assert.match(html, /Conceptual demonstration only/);

@@ -1,20 +1,18 @@
 {
   "version": 1,
   "approvedOriginals": [
-    "images/captures/desktop-locked.png",
-    "images/captures/desktop-create.png",
-    "images/captures/desktop-keyfile-choice.png",
-    "images/captures/desktop-settings-dark.png",
-    "images/captures/desktop-help.png",
-    "images/captures/windows/desktop-locked.png",
-    "images/captures/windows/desktop-create.png",
-    "images/captures/windows/desktop-keyfile-choice.png",
-    "images/captures/windows/desktop-settings-dark.png",
-    "images/captures/windows/desktop-help.png",
-    "images/captures/preview/history-preview.png",
-    "images/captures/preview/recycle-preview.png",
-    "images/captures/preview/descendant-preview.png",
-    "images/captures/preview/dark-settings-preview.png"
+    "images/captures/refresh-e96a0f0/desktop/drive-locked-light-en.png",
+    "images/captures/refresh-e96a0f0/desktop/force-lock-dialog-dark-en.png",
+    "images/captures/refresh-e96a0f0/desktop/force-lock-dialog-light-en.png",
+    "images/captures/refresh-e96a0f0/desktop/help-how-it-works-light-en.png",
+    "images/captures/refresh-e96a0f0/desktop/history-light-en.png",
+    "images/captures/refresh-e96a0f0/desktop/home-light-en.png",
+    "images/captures/refresh-e96a0f0/desktop/newtab-popover-light-en.png",
+    "images/captures/refresh-e96a0f0/desktop/recycle-bin-light-en.png",
+    "images/captures/refresh-e96a0f0/desktop/settings-dark-en.png",
+    "images/captures/refresh-e96a0f0/desktop/tools-converter-dark-en.png",
+    "images/captures/refresh-e96a0f0/desktop/tools-converter-light-bilingual.png",
+    "images/captures/refresh-e96a0f0/desktop/tools-documents-light-yue.png"
   ],
   "withheld": [
     {
@@ -26,79 +24,151 @@
       "path": "images/captures/windows/desktop-offline.png",
       "sha256": "32c543bc8337cbcff0d01a7bc6242cf194f93bb063ea28337c3fe07440524c09",
       "reason": "The original image visibly contains an absolute local cache path. Original bytes are retained privately and excluded from current public output."
+    },
+    {
+      "path": "images/captures/desktop-locked.png",
+      "sha256": "32e094af6b113302868ec7b72e9d04faabe835dec03e4212d739ef95316512b2",
+      "reason": "Superseded by a refreshed capture of the installed application. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/desktop-create.png",
+      "sha256": "d0b0a15f63ede89b44af929d0e0ef551c8d98c8e4c7544f6e34db1b871eeca04",
+      "reason": "Superseded by a refreshed capture of the installed application. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/desktop-keyfile-choice.png",
+      "sha256": "416d4812a2a4796f59121a2990cfebc7c39dc2ec6371f0c0a38595897f16414f",
+      "reason": "Superseded by a refreshed capture of the installed application. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/desktop-settings-dark.png",
+      "sha256": "32f9800e39c0df2c3e3095ba9b0ca97b2f193338ca661799e45519521973ff59",
+      "reason": "Superseded by a refreshed capture of the installed application. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/desktop-help.png",
+      "sha256": "a02fd3f5c74f2c8737949f6a4c3c276a9adde5c9482bb888b9d910b6d268e52e",
+      "reason": "Superseded by a refreshed capture of the installed application. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/windows/desktop-locked.png",
+      "sha256": "13e57820eff14a3dffac727ccd879b9cfe46ecee58bcc33a2a515d7de05247e7",
+      "reason": "Superseded by a refreshed capture of the installed application. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/windows/desktop-create.png",
+      "sha256": "14d16d03df62fa3e40c1baf961b960f360e26c2ac4cde1b58196d51a6725b225",
+      "reason": "Superseded by a refreshed capture of the installed application. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/windows/desktop-keyfile-choice.png",
+      "sha256": "1e7181b307bcd872f3cac709c54505ae8e3cf15837ad140db645ea4a04325480",
+      "reason": "Superseded by a refreshed capture of the installed application. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/windows/desktop-settings-dark.png",
+      "sha256": "1a265c9736bf38f908e0b549f5db5b2d2867d725049642e36f9eeeda5406d8ee",
+      "reason": "Superseded by a refreshed capture of the installed application. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/windows/desktop-help.png",
+      "sha256": "79d2b260758f82ec73d6b100dfeed4a62242d4018e55cf2947ed5b37fe0e171c",
+      "reason": "Superseded by a refreshed capture of the installed application. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/preview/history-preview.png",
+      "sha256": "01bfaec0707df62eeaf2ab72dc123f9c1a7369fc27af37c60eebfeccd6d4a4f6",
+      "reason": "Superseded by a refreshed capture of the installed application. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/preview/recycle-preview.png",
+      "sha256": "cc8bb0501a386226f0e4750657ab96e1b069ec283d0c4b3785e5c7a7b878c852",
+      "reason": "Superseded by a refreshed capture of the installed application. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/preview/descendant-preview.png",
+      "sha256": "893bec80cc965b618fca80603aa5d9f0a003b7a3c8f444921bc65bfc1426043d",
+      "reason": "Superseded by a refreshed capture of the installed application. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/preview/dark-settings-preview.png",
+      "sha256": "7a28deb679398b6521156d179c8ce7a7fcc643840de34cf5bdd0afa0905904ab",
+      "reason": "Superseded by a refreshed capture of the installed application. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
     }
   ],
   "historicalBoundary": "Removing an image from the current tree and deployment does not undo its historical publication. No history is rewritten.",
   "reviewedBindings": {
-    "images/captures/desktop-locked.png": {
-      "sourceCommit": "2a9887009f3bb2b64a3e5be37754d1d6612b6fd1",
-      "sha256": "32e094af6b113302868ec7b72e9d04faabe835dec03e4212d739ef95316512b2",
-      "workflow": "drive-access"
+    "images/captures/refresh-e96a0f0/desktop/drive-locked-light-en.png": {
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "sha256": "274ad94ac5bdcf03295dc78163cb47cc0d3b4fcb87045f4c99bad9c1e18ceb25",
+      "workflow": "drive-access",
+      "metadataSha256": "3fc83cd58a0197b0bde2d48cc72822b8d7ed66b09d7d6759a5cc5bbd49f0c9ce"
     },
-    "images/captures/desktop-create.png": {
-      "sourceCommit": "2a9887009f3bb2b64a3e5be37754d1d6612b6fd1",
-      "sha256": "d0b0a15f63ede89b44af929d0e0ef551c8d98c8e4c7544f6e34db1b871eeca04",
-      "workflow": "drive-access"
+    "images/captures/refresh-e96a0f0/desktop/force-lock-dialog-dark-en.png": {
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "sha256": "b27049c25b3f2b9867215f5c70e0dd7d6d301aa77f82cfa205e43171881dbe1f",
+      "workflow": "drive-access",
+      "metadataSha256": "67d379da91b44f91dda6a44e9b8be44e96824bf2737e8ccaaedbb7234586dbe7"
     },
-    "images/captures/desktop-keyfile-choice.png": {
-      "sourceCommit": "2a9887009f3bb2b64a3e5be37754d1d6612b6fd1",
-      "sha256": "416d4812a2a4796f59121a2990cfebc7c39dc2ec6371f0c0a38595897f16414f",
-      "workflow": "drive-access"
+    "images/captures/refresh-e96a0f0/desktop/force-lock-dialog-light-en.png": {
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "sha256": "4d9b1a72c6aa2c8f4614c1ea43594ba7bf48f99e7e82291cf7f448b74498c716",
+      "workflow": "drive-access",
+      "metadataSha256": "1cb637131fac0a8525a15bd88389079cacb9fbd2192ef0b5762ee9ddf161bc66"
     },
-    "images/captures/desktop-settings-dark.png": {
-      "sourceCommit": "2a9887009f3bb2b64a3e5be37754d1d6612b6fd1",
-      "sha256": "32f9800e39c0df2c3e3095ba9b0ca97b2f193338ca661799e45519521973ff59",
-      "workflow": "preferences-help"
+    "images/captures/refresh-e96a0f0/desktop/help-how-it-works-light-en.png": {
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "sha256": "91df8ce7f243ae1e3cce9f24d18e6c02cc5f2b541a37efbc76451ff1afe7e2f0",
+      "workflow": "preferences-help",
+      "metadataSha256": "7e0a3f61bbae364c407ea56b2ab3b5e44613041a41260230f0e2b7f5b8a1397c"
     },
-    "images/captures/desktop-help.png": {
-      "sourceCommit": "2a9887009f3bb2b64a3e5be37754d1d6612b6fd1",
-      "sha256": "a02fd3f5c74f2c8737949f6a4c3c276a9adde5c9482bb888b9d910b6d268e52e",
-      "workflow": "preferences-help"
+    "images/captures/refresh-e96a0f0/desktop/history-light-en.png": {
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "sha256": "c99c2daac5b1e6be24b3e2a73e0c9895622bde98723231f66e1668f3663795bc",
+      "workflow": "history-recovery",
+      "metadataSha256": "5e39564cc58a78ee7ea5e21122af587fa4a9c4722a6ccd6c05110862e4cd6cbe"
     },
-    "images/captures/windows/desktop-locked.png": {
-      "sourceCommit": "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
-      "sha256": "13e57820eff14a3dffac727ccd879b9cfe46ecee58bcc33a2a515d7de05247e7",
-      "workflow": "drive-access"
+    "images/captures/refresh-e96a0f0/desktop/home-light-en.png": {
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "sha256": "f14f1091b78f675fab9a281cec246ca0c6e4d928b234da0e7d9d6ed9757960d4",
+      "workflow": "workspace-tools",
+      "metadataSha256": "c93dc7487d47ed100e5a1c00d939e8aa1e0ad4955bbd0f88e2409c01583eb60e"
     },
-    "images/captures/windows/desktop-create.png": {
-      "sourceCommit": "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
-      "sha256": "14d16d03df62fa3e40c1baf961b960f360e26c2ac4cde1b58196d51a6725b225",
-      "workflow": "drive-access"
+    "images/captures/refresh-e96a0f0/desktop/newtab-popover-light-en.png": {
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "sha256": "d3d48403696b564e3a832cea8e438334ef09c38cb5f4c0b2f470aae8e6c50d28",
+      "workflow": "workspace-tools",
+      "metadataSha256": "59fa4c35394e53f9caed5c343b3dc709ffb80ae63e838c0c3e8f130ceb040115"
     },
-    "images/captures/windows/desktop-keyfile-choice.png": {
-      "sourceCommit": "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
-      "sha256": "1e7181b307bcd872f3cac709c54505ae8e3cf15837ad140db645ea4a04325480",
-      "workflow": "drive-access"
+    "images/captures/refresh-e96a0f0/desktop/recycle-bin-light-en.png": {
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "sha256": "f627395b33b837e940b606e2b8fd3aa0c5b4fb9fed420dfa975469dc001ac53c",
+      "workflow": "history-recovery",
+      "metadataSha256": "d0e67c7aa179445adbfa1686e72481ab049519a202d64a7e2b79c3a33b039b83"
     },
-    "images/captures/windows/desktop-settings-dark.png": {
-      "sourceCommit": "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
-      "sha256": "1a265c9736bf38f908e0b549f5db5b2d2867d725049642e36f9eeeda5406d8ee",
-      "workflow": "preferences-help"
+    "images/captures/refresh-e96a0f0/desktop/settings-dark-en.png": {
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "sha256": "782cdb7116a74974db7eaedd764774ba4c7024b0c677e46030f074bc55626134",
+      "workflow": "preferences-help",
+      "metadataSha256": "9349a72c0cfbda8045843af4344e5c306ef4ab467f9ef83f811905623f448a6c"
     },
-    "images/captures/windows/desktop-help.png": {
-      "sourceCommit": "c74b3a6828e3d1893015598f2df1c9bd4ce84c32",
-      "sha256": "79d2b260758f82ec73d6b100dfeed4a62242d4018e55cf2947ed5b37fe0e171c",
-      "workflow": "preferences-help"
+    "images/captures/refresh-e96a0f0/desktop/tools-converter-dark-en.png": {
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "sha256": "b8c2b9fd727901087a4d618820603da189c69cba096c98c5582c60668631f9f1",
+      "workflow": "workspace-tools",
+      "metadataSha256": "ed2ef59b59cb6ffcb78a91ec6351d5aef3bbc131826215ff7f983add9c1ad2fd"
     },
-    "images/captures/preview/history-preview.png": {
-      "sourceCommit": "1e16dea8edb66ea5e6cf31009b0dbcc953f18d74",
-      "sha256": "01bfaec0707df62eeaf2ab72dc123f9c1a7369fc27af37c60eebfeccd6d4a4f6",
-      "workflow": "history-recovery"
+    "images/captures/refresh-e96a0f0/desktop/tools-converter-light-bilingual.png": {
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "sha256": "e88f8d51faea93d3aacbcebe019248844e9862b5d1ac2d7a10c54d82f5b682c7",
+      "workflow": "workspace-tools",
+      "metadataSha256": "3f05bc9e45cf00b345bb2f3c1c7d22bda4c5ea8e64240e265fe26d12dfcf302d"
     },
-    "images/captures/preview/recycle-preview.png": {
-      "sourceCommit": "1e16dea8edb66ea5e6cf31009b0dbcc953f18d74",
-      "sha256": "cc8bb0501a386226f0e4750657ab96e1b069ec283d0c4b3785e5c7a7b878c852",
-      "workflow": "history-recovery"
-    },
-    "images/captures/preview/descendant-preview.png": {
-      "sourceCommit": "1e16dea8edb66ea5e6cf31009b0dbcc953f18d74",
-      "sha256": "893bec80cc965b618fca80603aa5d9f0a003b7a3c8f444921bc65bfc1426043d",
-      "workflow": "history-recovery"
-    },
-    "images/captures/preview/dark-settings-preview.png": {
-      "sourceCommit": "1e16dea8edb66ea5e6cf31009b0dbcc953f18d74",
-      "sha256": "7a28deb679398b6521156d179c8ce7a7fcc643840de34cf5bdd0afa0905904ab",
-      "workflow": "preferences-help"
+    "images/captures/refresh-e96a0f0/desktop/tools-documents-light-yue.png": {
+      "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+      "sha256": "3f5fc7ca1029782ea3efdcd1235002af22e51d26d4724a6b03a3e4af6da675dc",
+      "workflow": "workspace-tools",
+      "metadataSha256": "960b4946f45757fb881e51f9162d1bb5ab0e13ea63fedf0501c016be924e8abc"
     }
   },
   "workflows": [
@@ -113,6 +183,10 @@
     {
       "id": "preferences-help",
       "title": "Preferences and help"
+    },
+    {
+      "id": "workspace-tools",
+      "title": "Workspace and tools"
     }
   ]
 }
