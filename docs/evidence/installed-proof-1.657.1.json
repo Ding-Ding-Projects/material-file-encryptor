@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "kind": "installed-application-proof",
+  "recordedAtUtc": "2026-10-15",
+  "host": "One physical Windows 11 host; an off-screen desktop was used for every launch, interaction and capture. Machine names, user names and local paths are omitted.",
+  "release": {
+    "tag": "v1.657.1",
+    "sourceCommit": "e96a0f01994344e293f8e7a980bcd9ab64a4d276",
+    "fullPackage": {"bytes": 403813559, "sha1": "a82d26ac496706f3ced9593014bdb1528e2ce02e", "matchesReleasesRow": true},
+    "provenanceBindsCommit": true,
+    "setupSignature": "NotSigned",
+    "installedExecutableSha256": "f456408fb5bad4dcf528e5a680453cbb593d98e4d88f1cd65c102ebb55b54a3e"
+  },
+  "update": {"from": "1.648.1", "to": "1.657.1", "route": "Squirrel Setup.exe run per user", "result": "installed version and source commit reported by the running application matched"},
+  "nativeMessagingRegistration": {
+    "keys": ["HKCU Software Microsoft Edge NativeMessagingHosts org.dingding.material_file_encryptor.downloads", "HKCU Software Google Chrome NativeMessagingHosts org.dingding.material_file_encryptor.downloads"],
+    "allowedOrigins": ["chrome-extension://hfabajdjnmccemhokjnipmaabdpljbbg/"],
+    "brokerStart": "ready with ACL verified",
+    "result": "registered by the installer and accepted by the host"
+  },
+  "pairing": {
+    "extensionId": "hfabajdjnmccemhokjnipmaabdpljbbg",
+    "browser": "Microsoft Edge, disposable profile, unpacked staged extension",
+    "desktopPromptApproved": true,
+    "result": "paired; the extension reported the desktop version 1.657.1",
+    "limitation": "The paired session did not survive the extension service worker going idle; a fix is in progress."
+  },
+  "progressNoteConfirm": {
+    "nativeConfirmPromptShown": true,
+    "approved": true,
+    "result": "unavailable",
+    "reason": "The test profile had no signed-in forge account, so nothing was published. No credentials were entered."
+  },
+  "lock": {
+    "drive": "WinFsp 2.1 test drive in a disposable vault",
+    "plainLockWithOpenHandle": "refused with a message that a program still has files open",
+    "forceLock": "dismounted and locked",
+    "dataAfterUnlock": "files byte-identical by SHA-256; all items present",
+    "sessionEndAutoLock": "not exercised; no host restart, shutdown or sign-out was performed"
+  },
+  "serverManager": {
+    "flavor": "vanilla", "version": "26.3", "target": "local process",
+    "download": {"bytes": 62294556, "sha1": "33680f5f2ac32864d6d7cf5e56a705fdb3e05f4c", "verifiedAgainstPublishedSha1": true},
+    "licenseAccepted": false,
+    "started": false,
+    "note": "Prepared on release v1.642.1; the license must be accepted by the user before any start."
+  },
+  "captures": {"count": 147, "screens": 20, "themes": ["light", "dark"], "languages": ["en", "yue", "bilingual"], "physicalSize": "1920x1200 (1280x800 window at 150 percent scale)"},
+  "notVerified": ["store-installed extension", "live forge publication", "session-end auto lock", "server start after license acceptance", "uninstall and rollback"]
+}
