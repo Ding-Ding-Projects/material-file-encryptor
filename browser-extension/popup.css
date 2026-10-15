@@ -11,3 +11,14 @@
 #popup-logo{inline-size:40px;block-size:40px;border-radius:14px;object-fit:cover}
 /* Shared components read --mfe-font; point it and the page body at the bundled face. */
 :root{--mfe-font:"MFE Noto Sans",system-ui,sans-serif}body{font-family:var(--mfe-font)}
+/* Mini home page: a compact grid of section buttons. The whole cell is the target, and it stays inside the 380 pixel popup. */
+.launcher h2{margin-block-end:8px}
+.launcher-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.launcher-grid>li,.launcher-grid>li+li{margin:0}
+.launcher-grid>li{position:relative;isolation:isolate;overflow:hidden;display:grid;justify-items:center;align-content:start;gap:2px;min-inline-size:0;padding:8px 4px;border:1px solid var(--md-sys-color-outline-variant);border-radius:16px;background:var(--md-sys-color-surface);cursor:pointer;transition:border-color 200ms cubic-bezier(.2,0,0,1)}
+.launcher-grid>li::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--md-sys-color-on-surface);opacity:0;transition:opacity 200ms cubic-bezier(.2,0,0,1);pointer-events:none}
+.launcher-grid>li:hover{border-color:var(--md-sys-color-outline)}.launcher-grid>li:hover::before{opacity:.08}.launcher-grid>li:focus-within::before{opacity:.1}.launcher-grid>li:active::before{opacity:.12}
+.launcher-grid svg{display:block;inline-size:24px;block-size:24px;fill:currentColor}
+.launcher-grid md-icon-button{--md-icon-button-icon-color:var(--md-sys-color-primary);--md-icon-button-hover-icon-color:var(--md-sys-color-primary);--md-icon-button-focus-icon-color:var(--md-sys-color-primary);--md-icon-button-pressed-icon-color:var(--md-sys-color-primary)}
+.launcher-grid span{max-inline-size:100%;font-size:12px;line-height:16px;text-align:center;overflow-wrap:anywhere;white-space:pre-line}
+@media(prefers-reduced-motion:reduce){.launcher-grid>li,.launcher-grid>li::before{transition:none}}
