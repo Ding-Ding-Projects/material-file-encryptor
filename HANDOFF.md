@@ -1,3 +1,24 @@
+## Extension workflows, installed proof and motion audit, 2026-10-15
+
+No required-feature row is missing on any surface any more: desktop, site and extension each have 96 unverified and 9 not applicable rows. Unverified means the workflow exists and is tested, but has no complete installed proof yet.
+
+Installed proof on one physical Windows host, recorded in `docs/evidence/installed-proof-1.657.1.json`, `installed-proof-1.686.1.json` and `installed-proof-1.692.1.json`:
+- install and update, with the native messaging host registered by the installer and repaired at start;
+- pairing with the browser extension, which survives the extension worker going idle; quit and lock show the pairing as expired within about a second;
+- the progress-note Confirm prompt, which was shown and approved, but nothing was published because no forge account was signed in;
+- force lock with a file held open, with data intact after unlocking;
+- a Vanilla 26.3 download verified against the published SHA-1.
+
+Runtime Material and motion audit, recorded in `docs/evidence/runtime-motion-9c8191a.json` (full extension and renderer, English, Cantonese and bilingual) and `runtime-motion-9c8191a-site-sampled.json` (sampled site): no findings and no reduced-motion leaks, including inside Material Web shadow roots. A negative control without the shadow-root fix reports 310 leaks.
+
+Open, in order:
+- **Local container target (deferred by the owner to the next owner).** Docker Desktop is not installed on the verification host. Install it (it needs administrator approval and possibly a restart, both done by the owner), then prove the local container target in the server manager with a real container: create, start, status, logs and stop.
+- Publish the one approved test note to the "Browser extension progress" discussion once the owner has signed in to a forge account inside the app.
+- Start the prepared Vanilla server after the owner accepts its license in the app, then verify that it listens and stops cleanly.
+- Session-end automatic lock on a real restart, sign-out or shutdown (owner action only).
+- The full site runtime audit of every article, and the same runtime audit inside the installed desktop app.
+- Uninstall and rollback proof.
+
 ## Website preservation checkpoint, 2026-10-15
 
 The owner requested immediate preservation and task-scoped cleanup. Work stopped with the website objective incomplete. This request is not an account-allowance measurement.
