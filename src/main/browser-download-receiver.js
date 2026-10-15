@@ -34,7 +34,10 @@ export function createBrowserDownloadReceiver({allowedOrigins=[],authorizePair,i
     if(paired.seen.size>=64||paired.seen.has(item.browserDownloadId))throw new Error('Browser proposal is duplicated or exceeds the session limit.');const bound=generation;paired.seen.add(item.browserDownloadId);
     const id=randomUUID();await onProposal({id,origin,...item});if(bound!==generation)throw new Error('The desktop locked during capture.');unlocked();return{type:'proposed',id,state:'awaiting-confirmation'};
    }finally{active--;}
-  },revoke,close(){closed=true;revoke();pairingCodes?.clear();},
+  },
+  // True only while this origin holds exactly this unexpired, unrevoked pairing session.
+  holds(origin,session){const paired=sessions.get(origin);return Boolean(paired)&&paired.expires>now()&&same(session,paired.session);},
+  revoke,close(){closed=true;revoke();pairingCodes?.clear();},
  };
 }
 

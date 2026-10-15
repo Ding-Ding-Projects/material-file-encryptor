@@ -36,16 +36,58 @@ function serverManageOk(message){
 const REPORT_COUNTS=['notes','schedules','tickets','operations'];
 const reportExact=(row,keys)=>row!==null&&typeof row==='object'&&!Array.isArray(row)&&Object.keys(row).sort().join(',')===[...keys].sort().join(',');
 const reportValid=report=>reportExact(report,['version','connection','lastRefresh','counts'])&&typeof report.version==='string'&&/^\d{1,9}\.\d{1,9}\.\d{1,9}(?:-[0-9A-Za-z.-]{1,32})?$/.test(report.version)&&report.connection==='paired'&&(report.lastRefresh===null||typeof report.lastRefresh==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$/.test(report.lastRefresh))&&reportExact(report.counts,REPORT_COUNTS)&&REPORT_COUNTS.every(key=>Number.isSafeInteger(report.counts[key])&&report.counts[key]>=0&&report.counts[key]<=9999);
-let port=null,session=null,sequence=0,pending=null,captureId=null,connectionEpoch=0;
-function disconnect(){connectionEpoch++;port?.disconnect();port=null;session=null;captureId=null;if(pending){clearTimeout(pending.timer);pending.reject(new Error('Desktop connection closed.'));pending=null;}}
-function connect(){if(port)return port;port=chrome.runtime.connectNative(HOST);const ownPort=port;port.onDisconnect.addListener(()=>{if(port!==ownPort)return;connectionEpoch++;port=null;session=null;captureId=null;if(pending){clearTimeout(pending.timer);pending.reject(new Error('Desktop receiver is unavailable.'));pending=null;}});port.onMessage.addListener(message=>{if(port!==ownPort||!pending)return;const request=pending;pending=null;clearTimeout(request.timer);if(message?.type==='error')request.reject(new Error('Desktop did not accept the handoff.'));else request.resolve(message);});return port;}
-function request(message,timeoutMs=30000){if(pending)return Promise.reject(new Error('Resolve the current desktop handoff first.'));return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{pending=null;disconnect();reject(new Error('Desktop handoff timed out.'));},timeoutMs);pending={resolve,reject,timer};try{connect().postMessage(message);}catch(error){clearTimeout(timer);pending=null;disconnect();reject(new Error('Install and open the desktop receiver first.'));}});}
+// The pairing grant is the session value the desktop issued after the person approved the pairing. A worker idle for about 30 seconds is
+// stopped by the browser and loses its memory and its native port, so the grant is also kept in session storage: browser memory only,
+// cleared when the browser closes, never synced and never written to disk. A new worker presents it again on a new port and the desktop
+// accepts it only while the same session is still valid for this extension origin. It is never placed in local storage, messages to pages or logs.
+const GRANT_KEY='pairing-grant',GRANT_PATTERN=/^[A-Za-z0-9_-]{43}$/;
+const grantStore=()=>{try{return chrome.storage&&chrome.storage.session||null;}catch{return null;}};
+async function saveGrant(value,expires){try{await grantStore()?.set({[GRANT_KEY]:{session:value,expires}});}catch{}}
+async function loadGrant(){try{const row=await grantStore()?.get(GRANT_KEY);const held=row&&row[GRANT_KEY];return held&&typeof held.session==='string'&&GRANT_PATTERN.test(held.session)&&Number.isSafeInteger(held.expires)?held:null;}catch{return null;}}
+async function clearGrant(){try{await grantStore()?.remove(GRANT_KEY);}catch{}}
+let port=null,session=null,sequence=0,pending=null,captureId=null,connectionEpoch=0,grantExpires=0;
+// What the extension can truthfully say about the link: paired, reconnecting (the grant is kept and the next request resumes it),
+// expired (the desktop no longer accepts it, so pair again) or unpaired.
+let link='unpaired',resuming=null;
+const fail=(text,kind)=>Object.assign(new Error(text),{kind});
+// Ends this worker's port and in-memory session but keeps the stored grant, so the next request can resume without a prompt.
+function dropPort(){connectionEpoch++;port?.disconnect();port=null;if(session)link='reconnecting';session=null;captureId=null;if(pending){clearTimeout(pending.timer);pending.reject(fail('Desktop connection closed.','unavailable'));pending=null;}}
+// The person chose Disconnect: tell the desktop to end the session, then forget the grant so nothing can resume it.
+async function disconnect(){
+ try{if(!session&&await loadGrant())await ensureSession();
+  if(session&&!pending)await request({type:'unpair',session},3000).catch(()=>{});}catch{}
+ await clearGrant();dropPort();session=null;link='unpaired';grantExpires=0;
+}
+const grantExpired=()=>session!==null&&grantExpires>0&&Date.now()>=grantExpires;
+async function expireGrant(){await clearGrant();dropPort();session=null;link='expired';grantExpires=0;}
+// Lazily reconnect: when a request arrives and this worker holds no session, present the stored grant on a new port.
+function ensureSession(){
+ if(session)return Promise.resolve(true);if(resuming)return resuming;
+ resuming=(async()=>{
+  const held=await loadGrant();if(session)return true;
+  if(!held){if(link!=='expired')link='unpaired';return false;}
+  if(Date.now()>=held.expires){await expireGrant();return false;}
+  link='reconnecting';
+  try{
+   const result=await request({type:'resume',session:held.session},15000);
+   if(!result||result.type!=='resumed'||!Number.isSafeInteger(result.expiresInSeconds)||result.expiresInSeconds<1||result.expiresInSeconds>900)throw fail('Desktop resume response is invalid.','refused');
+   session=held.session;grantExpires=Date.now()+result.expiresInSeconds*1000;link='paired';return true;
+  }catch(error){
+   if(error?.kind==='refused'){await expireGrant();}
+   return false;
+  }
+ })().finally(()=>{resuming=null;});
+ return resuming;
+}
+function connect(){if(port)return port;port=chrome.runtime.connectNative(HOST);const ownPort=port;port.onDisconnect.addListener(()=>{if(port!==ownPort)return;connectionEpoch++;port=null;if(session)link='reconnecting';session=null;captureId=null;if(pending){clearTimeout(pending.timer);pending.reject(fail('Desktop receiver is unavailable.','unavailable'));pending=null;}});port.onMessage.addListener(message=>{if(port!==ownPort||!pending)return;const request=pending;pending=null;clearTimeout(request.timer);if(message?.type==='error')request.reject(fail('Desktop did not accept the handoff.','refused'));else request.resolve(message);});return port;}
+function request(message,timeoutMs=30000){if(pending)return Promise.reject(new Error('Resolve the current desktop handoff first.'));return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{pending=null;dropPort();reject(fail('Desktop handoff timed out.','timeout'));},timeoutMs);pending={resolve,reject,timer};try{connect().postMessage(message);}catch(error){clearTimeout(timer);pending=null;dropPort();reject(fail('Install and open the desktop receiver first.','unavailable'));}});}
 // An optional one-time code shown on the desktop travels with the pair request only; it is never kept.
-async function pair(code){const result=await request(code===undefined?{type:'pair'}:{type:'pair',code});if(result?.type!=='paired'||typeof result.session!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(result.session))throw new Error('Desktop pairing response is invalid.');session=result.session;return{paired:true};}
-async function propose(link){if(!session)throw new Error('Pair this browser with the unlocked desktop first.');const url=new URL(link);if(url.protocol!=='https:'||url.username||url.password||url.port&&url.port!=='443'||link.length>2048)throw new Error('Choose a public HTTPS link without credentials.');let filename;try{filename=decodeURIComponent(url.pathname.split('/').pop()||'download.bin');}catch{throw new Error('The download file name is invalid.');}filename=filename.replace(/[\\/<>:"|?*\x00-\x1f\x7f]/g,'_').slice(0,180)||'download.bin';if(['.','..'].includes(filename))filename='download.bin';const result=await request({type:'propose',session,proposal:{url:url.href,filename,browserDownloadId:++sequence}});if(result?.type!=='proposed'||result.state!=='awaiting-confirmation'||typeof result.id!=='string'||!/^[a-f0-9-]{36}$/.test(result.id))throw new Error('Desktop proposal response is invalid.');captureId=result.id;return{proposed:true,id:captureId,state:result.state};}
+async function pair(code){const result=await request(code===undefined?{type:'pair'}:{type:'pair',code},40000);if(result?.type!=='paired'||typeof result.session!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(result.session))throw new Error('Desktop pairing response is invalid.');const lifetime=Number.isSafeInteger(result.expiresInSeconds)&&result.expiresInSeconds>=1&&result.expiresInSeconds<=900?result.expiresInSeconds:900;session=result.session;grantExpires=Date.now()+lifetime*1000;link='paired';await saveGrant(session,grantExpires);return{paired:true};}
+async function propose(link){if(!session&&!await ensureSession())throw new Error('Pair this browser with the unlocked desktop first.');const url=new URL(link);if(url.protocol!=='https:'||url.username||url.password||url.port&&url.port!=='443'||link.length>2048)throw new Error('Choose a public HTTPS link without credentials.');let filename;try{filename=decodeURIComponent(url.pathname.split('/').pop()||'download.bin');}catch{throw new Error('The download file name is invalid.');}filename=filename.replace(/[\\/<>:"|?*\x00-\x1f\x7f]/g,'_').slice(0,180)||'download.bin';if(['.','..'].includes(filename))filename='download.bin';const result=await request({type:'propose',session,proposal:{url:url.href,filename,browserDownloadId:++sequence}});if(result?.type!=='proposed'||result.state!=='awaiting-confirmation'||typeof result.id!=='string'||!/^[a-f0-9-]{36}$/.test(result.id))throw new Error('Desktop proposal response is invalid.');captureId=result.id;return{proposed:true,id:captureId,state:result.state};}
 chrome.runtime.onInstalled.addListener(()=>{chrome.contextMenus.create({id:'propose-download',title:'Download with Material File Encryptor…',contexts:['link'],targetUrlPatterns:['https://*/*']});});
 chrome.contextMenus.onClicked.addListener(info=>{if(info.menuItemId==='propose-download')void propose(info.linkUrl).catch(()=>{chrome.action.setBadgeText({text:'!'});chrome.action.setTitle({title:'Pair the browser and retry the download handoff.'});});});
-chrome.runtime.onMessage.addListener((message,sender,respond)=>{if(sender.id!==chrome.runtime.id||!['popup.html','options.html'].some(path=>sender.url===chrome.runtime.getURL(path))||sender.frameId!==undefined&&sender.frameId!==0)return false;
+const statusReply=()=>({paired:session!==null,...(session===null&&(link==='reconnecting'||link==='expired')?{link}:{})});
+const handleMessage=(message,sender,respond)=>{if(sender.id!==chrome.runtime.id||!['popup.html','options.html'].some(path=>sender.url===chrome.runtime.getURL(path))||sender.frameId!==undefined&&sender.frameId!==0)return false;
  if(['converter-catalog','converter-prepare','converter-enqueue','converter-list','converter-control'].includes(message?.type)){
   const fields={'converter-catalog':[],'converter-prepare':[],'converter-enqueue':['selection','adapterId'],'converter-list':['cursor'],'converter-control':['id','action']}[message.type];
   const uuid=value=>typeof value==='string'&&/^[a-f0-9-]{36}$/.test(value);
@@ -219,4 +261,17 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{if(sender.id!==c
  if(!message||Object.keys(message).length!==1||!session){respond({error:'Protection observations are unavailable.'});return false;}
  const ownSession=session,epoch=connectionEpoch;
  request({type:'protection-status',session:ownSession}).then(value=>{if(session!==ownSession||connectionEpoch!==epoch||!value||Object.keys(value).sort().join(',')!=='browserPermission,profile,schemaVersion,sharedMode,type'||value.type!=='protection-status'||value.schemaVersion!==1||!['authenticated','locked','expired','unknown'].includes(value.profile)||!['active','inactive','unknown'].includes(value.sharedMode)||value.browserPermission!=='unavailable')throw Error('Protection observation is invalid.');respond({schemaVersion:1,profile:value.profile,sharedMode:value.sharedMode,browserPermission:'unavailable'});}).catch(()=>respond({error:'Protection observations are unavailable.'}));return true;
- }if(message?.type==='pair'){const keys=Reflect.ownKeys(message);if(!(keys.length===1||keys.length===2&&keys.includes('code'))||keys.length===2&&!/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{8}$/.test(message.code)){respond({error:'The pairing code is not valid.'});return false;}pair(keys.length===2?message.code:undefined).then(respond,error=>respond({error:error.message}));return true;}if(message?.type==='status'){if(!session||!captureId){respond({paired:!!session});return false;}request({type:'status',session,id:captureId}).then(result=>{if(result?.type!=='status'||result.id!==captureId||!['awaiting-confirmation','downloading','completed','failed','cancelled'].includes(result.state))throw new Error('Desktop status response is invalid.');respond({paired:true,capture:{id:result.id,state:result.state,received:Number.isSafeInteger(result.received)&&result.received>=0?result.received:0,total:Number.isSafeInteger(result.total)&&result.total>=0?result.total:null}});}).catch(()=>respond({paired:!!session,error:'Desktop transfer status is unavailable.'}));return true;}if(message?.type==='disconnect'){disconnect();respond({paired:false});return false;}return false;});
+ }if(message?.type==='pair'){const keys=Reflect.ownKeys(message);if(!(keys.length===1||keys.length===2&&keys.includes('code'))||keys.length===2&&!/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{8}$/.test(message.code)){respond({error:'The pairing code is not valid.'});return false;}pair(keys.length===2?message.code:undefined).then(respond,error=>respond({error:error.message}));return true;}if(message?.type==='status'){if(!session||!captureId){respond(statusReply());return false;}request({type:'status',session,id:captureId}).then(result=>{if(result?.type!=='status'||result.id!==captureId||!['awaiting-confirmation','downloading','completed','failed','cancelled'].includes(result.state))throw new Error('Desktop status response is invalid.');respond({paired:true,capture:{id:result.id,state:result.state,received:Number.isSafeInteger(result.received)&&result.received>=0?result.received:0,total:Number.isSafeInteger(result.total)&&result.total>=0?result.total:null}});}).catch(()=>respond({paired:!!session,error:'Desktop transfer status is unavailable.'}));return true;}if(message?.type==='disconnect'){disconnect().then(()=>respond({paired:false}),()=>respond({paired:false}));return true;}return false;};
+// Requests that need a pairing first try to resume the stored grant when this worker has just restarted.
+const RESUMABLE=new Set(['converter-catalog','converter-prepare','converter-enqueue','converter-list','converter-control','workflow-discover','workflow-editor-open','status-client-enroll','desktop-status','authenticator-focus','publish-progress-request','school-mode-read','school-mode-set','element-locks-read','element-lock-set','servers-read','server-catalog-read','server-manage','unlock-ladder-read','unlock-step-request','protected-discover','protection-status','status']);
+chrome.runtime.onMessage.addListener((message,sender,respond)=>{
+ const trusted=sender.id===chrome.runtime.id&&['popup.html','options.html'].some(path=>sender.url===chrome.runtime.getURL(path))&&(sender.frameId===undefined||sender.frameId===0);
+ if(!trusted||!RESUMABLE.has(message?.type)||grantStore()===null||session&&!grantExpired())return handleMessage(message,sender,respond);
+ void(async()=>{
+  if(grantExpired())await expireGrant();
+  if(!session)await ensureSession();
+  let answered=false;const once=value=>{answered=true;respond(value);};
+  if(handleMessage(message,sender,once)===false&&!answered)respond();
+ })().catch(()=>respond({error:'Desktop connection is unavailable.'}));
+ return true;
+});

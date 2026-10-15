@@ -67,9 +67,13 @@ export function createBrowserNativeBroker({config,hostPath,pairingCodes,authoriz
  const unlockLadders=createBrowserUnlockLadderMediation({getPair:origin=>sessions.get(origin),isUnlocked,canPrompt:()=>hasVisibleWindow?.()===true,readUnlockLadder,authenticate:authenticateUnlockStep,gate:promptGate,now});
  const servers=createBrowserServerMediation({getPair:origin=>sessions.get(origin),isUnlocked,canPrompt:()=>hasVisibleWindow?.()===true,readServers,readServerCatalog,supports:supportsServerAction,authenticate:authenticateServerAction,applyServerAction,gate:promptGate,now});
  const revoke=()=>{confirms.revoke();publishes.revoke();servers.revoke();schools.revoke();elementLocks.revoke();unlockLadders.revoke();revokeProfileAuthority?.();conversions.revoke();receiver.revoke();mediation.revoke();workflows.revoke();sessions.clear();currentConnections.clear();proposals.clear();};
+ // A lost native port ends everything bound to that port, but keeps the pairing session itself, detached and unusable,
+ // until the same extension presents it again on a new port or it expires. Lock, exit, update preparation and an explicit
+ // disconnect still call revoke(), which discards the session.
+ const detach=origin=>{confirms.revoke();publishes.revoke();servers.revoke();schools.revoke();elementLocks.revoke();unlockLadders.revoke();revokeProfileAuthority?.();conversions.revoke();mediation.revoke();workflows.revoke();currentConnections.delete(origin);const pair=sessions.get(origin);if(pair){pair.connectionId=null;pair.detached=true;}};
  function disconnectConnection(connectionId){
   const origin=connections.get(connectionId);connections.delete(connectionId);
-  if(origin&&currentConnections.get(origin)===connectionId)revoke();
+  if(origin&&currentConnections.get(origin)===connectionId)detach(origin);
  }
  const unlocked=()=>{if(closed||isUnlocked()!==true){revoke();pairingCodes?.clear();throw Error('Unlock the desktop before receiving downloads.');}};
  async function receive(origin,message,connectionId=null){
@@ -77,7 +81,23 @@ export function createBrowserNativeBroker({config,hostPath,pairingCodes,authoriz
   try{
    if(connectionId!==null&&(!uuid(connectionId)||connections.get(connectionId)!==origin))throw Error('Native browser connection is unavailable.');
    if(connectionId!==null&&(exact(message,['type'])||exact(message,['type','code']))&&message.type==='pair'&&currentConnections.get(origin)!==connectionId){revoke();currentConnections.set(origin,connectionId);}
+   // A detached session is reachable only through a resume on a live native connection.
+   if(connectionId===null&&sessions.get(origin)?.detached===true)throw Error('Pair the browser again.');
+   if(exact(message,['type','session'])&&message.type==='resume'){
+    if(connectionId===null)throw Error('Native browser connection identity is unavailable.');
+    const pair=sessions.get(origin);
+    if(!pair||pair.expires<=now()||!same(message.session,pair.session)||receiver.holds(origin,message.session)!==true)throw Error('Pair the browser again.');
+    // Same origin and the same secret are both required. A stale earlier port for this origin is detached first.
+    if(currentConnections.get(origin)!==connectionId){if(currentConnections.has(origin))detach(origin);currentConnections.set(origin,connectionId);}
+    pair.connectionId=connectionId;pair.detached=false;
+    return{type:'resumed',expiresInSeconds:Math.max(1,Math.ceil((pair.expires-now())/1000))};
+   }
    const liveConnection=()=>{if(connectionId!==null&&(connections.get(connectionId)!==origin||currentConnections.get(origin)!==connectionId))throw Error('Native browser connection is unavailable.');};
+   if(exact(message,['type','session'])&&message.type==='unpair'){
+    // The person chose Disconnect in the extension: end the session now instead of leaving it to resume.
+    const pair=sessions.get(origin);if(connectionId===null||!pair||pair.connectionId!==connectionId||!same(message.session,pair.session))throw Error('Pair the browser again.');
+    revoke();return{type:'unpaired'};
+   }
    if(conversions.supports(message?.type)){
     if(connectionId===null)throw Error('Native browser connection identity is unavailable.');
     const check=()=>{unlocked();liveConnection();if(sessions.get(origin)?.connectionId!==connectionId)throw Error('Pair the browser again.');};check();return await conversions.receive(origin,message,check);
