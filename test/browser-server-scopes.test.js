@@ -492,8 +492,8 @@ test('the options page wires the Servers section into Home, the palette, prefere
   assert.match(html, /id="tab-servers" data-tab="servers" aria-controls="panel-servers"/); assert.match(html, /<section role="tabpanel" id="panel-servers" aria-labelledby="section-title" hidden>[^]*?<div id="browser-servers"/);
   assert.match(html, /id="lock-mark-servers"/); assert.match(source, /import \{mountBrowserServers\} from '\.\/servers\.js';/); assert.match(source, /mountBrowserServers\(\$\('browser-servers'\)/);
   assert.match(source, /SECTION_IDS=\[[^\]]*'servers'\]/); assert.match(source, /Open Servers/); assert.match(source, /servers:\['Servers','伺服器'\]/);
-  assert.match(popup, /id="launch-cell-servers"/); assert.match(popupSource, /\['servers',\['Servers','伺服器'\]\]/); assert.match(prefs, /'status','servers'\]\.includes\(value\.tab\)/);
-  assert.match(css, /\.server-row\{[^}]*animation:mfe-panel-in 200ms cubic-bezier\(\.2,0,0,1\)/); assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{\.server-row\{animation:none\}\.server-state\{transition:none\}\}/);
-  assert.match(build, /'pairing-code\.js','servers\.js'\]/);
+  assert.match(popup, /id="launch-cell-servers"/); assert.match(popupSource, /\['servers',\['Servers','伺服器'\]\]/); assert.match(prefs, /'servers'\]\.includes\(value\.tab\)/);
+  assert.match(css, /\.server-row\{[^}]*animation:mfe-panel-in var\(--md-sys-motion-duration-short4\) var\(--md-sys-motion-easing-standard\)/); assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{\.server-row\{animation:none\}\.server-state\{transition:none\}\}/);
+  assert.match(build, /'pairing-code\.js',[^\]]*'servers\.js'/);
   assert.equal(source.match(/const LOCK_TABS=(\[[^\]]*\])/)[1].includes('servers'), false, 'the reviewed lockable tab list is unchanged');
 });

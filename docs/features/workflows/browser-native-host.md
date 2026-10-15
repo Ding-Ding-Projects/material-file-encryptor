@@ -130,6 +130,12 @@ tricks and wrong types before it reads anything.
 Both answers fit the existing 64 KiB frame and the 35-second request deadline.
 Nothing is stored and no grant is issued.
 
+### Status client scope: enroll-status-client
+
+A third status-mode scope, `enroll-status-client`, lets the paired extension enroll as an independent status client. It follows the same rules as the two read scopes: a valid live pairing from the same native connection, no desktop prompt and no grant. The request is exactly `type`, `session` and `report`. The report has exactly `version`, `connection` (always `paired`), `lastRefresh` (a UTC time cut to the minute, or `null`) and four counts from 0 to 9999: `notes`, `schedules`, `tickets` and `operations`. Any other field, type or range is refused before anything runs, so no content, name, link or path can ride along.
+
+The mediator hands a frozen copy of the report to the injected `enrollStatusClient` function and answers `status-client` with `state` set to `enrolled`, `pending` or `unavailable`. With no such function, or when it throws or answers anything else, the answer is `unavailable`. The shipped desktop does not inject a status feature yet, so today it answers `unavailable`; a live enrolled path is unverified.
+
 ## Confirm scope: focus-authenticator
 
 The first scope of the Confirm approval mode is `focus-authenticator`. A paired
