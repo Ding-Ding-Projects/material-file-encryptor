@@ -32,6 +32,10 @@ The dialog has no operating-system frame. Its title appears as a small label at 
 
 Shared Material easing and duration tokens drive screen and tab panel entrances (fade through), card and table row entrances (fade up with a short stagger) and disclosure expansion. The reduced-motion system setting turns all of it off.
 
+### Motion contract
+
+The browser extension pages and the desktop renderer share one contract. Every interactive element uses a Material Web component or a documented state layer that changes on hover, focus and press through a transition. Dialogs, side sheets, tab panels, disclosures and status messages animate in with the shared tokens `--md-sys-motion-easing-standard`, `--md-sys-motion-easing-emphasized-decelerate` and `--md-sys-motion-duration-short4`, never a literal easing curve. Every transition and animation has a `prefers-reduced-motion` override. `scripts/audit-material-motion.mjs` checks the contract statically and `test/material-motion-audit.test.js` requires zero findings. The only native controls allowed are the hidden file inputs and the home destination cards, each listed with its reason in the script.
+
 ## Shutdown
 
 Read-only requests, such as catalogue, status and font list reads, no longer keep the application open at exit. Mutating, transferring and user-gated work still blocks exit and still offers the shutdown choices.

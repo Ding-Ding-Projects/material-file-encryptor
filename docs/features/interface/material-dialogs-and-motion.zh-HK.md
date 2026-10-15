@@ -32,6 +32,10 @@
 
 共用嘅 Material 緩動同時長標記控制畫面同分頁面板進場（淡出淡入）、卡片同表格列進場（向上淡入並輕微錯開）以及展開區域動畫。系統嘅減少動態效果設定會將以上全部關閉。
 
+### 動畫規範
+
+瀏覽器擴充功能頁面同桌面畫面共用同一份規範。每個互動元素都用 Material Web 元件，或者有記錄嘅狀態層，懸停、聚焦同按下都會經過渡改變。對話框、側邊面板、分頁面板、展開區域同狀態訊息進場時，都用共用標記 `--md-sys-motion-easing-standard`、`--md-sys-motion-easing-emphasized-decelerate` 同 `--md-sys-motion-duration-short4`，唔會直接寫緩動曲線。每個過渡同動畫都有 `prefers-reduced-motion` 覆寫。`scripts/audit-material-motion.mjs` 會靜態檢查呢份規範，而 `test/material-motion-audit.test.js` 要求零項發現。唯一允許嘅原生控制項係隱藏嘅檔案輸入同主頁目的地卡片，兩者都喺程式碼入面列明原因。
+
 ## 關閉程式
 
 唯讀請求，例如讀取目錄、狀態同字型清單，唔會再阻止程式關閉。修改資料、傳輸同等待用家操作嘅工作，仍然會阻止關閉並顯示關閉選項。
