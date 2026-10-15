@@ -16,3 +16,28 @@
 .server-version-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding:8px;background:var(--md-sys-color-surface-container-low);border-radius:12px}
 .server-selection,.server-operation{display:grid;gap:12px;padding:20px;background:var(--md-sys-color-surface-container);border:1px solid var(--md-sys-color-outline-variant);border-radius:20px;min-width:0}
 .server-preparation>md-outlined-button{justify-self:start}
+
+/* Multi-target server manager panel. Motion uses the shared tokens and has an explicit reduced-motion fallback. */
+.server-targets{display:grid;gap:var(--mfe-space-4,16px);min-width:0;color:var(--md-sys-color-on-surface);container-type:inline-size}
+.server-targets :where(h2,h3,h4,p){margin:0;overflow-wrap:anywhere}
+.server-targets :where(md-outlined-text-field,md-outlined-select){max-width:100%;min-width:0;width:100%}
+.server-targets :where(md-text-button,md-outlined-button,md-filled-button){min-height:44px;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.server-targets>[role=status]{color:var(--md-sys-color-on-surface-variant);padding:12px 16px;background:var(--md-sys-color-surface-container);border-radius:12px}
+.server-targets>[role=status]:empty{display:none}
+.server-targets-form{display:grid;gap:12px;padding:20px;background:var(--md-sys-color-surface-container-low);border:1px solid var(--md-sys-color-outline-variant);border-radius:20px;min-width:0}
+.server-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;align-items:start;min-width:0}
+.server-targets md-chip-set{display:flex;flex-wrap:wrap;gap:8px}
+.server-list{display:grid;gap:12px;min-width:0}
+.server-card{display:grid;gap:12px;padding:20px;background:var(--md-sys-color-surface-container);border:1px solid var(--md-sys-color-outline-variant);border-radius:20px;min-width:0;transition:border-color var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1)),background-color var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1))}
+.server-card[data-state=running]{border-color:var(--md-sys-color-primary)}
+.server-card[data-state=failed]{border-color:var(--md-sys-color-error)}
+.server-card-head,.server-card-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;min-width:0}
+.server-card-head h3{flex:1 1 12ch}
+.server-card-panel{display:grid;gap:8px;min-width:0}
+.server-card-panel pre{max-height:320px;overflow:auto;overscroll-behavior:contain;white-space:pre-wrap;overflow-wrap:anywhere;margin:0;padding:12px;background:var(--md-sys-color-surface-container-low);border-radius:12px}
+.server-state-chip{display:inline-flex;align-items:center;min-height:28px;padding:0 12px;border-radius:8px;border:1px solid var(--md-sys-color-outline);background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface);font:var(--md-sys-typescale-label-large-font,inherit);transition:background-color var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1)),color var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1))}
+.server-state-chip[data-state=running],.server-state-chip[data-state=accepted]{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);border-color:transparent}
+.server-state-chip[data-state=failed]{background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);border-color:transparent}
+.server-state-chip[data-state=preparing],.server-state-chip[data-state=starting],.server-state-chip[data-state=stopping]{background:var(--md-sys-color-tertiary-container);color:var(--md-sys-color-on-tertiary-container);border-color:transparent}
+.server-setting-row,.server-plugin-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 12px;min-width:0}
+@media(prefers-reduced-motion:reduce){.server-card,.server-state-chip{transition:none;animation:none}}
