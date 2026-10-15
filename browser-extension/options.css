@@ -4,7 +4,9 @@ body{width:auto}main{max-width:1000px;margin:auto;max-height:none;grid-template-
 body{overflow-x:clip}
 .app-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;min-inline-size:0}
 .app-bar h1{flex:1 1 8rem;min-inline-size:0;margin:0;overflow-wrap:anywhere;outline:none}
-.app-bar mfe-search{flex:2 1 16rem}.app-bar>md-outlined-button{flex:0 0 auto}
+.app-bar mfe-search{flex:2 1 16rem}.app-bar>md-outlined-button{flex:0 0 auto}.compact-only{display:none}
+@media(max-width:599px){html[data-view=section] .app-bar{flex-wrap:nowrap;gap:4px}html[data-view=section] .app-bar h1{flex:1 1 auto;font-size:20px}html[data-view=section] .app-bar>#palette-open{display:none}html[data-view=section] .app-bar>.compact-only{display:inline-flex;flex:0 0 auto}html[data-view=section]:not([data-searching=true]) .app-bar>mfe-search{display:none}html[data-view=section][data-searching=true] .app-bar{flex-wrap:wrap}html[data-view=section][data-searching=true] .app-bar>mfe-search{flex:1 1 100%;animation:mfe-panel-in 200ms cubic-bezier(.2,0,0,1) both}}
+@media(max-width:599px) and (prefers-reduced-motion:reduce){html[data-view=section][data-searching=true] .app-bar>mfe-search{animation:none}}
 #home-back{flex:0 0 auto}#home-back svg,.home-icon svg{display:block;inline-size:24px;block-size:24px;fill:currentColor}
 :root[data-view=section] .workspace-logo{display:none}
 /* Panel titles live in the app bar while a section is open; the panel heading stays for assistive technology. */

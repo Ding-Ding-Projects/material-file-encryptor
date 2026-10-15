@@ -44,6 +44,18 @@ test('Home cards have state layers and a visible focus ring, and motion respects
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{\[role=tabpanel\]:not\(\[hidden\]\),\.changelog-entry\{animation:none\}\}/);
 });
 
+// On a phone a section's app bar keeps only back, title, a search icon and a commands icon; search opens on request.
+test('a section app bar is compact on narrow screens and search opens on request', async () => {
+  const css = await fs.readFile('browser-extension/options.css', 'utf8');
+  const html = await fs.readFile('browser-extension/options.html', 'utf8');
+  assert.match(css, /\.compact-only\{display:none\}/);
+  assert.match(css, /@media\(max-width:599px\)\{html\[data-view=section\] \.app-bar\{flex-wrap:nowrap;gap:4px\}/);
+  assert.match(css, /html\[data-view=section\] \.app-bar>#palette-open\{display:none\}/);
+  assert.match(css, /html\[data-view=section\]:not\(\[data-searching=true\]\) \.app-bar>mfe-search\{display:none\}/);
+  assert.match(html, /<md-icon-button id="search-toggle" class="compact-only" type="button" aria-expanded="false" aria-controls="search">/);
+  assert.match(html, /<md-icon-button id="palette-icon" class="compact-only" type="button">/);
+});
+
 // The popup mark sat on a light container with the dark theme's light text colour, so it was invisible.
 test('the popup app mark uses the on-container colour of its own container', async () => {
   const css = await fs.readFile('browser-extension/popup.css', 'utf8');
