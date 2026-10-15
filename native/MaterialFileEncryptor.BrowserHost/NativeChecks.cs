@@ -44,7 +44,24 @@ public static class NativeChecks
         await NativeFrames.Write(client, new { fixture = true }, timeout.Token);
         if ((await reading)?.GetProperty("fixture").GetBoolean() != true) throw new InvalidDataException("Same-user pipe round trip failed.");
         checks++;
-        Console.WriteLine($"PASS: {checks} synthetic native framing and same-user pipe checks. No installation or browser profile was changed.");
+        // Host configuration: an unpacked extension is accepted only when its id is derived from the reviewed public key.
+        const string keyHash = "75010939dc224c7ea9d8fc0013fb9116465ad7de9e0102b5874259719b622c7f", extensionId = "hfabajdjnmccemhokjnipmaabdpljbbg";
+        byte[] Config(string id, string package, string key) => Encoding.UTF8.GetBytes(
+            "{\"schemaVersion\":1,\"host\":\"org.dingding.material_file_encryptor.downloads\",\"allowedOrigins\":[\"chrome-extension://" + id
+            + "/\"],\"identity\":{\"extensionId\":\"" + id + "\",\"packageSha256\":\"" + package + "\",\"publicKeySha256\":\"" + key + "\"}}");
+        void Accept(byte[] config) { if (!Program.ParseAllowed(config).Contains($"chrome-extension://{extensionId}/")) throw new InvalidDataException("Valid host configuration was refused."); checks++; }
+        void RejectConfig(byte[] config)
+        {
+            try { Program.ParseAllowed(config); }
+            catch (InvalidDataException) { checks++; return; }
+            throw new InvalidDataException("Invalid host configuration was accepted.");
+        }
+        Accept(Config(extensionId, "unpacked", keyHash));
+        Accept(Config(extensionId, new string('0', 64), keyHash));
+        RejectConfig(Config(extensionId, "unpacked-extension", keyHash));
+        RejectConfig(Config(new string('a', 32), "unpacked", keyHash));
+        RejectConfig(Config(extensionId, "unpacked", new string('0', 64)));
+        Console.WriteLine($"PASS: {checks} synthetic native framing, same-user pipe and host configuration checks. No installation or browser profile was changed.");
         return 0;
     }
 }

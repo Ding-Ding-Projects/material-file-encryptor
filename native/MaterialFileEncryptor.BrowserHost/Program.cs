@@ -88,7 +88,10 @@ public static class Program
     static HashSet<string> Allowed()
     {
         var configPath = Path.Combine(AppContext.BaseDirectory, "browser-host-config.json");
-        var bytes = File.ReadAllBytes(configPath);
+        return ParseAllowed(File.ReadAllBytes(configPath));
+    }
+    internal static HashSet<string> ParseAllowed(byte[] bytes)
+    {
         if (bytes.Length > 8192) throw new InvalidDataException("Host configuration exceeds its limit.");
         using var config = JsonDocument.Parse(bytes);
         var root = config.RootElement;
@@ -99,12 +102,17 @@ public static class Program
         var identity = root.GetProperty("identity");
         if (!NativeFrames.Exact(identity, "extensionId", "packageSha256", "publicKeySha256")
             || !Regex.IsMatch(identity.GetProperty("extensionId").GetString() ?? "", @"^[a-p]{32}$")
-            || !new[] { "packageSha256", "publicKeySha256" }.All(field => Regex.IsMatch(identity.GetProperty(field).GetString() ?? "", @"^[a-f0-9]{64}$"))
+            || !Regex.IsMatch(identity.GetProperty("packageSha256").GetString() ?? "", @"^(?:[a-f0-9]{64}|unpacked)$")
+            || !Regex.IsMatch(identity.GetProperty("publicKeySha256").GetString() ?? "", @"^[a-f0-9]{64}$")
+            || ExtensionIdFromKeyHash(identity.GetProperty("publicKeySha256").GetString()!) != identity.GetProperty("extensionId").GetString()
             || origins.Count != 1 || root.GetProperty("allowedOrigins").GetArrayLength() != 1
             || origins.Any(row => !Origin.IsMatch(row)) || !origins.Contains($"chrome-extension://{identity.GetProperty("extensionId").GetString()}/"))
             throw new InvalidDataException("Reviewed extension identity unavailable.");
         return origins;
     }
+    // An unpacked extension has no package to hash, so its config says "unpacked"; its identity is the public key.
+    // Chromium derives the extension id from the first 32 hex digits of SHA-256(public key), mapped 0-f to a-p.
+    internal static string ExtensionIdFromKeyHash(string publicKeySha256) => new string(publicKeySha256[..32].Select(c => (char)('a' + Convert.ToInt32(c.ToString(), 16))).ToArray());
     public static async Task<int> Main(string[] args)
     {
         try
