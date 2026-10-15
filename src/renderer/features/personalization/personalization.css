@@ -33,3 +33,4 @@
 .local-ux :is(.local-ux-section,:has(>mfe-search+mfe-control-guidance))>mfe-control-guidance:not([data-open])+*{grid-column:1;justify-self:start;max-width:100%}
 .local-ux :is(.local-ux-section,:has(>mfe-search+mfe-control-guidance))>mfe-search{grid-column:1}
 .local-ux :is(.local-ux-section,:has(>mfe-search+mfe-control-guidance))>mfe-search+mfe-control-guidance:not([data-open]){align-self:start;margin-block-start:16px}
+[data-focus-mode=true] [data-focus-secondary]{transition:opacity var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1))}

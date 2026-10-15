@@ -15,10 +15,15 @@
 .launcher h2{margin-block-end:8px}
 .launcher-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .launcher-grid>li,.launcher-grid>li+li{margin:0}
-.launcher-grid>li{position:relative;isolation:isolate;overflow:hidden;display:grid;justify-items:center;align-content:start;gap:2px;min-inline-size:0;padding:8px 4px;border:1px solid var(--md-sys-color-outline-variant);border-radius:16px;background:var(--md-sys-color-surface);cursor:pointer;transition:border-color 200ms cubic-bezier(.2,0,0,1)}
-.launcher-grid>li::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--md-sys-color-on-surface);opacity:0;transition:opacity 200ms cubic-bezier(.2,0,0,1);pointer-events:none}
+.launcher-grid>li{position:relative;isolation:isolate;overflow:hidden;display:grid;justify-items:center;align-content:start;gap:2px;min-inline-size:0;padding:8px 4px;border:1px solid var(--md-sys-color-outline-variant);border-radius:16px;background:var(--md-sys-color-surface);cursor:pointer;transition:border-color 200ms var(--md-sys-motion-easing-standard)}
+.launcher-grid>li::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--md-sys-color-on-surface);opacity:0;transition:opacity 200ms var(--md-sys-motion-easing-standard);pointer-events:none}
 .launcher-grid>li:hover{border-color:var(--md-sys-color-outline)}.launcher-grid>li:hover::before{opacity:.08}.launcher-grid>li:focus-within::before{opacity:.1}.launcher-grid>li:active::before{opacity:.12}
 .launcher-grid svg{display:block;inline-size:24px;block-size:24px;fill:currentColor}
 .launcher-grid md-icon-button{--md-icon-button-icon-color:var(--md-sys-color-primary);--md-icon-button-hover-icon-color:var(--md-sys-color-primary);--md-icon-button-focus-icon-color:var(--md-sys-color-primary);--md-icon-button-pressed-icon-color:var(--md-sys-color-primary)}
 .launcher-grid span{max-inline-size:100%;font-size:12px;line-height:16px;text-align:center;overflow-wrap:anywhere;white-space:pre-line}
 @media(prefers-reduced-motion:reduce){.launcher-grid>li,.launcher-grid>li::before{transition:none}}
+/* Material 3 motion tokens and the status-message enter motion for the popup. */
+:root{--md-sys-motion-easing-standard:cubic-bezier(.2,0,0,1);--md-sys-motion-easing-emphasized-decelerate:cubic-bezier(.05,.7,.1,1);--md-sys-motion-duration-short4:200ms}
+@keyframes popup-status-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+[role=status]:not([hidden]),[role=alert]:not([hidden]){animation:popup-status-in var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-emphasized-decelerate) both}
+@media(prefers-reduced-motion:reduce){[role=status],[role=alert]{animation:none}}

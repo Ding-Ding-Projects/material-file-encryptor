@@ -22,3 +22,4 @@
 .appearance-editor [hidden]{display:none!important}.appearance-capability-note{font-size:12px;line-height:1.5;color:var(--md-sys-color-on-surface-variant,#49454f)}
 .appearance-editor .color-swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;max-block-size:320px;overflow:auto}.appearance-editor .color-swatches .appearance-property{padding:6px;display:block}.appearance-editor .color-swatches mfe-control-guidance{display:block}
 @media(max-width:420px){.appearance-editor{padding:12px}.appearance-section-body{padding:0 8px 12px}.appearance-property{grid-template-columns:minmax(0,1fr)}}
+.appearance-editor :focus-visible,.appearance-context :focus-visible{transition:outline-offset var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1))}
