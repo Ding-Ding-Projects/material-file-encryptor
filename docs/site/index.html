@@ -14,14 +14,15 @@
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
-  <header class="site-header">
+  <header class="site-header homepage-header">
     <div class="header-inner">
       <a class="brand" href="#overview" aria-label="Material File Encryptor home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 10V7a2 2 0 0 1 2-2h7l3 4h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V10Z"/><rect x="12" y="16" width="8" height="7" rx="1.5"/><path d="M14 16v-2a2 2 0 0 1 4 0v2"/></svg><span>Material File<br class="brand-break"> Encryptor</span></a>
       <button class="icon-button menu-button" id="menu-toggle" type="button" aria-label="Open navigation" aria-controls="navigation" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
       <nav id="navigation" aria-label="Main navigation">
-        <a href="#workflow">How it works</a><a href="#security">Security</a><a href="#documentation">Docs</a><a href="library.html">Documentation library</a><a href="wiki.html">Wiki</a><a href="workspace.html">Browser workspace</a><a href="gallery.html">Capture gallery</a>
-        <button class="icon-button" type="button" id="preferences-open" aria-label="Website preferences" title="Website preferences"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9m4 0h3M4 17h3m4 0h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button>
+        <div class="navigation-primary"><p class="navigation-group-label">On this page</p><a href="#workflow">How it works</a><a href="#security">Security</a><a href="#documentation">Docs</a></div>
         <a class="button button-small button-tonal" href="#download">Release status <svg class="inline-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></a>
+        <div class="navigation-explore"><button class="button button-outline button-small" id="explore-toggle" type="button" aria-controls="explore-links" aria-expanded="false">Explore <span aria-hidden="true">⌄</span></button><p class="navigation-group-label">Explore</p><div id="explore-links"><a href="library.html">Documentation library</a><a href="wiki.html">Wiki</a><a href="workspace.html">Browser workspace</a><a href="gallery.html">Capture gallery</a></div></div>
+        <button class="button button-outline button-small" type="button" id="preferences-open" aria-label="Website preferences" title="Website preferences"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9m4 0h3M4 17h3m4 0h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span class="preferences-label">Website preferences</span></button>
       </nav>
     </div>
   </header>
@@ -31,8 +32,8 @@
         <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> A Windows virtual drive · Preview</p>
         <h1 id="hero-heading">Your files, readable<br class="desktop-break"> in Explorer.<br><span>Encrypted where<br class="desktop-break"> they’re stored.</span></h1>
         <p class="hero-description">Open files through a mounted drive while their stored copies stay encrypted in a folder you choose.</p>
-        <div class="actions"><a class="button button-primary" href="#workflow">How it works <span aria-hidden="true">↓</span></a><a class="button button-outline" href="https://github.com/Ding-Ding-Projects/material-file-encryptor">Explore the source <svg class="inline-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></a></div>
-        <p class="small hero-note">An open-source Windows preview. Verification is tied to exact source and installer bytes.</p>
+        <div class="actions"><a class="button button-primary" href="#workflow">How it works <span aria-hidden="true">↓</span></a><a class="button button-outline" href="library.html">Read the documentation <svg class="inline-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></a></div>
+        <p class="small hero-note">An open-source Windows preview. Verification is tied to exact source and installer bytes. <a class="hero-source" href="https://github.com/Ding-Ding-Projects/material-file-encryptor">Explore the source</a></p>
       </div>
       <aside class="hero-route" aria-label="Conceptual file flow">
         <p class="route-eyebrow">Familiar files. Different storage.</p>

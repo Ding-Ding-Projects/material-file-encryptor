@@ -1,3 +1,9 @@
+## Website usability, 2026-10-15
+
+- [x] Independently review the scoped navigation, localized search, and article-reading design.
+- [ ] Implement and verify responsive navigation, repeated section links, localized preference search, and article spacing in the staged website.
+- [ ] Publish the changes through GitHub Pages and verify live source provenance, destinations, assets, and repository homepage.
+
 ## Material conversion sweep, 2026-10-14
 
 - [x] Replace hand-built section tabs with Material tabs in the converter, local models and file details (hidden-desktop captures, English, light theme).

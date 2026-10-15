@@ -52,7 +52,8 @@ export function renderMarkdown(markdown,source,routeMap,prefix='../',images=new 
 export function pageShell(home,title,body,{depth=0,search=true}={}) {
  if(!Number.isInteger(depth)||depth<0||depth>8)throw Error('Unsupported publication route depth');
  const prefix=depth?'../'.repeat(depth):'./';
- const header=home.match(/<header class="site-header">[\s\S]*?<\/header>/)[0];
+ const header=home.match(/<header\b[^>]*class="[^"]*\bsite-header\b[^"]*"[^>]*>[\s\S]*?<\/header>/)?.[0];
+ if(!header)throw Error('Publication template is missing its site header');
  const footer=home.match(/<footer class="container site-footer">[\s\S]*?<\/footer>/)[0];
  const dialog=home.match(/<dialog id="preferences-dialog"[\s\S]*?<\/dialog>/)[0];
  const navigation=(header+footer).replace(/href="#([^\"]+)"/g,(_,anchor)=>`href="${prefix}index.html#${anchor}"`);

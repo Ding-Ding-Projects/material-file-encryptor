@@ -1,13 +1,16 @@
 # Public website
 
-This self-contained static site is intended to be published at the repository’s GitHub Pages URL. It needs no compilation, external fonts, CDN, analytics, or server API. The root build stages the site and its diagrams together in `out/site`, matching the Pages workflow:
+This static site is published at the repository’s GitHub Pages URL. Its build bundles the shared Material controls and stages verified local fonts, reviewed images, and complete documentation. The deployed pages need no CDN, analytics, or server API. Stage the website independently on a supported Node.js runtime, matching the Pages workflow:
 
 ```sh
-build.bat /s
+npm ci --ignore-scripts --no-audit --no-fund
+node scripts/build-site.mjs
 python3 -m http.server 8080 --directory out/site
 ```
 
 Open `http://localhost:8080/`. The deployment places the diagrams in `images/` alongside the page, so all assets also work beneath the repository’s GitHub Pages path. The repository’s Pages workflow owns the final deployed directory layout.
+
+The Windows application build also stages the website through `build.bat /s`. In a proxy-configured Node.js environment, use its supported proxy setting for dependency and font acquisition; keep TLS verification enabled.
 
 Run the content and behavior checks with `node --test test/site*.test.js` from the repository root. Check 320px layouts, keyboard navigation, light/dark/system appearance, the mobile menu, documentation search, guide links, FAQ, and the preferences dialog in a real browser before publishing.
 

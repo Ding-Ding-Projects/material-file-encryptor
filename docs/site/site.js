@@ -162,15 +162,73 @@ function closeMenu() {
   menu.classList.remove('is-open'); menuToggle.setAttribute('aria-expanded', 'false');
   menuToggle.setAttribute('aria-label', localized('Open navigation', preferences.language));
 }
+const header = document.querySelector('.homepage-header');
+const exploreToggle = document.querySelector('#explore-toggle');
+const exploreLinks = document.querySelector('#explore-links');
+function closeExplore({ restoreFocus = false } = {}) {
+  if (!exploreToggle) return;
+  exploreToggle.setAttribute('aria-expanded', 'false');
+  exploreLinks.hidden = !header.classList.contains('is-compact');
+  if (restoreFocus) exploreToggle.focus();
+}
+function updateNavigationLayout() {
+  if (!header) return;
+  header.dataset.navigationReady = 'true';
+  const active = document.activeElement;
+  const wasCompact = header.classList.contains('is-compact');
+  header.classList.remove('is-compact');
+  exploreLinks.hidden = true;
+  const row = header.querySelector('.header-inner');
+  const compact = window.innerWidth <= 1100 || row.scrollWidth > row.clientWidth || menu.scrollWidth > menu.clientWidth;
+  header.classList.toggle('is-compact', compact);
+  if (compact !== wasCompact) {
+    closeMenu();
+    closeExplore();
+    if (menu.contains(active) || active === menuToggle) (compact ? menuToggle : menu.querySelector('a')).focus();
+  } else {
+    exploreLinks.hidden = compact ? false : exploreToggle.getAttribute('aria-expanded') !== 'true';
+  }
+}
+exploreToggle?.addEventListener('click', () => {
+  const open = exploreToggle.getAttribute('aria-expanded') !== 'true';
+  exploreToggle.setAttribute('aria-expanded', String(open));
+  exploreLinks.hidden = !open;
+});
 menuToggle.addEventListener('click', () => {
   const open = menu.classList.toggle('is-open'); menuToggle.setAttribute('aria-expanded', String(open));
   menuToggle.setAttribute('aria-label', localized(open ? 'Close navigation' : 'Open navigation', preferences.language));
 });
-menu.addEventListener('click', event => { if (event.target.closest('a')) closeMenu(); });
-document.addEventListener('keydown', event => { if (event.key === 'Escape' && menu.classList.contains('is-open')) { closeMenu(); menuToggle.focus(); } });
-document.addEventListener('click', event => { if (!event.target.closest('.site-header')) closeMenu(); });
-matchMedia('(min-width: 800px)').addEventListener('change', closeMenu);
-for (const id of ['preferences-open', 'preferences-footer']) document.getElementById(id).addEventListener('click', () => { closeMenu(); dialog.showModal(); });
+menu.addEventListener('click', event => { if (event.composedPath().some(node => node?.matches?.('a[href]')) && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { closeMenu(); closeExplore(); } });
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Escape') return;
+  if (menu.classList.contains('is-open')) { closeMenu(); menuToggle.focus(); }
+  else if (exploreToggle?.getAttribute('aria-expanded') === 'true') closeExplore({ restoreFocus: true });
+});
+document.addEventListener('click', event => {
+  if (!event.target.closest('.site-header')) closeMenu();
+  if (!event.target.closest('.navigation-explore')) closeExplore();
+});
+window.addEventListener('resize', updateNavigationLayout);
+window.addEventListener('site-language', updateNavigationLayout);
+document.fonts?.ready.then(updateNavigationLayout);
+updateNavigationLayout();
+if (header && typeof ResizeObserver === 'function') {
+  let pendingLayout = false;
+  const observer = new ResizeObserver(() => {
+    if (pendingLayout) return;
+    pendingLayout = true;
+    requestAnimationFrame(() => { pendingLayout = false; updateNavigationLayout(); });
+  });
+  observer.observe(header.querySelector('.header-inner'));
+  observer.observe(header.querySelector('.brand'));
+  observer.observe(menu);
+}
+let preferencesReturnTarget = null;
+for (const id of ['preferences-open', 'preferences-footer']) document.getElementById(id).addEventListener('click', () => {
+  preferencesReturnTarget = id === 'preferences-open' && header?.classList.contains('is-compact') ? menuToggle : document.getElementById(id);
+  closeMenu(); closeExplore(); dialog.showModal();
+});
+dialog.addEventListener('close', () => { preferencesReturnTarget?.focus(); preferencesReturnTarget = null; });
 const themeSelect = document.querySelector('#theme-select');
 function applyTheme(theme) {
   if (!['system', 'light', 'dark'].includes(theme)) theme = 'system';
