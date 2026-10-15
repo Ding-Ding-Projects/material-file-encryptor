@@ -105,3 +105,8 @@ md-primary-tab[aria-disabled=true]{opacity:.62}
 #coverage-search,#coverage-status{min-inline-size:0;flex:1 1 12rem}
 @media(prefers-reduced-motion:reduce){.release-result,.coverage-row{animation:none}}
 #desktop-progress{justify-self:stretch;min-inline-size:0}
+/* Optional pairing code: the field and the live camera preview never exceed the page width. */
+#pair-code{inline-size:min(100%,18rem)}
+.pair-video{display:block;inline-size:min(100%,320px);max-inline-size:100%;block-size:auto;margin-block:8px;border-radius:12px;background:var(--md-sys-color-surface-container)}
+.pair-video[hidden]{display:none}
+#pair-code-state,#pair-identity,#pair-code-help{min-inline-size:0;overflow-wrap:anywhere}

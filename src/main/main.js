@@ -21,6 +21,7 @@ import { createUpdateService } from './update-service.js';
 import { createRestartPreparation } from './restart-preparation.js';
 import { createBrowserHandoffLifecycle } from './browser-native-host.js';
 import { DEFAULT_DRIVE_NAME, normalizeDriveName } from '../shared/drive-name.js';
+import { createPairingCodes } from './browser-pairing-code.js';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const rendererPath = path.resolve(directory, '../renderer/index.html');
@@ -274,7 +275,17 @@ async function updateStatus() {
   const activeWork=await hasActiveWork();
   return {...snapshot,activeWork,desktopAvailable:process.platform==='win32'&&app.isPackaged,canInstall:snapshot.state==='ready'&&!activeWork&&!updateInstallLease};
 }
+// The one-time browser pairing code lives only here. Lock, exit and update preparation reach it through browserHandoff.revoke().
+const pairingCodes=createPairingCodes();
+function browserPairingRequest(action){
+  if(action==='clear'){pairingCodes.clear();return{cleared:true};}
+  if(action!=='issue')throw new Error('Unsupported pairing action.');
+  if(state.locked||state.lockVerified===false||quitPending||shuttingDown||updateInstallLease){pairingCodes.clear();throw new Error('Unlock the drive before pairing a browser.');}
+  if(browserHandoff?.status().available!==true)throw new Error('The browser receiver is not running on this desktop.');
+  return pairingCodes.issue();
+}
 async function featureRequest(feature,action,payload,context) {
+  if(feature==='browser-pairing')return browserPairingRequest(action);
   if(feature==='workflow')validateWorkflowAdmission(action,{locked:state.locked,lockVerified:state.lockVerified,quitPending,shuttingDown,updateInstallLease});
   if(feature!=='updates')return features.request(feature,action,payload,context);
   if(Object.keys(payload).some(key=>key!=='language') || (payload.language!==undefined&&!['en','yue','bilingual'].includes(payload.language)))throw new Error('Invalid update options.');
@@ -383,9 +394,9 @@ else {
     let rendererRecoveries=0;
     window.webContents.on('render-process-gone',()=>{if(!shuttingDown&&rendererRecoveries++<3)void window.loadFile(rendererPath);});
     window.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
-    browserHandoff=createBrowserHandoffLifecycle({...features.browserProfileAdapters,...features.browserSchoolAdapters,...features.browserElementLockAdapters,...features.browserUnlockLadderAdapters,confirmAction:context=>browserConfirm.confirm(context),hasVisibleWindow:()=>Boolean(window&&!window.isDestroyed()&&window.isVisible()&&!window.isMinimized()),focusAuthenticator:()=>{showWindow();window.webContents.send('feature:event','access',{type:'focusAuthenticator'});},revokeProfileAuthority:()=>features.revokeBrowserProfileAuthority(),readUpdateState:()=>({desktopVersion:app.getVersion(),status:updates?.status()}),disposeBrowserConversion:pair=>features.disposeBrowserConversion(pair),browserConversion:(message,context)=>features.browserConversion(message,context),openEditor:context=>features.openBrowserEditor(context),readProtectionStatus:()=>features.readBrowserProtectionStatus(),hostDirectory:app.isPackaged?path.join(process.resourcesPath,'browser-host'):path.resolve('out/browser-host'),verificationMode:verificationMode||testMode,isUnlocked:()=>!state.locked&&state.lockVerified!==false,canAdmit:()=>!quitPending&&!shuttingDown&&!updateInstallLease,onProposal:item=>features.receiveBrowserProposal(item),authorizePair:async({origin})=>{
+    browserHandoff=createBrowserHandoffLifecycle({pairingCodes,...features.browserProfileAdapters,...features.browserSchoolAdapters,...features.browserElementLockAdapters,...features.browserUnlockLadderAdapters,confirmAction:context=>browserConfirm.confirm(context),hasVisibleWindow:()=>Boolean(window&&!window.isDestroyed()&&window.isVisible()&&!window.isMinimized()),focusAuthenticator:()=>{showWindow();window.webContents.send('feature:event','access',{type:'focusAuthenticator'});},revokeProfileAuthority:()=>features.revokeBrowserProfileAuthority(),readUpdateState:()=>({desktopVersion:app.getVersion(),status:updates?.status()}),disposeBrowserConversion:pair=>features.disposeBrowserConversion(pair),browserConversion:(message,context)=>features.browserConversion(message,context),openEditor:context=>features.openBrowserEditor(context),readProtectionStatus:()=>features.readBrowserProtectionStatus(),hostDirectory:app.isPackaged?path.join(process.resourcesPath,'browser-host'):path.resolve('out/browser-host'),verificationMode:verificationMode||testMode,isUnlocked:()=>!state.locked&&state.lockVerified!==false,canAdmit:()=>!quitPending&&!shuttingDown&&!updateInstallLease,onProposal:item=>features.receiveBrowserProposal(item),authorizePair:async({origin,codeMatched})=>{
       if(!window||window.isDestroyed())return false;
-      const answer=await uiDialog.showMessageBox(window,{type:'question',buttons:['Reject · 拒絕','Pair downloads · 配對下載'],defaultId:0,cancelId:0,title:'Pair browser downloads · 配對瀏覽器下載',message:'Allow download proposals from this origin? · 允許此來源提出下載建議？',detail:origin+'\nThis origin allowlist cannot authenticate a manually launched same-user process. Pairing lasts up to 15 minutes and ends when the drive locks. Each download still needs its own destination choice and Start confirmation.\n來源允許清單無法驗證手動啟動嘅同用戶程序。配對最多維持 15 分鐘，磁碟鎖定就撤銷。每次下載仍要獨立選擇目的地同確認開始。'});return answer.response===1;
+      const answer=await uiDialog.showMessageBox(window,{type:'question',buttons:['Reject · 拒絕','Pair downloads · 配對下載'],defaultId:0,cancelId:0,title:'Pair browser downloads · 配對瀏覽器下載',message:'Allow download proposals from this origin? · 允許此來源提出下載建議？',detail:origin+(codeMatched===true?'\nThe extension entered the code shown on this desktop.\n擴充功能輸入咗呢部桌面顯示嘅代碼。':'')+'\nThis origin allowlist cannot authenticate a manually launched same-user process. Pairing lasts up to 15 minutes and ends when the drive locks. Each download still needs its own destination choice and Start confirmation.\n來源允許清單無法驗證手動啟動嘅同用戶程序。配對最多維持 15 分鐘，磁碟鎖定就撤銷。每次下載仍要獨立選擇目的地同確認開始。'});return answer.response===1;
     }});
     await browserHandoff.initialize();
     ipcMain.handle('vault:request', async (event, method, params) => { if (!trustedFrame(event, window, rendererURL)) throw new Error('Untrusted request source.'); return request(method, params,{senderFrame:event.senderFrame}); });

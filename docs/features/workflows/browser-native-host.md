@@ -338,6 +338,49 @@ browser-requested school mode change, whether the desktop's lock screens ever
 show the extension records, and whether the desktop's unlock screens reflect a
 level cleared through this route without a reload.
 
+## Pairing code: begin-qr-pairing
+
+The maintainer retargeted `begin-qr-pairing` on October 14, 2026 from pairing a
+phone to pairing the browser by QR. It adds an optional proof to the existing
+`pair` message. It does not replace the native approval prompt, which stays
+mandatory for every pairing.
+
+- **Showing a code.** The unlocked desktop has a **Pair a browser** tab with a
+  **Show pairing code** button. The main process issues the code and the tab
+  shows it as text and as a QR image drawn with the existing QR encoder. The QR
+  holds exactly the code, with no address and nothing else. **Hide pairing code**,
+  the two-minute expiry and closing the tab clear it.
+- **The code.** It has 8 characters from `ABCDEFGHJKMNPQRSTUVWXYZ23456789`
+  (no `0`, `O`, `1`, `I` or `L`), drawn with `crypto.randomInt`. It is valid for
+  2 minutes and single use. Only one code is active: showing a new one replaces
+  the old one. The desktop refuses to issue a code while it is locked, closing or
+  preparing an update, and when the native receiver is not running. Lock, exit,
+  update preparation and closing the receiver clear it. It lives only in memory
+  and is never logged, notified, stored or put in a response.
+- **Using a code.** The extension may send `{type:"pair",code}` instead of
+  `{type:"pair"}`. Any other extra field is refused as before. A supplied code is
+  compared in constant time with the single active code before any prompt. A
+  wrong, expired, used or unissued code is refused without a prompt. Five wrong
+  codes in a row clear the active code. A pair message with no `code` follows the
+  unchanged flow.
+- **Approval.** With a matching code the prompt still appears, still defaults to
+  Reject and now also says that the extension entered the code shown on this
+  desktop. A rejection leaves the code unspent until it expires. Approval spends
+  it. If the code changed while the prompt was open, pairing is refused.
+- **Identity.** After pairing, the extension reads the desktop version through
+  the existing `read-update-state` scope and shows it beside "Paired with this
+  desktop". No identity material is invented: the version is a label, not proof.
+
+`test/browser-pairing-code.test.js` covers the alphabet, the cryptographic
+source, expiry, replacement, single use, the five-wrong reset, the refusal paths
+that never reach a prompt, approval still being required, consumption after
+approval, clearing on lock and close, and responses that never carry the code.
+`test/browser-pairing-view.test.js` checks the desktop tab with a stub document
+and decodes the QR to prove its payload is exactly the code. These use synthetic
+fixtures. No installed desktop took part, no real native-messaging registration
+was used, and no real camera scanned a real QR, so the end-to-end path is
+unverified.
+
 ## Bounds and verification
 
 All transport frames use a four-byte little-endian length, strict UTF-8 JSON,

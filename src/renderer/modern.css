@@ -29,3 +29,7 @@ md-outlined-text-field>md-icon-button[slot="trailing-icon"]{width:48px;height:48
 /* Outlined selects keep room for their floating label; the split-size unit select stays compact. */
 md-outlined-select{min-width:min(100%,14rem)}
 .split-form md-outlined-select{min-width:0}
+
+/* One-time browser pairing code: large, wrapping, and readable at 200 percent. */
+.browser-pairing-code{font-family:ui-monospace,Consolas,monospace;font-size:2rem;letter-spacing:.2em;overflow-wrap:anywhere;margin-block:12px;color:var(--md-sys-color-on-surface)}
+.browser-pairing-qr{max-width:100%;height:auto;background:#fff;border-radius:12px}

@@ -26,7 +26,7 @@ async function readHostConfiguration(filename){
 }
 
 /** Desktop integration uses only bundled configuration, never renderer input. */
-export function createBrowserHandoffLifecycle({hostDirectory,platform=process.platform,verificationMode=false,readConfiguration=readHostConfiguration,createBroker=createBrowserNativeBroker,authorizePair,isUnlocked,canAdmit=()=>true,onProposal,readProtectionStatus,readUpdateState,openEditor,browserConversion,disposeBrowserConversion,authenticateProfile,validateAuthority,readProfileSummary,revokeProfileAuthority,confirmAction,focusAuthenticator,hasVisibleWindow,readSchoolMode,authenticateSchoolMode,applySchoolMode,readElementLocks,authenticateElementLock,applyElementLock,readUnlockLadder,authenticateUnlockStep}={}){
+export function createBrowserHandoffLifecycle({hostDirectory,pairingCodes,platform=process.platform,verificationMode=false,readConfiguration=readHostConfiguration,createBroker=createBrowserNativeBroker,authorizePair,isUnlocked,canAdmit=()=>true,onProposal,readProtectionStatus,readUpdateState,openEditor,browserConversion,disposeBrowserConversion,authenticateProfile,validateAuthority,readProfileSummary,revokeProfileAuthority,confirmAction,focusAuthenticator,hasVisibleWindow,readSchoolMode,authenticateSchoolMode,applySchoolMode,readElementLocks,authenticateElementLock,applyElementLock,readUnlockLadder,authenticateUnlockStep}={}){
  let broker=null,closed=false,starting=null,lastReceipt=null;let state={available:false,configured:false,reason:'NOT_INITIALIZED',installation:'not-performed'};
  const admitted=()=>!closed&&canAdmit()===true&&isUnlocked()===true;
  const status=()=>({...state,available:broker?.available===true&&!closed,closeReceipt:lastReceipt});
@@ -37,21 +37,21 @@ export function createBrowserHandoffLifecycle({hostDirectory,platform=process.pl
    let config;try{config=await readConfiguration(path.join(hostDirectory,'browser-host-config.json'));validateBrowserHostConfig(config);}catch{state={...state,reason:'REVIEWED_EXTENSION_IDENTITY_UNAVAILABLE'};return status();}
    if(closed)return status();
    state={...state,configured:true,reason:'STARTING'};
-   broker=createBroker({config,confirmAction,focusAuthenticator,hasVisibleWindow,readSchoolMode,authenticateSchoolMode,applySchoolMode,readElementLocks,authenticateElementLock,applyElementLock,readUnlockLadder,authenticateUnlockStep,readProtectionStatus,readUpdateState,openEditor,browserConversion,disposeBrowserConversion,authenticateProfile,validateAuthority,readProfileSummary,revokeProfileAuthority,hostPath:path.join(hostDirectory,'MaterialFileEncryptor.BrowserHost.exe'),authorizePair:async context=>admitted()&&await authorizePair(context)===true&&admitted(),isUnlocked:admitted,onProposal:item=>{if(!admitted())throw Error('Unlock the desktop before receiving downloads.');return onProposal(item);}});
+   broker=createBroker({config,pairingCodes,confirmAction,focusAuthenticator,hasVisibleWindow,readSchoolMode,authenticateSchoolMode,applySchoolMode,readElementLocks,authenticateElementLock,applyElementLock,readUnlockLadder,authenticateUnlockStep,readProtectionStatus,readUpdateState,openEditor,browserConversion,disposeBrowserConversion,authenticateProfile,validateAuthority,readProfileSummary,revokeProfileAuthority,hostPath:path.join(hostDirectory,'MaterialFileEncryptor.BrowserHost.exe'),authorizePair:async context=>admitted()&&await authorizePair(context)===true&&admitted(),isUnlocked:admitted,onProposal:item=>{if(!admitted())throw Error('Unlock the desktop before receiving downloads.');return onProposal(item);}});
    try{await broker.start();state={...state,reason:null};}catch{lastReceipt=await broker.close();state={...state,reason:'NATIVE_BROKER_START_UNVERIFIED'};}
    if(closed){lastReceipt=await broker.close();state={...state,reason:'CLOSED'};}return status();
   })();try{return await starting;}finally{starting=null;}
  }
- return{initialize,status,observeDownload:event=>broker?.observeDownload(event),revoke(){broker?.revoke();},get pending(){return broker?.pending||0;},async close(){closed=true;broker?.revoke();if(starting)await starting;if(broker)lastReceipt=await broker.close();else lastReceipt={closed:true,processExited:true,stdioClosed:true,pendingRequests:0,pendingResponses:0,pendingDisposals:0,verified:true,deadlineMs:0};state={...state,reason:'CLOSED'};return lastReceipt;}};
+ return{initialize,status,observeDownload:event=>broker?.observeDownload(event),revoke(){pairingCodes?.clear();broker?.revoke();},get pending(){return broker?.pending||0;},async close(){closed=true;pairingCodes?.clear();broker?.revoke();if(starting)await starting;if(broker)lastReceipt=await broker.close();else lastReceipt={closed:true,processExited:true,stdioClosed:true,pendingRequests:0,pendingResponses:0,pendingDisposals:0,verified:true,deadlineMs:0};state={...state,reason:'CLOSED'};return lastReceipt;}};
 }
 
 /** Host-only transport. Its caller origin is an allowlist input, never proof of
  * browser provenance. Every pair still requires approval in the unlocked app. */
-export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnlocked,onProposal,readProtectionStatus,readUpdateState,authenticateProfile,validateAuthority,readProfileSummary,openEditor,browserConversion,disposeBrowserConversion,revokeProfileAuthority,confirmAction,focusAuthenticator,hasVisibleWindow,readSchoolMode,authenticateSchoolMode,applySchoolMode,readElementLocks,authenticateElementLock,applyElementLock,readUnlockLadder,authenticateUnlockStep,spawnHost=spawn,now=Date.now,closeTimeoutMs=3000}={}){
+export function createBrowserNativeBroker({config,hostPath,pairingCodes,authorizePair,isUnlocked,onProposal,readProtectionStatus,readUpdateState,authenticateProfile,validateAuthority,readProfileSummary,openEditor,browserConversion,disposeBrowserConversion,revokeProfileAuthority,confirmAction,focusAuthenticator,hasVisibleWindow,readSchoolMode,authenticateSchoolMode,applySchoolMode,readElementLocks,authenticateElementLock,applyElementLock,readUnlockLadder,authenticateUnlockStep,spawnHost=spawn,now=Date.now,closeTimeoutMs=3000}={}){
  if(typeof authorizePair!=='function'||typeof isUnlocked!=='function'||typeof onProposal!=='function')throw Error('Native approval, unlocked admission and host proposal delivery are required.');
  if(!Number.isSafeInteger(closeTimeoutMs)||closeTimeoutMs<25||closeTimeoutMs>5000)throw Error('Native close timeout must be between 25 and 5000 milliseconds.');
  const allowedOrigins=validateBrowserHostConfig(config),sessions=new Map(),connections=new Map(),currentConnections=new Map(),proposals=new Map(),owners=new Set(),jobs=new Set();let child=null,closed=false,ready=false,active=0,starting=null,readyResolve,readyReject,closing=null;
- const receiver=createBrowserDownloadReceiver({allowedOrigins,authorizePair,isUnlocked,now,onProposal:async item=>{if(closed)throw Error('Native browser broker is closed.');await onProposal(item);unlocked();proposals.set(item.id,{origin:item.origin,state:'awaiting-confirmation',received:0,total:null});}});
+ const receiver=createBrowserDownloadReceiver({allowedOrigins,authorizePair,isUnlocked,pairingCodes,now,onProposal:async item=>{if(closed)throw Error('Native browser broker is closed.');await onProposal(item);unlocked();proposals.set(item.id,{origin:item.origin,state:'awaiting-confirmation',received:0,total:null});}});
  const mediation=createBrowserProtectedMediation({allowedOrigins,getPair:origin=>sessions.get(origin),isUnlocked,authenticateProfile,validateAuthority,readProfileSummary,now});
  const workflows=createBrowserWorkflowMediation({getPair:origin=>sessions.get(origin),isUnlocked,openEditor,now});
  const conversions=createBrowserConverterMediation({getPair:origin=>sessions.get(origin),isUnlocked,adapter:browserConversion,dispose:disposeBrowserConversion,now});
@@ -67,12 +67,12 @@ export function createBrowserNativeBroker({config,hostPath,authorizePair,isUnloc
   const origin=connections.get(connectionId);connections.delete(connectionId);
   if(origin&&currentConnections.get(origin)===connectionId)revoke();
  }
- const unlocked=()=>{if(closed||isUnlocked()!==true){revoke();throw Error('Unlock the desktop before receiving downloads.');}};
+ const unlocked=()=>{if(closed||isUnlocked()!==true){revoke();pairingCodes?.clear();throw Error('Unlock the desktop before receiving downloads.');}};
  async function receive(origin,message,connectionId=null){
   if(!allowedOrigins.includes(origin)||active>=2)throw Error('Browser caller unavailable or not allowed.');unlocked();active++;
   try{
    if(connectionId!==null&&(!uuid(connectionId)||connections.get(connectionId)!==origin))throw Error('Native browser connection is unavailable.');
-   if(connectionId!==null&&exact(message,['type'])&&message.type==='pair'&&currentConnections.get(origin)!==connectionId){revoke();currentConnections.set(origin,connectionId);}
+   if(connectionId!==null&&(exact(message,['type'])||exact(message,['type','code']))&&message.type==='pair'&&currentConnections.get(origin)!==connectionId){revoke();currentConnections.set(origin,connectionId);}
    const liveConnection=()=>{if(connectionId!==null&&(connections.get(connectionId)!==origin||currentConnections.get(origin)!==connectionId))throw Error('Native browser connection is unavailable.');};
    if(conversions.supports(message?.type)){
     if(connectionId===null)throw Error('Native browser connection identity is unavailable.');
