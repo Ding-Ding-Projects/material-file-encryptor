@@ -34,7 +34,7 @@
 
 ### 動畫規範
 
-瀏覽器擴充功能頁面同桌面畫面共用同一份規範。每個互動元素都用 Material Web 元件，或者有記錄嘅狀態層，懸停、聚焦同按下都會經過渡改變。對話框、側邊面板、分頁面板、展開區域同狀態訊息進場時，都用共用標記 `--md-sys-motion-easing-standard`、`--md-sys-motion-easing-emphasized-decelerate` 同 `--md-sys-motion-duration-short4`，唔會直接寫緩動曲線。每個過渡同動畫都有 `prefers-reduced-motion` 覆寫。`scripts/audit-material-motion.mjs` 會靜態檢查呢份規範，而 `test/material-motion-audit.test.js` 要求零項發現。唯一允許嘅原生控制項係隱藏嘅檔案輸入同主頁目的地卡片，兩者都喺程式碼入面列明原因。
+瀏覽器擴充功能頁面、桌面畫面、文件網站（包括原始頁面、產生頁面範本同暫存輸出）同設定檔驗證頁面共用同一份規範。每個互動元素都用 Material Web 元件，或者有記錄嘅狀態層，懸停、聚焦同按下都會經過渡改變。對話框、側邊面板、分頁面板、展開區域同狀態訊息進場時，都用共用標記 `--md-sys-motion-easing-standard`、`--md-sys-motion-easing-emphasized-decelerate` 同 `--md-sys-motion-duration-short4`，唔會直接寫緩動曲線。每個過渡同動畫都有 `prefers-reduced-motion` 覆寫。`scripts/audit-material-motion.mjs` 會靜態檢查呢份規範，而 `test/material-motion-audit.test.js` 要求零項發現。唯一允許嘅原生控制項係隱藏嘅檔案輸入、主頁目的地卡片同文件網站嘅無腳本基線標記，每項都喺程式碼入面列明原因。文件網站嘅例外只會喺 `scripts/audit-material-motion.mjs` 確認 `preparePublicDocumentControls` 會喺綁定任何監聽器之前，將每個原生控制項升級做已註冊嘅 Material 控制項時先被接受。由腳本建立嘅控制項直接用 Material Web 元件。`node scripts/audit-material-motion.mjs --site out/site` 會審核暫存網站，而測試亦會暫存一份並要求嗰度同樣零項發現。
 
 ## 關閉程式
 

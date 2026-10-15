@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 // Static Material Design 3 conformance and motion audit.
 //
-// Scans the browser extension (options and popup pages) and the desktop renderer for:
+// Scans the browser extension, the desktop renderer, the main-process verification page, the documentation site
+// (sources, page templates and, with --site, the staged output) for:
 //   native-control      raw <button>/<input>/<select>/<textarea> that is not allowlisted
 //   missing-transition  interactive selectors (hover/focus/press state or cursor:pointer) with no transition
 //   missing-enter       dialogs, panels, sheets and details with no enter animation
 //   missing-reduced     transitions/animations with no prefers-reduced-motion override
 //   js-motion           script-driven animation with no reduced-motion check
 //
-// Usage: node scripts/audit-material-motion.mjs [--json]
+// Usage: node scripts/audit-material-motion.mjs [--json] [--site <staged site directory>]
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,10 +20,22 @@ const rel = path => relative(root, path).split(sep).join('/');
 // Native elements that genuinely cannot be Material Web components. Every entry needs a reason.
 export const NATIVE_CONTROL_ALLOWLIST = [
   { file: 'browser-extension/options.html', tag: 'input', match: /type="file"[^>]*\bhidden\b|\bhidden\b[^>]*type="file"/, reason: 'Hidden file input: it only backs the Material button that opens the system file picker.' },
-  { file: 'browser-extension/options.html', tag: 'button', match: /class="home-card"/, reason: 'Home destination cards are tab buttons rendered as Material outlined cards with a hand-built state layer (hover, focus and press opacity transitions) because Material Web has no card-button component.' }
+  { file: 'browser-extension/options.html', tag: 'button', match: /class="home-card"/, reason: 'Home destination cards are tab buttons rendered as Material outlined cards with a hand-built state layer (hover, focus and press opacity transitions) because Material Web has no card-button component.' },
+  { file: 'docs/site/index.html', tag: '*', runtimeUpgrade: true, match: /./, reason: 'Documentation home markup is the no-script baseline: site.js calls preparePublicDocumentControls, which replaces every native button, input, select and dialog with the registered Material controls before any listener is bound.' },
+  { file: 'docs/site/publication.mjs', tag: '*', runtimeUpgrade: true, match: /./, reason: 'Generated documentation pages carry the same no-script baseline markup and load site.js, which upgrades every native control to the registered Material controls at runtime.' }
 ];
 
-const SOURCE_DIRS = ['browser-extension', 'src/renderer'];
+// Pages in the allowlist marked runtimeUpgrade are only acceptable while the upgrade pipeline is intact.
+const readText = relPath => (existsSync(join(root, relPath)) ? readFileSync(join(root, relPath), 'utf8') : '');
+export const runtimeUpgradeIntact = () => {
+  const site = readText('docs/site/site.js'), foundation = readText('docs/site/site-foundation.js');
+  return /import\s*\{[^}]*preparePublicDocumentControls[^}]*\}\s*from\s*['"]\.\/site-foundation\.js['"]/.test(site)
+    && /preparePublicDocumentControls\(document\)/.test(site)
+    && /export function preparePublicDocumentControls/.test(foundation)
+    && /upgradeControls\(document\)/.test(foundation);
+};
+
+const SOURCE_DIRS = ['browser-extension', 'src/renderer', 'src/main', 'docs/site'];
 const walk = dir => {
   const out = [];
   for (const name of readdirSync(dir)) {
@@ -107,12 +120,13 @@ const cssRules = file => {
 };
 
 // ---- Page groups: each HTML page with the stylesheets it links ----------------------------
-const pages = byExt('.html').map(html => {
+const makePage = html => {
   const text = readFileSync(html, 'utf8');
   const css = [...text.matchAll(/<link[^>]+rel=["']stylesheet["'][^>]*href=["']([^"']+)["']/gi)].map(m => resolve(dirname(html), m[1])).filter(existsSync);
   const scripts = [...text.matchAll(/<script[^>]+src=["']([^"']+)["']/gi)].map(m => resolve(dirname(html), m[1])).filter(existsSync);
   return { html, text, css, scripts };
-});
+};
+const pages = byExt('.html').map(makePage);
 // Feature stylesheets that no page links directly are attached to the main renderer page.
 const mainRenderer = pages.find(p => rel(p.html) === 'src/renderer/index.html');
 const linked = new Set(pages.flatMap(p => p.css));
@@ -124,8 +138,8 @@ const add = (rule, file, detail) => { const key = rule + '|' + rel(file) + '|' +
 
 // ---- (a) native controls --------------------------------------------------------------------
 const NATIVE = /<(button|input|select|textarea)(?=[\s>\/])[^>]*>/gi;
-const allowed = (file, tag, markup) => NATIVE_CONTROL_ALLOWLIST.find(a => a.file === rel(file) && a.tag === tag && a.match.test(markup));
-for (const file of [...byExt('.html'), ...byExt('.js')]) {
+const allowed = (file, tag, markup) => NATIVE_CONTROL_ALLOWLIST.find(a => a.file === rel(file) && (a.tag === '*' || a.tag === tag) && a.match.test(markup) && (!a.runtimeUpgrade || runtimeUpgradeIntact()));
+for (const file of [...byExt('.html'), ...byExt('.js'), ...byExt('.mjs')]) {
   const text = readFileSync(file, 'utf8');
   for (const m of text.matchAll(NATIVE)) {
     if (/type=["']hidden["']/.test(m[0])) continue;
@@ -148,7 +162,7 @@ const covers = (t, base) => {
   for (const tok of prefixTokens(t)) { const k = have.indexOf(tok, at); if (k < 0) return false; at = k + 1; }
   return true;
 };
-for (const page of pages) {
+const auditPage = page => {
   const sheetRules = page.css.flatMap(cssRules).filter(r => r.selectors);
   const transitioned = new Set(sheetRules.filter(r => hasTransition(r.decls) && !isReduced(r)).flatMap(r => r.selectors.map(stateBase)));
   const seen = new Set();
@@ -211,7 +225,8 @@ for (const page of pages) {
       }
     }
   }
-}
+};
+for (const page of pages) auditPage(page);
 
 // ---- (e) raw easing curves: transitions and animations must use the shared motion tokens ----------
 for (const css of byExt('.css')) {
@@ -231,6 +246,21 @@ for (const file of byExt('.js')) {
   if (JS_MOTION.test(text) && !/prefers-reduced-motion|reducedMotion|reduced-stimulus|reduceMotion/i.test(text)) add('js-motion', file, 'script animation without a reduced-motion check');
 }
 
+// Audit a staged documentation site (the output of scripts/build-site.mjs): every generated page is checked
+// for native controls that the runtime upgrade would not reach, and for the same motion rules as the sources.
+export const auditGeneratedSite = dir => {
+  const start = findings.length;
+  const staged = walk(resolve(dir)).filter(f => f.endsWith('.html')).map(makePage);
+  for (const page of staged) {
+    const upgraded = page.scripts.some(s => /[\\/]site\.js$/.test(s)) && runtimeUpgradeIntact();
+    if (!upgraded) for (const m of page.text.matchAll(NATIVE)) if (!/type=["']hidden["']/.test(m[0])) add('native-control', page.html, m[0].slice(0, 120));
+    auditPage(page);
+  }
+  const result = findings.splice(start).map(f => ({ ...f }));
+  for (const f of result) findingKeys.delete(f.rule + '|' + f.file + '|' + f.detail);
+  return { findings: result, pages: staged.length };
+};
+
 export const runAudit = () => ({
   findings: findings.map(f => ({ ...f })),
   allowlist: NATIVE_CONTROL_ALLOWLIST.map(({ file, tag, reason }) => ({ file, tag, reason })),
@@ -239,6 +269,8 @@ export const runAudit = () => ({
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const result = runAudit();
+  const siteDir = process.argv.indexOf('--site') >= 0 ? process.argv[process.argv.indexOf('--site') + 1] : '';
+  if (siteDir) { const staged = auditGeneratedSite(siteDir); result.findings.push(...staged.findings); result.scanned += staged.pages; }
   if (process.argv.includes('--json')) console.log(JSON.stringify(result, null, 2));
   else {
     const counts = {};

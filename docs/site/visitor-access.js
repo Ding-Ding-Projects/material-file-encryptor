@@ -58,7 +58,7 @@ export function mountVisitorAccess(container,{storage=globalThis.localStorage,fo
     });
     for(const button of host.querySelectorAll('button'))if(button.textContent===translate('Open application data folder'))button.remove();
     const fieldsets=host.querySelectorAll('fieldset');for(const fieldset of Array.from(fieldsets).slice(1))if(!fieldset.hidden){fieldset.hidden=true;fieldset.dataset.visitorHidden='true';}
-    const reset=bind(doc.createElement('button'),'Reset visitor records');reset.type='button';root.append(reset);
+    const reset=bind(doc.createElement('md-outlined-button'),'Reset visitor records');reset.type='button';root.append(reset);
     reset.addEventListener('click',async()=>{
       if(reset.disabled)return;reset.disabled=true;let resetPerformed=false,accessDestroyed=false,resetError=null;
       const confirm=confirmDestructive||((options)=>requestSuperConfirmation(root,options));
