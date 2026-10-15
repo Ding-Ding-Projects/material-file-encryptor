@@ -399,7 +399,9 @@ mapping onto the desktop manager is `src/main/browser-server-adapters.js`.
   the target ids it supports), `versions` (at most 100 per page, each an id and
   a channel of `release`, `snapshot`, `old_beta` or `old_alpha`), `total` and `next`,
   the cursor for the following page or `null`. Only flavors the desktop can
-  really prepare are listed; today that is Vanilla on `local-process`. The
+  really prepare are listed: Vanilla, Paper, Purpur, Fabric, Forge and NeoForge,
+  each with the targets a browser may create, which are `local-process` and
+  `local-container`. The
   extension cannot make the desktop download a catalogue, so a desktop that has
   not loaded one answers `not-loaded` and the extension says so.
 - `manage-server` is a Re-authenticate scope. The paired origin sends exactly
@@ -422,16 +424,21 @@ mapping onto the desktop manager is `src/main/browser-server-adapters.js`.
   which for `create` is the id of the new server and otherwise echoes the request.
   `changed` means the desktop accepted the request, not that a server is now
   running; the extension reads the servers again for the real state.
-- What the desktop manager does today: `create` for Vanilla on `local-process`
-  resolves the chosen version in the loaded catalogue and starts the same
-  verified preparation the desktop uses; `start` and `stop` call its lifecycle,
-  and `restart` is a stop followed by a start. `start` still needs the exact
-  server license accepted in the desktop and native process supervision, and
-  answers `unavailable` while either is missing. `change-setting`,
-  `install-plugin`, the three other targets and every other flavor have no desktop
-  implementation. Those requests are answered `unavailable` at once, without a
-  prompt, so nobody is asked to approve something that cannot happen. A failing
-  or malformed desktop answer is also `unavailable` and never a success.
+- What the desktop manager does today: `create` for any flavor on `local-process`
+  or `local-container` asks the managed-server service to prepare the server, but
+  only when that target reports itself available. The request carries no host,
+  key or path, so an SSH server cannot be created from a browser. `start`, `stop`
+  and `restart` act on verified-download servers and on managed servers on any of
+  the four targets; `start` needs the exact server license accepted in the desktop
+  and is answered `rejected` until it is. `change-setting` edits one key of a
+  managed server's `server.properties` through the desktop's typed schema, and
+  `install-plugin` installs a Modrinth project whose published SHA-512 matches the
+  received file, only while the server is stopped. A refused key, value, release
+  or digest is answered `rejected`. Servers prepared by the older verified-download
+  flow have no settings or plugin surface and are answered `unavailable`. A target
+  that cannot run, a failing or malformed desktop answer and an unsupported action
+  are answered `unavailable`; an unsupported action is answered without a prompt,
+  so nobody is asked to approve something that cannot happen.
 - The prompt is shared with Confirm mode, school mode, element locks and the
   unlock ladder: at most one is pending across all of them, and a second request
   is answered `busy` and is not queued. A locked desktop, a hidden or
@@ -545,6 +552,12 @@ background validation, and the page's filters, create dialog and localization.
 No real desktop server manager, real server, container, SSH host, installed
 desktop or captured prompt took part, so the whole path from a browser to a
 running server is unverified.
+
+`test/server-managed-adapters.test.js` covers the adapters over the managed-server
+service with fake processes, Docker, SSH and network: create, the license gate,
+start, stop, restart, setting changes, Modrinth plugin installs, and the
+`unavailable`, `rejected` and `busy` answers for a target that cannot run, an SSH
+create and an unaccepted license. No real server, container or SSH host took part.
 
 `test/browser-confirm-scopes.test.js` covers the Confirm scope with synthetic
 fixtures: the default Reject button and Escape, the localized prompt text, the

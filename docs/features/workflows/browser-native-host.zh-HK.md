@@ -305,8 +305,9 @@ SSH 金鑰、SSH 密碼、容器端點同地址全部留喺桌面，要求只可
   數字嘅字串。答案係 `server-catalog`，包含 `catalogue`（`ready`、`not-loaded` 或
   `unavailable`）、`flavors`（識別碼、顯示名稱同支援嘅目標識別碼）、`versions`（每頁
   最多 100 個，各有識別碼同頻道 `release`、`snapshot`、`old_beta` 或 `old_alpha`）、
-  `total` 同 `next`（下一頁嘅游標或者 `null`）。只會列出桌面真正可以準備嘅類型，
-  而家就係 `local-process` 上面嘅 Vanilla。擴充功能唔可以叫桌面下載目錄，所以桌面未載入目錄
+  `total` 同 `next`（下一頁嘅游標或者 `null`）。只會列出桌面真正可以準備嘅類型：
+  Vanilla、Paper、Purpur、Fabric、Forge 同 NeoForge，各自附上瀏覽器可以建立嘅目標，
+  即係 `local-process` 同 `local-container`。擴充功能唔可以叫桌面下載目錄，所以桌面未載入目錄
   時會答 `not-loaded`，擴充功能亦會照直講。
 - `manage-server` 係重新驗證範圍。已配對來源只會傳送
   `{type:'manage-server', session, action, server, options}`。`action` 係
@@ -324,13 +325,17 @@ SSH 金鑰、SSH 密碼、容器端點同地址全部留喺桌面，要求只可
   `unchanged`、`rejected`、`busy` 或 `unavailable`）、`action` 同 `server` 識別碼；
   `create` 返回新伺服器嘅識別碼，其他動作就照返要求嘅識別碼。`changed` 只表示桌面
   接受咗要求，並唔表示伺服器已經運行；擴充功能要再讀取伺服器先知道真正狀態。
-- 桌面管理器而家做到啲乜：`create`（`local-process` 上面嘅 Vanilla）會喺已載入嘅目錄
-  解析所揀版本，再啟動桌面本身使用嘅已驗證準備流程；`start` 同 `stop` 會呼叫佢嘅
-  生命週期，`restart` 就係先停止再啟動。`start` 仍然要喺桌面接受確實嘅伺服器
-  授權，同埋有原生程序監督，缺少其中一樣時答 `unavailable`。`change-setting`、
-  `install-plugin`、其餘三個目標同所有其他類型，桌面都未有實作，所以呢啲要求會即時答
-  `unavailable`，唔會出現提示，免得有人要批准一樣做唔到嘅嘢。桌面答失敗或者格式錯誤，
-  同樣答 `unavailable`，永遠唔會當成功。
+- 桌面管理器而家做到啲乜：`create` 可以喺 `local-process` 或者 `local-container`
+  上面建立任何類型，會交畀受管伺服器服務準備，但前提係嗰個目標自己回報可用。
+  要求入面冇主機、金鑰或者路徑，所以瀏覽器建立唔到 SSH 伺服器。`start`、`stop`
+  同 `restart` 可以操作已驗證下載伺服器，亦可以操作四個目標上面嘅受管伺服器；
+  `start` 要喺桌面接受確實嘅伺服器授權，未接受之前答 `rejected`。`change-setting`
+  會透過桌面嘅型別綱要修改受管伺服器 `server.properties` 嘅一個鍵，
+  `install-plugin` 會安裝發佈 SHA-512 同收到嘅檔案一致嘅 Modrinth 項目，而且只限
+  伺服器停止時。被拒絕嘅鍵、值、版本或者雜湊會答 `rejected`。較早嘅已驗證下載流程
+  所準備嘅伺服器冇設定或者插件介面，會答 `unavailable`。跑唔到嘅目標、桌面答失敗
+  或者格式錯誤，同埋唔支援嘅動作都答 `unavailable`；唔支援嘅動作會唔出提示就答，
+  免得有人要批准一樣做唔到嘅嘢。
 - 提示同確認模式、學校模式、元素鎖同解鎖階梯共用：所有範圍加埋最多只有一個待回答，
   第二個要求會答 `busy`，唔會排隊。桌面已鎖定、視窗隱藏或者縮到系統匣、桌面正在關閉，
   或者組建冇驗證回呼，都會即時答 `unavailable`。冇人回答嘅提示會喺 30 秒後以
@@ -408,6 +413,8 @@ SSH 金鑰、SSH 密碼、容器端點同地址全部留喺桌面，要求只可
 運行中桌面嘅端到端路徑仍然未驗證。
 
 `test/browser-server-scopes.test.js` 用合成測試資料涵蓋伺服器管理範圍：桌面、頁面同背景頁入面固定嘅目標、動作、狀態同頻道清單、嚴格嘅要求同答案形狀、拒絕任何主機、金鑰、密碼、路徑或者網址欄位、每次更改前嘅全新原生檢查、共用嘅單一提示同 busy 答案、桌面管理器欠缺嘅動作唔出提示就拒絕、鎖定／中斷連線／關閉時撤回、喺假桌面管理器上面運作嘅轉接器、原生代理訊息、背景頁驗證，以及頁面嘅篩選、建立對話框同本地化。冇真實桌面伺服器管理器、真實伺服器、容器、SSH 主機、已安裝桌面或者已擷取提示參與，所以由瀏覽器到運行中伺服器嘅整條路徑都未驗證。
+
+`test/server-managed-adapters.test.js` 用假嘅程序、Docker、SSH 同網絡涵蓋轉接器對應受管伺服器服務：建立、授權閘、啟動、停止、重新啟動、設定修改、Modrinth 插件安裝，以及目標跑唔到、SSH 建立同授權未接受時嘅 `unavailable`、`rejected` 同 `busy` 答案。呢個測試冇真實伺服器、容器或者 SSH 主機參與。
 
 `test/browser-confirm-scopes.test.js` 用合成測試資料涵蓋確認範圍：預設「拒絕」按鈕同
 Escape、本地化提示文字、單一待回答提示同 busy 答案、桌面鎖定、隱藏或者關閉時

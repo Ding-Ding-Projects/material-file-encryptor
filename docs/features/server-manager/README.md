@@ -4,7 +4,7 @@
 
 - [Catalogue and configuration foundation](foundation.md): authoritative metadata, source-bound controls, honest target availability, security boundaries and remaining integration.
 
-The complete server manager is not delivered yet. Runtime lifecycle, extensions, host mediation and actual interface acceptance remain pending. This category records implemented source behavior separately from those unfinished workflows.
+The complete server manager is not delivered yet. A managed-server service with source behavior for Paper, Purpur, Fabric, Forge and NeoForge, a local process, a local container, an SSH process and an SSH container, plus plugins and settings, is described in the last section of the foundation article. It is verified only with fake processes and a fake network: no real server, container or SSH host took part, and there is no actual interface acceptance. This category records implemented source behavior separately from those unfinished workflows.
 
 - [Native file lease primitive](native-file-lease.md): exact held-file sharing, pinned ancestors, partial acquisition, explicit release and separate cloud-compiled verification.
 

@@ -523,8 +523,8 @@
     {
       "source": "docs/features/server-manager/foundation.md",
       "translation": "docs/features/server-manager/foundation.zh-HK.md",
-      "sourceSha256": "855280f12666e7f3bb139e1d6fcfb49e9f7d4f47854d06d93e915a7bbb453db9",
-      "translationSha256": "dc1e4daff70c687e4b03e032554cbe4c26e655b66af8d89cd5967b7b669e0eea"
+      "sourceSha256": "c011462eb58302f25faf6fd413f6c8130591c8b7404031d595ccc4200dfddb78",
+      "translationSha256": "14fd4bb4d0188f8995f8b4aa4d02b6aeb3ce70c3069bcb06cd61003691124a26"
     },
     {
       "source": "docs/features/server-manager/native-file-lease.md",
@@ -547,8 +547,8 @@
     {
       "source": "docs/features/server-manager/README.md",
       "translation": "docs/features/server-manager/README.zh-HK.md",
-      "sourceSha256": "8a8886608c3c9e8be398f6cb17bf3f26b745c090fddc41ddfc1884a7f902704c",
-      "translationSha256": "793a92c8d9f7d73fb3878fbce02888351e056a0ece6319759c1524354ded8c12"
+      "sourceSha256": "ac81850f3718a5397892aaf756339215cc57f3d3e3af5ee8c963be9c359b31f6",
+      "translationSha256": "3bdc762dd24076bea10bfec6ea9bfe3c882afa00eeac25fce6311423cad52d2a"
     },
     {
       "source": "docs/features/storage/file-history-activity.md",
@@ -649,14 +649,14 @@
     {
       "source": "docs/features/workflows/browser-extension-workspace.md",
       "translation": "docs/features/workflows/browser-extension-workspace.zh-HK.md",
-      "sourceSha256": "311f433945e589c09b4db3fe6100e3558f6dbb618ef4620e56c657eace14d11d",
-      "translationSha256": "ad49475c9820ffa22afe4d187a1dfe6a9733def8d98505d0efc36b8c05bfa371"
+      "sourceSha256": "51029e512929b1f0d2115d4cdee9c5c1fc911ee513db1753d4ddfc76dc57fefc",
+      "translationSha256": "81e51214b8e0bf8e03d4464bae624327878e623780811443e5af4b4167b20287"
     },
     {
       "source": "docs/features/workflows/browser-native-host.md",
       "translation": "docs/features/workflows/browser-native-host.zh-HK.md",
-      "sourceSha256": "554a8923c0d4f872b78c5c9593bac2887d4087d448bd91d48b24c2846ad61350",
-      "translationSha256": "4a23c24a46c7c763544fb297f82f3fa051ebc09e3c106a1c344cc1295eb34ee7"
+      "sourceSha256": "f05d69cb0f5301b0e7bb96c8abf79ca9f2c3ccc163ee2781cc1c73344b933b30",
+      "translationSha256": "95b842c99414db9ab460d153bdb4bc11523a8d3143a1cb43db0c8ea9fda70e21"
     },
     {
       "source": "docs/features/workflows/browser-protection-observations.md",
