@@ -150,6 +150,14 @@ These captures come from the built desktop application at source `2a9cb388718c39
 
 ![Material consent dialog in the dark theme](docs/images/captures/material-2a9cb388/dialog-consent-dark-en.png)
 
+#### Browser extension Home page and popup launcher
+
+Headless Microsoft Edge with the staged extension from source `cfc5e00`, captured on October 14, 2026. The workspace opens on a grid of section cards instead of a tab bar, and the popup keeps the pairing controls above a launcher with one button per section. No desktop was paired, so the connection states read as unavailable.
+
+![Extension workspace Home page with one card per section, light theme, English](docs/images/captures/extension-home-cfc5e00/home-1280x900-light-en.png)
+
+![Extension popup with pairing controls above the section launcher, light theme, English](docs/images/captures/extension-home-cfc5e00/popup-380-light-en.png)
+
 #### Browser extension models tab
 
 Headless Microsoft Edge with the staged extension from source `45ccb91`, captured on October 14, 2026, against a fake local model server; the permission prompt was stubbed for the connected states, and no real Ollama server or installed build was used. The chat capture shows a `javascript:` address left as plain text and the one https link opening with `noopener noreferrer`.
