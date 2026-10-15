@@ -112,7 +112,7 @@ adapter 呼叫會保持缺少 context，唔會借用目前畫面 frame。
 
 第三個狀態模式範圍 `enroll-status-client` 讓已配對嘅擴充功能登記為獨立狀態用戶端。規則同兩個讀取範圍一樣：要有同一條原生連線上有效而且仍然存在嘅配對、唔會彈出桌面提示，亦唔會發出授權。要求只可以有 `type`、`session` 同 `report`。報告只可以有 `version`、`connection`（一定係 `paired`）、`lastRefresh`（去到分鐘嘅 UTC 時間，或者 `null`）同四個 0 至 9999 嘅數量：`notes`、`schedules`、`tickets` 同 `operations`。任何其他欄位、類型或範圍都會喺執行任何嘢之前被拒絕，所以內容、名稱、連結或路徑都夾帶唔到。
 
-中介層會將報告嘅凍結副本交俾注入嘅 `enrollStatusClient` 函式，並回覆 `status-client`，`state` 係 `enrolled`、`pending` 或 `unavailable`。冇呢個函式、函式拋出錯誤，或者回覆其他嘢，答案都係 `unavailable`。現時出貨嘅桌面版本仍未注入狀態功能，所以今日回覆 `unavailable`；實際登記成功嘅路徑未經驗證。
+中介層會將報告嘅凍結副本交俾注入嘅 `enrollStatusClient` 函式，並回覆 `status-client`，`state` 係 `enrolled`、`pending` 或 `unavailable`。冇呢個函式、函式拋出錯誤，或者回覆其他嘢，答案都係 `unavailable`。出貨嘅桌面版本由 `src/main/browser-status-enrollment.js` 注入 `enrollStatusClient`：佢透過現有嘅 `createStatusHubClient` 建立一個獨立狀態中心用戶端（自己嘅工作階段、冇結束掛鉤），並只用有界報告欄位組成嘅一行摘要去更新。狀態中心用戶端已配置而且冇降級（中心需要攝取權杖）就回覆 `enrolled`，否則回覆 `unavailable`。對真實狀態中心嘅登記未經驗證；測試只用假用戶端。
 
 ## 確認範圍：focus-authenticator
 
@@ -154,9 +154,17 @@ adapter 呼叫會保持缺少 context，唔會借用目前畫面 frame。
   `rejected`、`busy` 或者 `unavailable`。答案永遠唔會包含備註、連結、帳戶名稱、
   機密或者路徑。`approved` 表示使用者批准之後，桌面嘅發佈途徑剛好回傳 `true`；
   任何其他途徑結果、錯誤或者冇途徑，都係 `unavailable`。
-- 桌面而家冇討論留言、專案項目或者草稿嘅發佈途徑：`publishProgress` 係可選轉接器，
-  `src/main/main.js` 冇提供。冇轉接器時要求會即時答 `unavailable`，亦唔會顯示提示，
-  所以桌面永遠唔會假裝發佈。專案項目另外需要主機權限，冇權限同樣係 `unavailable`。
+- 桌面喺 `src/main/main.js` 經 `src/main/feature-services.js` 接駁 `publishProgress` 去
+  `src/main/browser-publish-adapter.js`。原生提示批准後，轉接器透過
+  `src/main/forge-workflow.js` 嘅 `postNote` 傳送固定 GraphQL 文件，使用桌面現時作用中、已登入嘅
+  代碼託管帳戶（受保護產品帳戶或 CLI 鑰匙圈帳戶）同內置固定版本 `gh`。備註同連結作為獨立
+  引數傳送，唔會放入查詢文字，憑證只存在於子程序環境。討論留言會貼去本專案儲存庫入面標題係
+  "Browser extension progress" 嘅討論；如果該討論唔存在就唔會建立。專案項目狀態同發佈草稿
+  需要已配置嘅專案目標（專案 id、項目、狀態欄位同選項 id），出貨版本冇提供，所以呢兩個目的地
+  不會發出網絡呼叫，直接答 `unavailable`。
+- 冇連線帳戶、冇目標或者能力、傳輸出錯或者提示中止，轉接器都會回傳 `false`，答案係
+  `unavailable`，絕不會係 `approved`。回應仍然只係固定狀態字詞：特意唔回傳新建項目嘅連結。
+  任何地方都唔會記錄備註。對真實代碼託管帳戶嘅實際發佈未經驗證；測試只用假程序執行器同假傳輸。
 - 同一時間最多只有一個待回答提示。第二個要求會得到 `busy`，唔會排隊。桌面已鎖定、
   視窗隱藏或者正在關閉，會即時答 `unavailable`。鎖定、中斷連線、離開、更新準備同
   30 秒期限都會將待回答提示當作拒絕撤回，撤回之後先到嘅批准唔算批准。

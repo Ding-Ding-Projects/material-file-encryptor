@@ -10,6 +10,7 @@ const loginPattern=/^[A-Za-z0-9][A-Za-z0-9-]{0,38}$/;
 const repoPattern=/^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/;
 const validLogin=value=>typeof value==='string'&&loginPattern.test(value);
 const validRepo=value=>typeof value==='string'&&repoPattern.test(value)&&!value.endsWith('.git');
+const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 export function runForgeCommand(file,args,{cwd,signal,env=process.env,interactive=false,onAuthenticationChallenge}={}){
  return new Promise((resolve,reject)=>{
   const child=spawn(file,args,{cwd,signal,env,shell:false,windowsHide:true,stdio:[interactive?'pipe':'ignore','pipe','pipe']});let output='',bytes=0,challengeSent=false,browserOpened=false;
@@ -79,6 +80,18 @@ export function createForgeWorkflow({dataDirectory,toolsDirectory,resolveTool=cr
     const result=JSON.parse(await gh(['repo','view',plan.destination,'--json','nameWithOwner,url,isPrivate,isFork']));if(result.nameWithOwner!==plan.destination||result.isPrivate!==(plan.visibility==='private')||plan.route==='fork'&&result.isFork!==true)throw new Error('Destination properties require review.');
     if(plan.route==='copy-push'){const helper=quoteForgeHelper(await checked(resolveTool('gh'))),proof=await command('git',['-C',staging,'-c','credential.helper=','-c','credential.helper='+helper,'ls-remote','https://github.com/'+plan.destination+'.git','refs/heads/main']);if(proof.code||proof.output.split(/\s/)[0]!==plan.revision)throw new Error('Uploaded revision could not be verified.');}checkCancellation();plan.state='completed';return{published:true,route:plan.route,destination:plan.destination,url:result.url,revision:plan.route==='copy-push'?plan.revision:null,completedActions};
    },plan);}catch(error){plan.state='failed';return{published:false,route:plan.route,destination:plan.destination,state:closed||operationContext.getStore()?.generation!==cancelGeneration?'cancelled':'failed',completedActions,attemptedActions,externalStateRequiresReview:attemptedActions.length>0,error:closed||operationContext.getStore()?.generation!==cancelGeneration?'Publication cancelled. An attempted provider operation may have completed; inspect the destination.':'Publication did not complete. Inspect authentication, source and destination before preparing again.'};}finally{if(staging)await fs.rm(staging,{recursive:true,force:true});}
+  }),
+  /** Posts one already-approved, already-sanitized note through the active signed-in account. The caller supplies fixed
+   * GraphQL documents through `target`; every variable travels as a separate argument, never inside the query text.
+   * Returns {posted:false} without any network call when there is no active account. Throws on transport failure. */
+  postNote:({operation,variables})=>serialized(async()=>{
+   if(!operation||typeof operation.query!=='string'||!object(variables))throw new Error('Invalid forge note operation.');
+   const rows=await accounts(),account=rows.find(row=>row.active===true);
+   if(!account)return{posted:false,reason:'no-account'};
+   return withSelectedAccount(account.id,async()=>{
+    const args=['api','graphql','-f','query='+operation.query];for(const[name,value]of Object.entries(variables))args.push('-f',name+'='+String(value));
+    const data=JSON.parse(await gh(args));if(data.errors)throw new Error('The forge rejected the note.');return{posted:true,data:data.data};
+   },{sourceKind:account.sourceKind,credentialRevision:account.credentialRevision});
   }),
   cancel(){protectedAccounts?.cancel();cancelGeneration++;for(const controller of controllers)controller.abort();},
   close(){protectedAccounts?.close();closed=true;cancelGeneration++;for(const controller of controllers)controller.abort();plans.clear();},

@@ -134,7 +134,7 @@ Nothing is stored and no grant is issued.
 
 A third status-mode scope, `enroll-status-client`, lets the paired extension enroll as an independent status client. It follows the same rules as the two read scopes: a valid live pairing from the same native connection, no desktop prompt and no grant. The request is exactly `type`, `session` and `report`. The report has exactly `version`, `connection` (always `paired`), `lastRefresh` (a UTC time cut to the minute, or `null`) and four counts from 0 to 9999: `notes`, `schedules`, `tickets` and `operations`. Any other field, type or range is refused before anything runs, so no content, name, link or path can ride along.
 
-The mediator hands a frozen copy of the report to the injected `enrollStatusClient` function and answers `status-client` with `state` set to `enrolled`, `pending` or `unavailable`. With no such function, or when it throws or answers anything else, the answer is `unavailable`. The shipped desktop does not inject a status feature yet, so today it answers `unavailable`; a live enrolled path is unverified.
+The mediator hands a frozen copy of the report to the injected `enrollStatusClient` function and answers `status-client` with `state` set to `enrolled`, `pending` or `unavailable`. With no such function, or when it throws or answers anything else, the answer is `unavailable`. The shipped desktop injects `enrollStatusClient` from `src/main/browser-status-enrollment.js`, which creates one independent status-hub client (its own session, no exit hook) through the existing `createStatusHubClient` and updates it with a one-line summary built only from the bounded report fields. It answers `enrolled` when the hub client is configured and not degraded (the hub needs its ingest token) and `unavailable` otherwise. Enrollment against a live hub is unverified; the tests use a fake client.
 
 ## Confirm scope: focus-authenticator
 
@@ -188,12 +188,25 @@ the other Confirm scopes.
   `approved` means the desktop's publishing route returned exactly `true`
   after the person approved; any other route result, an error or a missing
   route is `unavailable`.
-- The desktop has no publishing route for discussion comments, project items or
-  drafts: `publishProgress` is an optional adapter and `src/main/main.js` does
-  not provide one. Without it the request is answered `unavailable` at once
-  and no prompt is shown, so the desktop never pretends to publish. A project
-  item additionally needs host permission, which also makes it `unavailable`
-  when absent.
+- The desktop wires `publishProgress` in `src/main/main.js` through
+  `src/main/feature-services.js` to `src/main/browser-publish-adapter.js`. After
+  the native prompt is approved, the adapter sends fixed GraphQL documents
+  through `postNote` in `src/main/forge-workflow.js`, which uses the desktop's
+  active signed-in forge account (protected product account or CLI keyring
+  account) with the pinned bundled `gh`. The note and links travel as separate
+  arguments, never inside the query text, and the credential exists only in the
+  child process environment. A discussion comment is posted to the discussion
+  titled "Browser extension progress" in this project's repository; if that
+  discussion does not exist nothing is created. Project item status and
+  publication draft need a configured project target (project id, item, status
+  field and option ids); none is shipped, so those two destinations answer
+  `unavailable` without a network call.
+- With no connected account, a missing target or capability, a transport error
+  or an aborted prompt, the adapter returns `false` and the answer is
+  `unavailable`; it is never `approved`. The response is still only the fixed
+  state word: the created item's link is deliberately not returned. Nothing logs
+  the note. Live publication to a real forge account is unverified; the tests use
+  a fake process runner and fake transports.
 - At most one prompt is pending. A second request is answered `busy` and is not
   queued. A locked desktop, a hidden window or a closing desktop answers
   `unavailable` at once. Lock, disconnect, exit, update preparation and the
