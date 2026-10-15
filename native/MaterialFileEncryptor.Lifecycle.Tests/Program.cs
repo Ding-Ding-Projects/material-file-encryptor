@@ -21,6 +21,7 @@ CngLegacyRegression.Run();
 JournalRegression.Run();
 await StatusProtocolRegression.Run();
 await BackgroundAdmissionRegression.Run();
+await ForceLockRegression.Run();
 await TransferPhaseRegression.Run();
 StorageStageRegression.Run();
 ImportJournalRegression.Run();
@@ -60,7 +61,7 @@ try
     Set(controller, "activePreparedOperations", 2);
     lock (Get(controller, "gate"))
     {
-        var response = Task.Run(() => Json(Call(controller, "Execute", "forceLock", Json(new { }))));
+        var response = Task.Run(() => Json(Call(controller, "Execute", "forceLock", Json(new { timeoutMs = 100 }))));
         Assert(response.Wait(TimeSpan.FromSeconds(1)), "Force-lock diagnostics waited for controller lock");
         Assert(response.Result.GetProperty("activePreparedOperations").GetInt32() == 2, "Prepared-work snapshot was missing");
         Assert(response.Result.GetProperty("activeFilesystemIo").GetInt32() == 0, "Absent filesystem reported active I/O");
@@ -71,10 +72,12 @@ try
     var semaphore = (SemaphoreSlim)Get(controller, "commandWorker");
     await semaphore.WaitAsync();
     var pending = (Task<object?>)Call(controller, "DispatchAsync", "setHistoryRetention", Json(new { days = 7 }))!;
-    var busy = Json(Call(controller, "Execute", "forceLock", Json(new { })));
-    Assert(busy.GetProperty("busy").GetBoolean() && !busy.GetProperty("locked").GetBoolean(), "Queued command did not veto force-lock");
+    // A queued command cannot be cancelled, so force lock waits for the bounded
+    // deadline and then reports it honestly instead of locking under it.
+    var busy = Json(Call(controller, "Execute", "forceLock", Json(new { timeoutMs = 50 })));
+    Assert(busy.GetProperty("busy").GetBoolean() && !busy.GetProperty("locked").GetBoolean() && busy.GetProperty("code").GetString() == "operations-active", "Queued command did not hold force-lock back");
     semaphore.Release(); await pending.WaitAsync(TimeSpan.FromSeconds(5));
-    Console.WriteLine("PASS queued command vetoes force-lock without waiting for worker");
+    Console.WriteLine("PASS queued command holds force-lock back for its bounded deadline without waiting for worker");
 
     var registry = Get(controller, "operations");
     var worker = (SemaphoreSlim)registry.GetType().GetField("worker", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(registry)!;
@@ -82,8 +85,6 @@ try
     string file = Path.Combine(root, "example.bin"); File.WriteAllBytes(file, new byte[256 * 1024]);
     var start = Json(Call(controller, "Execute", "startImport", Json(new { paths = new[] { file } })));
     string id = start.GetProperty("operationId").GetString()!;
-    busy = Json(Call(controller, "Execute", "forceLock", Json(new { })));
-    Assert(busy.GetProperty("busy").GetBoolean(), "Queued transfer did not veto force-lock");
     var cancel = Json(Call(controller, "Execute", "cancelOperation", Json(new { operationId = id })));
     Assert(cancel.GetProperty("accepted").GetBoolean(), "Cancel was not admitted independently");
     worker.Release();
@@ -94,7 +95,7 @@ try
         await Task.Delay(10);
     }
     Assert(engine.GetInfo("example.bin") is null, "Cancelled queued import installed a file");
-    Console.WriteLine("PASS queued import cancellation and force-lock busy response");
+    Console.WriteLine("PASS queued import cancellation");
 
     start = Json(Call(controller, "Execute", "startImport", Json(new { paths = new[] { file } })));
     id = start.GetProperty("operationId").GetString()!;

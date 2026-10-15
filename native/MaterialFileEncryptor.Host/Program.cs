@@ -114,10 +114,24 @@ internal static class Program
             cancellation.Cancel(); await background;
             // EOF is an orderly parent shutdown. Preserve a busy mount until its
             // application handles close; successful writes are already journaled.
+            // The desktop application is gone, so nothing can unlock or lock this
+            // drive again. After a grace period for programs to close their files,
+            // cancel remaining work, release the leftover descriptors and dismount;
+            // every acknowledged write is already in the durable journal.
+            var shutdownClock = System.Diagnostics.Stopwatch.StartNew();
             while (true)
             {
                 try { controller.Dispose(); break; }
-                catch (InvalidOperationException) { Console.Error.WriteLine("Waiting for encrypted drive handles to close before shutdown."); await Task.Delay(1000); }
+                catch (InvalidOperationException)
+                {
+                    if (shutdownClock.Elapsed > TimeSpan.FromSeconds(30))
+                    {
+                        Console.Error.WriteLine("Encrypted drive handles stayed open after the application exited; forcing the lock.");
+                        try { controller.Execute("forceLock", JsonSerializer.SerializeToElement(new { timeoutMs = 10000 })); } catch { }
+                    }
+                    else Console.Error.WriteLine("Waiting for encrypted drive handles to close before shutdown.");
+                    await Task.Delay(1000);
+                }
                 catch { Console.Error.WriteLine("Encrypted shutdown could not complete; the local encrypted journal is retained."); exitCode = 1; break; }
             }
         }

@@ -14,11 +14,13 @@ namespace MaterialFileEncryptor.Host;
 internal sealed class VaultFileSystem : FileSystemBase
 {
     private sealed record Node(string Id);
-    private sealed class Handle(IDisposable lease)
+    private sealed class Handle(IDisposable lease, int processId)
     {
         public IDisposable Lease { get; } = lease;
+        public int ProcessId { get; } = processId;
         public bool Closed { get; set; }
     }
+    private readonly HashSet<Handle> openHandles = new();
     private readonly VaultEngine vault;
     private readonly object gate;
     private readonly byte[] security;
@@ -31,6 +33,7 @@ internal sealed class VaultFileSystem : FileSystemBase
     public int ActiveIo { get { lock (gate) return activeIo; } }
     public int ActiveIoSnapshot => Volatile.Read(ref activeIo);
     public int ActiveHandles { get { lock (gate) return activeHandles; } }
+    public int ActiveHandlesSnapshot => Volatile.Read(ref activeHandles);
 
     private readonly string volumeLabel;
 
@@ -96,6 +99,85 @@ internal sealed class VaultFileSystem : FileSystemBase
             stopping = true;
             return true;
         }
+    }
+    // Force lock: after the controller has cancelled and drained its own work, the
+    // descriptors other programs still hold are released here. Each lease is
+    // disposed before the engine is, and a late Close for a released descriptor
+    // does nothing. Only in-flight filesystem I/O can still veto the release.
+    public bool BeginForcedRelease(out int released)
+    {
+        lock (gate)
+        {
+            released = 0;
+            if (activeIo != 0) return false;
+            stopping = true;
+            foreach (var handle in openHandles.ToArray())
+            {
+                if (handle.Closed) continue;
+                try { handle.Lease.Dispose(); }
+                catch { LastError = "A file close could not complete. Retry sync before locking."; }
+                handle.Closed = true; ++released;
+            }
+            openHandles.Clear();
+            activeHandles = 0;
+            RecoverPending();
+            return true;
+        }
+    }
+    public readonly record struct HolderSummary(int Handles, int ActiveIo, int Explorer, int Search, int Security, int Application, int Other);
+    // Names only the kind of program holding a descriptor. Executable names are
+    // matched against a fixed list and are never stored, logged or returned, and
+    // no file or folder name is involved.
+    public HolderSummary DescribeHolders()
+    {
+        int[] processes;
+        int handles, io;
+        lock (gate)
+        {
+            handles = activeHandles; io = activeIo;
+            processes = openHandles.Where(handle => !handle.Closed).Select(handle => handle.ProcessId).ToArray();
+        }
+        int explorer = 0, search = 0, security = 0, application = 0, other = 0;
+        foreach (int pid in processes)
+        {
+            switch (ClassifyProcess(pid))
+            {
+                case "explorer": ++explorer; break;
+                case "search": ++search; break;
+                case "security": ++security; break;
+                case "application": ++application; break;
+                default: ++other; break;
+            }
+        }
+        return new HolderSummary(handles, io, explorer, search, security, application, other);
+    }
+    internal static string ClassifyProcess(int pid)
+    {
+        if (pid <= 0) return "other";
+        if (pid == Environment.ProcessId) return "application";
+        try
+        {
+            using var process = System.Diagnostics.Process.GetProcessById(pid);
+            return process.ProcessName.ToLowerInvariant() switch
+            {
+                "explorer" => "explorer",
+                "searchindexer" or "searchprotocolhost" or "searchfilterhost" => "search",
+                "msmpeng" or "nissrv" or "mpcmdrun" => "security",
+                "material file encryptor" or "materialfileencryptor" => "application",
+                _ => "other"
+            };
+        }
+        catch { return "other"; }
+    }
+    // The requesting process is only readable from inside a WinFsp dispatcher
+    // callback; outside one the native call faults. The controller enables this
+    // for a mounted adapter only, so directly driven instances record no process.
+    public bool RecordRequestingProcess { get; set; }
+    private int RequestingProcessId()
+    {
+        if (!RecordRequestingProcess) return 0;
+        try { return GetOperationProcessId(); }
+        catch { return 0; }
     }
     public void CancelUnmount() { lock (gate) stopping = false; }
     public void RecoverPending()
@@ -200,7 +282,8 @@ internal sealed class VaultFileSystem : FileSystemBase
             if (entry.IsDirectory && (options & FILE_NON_DIRECTORY_FILE) != 0) return STATUS_FILE_IS_A_DIRECTORY;
             if (!entry.IsDirectory && (options & FILE_DIRECTORY_FILE) != 0) return STATUS_NOT_A_DIRECTORY;
             node = NodeFor(entry);
-            fileDesc = new Handle((access & (0x00000002u|0x00000004u|0x40000000u|0x10000000u))!=0 ? vault.AcquireWriterById(entry.EntryId) : vault.AcquireOpenById(entry.EntryId));
+            var opened = new Handle((access & (0x00000002u|0x00000004u|0x40000000u|0x10000000u))!=0 ? vault.AcquireWriterById(entry.EntryId) : vault.AcquireOpenById(entry.EntryId), RequestingProcessId());
+            fileDesc = opened; openHandles.Add(opened);
             ++activeHandles;
             info = ToInfo(entry);
             normalizedName = "\\" + entry.Path.Replace('/', '\\');
@@ -370,9 +453,11 @@ internal sealed class VaultFileSystem : FileSystemBase
         lock (gate)
         {
             var handle = (Handle)desc;
+            // A descriptor released by a forced lock was already disposed and counted.
+            if (handle.Closed) return;
             try { handle.Lease.Dispose(); }
             catch { LastError = "A file close could not complete. Retry sync before locking."; }
-            finally { if (!handle.Closed) { handle.Closed = true; --activeHandles; } }
+            finally { handle.Closed = true; openHandles.Remove(handle); --activeHandles; }
         }
     }
     public override int GetSecurity(object node, object desc, ref byte[] descriptor) { descriptor = security; return STATUS_SUCCESS; }

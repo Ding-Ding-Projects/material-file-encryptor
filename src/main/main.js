@@ -4,7 +4,7 @@ import {readRuntimeAccessibility} from './startup-photo-service.js';
 import { selectVerificationRestartContext } from './verification-restart-context.js';
 import { readFileSync } from 'node:fs';
 import squirrelStartup from 'electron-squirrel-startup';
-import { app, autoUpdater, BrowserWindow, dialog, ipcMain, Menu, nativeImage, safeStorage, shell, Tray } from 'electron'
+import { app, autoUpdater, BrowserWindow, dialog, ipcMain, Menu, nativeImage, powerMonitor, safeStorage, shell, Tray } from 'electron'
 import { createMaterialDialogs, materialDialogPaths } from './material-dialog.js'
 import { describePending, shutdownPrompt } from './shutdown-pending.js';
 import { randomBytes, createHash } from 'node:crypto';
@@ -23,6 +23,7 @@ import { createBrowserHandoffLifecycle } from './browser-native-host.js';
 import { handleNativeHostSquirrelEvent } from './browser-host-squirrel.js';
 import { DEFAULT_DRIVE_NAME, normalizeDriveName } from '../shared/drive-name.js';
 import { createPairingCodes } from './browser-pairing-code.js';
+import { createSessionEnd } from './session-end.js';
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const rendererPath = path.resolve(directory, '../renderer/index.html');
@@ -87,7 +88,7 @@ const configPath = () => path.join(app.getPath('userData'), 'preferences.json');
 const sessionMarkerPath = () => path.join(app.getPath('userData'), 'session-open.json');
 const selectedImports = new Set();
 const selectedExports = new Set();
-let window, tray, helper, features, localAdapter, browserHandoff, updates, shuttingDown = false, operation = null, quitPending = false, updateInstallLease = false, updateLanguage = 'en', interruptedSession = false;
+let sessionEnd, window, tray, helper, features, localAdapter, browserHandoff, updates, shuttingDown = false, operation = null, quitPending = false, updateInstallLease = false, updateLanguage = 'en', interruptedSession = false;
 let cachedStartupRegistration = { enabled: false, verificationOnly: false, restored: false };
 const buildMetadata = { version: app.getVersion(), builtAt: null };
 let preferences = { startup: true, autoUnlock: false, driveLetter: 'M:', driveName: DEFAULT_DRIVE_NAME, transport: 'folder', historyRetentionDays: null, performanceMode: 'responsive' };
@@ -146,14 +147,20 @@ async function forceLockDrive(language = 'en') {
   const title = text('Force Lock', '強制鎖定');
   const answer = await uiDialog.showMessageBox(window, {
     type: 'warning', buttons: [text('Keep running', '繼續運行'), title], defaultId: 0, cancelId: 0, title,
-    message: text('Lock this drive after all files and mapped views are released?', '所有檔案及記憶體映射釋放後，鎖定呢個磁碟？'),
-    detail: text('Save and close open files and release mapped views first. Retained file handles, mapped views, active or queued transfers, and filesystem activity prevent locking and leave the drive mounted. Finish or cancel transfers, then retry. Other applications may retain plaintext they already read.', '請先儲存並關閉開啟的檔案，以及釋放記憶體映射。仍被持有的檔案控制代碼、記憶體映射、執行中或排隊傳輸，以及檔案系統活動都會阻止鎖定，磁碟會保持掛載。請完成或取消傳輸後再試。其他程式可能仍保留之前讀取的明文。'),
+    message: text('Lock this drive now?', '而家鎖定呢個磁碟？'),
+    detail: text('Force lock cancels active transfers and synchronization, closes the files and folders that other programs still have open on this drive, and then locks it. Save your work in those programs first, because they lose access to the drive. Everything already saved stays safe in the encrypted journal. Other programs may keep plaintext they already read.', '強制鎖定會取消進行緊嘅傳輸同同步，關閉其他程式仍然開住嘅檔案同資料夾，然後鎖定磁碟。請先喺嗰啲程式儲存你嘅工作，否則佢哋會失去磁碟存取。已經儲存嘅內容會安全留喺加密日誌入面。其他程式可能仍保留之前讀取過嘅明文。'),
   });
   if (answer.response !== 1) return {cancelled: true};
   browserHandoff?.revoke();
   const result = await helper.request('forceLock');
   if (result.locked) { state = nativeState(await helper.request('statusSummary')); publish(); }
-  else if (result.busy) throw new Error(text('Force Lock is busy. Close retained file handles and mapped views, and finish or cancel active or queued transfers. Filesystem activity must finish before locking. The drive remains mounted; retry after these resources are released.', '強制鎖定忙碌中。請關閉仍被持有的檔案控制代碼及記憶體映射，並完成或取消執行中或排隊傳輸。檔案系統活動亦須先完成。磁碟會保持掛載，資源釋放後請再試。'));
+  else if (result.busy) {
+    // Force lock has already cancelled what it can and waited; this is what is left.
+    if (result.code === 'operations-active') throw new Error(text('Force Lock waited, but a command on the drive did not finish in time. The drive is still mounted. Wait a moment and try again.', '強制鎖定已等候，但磁碟上嘅指令未能及時完成。磁碟仍然掛載，請稍等一陣再試。'));
+    if (result.code === 'crypto-active') throw new Error(text('Force Lock waited, but the drive was still busy encrypting or decrypting data. The drive is still mounted. Wait a moment and try again.', '強制鎖定已等候，但磁碟仍然忙緊加密或解密資料。磁碟仍然掛載，請稍等一陣再試。'));
+    if (result.code === 'filesystem-handles-active') throw new Error(text('Force Lock could not close all open files because the drive was still reading or writing. The drive is still mounted. Try again.', '強制鎖定未能關閉所有開啟嘅檔案，因為磁碟仍然讀寫緊資料。磁碟仍然掛載，請再試一次。'));
+    throw new Error(text('Force Lock could not finish while the drive was busy. The drive is still mounted. Try again.', '磁碟忙緊，強制鎖定未能完成。磁碟仍然掛載，請再試一次。'));
+  }
   else throw new Error(text('Force Lock did not confirm that the drive was detached and locked.', '強制鎖定未能確認磁碟已卸載及鎖定。'));
   return result;
 }
@@ -415,6 +422,24 @@ else {
       return proof;
     });
     window.on('close', event => { if (!shuttingDown && !testMode) { event.preventDefault(); window.hide(); } });
+    // Windows ends the session (shutdown, restart, sign-out): lock the drive in
+    // the few seconds available. The query phase can still be vetoed by another
+    // program, so it only commits the journal; the definitive event locks.
+    sessionEnd = createSessionEnd({
+      forceLock: async options => {
+        const result = await helper.request('forceLock', options);
+        if (result?.locked) { try { state = nativeState(await helper.request('statusSummary')); publish(); } catch { /* The session is ending. */ } }
+        return result;
+      },
+      flushJournal: () => helper.request('flushJournal'),
+      isMounted: () => Boolean(helper) && !state.locked,
+      clearMarker: () => fs.rm(sessionMarkerPath(), { force: true }),
+      beforeLock: () => { browserHandoff?.revoke(); localAdapter?.revoke(); }
+    });
+    window.on('query-session-end', () => { void sessionEnd.suspend(); });
+    window.on('session-end', () => { void sessionEnd.end(); });
+    powerMonitor.on('suspend', () => { void sessionEnd.suspend(); });
+    powerMonitor.on('shutdown', () => { void sessionEnd.end(); });
     const icon = nativeImage.createFromDataURL('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAIElEQVQ4T2NkqLj/n4ECwESJ5lEDRg0YNWDUgFEDBg0AAEZ7JPE/MhwBAAAAAElFTkSuQmCC');
     tray = new Tray(icon); updateTray(); tray.on('double-click', showWindow);
     await window.loadFile(rendererPath);
@@ -426,6 +451,13 @@ else {
     } else { state.driver.checking = false; state.driver.error = 'Windows and WinFsp are required to mount a drive.'; publish(); }
     await handleExplorerCopy(process.argv);
   }).catch(handleStartupFailure);
-  app.on('before-quit', event => { if (!shuttingDown && !testMode) { event.preventDefault(); void quit(); } });
+  app.on('before-quit', event => {
+    if (shuttingDown || testMode) return;
+    event.preventDefault();
+    // During session end there is no time for the interactive quit flow: finish
+    // the bounded lock, then leave.
+    if (sessionEnd?.ending) void sessionEnd.end().finally(() => { shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit()); });
+    else void quit();
+  });
   app.on('window-all-closed', async () => { if (testMode) {await closeBrowserHandoff();verificationStartup?.restore(); shuttingDown = true; helper?.dispose(); app.quit(); } });
 }

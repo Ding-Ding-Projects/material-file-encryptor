@@ -34,6 +34,7 @@ internal sealed partial class VaultController : IDisposable
     private DateTimeOffset? lastSync;
     private object? lastOfflineRelease;
     private bool syncing, unmountBusy;
+    private string[] unmountHolders = [];
     private int syncFlight, activePreparedOperations;
     private long engineGeneration;
     private CancellationTokenSource? syncCancellation;
@@ -106,7 +107,7 @@ internal sealed partial class VaultController : IDisposable
             }
             var snapshot = new
             {
-                locked = vault is null, mounted = host is not null, unmountBusy, driveLetter, driveName, storageDir, cacheDir, files, revision = vault?.Revision ?? -1, filesRevision = vault?.Revision ?? -1, historyRevision = revision, operations = operations.Snapshot(),
+                locked = vault is null, mounted = host is not null, unmountBusy, unmountHolders = unmountBusy ? unmountHolders : Array.Empty<string>(), driveLetter, driveName, storageDir, cacheDir, files, revision = vault?.Revision ?? -1, filesRevision = vault?.Revision ?? -1, historyRevision = revision, operations = operations.Snapshot(),
                 packing = PackingInfo(),
                 partSizeBytes = vault?.PartSizeBytes ?? 80L * 1024 * 1024, lastOfflineRelease, mountDiagnostic = cachedMountDiagnostic,
                 sync = new { running = syncing, lastSync, error = fileSystem?.LastError ?? syncError ?? (vault?.Status.LastError is null ? null : "Encrypted storage synchronization needs attention."), pendingCommits = vault?.Status.PendingCommits ?? 0, pendingLocalFrames = vault?.JournalStatistics.PendingFrames ?? 0, sourceAvailable = vault?.Status.IsSourceAvailable ?? false },
@@ -153,7 +154,8 @@ internal sealed partial class VaultController : IDisposable
     {
         if (method == "operations") return operations.Snapshot();
         if (method == "cancelOperation") return operations.Cancel(RequiredString(args, "operationId"));
-        if (method == "forceLock") return ForceLock();
+        if (method == "forceLock") return ForceLock(args);
+        if (method == "flushJournal") return FlushJournal();
         if (method == "startImport") return StartImport(args);
         if (method == "exportVersion") return ExportVersionFile(args);
         if (method == "startExport") return StartExport(args);
@@ -433,7 +435,7 @@ internal sealed partial class VaultController : IDisposable
         string selected = ValidateDrive(OptionalString(args, "driveLetter") ?? driveLetter);
         if (!FreeDriveLetters().Contains(selected, StringComparer.OrdinalIgnoreCase)) throw new InvalidOperationException("That drive letter is already in use.");
         string selectedName = ValidateDriveName(OptionalString(args, "driveName") ?? driveName);
-        var adapter = new VaultFileSystem(Engine, gate, selectedName);
+        var adapter = new VaultFileSystem(Engine, gate, selectedName) { RecordRequestingProcess = true };
         var mountedHost = new FileSystemHost(adapter);
         try
         {
@@ -450,11 +452,22 @@ internal sealed partial class VaultController : IDisposable
     public void Unmount()
     {
         FileSystemHost? mountedHost;
+        VaultFileSystem? busyFileSystem = null;
+        bool busyNow = false;
         lock (gate)
         {
             mountedHost = host;
             if (mountedHost is null) { unmountBusy = false; return; }
-            if (fileSystem is null || !fileSystem.BeginUnmount()) { unmountBusy = true; throw new InvalidOperationException("The drive is busy. Close files and Explorer windows using it, then try again."); }
+            if (fileSystem is null || !fileSystem.BeginUnmount()) { unmountBusy = busyNow = true; busyFileSystem = fileSystem; }
+        }
+        if (busyNow)
+        {
+            // Classifying the holders looks programs up by process; that never
+            // runs while the filesystem callback lock is held.
+            if (busyFileSystem is null) throw new InvalidOperationException("The drive is busy. Close the programs using it, then try again.");
+            var busy = DriveBusyException.From(busyFileSystem.DescribeHolders());
+            unmountHolders = busy.Holders;
+            throw busy;
         }
         try { mountedHost.Unmount(); }
         catch { lock (gate) fileSystem?.CancelUnmount(); throw; }

@@ -26,16 +26,25 @@ test('force lock cancellation keeps helper untouched in every current language',
     assert.equal(f.shown.defaultId,0);assert.equal(f.shown.cancelId,0);
     assert.equal(f.shown.buttons.length,2);
     assert.equal(f.shown.buttons[1],f.shown.title);
-    assert.match(f.shown.detail,language==='yue'?/保持掛載/:/leave the drive mounted/);
-    if(language==='bilingual')assert.match(f.shown.detail,/保持掛載/);
+    // The confirmation says what will really happen: work is cancelled, other programs lose the drive.
+    assert.match(f.shown.detail,language==='yue'?/失去磁碟存取/:/lose access to the drive/);
+    if(language==='bilingual')assert.match(f.shown.detail,/失去磁碟存取/);
+    assert.doesNotMatch(f.shown.detail,/prevent locking|阻止鎖定/);
   }
 });
-test('busy response preserves mounted state and localizes retained-resource instructions',async()=>{
-  for(const language of ['en','yue','bilingual']) {
-    const f=fixture(1);
+test('busy response preserves mounted state and says what is still running, in every language',async()=>{
+  const cases=[
+    ['operations-active',/command on the drive did not finish/,/指令未能及時完成/],
+    ['crypto-active',/encrypting or decrypting/,/加密或解密/],
+    ['filesystem-handles-active',/still reading or writing/,/讀寫緊資料/],
+    [undefined,/could not finish while the drive was busy/,/磁碟忙緊/]
+  ];
+  for(const [code,english,cantonese] of cases) for(const language of ['en','yue','bilingual']) {
+    const f=fixture(1,{busy:true,locked:false,code});
     await assert.rejects(f.context.forceLockDrive(language),error=>{
-      assert.match(error.message,language==='yue'?/控制代碼及記憶體映射/:/file handles and mapped views/);
-      if(language==='bilingual')assert.match(error.message,/磁碟會保持掛載/);
+      assert.match(error.message,language==='yue'?cantonese:english);
+      if(language==='bilingual')assert.match(error.message,cantonese);
+      assert.match(error.message,language==='yue'?/磁碟仍然掛載|仍然掛載/:/still mounted/);
       return true;
     });
     assert.deepEqual(f.calls,['revokeBrowser','forceLock']);assert.equal(f.context.state.mounted,true);
