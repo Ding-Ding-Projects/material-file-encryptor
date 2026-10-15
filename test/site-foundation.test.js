@@ -53,7 +53,13 @@ test('public navigation and locked wording status translate in Cantonese and bil
 
 test('School command filtering survives a language refresh and BFCache retains controls',async()=>{
  const source=await readFile(new URL('../docs/site/site-foundation.js',import.meta.url),'utf8');
- assert.match(source,/pagehide',event=>\{if\(event.persisted\)return;[\s\S]*?foundation.destroy\(\)/);
+ assert.match(source,/const destroy=\(\)=>\{if\(destroyed\)return;destroyed=true;/);
+ const lifecycle=source.slice(source.indexOf('const pagehide='),source.indexOf(' return {...foundation'));
+ let teardownCount=0,registered;
+ Function('destroy','window',lifecycle)(()=>teardownCount++,{addEventListener(name,handler){assert.equal(name,'pagehide');registered=handler;}});
+ registered({persisted:true});assert.equal(teardownCount,0);
+ registered({persisted:false});assert.equal(teardownCount,1);
+ assert.match(source,/window.removeEventListener\('pagehide',pagehide\)/);
  const filter=source.slice(source.indexOf('const visibleCommands='),source.indexOf('const handleLanguage='));
  const evaluate=Function('commands','schoolEnabled',filter+'return visibleCommands();');
  const commands=[{id:'preferences'},{id:'setting:language-select'},{id:'setting:theme-select'},{id:'setting:vocabulary-file'}];
@@ -63,7 +69,7 @@ test('School command filtering survives a language refresh and BFCache retains c
  assert.ok(refresh.includes('foundation.setLanguage(value)'));assert.ok(refresh.includes('foundation.palette.setCommands(visibleCommands())'));
  const calls=[],field=()=>({setAttribute:(key,value)=>calls.push([key,value]),setLanguage:value=>calls.push(['field-language',value])});
  const foundation={setLanguage(value){calls.push(['foundation-language',value]);this.palette.rows=commands;},palette:{rows:[],setCommands(rows){this.rows=rows;}}};
- const handler=Function('foundation','search','settingsSearch','role','localized','commands','document','setControlLanguage','let schoolEnabled=true;'+filter+refresh+'return handleLanguage;')(foundation,field(),field(),{},localized,commands,{},(_document,value)=>calls.push(['control-language',value]));
+ const handler=Function('foundation','search','settingsSearch','role','localized','commands','document','setControlLanguage','toolsButton','localizedLabel','text','results','refreshSettings','let schoolEnabled=true;'+filter+refresh+'return handleLanguage;')(foundation,field(),field(),{},localized,commands,{},(_document,value)=>calls.push(['control-language',value]),{},value=>value,(en,yue)=>({en,yue}),{childElementCount:0},()=>{});
  for(const language of ['yue','bilingual']){handler({detail:{language}});assert.deepEqual(foundation.palette.rows.map(row=>row.id),['preferences','setting:theme-select']);assert.deepEqual(calls.find(row=>row[0]==='foundation-language'),['foundation-language','en']);}
  assert.deepEqual(calls.filter(row=>row[0]==='control-language'),[['control-language','en'],['control-language','en']]);
 

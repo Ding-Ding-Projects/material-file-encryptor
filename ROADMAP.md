@@ -1,3 +1,11 @@
+## Website usability, 2026-10-15
+
+- [x] Independently review the scoped navigation, localized search, and article-reading design.
+- [ ] Implement and verify responsive navigation, repeated section links, localized preference search, and article spacing in the staged website.
+- [x] Publish the initial modernization and translation correction through `75d3ce3`; verify all 326 live files and the exact repository homepage.
+- [ ] Rebuild and verify the preserved compact-grid correction; finish the five remaining narrow bilingual tuples and article/1100-pixel probes.
+- [ ] Repair and verify palette focus restoration after its launcher is collapsed (7 of 8 staged interaction checks pass).
+
 ## Material conversion sweep, 2026-10-14
 
 - [x] Replace hand-built section tabs with Material tabs in the converter, local models and file details (hidden-desktop captures, English, light theme).

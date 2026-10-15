@@ -1,15 +1,32 @@
 # Public website
 
-This self-contained static site is intended to be published at the repository’s GitHub Pages URL. It needs no compilation, external fonts, CDN, analytics, or server API. The root build stages the site and its diagrams together in `out/site`, matching the Pages workflow:
+This static site is published at the repository’s GitHub Pages URL. Its build bundles the shared Material controls and stages verified local fonts, reviewed images, and complete documentation. The deployed pages need no CDN, analytics, or server API. Stage the website independently on a supported Node.js runtime, matching the Pages workflow:
 
 ```sh
-build.bat /s
+npm ci --ignore-scripts --no-audit --no-fund
+node scripts/build-site.mjs
 python3 -m http.server 8080 --directory out/site
 ```
 
 Open `http://localhost:8080/`. The deployment places the diagrams in `images/` alongside the page, so all assets also work beneath the repository’s GitHub Pages path. The repository’s Pages workflow owns the final deployed directory layout.
 
+The Windows application build also stages the website through `build.bat /s`. In a proxy-configured Node.js environment, use its supported proxy setting for dependency and font acquisition; keep TLS verification enabled.
+
 Run the content and behavior checks with `node --test test/site*.test.js` from the repository root. Check 320px layouts, keyboard navigation, light/dark/system appearance, the mobile menu, documentation search, guide links, FAQ, and the preferences dialog in a real browser before publishing.
+
+## Navigation and reading
+
+The header keeps workflow, security, documentation, and release status prominent. Explore groups the complete documentation library, wiki, browser workspace, and capture gallery. Compact navigation presents the same destinations in named groups. The opening links directly to the documentation; the source link remains available below it.
+
+Page tools expands the existing search, notifications, tabs, and tab actions. It starts collapsed, preserves keyboard shortcuts, and leaves active Home content and notification delivery available. Section links reveal their content even when the URL already contains the same fragment. Preference search matches English and Cantonese labels. Documentation articles use scoped paragraph, list, and heading spacing that follows the visitor's font scale.
+
+After staging, run the optional browser interaction checks with a Playwright Chromium installation or `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`:
+
+```sh
+SITE_NAVIGATION_ROOT="$PWD/out/site" node --test scripts/check-site-navigation.mjs
+```
+
+These browser checks are separate from the platform-independent source suite. They do not verify Windows drive mounting, an installer, or historical capture replacement. The reviewed design and affected-state inventory are in [`design/website-usability.md`](../../design/website-usability.md).
 
 The site identifies the published preview in `release.js`, but its direct installer CTA stays disabled until independently downloaded, packaged, installed and uninstall receipts are all verified for the exact release source and installer hash. Each receipt also records its actual verification time. `verifiedDownload` rejects missing, pending, draft, mismatched and malformed records. The browser reads this checked-in public summary; it does not independently verify installer bytes. Update it only from completed source-bound receipts. Workflow images are explanatory diagrams, not proof of native integration.
 

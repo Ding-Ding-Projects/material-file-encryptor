@@ -157,6 +157,45 @@ body:has(mfe-dialog[open]){overflow:hidden}
 :root{scroll-padding-top:calc(var(--site-header-height,72px) + 16px)}
 @media(max-width:799px){.header-inner{display:grid;grid-template-columns:minmax(0,1fr) auto}.brand{min-width:0;max-width:100%}.brand>span{overflow-wrap:anywhere}.brand svg{flex:none}#navigation{top:var(--site-header-height,72px);max-height:calc(100dvh - var(--site-header-height,72px));overflow:auto}#navigation .translation{white-space:normal}.menu-button{display:inline-flex}.header-actions{min-width:0;display:flex;flex-wrap:wrap;justify-content:flex-end}}
 @media(max-width:599px){.size-control:has(md-outlined-text-field){grid-template-columns:minmax(0,1fr)}.dialog-content{padding-inline:16px}.flow-destinations{grid-template-columns:minmax(0,1fr)}.playback>*{flex:1 1 150px}.header-inner{padding-inline:12px;gap:8px}.brand{font-size:13px}}
+/* Homepage navigation keeps secondary destinations in one accessible disclosure. */
+.homepage-header .header-inner{flex-wrap:nowrap;gap:20px}
+.homepage-header .brand{flex:none;max-width:240px}
+.homepage-header #navigation{flex:0 1 auto;flex-wrap:nowrap;gap:16px;min-width:0;padding-block:12px}
+.navigation-primary{display:flex;align-items:center;gap:20px}
+.homepage-header:not(.is-compact) .navigation-primary{flex-shrink:0}
+.homepage-header #navigation a:not(.button){display:flex;align-items:center;min-height:44px;padding:10px 4px;color:var(--muted);font-size:14px;text-decoration:none;white-space:normal;overflow-wrap:anywhere}
+.homepage-header #navigation a:not(.button):hover{color:var(--primary);background:var(--surface-container);border-radius:8px}
+.navigation-group-label{display:none}
+.navigation-explore{position:relative;flex:none}
+#explore-toggle{gap:8px}
+#explore-links{position:absolute;top:calc(100% + 8px);right:0;width:260px;max-width:calc(100vw - 40px);padding:8px;background:var(--surface-container);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px #00000020}
+.homepage-header #explore-links a{padding:12px;display:block}
+.homepage-header .menu-button{display:none}
+.homepage-header #preferences-open{min-width:44px;padding-inline:10px;flex:none}
+.homepage-header .preferences-label{display:none}
+.homepage-header.is-compact .preferences-label{display:inline;font-size:14px}
+.homepage-header.is-compact .header-inner{display:grid;grid-template-columns:minmax(0,1fr) auto;padding-inline:20px;gap:12px;min-height:72px}
+.homepage-header.is-compact .brand{min-width:0;max-width:100%;font-size:14px}
+.homepage-header.is-compact .menu-button{display:inline-flex}
+.homepage-header.is-compact #navigation{display:none;position:absolute;top:100%;left:0;right:0;padding:20px;max-height:calc(100dvh - var(--site-header-height,72px));overflow:auto;background:var(--surface);border-bottom:1px solid var(--line);box-shadow:0 10px 16px #0000000c}
+.homepage-header.is-compact #navigation.is-open{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;justify-content:stretch}
+.homepage-header.is-compact #navigation>*{grid-column:1/-1;min-width:0;max-width:100%}
+.homepage-header.is-compact .navigation-primary{display:block;grid-row:1}
+.homepage-header.is-compact #navigation>.button{grid-row:2;justify-self:start}
+.homepage-header.is-compact .navigation-explore{grid-row:3;border-top:1px solid var(--line);padding-top:16px}
+.homepage-header.is-compact #navigation>#preferences-open{grid-row:4;justify-self:start}
+.homepage-header.is-compact .navigation-group-label{display:block;font-size:12px;font-weight:600;color:var(--primary);margin-bottom:8px}
+.homepage-header.is-compact #explore-toggle{display:none}
+.homepage-header.is-compact #explore-links{position:static;width:auto;max-width:none;padding:0;background:transparent;border:0;border-radius:0;box-shadow:none}
+.homepage-header.is-compact #navigation a:not(.button){padding:12px 4px;display:block}
+.homepage-header #navigation .translation{white-space:normal}
+.hero-source{display:block;width:fit-content;margin-top:12px;text-decoration:underline;text-underline-offset:3px}
+.homepage-header:not([data-navigation-ready]) .header-inner{flex-wrap:wrap}
+.homepage-header:not([data-navigation-ready]) #navigation{display:flex;position:static;flex-wrap:wrap;max-height:none}
+.homepage-header:not([data-navigation-ready]) #explore-links{position:static;box-shadow:none}
+.homepage-header:not([data-navigation-ready]) #explore-toggle{display:none}
+#page-tools-toggle{min-height:44px;margin-block:12px}
+.page-tools-panel{margin-bottom:16px}
 /* Material motion: shared tokens, state-layer transitions and enter transitions. */
 :root{--md-sys-motion-easing-standard:cubic-bezier(.2,0,0,1);--md-sys-motion-easing-emphasized-decelerate:cubic-bezier(.05,.7,.1,1);--md-sys-motion-duration-short3:150ms;--md-sys-motion-duration-short4:200ms;--md-sys-motion-duration-medium1:250ms}
 a,button,summary{transition:color var(--md-sys-motion-duration-short3) var(--ease),background-color var(--md-sys-motion-duration-short3) var(--ease),border-color var(--md-sys-motion-duration-short3) var(--ease),box-shadow var(--md-sys-motion-duration-short3) var(--ease),opacity var(--md-sys-motion-duration-short3) var(--ease)}
@@ -174,3 +213,25 @@ details[open]>:not(summary){animation:site-surface-in var(--md-sys-motion-durati
 [role=status]:not([hidden]),[role=alert]:not([hidden]){animation:site-status-in var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-emphasized-decelerate) both}
 @media(prefers-reduced-motion:reduce){dialog[open]>*,details[open]>:not(summary),[role=status]:not([hidden]),[role=alert]:not([hidden]){animation:none}}
 .local-ux input,.local-ux select{transition:background-color var(--md-sys-motion-duration-short3) var(--ease),border-color var(--md-sys-motion-duration-short3) var(--ease),box-shadow var(--md-sys-motion-duration-short3) var(--ease),outline-offset var(--md-sys-motion-duration-short3) var(--ease)}
+
+/* Article rhythm follows visitor typography without narrowing diagrams or tables. */
+.documentation-article{min-width:0;max-width:100%;scroll-margin-top:0;--article-space:calc(16px * var(--local-ux-font-scale,1))}
+.documentation-article :is(p,ul,ol,blockquote){max-inline-size:65ch;margin-block:0 var(--article-space)}
+.documentation-article :is(h2,h3,h4,h5,h6){margin-block:calc(2 * var(--article-space)) calc(.75 * var(--article-space));font-weight:500;line-height:1.3;letter-spacing:normal;overflow-wrap:anywhere}
+.documentation-article h2{font-size:calc(32px * var(--local-ux-font-scale,1))}
+.documentation-article h3{font-size:calc(24px * var(--local-ux-font-scale,1))}
+.documentation-article h4{font-size:calc(20px * var(--local-ux-font-scale,1))}
+.documentation-article :is(h5,h6){font-size:1em}
+.documentation-article>:is(h2,h3,h4,h5,h6):first-child,.documentation-article>.eyebrow+:is(h2,h3,h4,h5,h6){margin-block-start:0}
+.documentation-article :is(ul,ol){padding-inline-start:1.5em}
+.documentation-article li+li{margin-block-start:.4em}
+.documentation-article li>:is(ul,ol){margin-block:.4em 0}
+.documentation-article li>p:last-child{margin-block-end:0}
+.documentation-article :is(pre,.table-scroll,.documentation-diagram){margin-block:var(--article-space)}
+.documentation-article pre{font-size:calc(14px * var(--local-ux-font-scale,1));white-space:pre-wrap;overflow-wrap:anywhere}
+.documentation-article :is(.small,.eyebrow){font-size:calc(14px * var(--local-ux-font-scale,1))}
+.documentation-article .source-reference{margin-block-start:calc(2 * var(--article-space))}
+.documentation-article :is(nav,.table-scroll){min-width:0;max-width:100%}
+/* The root scroll padding already includes the measured sticky header and clearance. */
+.documentation-article :is([id],details){scroll-margin-top:0}
+@media(max-width:599px){.documentation-article h2{font-size:calc(28px * var(--local-ux-font-scale,1))}}

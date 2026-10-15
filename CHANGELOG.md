@@ -1,3 +1,12 @@
+# Website navigation and reading, 2026-10-15
+
+- Grouped secondary destinations under Explore and existing toolbar/tab controls under Page tools, preserving every capability and shortcut.
+- Added a direct documentation action while retaining source access; improved responsive navigation and article reading rhythm.
+- Fixed repeated section links and English/Cantonese settings search, including missing translated labels.
+- Preserved a compact-grid correction awaiting rebuilt verification. Palette focus restoration and the remaining layout checks are explicitly unfinished in HANDOFF.md.
+
+網站導覽同工具整理成清楚分組，功能同快捷鍵全部保留；文件更易搵，文章更易讀。窄畫面修正已保存但未重新驗證，指令面板關閉後嘅焦點修復仍待完成。
+
 # Material layout, motion and extension workspace, 2026-10-14
 
 - Fixed layout defects found in captures: legend inside its card, full-width table headers, full-width workflow fields, buttons at their own width and help buttons beside the control they explain.
