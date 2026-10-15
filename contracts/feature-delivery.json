@@ -11665,7 +11665,16 @@
         "src/features/server-manager/configuration.js",
         "src/renderer/features/server-manager/configuration-controls.js",
         "src/main/server-manager-host.js",
-        "src/renderer/features/server-manager/index.js"
+        "src/renderer/features/server-manager/index.js",
+        "src/features/server-manager/flavors.js",
+        "src/features/server-manager/launch-plans.js",
+        "src/features/server-manager/target-drivers.js",
+        "src/features/server-manager/server-properties.js",
+        "src/features/server-manager/extensions.js",
+        "src/features/server-manager/bounded-http.js",
+        "src/main/server-targets-service.js",
+        "src/renderer/features/server-manager/targets-panel.js",
+        "src/renderer/features/server-manager/targets-copy.js"
       ],
       "documentation": [
         "docs/features/server-manager/foundation.md"
@@ -11675,10 +11684,16 @@
       ],
       "tests": [
         "test/server-manager.test.js",
-        "test/server-manager-local-process.test.js"
+        "test/server-manager-local-process.test.js",
+        "test/server-flavors.test.js",
+        "test/server-launch-plans.test.js",
+        "test/server-properties-and-extensions.test.js",
+        "test/server-targets-service.test.js",
+        "test/server-managed-adapters.test.js",
+        "test/server-targets-panel.test.js"
       ],
       "evidence": [],
-      "reason": "Preparation-only server workflow: catalog/version selection, bounded preparation, cancellation and license review exist. Full four-target interactive management, plugin/flavor lifecycle and real server acceptance are not implemented or proved here.",
+      "reason": "Servers are created and managed on the local process, local container, SSH process and SSH container targets in Vanilla, Paper, Purpur, Fabric, Forge and NeoForge, from each official API with HTTPS-only exact-host bounded fetches. Hashes are verified where published (Purpur MD5 labelled weak; Fabric and some Forge builds recorded unverified-upstream with the received bytes pinned). Start requires native license acceptance; SSH uses BatchMode with host key checking and a natively chosen key whose path never leaves the main process; containers publish on 127.0.0.1 only. A typed server.properties form and Modrinth plugin installs (SHA-512 required) are included. Verified with fakes only: no real server, container, SSH host, Java runtime, Docker daemon or download was exercised, and the new panel has not been captured in a built app.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -14713,7 +14728,10 @@
         "browser-extension/publishing-entry.js",
         "browser-extension/background.js",
         "src/shared/publication-request.js",
-        "src/main/browser-native-host.js"
+        "src/main/browser-native-host.js",
+        "src/main/browser-publish-adapter.js",
+        "src/main/forge-workflow.js",
+        "src/main/feature-services.js"
       ],
       "documentation": [
         "docs/features/workflows/browser-extension-workspace.md",
@@ -14725,11 +14743,12 @@
         "docs/features/workflows/browser-native-host.zh-HK.md"
       ],
       "tests": [
-        "test/browser-publishing-scope.test.js"
+        "test/browser-publishing-scope.test.js",
+        "test/browser-desktop-adapters.test.js"
       ],
       "evidence": [],
       "persistence": [],
-      "reason": "A Progress and publication section composes a note, shows a sanitized preview (local paths, user names, email addresses, token-like strings and personal wording removed, with a count), validates up to five https evidence links and requires a reviewed checkbox before sending. The page makes no network request; the paired desktop receives it through the publish-progress Confirm scope behind the single prompt gate. The desktop has no forge adapter wired, so every request is answered unavailable and nothing is published. Synthetic tests only.",
+      "reason": "A Progress and publication section composes a note, shows a sanitized preview, validates up to five https evidence links and requires a reviewed checkbox; the page makes no network request. After the native Confirm prompt the desktop adapter posts through the existing forge workflow with the active signed-in account and the bundled gh, token only in the child environment. A discussion comment goes to the \"Browser extension progress\" discussion when it exists; project items and drafts answer unavailable because no project target is configured. The browser receives only a fixed state word. Synthetic tests only; no live post has been made.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -15756,7 +15775,9 @@
         "browser-extension/status-client.js",
         "browser-extension/background.js",
         "src/main/browser-status-mediation.js",
-        "src/main/browser-native-host.js"
+        "src/main/browser-native-host.js",
+        "src/main/browser-status-enrollment.js",
+        "src/main/feature-services.js"
       ],
       "documentation": [
         "docs/features/workflows/browser-extension-workspace.md",
@@ -15768,11 +15789,12 @@
         "docs/features/workflows/browser-native-host.zh-HK.md"
       ],
       "tests": [
-        "test/browser-status-client-scope.test.js"
+        "test/browser-status-client-scope.test.js",
+        "test/browser-desktop-adapters.test.js"
       ],
       "evidence": [],
       "persistence": [],
-      "reason": "After pairing, Status offers enrollment as an independent status client through the enroll-status-client scope; the bounded report carries the version, paired state, last refresh to the minute and four counts. The shipped desktop has no enrollment function wired, so it answers unavailable; the enrolled and pending paths are verified only against an injected fake.",
+      "reason": "After pairing, Status offers enrollment as an independent status client; the desktop now creates one status-hub client through the existing createStatusHubClient and sends a one-line summary built only from the bounded report fields, answering enrolled when the client is configured and not degraded and unavailable otherwise. Synthetic tests only; no live status hub enrollment has been observed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -17219,7 +17241,10 @@
         "browser-extension/publishing-entry.js",
         "browser-extension/background.js",
         "src/shared/publication-request.js",
-        "src/main/browser-native-host.js"
+        "src/main/browser-native-host.js",
+        "src/main/browser-publish-adapter.js",
+        "src/main/forge-workflow.js",
+        "src/main/feature-services.js"
       ],
       "documentation": [
         "docs/features/workflows/browser-extension-workspace.md",
@@ -17231,11 +17256,12 @@
         "docs/features/workflows/browser-native-host.zh-HK.md"
       ],
       "tests": [
-        "test/browser-publishing-scope.test.js"
+        "test/browser-publishing-scope.test.js",
+        "test/browser-desktop-adapters.test.js"
       ],
       "evidence": [],
       "persistence": [],
-      "reason": "The Progress and publication section offers a discussion comment destination with validated evidence links and a sanitized preview, sent only through the desktop Confirm prompt. With no desktop forge adapter wired the answer is a fixed unavailable and no comment is posted. Synthetic tests only.",
+      "reason": "The discussion comment destination posts a sanitized note and evidence links to the \"Browser extension progress\" discussion through the desktop forge workflow after the native prompt; with no signed-in account or no such discussion the answer is unavailable and nothing is created. Synthetic tests only; no live comment has been posted.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -17281,7 +17307,10 @@
         "browser-extension/publishing-entry.js",
         "browser-extension/background.js",
         "src/shared/publication-request.js",
-        "src/main/browser-native-host.js"
+        "src/main/browser-native-host.js",
+        "src/main/browser-publish-adapter.js",
+        "src/main/forge-workflow.js",
+        "src/main/feature-services.js"
       ],
       "documentation": [
         "docs/features/workflows/browser-extension-workspace.md",
@@ -17293,11 +17322,12 @@
         "docs/features/workflows/browser-native-host.zh-HK.md"
       ],
       "tests": [
-        "test/browser-publishing-scope.test.js"
+        "test/browser-publishing-scope.test.js",
+        "test/browser-desktop-adapters.test.js"
       ],
       "evidence": [],
       "persistence": [],
-      "reason": "The Progress and publication section offers a project item status destination with a status field. Without a desktop adapter or host permission the request is answered unavailable and the page says so; nothing is changed on any project. Synthetic tests only.",
+      "reason": "The project item status destination is wired to the desktop forge workflow but needs a configured project target (project, item, status field and option ids); none is configured, so requests answer unavailable with no network call. The target path is exercised only in synthetic tests.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -17539,7 +17569,8 @@
         "browser-extension/background.js",
         "src/main/browser-server-mediation.js",
         "src/main/browser-server-adapters.js",
-        "src/main/browser-native-host.js"
+        "src/main/browser-native-host.js",
+        "src/main/server-targets-service.js"
       ],
       "documentation": [
         "docs/features/workflows/browser-extension-workspace.md",
@@ -17551,11 +17582,12 @@
         "docs/features/workflows/browser-native-host.zh-HK.md"
       ],
       "tests": [
-        "test/browser-server-scopes.test.js"
+        "test/browser-server-scopes.test.js",
+        "test/server-managed-adapters.test.js"
       ],
       "evidence": [],
       "persistence": [],
-      "reason": "A Servers section (Home card, popup launcher and palette entry) lists servers with target and state filter chips and offers a create dialog with Material selects for type, target and version, through read-servers, read-server-catalog (paged) and the re-authenticated manage-server scope. No host, key, password, path or URL passes through the browser. The desktop manager supports only Vanilla on the local process target; settings, plugins, container and SSH targets and other flavors are answered unavailable without a prompt. Synthetic tests and staged-build captures only; no real server, container or SSH host took part.",
+      "reason": "A Servers section lists servers with target and state filter chips and offers create, start, stop, restart, setting changes and plugin installs through read-servers, read-server-catalog and the re-authenticated manage-server scope, now mapped onto the desktop manager's four targets and six flavors. Creation from the browser is limited to the local process and local container targets because SSH needs a host and key only the desktop holds; no host, key, password, path or URL passes through the browser. Synthetic tests and staged-build captures only; no real server, container or SSH host took part.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -17907,7 +17939,25 @@
     "browser-extension/servers.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
     "src/main/browser-server-mediation.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
     "src/main/browser-server-adapters.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
-    "test/browser-server-scopes.test.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8"
+    "test/browser-server-scopes.test.js": "5011c97d5c554e551f88302f00b5ad57964bdfb8",
+    "src/features/server-manager/flavors.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "src/features/server-manager/launch-plans.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "src/features/server-manager/target-drivers.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "src/features/server-manager/server-properties.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "src/features/server-manager/extensions.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "src/features/server-manager/bounded-http.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "src/main/server-targets-service.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "src/renderer/features/server-manager/targets-panel.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "src/renderer/features/server-manager/targets-copy.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "test/server-flavors.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "test/server-launch-plans.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "test/server-properties-and-extensions.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "test/server-targets-service.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "test/server-managed-adapters.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "test/server-targets-panel.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "src/main/browser-publish-adapter.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "src/main/browser-status-enrollment.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "test/browser-desktop-adapters.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
