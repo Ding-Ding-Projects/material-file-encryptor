@@ -1,0 +1,821 @@
+{
+  "schemaVersion": 1,
+  "kind": "runtime-motion-audit",
+  "sourceCommit": "4c48fdba51c80cbef29af76e7e645c3996edbe18",
+  "quick": false,
+  "generatedAtUtc": "2026-10-15T15:44:08.847Z",
+  "allowlist": [
+    {
+      "id": "hidden-file-input",
+      "selector": "input[type=file]",
+      "reason": "A file input only backs the Material button that opens the system file picker."
+    },
+    {
+      "id": "platform-picker-input",
+      "selector": "input",
+      "host": "mfe-date-field,mfe-file-picker",
+      "reason": "The one-pixel, tab-order-free input inside mfe-date-field and mfe-file-picker is the platform date and file picker engine; the visible control is the Material outlined field and button drawn over it."
+    },
+    {
+      "id": "home-card",
+      "selector": "button.home-card",
+      "reason": "Home destination cards are tab buttons drawn as Material outlined cards with a hand-built state layer, because Material Web has no card-button component."
+    }
+  ],
+  "meta": {
+    "extension": {
+      "buildIdentity": "941129cd73e25b6162f61be3abb3573a4040705eef2569943ae028f81fcf01d0",
+      "extensionVersion": "0.1.0",
+      "browser": "Edg/155.0.4283.45",
+      "scriptErrors": 0
+    },
+    "site": {
+      "browser": "Edg/155.0.4283.45",
+      "routes": {
+        "topLevel": 5,
+        "categoriesAvailable": 16,
+        "categoriesSampled": 5,
+        "articlesAvailable": 230,
+        "articlesSampled": 10,
+        "sampling": "evenly spaced over the sorted file list, first and last included"
+      },
+      "scriptErrors": 0
+    },
+    "renderer": {
+      "browser": "Edg/155.0.4283.45",
+      "scope": "source renderer with a stubbed preload bridge; the installed application is not covered",
+      "destinations": [
+        "drive",
+        "offline",
+        "history",
+        "recycle",
+        "tools",
+        "settings",
+        "help"
+      ],
+      "scriptErrors": []
+    }
+  },
+  "surfaces": [
+    {
+      "name": "extension",
+      "states": 72,
+      "examinedElements": 1185352,
+      "interactiveElementsChecked": 1812,
+      "classification": {
+        "focus-target": 72,
+        "material": 1488,
+        "material-part": 2852,
+        "allowlisted-native": 220,
+        "hyperlink": 104,
+        "focus-stop": 4
+      },
+      "findings": [],
+      "enterAnimations": {
+        "probed": 64,
+        "animated": 64,
+        "missing": [],
+        "probes": [
+          {
+            "state": "open connection light 1280x800",
+            "surface": "#panel-connection",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open personalization light 1280x800",
+            "surface": "#panel-personalization",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open changelog light 1280x800",
+            "surface": "#panel-changelog",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open notes light 1280x800",
+            "surface": "#panel-notes",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open docs light 1280x800",
+            "surface": "#panel-docs",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open support light 1280x800",
+            "surface": "#panel-support",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open dimsum light 1280x800",
+            "surface": "#panel-dimsum",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open models light 1280x800",
+            "surface": "#panel-models",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open status light 1280x800",
+            "surface": "#panel-status",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open publishing light 1280x800",
+            "surface": "#panel-publishing",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open servers light 1280x800",
+            "surface": "#panel-servers",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "palette light 1280x800",
+            "surface": "#palette",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "message-preview light 1280x800",
+            "surface": "#message-preview",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "export-dialog light 1280x800",
+            "surface": "#export-dialog",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "confirm-dialog light 1280x800",
+            "surface": "#confirm-dialog",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "note sheet light 1280x800",
+            "surface": "#note-sheet",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open connection light 360x780",
+            "surface": "#panel-connection",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open personalization light 360x780",
+            "surface": "#panel-personalization",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open changelog light 360x780",
+            "surface": "#panel-changelog",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open notes light 360x780",
+            "surface": "#panel-notes",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open docs light 360x780",
+            "surface": "#panel-docs",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open support light 360x780",
+            "surface": "#panel-support",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open dimsum light 360x780",
+            "surface": "#panel-dimsum",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open models light 360x780",
+            "surface": "#panel-models",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open status light 360x780",
+            "surface": "#panel-status",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open publishing light 360x780",
+            "surface": "#panel-publishing",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open servers light 360x780",
+            "surface": "#panel-servers",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "palette light 360x780",
+            "surface": "#palette",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "message-preview light 360x780",
+            "surface": "#message-preview",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "export-dialog light 360x780",
+            "surface": "#export-dialog",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "confirm-dialog light 360x780",
+            "surface": "#confirm-dialog",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "note sheet light 360x780",
+            "surface": "#note-sheet",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open connection dark 1280x800",
+            "surface": "#panel-connection",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open personalization dark 1280x800",
+            "surface": "#panel-personalization",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open changelog dark 1280x800",
+            "surface": "#panel-changelog",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open notes dark 1280x800",
+            "surface": "#panel-notes",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open docs dark 1280x800",
+            "surface": "#panel-docs",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open support dark 1280x800",
+            "surface": "#panel-support",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open dimsum dark 1280x800",
+            "surface": "#panel-dimsum",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open models dark 1280x800",
+            "surface": "#panel-models",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open status dark 1280x800",
+            "surface": "#panel-status",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open publishing dark 1280x800",
+            "surface": "#panel-publishing",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open servers dark 1280x800",
+            "surface": "#panel-servers",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "palette dark 1280x800",
+            "surface": "#palette",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "message-preview dark 1280x800",
+            "surface": "#message-preview",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "export-dialog dark 1280x800",
+            "surface": "#export-dialog",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "confirm-dialog dark 1280x800",
+            "surface": "#confirm-dialog",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "note sheet dark 1280x800",
+            "surface": "#note-sheet",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open connection dark 360x780",
+            "surface": "#panel-connection",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open personalization dark 360x780",
+            "surface": "#panel-personalization",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open changelog dark 360x780",
+            "surface": "#panel-changelog",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open notes dark 360x780",
+            "surface": "#panel-notes",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open docs dark 360x780",
+            "surface": "#panel-docs",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open support dark 360x780",
+            "surface": "#panel-support",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open dimsum dark 360x780",
+            "surface": "#panel-dimsum",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open models dark 360x780",
+            "surface": "#panel-models",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open status dark 360x780",
+            "surface": "#panel-status",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open publishing dark 360x780",
+            "surface": "#panel-publishing",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open servers dark 360x780",
+            "surface": "#panel-servers",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "palette dark 360x780",
+            "surface": "#palette",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "message-preview dark 360x780",
+            "surface": "#message-preview",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "export-dialog dark 360x780",
+            "surface": "#export-dialog",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "confirm-dialog dark 360x780",
+            "surface": "#confirm-dialog",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "note sheet dark 360x780",
+            "surface": "#note-sheet",
+            "found": true,
+            "via": "css-animation"
+          }
+        ]
+      },
+      "reducedMotion": {
+        "states": 72,
+        "libraryInternalNote": "Transitions inside Material Web shadow roots (state layers, ripples, field labels, switch handles) cannot be restyled by the page. They are listed by element tag in libraryInternalTags, not counted as findings, and disclosed as a limit.",
+        "leaks": [],
+        "libraryInternalTags": {
+          "md-outlined-field": 56,
+          "md-ripple": 170,
+          "md-elevation": 12,
+          "md-filled-button": 2,
+          "md-outlined-select": 6,
+          "md-slider": 4,
+          "md-switch": 16,
+          "md-checkbox": 2
+        },
+        "runningAnimationsAfterEmulation": 0
+      }
+    },
+    {
+      "name": "site",
+      "states": 66,
+      "examinedElements": 1271564,
+      "interactiveElementsChecked": 6261,
+      "classification": {
+        "hyperlink": 4552,
+        "material": 1453,
+        "material-part": 1491,
+        "focus-target": 4,
+        "focus-stop": 12,
+        "disclosure": 256
+      },
+      "findings": [],
+      "enterAnimations": {
+        "probed": 16,
+        "animated": 16,
+        "missing": [],
+        "probes": [
+          {
+            "state": "page tools index.html light 1280x800",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools index.html dark 1280x800",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools library.html light 1280x800",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools library.html dark 1280x800",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools wiki.html light 1280x800",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools wiki.html dark 1280x800",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools gallery.html light 1280x800",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools gallery.html dark 1280x800",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools index.html light 360x780",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools index.html dark 360x780",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools library.html light 360x780",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools library.html dark 360x780",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools wiki.html light 360x780",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools wiki.html dark 360x780",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools gallery.html light 360x780",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "page tools gallery.html dark 360x780",
+            "surface": "#page-tools-panel",
+            "found": true,
+            "via": "computed-animation"
+          }
+        ]
+      },
+      "reducedMotion": {
+        "states": 66,
+        "libraryInternalNote": "Transitions inside Material Web shadow roots (state layers, ripples, field labels, switch handles) cannot be restyled by the page. They are listed by element tag in libraryInternalTags, not counted as findings, and disclosed as a limit.",
+        "leaks": [],
+        "libraryInternalTags": {
+          "md-ripple": 498,
+          "md-outlined-field": 8
+        },
+        "runningAnimationsAfterEmulation": 0
+      }
+    },
+    {
+      "name": "renderer",
+      "states": 100,
+      "examinedElements": 3446656,
+      "interactiveElementsChecked": 4222,
+      "classification": {
+        "material": 4198,
+        "material-part": 2708,
+        "focus-stop": 12,
+        "disclosure": 8,
+        "focus-target": 4,
+        "allowlisted-native": 16
+      },
+      "findings": [],
+      "enterAnimations": {
+        "probed": 28,
+        "animated": 28,
+        "missing": [],
+        "probes": [
+          {
+            "state": "open history light 1280x800",
+            "surface": "#view-history",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open recycle light 1280x800",
+            "surface": "#view-recycle",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "tools menu light 1280x800",
+            "surface": "mfe-context-menu >>> md-menu",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "settings menu light 1280x800",
+            "surface": "mfe-context-menu >>> md-menu",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "help menu light 1280x800",
+            "surface": "mfe-context-menu >>> md-menu",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "vault-dialog light 1280x800",
+            "surface": "#vault-dialog",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "confirm-dialog light 1280x800",
+            "surface": "#confirm-dialog",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "open history dark 1280x800",
+            "surface": "#view-history",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open recycle dark 1280x800",
+            "surface": "#view-recycle",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "tools menu dark 1280x800",
+            "surface": "mfe-context-menu >>> md-menu",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "settings menu dark 1280x800",
+            "surface": "mfe-context-menu >>> md-menu",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "help menu dark 1280x800",
+            "surface": "mfe-context-menu >>> md-menu",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "vault-dialog dark 1280x800",
+            "surface": "#vault-dialog",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "confirm-dialog dark 1280x800",
+            "surface": "#confirm-dialog",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "open history light 360x780",
+            "surface": "#view-history",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open recycle light 360x780",
+            "surface": "#view-recycle",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "tools menu light 360x780",
+            "surface": "mfe-context-menu >>> md-menu",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "settings menu light 360x780",
+            "surface": "mfe-context-menu >>> md-menu",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "help menu light 360x780",
+            "surface": "mfe-context-menu >>> md-menu",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "vault-dialog light 360x780",
+            "surface": "#vault-dialog",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "confirm-dialog light 360x780",
+            "surface": "#confirm-dialog",
+            "found": true,
+            "via": "computed-animation"
+          },
+          {
+            "state": "open history dark 360x780",
+            "surface": "#view-history",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "open recycle dark 360x780",
+            "surface": "#view-recycle",
+            "found": true,
+            "via": "css-animation"
+          },
+          {
+            "state": "tools menu dark 360x780",
+            "surface": "mfe-context-menu >>> md-menu",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "settings menu dark 360x780",
+            "surface": "mfe-context-menu >>> md-menu",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "help menu dark 360x780",
+            "surface": "mfe-context-menu >>> md-menu",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "vault-dialog dark 360x780",
+            "surface": "#vault-dialog",
+            "found": true,
+            "via": "computed-transition"
+          },
+          {
+            "state": "confirm-dialog dark 360x780",
+            "surface": "#confirm-dialog",
+            "found": true,
+            "via": "computed-animation"
+          }
+        ]
+      },
+      "reducedMotion": {
+        "states": 100,
+        "libraryInternalNote": "Transitions inside Material Web shadow roots (state layers, ripples, field labels, switch handles) cannot be restyled by the page. They are listed by element tag in libraryInternalTags, not counted as findings, and disclosed as a limit.",
+        "leaks": [],
+        "libraryInternalTags": {
+          "md-elevation": 12,
+          "md-filled-button": 2,
+          "md-ripple": 180,
+          "md-outlined-field": 68,
+          "md-outlined-select": 12,
+          "md-slider": 4,
+          "md-switch": 8,
+          "md-checkbox": 4,
+          "md-filled-tonal-button": 2,
+          "md-radio": 4
+        },
+        "runningAnimationsAfterEmulation": 0
+      }
+    }
+  ],
+  "totalFailures": 0,
+  "verdict": "clean"
+}
