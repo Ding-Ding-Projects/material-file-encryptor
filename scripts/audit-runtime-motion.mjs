@@ -40,7 +40,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const RUNTIME_ALLOWLIST = [
   {id: 'hidden-file-input', selector: 'input[type=file]', skipMotion: true, reason: 'A file input only backs the Material button that opens the system file picker.'},
   {id: 'platform-picker-input', selector: 'input', host: 'mfe-date-field,mfe-file-picker', skipMotion: true, reason: 'The one-pixel, tab-order-free input inside mfe-date-field and mfe-file-picker is the platform date and file picker engine; the visible control is the Material outlined field and button drawn over it.'},
-  {id: 'home-card', selector: 'button.home-card', reason: 'Home destination cards are tab buttons drawn as Material outlined cards with a hand-built state layer, because Material Web has no card-button component.'}
+  {id: 'home-card', selector: 'button.home-card', reason: 'Home destination cards are tab buttons drawn as Material outlined cards with a hand-built state layer, because Material Web has no card-button component.'},
+  {id: 'desktop-home-card', selector: 'button.card', host: 'mfe-home-grid', reason: 'Desktop Home destination cards inside mfe-home-grid are buttons drawn as Material outlined cards with a hand-built state layer, because Material Web has no card-button component.'}
 ];
 
 export const THEMES = ['light', 'dark'];

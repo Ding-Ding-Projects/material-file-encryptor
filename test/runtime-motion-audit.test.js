@@ -41,7 +41,8 @@ const pages = {
   'allowlisted.html': `<!doctype html><meta charset=utf-8><style>.home-card{display:block;min-width:80px;min-height:24px}.moving{transition:opacity 200ms}</style><button class="home-card moving" id=moving>Card</button><button class=home-card id=still>Card</button>`,
   'host-allowlist.html': `<!doctype html><meta charset=utf-8><script>customElements.define('mfe-date-field', class extends HTMLElement { constructor() { super(); this.attachShadow({mode: 'open'}).innerHTML = '<input id=inner type=date style="min-width:40px;min-height:20px">'; } }); customElements.define('mfe-other-field', class extends HTMLElement { constructor() { super(); this.attachShadow({mode: 'open'}).innerHTML = '<input id=stray type=date style="min-width:40px;min-height:20px">'; } });</script><mfe-date-field id=host></mfe-date-field><mfe-other-field id=other></mfe-other-field>`,
   'reduced.html': `<!doctype html><meta charset=utf-8><style>.a,.b{display:block;min-width:60px;min-height:20px;transition:opacity 300ms}@media(prefers-reduced-motion:reduce){.b{transition:none}}</style><div class=a id=a>A</div><div class=b id=b>B</div>`,
-  'enter.html': `<!doctype html><meta charset=utf-8><style>@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.panel{display:none;min-width:60px;min-height:20px}.panel.open.animated{display:block;animation:rise 200ms both}.panel.open.still{display:block}</style><div class="panel animated" id=animated>A</div><div class="panel still" id=still>B</div>`
+  'home-grid.html': `<!doctype html><meta charset=utf-8><script>const card = '<style>button.card{display:block;min-width:80px;min-height:24px;transition:background-color 200ms}</style><button class=card>Card</button>'; customElements.define('mfe-home-grid', class extends HTMLElement { constructor() { super(); this.attachShadow({mode: 'open'}).innerHTML = card; } }); customElements.define('mfe-other-grid', class extends HTMLElement { constructor() { super(); this.attachShadow({mode: 'open'}).innerHTML = card; } });</script><mfe-home-grid></mfe-home-grid><mfe-other-grid></mfe-other-grid>`,
+  'enter.html':`<!doctype html><meta charset=utf-8><style>@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.panel{display:none;min-width:60px;min-height:20px}.panel.open.animated{display:block;animation:rise 200ms both}.panel.open.still{display:block}</style><div class="panel animated" id=animated>A</div><div class="panel still" id=still>B</div>`
 };
 
 async function withPages(body) {
@@ -94,6 +95,12 @@ test('allowlisted native elements must still show motion', {skip, timeout: 90000
 test('the picker-input allowlist applies only inside its named hosts', {skip, timeout: 90000}, () => withPages(async ({run}) => {
   const result = await run('host-allowlist.html');
   assert.deepEqual(result.findings.map(row => [row.kind, row.path.includes('mfe-other-field')]), [['native-control', true]]);
+  assert.equal(result.counts.byClass['allowlisted-native'], 1);
+}));
+
+test('desktop Home cards are allowed only inside mfe-home-grid', {skip, timeout: 90000}, () => withPages(async ({run}) => {
+  const result = await run('home-grid.html');
+  assert.deepEqual(result.findings.map(row => [row.kind, row.path.includes('mfe-other-grid')]), [['native-control', true]]);
   assert.equal(result.counts.byClass['allowlisted-native'], 1);
 }));
 
@@ -185,7 +192,8 @@ test('the report merges repeated findings and counts failures from every check',
 });
 
 test('the runtime allowlist is minimal and every entry states a reason', () => {
-  assert.ok(RUNTIME_ALLOWLIST.length <= 3);
+  // Four reviewed entries: extension Home cards, desktop Home cards, hidden file inputs and the picker engines.
+  assert.ok(RUNTIME_ALLOWLIST.length <= 4);
   for (const entry of RUNTIME_ALLOWLIST) assert.ok(entry.id && entry.selector && entry.reason.length > 30);
 });
 
