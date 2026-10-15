@@ -13890,16 +13890,31 @@
     {
       "id": "qr-pairing",
       "surface": "extension",
-      "status": "missing",
+      "status": "unverified",
       "implementation": [
-        "browser-extension/options.js"
+        "browser-extension/options.js",
+        "browser-extension/options.html",
+        "browser-extension/pairing-code.js",
+        "browser-extension/background.js"
       ],
-      "documentation": [],
-      "localization": [],
-      "tests": [],
+      "documentation": [
+        "docs/features/workflows/browser-native-host.md",
+        "docs/features/workflows/browser-extension-workspace.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/workflows/browser-native-host.zh-HK.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "tests": [
+        "test/browser-extension-pairing-code.test.js",
+        "test/browser-extension-pairing-background.test.js",
+        "test/browser-pairing-code.test.js",
+        "test/browser-protection-options.test.js"
+      ],
       "evidence": [],
       "persistence": [],
-      "reason": "The required workflow is absent from the extension source: Display and scan bounded pairing QR data, reject expired codes and confirm the receiving identity. Existing desktop or documentation code does not prove an extension control or installed behavior.",
+      "reason": "By the maintainer's decision the browser is paired by a code the unlocked desktop shows as text and QR: 8 characters, two minutes, single use, one active code, five wrong tries clear it. The extension Connection section types or scans the code (scanning falls back to typing where the browser has no detector), sends it once with the pair request and clears the field; leaving the section stops the camera. The desktop approval prompt stays mandatory and defaults to Reject, and after pairing the desktop version is shown as a label, not as proof of identity. Verified with synthetic tests and a headless capture of the staged extension; no installed desktop, real native-messaging registration or real camera scan.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13913,7 +13928,7 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "missing",
+      "behaviorVerdict": "partial",
       "evidenceVerdict": "current-runtime-unverified",
       "completion": {
         "owner": "browser-extension/options.js",
@@ -13924,14 +13939,14 @@
         "action": "Display and scan bounded pairing QR data, reject expired codes and confirm the receiving identity.",
         "targets": [
           {
-            "state": "missing",
-            "surface": null,
-            "selector": null,
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
             "outcome": "Display and scan bounded pairing QR data, reject expired codes and confirm the receiving identity.",
-            "nextProof": "Exercise display and scan bounded pairing QR data, reject expired codes and confirm the receiving identity on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+            "nextProof": "Pair an installed extension with an installed desktop by scanning and by typing the shown code, prove an expired and a wrong code are refused before any prompt, and capture the approval prompt in English and Cantonese, light and dark."
           }
         ],
-        "persistence": "No dedicated extension persistence is implemented for this workflow. Define scoped durable state where needed; do not store secrets or private wording in general preferences."
+        "persistence": "Nothing is stored in the browser; the code lives only in desktop memory and the typed field is cleared after sending."
       }
     },
     {
@@ -17726,7 +17741,11 @@
     "src/shared/extension-lock-targets.js": "e945baadfc88d82df73eb71787fa437bb7a8331b",
     "test/browser-element-lock-scopes.test.js": "e945baadfc88d82df73eb71787fa437bb7a8331b",
     "src/main/browser-unlock-ladder-mediation.js": "ae6d15aa5f105a30332e030813e9fd232cd4f532",
-    "test/browser-unlock-ladder-scopes.test.js": "ae6d15aa5f105a30332e030813e9fd232cd4f532"
+    "test/browser-unlock-ladder-scopes.test.js": "ae6d15aa5f105a30332e030813e9fd232cd4f532",
+    "browser-extension/pairing-code.js": "d5189dd6ea49175a5c5126bd7daaf118e29ec594",
+    "test/browser-extension-pairing-code.test.js": "d5189dd6ea49175a5c5126bd7daaf118e29ec594",
+    "test/browser-extension-pairing-background.test.js": "d5189dd6ea49175a5c5126bd7daaf118e29ec594",
+    "test/browser-pairing-code.test.js": "d5189dd6ea49175a5c5126bd7daaf118e29ec594"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
