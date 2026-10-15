@@ -70,7 +70,7 @@ export function mountSiteFoundation({document,storage,getPreferences,onPreferenc
  foundation.shell.activateView=function(...args){setToolsOpen(true);return activateView.apply(this,args);};
  const toolsEscape=event=>{if(event.key==='Escape'&&!toolsPanel.hidden&&event.composedPath().includes(toolsPanel)){setToolsOpen(false);toolsButton.focus();}};
  toolsPanel.addEventListener('keydown',toolsEscape);
- const paletteReturn=()=>{const target=foundation.palette.returnFocus;if(target&&(!target.isConnected||toolsPanel.hidden&&toolsPanel.contains(target)))toolsButton.focus();};
+ const paletteReturn=()=>{const target=foundation.palette.returnFocus;if(target&&(target===toolsButton||!target.isConnected||toolsPanel.hidden&&toolsPanel.contains(target)))toolsButton.focus();};
  foundation.palette.shadowRoot.addEventListener('closed',paletteReturn);
 
  async function openPreferenceControl(resolveControl){
