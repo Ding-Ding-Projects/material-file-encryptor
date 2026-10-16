@@ -177,21 +177,25 @@ Material Design 3 applies to the desktop, documentation website, extension and n
 
 Every image below is a genuine capture of a real build; none is a mock, design preview or edited image. Each group is collapsed: choose its heading to open it. Capture times are unavailable because no validated timestamp was recorded, and earlier captures were withdrawn when these replaced them. They remain unchanged in Git history and are listed with their hashes in [the gallery review](docs/site/gallery-review.json).
 
-#### Release 1.772.1: setup guide and confirmation
+#### Release 1.779.1: setup, destructive confirmation, wording, element locks and settings
 
-Seven captures of the extracted full release package for version 1.772.1, built from source `c6edc1f`. This was a release package run, not an installed copy. Each frame was taken by window handle on a task-owned hidden desktop with an isolated profile and a throwaway vault holding neutral test files. Two visual defects visible in these frames, a loose search icon under each select in the setup guide and an information icon above the application name, are fixed in source after this release and are not yet in a published build. Machine-readable details are in [the capture manifest](docs/images/captures/reproof-1.772.1/manifest.json) and [the proof record](docs/evidence/installed-proof-1.772.1.json). Captures these replaced are listed in [the archive](design/superseded-captures.md).
+Fifteen captures of the extracted full release package for version 1.779.1, built from source `b83449e`. This was a release package run, not an installed copy. Each frame was taken by window handle on a task-owned hidden desktop with an isolated profile and a throwaway vault holding neutral test files. The information icons in these frames are the compact 28 pixel controls. Machine-readable details are in [the capture manifest](docs/images/captures/reproof-1.779.1/manifest.json) and [the proof record](docs/evidence/installed-proof-1.779.1.json). Captures these replaced are listed in [the archive](design/superseded-captures.md).
 
-| Setup guide, Requirements | Setup guide, Finish, dark | Drive, file list, dark |
+| Setup guide, Look and language | Setup guide, Look and language, bilingual | Setup guide, Requirements |
 |---|---|---|
-| ![Setup guide, Requirements step with Back, Skip this step, Next and Skip setup](docs/images/captures/reproof-1.772.1/desktop/setup-guide-requirements-light-en.png) | ![Setup guide, Finish step with the saved summary, dark](docs/images/captures/reproof-1.772.1/desktop/setup-guide-finish-dark-en.png) | ![Drive, file list with an information icon beside each control, dark](docs/images/captures/reproof-1.772.1/desktop/drive-file-list-dark-en.png) |
+| ![Setup guide, Look and language step with the choice search icon beside each select](docs/images/captures/reproof-1.779.1/desktop/setup-guide-look-light-en.png) | ![Setup guide, Look and language step in English and Cantonese](docs/images/captures/reproof-1.779.1/desktop/setup-guide-look-light-bilingual.png) | ![Setup guide, Requirements step with Back, Skip this step, Next and Skip setup](docs/images/captures/reproof-1.779.1/desktop/setup-guide-requirements-light-en.png) |
 
-| Drive, two files selected, dark | Delete confirmation with two keys and a slider, dark | Force Lock confirmation, dark |
+| Setup guide, Finish, dark | Drive, two files selected, dark | Delete confirmation with two keys and a slider, dark |
 |---|---|---|
-| ![Drive, two files selected for a bulk action, dark](docs/images/captures/reproof-1.772.1/desktop/drive-bulk-selection-dark-en.png) | ![Confirm destructive action for deleting three selected files, dark](docs/images/captures/reproof-1.772.1/desktop/confirm-bulk-delete-dark-en.png) | ![Confirm destructive action for Force Lock, dark](docs/images/captures/reproof-1.772.1/desktop/confirm-force-lock-dark-en.png) |
+| ![Setup guide, Finish step with the saved summary, dark](docs/images/captures/reproof-1.779.1/desktop/setup-guide-finish-dark-en.png) | ![Drive, two files selected for a bulk action, dark](docs/images/captures/reproof-1.779.1/desktop/drive-bulk-selection-dark-en.png) | ![Confirm destructive action for deleting two selected files, dark](docs/images/captures/reproof-1.779.1/desktop/confirm-bulk-delete-dark-en.png) |
 
-| Personal wording applied, full-window announcement, dark |
-|---|
-| ![Personal wording applied from a dropped file, with the full-window announcement and a saved notice, dark](docs/images/captures/reproof-1.772.1/desktop/wording-applied-celebration-dark-en.png) |
+| Force Lock confirmation, dark | Personal wording applied, full-window announcement, dark | Invalid wording file, transient notice |
+|---|---|---|
+| ![Confirm destructive action for Force Lock, dark](docs/images/captures/reproof-1.779.1/desktop/confirm-force-lock-dark-en.png) | ![Personal wording applied from a dropped file, with the full-window announcement and a saved notice, dark](docs/images/captures/reproof-1.779.1/desktop/wording-applied-celebration-dark-en.png) | ![Invalid personal wording file refused with a transient notice and no banner](docs/images/captures/reproof-1.779.1/desktop/invalid-wording-notice-light-en.png) |
+
+| Lock an element dialog with Create lock visible | Settings, Appearance and language, dark |
+|---|---|
+| ![Lock an element dialog with the Create lock button visible at the default window size](docs/images/captures/reproof-1.779.1/desktop/lock-element-dialog-light-en.png) | ![Settings, Appearance and language, dark, with compact information icons](docs/images/captures/reproof-1.779.1/desktop/settings-appearance-dark-en.png) |
 
 #### Desktop application
 
@@ -219,11 +223,11 @@ Seven captures of the extracted full release package for version 1.772.1, built 
 
 | Drive, locked | Drive, locked, bilingual | Drive, unlocked, top of the page |
 |---|---|---|
-| ![Drive, locked](docs/images/captures/refresh-b4cbf0e/desktop/drive-locked-light-en.png) | ![Drive, locked, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/drive-locked-light-bilingual.png) | ![Drive, unlocked, top of the page](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-light-en.png) |
+| ![Drive, locked](docs/images/captures/refresh-b4cbf0e/desktop/drive-locked-light-en.png) | ![Drive, locked, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/drive-locked-light-bilingual.png) | ![Drive, unlocked, top of the page](docs/images/captures/reproof-1.779.1/desktop/drive-toolbar-light-en.png) |
 
 | Drive, file list | Drive, file list, dark | Drive, one file selected |
 |---|---|---|
-| ![Drive, file list](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-light-en.png) | ![Drive, file list, dark](docs/images/captures/reproof-1.772.1/desktop/drive-file-list-dark-en.png) | ![Drive, one file selected](docs/images/captures/refresh-a3593fc/desktop/drive-file-selected-light-en.png) |
+| ![Drive, file list](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-light-en.png) | ![Drive, file list, dark](docs/images/captures/reproof-1.779.1/desktop/drive-toolbar-dark-en.png) | ![Drive, one file selected](docs/images/captures/refresh-a3593fc/desktop/drive-file-selected-light-en.png) |
 
 | Drive, file list, bilingual, Availability text wrapping beside its icon | Drive, file list, dark, bilingual | Available offline |
 |---|---|---|
@@ -239,7 +243,7 @@ Seven captures of the extracted full release package for version 1.772.1, built 
 
 | Lock message when a program still has files open | Force Lock confirmation | Force Lock confirmation, dark |
 |---|---|---|
-| ![Lock message when a program still has files open](docs/images/captures/refresh-b4cbf0e/desktop/lock-holder-message-light-en.png) | ![Force Lock confirmation](docs/images/captures/refresh-b4cbf0e/desktop/force-lock-confirm-light-en.png) | ![Force Lock confirmation, dark](docs/images/captures/reproof-1.772.1/desktop/confirm-force-lock-dark-en.png) |
+| ![Lock message when a program still has files open](docs/images/captures/refresh-b4cbf0e/desktop/lock-holder-message-light-en.png) | ![Force Lock confirmation](docs/images/captures/refresh-b4cbf0e/desktop/force-lock-confirm-light-en.png) | ![Force Lock confirmation, dark](docs/images/captures/reproof-1.779.1/desktop/confirm-force-lock-dark-en.png) |
 
 </details>
 
@@ -316,7 +320,7 @@ Seven captures of the extracted full release package for version 1.772.1, built 
 
 | Settings | Settings, Cantonese | Personalization, Language and voice |
 |---|---|---|
-| ![Settings](docs/images/captures/refresh-b4cbf0e/desktop/settings-light-en.png) | ![Settings, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/settings-light-yue.png) | ![Personalization, Language and voice](docs/images/captures/refresh-b4cbf0e/desktop/settings-personalization-light-en.png) |
+| ![Settings](docs/images/captures/reproof-1.779.1/desktop/settings-light-en.png) | ![Settings, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/settings-light-yue.png) | ![Personalization, Language and voice](docs/images/captures/refresh-b4cbf0e/desktop/settings-personalization-light-en.png) |
 
 | Personalization, Appearance | Personalization, Schedules | Personalization, Attention |
 |---|---|---|
@@ -328,7 +332,7 @@ Seven captures of the extracted full release package for version 1.772.1, built 
 
 | Local access, Element locks | Local access, Authenticator | Local access, Support Tickets |
 |---|---|---|
-| ![Local access, Element locks](docs/images/captures/refresh-b4cbf0e/desktop/settings-local-access-tab2-light-en.png) | ![Local access, Authenticator](docs/images/captures/refresh-b4cbf0e/desktop/settings-local-access-tab3-light-en.png) | ![Local access, Support Tickets](docs/images/captures/refresh-b4cbf0e/desktop/settings-local-access-tab4-light-en.png) |
+| ![Local access, Element locks](docs/images/captures/reproof-1.779.1/desktop/element-lock-created-light-en.png) | ![Local access, Authenticator](docs/images/captures/refresh-b4cbf0e/desktop/settings-local-access-tab3-light-en.png) | ![Local access, Support Tickets](docs/images/captures/refresh-b4cbf0e/desktop/settings-local-access-tab4-light-en.png) |
 
 | Local access, Access history | Local access, Access history, bilingual | Updates |
 |---|---|---|

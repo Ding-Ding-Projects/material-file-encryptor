@@ -1,0 +1,307 @@
+{
+  "schema": "release-package-proof-v1",
+  "label": "release package run (extracted full package), not an installed copy",
+  "release": {
+    "tag": "v1.779.1",
+    "version": "1.779.1",
+    "sourceCommit": "b83449ed712d85ddf6043e8dd5c2777e5554b91c",
+    "fullPackage": "MaterialFileEncryptor-1.779.1-full.nupkg",
+    "fullPackageBytes": 433085410,
+    "fullPackageSha1": "1b068f2c5588de40079092ce85e4f2c0ce96d38a",
+    "fullPackageSha256": "8e088bc85df9d62ebc5a1f908be6017937aa39f104bb29bf58be34d94fb4587b",
+    "releasesFileSha1Matched": true,
+    "mainExecutable": "lib/net45/MaterialFileEncryptor.exe",
+    "mainExecutableBytes": 246302720,
+    "mainExecutableSha256": "0031377391a7daf265df91928b98b7f7387157b53ceaa2359a3068c6217db690",
+    "buildProvenanceSourceCommit": "b83449ed712d85ddf6043e8dd5c2777e5554b91c",
+    "normalRelease": "Read back with the GitHub CLI: isDraft false, isPrerelease false; assets MaterialFileEncryptor-1.779.1-full.nupkg, MaterialFileEncryptor-Setup.exe, RELEASES and build-provenance.json."
+  },
+  "route": {
+    "launch": "Extracted package executable started on a task-owned hidden desktop through the cheap Lowlevel route with loopback-only remote debugging bound to 127.0.0.1 on one task-chosen port and an isolated profile directory. Setup.exe was not run and the installed application was not updated.",
+    "interaction": "Real background pointer clicks by window handle for controls; DOM value assignment for text fields and the slider; Chrome DevTools Protocol key and right-button mouse events for Escape and the context menu; a DataTransfer drop simulated through the debugging port.",
+    "isolation": "A small loopback service accepted evaluation only while exactly one page target existed on the port, otherwise it refused.",
+    "secrets": "Throwaway vault, profile and element-lock secrets were generated in memory and assigned through DOM values; they were never printed or stored. The wording files were small neutral made-up test files; no real private file was used.",
+    "flags": "No media auto-accept or screen-capture browser flags were used.",
+    "runs": "Three launches: (1) an isolated profile in a deeply nested folder, used for the setup guide language step and the first lock attempt; (2) an isolated profile in a short folder, used for every other step; (3) the deeply nested profile again, only to capture the failure frame after the first launch screenshot was overwritten."
+  },
+  "results": [
+    {
+      "id": 1,
+      "item": "Element lock creation on a fresh isolated profile through the Lock an element dialog",
+      "result": "failed on the deeply nested profile; passed on a short profile path",
+      "detail": "Fresh profile, local profile set up, then Lock this element from the context menu of the Import files button, PIN type, acknowledgement ticked, Create lock. On the deeply nested profile (data folder of 170 characters) Set up local profile failed with \"Local mutation history is unavailable\" (twice, in two launches), so no lock could be created there. On a fresh profile in a short folder (C:\\mfe-rp1779\\profile) the same release package set up the local profile (\"Private cache is unlocked until logout or application close\"), the dialog opened, Create lock closed the dialog and the Element locks tab then listed \"id:import-button: pin\" with Unlock, Lock again and Remove lock. The Create lock button was fully visible at the default window size (1180 by 752 CSS pixels at a device pixel ratio of 1.5): its bottom edge was at 646 of 752.",
+      "cause": "The local mutation journal runs the bundled Git in a repository under the application data folder and adds a record file named like records/<36 character id>-<64 hex>.json (about 115 characters). With the deep profile the absolute record path is 302 characters, above the legacy 260 character Windows limit, so \"git add\" stopped with \"Filename too long\" (exit code 128, stage add). The rollback record failed the same way, and the error that reached the window was the wrapped \"Local mutation history is unavailable.\" with the stage and reason dropped, so the window did not name them; they were only written to the main process console. The same bundled Git recorded successfully in a short folder and failed in the deep folder when run directly, which isolates the path length. With the short profile the path is 153 characters; a typical installed profile folder gives about 190, so this mostly affects long or redirected profile folders.",
+      "fix": "Source fix on branch evidence/reproof-1.779.1 (commit 159c7cc): every journal Git call now passes core.longpaths=true, and the wrapped error names the stage and reason, for example \"Local mutation history is unavailable (stage add, reason 128).\" test/mutation-history-long-path.test.js has two tests that fail without the change and pass with it; a direct run of the bundled Git against a 302 character path records successfully after the change. The fix is in source only and not in a published build.",
+      "captures": [
+        {
+          "file": "docs/images/captures/reproof-1.779.1/desktop/lock-element-dialog-light-en.png",
+          "sha256": "26759898385a38e04f6f2af42ec7383ed6d38eb4d508ed02745404d70c8a8105"
+        },
+        {
+          "file": "docs/images/captures/reproof-1.779.1/desktop/element-lock-created-light-en.png",
+          "sha256": "e1d08a26b2aeede643b31365721d39881f78f2f0eb508ca741c225284ba305be"
+        }
+      ],
+      "uncatalogued": [
+        {
+          "name": "c16-profile-setup-failure-deep-path",
+          "sha256": "b94517dd2157580cd5026bbd78381b14e6811a2314d02763914e27186e017b1a",
+          "note": "Failure frame on the deeply nested profile; kept out of the repository because it shows an error banner, not a feature."
+        },
+        "72d-lock-dialog-filled"
+      ]
+    },
+    {
+      "id": 2,
+      "item": "Invalid personal-wording file shows a transient notice and leaves no persistent banner across views",
+      "result": "passed",
+      "detail": "A small neutral invalid JSON file (schemaVersion 2) dropped on the window produced the snackbar notice \"Invalid vocabulary JSON. Use schemaVersion 1 with entries, or version 1 with replacements.\" It was visible about 0.4 s after the drop and still at about 4.4 s, and had gone by about 5.9 s. The red main error banner element was never visible, no alert region was visible, and the stored preferences were unchanged. Moving across My drive, Home, Setup guide and Settings afterwards showed no banner on any view.",
+      "captures": [
+        {
+          "file": "docs/images/captures/reproof-1.779.1/desktop/invalid-wording-notice-light-en.png",
+          "sha256": "0316000ad9a3c0690788f09badd431cabb32693b4f4935c5badf9e2d16a57629"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "item": "Compact information icons in toolbars and Settings",
+      "result": "passed",
+      "detail": "All 19 visible information controls on the Drive view (including the navigation icon) measured 28 by 28 CSS pixels (the 28 pixel control from the source change) and sit beside the control they explain in the drive header, the file toolbar, the search row and the encrypted part size row. Settings rows show the same compact icon beside each toggle, button and select in light and dark. A real pointer click on the icon beside Mounted opened the Lock drive explanation and Escape closed it.",
+      "caveat": "With the Lock drive explanation open, the panel rendered inline in the page header and squeezed the My drive heading into a narrow column in that one frame. That frame was not used in the README and the layout was not investigated.",
+      "captures": [
+        {
+          "file": "docs/images/captures/reproof-1.779.1/desktop/drive-toolbar-light-en.png",
+          "sha256": "a59d702cfe059aaa9438fbec18a12450ba450cae1f93295e9aaf203ba60ec510"
+        },
+        {
+          "file": "docs/images/captures/reproof-1.779.1/desktop/drive-toolbar-dark-en.png",
+          "sha256": "80051baa06f4aa916e45fb919af30ef29303d49467925a614049b6016c803bd3"
+        },
+        {
+          "file": "docs/images/captures/reproof-1.779.1/desktop/settings-light-en.png",
+          "sha256": "c3be7521303b83343210afcb413cba42e93d9a249fc839cf0d475ea4e1fc9bc2"
+        },
+        {
+          "file": "docs/images/captures/reproof-1.779.1/desktop/settings-appearance-dark-en.png",
+          "sha256": "83fb5e5ba2ad6797be1a25c093f8fa228dd3c743ba7501574c2cd4f1ba41a869"
+        }
+      ],
+      "uncatalogued": [
+        "c11-info-panel-open-dark-en"
+      ]
+    },
+    {
+      "id": 4,
+      "item": "Setup guide language step in bilingual mode",
+      "result": "passed",
+      "detail": "On the Look and language step the Language select offered English, Cantonese and English and Cantonese by name. Choosing English and Cantonese applied it at once: every label, the step list, the progress text, the helper text and the buttons showed both languages joined by a middle dot, and the confirmation read \"Language applied. English and Cantonese\". In bilingual mode at the default window size the Back, Next and skip row sits below the visible area and the page scrolls. Switching back to English restored single-language text.",
+      "captures": [
+        {
+          "file": "docs/images/captures/reproof-1.779.1/desktop/setup-guide-look-light-en.png",
+          "sha256": "c78dcfad907a51f72574295e50cf09b55b6686d526672ca77d6173ce0925ec14"
+        },
+        {
+          "file": "docs/images/captures/reproof-1.779.1/desktop/setup-guide-look-light-bilingual.png",
+          "sha256": "f62194937fddc204ba9d56ea53bba8637168d94b388b7ffe4469ad9391dfd4ac"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "item": "Spot checks repeated on this build",
+      "result": "passed",
+      "detail": "Two-key confirmation: Delete for two selected files and Force lock each opened Confirm destructive action with Confirm disabled, and Emergency exit closed it with nothing changed; the personal-wording reset confirmation was completed with both keys and the slider and restored the original wording. Drop-to-apply: a neutral valid wording file applied at once and showed the full-window announcement with the file headline in a polite live region, and it was gone after about 5 s. Setup guide: Requirements and Finish steps with Back, Next, Save and close and Skip setup.",
+      "caveat": "The announcement duration of about 3 seconds was not measured. Only English was used for these steps.",
+      "captures": [
+        {
+          "file": "docs/images/captures/reproof-1.779.1/desktop/confirm-bulk-delete-dark-en.png",
+          "sha256": "bae8d54bc4e3acad3e37b8a7f5cb5f8397b2b2f1eecd69c007bf611d9bb822a9"
+        },
+        {
+          "file": "docs/images/captures/reproof-1.779.1/desktop/confirm-force-lock-dark-en.png",
+          "sha256": "cba236ac310fd173b761faffb89cb95871d58ee18992e546afc639a5ced2ef3a"
+        },
+        {
+          "file": "docs/images/captures/reproof-1.779.1/desktop/wording-applied-celebration-dark-en.png",
+          "sha256": "f8860866344d8ebdb6cffc88a0d15d631f401bbd10069bfc46f4ae78569ff787"
+        },
+        {
+          "file": "docs/images/captures/reproof-1.779.1/desktop/drive-bulk-selection-dark-en.png",
+          "sha256": "282e023c823f87f40a79f59856694a23a7a5baffb75d62fbf2bf44ffeb77a3d1"
+        },
+        {
+          "file": "docs/images/captures/reproof-1.779.1/desktop/setup-guide-requirements-light-en.png",
+          "sha256": "15e2c5a60e8caebd0b84726e088558f894c931c68f643c6e192205122cb8b2c5"
+        },
+        {
+          "file": "docs/images/captures/reproof-1.779.1/desktop/setup-guide-finish-dark-en.png",
+          "sha256": "e48bb1cd5b85d3d3f81f5f22b2487f42fb2d7e8e2ca30bf8dda7d22eddc61753"
+        }
+      ]
+    }
+  ],
+  "findings": [
+    "On a deeply nested profile folder the shipped 1.779.1 build cannot set up the local profile: the journal Git call fails with \"Filename too long\". The window shows only \"Local mutation history is unavailable\" without the stage and reason that the build was expected to report. Fixed in source on evidence/reproof-1.779.1.",
+    "The first run of an extracted package registers a Start with Windows entry by default (the Settings toggle was on). The entry was removed from the current user run list after the run.",
+    "The Lock drive explanation panel squeezes the page heading into a narrow column while it is open at the default window size. Not investigated or fixed.",
+    "The site gallery data (gallery-additions.json and gallery-review.json) still lists the earlier installed captures that show the 48 pixel icons; their promotion receipts are bound to earlier sources, so only the README and its reviewed image list were refreshed."
+  ],
+  "boundaries": {
+    "protectedProcessSet": "Process 4416, its children (2740, 8152, 21640, 1996, 18612), C:\\MFE-Demo and drive M: were not touched. The process set was read before and after with identical ids, parents and creation times.",
+    "teardown": "Each application tree started by this lane (process ids 16704, 23976 and 30064) was ended by exact process id with its own children, the loopback evaluation service was stopped through its quit route, the drive was locked (unmounting its letter) before each exit, the throwaway vault and profile folders were deleted, the headless desktop was no longer listed, and the Run entry that the app created was removed.",
+    "notInstalled": "Setup.exe was not run and the installed application was not updated. Nothing here proves the installer, update, uninstall or a fresh-environment install."
+  },
+  "readmeCaptures": [
+    {
+      "file": "docs/images/captures/reproof-1.779.1/desktop/setup-guide-requirements-light-en.png",
+      "sha256": "15e2c5a60e8caebd0b84726e088558f894c931c68f643c6e192205122cb8b2c5",
+      "bytes": 109079,
+      "width": 1792,
+      "height": 1139,
+      "screen": "setup-guide-requirements",
+      "theme": "light",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.779.1/desktop/setup-guide-finish-dark-en.png",
+      "sha256": "e48bb1cd5b85d3d3f81f5f22b2487f42fb2d7e8e2ca30bf8dda7d22eddc61753",
+      "bytes": 106937,
+      "width": 1792,
+      "height": 1139,
+      "screen": "setup-guide-finish",
+      "theme": "dark",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.779.1/desktop/setup-guide-look-light-en.png",
+      "sha256": "c78dcfad907a51f72574295e50cf09b55b6686d526672ca77d6173ce0925ec14",
+      "bytes": 102439,
+      "width": 1792,
+      "height": 1139,
+      "screen": "setup-guide-look",
+      "theme": "light",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.779.1/desktop/setup-guide-look-light-bilingual.png",
+      "sha256": "f62194937fddc204ba9d56ea53bba8637168d94b388b7ffe4469ad9391dfd4ac",
+      "bytes": 172167,
+      "width": 1792,
+      "height": 1139,
+      "screen": "setup-guide-look",
+      "theme": "light",
+      "language": "bilingual"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.779.1/desktop/drive-toolbar-light-en.png",
+      "sha256": "a59d702cfe059aaa9438fbec18a12450ba450cae1f93295e9aaf203ba60ec510",
+      "bytes": 126572,
+      "width": 1792,
+      "height": 1139,
+      "screen": "drive-toolbar",
+      "theme": "light",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.779.1/desktop/drive-toolbar-dark-en.png",
+      "sha256": "80051baa06f4aa916e45fb919af30ef29303d49467925a614049b6016c803bd3",
+      "bytes": 127006,
+      "width": 1792,
+      "height": 1139,
+      "screen": "drive-toolbar",
+      "theme": "dark",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.779.1/desktop/drive-bulk-selection-dark-en.png",
+      "sha256": "282e023c823f87f40a79f59856694a23a7a5baffb75d62fbf2bf44ffeb77a3d1",
+      "bytes": 124874,
+      "width": 1792,
+      "height": 1139,
+      "screen": "drive-bulk-selection",
+      "theme": "dark",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.779.1/desktop/confirm-bulk-delete-dark-en.png",
+      "sha256": "bae8d54bc4e3acad3e37b8a7f5cb5f8397b2b2f1eecd69c007bf611d9bb822a9",
+      "bytes": 124010,
+      "width": 1792,
+      "height": 1139,
+      "screen": "confirm-bulk-delete",
+      "theme": "dark",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.779.1/desktop/confirm-force-lock-dark-en.png",
+      "sha256": "cba236ac310fd173b761faffb89cb95871d58ee18992e546afc639a5ced2ef3a",
+      "bytes": 125970,
+      "width": 1792,
+      "height": 1139,
+      "screen": "confirm-force-lock",
+      "theme": "dark",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.779.1/desktop/wording-applied-celebration-dark-en.png",
+      "sha256": "f8860866344d8ebdb6cffc88a0d15d631f401bbd10069bfc46f4ae78569ff787",
+      "bytes": 169162,
+      "width": 1792,
+      "height": 1139,
+      "screen": "wording-applied-celebration",
+      "theme": "dark",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.779.1/desktop/invalid-wording-notice-light-en.png",
+      "sha256": "0316000ad9a3c0690788f09badd431cabb32693b4f4935c5badf9e2d16a57629",
+      "bytes": 103102,
+      "width": 1792,
+      "height": 1139,
+      "screen": "invalid-wording-notice",
+      "theme": "light",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.779.1/desktop/lock-element-dialog-light-en.png",
+      "sha256": "26759898385a38e04f6f2af42ec7383ed6d38eb4d508ed02745404d70c8a8105",
+      "bytes": 103433,
+      "width": 1792,
+      "height": 1139,
+      "screen": "lock-element-dialog",
+      "theme": "light",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.779.1/desktop/element-lock-created-light-en.png",
+      "sha256": "e1d08a26b2aeede643b31365721d39881f78f2f0eb508ca741c225284ba305be",
+      "bytes": 99182,
+      "width": 1792,
+      "height": 1139,
+      "screen": "element-lock-created",
+      "theme": "light",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.779.1/desktop/settings-light-en.png",
+      "sha256": "c3be7521303b83343210afcb413cba42e93d9a249fc839cf0d475ea4e1fc9bc2",
+      "bytes": 140387,
+      "width": 1792,
+      "height": 1139,
+      "screen": "settings",
+      "theme": "light",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.779.1/desktop/settings-appearance-dark-en.png",
+      "sha256": "83fb5e5ba2ad6797be1a25c093f8fa228dd3c743ba7501574c2cd4f1ba41a869",
+      "bytes": 154234,
+      "width": 1792,
+      "height": 1139,
+      "screen": "settings-appearance",
+      "theme": "dark",
+      "language": "en"
+    }
+  ]
+}
