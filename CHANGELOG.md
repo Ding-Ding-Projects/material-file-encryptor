@@ -1,3 +1,11 @@
+# Inventory: wording drop and private delivery, 2026-10-16
+
+- The required-feature inventory now tracks two more identifiers (109 families per surface, 327 rows): dropping a personal wording file anywhere on a window to apply it, and packaged offline delivery of the documentation site for private repositories.
+- Wording drop applies to the desktop app and the browser extension and is recorded as unverified and partial: a built-app drop, refusal of an invalid drop, reduced motion, screen reader announcement and restart persistence are not yet proven on an installed build. The documentation site row is not applicable under a new applications-only rule.
+- Packaged private delivery does not apply because this repository is public and its documentation site is hosted. All three rows are not applicable, with the reason recorded.
+
+把兩個要求登記入必備功能清單（每個介面 109 項，共 327 行）：喺視窗任何位置放低個人用語檔即時套用，同埋私人倉庫將文件網站打包成離線程式。放低檔案套用適用於桌面程式同瀏覽器擴充功能，如實記錄為「未驗證、部分完成」，網站按新嘅「只限應用程式」規則記為不適用；私人打包派發因為本倉庫係公開，三個介面都記為不適用並寫明原因。
+
 # Information icons and setup guide, 2026-10-16
 
 - Every capable control in the desktop shell markup, on the website home page and preferences dialog, and in the browser extension popup and workspace now has its own compact information icon immediately before it. It opens a control-specific explanation, guided steps and an isolated sample, and never starts the real operation or reads a live value.

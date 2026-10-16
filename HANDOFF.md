@@ -1,3 +1,15 @@
+## Inventory: wording drop and private delivery, 2026-10-16
+
+Scope: two new required-feature identifiers, `vocabulary-drop-apply` and `private-site-app-delivery`, tracked on desktop, site and extension (109 families, 327 rows). Branch `feature/inventory-new-ids`.
+
+- `vocabulary-drop-apply`: desktop and extension rows are unverified and partial, bound to the existing drop and celebration code, tests and documentation. The site row is not applicable under the new `APPLICATIONS_ONLY` rule in `feature-delivery.mjs` ("Applies to applications only, not documentation sites").
+- `private-site-app-delivery`: all three rows are not applicable (declared scope: private repositories only), because this repository is public and its documentation site is hosted.
+- Updated: `REQUIRED_FEATURE_IDS`, `contracts/surface-registry.json`, `contracts/feature-delivery.json` (including the historical context counts and source references bound to the current revision), the public route contracts and the count-based tests.
+
+Not done, honestly: no installed-build drop, refusal, reduced-motion, screen-reader or restart-persistence proof exists.
+
+Counts now: desktop 99 unverified and 10 not applicable; site 97 and 12; extension 98 and 11.
+
 ## Information icons and setup guide, 2026-10-16
 
 Scope: the `info-icon-guidance` and `onboarding-wizard` required features, tracked on desktop, site and extension (107 families, 321 rows). Branch `feature/info-icons-onboarding`.

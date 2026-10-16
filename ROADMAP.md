@@ -1,3 +1,8 @@
+## Inventory: wording drop and private delivery, 2026-10-16
+
+- [x] Track the wording drop and private packaged-delivery identities in the required-feature inventory (109 families per surface) with an honest verdict on each surface.
+- [ ] Prove the wording drop on an installed build: drop a valid file, refuse an invalid file, reduced motion, screen reader announcement and restart persistence, on the desktop app and the browser extension.
+
 ## Information icons and setup guide, 2026-10-16
 
 - [x] Track the information icon and setup wizard identities in the required-feature inventory (107 families per surface) with an honest verdict on each surface.
