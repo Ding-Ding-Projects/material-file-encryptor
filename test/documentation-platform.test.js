@@ -4,9 +4,10 @@ import { readFile, mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { buildDocumentationCatalog, documentHeadings, resolveDocumentLink, parseChangelog } from '../src/features/documentation/catalog.mjs';
-import { validateFeatureDelivery, verifyFeatureDeliveryReferences, expectedFeatureApplicability } from '../src/features/documentation/feature-delivery.mjs';
+import { validateFeatureDelivery, verifyFeatureDeliveryReferences, expectedFeatureApplicability, implementedClaimProblems, unsupportedCompletionClaims } from '../src/features/documentation/feature-delivery.mjs';
 import { createApplicationStatus } from '../src/features/documentation/status-service.mjs';
 import { filterChanges } from '../src/renderer/features/documentation/changelog.js';
 import { resolveCatalogUrl } from '../src/renderer/features/documentation/markdown.js';
@@ -55,8 +56,10 @@ test('required inventory rejects omission and each missing proof dimension', asy
   assert.deepEqual(validateFeatureDelivery(manifest), []);
   for (const row of manifest.features) {
     const scope = expectedFeatureApplicability(row.id, row.surface);
-    assert.equal(row.status, scope.applies ? (row.surface === 'extension' && row.behaviorVerdict === 'missing' ? 'missing' : 'unverified') : 'not-applicable');
-    assert.equal(row.builtInteraction, 'unverified'); assert.equal(row.visualEvidence, 'unverified');
+    if (row.status !== 'implemented') {
+      assert.equal(row.status, scope.applies ? (row.surface === 'extension' && row.behaviorVerdict === 'missing' ? 'missing' : 'unverified') : 'not-applicable');
+      assert.equal(row.builtInteraction, 'unverified'); assert.equal(row.visualEvidence, 'unverified');
+    } else assert.ok(scope.applies, 'an excluded scope cannot be implemented');
     for (const evidence of row.evidence) assert.match(manifest.referenceSources[evidence], /^[a-f0-9]{40}$/);
   }
   const premature = structuredClone(manifest); premature.features.find(row => row.applicability.applies).status = 'implemented';
@@ -211,4 +214,41 @@ test('installer production and registration planning do not imply an installed l
  assert.equal(row.status,'unverified');assert.equal(row.behaviorVerdict,'partial');assert.equal(row.completion.owner,'build-installer.bat');assert.match(row.reason,/installation and registry mutation not performed/);
  for(const mutate of [r=>r.completion.owner='browser-extension/options.js',r=>r.implementation=r.implementation.filter(f=>f!=='scripts/browser-native-registration.mjs'),r=>r.completion.gaps=['behavior','proof'],r=>r.behaviorVerdict='present']){const broken=structuredClone(manifest);mutate(broken.features.find(r=>r.surface==='extension'&&r.id==='squirrel-installer'));assert.ok(validateFeatureDelivery(broken).some(error=>error.startsWith('extension/squirrel-installer:')));}
  assert.deepEqual(validateFeatureDelivery(manifest),[]);
+});
+
+const implementedFixture = () => {
+  const manifest = { features: [{ surface: 'desktop', id: 'display-name', status: 'implemented', builtInteraction: 'verified', visualEvidence: 'verified', evidence: ['docs/evidence/proof.json'], behaviorVerdict: 'present', evidenceVerdict: 'built-and-visual-verified' }, { surface: 'site', id: 'display-name', status: 'unverified', builtInteraction: 'unverified', visualEvidence: 'unverified', evidence: [], behaviorVerdict: 'partial', evidenceVerdict: 'current-runtime-unverified' }] };
+  const registry = { surfaces: [{ id: 'desktop:shell', family: 'desktop', route: 'src/renderer/index.html', selector: '#shell', proofs: { 'display-name': { status: 'implemented', surface: 'desktop:shell', route: 'src/renderer/index.html', selector: '#shell', sourceCommit: 'a'.repeat(40), builtSha256: 'b'.repeat(64), builtInteraction: 'verified', visualEvidence: 'verified', evidence: ['docs/evidence/proof.json'] } } }, { id: 'site:index', family: 'site', route: 'index.html', selector: '', proofs: {} }] };
+  return { manifest, registry };
+};
+test('a row may be implemented only with the complete evidence rule', () => {
+  const present = () => true;
+  const { manifest, registry } = implementedFixture();
+  assert.deepEqual(implementedClaimProblems(manifest, registry, present), []);
+  assert.deepEqual(unsupportedCompletionClaims(manifest.features), []);
+  const broken = (mutate, pattern) => {
+    const fixture = implementedFixture(); mutate(fixture);
+    assert.ok(implementedClaimProblems(fixture.manifest, fixture.registry, present).some(problem => pattern.test(problem)), String(pattern));
+  };
+  broken(f => { f.manifest.features[0].builtInteraction = 'unverified'; }, /without verified built and visual/);
+  broken(f => { f.manifest.features[0].visualEvidence = 'unverified'; }, /without verified built and visual/);
+  broken(f => { f.manifest.features[0].evidence = []; }, /without evidence files/);
+  broken(f => { f.manifest.features[0].behaviorVerdict = 'partial'; }, /behavior verdict/);
+  broken(f => { f.manifest.features[0].evidenceVerdict = 'current-runtime-unverified'; }, /runtime-unverified/);
+  broken(f => { delete f.registry.surfaces[0].proofs['display-name']; }, /without a matching surface proof/);
+  broken(f => { delete f.registry.surfaces[0].proofs['display-name'].sourceCommit; }, /without a matching surface proof/);
+  broken(f => { delete f.registry.surfaces[0].proofs['display-name'].builtSha256; }, /without a matching surface proof/);
+  broken(f => { f.registry.surfaces[0].proofs['display-name'].selector = '#other'; }, /without a matching surface proof/);
+  broken(f => { f.registry.surfaces[0].proofs['display-name'].status = 'unverified'; }, /without a matching surface proof/);
+  broken(f => { f.manifest.features[0].status = 'unverified'; f.manifest.features[0].builtInteraction = 'unverified'; f.manifest.features[0].visualEvidence = 'unverified'; }, /implemented surface proof without an implemented feature row/);
+  broken(f => { f.manifest.features[1].builtInteraction = 'verified'; }, /not implemented/);
+  const absent = implementedFixture();
+  assert.ok(implementedClaimProblems(absent.manifest, absent.registry, () => false).some(problem => /evidence file is absent/.test(problem)));
+});
+test('the committed manifest and registry make only fully supported implemented claims', async () => {
+  const manifest = JSON.parse(await readFile(new URL('../contracts/feature-delivery.json', import.meta.url)));
+  const registry = JSON.parse(await readFile(new URL('../contracts/surface-registry.json', import.meta.url)));
+  const root = fileURLToPath(new URL('../', import.meta.url));
+  assert.deepEqual(implementedClaimProblems(manifest, registry, file => existsSync(path.join(root, file))), []);
+  assert.deepEqual(unsupportedCompletionClaims(manifest.features), []);
 });

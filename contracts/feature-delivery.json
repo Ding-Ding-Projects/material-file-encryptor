@@ -18635,7 +18635,7 @@
     "test/server-flavors.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
     "test/server-launch-plans.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
     "test/server-properties-and-extensions.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
-    "test/server-targets-service.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
+    "test/server-targets-service.test.js": "ce71208c7a5329be17e84cc715f743aa378eb338",
     "test/server-managed-adapters.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
     "test/server-targets-panel.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
     "src/main/browser-publish-adapter.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
@@ -18675,9 +18675,9 @@
     "test/wording-drop.test.js": "5ff38608bf39d0747b46c761a2caaf1f475853df",
     "browser-extension/wording-drop.js": "5ff38608bf39d0747b46c761a2caaf1f475853df",
     "browser-extension/popup-wording.js": "5ff38608bf39d0747b46c761a2caaf1f475853df",
-    "docs/evidence/installed-proof-1.772.1.json": "c6edc1f6489264fdf00f190046dea68a3eece4fd",
-    "docs/evidence/installed-proof-1.779.1.json": "b83449ed712d85ddf6043e8dd5c2777e5554b91c",
-    "docs/evidence/installed-proof-1.782.1.json": "4a49919d44628f65e335f82f3321dbd9607bf3e7"
+    "docs/evidence/installed-proof-1.772.1.json": "0ef097a1f0cdea37e81d2c5ff1f367647de6ad6f",
+    "docs/evidence/installed-proof-1.779.1.json": "4a49919d44628f65e335f82f3321dbd9607bf3e7",
+    "docs/evidence/installed-proof-1.782.1.json": "56b1a12a783d7a23e1b4717f23fef3877174d8dd"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",

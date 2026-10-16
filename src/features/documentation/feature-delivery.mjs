@@ -176,6 +176,46 @@ export function unsupportedCompletionClaims(rows) {
   return problems;
 }
 
+
+/**
+ * Full completion rule for an implemented row, joining the manifest to the concrete surface registry. A row may be
+ * implemented only with verified built interaction and visual evidence, existing evidence files, a "present" behavior
+ * verdict, an evidence verdict that is not runtime-unverified, and a matching implemented surface proof that carries a
+ * source commit and a built artifact hash. Every other row must remain unverified, missing or not-applicable with
+ * unverified built evidence. Returns one message per problem; an empty list means the claims are exactly supported.
+ */
+export function implementedClaimProblems(manifest, registry, exists) {
+  const problems = [];
+  const rows = Array.isArray(manifest?.features) ? manifest.features : [];
+  const surfaces = Array.isArray(registry?.surfaces) ? registry.surfaces : [];
+  const proven = (family, id) => surfaces.filter(surface => surface?.family === family && object(surface.proofs?.[id]) && surface.proofs[id].status === 'implemented');
+  for (const row of rows) {
+    if (!object(row)) continue;
+    const label = `${row.surface}/${row.id}`;
+    if (row.status !== 'implemented') {
+      if (!['unverified', 'missing', 'not-applicable'].includes(row.status)) problems.push(`${label}: unexpected status ${String(row.status)}.`);
+      if (row.builtInteraction !== 'unverified' || row.visualEvidence !== 'unverified') problems.push(`${label}: built evidence is recorded on a row that is not implemented.`);
+      continue;
+    }
+    if (row.builtInteraction !== 'verified' || row.visualEvidence !== 'verified') problems.push(`${label}: implemented without verified built and visual evidence.`);
+    if (!Array.isArray(row.evidence) || !row.evidence.length) problems.push(`${label}: implemented without evidence files.`);
+    else if (typeof exists === 'function') for (const file of row.evidence) if (!exists(file)) problems.push(`${label}: evidence file is absent: ${file}.`);
+    if (row.behaviorVerdict !== 'present') problems.push(`${label}: implemented while the behavior verdict is ${String(row.behaviorVerdict)}.`);
+    if (!boundedText(row.evidenceVerdict) || row.evidenceVerdict === 'current-runtime-unverified') problems.push(`${label}: implemented while the evidence verdict is runtime-unverified.`);
+    const matches = proven(row.surface, row.id).filter(surface => {
+      const proof = surface.proofs[row.id];
+      return proof.surface === surface.id && proof.route === surface.route && proof.selector === surface.selector && commitId(proof.sourceCommit) && /^[a-f0-9]{64}$/.test(proof.builtSha256 || '') && proof.builtInteraction === 'verified' && proof.visualEvidence === 'verified';
+    });
+    if (!matches.length) problems.push(`${label}: implemented without a matching surface proof carrying a source commit and built hash.`);
+  }
+  for (const surface of surfaces) {
+    if (!object(surface) || !object(surface.proofs)) continue;
+    for (const [id, proof] of Object.entries(surface.proofs)) {
+      if (object(proof) && proof.status === 'implemented' && !rows.some(row => row?.surface === surface.family && row.id === id && row.status === 'implemented')) problems.push(`${surface.id}/${id}: implemented surface proof without an implemented feature row.`);
+    }
+  }
+  return problems;
+}
 /** Structural validation only. This function never claims to have queried Git objects. */
 export function validateFeatureDelivery(manifest, exists) {
   const errors = [];

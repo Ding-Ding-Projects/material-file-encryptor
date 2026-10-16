@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import { discoverFeatureSurfaces, expandSurfaceFeatureDelivery, validateSurfaceRegistry, REQUIRED_CONCRETE_SURFACE_IDS, validatePublicationSurfaceCatalogue, expectedFeatureApplicability } from '../src/features/documentation/feature-delivery.mjs';
+import { existsSync } from 'node:fs';
+import { discoverFeatureSurfaces, expandSurfaceFeatureDelivery, validateSurfaceRegistry, REQUIRED_CONCRETE_SURFACE_IDS, validatePublicationSurfaceCatalogue, expectedFeatureApplicability, implementedClaimProblems } from '../src/features/documentation/feature-delivery.mjs';
 import { buildDocumentationCatalog } from '../src/features/documentation/catalog.mjs';
 import { REQUIRED_FEATURE_IDS } from '../src/features/documentation/required-features.mjs';
 const registry = JSON.parse(await fs.readFile(new URL('../contracts/surface-registry.json', import.meta.url), 'utf8'));
@@ -41,12 +42,14 @@ test('publication catalogue omission of an actual feature article fails before r
   catalog.articles = catalog.articles.filter(file => file !== omitted);
   assert.throws(() => validatePublicationSurfaceCatalogue(catalog, bundled.documents), /Publication catalogue omits or invents concrete feature article routes/);
 });
-test('concrete inventory retains 109 families and independent unverified defaults', () => {
+test('concrete inventory retains 109 families and independent unverified defaults', async () => {
   assert.equal(REQUIRED_FEATURE_IDS.length, 109);
   assert.deepEqual(validateSurfaceRegistry(registry, expected), []);
   const rows = expandSurfaceFeatureDelivery(registry);
   assert.equal(rows.length, expected.length * 109);
-  assert.ok(rows.every(row => row.status === 'unverified' && row.proof === null));
+  assert.ok(rows.every(row => row.status === 'implemented' ? row.proof?.status === 'implemented' : row.status === 'unverified' && (row.proof === null || row.proof.status !== 'implemented')));
+  const manifest = JSON.parse(await fs.readFile(new URL('../contracts/feature-delivery.json', import.meta.url), 'utf8'));
+  assert.deepEqual(implementedClaimProblems(manifest, registry, file => existsSync(fileURLToPath(new URL('../' + file, import.meta.url)))), []);
   for (const family of ['desktop', 'site', 'extension']) assert.ok(expected.some(row => row.family === family));
 });
 test('omitting an actual generated article and whole extension family is rejected', () => {
