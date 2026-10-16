@@ -1,0 +1,4025 @@
+{
+ "schemaVersion": 1,
+ "kind": "installed-runtime-motion-audit",
+ "appVersion": "1.702.1",
+ "sourceCommit": "9394b351469d26c795c5ee48d8ebf1c2ddbe6618",
+ "auditTool": "scripts/runtime-motion-page.mjs pageAudit at channel-design b4cbf0e (allowlists button.card in mfe-home-grid), injected over loopback CDP",
+ "window": "1280x800 DIP, 150% display scale",
+ "statesAudited": 239,
+ "targetErrors": 0,
+ "totalsPerThemeLanguage": {
+  "dark/bilingual": {
+   "states": 39,
+   "examined": 1702324,
+   "interactive": 2528,
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  "dark/en": {
+   "states": 40,
+   "examined": 1701935,
+   "interactive": 2553,
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  "dark/yue": {
+   "states": 40,
+   "examined": 1702007,
+   "interactive": 2553,
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  "light/bilingual": {
+   "states": 40,
+   "examined": 1702592,
+   "interactive": 2552,
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  "light/en": {
+   "states": 40,
+   "examined": 1698629,
+   "interactive": 2328,
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  "light/yue": {
+   "states": 40,
+   "examined": 1701971,
+   "interactive": 2553,
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  }
+ },
+ "findingsByKind": [],
+ "findings": [],
+ "reducedMotion": {
+  "statesWithLeaks": 0,
+  "statesWithRunningAnimations": 0,
+  "shadowRootLeakTagsMaxPerState": {},
+  "leakKindsByHost": []
+ },
+ "perState": [
+  {
+   "state": "home",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Home",
+   "examined": 42945,
+   "interactive": 35,
+   "byClass": {
+    "material": 16,
+    "material-part": 14,
+    "allowlisted-native": 19
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "newtab-popover",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Home",
+   "examined": 43517,
+   "interactive": 61,
+   "byClass": {
+    "material": 42,
+    "material-part": 64,
+    "allowlisted-native": 19
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-00",
+   "label": "My drive, Open",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "My drive",
+   "examined": 43517,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 36,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-01",
+   "label": "Available offline",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Available offline",
+   "examined": 43417,
+   "interactive": 37,
+   "byClass": {
+    "material": 37,
+    "material-part": 36,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-02",
+   "label": "History",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "History",
+   "examined": 43658,
+   "interactive": 33,
+   "byClass": {
+    "material": 33,
+    "material-part": 26,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-03",
+   "label": "Recycle Bin",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Recycle Bin",
+   "examined": 43671,
+   "interactive": 25,
+   "byClass": {
+    "material": 25,
+    "material-part": 21,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-04",
+   "label": "Converter",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Converter",
+   "examined": 43684,
+   "interactive": 25,
+   "byClass": {
+    "material": 25,
+    "material-part": 15
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-05",
+   "label": "Documents and downloads",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Documents and downloads",
+   "examined": 43697,
+   "interactive": 64,
+   "byClass": {
+    "material": 63,
+    "material-part": 61,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-06",
+   "label": "Local models",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Local models",
+   "examined": 43710,
+   "interactive": 54,
+   "byClass": {
+    "material": 54,
+    "material-part": 44,
+    "focus-target": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-07",
+   "label": "Server preparation",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Server preparation",
+   "examined": 43723,
+   "interactive": 42,
+   "byClass": {
+    "material": 42,
+    "material-part": 35
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-08",
+   "label": "Storage maintenance",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Storage maintenance",
+   "examined": 43736,
+   "interactive": 30,
+   "byClass": {
+    "material": 30,
+    "material-part": 21
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-09",
+   "label": "Status",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Status",
+   "examined": 43749,
+   "interactive": 28,
+   "byClass": {
+    "material": 28,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-10",
+   "label": "File details",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "File details",
+   "examined": 43762,
+   "interactive": 38,
+   "byClass": {
+    "material": 36,
+    "material-part": 25,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-11",
+   "label": "Settings",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Settings",
+   "examined": 43775,
+   "interactive": 48,
+   "byClass": {
+    "material": 47,
+    "material-part": 35,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-12",
+   "label": "Personalization",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Personalization",
+   "examined": 43788,
+   "interactive": 95,
+   "byClass": {
+    "material": 95,
+    "material-part": 80
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-13",
+   "label": "Local access",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Local access",
+   "examined": 43801,
+   "interactive": 45,
+   "byClass": {
+    "material": 45,
+    "material-part": 27
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-14",
+   "label": "Updates",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Updates",
+   "examined": 43814,
+   "interactive": 36,
+   "byClass": {
+    "material": 36,
+    "material-part": 20
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-15",
+   "label": "How it works",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "How it works",
+   "examined": 43827,
+   "interactive": 35,
+   "byClass": {
+    "material": 35,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-16",
+   "label": "Documentation",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Documentation",
+   "examined": 43840,
+   "interactive": 275,
+   "byClass": {
+    "material": 275,
+    "material-part": 258,
+    "focus-target": 1,
+    "focus-stop": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-17",
+   "label": "Changelog",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Changelog",
+   "examined": 43853,
+   "interactive": 47,
+   "byClass": {
+    "material": 45,
+    "material-part": 29,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-18",
+   "label": "Pair a browser",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Pair a browser",
+   "examined": 43866,
+   "interactive": 36,
+   "byClass": {
+    "material": 36,
+    "material-part": 16
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-converter",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Converter",
+   "examined": 43462,
+   "interactive": 41,
+   "byClass": {
+    "material": 41,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-documents",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Documents and downloads",
+   "examined": 43462,
+   "interactive": 79,
+   "byClass": {
+    "material": 78,
+    "material-part": 63,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-local-models",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Local models",
+   "examined": 43462,
+   "interactive": 68,
+   "byClass": {
+    "material": 68,
+    "material-part": 46,
+    "focus-target": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-server-prep",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Server preparation",
+   "examined": 43462,
+   "interactive": 53,
+   "byClass": {
+    "material": 53,
+    "material-part": 35
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-storage",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Storage maintenance",
+   "examined": 43462,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 21
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-status",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Status",
+   "examined": 43462,
+   "interactive": 37,
+   "byClass": {
+    "material": 37,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-file-details",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "File details",
+   "examined": 43462,
+   "interactive": 46,
+   "byClass": {
+    "material": 44,
+    "material-part": 25,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Settings",
+   "examined": 43390,
+   "interactive": 55,
+   "byClass": {
+    "material": 54,
+    "material-part": 35,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-personalization",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Personalization",
+   "examined": 43390,
+   "interactive": 101,
+   "byClass": {
+    "material": 101,
+    "material-part": 80
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-local-access",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Local access",
+   "examined": 43390,
+   "interactive": 50,
+   "byClass": {
+    "material": 50,
+    "material-part": 27
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-updates",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Updates",
+   "examined": 43390,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 20
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-how-it-works",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "How it works",
+   "examined": 43366,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-documentation",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Documentation",
+   "examined": 43366,
+   "interactive": 277,
+   "byClass": {
+    "material": 277,
+    "material-part": 258,
+    "focus-target": 1,
+    "focus-stop": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-changelog",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "Changelog",
+   "examined": 43366,
+   "interactive": 48,
+   "byClass": {
+    "material": 46,
+    "material-part": 29,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "drive-unlocked-files",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "My drive",
+   "examined": 43366,
+   "interactive": 60,
+   "byClass": {
+    "material": 60,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "home",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Home",
+   "examined": 43367,
+   "interactive": 55,
+   "byClass": {
+    "material": 36,
+    "material-part": 16,
+    "allowlisted-native": 19
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "newtab-popover",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Home",
+   "examined": 43867,
+   "interactive": 81,
+   "byClass": {
+    "material": 62,
+    "material-part": 66,
+    "allowlisted-native": 19
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-00",
+   "label": "My drive, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "My drive",
+   "examined": 43867,
+   "interactive": 60,
+   "byClass": {
+    "material": 60,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-01",
+   "label": "Available offline, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Available offline",
+   "examined": 43755,
+   "interactive": 56,
+   "byClass": {
+    "material": 56,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-02",
+   "label": "History, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "History",
+   "examined": 43867,
+   "interactive": 51,
+   "byClass": {
+    "material": 51,
+    "material-part": 28,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-03",
+   "label": "Recycle Bin, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Recycle Bin",
+   "examined": 43867,
+   "interactive": 42,
+   "byClass": {
+    "material": 42,
+    "material-part": 23,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-04",
+   "label": "Converter, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Converter",
+   "examined": 43867,
+   "interactive": 41,
+   "byClass": {
+    "material": 41,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-05",
+   "label": "Documents and downloads, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Documents and downloads",
+   "examined": 43867,
+   "interactive": 79,
+   "byClass": {
+    "material": 78,
+    "material-part": 63,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-06",
+   "label": "Local models, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Local models",
+   "examined": 43867,
+   "interactive": 68,
+   "byClass": {
+    "material": 68,
+    "material-part": 46,
+    "focus-target": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-07",
+   "label": "Server preparation, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Server preparation",
+   "examined": 43867,
+   "interactive": 53,
+   "byClass": {
+    "material": 53,
+    "material-part": 35
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-08",
+   "label": "Storage maintenance, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Storage maintenance",
+   "examined": 43867,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 21
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-09",
+   "label": "Status, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Status",
+   "examined": 43867,
+   "interactive": 37,
+   "byClass": {
+    "material": 37,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-10",
+   "label": "File details, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "File details",
+   "examined": 43867,
+   "interactive": 46,
+   "byClass": {
+    "material": 44,
+    "material-part": 25,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-11",
+   "label": "Settings, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Settings",
+   "examined": 43867,
+   "interactive": 55,
+   "byClass": {
+    "material": 54,
+    "material-part": 35,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-12",
+   "label": "Personalization, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Personalization",
+   "examined": 43867,
+   "interactive": 101,
+   "byClass": {
+    "material": 101,
+    "material-part": 80
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-13",
+   "label": "Local access, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Local access",
+   "examined": 43867,
+   "interactive": 50,
+   "byClass": {
+    "material": 50,
+    "material-part": 27
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-14",
+   "label": "Updates, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Updates",
+   "examined": 43867,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 20
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-15",
+   "label": "How it works, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "How it works",
+   "examined": 43867,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-16",
+   "label": "Documentation, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Documentation",
+   "examined": 43867,
+   "interactive": 277,
+   "byClass": {
+    "material": 277,
+    "material-part": 258,
+    "focus-target": 1,
+    "focus-stop": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-17",
+   "label": "Changelog, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Changelog",
+   "examined": 43867,
+   "interactive": 48,
+   "byClass": {
+    "material": 46,
+    "material-part": 29,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-18",
+   "label": "Pair a browser, Open",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Pair a browser",
+   "examined": 43867,
+   "interactive": 36,
+   "byClass": {
+    "material": 36,
+    "material-part": 16
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-converter",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Converter",
+   "examined": 43463,
+   "interactive": 41,
+   "byClass": {
+    "material": 41,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-documents",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Documents and downloads",
+   "examined": 43463,
+   "interactive": 79,
+   "byClass": {
+    "material": 78,
+    "material-part": 63,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-local-models",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Local models",
+   "examined": 43463,
+   "interactive": 68,
+   "byClass": {
+    "material": 68,
+    "material-part": 46,
+    "focus-target": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-server-prep",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Server preparation",
+   "examined": 43463,
+   "interactive": 53,
+   "byClass": {
+    "material": 53,
+    "material-part": 35
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-storage",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Storage maintenance",
+   "examined": 43463,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 21
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-status",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Status",
+   "examined": 43463,
+   "interactive": 37,
+   "byClass": {
+    "material": 37,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-file-details",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "File details",
+   "examined": 43463,
+   "interactive": 46,
+   "byClass": {
+    "material": 44,
+    "material-part": 25,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Settings",
+   "examined": 43391,
+   "interactive": 55,
+   "byClass": {
+    "material": 54,
+    "material-part": 35,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-personalization",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Personalization",
+   "examined": 43391,
+   "interactive": 101,
+   "byClass": {
+    "material": 101,
+    "material-part": 80
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-local-access",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Local access",
+   "examined": 43391,
+   "interactive": 50,
+   "byClass": {
+    "material": 50,
+    "material-part": 27
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-updates",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Updates",
+   "examined": 43391,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 20
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-how-it-works",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "How it works",
+   "examined": 43367,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-documentation",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Documentation",
+   "examined": 43367,
+   "interactive": 277,
+   "byClass": {
+    "material": 277,
+    "material-part": 258,
+    "focus-target": 1,
+    "focus-stop": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-changelog",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "Changelog",
+   "examined": 43367,
+   "interactive": 48,
+   "byClass": {
+    "material": 46,
+    "material-part": 29,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "drive-unlocked-files",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "My drive",
+   "examined": 43367,
+   "interactive": 60,
+   "byClass": {
+    "material": 60,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "home",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u9996\u9801",
+   "examined": 43367,
+   "interactive": 55,
+   "byClass": {
+    "material": 36,
+    "material-part": 16,
+    "allowlisted-native": 19
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "newtab-popover",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u9996\u9801",
+   "examined": 43867,
+   "interactive": 81,
+   "byClass": {
+    "material": 62,
+    "material-part": 66,
+    "allowlisted-native": 19
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-00",
+   "label": "\u6211\u7684\u78c1\u789f, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u6211\u7684\u78c1\u789f",
+   "examined": 43867,
+   "interactive": 60,
+   "byClass": {
+    "material": 60,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-01",
+   "label": "\u53ef\u96e2\u7dda\u4f7f\u7528, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u53ef\u96e2\u7dda\u4f7f\u7528",
+   "examined": 43755,
+   "interactive": 56,
+   "byClass": {
+    "material": 56,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-02",
+   "label": "\u6b77\u53f2\u8a18\u9304, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u6b77\u53f2\u8a18\u9304",
+   "examined": 43867,
+   "interactive": 51,
+   "byClass": {
+    "material": 51,
+    "material-part": 28,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-03",
+   "label": "\u8cc7\u6e90\u56de\u6536\u7b52, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u8cc7\u6e90\u56de\u6536\u7b52",
+   "examined": 43867,
+   "interactive": 42,
+   "byClass": {
+    "material": 42,
+    "material-part": 23,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-04",
+   "label": "\u8f49\u63db\u5de5\u5177, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u8f49\u63db\u5de5\u5177",
+   "examined": 43867,
+   "interactive": 41,
+   "byClass": {
+    "material": 41,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-05",
+   "label": "\u6587\u4ef6\u8207\u4e0b\u8f09, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u6587\u4ef6\u8207\u4e0b\u8f09",
+   "examined": 43867,
+   "interactive": 79,
+   "byClass": {
+    "material": 78,
+    "material-part": 63,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-06",
+   "label": "\u672c\u6a5f\u6a21\u578b, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u672c\u6a5f\u6a21\u578b",
+   "examined": 43867,
+   "interactive": 68,
+   "byClass": {
+    "material": 68,
+    "material-part": 46,
+    "focus-target": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-07",
+   "label": "\u4f3a\u670d\u5668\u6e96\u5099, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u4f3a\u670d\u5668\u6e96\u5099",
+   "examined": 43867,
+   "interactive": 53,
+   "byClass": {
+    "material": 53,
+    "material-part": 35
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-08",
+   "label": "\u5132\u5b58\u7dad\u8b77, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u5132\u5b58\u7dad\u8b77",
+   "examined": 43867,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 21
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-09",
+   "label": "\u72c0\u614b, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u72c0\u614b",
+   "examined": 43867,
+   "interactive": 37,
+   "byClass": {
+    "material": 37,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-10",
+   "label": "\u6a94\u6848\u8a73\u60c5, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u6a94\u6848\u8a73\u60c5",
+   "examined": 43867,
+   "interactive": 46,
+   "byClass": {
+    "material": 44,
+    "material-part": 25,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-11",
+   "label": "\u8a2d\u5b9a, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u8a2d\u5b9a",
+   "examined": 43867,
+   "interactive": 55,
+   "byClass": {
+    "material": 54,
+    "material-part": 35,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-12",
+   "label": "\u500b\u4eba\u5316, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u500b\u4eba\u5316",
+   "examined": 43867,
+   "interactive": 101,
+   "byClass": {
+    "material": 101,
+    "material-part": 80
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-13",
+   "label": "\u672c\u6a5f\u5b58\u53d6, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u672c\u6a5f\u5b58\u53d6",
+   "examined": 43867,
+   "interactive": 50,
+   "byClass": {
+    "material": 50,
+    "material-part": 27
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-14",
+   "label": "\u66f4\u65b0, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u66f4\u65b0",
+   "examined": 43867,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 20
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-15",
+   "label": "\u4f7f\u7528\u65b9\u6cd5, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u4f7f\u7528\u65b9\u6cd5",
+   "examined": 43867,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-16",
+   "label": "\u8aaa\u660e\u6587\u4ef6, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u8aaa\u660e\u6587\u4ef6",
+   "examined": 43867,
+   "interactive": 277,
+   "byClass": {
+    "material": 277,
+    "material-part": 258,
+    "focus-target": 1,
+    "focus-stop": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-17",
+   "label": "\u66f4\u65b0\u8a18\u9304, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u66f4\u65b0\u8a18\u9304",
+   "examined": 43867,
+   "interactive": 48,
+   "byClass": {
+    "material": 46,
+    "material-part": 29,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-18",
+   "label": "\u914d\u5c0d\u700f\u89bd\u5668, \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u914d\u5c0d\u700f\u89bd\u5668",
+   "examined": 43867,
+   "interactive": 36,
+   "byClass": {
+    "material": 36,
+    "material-part": 16
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-converter",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u8f49\u63db\u5de5\u5177",
+   "examined": 43463,
+   "interactive": 41,
+   "byClass": {
+    "material": 41,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-documents",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u6587\u4ef6\u8207\u4e0b\u8f09",
+   "examined": 43463,
+   "interactive": 79,
+   "byClass": {
+    "material": 78,
+    "material-part": 63,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-local-models",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u672c\u6a5f\u6a21\u578b",
+   "examined": 43463,
+   "interactive": 68,
+   "byClass": {
+    "material": 68,
+    "material-part": 46,
+    "focus-target": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-server-prep",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u4f3a\u670d\u5668\u6e96\u5099",
+   "examined": 43463,
+   "interactive": 53,
+   "byClass": {
+    "material": 53,
+    "material-part": 35
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-storage",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u5132\u5b58\u7dad\u8b77",
+   "examined": 43463,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 21
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-status",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u72c0\u614b",
+   "examined": 43463,
+   "interactive": 37,
+   "byClass": {
+    "material": 37,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-file-details",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u6a94\u6848\u8a73\u60c5",
+   "examined": 43463,
+   "interactive": 46,
+   "byClass": {
+    "material": 44,
+    "material-part": 25,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u8a2d\u5b9a",
+   "examined": 43391,
+   "interactive": 55,
+   "byClass": {
+    "material": 54,
+    "material-part": 35,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-personalization",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u500b\u4eba\u5316",
+   "examined": 43391,
+   "interactive": 101,
+   "byClass": {
+    "material": 101,
+    "material-part": 80
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-local-access",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u672c\u6a5f\u5b58\u53d6",
+   "examined": 43391,
+   "interactive": 50,
+   "byClass": {
+    "material": 50,
+    "material-part": 27
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-updates",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u66f4\u65b0",
+   "examined": 43391,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 20
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-how-it-works",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u4f7f\u7528\u65b9\u6cd5",
+   "examined": 43367,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-documentation",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u8aaa\u660e\u6587\u4ef6",
+   "examined": 43367,
+   "interactive": 277,
+   "byClass": {
+    "material": 277,
+    "material-part": 258,
+    "focus-target": 1,
+    "focus-stop": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-changelog",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u66f4\u65b0\u8a18\u9304",
+   "examined": 43367,
+   "interactive": 48,
+   "byClass": {
+    "material": 46,
+    "material-part": 29,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "drive-unlocked-files",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u6211\u7684\u78c1\u789f",
+   "examined": 43367,
+   "interactive": 60,
+   "byClass": {
+    "material": 60,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "home",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u9996\u9801",
+   "examined": 43367,
+   "interactive": 55,
+   "byClass": {
+    "material": 36,
+    "material-part": 16,
+    "allowlisted-native": 19
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "newtab-popover",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u9996\u9801",
+   "examined": 43867,
+   "interactive": 81,
+   "byClass": {
+    "material": 62,
+    "material-part": 66,
+    "allowlisted-native": 19
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-00",
+   "label": "\u6211\u7684\u78c1\u789f, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u6211\u7684\u78c1\u789f",
+   "examined": 43867,
+   "interactive": 60,
+   "byClass": {
+    "material": 60,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-01",
+   "label": "\u53ef\u96e2\u7dda\u4f7f\u7528, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u53ef\u96e2\u7dda\u4f7f\u7528",
+   "examined": 43755,
+   "interactive": 56,
+   "byClass": {
+    "material": 56,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-02",
+   "label": "\u6b77\u53f2\u8a18\u9304, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u6b77\u53f2\u8a18\u9304",
+   "examined": 43867,
+   "interactive": 51,
+   "byClass": {
+    "material": 51,
+    "material-part": 28,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-03",
+   "label": "\u8cc7\u6e90\u56de\u6536\u7b52, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u8cc7\u6e90\u56de\u6536\u7b52",
+   "examined": 43867,
+   "interactive": 42,
+   "byClass": {
+    "material": 42,
+    "material-part": 23,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-04",
+   "label": "\u8f49\u63db\u5de5\u5177, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u8f49\u63db\u5de5\u5177",
+   "examined": 43867,
+   "interactive": 41,
+   "byClass": {
+    "material": 41,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-05",
+   "label": "\u6587\u4ef6\u8207\u4e0b\u8f09, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u6587\u4ef6\u8207\u4e0b\u8f09",
+   "examined": 43867,
+   "interactive": 79,
+   "byClass": {
+    "material": 78,
+    "material-part": 63,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-06",
+   "label": "\u672c\u6a5f\u6a21\u578b, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u672c\u6a5f\u6a21\u578b",
+   "examined": 43867,
+   "interactive": 68,
+   "byClass": {
+    "material": 68,
+    "material-part": 46,
+    "focus-target": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-07",
+   "label": "\u4f3a\u670d\u5668\u6e96\u5099, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u4f3a\u670d\u5668\u6e96\u5099",
+   "examined": 43867,
+   "interactive": 53,
+   "byClass": {
+    "material": 53,
+    "material-part": 35
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-08",
+   "label": "\u5132\u5b58\u7dad\u8b77, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u5132\u5b58\u7dad\u8b77",
+   "examined": 43867,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 21
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-09",
+   "label": "\u72c0\u614b, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u72c0\u614b",
+   "examined": 43867,
+   "interactive": 37,
+   "byClass": {
+    "material": 37,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-10",
+   "label": "\u6a94\u6848\u8a73\u60c5, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u6a94\u6848\u8a73\u60c5",
+   "examined": 43867,
+   "interactive": 46,
+   "byClass": {
+    "material": 44,
+    "material-part": 25,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-11",
+   "label": "\u8a2d\u5b9a, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u8a2d\u5b9a",
+   "examined": 43867,
+   "interactive": 55,
+   "byClass": {
+    "material": 54,
+    "material-part": 35,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-12",
+   "label": "\u500b\u4eba\u5316, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u500b\u4eba\u5316",
+   "examined": 43867,
+   "interactive": 101,
+   "byClass": {
+    "material": 101,
+    "material-part": 80
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-13",
+   "label": "\u672c\u6a5f\u5b58\u53d6, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u672c\u6a5f\u5b58\u53d6",
+   "examined": 43867,
+   "interactive": 50,
+   "byClass": {
+    "material": 50,
+    "material-part": 27
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-14",
+   "label": "\u66f4\u65b0, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u66f4\u65b0",
+   "examined": 43867,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 20
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-15",
+   "label": "\u4f7f\u7528\u65b9\u6cd5, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u4f7f\u7528\u65b9\u6cd5",
+   "examined": 43867,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-16",
+   "label": "\u8aaa\u660e\u6587\u4ef6, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u8aaa\u660e\u6587\u4ef6",
+   "examined": 43867,
+   "interactive": 277,
+   "byClass": {
+    "material": 277,
+    "material-part": 258,
+    "focus-target": 1,
+    "focus-stop": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-17",
+   "label": "\u66f4\u65b0\u8a18\u9304, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u66f4\u65b0\u8a18\u9304",
+   "examined": 43867,
+   "interactive": 48,
+   "byClass": {
+    "material": 46,
+    "material-part": 29,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-18",
+   "label": "\u914d\u5c0d\u700f\u89bd\u5668, \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u914d\u5c0d\u700f\u89bd\u5668",
+   "examined": 43867,
+   "interactive": 36,
+   "byClass": {
+    "material": 36,
+    "material-part": 16
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-converter",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u8f49\u63db\u5de5\u5177",
+   "examined": 43463,
+   "interactive": 41,
+   "byClass": {
+    "material": 41,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-documents",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u6587\u4ef6\u8207\u4e0b\u8f09",
+   "examined": 43463,
+   "interactive": 79,
+   "byClass": {
+    "material": 78,
+    "material-part": 63,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-local-models",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u672c\u6a5f\u6a21\u578b",
+   "examined": 43463,
+   "interactive": 68,
+   "byClass": {
+    "material": 68,
+    "material-part": 46,
+    "focus-target": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-server-prep",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u4f3a\u670d\u5668\u6e96\u5099",
+   "examined": 43463,
+   "interactive": 53,
+   "byClass": {
+    "material": 53,
+    "material-part": 35
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-storage",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u5132\u5b58\u7dad\u8b77",
+   "examined": 43463,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 21
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-status",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u72c0\u614b",
+   "examined": 43463,
+   "interactive": 37,
+   "byClass": {
+    "material": 37,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-file-details",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u6a94\u6848\u8a73\u60c5",
+   "examined": 43463,
+   "interactive": 46,
+   "byClass": {
+    "material": 44,
+    "material-part": 25,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u8a2d\u5b9a",
+   "examined": 43391,
+   "interactive": 55,
+   "byClass": {
+    "material": 54,
+    "material-part": 35,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-personalization",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u500b\u4eba\u5316",
+   "examined": 43391,
+   "interactive": 101,
+   "byClass": {
+    "material": 101,
+    "material-part": 80
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-local-access",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u672c\u6a5f\u5b58\u53d6",
+   "examined": 43391,
+   "interactive": 50,
+   "byClass": {
+    "material": 50,
+    "material-part": 27
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-updates",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u66f4\u65b0",
+   "examined": 43391,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 20
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-how-it-works",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u4f7f\u7528\u65b9\u6cd5",
+   "examined": 43367,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-documentation",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u8aaa\u660e\u6587\u4ef6",
+   "examined": 43367,
+   "interactive": 277,
+   "byClass": {
+    "material": 277,
+    "material-part": 258,
+    "focus-target": 1,
+    "focus-stop": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-changelog",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u66f4\u65b0\u8a18\u9304",
+   "examined": 43367,
+   "interactive": 48,
+   "byClass": {
+    "material": 46,
+    "material-part": 29,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "drive-unlocked-files",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u6211\u7684\u78c1\u789f",
+   "examined": 43367,
+   "interactive": 60,
+   "byClass": {
+    "material": 60,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "home",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Home \u00b7 \u9996\u9801",
+   "examined": 43382,
+   "interactive": 55,
+   "byClass": {
+    "material": 36,
+    "material-part": 16,
+    "allowlisted-native": 19
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "newtab-popover",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Home \u00b7 \u9996\u9801",
+   "examined": 43882,
+   "interactive": 81,
+   "byClass": {
+    "material": 62,
+    "material-part": 66,
+    "allowlisted-native": 19
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-00",
+   "label": "My drive \u00b7 \u6211\u7684\u78c1\u789f, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "My drive \u00b7 \u6211\u7684\u78c1\u789f",
+   "examined": 43882,
+   "interactive": 60,
+   "byClass": {
+    "material": 60,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-01",
+   "label": "Available offline \u00b7 \u53ef\u96e2\u7dda\u4f7f\u7528, Open ",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Available offline \u00b7 \u53ef\u96e2\u7dda\u4f7f\u7528",
+   "examined": 43770,
+   "interactive": 56,
+   "byClass": {
+    "material": 56,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-02",
+   "label": "History \u00b7 \u6b77\u53f2\u8a18\u9304, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "History \u00b7 \u6b77\u53f2\u8a18\u9304",
+   "examined": 43882,
+   "interactive": 51,
+   "byClass": {
+    "material": 51,
+    "material-part": 28,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-03",
+   "label": "Recycle Bin \u00b7 \u8cc7\u6e90\u56de\u6536\u7b52, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Recycle Bin \u00b7 \u8cc7\u6e90\u56de\u6536\u7b52",
+   "examined": 43882,
+   "interactive": 42,
+   "byClass": {
+    "material": 42,
+    "material-part": 23,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-04",
+   "label": "Converter \u00b7 \u8f49\u63db\u5de5\u5177, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Converter \u00b7 \u8f49\u63db\u5de5\u5177",
+   "examined": 43882,
+   "interactive": 41,
+   "byClass": {
+    "material": 41,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-05",
+   "label": "Documents and downloads \u00b7 \u6587\u4ef6\u8207\u4e0b\u8f09,",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Documents and downloads \u00b7 \u6587\u4ef6\u8207\u4e0b\u8f09",
+   "examined": 43882,
+   "interactive": 79,
+   "byClass": {
+    "material": 78,
+    "material-part": 63,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-06",
+   "label": "Local models \u00b7 \u672c\u6a5f\u6a21\u578b, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Local models \u00b7 \u672c\u6a5f\u6a21\u578b",
+   "examined": 43882,
+   "interactive": 68,
+   "byClass": {
+    "material": 68,
+    "material-part": 46,
+    "focus-target": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-07",
+   "label": "Server preparation \u00b7 \u4f3a\u670d\u5668\u6e96\u5099, Open",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Server preparation \u00b7 \u4f3a\u670d\u5668\u6e96\u5099",
+   "examined": 43882,
+   "interactive": 53,
+   "byClass": {
+    "material": 53,
+    "material-part": 35
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-08",
+   "label": "Storage maintenance \u00b7 \u5132\u5b58\u7dad\u8b77, Open",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Storage maintenance \u00b7 \u5132\u5b58\u7dad\u8b77",
+   "examined": 43882,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 21
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-09",
+   "label": "Status \u00b7 \u72c0\u614b, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Status \u00b7 \u72c0\u614b",
+   "examined": 43882,
+   "interactive": 37,
+   "byClass": {
+    "material": 37,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-10",
+   "label": "File details \u00b7 \u6a94\u6848\u8a73\u60c5, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "File details \u00b7 \u6a94\u6848\u8a73\u60c5",
+   "examined": 43882,
+   "interactive": 46,
+   "byClass": {
+    "material": 44,
+    "material-part": 25,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-11",
+   "label": "Settings \u00b7 \u8a2d\u5b9a, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Settings \u00b7 \u8a2d\u5b9a",
+   "examined": 43882,
+   "interactive": 55,
+   "byClass": {
+    "material": 54,
+    "material-part": 35,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-12",
+   "label": "Personalization \u00b7 \u500b\u4eba\u5316, Open \u00b7 \u5df2\u958b",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Personalization \u00b7 \u500b\u4eba\u5316",
+   "examined": 43882,
+   "interactive": 101,
+   "byClass": {
+    "material": 101,
+    "material-part": 80
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-13",
+   "label": "Local access \u00b7 \u672c\u6a5f\u5b58\u53d6, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Local access \u00b7 \u672c\u6a5f\u5b58\u53d6",
+   "examined": 43882,
+   "interactive": 50,
+   "byClass": {
+    "material": 50,
+    "material-part": 27
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-14",
+   "label": "Updates \u00b7 \u66f4\u65b0, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Updates \u00b7 \u66f4\u65b0",
+   "examined": 43882,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 20
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-15",
+   "label": "How it works \u00b7 \u4f7f\u7528\u65b9\u6cd5, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "How it works \u00b7 \u4f7f\u7528\u65b9\u6cd5",
+   "examined": 43882,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-16",
+   "label": "Documentation \u00b7 \u8aaa\u660e\u6587\u4ef6, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Documentation \u00b7 \u8aaa\u660e\u6587\u4ef6",
+   "examined": 43882,
+   "interactive": 277,
+   "byClass": {
+    "material": 277,
+    "material-part": 258,
+    "focus-target": 1,
+    "focus-stop": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-17",
+   "label": "Changelog \u00b7 \u66f4\u65b0\u8a18\u9304, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Changelog \u00b7 \u66f4\u65b0\u8a18\u9304",
+   "examined": 43882,
+   "interactive": 48,
+   "byClass": {
+    "material": 46,
+    "material-part": 29,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-18",
+   "label": "Pair a browser \u00b7 \u914d\u5c0d\u700f\u89bd\u5668, Open \u00b7 \u5df2",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Pair a browser \u00b7 \u914d\u5c0d\u700f\u89bd\u5668",
+   "examined": 43882,
+   "interactive": 36,
+   "byClass": {
+    "material": 36,
+    "material-part": 16
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-converter",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Converter \u00b7 \u8f49\u63db\u5de5\u5177",
+   "examined": 43478,
+   "interactive": 41,
+   "byClass": {
+    "material": 41,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-documents",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Documents and downloads \u00b7 \u6587\u4ef6\u8207\u4e0b\u8f09",
+   "examined": 43478,
+   "interactive": 79,
+   "byClass": {
+    "material": 78,
+    "material-part": 63,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-local-models",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Local models \u00b7 \u672c\u6a5f\u6a21\u578b",
+   "examined": 43478,
+   "interactive": 68,
+   "byClass": {
+    "material": 68,
+    "material-part": 46,
+    "focus-target": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-server-prep",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Server preparation \u00b7 \u4f3a\u670d\u5668\u6e96\u5099",
+   "examined": 43478,
+   "interactive": 53,
+   "byClass": {
+    "material": 53,
+    "material-part": 35
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-storage",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Storage maintenance \u00b7 \u5132\u5b58\u7dad\u8b77",
+   "examined": 43478,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 21
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-status",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Status \u00b7 \u72c0\u614b",
+   "examined": 43478,
+   "interactive": 37,
+   "byClass": {
+    "material": 37,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-file-details",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "File details \u00b7 \u6a94\u6848\u8a73\u60c5",
+   "examined": 43478,
+   "interactive": 46,
+   "byClass": {
+    "material": 44,
+    "material-part": 25,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Settings \u00b7 \u8a2d\u5b9a",
+   "examined": 43406,
+   "interactive": 55,
+   "byClass": {
+    "material": 54,
+    "material-part": 35,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-personalization",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Personalization \u00b7 \u500b\u4eba\u5316",
+   "examined": 43406,
+   "interactive": 101,
+   "byClass": {
+    "material": 101,
+    "material-part": 80
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-local-access",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Local access \u00b7 \u672c\u6a5f\u5b58\u53d6",
+   "examined": 43406,
+   "interactive": 50,
+   "byClass": {
+    "material": 50,
+    "material-part": 27
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-updates",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Updates \u00b7 \u66f4\u65b0",
+   "examined": 43406,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 20
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-how-it-works",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "How it works \u00b7 \u4f7f\u7528\u65b9\u6cd5",
+   "examined": 43382,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-documentation",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Documentation \u00b7 \u8aaa\u660e\u6587\u4ef6",
+   "examined": 43382,
+   "interactive": 277,
+   "byClass": {
+    "material": 277,
+    "material-part": 258,
+    "focus-target": 1,
+    "focus-stop": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-changelog",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "Changelog \u00b7 \u66f4\u65b0\u8a18\u9304",
+   "examined": 43382,
+   "interactive": 48,
+   "byClass": {
+    "material": 46,
+    "material-part": 29,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "drive-unlocked-files",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "My drive \u00b7 \u6211\u7684\u78c1\u789f",
+   "examined": 43382,
+   "interactive": 60,
+   "byClass": {
+    "material": 60,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "home",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Home \u00b7 \u9996\u9801",
+   "examined": 43382,
+   "interactive": 55,
+   "byClass": {
+    "material": 36,
+    "material-part": 16,
+    "allowlisted-native": 19
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "newtab-popover",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Home \u00b7 \u9996\u9801",
+   "examined": 43882,
+   "interactive": 81,
+   "byClass": {
+    "material": 62,
+    "material-part": 66,
+    "allowlisted-native": 19
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-00",
+   "label": "My drive \u00b7 \u6211\u7684\u78c1\u789f, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "My drive \u00b7 \u6211\u7684\u78c1\u789f",
+   "examined": 43882,
+   "interactive": 60,
+   "byClass": {
+    "material": 60,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-01",
+   "label": "Available offline \u00b7 \u53ef\u96e2\u7dda\u4f7f\u7528, Open ",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Available offline \u00b7 \u53ef\u96e2\u7dda\u4f7f\u7528",
+   "examined": 43770,
+   "interactive": 56,
+   "byClass": {
+    "material": 56,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-02",
+   "label": "History \u00b7 \u6b77\u53f2\u8a18\u9304, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "History \u00b7 \u6b77\u53f2\u8a18\u9304",
+   "examined": 43882,
+   "interactive": 51,
+   "byClass": {
+    "material": 51,
+    "material-part": 28,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-03",
+   "label": "Recycle Bin \u00b7 \u8cc7\u6e90\u56de\u6536\u7b52, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Recycle Bin \u00b7 \u8cc7\u6e90\u56de\u6536\u7b52",
+   "examined": 43882,
+   "interactive": 42,
+   "byClass": {
+    "material": 42,
+    "material-part": 23,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-04",
+   "label": "Converter \u00b7 \u8f49\u63db\u5de5\u5177, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Converter \u00b7 \u8f49\u63db\u5de5\u5177",
+   "examined": 43882,
+   "interactive": 41,
+   "byClass": {
+    "material": 41,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-05",
+   "label": "Documents and downloads \u00b7 \u6587\u4ef6\u8207\u4e0b\u8f09,",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Documents and downloads \u00b7 \u6587\u4ef6\u8207\u4e0b\u8f09",
+   "examined": 43882,
+   "interactive": 79,
+   "byClass": {
+    "material": 78,
+    "material-part": 63,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-06",
+   "label": "Local models \u00b7 \u672c\u6a5f\u6a21\u578b, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Local models \u00b7 \u672c\u6a5f\u6a21\u578b",
+   "examined": 43882,
+   "interactive": 68,
+   "byClass": {
+    "material": 68,
+    "material-part": 46,
+    "focus-target": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-07",
+   "label": "Server preparation \u00b7 \u4f3a\u670d\u5668\u6e96\u5099, Open",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Server preparation \u00b7 \u4f3a\u670d\u5668\u6e96\u5099",
+   "examined": 43882,
+   "interactive": 53,
+   "byClass": {
+    "material": 53,
+    "material-part": 35
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-08",
+   "label": "Storage maintenance \u00b7 \u5132\u5b58\u7dad\u8b77, Open",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Storage maintenance \u00b7 \u5132\u5b58\u7dad\u8b77",
+   "examined": 43882,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 21
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-09",
+   "label": "Status \u00b7 \u72c0\u614b, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Status \u00b7 \u72c0\u614b",
+   "examined": 43882,
+   "interactive": 37,
+   "byClass": {
+    "material": 37,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-10",
+   "label": "File details \u00b7 \u6a94\u6848\u8a73\u60c5, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "File details \u00b7 \u6a94\u6848\u8a73\u60c5",
+   "examined": 43882,
+   "interactive": 46,
+   "byClass": {
+    "material": 44,
+    "material-part": 25,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-11",
+   "label": "Settings \u00b7 \u8a2d\u5b9a, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Settings \u00b7 \u8a2d\u5b9a",
+   "examined": 43882,
+   "interactive": 55,
+   "byClass": {
+    "material": 54,
+    "material-part": 35,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-12",
+   "label": "Personalization \u00b7 \u500b\u4eba\u5316, Open \u00b7 \u5df2\u958b",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Personalization \u00b7 \u500b\u4eba\u5316",
+   "examined": 43882,
+   "interactive": 101,
+   "byClass": {
+    "material": 101,
+    "material-part": 80
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-13",
+   "label": "Local access \u00b7 \u672c\u6a5f\u5b58\u53d6, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Local access \u00b7 \u672c\u6a5f\u5b58\u53d6",
+   "examined": 43882,
+   "interactive": 50,
+   "byClass": {
+    "material": 50,
+    "material-part": 27
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-14",
+   "label": "Updates \u00b7 \u66f4\u65b0, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Updates \u00b7 \u66f4\u65b0",
+   "examined": 43882,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 20
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-15",
+   "label": "How it works \u00b7 \u4f7f\u7528\u65b9\u6cd5, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "How it works \u00b7 \u4f7f\u7528\u65b9\u6cd5",
+   "examined": 43882,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-16",
+   "label": "Documentation \u00b7 \u8aaa\u660e\u6587\u4ef6, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Documentation \u00b7 \u8aaa\u660e\u6587\u4ef6",
+   "examined": 43882,
+   "interactive": 277,
+   "byClass": {
+    "material": 277,
+    "material-part": 258,
+    "focus-target": 1,
+    "focus-stop": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-17",
+   "label": "Changelog \u00b7 \u66f4\u65b0\u8a18\u9304, Open \u00b7 \u5df2\u958b\u555f",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Changelog \u00b7 \u66f4\u65b0\u8a18\u9304",
+   "examined": 43882,
+   "interactive": 48,
+   "byClass": {
+    "material": 46,
+    "material-part": 29,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "card-18",
+   "label": "Pair a browser \u00b7 \u914d\u5c0d\u700f\u89bd\u5668, Open \u00b7 \u5df2",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Pair a browser \u00b7 \u914d\u5c0d\u700f\u89bd\u5668",
+   "examined": 43882,
+   "interactive": 36,
+   "byClass": {
+    "material": 36,
+    "material-part": 16
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-converter",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Converter \u00b7 \u8f49\u63db\u5de5\u5177",
+   "examined": 43478,
+   "interactive": 41,
+   "byClass": {
+    "material": 41,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-documents",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Documents and downloads \u00b7 \u6587\u4ef6\u8207\u4e0b\u8f09",
+   "examined": 43478,
+   "interactive": 79,
+   "byClass": {
+    "material": 78,
+    "material-part": 63,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-local-models",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Local models \u00b7 \u672c\u6a5f\u6a21\u578b",
+   "examined": 43478,
+   "interactive": 68,
+   "byClass": {
+    "material": 68,
+    "material-part": 46,
+    "focus-target": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-server-prep",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Server preparation \u00b7 \u4f3a\u670d\u5668\u6e96\u5099",
+   "examined": 43478,
+   "interactive": 53,
+   "byClass": {
+    "material": 53,
+    "material-part": 35
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-storage",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Storage maintenance \u00b7 \u5132\u5b58\u7dad\u8b77",
+   "examined": 43478,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 21
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-status",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Status \u00b7 \u72c0\u614b",
+   "examined": 43478,
+   "interactive": 37,
+   "byClass": {
+    "material": 37,
+    "material-part": 17
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "tools-file-details",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "File details \u00b7 \u6a94\u6848\u8a73\u60c5",
+   "examined": 43478,
+   "interactive": 46,
+   "byClass": {
+    "material": 44,
+    "material-part": 25,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Settings \u00b7 \u8a2d\u5b9a",
+   "examined": 43406,
+   "interactive": 55,
+   "byClass": {
+    "material": 54,
+    "material-part": 35,
+    "disclosure": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-personalization",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Personalization \u00b7 \u500b\u4eba\u5316",
+   "examined": 43406,
+   "interactive": 101,
+   "byClass": {
+    "material": 101,
+    "material-part": 80
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-local-access",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Local access \u00b7 \u672c\u6a5f\u5b58\u53d6",
+   "examined": 43406,
+   "interactive": 50,
+   "byClass": {
+    "material": 50,
+    "material-part": 27
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "settings-updates",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Updates \u00b7 \u66f4\u65b0",
+   "examined": 43406,
+   "interactive": 40,
+   "byClass": {
+    "material": 40,
+    "material-part": 20
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-how-it-works",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "How it works \u00b7 \u4f7f\u7528\u65b9\u6cd5",
+   "examined": 43382,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-documentation",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Documentation \u00b7 \u8aaa\u660e\u6587\u4ef6",
+   "examined": 43382,
+   "interactive": 277,
+   "byClass": {
+    "material": 277,
+    "material-part": 258,
+    "focus-target": 1,
+    "focus-stop": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "help-changelog",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "Changelog \u00b7 \u66f4\u65b0\u8a18\u9304",
+   "examined": 43382,
+   "interactive": 48,
+   "byClass": {
+    "material": 46,
+    "material-part": 29,
+    "allowlisted-native": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "drive-unlocked-files",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "My drive \u00b7 \u6211\u7684\u78c1\u789f",
+   "examined": 43382,
+   "interactive": 60,
+   "byClass": {
+    "material": 60,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "lock-open-files-banner",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "My drive",
+   "examined": 43403,
+   "interactive": 61,
+   "byClass": {
+    "material": 61,
+    "material-part": 39,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "force-lock-dialog",
+   "label": "Force Lock",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "",
+   "examined": 40,
+   "interactive": 2,
+   "byClass": {
+    "material": 2,
+    "material-part": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "lock-open-files-banner",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "My drive",
+   "examined": 43439,
+   "interactive": 61,
+   "byClass": {
+    "material": 61,
+    "material-part": 39,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "force-lock-dialog",
+   "label": "Force Lock",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "",
+   "examined": 40,
+   "interactive": 2,
+   "byClass": {
+    "material": 2,
+    "material-part": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "lock-open-files-banner",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u6211\u7684\u78c1\u789f",
+   "examined": 43475,
+   "interactive": 61,
+   "byClass": {
+    "material": 61,
+    "material-part": 39,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "force-lock-dialog",
+   "label": "\u5f37\u5236\u9396\u5b9a",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "",
+   "examined": 40,
+   "interactive": 2,
+   "byClass": {
+    "material": 2,
+    "material-part": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "lock-open-files-banner",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u6211\u7684\u78c1\u789f",
+   "examined": 43511,
+   "interactive": 61,
+   "byClass": {
+    "material": 61,
+    "material-part": 39,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "force-lock-dialog",
+   "label": "\u5f37\u5236\u9396\u5b9a",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "",
+   "examined": 40,
+   "interactive": 2,
+   "byClass": {
+    "material": 2,
+    "material-part": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "lock-open-files-banner",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "My drive \u00b7 \u6211\u7684\u78c1\u789f",
+   "examined": 43526,
+   "interactive": 60,
+   "byClass": {
+    "material": 60,
+    "material-part": 38,
+    "focus-stop": 1
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "force-lock-dialog",
+   "label": "Force Lock \u00b7 \u5f37\u5236\u9396\u5b9a",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "",
+   "examined": 40,
+   "interactive": 2,
+   "byClass": {
+    "material": 2,
+    "material-part": 2
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "lock-open-files-banner",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "My drive \u00b7 \u6211\u7684\u78c1\u789f",
+   "examined": 43298,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "drive-locked",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "My drive",
+   "examined": 43283,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "create-drive-dialog",
+   "label": "",
+   "theme": "light",
+   "language": "en",
+   "pageTitle": "My drive",
+   "examined": 43295,
+   "interactive": 65,
+   "byClass": {
+    "material": 65,
+    "material-part": 50
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "drive-locked",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "My drive",
+   "examined": 43293,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "create-drive-dialog",
+   "label": "",
+   "theme": "dark",
+   "language": "en",
+   "pageTitle": "My drive",
+   "examined": 43295,
+   "interactive": 65,
+   "byClass": {
+    "material": 65,
+    "material-part": 50
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "drive-locked",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u6211\u7684\u78c1\u789f",
+   "examined": 43293,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "create-drive-dialog",
+   "label": "",
+   "theme": "light",
+   "language": "yue",
+   "pageTitle": "\u6211\u7684\u78c1\u789f",
+   "examined": 43295,
+   "interactive": 65,
+   "byClass": {
+    "material": 65,
+    "material-part": 50
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "drive-locked",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u6211\u7684\u78c1\u789f",
+   "examined": 43293,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "create-drive-dialog",
+   "label": "",
+   "theme": "dark",
+   "language": "yue",
+   "pageTitle": "\u6211\u7684\u78c1\u789f",
+   "examined": 43295,
+   "interactive": 65,
+   "byClass": {
+    "material": 65,
+    "material-part": 50
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "drive-locked",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "My drive \u00b7 \u6211\u7684\u78c1\u789f",
+   "examined": 43308,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "create-drive-dialog",
+   "label": "",
+   "theme": "light",
+   "language": "bilingual",
+   "pageTitle": "My drive \u00b7 \u6211\u7684\u78c1\u789f",
+   "examined": 43310,
+   "interactive": 65,
+   "byClass": {
+    "material": 65,
+    "material-part": 50
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "drive-locked",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "My drive \u00b7 \u6211\u7684\u78c1\u789f",
+   "examined": 43308,
+   "interactive": 38,
+   "byClass": {
+    "material": 38,
+    "material-part": 18
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  },
+  {
+   "state": "create-drive-dialog",
+   "label": "",
+   "theme": "dark",
+   "language": "bilingual",
+   "pageTitle": "My drive \u00b7 \u6211\u7684\u78c1\u789f",
+   "examined": 43310,
+   "interactive": 65,
+   "byClass": {
+    "material": 65,
+    "material-part": 50
+   },
+   "findings": 0,
+   "reducedLeaks": 0,
+   "runningAfterReduce": 0
+  }
+ ]
+}
