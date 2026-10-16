@@ -1,0 +1,78 @@
+{
+  "round": 12,
+  "date": "2026-10-16",
+  "starting_state": { "installedVersion": "1.731.1", "appFolders": ["app-1.731.1"], "ownerProfileFiles": 72 },
+  "releases_used": {
+    "v1.739.1": {
+      "targetCommit": "44dd8102d270c150e7ceeca38b308cff63deff35",
+      "descendsFromMain3142c5a": true,
+      "isDraft": false, "isPrerelease": false, "authenticode": "NotSigned",
+      "setupSha256": "421786de4f8f293c065090272a6d4d61299a74aeec69bcf15129e38546c9c9f2 (matches provenance)",
+      "releasesSha256": "1ca3b49407799cd82c88614b8de070e9d53cd3842cbca1969626abfc70eb3f82 (matches provenance)",
+      "releasesRow": "0658a462433f880e9479f6c229f8cf5d44dca7b5 MaterialFileEncryptor-1.739.1-full.nupkg 431440763",
+      "note": "Newest release at the time; used instead of v1.731.1 because its target descends from main 3142c5a."
+    },
+    "v1.729.1": {
+      "targetCommit": "5db936fc36a15530379071db52d88f0b4fb4608e",
+      "isDraft": false, "isPrerelease": false, "authenticode": "NotSigned",
+      "setupSha256": "da0e81dfb4f661f27c09958421b2a9ec1a14ede8ee536824333b0176d2949936 (matches provenance)",
+      "releasesSha256": "33a8312d79334a6f178a8c5ec5dafe98815de8a6b13b440548008806dc1c5bbf (matches provenance)",
+      "releasesRow": "cbecd4374ae1b3264f2979da7bee41a4f0e5cefd MaterialFileEncryptor-1.729.1-full.nupkg 430115954"
+    }
+  },
+  "A_uninstall_reinstall": {
+    "uninstall": {
+      "route": "Update.exe --uninstall on a hidden desktop; finished in under 10 s",
+      "appFilesRemoved": true,
+      "leftBehind": "the install root folder itself still held Update.exe and a one-byte .dead marker (Squirrel's pending-removal marker); nothing else",
+      "shortcuts": "desktop shortcut and Start menu shortcut both removed",
+      "uninstallEntry": "HKCU Uninstall entry removed",
+      "squirrelRunValue": "the app's own startup Run value removed; an unrelated pre-existing verification Run value pointing at another build was left alone",
+      "nativeMessagingKeys": "the Chrome and Edge keys for this app were removed by the uninstall hook; other apps' keys were untouched",
+      "hostManifest": "the manifest inside the owner profile's native-messaging folder was removed by the hook",
+      "hostManifestNotRemoved": "before the test both keys pointed at a manifest inside the isolated test profile (written by earlier test runs with that profile); that file was not touched by the uninstall and still existed afterwards",
+      "ownerProfile": "kept: 71 of 72 files remained (the only missing file was the host manifest the hook removes); one shader-cache index file changed because the uninstall hook runs the app"
+    },
+    "reinstall": {
+      "route": "Setup.exe of v1.739.1, once",
+      "installedAppFolder": "app-1.739.1",
+      "autoLaunch": "Setup launched the app by itself on the owner profile; launch confirmed (window and process); quit through Help > Quit, exited within 2 s",
+      "nativeMessagingKeys": "both keys back, now pointing at the manifest in the owner profile",
+      "manifestPath": "the manifest's host path points into app-1.739.1",
+      "shortcuts": "desktop and Start menu shortcuts back, targeting the install-root stub",
+      "uninstallEntry": "back, version 1.739.1",
+      "runValue": "Squirrel startup Run value back, pointing into app-1.739.1"
+    }
+  },
+  "B_rollback": {
+    "whatSquirrelDid": "Setup.exe of the OLDER v1.729.1 over the installed 1.739.1 did not refuse and did not keep the newer one: its log says the install path already exists and it 'burns it to the ground', then does a first-run install. The older version became the only and current version (app-1.739.1 was deleted).",
+    "olderVersionCurrent": "app-1.729.1",
+    "launch": "autolaunched on the owner profile; confirmed by window and process; quit through Help > Quit",
+    "selfHeal": "registry keys, host manifest path, shortcuts, Uninstall entry (1.729.1) and Run value all pointed into app-1.729.1 right after the install",
+    "driveCheck": "the 1.729.1 app (user agent 1.729.1) created and mounted a throwaway vault in an isolated test profile, a neutral file written to the mounted drive appeared in the file list; vault locked and its folder deleted",
+    "sideEffect": "running the 1.729.1 app against the isolated test profile repointed the two native messaging keys at that profile's manifest (again), whose host path pointed into app-1.729.1",
+    "updateBack": "Setup.exe of v1.739.1 over 1.729.1 behaved the same way: install root rebuilt, app-1.739.1 only; keys, manifest path, shortcuts, Uninstall entry and Run value all pointed to 1.739.1 and the keys point at the owner profile manifest again; launch confirmed, quit through Help > Quit"
+  },
+  "owner_profile_final_compare": {
+    "filesBefore": 72, "filesAfter": 74,
+    "removed": ["DIPS-wal", "session-open.json"],
+    "added": ["update-staging folder with ready.json and a v1.739.1 package (the app's own updater staging)", "one Code Cache entry", "one GrShaderCache file"],
+    "changedContent": "browser cache, storage and log files (GPU, shader, Dawn, Session Storage, Local Storage leveldb, Network state, DIPS) and the host manifest (now names app-1.739.1); these change whenever the app runs",
+    "unchanged": ["Preferences", "Local State", "server-manager"],
+    "deletedByTester": false
+  },
+  "left_in_place": {
+    "otherAppsNativeMessagingKeys": "unchanged (compared)",
+    "unrelatedRunValue": "unchanged",
+    "testProfileFolder": "kept",
+    "throwawayVault": "deleted"
+  },
+  "problems": [
+    "The uninstall leaves the install root folder with Update.exe and a .dead marker behind.",
+    "The uninstall does not remove a host manifest that sits in a different profile folder (only the owner profile one), so earlier isolated-profile runs left a manifest behind.",
+    "Every Setup.exe run auto-launches the app on the owner profile; those launches change cache files and the updater staged a package there.",
+    "Running a different version against an isolated profile rewrites the shared registry keys to that profile's manifest; a later install or launch on the owner profile heals them."
+  ],
+  "firewallPrompt": false,
+  "process_cleanup": "zero app, Update.exe and java processes at the end; helper password process stopped"
+}
