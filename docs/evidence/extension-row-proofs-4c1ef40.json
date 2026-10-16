@@ -1,0 +1,520 @@
+{
+  "schemaVersion": 1,
+  "kind": "extension-row-proofs",
+  "buildSourceCommit": "4c1ef401bd429ed4b35f64c85dc66f6ff8d0a7b2",
+  "sourceModified": false,
+  "package": {
+    "buildIdentity": "fb51928d71119e837ce0f303cf25da67033e280ac87b11c134aed76e4f481e8e",
+    "bundleReceiptSha256": "1824730f8e9f02a6417b72dd0e31f8bf3073e6d31fbc3281e97a7bf4ac256c32",
+    "fileCount": 53,
+    "extensionVersion": "0.1.0",
+    "extensionId": "hfabajdjnmccemhokjnipmaabdpljbbg",
+    "builtBy": "node scripts/build-browser-extension.mjs (staged to out/browser-extension)",
+    "signing": "not-produced",
+    "installation": "not-performed"
+  },
+  "browser": {
+    "version": "Edg/155.0.4283.45",
+    "mode": "headless, extension loaded unpacked into a new isolated profile, one page target per driven page, real CDP mouse and keyboard input"
+  },
+  "pairing": "not used: the desktop pairing lane is out of scope, so every pairing-dependent behaviour remains unverified",
+  "proofs": [
+    {
+      "id": "options-personalization",
+      "surface": "extension:options:personalization",
+      "feature": null,
+      "route": "browser-extension/options.html",
+      "steps": [
+        {
+          "step": "language yue sets zh-HK, pressed state, Cantonese labels",
+          "ok": true,
+          "detail": {
+            "lang": "zh-HK",
+            "control": "yue",
+            "pressed": "en:false,yue:true,bilingual:false",
+            "heading": "個人化",
+            "groupLabel": "語言",
+            "themeLabel": "主題",
+            "previewButton": "預覽訊息"
+          }
+        },
+        {
+          "step": "language bilingual shows both languages in heading and keeps en document language",
+          "ok": true,
+          "detail": {
+            "lang": "en",
+            "control": "bilingual",
+            "pressed": "en:false,yue:false,bilingual:true",
+            "heading": "Personalization個人化",
+            "groupLabel": "Language",
+            "themeLabel": "Theme",
+            "previewButton": "Preview message預覽訊息"
+          }
+        },
+        {
+          "step": "language en returns English-only labels",
+          "ok": true,
+          "detail": {
+            "lang": "en",
+            "control": "en",
+            "pressed": "en:true,yue:false,bilingual:false",
+            "heading": "Personalization",
+            "groupLabel": "Language",
+            "themeLabel": "Theme",
+            "previewButton": "Preview message"
+          }
+        },
+        {
+          "step": "language persisted to extension storage",
+          "ok": true,
+          "detail": {
+            "version": 3,
+            "language": "yue",
+            "theme": "light",
+            "tab": "personalization",
+            "funnyEnglish": 5,
+            "funnyCantonese": 5,
+            "emoji": false,
+            "displayName": "",
+            "accent": ""
+          }
+        },
+        {
+          "step": "language restored after reload",
+          "ok": true,
+          "detail": "zh-HK|yue"
+        },
+        {
+          "step": "theme dark applied",
+          "ok": true,
+          "detail": "dark|true|rgba(0, 0, 0, 0)"
+        },
+        {
+          "step": "theme light applied",
+          "ok": true,
+          "detail": "light|true|rgba(0, 0, 0, 0)"
+        },
+        {
+          "step": "English playfulness slider changes by keyboard and persists",
+          "ok": true,
+          "detail": {
+            "version": 3,
+            "language": "en",
+            "theme": "light",
+            "tab": "personalization",
+            "funnyEnglish": 3,
+            "funnyCantonese": 5,
+            "emoji": false,
+            "displayName": "",
+            "accent": ""
+          }
+        },
+        {
+          "step": "English playfulness reset restores 5 without touching Cantonese",
+          "ok": true,
+          "detail": {
+            "version": 3,
+            "language": "en",
+            "theme": "light",
+            "tab": "personalization",
+            "funnyEnglish": 5,
+            "funnyCantonese": 5,
+            "emoji": false,
+            "displayName": "",
+            "accent": ""
+          }
+        },
+        {
+          "step": "Cantonese playfulness slider Home key sets minimum independently",
+          "ok": true,
+          "detail": {
+            "version": 3,
+            "language": "en",
+            "theme": "light",
+            "tab": "personalization",
+            "funnyEnglish": 5,
+            "funnyCantonese": 1,
+            "emoji": false,
+            "displayName": "",
+            "accent": ""
+          }
+        },
+        {
+          "step": "emoji switch toggles message-only emoji preference",
+          "ok": true,
+          "detail": {
+            "version": 3,
+            "language": "en",
+            "theme": "light",
+            "tab": "personalization",
+            "funnyEnglish": 5,
+            "funnyCantonese": 5,
+            "emoji": true,
+            "displayName": "",
+            "accent": ""
+          }
+        },
+        {
+          "step": "display name saved and propagated to page title and workspace label",
+          "ok": true,
+          "detail": {
+            "stored": "Proof Vault",
+            "title": "Proof Vault · Extension workspace",
+            "home": "Proof Vault · Workspace"
+          }
+        },
+        {
+          "step": "display name with angle bracket is refused and previous name kept",
+          "ok": true,
+          "detail": {
+            "bad": {
+              "error": true,
+              "text": "Use up to 60 characters without angle brackets or line breaks."
+            },
+            "stored": "Proof Vault"
+          }
+        },
+        {
+          "step": "display name containing a line break is refused and previous name kept",
+          "ok": true,
+          "detail": {
+            "nl": {
+              "error": true
+            },
+            "stored": "Proof Vault"
+          }
+        },
+        {
+          "step": "display name appears in the version line, home tab list name, workspace heading and page title",
+          "ok": true,
+          "detail": {
+            "version": "Proof Vault 0.1.0",
+            "tablistName": "Proof Vault · Workspace",
+            "heading": "Proof Vault · Extension workspace",
+            "title": "Proof Vault · Extension workspace"
+          }
+        },
+        {
+          "step": "display name persists after reload",
+          "ok": true,
+          "detail": "Proof Vault · Extension workspace"
+        },
+        {
+          "step": "display name cleared restores built-in product name",
+          "ok": true,
+          "detail": "Material File Encryptor · Extension workspace"
+        },
+        {
+          "step": "accent hex entry reports measured contrast and enables Apply when it passes",
+          "ok": true,
+          "detail": {
+            "contrast": "Text contrast 8.3:1 meets the 4.5:1 minimum.",
+            "applyEnabled": true
+          }
+        },
+        {
+          "step": "accent applied, stored and visible in the primary colour role",
+          "ok": true,
+          "detail": {
+            "before": "#476333",
+            "after": "#7a1fa2",
+            "stored": "#7a1fa2"
+          }
+        },
+        {
+          "step": "invalid accent text is refused with guidance and cannot be applied",
+          "ok": true,
+          "detail": {
+            "text": "Enter a colour as # followed by six hexadecimal digits.",
+            "applyDisabled": true,
+            "stored": "#7a1fa2"
+          }
+        },
+        {
+          "step": "accent reset returns to built-in palette",
+          "ok": true,
+          "detail": {
+            "version": 3,
+            "language": "en",
+            "theme": "light",
+            "tab": "personalization",
+            "funnyEnglish": 5,
+            "funnyCantonese": 5,
+            "emoji": false,
+            "displayName": "",
+            "accent": ""
+          }
+        },
+        {
+          "step": "no script errors on the personalization panel",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "shots": [
+        {
+          "file": "options-personalization-language-yue-light-1280x800.png",
+          "sha256": "671a444738cda0d01982b58288c422885fcdc78bc9f19129c6e5e782b7926b65",
+          "width": 1280,
+          "height": 800,
+          "bytes": 32900
+        },
+        {
+          "file": "options-personalization-language-bilingual-light-1280x800.png",
+          "sha256": "448ace728530e01a9014d9bd7c834cbeaecca0398e097474b5a98b2eb26ff6a6",
+          "width": 1280,
+          "height": 800,
+          "bytes": 42103
+        },
+        {
+          "file": "options-personalization-language-en-light-1280x800.png",
+          "sha256": "57bb20b6b05f99aa2622ab4bf86335331c8a62be89f50d7735aa8792e1e38e45",
+          "width": 1280,
+          "height": 800,
+          "bytes": 37533
+        },
+        {
+          "file": "options-personalization-theme-dark-1280x800.png",
+          "sha256": "d7040fc09e26f668a0f58e3ac341a558e5d120c6fce8bd83e4a6b2548e2df58e",
+          "width": 1280,
+          "height": 800,
+          "bytes": 38225
+        },
+        {
+          "file": "options-personalization-controls-light-1280x800.png",
+          "sha256": "ec4af96a21a3878892ef132a55000ec2ecf6f955393ab1b35451873386c11524",
+          "width": 1280,
+          "height": 800,
+          "bytes": 44033
+        },
+        {
+          "file": "options-personalization-display-name-light-1280x800.png",
+          "sha256": "7f5dabce8e63df4362e43e0d4bf84002ce9d1d66ed8d3e4afb0ad174260d2d76",
+          "width": 1280,
+          "height": 800,
+          "bytes": 47164
+        },
+        {
+          "file": "options-personalization-accent-light-1280x800.png",
+          "sha256": "4f0de24ff42aa6b8c061a36ada662d21e7a7ee87a242e2f564722caf68c08067",
+          "width": 1280,
+          "height": 800,
+          "bytes": 45620
+        },
+        {
+          "file": "options-personalization-accent-invalid-light-1280x800.png",
+          "sha256": "77d8e1af218061a4874c6265409f798aca865983d63ca16b80b928dd5ca333d7",
+          "width": 1280,
+          "height": 800,
+          "bytes": 45928
+        }
+      ]
+    },
+    {
+      "id": "options-changelog",
+      "surface": "extension:options:changelog",
+      "feature": null,
+      "route": "browser-extension/options.html",
+      "steps": [
+        {
+          "step": "changelog renders bundled releases offline",
+          "ok": true,
+          "detail": {
+            "count0": "16 of 16 releases",
+            "entries0": 16
+          }
+        },
+        {
+          "step": "changelog filter narrows the list",
+          "ok": true,
+          "detail": {
+            "count1": "5 of 16 releases",
+            "n1": 5
+          }
+        },
+        {
+          "step": "collapsing filters hides the group, flags active criteria and keeps the result set",
+          "ok": true,
+          "detail": {
+            "expanded": "false",
+            "hidden": true,
+            "label": "Filters (active)",
+            "query": "extension",
+            "items": 5
+          }
+        },
+        {
+          "step": "collapsing filters also hides the export controls",
+          "ok": true,
+          "detail": {
+            "formatHidden": true,
+            "previewHidden": true
+          }
+        },
+        {
+          "step": "expanding filters restores the export controls",
+          "ok": true,
+          "detail": true
+        },
+        {
+          "step": "expanding filters restores the group with the criteria intact",
+          "ok": true,
+          "detail": {
+            "expanded": "true",
+            "hidden": false,
+            "query": "extension",
+            "items": 5
+          }
+        },
+        {
+          "step": "no script errors on the changelog panel",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "shots": [
+        {
+          "file": "options-changelog-light-1280x800.png",
+          "sha256": "45dfa58e41c05dde65f988231f93ca8e0aa1c43fa8e69cf7f219790317a5868d",
+          "width": 1280,
+          "height": 800,
+          "bytes": 122998
+        },
+        {
+          "file": "options-changelog-filters-collapsed-light-1280x800.png",
+          "sha256": "6195ec7a398b755eb15e13a960eefe4a703fdf3248f90fdd6a3b7f14e85b68e7",
+          "width": 1280,
+          "height": 800,
+          "bytes": 152271
+        }
+      ]
+    },
+    {
+      "id": "popup-language",
+      "surface": "extension:popup",
+      "feature": null,
+      "route": "browser-extension/popup.html",
+      "steps": [
+        {
+          "step": "popup yue shows Cantonese heading and button",
+          "ok": true,
+          "detail": {
+            "lang": "zh-HK",
+            "heading": "下載交接",
+            "pair": "配對瀏覽器",
+            "pressed": "en:false,yue:true,bilingual:false"
+          }
+        },
+        {
+          "step": "popup bilingual stacks both languages",
+          "ok": true,
+          "detail": {
+            "lang": "en",
+            "heading": "Download handoff 下載交接",
+            "pair": "Pair browser 配對瀏覽器",
+            "pressed": "en:false,yue:false,bilingual:true"
+          }
+        },
+        {
+          "step": "popup en shows English only",
+          "ok": true,
+          "detail": {
+            "lang": "en",
+            "heading": "Download handoff",
+            "pair": "Pair browser",
+            "pressed": "en:true,yue:false,bilingual:false"
+          }
+        },
+        {
+          "step": "popup language written to the shared preference record",
+          "ok": true,
+          "detail": {
+            "version": 3,
+            "language": "yue",
+            "theme": "light",
+            "tab": "home",
+            "funnyEnglish": 5,
+            "funnyCantonese": 5,
+            "emoji": false,
+            "displayName": "",
+            "accent": ""
+          }
+        },
+        {
+          "step": "no script errors in the popup",
+          "ok": true,
+          "detail": []
+        }
+      ],
+      "shots": [
+        {
+          "file": "popup-language-yue-light-400x560.png",
+          "sha256": "f0a53c03e60054b4c7360845be5f904bb68b421174151811f4be0cd655d4f9ee",
+          "width": 400,
+          "height": 560,
+          "bytes": 25311
+        },
+        {
+          "file": "popup-language-bilingual-light-400x560.png",
+          "sha256": "688a486d9a4db85d2580ea834856f58ef84fe5cb088a3f17648e50230e26411f",
+          "width": 400,
+          "height": 560,
+          "bytes": 43356
+        },
+        {
+          "file": "popup-language-en-light-400x560.png",
+          "sha256": "4ec0b24cbd79d211f32d1e87a37f72d137fce034c3cc0991fc99fe19f957f599",
+          "width": 400,
+          "height": 560,
+          "bytes": 26106
+        }
+      ]
+    },
+    {
+      "id": "popup-display-name",
+      "surface": "extension:popup",
+      "feature": null,
+      "route": "browser-extension/popup.html",
+      "steps": [
+        {
+          "step": "popup product line shows the saved display name",
+          "ok": true,
+          "detail": "Proof Vault"
+        }
+      ],
+      "shots": [
+        {
+          "file": "popup-display-name-light-400x560.png",
+          "sha256": "b8dfb8ee228bb5606fb6fa921f040462c16eb35c5bfc91ba6299f185aa30f197",
+          "width": 400,
+          "height": 560,
+          "bytes": 31137
+        }
+      ]
+    }
+  ],
+  "rowsProven": {
+    "collapse-filters": {
+      "surface": "extension:options",
+      "proofs": [
+        "options-changelog"
+      ],
+      "note": "Every statement in the row reason is exercised: collapse keeps filter text, export controls hide with the filters, Filters (active) label, expand restores."
+    },
+    "display-name": {
+      "surface": "extension:options",
+      "proofs": [
+        "options-personalization",
+        "popup-display-name"
+      ],
+      "note": "Name saved, shown in heading, page title, version line, home tab list name and popup; angle bracket and line break refused; persists across reload; clearing restores the built-in name."
+    }
+  },
+  "observationsNotClaimed": [
+    "language: in Cantonese mode the workspace search field label and placeholder stay English, so complete copy and accessible-name coverage is not proven; row stays unverified.",
+    "workspace heading in the dark theme at 1280x800 wraps the word Personalization mid-word (see options-personalization-theme-dark-1280x800.png); a layout defect, so material-design, accessibility-sizing and cheap-jor-matrix stay unverified.",
+    "color-picker: a sweep of colours and opacities never produced a below-4.5:1 result because the palette adjusts text colour, so the claim that Apply is only offered at 4.5:1 or better has no observable negative case; row stays unverified.",
+    "changelog: the row persistence note says the selected tab persists, but a reload opens on Home; the statement needs correction before the row can be accepted.",
+    "personal-vocabulary and vocabulary-drop-apply: imported wording applies only while paired with the desktop, and pairing is out of scope here."
+  ]
+}
