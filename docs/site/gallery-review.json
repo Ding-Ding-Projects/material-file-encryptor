@@ -71,8 +71,6 @@
     "images/captures/refresh-b4cbf0e/desktop/unlock-drive-dialog-light-en.png",
     "images/captures/refresh-b4cbf0e/desktop/update-page-dark-en.png",
     "images/captures/refresh-b4cbf0e/desktop/update-page-light-en.png",
-    "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-light-en.png",
-    "images/captures/refresh-6ef15e8/desktop/drive-file-selected-light-en.png",
     "images/captures/refresh-6ef15e8/desktop/server-card-running-light-en.png",
     "images/captures/refresh-6ef15e8/desktop/server-card-running-dark-en.png",
     "images/captures/refresh-6ef15e8/desktop/server-java25-needed-dark-bilingual.png",
@@ -92,7 +90,9 @@
     "images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-light-en.png",
     "images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-dark-en.png",
     "images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-light-bilingual.png",
-    "images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-dark-bilingual.png"
+    "images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-dark-bilingual.png",
+    "images/captures/refresh-a3593fc/desktop/drive-unlocked-files-light-en.png",
+    "images/captures/refresh-a3593fc/desktop/drive-file-selected-light-en.png"
   ],
   "withheld": [
     {
@@ -403,6 +403,16 @@
     {
       "path": "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-bilingual.png",
       "sha256": "59d6e682cae65d9c42fed678ba4a3ebae0c2c2b1a0b1aacb4ce9985255453f0a",
+      "reason": "Withdrawn: replaced by a refreshed capture of the same surface. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-light-en.png",
+      "sha256": "eee19ed14e2983299eeed23dd64a34092ed2a4df5a6bf1dce04d4008b6684ff0",
+      "reason": "Withdrawn: replaced by a refreshed capture of the same surface. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/drive-file-selected-light-en.png",
+      "sha256": "968114ac02a7820790285ad7a19c20d1bae343956961d5877f743e6a2dfd6e07",
       "reason": "Withdrawn: replaced by a refreshed capture of the same surface. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
     }
   ],
@@ -828,18 +838,6 @@
       "workflow": "preferences-help",
       "metadataSha256": "aeb0eef13d1ad8148145a8c2540c1bf15d09eb3c87cda79578d035efef06fce2"
     },
-    "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-light-en.png": {
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "sha256": "eee19ed14e2983299eeed23dd64a34092ed2a4df5a6bf1dce04d4008b6684ff0",
-      "workflow": "drive-access",
-      "metadataSha256": "52e956d3c0483c4f1e3b2942cc30ea4541e4df88f7f584302666b2027a394127"
-    },
-    "images/captures/refresh-6ef15e8/desktop/drive-file-selected-light-en.png": {
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "sha256": "968114ac02a7820790285ad7a19c20d1bae343956961d5877f743e6a2dfd6e07",
-      "workflow": "drive-access",
-      "metadataSha256": "740087631a72ee5569ce4431328b582bf19e7842069189adccc95d9a977d234c"
-    },
     "images/captures/refresh-6ef15e8/desktop/server-card-running-light-en.png": {
       "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
       "sha256": "b7e4475bdbce3f49631523519d9e4aa9819a7e4e1b39aed5c9031cbb6c6d96b5",
@@ -959,6 +957,18 @@
       "sha256": "69bb81b434bfd22265400be0f545b7092ae885e025168f7c26d2c4b36d4263ce",
       "workflow": "drive-access",
       "metadataSha256": "b5230a7367b1932e6a18d3a20f1368931a1d02b137464c356cd71c0209187371"
+    },
+    "images/captures/refresh-a3593fc/desktop/drive-unlocked-files-light-en.png": {
+      "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+      "sha256": "1fb8173e344181f046b99a6e2e48e7f8e64cbbd0f85a1a02759298e1b7db4e9d",
+      "workflow": "drive-access",
+      "metadataSha256": "97d65fd7f9760f89188d613ef6a09b544d10f0705bc7dda28fce60024ed24bfb"
+    },
+    "images/captures/refresh-a3593fc/desktop/drive-file-selected-light-en.png": {
+      "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+      "sha256": "29863ecdfa37d78366cfcd38c322bc19d287a6d4e8a366576f3592d14c5c7ca1",
+      "workflow": "drive-access",
+      "metadataSha256": "e05e1148205af509f8623a596e4a180761fc2fe9313d9e59200c17a05aa3c4fa"
     }
   },
   "workflows": [

@@ -162,11 +162,11 @@ Every image below is a genuine capture of a real build; none is a mock, design p
 
 | Drive, locked | Drive, locked, bilingual | Drive, unlocked, top of the page |
 |---|---|---|
-| ![Drive, locked](docs/images/captures/refresh-b4cbf0e/desktop/drive-locked-light-en.png) | ![Drive, locked, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/drive-locked-light-bilingual.png) | ![Drive, unlocked, top of the page](docs/images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-light-en.png) |
+| ![Drive, locked](docs/images/captures/refresh-b4cbf0e/desktop/drive-locked-light-en.png) | ![Drive, locked, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/drive-locked-light-bilingual.png) | ![Drive, unlocked, top of the page](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-light-en.png) |
 
 | Drive, file list | Drive, file list, dark | Drive, one file selected |
 |---|---|---|
-| ![Drive, file list](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-light-en.png) | ![Drive, file list, dark](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-dark-en.png) | ![Drive, one file selected](docs/images/captures/refresh-6ef15e8/desktop/drive-file-selected-light-en.png) |
+| ![Drive, file list](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-light-en.png) | ![Drive, file list, dark](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-dark-en.png) | ![Drive, one file selected](docs/images/captures/refresh-a3593fc/desktop/drive-file-selected-light-en.png) |
 
 | Drive, file list, bilingual, Availability text wrapping beside its icon | Drive, file list, dark, bilingual | Available offline |
 |---|---|---|

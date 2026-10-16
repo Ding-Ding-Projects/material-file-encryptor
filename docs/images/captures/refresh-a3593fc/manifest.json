@@ -69,6 +69,54 @@
       "appVersion": "1.731.1",
       "window": "1280x800 at 150% display scale (PNG is physical pixels)",
       "originalFile": "04-drive-unlocked-files-list__dark__bilingual.png"
+    },
+    {
+      "kind": "desktop",
+      "name": "drive-unlocked-files-light-en",
+      "file": "desktop/drive-unlocked-files-light-en.png",
+      "sha256": "1fb8173e344181f046b99a6e2e48e7f8e64cbbd0f85a1a02759298e1b7db4e9d",
+      "bytes": 140018,
+      "width": 1920,
+      "height": 1200,
+      "screen": "drive-unlocked-files",
+      "theme": "light",
+      "language": "en",
+      "scale": 1.5,
+      "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+      "appVersion": "1.731.1",
+      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
+      "originalFile": "04-drive-unlocked-files__light__en.png",
+      "desktopSource": {
+        "manifest": "desktop-capture-manifest-b.json",
+        "manifestSha256": "084a3bf3ff53c92ebad5bf683850a03c8dcad74508e66c35ddd3791f01e5590b",
+        "route": "cheap Lowlevel PrintWindow on a hidden desktop, installed v1.731.1, isolated profile with a neutral path",
+        "count": 2,
+        "numberedFramesNote": "The numbered frames sit beside the manifest folder and have no manifest entry; their hashes are computed on import."
+      }
+    },
+    {
+      "kind": "desktop",
+      "name": "drive-file-selected-light-en",
+      "file": "desktop/drive-file-selected-light-en.png",
+      "sha256": "29863ecdfa37d78366cfcd38c322bc19d287a6d4e8a366576f3592d14c5c7ca1",
+      "bytes": 136721,
+      "width": 1920,
+      "height": 1200,
+      "screen": "drive-file-selected",
+      "theme": "light",
+      "language": "en",
+      "scale": 1.5,
+      "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+      "appVersion": "1.731.1",
+      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
+      "originalFile": "04-drive-file-selected__light__en.png",
+      "desktopSource": {
+        "manifest": "desktop-capture-manifest-b.json",
+        "manifestSha256": "084a3bf3ff53c92ebad5bf683850a03c8dcad74508e66c35ddd3791f01e5590b",
+        "route": "cheap Lowlevel PrintWindow on a hidden desktop, installed v1.731.1, isolated profile with a neutral path",
+        "count": 2,
+        "numberedFramesNote": "The numbered frames sit beside the manifest folder and have no manifest entry; their hashes are computed on import."
+      }
     }
   ],
   "desktopSource": {

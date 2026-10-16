@@ -176,7 +176,7 @@ export async function applyRefresh({folder, extraFolders = []}) {
   const extraManifests = [];
   for (const extra of extraFolders) { const m = JSON.parse(await fs.readFile(path.join(extra, 'manifest.json'), 'utf8')); extraManifests.push({folder: extra, manifest: m}); }
   const baseDesktop = rowsOf('desktop').map(row => ({...row, _folder: folder, _desktopSource: manifest.desktopSource}));
-  const laterDesktop = extraManifests.flatMap(({folder: f, manifest: m}) => m.captures.filter(row => row.kind === 'desktop').map(row => ({...row, _folder: f, _desktopSource: m.desktopSource})));
+  const laterDesktop = extraManifests.flatMap(({folder: f, manifest: m}) => m.captures.filter(row => row.kind === 'desktop').map(row => ({...row, _folder: f, _desktopSource: row.desktopSource || m.desktopSource})));
   const desktopRows = [...baseDesktop, ...laterDesktop], extensionRows = rowsOf('extension'), siteRows = rowsOf('site');
   if (!desktopRows.length || !manifest.desktopSource) throw new Error('The folder holds no imported desktop captures.');
   if (new Set(desktopRows.map(row => row.name)).size !== desktopRows.length) throw new Error('Two folders publish a desktop capture of the same name.');

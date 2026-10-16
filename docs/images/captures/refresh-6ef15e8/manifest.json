@@ -4,40 +4,6 @@
   "captures": [
     {
       "kind": "desktop",
-      "name": "drive-unlocked-files-light-en",
-      "file": "desktop/drive-unlocked-files-light-en.png",
-      "sha256": "eee19ed14e2983299eeed23dd64a34092ed2a4df5a6bf1dce04d4008b6684ff0",
-      "bytes": 146382,
-      "width": 1920,
-      "height": 1200,
-      "screen": "drive-unlocked-files",
-      "theme": "light",
-      "language": "en",
-      "scale": 1.5,
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "appVersion": "1.719.1",
-      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
-      "originalFile": "04-drive-unlocked-files__light__en.png"
-    },
-    {
-      "kind": "desktop",
-      "name": "drive-file-selected-light-en",
-      "file": "desktop/drive-file-selected-light-en.png",
-      "sha256": "968114ac02a7820790285ad7a19c20d1bae343956961d5877f743e6a2dfd6e07",
-      "bytes": 143306,
-      "width": 1920,
-      "height": 1200,
-      "screen": "drive-file-selected",
-      "theme": "light",
-      "language": "en",
-      "scale": 1.5,
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "appVersion": "1.719.1",
-      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
-      "originalFile": "04-drive-file-selected__light__en.png"
-    },
-    {
-      "kind": "desktop",
       "name": "server-card-running-light-en",
       "file": "desktop/server-card-running-light-en.png",
       "sha256": "b7e4475bdbce3f49631523519d9e4aa9819a7e4e1b39aed5c9031cbb6c6d96b5",
@@ -204,6 +170,16 @@
       "path": "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-bilingual.png",
       "sha256": "59d6e682cae65d9c42fed678ba4a3ebae0c2c2b1a0b1aacb4ce9985255453f0a",
       "reason": "Withdrawn: the file list was captured from an earlier build; the bilingual frame showed the Availability text cut off at the cell edge; replaced by a later capture. The original remains unchanged in Git history and is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-light-en.png",
+      "sha256": "eee19ed14e2983299eeed23dd64a34092ed2a4df5a6bf1dce04d4008b6684ff0",
+      "reason": "Withdrawn: the frame came from an earlier build than the rest of the drive group; replaced by a later capture. The original remains unchanged in Git history and is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/drive-file-selected-light-en.png",
+      "sha256": "968114ac02a7820790285ad7a19c20d1bae343956961d5877f743e6a2dfd6e07",
+      "reason": "Withdrawn: the frame came from an earlier build than the rest of the drive group; replaced by a later capture. The original remains unchanged in Git history and is not relabelled."
     }
   ]
 }

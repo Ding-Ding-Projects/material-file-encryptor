@@ -313,6 +313,9 @@ export const UPDATE_ROUNDS = {
     ['04-drive-unlocked-files-list__light__bilingual.png', 'drive-unlocked-files-list-light-bilingual'], ['04-drive-unlocked-files-list__dark__bilingual.png', 'drive-unlocked-files-list-dark-bilingual']],
   numbered: [], superseded: ['drive-unlocked-files-list-light-en', 'drive-unlocked-files-list-dark-en', 'drive-unlocked-files-list-light-bilingual'],
   reason: 'the file list was captured from an earlier build; the bilingual frame showed the Availability text cut off at the cell edge'},
+  12: {selection: [['04-drive-unlocked-files__light__en.png', 'drive-unlocked-files-light-en'], ['04-drive-file-selected__light__en.png', 'drive-file-selected-light-en']],
+  numbered: [], superseded: ['drive-unlocked-files-light-en', 'drive-file-selected-light-en'], append: true,
+  reason: 'the frame came from an earlier build than the rest of the drive group'},
   10: {selection: [
     ['24-pair-a-browser__light__en.png', 'pair-a-browser-light-en'], ['24-pair-a-browser__dark__en.png', 'pair-a-browser-dark-en'],
     ['24-pair-a-browser__light__yue.png', 'pair-a-browser-light-yue'], ['24-pair-a-browser__light__bilingual.png', 'pair-a-browser-light-bilingual'],
@@ -332,8 +335,11 @@ export async function importUpdate({manifestPath, directory, supersedeFolder, ro
   if (!config) throw new Error('Unknown update round ' + round);
   const source = JSON.parse(await fs.readFile(manifestPath, 'utf8'));
   if (source.privateFrames) throw new Error('The desktop manifest reports private frames.');
-  const roundDirectory = path.dirname(path.resolve(manifestPath)), baseDirectory = path.join(roundDirectory, 'captures');
-  const manifest = {schemaVersion: 1, sourceCommit: git('rev-parse', 'HEAD'), captures: []};
+  const roundDirectory = path.dirname(path.resolve(manifestPath)), baseDirectory = (await fs.stat(path.join(roundDirectory, 'captures')).then(() => true, () => false)) ? path.join(roundDirectory, 'captures') : roundDirectory;
+  const manifestFile = path.join(directory, 'manifest.json');
+  const existing = config.append ? await readManifest(manifestFile) : null;
+  const manifest = existing || {schemaVersion: 1, sourceCommit: git('rev-parse', 'HEAD'), captures: []};
+  const firstNew = manifest.captures.length, sidecar = config.append ? 'desktop-capture-manifest-b.json' : 'desktop-capture-manifest.json';
   await fs.mkdir(path.join(directory, 'desktop'), {recursive: true});
   const save = async (bytes, name) => { const target = path.join(directory, 'desktop', name + '.png'); await fs.writeFile(target, bytes); return target; };
   const assertPng = (bytes, file) => { if (bytes.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') throw new Error(`${file} is not a PNG.`); };
@@ -346,7 +352,7 @@ export async function importUpdate({manifestPath, directory, supersedeFolder, ro
     manifest.captures.push({kind: 'desktop', name, file: `desktop/${name}.png`, sha256: row.sha256, bytes: bytes.length, ...pngSize(bytes), screen: row.screen, theme: row.theme, language: row.language, scale: 1.5,
       sourceCommit: row.sourceCommit, appVersion: row.appVersion, window: row.appWindowDip, originalFile: row.file});
   }
-  const sourceCommit = manifest.captures[0].sourceCommit, appVersion = manifest.captures[0].appVersion;
+  const sourceCommit = manifest.captures[firstNew].sourceCommit, appVersion = manifest.captures[firstNew].appVersion;
   for (const [file, name, theme, language] of config.numbered) {
     const bytes = await fs.readFile(path.join(roundDirectory, file));
     assertPng(bytes, file); await save(bytes, name);
@@ -354,10 +360,11 @@ export async function importUpdate({manifestPath, directory, supersedeFolder, ro
       sourceCommit, appVersion, window: 'not recorded for this numbered frame', originalFile: file, numbered: true});
   }
   const raw = (await fs.readFile(manifestPath, 'utf8')).replace(/\r\n/g, '\n');
-  await fs.writeFile(path.join(directory, 'desktop-capture-manifest.json'), raw);
+  await fs.writeFile(path.join(directory, sidecar), raw);
   const receipt = JSON.parse(await fs.readFile(path.join(roundDirectory, 'receipt.json'), 'utf8').catch(() => '{}') || '{}');
-  manifest.desktopSource = {manifest: 'desktop-capture-manifest.json', manifestSha256: digest(Buffer.from(raw)), route: source.route, count: source.count,
+  const desktopSource = {manifest: sidecar, manifestSha256: digest(Buffer.from(raw)), route: source.route, count: source.count,
     release: receipt.release, numberedFramesNote: 'The numbered frames sit beside the manifest folder and have no manifest entry; their hashes are computed on import.'};
+  if (config.append) for (const row of manifest.captures.slice(firstNew)) row.desktopSource = desktopSource; else manifest.desktopSource = desktopSource;
   // Withdraw the earlier frames this round replaces.
   const earlierFile = path.join(supersedeFolder, 'manifest.json'), earlier = JSON.parse(await fs.readFile(earlierFile, 'utf8'));
   earlier.withdrawn = earlier.withdrawn || [];
@@ -369,7 +376,7 @@ export async function importUpdate({manifestPath, directory, supersedeFolder, ro
     await fs.rm(path.join(supersedeFolder, row.file), {force: true});
   }
   await writeManifest(earlierFile, earlier);
-  await writeManifest(path.join(directory, 'manifest.json'), manifest);
+  await writeManifest(manifestFile, manifest);
   return manifest;
 }
 

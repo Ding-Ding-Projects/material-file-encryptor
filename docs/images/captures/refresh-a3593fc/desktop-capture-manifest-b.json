@@ -1,0 +1,47 @@
+{
+ "schema": "installed-capture-manifest-v1",
+ "route": "cheap Lowlevel PrintWindow on a hidden desktop, installed v1.731.1, isolated profile with a neutral path",
+ "release": "v1.731.1 built from main a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+ "notes": [
+  "Every frame is a 1920x1200 PNG of a 1280x800 DIP window at 150% scale, taken from the installed v1.731.1.",
+  "privatePathVisible comes from a visible-text scan for the user name, user profile paths and AppData; the vault uses a neutral C:/MFE-Demo folder, so no frame shows a user name.",
+  "04-drive-unlocked-files is the top of My drive (header, mounted chip, lock and force-lock buttons) from the same build as the round-11 file-table frames; 04-drive-file-selected shows one selected row with the filled radio and the enabled Open, Export copy and Keep offline actions (Remove offline copy stays disabled because the file is not kept offline)."
+ ],
+ "countsPerThemeLanguage": {
+  "light/en": 2
+ },
+ "count": 2,
+ "privateFrames": 0,
+ "captures": [
+  {
+   "file": "04-drive-file-selected__light__en.png",
+   "sha256": "29863ecdfa37d78366cfcd38c322bc19d287a6d4e8a366576f3592d14c5c7ca1",
+   "width": 1920,
+   "height": 1200,
+   "screen": "drive-file-selected",
+   "order": "04",
+   "theme": "light",
+   "language": "en",
+   "appVersion": "1.731.1",
+   "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+   "appWindowDip": "1280x800 at 150% display scale (PNG is physical pixels)",
+   "vault": "throwaway vault, neutral folder names (C:/MFE-Demo), test files only",
+   "privatePathVisible": false
+  },
+  {
+   "file": "04-drive-unlocked-files__light__en.png",
+   "sha256": "1fb8173e344181f046b99a6e2e48e7f8e64cbbd0f85a1a02759298e1b7db4e9d",
+   "width": 1920,
+   "height": 1200,
+   "screen": "drive-unlocked-files",
+   "order": "04",
+   "theme": "light",
+   "language": "en",
+   "appVersion": "1.731.1",
+   "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+   "appWindowDip": "1280x800 at 150% display scale (PNG is physical pixels)",
+   "vault": "throwaway vault, neutral folder names (C:/MFE-Demo), test files only",
+   "privatePathVisible": false
+  }
+ ]
+}
