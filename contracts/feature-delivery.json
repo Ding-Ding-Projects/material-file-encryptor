@@ -3139,7 +3139,7 @@
         "test/surface-registry.test.js"
       ],
       "evidence": [],
-      "reason": "Build provenance display exists in the integrated shell. Exact final build version and timestamp visibility across required surfaces remains unverified.",
+      "reason": "Build provenance display exists in the integrated shell. Exact final build version and timestamp visibility across required surfaces remains unverified. A 1.784.1 release package run (extracted full package, not an installed copy) found the front screen provenance element present but empty: mfe-build-provenance was never defined as a custom element, so no version or build time is drawn (docs/evidence/desktop-row-probes-1.784.1.json).",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
