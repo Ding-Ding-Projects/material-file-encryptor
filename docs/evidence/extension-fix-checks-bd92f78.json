@@ -1,0 +1,57 @@
+{
+  "buildIdentity": "69e8a57e5151bbb5181d4360f2529548cfb91f66d1947c788d7965d966f14dda",
+  "sourceCommit": "bd92f788afdf879f06f5084f414852a1844721a6",
+  "results": [
+    {
+      "theme": "dark",
+      "language": "en",
+      "title": "Personalization",
+      "lines": 1,
+      "width": 591,
+      "searchLabel": "Find workspace guidance",
+      "searchAttr": "Find workspace guidance",
+      "file": "options-title-dark-en-1280x800.png",
+      "sha256": "73ef69ed43f98428d915deed72ba5a54bbe42976cbe293ba5d3d304c28a88a23"
+    },
+    {
+      "theme": "light",
+      "language": "en",
+      "title": "Personalization",
+      "lines": 1,
+      "width": 591,
+      "searchLabel": "Find workspace guidance",
+      "searchAttr": "Find workspace guidance",
+      "file": "options-title-light-en-1280x800.png",
+      "sha256": "2a2a5f2d91f3da1343f5bb0c3931bdb4c3cf6044a433e89b55a9f2a981e774d4"
+    },
+    {
+      "theme": "light",
+      "language": "yue",
+      "title": "個人化",
+      "lines": 1,
+      "width": 190,
+      "searchLabel": "搜尋工作區指引",
+      "searchAttr": "搜尋工作區指引",
+      "file": "options-title-light-yue-1280x800.png",
+      "sha256": "d2530b70bd10257330a7acd36910178762e1446ae84d1601c3da66844643b867"
+    },
+    {
+      "theme": "light",
+      "language": "bilingual",
+      "title": "Personalization個人化",
+      "lines": 2,
+      "width": 591,
+      "searchLabel": "Find workspace guidance",
+      "searchAttr": "Find workspace guidance",
+      "file": "options-title-light-bilingual-1280x800.png",
+      "sha256": "bea837ceca8444779285e023c0855dbabfd649dbaad1e8e003fb894e1e83571d"
+    }
+  ],
+  "kind": "extension-fix-checks",
+  "browser": "headless Edge 155, isolated profile, unpacked staged package",
+  "checks": [
+    "workspace title stays on one line with the whole word at 1280x800 (dark and light English)",
+    "search label follows the chosen language (Cantonese: shown in Cantonese)"
+  ],
+  "notClaimed": "Bilingual mode still shows the English-only search label; this is a staged-package observation, not an installed-build proof, and no feature row is changed by it."
+}
