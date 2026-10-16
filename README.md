@@ -528,18 +528,18 @@ The verification diagram is a path, not a claim that every step passed. Releases
 
 | Hand-written code | Files | Non-blank lines | Multiplier | Weighted lines |
 |---|---:|---:|---:|---:|
-| Application source (JavaScript) | 359 | 29,624 | 1 | 29,624 |
+| Application source (JavaScript) | 359 | 29,631 | 1 | 29,631 |
 | Native engine and drive adapter (C#) | 51 | 7,533 | 1.5 | 11,300 |
 | Styles and markup (CSS, HTML) | 24 | 1,125 | 1 | 1,125 |
 | Tests | 414 | 29,781 | 1 | 29,781 |
 | Build, release and tooling scripts | 134 | 13,509 | 1 | 13,509 |
-| **Total** | | **81,572** | | **85,339** |
+| **Total** | | **81,579** | | **85,346** |
 
-**Arithmetic:** 85,339 weighted lines ÷ 50 lines per day = 1,707 days, and 85,339 ÷ 25 = 3,414 days; at 20 working days per month that is 85.3 to 170.7 person-months.
+**Arithmetic:** 85,346 weighted lines ÷ 50 lines per day = 1,707 days, and 85,346 ÷ 25 = 3,414 days; at 20 working days per month that is 85.3 to 170.7 person-months.
 
 **Assumptions:** 25 (conservative) to 50 (optimistic) non-blank lines per 8-hour day of finished, reviewed, debugged code, a common industry rule of thumb rather than a measurement of this team. The native engine counts at 1.5 times because encrypted storage and a filesystem adapter are harder than their size suggests. Part of the application source is written as long lines, so line counts understate it. Design, research and review time beyond the test code are not included.
 
-**Left out, exactly as the line count leaves them out:** Markdown prose (counted separately, not estimated) (263 files); images, JSON data and catalogues, and other non-code files (229 files); design reference prototypes (51 files); vendored, bundled or build-output trees (16 files); lockfiles (1 files). Markdown prose (16,879 non-blank lines in 263 files) is not estimated.
+**Left out, exactly as the line count leaves them out:** Markdown prose (counted separately, not estimated) (263 files); images, JSON data and catalogues, and other non-code files (229 files); design reference prototypes (51 files); vendored, bundled or build-output trees (16 files); lockfiles (1 files). Markdown prose (16,896 non-blank lines in 263 files) is not estimated.
 
 Reproduce it with `node scripts/human-time-estimate.mjs` (prints the same table from `git ls-files`) and refresh this block with `node scripts/human-time-estimate.mjs --write`. The block may lag the tree by up to 10 percent before `--check` and the test fail.
 
