@@ -26,6 +26,15 @@ md-outlined-text-field>md-icon-button[slot="trailing-icon"]{width:48px;height:48
 .dialog-body>md-outlined-select[data-select-search-composition="adjacent"]:has(+md-icon-button[data-choice-search]){width:calc(100% - 56px);vertical-align:middle}
 .dialog-body>md-outlined-select[data-select-search-composition="adjacent"]+md-icon-button[data-choice-search]{vertical-align:middle;margin-inline:12px 4px}
 
+/* Where the select sits in a grid container, the choice search button and the select form one grid item. */
+[data-choice-search-pair]{display:inline-flex;align-items:center;gap:4px;grid-column:1/-1;min-inline-size:0;max-inline-size:100%}
+[data-choice-search-pair]>md-outlined-select[data-select-search-composition="adjacent"]{flex:1 1 0;min-inline-size:0;min-width:0;inline-size:auto}
+[data-choice-search-pair]>md-icon-button[data-choice-search]{flex:none}
+.local-ux-field:has(>mfe-control-guidance:not([data-open]))>[data-choice-search-pair]{grid-column:1}
+/* The main navigation information icon sits in the rail header beside the application name instead of taking its own row above it. */
+.sidebar>mfe-control-guidance[data-info-icon]{position:absolute;inset-block-start:12px;inset-inline-end:8px;z-index:2}
+.sidebar>mfe-control-guidance[data-info-icon][data-open]{inset-inline-start:8px;inline-size:auto;flex:none;border-radius:16px;background:var(--md-sys-color-surface-container-high,var(--container-high))}
+
 /* Outlined selects keep room for their floating label; the split-size unit select stays compact. */
 md-outlined-select{min-width:min(100%,14rem)}
 .split-form md-outlined-select{min-width:0}
