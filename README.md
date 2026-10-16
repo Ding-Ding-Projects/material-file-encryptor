@@ -21,7 +21,7 @@ Promotion retries retain their verified producer identity and check exact downlo
 
 The shared titlebar, main workspace, content panel, data table and selection toolbar now use registered components with their own structure, styles and connection lifecycle. Original record rows and action nodes remain in place. The combined source inventory and component checks pass 59 tests. The exact root build of composition candidate `4959f2af4a2ced2980b2a68d2ba9fb4056458e35` passed; its package contains 6,066 entries with zero privacy rejections. Bounded real captures found incomplete table focus visibility. A separately preserved inset-outline candidate exposes the sides and bottom, but its top remains covered by the header. Full rendered composition acceptance remains incomplete. Existing images retain their historical source and do not certify this newer candidate.
 
-The feature ledger now contains 321 assessments: 107 feature families on each of the desktop, website and extension surfaces. Desktop has 98 unverified and 9 not applicable, the website 97 unverified and 10 not applicable, and the extension 97 unverified and 10 not applicable. The combined catalogue declares 1,075 concrete surfaces and 255 public routes; these are inventory counts, not completed workflows.
+The feature ledger now contains 327 assessments: 109 feature families on each of the desktop, website and extension surfaces. Desktop has 99 unverified and 10 not applicable, the website 97 unverified and 12 not applicable, and the extension 98 unverified and 11 not applicable. The combined catalogue declares 1,075 concrete surfaces and 257 public routes; these are inventory counts, not completed workflows.
 
 Protected browser mediation has focused source and compiled synthetic pipe verification. Production profile authentication controls remain unavailable until their native callbacks and real extension interactions are implemented and accepted. [Shared compositions](docs/features/interface/shared-compositions.md) · [Extension assessments](docs/features/platform/extension-assessment.md) · [Protected mediation boundaries](docs/features/interface/protected-browser-mediation.md)
 
@@ -121,7 +121,7 @@ Package inspection also validates each ASAR file's declared SHA-256 and block ha
 
 ### Unfinished delivery and current images
 
-The inventory contains **107 required feature identifiers and 214 desktop/website rows**. It does not count completed features. The [goal](GOAL.md), [roadmap](ROADMAP.md) and [interface design](DESIGN.md) retain the outstanding controls, guidance, accessibility, language/theme/scale states and full visual matrix.
+The inventory contains **109 required feature identifiers and 218 desktop/website rows**. It does not count completed features. The [goal](GOAL.md), [roadmap](ROADMAP.md) and [interface design](DESIGN.md) retain the outstanding controls, guidance, accessibility, language/theme/scale states and full visual matrix.
 
 Two inspected source-bound documentation screenshots now appear below. Current native-product replacements and the full visual matrix remain pending.
 

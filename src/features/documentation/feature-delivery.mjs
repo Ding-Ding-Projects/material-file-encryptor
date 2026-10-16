@@ -128,6 +128,7 @@ const REPOSITORY_IDS = new Set('design-folder build-entrypoints fresh-build-run-
 const CANONICAL_ONLY = new Set(['readme-prompt-banner', 'uh-single-file-editions', 'project-profile']);
 const GAME_ONLY = new Set(['roblox-model-catalogue', 'roblox-visual-realism']);
 const HUB_SERVER_ONLY = new Set(['discord-status-bridge', 'panic-webhooks', 'tidbyt-displays']);
+const APPLICATIONS_ONLY = new Set(['vocabulary-drop-apply']);
 const DESKTOP_ONLY = new Set(['onboarding-wizard']);
 const SITE_ONLY = new Set(['landing-site', 'deen-wah-site', 'installer-download-button', 'feature-articles']);
 const APP_ONLY = new Set(['display-name', 'offline-docs', 'external-editor', 'download-handoff', 'forge-publishing', 'screen-recording', 'bundled-dependencies', 'auto-updates']);
@@ -148,6 +149,10 @@ export function expectedFeatureApplicability(id, surface) {
   // The setup wizard belongs to the desktop application. A website or an extension page cannot substitute for it,
   // and adding it never removes the separate public website requirement.
   if (DESKTOP_ONLY.has(id) && surface !== 'desktop') return { kind: 'not-applicable', applies: false, directSurface: false, declaredScope: 'Desktop application only' };
+  // Dropping a wording file applies to applications (desktop and extension), never to a documentation site.
+  if (APPLICATIONS_ONLY.has(id) && surface === 'site') return { kind: 'not-applicable', applies: false, directSurface: false, declaredScope: 'Applications only' };
+  // Private repositories package their documentation site as an offline application; this repository is public.
+  if (id === 'private-site-app-delivery') return { kind: 'not-applicable', applies: false, directSurface: false, declaredScope: 'Private repositories only' };
   if (REPOSITORY_IDS.has(id)) return { kind: 'repository', applies: true, directSurface: false, declaredScope: 'Repository obligation supporting the product' };
   if ((SITE_ONLY.has(id) && surface !== 'site') || (APP_ONLY.has(id) && surface === 'site')) return { kind: 'product', applies: true, directSurface: false, declaredScope: 'Named product surface with companion support' };
   return { kind: 'product', applies: true, directSurface: true, declaredScope: 'User-facing product surface' };

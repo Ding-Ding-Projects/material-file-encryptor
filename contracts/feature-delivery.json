@@ -12228,6 +12228,187 @@
       }
     },
     {
+      "id": "vocabulary-drop-apply",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [
+        "src/renderer/wording-drop.js",
+        "src/renderer/app.js",
+        "src/renderer/modern.css"
+      ],
+      "documentation": [
+        "docs/features/interface/personal-vocabulary.md",
+        "docs/features/interface/personal-vocabulary.zh-HK.md"
+      ],
+      "localization": [
+        "src/renderer/i18n.js",
+        "docs/features/interface/personal-vocabulary.zh-HK.md"
+      ],
+      "tests": [
+        "test/wording-drop.test.js"
+      ],
+      "evidence": [],
+      "reason": "A wording file dropped anywhere on the window is validated with the same schema and bounds as the Settings upload, applied at once and followed by a non-blocking celebration, and the Settings upload remains the fallback. Source tests use fakes for the window, timers and storage. Built-app drop, refusal of an invalid drop, reduced motion, screen reader announcement and restart persistence are not yet proven on an installed build.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "sourceReview": {
+        "baseline": "6d6f563",
+        "readyCandidates": [],
+        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+      },
+      "persistence": [
+        "src/renderer/preferences.js"
+      ],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "vocabulary-drop-apply",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "5ff38608bf39d0747b46c761a2caaf1f475853df",
+        "verdict": "references-present",
+        "checkedPaths": 9,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt. Native owner receipts and earlier defect captures are scoped separately in assessmentContext."
+      }
+    },
+    {
+      "id": "vocabulary-drop-apply",
+      "surface": "site",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [
+        "docs/features/interface/personal-vocabulary.md",
+        "docs/features/interface/personal-vocabulary.zh-HK.md"
+      ],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Applies to applications only, not documentation sites",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "sourceReview": {
+        "baseline": "6d6f563",
+        "readyCandidates": [],
+        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+      },
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "Applies to applications only, not documentation sites",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "vocabulary-drop-apply",
+          "declaredScope": "Applications only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable",
+      "sourceVerification": {
+        "baseline": "5ff38608bf39d0747b46c761a2caaf1f475853df",
+        "verdict": "references-present",
+        "checkedPaths": 2,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "Excluded by explicit applicability."
+      }
+    },
+    {
+      "id": "vocabulary-drop-apply",
+      "surface": "extension",
+      "status": "unverified",
+      "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/popup.js",
+        "browser-extension/wording-drop.js",
+        "browser-extension/popup-wording.js",
+        "browser-extension/popup.css",
+        "browser-extension/vocabulary.js",
+        "scripts/build-browser-extension.mjs"
+      ],
+      "documentation": [
+        "docs/features/interface/personal-vocabulary.md",
+        "docs/features/interface/personal-vocabulary.zh-HK.md",
+        "docs/features/workflows/browser-extension-workspace.md",
+        "docs/features/workflows/browser-extension-workspace.zh-HK.md"
+      ],
+      "localization": [
+        "browser-extension/options.js",
+        "docs/features/interface/personal-vocabulary.zh-HK.md"
+      ],
+      "tests": [
+        "test/wording-drop.test.js",
+        "test/browser-protection-options.test.js"
+      ],
+      "evidence": [],
+      "reason": "A wording file dropped on the workspace or the popup takes the same validation and storage path as the options upload, applies while the browser is paired with the desktop, and is followed by the same celebration. The files are bundled locally. Built-app drop, refusal of an invalid drop, reduced motion, screen reader announcement and restart persistence are not yet proven on an installed build.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "vocabulary-drop-apply",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Drop a personal wording JSON file anywhere on the product window to apply it at once, keep the Settings upload as the fallback, and show a full-window celebration headline that animates in, holds for about three seconds and animates out, with reduced motion and a polite screen reader announcement.",
+        "targets": [
+          {
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
+            "outcome": "Drop a personal wording JSON file anywhere on the product window to apply it at once, keep the Settings upload as the fallback, and show a full-window celebration headline that animates in, holds for about three seconds and animates out, with reduced motion and a polite screen reader announcement.",
+            "nextProof": "Exercise a drop of a valid file, an invalid file and a non-file drag on this extension target, then retain independent installed-build identity, interaction and visual receipts, including reduced motion and restart persistence."
+          },
+          {
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
+            "outcome": "Drop a personal wording JSON file anywhere on the product window to apply it at once, keep the Settings upload as the fallback, and show a full-window celebration headline that animates in, holds for about three seconds and animates out, with reduced motion and a polite screen reader announcement.",
+            "nextProof": "Exercise a drop of a valid file, an invalid file and a non-file drag on this extension target, then retain independent installed-build identity, interaction and visual receipts, including reduced motion and restart persistence."
+          }
+        ],
+        "persistence": "The dropped file is stored in the same separate bounded local record as the options upload; it applies to interface copy only and clearing it restores the original text. The celebration keeps no state."
+      },
+      "sourceVerification": {
+        "baseline": "5ff38608bf39d0747b46c761a2caaf1f475853df",
+        "checkedPaths": 15,
+        "missingPaths": []
+      }
+    },
+    {
       "id": "school-mode",
       "surface": "extension",
       "status": "unverified",
@@ -15765,6 +15946,130 @@
       }
     },
     {
+      "id": "private-site-app-delivery",
+      "surface": "desktop",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "This repository is public; its documentation site is hosted and the packaged private delivery format does not apply.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "sourceReview": {
+        "baseline": "37fa47a",
+        "readyCandidates": [
+          "2903fc5"
+        ],
+        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+      },
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "This repository is public; its documentation site is hosted and the packaged private delivery format does not apply.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "private-site-app-delivery",
+          "declaredScope": "Private repositories only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable",
+      "sourceVerification": {
+        "baseline": "5ff38608bf39d0747b46c761a2caaf1f475853df",
+        "verdict": "references-present",
+        "checkedPaths": 0,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "Excluded by explicit applicability."
+      }
+    },
+    {
+      "id": "private-site-app-delivery",
+      "surface": "site",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "This repository is public; its documentation site is hosted and the packaged private delivery format does not apply.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "sourceReview": {
+        "baseline": "37fa47a",
+        "readyCandidates": [
+          "2903fc5"
+        ],
+        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+      },
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "This repository is public; its documentation site is hosted and the packaged private delivery format does not apply.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "private-site-app-delivery",
+          "declaredScope": "Private repositories only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable",
+      "sourceVerification": {
+        "baseline": "5ff38608bf39d0747b46c761a2caaf1f475853df",
+        "verdict": "references-present",
+        "checkedPaths": 0,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "Excluded by explicit applicability."
+      }
+    },
+    {
+      "id": "private-site-app-delivery",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "persistence": [],
+      "reason": "This repository is public; its documentation site is hosted and the packaged private delivery format does not apply.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "This repository is public; its documentation site is hosted and the packaged private delivery format does not apply.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "private-site-app-delivery",
+          "declaredScope": "Private repositories only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "5ff38608bf39d0747b46c761a2caaf1f475853df",
+        "checkedPaths": 0,
+        "missingPaths": []
+      }
+    },
+    {
       "id": "installer-download-button",
       "surface": "extension",
       "status": "unverified",
@@ -18340,7 +18645,12 @@
     "docs/features/interface/setup-guide.zh-HK.md": "965f4325e0eab995132394d0a32ab38a7c2323a8",
     "test/onboarding-wizard.test.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
     "test/helpers/onboarding-dom.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
-    "test/feature-mount-timing.test.js": "965f4325e0eab995132394d0a32ab38a7c2323a8"
+    "test/feature-mount-timing.test.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "src/renderer/wording-drop.js": "5ff38608bf39d0747b46c761a2caaf1f475853df",
+    "docs/features/interface/personal-vocabulary.zh-HK.md": "5ff38608bf39d0747b46c761a2caaf1f475853df",
+    "test/wording-drop.test.js": "5ff38608bf39d0747b46c761a2caaf1f475853df",
+    "browser-extension/wording-drop.js": "5ff38608bf39d0747b46c761a2caaf1f475853df",
+    "browser-extension/popup-wording.js": "5ff38608bf39d0747b46c761a2caaf1f475853df"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
@@ -18348,8 +18658,8 @@
       "families": 104,
       "rows": 208
     },
-    "families": 107,
-    "rows": 214,
+    "families": 109,
+    "rows": 218,
     "scope": "Finite source-reference reconciliation and bounded source inspection, not an exhaustive behavioral audit. Historical source bindings and assessments remain preserved.",
     "guiMatrix": "89 declared states, 4272 viewport/language/theme/scale tuples pending.",
     "builtCandidate": "Prior 1d3 candidate exposed title and dialog accessible-name defects; source fixes are integrated. The 0f5 candidate build is running by owner receipt, with no accepted replacement runtime result.",

@@ -41,11 +41,11 @@ test('publication catalogue omission of an actual feature article fails before r
   catalog.articles = catalog.articles.filter(file => file !== omitted);
   assert.throws(() => validatePublicationSurfaceCatalogue(catalog, bundled.documents), /Publication catalogue omits or invents concrete feature article routes/);
 });
-test('concrete inventory retains 107 families and independent unverified defaults', () => {
-  assert.equal(REQUIRED_FEATURE_IDS.length, 107);
+test('concrete inventory retains 109 families and independent unverified defaults', () => {
+  assert.equal(REQUIRED_FEATURE_IDS.length, 109);
   assert.deepEqual(validateSurfaceRegistry(registry, expected), []);
   const rows = expandSurfaceFeatureDelivery(registry);
-  assert.equal(rows.length, expected.length * 107);
+  assert.equal(rows.length, expected.length * 109);
   assert.ok(rows.every(row => row.status === 'unverified' && row.proof === null));
   for (const family of ['desktop', 'site', 'extension']) assert.ok(expected.some(row => row.family === family));
 });

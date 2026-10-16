@@ -169,8 +169,8 @@ test('status without client is explicit and configured snapshots cannot expose s
 });
 
 test('extension inventory rejects whole-family omission, borrowed ownership and missing completion evidence', async () => {
- const manifest = await inventory(); assert.equal(manifest.features.length,321);
- assert.equal(manifest.features.filter(row=>row.surface==='extension').length,107);
+ const manifest = await inventory(); assert.equal(manifest.features.length,327);
+ assert.equal(manifest.features.filter(row=>row.surface==='extension').length,109);
  for(const mutate of [m=>m.features=m.features.filter(row=>row.surface!=='extension'),m=>m.features.push(structuredClone(m.features.find(row=>row.surface==='extension'))),m=>delete m.features.find(row=>row.surface==='extension').completion.owner,m=>delete m.features.find(row=>row.surface==='extension').completion.targets[0].nextProof,m=>m.features.find(row=>row.surface==='extension').completion.targets[0].surface='desktop:view-settings',m=>m.extensionTargets[0].route='src/renderer/index.html',m=>m.features.find(row=>row.surface==='extension').status='implemented']) {const broken=structuredClone(manifest);mutate(broken);assert.ok(validateFeatureDelivery(broken).length);}
 });
 
