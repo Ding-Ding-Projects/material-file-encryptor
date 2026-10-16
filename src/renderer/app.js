@@ -452,25 +452,25 @@ for (const key of ['theme','language','emoji','funnyEnglish','funnyCantonese']) 
  localSettings.update({[key]:preferences[key]},'preference changed');
  savePreferences(); applyPreferences();
 });
-listen('vocabulary-label','click',event=>{event.preventDefault();$('vocabulary-file').click();});
-listen('vocabulary-label','keydown',event => { if (['Enter',' '].includes(event.key)) { event.preventDefault(); $('vocabulary-file').click(); } });
-async function applyWordingSource(source, version) {
- const next = parseVocabulary(source);
- if (version !== vocabularyUploadVersion) return null;
- preferences.vocabulary = next; vocabularyPersisted = savePreferences();
- if (!vocabularyPersisted) { try { localStorage.removeItem('material-drive.preferences.v1'); } catch {} }
- applyPreferences();
- toast(vocabularyPersisted ? 'Saved.' : 'Active for this session only. Saving failed.');
- return { name: next.displayName };
-}
-listen('vocabulary-file','change',async event => { const version = ++vocabularyUploadVersion; try { const file = event.target.files[0]; if (!file) return; if (file.size > 256 * 1024) throw new Error('Vocabulary JSON must be no larger than 256 KiB.'); const applied = await applyWordingSource(await file.text(), version); if (applied) wordingDrop.celebration.show(applied.name); } catch(error) { if (version === vocabularyUploadVersion) showError(error); } finally { if (version === vocabularyUploadVersion) event.target.value = ''; } });
+// Dropping a wording file anywhere on the window takes the same path as the Settings upload, then celebrates.
 const wordingDrop = installWordingDrop({
  doc: document, maxBytes: 256 * 1024,
  celebration: createCelebration({ doc: document, neutral: () => t('Personal wording applied', { message: true }), reducedMotion: () => matchMedia('(prefers-reduced-motion: reduce)').matches }),
  overlayText: () => t('Drop your wording file to apply it', { message: true }),
- apply: source => applyWordingSource(source, ++vocabularyUploadVersion),
+ apply: source => {
+  const version = ++vocabularyUploadVersion, next = parseVocabulary(source);
+  preferences.vocabulary = next; vocabularyPersisted = savePreferences();
+  if (!vocabularyPersisted) { try { localStorage.removeItem('material-drive.preferences.v1'); } catch {} }
+  applyPreferences();
+  toast(vocabularyPersisted ? 'Saved.' : 'Active for this session only. Saving failed.');
+  return version === vocabularyUploadVersion ? { name: next.displayName } : null;
+ },
  refuse: (code, error) => showError(code === 'invalid' ? error : ({ count: 'Drop one wording file at a time. Nothing was changed.', type: 'Only a .json wording file can be dropped. Nothing was changed.', size: 'Vocabulary JSON must be no larger than 256 KiB.', unreadable: 'The wording file could not be read. Nothing was changed.' })[code]),
 });
+function celebrateWording(name) { wordingDrop.celebration.show(name); }
+listen('vocabulary-label','click',event=>{event.preventDefault();$('vocabulary-file').click();});
+listen('vocabulary-label','keydown',event => { if (['Enter',' '].includes(event.key)) { event.preventDefault(); $('vocabulary-file').click(); } });
+listen('vocabulary-file','change',async event => { const version = ++vocabularyUploadVersion; try { const file = event.target.files[0]; if (!file) return; if (file.size > 256 * 1024) throw new Error('Vocabulary JSON must be no larger than 256 KiB.'); const next = parseVocabulary(await file.text()); if (version !== vocabularyUploadVersion) return; preferences.vocabulary = next; vocabularyPersisted = savePreferences(); if (!vocabularyPersisted) { try { localStorage.removeItem('material-drive.preferences.v1'); } catch {} } applyPreferences(); toast(vocabularyPersisted ? 'Saved.' : 'Active for this session only. Saving failed.'); if (typeof celebrateWording === 'function') celebrateWording(next.displayName); } catch(error) { if (version === vocabularyUploadVersion) showError(error); } finally { if (version === vocabularyUploadVersion) event.target.value = ''; } });
 // Personal mappings are intentionally excluded from all download and export routes.
 $('export-vocabulary')?.remove();
 listen('reset-vocabulary','click',() => { vocabularyUploadVersion++; preferences.vocabulary = parseVocabulary('{"schemaVersion":1,"entries":{}}'); vocabularyPersisted = savePreferences(); if (!vocabularyPersisted) { try { localStorage.removeItem('material-drive.preferences.v1'); vocabularyPersisted = true; } catch {} } applyPreferences(); toast(vocabularyPersisted ? 'Original wording restored.' : 'Original wording restored for this session. Stored settings could not be removed.'); });

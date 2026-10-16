@@ -234,12 +234,14 @@ test('the extension stores wording when unpaired and applies it only while paire
 
 test('both app surfaces wire the drop and the upload to the celebration', async () => {
   const read = path => fs.readFile(new URL(path, import.meta.url), 'utf8');
-  const [app, options, popup, build] = await Promise.all([read('../src/renderer/app.js'), read('../browser-extension/options.js'), read('../browser-extension/popup.js'), read('../scripts/build-browser-extension.mjs')]);
+  const [app, options, popup, build] = await Promise.all([read('../src/renderer/app.js'), read('../browser-extension/options.js'), read('../browser-extension/popup-wording.js'), read('../scripts/build-browser-extension.mjs')]);
   for (const source of [app, options, popup]) assert.match(source, /installWordingDrop\(/);
-  assert.match(app, /wordingDrop\.celebration\.show\(applied\.name\)/);
+  assert.match(app, /celebrateWording\(next\.displayName\)/, 'the Settings upload celebrates');
+  assert.match(app, /\{ name: next\.displayName \}/, 'a dropped file celebrates with its own name');
   assert.match(options, /wordingDrop\.celebration\.show\(result\.name\)/);
   assert.match(options, /result\.applied\?\{name:result\.name\}:null/, 'the options page celebrates only when the wording applies');
-  assert.match(popup, /if\(paired\)return \{name:result\.displayName\}/);
+  assert.match(popup, /if\(await paired\(\)\)return \{name:result\.displayName\}/);
+  assert.match(await read('../browser-extension/popup.html'), /src="popup-wording\.js"/);
   assert.match(build, /'wording-drop\.js'/);
 });
 
@@ -255,7 +257,7 @@ test('guard: headlines never come from literals in the new source files', async 
     assert.doesNotMatch(source, /\.show\(\s*['"`]/, `${path} passes a literal headline`);
     assert.doesNotMatch(source, /displayName\s*[:=]\s*['"`]/, `${path} hard-codes a display name`);
   }
-  for (const path of ['../src/renderer/app.js', '../browser-extension/options.js', '../browser-extension/popup.js']) {
+  for (const path of ['../src/renderer/app.js', '../browser-extension/options.js', '../browser-extension/popup-wording.js']) {
     const source = await fs.readFile(new URL(path, import.meta.url), 'utf8');
     assert.doesNotMatch(source, /celebration\.show\(\s*['"`]/, `${path} passes a literal headline`);
   }
