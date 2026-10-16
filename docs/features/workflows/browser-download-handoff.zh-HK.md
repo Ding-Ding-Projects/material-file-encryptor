@@ -25,3 +25,7 @@
 擴充套件封裝入口透過 `scripts/build-browser-extension.mjs` 準備本機 `vendor/material.js`、`vendor/search.js` 同 `vendor/regex-worker.js`。Material Web 2.5.0 同 esbuild 0.25.11 維持固定版本。準備收據記錄來源及輸出雜湊，明確標示簽署、安裝同執行驗證尚未進行。彈出頁程式唔使用 CDN。
 
 原生準備會發出帶有 `browserCaptureId` 嘅就緒下載；傳輸事件保留呢個識別碼直到完成或失敗。取消待處理提案會發出 `browser-proposal-cancelled`。配套保留提案識別碼，透過 `{type:'status',session,id}` 查詢原生接收器。提案回覆代表等待確認，唔代表傳輸完成。已安裝呼叫者及三個畫面嘅實際證據仍待完成。
+
+## 主機資訊清單位置
+
+原生主機資訊清單寫入 Squirrel 安裝根目錄入面一個固定嘅每用戶檔案 `%LOCALAPPDATA%\MaterialFileEncryptor\native-messaging\org.dingding.material_file_encryptor.downloads.json`，唔會寫入用戶資料設定檔。所以無論應用程式用邊個 `--user-data-dir` 執行，Edge 同 Chrome 嘅登錄機碼都保持不變，而 Squirrel 解除安裝會連同安裝根目錄一齊移除呢個檔案。Squirrel 嘅解除安裝會留低 `Update.exe` 同 `.dead` 標記，之後嘅清理會移除，而每次執行 Setup 都會啟動應用程式一次。舊有設定檔內檔案嘅遷移請見原生主機文件。

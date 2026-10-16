@@ -133,7 +133,8 @@ The Squirrel hooks in `src/main/browser-host-squirrel.js` call
 `src/main/browser-host-registration.js`. On `--squirrel-install` and
 `--squirrel-updated` the app writes the host manifest (name, description, path to
 the installed host executable, `stdio`, and the single allowed origin) into the
-`native-messaging` folder of the per-user data directory. It then sets the default
+one fixed file, `%LOCALAPPDATA%\MaterialFileEncryptor\native-messaging\org.dingding.material_file_encryptor.downloads.json`,
+inside the Squirrel install root. It then sets the default
 value of two per-user keys with `reg.exe` and argument arrays:
 `HKCU\Software\Microsoft\Edge\NativeMessagingHosts\org.dingding.material_file_encryptor.downloads` and
 `HKCU\Software\Google\Chrome\NativeMessagingHosts\org.dingding.material_file_encryptor.downloads`.
@@ -143,6 +144,26 @@ manifest are removed. On `--squirrel-obsolete` the removal happens only when the
 manifest still points into the obsolete installation, so an update never erases
 the registration written by the new version. A failed hook is reported in its
 result and never fails the installer.
+
+The manifest location is derived from the install root of the running executable
+(the parent of the versioned `app-x.y.z` folder), so it does not change between
+versions, and the manifest `path` always names the current version's host
+executable. The user-data profile in use never affects the manifest location or
+the two registry keys: starting the app with another `--user-data-dir`, for
+example an isolated test profile, leaves both unchanged. The startup self-heal
+and the install, update and obsolete hooks all use this one location. When the
+app runs from source or anywhere outside a Squirrel install layout, it does not
+touch the registry at all. Squirrel removes the install root on uninstall, and
+the uninstall hook also removes the manifest file and its folder explicitly.
+
+Earlier builds wrote the manifest into the user-data profile. On install, update
+and startup self-heal the app removes that one old file from the current profile
+only, and only when the host name and the allowed origin show this application
+wrote it. Other profiles are never inspected or changed.
+
+Squirrel's own uninstall leaves `Update.exe` and a `.dead` marker in the install
+root, which Squirrel removes on a later cleanup, and every Setup run launches the
+app once (the Squirrel first run). Neither is caused by the native host.
 
 The hooks run from `src/main/squirrel-hook-entry.js`, which is the first import of
 the main module, so the registration happens before any other start-up work.

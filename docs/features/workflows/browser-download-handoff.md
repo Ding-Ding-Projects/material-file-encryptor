@@ -25,3 +25,7 @@ The installed application registers the native host for the current user during 
 The extension packaging entrypoint stages local `vendor/material.js`, `vendor/search.js` and `vendor/regex-worker.js` through `scripts/build-browser-extension.mjs`. Material Web 2.5.0 and esbuild 0.25.11 remain pinned. The staging receipt records source/output hashes and explicitly marks signing, installation and runtime verification as not performed. Popup code uses no CDN.
 
 Native preparation emits a ready download with `browserCaptureId`; transfer events preserve this identifier through completion or failure. Pending proposal cancellation emits `browser-proposal-cancelled`. The companion retains the proposed identifier and queries the native broker with `{type:'status',session,id}`. A proposed response means awaiting confirmation, never completed transfer. Installed caller and three-surface presentation proof remain pending.
+
+## Host manifest location
+
+The native host manifest is written to one fixed per-user file inside the Squirrel install root, `%LOCALAPPDATA%\MaterialFileEncryptor\native-messaging\org.dingding.material_file_encryptor.downloads.json`, never into the user-data profile. The Edge and Chrome registry keys therefore stay the same whichever `--user-data-dir` the app runs with, and Squirrel uninstall removes the file with the install root. Squirrel's uninstall leaves `Update.exe` and a `.dead` marker that a later cleanup removes, and each Setup run launches the app once. See the native host document for the migration of the earlier in-profile file.
