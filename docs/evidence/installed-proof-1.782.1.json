@@ -1,0 +1,110 @@
+{
+  "schema": "release-package-proof-v1",
+  "label": "release package run (extracted full package), not an installed copy",
+  "release": {
+    "tag": "v1.782.1",
+    "version": "1.782.1",
+    "sourceCommit": "4a49919d44628f65e335f82f3321dbd9607bf3e7",
+    "fullPackage": "MaterialFileEncryptor-1.782.1-full.nupkg",
+    "fullPackageBytes": 434355085,
+    "fullPackageSha1": "086869edc6b95978ab74e3cf1f24527f5a2026d4",
+    "fullPackageSha256": "f0586678c70f24a0f62ef25f944ce486ca0211503ff8831fef284f823d7c34da",
+    "releasesFileSha1Matched": true,
+    "mainExecutable": "lib/net45/MaterialFileEncryptor.exe",
+    "mainExecutableBytes": 246302720,
+    "mainExecutableSha256": "e387f36f79be70c0b070d680347076d05d2a15f31086e884816f1fef3216057b",
+    "buildProvenanceSourceCommit": "4a49919d44628f65e335f82f3321dbd9607bf3e7",
+    "normalRelease": "Read back with the GitHub CLI: isDraft false, isPrerelease false, target commit 4a49919d44628f65e335f82f3321dbd9607bf3e7; assets MaterialFileEncryptor-1.782.1-full.nupkg, MaterialFileEncryptor-Setup.exe, RELEASES and build-provenance.json."
+  },
+  "route": {
+    "launch": "Extracted package executable started on a task-owned hidden desktop through the cheap Lowlevel route with loopback-only remote debugging bound to 127.0.0.1 on one task-chosen port and an isolated profile directory. Setup.exe was not run and the installed application was not updated.",
+    "interaction": "Real background pointer clicks by window handle for controls and tabs; DOM value assignment for text fields and select values; Chrome DevTools Protocol text insertion for the menu filter and a right-button mouse event for the context menu.",
+    "isolation": "A small loopback service accepted evaluation only while exactly one page target existed on the port, otherwise it refused.",
+    "secrets": "The throwaway profile password was generated in memory by that service and assigned through a DOM value; the vault password likewise. The element-lock PIN was generated in memory by the script, assigned through a DOM value and discarded: it was never printed, stored or reused. The test files were small neutral made-up files; no real private file was used.",
+    "flags": "No media auto-accept or screen-capture browser flags were used.",
+    "runs": "Two launches of the same package. Launch 1 used a fresh isolated profile in a deeply nested folder (172 character path to the data folder) for the long-path proof. Launch 2 used a second fresh isolated profile in the same deeply nested folder, with a throwaway vault, for the squeezed-heading check and the six drive captures. The element lock created in launch 1 guarded the Create a drive button and its PIN was not retained, so the vault could not be created in that run; that is why launch 2 started from an empty profile."
+  },
+  "results": [
+    {
+      "id": 1,
+      "item": "Local profile setup and first element lock on a fresh profile with a deeply nested data folder",
+      "result": "passed",
+      "detail": "Fresh profile, data folder path of 172 characters (the 1.779.1 proof used 170). Local access, Local profile, Set up local profile with a generated password: the window reported \"Private cache is unlocked until logout or application close.\" and no error. Right-click on Create a drive, Lock this element, PIN type, acknowledgement ticked, Create lock: the dialog closed with no error and the Element locks tab then listed \"id:create-button: pin\" with Unlock, Lock again and Remove lock. The lock then guarded that button as designed: a later click on Create a drive in the same run opened an unlock prompt instead of the create dialog, and with the PIN deliberately not retained the lock was left in place and the app was restarted on a new profile.",
+      "cause": "The 1.779.1 release failed at this step because the local mutation journal's Git call stopped with Filename too long on a path above 260 characters. The fix (core.longpaths on every journal Git call, and error text that names the stage and reason) is in source commit 159c7cc, an ancestor of 4a49919, and is contained in this package.",
+      "captures": [],
+      "uncatalogued": [
+        {"name": "10-profile-setup-deep", "sha256": "3e4cc10120ba97e383883297862680cbf3a6c7511e5d352157cab20152a60830", "note": "Local profile set up on the deep path."},
+        {"name": "14-lock-dialog", "sha256": "c882525fca99219531f9c4a736754567e5955cccd7cbc88ec0b599f6983f1650", "note": "Lock an element dialog from the context menu; Create lock visible."},
+        {"name": "15-lock-dialog-filled", "sha256": "bfb918fd5827adb02f67490ae3ecee20bcc9abccd945dad9b615353f61654af2", "note": "PIN entered and acknowledgement ticked."},
+        {"name": "16-after-create-lock", "sha256": "d08fdd050f3a337206917245ed5af71674415879d97f9907c12b58878d6f49c5", "note": "Dialog closed after Create lock."},
+        {"name": "17-element-locks", "sha256": "0aad0ac51779638004dbe35a6e430806ca38cf13ed3ff814c0693dd29b072c65", "note": "Element locks tab listing the new lock."}
+      ]
+    },
+    {
+      "id": 2,
+      "item": "Squeezed page heading while an information panel is open",
+      "result": "reproduced on the package; fixed in source and verified in source and by a live stylesheet check; not in a published build",
+      "detail": "With the Force lock explanation open on the Drive view at the default window size (1180 by 752 CSS pixels at a device pixel ratio of 1.5), the My drive heading measured 78 by 62 CSS pixels, broken over two lines, while the actions row beside it measured 782 of the header's 876 pixels. After the three rules below were applied to the same window through a constructable stylesheet (a style element had no effect there), the heading measured 99 by 31 on one line and the actions row, with its open panel, sat below it at the full header width of 876. Removing the stylesheet restored the squeezed layout byte for byte (the frame hash matched the first). The live check shows the CSS behaves as intended against the real layout; it is not a behaviour of the package.",
+      "cause": "In src/renderer/modern.css an open information panel is display:block with flex:1 1 100% and sits inside the page header's actions row. The page header is a non-wrapping flex row, so the actions row grew to the panel's content width and the heading, the other flex item, shrank to its narrowest wrap.",
+      "fix": "Source commit c87a542 on branch evidence/reproof-1.782.1: a page header that contains an open panel wraps (.page-header:has(mfe-control-guidance[data-open]){flex-wrap:wrap}), keeps its first child at its own width, and gives the actions row the full line (flex:1 1 100%; min-inline-size:0). test/reproof-info-icons.test.js has a new test that fails without the three rules and passes with them. The fix is in source only; v1.782.1 does not contain it.",
+      "captures": [],
+      "uncatalogued": [
+        {"name": "22-squeeze-before", "sha256": "7b837a575325c3bc9a19a137a6a680528c3f844ed66533e137842c1735b4ebfa", "note": "Squeezed heading with the Force lock panel open. Kept out of the repository because it shows a defect, not a feature."},
+        {"name": "23-squeeze-fix-injected", "sha256": "79650f9778eba507a2be006007520ade6510142cfc68298b8e99b23a8f07b808", "note": "The same window with the three rules applied through a constructable stylesheet. Not a capture of the package's own behaviour."}
+      ]
+    },
+    {
+      "id": 3,
+      "item": "Replace the remaining README drive frames",
+      "result": "passed for the six frames replaced; no other README frame shows the old 48 pixel icons",
+      "detail": "Every README image was traced to its manifest. All frames from the 1.772.1 package, which showed the old 48 pixel information buttons, had already been replaced in 1.779.1. The four remaining drive frames named as suspects (file list, one file selected, bilingual light and dark file lists, from installed 1.731.1) and the locked drive frames (installed 1.702.1) were inspected: they predate the per-control information icons and show no icons at all, so they were stale rather than showing old-size icons. Six new frames from this package replace them: drive file list, one file selected, bilingual light and dark file lists, locked drive in English and bilingual. The frames in the other README groups come from builds that also predate the icons; they show other screens that this run did not recapture and are not claimed as current for icon coverage.",
+      "captures": [
+        {"file": "docs/images/captures/reproof-1.782.1/desktop/drive-files-light-en.png", "sha256": "ca80991e5de7c6a41d04dc1ae54972875e3ddcd27e35040793cf50fcb7c2bb25"},
+        {"file": "docs/images/captures/reproof-1.782.1/desktop/drive-file-selected-light-en.png", "sha256": "f0f08d14b62473080f781549ebfa8609cc26c117e1fc028a85c72523cce38d1d"},
+        {"file": "docs/images/captures/reproof-1.782.1/desktop/drive-files-light-bilingual.png", "sha256": "562966447ed86bd0e53b4760f1b553f932165b005ab802609d4619dd9601f699"},
+        {"file": "docs/images/captures/reproof-1.782.1/desktop/drive-files-dark-bilingual.png", "sha256": "0c9f1a7b77b220c02bcacb673cd922560dfc53b65624e3ea66c037bcef6fb222"},
+        {"file": "docs/images/captures/reproof-1.782.1/desktop/drive-locked-light-en.png", "sha256": "1c379fddf309cd93bbcdd7cf06beb7163adfa6dcbf0844857f32a0ff9ef05025"},
+        {"file": "docs/images/captures/reproof-1.782.1/desktop/drive-locked-light-bilingual.png", "sha256": "890c0b5f61b9ec00cce771030c7b962cb43af7277441e74a9390e2b4c670e8d1"}
+      ]
+    },
+    {
+      "id": 4,
+      "item": "Site gallery data refreshed to the current captures",
+      "result": "passed for the data and its tests; the deployed gallery page was not rebuilt or viewed in this run",
+      "detail": "docs/site/gallery-additions.json and gallery-review.json now list 21 release package captures (the 15 from 1.779.1 and the 6 from 1.782.1) and withdraw the six replaced frames, each withheld entry carrying the original path and hash. Each new record carries its own source commit, hash, dimensions, method (extracted release package, not an installed copy), viewport, the reviewed workflow and a promotion receipt digest that is the SHA-256 of the capture manifest for that package run, docs/images/captures/reproof-1.779.1/manifest.json and docs/images/captures/reproof-1.782.1/manifest.json (digests of the stored LF form). The two source commits are admitted explicitly in ADDITIONAL_CAPTURE_UI_SOURCES. The presentation test required every record to sit under a refresh- folder; it now accepts a refresh- or reproof- folder. The receipt digest is a reference to the manifest, not proof that a reviewer inspected pixels; each frame was inspected by eye in this run (1.782.1) and in the 1.779.1 run.",
+      "captures": []
+    },
+    {
+      "id": 5,
+      "item": "Observation not investigated: Cantonese label for My drive differs between places in bilingual mode",
+      "result": "observed only",
+      "detail": "In bilingual mode the Drive page heading read \"My drive · 我嘅磁碟\" in the locked state while the tab and the first bilingual file-list frame showed \"我的磁碟\". Not investigated and not fixed in this run.",
+      "captures": []
+    }
+  ],
+  "findings": [
+    "The long-path fix is present and working in v1.782.1: a fresh profile in a 172 character folder sets up and creates an element lock.",
+    "The squeezed heading cause is the open panel's full-row flex basis inside the non-wrapping page header; fixed in source commit c87a542 with a failing-first test, not in a published build.",
+    "The extracted package registers a Start with Windows entry on first run (value name electron.app.material-file-encryptor). It was removed after the run; the existing com.squirrel entry was not touched.",
+    "No other README frame was found to show the old 48 pixel icons; the stale drive frames showed no icons because they predate them."
+  ],
+  "runKey": {
+    "before": ["com.squirrel.MaterialFileEncryptor.MaterialFileEncryptor", "RiotClient", "MicrosoftEdgeAutoLaunch_2D517282B2255A47000260C6B38B2884"],
+    "addedByRun": "electron.app.material-file-encryptor",
+    "after": ["com.squirrel.MaterialFileEncryptor.MaterialFileEncryptor", "RiotClient", "MicrosoftEdgeAutoLaunch_2D517282B2255A47000260C6B38B2884"],
+    "note": "Only the entry added by this run was removed; the three earlier values are unchanged."
+  },
+  "boundaries": {
+    "protectedProcessSet": "Process 4416, its children (2740, 8152, 21640, 1996, 18612), C:\\MFE-Demo and drive M: were not touched. The process set was read before and after with identical ids, parents and creation times.",
+    "teardown": "Both application trees started by this lane were ended by exact process id with their own children (launch 1: root 9156 and its five children; launch 2: root 15480 and its five children); one extra launch attempt exited by itself because the app is single-instance. The loopback evaluation service was stopped through its quit route, the drive was locked (unmounting R:) before exit, the throwaway vault and profile folders were deleted, the named hidden desktop no longer existed, and the Run entry that the app created was removed.",
+    "notInstalled": "Setup.exe was not run and the installed application was not updated. Nothing here proves the installer, update, uninstall or a fresh-environment install."
+  },
+  "readmeCaptures": [
+    {"file": "docs/images/captures/reproof-1.782.1/desktop/drive-files-light-en.png", "sha256": "ca80991e5de7c6a41d04dc1ae54972875e3ddcd27e35040793cf50fcb7c2bb25", "bytes": 119364, "width": 1792, "height": 1139, "screen": "drive-files", "theme": "light", "language": "en"},
+    {"file": "docs/images/captures/reproof-1.782.1/desktop/drive-file-selected-light-en.png", "sha256": "f0f08d14b62473080f781549ebfa8609cc26c117e1fc028a85c72523cce38d1d", "bytes": 122530, "width": 1792, "height": 1139, "screen": "drive-file-selected", "theme": "light", "language": "en"},
+    {"file": "docs/images/captures/reproof-1.782.1/desktop/drive-files-light-bilingual.png", "sha256": "562966447ed86bd0e53b4760f1b553f932165b005ab802609d4619dd9601f699", "bytes": 180385, "width": 1792, "height": 1139, "screen": "drive-files", "theme": "light", "language": "bilingual"},
+    {"file": "docs/images/captures/reproof-1.782.1/desktop/drive-files-dark-bilingual.png", "sha256": "0c9f1a7b77b220c02bcacb673cd922560dfc53b65624e3ea66c037bcef6fb222", "bytes": 179791, "width": 1792, "height": 1139, "screen": "drive-files", "theme": "dark", "language": "bilingual"},
+    {"file": "docs/images/captures/reproof-1.782.1/desktop/drive-locked-light-en.png", "sha256": "1c379fddf309cd93bbcdd7cf06beb7163adfa6dcbf0844857f32a0ff9ef05025", "bytes": 97364, "width": 1792, "height": 1139, "screen": "drive-locked", "theme": "light", "language": "en"},
+    {"file": "docs/images/captures/reproof-1.782.1/desktop/drive-locked-light-bilingual.png", "sha256": "890c0b5f61b9ec00cce771030c7b962cb43af7277441e74a9390e2b4c670e8d1", "bytes": 172249, "width": 1792, "height": 1139, "screen": "drive-locked", "theme": "light", "language": "bilingual"}
+  ]
+}
