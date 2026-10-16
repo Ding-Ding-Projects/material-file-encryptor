@@ -128,6 +128,17 @@ function applyPreferences() {
  notifyLanguageListeners();
 }
 colorQuery.addEventListener('change', applyThemeOnly);
+function clearMainError() { const banner = $('main-error'); if (banner) banner.hidden = true; }
+// A refused personal-wording file changed nothing, so it is reported as a transient, non-blocking notification
+// (status message plus notification centre entry) and never as a banner that outlives the action.
+function showTransientError(error) {
+ const message = plainErrorMessage(error);
+ clearTimeout(snackbarTimer);
+ $('snackbar').textContent = t(message,{message:true});
+ $('snackbar').hidden = false;
+ snackbarTimer = setTimeout(() => { $('snackbar').hidden = true; }, 5500);
+ foundation?.notify({title:'Operation could not complete',message,level:'error'});
+}
 function showError(error, inDialog = false) {
  const message = plainErrorMessage(error);
  const target = $(inDialog ? 'dialog-error' : 'main-error-text'); target.textContent = t(message,{message:true});
@@ -284,7 +295,7 @@ async function loadFilePage(append=false){if(!api?.listFiles||state?.locked)retu
 function changeView(next) {
  try{navigationTiming=rendererTiming.begin('navigation',next);}catch{navigationTiming=null;}
  foundation?.closeContextMenu('navigation',{restoreFocus:false});
- view = next;
+ view = next; clearMainError();
  document.querySelectorAll('.view').forEach(el => { el.hidden = el.id !== `view-${next === 'offline' ? 'drive' : next}`; });
  document.querySelectorAll('[data-view]').forEach(el => { const active = el.dataset.view === next; el.classList.toggle('active',active); active ? el.setAttribute('aria-current','page') : el.removeAttribute('aria-current'); });
  setText('drive-heading',next === 'offline' ? 'Available offline' : 'My drive'); setText('files-heading',next === 'offline' ? 'Available offline' : 'All files');
@@ -534,10 +545,11 @@ const wordingDrop = installWordingDrop({
   preferences.vocabulary = next; vocabularyPersisted = savePreferences();
   if (!vocabularyPersisted) { try { localStorage.removeItem('material-drive.preferences.v1'); } catch {} }
   applyPreferences();
+  clearMainError();
   toast(vocabularyPersisted ? 'Saved.' : 'Active for this session only. Saving failed.');
   return version === vocabularyUploadVersion ? { name: next.displayName } : null;
  },
- refuse: (code, error) => showError(code === 'invalid' ? error : ({ count: 'Drop one wording file at a time. Nothing was changed.', type: 'Only a .json wording file can be dropped. Nothing was changed.', size: 'Vocabulary JSON must be no larger than 256 KiB.', unreadable: 'The wording file could not be read. Nothing was changed.' })[code]),
+ refuse: (code, error) => showTransientError(code === 'invalid' ? error : ({ count: 'Drop one wording file at a time. Nothing was changed.', type: 'Only a .json wording file can be dropped. Nothing was changed.', size: 'Vocabulary JSON must be no larger than 256 KiB.', unreadable: 'The wording file could not be read. Nothing was changed.' })[code]),
 });
 function celebrateWording(name) { wordingDrop.celebration.show(name); }
 // The setup guide applies a preference through the same path as the Settings controls above.
@@ -546,10 +558,10 @@ let openSetupGuide=()=>{};
 listen('open-setup-guide','click',()=>openSetupGuide());
 listen('vocabulary-label','click',event=>{event.preventDefault();$('vocabulary-file').click();});
 listen('vocabulary-label','keydown',event => { if (['Enter',' '].includes(event.key)) { event.preventDefault(); $('vocabulary-file').click(); } });
-listen('vocabulary-file','change',async event => { const version = ++vocabularyUploadVersion; try { const file = event.target.files[0]; if (!file) return; if (file.size > 256 * 1024) throw new Error('Vocabulary JSON must be no larger than 256 KiB.'); const next = parseVocabulary(await file.text()); if (version !== vocabularyUploadVersion) return; if (preferences.vocabulary?.replacements?.length && !await superConfirm('desktop.import-vocabulary', file.name)) return; if (version !== vocabularyUploadVersion) return; preferences.vocabulary = next; vocabularyPersisted = savePreferences(); if (!vocabularyPersisted) { try { localStorage.removeItem('material-drive.preferences.v1'); } catch {} } applyPreferences(); toast(vocabularyPersisted ? 'Saved.' : 'Active for this session only. Saving failed.'); if (typeof celebrateWording === 'function') celebrateWording(next.displayName); } catch(error) { if (version === vocabularyUploadVersion) showError(error); } finally { if (version === vocabularyUploadVersion) event.target.value = ''; } });
+listen('vocabulary-file','change',async event => { const version = ++vocabularyUploadVersion; try { const file = event.target.files[0]; if (!file) return; if (file.size > 256 * 1024) throw new Error('Vocabulary JSON must be no larger than 256 KiB.'); const next = parseVocabulary(await file.text()); if (version !== vocabularyUploadVersion) return; if (preferences.vocabulary?.replacements?.length && !await superConfirm('desktop.import-vocabulary', file.name)) return; if (version !== vocabularyUploadVersion) return; preferences.vocabulary = next; vocabularyPersisted = savePreferences(); if (!vocabularyPersisted) { try { localStorage.removeItem('material-drive.preferences.v1'); } catch {} } applyPreferences(); clearMainError(); toast(vocabularyPersisted ? 'Saved.' : 'Active for this session only. Saving failed.'); if (typeof celebrateWording === 'function') celebrateWording(next.displayName); } catch(error) { if (version === vocabularyUploadVersion) showTransientError(error); } finally { if (version === vocabularyUploadVersion) event.target.value = ''; } });
 // Personal mappings are intentionally excluded from all download and export routes.
 $('export-vocabulary')?.remove();
-listen('reset-vocabulary','click',async () => { if (!await superConfirm('desktop.reset-vocabulary')) return; vocabularyUploadVersion++; preferences.vocabulary = parseVocabulary('{"schemaVersion":1,"entries":{}}'); vocabularyPersisted = savePreferences(); if (!vocabularyPersisted) { try { localStorage.removeItem('material-drive.preferences.v1'); vocabularyPersisted = true; } catch {} } applyPreferences(); toast(vocabularyPersisted ? 'Original wording restored.' : 'Original wording restored for this session. Stored settings could not be removed.'); });
+listen('reset-vocabulary','click',async () => { if (!await superConfirm('desktop.reset-vocabulary')) return; vocabularyUploadVersion++; preferences.vocabulary = parseVocabulary('{"schemaVersion":1,"entries":{}}'); vocabularyPersisted = savePreferences(); if (!vocabularyPersisted) { try { localStorage.removeItem('material-drive.preferences.v1'); vocabularyPersisted = true; } catch {} } applyPreferences(); clearMainError(); toast(vocabularyPersisted ? 'Original wording restored.' : 'Original wording restored for this session. Stored settings could not be removed.'); });
 for (const dialog of document.querySelectorAll('mfe-dialog')) dialog.addEventListener('keydown', event => {
  if (event.key !== 'Tab') return;
  const controls = [...dialog.querySelectorAll(CONTROL_SELECTOR+', [tabindex]')].filter(el => !el.disabled && el.tabIndex >= 0 && el.getClientRects().length > 0);

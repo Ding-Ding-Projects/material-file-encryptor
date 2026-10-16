@@ -41,13 +41,13 @@ test('actual desktop callback suppresses stale failures and removes failed-write
   const script=source('../src/renderer/app.js');
   const callbackSource=script.slice(script.indexOf("listen('vocabulary-file','change'"),script.indexOf("for (const dialog of",script.indexOf("listen('vocabulary-file','change'")));
   const handlers={}, removed=[], errors=[], confirmed=[];
-  const run = new Function('parseVocabulary','listen','localStorage','$','showError','applyPreferences','toast','superConfirm', `
+  const run = new Function('parseVocabulary','listen','localStorage','$','showTransientError','clearMainError','applyPreferences','toast','superConfirm', `
     let vocabularyUploadVersion=0, preferences={vocabulary:parseVocabulary('${words('old')}')}, vocabularyPersisted=true;
     const savePreferences=()=>false;
     ${callbackSource}
     return ()=>preferences;
   `);
-  const state=run(parseVocabulary,(id,event,handler)=>handlers[id]=handler,{removeItem:key=>removed.push(key)},()=>({remove(){}}),error=>errors.push(error),()=>{},()=>{},async id=>{confirmed.push(id);return true;});
+  const state=run(parseVocabulary,(id,event,handler)=>handlers[id]=handler,{removeItem:key=>removed.push(key)},()=>({remove(){}}),error=>errors.push(error),()=>{},()=>{},()=>{},async id=>{confirmed.push(id);return true;});
   let reject;
   const stale={files:[{size:1,text:()=>new Promise((resolve,rejectPromise)=>{reject=rejectPromise;})}],value:'old-selection'};
   const pending=handlers['vocabulary-file']({target:stale});
@@ -74,13 +74,13 @@ test('declining the desktop wording reset or overwrite import leaves the saved w
   const script=source('../src/renderer/app.js');
   const callbackSource=script.slice(script.indexOf("listen('vocabulary-file','change'"),script.indexOf("for (const dialog of",script.indexOf("listen('vocabulary-file','change'")));
   const handlers={}, removed=[], asked=[];
-  const run = new Function('parseVocabulary','listen','localStorage','$','showError','applyPreferences','toast','superConfirm', `
+  const run = new Function('parseVocabulary','listen','localStorage','$','showTransientError','clearMainError','applyPreferences','toast','superConfirm', `
     let vocabularyUploadVersion=0, preferences={vocabulary:parseVocabulary('${words('old')}')}, vocabularyPersisted=true;
     const savePreferences=()=>true;
     ${callbackSource}
     return ()=>preferences;
   `);
-  const state=run(parseVocabulary,(id,event,handler)=>handlers[id]=handler,{removeItem:key=>removed.push(key)},()=>({remove(){}}),()=>{},()=>{},()=>{},async id=>{asked.push(id);return false;});
+  const state=run(parseVocabulary,(id,event,handler)=>handlers[id]=handler,{removeItem:key=>removed.push(key)},()=>({remove(){}}),()=>{},()=>{},()=>{},()=>{},async id=>{asked.push(id);return false;});
   await handlers['reset-vocabulary']();
   assert.equal(replaceVocabulary('folder',state().vocabulary),'old');
   const target={files:[file(words('current'))],value:'selected'};
