@@ -2061,8 +2061,8 @@
         360,
         800
       ],
-      "sourceCommit": "15ac57ef15c0b7463974df8713d22b640606384f",
-      "siteBuiltFrom": "15ac57ef15c0b7463974df8713d22b640606384f",
+      "sourceCommit": "0d487476635484068d8bdbc5f39887251dfc4a29",
+      "siteBuiltFrom": "0d487476635484068d8bdbc5f39887251dfc4a29",
       "siteSourceDirty": false,
       "checks": {
         "title": "Browser extension local models · Material File Encryptor",
@@ -2074,8 +2074,8 @@
       "kind": "site",
       "name": "gallery-1280x900-light-en",
       "file": "site/gallery-1280x900-light-en.png",
-      "sha256": "bff67953f420525092f08f39733952bd27114a58650f7473f7d1106e836875f4",
-      "bytes": 82127,
+      "sha256": "f565380f9d2d0f7549d7e03df262d7879d366eec67190f7962c46594503f1b89",
+      "bytes": 82093,
       "width": 1280,
       "height": 900,
       "surface": "documentation site: /gallery.html",
@@ -2086,8 +2086,8 @@
         1280,
         900
       ],
-      "sourceCommit": "15ac57ef15c0b7463974df8713d22b640606384f",
-      "siteBuiltFrom": "15ac57ef15c0b7463974df8713d22b640606384f",
+      "sourceCommit": "0d487476635484068d8bdbc5f39887251dfc4a29",
+      "siteBuiltFrom": "0d487476635484068d8bdbc5f39887251dfc4a29",
       "siteSourceDirty": false,
       "checks": {
         "title": "Capture gallery · Material File Encryptor",
@@ -2111,8 +2111,8 @@
         1280,
         900
       ],
-      "sourceCommit": "15ac57ef15c0b7463974df8713d22b640606384f",
-      "siteBuiltFrom": "15ac57ef15c0b7463974df8713d22b640606384f",
+      "sourceCommit": "0d487476635484068d8bdbc5f39887251dfc4a29",
+      "siteBuiltFrom": "0d487476635484068d8bdbc5f39887251dfc4a29",
       "siteSourceDirty": false,
       "checks": {
         "title": "Material File Encryptor · Your files, your folder",
@@ -2136,8 +2136,8 @@
         320,
         800
       ],
-      "sourceCommit": "15ac57ef15c0b7463974df8713d22b640606384f",
-      "siteBuiltFrom": "15ac57ef15c0b7463974df8713d22b640606384f",
+      "sourceCommit": "0d487476635484068d8bdbc5f39887251dfc4a29",
+      "siteBuiltFrom": "0d487476635484068d8bdbc5f39887251dfc4a29",
       "siteSourceDirty": false,
       "checks": {
         "title": "Material File Encryptor · Your files, your folder",
@@ -2161,8 +2161,8 @@
         1280,
         900
       ],
-      "sourceCommit": "15ac57ef15c0b7463974df8713d22b640606384f",
-      "siteBuiltFrom": "15ac57ef15c0b7463974df8713d22b640606384f",
+      "sourceCommit": "0d487476635484068d8bdbc5f39887251dfc4a29",
+      "siteBuiltFrom": "0d487476635484068d8bdbc5f39887251dfc4a29",
       "siteSourceDirty": false,
       "checks": {
         "title": "Documentation library · Material File Encryptor",
@@ -2186,8 +2186,8 @@
         1280,
         900
       ],
-      "sourceCommit": "15ac57ef15c0b7463974df8713d22b640606384f",
-      "siteBuiltFrom": "15ac57ef15c0b7463974df8713d22b640606384f",
+      "sourceCommit": "0d487476635484068d8bdbc5f39887251dfc4a29",
+      "siteBuiltFrom": "0d487476635484068d8bdbc5f39887251dfc4a29",
       "siteSourceDirty": false,
       "checks": {
         "title": "Wiki · Material File Encryptor",
@@ -2196,7 +2196,7 @@
       }
     }
   ],
-  "sourceCommit": "15ac57ef15c0b7463974df8713d22b640606384f",
+  "sourceCommit": "0d487476635484068d8bdbc5f39887251dfc4a29",
   "desktopSource": {
     "manifest": "desktop-capture-manifest.json",
     "manifestSha256": "5b7861d5f649cd9891f5f297b5c685f8782621ab661bdd05493ba5b738aaa113",
