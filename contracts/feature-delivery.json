@@ -12613,7 +12613,7 @@
     {
       "id": "display-name",
       "surface": "extension",
-      "status": "unverified",
+      "status": "implemented",
       "implementation": [
         "browser-extension/options.js",
         "browser-extension/options.html",
@@ -12631,11 +12631,15 @@
         "test/browser-protection-options.test.js",
         "test/browser-extension-preferences.test.js"
       ],
-      "evidence": [],
+      "evidence": [
+        "docs/evidence/extension-row-proofs-4c1ef40.json",
+        "docs/evidence/extension-row-proofs-4c1ef40/options-personalization-display-name-light-1280x800.png",
+        "docs/evidence/extension-row-proofs-4c1ef40/popup-display-name-light-400x560.png"
+      ],
       "persistence": [],
-      "reason": "Built-extension proof exists: on the staged package (build identity fb51928d71119e837ce0f303cf25da67033e280ac87b11c134aed76e4f481e8e, source 4c1ef401bd429ed4b35f64c85dc66f6ff8d0a7b2) driven in headless Edge 155 with real input, the saved name appears in the heading, page title, version line, home tab list name and popup, angle brackets and line breaks are refused, it survives a reload and clearing restores the built-in name; see docs/evidence/extension-row-proofs-4c1ef40.json. Remaining gap: the row stays unverified only because validateFeatureDelivery still requires every applicable extension row to keep evidenceVerdict current-runtime-unverified and a status of unverified while behaviorVerdict is present, so no extension row can be marked implemented without changing that validator rule. It is also not an installed-build proof.",
-      "builtInteraction": "unverified",
-      "visualEvidence": "unverified",
+      "reason": "A local product name replaces the original name in the workspace heading, page title, version line, home tab list name and popup; markup and line breaks are rejected. Proven on the staged extension package (build identity fb51928d71119e837ce0f303cf25da67033e280ac87b11c134aed76e4f481e8e, source 4c1ef401bd429ed4b35f64c85dc66f6ff8d0a7b2) loaded unpacked in headless Edge 155 with real input: every named place shows the saved name, angle brackets and line breaks are refused with the previous name kept, the name survives a reload and clearing restores the built-in name; captures are bound in docs/evidence/extension-row-proofs-4c1ef40.json. This is an unpacked staged-package proof, not an installed-build proof.",
+      "builtInteraction": "verified",
+      "visualEvidence": "verified",
       "applicability": {
         "kind": "product",
         "applies": true,
@@ -12647,14 +12651,11 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "partial",
-      "evidenceVerdict": "current-runtime-unverified",
+      "behaviorVerdict": "present",
+      "evidenceVerdict": "current-runtime-verified",
       "completion": {
         "owner": "browser-extension/options.js",
-        "gaps": [
-          "behavior",
-          "proof"
-        ],
+        "gaps": [],
         "action": "Rename the product locally and propagate the chosen name through extension headings and accessible labels.",
         "targets": [
           {
@@ -13289,7 +13290,7 @@
     {
       "id": "collapse-filters",
       "surface": "extension",
-      "status": "unverified",
+      "status": "implemented",
       "implementation": [
         "browser-extension/options.js",
         "browser-extension/options.html"
@@ -13304,11 +13305,15 @@
       "tests": [
         "test/browser-protection-options.test.js"
       ],
-      "evidence": [],
+      "evidence": [
+        "docs/evidence/extension-row-proofs-4c1ef40.json",
+        "docs/evidence/extension-row-proofs-4c1ef40/options-changelog-light-1280x800.png",
+        "docs/evidence/extension-row-proofs-4c1ef40/options-changelog-filters-collapsed-light-1280x800.png"
+      ],
       "persistence": [],
-      "reason": "Built-extension proof exists: on the staged package (build identity fb51928d71119e837ce0f303cf25da67033e280ac87b11c134aed76e4f481e8e, source 4c1ef401bd429ed4b35f64c85dc66f6ff8d0a7b2) driven in headless Edge 155 with real input, collapse keeps the filter text and the result set, hides the export controls, reads Filters (active), and expand restores everything; see docs/evidence/extension-row-proofs-4c1ef40.json and its changelog captures. Remaining gap: the row stays unverified only because validateFeatureDelivery still requires every applicable extension row to keep evidenceVerdict current-runtime-unverified and a status of unverified while behaviorVerdict is present, so no extension row can be marked implemented without changing that validator rule. It is also not an installed-build proof.",
-      "builtInteraction": "unverified",
-      "visualEvidence": "unverified",
+      "reason": "The changelog Filters button collapses filter and export controls without clearing them and reads Filters (active) while a hidden filter applies. Proven on the staged extension package (build identity fb51928d71119e837ce0f303cf25da67033e280ac87b11c134aed76e4f481e8e, source 4c1ef401bd429ed4b35f64c85dc66f6ff8d0a7b2) loaded unpacked in headless Edge 155 with real input: the filter text and result set survive collapse and expand, the export controls hide and return, and the captured states are bound in docs/evidence/extension-row-proofs-4c1ef40.json. This is an unpacked staged-package proof, not an installed-build proof.",
+      "builtInteraction": "verified",
+      "visualEvidence": "verified",
       "applicability": {
         "kind": "product",
         "applies": true,
@@ -13320,14 +13325,11 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "partial",
-      "evidenceVerdict": "current-runtime-unverified",
+      "behaviorVerdict": "present",
+      "evidenceVerdict": "current-runtime-verified",
       "completion": {
         "owner": "browser-extension/options.js",
-        "gaps": [
-          "behavior",
-          "proof"
-        ],
+        "gaps": [],
         "action": "Collapse and expand grouped filters without losing active criteria.",
         "targets": [
           {
@@ -18677,7 +18679,12 @@
     "browser-extension/popup-wording.js": "5ff38608bf39d0747b46c761a2caaf1f475853df",
     "docs/evidence/installed-proof-1.772.1.json": "0ef097a1f0cdea37e81d2c5ff1f367647de6ad6f",
     "docs/evidence/installed-proof-1.779.1.json": "4a49919d44628f65e335f82f3321dbd9607bf3e7",
-    "docs/evidence/installed-proof-1.782.1.json": "56b1a12a783d7a23e1b4717f23fef3877174d8dd"
+    "docs/evidence/installed-proof-1.782.1.json": "56b1a12a783d7a23e1b4717f23fef3877174d8dd",
+    "docs/evidence/extension-row-proofs-4c1ef40.json": "63de40c5604ab30b9996a7ef4636cebda24153fc",
+    "docs/evidence/extension-row-proofs-4c1ef40/options-changelog-light-1280x800.png": "63de40c5604ab30b9996a7ef4636cebda24153fc",
+    "docs/evidence/extension-row-proofs-4c1ef40/options-changelog-filters-collapsed-light-1280x800.png": "63de40c5604ab30b9996a7ef4636cebda24153fc",
+    "docs/evidence/extension-row-proofs-4c1ef40/options-personalization-display-name-light-1280x800.png": "63de40c5604ab30b9996a7ef4636cebda24153fc",
+    "docs/evidence/extension-row-proofs-4c1ef40/popup-display-name-light-400x560.png": "63de40c5604ab30b9996a7ef4636cebda24153fc"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",

@@ -126,7 +126,8 @@ test('repository-aware verifier proves blobs and reports absent Git access hones
   const manifest = await inventory(), offline = await verifyFeatureDeliveryReferences(manifest);
   assert.equal(offline.referenceVerification, 'unverified'); assert.equal(offline.checkedReferences, 0);
   const repositoryPath = fileURLToPath(new URL('../', import.meta.url));
-  const fixture = structuredClone(manifest); for (const row of fixture.features) for (const field of ['implementation','documentation','localization','tests','evidence','persistence']) row[field] = [];
+  const fixture = structuredClone(manifest); for (const row of fixture.features) if (row.status === 'implemented') { Object.assign(row, { status: 'unverified', builtInteraction: 'unverified', visualEvidence: 'unverified', evidenceVerdict: 'current-runtime-unverified' }); if (row.completion) row.completion.gaps = ['proof']; }
+  for (const row of fixture.features) for (const field of ['implementation','documentation','localization','tests','evidence','persistence']) row[field] = [];
   const revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repositoryPath, encoding: 'utf8', windowsHide: true }).trim();
   fixture.features[0].implementation = ['src/features/documentation/required-features.mjs'];
   fixture.referenceSources = { 'src/features/documentation/required-features.mjs': revision };

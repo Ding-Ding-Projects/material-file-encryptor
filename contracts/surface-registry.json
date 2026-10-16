@@ -2681,7 +2681,38 @@
       "owner": "browser-extension/options.js",
       "selector": "",
       "template": "required-families",
-      "proofs": {}
+      "proofs": {
+        "collapse-filters": {
+          "status": "implemented",
+          "surface": "extension:options",
+          "route": "browser-extension/options.html",
+          "selector": "",
+          "sourceCommit": "4c1ef401bd429ed4b35f64c85dc66f6ff8d0a7b2",
+          "builtSha256": "fb51928d71119e837ce0f303cf25da67033e280ac87b11c134aed76e4f481e8e",
+          "builtInteraction": "verified",
+          "visualEvidence": "verified",
+          "evidence": [
+            "docs/evidence/extension-row-proofs-4c1ef40.json",
+            "docs/evidence/extension-row-proofs-4c1ef40/options-changelog-light-1280x800.png",
+            "docs/evidence/extension-row-proofs-4c1ef40/options-changelog-filters-collapsed-light-1280x800.png"
+          ]
+        },
+        "display-name": {
+          "status": "implemented",
+          "surface": "extension:options",
+          "route": "browser-extension/options.html",
+          "selector": "",
+          "sourceCommit": "4c1ef401bd429ed4b35f64c85dc66f6ff8d0a7b2",
+          "builtSha256": "fb51928d71119e837ce0f303cf25da67033e280ac87b11c134aed76e4f481e8e",
+          "builtInteraction": "verified",
+          "visualEvidence": "verified",
+          "evidence": [
+            "docs/evidence/extension-row-proofs-4c1ef40.json",
+            "docs/evidence/extension-row-proofs-4c1ef40/options-personalization-display-name-light-1280x800.png",
+            "docs/evidence/extension-row-proofs-4c1ef40/popup-display-name-light-400x560.png"
+          ]
+        }
+      }
     },
     {
       "id": "extension:options:changelog",

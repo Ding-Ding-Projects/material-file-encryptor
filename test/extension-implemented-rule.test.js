@@ -6,7 +6,7 @@ import { validateFeatureDelivery } from '../src/features/documentation/feature-d
 const manifest = JSON.parse(fs.readFileSync(new URL('../contracts/feature-delivery.json', import.meta.url), 'utf8'));
 
 // An applicable extension row, given present behaviour and complete evidence below, used as the fixture for the implemented-row rules.
-const index = manifest.features.findIndex(row => row.surface === 'extension' && row.id === 'display-name' && row.status === 'unverified');
+const index = manifest.features.findIndex(row => row.surface === 'extension' && row.id === 'display-name');
 const rowErrors = (candidate, id) => validateFeatureDelivery(candidate).filter(error => error.startsWith(`extension/${id}:`));
 
 function withRow(change) {
@@ -51,6 +51,8 @@ test('an implemented extension row that still lists gaps is rejected', () => {
 test('an unverified extension row may not drop the runtime-unverified verdict', () => {
   const copy = structuredClone(manifest);
   const row = copy.features[index];
+  Object.assign(row, { status: 'unverified', builtInteraction: 'unverified', visualEvidence: 'unverified' });
+  if (row.completion) row.completion.gaps = ['proof'];
   row.evidenceVerdict = 'current-runtime-verified';
   assert.ok(rowErrors(copy, row.id).some(error => error.includes('invalid independent evidence verdict')));
 });
