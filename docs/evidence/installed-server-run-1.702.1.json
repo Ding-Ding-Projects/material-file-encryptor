@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "kind": "installed-server-run",
+  "recordedAt": "2026-10-15T20:10:48-04:00",
+  "host": "One physical Windows 11 host; an off-screen desktop and an isolated application profile were used. Machine names, user names and local paths are omitted.",
+  "app": {"version": "1.702.1", "installedVia": "Squirrel.Windows"},
+  "server": {
+    "flavor": "vanilla",
+    "version": "26.3",
+    "target": "local process",
+    "port": 25565,
+    "boundAddress": "127.0.0.1 (loopback only)",
+    "jarSha1": "33680f5f2ac32864d6d7cf5e56a705fdb3e05f4c",
+    "jarSha1MatchesPublished": true
+  },
+  "license": {
+    "reference": "https://www.minecraft.net/en-us/eula",
+    "acceptedThrough": "the application's Accept server license control, at the owner's explicit request",
+    "acceptedAt": "2026-10-15T20:04:30-04:00",
+    "result": "eula=true"
+  },
+  "firstAttempt": {
+    "runtime": "Java 21",
+    "result": "the server exited at once with UnsupportedClassVersionError (class file version 69 needs Java 25)",
+    "applicationFindings": [
+      "Start was allowed although the detected Java was older than the version requires",
+      "the server card kept showing running after the process had exited"
+    ]
+  },
+  "run": {
+    "runtime": "Java 25 (Temurin 25.0.4.1)",
+    "startedAt": "2026-10-15T20:09:17-04:00",
+    "processParentIsApplication": true,
+    "listening": "127.0.0.1:25565 owned by the server process",
+    "readyLine": "Done (3.188s)! For help, type \"help\"",
+    "cardState": "running",
+    "stoppedAt": "2026-10-15T20:10:48-04:00",
+    "stopResult": "the server process exited and the port closed within 2 seconds; the log shows the worlds being saved",
+    "firewallPrompt": false,
+    "clientsConnected": 0,
+    "pluginsInstalled": 0
+  },
+  "applicationFindingsStillOpen": ["the window close button and close message were ignored; the application has no quit route in its interface"],
+  "notVerified": ["container and SSH targets on a real host", "plugins on a real server", "client connections"]
+}
