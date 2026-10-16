@@ -60,3 +60,7 @@
 - [受保護瀏覽器中介](protected-browser-mediation.zh-HK.md)
 
 - [已登記共用組件](shared-compositions.zh-HK.md)
+
+- [資訊圖示](info-icon-guidance.zh-HK.md)
+
+- [設定指南](setup-guide.zh-HK.md)

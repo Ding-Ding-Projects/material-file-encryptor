@@ -60,3 +60,7 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 - [Protected browser mediation](protected-browser-mediation.md)
 
 - [Registered shared compositions](shared-compositions.md)
+
+- [Information icons](info-icon-guidance.md)
+
+- [Setup guide](setup-guide.md)

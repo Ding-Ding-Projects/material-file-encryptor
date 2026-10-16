@@ -9,7 +9,7 @@ const REQUIRED = [
   'browser/README', 'browser/safe-note-reading', 'browser/external-editor', 'browser/file-conversion', 'browser/native-profile-summary', 'platform/renderer-runtime-identity',
   'workflows/README', 'workflows/forge-publication', 'workflows/browser-download-handoff', 'workflows/browser-extension-evidence', 'workflows/browser-native-host', 'workflows/browser-extension-workspace', 'workflows/browser-extension-local-models', 'workflows/browser-protection-observations',
   'interface/storage-maintenance', 'interface/startup-photo-host',
-  'interface/local-tools-workspaces', 'interface/material-dialogs-and-motion',
+  'interface/local-tools-workspaces', 'interface/material-dialogs-and-motion', 'interface/info-icon-guidance', 'interface/setup-guide',
   'schedules/customization',
   'README', 'access-local', 'appearance-editor', 'local-personalization',
   'access/README', 'access/access-host', 'access/local-access', 'access/visitor-local-access', 'appearance/README', 'appearance/image-placement', 'appearance/raster-workflows',
