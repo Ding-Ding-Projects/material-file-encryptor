@@ -40,13 +40,16 @@ export function mountOnboarding(host, {session, translate = value => value, subs
   const root = make('section', {class: 'onboarding', 'aria-labelledby': 'onboarding-title'});
   host.append(root);
 
+  // The look step reports the chosen option by its readable name, never by its stored value.
+  const LOOK_CHOICE_LABELS = Object.freeze({en: 'English', yue: 'Cantonese', bilingual: 'English and Cantonese', system: 'Device setting', light: 'Light', dark: 'Dark'});
   const resultLine = id => {
     const value = session.result(id);
     const line = make('p', {class: 'onboarding-result', role: 'status', 'aria-live': 'polite'});
     if (!value) return line;
     line.dataset ||= {};
     line.dataset.ok = String(value.ok === true);
-    line.textContent = value.detail ? `${t(value.key)} ${value.detail}` : t(value.key);
+    const detail = id === 'look' && Object.hasOwn(LOOK_CHOICE_LABELS, value.detail) ? t(LOOK_CHOICE_LABELS[value.detail]) : value.detail;
+    line.textContent = detail ? `${t(value.key)} ${detail}` : t(value.key);
     return line;
   };
   const busyNote = () => make('p', {class: 'onboarding-busy', role: 'status', 'aria-live': 'polite', text: session.busy ? t('Working…') : ''});

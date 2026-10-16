@@ -361,7 +361,7 @@ test('choosing a language and a theme in the view applies them through the prefe
   await language.fire('change');
   await tick();
   assert.deepEqual(ui.s.calls.find(call => call[0] === 'setPreference'), ['setPreference', 'language', 'yue']);
-  assert.deepEqual(status(ui), ['Language applied. yue']);
+  assert.deepEqual(status(ui), ['Language applied. Cantonese']);
   const theme = byKey(ui.host, 'theme');
   theme.value = 'dark';
   await theme.fire('change');

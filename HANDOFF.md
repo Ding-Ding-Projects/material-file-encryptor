@@ -1,3 +1,14 @@
+## Release package re-proof fixes, 2026-10-16
+
+Scope: four findings from `docs/evidence/installed-proof-1.772.1.json`. Branch `fix/reproof-findings`.
+
+- Lock an element clipping: root cause was a floating panel authored inside a view whose reveal animation leaves a transform on an ancestor (fixed positioning then follows that ancestor) and whose content region clips. Fixed by top layer promotion plus a sticky action row. Checked on a source overlay run in the packaged runtime on a hidden desktop at the default window and at 900 by 460: the panel stays inside the window and Create lock stays visible. Creating a PIN lock on a fresh isolated profile succeeded there.
+- Local profile setup message: not reproduced. Profile setup and a first lock succeeded on a fresh isolated profile with the older packaged runtime and its bundled tools, and the journal succeeded with the installed 1.739.1 tools and with minimal environment variables. The release package itself was not run. Hardening only (exact directory trust, longer cold start timeout, stage and reason on failures, cause kept through the rollback). Treat as unconfirmed until the same step is repeated on a release package.
+- Refused wording file banner: now transient, cleared on view change and on successful apply or reset; extension clears its text after the notice.
+- Information icons: compact 28 pixel control, 18 pixel glyph, 44 pixel hit area; look step result names the choice.
+
+Not done: no installer, update or release package run; no README capture refresh; the before and after captures are task-local and were not promoted into the evidence inventory.
+
 ## Integration of older branches, 2026-10-16
 
 Merged on `integrate/leftover-branches`: the native helper IPC validation and lifecycle fixes, the protected settings reset mediation (new `src/main/protected-settings-reset.js`, inactive: no renderer IPC exposes it yet), and a renderer test fix. Also merged: the compiled-pipe verification note for browser protection observations (the stash's test edit is superseded by main's newer test). Skipped: the 24-row presentation-image replacement map (its originals no longer exist in the tree and all of its rows were pending). No installer was built and no production acceptance is claimed for the reset path.

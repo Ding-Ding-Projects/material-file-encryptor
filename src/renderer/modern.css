@@ -87,7 +87,7 @@ md-outlined-select{min-width:min(100%,14rem)}
    inline beside its target's row; an open explanation takes the full row so its text and sample can wrap. */
 mfe-control-guidance[data-info-icon]{display:inline-flex;vertical-align:middle;position:relative;max-inline-size:100%;min-inline-size:0;--guidance-tooltip-position:absolute;--guidance-tooltip-start:0;--guidance-tooltip-end:auto;--guidance-tooltip-width:max-content;--guidance-tooltip-max-width:min(18rem,80vw)}
 mfe-control-guidance[data-info-icon][data-open]{display:block;flex:1 1 100%;inline-size:100%}
-[data-info-icon-pair]{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px;max-inline-size:100%;min-inline-size:0}
+[data-info-icon-pair]{display:inline-flex;flex-wrap:wrap;align-items:center;gap:8px;max-inline-size:100%;min-inline-size:0}
 [data-info-icon-pair]:has(>mfe-control-guidance[data-open]){flex:1 1 100%}
 /* An icon follows its control: when the control is hidden, its icon is hidden with it. */
 mfe-control-guidance[data-info-icon]:has(+[hidden]){display:none}

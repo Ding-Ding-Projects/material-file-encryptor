@@ -1,3 +1,13 @@
+# Release package re-proof fixes, 2026-10-16
+
+- The Lock an element panel (and the unlock panel) now enters the browser top layer, so the reveal animation transform and the scrolling content region of the Local access view can no longer crop it at the default window size. Cancel and Create lock sit in a sticky action row and the panel body scrolls inside its own bounds.
+- The local mutation journal trusts exactly its own directory through command-line configuration, allows a cold Git start 60 seconds, and tags failures with their stage and reason. The credential rollback keeps the underlying cause instead of replacing it with a generic message. The original failure behind the profile setup message on the release package was not reproduced on a source-run profile and is still unconfirmed.
+- A refused personal wording file is reported as a transient status message and notification centre entry instead of a persistent banner. The banner also clears on every view change and after a successful apply or reset, and the extension options page clears its refusal text after the notice expires.
+- Information icons are compact: an 18 pixel glyph in a 28 pixel control in the on-surface-variant colour, with an invisible 44 by 44 pixel hit area and an 8 pixel gap to their control. Explanations, keyboard access and localization are unchanged.
+- The setup guide look step names the chosen language or appearance instead of its stored value.
+
+呢批修正：Lock an element 面板搬上瀏覽器頂層，唔會再被截走，Create lock 掣固定喺底部；本機變更日誌嘅 Git 只信自己個資料夾，失敗會講明步驟同原因；無效用詞檔案改做短暫通知，轉畫面就清走；資訊圖示縮細、淡色，但點擊範圍維持 44 像素；設定指南嘅外觀步驟會講出所揀嘅名，唔再顯示內部值。
+
 # Inventory: wording drop and private delivery, 2026-10-16
 
 - The required-feature inventory now tracks two more identifiers (109 families per surface, 327 rows): dropping a personal wording file anywhere on a window to apply it, and packaged offline delivery of the documentation site for private repositories.

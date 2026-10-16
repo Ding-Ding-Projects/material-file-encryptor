@@ -1,3 +1,11 @@
+## Release package re-proof fixes, 2026-10-16
+
+- [x] Lock an element panel stays inside the window and keeps its action row visible (source overlay in the packaged runtime, hidden desktop).
+- [ ] Local profile setup message on the release package: not reproduced, hardening only. Repeat on a real release package.
+- [x] Refused wording file is a transient notification that clears on view change and after a successful apply.
+- [x] Compact information icons with a 44 pixel hit area.
+- [ ] Promote refreshed captures of these surfaces into the README after the next release package run.
+
 ## Inventory: wording drop and private delivery, 2026-10-16
 
 - [x] Track the wording drop and private packaged-delivery identities in the required-feature inventory (109 families per surface) with an honest verdict on each surface.
