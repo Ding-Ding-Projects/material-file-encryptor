@@ -112,6 +112,37 @@ test('the view source never writes markup, storage or logs and holds the code on
   assert.equal(/innerHTML|insertAdjacentHTML|localStorage|sessionStorage|indexedDB|console\.|clipboard/.test(source), false);
 });
 
+test('the pairing page follows the selected interface language and re-renders when it changes', async () => {
+  const host = new Node();
+  const language = { value: 'en' };
+  const yue = { 'Pair a browser': '配對瀏覽器', 'Show pairing code': '顯示配對代碼', 'Hide pairing code': '隱藏配對代碼', 'Pairing code hidden and cleared.': '配對代碼已隱藏並清除。', 'Valid for': '有效時間', seconds: '秒' };
+  const translate = value => language.value === 'yue' ? (yue[value] ?? value) : language.value === 'bilingual' && yue[value] ? `${value} · ${yue[value]}` : value;
+  let notify = () => {}, unsubscribed = 0;
+  const view = mountBrowserPairing(host, {
+    translate, now: () => 10000, setInterval: () => 1, clearInterval: () => {},
+    subscribeLanguage: callback => { notify = callback; return () => { unsubscribed++; notify = () => {}; }; },
+    request: async action => action === 'issue' ? { code: 'ABCD2345', expiresAt: 130000 } : { cleared: true },
+  });
+  assert.ok(find(host, 'Pair a browser') && find(host, 'Show pairing code'), 'English mode shows only English');
+  assert.equal(walk(host).some(node => /配對/.test(node.textContent)), false);
+  language.value = 'yue'; notify();
+  assert.ok(find(host, '配對瀏覽器') && find(host, '顯示配對代碼'));
+  assert.equal(find(host, 'Pair a browser'), undefined);
+  language.value = 'bilingual'; notify();
+  assert.ok(find(host, 'Pair a browser · 配對瀏覽器') && find(host, 'Show pairing code · 顯示配對代碼'));
+  language.value = 'en'; notify();
+  assert.ok(find(host, 'Pair a browser') && find(host, 'Show pairing code'));
+  const show = find(host, 'Show pairing code');
+  show.listeners.click(); await tick(); await tick();
+  assert.ok(find(host, 'Valid for 120 seconds'));
+  language.value = 'yue'; notify();
+  assert.ok(find(host, '有效時間 120 秒'), 'the countdown line is translated again');
+  assert.ok(find(host, '隱藏配對代碼'));
+  assert.ok(find(host, 'ABCD 2345'), 'the code itself is untouched by a language change');
+  view.destroy();
+  assert.equal(unsubscribed, 1);
+});
+
 test('the desktop validates the new feature for the renderer only', async () => {
   const { validateFeatureRequest } = await import('../src/main/validation.js');
   assert.deepEqual(validateFeatureRequest('browser-pairing', 'issue', {}), { feature: 'browser-pairing', action: 'issue', payload: {} });

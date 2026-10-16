@@ -94,6 +94,12 @@ export function createServerTargetsService({
     try { return await (passive ? work(controller.signal) : track(work(controller.signal))); } finally { release(rec.id, controller); }
   }
 
+  /** Windows reports exit codes as unsigned 32-bit values; 4294967295 is really -1. Values outside the unsigned 32-bit range are left alone. */
+  const signedExitCode = value => Number.isSafeInteger(value) ? (value >= 0x80000000 && value <= 0xFFFFFFFF ? value - 0x100000000 : value) : null;
+  /** Codes meaning the process died abnormally (-1, access violation, stack overflow) versus being ended from outside (Ctrl+C, SIGINT, SIGKILL, SIGTERM). */
+  const CRASH_CODES = new Set([-1, -1073741819, -1073741571, -1073740791]);
+  const TERMINATED_CODES = new Set([-1073741510, 130, 137, 143]);
+
   /** Moves a card out of a live state after its process, container or remote pid ended. A requested stop or a clean exit is
    * "stopped"; a crash, a signal or a vanished process is "failed" with the exit code and the last log lines. */
   async function settleExit(rec, info = {}) {
@@ -101,7 +107,7 @@ export function createServerTargetsService({
     settling.add(rec.id);
     try {
       const requested = stopping.delete(rec.id);
-      const code = Number.isSafeInteger(info.code) ? info.code : null, exitSignal = typeof info.signal === 'string' ? info.signal : null;
+      const code = signedExitCode(info.code), exitSignal = typeof info.signal === 'string' ? info.signal : null;
       let lines = [];
       try { lines = (await driverOf(rec).logs(rec, 20, {signal: AbortSignal.timeout(10000)})).slice(-20); } catch { /* the log may be gone with the process */ }
       if (!LIVE.has(rec.state)) return;
@@ -111,6 +117,8 @@ export function createServerTargetsService({
       else {
         rec.state = 'failed';
         if (info.error) { rec.errorCode = 'spawn'; rec.errorParams = null; rec.error = 'The server process could not run: ' + String(info.error).slice(0, 200); }
+        else if (code !== null && CRASH_CODES.has(code)) { rec.errorCode = 'crashed'; rec.errorParams = {code}; rec.error = 'The server process ended unexpectedly (exit code ' + code + ').'; }
+        else if (code !== null && TERMINATED_CODES.has(code)) { rec.errorCode = 'terminated'; rec.errorParams = {code}; rec.error = 'The server process was ended by another program (exit code ' + code + ').'; }
         else if (code !== null) { rec.errorCode = 'exited'; rec.errorParams = {code}; rec.error = 'The server process exited with code ' + code + '.'; }
         else if (exitSignal) { rec.errorCode = 'signal'; rec.errorParams = {signal: exitSignal}; rec.error = 'The server process was ended by signal ' + exitSignal + '.'; }
         else { rec.errorCode = 'ended'; rec.errorParams = null; rec.error = 'The server process ended on its own.'; }

@@ -18,7 +18,7 @@ import {shouldOpenRegisteredView} from '../../../shared/surface/view-registratio
 if(typeof document!=='undefined')installShadowReducedMotion(document);
 
 /** Mounts reusable chrome without mutating host content or acquiring host capabilities. */
-export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport,renderText=value=>value,onNotificationAction,onNotification,navigationHost}={}) {
+export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport,renderText=value=>value,onNotificationAction,onNotification,onQuit,navigationHost}={}) {
   if(!(host instanceof HTMLElement))throw new TypeError('A host element is required');
   tabs=[...tabs];
   const model=createSurfaceModel({storage,storageKey:'mfe.surface.tabs.v1',tabs:tabs.slice(0,1).map(tab=>({...tab,label:localized(tab.label,'en')}))});
@@ -44,14 +44,14 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
   customElements.upgrade(toolbar);
   const showView=id=>{closeContextMenu('navigation',{restoreFocus:false});frame?.setActive(id);if(id===HOME_ID)renderHome();for(const [key,view]of views){view.root.hidden=key!==id;}onActivate(id);if(id===HOME_ID)homeGrid.focusFirst?.();};
   const configure=()=>{
-    shell.configure({model,language:activeLanguage,labels,onActivate:showView,onContext:openContextMenu});
+    shell.configure({model,language:activeLanguage,labels,onActivate:showView,onContext:openContextMenu,onQuit});
     build.language=activeLanguage;build.value=provenance;
     palette.language=activeLanguage;palette.render();renderHome();palette.setCommands([{id:'view:home',label:HOME_LABEL,run:()=>shell.openHome()},{id:'tab:new',label:text('New tab','新分頁'),shortcut:'Control+t',run:()=>shell.openNewTab()},...tabs.map(tab=>({id:`view:${tab.id}`,label:labels.get(tab.id),run:()=>{model.openTab({id:tab.id,label:localized(labels.get(tab.id),'en')});shell.activate(tab.id);}})),...hostCommands]);
     notifications.configure({model,language:activeLanguage,onExport,renderText,onAction:onNotificationAction,onAudio:enabled=>audio.enable(enabled)});
     const sheet=new CSSStyleSheet();sheet.replaceSync(':host{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}');toolbar.shadowRoot.adoptedStyleSheets=[sheet];
     toolbar.shadowRoot.replaceChildren(element('md-outlined-button',{text:localized(text('Commands · Ctrl+Shift+F','指令 · Ctrl+Shift+F'),activeLanguage),onclick:()=>palette.open()}),element('md-outlined-button',{text:localized(text('Notifications','通知'),activeLanguage),onclick:()=>{notifications.hidden=!notifications.hidden;}}));
   };
-  host.insertBefore(shell,before);host.insertBefore(homeRoot,shell.nextSibling);host.append(live);document.body.append(palette);configure();frame=mountNavigationFrame({navigationHost,host,shell,build,toolbar,notifications,labels,language:activeLanguage,onActivate:id=>shell.activate(id),onCommands:()=>palette.open(),onNotifications:()=>{notifications.hidden=!notifications.hidden;}});frame.setActive(model.getState().activeTabId);
+  host.insertBefore(shell,before);host.insertBefore(homeRoot,shell.nextSibling);host.append(live);document.body.append(palette);configure();frame=mountNavigationFrame({navigationHost,host,shell,build,toolbar,notifications,labels,language:activeLanguage,onActivate:id=>shell.activate(id),onCommands:()=>palette.open(),onNotifications:()=>{notifications.hidden=!notifications.hidden;},onQuit});frame.setActive(model.getState().activeTabId);
   const keydown=event=>{
     if(!(event.ctrlKey||event.metaKey))return;
     if(event.shiftKey&&event.key.toLowerCase()==='f'){event.preventDefault();palette.open();}

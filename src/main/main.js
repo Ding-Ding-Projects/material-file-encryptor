@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 import { app, autoUpdater, BrowserWindow, dialog, ipcMain, Menu, nativeImage, powerMonitor, safeStorage, shell, Tray } from 'electron'
 import { createMaterialDialogs, materialDialogPaths } from './material-dialog.js'
 import { describePending, shutdownPrompt } from './shutdown-pending.js';
+import { createTrayNotice } from './tray-notice.js';
 import { createWindowCloseHandler, closeChoiceFromResponse } from './window-close.js';
 import { randomBytes, createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
@@ -87,6 +88,12 @@ function startupRegistration() {
 }
 const configPath = () => path.join(app.getPath('userData'), 'preferences.json');
 const sessionMarkerPath = () => path.join(app.getPath('userData'), 'session-open.json');
+// One-time, non-blocking tray balloon the first time closing the window leaves the app running in the tray.
+const trayNotice = createTrayNotice({
+  markerPath: () => path.join(app.getPath('userData'), 'tray-notice-shown.json'),
+  getLanguage: async () => window && !window.isDestroyed() ? window.webContents.executeJavaScript('document.documentElement.getAttribute("data-control-language") || ""', true) : 'en',
+  show: ({title, content}) => { if (tray && typeof tray.displayBalloon === 'function') tray.displayBalloon({title, content, iconType: 'info', noSound: true}); }
+});
 const selectedImports = new Set();
 const selectedExports = new Set();
 let sessionEnd, window, tray, helper, features, localAdapter, browserHandoff, updates, shuttingDown = false, operation = null, quitPending = false, updateInstallLease = false, updateLanguage = 'en', interruptedSession = false;
@@ -421,7 +428,7 @@ else {
       return proof;
     });
     window.on('close', createWindowCloseHandler({
-      isShuttingDown: () => shuttingDown, isTestMode: () => testMode, liveServers: () => features?.liveServers() ?? [], hideWindow: () => window.hide(), quit: () => quit(),
+      isShuttingDown: () => shuttingDown, isTestMode: () => testMode, liveServers: () => features?.liveServers() ?? [], hideWindow: () => { window.hide(); void trayNotice.maybeShow(); }, quit: () => quit(),
       askChoice: async servers => {
         const names = servers.slice(0, 5).map(item => '• ' + item.name).join('\n') + (servers.length > 5 ? '\n• +' + (servers.length - 5) : '');
         const answer = await uiDialog.showMessageBox(window, {

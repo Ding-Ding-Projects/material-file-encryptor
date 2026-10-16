@@ -48,3 +48,9 @@ md-outlined-select{min-width:min(100%,14rem)}
 .browser-pairing-display{display:grid;justify-items:start;gap:8px;margin-block:12px}
 .browser-pairing-display:not([hidden]){animation:md-fade-through-in var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate) both}
 @media(prefers-reduced-motion:reduce){.browser-pairing-display:not([hidden]){animation:none}}
+
+/* Drive file table: the Availability text wraps instead of being cut at the cell edge, so bilingual wording is fully readable at every width. */
+#file-list>tr>td.availability{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;word-break:normal;line-height:1.35}
+#file-list>tr>td.availability .availability-content{flex-wrap:wrap;min-width:0}
+#file-list>tr>td.availability .availability-content>span{min-width:0;overflow-wrap:anywhere}
+.table-scroll th:nth-child(3){white-space:normal;overflow-wrap:anywhere}

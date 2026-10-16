@@ -123,15 +123,25 @@ function localProcessDriver(deps, {dataRoot, onExit}) {
       const child = deps.spawn('java', args, {cwd: dataOf(record), stdio: ['pipe', 'pipe', 'pipe']});
       const entry = {child, lines: [], exited: null};
       const report = () => { try { onExit?.(record.id, {code: entry.exit?.code ?? null, signal: entry.exit?.signal ?? null, error: entry.error ?? null}); } catch { /* monitoring must never break the process owner */ } };
-      entry.exited = new Promise(resolve => { child.once('exit', (code, exitSignal) => { entry.exit = {code, signal: exitSignal}; resolve(); report(); }); child.once('error', error => { entry.error = redact(error.message); resolve(); report(); }); });
-      for (const stream of [child.stdout, child.stderr]) { let rest = ''; stream?.on?.('data', chunk => { rest += chunk; const parts = rest.split(/\r?\n/); rest = parts.pop(); parts.forEach(line => bounded(entry.lines, line)); }); }
+      // The exit event can arrive before the last stdout/stderr chunks are read, so the exit is only reported once the pipes have
+      // drained ('close'), or after a short grace period when they never close. Otherwise the last log lines would be missing.
+      const tails = [];
+      const flushTails = () => { for (const tail of tails) { if (tail.rest) bounded(entry.lines, tail.rest); tail.rest = ''; } };
+      entry.exited = new Promise(resolve => {
+        let settled = false, grace = null;
+        const finish = (code, exitSignal) => { if (settled) return; settled = true; clearTimeout(grace); flushTails(); entry.exit = {code, signal: exitSignal}; resolve(); report(); };
+        child.once('exit', (code, exitSignal) => { entry.exiting = true; grace = setTimeout(() => finish(code, exitSignal), 250); grace.unref?.(); });
+        child.once('close', (code, exitSignal) => finish(code, exitSignal));
+        child.once('error', error => { entry.error = redact(error.message); resolve(); report(); });
+      });
+      for (const stream of [child.stdout, child.stderr]) { const tail = {rest: ''}; tails.push(tail); stream?.on?.('data', chunk => { tail.rest += chunk; const parts = tail.rest.split(/\r?\n/); tail.rest = parts.pop(); parts.forEach(line => bounded(entry.lines, line)); }); }
       children.set(record.id, entry);
       return {state: 'running'};
     },
     async status(record) {
       const entry = children.get(record.id);
       if (!entry) return {state: ['running', 'starting', 'stopping'].includes(record.state) ? 'stopped' : record.state};
-      if (entry.child.exitCode === null && !entry.exit && !entry.error) return {state: 'running'};
+      if (entry.child.exitCode === null && !entry.exit && !entry.error || entry.exiting && !entry.exit) return {state: 'running'};
       return {state: 'stopped', exitCode: entry.exit?.code ?? entry.child.exitCode ?? null, exitSignal: entry.exit?.signal ?? null, errorText: entry.error ?? null};
     },
     async stop(record, {signal}) {

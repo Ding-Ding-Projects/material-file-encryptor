@@ -34,6 +34,8 @@ export function mountServerTargets(host, services = {}) {
     if (code === 'java-too-old') return fill(params?.where === 'host' ? 'Java {required} or newer is required on the host; Java {found} was found.' : 'Java {required} or newer is required; Java {found} was found.', params);
     if (code === 'exited') return fill('The server process exited with code {code}.', params);
     if (code === 'signal') return fill('The server process was ended by signal {signal}.', params);
+    if (code === 'crashed') return fill('The server process ended unexpectedly (exit code {code}).', params);
+    if (code === 'terminated') return fill('The server process was ended by another program (exit code {code}).', params);
     if (code === 'ended') return t('The server process ended on its own.');
     return fallback ?? '';
   }
@@ -45,6 +47,7 @@ export function mountServerTargets(host, services = {}) {
   }
   const reasonLabel = server => server.errorCode === 'java-too-old' ? fill('Needs Java {required}', server.errorParams)
     : server.errorCode === 'exited' ? fill('Exited with code {code}', server.errorParams) : server.errorCode === 'signal' ? fill('Ended by {signal}', server.errorParams)
+    : server.errorCode === 'crashed' ? t('Ended unexpectedly') : server.errorCode === 'terminated' ? t('Ended by another program')
     : server.errorCode === 'ended' ? t('Ended on its own') : server.errorCode === 'spawn' ? t('Could not run') : t('See the reason below');
 
   function button(parent, label, onClick, {kind = 'outlined', disabled = false, title = ''} = {}) {
@@ -179,6 +182,7 @@ export function mountServerTargets(host, services = {}) {
     for (const [label, value] of facts) panel.append(el('p', t(label) + ': ' + value));
     if (server.javaMajor) panel.append(el('p', t('Java required') + ': ' + server.javaMajor));
     if (server.error) { const note = el('p', failureText(server.errorCode, server.errorParams, localizeMessage(server.error))); note.setAttribute('role', 'alert'); panel.append(note); }
+    if (server.state === 'failed' && Number.isSafeInteger(server.exitCode)) panel.append(el('p', fill('Exit code: {code}', {code: server.exitCode}), 'server-exit-detail'));
     if (server.state === 'failed' && Array.isArray(server.lastLines) && server.lastLines.length) {
       panel.append(el('h4', t('Last log lines')));
       const lines = el('pre', server.lastLines.join('\n')); lines.setAttribute('tabindex', '0'); lines.setAttribute('aria-label', t('Last log lines')); panel.append(lines);

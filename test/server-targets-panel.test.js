@@ -240,3 +240,21 @@ test('a failed server shows a reason chip, a localized reason, the exit code and
   language.value = 'en'; await s.module.refresh(); s.module.setLanguage();
   assert.ok(chips().some(node => node.dataset.kind === 'reason' && node.textContent === 'Exited with code 1'));
 });
+
+test('an abnormal end shows readable text with the numeric exit code kept as a secondary line', async () => {
+  const language = {value: 'en'};
+  const base = backend().view({licenseAccepted: true, state: 'failed', exitCode: -1, errorCode: 'crashed', errorParams: {code: -1}, error: 'The server process ended unexpectedly (exit code -1).', lastLines: ['last']});
+  const s = scene({servers: [base]}, {getLanguage: () => language.value});
+  await flush();
+  const chips = () => s.host.querySelectorAll('span');
+  const text = () => s.host.querySelectorAll('p').map(node => node.textContent).join('\n');
+  assert.ok(chips().some(node => node.dataset.kind === 'reason' && node.textContent === 'Ended unexpectedly'));
+  assert.match(text(), /ended unexpectedly \(exit code -1\)/);
+  assert.match(text(), /Exit code: -1/);
+  s.fake.state.servers = [{...base, exitCode: 143, errorCode: 'terminated', errorParams: {code: 143}, error: 'x'}];
+  await s.module.refresh(); s.module.setLanguage();
+  assert.ok(chips().some(node => node.dataset.kind === 'reason' && node.textContent === 'Ended by another program'));
+  language.value = 'yue'; s.module.setLanguage();
+  assert.ok(chips().some(node => node.dataset.kind === 'reason' && node.textContent === '被其他程式終止'));
+  assert.match(text(), /結束代碼：143/);
+});

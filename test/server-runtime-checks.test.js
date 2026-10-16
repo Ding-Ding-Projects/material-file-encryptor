@@ -215,3 +215,40 @@ test('window close: no servers hides, a running server asks, and no close is eve
   assert.deepEqual([e.prevented, calls], [false, []], 'while shutting down the close goes through');
   assert.deepEqual([0, 1, 2, 9].map(closeChoiceFromResponse), ['hide', 'quit', 'cancel', 'cancel']);
 });
+
+test('an unsigned 32-bit exit code is shown as its signed value with a readable reason', async () => {
+  const cases = [[4294967295, -1, 'crashed'], [3221225786, -1073741510, 'terminated'], [143, 143, 'terminated'], [1, 1, 'exited']];
+  for (const [raw, signed, errorCode] of cases) {
+    const h = await harness({javaStderr: 'openjdk version "25.0.1" 2025-10-21'});
+    const server = await h.make({target: 'local-process', flavor: 'vanilla', version: '26.3'});
+    await h.call('acceptServerLicense', {serverId: server.serverId});
+    await h.call('startServer', {serverId: server.serverId});
+    h.spawn.calls[0].child.finish(raw);
+    await until(async () => (await h.find(server.serverId)).state === 'failed');
+    const failed = await h.find(server.serverId);
+    assert.deepEqual([failed.exitCode, failed.errorCode, failed.errorParams], [signed, errorCode, {code: signed}], 'code ' + raw);
+    assert.ok(!/4294967295|3221225786/.test(failed.error), 'the raw unsigned value is never shown');
+  }
+});
+
+test('the last log lines of a crashed server are the final lines before the exit, in order, including output that arrives just after the exit event', async () => {
+  const h = await harness({javaStderr: 'openjdk version "25.0.1" 2025-10-21'});
+  const server = await h.make({target: 'local-process', flavor: 'vanilla', version: '26.3'});
+  await h.call('acceptServerLicense', {serverId: server.serverId});
+  await h.call('startServer', {serverId: server.serverId});
+  const child = h.spawn.calls[0].child;
+  for (let i = 1; i <= 40; i++) child.stdout.write('line ' + i + '\n');
+  await tick();
+  child.finish(1);
+  child.stderr.write('late stderr line\n');
+  child.stdout.write('final partial line without newline');
+  await until(async () => (await h.find(server.serverId)).state === 'failed');
+  const lines = (await h.find(server.serverId)).lastLines;
+  assert.equal(lines.length, 20);
+  assert.ok(lines.includes('late stderr line'));
+  assert.ok(lines.includes('final partial line without newline'));
+  const numbered = lines.filter(line => /^line \d+$/.test(line)).map(line => Number(line.slice(5)));
+  assert.deepEqual(numbered, [...numbered].sort((a, b) => a - b), 'in order');
+  assert.equal(numbered.at(-1), 40, 'the newest numbered line is kept, not the oldest');
+  assert.ok(!lines.includes('line 1'));
+});
