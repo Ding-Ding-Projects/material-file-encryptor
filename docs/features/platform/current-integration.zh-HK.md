@@ -33,7 +33,7 @@
 | P1 | 額外受保護產品 OAuth 路徑沒有設定公開客戶端資料。 | `src/main/protected-forge-accounts.js`、`src/main/protected-forge-device-transport.js` | 由負責人提供已審閱設定。現有系統鑰匙圈登入是另一條路徑，不聲稱已即時登入。 |
 | P1 | 原生瀏覽器主機缺少已審閱安裝身分及登記。 | `src/main/browser-native-host.js`、`scripts/browser-native-registration.mjs` | 完成封裝及登記後才驗證真實擴充功能交接。 |
 | P2 | 伺服器啟動監管、執行環境、網絡／資源設定及租約 IPC 未整合；完整四目標管理及插件生命週期仍缺少。 | `src/renderer/features/server-manager/index.js` 明確只提供準備。 | 保留準備界線，沒有啟動伺服器或接受授權。 |
-| P2 | 固定工作流程標籤沒有動態執行器選擇。 | `.github/workflows/windows.yml` 使用 `runs-on: windows-2022`。 | 由負責人另行處理，此文件評估不修改工作流程。 |
+| P2 | 發佈工作流程已實作動態執行器選擇；真正揀中自架執行器仍未證實。 | `.github/workflows/windows.yml` 嘅 `select-runner` 工作同 `scripts/select-runner.mjs`，說明見[套件完整性](../desktop/package-integrity.zh-HK.md)。 | 固定回應測試通過；每次執行都會記錄實際退回託管映像。未見過閒置自架執行器。 |
 
 其他部分或未知項目保留原有有限理由。全部控制項引導、命令／搜尋覆蓋、進階外觀完整度、集合覆蓋、README 工時估計及外部操作記錄，尚未經完整定論審核。這些屬待審核範圍，不是假造的已確認缺失清單。
 

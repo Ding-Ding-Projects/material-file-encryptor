@@ -3,6 +3,12 @@
   "jobs": [
     {
       "workflow": ".github/workflows/windows.yml",
+      "job": "select-runner",
+      "inventory": ".github/workflows/windows.dependencies.json",
+      "record": "jobs.select-runner"
+    },
+    {
+      "workflow": ".github/workflows/windows.yml",
       "job": "windows",
       "inventory": ".github/workflows/windows.dependencies.json",
       "record": "jobs.windows"

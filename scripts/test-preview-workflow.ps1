@@ -12,7 +12,7 @@ Check (!(PublicationEnabled ($workflow.Replace("    branches: ['**']", '')))) 'u
 Check (!(PublicationEnabled ($workflow.Replace('      - name: Prepare and publish unique release', "      - name: Prepare and publish unique release`n        if: github.event_name == 'workflow_dispatch'")))) 'dispatch-only publication is rejected'
 Check (!(PublicationEnabled ($workflow.Replace("branches: ['**']", 'branches: [main]').Replace('    runs-on:', "    if: github.ref == 'refs/heads/main'`n    runs-on:")))) 'main-only delivery is rejected'
 Check ($workflow.Contains('required: false') -and $workflow.Contains('./scripts/check-publication-source.ps1 -ExpectedSourceCommit $env:EXPECTED_SOURCE_COMMIT')) 'optional source constraint is wired'
-Check ($workflow.Contains('run: build.bat /s') -and $workflow.Contains('run: build-installer.bat /s') -and $workflow.Contains('runs-on: windows-2022')) 'pinned Windows entrypoints retained'
+Check ($workflow.Contains('run: build.bat /s') -and $workflow.Contains('run: build-installer.bat /s') -and $workflow.Contains('runs-on: ${{ fromJSON(needs.select-runner.outputs.runner) }}') -and $workflow.Contains('runs-on: windows-2022')) 'Windows entrypoints retained with live runner selection and pinned promotion image'
 Check ($workflow -notmatch '(?im)^\s*run:.*(test|lint|typecheck)') 'workflow contains no quality test or lint steps'
 Check ($workflow.Contains('secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN') -and $workflow.Contains('actions: read')) 'release credential fallback and timing read permission retained'
 function SafeOutputs([string]$Text) {
@@ -62,12 +62,13 @@ Check (!(NormalRelease ($publisher.Replace('Assert (!$published.isDraft -and !$p
 
 function WorkflowJobsCovered([string]$Text, $Inventory) {
  $actual=@([regex]::Matches(($Text -split '(?m)^jobs:',2)[1], '(?m)^  ([a-z][a-z0-9_-]*):\s*$') | ForEach-Object { $_.Groups[1].Value })
- $required=@('windows','promote')
+ $required=@('select-runner','windows','promote')
  $toolsByJob=@{
+  'select-runner'=@('Node.js')
   windows=@('Windows PowerShell 5.1','cmd.exe','Git','GitHub CLI','Node.js','npm','pinned .NET SDK','7-Zip','NuGet','WinFsp packaging files')
   promote=@('Windows PowerShell >=5.1','Git','GitHub CLI','Node.js')
  }
- $markersByJob=@{windows=@('run: build.bat /s','run: build-installer.bat /s','. ./scripts/bootstrap.ps1');promote=@('. ./.github/scripts/bootstrap-promotion.ps1')}
+ $markersByJob=@{'select-runner'=@('actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020','run: node scripts/select-runner.mjs');windows=@('run: build.bat /s','run: build-installer.bat /s','. ./scripts/bootstrap.ps1');promote=@('. ./.github/scripts/bootstrap-promotion.ps1')}
  if ((($actual | Sort-Object) -join ',') -ne (($required | Sort-Object) -join ',')) { return $false }
  if ((($Inventory.jobs.PSObject.Properties.Name | Sort-Object) -join ',') -ne (($required | Sort-Object) -join ',')) { return $false }
  foreach ($job in $required) {

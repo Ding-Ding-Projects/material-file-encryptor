@@ -64,6 +64,14 @@ gh workflow run windows.yml --repo Ding-Ding-Projects/material-file-encryptor --
 
 固定的 Windows runner 執行 `build.bat /s` 同 `build-installer.bat /s`，取得缺少工具，並發佈未簽署 Squirrel setup、完整套件、RELEASES 及建置來源證明。交付標籤用 `v1.<run_number>.<run_attempt>`，係單調遞增數字序列，同記錄的應用程式／套件版本分開；現有標籤及版本永不覆寫。已發佈附件會下載並比較雜湊。說明連結工作流程，記錄 UTC 首個工作開始、發佈完成及所需時間。建置或發佈失敗後，安全輸出仍會保留。
 
+## 執行器選擇
+
+第一個 `select-runner` 工作會喺執行時決定建置工作喺邊度跑。`scripts/select-runner.mjs` 透過 REST API 讀取自架執行器清單：登記喺儲存庫嘅執行器，加上開放畀本儲存庫嘅組織執行器群組（揀選儲存庫嘅群組會檢查是否包括本儲存庫，不容許公開儲存庫嘅群組會略過）。只有上線、閒置而且帶齊所需標籤（預設 `self-hosted`、`Windows`、`X64`，可用 `RUNNER_REQUIRED_LABELS` 覆寫）嘅執行器才會被揀選。忙碌、離線同標籤唔符嘅執行器都會略過。建置工作透過 `runs-on: ${{ fromJSON(needs.select-runner.outputs.runner) }}` 取得結果。
+
+冇執行器合資格、權杖讀唔到清單，或者 API 失敗時，工作會揀固定嘅託管映像 `windows-2022` 並記錄原因。權杖按次序取 `RUNNER_INVENTORY_TOKEN`、`ORG_TOKEN` 同工作流程權杖其中第一個有嘅。讀取儲存庫執行器需要管理權限，所以工作流程權杖通常會退回託管映像。建置唔會等住離線標籤。工作流程冇 pull-request 觸發，所以自架執行器只可由獲授權嘅分支推送同手動派送到達。
+
+決定、原因、所需標籤同逐個執行器表格（狀態、忙碌旗標同略過原因）會寫入工作摘要，並以 `runner-selection-evidence` 附件保留 14 日。呢個只係容量證據。執行器嘅選擇唔係測試或驗證結果，而升級發佈工作仍用固定嘅託管映像。`node --test test/runner-selection.test.js` 用固定 API 回應涵蓋選擇、略過、標籤、退回同輸出格式，唔會連線 GitHub。
+
 ## PDF 除錯對照檔排除
 
 封裝只排除 `node_modules/pdf-lib/` 下面嘅 `.map` 檔案。執行模組同授權文件仍然包括，來源安裝亦保留上游除錯對照檔，所以執行期除錯會少咗呢啲上游來源對照資料。呢次主線基準調整保留現有資源清單。來源 `a0239c91d517ca06d9725f36dd76874f5ab33ece` 嘅確切根目錄組建退出 0，994 個保留 PDF 檔案全部符合來源雜湊，560 個對照檔已排除，五項抽出執行模組 PDF 檢查通過。現有封裝器排除 `yarn.lock` 係另一回事。精選 ASAR 雜湊同驗證限制見[公開證據](../../evidence/main-performance-20261012.json)。呢啲結果唔驗證已安裝或 GUI 行為。套件大小同應用程式速度分開記錄。

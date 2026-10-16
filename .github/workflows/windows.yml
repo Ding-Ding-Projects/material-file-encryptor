@@ -15,8 +15,36 @@ concurrency:
   group: windows-release-${{ github.run_id }}
   cancel-in-progress: false
 jobs:
+  select-runner:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      runner: ${{ steps.select.outputs.runner }}
+      kind: ${{ steps.select.outputs.kind }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.19.0'
+      - name: Select runner from live inventory
+        id: select
+        env:
+          RUNNER_INVENTORY_TOKEN: ${{ secrets.RUNNER_INVENTORY_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
+          REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+          RUNNER_EVIDENCE_DIRECTORY: ${{ runner.temp }}/runner-selection
+        run: node scripts/select-runner.mjs
+      - name: Preserve runner selection evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        continue-on-error: true
+        with:
+          name: runner-selection-evidence
+          path: ${{ runner.temp }}/runner-selection/runner-selection.json
+          if-no-files-found: warn
+          retention-days: 14
   windows:
-    runs-on: windows-2022
+    needs: select-runner
+    runs-on: ${{ fromJSON(needs.select-runner.outputs.runner) }}
     timeout-minutes: 45
     env:
       GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
