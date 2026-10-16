@@ -29,7 +29,7 @@ A loopback or other caller with no verified frame has no actor and is rejected. 
 
 School mode comes from the native application-data `shared-settings.json` file. Missing initial settings mean disabled; malformed, oversized or symbolic-link settings stop the operation. The renderer cannot override this value or a waiting deadline.
 
-The host uses `createForgeToolResolver(toolsDirectory)` and the trusted package's `forge-executables.json`. Every process invocation verifies the bundled executable's path and actual hash, then checks `git version 2.56.0.windows.2`. It never selects Git from PATH or accepts a renderer-supplied digest. Missing or changed tools stop recording. Packaged executable verification remains separate from a synthetic test executor.
+The host uses `createForgeToolResolver(toolsDirectory)` and the trusted package's `forge-executables.json`. Every process invocation verifies the bundled executable's path and actual hash, then checks `git version 2.56.0.windows.2`. It never selects Git from PATH or accepts a renderer-supplied digest. Missing or changed tools stop recording. The tools directory itself may be reached through an alias such as a junction, a redirected profile folder or a virtualized application-data path: the resolved real path of each executable must equal the resolved real tools directory joined with its pinned relative path, so a redirected executable file or inner folder is still rejected. Packaged executable verification remains separate from a synthetic test executor.
 
 ## Request and protected-store contract
 

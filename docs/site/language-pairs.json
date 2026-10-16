@@ -13,14 +13,14 @@
     {
       "source": "docs/features/access/access-host.md",
       "translation": "docs/features/access/access-host.zh-HK.md",
-      "sourceSha256": "6ee9845fe6370d9d9b853c436a978ceef166801d4a8bb7488977cbf23aac0bb6",
-      "translationSha256": "9b00b7d3ed00a06b21afa2240879a5dcf0b9ff8595da350910cd0059698435d5"
+      "sourceSha256": "781a16a32fad3729ed0272c4812f4739a71c299275b4a150b1cf3e3636be34f5",
+      "translationSha256": "6e524841c3b8c9d586f7ef253949d88d8b2d748575fd1cdc04f57be817e44713"
     },
     {
       "source": "docs/features/access/local-access.md",
       "translation": "docs/features/access/local-access.zh-HK.md",
-      "sourceSha256": "da05e177d8859e26e6d60b85b613afb0463984acf84cc0006aedb4d9876dc258",
-      "translationSha256": "b600d0a1a3536c51a20e5d73f92afb51aae82f54cec685417c2262c52e9043b1"
+      "sourceSha256": "f24426a3f88fe0744531f89c1d42ae82259ed5a1d62aba14f021c8a993ddf4b7",
+      "translationSha256": "ce7c414b4c664d3c9ccd784e69dd95598f09af13c51f1bd9ba5428274e35cd27"
     },
     {
       "source": "docs/features/access/README.md",
