@@ -44,6 +44,7 @@
         "collapse-filters",
         "accessibility-sizing",
         "functional-ui",
+        "onboarding-wizard",
         "tabs",
         "regex-search",
         "command-palette",
@@ -51,6 +52,7 @@
         "menu-shortcuts",
         "rich-controls",
         "guided-forms",
+        "info-icon-guidance",
         "settings-explanations",
         "blank-editors",
         "super-confirmation",
@@ -898,6 +900,24 @@
       "proofs": {}
     },
     {
+      "id": "desktop:document:docs/features/interface/info-icon-guidance",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/info-icon-guidance",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/interface/info-icon-guidance.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/info-icon-guidance.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "desktop:document:docs/features/interface/local-personalization",
       "family": "desktop",
       "route": "src/renderer/index.html",
@@ -1128,6 +1148,24 @@
       "route": "src/renderer/index.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/interface/settings-guidance.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/interface/setup-guide",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/setup-guide",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/interface/setup-guide.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/setup-guide.zh-HK",
       "template": "required-families",
       "proofs": {}
     },
@@ -2541,6 +2579,15 @@
       "route": "src/renderer/index.html",
       "owner": "src/renderer/app.js",
       "selector": "#view-ollama",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:view-onboarding",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/app.js",
+      "selector": "#view-onboarding",
       "template": "required-families",
       "proofs": {}
     },
@@ -4147,6 +4194,42 @@
       "proofs": {}
     },
     {
+      "id": "site:article:docs/features/interface/info-icon-guidance.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--info-icon-guidance.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/info-icon-guidance.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--interface--info-icon-guidance.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/info-icon-guidance.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--info-icon-guidance.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/info-icon-guidance.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--interface--info-icon-guidance.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:article:docs/features/interface/local-personalization.md",
       "family": "site",
       "route": "articles/docs--features--interface--local-personalization.html",
@@ -4609,6 +4692,42 @@
       "id": "site:article:docs/features/interface/settings-guidance.zh-HK.md:preferences",
       "family": "site",
       "route": "articles/docs--features--interface--settings-guidance.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/setup-guide.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--setup-guide.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/setup-guide.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--interface--setup-guide.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/setup-guide.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--setup-guide.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/setup-guide.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--interface--setup-guide.zh-HK.html",
       "owner": "docs/site/preferences.js",
       "selector": "#preferences-dialog",
       "template": "required-families",
@@ -8152,6 +8271,24 @@
       "proofs": {}
     },
     {
+      "id": "site:workspace:document:docs/features/interface/info-icon-guidance",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/info-icon-guidance",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/interface/info-icon-guidance.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/info-icon-guidance.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "site:workspace:document:docs/features/interface/local-personalization",
       "family": "site",
       "route": "workspace.html",
@@ -8382,6 +8519,24 @@
       "route": "workspace.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/interface/settings-guidance.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/interface/setup-guide",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/setup-guide",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/interface/setup-guide.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/setup-guide.zh-HK",
       "template": "required-families",
       "proofs": {}
     },
@@ -9730,6 +9885,6 @@
   "currentAssessment": {
     "manifest": "contracts/feature-delivery.json",
     "baseline": "5ea562423e90565e582cac67982aca965898e436",
-    "scope": "315 family assessment rows, including 105 independent extension rows. Concrete surface verdicts remain unverified."
+    "scope": "321 family assessment rows, including 107 independent extension rows. Concrete surface verdicts remain unverified."
   }
 }

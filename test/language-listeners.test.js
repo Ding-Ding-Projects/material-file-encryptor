@@ -11,7 +11,7 @@ test('views that cache text are relabelled after the preferences hold the new la
   assert.ok(apply.indexOf('preferences.language') < apply.indexOf('notifyLanguageListeners()'));
 });
 
-test('browser pairing and server preparation use the shared language subscription', () => {
-  assert.equal((source.match(/subscribeLanguage,/g) || []).length, 2);
+test('browser pairing, server preparation and the setup guide use the shared language subscription', () => {
+  assert.equal((source.match(/subscribeLanguage,/g) || []).length, 3);
   assert.doesNotMatch(source, /subscribeLanguage:callback=>localSettings\.subscribe/);
 });

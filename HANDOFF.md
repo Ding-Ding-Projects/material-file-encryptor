@@ -1,3 +1,20 @@
+## Information icons and setup guide, 2026-10-16
+
+Scope: the `info-icon-guidance` and `onboarding-wizard` required features, tracked on desktop, site and extension (107 families, 321 rows). Branch `feature/info-icons-onboarding`.
+
+What exists:
+- One authored inventory per surface (`src/shared/local-ux/info-icon-*.js`): desktop 63 explanations and 6 exemptions, website 22 and 7, extension popup 15, extension workspace 142 and 3. Each row has a purpose, effects, default, example, guided steps and an isolated sample, in English and Cantonese. `docs/features/interface/info-icon-guidance.md` and its twin are generated from them with `node scripts/generate-info-icon-article.mjs`; a test fails when they are stale.
+- `mountInfoIcons` places the icon immediately before its target and keeps the pair together in a wrapping flex row. The guided steps end by moving focus to the real control; nothing operates it. `probeInfoIcons` reports a missing icon, a broken target binding, a missing keyboard action and a missing panel as separate codes, and the guard test proves each one independently.
+- Coverage tests read each page's markup and fail for an unexplained control or a stale selector. The extension gets `vendor/guidance.js` from `scripts/browser-extension-guidance-entry.js`.
+- The setup guide (`src/renderer/features/onboarding/`): model with saved progress, view, copy, styles. It uses the existing preference, WinFsp, drive dialog, two-key confirmation and pairing code paths. `docs/features/interface/setup-guide.md` and its twin describe it.
+- The wizard is desktop only: the site and extension rows are not applicable (new `DESKTOP_ONLY` rule in `feature-delivery.mjs`).
+
+Verification done: the new source tests, the documentation and feature-delivery tests, `node scripts/audit-material-motion.mjs` at 0 findings, and `validateFeatureDelivery` at 0 problems. A headless Chromium run of the real desktop renderer against a stubbed bridge, the website home page and the extension markup mounted every icon with no console error, opened the guide on first launch and found one real fault (the feature timer allow-list lacked the new view id, fixed). That run used stubs, so it is not built-app evidence and no capture was kept in the repository.
+
+Not done, honestly: controls created by feature modules after start-up have no icon; there is no installed-build interaction or visual capture of the icons or the guide; the guide's driver install, drive creation and pairing have not been run on a real device; layout of the icons in every language, theme and scale tuple is unverified.
+
+Counts now: desktop 98 unverified and 9 not applicable; site 97 and 10; extension 97 and 10.
+
 ## Extension workflows, installed proof and motion audit, 2026-10-15
 
 No required-feature row is missing on any surface any more: desktop, site and extension each have 96 unverified and 9 not applicable rows. Unverified means the workflow exists and is tested, but has no complete installed proof yet.

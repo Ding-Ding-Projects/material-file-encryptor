@@ -1,0 +1,30 @@
+/* Setup guide: a Material surface with a progress bar, a step list and one panel per step. */
+.onboarding{display:grid;gap:16px;max-inline-size:720px;min-inline-size:0;padding:16px;margin-inline:auto}
+.onboarding-header{display:grid;gap:8px;min-inline-size:0}
+.onboarding-header h2{margin:0;font:var(--md-sys-typescale-headline-small-font,inherit);overflow-wrap:anywhere;outline:3px solid transparent;outline-offset:3px;border-radius:4px;transition:outline-color var(--md-sys-motion-duration-short3,150ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1))}
+.onboarding-header h2:focus-visible{outline-color:var(--md-sys-color-primary)}
+.onboarding-count{margin:0;color:var(--md-sys-color-on-surface-variant)}
+.onboarding md-linear-progress{inline-size:100%}
+.onboarding-steps{display:flex;flex-wrap:wrap;gap:4px;list-style:none;margin:0;padding:0}
+.onboarding-steps li{min-inline-size:0}
+.onboarding-step-chip{min-block-size:48px;max-inline-size:100%;transition:background-color var(--md-sys-motion-duration-short3,150ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1))}
+.onboarding-step-chip[aria-current="step"]{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);border-radius:16px}
+.onboarding-step-chip[data-state="done"]::part(label),.onboarding-step-chip[data-state="skipped"]::part(label){color:var(--md-sys-color-on-surface-variant)}
+.onboarding-panel{display:grid;gap:12px;min-inline-size:0;padding:16px;border:1px solid var(--md-sys-color-outline-variant);border-radius:16px;background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface);overflow-wrap:anywhere;animation:onboarding-forward var(--md-sys-motion-duration-medium2,300ms) var(--md-sys-motion-easing-emphasized-decelerate,cubic-bezier(.05,.7,.1,1)) both}
+.onboarding-panel[data-direction="back"]{animation-name:onboarding-back}
+.onboarding-panel[data-direction="none"]{animation-name:onboarding-fade}
+.onboarding-panel p,.onboarding-panel ol,.onboarding-panel ul{margin:0}
+.onboarding-overview,.onboarding-status-list,.onboarding-summary{padding-inline-start:24px}
+.onboarding-field{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.onboarding-field md-outlined-text-field{min-inline-size:0;inline-size:100%}
+.onboarding-field .onboarding-help{grid-column:1/-1}
+.onboarding-panel md-outlined-select{inline-size:100%;max-inline-size:360px}
+.onboarding-help,.onboarding-persistence{margin:0;font-size:.875em;color:var(--md-sys-color-on-surface-variant)}
+.onboarding-result{min-block-size:1.5em}
+.onboarding-result[data-ok="false"]{color:var(--md-sys-color-error)}
+.onboarding-actions,.onboarding-actions-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.onboarding-actions md-filled-button,.onboarding-actions md-outlined-button,.onboarding-actions md-text-button,.onboarding-actions-row md-filled-button,.onboarding-actions-row md-outlined-button{min-block-size:48px}
+@keyframes onboarding-forward{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes onboarding-back{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+@keyframes onboarding-fade{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.onboarding-panel{animation:none}.onboarding-step-chip,.onboarding-header h2{transition:none}}

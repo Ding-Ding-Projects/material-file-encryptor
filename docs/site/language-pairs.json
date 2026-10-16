@@ -221,6 +221,12 @@
       "translationSha256": "2eccf0921db7287a9e110ec3c23dbc41968d490d59db4d88f276cfa681510f60"
     },
     {
+      "source": "docs/features/interface/info-icon-guidance.md",
+      "translation": "docs/features/interface/info-icon-guidance.zh-HK.md",
+      "sourceSha256": "e0fce3539191dfcdb8b5be995e9c941dd9b18a13ff5de6f13931e8628663c2a0",
+      "translationSha256": "43c0b0a6823359224555f0e58b7b45566fb27799b39f08197c679f33a2692df1"
+    },
+    {
       "source": "docs/features/interface/local-personalization.md",
       "translation": "docs/features/interface/local-personalization.zh-HK.md",
       "sourceSha256": "cecd944bb5d8fe9333fe456af243b310480e6977173872194494f4f781b5560c",
@@ -283,8 +289,8 @@
     {
       "source": "docs/features/interface/README.md",
       "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "7ccacfc8dff1799a4cab66908c379892502b88f5f6223512e1825aec8d20b272",
-      "translationSha256": "8c0012f3f08d36f37f484ef413c25aa74ed1b8040fdede52b198b5e1d301ff27"
+      "sourceSha256": "1c0fc118811822c5b1e07117c8fd61743b61bb3749516b8dcc9adbca920a3fb7",
+      "translationSha256": "8f6d4cfc3b810f00492fc7b6138b6c1f155bac55b0a6d90e865650b6636714d8"
     },
     {
       "source": "docs/features/interface/settings-completeness.md",
@@ -297,6 +303,12 @@
       "translation": "docs/features/interface/settings-guidance.zh-HK.md",
       "sourceSha256": "44c760739960bc49e79193fd2c2bbe0182abd3ec44d9ed76e9103cdc1927c808",
       "translationSha256": "1a8b9ed617698f86a47bb74c51bc45ada2cdb40568680397a69651e103aebf44"
+    },
+    {
+      "source": "docs/features/interface/setup-guide.md",
+      "translation": "docs/features/interface/setup-guide.zh-HK.md",
+      "sourceSha256": "be2d5062e072f521ab1a26eea02434d4cd002c230553e01d935674de4c703755",
+      "translationSha256": "34d765713c20e2f59331608ab0fc49a88370a5e1487a7eb583e9d6ea47f23f26"
     },
     {
       "source": "docs/features/interface/shared-compositions.md",

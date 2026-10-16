@@ -43,3 +43,13 @@
 @media(prefers-reduced-motion:reduce){.wording-drop-overlay,.wording-drop-overlay__card{transition:none}.wording-celebration[data-phase=in] .wording-celebration__headline,.wording-celebration[data-phase=out] .wording-celebration__headline{animation:none;box-shadow:none}}
 .wording-notice{position:fixed;inset-block-end:16px;inset-inline:16px;z-index:2147483001;margin:0 auto;box-sizing:border-box;max-inline-size:480px;padding:12px 16px;border-radius:4px;background:var(--md-sys-color-inverse-surface,#322f35);color:var(--md-sys-color-inverse-on-surface,#f5eff7);pointer-events:none;animation:wording-level-in var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1)) both}
 @media(prefers-reduced-motion:reduce){.wording-notice{animation:none}}
+
+/* Information icons: one compact icon directly before each capable control; an open explanation takes the full row. */
+mfe-control-guidance[data-info-icon]{display:inline-flex;vertical-align:middle;position:relative;max-inline-size:100%;min-inline-size:0;--guidance-tooltip-position:absolute;--guidance-tooltip-start:0;--guidance-tooltip-end:auto;--guidance-tooltip-width:max-content;--guidance-tooltip-max-width:min(18rem,80vw)}
+mfe-control-guidance[data-info-icon][data-open]{display:block;flex:1 1 100%;inline-size:100%}
+.actions>mfe-control-guidance[data-info-icon][data-open]{flex-basis:100%}
+[data-info-icon-pair]{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px;max-inline-size:100%;min-inline-size:0}
+[data-info-icon-pair]:has(>mfe-control-guidance[data-open]){flex:1 1 100%}
+/* An icon follows its control: when the control is hidden, its icon is hidden with it. */
+mfe-control-guidance[data-info-icon]:has(+[hidden]){display:none}
+[data-info-icon-pair]:has(>[hidden]:not(mfe-control-guidance)){display:none}

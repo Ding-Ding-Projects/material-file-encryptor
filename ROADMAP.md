@@ -1,3 +1,13 @@
+## Information icons and setup guide, 2026-10-16
+
+- [x] Track the information icon and setup wizard identities in the required-feature inventory (107 families per surface) with an honest verdict on each surface.
+- [x] Give every control in the desktop shell markup, the website home page and preferences dialog, and the extension popup and workspace an information icon with a control-specific explanation, guided steps and an isolated sample.
+- [x] Add a guard test that removes the icon, the target binding, the keyboard action and the contextual panel one at a time and requires each to fail, plus markup-scanning coverage tests for each page.
+- [x] Add a desktop setup guide with real actions, progress, Back and Next, skipping, saved progress, keyboard movement and three language modes.
+- [ ] Give the controls that feature modules create after start-up (file rows, history and recycle rows, access, converter, local models, server manager, storage, updates, status, and the extension notes, tickets, models, publishing, servers and converter panels) their own icons.
+- [ ] Capture the icons and the setup guide from the installed build in the language, theme and scale matrix; none is recorded.
+- [ ] Run the setup guide on a real device: install the driver, create and unlock a drive, and show a pairing code.
+
 ## Website usability, 2026-10-15
 
 - [x] Independently review the scoped navigation, localized search, and article-reading design.

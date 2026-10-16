@@ -7,6 +7,10 @@ export function confirmSiteDestructive(id,{affected,language=()=>'en'}={}){
   return confirmDestructiveAction(document.body,id,{affected,getLanguage:language});
 }
 import {cantonese,localized} from './locales.js';
+import {createInfoIconController} from '../../src/shared/surface/info-icon-controller.js';
+import {SITE_INFO_ICON_INVENTORY} from '../../src/shared/local-ux/info-icon-site.js';
+import {INFO_ICON_COPY} from '../../src/shared/local-ux/info-icon-inventory.js';
+import {GUIDANCE_COPY} from '../../src/shared/surface/control-guidance.js';
 import {mountSurfaceFoundation} from '../../src/renderer/features/shell/index.js';
 import {element, text, localized as localizedLabel} from '../../src/shared/surface/registry.js';
 import '../../src/shared/surface/search.js';
@@ -188,7 +192,14 @@ export function mountSiteFoundation({document,storage,getPreferences,onPreferenc
  settings=commands.filter(command=>command.id.startsWith('setting:'));foundation.palette.setCommands(visibleCommands());
  const accessLanguage=event=>visitorAccess.setLanguage(schoolEnabled?'en':event.detail.language);window.addEventListener('site-language',accessLanguage);
  fetch(new URL('site-provenance.json',base),{credentials:'omit',cache:'no-store'}).then(response=>{if(!response.ok)throw Error('Build provenance unavailable');return response.json();}).then(value=>foundation.setProvenance(value)).catch(()=>foundation.setProvenance(null));
- const destroy=()=>{if(destroyed)return;destroyed=true;++generation;++settingsGeneration;cancelAnimationFrame(anchorFrame);toolsPanel.removeEventListener('keydown',toolsEscape);foundation.palette.shadowRoot.removeEventListener('closed',paletteReturn,true);foundation.shell.openNewTab=newTab;foundation.shell.activateView=activateView;toolsButton.remove();toolsPanel.remove();for(const restore of temporaryFocus.values())restore();visitorPersonalization?.destroy();visitorAccess?.destroy();window.removeEventListener('site-language',accessLanguage);foundation.destroy();window.removeEventListener('site-language',handleLanguage);window.removeEventListener('site-shared-settings',shared);window.removeEventListener('hashchange',hash);document.removeEventListener('click',anchorClick);settingsSearch.removeEventListener('search-change',refreshSettings);dialog.removeEventListener('change',changed);window.removeEventListener('pagehide',pagehide);};
+ // Each capable website control gets its own compact information icon immediately before it. The icons explain and
+ // demonstrate with an isolated sample; they never press a control or read what a visitor typed into one.
+ let infoLanguage=language();
+ const infoText=source=>{const yue=INFO_ICON_COPY[source]||GUIDANCE_COPY[source]||cantonese[source]||source;return infoLanguage==='yue'?yue:infoLanguage==='bilingual'&&yue!==source?`${source} / ${yue}`:source;};
+ const infoIcons=createInfoIconController(document,{inventory:SITE_INFO_ICON_INVENTORY,t:infoText,getLanguage:()=>infoLanguage,pair:true,registerCommands:rows=>foundation.registerCommands(rows)});
+ const infoIconLanguage=event=>{infoLanguage=schoolEnabled?'en':event.detail.language;infoIcons.setLanguage(infoLanguage);};
+ window.addEventListener('site-language',infoIconLanguage);
+ const destroy=()=>{if(destroyed)return;destroyed=true;++generation;++settingsGeneration;window.removeEventListener('site-language',infoIconLanguage);infoIcons.destroy();cancelAnimationFrame(anchorFrame);toolsPanel.removeEventListener('keydown',toolsEscape);foundation.palette.shadowRoot.removeEventListener('closed',paletteReturn,true);foundation.shell.openNewTab=newTab;foundation.shell.activateView=activateView;toolsButton.remove();toolsPanel.remove();for(const restore of temporaryFocus.values())restore();visitorPersonalization?.destroy();visitorAccess?.destroy();window.removeEventListener('site-language',accessLanguage);foundation.destroy();window.removeEventListener('site-language',handleLanguage);window.removeEventListener('site-shared-settings',shared);window.removeEventListener('hashchange',hash);document.removeEventListener('click',anchorClick);settingsSearch.removeEventListener('search-change',refreshSettings);dialog.removeEventListener('change',changed);window.removeEventListener('pagehide',pagehide);};
  const pagehide=event=>{if(!event.persisted)destroy();};window.addEventListener('pagehide',pagehide);
  return {...foundation,visitorAccess,visitorPersonalization,destroy};
 }

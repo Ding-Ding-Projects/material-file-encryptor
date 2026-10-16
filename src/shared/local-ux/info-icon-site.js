@@ -1,0 +1,97 @@
+import {buildSurfaceInventory, exemptRow} from './info-icon-inventory.js';
+
+/**
+ * Information icons for the controls of the public website pages: the home
+ * page, the shared documentation search and the preferences dialog that every
+ * generated page carries. Plain links are navigation, not capable controls,
+ * and are listed as exempt in the feature article. Selectors stay limited to
+ * an id, a tag with one attribute or a single attribute so the independent
+ * coverage check can match them without a browser.
+ */
+const rows = [
+  ['#menu-toggle', 'button', 'Open navigation', '開啟導覽選單',
+    'Open or close the page navigation menu on narrow screens.', '在窄螢幕上開啟或關閉頁面導覽選單。',
+    'The list of page sections appears or hides. No page content changes.', '頁面區段清單會顯示或隱藏，頁面內容不會改變。'],
+  ['#explore-toggle', 'button', 'Explore', '探索',
+    'Open or close the list that leads to the documentation library, wiki, workspace and capture gallery.', '開啟或關閉通往文件總覽、維基、工作區和畫面紀錄集的清單。',
+    'The extra links appear or hide. Nothing is loaded until you follow one.', '額外連結會顯示或隱藏，在你跟隨連結之前不會載入任何內容。'],
+  ['#preferences-open', 'button', 'Website preferences', '網站偏好設定',
+    'Open the dialog for appearance, language, message tone and personal vocabulary on this website.', '開啟設定本網站外觀、語言、訊息語氣和個人用詞的對話框。',
+    'The dialog opens over the page. Settings are kept in this browser only.', '對話框會在頁面上開啟，設定只保存在這個瀏覽器。'],
+  ['[data-operation="write"]', 'button', 'Write', '寫入',
+    'Show the animated example of what happens when a file is saved to the drive.', '顯示把檔案儲存到磁碟時所發生事情的動畫範例。',
+    'The diagram plays the write path. It is a concept demonstration; no file is processed.', '圖表會播放寫入流程，這只是概念示範，不會處理任何檔案。',
+    {key: 'operation-write'}],
+  ['[data-operation="read"]', 'button', 'Read', '讀取',
+    'Show the example of what happens when a file is opened from the drive.', '顯示從磁碟開啟檔案時所發生事情的範例。',
+    'The diagram plays the read path, with the decryption step highlighted. Nothing is read from your computer.', '圖表會播放讀取流程並突顯解密步驟，不會讀取你電腦上的任何內容。',
+    {key: 'operation-read'}],
+  ['[data-operation="offline"]', 'button', 'Offline', '離線',
+    'Show the example of reading a file when the storage cannot be reached.', '顯示儲存位置連接不到時讀取檔案的範例。',
+    'The result depends on the example availability you chose: a complete cache works, an incomplete one does not.', '結果取決於你選擇的範例可用情況：快取完整可以讀取，不完整則不可以。',
+    {key: 'operation-offline'}],
+  ['[data-operation="startup"]', 'button', 'Startup', '啟動',
+    'Show the example of what happens when the app starts with Windows.', '顯示程式隨 Windows 啟動時所發生事情的範例。',
+    'The diagram explains the start-up and optional automatic unlock steps. Nothing is installed.', '圖表會說明啟動和可選自動解鎖的步驟，不會安裝任何東西。',
+    {key: 'operation-startup'}],
+  ['[data-operation="resplit"]', 'button', 'Resplit', '重新分割',
+    'Show the example of rewriting existing files into a different part size.', '顯示把現有檔案重寫成不同分段大小的範例。',
+    'The diagram and the size example below it update. Your own files are never touched.', '圖表和下方的大小範例會更新，你自己的檔案完全不會被觸碰。',
+    {key: 'operation-resplit'}],
+  ['#access-mode', 'choice', 'Example availability', '範例可用情況',
+    'Choose whether the example assumes the storage is reachable, the cache is complete or the cache is incomplete.', '選擇範例假設儲存位置可連接、快取完整，還是快取不完整。',
+    'The result text under the diagram changes to match. It describes an example, not your files.', '圖表下方的結果文字會跟著改變，描述的是範例而不是你的檔案。'],
+  ['#part-limit', 'number', 'Maximum encrypted part size', '加密分段大小上限',
+    'Type a part size to see how a 16 MiB example file would be split.', '輸入分段大小，查看一個 16 MiB 範例檔案會被如何分割。',
+    'The part count in the example updates. A value that is too large or not a number shows a message.', '範例的分段數量會更新；數值過大或不是數字會顯示訊息。',
+    {min: 1, max: 1000, sample: 10, integer: false, default: ['10 in the chosen unit', '以所選單位計為 10']}],
+  ['#part-limit-clear', 'button', 'Clear maximum encrypted part size', '清除分段大小',
+    'Empty the part size field so you can type a new value.', '清空分段大小欄位，方便輸入新數值。',
+    'The field becomes empty and the example shows a prompt instead of a result.', '欄位會變成空白，範例會顯示提示而不是結果。'],
+  ['#part-unit', 'choice', 'Part size unit', '分段大小單位',
+    'Choose whether the example part size is in KiB, MiB or GiB.', '選擇範例分段大小使用 KiB、MiB 或 GiB。',
+    'The unit decides how the number is read in the example. Real vaults are unaffected.', '單位決定範例如何解讀數字，真正的磁碟不受影響。'],
+  ['#workflow-play', 'button', 'Play walkthrough', '播放逐步示範',
+    'Play the conceptual workflow one step after another, or advance one step at a time.', '依次播放概念流程，或每次前進一步。',
+    'The steps highlight in order. When your device asks for reduced motion it advances one step per press instead.', '步驟會按次序突顯；如果裝置要求減少動態，則每按一次前進一步。'],
+  ['#workflow-replay', 'button', 'Replay workflow', '重播流程',
+    'Start the conceptual workflow again from the first step.', '從第一步重新開始播放概念流程。',
+    'The highlight returns to the start and plays again. Nothing outside the diagram changes.', '突顯會回到開頭再次播放，圖表以外的內容不會改變。'],
+  ['#doc-search', 'search', 'Search documentation', '搜尋文件',
+    'Type words to narrow the guides and articles to those that mention them.', '輸入文字，把指南和文章縮窄為提到這些文字的項目。',
+    'Guides that do not match are hidden until you clear the search. Nothing is sent anywhere.', '不符合的指南會隱藏，直到你清除搜尋；不會傳送任何內容。'],
+  ['#search-clear', 'button', 'Clear documentation search', '清除文件搜尋',
+    'Empty the documentation search so every guide is listed again.', '清空文件搜尋，重新列出所有指南。',
+    'The search text is removed and all guides return.', '搜尋文字會被移除，所有指南重新顯示。'],
+  ['#preview-download', 'button', 'Download the preview', '下載預覽版',
+    'Download the verified preview installer once a release has been published and checked.', '待版本發布並通過檢查後，下載已驗證的預覽版安裝程式。',
+    'It stays disabled until a release record exists. Nothing is downloaded before you press it.', '在有版本記錄之前會保持停用，在你按下之前不會下載任何東西。'],
+  ['#preferences-footer', 'button', 'Website preferences (footer)', '網站偏好設定（頁尾）',
+    'Open the same preferences dialog from the page footer.', '從頁尾開啟同一個偏好設定對話框。',
+    'The dialog opens. It is the same set of settings as the button in the header.', '對話框會開啟，內容和頁首按鈕開啟的相同。'],
+  ['#preferences-close', 'button', 'Close preferences', '關閉偏好設定',
+    'Close the preferences dialog and return to the page.', '關閉偏好設定對話框並返回頁面。',
+    'Your choices are already applied; closing only hides the dialog.', '你的選擇已經套用，關閉只是隱藏對話框。'],
+  ['#vocabulary-file', 'file', 'Choose a vocabulary JSON file', '選擇自訂用詞 JSON 檔',
+    'Load your own wording replacements from a JSON file on this device.', '從這部裝置上的 JSON 檔案載入你自訂的用字取代。',
+    'The file is read in this browser only and never uploaded. Matching labels are replaced.', '檔案只會在這個瀏覽器內讀取，不會上傳，符合的標籤會被取代。'],
+  ['#vocabulary-reset', 'button', 'Reset vocabulary', '重設自訂用詞',
+    'Remove every wording replacement and go back to the default text.', '移除所有用字取代，恢復預設文字。',
+    'The default wording returns at once. Your original file is untouched.', '預設用字會立即恢復，你的原始檔案不受影響。'],
+  ['#page-tools-toggle', 'button', 'Page tools', '頁面工具',
+    'Open or close the page tools: tabs, command palette and notifications for this page.', '開啟或關閉本頁的頁面工具：分頁、指令面板和通知。',
+    'The tools panel appears or hides. Page content does not change.', '工具面板會顯示或隱藏，頁面內容不會改變。',
+    {runtime: true}]
+];
+
+const exemptions = [
+  exemptRow('#theme-select', 'A migration binding that the page hides at start-up. The visible control comes from the personalization panel, which carries its own registered explanation.', '網頁啟動時會隱藏的遷移用控制項。可見的控制項來自個人化面板，那裡已有自己的說明。'),
+  exemptRow('#language-select', 'A migration binding that the page hides at start-up. The visible control comes from the personalization panel, which carries its own registered explanation.', '網頁啟動時會隱藏的遷移用控制項。可見的控制項來自個人化面板，那裡已有自己的說明。'),
+  exemptRow('#emoji-toggle', 'A migration binding that the page hides at start-up. The visible control comes from the personalization panel, which carries its own registered explanation.', '網頁啟動時會隱藏的遷移用控制項。可見的控制項來自個人化面板，那裡已有自己的說明。'),
+  exemptRow('#success-tone', 'A migration binding that the page hides at start-up. The visible control comes from the personalization panel, which carries its own registered explanation.', '網頁啟動時會隱藏的遷移用控制項。可見的控制項來自個人化面板，那裡已有自己的說明。'),
+  exemptRow('#english-tone-reset', 'A migration binding that the page hides at start-up. The visible control comes from the personalization panel, which carries its own registered explanation.', '網頁啟動時會隱藏的遷移用控制項。可見的控制項來自個人化面板，那裡已有自己的說明。'),
+  exemptRow('#search-tone', 'A migration binding that the page hides at start-up. The visible control comes from the personalization panel, which carries its own registered explanation.', '網頁啟動時會隱藏的遷移用控制項。可見的控制項來自個人化面板，那裡已有自己的說明。'),
+  exemptRow('#cantonese-tone-reset', 'A migration binding that the page hides at start-up. The visible control comes from the personalization panel, which carries its own registered explanation.', '網頁啟動時會隱藏的遷移用控制項。可見的控制項來自個人化面板，那裡已有自己的說明。')
+];
+
+export const SITE_INFO_ICON_INVENTORY = buildSurfaceInventory('site', rows, exemptions);

@@ -21,7 +21,7 @@ Promotion retries retain their verified producer identity and check exact downlo
 
 The shared titlebar, main workspace, content panel, data table and selection toolbar now use registered components with their own structure, styles and connection lifecycle. Original record rows and action nodes remain in place. The combined source inventory and component checks pass 59 tests. The exact root build of composition candidate `4959f2af4a2ced2980b2a68d2ba9fb4056458e35` passed; its package contains 6,066 entries with zero privacy rejections. Bounded real captures found incomplete table focus visibility. A separately preserved inset-outline candidate exposes the sides and bottom, but its top remains covered by the header. Full rendered composition acceptance remains incomplete. Existing images retain their historical source and do not certify this newer candidate.
 
-The feature ledger now contains 315 assessments, preserving the original 210 desktop and documentation records and adding 105 independently scoped extension assessments. The extension records distinguish 35 unverified, 61 missing and nine inapplicable items. The combined catalogue declares 959 concrete surfaces and 230 public routes; these are inventory counts, not completed workflows.
+The feature ledger now contains 321 assessments: 107 feature families on each of the desktop, website and extension surfaces. Desktop has 98 unverified and 9 not applicable, the website 97 unverified and 10 not applicable, and the extension 97 unverified and 10 not applicable. The combined catalogue declares 1,075 concrete surfaces and 255 public routes; these are inventory counts, not completed workflows.
 
 Protected browser mediation has focused source and compiled synthetic pipe verification. Production profile authentication controls remain unavailable until their native callbacks and real extension interactions are implemented and accepted. [Shared compositions](docs/features/interface/shared-compositions.md) · [Extension assessments](docs/features/platform/extension-assessment.md) · [Protected mediation boundaries](docs/features/interface/protected-browser-mediation.md)
 
@@ -121,7 +121,7 @@ Package inspection also validates each ASAR file's declared SHA-256 and block ha
 
 ### Unfinished delivery and current images
 
-The historical inventory contains **105 required feature identifiers and 210 desktop/website rows**. It does not count completed features. The [goal](GOAL.md), [roadmap](ROADMAP.md) and [interface design](DESIGN.md) retain the outstanding controls, guidance, accessibility, language/theme/scale states and full visual matrix.
+The inventory contains **107 required feature identifiers and 214 desktop/website rows**. It does not count completed features. The [goal](GOAL.md), [roadmap](ROADMAP.md) and [interface design](DESIGN.md) retain the outstanding controls, guidance, accessibility, language/theme/scale states and full visual matrix.
 
 Two inspected source-bound documentation screenshots now appear below. Current native-product replacements and the full visual matrix remain pending.
 
@@ -524,22 +524,22 @@ The verification diagram is a path, not a claim that every step passed. Releases
 
 ## Project size and human-time estimate
 
-**Estimate, not a measurement:** writing this project by hand would plausibly take one person about **87.8 to 175.6 person-months** (1,756 to 3,512 working days). Nobody built it that way; this gives a sense of scale and is not a claim about effort, quality or value.
+**Estimate, not a measurement:** writing this project by hand would plausibly take one person about **85.3 to 170.7 person-months** (1,707 to 3,414 working days). Nobody built it that way; this gives a sense of scale and is not a claim about effort, quality or value.
 
 | Hand-written code | Files | Non-blank lines | Multiplier | Weighted lines |
 |---|---:|---:|---:|---:|
-| Application source (JavaScript) | 353 | 30,650 | 1 | 30,650 |
+| Application source (JavaScript) | 359 | 29,624 | 1 | 29,624 |
 | Native engine and drive adapter (C#) | 51 | 7,533 | 1.5 | 11,300 |
-| Styles and markup (CSS, HTML) | 23 | 1,060 | 1 | 1,060 |
-| Tests | 411 | 31,240 | 1 | 31,240 |
-| Build, release and tooling scripts | 134 | 13,547 | 1 | 13,547 |
-| **Total** | | **84,030** | | **87,797** |
+| Styles and markup (CSS, HTML) | 24 | 1,125 | 1 | 1,125 |
+| Tests | 414 | 29,781 | 1 | 29,781 |
+| Build, release and tooling scripts | 134 | 13,509 | 1 | 13,509 |
+| **Total** | | **81,572** | | **85,339** |
 
-**Arithmetic:** 87,797 weighted lines ÷ 50 lines per day = 1,756 days, and 87,797 ÷ 25 = 3,512 days; at 20 working days per month that is 87.8 to 175.6 person-months.
+**Arithmetic:** 85,339 weighted lines ÷ 50 lines per day = 1,707 days, and 85,339 ÷ 25 = 3,414 days; at 20 working days per month that is 85.3 to 170.7 person-months.
 
 **Assumptions:** 25 (conservative) to 50 (optimistic) non-blank lines per 8-hour day of finished, reviewed, debugged code, a common industry rule of thumb rather than a measurement of this team. The native engine counts at 1.5 times because encrypted storage and a filesystem adapter are harder than their size suggests. Part of the application source is written as long lines, so line counts understate it. Design, research and review time beyond the test code are not included.
 
-**Left out, exactly as the line count leaves them out:** Markdown prose (counted separately, not estimated) (259 files); images, JSON data and catalogues, and other non-code files (229 files); design reference prototypes (51 files); vendored, bundled or build-output trees (16 files); lockfiles (1 files). Markdown prose (13,224 non-blank lines in 259 files) is not estimated.
+**Left out, exactly as the line count leaves them out:** Markdown prose (counted separately, not estimated) (263 files); images, JSON data and catalogues, and other non-code files (229 files); design reference prototypes (51 files); vendored, bundled or build-output trees (16 files); lockfiles (1 files). Markdown prose (16,879 non-blank lines in 263 files) is not estimated.
 
 Reproduce it with `node scripts/human-time-estimate.mjs` (prints the same table from `git ls-files`) and refresh this block with `node scripts/human-time-estimate.mjs --write`. The block may lag the tree by up to 10 percent before `--check` and the test fail.
 
@@ -578,6 +578,10 @@ a step, not a habit.
 <summary>Guidance playgrounds, responsive documentation controls and the table focus ring</summary>
 
 The current candidate replaces persistent guidance text entries with accessible information icons and isolated worked examples. All 88 static settings descriptors have authored practice fixtures; scheduled scalar values, clear actions and snapshot operations have separate synthetic examples. Other control families and the complete built acceptance inventory remain unfinished. See [guidance playgrounds](docs/features/interface/guidance-playgrounds.md) for exact boundaries and remaining work.
+
+Every capable control in the desktop shell markup, on the website's home page and shared preferences dialog, and in the browser extension popup and workspace now has its own compact information icon immediately before it. The icon opens a control-specific explanation, guided steps and an isolated worked sample that never starts the real operation or reads a live value. A guard test removes the icon, the target binding, the keyboard action and the contextual panel one at a time and requires each removal to fail, and a coverage test reads each page's markup so an unexplained control fails. Controls that feature modules create after start-up are not covered yet, and no built-app capture of these icons is recorded. See [information icons](docs/features/interface/info-icon-guidance.md).
+
+The desktop app also has a first-run [setup guide](docs/features/interface/setup-guide.md): language and appearance, a read-only WinFsp and server runtime check, naming a drive and opening the existing create or unlock dialog, and showing the browser pairing code. It saves progress, can be skipped, works from the keyboard, and reopens from Help or the command palette. Its source checks use fakes for the preference, driver, dialog and pairing services; a built-app run and capture of the first-run flow are not recorded yet.
 
 Public document controls now prepare real Material Web components before listeners and localization snapshots. The navigation menu follows its measured header height, and tab information panels use the actual navigation scrollport width. Focused source checks pass; two representative source-bound documentation captures are inspected and inventoried. The full language/theme/scale matrix and live publication checks remain pending. Existing historical images retain their original provenance.
 

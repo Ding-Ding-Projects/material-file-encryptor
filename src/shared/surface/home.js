@@ -49,6 +49,7 @@ export const HOME_CATALOG = Object.freeze([
   ['documentation', text('Read the full documentation offline.', '離線閱讀完整文件。')],
   ['changelog', text('See what changed in each release.', '睇每個版本改咗啲乜。')],
   ['browser-pairing', text('Show a one-time code to link the browser extension to this drive.', '顯示一次性代碼，將瀏覽器擴充功能連結到呢個磁碟。')],
+  ['onboarding', text('Set up language, requirements, your drive and a paired browser, step by step.', '逐步設定語言、系統需要、你嘅磁碟同已配對嘅瀏覽器。')],
   ['connection', text('Pair the browser extension and check the link.', '配對瀏覽器擴充功能同檢查連線。')]
 ]);
 
