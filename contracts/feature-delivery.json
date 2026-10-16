@@ -9466,7 +9466,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
+      "reason": "Deployed bytes, internal routes and responsive behavior of the home page are proven on the live site (docs/evidence/site-row-proofs-45df6c4f.json), and the download area correctly stays disabled. Remaining gaps: the download area still names the preview release v0.1.0-preview.16.1 although newer releases exist, so no verified download path is demonstrated, and the home page is not yet accepted as the final landing content.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -9525,7 +9525,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
+      "reason": "Phone width behavior is proven on the live site: no horizontal overflow in 72 language, theme and width combinations, and the navigation menu opens by touch (docs/evidence/site-row-proofs-45df6c4f.json). Remaining gap: three phone links (repository setup instructions, footer brand and FAQ) are smaller than 24 CSS pixels in one dimension.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -9584,7 +9584,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
+      "reason": "The download button is verified to fail closed: it is disabled with no link and the help text says why (docs/evidence/site-row-proofs-45df6c4f.json). Remaining gaps: the site release record names the preview release v0.1.0-preview.16.1 rather than a current verified release, so the button never offers a working download.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -9643,7 +9643,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
+      "reason": "All 238 article pages are deployed, none is empty and no internal link is broken (docs/evidence/site-row-proofs-45df6c4f.json). Remaining gaps: no article has a top-level heading (the title is a second-level heading), and six moved-article stub pages are reachable by no link on the site.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -9757,7 +9757,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
+      "reason": "Deployed pages carry a description and theme color only. Remaining gap: no Open Graph or Twitter card metadata exists on any page, so a shared link has no designed embed, and none was observed.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -9797,7 +9797,7 @@
     {
       "id": "homepage-link",
       "surface": "site",
-      "status": "unverified",
+      "status": "implemented",
       "implementation": [
         "docs/site/index.html",
         "docs/site/publication.mjs",
@@ -9810,15 +9810,21 @@
         "docs/features/platform/current-integration.md",
         "docs/site/README.md"
       ],
-      "localization": [],
+      "localization": [
+        "docs/site/locales.js"
+      ],
       "tests": [
         "test/site.test.js",
         "test/site-publication.test.js"
       ],
-      "evidence": [],
-      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
-      "builtInteraction": "unverified",
-      "visualEvidence": "unverified",
+      "evidence": [
+        "docs/evidence/site-row-proofs-45df6c4f.json",
+        "docs/evidence/site-row-proofs-45df6c4f/site-desktop-index-en-light.png",
+        "docs/evidence/site-row-proofs-45df6c4f/site-phone-index-yue-dark.png"
+      ],
+      "reason": "The repository About homepage field reads back as exactly the deployed documentation URL, that URL answers 200, and the brand link on an article page returns to the home page. Proven on the live site (deployed source 45df6c4f, built-artifact manifest hash 55cb49df) in an isolated headless browser: all 431 built files match the deployed bytes, 15,408 internal links and 4,681 anchors resolve with none broken, and 72 language, theme and width combinations on six routes show no horizontal overflow. Captures and the readback are bound in docs/evidence/site-row-proofs-45df6c4f.json. This proves the deployed site and homepage readback, not any desktop or extension surface.",
+      "builtInteraction": "verified",
+      "visualEvidence": "verified",
       "sourceReview": {
         "baseline": "37fa47a",
         "readyCandidates": [
@@ -9838,8 +9844,8 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "partial",
-      "evidenceVerdict": "current-runtime-unverified",
+      "behaviorVerdict": "present",
+      "evidenceVerdict": "built-and-visual-verified",
       "sourceVerification": {
         "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
         "verdict": "references-present",
@@ -9848,9 +9854,9 @@
         "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
       },
       "builtEvidenceVerdict": {
-        "interaction": "unverified",
-        "visual": "unverified",
-        "reason": "No complete current-source surface acceptance receipt. Native owner receipts and earlier defect captures are scoped separately in assessmentContext."
+        "interaction": "verified",
+        "visual": "verified",
+        "reason": "Source-bound deployed-site proof with inspected captures; see docs/evidence/site-row-proofs-45df6c4f.json."
       }
     },
     {
@@ -11392,7 +11398,7 @@
     {
       "id": "wiki-documentation-sync",
       "surface": "site",
-      "status": "unverified",
+      "status": "implemented",
       "implementation": [
         "docs/site/index.html",
         "docs/site/publication.mjs",
@@ -11405,15 +11411,21 @@
         "docs/features/platform/current-integration.md",
         "docs/site/README.md"
       ],
-      "localization": [],
+      "localization": [
+        "docs/site/locales.js"
+      ],
       "tests": [
         "test/site.test.js",
         "test/site-publication.test.js"
       ],
-      "evidence": [],
-      "reason": "The companion workspace is integrated with explicit local/paired-host capability boundaries. Static publication, article/wiki inventory and homepage-update wiring exist. Current deployment bytes, internal routes, responsive behavior, download eligibility and exact homepage readback remain independently unverified.",
-      "builtInteraction": "unverified",
-      "visualEvidence": "unverified",
+      "evidence": [
+        "docs/evidence/site-row-proofs-45df6c4f.json",
+        "docs/evidence/site-row-proofs-45df6c4f/site-phone-wiki-html.png",
+        "docs/evidence/site-row-proofs-45df6c4f/site-phone-articles-wiki--Home-html.png"
+      ],
+      "reason": "The three bundled wiki snapshot pages match the live GitHub wiki byte for byte at revision 96ac4777, that revision is stated on the deployed wiki page, and each wiki article opens from the wiki page. Proven on the live site (deployed source 45df6c4f, built-artifact manifest hash 55cb49df) in an isolated headless browser: all 431 built files match the deployed bytes, 15,408 internal links and 4,681 anchors resolve with none broken, and 72 language, theme and width combinations show no horizontal overflow. Evidence is bound in docs/evidence/site-row-proofs-45df6c4f.json. A later wiki edit would need a new snapshot and a new proof.",
+      "builtInteraction": "verified",
+      "visualEvidence": "verified",
       "sourceReview": {
         "baseline": "37fa47a",
         "readyCandidates": [
@@ -11433,8 +11445,8 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "partial",
-      "evidenceVerdict": "current-runtime-unverified",
+      "behaviorVerdict": "present",
+      "evidenceVerdict": "built-and-visual-verified",
       "sourceVerification": {
         "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
         "verdict": "references-present",
@@ -11443,9 +11455,9 @@
         "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
       },
       "builtEvidenceVerdict": {
-        "interaction": "unverified",
-        "visual": "unverified",
-        "reason": "No complete current-source surface acceptance receipt. Native owner receipts and earlier defect captures are scoped separately in assessmentContext."
+        "interaction": "verified",
+        "visual": "verified",
+        "reason": "Source-bound deployed-site proof with inspected captures; see docs/evidence/site-row-proofs-45df6c4f.json."
       }
     },
     {
@@ -18677,7 +18689,13 @@
     "browser-extension/popup-wording.js": "5ff38608bf39d0747b46c761a2caaf1f475853df",
     "docs/evidence/installed-proof-1.772.1.json": "0ef097a1f0cdea37e81d2c5ff1f367647de6ad6f",
     "docs/evidence/installed-proof-1.779.1.json": "4a49919d44628f65e335f82f3321dbd9607bf3e7",
-    "docs/evidence/installed-proof-1.782.1.json": "56b1a12a783d7a23e1b4717f23fef3877174d8dd"
+    "docs/evidence/installed-proof-1.782.1.json": "56b1a12a783d7a23e1b4717f23fef3877174d8dd",
+    "docs/evidence/site-row-proofs-45df6c4f.json": "ac3520483a20ca6422424df4456777506847614a",
+    "docs/evidence/site-row-proofs-45df6c4f/site-desktop-index-en-light.png": "ac3520483a20ca6422424df4456777506847614a",
+    "docs/evidence/site-row-proofs-45df6c4f/site-phone-index-yue-dark.png": "ac3520483a20ca6422424df4456777506847614a",
+    "docs/evidence/site-row-proofs-45df6c4f/site-phone-wiki-html.png": "ac3520483a20ca6422424df4456777506847614a",
+    "docs/evidence/site-row-proofs-45df6c4f/site-phone-articles-wiki--Home-html.png": "ac3520483a20ca6422424df4456777506847614a",
+    "docs/site/locales.js": "ac3520483a20ca6422424df4456777506847614a"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
