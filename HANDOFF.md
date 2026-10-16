@@ -11,12 +11,20 @@ Installed proof on one physical Windows host, recorded in `docs/evidence/install
 
 Runtime Material and motion audit, recorded in `docs/evidence/runtime-motion-9c8191a.json` (full extension and renderer, English, Cantonese and bilingual) and `runtime-motion-9c8191a-site-sampled.json` (sampled site): no findings and no reduced-motion leaks, including inside Material Web shadow roots. A negative control without the shadow-root fix reports 310 leaks.
 
+Later on 2026-10-16 the installed proof continued through releases 1.719.1, 1.729.1 and 1.731.1, recorded in `docs/evidence/installed-proof-1.719.1.json`, `installed-proof-1.729.1.json`, `installed-server-run-1.702.1.json` and `runtime-motion-installed-1.702.1.json`:
+- a real Vanilla 26.3 server, with its licence accepted through the app at the owner's request, started on Java 25, listened on loopback 25565, became ready and stopped cleanly;
+- the Java requirement check refuses an older Java before anything starts;
+- a server that ends outside the app shows as failed with a readable reason and its real last log lines;
+- closing with a server running offers keep in the tray, stop servers and quit, or cancel, and quits cleanly; Quit is also in the Help and Settings menus, the command palette, the New tab menu, the tray and Ctrl+Q;
+- the runtime Material and motion audit inside the installed app reports no findings and no reduced-motion leaks across 239 states in both themes and all three languages;
+- every screenshot in the README and on the site was replaced with captures of these releases.
+
+The owner skipped publishing the test note to the forge discussion, so no forge account was signed in and that proof is not pending.
+
 Open, in order:
 - **Local container target (deferred by the owner to the next owner).** Docker Desktop is not installed on the verification host. Install it (it needs administrator approval and possibly a restart, both done by the owner), then prove the local container target in the server manager with a real container: create, start, status, logs and stop.
-- Publish the one approved test note to the "Browser extension progress" discussion once the owner has signed in to a forge account inside the app.
-- Start the prepared Vanilla server after the owner accepts its license in the app, then verify that it listens and stops cleanly.
 - Session-end automatic lock on a real restart, sign-out or shutdown (owner action only).
-- The full site runtime audit of every article, and the same runtime audit inside the installed desktop app.
+- Done: the full site runtime audit (612 states) and the runtime audit inside the installed desktop app.
 - Uninstall and rollback proof.
 
 ## Website preservation checkpoint, 2026-10-15
