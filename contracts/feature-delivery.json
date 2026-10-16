@@ -9447,7 +9447,7 @@
     {
       "id": "landing-site",
       "surface": "site",
-      "status": "unverified",
+      "status": "implemented",
       "implementation": [
         "docs/site/index.html",
         "docs/site/publication.mjs",
@@ -9460,15 +9460,23 @@
         "docs/features/platform/current-integration.md",
         "docs/site/README.md"
       ],
-      "localization": [],
+      "localization": [
+        "docs/site/locales.js"
+      ],
       "tests": [
         "test/site.test.js",
         "test/site-publication.test.js"
       ],
-      "evidence": [],
-      "reason": "Deployed bytes, internal routes and responsive behavior of the home page are proven on the live site (docs/evidence/site-row-proofs-45df6c4f.json). The source and a local build now embed the release record read back from the latest normal release in place of the retired preview record, with a working Setup.exe link labelled as not yet behavior-verified; this was verified in a local headless build (test/site-proof-findings.test.js), not yet on the live site. Remaining gaps: live-site confirmation after the next deployment, and the home page is not yet accepted as the final landing content.",
-      "builtInteraction": "unverified",
-      "visualEvidence": "unverified",
+      "evidence": [
+        "docs/evidence/site-row-proofs-6acd512a.json",
+        "docs/evidence/site-row-proofs-6acd512a/site-findings-proofs-6acd512a.json",
+        "docs/evidence/site-row-proofs-6acd512a/findings-desktop-download-area.png",
+        "docs/evidence/site-row-proofs-6acd512a/site-desktop-index-en-light.png",
+        "docs/evidence/site-row-proofs-6acd512a/site-phone-index-bilingual-dark.png"
+      ],
+      "reason": "The deployed home page opens its sections from the navigation, switches between English, Cantonese and bilingual wording and between light and dark themes, and its download area names the newest published normal release with a link to that release installer, labelled verification pending. Proven on the live site (deployed source 6acd512a, built-artifact manifest hash d91c9cfb) in an isolated headless browser: all 431 built files match the deployed bytes (the embedded release record is checked against GitHub separately), 15,409 internal links and 4,681 anchors resolve with none broken, and 72 language, theme and width combinations on six routes show no horizontal overflow. Share metadata is present on every page. Evidence is bound in docs/evidence/site-row-proofs-6acd512a.json and docs/evidence/site-row-proofs-6acd512a/site-findings-proofs-6acd512a.json. This proves the deployed page, not installer behavior on a machine.",
+      "builtInteraction": "verified",
+      "visualEvidence": "verified",
       "sourceReview": {
         "baseline": "37fa47a",
         "readyCandidates": [
@@ -9488,8 +9496,8 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "partial",
-      "evidenceVerdict": "current-runtime-unverified",
+      "behaviorVerdict": "present",
+      "evidenceVerdict": "built-and-visual-verified",
       "sourceVerification": {
         "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
         "verdict": "references-present",
@@ -9498,9 +9506,9 @@
         "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
       },
       "builtEvidenceVerdict": {
-        "interaction": "unverified",
-        "visual": "unverified",
-        "reason": "No complete current-source surface acceptance receipt. Native owner receipts and earlier defect captures are scoped separately in assessmentContext."
+        "interaction": "verified",
+        "visual": "verified",
+        "reason": "Source-bound deployed-site proof with inspected captures; see docs/evidence/site-row-proofs-6acd512a.json."
       }
     },
     {
@@ -9525,7 +9533,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "Phone width behavior is proven on the live site: no horizontal overflow in 72 language, theme and width combinations, and the navigation menu opens by touch (docs/evidence/site-row-proofs-45df6c4f.json). The three previously small phone links (repository setup instructions, footer brand and footer links) now declare a 24 by 24 CSS pixel minimum target and measured at or above it in a local headless build at 320 and 375 pixel widths; live-site confirmation is pending the next deployment.",
+      "reason": "Phone width behavior is proven on the live site: no horizontal overflow in 72 language, theme and width combinations, the navigation menu opens by touch, and the home and library pages have no tap target under 24 pixels at 320, 375 and 390 pixels (docs/evidence/site-row-proofs-6acd512a/site-findings-proofs-6acd512a.json). Remaining gap: the wiki page, the capture gallery and article pages still have undersized phone targets (for example the heading anchor links, the Open original image links and some article links), so the 24 pixel target size is not met site wide.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -9584,7 +9592,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "Before this change the button was verified to fail closed on a stale preview record (docs/evidence/site-row-proofs-45df6c4f.json). The source and a local build now generate the record from the latest normal release (scripts/generate-release-record.mjs), the button is a working Setup.exe link for a published normal release, and it stays labelled verification pending until download, packaged, installed and uninstall receipts exist, so it is never shown as verified. Verified in a local headless build; live-site confirmation is pending the next deployment, and no installed-behavior receipt exists for the offered release.",
+      "reason": "The download area now offers a working link to the installer of the newest published normal release (checked against GitHub: not a draft, not a prerelease, installer name, address and size match), labelled verification pending, and it is honest about it (docs/evidence/site-row-proofs-6acd512a/site-findings-proofs-6acd512a.json). Remaining gap: the release record carries pending download, packaged, installed and uninstall receipts, so no verified release with all four receipts is offered; this row stays unverified until those receipts exist for the offered release.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -9624,7 +9632,7 @@
     {
       "id": "feature-articles",
       "surface": "site",
-      "status": "unverified",
+      "status": "implemented",
       "implementation": [
         "docs/site/index.html",
         "docs/site/publication.mjs",
@@ -9637,15 +9645,23 @@
         "docs/features/platform/current-integration.md",
         "docs/site/README.md"
       ],
-      "localization": [],
+      "localization": [
+        "docs/site/locales.js"
+      ],
       "tests": [
         "test/site.test.js",
         "test/site-publication.test.js"
       ],
-      "evidence": [],
-      "reason": "All 238 article pages are deployed, none is empty and no internal link is broken (docs/evidence/site-row-proofs-45df6c4f.json). The source and a local build now give every article a single h1 with a valid heading order, and the six moved-article stubs are redirect pages listed in the documentation library, so none is orphaned (test/site-proof-findings.test.js). Verified in a local build and headless browser; live-site confirmation is pending the next deployment.",
-      "builtInteraction": "unverified",
-      "visualEvidence": "unverified",
+      "evidence": [
+        "docs/evidence/site-row-proofs-6acd512a.json",
+        "docs/evidence/site-row-proofs-6acd512a/site-findings-proofs-6acd512a.json",
+        "docs/evidence/site-row-proofs-6acd512a/findings-desktop-library-moved-articles.png",
+        "docs/evidence/site-row-proofs-6acd512a/findings-desktop-moved-article.png",
+        "docs/evidence/site-row-proofs-6acd512a/site-phone-articles-DESIGN-html.png"
+      ],
+      "reason": "All 238 article pages are deployed with real content, every one has exactly one h1, no article is unreachable, the six moved-article pages are listed in the library under Moved articles and redirect to the current article, and an article opens from the library and returns home. Proven on the live site (deployed source 6acd512a, built-artifact manifest hash d91c9cfb) in an isolated headless browser: all 431 built files match the deployed bytes (the embedded release record is checked against GitHub separately), 15,409 internal links and 4,681 anchors resolve with none broken, and 72 language, theme and width combinations on six routes show no horizontal overflow. Evidence is bound in docs/evidence/site-row-proofs-6acd512a.json and docs/evidence/site-row-proofs-6acd512a/site-findings-proofs-6acd512a.json.",
+      "builtInteraction": "verified",
+      "visualEvidence": "verified",
       "sourceReview": {
         "baseline": "37fa47a",
         "readyCandidates": [
@@ -9665,8 +9681,8 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "partial",
-      "evidenceVerdict": "current-runtime-unverified",
+      "behaviorVerdict": "present",
+      "evidenceVerdict": "built-and-visual-verified",
       "sourceVerification": {
         "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
         "verdict": "references-present",
@@ -9675,9 +9691,9 @@
         "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
       },
       "builtEvidenceVerdict": {
-        "interaction": "unverified",
-        "visual": "unverified",
-        "reason": "No complete current-source surface acceptance receipt. Native owner receipts and earlier defect captures are scoped separately in assessmentContext."
+        "interaction": "verified",
+        "visual": "verified",
+        "reason": "Source-bound deployed-site proof with inspected captures; see docs/evidence/site-row-proofs-6acd512a.json."
       }
     },
     {
@@ -9738,7 +9754,7 @@
     {
       "id": "shared-link-embed",
       "surface": "site",
-      "status": "unverified",
+      "status": "implemented",
       "implementation": [
         "docs/site/index.html",
         "docs/site/publication.mjs",
@@ -9751,15 +9767,21 @@
         "docs/features/platform/current-integration.md",
         "docs/site/README.md"
       ],
-      "localization": [],
+      "localization": [
+        "docs/site/locales.js"
+      ],
       "tests": [
         "test/site.test.js",
         "test/site-publication.test.js"
       ],
-      "evidence": [],
-      "reason": "The source and a local build now add Open Graph and Twitter card metadata (title, description, type, URL, image and card) to every built page, localized for the zh-HK pages, with an existing public site image (test/site-proof-findings.test.js). The metadata is verified in the built files only; no social platform has been observed rendering a shared link, and live-site confirmation is pending the next deployment.",
-      "builtInteraction": "unverified",
-      "visualEvidence": "unverified",
+      "evidence": [
+        "docs/evidence/site-row-proofs-6acd512a/site-findings-proofs-6acd512a.json",
+        "docs/evidence/site-row-proofs-6acd512a/findings-desktop-download-area.png",
+        "docs/evidence/site-row-proofs-6acd512a/site-desktop-index-en-light.png"
+      ],
+      "reason": "Every one of the 259 deployed pages carries Open Graph title, description, type, URL and image plus the Twitter card type; each og:url equals the page address and the one shared image answers 200 as image/png. Proven on the live site (deployed source 6acd512a) in docs/evidence/site-row-proofs-6acd512a/site-findings-proofs-6acd512a.json. No social platform was observed rendering a shared link, so the proof is of the metadata a platform reads, not of any platform preview.",
+      "builtInteraction": "verified",
+      "visualEvidence": "verified",
       "sourceReview": {
         "baseline": "37fa47a",
         "readyCandidates": [
@@ -9779,8 +9801,8 @@
           "declaredScope": "User-facing product surface"
         }
       },
-      "behaviorVerdict": "partial",
-      "evidenceVerdict": "current-runtime-unverified",
+      "behaviorVerdict": "present",
+      "evidenceVerdict": "built-and-visual-verified",
       "sourceVerification": {
         "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
         "verdict": "references-present",
@@ -9789,9 +9811,9 @@
         "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
       },
       "builtEvidenceVerdict": {
-        "interaction": "unverified",
-        "visual": "unverified",
-        "reason": "No complete current-source surface acceptance receipt. Native owner receipts and earlier defect captures are scoped separately in assessmentContext."
+        "interaction": "verified",
+        "visual": "verified",
+        "reason": "Source-bound deployed-site proof with inspected captures; see docs/evidence/site-row-proofs-6acd512a.json."
       }
     },
     {
@@ -9818,11 +9840,11 @@
         "test/site-publication.test.js"
       ],
       "evidence": [
-        "docs/evidence/site-row-proofs-45df6c4f.json",
-        "docs/evidence/site-row-proofs-45df6c4f/site-desktop-index-en-light.png",
-        "docs/evidence/site-row-proofs-45df6c4f/site-phone-index-yue-dark.png"
+        "docs/evidence/site-row-proofs-6acd512a.json",
+        "docs/evidence/site-row-proofs-6acd512a/site-desktop-index-en-light.png",
+        "docs/evidence/site-row-proofs-6acd512a/site-phone-index-yue-dark.png"
       ],
-      "reason": "The repository About homepage field reads back as exactly the deployed documentation URL, that URL answers 200, and the brand link on an article page returns to the home page. Proven on the live site (deployed source 45df6c4f, built-artifact manifest hash 55cb49df) in an isolated headless browser: all 431 built files match the deployed bytes, 15,408 internal links and 4,681 anchors resolve with none broken, and 72 language, theme and width combinations on six routes show no horizontal overflow. Captures and the readback are bound in docs/evidence/site-row-proofs-45df6c4f.json. This proves the deployed site and homepage readback, not any desktop or extension surface.",
+      "reason": "The repository About homepage field reads back as exactly the deployed documentation URL, that URL answers 200, and the brand link on an article page returns to the home page. Proven on the live site (deployed source 6acd512a, built-artifact manifest hash d91c9cfb) in an isolated headless browser: all 431 built files match the deployed bytes (the embedded release record is checked against GitHub separately), 15,409 internal links and 4,681 anchors resolve with none broken, and 72 language, theme and width combinations on six routes show no horizontal overflow. Evidence is bound in docs/evidence/site-row-proofs-6acd512a.json.",
       "builtInteraction": "verified",
       "visualEvidence": "verified",
       "sourceReview": {
@@ -9856,7 +9878,7 @@
       "builtEvidenceVerdict": {
         "interaction": "verified",
         "visual": "verified",
-        "reason": "Source-bound deployed-site proof with inspected captures; see docs/evidence/site-row-proofs-45df6c4f.json."
+        "reason": "Source-bound deployed-site proof with inspected captures; see docs/evidence/site-row-proofs-6acd512a.json."
       }
     },
     {
@@ -11419,11 +11441,11 @@
         "test/site-publication.test.js"
       ],
       "evidence": [
-        "docs/evidence/site-row-proofs-45df6c4f.json",
-        "docs/evidence/site-row-proofs-45df6c4f/site-phone-wiki-html.png",
-        "docs/evidence/site-row-proofs-45df6c4f/site-phone-articles-wiki--Home-html.png"
+        "docs/evidence/site-row-proofs-6acd512a.json",
+        "docs/evidence/site-row-proofs-6acd512a/site-phone-wiki-html.png",
+        "docs/evidence/site-row-proofs-6acd512a/site-phone-articles-wiki--Home-html.png"
       ],
-      "reason": "The three bundled wiki snapshot pages match the live GitHub wiki byte for byte at revision 96ac4777, that revision is stated on the deployed wiki page, and each wiki article opens from the wiki page. Proven on the live site (deployed source 45df6c4f, built-artifact manifest hash 55cb49df) in an isolated headless browser: all 431 built files match the deployed bytes, 15,408 internal links and 4,681 anchors resolve with none broken, and 72 language, theme and width combinations show no horizontal overflow. Evidence is bound in docs/evidence/site-row-proofs-45df6c4f.json. A later wiki edit would need a new snapshot and a new proof.",
+      "reason": "The three bundled wiki snapshot pages match the live GitHub wiki byte for byte at revision 96ac4777, that revision is stated on the deployed wiki page, and each wiki article opens from the wiki page. Proven on the live site (deployed source 6acd512a, built-artifact manifest hash d91c9cfb) in an isolated headless browser: all 431 built files match the deployed bytes (the embedded release record is checked against GitHub separately), 15,409 internal links and 4,681 anchors resolve with none broken, and 72 language, theme and width combinations on six routes show no horizontal overflow. Evidence is bound in docs/evidence/site-row-proofs-6acd512a.json. A later wiki edit would need a new snapshot and a new proof.",
       "builtInteraction": "verified",
       "visualEvidence": "verified",
       "sourceReview": {
@@ -11457,7 +11479,7 @@
       "builtEvidenceVerdict": {
         "interaction": "verified",
         "visual": "verified",
-        "reason": "Source-bound deployed-site proof with inspected captures; see docs/evidence/site-row-proofs-45df6c4f.json."
+        "reason": "Source-bound deployed-site proof with inspected captures; see docs/evidence/site-row-proofs-6acd512a.json."
       }
     },
     {
@@ -18697,12 +18719,18 @@
     "docs/evidence/extension-row-proofs-4c1ef40/options-changelog-filters-collapsed-light-1280x800.png": "63de40c5604ab30b9996a7ef4636cebda24153fc",
     "docs/evidence/extension-row-proofs-4c1ef40/options-personalization-display-name-light-1280x800.png": "63de40c5604ab30b9996a7ef4636cebda24153fc",
     "docs/evidence/extension-row-proofs-4c1ef40/popup-display-name-light-400x560.png": "63de40c5604ab30b9996a7ef4636cebda24153fc",
-    "docs/evidence/site-row-proofs-45df6c4f.json": "ac3520483a20ca6422424df4456777506847614a",
-    "docs/evidence/site-row-proofs-45df6c4f/site-desktop-index-en-light.png": "ac3520483a20ca6422424df4456777506847614a",
-    "docs/evidence/site-row-proofs-45df6c4f/site-phone-index-yue-dark.png": "ac3520483a20ca6422424df4456777506847614a",
-    "docs/evidence/site-row-proofs-45df6c4f/site-phone-wiki-html.png": "ac3520483a20ca6422424df4456777506847614a",
-    "docs/evidence/site-row-proofs-45df6c4f/site-phone-articles-wiki--Home-html.png": "ac3520483a20ca6422424df4456777506847614a",
-    "docs/site/locales.js": "ac3520483a20ca6422424df4456777506847614a"
+    "docs/site/locales.js": "ac3520483a20ca6422424df4456777506847614a",
+    "docs/evidence/site-row-proofs-6acd512a.json": "3733a6f4996342bec68e5c650d07c075fa1cc7b3",
+    "docs/evidence/site-row-proofs-6acd512a/site-desktop-index-en-light.png": "3733a6f4996342bec68e5c650d07c075fa1cc7b3",
+    "docs/evidence/site-row-proofs-6acd512a/site-phone-index-yue-dark.png": "3733a6f4996342bec68e5c650d07c075fa1cc7b3",
+    "docs/evidence/site-row-proofs-6acd512a/site-phone-wiki-html.png": "3733a6f4996342bec68e5c650d07c075fa1cc7b3",
+    "docs/evidence/site-row-proofs-6acd512a/site-phone-articles-wiki--Home-html.png": "3733a6f4996342bec68e5c650d07c075fa1cc7b3",
+    "docs/evidence/site-row-proofs-6acd512a/site-findings-proofs-6acd512a.json": "3733a6f4996342bec68e5c650d07c075fa1cc7b3",
+    "docs/evidence/site-row-proofs-6acd512a/findings-desktop-download-area.png": "3733a6f4996342bec68e5c650d07c075fa1cc7b3",
+    "docs/evidence/site-row-proofs-6acd512a/site-phone-index-bilingual-dark.png": "3733a6f4996342bec68e5c650d07c075fa1cc7b3",
+    "docs/evidence/site-row-proofs-6acd512a/findings-desktop-library-moved-articles.png": "3733a6f4996342bec68e5c650d07c075fa1cc7b3",
+    "docs/evidence/site-row-proofs-6acd512a/findings-desktop-moved-article.png": "3733a6f4996342bec68e5c650d07c075fa1cc7b3",
+    "docs/evidence/site-row-proofs-6acd512a/site-phone-articles-DESIGN-html.png": "3733a6f4996342bec68e5c650d07c075fa1cc7b3"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",

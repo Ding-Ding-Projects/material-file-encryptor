@@ -7461,14 +7461,46 @@
           "surface": "site:index",
           "route": "index.html",
           "selector": "",
-          "sourceCommit": "45df6c4f00a64e816b7702381c5166a8f1533293",
-          "builtSha256": "55cb49df7cd7d0ca2f5806218beedae77c72e6dea91574253575d310c055e444",
+          "sourceCommit": "6acd512acb95ca5d333091b5424c0588a349b164",
+          "builtSha256": "d91c9cfbab9eb274edbdb24995efff11651892865e6411bc919165af6ee54b4b",
           "builtInteraction": "verified",
           "visualEvidence": "verified",
           "evidence": [
-            "docs/evidence/site-row-proofs-45df6c4f.json",
-            "docs/evidence/site-row-proofs-45df6c4f/site-desktop-index-en-light.png",
-            "docs/evidence/site-row-proofs-45df6c4f/site-phone-index-yue-dark.png"
+            "docs/evidence/site-row-proofs-6acd512a.json",
+            "docs/evidence/site-row-proofs-6acd512a/site-desktop-index-en-light.png",
+            "docs/evidence/site-row-proofs-6acd512a/site-phone-index-yue-dark.png"
+          ]
+        },
+        "landing-site": {
+          "status": "implemented",
+          "surface": "site:index",
+          "route": "index.html",
+          "selector": "",
+          "sourceCommit": "6acd512acb95ca5d333091b5424c0588a349b164",
+          "builtSha256": "d91c9cfbab9eb274edbdb24995efff11651892865e6411bc919165af6ee54b4b",
+          "builtInteraction": "verified",
+          "visualEvidence": "verified",
+          "evidence": [
+            "docs/evidence/site-row-proofs-6acd512a.json",
+            "docs/evidence/site-row-proofs-6acd512a/site-findings-proofs-6acd512a.json",
+            "docs/evidence/site-row-proofs-6acd512a/findings-desktop-download-area.png",
+            "docs/evidence/site-row-proofs-6acd512a/site-desktop-index-en-light.png",
+            "docs/evidence/site-row-proofs-6acd512a/site-phone-index-bilingual-dark.png"
+          ]
+        },
+        "shared-link-embed": {
+          "status": "implemented",
+          "surface": "site:index",
+          "route": "index.html",
+          "selector": "",
+          "sourceCommit": "6acd512acb95ca5d333091b5424c0588a349b164",
+          "builtSha256": "d91c9cfbab9eb274edbdb24995efff11651892865e6411bc919165af6ee54b4b",
+          "builtInteraction": "verified",
+          "visualEvidence": "verified",
+          "evidence": [
+            "docs/evidence/site-row-proofs-6acd512a/site-findings-proofs-6acd512a.json",
+            "docs/evidence/site-row-proofs-6acd512a/findings-desktop-download-area.png",
+            "docs/evidence/site-row-proofs-6acd512a/site-desktop-index-en-light.png"
           ]
         }
       }
@@ -7489,7 +7521,25 @@
       "owner": "docs/site/publication.mjs",
       "selector": "",
       "template": "required-families",
-      "proofs": {}
+      "proofs": {
+        "feature-articles": {
+          "status": "implemented",
+          "surface": "site:library",
+          "route": "library.html",
+          "selector": "",
+          "sourceCommit": "6acd512acb95ca5d333091b5424c0588a349b164",
+          "builtSha256": "d91c9cfbab9eb274edbdb24995efff11651892865e6411bc919165af6ee54b4b",
+          "builtInteraction": "verified",
+          "visualEvidence": "verified",
+          "evidence": [
+            "docs/evidence/site-row-proofs-6acd512a.json",
+            "docs/evidence/site-row-proofs-6acd512a/site-findings-proofs-6acd512a.json",
+            "docs/evidence/site-row-proofs-6acd512a/findings-desktop-library-moved-articles.png",
+            "docs/evidence/site-row-proofs-6acd512a/findings-desktop-moved-article.png",
+            "docs/evidence/site-row-proofs-6acd512a/site-phone-articles-DESIGN-html.png"
+          ]
+        }
+      }
     },
     {
       "id": "site:library:preferences",
@@ -7513,14 +7563,14 @@
           "surface": "site:wiki",
           "route": "wiki.html",
           "selector": "",
-          "sourceCommit": "45df6c4f00a64e816b7702381c5166a8f1533293",
-          "builtSha256": "55cb49df7cd7d0ca2f5806218beedae77c72e6dea91574253575d310c055e444",
+          "sourceCommit": "6acd512acb95ca5d333091b5424c0588a349b164",
+          "builtSha256": "d91c9cfbab9eb274edbdb24995efff11651892865e6411bc919165af6ee54b4b",
           "builtInteraction": "verified",
           "visualEvidence": "verified",
           "evidence": [
-            "docs/evidence/site-row-proofs-45df6c4f.json",
-            "docs/evidence/site-row-proofs-45df6c4f/site-phone-wiki-html.png",
-            "docs/evidence/site-row-proofs-45df6c4f/site-phone-articles-wiki--Home-html.png"
+            "docs/evidence/site-row-proofs-6acd512a.json",
+            "docs/evidence/site-row-proofs-6acd512a/site-phone-wiki-html.png",
+            "docs/evidence/site-row-proofs-6acd512a/site-phone-articles-wiki--Home-html.png"
           ]
         }
       }
