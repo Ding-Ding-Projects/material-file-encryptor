@@ -1,6 +1,6 @@
 ## Integration of older branches, 2026-10-16
 
-Merged on `integrate/leftover-branches`: the native helper IPC validation and lifecycle fixes, the protected settings reset mediation (new `src/main/protected-settings-reset.js`, inactive: no renderer IPC exposes it yet), and a renderer test fix. Skipped: the 24-row presentation-image replacement map (its originals no longer exist in the tree) and, see the integration report for the recovery branch. No installer was built and no production acceptance is claimed for the reset path.
+Merged on `integrate/leftover-branches`: the native helper IPC validation and lifecycle fixes, the protected settings reset mediation (new `src/main/protected-settings-reset.js`, inactive: no renderer IPC exposes it yet), and a renderer test fix. Also merged: the compiled-pipe verification note for browser protection observations (the stash's test edit is superseded by main's newer test). Skipped: the 24-row presentation-image replacement map (its originals no longer exist in the tree and all of its rows were pending). No installer was built and no production acceptance is claimed for the reset path.
 
 ## Inventory: wording drop and private delivery, 2026-10-16
 
