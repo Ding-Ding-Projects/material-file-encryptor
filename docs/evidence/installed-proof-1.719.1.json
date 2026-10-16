@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "kind": "installed-application-proof",
+  "recordedAtUtc": "2026-10-16",
+  "host": "One physical Windows 11 host; an off-screen desktop and an isolated application profile were used. Machine names, user names and local paths are omitted.",
+  "release": {"tag": "v1.719.1", "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6", "type": "normal release", "provenanceBindsCommit": true, "setupSignature": "NotSigned"},
+  "serverManager": {
+    "javaRequirementCheck": {"launchedWith": "Java 21 first on the process path only", "result": "Start was refused before any process started; the card showed Needs Java 25 and named both versions; no Java process and no listener appeared"},
+    "normalRun": {"runtime": "Java 25", "listening": "127.0.0.1:25565 owned by the server process", "readyLine": "Done (0.307s)! For help, type \"help\"", "cardState": "running"},
+    "closeWithServerRunning": {"dialog": "A server is still running, with Keep running in the tray, Stop servers and quit, and Cancel", "choice": "Stop servers and quit", "result": "the server stopped, the port closed and the application exited by itself within 2 seconds"},
+    "exitDetection": {"route": "the server process the test started was ended by its exact process id", "result": "the card changed to failed about 1 second later with a reason chip and recent log lines"}
+  },
+  "drive": {"selectionColumn": "the selection control is shown in full with no ellipsis"},
+  "pairABrowser": {"result": "the page renders its heading, explanation and Show pairing code button"},
+  "openFindings": [
+    "with no server running, closing hides the application to the tray and the interface has no Quit command",
+    "the failed chip shows an unsigned exit code instead of readable text",
+    "the failed card shows the earliest log lines instead of the last ones",
+    "the Pair a browser page stays bilingual when English is selected",
+    "the bilingual Availability cell in the drive table is cut off"
+  ],
+  "firewallPrompt": false,
+  "clientsConnected": 0,
+  "newLicenseAcceptance": false
+}
