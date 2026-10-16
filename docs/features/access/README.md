@@ -11,3 +11,5 @@ These are local convenience and credential-storage workflows. They do not add a 
 
 - [Privileged host challenges and encrypted mutation history](access-host.md)
 - [特權存取主機同加密修改歷史](access-host.zh-HK.md)
+
+- [Protected preference reset foundation and open review findings](protected-reset.md)

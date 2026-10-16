@@ -308,6 +308,24 @@
       "proofs": {}
     },
     {
+      "id": "desktop:document:docs/features/access/protected-reset",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/access/protected-reset",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/access/protected-reset.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/access/protected-reset.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "desktop:document:docs/features/access/README",
       "family": "desktop",
       "route": "src/renderer/index.html",
@@ -3002,6 +3020,42 @@
       "id": "site:article:docs/features/access/local-access.zh-HK.md:preferences",
       "family": "site",
       "route": "articles/docs--features--access--local-access.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/access/protected-reset.md",
+      "family": "site",
+      "route": "articles/docs--features--access--protected-reset.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/access/protected-reset.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--access--protected-reset.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/access/protected-reset.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--access--protected-reset.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/access/protected-reset.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--access--protected-reset.zh-HK.html",
       "owner": "docs/site/preferences.js",
       "selector": "#preferences-dialog",
       "template": "required-families",
@@ -7675,6 +7729,24 @@
       "route": "workspace.html",
       "owner": "src/renderer/features/documentation/index.js",
       "selector": "document:docs/features/access/local-access.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/access/protected-reset",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/access/protected-reset",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/access/protected-reset.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/access/protected-reset.zh-HK",
       "template": "required-families",
       "proofs": {}
     },

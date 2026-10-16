@@ -1,3 +1,7 @@
+## Integration of older branches, 2026-10-16
+
+Merged on `integrate/leftover-branches`: the native helper IPC validation and lifecycle fixes, the protected settings reset mediation (new `src/main/protected-settings-reset.js`, inactive: no renderer IPC exposes it yet), and a renderer test fix. Skipped: the 24-row presentation-image replacement map (its originals no longer exist in the tree) and, see the integration report for the recovery branch. No installer was built and no production acceptance is claimed for the reset path.
+
 ## Inventory: wording drop and private delivery, 2026-10-16
 
 Scope: two new required-feature identifiers, `vocabulary-drop-apply` and `private-site-app-delivery`, tracked on desktop, site and extension (109 families, 327 rows). Branch `feature/inventory-new-ids`.

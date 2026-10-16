@@ -42,19 +42,42 @@ export function createCredentialStore({directory,safeStorage}){
  async function read(){try{const info=await fs.stat(filename);if(info.size>4*1024*1024)throw Error('Protected record store exceeds its limit.');const data=JSON.parse(await fs.readFile(filename,'utf8'));if(!object(data))throw Error('Invalid protected record store.');return data;}catch(e){if(e.code==='ENOENT')return {};throw e;}}
  function available(){if(!safeStorage?.isEncryptionAvailable())throw Error('Operating-system protected storage is unavailable.');}
  function check(key){if(typeof key!=='string'||!keyPattern.test(key))throw Error('Invalid protected record identifier.');}
- async function write(data){const text=encoded(data);if(Buffer.byteLength(text)>4*1024*1024)throw Error('Protected record store exceeds its limit.');await fs.mkdir(directory,{recursive:true});const temporary=filename+'.'+randomUUID()+'.tmp';try{await fs.writeFile(temporary,text,{mode:0o600,flag:'wx'});await fs.rename(temporary,filename);}finally{await fs.rm(temporary,{force:true});}}
+ async function write(data){const text=encoded(data);if(Buffer.byteLength(text)>4*1024*1024)throw Error('Protected record store exceeds its limit.');await fs.mkdir(directory,{recursive:true});const temporary=filename+'.'+randomUUID()+'.tmp';try{const handle=await fs.open(temporary,'wx',0o600);try{await handle.writeFile(text);await handle.sync();}finally{await handle.close();}await fs.rename(temporary,filename);}finally{await fs.rm(temporary,{force:true});}}
  const revisionKey="__protected_record_revisions_v1";
  function revisions(data){if(!Object.hasOwn(data,revisionKey))return {};const value=JSON.parse(safeStorage.decryptString(Buffer.from(data[revisionKey],"base64")));if(!object(value)||Object.entries(value).some(([key,revision])=>!keyPattern.test(key)||typeof revision!=="string"||!/^[a-f0-9-]{36}$/.test(revision)))throw Error("Invalid protected revision index.");return value;}
  function advanceRevision(data,key){const index=revisions(data),revision=randomUUID();index[key]=revision;bounded(index,1024*1024);data[revisionKey]=safeStorage.encryptString(encoded(index)).toString("base64");return revision;}
- function mutate(action){const next=chain.catch(()=>{}).then(action);chain=next;return next;}
+ function mutate(action){const next=chain.catch(()=>{}).then(async()=>{
+  await fs.mkdir(directory,{recursive:true});const lock=filename+'.lock';let handle;
+  try{handle=await fs.open(lock,'wx',0o600);}catch(error){if(error.code==='EEXIST')throw Error('Protected storage is busy or requires abandoned-lock recovery.');throw error;}
+  try{return await action();}finally{await handle.close();await fs.rm(lock);}
+ });chain=next;return next;}
  return {
-  async get(key){check(key);available();await chain;const data=await read();if(!Object.hasOwn(data,key))return null;return JSON.parse(safeStorage.decryptString(Buffer.from(data[key],'base64')));},
+  async get(key){check(key);available();await chain.catch(()=>{});const data=await read();if(!Object.hasOwn(data,key))return null;return JSON.parse(safeStorage.decryptString(Buffer.from(data[key],'base64')));},
   set(key,value){check(key);available();bounded(value);return mutate(async()=>{const data=await read();data[key]=safeStorage.encryptString(encoded(value)).toString('base64');advanceRevision(data,key);await write(data);});},
   compareAndSet(key,expected,replacement){check(key);available();bounded(expected);bounded(replacement);const expectedText=encoded(expected),replacementText=encoded(replacement);return mutate(async()=>{available();const data=await read();const current=Object.hasOwn(data,key)?safeStorage.decryptString(Buffer.from(data[key],'base64')):'null';if(encoded(JSON.parse(current))!==expectedText)return false;if(replacementText==='null')delete data[key];else data[key]=safeStorage.encryptString(replacementText).toString('base64');advanceRevision(data,key);await write(data);return true;});},
   delete(key){check(key);return mutate(async()=>{const data=await read();available();delete data[key];advanceRevision(data,key);await write(data);});},
-  async readVersioned(key){check(key);available();await chain;const data=await read();return{value:Object.hasOwn(data,key)?JSON.parse(safeStorage.decryptString(Buffer.from(data[key],'base64'))):null,revision:revisions(data)[key]||null};},
+  async readVersioned(key){check(key);available();await chain.catch(()=>{});const data=await read();return{value:Object.hasOwn(data,key)?JSON.parse(safeStorage.decryptString(Buffer.from(data[key],'base64'))):null,revision:revisions(data)[key]||null};},
   compareAndSetVersioned(key,expectedRevision,replacement){check(key);available();if(expectedRevision!==null&&(typeof expectedRevision!=='string'||!/^[a-f0-9-]{36}$/.test(expectedRevision)))throw Error('Invalid protected record revision.');bounded(replacement);const replacementText=encoded(replacement);return mutate(async()=>{available();const data=await read(),currentRevision=revisions(data)[key]||null;if(currentRevision!==expectedRevision)return{updated:false,revision:currentRevision};if(replacementText==='null')delete data[key];else data[key]=safeStorage.encryptString(replacementText).toString('base64');const revision=advanceRevision(data,key);await write(data);return{updated:true,revision};});},
-  async list(prefix){if(typeof prefix!=='string'||!keyPattern.test(prefix+'x'))throw Error('Invalid protected record prefix.');await chain;return Object.keys(await read()).filter(key=>key.startsWith(prefix));}
+  // Host-only atomic batch. The journal receives the exact installed revisions
+  // in the same replacement file, so restart recovery has no ownership gap.
+  // The optional synchronous guard runs while the writer lock is held, after
+  // the revision comparison and before the write, so authorization that is
+  // lost while waiting for the lock aborts the batch without any change.
+  compareAndSetBatchVersioned(changes,journal,conditions=[],guard=null){
+   available();if(guard!==null&&typeof guard!=='function')throw Error('Invalid protected transaction guard.');if(!Array.isArray(changes)||!changes.length||changes.length>32)throw Error('Invalid protected transaction.');
+   if(!Array.isArray(conditions)||conditions.length>32)throw Error('Invalid protected transaction conditions.');
+   const rows=structuredClone(changes),intent=journal?structuredClone(journal):null,guards=structuredClone(conditions),keys=new Set();
+   for(const row of [...rows,...(intent?[intent]:[])]){check(row.key);if(keys.has(row.key)||row.expectedRevision!==null&&(typeof row.expectedRevision!=='string'||!/^[a-f0-9-]{36}$/.test(row.expectedRevision)))throw Error('Invalid protected transaction.');keys.add(row.key);bounded(row.replacement);}
+   for(const row of guards){check(row.key);if(keys.has(row.key)||row.expectedRevision!==null&&(typeof row.expectedRevision!=='string'||!/^[a-f0-9-]{36}$/.test(row.expectedRevision))||Object.keys(row).some(key=>!['key','expectedRevision'].includes(key)))throw Error('Invalid protected transaction condition.');keys.add(row.key);}
+   const receiptField=intent?.receiptField??'written';if(!['written','restored'].includes(receiptField))throw Error('Invalid protected journal receipt.');
+   return mutate(async()=>{available();const data=await read(),index=revisions(data);for(const row of [...rows,...(intent?[intent]:[]),...guards])if((index[row.key]||null)!==row.expectedRevision)return{updated:false};
+    if(guard&&guard()!==undefined)throw Error('Invalid protected transaction guard.');
+    const installed={};for(const row of rows){if(row.replacement===null)delete data[row.key];else data[row.key]=safeStorage.encryptString(encoded(row.replacement)).toString('base64');installed[row.key]=advanceRevision(data,row.key);}
+    let journalRevision=null;if(intent){const value={...intent.replacement,[receiptField]:{...intent.replacement?.[receiptField],...installed}};bounded(value);data[intent.key]=safeStorage.encryptString(encoded(value)).toString('base64');journalRevision=advanceRevision(data,intent.key);}
+    await write(data);return{updated:true,revisions:installed,journalRevision};
+   });
+  },
+  async list(prefix){if(typeof prefix!=='string'||!keyPattern.test(prefix+'x'))throw Error('Invalid protected record prefix.');await chain.catch(()=>{});return Object.keys(await read()).filter(key=>key.startsWith(prefix));}
  };
 }
 

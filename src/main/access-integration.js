@@ -10,6 +10,7 @@ import {accessGitEnvironment} from './access-git-environment.js';
 import {LOCK_POLICIES} from '../renderer/features/access/locks.js';
 import {validateOtp} from '../renderer/features/access/crypto.js';
 import {EXTENSION_LOCK_TABS,extensionLockId,isExtensionLockTab} from '../shared/extension-lock-targets.js';
+import {createProtectedSettingsReset} from './protected-settings-reset.js';
 
 const executeFile=promisify(execFile),credentialActions=new Set(['credentialGet','credentialSet','credentialDelete','credentialList']);
 const keyAllowed=key=>typeof key==='string'&&(/^(?:authenticator:|history:)[a-zA-Z0-9:_.-]{1,160}$/.test(key)||key==='local-profile:v1'||/^element-lock:[^\x00-\x1f\x7f]{1,256}$/.test(key));
@@ -83,6 +84,14 @@ export function createAccessIntegration({dataDirectory,toolsDirectory,credential
  }});
  async function profileGrant(who){const id=identity(who,'profile'),grant=grants.get(id),epoch=generation(who,'profile');const check=()=>{current(who,'profile',epoch);if(!grant||grants.get(id)!==grant||grant.expires<=now())throw Error('Unlock the local profile before accessing private history.');};check();const record=await credentials.readVersioned('local-profile:v1');check();if(record.revision!==grant.revision){grants.delete(id);throw Error('Unlock the local profile before accessing private history.');}return check;}
  async function privateHistoryMutation(who,action,key,value){const check=await profileGrant(who),before=await credentials.readVersioned(key);check();const written=await credentials.compareAndSetVersioned(key,before.revision,action==='credentialSet'?value:null);if(!written.updated)throw Error('Protected access record changed concurrently.');try{check();return true;}catch(error){const restored=await credentials.compareAndSetVersioned(key,written.revision,before.value);if(!restored.updated)throw Error('Protected access record changed concurrently. Local recovery is required.');throw error;}}
+ const settingsReset=typeof credentials.compareAndSetBatchVersioned==='function'?createProtectedSettingsReset({credentials,getActor:actor,now,
+  authorize:async who=>{
+   const profile=await profileGrant(who),history=host.authorizeSettingsReset(),grant=grants.get(identity(who,'profile')),revision=grant?.revision;
+   const check=async()=>{profile();history();const record=await credentials.readVersioned('local-profile:v1');profile();history();if(record.revision!==revision){grants.delete(identity(who,'profile'));throw Error('Unlock the local profile before resetting preferences.');}};
+   check.sync=()=>{profile();history();};check.conditions=[{key:'local-profile:v1',expectedRevision:revision}];return check;
+  },
+  audit:record=>host.auditSettingsReset(record),
+ }):null;
  async function mutateCredential(who,action,key,value){
   if(key.startsWith('authenticator:'))return action==='credentialSet'?host.setCredential(key,value):host.deleteCredential(key);
   if(key.startsWith('history:'))return privateHistoryMutation(who,action,key,value);
@@ -154,6 +163,16 @@ export function createAccessIntegration({dataDirectory,toolsDirectory,credential
   async readNativeWaitingLadder(){return nativeRun(async()=>{const waiting=await host.request('waitStatus',{target:'profile'});return {level:waiting.level,until:waiting.until};});},
   async readNativeProfileSummary(context){if(!await validateNativeProfileAuthority(context))throw Error('Native profile authority expired.');return {schemaVersion:1,profile:'authenticated',protectedAccess:'granted'};},
   protectionStatus,
+  // Not exposed through renderer IPC until every desktop preference writer
+  // adopts the native authority and the exact preview is wired to approval.
+  requestSettingsReset(senderFrame,action,payload={}){
+   if(!settingsReset||closed||!senderFrame||senderFrame!==getMainFrame()||typeof senderFrame!=='object')return Promise.reject(Error('Coordinated settings reset is unavailable.'));
+   const schema=action==='prepare'?['includeDisplayName']:['id'];
+   if(!['prepare','commit','abort'].includes(action)||!object(payload)||Reflect.ownKeys(payload).length!==schema.length||schema.some(key=>!Object.hasOwn(payload,key))||action==='prepare'&&typeof payload.includeDisplayName!=='boolean'||action!=='prepare'&&(typeof payload.id!=='string'||!/^[a-f0-9-]{36}$/.test(payload.id)))return Promise.reject(Error('Unsupported settings reset payload.'));
+   const copy=structuredClone(payload);if(!actors.has(senderFrame))actors.set(senderFrame,randomUUID());
+   return context.run({frame:senderFrame,actor:actors.get(senderFrame)},()=>action==='prepare'?settingsReset.prepare(copy):settingsReset[action](copy.id));
+  },
+  recoverSettingsReset(){if(!settingsReset)return Promise.reject(Error('Coordinated settings reset is unavailable.'));return settingsReset.recover();},
   request(senderFrame,action,payload={}){
    if(closed||!senderFrame||typeof senderFrame!=='object'||senderFrame!==getMainFrame())return Promise.reject(Error('Trusted access actor is unavailable.'));
    if(credentialActions.has(action))validateCredentialRequest(action,payload);else validateAccessHostRequest(action,payload);
@@ -169,6 +188,6 @@ export function createAccessIntegration({dataDirectory,toolsDirectory,credential
    });
   },
   supports(action){return credentialActions.has(action)||ACCESS_HOST_ACTIONS.includes(action);},
-  close(){revokeNativeProfile();closed=true;lifetime.abort();host.close();grants.clear();creations.clear();epochs.clear();},
+  close(){revokeNativeProfile();closed=true;settingsReset?.close();lifetime.abort();host.close();grants.clear();creations.clear();epochs.clear();},
  };
 }
