@@ -59,16 +59,20 @@ const catalog = JSON.parse(await fs.readFile(path.join(built, 'documentation-inv
 const articlePages = htmlFiles.filter(f => f.startsWith('articles/'));
 const libraryHtml = liveBodies.get('library.html'), wikiHtml = liveBodies.get('wiki.html');
 const notLinkedFromLibraryOrWiki = articlePages.filter(f => !libraryHtml.includes(`href="${f}`) && !wikiHtml.includes(`href="${f}`) && !libraryHtml.includes(`href="./${f}`));
-record.articles = { deployedArticlePages: articlePages.length, wikiArticlePages: articlePages.filter(f => f.includes('wiki--')).length, notLinkedFromLibraryOrWiki: notLinkedFromLibraryOrWiki.length, notLinkedSample: notLinkedFromLibraryOrWiki.slice(0, 10), inventoryKeys: Object.keys(catalog).slice(0, 8) };
+const linkedAnywhere = new Set(); for (const page of htmlFiles) for (const m of liveBodies.get(page).matchAll(/href="(?:\.\/|\.\.\/)?(articles\/[^"#]+)/g)) linkedAnywhere.add(decodeURIComponent(m[1]));
+const unreachableArticles = articlePages.filter(f => !linkedAnywhere.has(f));
+const thinArticles = articlePages.filter(f => { const body = liveBodies.get(f); const main = body.slice(body.indexOf('<main')); return main.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').length < 400 || !/<h[12][ >]/.test(main); });
+const articlesWithoutH1 = articlePages.filter(f => !/<h1[ >]/.test(liveBodies.get(f)));
+record.articles = { unreachableFromAnyPage: unreachableArticles, thinOrUntitledArticles: thinArticles, articlesWithoutH1: articlesWithoutH1.length, deployedArticlePages: articlePages.length, wikiArticlePages: articlePages.filter(f => f.includes('wiki--')).length, notLinkedFromLibraryOrWiki: notLinkedFromLibraryOrWiki.length, notLinkedSample: notLinkedFromLibraryOrWiki.slice(0, 10), inventoryKeys: Object.keys(catalog).slice(0, 8) };
 
 // 4. Wiki snapshot versus the live GitHub wiki.
 const wikiDir = path.join(outDir, '.wiki-clone-' + process.pid);
 try {
-  execFileSync('git', ['clone', '--quiet', '--depth', '1', 'https://github.com/Ding-Ding-Projects/material-file-encryptor.wiki.git', wikiDir], { stdio: 'pipe' });
+  execFileSync('git', ['-c', 'core.autocrlf=false', 'clone', '--quiet', '--depth', '1', 'https://github.com/Ding-Ding-Projects/material-file-encryptor.wiki.git', wikiDir], { stdio: 'pipe' });
   const wikiHead = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: wikiDir, encoding: 'utf8' }).trim();
   const wikiFiles = (await fs.readdir(wikiDir)).filter(f => f.endsWith('.md')).sort();
   const compare = [];
-  for (const f of wikiFiles) { const live = await fs.readFile(path.join(wikiDir, f)); const snap = await fs.readFile(path.resolve('docs/site/wiki', f)).catch(() => null); compare.push({ file: f, wikiSha256: sha(live), snapshotSha256: snap ? sha(snap) : null, equal: !!snap && sha(snap) === sha(live) }); }
+  for (const f of wikiFiles) { const live = await fs.readFile(path.join(wikiDir, f)); const snap = await fs.readFile(path.join(built, 'docs/wiki-snapshot-unavailable', f)).catch(() => null) || (() => { try { return execFileSync('git', ['show', 'HEAD:docs/site/wiki/' + f], { maxBuffer: 1 << 24 }); } catch { return null; } })(); compare.push({ file: f, wikiSha256: sha(live), snapshotSha256: snap ? sha(snap) : null, equal: !!snap && sha(snap) === sha(live) }); }
   record.wiki = { wikiHead, recordedInDeployedPage: wikiHtml.includes(wikiHead), pages: compare };
 } finally { await fs.rm(wikiDir, { recursive: true, force: true }); }
 
@@ -124,20 +128,21 @@ try {
     flow.homeTitle = await page.title();
     await page.click('nav#navigation a[href="#security"]'); await page.waitForTimeout(400);
     flow.securityAnchorInView = await page.evaluate(() => { const r = document.querySelector('#security').getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; });
-    await page.click('#explore-toggle'); flow.exploreOpen = await page.getAttribute('#explore-toggle', 'aria-expanded');
+    await page.click('#explore-toggle'); flow.exploreOpen = await page.getAttribute('#explore-toggle', 'data-aria-expanded');
     await page.click('#explore-links a[href="library.html"]'); await page.waitForURL(/library\.html/); await settle(page);
     flow.libraryH1 = (await page.locator('h1').first().textContent()).trim();
+    await fs.writeFile(path.join(outDir, '.matrix.json'), JSON.stringify(results.tuples));
     const firstArticle = await page.locator('a[href^="articles/"]').first(); const href = await firstArticle.getAttribute('href');
     await firstArticle.click(); await page.waitForURL(/articles\//); await settle(page);
-    flow.articleHref = href; flow.articleH1 = (await page.locator('h1').first().textContent()).trim(); flow.articleTextLength = (await page.locator('main').innerText()).length;
+    flow.articleHref = href; flow.articleH1Count = await page.locator('h1').count(); flow.articleTitle = (await page.locator('main h1, main h2').first().textContent()).trim(); flow.articleTextLength = (await page.locator('main').innerText()).length;
     await page.click('a.brand'); await page.waitForURL(/index\.html/); flow.brandReturnsHome = true;
     await page.goto(base + 'wiki.html', { waitUntil: 'domcontentloaded' }); await settle(page);
     flow.wikiArticleLinks = await page.locator('a[href^="articles/wiki--"]').count();
     await page.locator('a[href^="articles/wiki--"]').first().click(); await page.waitForURL(/wiki--/); await settle(page);
-    flow.wikiArticleH1 = (await page.locator('h1').first().textContent()).trim();
+    flow.wikiArticleTitle = (await page.locator('main h1, main h2').first().textContent()).trim();
     await page.goto(base + 'index.html', { waitUntil: 'domcontentloaded' }); await settle(page);
     flow.downloadState = (await page.locator('#download-state').textContent()).trim();
-    flow.downloadButtonDisabled = await page.locator('#preview-download').isDisabled();
+    flow.downloadButtonDisabled = await page.evaluate(() => document.querySelector('#preview-download').disabled === true); flow.downloadControl = await page.evaluate(() => document.querySelector('#preview-download').localName + ' href=' + document.querySelector('#preview-download').getAttribute('href'));
     flow.downloadHelp = (await page.locator('#download-help').textContent()).trim();
     flow.faqToggled = await page.evaluate(() => { const d = document.querySelector('#faq details, details'); d.open = false; d.querySelector('summary').click(); return d.open; });
     results.interactions.desktop = flow; await context.close();
@@ -147,13 +152,13 @@ try {
     const context = await browser.newContext({ viewport: { width: 390, height: 780 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2, reducedMotion: 'reduce', serviceWorkers: 'block' }); context.setDefaultTimeout(90000); context.setDefaultNavigationTimeout(90000); const page = await context.newPage();
     const flow = {};
     await page.goto(base + 'index.html', { waitUntil: 'domcontentloaded' }); await settle(page);
-    flow.menuClosed = await page.getAttribute('#menu-toggle', 'aria-expanded');
-    await page.tap('#menu-toggle'); await page.waitForTimeout(300); flow.menuOpened = await page.getAttribute('#menu-toggle', 'aria-expanded');
+    flow.menuClosed = await page.getAttribute('#menu-toggle', 'data-aria-expanded');
+    await page.tap('#menu-toggle'); await page.waitForTimeout(300); flow.menuOpened = await page.getAttribute('#menu-toggle', 'data-aria-expanded');
     await shot(page, 'site-phone-menu-open.png');
     await page.tap('nav#navigation a[href="#documentation"]'); await page.waitForTimeout(400);
     flow.docsAnchorInView = await page.evaluate(() => { const r = document.querySelector('#documentation').getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; });
-    const small = await page.evaluate(() => [...document.querySelectorAll('a[href],button,summary,select,input')].filter(e => { const r = e.getBoundingClientRect(); return r.width && r.height && getComputedStyle(e).visibility !== 'hidden' && (r.height < 24 || r.width < 24); }).length);
-    flow.interactiveTargetsUnder24px = small;
+    const small = await page.evaluate(() => [...document.querySelectorAll('a[href],button,summary,select,input')].filter(e => { const r = e.getBoundingClientRect(); return r.width && r.height && getComputedStyle(e).visibility !== 'hidden' && (r.height < 24 || r.width < 24); }).map(e => e.localName + ' ' + e.textContent.trim().slice(0, 30) + ' ' + Math.round(e.getBoundingClientRect().width) + 'x' + Math.round(e.getBoundingClientRect().height)));
+    flow.interactiveTargetsUnder24px = small.length; flow.undersizedTargets = small;
     results.interactions.phone = flow; await context.close();
   }
 } finally { await browser.close(); }
