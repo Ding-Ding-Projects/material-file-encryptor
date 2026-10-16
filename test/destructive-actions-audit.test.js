@@ -92,3 +92,10 @@ test('a malformed registry entry is reported', async () => {
   assert.match(messages, /affected needs an English and a Cantonese text/);
   assert.match(messages, /list the handler or request tokens/);
 });
+
+test('a bypass added to just one of several entry points is still a finding', async () => {
+  const sites = destructiveAction('desktop.force-lock').sites;
+  assert.equal(sites, 3, 'force lock has a button and two palette commands');
+  const findings = await auditWith('src/renderer/app.js', text => text.replace("if(await superConfirm('desktop.force-lock'))return run(", 'if(true)return run('));
+  assert.ok(findings.some(item => item.kind === 'unconfirmed' && item.message.startsWith('desktop.force-lock:') && /2 of 3/.test(item.message)), JSON.stringify(findings));
+});

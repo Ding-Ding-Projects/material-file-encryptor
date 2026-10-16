@@ -18,8 +18,10 @@ export const CONFIRMATION_ROUTES = Object.freeze({
   nativeBoundary: 'native-consent-boundary'
 });
 
-const entry = (id, surfaces, file, invokes, title, affected, route = CONFIRMATION_ROUTES.superConfirmation) => Object.freeze({
-  id, surfaces: Object.freeze([...surfaces]), file, invokes: Object.freeze([...invokes]), title: Object.freeze([...title]), affected: Object.freeze([...affected]), route
+// sites is how many places in the file start this action (a button, a palette command, a menu item). The guard requires
+// at least that many confirmation references, so a bypass added to one of several entry points is still caught.
+const entry = (id, surfaces, file, invokes, title, affected, route = CONFIRMATION_ROUTES.superConfirmation, sites = 1) => Object.freeze({
+  id, surfaces: Object.freeze([...surfaces]), file, invokes: Object.freeze([...invokes]), title: Object.freeze([...title]), affected: Object.freeze([...affected]), route, sites
 });
 
 const D = ['desktop'];
@@ -29,12 +31,12 @@ const S = ['site'];
 
 export const DESTRUCTIVE_ACTIONS = Object.freeze([
   // ---- Desktop: drive and files -------------------------------------------------------------------------------
-  entry('desktop.force-lock', D, 'src/renderer/app.js', ['forceLock'], ['Force lock the drive', '強制鎖定磁碟'], ['The drive unmounts at once. Open files may lose unsaved changes.', '磁碟會即時卸載，未儲存嘅更改可能會遺失。']),
+  entry('desktop.force-lock', D, 'src/renderer/app.js', ['forceLock'], ['Force lock the drive', '強制鎖定磁碟'], ['The drive unmounts at once. Open files may lose unsaved changes.', '磁碟會即時卸載，未儲存嘅更改可能會遺失。'], undefined, 3),
   entry('desktop.empty-recycle-bin', D, 'src/renderer/app.js', ['emptyRecycleBin'], ['Empty the Recycle Bin', '清空資源回收筒'], ['Every deleted entry in the Recycle Bin is permanently removed.', '資源回收筒入面所有已刪除項目會永久移除。']),
-  entry('desktop.restore-version', DS, 'src/renderer/app.js', ['restoreVersion'], ['Restore an older version', '還原舊版本'], ['The chosen version becomes the current content of the file.', '揀咗嘅版本會變成檔案嘅目前內容。']),
+  entry('desktop.restore-version', DS, 'src/renderer/app.js', ['restoreVersion'], ['Restore an older version', '還原舊版本'], ['The chosen version becomes the current content of the file.', '揀咗嘅版本會變成檔案嘅目前內容。'], undefined, 2),
   entry('desktop.release-offline-copy', D, 'src/renderer/app.js', ['releaseOffline'], ['Remove the offline copy', '移除離線副本'], ['The unneeded encrypted cache for this file is deleted from this device.', '呢個檔案用唔著嘅加密快取會由本機刪除。']),
   entry('desktop.resplit-files', D, 'src/renderer/app.js', ['resplit'], ['Re-split every file', '重新分割所有檔案'], ['Replacement encrypted parts are written for every file using the current part size.', '會用目前嘅分段大小為所有檔案寫入新嘅加密分段。']),
-  entry('desktop.forget-saved-credential', D, 'src/renderer/app.js', ['forgetSavedCredential', 'setAutoUnlock'], ['Turn off automatic unlock', '關閉自動解鎖'], ['The protected drive key saved on this device is forgotten.', '儲存喺本機嘅受保護磁碟金鑰會被忘記。']),
+  entry('desktop.forget-saved-credential', D, 'src/renderer/app.js', ['forgetSavedCredential', 'setAutoUnlock'], ['Turn off automatic unlock', '關閉自動解鎖'], ['The protected drive key saved on this device is forgotten.', '儲存喺本機嘅受保護磁碟金鑰會被忘記。'], undefined, 2),
   entry('desktop.pack-storage', D, 'src/renderer/app.js', ['startPacking'], ['Pack encrypted storage', '整合加密儲存'], ['Encrypted storage parts are rewritten with the chosen part size.', '加密儲存分段會按揀選嘅大小重寫。']),
   entry('desktop.replace-converter-output', DS, 'src/renderer/app.js', ['confirmOverwrite'], ['Replace the output file', '取代輸出檔案'], ['The selected output file is overwritten. Source files stay unchanged.', '揀選嘅輸出檔案會被覆寫，來源檔案保持不變。']),
   entry('desktop.install-update', D, 'src/renderer/app.js', ['updates'], ['Install the update and restart', '安裝更新並重新啟動'], ['Installed application files are replaced and the application restarts.', '已安裝嘅程式檔案會被取代，程式會重新啟動。']),
@@ -50,7 +52,7 @@ export const DESTRUCTIVE_ACTIONS = Object.freeze([
   entry('desktop.server-stop', D, 'src/renderer/features/server-manager/targets-panel.js', ['stopServer'], ['Stop the server', '停止伺服器'], ['Players are disconnected and the server process ends.', '玩家會斷線，伺服器程序會結束。']),
   entry('desktop.server-restart', D, 'src/renderer/features/server-manager/targets-panel.js', ['restartServer'], ['Restart the server', '重新啟動伺服器'], ['Players are disconnected while the server stops and starts again.', '伺服器停止同再啟動期間，玩家會斷線。']),
   entry('desktop.server-change-setting', D, 'src/renderer/features/server-manager/targets-panel.js', ['changeServerSetting'], ['Change a server setting', '更改伺服器設定'], ['The server configuration file is overwritten with the new value.', '伺服器設定檔會被新數值覆寫。']),
-  entry('desktop.server-install-plugin', D, 'src/renderer/features/server-manager/targets-panel.js', ['installExtension'], ['Install a server plugin', '安裝伺服器外掛'], ['Plugin files are written into the server folder and can replace existing files.', '外掛檔案會寫入伺服器資料夾，可能取代現有檔案。']),
+  entry('desktop.server-install-plugin', D, 'src/renderer/features/server-manager/targets-panel.js', ['installExtension'], ['Install a server plugin', '安裝伺服器外掛'], ['Plugin files are written into the server folder and can replace existing files.', '外掛檔案會寫入伺服器資料夾，可能取代現有檔案。'], undefined, 2),
   // ---- Desktop and site: local access ------------------------------------------------------------------------
   entry('desktop.access-remove-lock', DS, 'src/renderer/features/access/index.js', ['controller.remove'], ['Remove the lock', '移除鎖定'], ['The lock on this element is removed.', '呢個元素嘅鎖定會被移除。']),
   entry('desktop.access-remove-authenticators', DS, 'src/renderer/features/access/index.js', ['removeAuthenticators'], ['Remove authenticators', '移除驗證器'], ['The selected authenticators are deleted from the local profile.', '揀選嘅驗證器會由本機設定檔刪除。']),

@@ -43,14 +43,14 @@ const defaultFiles = () => SOURCE_DIRS.flatMap(directory => walk(join(root, dire
 const defaultRead = file => readFileSync(join(root, file), 'utf8');
 
 /** The id counts only as an argument of a confirmation helper, as an option named destructiveId, or as the trailing id of a confirmAction callback. */
-function referencesId(text, id) {
+function countReferences(text, id) {
   const q = '[\'"`]', literal = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const shapes = [
-    new RegExp(`destructiveId\\s*:\\s*${q}${literal}${q}`),
-    new RegExp(`\\b(?:${CONFIRM_HELPERS})\\(\\s*(?:[^,'"\`()]{0,60},\\s*)?${q}${literal}${q}`),
-    new RegExp(`confirmAction\\([\\s\\S]{0,4000}?\\}\\s*,\\s*${q}${literal}${q}\\s*\\)`)
+    new RegExp(`destructiveId\\s*:\\s*${q}${literal}${q}`, 'g'),
+    new RegExp(`\\b(?:${CONFIRM_HELPERS})\\(\\s*(?:[^,'"\`()]{0,60},\\s*)?${q}${literal}${q}`, 'g'),
+    new RegExp(`confirmAction\\([\\s\\S]{0,4000}?\\}\\s*,\\s*${q}${literal}${q}\\s*\\)`, 'g')
   ];
-  return shapes.some(shape => shape.test(text));
+  return shapes.reduce((sum, shape) => sum + [...text.matchAll(shape)].length, 0);
 }
 
 /** Names a registry entry accounts for: each invokes token, and the last segment of a dotted token. */
@@ -110,7 +110,8 @@ export async function auditDestructiveActions({read = defaultRead, files = defau
     if (entry.route !== 'super-confirmation') continue;
     let text;
     try { text = read(entry.file); } catch { add('unconfirmed', entry.file, `${entry.id}: source file is missing`); continue; }
-    if (!referencesId(text, entry.id)) add('unconfirmed', entry.file, `${entry.id}: no confirmation call references this id, so the action can run without the two-key confirmation`);
+    const found = countReferences(text, entry.id), needed = entry.sites ?? 1;
+    if (found < needed) add('unconfirmed', entry.file, `${entry.id}: ${found} of ${needed} entry points reference this id in a confirmation call, so the action can run without the two-key confirmation`);
     for (const token of entry.invokes) if (!text.includes(token)) add('unconfirmed', entry.file, `${entry.id}: handler token ${token} is gone from this file, so the registry entry is stale`);
   }
 

@@ -40,18 +40,18 @@ test('actual site upload callback keeps locked wording pending and encrypts auth
 test('actual desktop callback suppresses stale failures and removes failed-write cache', async () => {
   const script=source('../src/renderer/app.js');
   const callbackSource=script.slice(script.indexOf("listen('vocabulary-file','change'"),script.indexOf("for (const dialog of",script.indexOf("listen('vocabulary-file','change'")));
-  const handlers={}, removed=[], errors=[];
-  const run = new Function('parseVocabulary','listen','localStorage','$','showError','applyPreferences','toast', `
+  const handlers={}, removed=[], errors=[], confirmed=[];
+  const run = new Function('parseVocabulary','listen','localStorage','$','showError','applyPreferences','toast','superConfirm', `
     let vocabularyUploadVersion=0, preferences={vocabulary:parseVocabulary('${words('old')}')}, vocabularyPersisted=true;
     const savePreferences=()=>false;
     ${callbackSource}
     return ()=>preferences;
   `);
-  const state=run(parseVocabulary,(id,event,handler)=>handlers[id]=handler,{removeItem:key=>removed.push(key)},()=>({remove(){}}),error=>errors.push(error),()=>{},()=>{});
+  const state=run(parseVocabulary,(id,event,handler)=>handlers[id]=handler,{removeItem:key=>removed.push(key)},()=>({remove(){}}),error=>errors.push(error),()=>{},()=>{},async id=>{confirmed.push(id);return true;});
   let reject;
   const stale={files:[{size:1,text:()=>new Promise((resolve,rejectPromise)=>{reject=rejectPromise;})}],value:'old-selection'};
   const pending=handlers['vocabulary-file']({target:stale});
-  handlers['reset-vocabulary'](); reject(Error('stale read')); await pending;
+  await handlers['reset-vocabulary'](); reject(Error('stale read')); await pending; assert.deepEqual(confirmed,['desktop.reset-vocabulary']);
   assert.equal(errors.length,0); assert.equal(stale.value,'old-selection');
   const current={files:[file(words('current'))],value:'selected'};
   await handlers['vocabulary-file']({target:current});
@@ -68,4 +68,24 @@ test('Unicode path prefixes and quoted paths with spaces preserve both separator
   for (const path of ['資料夾/file','資料夾\\file','"資料夾 name/file name"',"'資料夾 name\\file name'",'"folder name/file name"']) {
     assert.equal(replaceVocabulary(`${path} folder 資料夾`,vocabulary),`${path} cabinet replacement`);
   }
+});
+
+test('declining the desktop wording reset or overwrite import leaves the saved wording alone', async () => {
+  const script=source('../src/renderer/app.js');
+  const callbackSource=script.slice(script.indexOf("listen('vocabulary-file','change'"),script.indexOf("for (const dialog of",script.indexOf("listen('vocabulary-file','change'")));
+  const handlers={}, removed=[], asked=[];
+  const run = new Function('parseVocabulary','listen','localStorage','$','showError','applyPreferences','toast','superConfirm', `
+    let vocabularyUploadVersion=0, preferences={vocabulary:parseVocabulary('${words('old')}')}, vocabularyPersisted=true;
+    const savePreferences=()=>true;
+    ${callbackSource}
+    return ()=>preferences;
+  `);
+  const state=run(parseVocabulary,(id,event,handler)=>handlers[id]=handler,{removeItem:key=>removed.push(key)},()=>({remove(){}}),()=>{},()=>{},()=>{},async id=>{asked.push(id);return false;});
+  await handlers['reset-vocabulary']();
+  assert.equal(replaceVocabulary('folder',state().vocabulary),'old');
+  const target={files:[file(words('current'))],value:'selected'};
+  await handlers['vocabulary-file']({target});
+  assert.equal(replaceVocabulary('folder',state().vocabulary),'old');
+  assert.deepEqual(asked,['desktop.reset-vocabulary','desktop.import-vocabulary']);
+  assert.deepEqual(removed,[]);
 });
