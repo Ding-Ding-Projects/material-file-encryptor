@@ -415,8 +415,8 @@
     {
       "source": "docs/features/platform/documentation-and-status.md",
       "translation": "docs/features/platform/documentation-and-status.zh-HK.md",
-      "sourceSha256": "b121a9ae8e6193d91a51355d2cd503d5c1c40427ea28e07c676fa9e13f3ebac7",
-      "translationSha256": "e303f34b1e4c00b16cd47ce650ecc3a84a91ebfa3ef1c10c91cca39e815bdc1c"
+      "sourceSha256": "39f83f8413e71fb0b1c614510b71fba03d1d9e3bc387a71c8f83cd30bd81d62f",
+      "translationSha256": "273cff65fb1bc7d5b66f2c41d81a59977eb698720b69ae62123682773cdfffab"
     },
     {
       "source": "docs/features/platform/extension-assessment.md",
