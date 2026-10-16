@@ -414,7 +414,7 @@ Headless Microsoft Edge with the staged extension from source `b4cbf0e`, loaded 
 
 #### Documentation site
 
-Captures of the documentation site staged from source `4f50028` and served from loopback in a disposable headless Microsoft Edge profile, light theme, English. They show public pages only, not native-product or installed acceptance. The workspace page was not captured because its article list renders unstyled.
+Captures of the documentation site staged from source `048cfbd` and served from loopback in a disposable headless Microsoft Edge profile, light theme, English. They show public pages only, not native-product or installed acceptance. The workspace page was not captured because its article list renders unstyled.
 
 <details>
 <summary>Documentation site (6)</summary>
