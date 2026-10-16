@@ -138,7 +138,7 @@ Every image below is a genuine capture of a real build; none is a mock, design p
 
 #### Desktop application
 
-86 captures of the installed desktop application, version 1.702.1, built from source `9394b35`. Each was taken by window handle on a task-owned hidden desktop at 150 percent display scale (a 1280 by 800 window, saved at 1920 by 1200 pixels) with an isolated profile and a throwaway vault that holds test files only and uses neutral folder names. The capture host reported no frame showing a private path. The run captured 312 frames in all, covering 52 screens in light and dark themes and in English, Cantonese and bilingual modes; these are the ones published. A tabbed screen's own frame shows the tab named in its caption, and a few dark and bilingual frames show the last tab visited. Home is the first group. The drive, Pair a browser and server frames were retaken from a later installed release, listed with its own manifest below. The [capture manifest](docs/images/captures/refresh-b4cbf0e/desktop-capture-manifest.json) records every frame's hash.
+91 captures of the installed desktop application, version 1.702.1, built from source `9394b35`. Each was taken by window handle on a task-owned hidden desktop at 150 percent display scale (a 1280 by 800 window, saved at 1920 by 1200 pixels) with an isolated profile and a throwaway vault that holds test files only and uses neutral folder names. The capture host reported no frame showing a private path. The run captured 312 frames in all, covering 52 screens in light and dark themes and in English, Cantonese and bilingual modes; these are the ones published. A tabbed screen's own frame shows the tab named in its caption, and a few dark and bilingual frames show the last tab visited. Home is the first group. The drive, Pair a browser and server frames were retaken from a later installed release, listed with its own manifest below. The [capture manifest](docs/images/captures/refresh-b4cbf0e/desktop-capture-manifest.json) records every frame's hash.
 
 <details>
 <summary>Home and navigation (7)</summary>
@@ -284,28 +284,45 @@ Every image below is a genuine capture of a real build; none is a mock, design p
 </details>
 
 <details>
-<summary>Pair a browser (2)</summary>
+<summary>Pair a browser (4)</summary>
 
-| Pair a browser | Pair a browser, dark |
-|---|---|
-| ![Pair a browser](docs/images/captures/refresh-6ef15e8/desktop/pair-a-browser-light-en.png) | ![Pair a browser, dark](docs/images/captures/refresh-6ef15e8/desktop/pair-a-browser-dark-en.png) |
+| Pair a browser | Pair a browser, dark | Pair a browser, Cantonese |
+|---|---|---|
+| ![Pair a browser](docs/images/captures/refresh-5db936f/desktop/pair-a-browser-light-en.png) | ![Pair a browser, dark](docs/images/captures/refresh-5db936f/desktop/pair-a-browser-dark-en.png) | ![Pair a browser, Cantonese](docs/images/captures/refresh-5db936f/desktop/pair-a-browser-light-yue.png) |
+
+| Pair a browser, bilingual |
+|---|
+| ![Pair a browser, bilingual](docs/images/captures/refresh-5db936f/desktop/pair-a-browser-light-bilingual.png) |
 
 </details>
 
 <details>
-<summary>Server cards and server lifecycle (9)</summary>
+<summary>Quitting the app (2)</summary>
 
-| Server card, running | Server card, running, dark | Server card, failed, with the reason chip |
-|---|---|---|
-| ![Server card, running](docs/images/captures/refresh-6ef15e8/desktop/server-card-running-light-en.png) | ![Server card, running, dark](docs/images/captures/refresh-6ef15e8/desktop/server-card-running-dark-en.png) | ![Server card, failed, with the reason chip](docs/images/captures/refresh-6ef15e8/desktop/server-card-failed-light-en.png) |
+| Help menu with Quit Material File Encryptor | Command palette searching for Quit |
+|---|---|
+| ![Help menu with Quit Material File Encryptor](docs/images/captures/refresh-5db936f/desktop/quit-help-menu-light-en.png) | ![Command palette searching for Quit](docs/images/captures/refresh-5db936f/desktop/quit-palette-query-light-en.png) |
 
-| Server card, failed, with the reason chip, dark | Server card needing Java 25 after the Java check, dark, bilingual | Java-check refusal message, dark, bilingual |
-|---|---|---|
-| ![Server card, failed, with the reason chip, dark](docs/images/captures/refresh-6ef15e8/desktop/server-card-failed-dark-en.png) | ![Server card needing Java 25 after the Java check, dark, bilingual](docs/images/captures/refresh-6ef15e8/desktop/server-java25-needed-dark-bilingual.png) | ![Java-check refusal message, dark, bilingual](docs/images/captures/refresh-6ef15e8/desktop/server-java-check-refusal-dark-bilingual.png) |
+</details>
 
-| Server running, dark, bilingual | Server logs ending with the Done line, dark, bilingual | Close dialog while a server runs: keep in the tray, stop and quit, or cancel |
+<details>
+<summary>Server cards and server lifecycle (10)</summary>
+
+| Server card, running | Server card, running, dark | Server card, failed: Ended unexpectedly, exit code -1 |
 |---|---|---|
-| ![Server running, dark, bilingual](docs/images/captures/refresh-6ef15e8/desktop/server-running-card-dark-bilingual.png) | ![Server logs ending with the Done line, dark, bilingual](docs/images/captures/refresh-6ef15e8/desktop/server-running-logs-dark-bilingual.png) | ![Close dialog while a server runs: keep in the tray, stop and quit, or cancel](docs/images/captures/refresh-6ef15e8/desktop/close-dialog-server-running-dark-bilingual.png) |
+| ![Server card, running](docs/images/captures/refresh-6ef15e8/desktop/server-card-running-light-en.png) | ![Server card, running, dark](docs/images/captures/refresh-6ef15e8/desktop/server-card-running-dark-en.png) | ![Server card, failed: Ended unexpectedly, exit code -1](docs/images/captures/refresh-5db936f/desktop/server-card-failed-light-en.png) |
+
+| Server card, failed: Ended unexpectedly, exit code -1, dark | Server card, failed, scrolled to the last log lines | Server card needing Java 25 after the Java check, dark, bilingual |
+|---|---|---|
+| ![Server card, failed: Ended unexpectedly, exit code -1, dark](docs/images/captures/refresh-5db936f/desktop/server-card-failed-dark-en.png) | ![Server card, failed, scrolled to the last log lines](docs/images/captures/refresh-5db936f/desktop/server-card-failed-logtail-light-en.png) | ![Server card needing Java 25 after the Java check, dark, bilingual](docs/images/captures/refresh-6ef15e8/desktop/server-java25-needed-dark-bilingual.png) |
+
+| Java-check refusal message, dark, bilingual | Server running, dark, bilingual | Server logs ending with the Done line, dark, bilingual |
+|---|---|---|
+| ![Java-check refusal message, dark, bilingual](docs/images/captures/refresh-6ef15e8/desktop/server-java-check-refusal-dark-bilingual.png) | ![Server running, dark, bilingual](docs/images/captures/refresh-6ef15e8/desktop/server-running-card-dark-bilingual.png) | ![Server logs ending with the Done line, dark, bilingual](docs/images/captures/refresh-6ef15e8/desktop/server-running-logs-dark-bilingual.png) |
+
+| Close dialog while a server runs: keep in the tray, stop and quit, or cancel |
+|---|
+| ![Close dialog while a server runs: keep in the tray, stop and quit, or cancel](docs/images/captures/refresh-6ef15e8/desktop/close-dialog-server-running-dark-bilingual.png) |
 
 </details>
 

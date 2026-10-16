@@ -89,40 +89,6 @@
     },
     {
       "kind": "desktop",
-      "name": "pair-a-browser-light-en",
-      "file": "desktop/pair-a-browser-light-en.png",
-      "sha256": "d1cdf1738c9b740f4bade3102bafb08bd87ef0b44d0c633aa15e82aab26277b2",
-      "bytes": 105879,
-      "width": 1920,
-      "height": 1200,
-      "screen": "pair-a-browser",
-      "theme": "light",
-      "language": "en",
-      "scale": 1.5,
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "appVersion": "1.719.1",
-      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
-      "originalFile": "24-pair-a-browser__light__en.png"
-    },
-    {
-      "kind": "desktop",
-      "name": "pair-a-browser-dark-en",
-      "file": "desktop/pair-a-browser-dark-en.png",
-      "sha256": "95dcfb0f79906bce9c6bd401e9a4bc2be967d1520dac31f592ad654b2aeef0ad",
-      "bytes": 105752,
-      "width": 1920,
-      "height": 1200,
-      "screen": "pair-a-browser",
-      "theme": "dark",
-      "language": "en",
-      "scale": 1.5,
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "appVersion": "1.719.1",
-      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
-      "originalFile": "24-pair-a-browser__dark__en.png"
-    },
-    {
-      "kind": "desktop",
       "name": "server-card-running-light-en",
       "file": "desktop/server-card-running-light-en.png",
       "sha256": "b7e4475bdbce3f49631523519d9e4aa9819a7e4e1b39aed5c9031cbb6c6d96b5",
@@ -154,40 +120,6 @@
       "appVersion": "1.719.1",
       "window": "1280x800 at 150% display scale (PNG is physical pixels)",
       "originalFile": "13-tools-server-card-running__dark__en.png"
-    },
-    {
-      "kind": "desktop",
-      "name": "server-card-failed-light-en",
-      "file": "desktop/server-card-failed-light-en.png",
-      "sha256": "43efee0ddc7552651d2f6a724fb53b00cce528e86517816c7f47806f3778192f",
-      "bytes": 169630,
-      "width": 1920,
-      "height": 1200,
-      "screen": "tools-server-card-failed",
-      "theme": "light",
-      "language": "en",
-      "scale": 1.5,
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "appVersion": "1.719.1",
-      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
-      "originalFile": "13-tools-server-card-failed__light__en.png"
-    },
-    {
-      "kind": "desktop",
-      "name": "server-card-failed-dark-en",
-      "file": "desktop/server-card-failed-dark-en.png",
-      "sha256": "d551d5ad111e1cbbab2ace92dde2931ba302fff6de77047f24e197d7e8a350aa",
-      "bytes": 170474,
-      "width": 1920,
-      "height": 1200,
-      "screen": "tools-server-card-failed",
-      "theme": "dark",
-      "language": "en",
-      "scale": 1.5,
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "appVersion": "1.719.1",
-      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
-      "originalFile": "13-tools-server-card-failed__dark__en.png"
     },
     {
       "kind": "desktop",
@@ -287,5 +219,27 @@
     "count": 16,
     "release": "v1.719.1",
     "numberedFramesNote": "The five numbered server frames sit beside the manifest folder and have no manifest entry; their hashes are computed on import."
-  }
+  },
+  "withdrawn": [
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/pair-a-browser-light-en.png",
+      "sha256": "d1cdf1738c9b740f4bade3102bafb08bd87ef0b44d0c633aa15e82aab26277b2",
+      "reason": "Withdrawn: the Pair a browser page did not follow the chosen language, and the failed server card showed a raw exit code with early log lines instead of the readable reason, the exit-code line and the real last log lines; replaced by a later capture. The original remains unchanged in Git history and is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/pair-a-browser-dark-en.png",
+      "sha256": "95dcfb0f79906bce9c6bd401e9a4bc2be967d1520dac31f592ad654b2aeef0ad",
+      "reason": "Withdrawn: the Pair a browser page did not follow the chosen language, and the failed server card showed a raw exit code with early log lines instead of the readable reason, the exit-code line and the real last log lines; replaced by a later capture. The original remains unchanged in Git history and is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/server-card-failed-light-en.png",
+      "sha256": "43efee0ddc7552651d2f6a724fb53b00cce528e86517816c7f47806f3778192f",
+      "reason": "Withdrawn: the Pair a browser page did not follow the chosen language, and the failed server card showed a raw exit code with early log lines instead of the readable reason, the exit-code line and the real last log lines; replaced by a later capture. The original remains unchanged in Git history and is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/server-card-failed-dark-en.png",
+      "sha256": "d551d5ad111e1cbbab2ace92dde2931ba302fff6de77047f24e197d7e8a350aa",
+      "reason": "Withdrawn: the Pair a browser page did not follow the chosen language, and the failed server card showed a raw exit code with early log lines instead of the readable reason, the exit-code line and the real last log lines; replaced by a later capture. The original remains unchanged in Git history and is not relabelled."
+    }
+  ]
 }

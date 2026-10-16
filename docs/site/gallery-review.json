@@ -76,17 +76,22 @@
     "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-dark-en.png",
     "images/captures/refresh-6ef15e8/desktop/drive-file-selected-light-en.png",
     "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-bilingual.png",
-    "images/captures/refresh-6ef15e8/desktop/pair-a-browser-light-en.png",
-    "images/captures/refresh-6ef15e8/desktop/pair-a-browser-dark-en.png",
     "images/captures/refresh-6ef15e8/desktop/server-card-running-light-en.png",
     "images/captures/refresh-6ef15e8/desktop/server-card-running-dark-en.png",
-    "images/captures/refresh-6ef15e8/desktop/server-card-failed-light-en.png",
-    "images/captures/refresh-6ef15e8/desktop/server-card-failed-dark-en.png",
     "images/captures/refresh-6ef15e8/desktop/server-java25-needed-dark-bilingual.png",
     "images/captures/refresh-6ef15e8/desktop/server-java-check-refusal-dark-bilingual.png",
     "images/captures/refresh-6ef15e8/desktop/server-running-card-dark-bilingual.png",
     "images/captures/refresh-6ef15e8/desktop/server-running-logs-dark-bilingual.png",
-    "images/captures/refresh-6ef15e8/desktop/close-dialog-server-running-dark-bilingual.png"
+    "images/captures/refresh-6ef15e8/desktop/close-dialog-server-running-dark-bilingual.png",
+    "images/captures/refresh-5db936f/desktop/pair-a-browser-light-en.png",
+    "images/captures/refresh-5db936f/desktop/pair-a-browser-dark-en.png",
+    "images/captures/refresh-5db936f/desktop/pair-a-browser-light-yue.png",
+    "images/captures/refresh-5db936f/desktop/pair-a-browser-light-bilingual.png",
+    "images/captures/refresh-5db936f/desktop/server-card-failed-light-en.png",
+    "images/captures/refresh-5db936f/desktop/server-card-failed-dark-en.png",
+    "images/captures/refresh-5db936f/desktop/server-card-failed-logtail-light-en.png",
+    "images/captures/refresh-5db936f/desktop/quit-help-menu-light-en.png",
+    "images/captures/refresh-5db936f/desktop/quit-palette-query-light-en.png"
   ],
   "withheld": [
     {
@@ -362,6 +367,26 @@
     {
       "path": "images/captures/refresh-b4cbf0e/desktop/drive-unlocked-files-light-en.png",
       "sha256": "14623ddd4bbb467cabfd5aaca843bfae56dc41492d0aebd452e8546a4416d5ce",
+      "reason": "Withdrawn: replaced by a refreshed capture of the same surface. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/pair-a-browser-light-en.png",
+      "sha256": "d1cdf1738c9b740f4bade3102bafb08bd87ef0b44d0c633aa15e82aab26277b2",
+      "reason": "Withdrawn: replaced by a refreshed capture of the same surface. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/pair-a-browser-dark-en.png",
+      "sha256": "95dcfb0f79906bce9c6bd401e9a4bc2be967d1520dac31f592ad654b2aeef0ad",
+      "reason": "Withdrawn: replaced by a refreshed capture of the same surface. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/server-card-failed-light-en.png",
+      "sha256": "43efee0ddc7552651d2f6a724fb53b00cce528e86517816c7f47806f3778192f",
+      "reason": "Withdrawn: replaced by a refreshed capture of the same surface. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/server-card-failed-dark-en.png",
+      "sha256": "d551d5ad111e1cbbab2ace92dde2931ba302fff6de77047f24e197d7e8a350aa",
       "reason": "Withdrawn: replaced by a refreshed capture of the same surface. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
     }
   ],
@@ -817,18 +842,6 @@
       "workflow": "drive-access",
       "metadataSha256": "e2e5c607981a77f486f5642fe4b21f02db52f424afc809d5ce15b2d4fec3b131"
     },
-    "images/captures/refresh-6ef15e8/desktop/pair-a-browser-light-en.png": {
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "sha256": "d1cdf1738c9b740f4bade3102bafb08bd87ef0b44d0c633aa15e82aab26277b2",
-      "workflow": "drive-access",
-      "metadataSha256": "7e33402e9992f8b36194167703cf16133994c3e82f2156633ae7c0d26e70be8d"
-    },
-    "images/captures/refresh-6ef15e8/desktop/pair-a-browser-dark-en.png": {
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "sha256": "95dcfb0f79906bce9c6bd401e9a4bc2be967d1520dac31f592ad654b2aeef0ad",
-      "workflow": "drive-access",
-      "metadataSha256": "2588c01c6898d277aa765df9a3722d518fd06c805ccb5bd85d78319ce3456ac7"
-    },
     "images/captures/refresh-6ef15e8/desktop/server-card-running-light-en.png": {
       "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
       "sha256": "b7e4475bdbce3f49631523519d9e4aa9819a7e4e1b39aed5c9031cbb6c6d96b5",
@@ -840,18 +853,6 @@
       "sha256": "033fa7a23b6854caafefaebcbe6d0ddaa4827f917aa78f491d5f268bccdc47a2",
       "workflow": "workspace-tools",
       "metadataSha256": "4b73f9692ac08f1fe7efd6b4cdae98a95449c59485fbd81dfcf93f1ab39afddb"
-    },
-    "images/captures/refresh-6ef15e8/desktop/server-card-failed-light-en.png": {
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "sha256": "43efee0ddc7552651d2f6a724fb53b00cce528e86517816c7f47806f3778192f",
-      "workflow": "workspace-tools",
-      "metadataSha256": "bba0fd656c05445c803de16e57672397fc883e9135b283b32f0d20ebecdf0b4a"
-    },
-    "images/captures/refresh-6ef15e8/desktop/server-card-failed-dark-en.png": {
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "sha256": "d551d5ad111e1cbbab2ace92dde2931ba302fff6de77047f24e197d7e8a350aa",
-      "workflow": "workspace-tools",
-      "metadataSha256": "b11c7ed297727eb46d270b0f9a9c13a1538367a05b502ac7c1af3b5226deeeec"
     },
     "images/captures/refresh-6ef15e8/desktop/server-java25-needed-dark-bilingual.png": {
       "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
@@ -882,6 +883,60 @@
       "sha256": "008856cd318c63917b67f4c14f20eb1f6bb26d19b34a4e81b96c65255e3e24b9",
       "workflow": "workspace-tools",
       "metadataSha256": "a222fd8f22d7f2719d668e2434c527174c0baa4fc7011b49a9885d37fc31e5af"
+    },
+    "images/captures/refresh-5db936f/desktop/pair-a-browser-light-en.png": {
+      "sourceCommit": "5db936fc36a15530379071db52d88f0b4fb4608e",
+      "sha256": "a7c8b29929f0cb9e783576bf620c0c2300fb242930ee37c123f78979ce95d6c5",
+      "workflow": "drive-access",
+      "metadataSha256": "81e78b5c0a479825fd4f500713a76657ffac40beee6d6c9ab5ba8d8b40e8b672"
+    },
+    "images/captures/refresh-5db936f/desktop/pair-a-browser-dark-en.png": {
+      "sourceCommit": "5db936fc36a15530379071db52d88f0b4fb4608e",
+      "sha256": "24404b91794f8e9f5c04ca19184a4577f43f538b3213fb71f4666fa2e6769f2c",
+      "workflow": "drive-access",
+      "metadataSha256": "768ab2a871413e2106977368acff0f62aac91084a68b3ed9499b5aa35858a02a"
+    },
+    "images/captures/refresh-5db936f/desktop/pair-a-browser-light-yue.png": {
+      "sourceCommit": "5db936fc36a15530379071db52d88f0b4fb4608e",
+      "sha256": "b944dbbeb0629130d1a508f25190634fa32673e3e8b3b1e6bdb21a66947d210e",
+      "workflow": "drive-access",
+      "metadataSha256": "e16788cacc515589c4f07cc8a1cb65ea6f185bf80d0a9c7bc34366cda39fb749"
+    },
+    "images/captures/refresh-5db936f/desktop/pair-a-browser-light-bilingual.png": {
+      "sourceCommit": "5db936fc36a15530379071db52d88f0b4fb4608e",
+      "sha256": "429478940eec70dcdbcd81eab91d6e0a153dd6c87377cd6fd9ecddf63e8052ba",
+      "workflow": "drive-access",
+      "metadataSha256": "537701c4a6a260f0c350fa60c4a4c3a245a7b65f41e7e081863d59222d438ef7"
+    },
+    "images/captures/refresh-5db936f/desktop/server-card-failed-light-en.png": {
+      "sourceCommit": "5db936fc36a15530379071db52d88f0b4fb4608e",
+      "sha256": "8c66dff4cf99caa9ac8b41f3be9247f80d7dda6560b31a52bfcb03c210e11fb1",
+      "workflow": "workspace-tools",
+      "metadataSha256": "f57f4b268e84cabdcabed691f9d6739557a34e51d9a30eb342be3b88bdd83e58"
+    },
+    "images/captures/refresh-5db936f/desktop/server-card-failed-dark-en.png": {
+      "sourceCommit": "5db936fc36a15530379071db52d88f0b4fb4608e",
+      "sha256": "add82750ec5b907a9cf548c22444ba4780ab05deabe03d4f871e252890c790bb",
+      "workflow": "workspace-tools",
+      "metadataSha256": "09cb8b133c5ab50e374a9c075562ebc238d1e506a4f4b8f061172aa7bd6feaa7"
+    },
+    "images/captures/refresh-5db936f/desktop/server-card-failed-logtail-light-en.png": {
+      "sourceCommit": "5db936fc36a15530379071db52d88f0b4fb4608e",
+      "sha256": "689b0db3f8c3238fcbf77966d1c69662bce2573b8ea096398965e7bbd93a2c1f",
+      "workflow": "workspace-tools",
+      "metadataSha256": "f2716bcf0260894d0ed47e1c583df8f675a2055d623562d3b5dbdf432f61a7f8"
+    },
+    "images/captures/refresh-5db936f/desktop/quit-help-menu-light-en.png": {
+      "sourceCommit": "5db936fc36a15530379071db52d88f0b4fb4608e",
+      "sha256": "59669d5a1b59f9ec37b2275436ba02f2ce6e76d3becf8985717f6cc2371aefc0",
+      "workflow": "drive-access",
+      "metadataSha256": "28e8d1f696a770cad817caa69c19a9d69452ae8ca9064b68b04298a79b30a3e1"
+    },
+    "images/captures/refresh-5db936f/desktop/quit-palette-query-light-en.png": {
+      "sourceCommit": "5db936fc36a15530379071db52d88f0b4fb4608e",
+      "sha256": "eb048c9a5ac4165350c67000844360e9d83c56f59de290aeaa079d8f5eff88fe",
+      "workflow": "drive-access",
+      "metadataSha256": "3a28bde982c620174f40d8a380bfa4368c5d21fd02fd5d466a1984d2cc7bc05d"
     }
   },
   "workflows": [

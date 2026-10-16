@@ -42,9 +42,10 @@ export const DESKTOP_GROUPS = [
     ['settings-local-access-light-en', 'Local access, Local profile'], ['settings-local-access-tab2-light-en', 'Local access, Element locks'], ['settings-local-access-tab3-light-en', 'Local access, Authenticator'],
     ['settings-local-access-tab4-light-en', 'Local access, Support Tickets'], ['settings-local-access-tab5-light-en', 'Local access, Access history'], ['settings-local-access-light-bilingual', 'Local access, Access history, bilingual'],
     ['update-page-light-en', 'Updates'], ['update-page-dark-en', 'Updates, dark']]],
-  ['Pair a browser', [['pair-a-browser-light-en', 'Pair a browser'], ['pair-a-browser-dark-en', 'Pair a browser, dark']]],
+  ['Pair a browser', [['pair-a-browser-light-en', 'Pair a browser'], ['pair-a-browser-dark-en', 'Pair a browser, dark'], ['pair-a-browser-light-yue', 'Pair a browser, Cantonese'], ['pair-a-browser-light-bilingual', 'Pair a browser, bilingual']]],
+  ['Quitting the app', [['quit-help-menu-light-en', 'Help menu with Quit Material File Encryptor'], ['quit-palette-query-light-en', 'Command palette searching for Quit']]],
   ['Server cards and server lifecycle', [['server-card-running-light-en', 'Server card, running'], ['server-card-running-dark-en', 'Server card, running, dark'],
-    ['server-card-failed-light-en', 'Server card, failed, with the reason chip'], ['server-card-failed-dark-en', 'Server card, failed, with the reason chip, dark'],
+    ['server-card-failed-light-en', 'Server card, failed: Ended unexpectedly, exit code -1'], ['server-card-failed-dark-en', 'Server card, failed: Ended unexpectedly, exit code -1, dark'], ['server-card-failed-logtail-light-en', 'Server card, failed, scrolled to the last log lines'],
     ['server-java25-needed-dark-bilingual', 'Server card needing Java 25 after the Java check, dark, bilingual'], ['server-java-check-refusal-dark-bilingual', 'Java-check refusal message, dark, bilingual'],
     ['server-running-card-dark-bilingual', 'Server running, dark, bilingual'], ['server-running-logs-dark-bilingual', 'Server logs ending with the Done line, dark, bilingual'],
     ['close-dialog-server-running-dark-bilingual', 'Close dialog while a server runs: keep in the tray, stop and quit, or cancel']]],
@@ -94,7 +95,7 @@ export const SITE_GROUP = ['Documentation site', [['home-1280x900-light-en', 'Ho
   ['wiki-1280x900-light-en', 'Wiki'], ['gallery-1280x900-light-en', 'Capture gallery'], ['article-local-models-360x800-light-en', 'Browser extension local models article at 360 pixels']]];
 
 const WORKFLOW = name => /^(history|recycle-bin)-/.test(name) ? 'history-recovery'
-  : /^(drive-|offline-|create-drive|unlock-drive|lock-holder|force-lock|pair-a-browser)/.test(name) ? 'drive-access'
+  : /^(drive-|offline-|create-drive|unlock-drive|lock-holder|force-lock|pair-a-browser|quit-)/.test(name) ? 'drive-access'
   : /^(settings|update-page|help)-/.test(name) ? 'preferences-help' : 'workspace-tools';
 
 const HOME_FIGURES = ['drive-unlocked-files-light-en', 'home-light-en', 'history-light-en', 'recycle-bin-light-en', 'tools-local-models-light-en', 'tools-server-targets-panel-light-en', 'settings-local-access-light-en', 'help-how-it-works-dark-en'];
