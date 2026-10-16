@@ -258,7 +258,7 @@ export function validateFeatureDelivery(manifest, exists) {
       if (!object(completion) || Object.keys(completion).sort().join(',') !== completionKeys) errors.push(`${label}: bounded completion ownership required.`);
       else {
         if (!sourcePath(completion.owner) || !row.implementation?.includes(completion.owner)) errors.push(`${label}: completion owner must be a bound implementation reference.`);
-        if (!boundedText(completion.action) || !boundedText(completion.persistence) || !Array.isArray(completion.gaps) || !completion.gaps.length || new Set(completion.gaps).size !== completion.gaps.length || completion.gaps.some(gap => !['behavior', 'wiring', 'proof'].includes(gap))) errors.push(`${label}: explicit behavior, persistence, wiring or proof gaps required.`);
+        if (!boundedText(completion.action) || !boundedText(completion.persistence) || !Array.isArray(completion.gaps) || (row.status === 'implemented' ? completion.gaps.length !== 0 : !completion.gaps.length) || new Set(completion.gaps).size !== completion.gaps.length || completion.gaps.some(gap => !['behavior', 'wiring', 'proof'].includes(gap))) errors.push(`${label}: explicit behavior, persistence, wiring or proof gaps required.`);
         if (required.kind === 'repository' && completion.owner.startsWith('browser-extension/')) errors.push(`${label}: repository obligation cannot borrow a browser control owner.`);
         if (row.id === 'context-menus') {
           const equivalent = completion.platformEquivalent;
@@ -281,10 +281,12 @@ export function validateFeatureDelivery(manifest, exists) {
         }
       }
       if (!['partial', 'present', 'missing'].includes(row.behaviorVerdict)) errors.push(`${label}: independent behavior verdict required.`);
-      if (row.evidenceVerdict !== 'current-runtime-unverified') errors.push(`${label}: invalid independent evidence verdict.`);
-      if ((row.behaviorVerdict === 'missing' && row.status !== 'missing') || (['partial', 'present'].includes(row.behaviorVerdict) && row.status !== 'unverified')) errors.push(`${label}: behavior and delivery verdicts disagree.`);
+      // An implemented row carries its own runtime evidence verdict; every other row stays runtime-unverified.
+      if (row.status === 'implemented' ? (!boundedText(row.evidenceVerdict) || row.evidenceVerdict === 'current-runtime-unverified') : row.evidenceVerdict !== 'current-runtime-unverified') errors.push(`${label}: invalid independent evidence verdict.`);
+      if ((row.behaviorVerdict === 'missing' && row.status !== 'missing') || (row.behaviorVerdict === 'partial' && row.status !== 'unverified') || (row.behaviorVerdict === 'present' && !['unverified', 'implemented'].includes(row.status)) || (row.status === 'implemented' && row.behaviorVerdict !== 'present')) errors.push(`${label}: behavior and delivery verdicts disagree.`);
       if (object(completion) && Array.isArray(completion.gaps)) {
-        if (!completion.gaps.includes('proof') || (['partial', 'missing'].includes(row.behaviorVerdict) && !completion.gaps.includes('behavior')) || (row.behaviorVerdict === 'present' && completion.gaps.includes('behavior'))) errors.push(`${label}: gaps contradict behavior or evidence verdict.`);
+        if (row.status === 'implemented' ? completion.gaps.length > 0 : !completion.gaps.includes('proof')) errors.push(`${label}: gaps contradict behavior or evidence verdict.`);
+        else if ( (['partial', 'missing'].includes(row.behaviorVerdict) && !completion.gaps.includes('behavior')) || (row.behaviorVerdict === 'present' && completion.gaps.includes('behavior'))) errors.push(`${label}: gaps contradict behavior or evidence verdict.`);
       }
     }
     for (const key of ['builtInteraction', 'visualEvidence']) if (!['verified', 'unverified'].includes(row[key])) errors.push(`${label}: invalid ${key}.`);

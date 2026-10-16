@@ -7,6 +7,7 @@ import {installShadowReducedMotion} from '../../../shared/surface/reduced-motion
 import {createSurfaceModel} from '../../../shared/surface/model.js';
 import {element,localized,text} from '../../../shared/surface/registry.js';
 import '../../../shared/surface/workspace-shell.js';
+import '../../../shared/surface/provenance.js';
 import {homeEntries,isNewTabShortcut,HOME_ID,HOME_LABEL} from '../../../shared/surface/home.js';
 import '../../../shared/surface/command-palette.js';
 import '../../../shared/surface/notification-center.js';

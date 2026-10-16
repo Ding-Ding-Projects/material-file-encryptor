@@ -1,0 +1,48 @@
+{
+  "schema": "release-package-probe-v1",
+  "label": "release package run (extracted full package), not an installed copy",
+  "outcome": "No desktop row was moved to implemented. This file records what the probes did and did not establish.",
+  "release": {
+    "tag": "v1.784.1",
+    "sourceCommit": "0e4cae3e1788c2286b2a893570519aba2ae52373",
+    "fullPackage": "MaterialFileEncryptor-1.784.1-full.nupkg",
+    "fullPackageBytes": 434168890,
+    "fullPackageSha256": "1c59b8885453b45c68b339acb672d6bc142a9c807a2f33c0b17da4d8dbe01133",
+    "digestMatchesReleaseAsset": true,
+    "mainExecutable": "lib/net45/MaterialFileEncryptor.exe",
+    "mainExecutableSha256": "9fe2b445399a049c2c62c716a4093a9c54788db8920f574a09c7981f179f6423",
+    "normalRelease": "isDraft false, isPrerelease false, target commit 0e4cae3e1788c2286b2a893570519aba2ae52373 is an ancestor of main."
+  },
+  "route": {
+    "launch": "Extracted package executable on a task-owned hidden desktop through the cheap Lowlevel route, loopback-only remote debugging on one task-chosen port, isolated profile directory. Setup.exe was not run and the installed application was not updated.",
+    "interaction": "Real background pointer clicks by window handle; DOM value assignment for text fields; one page target required per call by a loopback evaluation service.",
+    "teardown": "Only the exact process tree started for this run and the task-owned evaluation service were ended. The login-item value written by the launch was restored to its previous value."
+  },
+  "probes": [
+    {
+      "row": "desktop/front-provenance",
+      "result": "defect found; row stays unverified",
+      "detail": "On the front screen the build provenance element exists (220 by 20 CSS pixels, value 1.784.1 built 2026-10-16T11:48:55.230Z, commit 0e4cae3e1788c2286b2a893570519aba2ae52373) but customElements.get('mfe-build-provenance') is undefined, so it has no shadow content and nothing is drawn. A cropped capture of the sidebar bottom was inspected and shows no version or time.",
+      "captures": [
+        {"name": "02b-home", "sha256": "5f30f294d3ff6cb6b2181474813cef565ec74a9f7491976f2f0f6bd530b4d692"},
+        {"name": "crop-prov", "sha256": "405351dea36f642fee8d9b94a1817d43b9e59018b8767d5caa83cc5981c77db1", "note": "DevTools clip of the sidebar bottom, inspected, empty of provenance text."}
+      ]
+    },
+    {
+      "row": "desktop/display-name",
+      "result": "not proven; row stays unverified",
+      "detail": "A value assigned to the Display name field was accepted by the field, but the stored label stayed on the default, the page title, window title and brand text did not change, and the host reported that the drive must be unlocked before account features run. Propagation needs a local profile and an unlocked throwaway drive, which this run did not set up.",
+      "captures": [
+        {"name": "10-name-before", "sha256": "e71bfc1146795838612dab7a26ffe5f60b53a74c59e14d9b00c65a5725afc819"},
+        {"name": "11-name-after", "sha256": "60891a3d1481a65d6d2a8c0106e86b3abf15854e74987c9e3f015a5c998828f1"}
+      ]
+    },
+    {
+      "row": "desktop/adhd-modes",
+      "result": "not proven; row stays unverified",
+      "detail": "The run stopped when the host ran out of memory (about 6 MB free of 7.9 GB, processor near 95 percent from parallel work) and the renderer stopped answering evaluation calls; no toggle result was captured."
+    }
+  ],
+  "unprobed": "tabs, overlay-panels, changelog and offline-docs were not driven. tabs and overlay-panels also lack a concrete shell surface in the surface registry to carry a proof.",
+  "protectedSet": "The process tree of PID 4416, C:\\MFE-Demo and drive M: were untouched; the tree was re-read at the end and is identical to the start."
+}
