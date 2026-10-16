@@ -14798,7 +14798,7 @@
             "nextProof": "Retain independent installed-build identity, interaction and visual receipts for this options workflow, including invalid and reset states."
           }
         ],
-        "persistence": "Selected tab persists in the existing local preference record; the filter is not stored."
+        "persistence": "The selected section is written to the existing local preference record, but the workspace always opens on Home or on the section named in the address, so it is not restored on reload; the filter is not stored."
       }
     },
     {
