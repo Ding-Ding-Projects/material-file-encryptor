@@ -157,13 +157,13 @@ function fakeDocument() {
 const walk = (node, visit) => { visit(node); node.children.forEach(child => walk(child, visit)); };
 const find = (root, predicate) => { const found = []; walk(root, node => { if (predicate(node)) found.push(node); }); return found; };
 
-function panel({connection = true, send = async () => ({schemaVersion: 1, state: 'unavailable'}), storage = store(), binding: bound = binding, verify, resume} = {}) {
+function panel({connection = true, send = async () => ({schemaVersion: 1, state: 'unavailable'}), storage = store(), binding: bound = binding, verify, resume, confirmations = [], confirm = (id, run) => { confirmations.push(id); run(); }} = {}) {
   const root = fakeDocument(), calls = [];
   const view = mountOperations(root, {root, storage, now: () => 1000 + JOURNAL_LIMITS.staleMs * 2, label: (node, pair) => { node.textContent = pair[0]; }, getConnection: () => connection, getBinding: () => bound, getOwner: () => 'page-new',
-    getProcedureState: () => ({paired: connection === true, changelogEntries: 2, interrupted: 0, provenance: null}),
+    confirm, getProcedureState: () => ({paired: connection === true, changelogEntries: 2, interrupted: 0, provenance: null}),
     getReportInput: () => ({version: '0.1.0', lastRefreshAt: new Date('2026-10-14T09:30:45Z'), counts: {notes: 2, schedules: 1, tickets: 0, operations: 0}}),
     send: async message => { calls.push(message); return send(message); }, verify: async kind => { calls.push({verify: kind}); return verify?.(kind); }, resume});
-  return {root, view, calls, storage};
+  return {root, view, calls, storage, confirmations};
 }
 
 test('the panel lists procedures and Status Hub enrollment starts as not enrolled', () => {
@@ -210,6 +210,16 @@ test('interrupted operations offer Resume and Discard, and a changed build block
   assert.match(blocked.root.allText, /different build/);
   buttons.find(node => node.textContent === 'Discard').listeners.click();
   assert.equal(readOperations(changed).length, 0);
+  assert.deepEqual(blocked.confirmations, ['extension.discard-operation'], 'discarding names its registered action');
+
+  const refused = store();
+  begin(refused, {owner: 'page-old', now: 1});
+  const never = panel({storage: refused, confirm: () => {}});
+  find(never.root, node => node.textContent === 'Discard')[0].listeners.click();
+  assert.equal(readOperations(refused).length, 1, 'a confirmation that never completes leaves the saved operation alone');
+  const missing = panel({storage: refused, confirm: null});
+  find(missing.root, node => node.textContent === 'Discard')[0].listeners.click();
+  assert.equal(readOperations(refused).length, 1, 'without a confirmation host nothing is discarded');
 });
 
 test('an unconfirmed desktop request is checked, never replayed', async () => {

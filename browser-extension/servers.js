@@ -94,7 +94,7 @@ const MESSAGES = {
   connect: ['Pair the browser to begin.', '配對瀏覽器先可以開始。'],
 };
 
-export function mountBrowserServers(root, {send, getLanguage = () => 'en', acquire = () => true, release = () => {}, isExternallyBusy = () => false} = {}) {
+export function mountBrowserServers(root, {send, getLanguage = () => 'en', acquire = () => true, release = () => {}, isExternallyBusy = () => false, confirm = null} = {}) {
   const doc = root.ownerDocument;
   let connected = false, busy = false, generation = 0, read = false, manager = 'unknown', targets = [], servers = [], flavors = [], versions = [], catalogue = 'unknown', total = 0, next = null;
   let message = null, outcome = null;
@@ -148,6 +148,10 @@ export function mountBrowserServers(root, {send, getLanguage = () => 'en', acqui
     if (!form.flavor && flavors.length) form.flavor = flavors[0].id;
     render();
   }
+  /** Stop, restart, setting and plugin changes ask the host for the two-key super confirmation first. Without a host they never run. */
+  function ask(id, run, name) {
+    if (typeof confirm === 'function') confirm(id, run, name ? [name + '.', name + '。'] : undefined);
+  }
   async function manage(action, server, options) {
     if (!ready()) return;
     const built = buildManageMessage(action, server, options);
@@ -178,7 +182,8 @@ export function mountBrowserServers(root, {send, getLanguage = () => 'en', acqui
       button.disabled = !ready() || server.state === 'preparing' || action === 'start' && running || action === 'stop' && !running && server.state !== 'stopping';
       button.setAttribute('aria-label', t(ACTION_NAMES[action]) + ': ' + server.name);
       button.addEventListener('click', () => {
-        if (action === 'start' || action === 'stop' || action === 'restart') void manage(action, server.id, null);
+        if (action === 'start') void manage(action, server.id, null);
+        else if (action === 'stop' || action === 'restart') ask('extension.server-' + action, () => void manage(action, server.id, null), server.name);
         else openDialog(action === 'change-setting' ? 'setting' : 'plugin', server.id);
       });
       item.append(button);
@@ -260,7 +265,9 @@ export function mountBrowserServers(root, {send, getLanguage = () => 'en', acqui
     else return;
     if (!buildManageMessage(action, mode === 'create' ? null : server, options)) { dialogError.textContent = t(['Check the fields: names use lower-case letters, digits, dots, dashes and underscores only.', '請檢查欄位：名稱只可以用小寫字母、數字、點、連字號同底線。']); return; }
     if (mode === 'create' && (!targetAvailable(options.target) || !flavorTargets(options.flavor).includes(options.target))) { dialogError.textContent = t(['That target is unavailable on the desktop.', '桌面暫時冇提供呢個目標。']); return; }
-    closeDialog(); void manage(action, mode === 'create' ? null : server, options);
+    closeDialog();
+    if (mode === 'create') void manage(action, null, options);
+    else ask(mode === 'setting' ? 'extension.server-change-setting' : 'extension.server-install-plugin', () => void manage(action, server, options), servers.find(row => row.id === server)?.name);
   });
   render();
   return {
