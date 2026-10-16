@@ -55,3 +55,7 @@ md-outlined-select{min-width:min(100%,14rem)}
 #file-list>tr>td.availability .availability-content>:not(span){flex:none}
 #file-list>tr>td.availability .availability-content>span{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
 .table-scroll th:nth-child(3){white-space:normal;overflow-wrap:anywhere}
+
+/* Accent colour: the personalization feature writes both theme variants and flags the root; switching light/dark then only flips data-theme. */
+:root[data-local-accent]{--primary:var(--local-ux-accent-light-primary);--on-primary:var(--local-ux-accent-light-on-primary);--primary-container:var(--local-ux-accent-light-primary-container);--on-primary-container:var(--local-ux-accent-light-on-primary-container)}
+:root[data-local-accent][data-theme=dark]{--primary:var(--local-ux-accent-dark-primary);--on-primary:var(--local-ux-accent-dark-on-primary);--primary-container:var(--local-ux-accent-dark-primary-container);--on-primary-container:var(--local-ux-accent-dark-on-primary-container)}
