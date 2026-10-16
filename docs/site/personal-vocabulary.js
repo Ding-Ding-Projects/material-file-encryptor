@@ -49,8 +49,17 @@ export function parseStrictJson(source, maxBytes = MAX_VOCABULARY_BYTES) {
   try { return JSON.parse(source); } catch { invalid(); }
 }
 const exact = (object, keys) => object && typeof object === 'object' && !Array.isArray(object) && Object.keys(object).length === keys.length && keys.every(key => Object.hasOwn(object, key));
+export const MAX_DISPLAY_NAME = 40;
+// An optional top-level displayName is the headline shown when the file is applied. It is plain text only,
+// never stored with the replacements, and files without it stay valid.
+function takeDisplayName(parsed) {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || !Object.hasOwn(parsed, 'displayName')) return { value: parsed };
+  const { displayName, ...rest } = parsed;
+  if (typeof displayName !== 'string' || !displayName.trim() || displayName !== displayName.trim() || size(displayName) > MAX_DISPLAY_NAME || /[\u0000-\u001f\u007f-\u009f<>]/u.test(displayName)) invalid();
+  return { value: rest, displayName };
+}
 export function parseVocabulary(source) {
-  const value = parseStrictJson(source);
+  const { value, displayName } = takeDisplayName(parseStrictJson(source));
   let replacements;
   if (exact(value, ['schemaVersion', 'entries']) && value.schemaVersion === 1 && value.entries && typeof value.entries === 'object' && !Array.isArray(value.entries)) replacements = Object.entries(value.entries).map(([from, to]) => ({ from, to }));
   else if (exact(value, ['version', 'replacements']) && value.version === 1 && Array.isArray(value.replacements)) replacements = value.replacements;
@@ -60,7 +69,7 @@ export function parseVocabulary(source) {
     if (!exact(entry, ['from', 'to']) || typeof entry.from !== 'string' || typeof entry.to !== 'string' || !entry.from.trim() || size(entry.from) > 160 || size(entry.to) > 1000 || /[\u0000-\u001f\u007f-\u009f]/u.test(entry.from + entry.to) || unsafe.has(entry.from) || unsafe.has(entry.to) || seen.has(entry.from)) invalid();
     seen.add(entry.from);
   }
-  return Object.freeze({ version: 1, replacements: Object.freeze(replacements.map(entry => Object.freeze({ ...entry }))) });
+  return Object.freeze({ version: 1, replacements: Object.freeze(replacements.map(entry => Object.freeze({ ...entry }))), ...(displayName === undefined ? {} : { displayName }) });
 }
 const matchers = new WeakMap();
 export const RENDER_LIMITS = Object.freeze({ inputCodeUnits: 65536, outputCodeUnits: 262144, trieSteps: 1000000 });

@@ -96,5 +96,12 @@ export const cantonese = {
  'A program still has files or folders on the drive open, so it was not locked. Close the program and try again, or choose Force lock to release them and lock now.':'有程式仍然開住磁碟上嘅檔案或資料夾，所以未有鎖定。請關閉嗰個程式再試，或者撳「強制鎖定」釋放並即刻鎖定。',
  'The drive is busy. Close the programs using it, then try again.':'磁碟忙緊。請關閉用緊佢嘅程式再試。',
  'A transfer is active. Cancel it or wait before locking.':'有傳輸進行緊。請先取消或者等佢完成先鎖定。',
- 'A vault operation is retrieving content. Wait before locking.':'有操作正在擷取內容。請等佢完成先鎖定。'
+ 'A vault operation is retrieving content. Wait before locking.':'有操作正在擷取內容。請等佢完成先鎖定。',
+ 'Personal wording applied':'已套用個人用詞',
+ 'Vocabulary JSON must be no larger than 256 KiB.':'用詞 JSON 唔可以大過 256 KiB。',
+ 'Invalid vocabulary JSON. Use schemaVersion 1 with entries, or version 1 with replacements.':'用詞 JSON 無效。請用 schemaVersion 1 加 entries，或者 version 1 加 replacements。乜都冇改。',
+ 'Drop your wording file to apply it':'將用詞檔案放喺呢度即可套用',
+ 'Drop one wording file at a time. Nothing was changed.':'一次只可以放一個用詞檔案，乜都冇改。',
+ 'Only a .json wording file can be dropped. Nothing was changed.':'只可以放 .json 用詞檔案，乜都冇改。',
+ 'The wording file could not be read. Nothing was changed.':'讀取唔到用詞檔案，乜都冇改。'
 };
