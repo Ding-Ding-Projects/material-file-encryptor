@@ -33,7 +33,7 @@ function fixture() {
   mountState:()=>'',setText:(id,text)=>{get(id).textContent=text;},operation(){},
   displayPartSize:()=>({value:10,unit:'MB'}),renderFiles(){},renderAvailability(){},changeView(){},
   translateWorkspace:createTranslator(()=>preferences,{dictionary:cantonese}),
-  vocabularyPersisted:true,foundation:null,fileSearch:null,featureMounts:new Map(),
+  vocabularyPersisted:true,foundation:null,shellInfoIcons:null,fileSearch:null,featureMounts:new Map(),
   renderedFilesKey:'',privateWordingView:{refresh(){}},currentFiles:()=>[],renderOperations(){}});
  vm.runInContext(section('function t(source,options)', 'const privateWordingView') +
   section('function applyPreferences()', "colorQuery.addEventListener") +
