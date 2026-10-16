@@ -11695,9 +11695,10 @@
         "test/server-targets-panel.test.js"
       ],
       "evidence": [
-        "docs/evidence/installed-proof-1.657.1.json"
+        "docs/evidence/installed-proof-1.657.1.json",
+        "docs/evidence/installed-server-run-1.702.1.json"
       ],
-      "reason": "Servers are created and managed on the local process, local container, SSH process and SSH container targets in Vanilla, Paper, Purpur, Fabric, Forge and NeoForge, from each official API with HTTPS-only exact-host bounded fetches. Hashes are verified where published (Purpur MD5 labelled weak; Fabric and some Forge builds recorded unverified-upstream with the received bytes pinned). Start requires native license acceptance; SSH uses BatchMode with host key checking and a natively chosen key whose path never leaves the main process; containers publish on 127.0.0.1 only. A typed server.properties form and Modrinth plugin installs (SHA-512 required) are included. Verified with fakes only: no real server, container, SSH host, Java runtime, Docker daemon or download was exercised, and the new panel has not been captured in a built app. Installed proof (release 1.642.1): the installed app downloaded Vanilla 26.3 for the local process target and verified it against the published SHA-1; the license was not accepted and the server was not started.",
+      "reason": "Servers are created and managed on the local process, local container, SSH process and SSH container targets in Vanilla, Paper, Purpur, Fabric, Forge and NeoForge, from each official API with HTTPS-only exact-host bounded fetches. Hashes are verified where published (Purpur MD5 labelled weak; Fabric and some Forge builds recorded unverified-upstream with the received bytes pinned). Start requires native license acceptance; SSH uses BatchMode with host key checking and a natively chosen key whose path never leaves the main process; containers publish on 127.0.0.1 only. A typed server.properties form and Modrinth plugin installs (SHA-512 required) are included. Verified with fakes only: no real server, container, SSH host, Java runtime, Docker daemon or download was exercised, and the new panel has not been captured in a built app. Installed proof (release 1.642.1): the installed app downloaded Vanilla 26.3 for the local process target and verified it against the published SHA-1;  Installed run (release 1.702.1): the licence was accepted through the app at the owner's request, and Vanilla 26.3 started on Java 25, listened on loopback 25565, logged its ready line and stopped cleanly.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -17970,7 +17971,8 @@
     "src/main/browser-status-enrollment.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
     "test/browser-desktop-adapters.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
     "docs/evidence/installed-proof-1.657.1.json": "8eb6cd8afec664d3ecbeab41619fcb2ef9048978",
-    "docs/evidence/installed-proof-1.692.1.json": "b8408947a90da839267fc8d508f185e8e09a9689"
+    "docs/evidence/installed-proof-1.692.1.json": "b8408947a90da839267fc8d508f185e8e09a9689",
+    "docs/evidence/installed-server-run-1.702.1.json": "bb22b8bf34ee85831d176650fc76bde329e2d801"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
