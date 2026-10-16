@@ -31,7 +31,7 @@ const {WorkspaceShell} = await import('../src/shared/surface/workspace-shell.js'
 const {createSurfaceModel} = await import('../src/shared/surface/model.js');
 
 const labelMap = () => new Map([
-  ['home', {en: 'Home', yue: '首頁'}], ['drive', {en: 'My drive', yue: '我的磁碟'}], ['converter', {en: 'Converter', yue: '轉換器'}],
+  ['home', {en: 'Home', yue: '首頁'}], ['drive', {en: 'My drive', yue: '我嘅磁碟'}], ['converter', {en: 'Converter', yue: '轉換器'}],
   ['settings', {en: 'Settings', yue: '設定'}], ['server-manager', {en: 'Server preparation', yue: '伺服器準備'}], ['custom-tool', {en: 'Custom tool', yue: '自訂工具'}]
 ]);
 function shellFixture() {

@@ -10,7 +10,7 @@ const surface = mountSurfaceFoundation({
   storage: localStorage,
   language: 'en',
   provenance: {version: buildMetadata.version, builtAt: buildMetadata.builtAt},
-  tabs: [{id:'drive',label:'My drive',labelYue:'我的磁碟'}],
+  tabs: [{id:'drive',label:'My drive',labelYue:'我嘅磁碟'}],
   onActivate: id => showExistingView(id),
   onExport: ({name,mime,content}) => saveUserChosenExport({name,mime,content}),
   commands: [{id:'drive:refresh',label:{en:'Refresh drive',yue:'重新整理磁碟'},run:refreshDrive}]

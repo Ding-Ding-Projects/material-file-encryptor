@@ -230,7 +230,7 @@
       "source": "docs/features/interface/info-icon-guidance.md",
       "translation": "docs/features/interface/info-icon-guidance.zh-HK.md",
       "sourceSha256": "e0fce3539191dfcdb8b5be995e9c941dd9b18a13ff5de6f13931e8628663c2a0",
-      "translationSha256": "43c0b0a6823359224555f0e58b7b45566fb27799b39f08197c679f33a2692df1"
+      "translationSha256": "2d851173d37c624f4519965901f66688445b4d55c89561e0b5640d697cd68090"
     },
     {
       "source": "docs/features/interface/local-personalization.md",
@@ -625,8 +625,8 @@
     {
       "source": "docs/features/surface-foundation/integration.md",
       "translation": "docs/features/surface-foundation/integration.zh-HK.md",
-      "sourceSha256": "186832082e89cf147e54f8cbd324f91541d5c4464f3ab161ad31cd9382e12947",
-      "translationSha256": "483d5e451efec7d1f13d34786a0ecff610d621dd3a32accbe7fc8f4738a68190"
+      "sourceSha256": "44693e35d979c2591febbb57fbe63c3e96dc0d06551437e9ccb5dfa2f79c81bd",
+      "translationSha256": "d0443f33bc399a4410c03df84f1e40f28985c13b1161a288d7f98f007e7ceade"
     },
     {
       "source": "docs/features/surface-foundation/layout-and-notifications.md",

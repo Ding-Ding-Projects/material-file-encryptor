@@ -11,7 +11,7 @@ import {buildSurfaceInventory, exemptRow} from './info-icon-inventory.js';
  */
 const rows = [
   ['mfe-navigation-rail', 'navigation', 'Main navigation', '主要導覽',
-    'Switch between the six main views: My drive, Available offline, History, Recycle Bin, Settings and How it works.', '在六個主要檢視之間切換：我的磁碟、離線可用、歷史、資源回收筒、設定及使用說明。',
+    'Switch between the six main views: My drive, Available offline, History, Recycle Bin, Settings and How it works.', '在六個主要檢視之間切換：我嘅磁碟、離線可用、歷史、資源回收筒、設定及使用說明。',
     'Choosing a view only changes what is shown; it never opens, locks or changes a drive.', '選擇檢視只會改變顯示內容，不會開啟、鎖定或更改任何磁碟。',
     {key: 'main-navigation', runtime: true, covers: ['[data-view="drive"]', '[data-view="offline"]', '[data-view="history"]', '[data-view="recycle"]', '[data-view="settings"]', '[data-view="help"]']}],
   ['#dismiss-error', 'button', 'Dismiss error', '關閉錯誤訊息',
@@ -204,7 +204,7 @@ const rows = [
     'A new file is written to a place you choose. Keep a safe copy because there is no recovery.', '新檔案會寫到你選擇的位置，請另存備份，因為無法復原。'],
   ['#create-split-value', 'number', 'Maximum encrypted part size', '加密分段大小上限',
     'Set the largest size of each encrypted part for the drive you are creating.', '設定新建磁碟每個加密分段的大小上限。',
-    'The size is saved with the new drive and can be changed later in My drive.', '大小會隨新磁碟儲存，之後可在「我的磁碟」更改。',
+    'The size is saved with the new drive and can be changed later in My drive.', '大小會隨新磁碟儲存，之後可在「我嘅磁碟」更改。',
     {min: 1, max: 1000, sample: 80, integer: false, key: 'create-split-value', default: ['80 in the chosen unit', '以所選單位計為 80']}],
   ['#create-split-unit', 'choice', 'Creation part size unit', '建立時的分段大小單位',
     'Choose KiB, MiB or GiB for the part size entered above.', '為上方輸入的分段大小選擇 KiB、MiB 或 GiB。',
