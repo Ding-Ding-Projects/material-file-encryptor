@@ -111,13 +111,29 @@ adapter 呼叫會保持缺少 context，唔會借用目前畫面 frame。
 `src/main/browser-host-squirrel.js` 入面嘅 Squirrel 掛鉤會呼叫
 `src/main/browser-host-registration.js`。喺 `--squirrel-install` 同 `--squirrel-updated`，
 應用程式會將主機資訊清單（名稱、說明、已安裝主機執行檔路徑、`stdio`，同唯一允許嘅來源）
-寫入每位用戶資料目錄嘅 `native-messaging` 資料夾，再用 `reg.exe` 同參數陣列設定兩個每用戶機碼嘅預設值：
+寫入 Squirrel 安裝根目錄入面一個固定檔案 `%LOCALAPPDATA%\MaterialFileEncryptor\native-messaging\org.dingding.material_file_encryptor.downloads.json`，再用 `reg.exe` 同參數陣列設定兩個每用戶機碼嘅預設值：
 `HKCU\Software\Microsoft\Edge\NativeMessagingHosts\org.dingding.material_file_encryptor.downloads` 同
 `HKCU\Software\Google\Chrome\NativeMessagingHosts\org.dingding.material_file_encryptor.downloads`。
 如果主機執行檔喺安裝根目錄之外，登記會拒絕，而且唔需要管理員權限。
 喺 `--squirrel-uninstall` 只會移除嗰兩個機碼同資訊清單。喺 `--squirrel-obsolete`，
 只有資訊清單仍然指向過時安裝時先會移除，所以更新唔會抹走新版本寫好嘅登記。
 掛鉤失敗會記入結果，但係唔會令安裝程式失敗。
+
+資訊清單位置由執行中執行檔嘅安裝根目錄（有版本號嘅 `app-x.y.z` 資料夾嘅上一層）導出，
+所以唔會隨版本改變，而資訊清單入面嘅 `path` 永遠指向目前版本嘅主機執行檔。
+使用中嘅用戶資料設定檔永遠唔會影響資訊清單位置或者兩個登錄機碼：
+就算用另一個 `--user-data-dir` 啟動（例如獨立測試設定檔），兩者都原封不動。
+啟動自我修復同安裝、更新、過時掛鉤全部用呢個唯一位置。
+從原始碼或者 Squirrel 安裝配置之外執行時，應用程式完全唔會碰登錄。
+解除安裝時 Squirrel 會移除安裝根目錄，而解除安裝掛鉤亦會明確移除資訊清單檔案同佢嘅資料夾。
+
+早期版本將資訊清單寫入用戶資料設定檔。喺安裝、更新同啟動自我修復時，應用程式只會移除
+目前設定檔入面嗰一個舊檔案，而且必須主機名稱同允許來源證明係本應用程式寫嘅先會移除。
+其他設定檔從來唔會被檢查或者改動。
+
+Squirrel 自己嘅解除安裝會喺安裝根目錄留低 `Update.exe` 同 `.dead` 標記，
+Squirrel 會喺之後嘅清理再移除；每次執行 Setup 都會啟動應用程式一次（Squirrel 首次執行）。
+兩者都唔係原生主機造成。
 
 掛鉤由 `src/main/squirrel-hook-entry.js` 執行，佢係主模組嘅第一個匯入，所以登記會喺任何其他啟動工作之前完成。
 `src/main/squirrel-lifecycle.js` 只做登記同捷徑變更，然後離開。每次 `reg.exe` 呼叫上限 5 秒，

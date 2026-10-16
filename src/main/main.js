@@ -22,7 +22,7 @@ import { explorerCopyPath } from './explorer-command.js';
 import { createUpdateService } from './update-service.js';
 import { createRestartPreparation } from './restart-preparation.js';
 import { createBrowserHandoffLifecycle } from './browser-native-host.js';
-import { repairNativeHostRegistration } from './browser-host-registration.js';
+import { repairNativeHostRegistration, fixedManifestDirectory } from './browser-host-registration.js';
 import { DEFAULT_DRIVE_NAME, normalizeDriveName } from '../shared/drive-name.js';
 import { createPairingCodes } from './browser-pairing-code.js';
 import { createSessionEnd } from './session-end.js';
@@ -412,7 +412,8 @@ else {
       const answer=await uiDialog.showMessageBox(window,{type:'question',buttons:['Reject · 拒絕','Pair downloads · 配對下載'],defaultId:0,cancelId:0,title:'Pair browser downloads · 配對瀏覽器下載',message:'Allow download proposals from this origin? · 允許此來源提出下載建議？',detail:origin+(codeMatched===true?'\nThe extension entered the code shown on this desktop.\n擴充功能輸入咗呢部桌面顯示嘅代碼。':'')+'\nThis origin allowlist cannot authenticate a manually launched same-user process. Pairing lasts up to 15 minutes and ends when the drive locks. Each download still needs its own destination choice and Start confirmation.\n來源允許清單無法驗證手動啟動嘅同用戶程序。配對最多維持 15 分鐘，磁碟鎖定就撤銷。每次下載仍要獨立選擇目的地同確認開始。'});return answer.response===1;
     }});
     // Self-healing: after an update whose installer hook did not finish, the registered manifest can still name a removed version's host.
-    if (process.platform === 'win32' && app.isPackaged && !verificationMode) { try { repairNativeHostRegistration({ hostDirectory: path.win32.join(process.resourcesPath, 'browser-host'), installRoot: path.win32.dirname(process.execPath), manifestDirectory: path.win32.join(app.getPath('userData'), 'native-messaging') }); } catch { /* pairing reports its own unavailable state */ } }
+    // The manifest folder is fixed inside the Squirrel install root, so the profile in use never moves the registry keys; outside that layout nothing is touched.
+    if (process.platform === 'win32' && app.isPackaged && !verificationMode) { try { const manifestDirectory = fixedManifestDirectory(process.execPath); if (manifestDirectory) repairNativeHostRegistration({ hostDirectory: path.win32.join(process.resourcesPath, 'browser-host'), installRoot: path.win32.dirname(process.execPath), manifestDirectory, legacyUserData: app.getPath('userData') }); } catch { /* pairing reports its own unavailable state */ } }
     await browserHandoff.initialize();
     ipcMain.handle('vault:request', async (event, method, params) => { if (!trustedFrame(event, window, rendererURL)) throw new Error('Untrusted request source.'); return request(method, params,{senderFrame:event.senderFrame}); });
     ipcMain.handle('feature:request', async (event, feature, action, params) => { if (!trustedFrame(event, window, rendererURL)) throw new Error('Untrusted request source.'); const request = validateFeatureRequest(feature, action, params); return featureRequest(request.feature, request.action, request.payload,{senderFrame:event.senderFrame}); });
