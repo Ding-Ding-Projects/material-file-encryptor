@@ -183,7 +183,8 @@ export function mountBrowserServers(root, {send, getLanguage = () => 'en', acqui
       button.setAttribute('aria-label', t(ACTION_NAMES[action]) + ': ' + server.name);
       button.addEventListener('click', () => {
         if (action === 'start') void manage(action, server.id, null);
-        else if (action === 'stop' || action === 'restart') ask('extension.server-' + action, () => void manage(action, server.id, null), server.name);
+        else if (action === 'stop') ask('extension.server-stop', () => void manage(action, server.id, null), server.name);
+        else if (action === 'restart') ask('extension.server-restart', () => void manage(action, server.id, null), server.name);
         else openDialog(action === 'change-setting' ? 'setting' : 'plugin', server.id);
       });
       item.append(button);
@@ -267,7 +268,8 @@ export function mountBrowserServers(root, {send, getLanguage = () => 'en', acqui
     if (mode === 'create' && (!targetAvailable(options.target) || !flavorTargets(options.flavor).includes(options.target))) { dialogError.textContent = t(['That target is unavailable on the desktop.', '桌面暫時冇提供呢個目標。']); return; }
     closeDialog();
     if (mode === 'create') void manage(action, null, options);
-    else ask(mode === 'setting' ? 'extension.server-change-setting' : 'extension.server-install-plugin', () => void manage(action, server, options), servers.find(row => row.id === server)?.name);
+    else if (mode === 'setting') ask('extension.server-change-setting', () => void manage(action, server, options), servers.find(row => row.id === server)?.name);
+    else ask('extension.server-install-plugin', () => void manage(action, server, options), servers.find(row => row.id === server)?.name);
   });
   render();
   return {

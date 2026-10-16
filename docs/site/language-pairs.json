@@ -197,6 +197,12 @@
       "translationSha256": "0f7f74137db97e0d8e0731ccaeea1da2feb74e05f026d6bea1b81525585d5ff9"
     },
     {
+      "source": "docs/features/interface/destructive-actions.md",
+      "translation": "docs/features/interface/destructive-actions.zh-HK.md",
+      "sourceSha256": "d1097c18ec56b8ec6b6e85c89e3d41f7e909344cfeb9104adf28367646c53fc2",
+      "translationSha256": "2b4873ff9b72c971283a2f87a2d97e10b009ceddb053de2393196db57e1c1fb2"
+    },
+    {
       "source": "docs/features/interface/font-metadata.md",
       "translation": "docs/features/interface/font-metadata.zh-HK.md",
       "sourceSha256": "01d048217360f76e95c2dfe83db948b692e909ff825584d63501a55d554bf3b8",

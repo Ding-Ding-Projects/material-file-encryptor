@@ -55,6 +55,7 @@ These renderer modules do not introduce a public HTTP API; a Postman collection 
 - [Workspace shell, shared controls, notification narration and startup presentation](gui-redesign.md)
 - [Local tools workspaces](local-tools-workspaces.md)
 - [Storage maintenance](storage-maintenance.md)
+- [Destructive actions and the two-key super confirmation](destructive-actions.md)
 - [Verified startup photo host](startup-photo-host.md)
 
 - [Protected browser mediation](protected-browser-mediation.md)

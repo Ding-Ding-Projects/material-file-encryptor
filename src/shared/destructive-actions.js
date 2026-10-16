@@ -33,8 +33,8 @@ export const DESTRUCTIVE_ACTIONS = Object.freeze([
   entry('desktop.empty-recycle-bin', D, 'src/renderer/app.js', ['emptyRecycleBin'], ['Empty the Recycle Bin', '清空資源回收筒'], ['Every deleted entry in the Recycle Bin is permanently removed.', '資源回收筒入面所有已刪除項目會永久移除。']),
   entry('desktop.restore-version', DS, 'src/renderer/app.js', ['restoreVersion'], ['Restore an older version', '還原舊版本'], ['The chosen version becomes the current content of the file.', '揀咗嘅版本會變成檔案嘅目前內容。']),
   entry('desktop.release-offline-copy', D, 'src/renderer/app.js', ['releaseOffline'], ['Remove the offline copy', '移除離線副本'], ['The unneeded encrypted cache for this file is deleted from this device.', '呢個檔案用唔著嘅加密快取會由本機刪除。']),
-  entry('desktop.resplit-files', D, 'src/renderer/app.js', ['resplitAll'], ['Re-split every file', '重新分割所有檔案'], ['Replacement encrypted parts are written for every file using the current part size.', '會用目前嘅分段大小為所有檔案寫入新嘅加密分段。']),
-  entry('desktop.forget-saved-credential', D, 'src/renderer/app.js', ['setAutoUnlock'], ['Turn off automatic unlock', '關閉自動解鎖'], ['The protected drive key saved on this device is forgotten.', '儲存喺本機嘅受保護磁碟金鑰會被忘記。']),
+  entry('desktop.resplit-files', D, 'src/renderer/app.js', ['resplit'], ['Re-split every file', '重新分割所有檔案'], ['Replacement encrypted parts are written for every file using the current part size.', '會用目前嘅分段大小為所有檔案寫入新嘅加密分段。']),
+  entry('desktop.forget-saved-credential', D, 'src/renderer/app.js', ['forgetSavedCredential', 'setAutoUnlock'], ['Turn off automatic unlock', '關閉自動解鎖'], ['The protected drive key saved on this device is forgotten.', '儲存喺本機嘅受保護磁碟金鑰會被忘記。']),
   entry('desktop.pack-storage', D, 'src/renderer/app.js', ['startPacking'], ['Pack encrypted storage', '整合加密儲存'], ['Encrypted storage parts are rewritten with the chosen part size.', '加密儲存分段會按揀選嘅大小重寫。']),
   entry('desktop.replace-converter-output', DS, 'src/renderer/app.js', ['confirmOverwrite'], ['Replace the output file', '取代輸出檔案'], ['The selected output file is overwritten. Source files stay unchanged.', '揀選嘅輸出檔案會被覆寫，來源檔案保持不變。']),
   entry('desktop.install-update', D, 'src/renderer/app.js', ['updates'], ['Install the update and restart', '安裝更新並重新啟動'], ['Installed application files are replaced and the application restarts.', '已安裝嘅程式檔案會被取代，程式會重新啟動。']),
@@ -58,8 +58,8 @@ export const DESTRUCTIVE_ACTIONS = Object.freeze([
   entry('desktop.access-history-prune', DS, 'src/renderer/features/access/history-view.js', ['historyPrune'], ['Prune expired history', '清理過期記錄'], ['Expired history entries are permanently removed.', '過期嘅記錄項目會永久移除。']),
   entry('desktop.access-history-restore', DS, 'src/renderer/features/access/history-view.js', ['historyRestore'], ['Restore a history record', '還原記錄項目'], ['Live local records are replaced by the chosen history record.', '現有本機記錄會被揀選嘅記錄項目取代。']),
   // ---- Desktop and site: personalization ---------------------------------------------------------------------
-  entry('desktop.reset-settings', DS, 'src/renderer/features/personalization/index.js', ['resetSettings'], ['Reset preferences', '重設偏好設定'], ['All local appearance, language, attention and schedule preferences return to their defaults.', '所有本機外觀、語言、專注同排程偏好會恢復預設值。']),
-  entry('desktop.import-settings', DS, 'src/renderer/features/personalization/index.js', ['importSettings'], ['Import settings over the current ones', '匯入設定覆蓋目前設定'], ['Current local preferences are replaced by the imported file.', '目前嘅本機偏好會被匯入檔案取代。']),
+  entry('desktop.reset-settings', DS, 'src/shared/local-ux/settings-reset.js', ['store.reset'], ['Reset preferences', '重設偏好設定'], ['All local appearance, language, attention and schedule preferences return to their defaults.', '所有本機外觀、語言、專注同排程偏好會恢復預設值。']),
+  entry('desktop.import-settings', DS, 'src/renderer/features/personalization/index.js', ['settings imported'], ['Import settings over the current ones', '匯入設定覆蓋目前設定'], ['Current local preferences are replaced by the imported file.', '目前嘅本機偏好會被匯入檔案取代。']),
   entry('desktop.reset-display-name', DS, 'src/renderer/features/personalization/index.js', ['resetName'], ['Reset the display name', '重設顯示名稱'], ['The custom display name returns to the original name.', '自訂嘅顯示名稱會恢復原本名稱。']),
   entry('desktop.remove-schedule', DS, 'src/renderer/features/personalization/index.js', ['schedules.filter'], ['Remove a schedule rule', '移除排程規則'], ['The schedule rule is deleted.', '呢條排程規則會被刪除。']),
   entry('desktop.clear-schedule-credential', D, 'src/renderer/features/personalization/index.js', ['clearScheduleCredential'], ['Clear a schedule credential', '清除排程憑證'], ['The protected credential for this schedule source is deleted.', '呢個排程來源嘅受保護憑證會被刪除。']),
@@ -136,6 +136,16 @@ export const EXEMPT_ACTIONS = Object.freeze({
   hidePairingCode: 'Hides the one-time pairing code on screen. Existing pairings are untouched.',
   unmount: 'Locks the drive normally with open files flushed. The abrupt variant is registered as desktop.force-lock.'
 });
+
+/** A destructive-looking name that is allowed in exactly one file, with the reason. Narrower than EXEMPT_ACTIONS on purpose. */
+export const EXEMPT_IN_FILES = Object.freeze([
+  Object.freeze({file: 'src/features/ollama/service.js', name: 'delete', reason: 'The Ollama HTTP verb beneath deleteModel and deleteSession, which are registered and confirmed in the interface before this call can be reached.'}),
+  Object.freeze({file: 'browser-extension/options.js', name: 'delete', reason: 'The local model delete request that extension.delete-model runs only after the two-key confirmation completes.'}),
+  Object.freeze({file: 'src/main/browser-native-host.js', name: 'unpair', reason: 'The native host side of Disconnect. The extension confirms with extension.disconnect or extension.popup-disconnect before it sends this message.'}),
+  Object.freeze({file: 'src/main/browser-native-host.js', name: 'disconnected', reason: 'A connection state name, not an action.'}),
+  Object.freeze({file: 'browser-extension/background.js', name: 'revoked', reason: 'A pairing state name, not an action.'}),
+  Object.freeze({file: 'docs/site/visitor-records.js', name: 'delete', reason: 'The record store method beneath the access removals. It refuses the local profile record, and every interface caller is registered as a desktop.access-remove action or site.reset-visitor-records.'})
+]);
 
 /** Browser-native consent prompts and the quit dialog are the user's own consent to a request from outside or a choice already made. */
 export const NATIVE_BOUNDARIES = Object.freeze([
