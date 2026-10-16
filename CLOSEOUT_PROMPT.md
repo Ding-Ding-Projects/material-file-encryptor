@@ -3,43 +3,44 @@
 
 ## Objective
 
-Continue until every required feature is implemented and every interface element follows Material Design 3 with transitions and motion. Inventory rows stay "unverified" until each one has real proof from an installed build. Do not upgrade source checks or stubbed runs into installed proof.
+Continue until every required feature is implemented and every interface element follows Material Design 3 with transitions and motion. Inventory rows stay "unverified" until each has real proof from an installed build. Source checks and extracted-package runs are recorded as what they are.
 
 ## Current main
 
-`main` is at `5ff38608bf39d0747b46c761a2caaf1f475853df` (read back with `git ls-remote`). The most recent merges:
-- `b66b9f0`: two-key confirmation on every destructive action. The 62 registered actions are in `src/shared/destructive-actions.js`, and `node scripts/audit-destructive-actions.mjs` reports 0 findings. Bulk file delete uses `desktop.delete-files` and bulk offline release uses `desktop.release-offline-copy`. A dropped wording file in the extension asks first only when it would replace existing wording.
-- `5ff3860`: information icons on every surface and the desktop setup guide. The inventories are in `src/shared/local-ux/info-icon-*.js` and the guide is in `src/renderer/features/onboarding/`.
+`main` is at `45df6c4` (read back with `git ls-remote`). The latest published release is v1.782.1 (source `4a49919`), and it is a normal release.
 
-## Verification at 5ff3860
+Since the last handoff, main gained:
+- The two-key confirmation on every destructive action (62 registered, audit 0 findings).
+- Information icons, now compact, and the desktop setup guide.
+- Inventory coverage of 109 required features per surface.
+- Four older branches integrated. The stale presentation-image map was skipped because its source images no longer exist.
+- Fixes found by the release-package proofs:
+  - detached select search icons and a misplaced navigation information icon;
+  - a clipped element-lock dialog;
+  - a persistent wording error banner;
+  - the element-lock failure on long profile paths (Git `core.longpaths`);
+  - a heading squeezed by an open information panel;
+  - one Cantonese name for My drive.
+- Proof receipts for 1.772.1, 1.779.1 and 1.782.1 in `docs/evidence/`. Each is labelled as an extracted release package run, not an installed copy.
+- Refreshed README captures and site gallery data.
 
-- The gated test set ran 1570 tests: 1562 passed, 4 failed and 4 were not counted as passes. All 4 failures were merge seams, fixed and rerun green (105/0, plus 361/0 for the tests that read the renderer). The known environment-only failures are renderer-dialog-lifecycle, renderer-feature-fixture, ui-headless-route and ui-renderer.
-- The Material motion audit reports 0 findings. The inventory validator reports 0 problems. The public route contracts check is clean.
-
-## Proven on an installed build (one physical Windows host)
-
-- Install, update, uninstall, reinstall and rollback.
-- Native messaging host registration, with repair at start.
-- Pairing that survives an idle worker and expires on quit or lock.
-- Lock and force lock with data intact.
-- The Java requirement check.
-- A real Vanilla 26.3 server: start, ready and stop.
-- The quit routes.
-- The runtime motion audit, with 0 findings.
-
-Evidence is in `docs/evidence/installed-*.json` and `docs/evidence/runtime-motion-*.json`.
+Gate at `45df6c4`: 1645 passed, 0 failed. Material motion audit: 0 findings. Inventory validator: 0 problems.
 
 ## Open work, in order
 
-1. Merge `feature/inventory-new-ids` after it passes the gate. It adds two required features: drop-to-apply personal wording (desktop and extension, site not applicable), and packaged private documentation delivery (not applicable here, because this repository is public).
-2. Build and install the next release. Then re-prove: confirmation dialogs, multi-select bulk actions, drop-to-apply and its celebration, information icons, the setup guide, access wiring, display name, element locks, accent, regex, focus and export.
-3. Replace the affected screenshots in the README and on the site with inspected captures of that release.
-4. Deferred to the next owner: the local container target, which needs Docker Desktop.
-5. Last: a session-end automatic lock on a real restart. The owner restarts the computer. Then check that the drive auto-locks, unlock it with the saved test password, compare the file hashes with the recorded before state, and delete the test vault and password file.
+1. Session-end automatic lock on a real restart. The owner restarts the computer. Afterwards:
+   - check that the drive auto-locked;
+   - unlock it with the saved test password;
+   - compare the file hashes with the recorded before state;
+   - delete the test vault and the password file.
+2. The squeezed-heading fix is in source only (after v1.782.1). Confirm it on the next release.
+3. Deferred to the next owner: the local container target, which needs Docker Desktop.
+4. Installed-build proof for the rows that are still unverified. Every row in `contracts/feature-delivery.json` that is "unverified" names its remaining gap.
 
 ## Constraints
 
-- Push only `main`. Pushing a second branch at the same commit starts a duplicate release run.
+- Push only `main`. A second branch at the same commit starts a duplicate release run; cancel it if one starts.
+- Extracted package runs register a per-user startup entry. Remove only the entry the run added.
 - Never kill processes by image name.
 - Never weaken Windows sign-in or change system security settings.
 - The owner performs every restart.
