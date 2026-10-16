@@ -1,3 +1,12 @@
+# Information icons and setup guide, 2026-10-16
+
+- Every capable control in the desktop shell markup, on the website home page and preferences dialog, and in the browser extension popup and workspace now has its own compact information icon immediately before it. It opens a control-specific explanation, guided steps and an isolated sample, and never starts the real operation or reads a live value.
+- The desktop app gained a first-run setup guide: language and appearance, a read-only WinFsp and server runtime check, naming a drive and opening the existing create or unlock dialog, and showing the browser pairing code. It saves progress, can be skipped, works from the keyboard and reopens from Help or the command palette.
+- The required-feature inventory now tracks the information icons and the setup wizard (107 families per surface). The wizard is recorded as not applicable on the website and the extension.
+- Not covered yet: controls that feature modules create after start-up, and any built-app capture of the new surfaces.
+
+每個有功能嘅控制項前面而家都有自己嘅資訊圖示，會開專屬說明、逐步指引同獨立樣本，唔會真係執行操作。桌面程式新增首次使用設定指南，可以略過、儲存進度同用鍵盤操作。啟動後先建立嘅控制項同已建置程式嘅畫面證據仍然未做。
+
 # Installed pairing fixes, 2026-10-15
 
 - The Squirrel hooks now run from the first import of the main module, bound each registry call, and exit under a watchdog, so an update no longer leaves the native host manifest naming the removed version. Every normal start repairs a stale manifest.

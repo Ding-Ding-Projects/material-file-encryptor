@@ -1190,6 +1190,70 @@
       }
     },
     {
+      "id": "onboarding-wizard",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [
+        "src/renderer/features/onboarding/model.js",
+        "src/renderer/features/onboarding/index.js",
+        "src/renderer/features/onboarding/copy.js",
+        "src/renderer/features/onboarding/onboarding.css",
+        "src/renderer/performance-timing.js",
+        "src/renderer/app.js",
+        "src/renderer/index.html"
+      ],
+      "documentation": [
+        "docs/features/interface/setup-guide.md",
+        "docs/features/interface/setup-guide.zh-HK.md"
+      ],
+      "localization": [
+        "src/renderer/features/onboarding/copy.js",
+        "docs/features/interface/setup-guide.zh-HK.md"
+      ],
+      "tests": [
+        "test/onboarding-wizard.test.js",
+        "test/helpers/onboarding-dom.js",
+        "test/feature-mount-timing.test.js"
+      ],
+      "persistence": [
+        "src/renderer/features/onboarding/model.js"
+      ],
+      "evidence": [],
+      "reason": "A first-run and setup guide performs real setup actions through the existing preference, driver, drive dialog and pairing paths, with progress, Back and Next, skipping, saved progress, keyboard movement and three language modes. Source checks use fakes for those services and a headless browser run of the real renderer opened it on first launch. A built-app run, a real driver install or drive creation, and a visual capture of the flow are not recorded.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "sourceReview": {
+        "baseline": "6d6f563",
+        "readyCandidates": [],
+        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+      },
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "onboarding-wizard",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+        "verdict": "references-present",
+        "checkedPaths": 15,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt. Native owner receipts and earlier defect captures are scoped separately in assessmentContext."
+      }
+    },
+    {
       "id": "tabs",
       "surface": "desktop",
       "status": "unverified",
@@ -1583,6 +1647,70 @@
         "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
         "verdict": "references-present",
         "checkedPaths": 7,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt. Native owner receipts and earlier defect captures are scoped separately in assessmentContext."
+      }
+    },
+    {
+      "id": "info-icon-guidance",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [
+        "src/shared/local-ux/info-icon-inventory.js",
+        "src/shared/surface/info-icon-mount.js",
+        "src/shared/surface/info-icon-controller.js",
+        "src/shared/local-ux/info-icon-desktop.js",
+        "src/shared/surface/control-guidance.js",
+        "src/renderer/features/shell/info-icons.js",
+        "src/renderer/app.js",
+        "src/renderer/index.html",
+        "src/renderer/modern.css"
+      ],
+      "documentation": [
+        "docs/features/interface/info-icon-guidance.md",
+        "docs/features/interface/info-icon-guidance.zh-HK.md"
+      ],
+      "localization": [
+        "src/shared/local-ux/info-icon-inventory.js",
+        "docs/features/interface/info-icon-guidance.zh-HK.md"
+      ],
+      "tests": [
+        "test/info-icon-guidance.test.js",
+        "test/helpers/info-icon-sources.js",
+        "test/helpers/info-icon-dom.js"
+      ],
+      "evidence": [],
+      "reason": "Every control in the desktop shell markup has an authored explanation, guided steps and an isolated sample, mounted before its control and covered by a markup-scanning coverage test and a guard test. A headless browser run of the real renderer against a stubbed bridge mounted every icon. Controls that feature modules create after start-up, built-app interaction and visual evidence remain unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "sourceReview": {
+        "baseline": "6d6f563",
+        "readyCandidates": [],
+        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+      },
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "info-icon-guidance",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+        "verdict": "references-present",
+        "checkedPaths": 16,
         "missingPaths": [],
         "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
       },
@@ -7001,6 +7129,53 @@
       }
     },
     {
+      "id": "onboarding-wizard",
+      "surface": "site",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [
+        "docs/features/interface/setup-guide.md",
+        "docs/features/interface/setup-guide.zh-HK.md"
+      ],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "The setup wizard is a desktop application feature. The website is documentation and download, cannot stand in for it, and its separate public website requirement is unchanged.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "sourceReview": {
+        "baseline": "6d6f563",
+        "readyCandidates": [],
+        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+      },
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "The setup wizard is a desktop application feature. The website is documentation and download, cannot stand in for it, and its separate public website requirement is unchanged.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "onboarding-wizard",
+          "declaredScope": "Desktop application only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable",
+      "sourceVerification": {
+        "baseline": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+        "verdict": "references-present",
+        "checkedPaths": 2,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "Excluded by explicit applicability."
+      }
+    },
+    {
       "id": "tabs",
       "surface": "site",
       "status": "unverified",
@@ -7401,6 +7576,68 @@
         "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
         "verdict": "references-present",
         "checkedPaths": 8,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt. Native owner receipts and earlier defect captures are scoped separately in assessmentContext."
+      }
+    },
+    {
+      "id": "info-icon-guidance",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [
+        "src/shared/local-ux/info-icon-inventory.js",
+        "src/shared/surface/info-icon-mount.js",
+        "src/shared/surface/info-icon-controller.js",
+        "src/shared/local-ux/info-icon-site.js",
+        "src/shared/surface/control-guidance.js",
+        "docs/site/site-foundation.js",
+        "docs/site/site.css"
+      ],
+      "documentation": [
+        "docs/features/interface/info-icon-guidance.md",
+        "docs/features/interface/info-icon-guidance.zh-HK.md"
+      ],
+      "localization": [
+        "src/shared/local-ux/info-icon-inventory.js",
+        "docs/features/interface/info-icon-guidance.zh-HK.md"
+      ],
+      "tests": [
+        "test/info-icon-guidance.test.js",
+        "test/helpers/info-icon-sources.js",
+        "test/helpers/info-icon-dom.js"
+      ],
+      "evidence": [],
+      "reason": "The website home page and the preferences dialog of every generated page mount an icon before each capable control, covered by a markup-scanning coverage test and the shared guard test. A headless browser run mounted all of them with no console error. The workspace page reuses the settings guidance, and built-site interaction and visual evidence remain unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "sourceReview": {
+        "baseline": "6d6f563",
+        "readyCandidates": [],
+        "scope": "Source applicability and reference review only; earlier source bindings remain recorded per file."
+      },
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "info-icon-guidance",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+        "verdict": "references-present",
+        "checkedPaths": 14,
         "missingPaths": [],
         "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
       },
@@ -13036,6 +13273,36 @@
       }
     },
     {
+      "id": "onboarding-wizard",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [
+        "docs/features/interface/setup-guide.md",
+        "docs/features/interface/setup-guide.zh-HK.md"
+      ],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "The setup wizard is a desktop application feature. The extension has its own pairing flow in its workspace and cannot stand in for the wizard, so this is recorded as not applicable rather than missing.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "The setup wizard is a desktop application feature. The extension has its own pairing flow in its workspace and cannot stand in for the wizard, so this is recorded as not applicable rather than missing.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "onboarding-wizard",
+          "declaredScope": "Desktop application only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
       "id": "tabs",
       "surface": "extension",
       "status": "unverified",
@@ -13488,6 +13755,81 @@
           }
         ],
         "persistence": "A draft record keeps the title, text and step until the note is saved."
+      }
+    },
+    {
+      "id": "info-icon-guidance",
+      "surface": "extension",
+      "status": "unverified",
+      "implementation": [
+        "browser-extension/options.js",
+        "browser-extension/popup.js",
+        "browser-extension/options.css",
+        "browser-extension/popup.css",
+        "scripts/browser-extension-guidance-entry.js",
+        "scripts/build-browser-extension.mjs",
+        "src/shared/local-ux/info-icon-inventory.js",
+        "src/shared/surface/info-icon-mount.js",
+        "src/shared/surface/info-icon-controller.js",
+        "src/shared/local-ux/info-icon-extension.js",
+        "src/shared/surface/control-guidance.js"
+      ],
+      "documentation": [
+        "docs/features/interface/info-icon-guidance.md",
+        "docs/features/interface/info-icon-guidance.zh-HK.md"
+      ],
+      "localization": [
+        "src/shared/local-ux/info-icon-inventory.js",
+        "docs/features/interface/info-icon-guidance.zh-HK.md"
+      ],
+      "tests": [
+        "test/info-icon-guidance.test.js",
+        "test/helpers/info-icon-sources.js",
+        "test/helpers/info-icon-dom.js",
+        "test/browser-extension-bundle.test.js"
+      ],
+      "evidence": [],
+      "reason": "The popup and workspace markup carry an authored explanation, guided steps and an isolated sample for every capable control, bundled locally and covered by markup-scanning coverage tests and the shared guard test. A headless browser run mounted all of them on the real markup with no console error. Controls created later by extension modules, installed-build interaction and visual evidence remain unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "info-icon-guidance",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "proof"
+        ],
+        "action": "Open a control-specific explanation, guided steps and an isolated sample from a compact information icon placed immediately before every capable control, without starting the real operation.",
+        "targets": [
+          {
+            "state": "present",
+            "surface": "extension:options",
+            "selector": "",
+            "outcome": "Open a control-specific explanation, guided steps and an isolated sample from a compact information icon placed immediately before every capable control, without starting the real operation.",
+            "nextProof": "Exercise open a control-specific explanation, guided steps and an isolated sample from a compact information icon placed immediately before every capable control, without starting the real operation on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+          },
+          {
+            "state": "present",
+            "surface": "extension:popup",
+            "selector": "",
+            "outcome": "Open a control-specific explanation, guided steps and an isolated sample from a compact information icon placed immediately before every capable control, without starting the real operation.",
+            "nextProof": "Exercise open a control-specific explanation, guided steps and an isolated sample from a compact information icon placed immediately before every capable control, without starting the real operation on this extension target; test applicable invalid and reset states, then retain independent installed-build identity, interaction and visual receipts."
+          }
+        ],
+        "persistence": "No setting is stored: the icons keep no state, and the open or closed panel is not persisted."
       }
     },
     {
@@ -17972,7 +18314,33 @@
     "test/browser-desktop-adapters.test.js": "20d8dab91b79334669e7ac98eff66cf7ff4080bf",
     "docs/evidence/installed-proof-1.657.1.json": "8eb6cd8afec664d3ecbeab41619fcb2ef9048978",
     "docs/evidence/installed-proof-1.692.1.json": "b8408947a90da839267fc8d508f185e8e09a9689",
-    "docs/evidence/installed-server-run-1.702.1.json": "bb22b8bf34ee85831d176650fc76bde329e2d801"
+    "docs/evidence/installed-server-run-1.702.1.json": "bb22b8bf34ee85831d176650fc76bde329e2d801",
+    "src/shared/local-ux/info-icon-inventory.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "src/shared/surface/info-icon-mount.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "src/shared/surface/info-icon-controller.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "src/shared/local-ux/info-icon-desktop.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "src/shared/surface/control-guidance.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "src/renderer/features/shell/info-icons.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "src/renderer/modern.css": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "docs/features/interface/info-icon-guidance.md": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "docs/features/interface/info-icon-guidance.zh-HK.md": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "test/info-icon-guidance.test.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "test/helpers/info-icon-sources.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "test/helpers/info-icon-dom.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "src/shared/local-ux/info-icon-site.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "docs/site/site-foundation.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "scripts/browser-extension-guidance-entry.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "src/shared/local-ux/info-icon-extension.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "src/renderer/features/onboarding/model.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "src/renderer/features/onboarding/index.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "src/renderer/features/onboarding/copy.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "src/renderer/features/onboarding/onboarding.css": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "src/renderer/performance-timing.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "docs/features/interface/setup-guide.md": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "docs/features/interface/setup-guide.zh-HK.md": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "test/onboarding-wizard.test.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "test/helpers/onboarding-dom.js": "965f4325e0eab995132394d0a32ab38a7c2323a8",
+    "test/feature-mount-timing.test.js": "965f4325e0eab995132394d0a32ab38a7c2323a8"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
@@ -17980,8 +18348,8 @@
       "families": 104,
       "rows": 208
     },
-    "families": 105,
-    "rows": 210,
+    "families": 107,
+    "rows": 214,
     "scope": "Finite source-reference reconciliation and bounded source inspection, not an exhaustive behavioral audit. Historical source bindings and assessments remain preserved.",
     "guiMatrix": "89 declared states, 4272 viewport/language/theme/scale tuples pending.",
     "builtCandidate": "Prior 1d3 candidate exposed title and dialog accessible-name defects; source fixes are integrated. The 0f5 candidate build is running by owner receipt, with no accepted replacement runtime result.",
