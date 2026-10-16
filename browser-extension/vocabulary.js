@@ -6,6 +6,9 @@ export const vocabularyKey = 'mfe-extension-vocabulary-v1';
 const MAX_BYTES = 32768, MAX_ENTRIES = 200, MAX_TEXT = 60;
 const plain = text => typeof text === 'string' && text.length >= 1 && text.length <= MAX_TEXT && text === text.trim() && !/[\u0000-\u001f\u007f-\u009f<>-]/.test(text);
 
+const MAX_NAME = 40;
+const plainName = text => typeof text === 'string' && text.length >= 1 && [...text].length <= MAX_NAME && text === text.trim() && !/[\u0000-\u001f\u007f-\u009f<>]/.test(text);
+
 /** Parses a wording file all or nothing: any invalid entry rejects the whole file. */
 export function parseVocabulary(text) {
   if (typeof text !== 'string' || text.length > MAX_BYTES) return {error: 'Use a wording file of 32 KB or less.'};
@@ -15,7 +18,9 @@ export function parseVocabulary(text) {
   const entries = Object.entries(value.entries);
   if (!entries.length || entries.length > MAX_ENTRIES) return {error: 'Include between 1 and 200 entries.'};
   if (!entries.every(([from, to]) => plain(from) && plain(to))) return {error: 'Each entry needs plain text of 60 characters or fewer.'};
-  return {entries: entries.sort((a, b) => b[0].length - a[0].length)};
+  // Optional headline for the celebration: plain text, never applied as wording.
+  if (Object.hasOwn(value, 'displayName') && !plainName(value.displayName)) return {error: 'The display name needs plain text of 40 characters or fewer.'};
+  return {entries: entries.sort((a, b) => b[0].length - a[0].length), displayName: value.displayName};
 }
 
 export function readVocabulary(storage) {
