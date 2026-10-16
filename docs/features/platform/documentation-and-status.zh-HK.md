@@ -47,3 +47,15 @@
 ## 操作技能
 
 儲存庫喺 `skills` 下面保留可重用、已檢入嘅操作程序。每個資料夾都有一份 `SKILL.md`，frontmatter 有 `name` 同 `description`，章節固定一樣：何時使用、先決條件、步驟、預期輸出、失敗處理、擁有者步驟同可用性。內容涵蓋 `build.bat`、`build-installer.bat` 同 `scripts/verify-local.ps1`；擴充功能暫存、證據同參考對照；靜態同執行時動態稽核；網站暫存同螢幕截圖更新；版本中繼資料同 `RELEASES` 驗證；以及包括解除安裝同回復舊版嘅已安裝驗證。需要真人處理嘅步驟（例如授權條款接受、UAC 同意、重新啟動或者平台登入）會標示為擁有者步驟。`test/operational-skill.test.js` 檢查結構、frontmatter，同每個技能提到嘅腳本或命令路徑是否仍然存在，並且已證明對刻意植入嘅壞參照會失敗。技能只記錄程序，唔係結果：只有 `docs/evidence` 之下有日期嘅收據先可以證明一次執行。索引見 `skills/README.md`。
+
+## 誠實收費審核
+
+產品係免費，而 `scripts/audit-monetization.mjs` 負責守住呢點。`node scripts/audit-monetization.mjs` 會掃描桌面轉譯程序、主程序同共用程式碼、瀏覽器擴充功能同文件網站原始碼，並略過內置第三方目錄、字型、圖示同授權文字。佢會報告付款 SDK 同付款主機、似信用卡號碼嘅欄位同付款表單、購買同升級字眼、授權金鑰同權益檢查、試用計時、捐款同評分請求，以及價錢標籤。審核亦會拒絕 `package.json` 內嘅付款相依項目、擴充功能資訊清單內嘅付款權限同付款主機，以及任何內容安全政策內嘅付款主機。只有清楚講明產品免費嘅句子先可以例外。審核仲要求桌面（說明頁，用 Material 清單控制項，並跟共用 Material 動畫進場）、擴充功能選項頁同網站首頁，各自用英文同粵語清楚列明價錢。
+
+`test/monetization-audit.test.js` 會對真實檔案樹執行審核，要求零項發現。測試亦會喺記憶體同臨時目錄種入每一類違規，要求全部被報告，所以審核唔會因為乜都搵唔到而靜靜雞通過。圖樣清單同程式碼一樣係規則嘅文件：出現新付款機制就要擴闊，亦要令允許嘅免費聲明同各介面嘅字句保持一致。
+
+## README 分頁同人手撰寫時間估算
+
+README 開頭有精簡索引（專案係乜、安裝一行、價錢聲明同目錄），然後將每個長參考章節收埋入 `<details>` 區塊，並配上描述性 `<summary>`。第一次睇嘅人要知嘅嘢永遠唔會收埋，畫面截圖圖庫保留自己嘅分組。`CONTRIBUTING.md`、`SECURITY.md`、`CODE_OF_CONDUCT.md` 同 `LICENSE` 保持係真實檔案，等 GitHub 喺 README 上面顯示成分頁。
+
+README 入面「Project size and human-time estimate」呢節由 `scripts/human-time-estimate.mjs` 產生。佢用 `git ls-files` 列出受追蹤檔案，將人手撰寫程式碼嘅非空白行數分五組計算（應用程式原始碼、原生引擎、樣式同標記、測試，以及建置同工具腳本），並略過內置同打包目錄、字型、鎖定檔、壓縮檔、二進位檔、JSON 資料、設計參考原型同 Markdown 文字，而且逐項列明。原生引擎按 1.5 倍計。結果除以每個工作天 25 至 50 行同每月 20 個工作天，得出一個範圍，標明係估算並列出算式。`node scripts/human-time-estimate.mjs --write` 會更新該節，而 `node scripts/human-time-estimate.mjs --check` 會喺同目前檔案樹相差超過百分之十或者算式錯誤時失敗。`test/readme-tabs-and-estimate.test.js` 同時把關 README 結構同估算。

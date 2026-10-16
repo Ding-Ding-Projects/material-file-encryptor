@@ -87,6 +87,7 @@ export const cantonese = Object.freeze({
 'Security':'保安',
 'Docs':'文件',
 'Release status':'發佈狀態',
+'Price: Material File Encryptor is free. There are no purchases, subscriptions or paid features, nothing is unlocked by paying, and nothing on this website asks for payment details.':'價錢：Material File Encryptor 係免費。冇購買、冇訂閱、冇收費功能，付款唔會解鎖任何嘢，呢個網站亦唔會要求你輸入付款資料。',
 'A Windows virtual drive · In development':'Windows 虛擬磁碟 · 開發中',
 'Your files, readable':'你嘅檔案，可以',
 'in Explorer.':'喺檔案總管讀取。',

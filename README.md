@@ -4,17 +4,28 @@
 
 [Documentation website](https://ding-ding-projects.github.io/material-file-encryptor/) · [Feature library](docs/features/README.md) · [中文文件](docs/features/README.zh-HK.md) · [Roadmap](ROADMAP.md) · [Current handoff](HANDOFF.md) · [Releases](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases)
 
+**Install:** Windows 10 or 11 on x64. Download the unsigned Squirrel.Windows installer from the [releases page](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases); Windows may show an unknown-publisher warning. To build from a checkout, run `build.bat /s` and then `build-installer.bat /s` (see [Build, package and verify](#build-package-and-verify)). Explorer mounting also needs the WinFsp driver.
+
+**Price:** free. There are no purchases, subscriptions or paid features, nothing is unlocked by paying, and nothing here asks for payment details.
+
+**Contents:** [Choose a workflow](#choose-a-workflow) · [Architecture](#architecture) · [What happens to a file](#what-happens-to-a-file) · [Current captures](#current-captures) · [Build, package and verify](#build-package-and-verify) · [Security](#security-and-recovery-boundaries) · [Size and human-time estimate](#project-size-and-human-time-estimate) · [Documentation and contributing](#documentation-and-contributing). Long reference sections are collapsed: choose a summary line to open it.
+
 > **Historical verified baseline:** `411ce5d55b96958799d996713374b7b683552234` records verified PDF packaging and documentation catalogue caching, plus the updater controller and future release-index repair. This is a fixed evidence reference, not the latest main revision. The exact root builds and bounded component results are recorded below. Complete required features, current Material Design 3 acceptance, installed startup, automatic updating and restart continuity remain unfinished. A successful build or release does not certify those outcomes.
 
 Promotion retries retain their verified producer identity and check exact downloaded provenance before current-main promotion. [Release delivery](docs/features/release/preview-delivery.md) distinguishes source checks, downloaded bytes and still-unverified installed behavior.
 
 ## Current interface implementation
 
+<details>
+<summary>Interface implementation status, feature ledger counts and protected mediation</summary>
+
 The shared titlebar, main workspace, content panel, data table and selection toolbar now use registered components with their own structure, styles and connection lifecycle. Original record rows and action nodes remain in place. The combined source inventory and component checks pass 59 tests. The exact root build of composition candidate `4959f2af4a2ced2980b2a68d2ba9fb4056458e35` passed; its package contains 6,066 entries with zero privacy rejections. Bounded real captures found incomplete table focus visibility. A separately preserved inset-outline candidate exposes the sides and bottom, but its top remains covered by the header. Full rendered composition acceptance remains incomplete. Existing images retain their historical source and do not certify this newer candidate.
 
 The feature ledger now contains 315 assessments, preserving the original 210 desktop and documentation records and adding 105 independently scoped extension assessments. The extension records distinguish 35 unverified, 61 missing and nine inapplicable items. The combined catalogue declares 959 concrete surfaces and 230 public routes; these are inventory counts, not completed workflows.
 
 Protected browser mediation has focused source and compiled synthetic pipe verification. Production profile authentication controls remain unavailable until their native callbacks and real extension interactions are implemented and accepted. [Shared compositions](docs/features/interface/shared-compositions.md) · [Extension assessments](docs/features/platform/extension-assessment.md) · [Protected mediation boundaries](docs/features/interface/protected-browser-mediation.md)
+
+</details>
 
 ## Choose a workflow
 
@@ -34,6 +45,9 @@ Browser workspace, profile mediation, native server provisioning and interface r
 
 The desktop sends bounded requests to the native host. Explorer uses the mounted filesystem. The engine persists encrypted objects and metadata; the configured backing-folder provider controls its own remote delivery.
 
+<details>
+<summary>Architecture diagram and the browser extension boundary</summary>
+
 ```mermaid
 flowchart LR
     Desktop["Desktop workspace"] --> Main["Trusted main process"]
@@ -48,9 +62,14 @@ flowchart LR
 
 The browser extension is a separate proposal surface. Its native messaging broker checks the reviewed origin, explicit pairing and desktop admission. Read-only protection observations distinguish native profile verification from shared mode; `browserPermission` remains `unavailable`. Neither a pairing session nor a protection label grants browser profile authority. See [native transport](docs/features/workflows/browser-native-host.md) and [protection observations](docs/features/workflows/browser-protection-observations.md).
 
+</details>
+
 ## What happens to a file
 
 Writes become durable encrypted objects and journal state before source publication. Closing the final writable handle can trigger background physical-part packing. Reads authenticate ciphertext before returning plaintext through the unlocked drive.
+
+<details>
+<summary>File workflow diagram and the physical part cap</summary>
 
 ```mermaid
 flowchart TD
@@ -67,7 +86,12 @@ flowchart TD
 
 New vaults default to an **80 MiB physical part cap (83,886,080 bytes)**. The maximum remains **90,000,000 bytes**, including authentication framing. Existing data needs explicit packing or resplitting; historical versions and pending work remain protected. See [physical packing](docs/features/storage/physical-packing.md). Existing user-data migration remains deferred.
 
+</details>
+
 ## Current continuation
+
+<details>
+<summary>Latest recorded continuation and open work</summary>
 
 Main 07a9d286 records the completed e7099d37 strict UTF-8 article repair. All 234 deployed files, the complete deployment archive, article bytes and exact About homepage were accepted at that observation. Later source requires its own live verification.
 
@@ -75,7 +99,12 @@ GUI source 04bf6c25 is preserved remotely with independent merge review and 34 f
 
 The 105-family/210-row goal remains open, with 22 routes declared, 67 unavailable providers, zero of 4,272 accepted visual tuples and 74 design gaps. One offline-populated source unit is in progress without acceptance. Installed update and parity remain unfinished; initial installation, removal and real-data migration remain deferred. Deletion awaits the unavailable verified archive destination. See the [handoff](HANDOFF.md) and [roadmap](ROADMAP.md) for source-specific evidence.
 
+</details>
+
 ## Source-bound verification
+
+<details>
+<summary>Verification table, unfinished delivery and the preview capture history</summary>
 
 Evidence applies to the named source and scope. Later revisions do not inherit earlier installed or visual verdicts.
 
@@ -102,7 +131,12 @@ Earlier captures were replaced by the current ones listed below and remain uncha
 
 Updater source and future BOM-free release-index production are delivered on main. Local installer production passed at `ab975`; main `411ce5d` retains the same complete source tree after a preserved unpublished message correction. Hosted release [v1.344.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.344.1) passed the older installed-controller metadata check with an available verdict, and its independently downloaded Setup/package bytes passed archive and embedding checks. [Selected update proof](docs/evidence/hosted-update-1344-20261012.json) keeps those results separate from pending installed GUI and actual native apply acceptance. Installed startup, ready/Later interaction, restart continuity and removal are not certified. Local models must follow the documented one-click application-managed Ollama runtime procedure. The shared instructions may be updated only after actual installation and runtime proof; no shared physical directory is implied, existing installations remain untouched, and this documentation change starts no model service. See [local model boundaries](docs/features/ollama/local-models.md).
 
-## Build, package and verify
+</details>
+
+## Storage write path and part size
+
+<details>
+<summary>Write path, publication queue and the 80 MiB physical part cap</summary>
 
 Writes first become durable encrypted objects and journal state. Closing the final writable handle can trigger background physical-part packing. Source publication is separate and may remain queued. Reads return authenticated plaintext through the unlocked mounted drive, without a plaintext working folder.
 
@@ -110,7 +144,12 @@ The [file workflow diagram](#what-happens-to-a-file) above shows this sequence a
 
 New vaults now default to an **80 MiB physical part cap (83,886,080 bytes)**. The maximum remains **90,000,000 bytes**, including authentication framing. This is a physical storage cap, not a plaintext allocation size. Existing data requires an explicit packing or resplitting workflow; versions and pending work remain protected. [Physical packing and migration](docs/features/storage/physical-packing.md) is the current source of truth for this behavior.
 
+</details>
+
 ## Current evidence and its limits
+
+<details>
+<summary>Source-bound evidence table, evidence summaries and feature acceptance</summary>
 
 Each row below applies only to its recorded source and scope. Later integration does not inherit an earlier binary, capture or installed-runtime verdict.
 
@@ -131,6 +170,8 @@ Evidence summaries: [native and package boundaries](docs/evidence/resume-native-
 The historical inventory retains **105 feature identifiers and 210 desktop/website rows**. At source `53d2b4612b96559c5afaac2c28e2888fa0a3ba91`, the supplementary registry declares **901 concrete surfaces and 94,605 independently unverified assessments**. Empty proof remains unverified. These are acceptance inventories, not a count of completed features.
 
 Material Design 3 applies to the desktop, documentation website, extension and nested controls. Current layout, keyboard interaction, accessible names, language/theme/scale coverage, complete contextual guidance and the remaining specialized editors require real rendered evidence. The [interface design](DESIGN.md), [surface inventory documentation](docs/features/platform/documentation-and-status.md), [goal](GOAL.md) and [checklist roadmap](ROADMAP.md) describe the unfinished work.
+
+</details>
 
 ### Current captures
 
@@ -465,6 +506,9 @@ The verification diagram is a path, not a claim that every step passed. Releases
 
 ## Security and recovery boundaries
 
+<details>
+<summary>Security, privacy and recovery boundaries in full</summary>
+
 - Keep credentials and backups outside storage/cache roots. There is no promised password-recovery service.
 - Password or key-file credentials protect the vault key. Content, namespace metadata, journals and history use authenticated encryption. [Native storage](docs/features/storage/native-vault.md) specifies the format.
 - Storage and cache roots must be separate and non-overlapping. Managed symbolic-link and reparse paths are rejected.
@@ -476,6 +520,29 @@ The verification diagram is a path, not a claim that every step passed. Releases
 - Server preparation verifies reviewed files without accepting the server license, installing Java globally or starting a server. Local process, local Docker, SSH process and SSH Docker operational acceptance remain unavailable until their own requirements are met.
 - Existing installations, mounted user data and incomplete branches remain protected while verification continues.
 
+</details>
+
+## Project size and human-time estimate
+
+**Estimate, not a measurement:** writing this project by hand would plausibly take one person about **79 to 158 person-months** (1,580 to 3,160 working days). Nobody built it that way; this gives a sense of scale and is not a claim about effort, quality or value.
+
+| Hand-written code | Files | Non-blank lines | Multiplier | Weighted lines |
+|---|---:|---:|---:|---:|
+| Application source (JavaScript) | 338 | 26,638 | 1 | 26,638 |
+| Native engine and drive adapter (C#) | 51 | 7,533 | 1.5 | 11,300 |
+| Styles and markup (CSS, HTML) | 23 | 1,028 | 1 | 1,028 |
+| Tests | 394 | 27,339 | 1 | 27,339 |
+| Build, release and tooling scripts | 128 | 12,704 | 1 | 12,704 |
+| **Total** | | **75,242** | | **79,009** |
+
+**Arithmetic:** 79,009 weighted lines ÷ 50 lines per day = 1,580 days, and 79,009 ÷ 25 = 3,160 days; at 20 working days per month that is 79 to 158 person-months.
+
+**Assumptions:** 25 (conservative) to 50 (optimistic) non-blank lines per 8-hour day of finished, reviewed, debugged code, a common industry rule of thumb rather than a measurement of this team. The native engine counts at 1.5 times because encrypted storage and a filesystem adapter are harder than their size suggests. Part of the application source is written as long lines, so line counts understate it. Design, research and review time beyond the test code are not included.
+
+**Left out, exactly as the line count leaves them out:** Markdown prose (counted separately, not estimated) (247 files); images, JSON data and catalogues, and other non-code files (229 files); design reference prototypes (51 files); vendored, bundled or build-output trees (16 files); lockfiles (1 files). Markdown prose (12,729 non-blank lines in 247 files) is not estimated.
+
+Reproduce it with `node scripts/human-time-estimate.mjs` (prints the same table from `git ls-files`) and refresh this block with `node scripts/human-time-estimate.mjs --write`. The block may lag the tree by up to 10 percent before `--check` and the test fail.
+
 ## Documentation and contributing
 
 Browse [all categories](docs/features/README.md), [storage](docs/features/storage/README.md), [desktop verification](docs/features/desktop/README.md), [interface](docs/features/interface/README.md), [access](docs/features/access/README.md), [platform](docs/features/platform/README.md), [release procedures](docs/features/release/README.md), [changelog](CHANGELOG.md), [deployed library](https://ding-ding-projects.github.io/material-file-encryptor/library.html) and [wiki snapshot](https://ding-ding-projects.github.io/material-file-encryptor/wiki.html). Live documentation delivery is separate from this source revision.
@@ -483,6 +550,8 @@ Browse [all categories](docs/features/README.md), [storage](docs/features/storag
 Read [AGENTS.md](AGENTS.md), the handoff and affected documentation before editing. Preserve unrelated work, reconcile fetched history, use the root entrypoints, run proportionate local checks and retain failed receipts. Integrate completed work into `main`, push it and verify the remote ref. Keep unfinished work explicitly incomplete, never force-push without reviewed authorization, and never delete uncommitted, unmerged or unpushed work.
 
 Keep credentials, private instructions, machine paths and unapproved data out of source and published material. Review text and pixels before publication. Agents must never initiate restart, shutdown, sign-out, sleep or hibernation of the user's current computer. User-approved settings changes are separate from actual power actions; native elevated consent comes from the user. External communications require explicit authorization.
+
+The root [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and [LICENSE](LICENSE) files appear as tabs above this README on GitHub, so they are not repeated here.
 
 ## Agent conversation vocabulary
 
@@ -505,14 +574,24 @@ a step, not a habit.
 
 ## Guidance and responsive interface candidate
 
+<details>
+<summary>Guidance playgrounds, responsive documentation controls and the table focus ring</summary>
+
 The current candidate replaces persistent guidance text entries with accessible information icons and isolated worked examples. All 88 static settings descriptors have authored practice fixtures; scheduled scalar values, clear actions and snapshot operations have separate synthetic examples. Other control families and the complete built acceptance inventory remain unfinished. See [guidance playgrounds](docs/features/interface/guidance-playgrounds.md) for exact boundaries and remaining work.
 
 Public document controls now prepare real Material Web components before listeners and localization snapshots. The navigation menu follows its measured header height, and tab information panels use the actual navigation scrollport width. Focused source checks pass; two representative source-bound documentation captures are inspected and inventoried. The full language/theme/scale matrix and live publication checks remain pending. Existing historical images retain their original provenance.
 
 The table keyboard-focus ring now paints above sticky headers. Independent review verified twelve source-bound captures and unchanged geometry at both desktop sizes. This bounded English, scale-1 result does not complete the full visual acceptance matrix.
 
+</details>
+
 ## Browser workflow source update
+
+<details>
+<summary>Browser workspace notes and external-editor workflow (English and Cantonese)</summary>
 
 The browser workspace includes full note reading and an external-editor workflow using native file selection, signed-editor selection and explicit desktop confirmation. See [browser workflows](docs/features/browser/README.md) for behavior and verification boundaries. Current installed-extension, native-dialog and visual acceptance remains pending; earlier captures retain their original source identity.
 
 瀏覽器工作區加入完整筆記閱讀，同經原生檔案選擇、已簽署編輯器選擇及桌面確認嘅外部編輯流程。行為同驗證邊界見[瀏覽器工作流程](docs/features/browser/README.zh-HK.md)。目前安裝後擴充功能、原生對話框同畫面驗收仍然待做，舊畫面證據保留原本來源身份。
+
+</details>
