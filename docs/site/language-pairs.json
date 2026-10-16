@@ -253,8 +253,8 @@
     {
       "source": "docs/features/interface/personal-vocabulary.md",
       "translation": "docs/features/interface/personal-vocabulary.zh-HK.md",
-      "sourceSha256": "398a98552cebe95bb18db34dc530833ee84b6d99f7101be58a256e8a27bc17c7",
-      "translationSha256": "2f5f6a61210286019009a69d126fc79d3adb44825bac991d46e96af0e5c7f4de"
+      "sourceSha256": "f16ca2d7935045c76ce6a063758d9dbda4216536e8c16f78d973dad4a091e43d",
+      "translationSha256": "7d0e10da3d93a6bacd42e1372275018f5f6dbbb40c6df21b676390d1c98ac590"
     },
     {
       "source": "docs/features/interface/private-history-controls.md",
@@ -649,8 +649,8 @@
     {
       "source": "docs/features/workflows/browser-extension-workspace.md",
       "translation": "docs/features/workflows/browser-extension-workspace.zh-HK.md",
-      "sourceSha256": "b1319bb9c3158559a215fda0489f2d4f42b96926b83eaf4a34b1c1246aefaa19",
-      "translationSha256": "303169031e98aeef8ec635458e4ce0d5d3170b3f445519f1dc64b6e05f469f91"
+      "sourceSha256": "ce97b5e473b3afdc149288d8c1cfecc0ff8771a048a656eb4f65ec77f260aaa5",
+      "translationSha256": "b112942793192b6c5404746bbb1ec0b2a9475888d2703040e6292552feb5ccc2"
     },
     {
       "source": "docs/features/workflows/browser-native-host.md",
