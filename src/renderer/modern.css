@@ -51,6 +51,7 @@ md-outlined-select{min-width:min(100%,14rem)}
 
 /* Drive file table: the Availability text wraps instead of being cut at the cell edge, so bilingual wording is fully readable at every width. */
 #file-list>tr>td.availability{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;word-break:normal;line-height:1.35}
-#file-list>tr>td.availability .availability-content{flex-wrap:wrap;min-width:0}
-#file-list>tr>td.availability .availability-content>span{min-width:0;overflow-wrap:anywhere}
+#file-list>tr>td.availability .availability-content{flex-wrap:nowrap;align-items:flex-start;min-width:0}
+#file-list>tr>td.availability .availability-content>:not(span){flex:none}
+#file-list>tr>td.availability .availability-content>span{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
 .table-scroll th:nth-child(3){white-space:normal;overflow-wrap:anywhere}

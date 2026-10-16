@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "kind": "installed-application-proof",
+  "recordedAtUtc": "2026-10-16",
+  "host": "One physical Windows 11 host; an off-screen desktop and an isolated application profile were used. Machine names, user names and local paths are omitted.",
+  "release": {"tag": "v1.729.1", "sourceCommit": "5db936fc36a15530379071db52d88f0b4fb4608e", "type": "normal release", "provenanceBindsCommit": true, "setupSignature": "NotSigned"},
+  "quit": {
+    "helpMenuQuit": "the application exited by itself within 2 seconds",
+    "commandPaletteQuit": "the application exited by itself within 2 seconds",
+    "ctrlQ": "the application exited by itself within 2 seconds when the key was delivered to the page; a background window key message did not reach the shortcut, so real keyboard delivery is not proven",
+    "closeToTrayNotice": "a one-time marker was written on the first close to the tray and was not rewritten on a later close; the tray balloon itself was not visible on the off-screen desktop"
+  },
+  "serverFailure": {
+    "route": "the running server process the test started was ended by its exact process id after the ready line",
+    "card": "Ended unexpectedly, with the exit code -1 on a secondary line",
+    "lastLogLines": "end at the ready line followed by the final chunk-saving lines"
+  },
+  "pairABrowser": "English shows English only, Cantonese shows Cantonese only, bilingual shows both, in light and dark",
+  "driveAvailabilityCell": "bilingual text wraps onto two lines with nothing cut off; the status icon then sat on its own line, which is fixed in the following commit",
+  "firewallPrompt": false,
+  "clientsConnected": 0,
+  "newLicenseAcceptance": false
+}
