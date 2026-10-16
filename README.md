@@ -138,7 +138,7 @@ Every image below is a genuine capture of a real build; none is a mock, design p
 
 #### Desktop application
 
-91 captures of the installed desktop application, version 1.702.1, built from source `9394b35`. Each was taken by window handle on a task-owned hidden desktop at 150 percent display scale (a 1280 by 800 window, saved at 1920 by 1200 pixels) with an isolated profile and a throwaway vault that holds test files only and uses neutral folder names. The capture host reported no frame showing a private path. The run captured 312 frames in all, covering 52 screens in light and dark themes and in English, Cantonese and bilingual modes; these are the ones published. A tabbed screen's own frame shows the tab named in its caption, and a few dark and bilingual frames show the last tab visited. Home is the first group. The drive, Pair a browser and server frames were retaken from a later installed release, listed with its own manifest below. The [capture manifest](docs/images/captures/refresh-b4cbf0e/desktop-capture-manifest.json) records every frame's hash.
+92 captures of the installed desktop application, version 1.702.1, built from source `9394b35`. Each was taken by window handle on a task-owned hidden desktop at 150 percent display scale (a 1280 by 800 window, saved at 1920 by 1200 pixels) with an isolated profile and a throwaway vault that holds test files only and uses neutral folder names. The capture host reported no frame showing a private path. The run captured 312 frames in all, covering 52 screens in light and dark themes and in English, Cantonese and bilingual modes; these are the ones published. A tabbed screen's own frame shows the tab named in its caption, and a few dark and bilingual frames show the last tab visited. Home is the first group. The drive, Pair a browser and server frames were retaken from a later installed release, listed with its own manifest below. The [capture manifest](docs/images/captures/refresh-b4cbf0e/desktop-capture-manifest.json) records every frame's hash.
 
 <details>
 <summary>Home and navigation (7)</summary>
@@ -158,7 +158,7 @@ Every image below is a genuine capture of a real build; none is a mock, design p
 </details>
 
 <details>
-<summary>Drive, offline and dialogs (17)</summary>
+<summary>Drive, offline and dialogs (18)</summary>
 
 | Drive, locked | Drive, locked, bilingual | Drive, unlocked, top of the page |
 |---|---|---|
@@ -166,23 +166,23 @@ Every image below is a genuine capture of a real build; none is a mock, design p
 
 | Drive, file list | Drive, file list, dark | Drive, one file selected |
 |---|---|---|
-| ![Drive, file list](docs/images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-en.png) | ![Drive, file list, dark](docs/images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-dark-en.png) | ![Drive, one file selected](docs/images/captures/refresh-6ef15e8/desktop/drive-file-selected-light-en.png) |
+| ![Drive, file list](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-light-en.png) | ![Drive, file list, dark](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-dark-en.png) | ![Drive, one file selected](docs/images/captures/refresh-6ef15e8/desktop/drive-file-selected-light-en.png) |
 
-| Drive, file list, bilingual (the Availability text is cut off at the cell edge, a known issue being fixed) | Available offline | Available offline, Cantonese |
+| Drive, file list, bilingual, Availability text wrapping beside its icon | Drive, file list, dark, bilingual | Available offline |
 |---|---|---|
-| ![Drive, file list, bilingual (the Availability text is cut off at the cell edge, a known issue being fixed)](docs/images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-bilingual.png) | ![Available offline](docs/images/captures/refresh-b4cbf0e/desktop/offline-light-en.png) | ![Available offline, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/offline-light-yue.png) |
+| ![Drive, file list, bilingual, Availability text wrapping beside its icon](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-light-bilingual.png) | ![Drive, file list, dark, bilingual](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-dark-bilingual.png) | ![Available offline](docs/images/captures/refresh-b4cbf0e/desktop/offline-light-en.png) |
 
-| Create a drive dialog | Create a drive dialog, dark | Create a drive dialog, Cantonese |
+| Available offline, Cantonese | Create a drive dialog | Create a drive dialog, dark |
 |---|---|---|
-| ![Create a drive dialog](docs/images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-light-en.png) | ![Create a drive dialog, dark](docs/images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-dark-en.png) | ![Create a drive dialog, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-light-yue.png) |
+| ![Available offline, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/offline-light-yue.png) | ![Create a drive dialog](docs/images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-light-en.png) | ![Create a drive dialog, dark](docs/images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-dark-en.png) |
 
-| Unlock a drive dialog | Unlock a drive dialog, bilingual | Lock message when a program still has files open |
+| Create a drive dialog, Cantonese | Unlock a drive dialog | Unlock a drive dialog, bilingual |
 |---|---|---|
-| ![Unlock a drive dialog](docs/images/captures/refresh-b4cbf0e/desktop/unlock-drive-dialog-light-en.png) | ![Unlock a drive dialog, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/unlock-drive-dialog-light-bilingual.png) | ![Lock message when a program still has files open](docs/images/captures/refresh-b4cbf0e/desktop/lock-holder-message-light-en.png) |
+| ![Create a drive dialog, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-light-yue.png) | ![Unlock a drive dialog](docs/images/captures/refresh-b4cbf0e/desktop/unlock-drive-dialog-light-en.png) | ![Unlock a drive dialog, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/unlock-drive-dialog-light-bilingual.png) |
 
-| Force Lock confirmation | Force Lock confirmation, dark |
-|---|---|
-| ![Force Lock confirmation](docs/images/captures/refresh-b4cbf0e/desktop/force-lock-confirm-light-en.png) | ![Force Lock confirmation, dark](docs/images/captures/refresh-b4cbf0e/desktop/force-lock-confirm-dark-en.png) |
+| Lock message when a program still has files open | Force Lock confirmation | Force Lock confirmation, dark |
+|---|---|---|
+| ![Lock message when a program still has files open](docs/images/captures/refresh-b4cbf0e/desktop/lock-holder-message-light-en.png) | ![Force Lock confirmation](docs/images/captures/refresh-b4cbf0e/desktop/force-lock-confirm-light-en.png) | ![Force Lock confirmation, dark](docs/images/captures/refresh-b4cbf0e/desktop/force-lock-confirm-dark-en.png) |
 
 </details>
 

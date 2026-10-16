@@ -21,40 +21,6 @@
     },
     {
       "kind": "desktop",
-      "name": "drive-unlocked-files-list-light-en",
-      "file": "desktop/drive-unlocked-files-list-light-en.png",
-      "sha256": "be8a7965cd1ddbe8d72be9fc34436876655094cb6837f881b8154a91c98ae11a",
-      "bytes": 141203,
-      "width": 1920,
-      "height": 1200,
-      "screen": "drive-unlocked-files-list",
-      "theme": "light",
-      "language": "en",
-      "scale": 1.5,
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "appVersion": "1.719.1",
-      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
-      "originalFile": "04-drive-unlocked-files-list__light__en.png"
-    },
-    {
-      "kind": "desktop",
-      "name": "drive-unlocked-files-list-dark-en",
-      "file": "desktop/drive-unlocked-files-list-dark-en.png",
-      "sha256": "41b5b0b43ffa9225d0639a5c6f1d616ce2ead25b181b4ceb6b64ab463085fcab",
-      "bytes": 141695,
-      "width": 1920,
-      "height": 1200,
-      "screen": "drive-unlocked-files-list",
-      "theme": "dark",
-      "language": "en",
-      "scale": 1.5,
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "appVersion": "1.719.1",
-      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
-      "originalFile": "04-drive-unlocked-files-list__dark__en.png"
-    },
-    {
-      "kind": "desktop",
       "name": "drive-file-selected-light-en",
       "file": "desktop/drive-file-selected-light-en.png",
       "sha256": "968114ac02a7820790285ad7a19c20d1bae343956961d5877f743e6a2dfd6e07",
@@ -69,23 +35,6 @@
       "appVersion": "1.719.1",
       "window": "1280x800 at 150% display scale (PNG is physical pixels)",
       "originalFile": "04-drive-file-selected__light__en.png"
-    },
-    {
-      "kind": "desktop",
-      "name": "drive-unlocked-files-list-light-bilingual",
-      "file": "desktop/drive-unlocked-files-list-light-bilingual.png",
-      "sha256": "59d6e682cae65d9c42fed678ba4a3ebae0c2c2b1a0b1aacb4ce9985255453f0a",
-      "bytes": 197805,
-      "width": 1920,
-      "height": 1200,
-      "screen": "drive-unlocked-files-list",
-      "theme": "light",
-      "language": "bilingual",
-      "scale": 1.5,
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "appVersion": "1.719.1",
-      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
-      "originalFile": "04-drive-unlocked-files-list__light__bilingual.png"
     },
     {
       "kind": "desktop",
@@ -240,6 +189,21 @@
       "path": "images/captures/refresh-6ef15e8/desktop/server-card-failed-dark-en.png",
       "sha256": "d551d5ad111e1cbbab2ace92dde2931ba302fff6de77047f24e197d7e8a350aa",
       "reason": "Withdrawn: the Pair a browser page did not follow the chosen language, and the failed server card showed a raw exit code with early log lines instead of the readable reason, the exit-code line and the real last log lines; replaced by a later capture. The original remains unchanged in Git history and is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-en.png",
+      "sha256": "be8a7965cd1ddbe8d72be9fc34436876655094cb6837f881b8154a91c98ae11a",
+      "reason": "Withdrawn: the file list was captured from an earlier build; the bilingual frame showed the Availability text cut off at the cell edge; replaced by a later capture. The original remains unchanged in Git history and is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-dark-en.png",
+      "sha256": "41b5b0b43ffa9225d0639a5c6f1d616ce2ead25b181b4ceb6b64ab463085fcab",
+      "reason": "Withdrawn: the file list was captured from an earlier build; the bilingual frame showed the Availability text cut off at the cell edge; replaced by a later capture. The original remains unchanged in Git history and is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-bilingual.png",
+      "sha256": "59d6e682cae65d9c42fed678ba4a3ebae0c2c2b1a0b1aacb4ce9985255453f0a",
+      "reason": "Withdrawn: the file list was captured from an earlier build; the bilingual frame showed the Availability text cut off at the cell edge; replaced by a later capture. The original remains unchanged in Git history and is not relabelled."
     }
   ]
 }

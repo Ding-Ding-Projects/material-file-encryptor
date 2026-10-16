@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "2ec0ddf284aade658aa2b28fbd88d65a1f1c9f37",
+  "captures": [
+    {
+      "kind": "desktop",
+      "name": "drive-unlocked-files-list-light-en",
+      "file": "desktop/drive-unlocked-files-list-light-en.png",
+      "sha256": "77cc4735c7281e3fc18c684521315a64760d610250f31abb11d65841df58f1c9",
+      "bytes": 134936,
+      "width": 1920,
+      "height": 1200,
+      "screen": "drive-unlocked-files-list",
+      "theme": "light",
+      "language": "en",
+      "scale": 1.5,
+      "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+      "appVersion": "1.731.1",
+      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
+      "originalFile": "04-drive-unlocked-files-list__light__en.png"
+    },
+    {
+      "kind": "desktop",
+      "name": "drive-unlocked-files-list-dark-en",
+      "file": "desktop/drive-unlocked-files-list-dark-en.png",
+      "sha256": "80ad6be28a5d7c45f3a86a4bfc49d4ba254e2323361be7e11d55a0367ea4e489",
+      "bytes": 135336,
+      "width": 1920,
+      "height": 1200,
+      "screen": "drive-unlocked-files-list",
+      "theme": "dark",
+      "language": "en",
+      "scale": 1.5,
+      "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+      "appVersion": "1.731.1",
+      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
+      "originalFile": "04-drive-unlocked-files-list__dark__en.png"
+    },
+    {
+      "kind": "desktop",
+      "name": "drive-unlocked-files-list-light-bilingual",
+      "file": "desktop/drive-unlocked-files-list-light-bilingual.png",
+      "sha256": "b03b678608a8fca6082c48d8edd8b4ca574129628cc2b47514f6a73d47ba08aa",
+      "bytes": 205012,
+      "width": 1920,
+      "height": 1200,
+      "screen": "drive-unlocked-files-list",
+      "theme": "light",
+      "language": "bilingual",
+      "scale": 1.5,
+      "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+      "appVersion": "1.731.1",
+      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
+      "originalFile": "04-drive-unlocked-files-list__light__bilingual.png"
+    },
+    {
+      "kind": "desktop",
+      "name": "drive-unlocked-files-list-dark-bilingual",
+      "file": "desktop/drive-unlocked-files-list-dark-bilingual.png",
+      "sha256": "69bb81b434bfd22265400be0f545b7092ae885e025168f7c26d2c4b36d4263ce",
+      "bytes": 204697,
+      "width": 1920,
+      "height": 1200,
+      "screen": "drive-unlocked-files-list",
+      "theme": "dark",
+      "language": "bilingual",
+      "scale": 1.5,
+      "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+      "appVersion": "1.731.1",
+      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
+      "originalFile": "04-drive-unlocked-files-list__dark__bilingual.png"
+    }
+  ],
+  "desktopSource": {
+    "manifest": "desktop-capture-manifest.json",
+    "manifestSha256": "a1bd22f45dc894280b5d29913d47be84daf40f2e6e3a6eef900ade533e681ece",
+    "route": "cheap Lowlevel PrintWindow on a hidden desktop, installed v1.731.1, isolated profile with a neutral path",
+    "count": 4,
+    "release": "v1.731.1",
+    "numberedFramesNote": "The numbered frames sit beside the manifest folder and have no manifest entry; their hashes are computed on import."
+  }
+}

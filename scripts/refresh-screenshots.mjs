@@ -308,6 +308,11 @@ export const UPDATE_NUMBERED = [
 export const UPDATE_ROUNDS = {
   9: {selection: UPDATE_SELECTION, numbered: UPDATE_NUMBERED.map(([file, name]) => [file, name, 'dark', 'bilingual']),
     superseded: ['drive-unlocked-files-light-en', 'drive-unlocked-files-dark-en'], reason: 'the selection column in this frame was clipped'},
+  11: {selection: [
+    ['04-drive-unlocked-files-list__light__en.png', 'drive-unlocked-files-list-light-en'], ['04-drive-unlocked-files-list__dark__en.png', 'drive-unlocked-files-list-dark-en'],
+    ['04-drive-unlocked-files-list__light__bilingual.png', 'drive-unlocked-files-list-light-bilingual'], ['04-drive-unlocked-files-list__dark__bilingual.png', 'drive-unlocked-files-list-dark-bilingual']],
+  numbered: [], superseded: ['drive-unlocked-files-list-light-en', 'drive-unlocked-files-list-dark-en', 'drive-unlocked-files-list-light-bilingual'],
+  reason: 'the file list was captured from an earlier build; the bilingual frame showed the Availability text cut off at the cell edge'},
   10: {selection: [
     ['24-pair-a-browser__light__en.png', 'pair-a-browser-light-en'], ['24-pair-a-browser__dark__en.png', 'pair-a-browser-dark-en'],
     ['24-pair-a-browser__light__yue.png', 'pair-a-browser-light-yue'], ['24-pair-a-browser__light__bilingual.png', 'pair-a-browser-light-bilingual'],
@@ -350,7 +355,7 @@ export async function importUpdate({manifestPath, directory, supersedeFolder, ro
   }
   const raw = (await fs.readFile(manifestPath, 'utf8')).replace(/\r\n/g, '\n');
   await fs.writeFile(path.join(directory, 'desktop-capture-manifest.json'), raw);
-  const receipt = JSON.parse(await fs.readFile(path.join(roundDirectory, 'receipt.json'), 'utf8'));
+  const receipt = JSON.parse(await fs.readFile(path.join(roundDirectory, 'receipt.json'), 'utf8').catch(() => '{}') || '{}');
   manifest.desktopSource = {manifest: 'desktop-capture-manifest.json', manifestSha256: digest(Buffer.from(raw)), route: source.route, count: source.count,
     release: receipt.release, numberedFramesNote: 'The numbered frames sit beside the manifest folder and have no manifest entry; their hashes are computed on import.'};
   // Withdraw the earlier frames this round replaces.

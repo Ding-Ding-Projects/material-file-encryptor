@@ -72,10 +72,7 @@
     "images/captures/refresh-b4cbf0e/desktop/update-page-dark-en.png",
     "images/captures/refresh-b4cbf0e/desktop/update-page-light-en.png",
     "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-light-en.png",
-    "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-en.png",
-    "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-dark-en.png",
     "images/captures/refresh-6ef15e8/desktop/drive-file-selected-light-en.png",
-    "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-bilingual.png",
     "images/captures/refresh-6ef15e8/desktop/server-card-running-light-en.png",
     "images/captures/refresh-6ef15e8/desktop/server-card-running-dark-en.png",
     "images/captures/refresh-6ef15e8/desktop/server-java25-needed-dark-bilingual.png",
@@ -91,7 +88,11 @@
     "images/captures/refresh-5db936f/desktop/server-card-failed-dark-en.png",
     "images/captures/refresh-5db936f/desktop/server-card-failed-logtail-light-en.png",
     "images/captures/refresh-5db936f/desktop/quit-help-menu-light-en.png",
-    "images/captures/refresh-5db936f/desktop/quit-palette-query-light-en.png"
+    "images/captures/refresh-5db936f/desktop/quit-palette-query-light-en.png",
+    "images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-light-en.png",
+    "images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-dark-en.png",
+    "images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-light-bilingual.png",
+    "images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-dark-bilingual.png"
   ],
   "withheld": [
     {
@@ -387,6 +388,21 @@
     {
       "path": "images/captures/refresh-6ef15e8/desktop/server-card-failed-dark-en.png",
       "sha256": "d551d5ad111e1cbbab2ace92dde2931ba302fff6de77047f24e197d7e8a350aa",
+      "reason": "Withdrawn: replaced by a refreshed capture of the same surface. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-en.png",
+      "sha256": "be8a7965cd1ddbe8d72be9fc34436876655094cb6837f881b8154a91c98ae11a",
+      "reason": "Withdrawn: replaced by a refreshed capture of the same surface. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-dark-en.png",
+      "sha256": "41b5b0b43ffa9225d0639a5c6f1d616ce2ead25b181b4ceb6b64ab463085fcab",
+      "reason": "Withdrawn: replaced by a refreshed capture of the same surface. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-bilingual.png",
+      "sha256": "59d6e682cae65d9c42fed678ba4a3ebae0c2c2b1a0b1aacb4ce9985255453f0a",
       "reason": "Withdrawn: replaced by a refreshed capture of the same surface. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
     }
   ],
@@ -818,29 +834,11 @@
       "workflow": "drive-access",
       "metadataSha256": "52e956d3c0483c4f1e3b2942cc30ea4541e4df88f7f584302666b2027a394127"
     },
-    "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-en.png": {
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "sha256": "be8a7965cd1ddbe8d72be9fc34436876655094cb6837f881b8154a91c98ae11a",
-      "workflow": "drive-access",
-      "metadataSha256": "7e6d130fb771b5fffb06be0a5dcb1779015a8bc7a1cbd28db97a77c1b6d0a023"
-    },
-    "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-dark-en.png": {
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "sha256": "41b5b0b43ffa9225d0639a5c6f1d616ce2ead25b181b4ceb6b64ab463085fcab",
-      "workflow": "drive-access",
-      "metadataSha256": "79bdfcc4e438bde2cc6e8615abbb3f04fd42a18ce913224f1817bef1c52f18e1"
-    },
     "images/captures/refresh-6ef15e8/desktop/drive-file-selected-light-en.png": {
       "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
       "sha256": "968114ac02a7820790285ad7a19c20d1bae343956961d5877f743e6a2dfd6e07",
       "workflow": "drive-access",
       "metadataSha256": "740087631a72ee5569ce4431328b582bf19e7842069189adccc95d9a977d234c"
-    },
-    "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-bilingual.png": {
-      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
-      "sha256": "59d6e682cae65d9c42fed678ba4a3ebae0c2c2b1a0b1aacb4ce9985255453f0a",
-      "workflow": "drive-access",
-      "metadataSha256": "e2e5c607981a77f486f5642fe4b21f02db52f424afc809d5ce15b2d4fec3b131"
     },
     "images/captures/refresh-6ef15e8/desktop/server-card-running-light-en.png": {
       "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
@@ -937,6 +935,30 @@
       "sha256": "eb048c9a5ac4165350c67000844360e9d83c56f59de290aeaa079d8f5eff88fe",
       "workflow": "drive-access",
       "metadataSha256": "3a28bde982c620174f40d8a380bfa4368c5d21fd02fd5d466a1984d2cc7bc05d"
+    },
+    "images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-light-en.png": {
+      "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+      "sha256": "77cc4735c7281e3fc18c684521315a64760d610250f31abb11d65841df58f1c9",
+      "workflow": "drive-access",
+      "metadataSha256": "1abdb5727086d2dab3d148b2349139e8824879ae8a06bc09ce2696bb7ce34998"
+    },
+    "images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-dark-en.png": {
+      "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+      "sha256": "80ad6be28a5d7c45f3a86a4bfc49d4ba254e2323361be7e11d55a0367ea4e489",
+      "workflow": "drive-access",
+      "metadataSha256": "b0c1e6c853fef424a7aebb3d2e494fb94e6557f32f49670e65fb184348121e95"
+    },
+    "images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-light-bilingual.png": {
+      "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+      "sha256": "b03b678608a8fca6082c48d8edd8b4ca574129628cc2b47514f6a73d47ba08aa",
+      "workflow": "drive-access",
+      "metadataSha256": "ebdc1aba256e776c2f7de0e9c0775d67110cdbcf67ff358e134f23a41745f097"
+    },
+    "images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-dark-bilingual.png": {
+      "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+      "sha256": "69bb81b434bfd22265400be0f545b7092ae885e025168f7c26d2c4b36d4263ce",
+      "workflow": "drive-access",
+      "metadataSha256": "b5230a7367b1932e6a18d3a20f1368931a1d02b137464c356cd71c0209187371"
     }
   },
   "workflows": [

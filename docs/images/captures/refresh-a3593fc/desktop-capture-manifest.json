@@ -1,0 +1,80 @@
+{
+ "schema": "installed-capture-manifest-v1",
+ "route": "cheap Lowlevel PrintWindow on a hidden desktop, installed v1.731.1, isolated profile with a neutral path",
+ "release": "v1.731.1 built from main a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+ "notes": [
+  "Every frame is a 1920x1200 PNG of a 1280x800 DIP window at 150% scale.",
+  "privatePathVisible comes from a visible-text scan for the user name, user profile paths and AppData; the vault and profile use a neutral C:/MFE-Demo folder, so no frame shows a user name.",
+  "My drive frames: a throwaway vault with six neutral test files, scrolled to the file table. In bilingual mode the Availability cell wraps onto two lines and the status icon sits beside the first line of text."
+ ],
+ "countsPerThemeLanguage": {
+  "dark/bilingual": 1,
+  "dark/en": 1,
+  "light/bilingual": 1,
+  "light/en": 1
+ },
+ "count": 4,
+ "privateFrames": 0,
+ "captures": [
+  {
+   "file": "04-drive-unlocked-files-list__dark__bilingual.png",
+   "sha256": "69bb81b434bfd22265400be0f545b7092ae885e025168f7c26d2c4b36d4263ce",
+   "width": 1920,
+   "height": 1200,
+   "screen": "drive-unlocked-files-list",
+   "order": "04",
+   "theme": "dark",
+   "language": "bilingual",
+   "appVersion": "1.731.1",
+   "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+   "appWindowDip": "1280x800 at 150% display scale (PNG is physical pixels)",
+   "vault": "throwaway vault, neutral folder names (C:/MFE-Demo), test files only",
+   "privatePathVisible": false
+  },
+  {
+   "file": "04-drive-unlocked-files-list__dark__en.png",
+   "sha256": "80ad6be28a5d7c45f3a86a4bfc49d4ba254e2323361be7e11d55a0367ea4e489",
+   "width": 1920,
+   "height": 1200,
+   "screen": "drive-unlocked-files-list",
+   "order": "04",
+   "theme": "dark",
+   "language": "en",
+   "appVersion": "1.731.1",
+   "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+   "appWindowDip": "1280x800 at 150% display scale (PNG is physical pixels)",
+   "vault": "throwaway vault, neutral folder names (C:/MFE-Demo), test files only",
+   "privatePathVisible": false
+  },
+  {
+   "file": "04-drive-unlocked-files-list__light__bilingual.png",
+   "sha256": "b03b678608a8fca6082c48d8edd8b4ca574129628cc2b47514f6a73d47ba08aa",
+   "width": 1920,
+   "height": 1200,
+   "screen": "drive-unlocked-files-list",
+   "order": "04",
+   "theme": "light",
+   "language": "bilingual",
+   "appVersion": "1.731.1",
+   "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+   "appWindowDip": "1280x800 at 150% display scale (PNG is physical pixels)",
+   "vault": "throwaway vault, neutral folder names (C:/MFE-Demo), test files only",
+   "privatePathVisible": false
+  },
+  {
+   "file": "04-drive-unlocked-files-list__light__en.png",
+   "sha256": "77cc4735c7281e3fc18c684521315a64760d610250f31abb11d65841df58f1c9",
+   "width": 1920,
+   "height": 1200,
+   "screen": "drive-unlocked-files-list",
+   "order": "04",
+   "theme": "light",
+   "language": "en",
+   "appVersion": "1.731.1",
+   "sourceCommit": "a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f",
+   "appWindowDip": "1280x800 at 150% display scale (PNG is physical pixels)",
+   "vault": "throwaway vault, neutral folder names (C:/MFE-Demo), test files only",
+   "privatePathVisible": false
+  }
+ ]
+}
