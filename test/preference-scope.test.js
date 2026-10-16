@@ -25,7 +25,7 @@ test('identical settings need nothing and missing settings are treated as full',
 });
 
 test('the renderer applies appearance-only changes without re-rendering the views', () => {
-  const source = fs.readFileSync(new URL('../src/renderer/app.js', import.meta.url), 'utf8');
+  const source = fs.readFileSync(new URL('../src/renderer/app.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
   assert.match(source, /scope==='appearance'\)applyThemeOnly\(\)/);
   const body = /function applyThemeOnly\(\) \{([\s\S]*?)\n\}/.exec(source)[1];
   assert.doesNotMatch(body, /render\(|changeView|setLanguage|refresh\(/);

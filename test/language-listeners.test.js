@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-const source = fs.readFileSync(new URL('../src/renderer/app.js', import.meta.url), 'utf8');
+const source = fs.readFileSync(new URL('../src/renderer/app.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 
 test('views that cache text are relabelled after the preferences hold the new language', () => {
   assert.match(source, /function subscribeLanguage\(listener\)/);
