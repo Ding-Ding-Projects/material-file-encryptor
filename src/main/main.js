@@ -13,6 +13,7 @@ import { randomBytes, createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { exportDialogOptions, chosenExportPath } from './export-dialog.js';
 import { NativeClient } from './native-client.js';
 import { validateRequest, validateFeatureRequest, validateWorkflowAdmission, trustedFrame } from './validation.js';
 import { parseVocabulary, MAX_VOCABULARY_BYTES } from '../shared/personal-vocabulary.js';
@@ -135,6 +136,7 @@ async function perform(label, task) {
   operation = label; publish();
   try { return await task(); } finally { operation = null; publish(); }
 }
+let lastExportDirectory = null;
 async function safeDestination(filename, forbidden) {
   const parent = await fs.realpath(path.dirname(filename));
   const resolved = path.join(parent, path.basename(filename));
@@ -191,9 +193,10 @@ async function request(method, params, context) {
   }
   if (method === 'forceLock') return forceLockDrive(params.language);
   if (method === 'exportText') {
-    const picked=await dialog.showSaveDialog(window,{title:'Export original records',defaultPath:params.name});
-    if(picked.canceled)return null;
-    const target=await safeDestination(picked.filePath,[state.storageDir,state.cacheDir,state.mounted?mountedPath():null]);
+    const picked=await dialog.showSaveDialog(window,exportDialogOptions(params,{lastDirectory:lastExportDirectory,documentsDirectory:app.getPath('documents')}));
+    if(picked.canceled||!picked.filePath)return null;
+    const target=await safeDestination(chosenExportPath(picked.filePath,params.name),[state.storageDir,state.cacheDir,state.mounted?mountedPath():null]);
+    lastExportDirectory=path.dirname(target);
     await fs.writeFile(target,params.content,{encoding:'utf8',mode:0o600});return {saved:true};
   }
   if (method === 'exportVersion') {
