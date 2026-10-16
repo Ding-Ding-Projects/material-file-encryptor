@@ -34,6 +34,14 @@ export const TARGETS_COPY = Object.freeze({
   'Verified against the publisher SHA-512': '已對照發佈者 SHA-512 驗證', 'Local file, not verified against a publisher': '本機檔案，未對照發佈者驗證',
   'Stop the server before installing.': '安裝之前請先停止伺服器。', 'This flavor has no plugins or mods.': '呢種伺服器冇插件或者模組。', 'Nothing installed yet.': '暫時未有安裝。',
   'Installed. Start the server to load it.': '已安裝，啟動伺服器就會載入。',
+  'Java {required} or newer is required; Java {found} was found.': '需要 Java {required} 或以上，但係只搵到 Java {found}。',
+  'Java {required} or newer is required on the host; Java {found} was found.': '主機需要 Java {required} 或以上，但係只搵到 Java {found}。',
+  'Java was not found on this computer.': '呢部電腦搵唔到 Java。', 'Java was not found on the host.': '主機搵唔到 Java。',
+  'The server process exited with code {code}.': '伺服器進程以代碼 {code} 結束。', 'The server process was ended by signal {signal}.': '伺服器進程被訊號 {signal} 終止。',
+  'The server process ended on its own.': '伺服器進程自己停咗。',
+  'Needs Java {required}': '需要 Java {required}', 'Exited with code {code}': '代碼 {code} 結束', 'Ended by {signal}': '被 {signal} 終止',
+  'Ended on its own': '自己停咗', 'Could not run': '行唔到', 'See the reason below': '原因見下面',
+  'Java required': '所需 Java', 'Last log lines': '最後幾行日誌',
 });
 
 export function targetsTranslator(getLanguage = () => 'en') {

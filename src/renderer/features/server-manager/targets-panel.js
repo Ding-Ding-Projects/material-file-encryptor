@@ -28,6 +28,25 @@ export function mountServerTargets(host, services = {}) {
   const el = (tag, text, className) => { const node = doc.createElement(tag); if (text !== undefined && text !== null && text !== '') node.textContent = text; if (className) node.className = className; return node; };
   const state = id => { if (!ui.has(id)) ui.set(id, {tab: 'overview', logs: null, settings: null, drafts: {}, query: '', results: null}); return ui.get(id); };
 
+  const fill = (template, values = {}) => t(template).replace(/\{(\w+)\}/g, (_match, key) => String(values?.[key] ?? '?'));
+  /** The localized sentence for a stored or thrown failure. Unknown codes fall back to the plain main-process text. */
+  function failureText(code, params, fallback) {
+    if (code === 'java-too-old') return fill(params?.where === 'host' ? 'Java {required} or newer is required on the host; Java {found} was found.' : 'Java {required} or newer is required; Java {found} was found.', params);
+    if (code === 'exited') return fill('The server process exited with code {code}.', params);
+    if (code === 'signal') return fill('The server process was ended by signal {signal}.', params);
+    if (code === 'ended') return t('The server process ended on its own.');
+    return fallback ?? '';
+  }
+  function localizeMessage(text) {
+    const old = /^Java (\d+) or newer is required( on the host)?; Java (\d+) was found\.$/.exec(text);
+    if (old) return failureText('java-too-old', {required: old[1], found: old[3], where: old[2] ? 'host' : 'local'}, text);
+    if (text === 'Java was not found on this computer.' || text === 'Java was not found on the host.') return t(text);
+    return text;
+  }
+  const reasonLabel = server => server.errorCode === 'java-too-old' ? fill('Needs Java {required}', server.errorParams)
+    : server.errorCode === 'exited' ? fill('Exited with code {code}', server.errorParams) : server.errorCode === 'signal' ? fill('Ended by {signal}', server.errorParams)
+    : server.errorCode === 'ended' ? t('Ended on its own') : server.errorCode === 'spawn' ? t('Could not run') : t('See the reason below');
+
   function button(parent, label, onClick, {kind = 'outlined', disabled = false, title = ''} = {}) {
     const node = control('button', {class: kind === 'primary' ? 'primary' : kind === 'text' ? '' : 'outlined', text: t(label)}, [], doc);
     node.type = 'button'; node.disabled = disabled; node.setAttribute('aria-label', t(label)); if (title) node.title = t(title);
@@ -37,7 +56,7 @@ export function mountServerTargets(host, services = {}) {
   async function attempt(work) {
     if (busy) return;
     busy = true; message = '';
-    try { await work(); } catch (error) { if (available()) { message = t('The action was not completed.') + ' ' + String(error?.message ?? '').replace(/[A-Za-z]:\\[^\s]+/g, '').slice(0, 160); } } finally { busy = false; if (available()) render(); }
+    try { await work(); } catch (error) { if (available()) { message = t('The action was not completed.') + ' ' + localizeMessage(String(error?.message ?? '').replace(/[A-Za-z]:\\[^\s]+/g, '').slice(0, 160)); } } finally { busy = false; if (available()) render(); }
   }
   function field(parent, label, value, onInput, {type = 'text', maxLength = 80, disabled = false} = {}) {
     const node = control('input', {type: type === 'number' ? 'text' : type, label: t(label)}, [], doc);
@@ -132,7 +151,9 @@ export function mountServerTargets(host, services = {}) {
     const ctx = state(server.serverId), live = LIVE.has(server.state);
     const card = el('article', '', 'server-card'); card.dataset.state = server.state;
     const head = el('div', '', 'server-card-head');
-    head.append(el('h3', server.name), chip(server.state, server.state), chip(server.licenseAccepted ? 'License accepted' : 'License not accepted', server.licenseAccepted ? 'accepted' : 'pending'));
+    head.append(el('h3', server.name), chip(server.state, server.state));
+    if (server.state === 'failed') { const reason = chip(reasonLabel(server), 'failed'); reason.dataset.kind = 'reason'; head.append(reason); }
+    head.append(chip(server.licenseAccepted ? 'License accepted' : 'License not accepted', server.licenseAccepted ? 'accepted' : 'pending'));
     card.append(head);
     const actions = el('div', '', 'server-card-actions');
     if (server.state === 'preparing') button(actions, 'Cancel', () => request('cancelServer', {serverId: server.serverId}), {kind: 'text'});
@@ -156,7 +177,12 @@ export function mountServerTargets(host, services = {}) {
   function renderOverview(panel, server) {
     const facts = [['Flavor and version', server.flavor + ' ' + server.version], ['Target', t(TARGET_LABEL[server.target]) + (server.ssh ? ' · ' + server.ssh.user + '@' + server.ssh.host : '')], ['Build', server.build ?? '-'], ['Port', String(server.port)], ['Memory', server.memoryMb + ' MB'], ['Integrity', t(INTEGRITY[server.distribution.integrity] ?? server.distribution.integrity)], ['License', t(server.licenseAccepted ? 'License accepted' : 'License not accepted')]];
     for (const [label, value] of facts) panel.append(el('p', t(label) + ': ' + value));
-    if (server.error) { const note = el('p', server.error); note.setAttribute('role', 'alert'); panel.append(note); }
+    if (server.javaMajor) panel.append(el('p', t('Java required') + ': ' + server.javaMajor));
+    if (server.error) { const note = el('p', failureText(server.errorCode, server.errorParams, localizeMessage(server.error))); note.setAttribute('role', 'alert'); panel.append(note); }
+    if (server.state === 'failed' && Array.isArray(server.lastLines) && server.lastLines.length) {
+      panel.append(el('h4', t('Last log lines')));
+      const lines = el('pre', server.lastLines.join('\n')); lines.setAttribute('tabindex', '0'); lines.setAttribute('aria-label', t('Last log lines')); panel.append(lines);
+    }
   }
   function renderLogs(panel, server, ctx) {
     button(panel, 'Refresh logs', async () => { ctx.logs = (await request('serverLogs', {serverId: server.serverId, lines: 100})).lines; }, {kind: 'text', disabled: server.state === 'preparing'});

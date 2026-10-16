@@ -36,6 +36,12 @@
 
 插件同模組：`src/features/server-manager/extensions.js` 用 `api.modrinth.com/v2` 處理插件（Paper、Purpur）同模組（Fabric、Forge、NeoForge）。只有 API 發佈咗 SHA-512、下載主機係 `cdn.modrinth.com`、大小喺 128 MiB 以內而且收到嘅位元組相符，檔案先會安裝。喺原生檔案選擇器揀嘅 jar 會連同本機計算嘅 SHA-256 安裝，並標示為未對照發佈者驗證。安裝需要伺服器處於停止狀態。
 
+Java 要求：準備伺服器嗰陣，`resolveJavaRequirement`（位於 `src/features/server-manager/flavors.js`）會讀取 Mojang 版本中繼資料嘅 `javaVersion.majorVersion`，並以 `javaMajor` 連同伺服器一齊儲存（`javaSource` 記錄係 `mojang` 定 `table`）。Paper、Purpur、Fabric、Forge 同 NeoForge 都係行 Mojang 嘅版本，而且佢哋嘅公開 API 都冇發佈更嚴格嘅數值，所以 Mojang 嘅數字適用於所有類型。如果讀唔到中繼資料，就會用 `requiredJavaMajor` 入面記載嘅版本對照表，包括 26.1 及之後呢類以年份命名嘅版本需要 Java 25，來源會顯示為 `table`。每次啟動之前，桌面程式都會拿呢個數字同實際會用嘅 Java 比較：本機進程用本機嘅 `java -version`，SSH 進程就經 SSH 執行 `java -version`。如果搵唔到 Java 或者版本太舊，啟動會喺啟動任何嘢之前被拒絕，訊息會用英文、廣東話或者雙語講明需要同搵到嘅主要版本。拒絕之後卡片會停喺 `failed`，並顯示例如「需要 Java 25」嘅原因籌碼，換咗夠新嘅 Java 之後再啟動就會清除。容器目標用同一個數字揀映像：掛載 jar 用 `eclipse-temurin` 執行環境映像，官方映像模式用對應嘅 `itzg/minecraft-server` 標籤。
+
+失敗狀態：伺服器消失之後，卡片唔會繼續停喺 `running`。本機進程會即時回報自己結束；容器經 `docker inspect`（狀態同結束代碼）檢查，SSH 進程就檢查 pid 是否仍然存在，只要有任何卡片仍然運行，兩者都會每隔幾秒輪詢一次，手動更新狀態都會做同一個檢查。按要求停止，或者以代碼 0 結束（例如遊戲內嘅停止指令），會變成 `stopped`；其他結束方式會變成 `failed`，並附上已知嘅結束代碼或者訊號、放喺 `errorCode` 嘅原因，同放喺 `lastLines` 嘅最後 20 行日誌，卡片會喺原因籌碼下面顯示。再次啟動失敗嘅卡片會清除失敗記錄。
+
+關閉視窗：普通關閉只會隱藏視窗，磁碟機繼續留喺系統匣。當受管理伺服器處於 `starting` 或者 `running`，關閉會改為詢問你係保持喺系統匣運行、停止伺服器並結束，定係取消，由 `src/main/window-close.js` 處理。每個結果都睇得到，唔會被靜靜雞丟棄。結束時本機進程伺服器會用主控台 `stop` 指令停止；容器同 SSH 伺服器喺桌面程式結束之後會繼續運行，對話框亦會講明。
+
 介面：`src/renderer/features/server-manager/targets-panel.js` 係準備控制項下面嘅面板。有顯示真實可用性嘅目標選擇器、只喺要求時先載入嘅類型同版本選擇器、狀態籌碼、日誌、設定表格同插件安裝，支援英文、廣東話或者雙語，並使用共用動態 token 同減少動態嘅後備。
 
 驗證：執行 `node --test test/server-targets-service.test.js test/server-flavors.test.js test/server-launch-plans.test.js test/server-properties-and-extensions.test.js test/server-managed-adapters.test.js test/server-targets-panel.test.js`。呢啲測試只用假進程、Docker、SSH 同網絡。冇真實伺服器、容器、SSH 主機、Java 執行環境、Docker 守護程式或者下載參與，面板亦未喺已建置應用程式擷取，所以呢一節所有內容都只係用合成測試資料驗證。

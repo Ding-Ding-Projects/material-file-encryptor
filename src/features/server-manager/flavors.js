@@ -48,6 +48,9 @@ export function neoForgeMinecraft(version) {
 }
 /** Java major required by a Minecraft release (documented Mojang requirements). */
 export function requiredJavaMajor(minecraft) {
+  // Year-based releases (26.1 and later) and their weekly snapshots (26w14a) need Java 25.
+  const modern = /^(\d{2})\.\d+(?:\.\d+)?|^(\d{2})w\d{2}[a-z]/.exec(String(minecraft));
+  if (modern) { const year = Number(modern[1] ?? modern[2]); if (year >= 26) return 25; if (year >= 24) return 21; }
   const match = /^1\.(\d+)(?:\.(\d+))?/.exec(minecraft);
   if (!match) return 21;
   const minor = Number(match[1]), patch = Number(match[2] ?? 0);
@@ -171,4 +174,30 @@ export async function resolveFlavorDistribution(flavor, version, {fetchImpl = fe
   const distribution = await RESOLVERS[flavor](version, {fetchImpl, signal, flavor});
   distribution.hosts = flavorHosts(flavor);
   return distribution;
+}
+
+/** The Minecraft release a flavor build runs, used to look up the Java requirement. */
+function minecraftOf(flavor, version) {
+  if (flavor === 'neoforge') return neoForgeMinecraft(version) ?? version;
+  return version;
+}
+
+/** The Java major a prepared server needs. Mojang's version metadata (`javaVersion.majorVersion`) is the source of truth for
+ * every flavor, because Paper, Purpur, Fabric, Forge and NeoForge all run a Mojang release and none of their public APIs
+ * publishes a stricter requirement. When the metadata cannot be read the documented release table is used and the source is
+ * reported as `table`, never presented as verified. */
+export async function resolveJavaRequirement(flavor, version, {fetchImpl = fetch, signal} = {}) {
+  const minecraft = minecraftOf(flavor, version);
+  try {
+    const manifest = await fetchJson(fetchImpl, 'https://piston-meta.mojang.com/mc/game/version_manifest_v2.json', HOSTS.vanilla, {signal});
+    const row = array(manifest.versions).find(item => item?.id === minecraft);
+    need(row && typeof row.url === 'string');
+    const detail = await fetchJson(fetchImpl, row.url, ['piston-meta.mojang.com'], {signal});
+    const major = detail?.javaVersion?.majorVersion;
+    need(Number.isSafeInteger(major) && major >= 8 && major <= 99);
+    return {major, source: 'mojang'};
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    return {major: requiredJavaMajor(minecraft), source: 'table'};
+  }
 }

@@ -7,7 +7,7 @@ import {sha256OfFile} from './bounded-http.js';
 import {requiredJavaMajor} from './flavors.js';
 import {
   containerName, dockerInspectArgs, dockerLogsArgs, dockerPullArgs, dockerRunArgs, dockerStartArgs, dockerStopArgs, dockerVersionArgs,
-  installerArgs, javaImage, javaServerArgs, remote, remoteDockerRunArgs, remoteRoot, sshArgs, validRemoteName, validServerId, CONTAINER_IMAGES,
+  installerArgs, javaImage, javaServerArgs, serverImage, remote, remoteDockerRunArgs, remoteRoot, sshArgs, validRemoteName, validServerId, CONTAINER_IMAGES,
 } from './launch-plans.js';
 
 /** The four execution targets. Every external process goes through `deps.execFile` / `deps.spawn`, which default to the real
@@ -30,10 +30,21 @@ export function failure(prefix, error) {
   if (error?.name === 'AbortError' || error?.code === 'ABORT_ERR') return Object.assign(Error('Canceled.'), {code: 'canceled'});
   return Error(prefix + (error?.stderr || error?.message ? ': ' + redact(String(error.stderr || error.message).trim().split(/\r?\n/).at(-1)) : '.'));
 }
-function parseJavaMajor(output) {
+export function parseJavaMajor(output) {
   const match = /version "(\d+)(?:\.(\d+))?/.exec(String(output));
   if (!match) return null;
   return match[1] === '1' ? Number(match[2]) : Number(match[1]);
+}
+/** The Java major a prepared server needs: the value stored at preparation (Mojang's metadata), else the documented table. */
+export const neededJavaMajor = record => Number.isSafeInteger(record.javaMajor) && record.javaMajor >= 8 ? record.javaMajor : requiredJavaMajor(record.version);
+/** The refusal raised before Start when the Java that would run the server is older than the release requires. */
+export function javaTooOld(required, found, where) {
+  return Object.assign(Error('Java ' + required + ' or newer is required' + (where === 'host' ? ' on the host' : '') + '; Java ' + found + ' was found.'), {code: 'java-too-old', required, found, where});
+}
+export function assertJavaVersion(record, found, where = 'local') {
+  const required = neededJavaMajor(record);
+  if (!found) throw Object.assign(Error('Java was not found ' + (where === 'host' ? 'on the host.' : 'on this computer.')), {code: 'java-missing', required, where});
+  if (found < required) throw javaTooOld(required, found, where);
 }
 
 async function pipeFile(deps, file, args, {signal}) {
@@ -56,7 +67,7 @@ async function pipeFile(deps, file, args, {signal}) {
 }
 
 /* ---------------------------------------------------------------- local process */
-function localProcessDriver(deps, {dataRoot}) {
+function localProcessDriver(deps, {dataRoot, onExit}) {
   const children = new Map();
   const dataOf = record => path.join(dataRoot, 'servers', record.id, 'data');
   const bounded = (list, line) => { list.push(line.slice(0, 400)); if (list.length > 500) list.shift(); };
@@ -105,14 +116,14 @@ function localProcessDriver(deps, {dataRoot}) {
       const live = children.get(record.id);
       if (live && live.child.exitCode === null) throw Error('This server is already running.');
       const java = await javaProbe(signal);
-      if (!java.available) throw Error(java.reason);
-      const need = requiredJavaMajor(record.version);
-      if (java.major < need) throw Error('Java ' + need + ' or newer is required; Java ' + java.major + ' was found.');
+      if (!java.available) throw Object.assign(Error(java.reason), {code: 'java-missing', required: neededJavaMajor(record), where: 'local'});
+      assertJavaVersion(record, java.major, 'local');
       signal?.throwIfAborted();
       const args = javaServerArgs({id: record.id, memoryMb: record.memoryMb, ...(record.argsFile ? {argsFile: record.argsFile} : {})});
       const child = deps.spawn('java', args, {cwd: dataOf(record), stdio: ['pipe', 'pipe', 'pipe']});
       const entry = {child, lines: [], exited: null};
-      entry.exited = new Promise(resolve => { child.once('exit', (code, exitSignal) => { entry.exit = {code, signal: exitSignal}; resolve(); }); child.once('error', error => { entry.error = redact(error.message); resolve(); }); });
+      const report = () => { try { onExit?.(record.id, {code: entry.exit?.code ?? null, signal: entry.exit?.signal ?? null, error: entry.error ?? null}); } catch { /* monitoring must never break the process owner */ } };
+      entry.exited = new Promise(resolve => { child.once('exit', (code, exitSignal) => { entry.exit = {code, signal: exitSignal}; resolve(); report(); }); child.once('error', error => { entry.error = redact(error.message); resolve(); report(); }); });
       for (const stream of [child.stdout, child.stderr]) { let rest = ''; stream?.on?.('data', chunk => { rest += chunk; const parts = rest.split(/\r?\n/); rest = parts.pop(); parts.forEach(line => bounded(entry.lines, line)); }); }
       children.set(record.id, entry);
       return {state: 'running'};
@@ -120,7 +131,8 @@ function localProcessDriver(deps, {dataRoot}) {
     async status(record) {
       const entry = children.get(record.id);
       if (!entry) return {state: ['running', 'starting', 'stopping'].includes(record.state) ? 'stopped' : record.state};
-      return {state: entry.child.exitCode === null && !entry.exit && !entry.error ? 'running' : 'stopped'};
+      if (entry.child.exitCode === null && !entry.exit && !entry.error) return {state: 'running'};
+      return {state: 'stopped', exitCode: entry.exit?.code ?? entry.child.exitCode ?? null, exitSignal: entry.exit?.signal ?? null, errorText: entry.error ?? null};
     },
     async stop(record, {signal}) {
       const entry = children.get(record.id);
@@ -148,7 +160,7 @@ function localContainerDriver(deps, {dataRoot}) {
   const dataOf = record => path.join(rootOf(record), 'data');
   const docker = (args, options = {}) => deps.execFile('docker', args, {timeout: TIMEOUT.command, ...options});
   async function inspect(record, signal) {
-    try { const {stdout} = await docker(dockerInspectArgs(record.id), {timeout: TIMEOUT.probe, signal}); const [state, label] = String(stdout).trim().split('|'); return {exists: true, state, owned: label === record.id}; }
+    try { const {stdout} = await docker(dockerInspectArgs(record.id), {timeout: TIMEOUT.probe, signal}); const [state, label, exit] = String(stdout).trim().split('|'); return {exists: true, state, owned: label === record.id, exitCode: Number.isSafeInteger(Number(exit)) && exit !== undefined && exit !== '' ? Number(exit) : null}; }
     catch (error) { if (error?.name === 'AbortError') throw failure('', error); return {exists: false}; }
   }
   return {
@@ -162,7 +174,7 @@ function localContainerDriver(deps, {dataRoot}) {
       await fs.writeFile(path.join(dataOf(record), 'eula.txt'), 'eula=false\n', {flag: 'wx'}).catch(error => { if (error.code !== 'EEXIST') throw error; });
       let jarSha256 = null;
       if (record.containerMode === 'jar') { await fs.copyFile(artifactFile, path.join(rootOf(record), 'server.jar')); jarSha256 = await sha256OfFile(path.join(rootOf(record), 'server.jar')); }
-      try { await docker(dockerPullArgs(record.containerMode === 'jar' ? javaImage(requiredJavaMajor(record.version)) : CONTAINER_IMAGES.server), {timeout: TIMEOUT.pull, signal}); } catch (error) { throw failure('The image could not be pulled', error); }
+      try { await docker(dockerPullArgs(record.containerMode === 'jar' ? javaImage(neededJavaMajor(record)) : serverImage(neededJavaMajor(record))), {timeout: TIMEOUT.pull, signal}); } catch (error) { throw failure('The image could not be pulled', error); }
       return {argsFile: null, jarSha256};
     },
     async readText(record, name) { return fs.readFile(path.join(dataOf(record), name), 'utf8'); },
@@ -172,7 +184,7 @@ function localContainerDriver(deps, {dataRoot}) {
       const found = await inspect(record, signal);
       if (found.exists && !found.owned) throw Error('A container with this name exists but is not owned by this server.');
       if (found.exists) { await docker(dockerStartArgs(record.id), {signal}).catch(error => { throw failure('The container did not start', error); }); return {state: 'running'}; }
-      const args = dockerRunArgs({id: record.id, flavor: record.flavor, version: record.version, port: record.port, memoryMb: record.memoryMb, mode: record.containerMode, licenseAccepted: record.licenseAccepted, hostData: dataOf(record), hostJar: record.containerMode === 'jar' ? path.join(rootOf(record), 'server.jar') : null, javaMajor: requiredJavaMajor(record.version)});
+      const args = dockerRunArgs({id: record.id, flavor: record.flavor, version: record.version, port: record.port, memoryMb: record.memoryMb, mode: record.containerMode, licenseAccepted: record.licenseAccepted, hostData: dataOf(record), hostJar: record.containerMode === 'jar' ? path.join(rootOf(record), 'server.jar') : null, javaMajor: neededJavaMajor(record)});
       await docker(args, {signal}).catch(error => { throw failure('The container did not start', error); });
       return {state: 'running'};
     },
@@ -180,7 +192,7 @@ function localContainerDriver(deps, {dataRoot}) {
       const found = await inspect(record, signal);
       if (!found.exists) return {state: ['running', 'starting', 'stopping'].includes(record.state) ? 'stopped' : record.state};
       if (!found.owned) return {state: 'failed', note: 'ownership-unverified'};
-      return {state: found.state === 'running' ? 'running' : found.state === 'restarting' || found.state === 'created' ? 'starting' : 'stopped'};
+      return {state: found.state === 'running' ? 'running' : found.state === 'restarting' || found.state === 'created' ? 'starting' : 'stopped', exitCode: found.state === 'running' ? null : found.exitCode ?? null};
     },
     async stop(record, {signal}) {
       const found = await inspect(record, signal);
@@ -255,9 +267,7 @@ function sshProcessDriver(deps, {endpointOf}) {
     },
     async start(record, {signal}) {
       const {stdout, stderr} = await runner.run(record, remote.javaVersion(), {signal, timeout: TIMEOUT.probe}).catch(error => { throw failure('Java could not be checked on the host', error); });
-      const major = parseJavaMajor(stderr || stdout), need = requiredJavaMajor(record.version);
-      if (!major) throw Error('Java was not found on the host.');
-      if (major < need) throw Error('Java ' + need + ' or newer is required on the host; Java ' + major + ' was found.');
+      assertJavaVersion(record, parseJavaMajor(stderr || stdout), 'host');
       const {stdout: pid} = await runner.run(record, remote.start(record.id, javaServerArgs({id: record.id, memoryMb: record.memoryMb, ...(record.argsFile ? {argsFile: record.argsFile} : {})})), {signal}).catch(error => { throw failure('The remote server did not start', error); });
       if (!/^\d{1,9}$/.test(String(pid).trim())) throw Error('The remote server did not report a process id.');
       return {state: 'running'};
@@ -274,7 +284,7 @@ function sshContainerDriver(deps, {endpointOf}) {
   const runner = sshRunner(deps, endpointOf), ops = remoteFileOps(runner);
   const dockerCommand = args => remote.docker(args);
   async function inspect(record, signal) {
-    try { const {stdout} = await runner.run(record, dockerCommand(dockerInspectArgs(record.id)), {timeout: TIMEOUT.probe, signal}); const [state, label] = String(stdout).trim().split('|'); return {exists: true, state, owned: label === record.id}; }
+    try { const {stdout} = await runner.run(record, dockerCommand(dockerInspectArgs(record.id)), {timeout: TIMEOUT.probe, signal}); const [state, label, exit] = String(stdout).trim().split('|'); return {exists: true, state, owned: label === record.id, exitCode: Number.isSafeInteger(Number(exit)) && exit !== undefined && exit !== '' ? Number(exit) : null}; }
     catch { return {exists: false}; }
   }
   return {
@@ -288,14 +298,14 @@ function sshContainerDriver(deps, {endpointOf}) {
     },
     async prepare(record, {signal}) {
       await runner.run(record, remote.prepare(record.id), {signal});
-      try { await runner.run(record, dockerCommand(dockerPullArgs(CONTAINER_IMAGES.server)), {timeout: TIMEOUT.pull, signal}); } catch (error) { throw failure('The image could not be pulled on the host', error); }
+      try { await runner.run(record, dockerCommand(dockerPullArgs(serverImage(neededJavaMajor(record)))), {timeout: TIMEOUT.pull, signal}); } catch (error) { throw failure('The image could not be pulled on the host', error); }
       return {argsFile: null, jarSha256: null};
     },
     async start(record, {signal}) {
       const found = await inspect(record, signal);
       if (found.exists && !found.owned) throw Error('A container with this name exists but is not owned by this server.');
       if (found.exists) { await runner.run(record, dockerCommand(dockerStartArgs(record.id)), {signal}).catch(error => { throw failure('The container did not start', error); }); return {state: 'running'}; }
-      const args = remoteDockerRunArgs({id: record.id, flavor: record.flavor, version: record.version, port: record.port, memoryMb: record.memoryMb, licenseAccepted: record.licenseAccepted});
+      const args = remoteDockerRunArgs({id: record.id, flavor: record.flavor, version: record.version, port: record.port, memoryMb: record.memoryMb, licenseAccepted: record.licenseAccepted, javaMajor: neededJavaMajor(record)});
       await runner.run(record, remote.dockerRun(record.id, args), {signal}).catch(error => { throw failure('The container did not start', error); });
       return {state: 'running'};
     },
@@ -303,7 +313,7 @@ function sshContainerDriver(deps, {endpointOf}) {
       const found = await inspect(record, signal);
       if (!found.exists) return {state: ['running', 'starting', 'stopping'].includes(record.state) ? 'stopped' : record.state};
       if (!found.owned) return {state: 'failed', note: 'ownership-unverified'};
-      return {state: found.state === 'running' ? 'running' : found.state === 'restarting' || found.state === 'created' ? 'starting' : 'stopped'};
+      return {state: found.state === 'running' ? 'running' : found.state === 'restarting' || found.state === 'created' ? 'starting' : 'stopped', exitCode: found.state === 'running' ? null : found.exitCode ?? null};
     },
     async stop(record, {signal}) {
       const found = await inspect(record, signal);
@@ -317,10 +327,10 @@ function sshContainerDriver(deps, {endpointOf}) {
   };
 }
 
-export function createTargetDrivers({deps = defaultDeps(), dataRoot, endpointOf}) {
+export function createTargetDrivers({deps = defaultDeps(), dataRoot, endpointOf, onExit}) {
   if (typeof dataRoot !== 'string' || typeof endpointOf !== 'function') throw Error('Invalid target driver configuration.');
   return {
-    'local-process': localProcessDriver(deps, {dataRoot}),
+    'local-process': localProcessDriver(deps, {dataRoot, onExit}),
     'local-container': localContainerDriver(deps, {dataRoot}),
     'ssh-process': sshProcessDriver(deps, {endpointOf}),
     'ssh-container': sshContainerDriver(deps, {endpointOf}),

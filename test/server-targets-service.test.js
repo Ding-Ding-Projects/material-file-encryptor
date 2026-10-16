@@ -168,7 +168,7 @@ test('local container (official image): pull, gate on the license, run with loop
   const server = await created(h, {target: 'local-container', flavor: 'neoforge', version: '1.21.1', port: 25570, memoryMb: 3072});
   assert.equal(server.state, 'prepared');
   assert.deepEqual([server.distribution.artifact, server.distribution.integrity], ['delegated-to-image', 'delegated-to-image'], 'the image downloads the flavor itself, and the result says the desktop did not verify it');
-  assert.equal(h.fetchImpl.calls.length, 0, 'the desktop downloaded nothing');
+  assert.ok(h.fetchImpl.calls.every(call => new URL(call.url).hostname === 'piston-meta.mojang.com'), 'the desktop downloaded no server file; only the Mojang Java requirement metadata was read');
   assert.deepEqual(h.execFile.calls.filter(call => call.file === 'docker').map(call => call.args[0]), ['pull', 'version'], 'only the image pull and the availability probe ran');
   assert.deepEqual(h.execFile.calls.find(call => call.args[0] === 'pull').args, ['pull', 'itzg/minecraft-server:latest']);
   await assert.rejects(h.call('startServer', {serverId: server.serverId}), /license acceptance is required/);
