@@ -1,5 +1,6 @@
-// This worker is disposable. Its owner enforces the wall-clock deadline and
-// terminates it even if the native regular-expression engine does not return.
+// This worker is reusable between searches. Its owner enforces the wall-clock
+// deadline on the match work and terminates it even if the native regular-expression
+// engine does not return. It announces readiness so start-up is never counted as match time.
 self.onmessage=({data})=>{
   try {
     const {pattern,anchor,rows}=data;
@@ -10,3 +11,4 @@ self.onmessage=({data})=>{
     self.postMessage({matches});
   }catch{self.postMessage({error:'The regular expression is invalid.'});}
 };
+self.postMessage({ready:true});
