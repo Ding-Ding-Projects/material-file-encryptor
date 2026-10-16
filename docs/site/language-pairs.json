@@ -199,8 +199,8 @@
     {
       "source": "docs/features/interface/destructive-actions.md",
       "translation": "docs/features/interface/destructive-actions.zh-HK.md",
-      "sourceSha256": "100c7dfdb6e1161bf8818970379f161fcc16d73d5472c673e52aad6685945cdc",
-      "translationSha256": "8952860ea8a7b6ca8107f7c48fd801432cdf2589d62201cf56185db24c46ac56"
+      "sourceSha256": "65bccdf202f9adc9337d4129e0f1d59967eaf69aa95ef313a144161227c034dc",
+      "translationSha256": "814e24d118b50eaf84e84de2f7e94ffb52dc3556841a865cc6fff5b01539b0fc"
     },
     {
       "source": "docs/features/interface/font-metadata.md",

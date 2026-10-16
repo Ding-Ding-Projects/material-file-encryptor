@@ -23,6 +23,7 @@ export const EXTENSION_DESTRUCTIVE = Object.freeze({
   "extension.server-restart": Object.freeze({title: ["Restart the server","重新啟動伺服器"], affected: ["Players are disconnected while the server stops and starts again.","伺服器停止同再啟動期間，玩家會斷線。"]}),
   "extension.server-change-setting": Object.freeze({title: ["Change a server setting","更改伺服器設定"], affected: ["The server configuration file is overwritten with the new value.","伺服器設定檔會被新數值覆寫。"]}),
   "extension.server-install-plugin": Object.freeze({title: ["Install a server plugin","安裝伺服器外掛"], affected: ["Plugin files are written into the server folder and can replace existing files.","外掛檔案會寫入伺服器資料夾，可能取代現有檔案。"]}),
+  "extension.cancel-schedule": Object.freeze({title: ["Cancel a scheduled change","取消預定改動"], affected: ["The scheduled change is deleted from this browser.","預定改動會由呢個瀏覽器刪除。"]}),
   "extension.discard-operation": Object.freeze({title: ["Discard a saved operation","捨棄已儲存嘅操作"], affected: ["The saved operation is deleted. Nothing was sent or changed.","已儲存嘅操作會被刪除，之前冇傳送或更改任何嘢。"]}),
   "extension.discard-all-operations": Object.freeze({title: ["Discard all saved operations","捨棄所有已儲存嘅操作"], affected: ["Every saved operation is deleted. Nothing was sent or changed.","所有已儲存嘅操作都會被刪除，之前冇傳送或更改任何嘢。"]}),
 });

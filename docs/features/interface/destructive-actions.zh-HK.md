@@ -23,7 +23,7 @@
 
 ## 清單
 
-已登記操作：合共 59 個。桌面程式 36 個、瀏覽器擴充功能 20 個、說明網站 26 個。共用模組會喺每個掛載佢嘅介面計算。
+已登記操作：合共 62 個。桌面程式 38 個、瀏覽器擴充功能 21 個、說明網站 26 個。共用模組會喺每個掛載佢嘅介面計算。
 
 ### 桌面程式
 
@@ -36,6 +36,8 @@
 | `desktop.forget-saved-credential` | 關閉自動解鎖 | `src/renderer/app.js` |
 | `desktop.pack-storage` | 整合加密儲存 | `src/renderer/app.js` |
 | `desktop.install-update` | 安裝更新並重新啟動 | `src/renderer/app.js` |
+| `desktop.reset-vocabulary` | 重設個人用詞 | `src/renderer/app.js` |
+| `desktop.import-vocabulary` | 匯入用詞覆蓋目前用詞 | `src/renderer/app.js` |
 | `desktop.ollama-stop-runtime` | 停止本機模型執行環境 | `src/renderer/features/ollama/index.js` |
 | `desktop.server-stop` | 停止伺服器 | `src/renderer/features/server-manager/targets-panel.js` |
 | `desktop.server-restart` | 重新啟動伺服器 | `src/renderer/features/server-manager/targets-panel.js` |
@@ -93,6 +95,7 @@
 | `extension.server-restart` | 重新啟動伺服器 | `browser-extension/servers.js` |
 | `extension.server-change-setting` | 更改伺服器設定 | `browser-extension/servers.js` |
 | `extension.server-install-plugin` | 安裝伺服器外掛 | `browser-extension/servers.js` |
+| `extension.cancel-schedule` | 取消預定改動 | `browser-extension/options.js` |
 | `extension.discard-operation` | 捨棄已儲存嘅操作 | `browser-extension/operations-panel.js` |
 | `extension.discard-all-operations` | 捨棄所有已儲存嘅操作 | `browser-extension/operations-panel.js` |
 
@@ -110,6 +113,7 @@
 
 - `native.browser-pairing` in `src/main/browser-native-host.js`: 桌面主程序入面嘅配對同確認提示。
 - `native.quit-dialog` in `src/main/main.js`: 程式結束時停止伺服器，係擁有者已經揀咗嘅結束對話框嘅一部分。
+- `native.driver-install` in `src/main/main.js`: 安裝檔案系統驅動程式會啟動原生安裝程式，由佢自己顯示提升權限同意；只會加入元件，不會移除任何嘢。
 - `native.tray-menu` in `src/main/main.js`: 系統匣選單係作業系統選單，無法承載確認介面；其鎖定項目係一般鎖定、結束項目會打開結束對話框、取消項目只會取消進行中嘅工作。
 
 睇落似破壞性但其實唔係嘅名稱，會連同理由列喺 `EXEMPT_ACTIONS` 同 `EXEMPT_IN_FILES`。包括取消進行中嘅工作、隱藏配對碼、還原已刪除項目、只改草稿嘅編輯，以及登記操作底下嘅低層呼叫。覆核呢啲理由係覆核此功能嘅一部分。

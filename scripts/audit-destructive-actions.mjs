@@ -23,7 +23,7 @@ const SKIP_DIRS = new Set(['vendor', 'node_modules', 'icons', 'fonts', 'unicode'
 const SKIP_FILES = /(?:^|\/)(?:locales|copy|[a-z-]*-copy|[a-z-]*-content|language-pairs|gallery-[a-z]+|public-images|publication)\.(?:m?js|json)$|\.d\.ts$|ollama-runtime-files\.json$/;
 
 /** Names that mean "this removes, overwrites, stops or revokes something". Matched against whole request and handler names. */
-export const DESTRUCTIVE_NAME = /^(?:delete|remove|clear|reset|revoke|uninstall|forceLock|force|stop|wipe|discard|overwrite|empty|purge|erase|restart|rollback|disconnect|forget|prune|signOut|unpair)[A-Za-z]*$/;
+export const DESTRUCTIVE_NAME = /^(?:delete|remove|clear|reset|revoke|uninstall|forceLock|force|stop|wipe|discard|overwrite|empty|purge|erase|restart|rollback|disconnect|forget|prune|signOut|unpair|cancel)[A-Za-z]*$/;
 
 /** The helpers that open the two-key confirmation. Each takes the registry id as its first argument, or as its second after a host. */
 const CONFIRM_HELPERS = 'confirmDestructiveAction|superConfirm|confirmDestructive|confirmed|ask|confirm|confirmLogo|confirmAppearance|confirmSiteDestructive';

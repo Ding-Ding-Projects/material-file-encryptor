@@ -38,6 +38,8 @@ export const DESTRUCTIVE_ACTIONS = Object.freeze([
   entry('desktop.pack-storage', D, 'src/renderer/app.js', ['startPacking'], ['Pack encrypted storage', '整合加密儲存'], ['Encrypted storage parts are rewritten with the chosen part size.', '加密儲存分段會按揀選嘅大小重寫。']),
   entry('desktop.replace-converter-output', DS, 'src/renderer/app.js', ['confirmOverwrite'], ['Replace the output file', '取代輸出檔案'], ['The selected output file is overwritten. Source files stay unchanged.', '揀選嘅輸出檔案會被覆寫，來源檔案保持不變。']),
   entry('desktop.install-update', D, 'src/renderer/app.js', ['updates'], ['Install the update and restart', '安裝更新並重新啟動'], ['Installed application files are replaced and the application restarts.', '已安裝嘅程式檔案會被取代，程式會重新啟動。']),
+  entry('desktop.reset-vocabulary', D, 'src/renderer/app.js', ['parseVocabulary'], ['Reset personal wording', '重設個人用詞'], ['The imported wording file is removed from this device and the original wording returns.', '匯入嘅用詞檔會由本機移除，原本用詞會恢復。']),
+  entry('desktop.import-vocabulary', D, 'src/renderer/app.js', ['vocabulary-file'], ['Import wording over the current wording', '匯入用詞覆蓋目前用詞'], ['The current personal wording is replaced by the imported file.', '目前嘅個人用詞會被匯入檔案取代。']),
   entry('desktop.sign-out-account', DS, 'src/shared/surface/publication-panel.js', ['signOutAccount'], ['Sign out the selected account', '登出揀選嘅帳戶'], ['The saved sign-in for this account is removed from this device.', '呢個帳戶儲存咗嘅登入會由本機移除。']),
   entry('desktop.discard-unsaved-text', DS, 'src/shared/surface/workflow-tools.js', ['discard'], ['Discard unsaved text', '捨棄未儲存嘅文字'], ['Unsaved text in the editor is lost.', '編輯器入面未儲存嘅文字會遺失。']),
   // ---- Desktop: local models ---------------------------------------------------------------------------------
@@ -89,6 +91,7 @@ export const DESTRUCTIVE_ACTIONS = Object.freeze([
   entry('extension.server-restart', E, 'browser-extension/servers.js', ['restart'], ['Restart the server', '重新啟動伺服器'], ['Players are disconnected while the server stops and starts again.', '伺服器停止同再啟動期間，玩家會斷線。']),
   entry('extension.server-change-setting', E, 'browser-extension/servers.js', ['change-setting'], ['Change a server setting', '更改伺服器設定'], ['The server configuration file is overwritten with the new value.', '伺服器設定檔會被新數值覆寫。']),
   entry('extension.server-install-plugin', E, 'browser-extension/servers.js', ['install-plugin'], ['Install a server plugin', '安裝伺服器外掛'], ['Plugin files are written into the server folder and can replace existing files.', '外掛檔案會寫入伺服器資料夾，可能取代現有檔案。']),
+  entry('extension.cancel-schedule', E, 'browser-extension/options.js', ['cancelSchedule'], ['Cancel a scheduled change', '取消預定改動'], ['The scheduled change is deleted from this browser.', '預定改動會由呢個瀏覽器刪除。']),
   entry('extension.discard-operation', E, 'browser-extension/operations-panel.js', ['discardOperation'], ['Discard a saved operation', '捨棄已儲存嘅操作'], ['The saved operation is deleted. Nothing was sent or changed.', '已儲存嘅操作會被刪除，之前冇傳送或更改任何嘢。']),
   entry('extension.discard-all-operations', E, 'browser-extension/operations-panel.js', ['discardAll'], ['Discard all saved operations', '捨棄所有已儲存嘅操作'], ['Every saved operation is deleted. Nothing was sent or changed.', '所有已儲存嘅操作都會被刪除，之前冇傳送或更改任何嘢。']),
 
@@ -140,6 +143,7 @@ export const EXEMPT_ACTIONS = Object.freeze({
 /** A destructive-looking name that is allowed in exactly one file, with the reason. Narrower than EXEMPT_ACTIONS on purpose. */
 export const EXEMPT_IN_FILES = Object.freeze([
   Object.freeze({file: 'src/features/ollama/service.js', name: 'delete', reason: 'The Ollama HTTP verb beneath deleteModel and deleteSession, which are registered and confirmed in the interface before this call can be reached.'}),
+  Object.freeze({file: 'src/features/ollama/service.js', name: 'cancelAll', reason: 'The service method that cancels in-flight model operations when the host shuts down or the feature is torn down. It removes no stored data.'}),
   Object.freeze({file: 'browser-extension/options.js', name: 'delete', reason: 'The local model delete request that extension.delete-model runs only after the two-key confirmation completes.'}),
   Object.freeze({file: 'src/main/browser-native-host.js', name: 'unpair', reason: 'The native host side of Disconnect. The extension confirms with extension.disconnect or extension.popup-disconnect before it sends this message.'}),
   Object.freeze({file: 'src/main/browser-native-host.js', name: 'disconnected', reason: 'A connection state name, not an action.'}),
@@ -151,6 +155,7 @@ export const EXEMPT_IN_FILES = Object.freeze([
 export const NATIVE_BOUNDARIES = Object.freeze([
   Object.freeze({id: 'native.browser-pairing', file: 'src/main/browser-native-host.js', reason: 'The pairing and Confirm prompts are the desktop owner consenting to a request that came from the browser, so they stay native.'}),
   Object.freeze({id: 'native.quit-dialog', file: 'src/main/main.js', reason: 'Stopping servers while the application quits is part of the quit dialog the user already chose.'}),
+  Object.freeze({id: 'native.driver-install', file: 'src/main/main.js', reason: 'Installing the file system driver launches the native installer, which shows its own elevation consent. It adds a component and removes nothing.'}),
   Object.freeze({id: 'native.tray-menu', file: 'src/main/main.js', reason: 'The tray menu is an operating-system menu that cannot host the confirmation. Its Lock drive item is the ordinary lock, its Quit item opens the quit dialog, and Cancel unfinished transfers only cancels in-flight work.'})
 ]);
 

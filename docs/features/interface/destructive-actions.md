@@ -23,7 +23,7 @@ Run `node scripts/audit-destructive-actions.mjs`. It fails when a registered act
 
 ## Inventory
 
-Registered actions: 59 in total. 36 on the desktop application, 20 in the browser extension and 26 on the documentation site. Shared modules count on every surface that mounts them.
+Registered actions: 62 in total. 38 on the desktop application, 21 in the browser extension and 26 on the documentation site. Shared modules count on every surface that mounts them.
 
 ### Desktop application
 
@@ -36,6 +36,8 @@ Registered actions: 59 in total. 36 on the desktop application, 20 in the browse
 | `desktop.forget-saved-credential` | Turn off automatic unlock | `src/renderer/app.js` |
 | `desktop.pack-storage` | Pack encrypted storage | `src/renderer/app.js` |
 | `desktop.install-update` | Install the update and restart | `src/renderer/app.js` |
+| `desktop.reset-vocabulary` | Reset personal wording | `src/renderer/app.js` |
+| `desktop.import-vocabulary` | Import wording over the current wording | `src/renderer/app.js` |
 | `desktop.ollama-stop-runtime` | Stop the local model runtime | `src/renderer/features/ollama/index.js` |
 | `desktop.server-stop` | Stop the server | `src/renderer/features/server-manager/targets-panel.js` |
 | `desktop.server-restart` | Restart the server | `src/renderer/features/server-manager/targets-panel.js` |
@@ -93,6 +95,7 @@ Registered actions: 59 in total. 36 on the desktop application, 20 in the browse
 | `extension.server-restart` | Restart the server | `browser-extension/servers.js` |
 | `extension.server-change-setting` | Change a server setting | `browser-extension/servers.js` |
 | `extension.server-install-plugin` | Install a server plugin | `browser-extension/servers.js` |
+| `extension.cancel-schedule` | Cancel a scheduled change | `browser-extension/options.js` |
 | `extension.discard-operation` | Discard a saved operation | `browser-extension/operations-panel.js` |
 | `extension.discard-all-operations` | Discard all saved operations | `browser-extension/operations-panel.js` |
 
@@ -110,6 +113,7 @@ Native consent prompts stay native because they are the owner agreeing to a requ
 
 - `native.browser-pairing` in `src/main/browser-native-host.js`: the pairing and Confirm prompts in the desktop main process.
 - `native.quit-dialog` in `src/main/main.js`: stopping servers while the application quits is part of the quit dialog the owner already chose.
+- `native.driver-install` in `src/main/main.js`: installing the file system driver launches the native installer, which shows its own elevation consent; it adds a component and removes nothing.
 - `native.tray-menu` in `src/main/main.js`: the tray menu is an operating-system menu that cannot host the confirmation; its lock item is the ordinary lock, its quit item opens the quit dialog and its cancel item only cancels in-flight work.
 
 Names that look destructive but are not are listed with a reason in `EXEMPT_ACTIONS` and `EXEMPT_IN_FILES`. They cover cancelling in-flight work, hiding a pairing code, restoring deleted entries, draft-only edits and the low-level calls that sit beneath a registered action. Reviewing those reasons is part of reviewing this feature.
