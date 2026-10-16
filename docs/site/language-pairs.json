@@ -523,8 +523,8 @@
     {
       "source": "docs/features/server-manager/foundation.md",
       "translation": "docs/features/server-manager/foundation.zh-HK.md",
-      "sourceSha256": "c011462eb58302f25faf6fd413f6c8130591c8b7404031d595ccc4200dfddb78",
-      "translationSha256": "14fd4bb4d0188f8995f8b4aa4d02b6aeb3ce70c3069bcb06cd61003691124a26"
+      "sourceSha256": "f1f659bc78b16a5725a25297bd57f12188176a383eb661ed9421aeaaee47ff08",
+      "translationSha256": "813c87273eabe29a1e86625ba6cc71347f94d2b21a7f9670a6aad7384cc57de7"
     },
     {
       "source": "docs/features/server-manager/native-file-lease.md",

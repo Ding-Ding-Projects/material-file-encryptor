@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import net from 'node:net';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
-import {FLAVOR_IDS, FLAVOR_NAMES, listFlavorVersions, resolveFlavorDistribution, validVersion} from '../features/server-manager/flavors.js';
+import {FLAVOR_IDS, FLAVOR_NAMES, listFlavorVersions, resolveFlavorDistribution, resolveJavaRequirement, validVersion} from '../features/server-manager/flavors.js';
 import {downloadToFile} from '../features/server-manager/bounded-http.js';
 import {validHost, validMemoryMb, validPort, validServerId, validUser} from '../features/server-manager/launch-plans.js';
 import {applySetting, describeSettings, readSettings} from '../features/server-manager/server-properties.js';
@@ -35,7 +35,7 @@ function defaultPortProbe(port) {
  * the renderer receives a label and an opaque id. SSH key paths and the records file stay here. Passwords are never accepted. */
 export function createServerTargetsService({
   dataDirectory, deps = defaultDeps(), fetchImpl = fetch, confirmLicense = async () => false, chooseSshKey = async () => null,
-  chooseExtensionFile = async () => null, emit = () => {}, now = () => new Date().toISOString(), portProbe = defaultPortProbe, pause = sleep,
+  chooseExtensionFile = async () => null, emit = () => {}, now = () => new Date().toISOString(), portProbe = defaultPortProbe, pause = sleep, monitorMs = 5000,
 } = {}) {
   if (typeof dataDirectory !== 'string') throw Error('Invalid managed server configuration.');
   const root = path.join(path.resolve(dataDirectory), 'server-manager', 'managed');
@@ -43,7 +43,11 @@ export function createServerTargetsService({
   const records = new Map(), keys = new Map(), controllers = new Map(), flights = new Set();
   let loaded, closed = false, persistTail = Promise.resolve();
   const endpointOf = rec => ({host: rec.ssh.host, port: rec.ssh.port, user: rec.ssh.user, keyPath: rec.ssh.keyId ? keys.get(rec.ssh.keyId)?.path ?? null : null});
-  const drivers = createTargetDrivers({deps, dataRoot: root, endpointOf});
+  const stopping = new Set(), settling = new Set();
+  let timer = null, polling = false;
+  // A process the desktop itself spawned reports its own exit at once; every target is also polled so a crashed container or a
+  // dead remote pid cannot leave a card showing "running".
+  const drivers = createTargetDrivers({deps, dataRoot: root, endpointOf, onExit: (id, info) => { const rec = records.get(id); if (rec) void settleExit(rec, info); }});
   const ensure = () => { if (closed) throw Error('The server manager is closing.'); };
   const changed = id => { try { emit({type: 'changed', serverId: id ?? null}); } catch { /* a renderer that is gone must not break a lifecycle */ } };
 
@@ -57,6 +61,7 @@ export function createServerTargetsService({
         // A process or an SSH session that outlived the previous desktop session cannot be assumed; state is re-read on request.
         for (const item of records.values()) if (item.state === 'preparing') { item.state = 'failed'; item.error = 'Preparation was interrupted; retained files need explicit recovery.'; }
       } catch (error) { if (error.code !== 'ENOENT') throw error; }
+      syncMonitor();
     })();
     await loaded;
   }
@@ -69,6 +74,8 @@ export function createServerTargetsService({
     return {
       serverId: rec.id, name: rec.name, target: rec.target, flavor: rec.flavor, version: rec.version, build: rec.distribution?.build ?? null, state: rec.state,
       licenseAccepted: rec.licenseAccepted === true, port: rec.port, memoryMb: rec.memoryMb, containerMode: rec.containerMode ?? null, error: rec.error ?? null, createdAt: rec.createdAt,
+      errorCode: rec.errorCode ?? null, errorParams: rec.errorParams ?? null, exitCode: rec.exit?.code ?? null, exitSignal: rec.exit?.signal ?? null, exitedAt: rec.exit?.at ?? null,
+      lastLines: Array.isArray(rec.lastLines) ? rec.lastLines.slice(-20) : [], javaMajor: rec.javaMajor ?? null, javaSource: rec.javaSource ?? null,
       distribution: rec.distribution ? {artifact: rec.distribution.artifact, integrity: rec.distribution.integrity, hashAlgorithm: rec.distribution.hashAlgorithm, hashSource: rec.distribution.hashSource, sha256: rec.jarSha256 ?? null} : {artifact: 'delegated-to-image', integrity: 'delegated-to-image', hashAlgorithm: null, hashSource: 'none', sha256: null},
       ssh: rec.ssh ? {host: rec.ssh.host, port: rec.ssh.port, user: rec.ssh.user, keyConfigured: !!rec.ssh.keyId} : null,
       extensions: (rec.extensions ?? []).map(item => ({fileName: item.fileName, directory: item.directory, source: item.source, upstreamVerified: item.upstreamVerified === true, sha256: item.sha256})),
@@ -82,9 +89,54 @@ export function createServerTargetsService({
   }
   const release = (id, controller) => { if (controllers.get(id) === controller) controllers.delete(id); };
   function track(promise) { flights.add(promise); promise.finally(() => flights.delete(promise)).catch(() => {}); return promise; }
-  async function withOperation(rec, work) {
+  async function withOperation(rec, work, {passive = false} = {}) {
     const controller = claim(rec.id);
-    try { return await track(work(controller.signal)); } finally { release(rec.id, controller); }
+    try { return await (passive ? work(controller.signal) : track(work(controller.signal))); } finally { release(rec.id, controller); }
+  }
+
+  /** Moves a card out of a live state after its process, container or remote pid ended. A requested stop or a clean exit is
+   * "stopped"; a crash, a signal or a vanished process is "failed" with the exit code and the last log lines. */
+  async function settleExit(rec, info = {}) {
+    if (!LIVE.has(rec.state) || settling.has(rec.id) || closed) return;
+    settling.add(rec.id);
+    try {
+      const requested = stopping.delete(rec.id);
+      const code = Number.isSafeInteger(info.code) ? info.code : null, exitSignal = typeof info.signal === 'string' ? info.signal : null;
+      let lines = [];
+      try { lines = (await driverOf(rec).logs(rec, 20, {signal: AbortSignal.timeout(10000)})).slice(-20); } catch { /* the log may be gone with the process */ }
+      if (!LIVE.has(rec.state)) return;
+      rec.exit = {code, signal: exitSignal, at: now()};
+      rec.lastLines = lines;
+      if (requested || code === 0 && !exitSignal && !info.error) { rec.state = 'stopped'; rec.error = null; rec.errorCode = null; rec.errorParams = null; }
+      else {
+        rec.state = 'failed';
+        if (info.error) { rec.errorCode = 'spawn'; rec.errorParams = null; rec.error = 'The server process could not run: ' + String(info.error).slice(0, 200); }
+        else if (code !== null) { rec.errorCode = 'exited'; rec.errorParams = {code}; rec.error = 'The server process exited with code ' + code + '.'; }
+        else if (exitSignal) { rec.errorCode = 'signal'; rec.errorParams = {signal: exitSignal}; rec.error = 'The server process was ended by signal ' + exitSignal + '.'; }
+        else { rec.errorCode = 'ended'; rec.errorParams = null; rec.error = 'The server process ended on its own.'; }
+      }
+      try { await persist(); } catch { /* the in-memory state is still correct for this session */ }
+      changed(rec.id);
+    } finally { settling.delete(rec.id); syncMonitor(); }
+  }
+  async function monitorOnce() {
+    if (polling || closed) return;
+    polling = true;
+    try {
+      for (const rec of [...records.values()]) {
+        if (!LIVE.has(rec.state) || controllers.has(rec.id) || settling.has(rec.id)) continue;
+        let next;
+        try { next = await driverOf(rec).status(rec, {signal: AbortSignal.timeout(15000)}); } catch { continue; }
+        if (closed) return;
+        if (next.state === 'running' && rec.state === 'starting') { rec.state = 'running'; try { await persist(); } catch { /* retried on the next change */ } changed(rec.id); }
+        else if (next.state === 'stopped' || next.state === 'failed') await settleExit(rec, {code: next.exitCode, signal: next.exitSignal, error: next.errorText});
+      }
+    } finally { polling = false; syncMonitor(); }
+  }
+  function syncMonitor() {
+    const needed = !closed && monitorMs > 0 && [...records.values()].some(rec => LIVE.has(rec.state));
+    if (needed && !timer) { timer = setInterval(() => { void monitorOnce(); }, monitorMs); timer.unref?.(); }
+    else if (!needed && timer) { clearInterval(timer); timer = null; }
   }
 
   async function probeTargets(signal) {
@@ -137,6 +189,8 @@ export function createServerTargetsService({
           await persist();
         }
         signal.throwIfAborted();
+        const java = await resolveJavaRequirement(flavor, version, {fetchImpl, signal});
+        rec.javaMajor = java.major; rec.javaSource = java.source;
         const prepared = await driver.prepare(rec, {artifactFile, distribution, signal, port});
         rec.argsFile = prepared.argsFile ?? null; rec.jarSha256 = prepared.jarSha256 ?? null;
         rec.state = 'prepared'; rec.error = null;
@@ -160,21 +214,36 @@ export function createServerTargetsService({
       if (action === 'start') {
         if (rec.licenseAccepted !== true) throw Error('Exact server license acceptance is required.');
         if (rec.state === 'running') return view(rec);
+        stopping.delete(rec.id);
         rec.state = 'starting'; changed(rec.id);
-        try { rec.state = (await driver.start(rec, {signal})).state; rec.error = null; }
-        catch (error) { rec.state = 'failed'; rec.error = String(error?.message ?? 'Start failed.').slice(0, 300); await persist(); changed(rec.id); throw error; }
+        try {
+          rec.state = (await driver.start(rec, {signal})).state;
+          rec.error = null; rec.errorCode = null; rec.errorParams = null; rec.exit = null; rec.lastLines = [];
+        } catch (error) {
+          // A Java that is missing or too old is a refusal before launch: nothing was spawned and the card says why.
+          const refusal = error?.code === 'java-too-old' || error?.code === 'java-missing';
+          rec.state = 'failed';
+          rec.error = String(error?.message ?? 'Start failed.').slice(0, 300);
+          rec.errorCode = error?.code ?? null;
+          rec.errorParams = refusal ? {required: error.required ?? null, found: error.found ?? null, where: error.where ?? 'local'} : null;
+          await persist(); changed(rec.id); syncMonitor(); throw error;
+        }
       } else if (action === 'stop') {
         if (!LIVE.has(rec.state) && rec.state !== 'failed') return view(rec);
+        const wasLive = LIVE.has(rec.state);
+        if (wasLive) stopping.add(rec.id);
         rec.state = 'stopping'; changed(rec.id);
-        try { rec.state = (await driver.stop(rec, {signal})).state; rec.error = null; }
-        catch (error) { rec.state = 'running'; rec.error = String(error?.message ?? 'Stop failed.').slice(0, 300); await persist(); changed(rec.id); throw error; }
+        try { rec.state = (await driver.stop(rec, {signal})).state; rec.error = null; rec.errorCode = null; rec.errorParams = null; }
+        catch (error) { stopping.delete(rec.id); rec.state = 'running'; rec.error = String(error?.message ?? 'Stop failed.').slice(0, 300); await persist(); changed(rec.id); throw error; }
+        if (rec.state === 'stopped') stopping.delete(rec.id);
       } else {
-        const next = (await driver.status(rec, {signal})).state;
-        if (next !== rec.state) rec.state = next;
+        const next = await driver.status(rec, {signal});
+        if (LIVE.has(rec.state) && (next.state === 'stopped' || next.state === 'failed')) await settleExit(rec, {code: next.exitCode, signal: next.exitSignal, error: next.errorText});
+        else if (LIVE.has(rec.state) && next.state !== rec.state) rec.state = next.state;
       }
-      await persist(); changed(rec.id);
+      await persist(); changed(rec.id); syncMonitor();
       return view(rec);
-    });
+    }, {passive: action === 'status'});
   }
 
   async function dispatch(action, payload = {}) {
@@ -302,6 +371,10 @@ export function createServerTargetsService({
     /** Resolves when every in-flight preparation has finished. Used by tests and by shutdown. */
     async idle() { while (flights.size) await Promise.allSettled([...flights]); },
     cancelAll() { for (const controller of controllers.values()) controller.abort(); },
-    async close() { closed = true; for (const controller of controllers.values()) controller.abort(); await Promise.allSettled([...flights]); await Promise.allSettled(Object.values(drivers).map(driver => driver.close())); await persistTail.catch(() => {}); },
+    /** One monitoring pass over every live card. The timer calls this; tests call it directly. */
+    monitorOnce,
+    /** Cards whose server is starting or running. The desktop uses this to decide whether closing the window needs a choice. */
+    liveServers() { return [...records.values()].filter(rec => rec.state === 'starting' || rec.state === 'running').map(rec => ({serverId: rec.id, name: rec.name, target: rec.target})); },
+    async close() { closed = true; if (timer) { clearInterval(timer); timer = null; } for (const controller of controllers.values()) controller.abort(); await Promise.allSettled([...flights]); await Promise.allSettled(Object.values(drivers).map(driver => driver.close())); if (loaded) { let touched = false; for (const rec of records.values()) if (rec.target === 'local-process' && LIVE.has(rec.state)) { rec.state = 'stopped'; touched = true; } if (touched) await persist().catch(() => {}); } await persistTail.catch(() => {}); },
   };
 }

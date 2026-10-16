@@ -220,3 +220,23 @@ test('the stylesheet uses shared motion tokens and has a reduced-motion fallback
   assert.match(css, /\.server-card\{[^}]*transition:[^}]*var\(--md-sys-motion-duration-short4/);
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{\.server-card,\.server-state-chip\{transition:none;animation:none\}\}/);
 });
+
+test('a failed server shows a reason chip, a localized reason, the exit code and the last log lines', async () => {
+  const language = {value: 'en'};
+  const base = backend().view({licenseAccepted: true, state: 'failed', javaMajor: 25, errorCode: 'java-too-old', errorParams: {required: 25, found: 21, where: 'local'}, error: 'Java 25 or newer is required; Java 21 was found.', lastLines: ['boom one', 'boom two']});
+  const s = scene({servers: [base]}, {getLanguage: () => language.value});
+  await flush();
+  const chips = () => s.host.querySelectorAll('span');
+  assert.ok(chips().some(node => node.dataset.state === 'failed' && node.dataset.kind === 'reason' && node.textContent === 'Needs Java 25'));
+  const text = () => s.host.querySelectorAll('p').concat(s.host.querySelectorAll('pre')).map(node => node.textContent).join('\n');
+  assert.match(text(), /Java 25 or newer is required; Java 21 was found\./);
+  assert.match(text(), /Java required: 25/);
+  assert.match(text(), /boom one\nboom two/);
+  language.value = 'yue'; s.module.setLanguage();
+  assert.match(text(), /需要 Java 25 或以上，但係只搵到 Java 21。/);
+  language.value = 'bilingual'; s.module.setLanguage();
+  assert.match(text(), /Java 25 or newer is required; Java 21 was found\. \/ 需要 Java 25 或以上/);
+  s.fake.state.servers = [{...base, errorCode: 'exited', errorParams: {code: 1}, error: 'The server process exited with code 1.'}];
+  language.value = 'en'; await s.module.refresh(); s.module.setLanguage();
+  assert.ok(chips().some(node => node.dataset.kind === 'reason' && node.textContent === 'Exited with code 1'));
+});

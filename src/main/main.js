@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 import { app, autoUpdater, BrowserWindow, dialog, ipcMain, Menu, nativeImage, powerMonitor, safeStorage, shell, Tray } from 'electron'
 import { createMaterialDialogs, materialDialogPaths } from './material-dialog.js'
 import { describePending, shutdownPrompt } from './shutdown-pending.js';
+import { createWindowCloseHandler, closeChoiceFromResponse } from './window-close.js';
 import { randomBytes, createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -350,6 +351,7 @@ async function quit() {
     let active=helper?await helper.request('operations'):[];
     if (operation || await features.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state))) {
       const transfers=(operation?1:0)+active.filter(item=>['queued','running','cancelling'].includes(item.state)).length;
+      showWindow();
       const prompt=shutdownPrompt(describePending(await features.pendingDetail(),transfers));
       const answer=await uiDialog.showMessageBox(window,{type:'question',buttons:['Keep running','Finish then quit','Cancel unfinished work then quit'],defaultId:0,cancelId:0,title:prompt.title,message:'What should happen to unfinished work?',detail:prompt.detail});
       if(answer.response===0)return;
@@ -418,7 +420,18 @@ else {
       setTimeout(() => app.quit(), 250);
       return proof;
     });
-    window.on('close', event => { if (!shuttingDown && !testMode) { event.preventDefault(); window.hide(); } });
+    window.on('close', createWindowCloseHandler({
+      isShuttingDown: () => shuttingDown, isTestMode: () => testMode, liveServers: () => features?.liveServers() ?? [], hideWindow: () => window.hide(), quit: () => quit(),
+      askChoice: async servers => {
+        const names = servers.slice(0, 5).map(item => '• ' + item.name).join('\n') + (servers.length > 5 ? '\n• +' + (servers.length - 5) : '');
+        const answer = await uiDialog.showMessageBox(window, {
+          type: 'question', buttons: ['Keep running in the tray · 保持喺系統匣運行', 'Stop servers and quit · 停止伺服器並結束', 'Cancel · 取消'], defaultId: 0, cancelId: 2,
+          title: 'A server is still running · 仲有伺服器運行緊', message: 'What should happen to the running Minecraft server? · 運行緊嘅 Minecraft 伺服器要點處理？',
+          detail: names + '\n\nServers running in a container or on an SSH host keep running after you quit. · 容器或者 SSH 主機上面嘅伺服器喺結束之後會繼續運行。'
+        });
+        return closeChoiceFromResponse(answer.response);
+      }
+    }));
     // Windows ends the session (shutdown, restart, sign-out): lock the drive in
     // the few seconds available. The query phase can still be vetoed by another
     // program, so it only commits the journal; the definitive event locks.

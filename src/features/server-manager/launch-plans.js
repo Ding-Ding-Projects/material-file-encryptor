@@ -12,7 +12,18 @@ const IPV6 = /^[A-Fa-f0-9:]{2,45}$/;
 const USER = /^[a-z_][a-z0-9_-]{0,31}$/;
 const REMOTE_NAME = /^[A-Za-z0-9._+-]{1,128}$/;
 const FLAVOR_TYPE = Object.freeze({vanilla: 'VANILLA', paper: 'PAPER', purpur: 'PURPUR', fabric: 'FABRIC', forge: 'FORGE', neoforge: 'NEOFORGE'});
-export const CONTAINER_IMAGES = Object.freeze({server: 'itzg/minecraft-server:latest', java8: 'eclipse-temurin:8-jre', java16: 'eclipse-temurin:17-jre', java17: 'eclipse-temurin:17-jre', java21: 'eclipse-temurin:21-jre'});
+export const CONTAINER_IMAGES = Object.freeze({server: 'itzg/minecraft-server:latest', java8: 'eclipse-temurin:8-jre', java16: 'eclipse-temurin:17-jre', java17: 'eclipse-temurin:17-jre', java21: 'eclipse-temurin:21-jre', java25: 'eclipse-temurin:25-jre', server8: 'itzg/minecraft-server:java8', server17: 'itzg/minecraft-server:java17', server25: 'itzg/minecraft-server:java25'});
+
+/** The official itzg tag whose bundled Java can run the release. Java 21 stays on the default tag, which also runs it. */
+export function serverImage(javaMajor) {
+  if (javaMajor === undefined || javaMajor === null) return CONTAINER_IMAGES.server;
+  if (!Number.isSafeInteger(javaMajor)) refuse();
+  if (javaMajor <= 8) return CONTAINER_IMAGES.server8;
+  if (javaMajor <= 17) return CONTAINER_IMAGES.server17;
+  if (javaMajor <= 21) return CONTAINER_IMAGES.server;
+  if (javaMajor <= 25) return CONTAINER_IMAGES.server25;
+  refuse();
+}
 const SAFE_MEMORY = /^[0-9]{3,5}$/;
 
 export const validServerId = value => typeof value === 'string' && SERVER_ID.test(value);
@@ -63,14 +74,14 @@ export function dockerRunArgs({id, flavor, version, port, memoryMb, mode, licens
   if (licenseAccepted !== true) throw Error('Exact server license acceptance is required.');
   if (typeof hostData !== 'string' || hostData.length === 0 || hostData.length > 400 || /[\u0000-\u001f,:]/.test(hostData.replace(/^[A-Za-z]:[\\/]/, '')) || hostData.startsWith('-')) refuse();
   const args = ['run', '--detach', '--name', containerName(id), '--label', 'mfe.managed=true', '--label', 'mfe.server=' + id, '--publish', '127.0.0.1:' + port + ':25565', '--mount', 'type=bind,source=' + hostData + ',target=/data'];
-  if (mode === 'itzg') return [...args, '--env', 'EULA=TRUE', '--env', 'TYPE=' + FLAVOR_TYPE[flavor], '--env', 'VERSION=' + version, '--env', 'MEMORY=' + memory(memoryMb), CONTAINER_IMAGES.server];
+  if (mode === 'itzg') return [...args, '--env', 'EULA=TRUE', '--env', 'TYPE=' + FLAVOR_TYPE[flavor], '--env', 'VERSION=' + version, '--env', 'MEMORY=' + memory(memoryMb), serverImage(javaMajor)];
   if (mode !== 'jar' || ['forge', 'neoforge'].includes(flavor)) refuse();
   // The verified jar is mounted read-only; the data directory (eula.txt, world, properties) is the only writable mount.
   if (typeof hostJar !== 'string' || hostJar.length === 0 || hostJar.length > 400 || /[\u0000-\u001f,:]/.test(hostJar.replace(/^[A-Za-z]:[\\/]/, '')) || hostJar.startsWith('-')) refuse();
   return [...args, '--mount', 'type=bind,source=' + hostJar + ',target=/srv/server.jar,readonly', '--workdir', '/data', '--read-only', '--tmpfs', '/tmp', javaImage(javaMajor), 'java', ...javaServerArgs({id, memoryMb, jar: '/srv/server.jar'})];
 }
 export const dockerPullArgs = image => { if (!Object.values(CONTAINER_IMAGES).includes(image)) refuse(); return ['pull', image]; };
-export const dockerInspectArgs = id => ['inspect', '--format', '{{.State.Status}}|{{index .Config.Labels "mfe.server"}}', containerName(id)];
+export const dockerInspectArgs = id => ['inspect', '--format', '{{.State.Status}}|{{index .Config.Labels "mfe.server"}}|{{.State.ExitCode}}', containerName(id)];
 export const dockerStopArgs = id => ['stop', '--time', '30', containerName(id)];
 export const dockerStartArgs = id => ['start', containerName(id)];
 export const dockerRemoveArgs = id => ['rm', containerName(id)];
