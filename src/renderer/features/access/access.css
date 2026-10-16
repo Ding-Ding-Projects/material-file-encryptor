@@ -20,3 +20,6 @@
 .access-registration{order:3}.access-workspace video{max-width:100%;height:auto}.access-workspace svg{max-width:280px;width:100%;height:auto}.access-workspace [hidden]{display:none!important}
 @media(max-width:640px){.access-workspace{padding:12px}.access-workspace fieldset{padding:12px}.access-field{flex-basis:100%;flex-wrap:wrap}.access-field>md-text-button{max-width:100%}.access-record{padding:12px;gap:8px}.access-tabs{overflow:auto}}
 @media(prefers-reduced-motion:reduce){.access-workspace *{scroll-behavior:auto}}
+/* Floating panels scroll inside their own bounds; the action row stays pinned to the bottom edge of the scrollport. */
+.access-workspace .access-floating-panel{overscroll-behavior:contain;scrollbar-gutter:stable}
+.access-workspace .access-panel-actions{position:sticky;inset-block-end:-20px;z-index:1;flex:1 0 100%;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:12px;margin-block-end:-20px;padding-block:12px 20px;background:var(--md-sys-color-surface-container-high);border-top:1px solid var(--md-sys-color-outline-variant)}

@@ -37,9 +37,36 @@ export function placeAccessPanel(originRect, viewport, panelHeight = 0, {margin 
   return {left: placed.x, top: Math.max(margin, top), width, maxHeight: placed.flip ? height : placed.maxHeight};
 }
 
+/**
+ * Promote a non-modal panel to the browser top layer. Panels are authored inside the Local access view, whose
+ * reveal animation leaves a transform on an ancestor (that ancestor becomes the containing block for fixed
+ * positioning) and whose content region scrolls and clips. Without promotion the panel is cropped by that
+ * region at the default window size, hiding its action row. The top layer positions against the viewport and
+ * ignores ancestor clipping while the panel keeps its place in the DOM for styling, focus order and queries.
+ * The panel's own hidden attribute keeps controlling visibility.
+ */
+export function promoteAccessPanelToTopLayer(panel) {
+  if (typeof panel.showPopover !== 'function' || typeof panel.hidePopover !== 'function') return;
+  const sync = () => {
+    if (panel.isConnected === false) return;
+    const open = typeof panel.matches === 'function' && panel.matches(':popover-open');
+    try {
+      if (panel.hidden) { if (open) panel.hidePopover(); }
+      else if (!open) panel.showPopover();
+    } catch { /* A panel that cannot enter the top layer stays in flow and scrolls inside its own bounds. */ }
+  };
+  if (!panel.__accessTopLayer) {
+    panel.__accessTopLayer = true;
+    panel.setAttribute('popover', 'manual');
+    if (typeof MutationObserver === 'function') new MutationObserver(sync).observe(panel, {attributes: true, attributeFilter: ['hidden']});
+  }
+  sync();
+}
+
 /** Non-modal panels use their own surface and remain bounded by the current viewport. */
 export function anchorAccessPanel(panel,origin) {
   const view=panel.ownerDocument.defaultView;if(!view||!panel.style)return;
+  promoteAccessPanelToTopLayer(panel);
   panel.__accessOrigin=origin;
   const apply=()=>{
     if(panel.isConnected===false||panel.hidden)return;
