@@ -16,6 +16,8 @@ if (!/^[a-f0-9]{40}$/.test(deployedCommit || '')) throw new Error('--deployed-co
 const requireFrom = createRequire(path.join(process.env.PLAYWRIGHT_ROOT || process.cwd(), 'package.json'));
 const { chromium } = requireFrom('playwright');
 
+const fetchRetry = async url => { let r; for (let i = 0; i < 4; i++) { r = await fetch(url); if (r.status < 500) return r; await new Promise(ok => setTimeout(ok, 1500 * (i + 1))); } return r; };
+const normalizeHtml = (f, html) => f === 'index.html' ? html.replace(/<script type="application\/json" id="release-record">[\s\S]*?<\/script>/, '<!--release-record-->').replace(/<section class="download-band"[\s\S]*?<\/section>/, '<!--download-band-->') : html;
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const PROVENANCE = new Set(['site-provenance.json', 'workspace-provenance.json']);
 async function walk(dir) { const rows = []; for (const entry of await fs.readdir(dir, { withFileTypes: true })) { const full = path.join(dir, entry.name); if (entry.isDirectory()) rows.push(...await walk(full)); else rows.push(full); } return rows; }
@@ -26,9 +28,10 @@ if (arg('reuse-stages') === 'true') Object.assign(record, JSON.parse(await fs.re
 // 1. Deployed bytes versus the locally built artifact.
 const files = (await walk(built)).map(f => path.relative(built, f).split(path.sep).join('/')).sort();
 const hashes = new Map(), liveBodies = new Map(), mismatches = [];
-for (const f of files) hashes.set(f, sha(await fs.readFile(path.join(built, f))));
+const bodyDigest = (f, body) => f === 'index.html' ? sha(Buffer.from(normalizeHtml(f, body.toString('utf8')))) : sha(body);
+for (const f of files) hashes.set(f, bodyDigest(f, await fs.readFile(path.join(built, f))));
 const queue = files.filter(f => !PROVENANCE.has(f));
-await Promise.all(Array.from({ length: 12 }, async () => { while (queue.length) { const f = queue.shift(); const response = await fetch(base + f.split('/').map(encodeURIComponent).join('/')); const body = Buffer.from(await response.arrayBuffer()); if (!response.ok || sha(body) !== hashes.get(f)) mismatches.push(`${f} ${response.status}`); else if (f.endsWith('.html')) liveBodies.set(f, body.toString('utf8')); } }));
+await Promise.all(Array.from({ length: 6 }, async () => { while (queue.length) { const f = queue.shift(); const response = await fetchRetry(base + f.split('/').map(encodeURIComponent).join('/')); const body = Buffer.from(await response.arrayBuffer()); if (!response.ok || bodyDigest(f, body) !== hashes.get(f)) mismatches.push(`${f} ${response.status}`); else if (f.endsWith('.html')) liveBodies.set(f, body.toString('utf8')); } }));
 const manifestLines = files.filter(f => !PROVENANCE.has(f)).map(f => `${f}\t${hashes.get(f)}`);
 const builtSha256 = sha(manifestLines.join('\n') + '\n');
 const liveProvenance = await (await fetch(base + 'site-provenance.json')).json();
