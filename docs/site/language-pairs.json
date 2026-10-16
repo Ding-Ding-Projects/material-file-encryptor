@@ -199,8 +199,8 @@
     {
       "source": "docs/features/interface/destructive-actions.md",
       "translation": "docs/features/interface/destructive-actions.zh-HK.md",
-      "sourceSha256": "d1097c18ec56b8ec6b6e85c89e3d41f7e909344cfeb9104adf28367646c53fc2",
-      "translationSha256": "2b4873ff9b72c971283a2f87a2d97e10b009ceddb053de2393196db57e1c1fb2"
+      "sourceSha256": "100c7dfdb6e1161bf8818970379f161fcc16d73d5472c673e52aad6685945cdc",
+      "translationSha256": "8952860ea8a7b6ca8107f7c48fd801432cdf2589d62201cf56185db24c46ac56"
     },
     {
       "source": "docs/features/interface/font-metadata.md",
@@ -283,8 +283,8 @@
     {
       "source": "docs/features/interface/README.md",
       "translation": "docs/features/interface/README.zh-HK.md",
-      "sourceSha256": "62b3118495b543ee586b5aed193e55c96be87f432ab1e8ebf997fbd2ff3b86ce",
-      "translationSha256": "6c1c0e156debf2d55c457ab234a03998c24b1acab9bc79e002bf17a08a82be42"
+      "sourceSha256": "7ccacfc8dff1799a4cab66908c379892502b88f5f6223512e1825aec8d20b272",
+      "translationSha256": "8c0012f3f08d36f37f484ef413c25aa74ed1b8040fdede52b198b5e1d301ff27"
     },
     {
       "source": "docs/features/interface/settings-completeness.md",
@@ -649,8 +649,8 @@
     {
       "source": "docs/features/workflows/browser-extension-local-models.md",
       "translation": "docs/features/workflows/browser-extension-local-models.zh-HK.md",
-      "sourceSha256": "5b72b45894aa5b0a6a8ad512d757a83e70d4941d83b4cbff4a27a87a4fc5208a",
-      "translationSha256": "6485dd0a9ead1f1b5f0386e4433c31da77ee44641d82aaf9206dcf2baab7a179"
+      "sourceSha256": "0fec6b22e4079b895932d7e3bc5e048441930db75138bdc87eff05b2c554daa5",
+      "translationSha256": "1f27c7d9e90e15dc9b74d8be8b5fa2a21e5fb221abc9a736d6891d8f1012e76f"
     },
     {
       "source": "docs/features/workflows/browser-extension-workspace.md",

@@ -150,7 +150,8 @@ export const EXEMPT_IN_FILES = Object.freeze([
 /** Browser-native consent prompts and the quit dialog are the user's own consent to a request from outside or a choice already made. */
 export const NATIVE_BOUNDARIES = Object.freeze([
   Object.freeze({id: 'native.browser-pairing', file: 'src/main/browser-native-host.js', reason: 'The pairing and Confirm prompts are the desktop owner consenting to a request that came from the browser, so they stay native.'}),
-  Object.freeze({id: 'native.quit-dialog', file: 'src/main/main.js', reason: 'Stopping servers while the application quits is part of the quit dialog the user already chose.'})
+  Object.freeze({id: 'native.quit-dialog', file: 'src/main/main.js', reason: 'Stopping servers while the application quits is part of the quit dialog the user already chose.'}),
+  Object.freeze({id: 'native.tray-menu', file: 'src/main/main.js', reason: 'The tray menu is an operating-system menu that cannot host the confirmation. Its Lock drive item is the ordinary lock, its Quit item opens the quit dialog, and Cancel unfinished transfers only cancels in-flight work.'})
 ]);
 
 const byId = new Map(DESTRUCTIVE_ACTIONS.map(item => [item.id, item]));

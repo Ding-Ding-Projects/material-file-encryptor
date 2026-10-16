@@ -27,7 +27,7 @@ export function createLogoPresentation({storage=globalThis.localStorage,onChange
 }
 export function mountLogoEditor(root,services={}) {
  const doc=root.ownerDocument,t=appearanceTranslator(services.translate),message=source=>t(source,{message:true});
- const confirmLogo=async id=>(await import('../../../shared/surface/workflow-confirm.js')).confirmDestructiveAction(root,id,{translate:t,getLanguage:()=>services.getLanguage?.()||(doc.documentElement?.lang?.startsWith('yue')?'yue':'en')});
+ const confirmLogo=async id=>services.confirmDestructive?services.confirmDestructive(id):(await import('../../../shared/surface/workflow-confirm.js')).confirmDestructiveAction(root,id,{translate:t,getLanguage:()=>services.getLanguage?.()||(doc.documentElement?.lang?.startsWith('yue')?'yue':'en')});
  const storage=services.storage||globalThis.localStorage,key='m4e.logo.private.v1',bindings=[],guides=[];let disposed=false,generation=0,decodeController=null,processing=null,persistenceFault=false;
  const box=doc.createElement('section');box.className='appearance-logo';
  const title=doc.createElement('h3');title.textContent=t('Application logo');const input=materialControl('input',{type:'file'},[],doc);input.accept='image/png,image/jpeg,image/webp';input.setAttribute('aria-label',t('Choose a local logo'));

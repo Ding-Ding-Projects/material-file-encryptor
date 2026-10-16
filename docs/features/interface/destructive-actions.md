@@ -110,9 +110,10 @@ Native consent prompts stay native because they are the owner agreeing to a requ
 
 - `native.browser-pairing` in `src/main/browser-native-host.js`: the pairing and Confirm prompts in the desktop main process.
 - `native.quit-dialog` in `src/main/main.js`: stopping servers while the application quits is part of the quit dialog the owner already chose.
+- `native.tray-menu` in `src/main/main.js`: the tray menu is an operating-system menu that cannot host the confirmation; its lock item is the ordinary lock, its quit item opens the quit dialog and its cancel item only cancels in-flight work.
 
 Names that look destructive but are not are listed with a reason in `EXEMPT_ACTIONS` and `EXEMPT_IN_FILES`. They cover cancelling in-flight work, hiding a pairing code, restoring deleted entries, draft-only edits and the low-level calls that sit beneath a registered action. Reviewing those reasons is part of reviewing this feature.
 
 ## Verification
 
-The checks are deterministic source and component checks with a DOM double. They are not installed runtime, built UI or assistive-technology acceptance, and no Cheap Jor capture was taken for the new panels in this change.
+The checks are deterministic source and component checks with a DOM double. They are not installed runtime, built interface or assistive-technology acceptance, and no layout capture was taken for the new panels in this change.
