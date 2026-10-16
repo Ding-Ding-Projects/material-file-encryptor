@@ -14,7 +14,7 @@ export function createForgeToolResolver(directory){
   try{
    if(!Object.hasOwn(expected,name)||typeof directory!=='string'||!path.isAbsolute(directory))throw new Error();
    if(!receipt){const filename=path.join(directory,'forge-executables.json'),stat=await fs.lstat(filename);if(!stat.isFile()||stat.isSymbolicLink()||stat.size>8192)throw new Error();receipt=validateForgeToolReceipt(JSON.parse(await fs.readFile(filename,'utf8')));}
-   const filename=path.join(directory,expected[name].relativePath),stat=await fs.lstat(filename);if(!stat.isFile()||stat.isSymbolicLink()||path.resolve(await fs.realpath(filename)).toLowerCase()!==path.resolve(filename).toLowerCase()||await digestFile(filename)!==receipt[name].sha256)throw new Error();return filename;
+   const filename=path.join(directory,expected[name].relativePath),stat=await fs.lstat(filename);if(!stat.isFile()||stat.isSymbolicLink()||path.resolve(await fs.realpath(filename)).toLowerCase()!==path.join(path.resolve(await fs.realpath(directory)),expected[name].relativePath).toLowerCase()||await digestFile(filename)!==receipt[name].sha256)throw new Error();return filename;
   }catch{throw new Error('Verified bundled forge tools are unavailable or changed. Rebuild or reinstall the application.');}
  };
 }
