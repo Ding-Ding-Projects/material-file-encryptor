@@ -42,7 +42,15 @@ Open, in order:
 - **Local container target (deferred by the owner to the next owner).** Docker Desktop is not installed on the verification host. Install it (it needs administrator approval and possibly a restart, both done by the owner), then prove the local container target in the server manager with a real container: create, start, status, logs and stop.
 - Session-end automatic lock on a real restart, sign-out or shutdown (owner action only).
 - Done: the full site runtime audit (612 states) and the runtime audit inside the installed desktop app.
-- Uninstall and rollback proof.
+- Done: uninstall, reinstall and rollback proof, recorded in `docs/evidence/installed-lifecycle-uninstall-rollback.json`.
+
+## Integration on main, 2026-10-16
+
+Merged into main at `b66b9f0` and `5ff3860`:
+- Two-key confirmation on every destructive action (62 registered actions across the desktop app, extension and site). `node scripts/audit-destructive-actions.mjs` reports 0 findings. Deleting the selected files and removing several offline copies now use the registered `desktop.delete-files` and `desktop.release-offline-copy` confirmations. In the extension, a dropped wording file still applies at once, and asks first only when it would replace existing wording.
+- Information icons and the setup guide (see the section above). The multi-select delete and select-all controls have explanations, and the retired model-delete dialog buttons were removed from the extension inventory.
+
+Not yet re-proven on an installed build: the confirmation dialogs, the multi-select bulk actions, the drop-to-apply celebration, the information icons and the setup guide. These fixes from the workflow findings lane are not re-proven either: access wiring, display name, element locks, accent, regex, focus and export. The next installed release should repeat those workflows and replace the affected screenshots.
 
 ## Website preservation checkpoint, 2026-10-15
 
