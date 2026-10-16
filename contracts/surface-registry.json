@@ -7455,7 +7455,23 @@
       "owner": "docs/site/index.html",
       "selector": "",
       "template": "required-families",
-      "proofs": {}
+      "proofs": {
+        "homepage-link": {
+          "status": "implemented",
+          "surface": "site:index",
+          "route": "index.html",
+          "selector": "",
+          "sourceCommit": "45df6c4f00a64e816b7702381c5166a8f1533293",
+          "builtSha256": "55cb49df7cd7d0ca2f5806218beedae77c72e6dea91574253575d310c055e444",
+          "builtInteraction": "verified",
+          "visualEvidence": "verified",
+          "evidence": [
+            "docs/evidence/site-row-proofs-45df6c4f.json",
+            "docs/evidence/site-row-proofs-45df6c4f/site-desktop-index-en-light.png",
+            "docs/evidence/site-row-proofs-45df6c4f/site-phone-index-yue-dark.png"
+          ]
+        }
+      }
     },
     {
       "id": "site:index:preferences",
@@ -7491,7 +7507,23 @@
       "owner": "docs/site/publication.mjs",
       "selector": "",
       "template": "required-families",
-      "proofs": {}
+      "proofs": {
+        "wiki-documentation-sync": {
+          "status": "implemented",
+          "surface": "site:wiki",
+          "route": "wiki.html",
+          "selector": "",
+          "sourceCommit": "45df6c4f00a64e816b7702381c5166a8f1533293",
+          "builtSha256": "55cb49df7cd7d0ca2f5806218beedae77c72e6dea91574253575d310c055e444",
+          "builtInteraction": "verified",
+          "visualEvidence": "verified",
+          "evidence": [
+            "docs/evidence/site-row-proofs-45df6c4f.json",
+            "docs/evidence/site-row-proofs-45df6c4f/site-phone-wiki-html.png",
+            "docs/evidence/site-row-proofs-45df6c4f/site-phone-articles-wiki--Home-html.png"
+          ]
+        }
+      }
     },
     {
       "id": "site:wiki:CLOSEOUT_PROMPT.md",
