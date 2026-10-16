@@ -145,8 +145,8 @@
     {
       "source": "docs/features/desktop/package-integrity.md",
       "translation": "docs/features/desktop/package-integrity.zh-HK.md",
-      "sourceSha256": "bd5f18ff347a3362d640d37289273994f4c60bf8b1702c1f45a1ef10f6128e3b",
-      "translationSha256": "eee818c689d0edcd87e8cacf8c93545b0c14f2731cc56db7b98738ec608a1573"
+      "sourceSha256": "c5f27ad62a205fd99080164ca7c5d1eaa1dd531c71d39438beba44435e67eac3",
+      "translationSha256": "aab75218bd38ec162dc10b58b444349ced180936becb8e7dfdcd4c2decf52d18"
     },
     {
       "source": "docs/features/desktop/README.md",
@@ -409,8 +409,8 @@
     {
       "source": "docs/features/platform/current-integration.md",
       "translation": "docs/features/platform/current-integration.zh-HK.md",
-      "sourceSha256": "5a14841e0c8142aa64055e6b82b11bfc7f8c8955f6a55f5d5b920b34715cd81e",
-      "translationSha256": "6becbab7f6502e751d8f1d351ee3bf13cae497ed3649be1653014150fc567e6a"
+      "sourceSha256": "98053e950878b4f4ac2d3821e3d595a85993ab0a9c95e056c4150ae0d805bf06",
+      "translationSha256": "7e4196faead3eb3787ad10982188884e9a5b68bfd89b21a2ff40208573997dc7"
     },
     {
       "source": "docs/features/platform/documentation-and-status.md",

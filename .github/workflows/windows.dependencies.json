@@ -3,6 +3,17 @@
   "workflow": ".github/workflows/windows.yml",
   "freshEnvironmentVerification": "unverified until an actual hosted cache-miss receipt is retained",
   "jobs": {
+    "select-runner": {
+      "tools": [
+        "Node.js"
+      ],
+      "versions": "Node.js 24.19.0 from dependencies.json; the selector uses only the built-in fetch of that runtime; ubuntu-24.04 hosted image",
+      "bootstrapMarkers": [
+        "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+        "run: node scripts/select-runner.mjs"
+      ],
+      "route": "Pinned Node setup, then the selector reads the live runner inventory through the REST API and writes the decision to the job summary. No package installation, tests or lint."
+    },
     "windows": {
       "tools": [
         "Windows PowerShell 5.1",
