@@ -264,7 +264,10 @@ test('real renderer interactions, error states, keyboard dialogs and responsive 
   await page.click('#explorer-button');await page.click('#import-button');await page.waitForSelector('#file-list tr');await selectImportedFile(page);
   await page.click('#offline-button');await page.waitForFunction(() => document.querySelector('mfe-navigation-rail').shadowRoot.querySelector('[data-destination=offline] .count').textContent === '1');
   await navigate(page,'offline');assert.equal(await page.locator('#file-list tr').count(),1);
-  await page.click('#release-button');assert.equal(await page.locator('#confirm-dialog md-text-button[value=cancel]').evaluate(activeWithin),true);await page.keyboard.press('Escape');assert.equal(await page.locator('#confirm-dialog').evaluate(el => el.open),false);
+  await page.click('#release-button');assert.equal(await page.locator('#confirm-dialog md-text-button[value=cancel]').evaluate(activeWithin),true);
+  await page.evaluate(()=>{window.releaseEscapeClosed=null;const dialog=document.querySelector('#confirm-dialog');dialog.addEventListener('close',()=>{window.releaseEscapeClosed={event:'close',at:performance.now(),hostOpen:dialog.open,materialOpen:dialog.shadowRoot.querySelector('md-dialog').open};},{once:true});});
+  await page.keyboard.press('Escape');await page.waitForFunction(()=>window.releaseEscapeClosed!==null);assert.equal(await page.locator('#confirm-dialog').evaluate(el => el.open),false);
+  console.log(JSON.stringify({scope:'release-dialog-escape-completion',...(await page.evaluate(()=>({close:window.releaseEscapeClosed,assertedAt:performance.now(),hostOpen:document.querySelector('#confirm-dialog').open})))}));
   await navigate(page,'drive');await page.click('#release-button');await page.click('#confirm-action');
   await page.waitForFunction(() => document.querySelector('#snackbar').textContent.includes('Released 4 KB of encrypted cache'));
   assert.match(await page.locator('#snackbar').textContent(),/Protected data is retained/);
