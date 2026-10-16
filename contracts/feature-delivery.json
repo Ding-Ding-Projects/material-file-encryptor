@@ -9466,7 +9466,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "Deployed bytes, internal routes and responsive behavior of the home page are proven on the live site (docs/evidence/site-row-proofs-45df6c4f.json), and the download area correctly stays disabled. Remaining gaps: the download area still names the preview release v0.1.0-preview.16.1 although newer releases exist, so no verified download path is demonstrated, and the home page is not yet accepted as the final landing content.",
+      "reason": "Deployed bytes, internal routes and responsive behavior of the home page are proven on the live site (docs/evidence/site-row-proofs-45df6c4f.json). The source and a local build now embed the release record read back from the latest normal release in place of the retired preview record, with a working Setup.exe link labelled as not yet behavior-verified; this was verified in a local headless build (test/site-proof-findings.test.js), not yet on the live site. Remaining gaps: live-site confirmation after the next deployment, and the home page is not yet accepted as the final landing content.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -9525,7 +9525,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "Phone width behavior is proven on the live site: no horizontal overflow in 72 language, theme and width combinations, and the navigation menu opens by touch (docs/evidence/site-row-proofs-45df6c4f.json). Remaining gap: three phone links (repository setup instructions, footer brand and FAQ) are smaller than 24 CSS pixels in one dimension.",
+      "reason": "Phone width behavior is proven on the live site: no horizontal overflow in 72 language, theme and width combinations, and the navigation menu opens by touch (docs/evidence/site-row-proofs-45df6c4f.json). The three previously small phone links (repository setup instructions, footer brand and footer links) now declare a 24 by 24 CSS pixel minimum target and measured at or above it in a local headless build at 320 and 375 pixel widths; live-site confirmation is pending the next deployment.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -9584,7 +9584,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "The download button is verified to fail closed: it is disabled with no link and the help text says why (docs/evidence/site-row-proofs-45df6c4f.json). Remaining gaps: the site release record names the preview release v0.1.0-preview.16.1 rather than a current verified release, so the button never offers a working download.",
+      "reason": "Before this change the button was verified to fail closed on a stale preview record (docs/evidence/site-row-proofs-45df6c4f.json). The source and a local build now generate the record from the latest normal release (scripts/generate-release-record.mjs), the button is a working Setup.exe link for a published normal release, and it stays labelled verification pending until download, packaged, installed and uninstall receipts exist, so it is never shown as verified. Verified in a local headless build; live-site confirmation is pending the next deployment, and no installed-behavior receipt exists for the offered release.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -9643,7 +9643,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "All 238 article pages are deployed, none is empty and no internal link is broken (docs/evidence/site-row-proofs-45df6c4f.json). Remaining gaps: no article has a top-level heading (the title is a second-level heading), and six moved-article stub pages are reachable by no link on the site.",
+      "reason": "All 238 article pages are deployed, none is empty and no internal link is broken (docs/evidence/site-row-proofs-45df6c4f.json). The source and a local build now give every article a single h1 with a valid heading order, and the six moved-article stubs are redirect pages listed in the documentation library, so none is orphaned (test/site-proof-findings.test.js). Verified in a local build and headless browser; live-site confirmation is pending the next deployment.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -9757,7 +9757,7 @@
         "test/site-publication.test.js"
       ],
       "evidence": [],
-      "reason": "Deployed pages carry a description and theme color only. Remaining gap: no Open Graph or Twitter card metadata exists on any page, so a shared link has no designed embed, and none was observed.",
+      "reason": "The source and a local build now add Open Graph and Twitter card metadata (title, description, type, URL, image and card) to every built page, localized for the zh-HK pages, with an existing public site image (test/site-proof-findings.test.js). The metadata is verified in the built files only; no social platform has been observed rendering a shared link, and live-site confirmation is pending the next deployment.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {

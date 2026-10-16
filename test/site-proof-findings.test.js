@@ -128,7 +128,7 @@ test('inline links, footer brand and footer navigation links declare a 24px mini
   const css = await fs.readFile(path.join(root, 'docs/site/site.css'), 'utf8');
   const block = css.slice(css.indexOf('/* target-size */'));
   assert.ok(css.includes('/* target-size */'), 'target-size block present');
-  for (const selector of ['.guide-body p a', '.footer-brand', '.site-footer nav a']) {
+  for (const selector of ['.guide-body p a', '.hero-note a', '.footer-brand', '.site-footer nav a']) {
     const rule = new RegExp(selector.replace(/[.>#]/g, m => '\\' + m) + '[^{]*\\{[^}]*min-height:\\s*24px').test(block);
     assert.ok(rule, selector);
   }

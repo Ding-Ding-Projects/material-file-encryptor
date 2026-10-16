@@ -245,6 +245,6 @@ mfe-control-guidance[data-info-icon][data-open]{display:block;flex:1 1 100%;inli
 mfe-control-guidance[data-info-icon]:has(+[hidden]){display:none}
 [data-info-icon-pair]:has(>[hidden]:not(mfe-control-guidance)){display:none}
 /* target-size */
-.guide-body p a{display:inline-block;min-height:24px;min-width:24px}
+.guide-body p a,.hero-note a{display:inline-block;min-height:24px;min-width:24px}
 .footer-brand{display:inline-flex;align-items:center;min-height:24px;min-width:24px}
 .site-footer nav a{display:inline-flex;align-items:center;justify-content:center;min-height:24px;min-width:24px}
