@@ -55,3 +55,17 @@ md-outlined-select{min-width:min(100%,14rem)}
 #file-list>tr>td.availability .availability-content>:not(span){flex:none}
 #file-list>tr>td.availability .availability-content>span{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
 .table-scroll th:nth-child(3){white-space:normal;overflow-wrap:anywhere}
+
+/* Drop-to-apply personal wording: the drop target and the celebration. Both ignore pointer input and never take focus. */
+.wording-drop-overlay{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;pointer-events:none;background:color-mix(in srgb,var(--md-sys-color-scrim,#000) 32%,transparent);opacity:0;visibility:hidden;transition:opacity var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1)),visibility 0s linear var(--md-sys-motion-duration-short4,200ms)}
+.wording-drop-overlay[data-active=true]{opacity:1;visibility:visible;transition-delay:0s}
+.wording-drop-overlay__card{box-sizing:border-box;max-inline-size:min(420px,calc(100vw - 32px));padding:32px 40px;border:2px dashed var(--md-sys-color-primary,#6750a4);border-radius:28px;background:var(--md-sys-color-surface-container-high,#ece6f0);color:var(--md-sys-color-on-surface,#1d1b20);text-align:center;font-weight:500;font-size:1.25rem;line-height:1.4;transform:scale(.96);transition:transform var(--md-sys-motion-duration-medium2,300ms) var(--md-sys-motion-easing-emphasized-decelerate,cubic-bezier(.05,.7,.1,1))}
+.wording-drop-overlay[data-active=true] .wording-drop-overlay__card{transform:scale(1)}
+.wording-drop-overlay__card p{margin:0}
+.wording-celebration{position:fixed;inset:0;z-index:2147483001;display:grid;place-items:center;pointer-events:none;padding:16px;box-sizing:border-box}
+.wording-celebration__headline{margin:0;max-inline-size:100%;padding:16px 32px;border-radius:28px;background:color-mix(in srgb,var(--md-sys-color-primary-container,#eaddff) 92%,transparent);color:var(--md-sys-color-on-primary-container,#21005d);font-weight:700;font-size:clamp(1.75rem,6vw,3.5rem);line-height:1.15;text-align:center;overflow-wrap:anywhere;box-shadow:0 0 48px 8px color-mix(in srgb,var(--md-sys-color-primary,#6750a4) 55%,transparent)}
+.wording-celebration[data-phase=in] .wording-celebration__headline{animation:wording-level-in var(--md-sys-motion-duration-medium4,400ms) var(--md-sys-motion-easing-emphasized-decelerate,cubic-bezier(.05,.7,.1,1)) both}
+.wording-celebration[data-phase=out] .wording-celebration__headline{animation:wording-level-out 300ms var(--md-sys-motion-easing-emphasized-accelerate,cubic-bezier(.3,0,.8,.15)) both}
+@keyframes wording-level-in{from{opacity:0;transform:scale(.6);box-shadow:0 0 0 0 transparent}60%{transform:scale(1.06)}to{opacity:1;transform:scale(1);box-shadow:0 0 48px 8px color-mix(in srgb,var(--md-sys-color-primary,#6750a4) 55%,transparent)}}
+@keyframes wording-level-out{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.12)}}
+@media(prefers-reduced-motion:reduce){.wording-drop-overlay,.wording-drop-overlay__card{transition:none}.wording-celebration[data-phase=in] .wording-celebration__headline,.wording-celebration[data-phase=out] .wording-celebration__headline{animation:none;box-shadow:none}}
