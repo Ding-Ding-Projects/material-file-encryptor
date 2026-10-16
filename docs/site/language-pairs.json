@@ -169,8 +169,8 @@
     {
       "source": "docs/features/drive/README.md",
       "translation": "docs/features/drive/README.zh-HK.md",
-      "sourceSha256": "4bb3a745b7f69de6e9be7138ccc1cc4c29dc7b61e6ca355b75d7c6acee09bb66",
-      "translationSha256": "5cc2c07950c33bd94d6b2571e28aaa5009a660ebfbfca4a8094c200c749d1a0b"
+      "sourceSha256": "1a778c48b59fa0459d5b3a993854c4814741d75094abbf510658d72188787247",
+      "translationSha256": "6da3374a56b73447a3b1dae0ad16023ee2ca76868076cdc5195c0a62a1dd6f9c"
     },
     {
       "source": "docs/features/interface/animation-transition.md",
@@ -217,8 +217,8 @@
     {
       "source": "docs/features/interface/local-personalization.md",
       "translation": "docs/features/interface/local-personalization.zh-HK.md",
-      "sourceSha256": "07c6ee97e1a65f7d2d0c123b2680571fdd47a6bbdac6e0817e40dc403eea34e1",
-      "translationSha256": "6fe8c0a174e1544dad5a9b8a4fd239d8d679bf5b7c49b577be64229c88f20358"
+      "sourceSha256": "cecd944bb5d8fe9333fe456af243b310480e6977173872194494f4f781b5560c",
+      "translationSha256": "07a70c8891093028f8bf63b73d90a455e32b3cfa8767a129424841e2a3597785"
     },
     {
       "source": "docs/features/interface/local-tools-workspaces.md",
@@ -355,8 +355,8 @@
     {
       "source": "docs/features/ollama/local-models.md",
       "translation": "docs/features/ollama/local-models.zh-HK.md",
-      "sourceSha256": "ac481b43c9fbae3e4bde96a891add27273eeb71c5f1b8188a5bc6c1e3418b063",
-      "translationSha256": "e08c64e97e4d820da22690a99b56ca6b22733761bf2ff5f4b6afc71739f002be"
+      "sourceSha256": "4ce07fe3cf48fdcafad7ec5fd64c33d5e6c52b2a9065627732ab9884d558cda0",
+      "translationSha256": "092a38b65ac31ff47240c4b55a2a39c2919cbf7028d7f15391e70a8fb47923a7"
     },
     {
       "source": "docs/features/ollama/managed-runtime-installation.md",
@@ -379,8 +379,8 @@
     {
       "source": "docs/features/ollama/regression-verification.md",
       "translation": "docs/features/ollama/regression-verification.zh-HK.md",
-      "sourceSha256": "7cecada128985200f4e67d600259bf936de0519b0c40431b79ac8af78a441df7",
-      "translationSha256": "e3b76abe363b5c50bfd5123f98a89f07528dde80a5f0f7e9554e200514147b44"
+      "sourceSha256": "d95c36655ac0c13f4e8858934874cf0f3d0afda3e88697dc2962d248d056c5c6",
+      "translationSha256": "8689bb06c4fa069bf9370f06e451fe8f657f3d1fe29ddd4a48ca986115abce56"
     },
     {
       "source": "docs/features/ollama/release-provenance.md",
@@ -553,8 +553,8 @@
     {
       "source": "docs/features/storage/file-history-activity.md",
       "translation": "docs/features/storage/file-history-activity.zh-HK.md",
-      "sourceSha256": "17fb93f0b8f87f9b2e80671f2de19071f091d7e6be51b46195d1f485ac6a9b0f",
-      "translationSha256": "44fba578130d343c8a2a636a69990c43381b8fa2ce3f3a0b62a501b2edb443ce"
+      "sourceSha256": "f7deea30c0934657eac71a8e865d2abc6a75aa9156f3ff7eb7cdeddf202ae39f",
+      "translationSha256": "719b584698e02f1af54c387b647f94315fbaf63c1d8574d2c46ca67a58f3146c"
     },
     {
       "source": "docs/features/storage/git-transport.md",
@@ -601,8 +601,8 @@
     {
       "source": "docs/features/surface-foundation/integration.md",
       "translation": "docs/features/surface-foundation/integration.zh-HK.md",
-      "sourceSha256": "a85eea76c1e7c1da584bab9e4a8242a57fe40abca343d0a721467b4e8fc5611a",
-      "translationSha256": "73da7ad0f668202a9ac350276d8e38359ed2253074238f90c088a845c71e4bce"
+      "sourceSha256": "186832082e89cf147e54f8cbd324f91541d5c4464f3ab161ad31cd9382e12947",
+      "translationSha256": "483d5e451efec7d1f13d34786a0ecff610d621dd3a32accbe7fc8f4738a68190"
     },
     {
       "source": "docs/features/surface-foundation/layout-and-notifications.md",

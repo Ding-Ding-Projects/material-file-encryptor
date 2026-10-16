@@ -17,6 +17,7 @@ const paths = {
  search: ['M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0','m15 15 6 6'],
  export: ['M12 3v12m-4-4 4 4 4-4','M5 15v6h14v-6'],
  release: ['M5 3h14v18l-7-4-7 4z','M9 10h6'],
+ delete: ['M4 7h16','M9 7V4h6v3','M6 7l1 14h10l1-14','M10 11v6M14 11v6'],
  sync: ['M20 8a8 8 0 0 0-14-3L3 8','M3 3v5h5','M4 16a8 8 0 0 0 14 3l3-3','M21 21v-5h-5'],
  minimize: ['M5 12h14'], maximize: ['M5 5h14v14H5z'], close: ['m6 6 12 12M18 6 6 18']
 };

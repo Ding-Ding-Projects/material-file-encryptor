@@ -42,7 +42,7 @@ md-outlined-select{min-width:min(100%,14rem)}
 
 /* Drive file table: the selection column must hold the full Material radio and its state layer without clipping. */
 .table-scroll th.select-column,#file-list>tr>td:first-child{width:56px;min-width:56px;max-width:56px;padding-inline:4px;overflow:visible;text-overflow:clip;text-align:center}
-#file-list>tr>td:first-child md-radio{display:inline-flex;vertical-align:middle;margin:0}
+#file-list>tr>td:first-child md-radio,#file-list>tr>td:first-child md-checkbox,.table-scroll th.select-column md-checkbox{display:inline-flex;vertical-align:middle;margin:0}
 
 /* Pair a browser: the issued code and QR fade in like any other section, and not at all under reduced motion. */
 .browser-pairing-display{display:grid;justify-items:start;gap:8px;margin-block:12px}
@@ -69,3 +69,7 @@ md-outlined-select{min-width:min(100%,14rem)}
 @keyframes wording-level-in{from{opacity:0;transform:scale(.6);box-shadow:0 0 0 0 transparent}60%{transform:scale(1.06)}to{opacity:1;transform:scale(1);box-shadow:0 0 48px 8px color-mix(in srgb,var(--md-sys-color-primary,#6750a4) 55%,transparent)}}
 @keyframes wording-level-out{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.12)}}
 @media(prefers-reduced-motion:reduce){.wording-drop-overlay,.wording-drop-overlay__card{transition:none}.wording-celebration[data-phase=in] .wording-celebration__headline,.wording-celebration[data-phase=out] .wording-celebration__headline{animation:none;box-shadow:none}}
+
+/* Accent colour: the personalization feature writes both theme variants and flags the root; switching light/dark then only flips data-theme. */
+:root[data-local-accent]{--primary:var(--local-ux-accent-light-primary);--on-primary:var(--local-ux-accent-light-on-primary);--primary-container:var(--local-ux-accent-light-primary-container);--on-primary-container:var(--local-ux-accent-light-on-primary-container)}
+:root[data-local-accent][data-theme=dark]{--primary:var(--local-ux-accent-dark-primary);--on-primary:var(--local-ux-accent-dark-on-primary);--primary-container:var(--local-ux-accent-dark-primary-container);--on-primary-container:var(--local-ux-accent-dark-on-primary-container)}

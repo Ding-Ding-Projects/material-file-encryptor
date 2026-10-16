@@ -1,10 +1,11 @@
 import { SurfaceElement, element, register } from './registry.js';
 import { mountWorkbenchTools } from './workbench-tools.js';
+import { createWarmWorkerRunner } from './warm-worker.js';
 
 export class SurfaceSearch extends SurfaceElement {
   constructor() { super(); this.query = ''; this.regex = false; this.flags = 'iu'; this.pending = new Map(); this.generation = 0; }
   connectedCallback() { this.render(); }
-  disconnectedCallback() { this.closeBuilder();this.generation++; for (const stop of this.pending.values()) stop(); this.pending.clear(); }
+  disconnectedCallback() { this.closeBuilder();this.generation++; for (const stop of this.pending.values()) stop(); this.pending.clear(); this.releaseRunner(); }
   setLanguage(language) { this.language=language; this.render(); }
   render() {
     this.closeBuilder();this.generation++;for(const stop of this.pending.values())stop();this.pending.clear();
@@ -23,9 +24,9 @@ export class SurfaceSearch extends SurfaceElement {
     const test=element('md-outlined-button',{text:this.t('Test expression','測試表達式'),onclick:async()=>{const started=performance.now(); const value=await this.evaluate({sample:sample.value,replacement:replacement.value}); result.textContent=JSON.stringify({...value,elapsedMs:Math.round(performance.now()-started)},null,2);}});
     const escaped=element('md-text-button',{text:this.t('Escape query as literal','將查詢轉為純文字'),onclick:()=>{this.query=this.query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');this.input.value=this.query;this.emitChange();}});
     this.builder=element('section',{hidden:true,popover:'manual',class:'builder stack','aria-label':this.t('Regular expression workbench','正則表達式工作台')},[
-      element('h3',{text:this.t('JavaScript RegExp · local worker · 150 ms budget','JavaScript RegExp · 本機 worker · 150 毫秒上限')}),
+      element('h3',{text:this.t('JavaScript RegExp · local worker · 1000 ms match budget','JavaScript RegExp · 本機 worker · 1000 毫秒運算上限')}),
       element('label',{class:'row'},[enabled,document.createTextNode(this.t('Use regular expression','使用正則表達式'))]), flags,tokenBox,escaped,sample,replacement,test,
-      element('p',{text:this.t('Supports Unicode classes, anchors, groups, lookarounds and replacement captures. The capability matrix below probes this engine directly. Evaluation stops after 150 ms; complex expressions may time out.','支援 Unicode 字元類別、錨點、群組、環視及替換擷取。下方功能表直接檢查此引擎。運算在 150 毫秒後停止，複雜表達式可能逾時。')}),result]);
+      element('p',{text:this.t('Supports Unicode classes, anchors, groups, lookarounds and replacement captures. The capability matrix below probes this engine directly. Evaluation stops after 1000 ms of matching; complex expressions may time out.','支援 Unicode 字元類別、錨點、群組、環視及替換擷取。下方功能表直接檢查此引擎。運算在匹配 1000 毫秒後停止，複雜表達式可能逾時。')}),result]);
     this.status=element('div',{class:'status','aria-live':'polite'});
     this.shadowRoot.append(element('div',{class:'row'},[this.input,this.toggle]),this.builder,this.status);
     tokenBox.remove();
@@ -38,16 +39,19 @@ export class SurfaceSearch extends SurfaceElement {
   emitChange(){this.generation++;this.workbench?.explain();this.emit('search-change',{query:this.query,regex:this.regex,flags:this.flags});}
   evaluate(extra) {
     if(this.query.length>512 || !/^[dgimsuv]*$/.test(this.flags) || new Set(this.flags).size!==this.flags.length) return Promise.resolve({error:this.t('Invalid pattern or flags.','表達式或旗標無效。')});
-    return new Promise(resolve=>{
-      const worker=new Worker(new URL('./regex-worker.js',import.meta.url),{type:'module'});
-      const key=Symbol(); let timer;
-      const finish=value=>{worker.terminate();clearTimeout(timer);this.pending.delete(key);resolve(value);};
-      this.pending.set(key,()=>finish({error:'Search cancelled'}));
-      timer=setTimeout(()=>finish({error:this.t('Expression exceeded 150 ms. Simplify the pattern.','表達式超過 150 毫秒。請簡化。')}),150);
-      worker.onmessage=event=>finish(event.data); worker.onerror=()=>finish({error:this.t('Expression could not be evaluated.','未能運算表達式。')});
-      worker.postMessage({pattern:this.query,flags:this.flags,...extra});
-    });
+    // Result filtering and the builder's test button each own a worker, so one cannot cancel the other.
+    const slot=extra&&extra.rows?'runner':'testRunner';
+    this[slot]=this[slot]||createWarmWorkerRunner({createWorker:()=>new Worker(new URL('./regex-worker.js',import.meta.url),{type:'module'})});
+    const runner=this[slot],key=Symbol();
+    this.pending.set(key,()=>runner.cancel());
+    return runner.run({pattern:this.query,flags:this.flags,...extra}).then(value=>value,error=>{
+      if(error?.code==='superseded')return {error:'Search cancelled'};
+      if(error?.code==='match-timeout')return {error:this.t('Expression took longer than 1000 ms to match. Simplify the pattern.','表達式匹配超過 1000 毫秒。請簡化。')};
+      if(error?.code==='start-timeout'||error?.code==='start-failed')return {error:this.t('The search worker could not start. Try again.','搜尋 worker 未能啟動，請再試一次。')};
+      return {error:this.t('Expression could not be evaluated.','未能運算表達式。')};
+    }).finally(()=>{this.pending.delete(key);});
   }
+  releaseRunner() { this.runner?.release(); this.testRunner?.release(); }
   async filter(rows, { reportOutcome = false } = {}) {
     const generation=this.generation,sequence=this.filterSequence=(this.filterSequence||0)+1;
     const output=(matched,outcome)=>reportOutcome?{rows:matched,outcome}:matched;

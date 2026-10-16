@@ -4,3 +4,4 @@ self.onmessage = ({ data }) => {
   self.postMessage({ indices: data.rows.filter(row => expression.test(row.text)).map(row => row.index) });
  } catch { self.postMessage({ error: 'Invalid regular expression.' }); }
 };
+self.postMessage({ ready: true });

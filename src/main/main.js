@@ -13,6 +13,7 @@ import { randomBytes, createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { exportDialogOptions, chosenExportPath } from './export-dialog.js';
 import { NativeClient } from './native-client.js';
 import { validateRequest, validateFeatureRequest, validateWorkflowAdmission, trustedFrame } from './validation.js';
 import { parseVocabulary, MAX_VOCABULARY_BYTES } from '../shared/personal-vocabulary.js';
@@ -96,6 +97,7 @@ const trayNotice = createTrayNotice({
 });
 const selectedImports = new Set();
 const selectedExports = new Set();
+const selectedExportFolders = new Set();
 let sessionEnd, window, tray, helper, features, localAdapter, browserHandoff, updates, shuttingDown = false, operation = null, quitPending = false, updateInstallLease = false, updateLanguage = 'en', interruptedSession = false;
 let cachedStartupRegistration = { enabled: false, verificationOnly: false, restored: false };
 const buildMetadata = { version: app.getVersion(), builtAt: null };
@@ -134,6 +136,16 @@ async function perform(label, task) {
   if (operation) throw new Error('Wait for the current drive operation to finish.');
   operation = label; publish();
   try { return await task(); } finally { operation = null; publish(); }
+}
+let lastExportDirectory = null;
+/** A name inside a chosen export folder that never replaces an existing file. */
+async function uniqueExportName(folder, name) {
+  const extension = path.extname(name), stem = name.slice(0, name.length - extension.length);
+  for (let index = 0; index < 1000; index += 1) {
+    const candidate = path.join(folder, index ? `${stem} (${index + 1})${extension}` : name);
+    try { await fs.lstat(candidate); } catch (error) { if (error.code === 'ENOENT') return candidate; throw error; }
+  }
+  throw new Error('Too many files share this name in the export folder.');
 }
 async function safeDestination(filename, forbidden) {
   const parent = await fs.realpath(path.dirname(filename));
@@ -191,9 +203,10 @@ async function request(method, params, context) {
   }
   if (method === 'forceLock') return forceLockDrive(params.language);
   if (method === 'exportText') {
-    const picked=await dialog.showSaveDialog(window,{title:'Export original records',defaultPath:params.name});
-    if(picked.canceled)return null;
-    const target=await safeDestination(picked.filePath,[state.storageDir,state.cacheDir,state.mounted?mountedPath():null]);
+    const picked=await dialog.showSaveDialog(window,exportDialogOptions(params,{lastDirectory:lastExportDirectory,documentsDirectory:app.getPath('documents')}));
+    if(picked.canceled||!picked.filePath)return null;
+    const target=await safeDestination(chosenExportPath(picked.filePath,params.name),[state.storageDir,state.cacheDir,state.mounted?mountedPath():null]);
+    lastExportDirectory=path.dirname(target);
     await fs.writeFile(target,params.content,{encoding:'utf8',mode:0o600});return {saved:true};
   }
   if (method === 'exportVersion') {
@@ -204,9 +217,10 @@ async function request(method, params, context) {
   }
   if (['saveVersion', 'restoreVersion', 'restoreDeleted', 'emptyRecycleBin'].includes(method)) return perform(method, () => backend(method, params));
   if (method === 'chooseFiles') { const picked = await dialog.showOpenDialog(window, { title: 'Import files into encrypted storage', properties: ['openFile', 'multiSelections'] }); if (picked.canceled) return []; for (const filename of picked.filePaths) selectedImports.add(filename); return picked.filePaths; }
+  if (method === 'chooseExportFolder') { const picked = await dialog.showOpenDialog(window, { title: 'Export readable copies to a folder', properties: ['openDirectory', 'createDirectory'] }); if (picked.canceled || !picked.filePaths[0]) return null; selectedExportFolders.add(picked.filePaths[0]); return picked.filePaths[0]; }
   if (method === 'chooseExport') { const picked = await dialog.showSaveDialog(window, { title: 'Export a readable copy', defaultPath: path.win32.basename(params.name) }); if (picked.canceled) return null; selectedExports.add(picked.filePath); return picked.filePath; }
   if (method === 'importSelected' || method === 'startImport') { if (quitPending) throw new Error('The application is waiting to quit.'); if (params.paths.some(filename => !selectedImports.has(filename))) throw new Error('Choose files using the file picker.'); for (const filename of params.paths) selectedImports.delete(filename); return helper.request('startImport', { paths: params.paths }); }
-  if (method === 'fileAction') { const entry = await helper.request('getFile',{entryId:params.id}); if (!entry) throw new Error('Select a current file.'); if (params.action === 'open') return openPath(mountedPath(entry.path)); if (params.action === 'export') { if (!selectedExports.delete(params.destination)) throw new Error('Choose an export destination using the file picker.'); const target = await safeDestination(params.destination, [state.storageDir, state.cacheDir, mountedPath()]); if (quitPending || shuttingDown) throw new Error('The application is waiting to quit.'); return helper.request('startExport', {path:entry.path,destination:target}); } return perform(params.action, () => backend(params.action, { path: entry.path })); }
+  if (method === 'fileAction') { const entry = await helper.request('getFile',{entryId:params.id}); if (!entry) throw new Error('Select a current file.'); if (params.action === 'open') return openPath(mountedPath(entry.path)); if (params.action === 'delete') return perform('delete', async () => { await fs.rm(mountedPath(entry.path), { force: false, recursive: false }); return backend('statusSummary'); }); if (params.action === 'export') { const folderExport = !selectedExports.has(params.destination) && selectedExportFolders.has(path.dirname(params.destination || '')); if (!folderExport && !selectedExports.delete(params.destination)) throw new Error('Choose an export destination using the file picker.'); const wanted = folderExport ? await uniqueExportName(path.dirname(params.destination), path.basename(params.destination)) : params.destination; const target = await safeDestination(wanted, [state.storageDir, state.cacheDir, mountedPath()]); if (quitPending || shuttingDown) throw new Error('The application is waiting to quit.'); return helper.request('startExport', {path:entry.path,destination:target}); } return perform(params.action, () => backend(params.action, { path: entry.path })); }
   if (method === 'resplitAll') return perform('resplit', async () => { for (const file of await currentFileInventory()) await backend('resplit', { path: file.path, partSizeBytes: state.partSizeBytes }); return snapshot(); });
   if (method === 'windowControl') { if (params.action === 'minimize') window.minimize(); if (params.action === 'maximize') window.isMaximized() ? window.unmaximize() : window.maximize(); if (params.action === 'close') window.close(); return; }
   if (method === 'openExternal') return shell.openExternal(params.url);

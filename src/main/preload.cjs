@@ -18,6 +18,7 @@ const api = {
   listActivity: (options={}) => invoke('listActivity',options), previewVersion: versionId => invoke('previewVersion',{versionId}), labelVersion:(versionId,label)=>invoke('labelVersion',{versionId,label}), exportVersion:versionId=>invoke('exportVersion',{versionId}), exportText:options=>invoke('exportText',options),
   open: id => invoke('fileAction', { id, action: 'open' }), openExplorer: () => invoke('openExplorer'),
   exportFile: ({ id, destination }) => invoke('fileAction', { id, action: 'export', destination }),
+  chooseExportFolder: () => invoke('chooseExportFolder'), deleteFile: id => invoke('fileAction', { id, action: 'delete' }),
   keepOffline: id => invoke('fileAction', { id, action: 'keepOffline' }), releaseOffline: id => invoke('fileAction', { id, action: 'releaseOffline' }),
   history: (options = {}) => invoke('listVersions', options), saveVersion: path => invoke('saveVersion', path === undefined ? {} : { path }),
   listVersions: async entryId => {const [versions,labels]=await Promise.all([invoke('listVersions',{entryId}),invoke('listVersionLabels',{entryId})]);return versions.map(version=>({...version,label:labels[version.id]||''}));},

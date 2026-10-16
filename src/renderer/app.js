@@ -8,6 +8,8 @@ import {resolveGuidanceArticle} from '../shared/surface/control-guidance.js';
 import { installClearFields } from './clear-fields.js';
 import { deletedDescendantCandidates } from './recycle-selection.js';
 import { createScopedSearch } from './scoped-search.js';
+import { preferenceChangeScope } from './preference-scope.js';
+import { createFileSelection, bulkAvailability, runForEach } from './file-selection.js';
 import { parsePartSize, displayPartSize, parseVocabulary, replaceVocabulary, loadSettings } from './preferences.js';
 import { serializeVocabulary } from '../shared/personal-vocabulary.js';
 import { icon, initializeIcons } from './icons.js';
@@ -36,6 +38,7 @@ const api = window.drive;
 let preferences = loadSettings(localStorage);
 let vocabularyPersisted = true;
 let vocabularyUploadVersion = 0;
+const fileSelection = createFileSelection();
 let state = null, selected = null, view = 'drive', busy = false, dialogMode = 'create', snackbarTimer;
 let archiveRows = {history:[],recycle:[]}, archiveRequests={history:0,recycle:0};
 const archiveRenders={history:0,recycle:0};
@@ -63,6 +66,8 @@ function acceptUpdateSnapshot(value){updateSnapshot=value?.snapshot||value;const
 const narrationEvents=createNotificationNarration({getNarrator:()=>featureMounts.get('personalization')?.narrator,getSettings:()=>effectiveLocalSettings,translate:(source,options)=>t(source,options),isScreenReaderActive:()=>screenReaderActive!==false,onUnavailable:()=>foundation?.notify({title:'Narration unavailable',message:'Open Settings, Personalization, then Language to select an installed voice. Visual notifications remain available.',level:'warning',narration:false})});
 function forceLockOptions(){return {language:effectiveLocalSettings.school.enabled?'en':preferences.language};}
 const enhancedLabels={'Notification history reset':'通知記錄已重設','Previous notification text was cleared because its original wording could not be verified.':'舊有通知文字已清除，因為無法確認原有用詞。','Export queued. Cancel unfinished work from Operations.':'匯出已加入佇列。可以在操作面板取消未完成工作。','File details':'檔案詳情','Converter':'轉換工具','Local models':'本機模型','Personalization':'個人化','Local access':'本機存取','Documentation':'說明文件','Changelog':'更新記錄','Status':'狀態','Load more files':'載入更多檔案','Retry loading files':'重試載入檔案','Cancel operation':'取消操作','Operations':'操作','Force lock':'強制鎖定','Quit application':'結束程式','Feature unavailable':'功能無法使用','Refresh':'重新整理','Search settings':'搜尋設定'};
+Object.assign(enhancedLabels,{'Delete':'刪除','Delete selected files':'刪除所選檔案','Deleting files…':'正在刪除檔案…','Files moved to the Recycle Bin.':'檔案已移至資源回收筒。','file':'個檔案','files':'個檔案','{count} files selected':'已選取 {count} 個檔案','Select all visible files':'選取所有可見檔案','Export decrypted copies?':'要匯出已解密副本嗎？','The destination folder will contain ordinary readable files. Choose a location you trust.':'目的地資料夾會包含一般可讀取嘅檔案，請揀選你信任嘅位置。','Remove these offline copies?':'要移除呢啲離線副本嗎？','Release unneeded encrypted cache for the selected files. The encrypted storage copies remain. You may need your storage connection to open them again.':'會釋放所選檔案不需要嘅加密快取，加密儲存副本會保留。再開啟時可能需要儲存連線。','Remove copies':'移除副本','Offline pins removed. Protected data is retained.':'已移除離線釘選，受保護資料會保留。'});
+Object.assign(enhancedLabels,{'The search could not finish':'搜尋未能完成','The file list is not filtered. Simplify the expression or switch off regular expressions, then search again.':'檔案清單未有篩選。請簡化表達式或關閉正則表達式，然後再搜尋。'});
 Object.assign(enhancedLabels,{'Transfer responsiveness':'傳輸回應速度','Background work priority':'背景工作優先順序','Responsive mode lowers background encryption and synchronization priority. Throughput mode uses normal priority. Both keep bounded transfer buffers.':'快速回應模式會降低背景加密及同步的優先順序。高吞吐量模式使用正常優先順序。兩種模式都保留傳輸緩衝上限。','Responsive (recommended)':'快速回應（建議）','Throughput':'高吞吐量'});
 Object.assign(enhancedLabels,{'The protected display name is unavailable. The existing local name is unchanged. Update the desktop host and retry.':'受保護顯示名稱暫時無法取得，原有本機名稱保持不變。請更新桌面主程式再試。','Selected version':'已選版本','Version ID':'版本識別碼','Entry ID':'項目識別碼','Selecting a version does not restore it.':'選取版本唔會還原檔案。','The selected version is outside the current filter.':'已選版本唔喺目前篩選結果內。','Private history unavailable':'私人歷史無法使用','Unlock the local profile before accessing private history.':'存取私人歷史前，請先解鎖本機設定檔。','Reset website or application preferences':'重設網站或程式偏好設定','All local appearance, language, attention and schedule preferences':'所有本機外觀、語言、注意力及排程偏好設定'});
 Object.assign(enhancedLabels,{'Pair a browser':'配對瀏覽器','Show a one-time code here, then type it or scan it in the browser extension. You still approve the pairing on this desktop.':'喺度顯示一次性代碼，然後喺瀏覽器擴充功能輸入或掃描。配對仍然要喺呢部桌面批准。','Show pairing code':'顯示配對代碼','Hide pairing code':'隱藏配對代碼','The code expired. Show a new one.':'代碼已過期，請重新顯示一個。','Valid for':'有效時間','seconds':'秒','Browser pairing QR code':'瀏覽器配對二維碼','Enter this code in the extension, or scan it. Approve the request when this desktop asks.':'喺擴充功能輸入呢個代碼，或者掃描。桌面詢問時請批准要求。','Pairing code unavailable':'暫時無法提供配對代碼','Pairing code hidden and cleared.':'配對代碼已隱藏並清除。','Unlock the drive before pairing a browser.':'配對瀏覽器之前請先解鎖磁碟。','The browser receiver is not running on this desktop.':'呢部桌面未有執行瀏覽器接收程式。'});
@@ -87,6 +92,15 @@ function setText(id, source) { $(id).textContent = t(source); }
 function savePreferences() { try { localStorage.setItem('material-drive.preferences.v1', JSON.stringify({...preferences, vocabulary: JSON.parse(serializeVocabulary(preferences.vocabulary))})); return true; } catch { showError('Your device could not save these preferences.'); return false; } }
 const clearFields = installClearFields(document.body, t);
 const colorQuery = window.matchMedia('(prefers-color-scheme: dark)');
+/** Views that cache their text at mount subscribe here. Listeners run after the preferences hold the new language, so a label never lags one change behind. */
+const languageListeners = new Set();
+function subscribeLanguage(listener) { languageListeners.add(listener); return () => languageListeners.delete(listener); }
+function notifyLanguageListeners() { for (const listener of [...languageListeners]) { try { listener(preferences.language); } catch (error) { console.error(error); } } }
+/** Theme, density, accent and font changes only touch attributes and custom properties on the root, so no view is re-labelled or re-rendered. */
+function applyThemeOnly() {
+ document.documentElement.dataset.theme = preferences.theme === 'system' ? colorQuery.matches ? 'dark' : 'light' : preferences.theme;
+ if ($('theme-setting').value !== preferences.theme) $('theme-setting').value = preferences.theme;
+}
 function applyPreferences() {
  narrationEvents.changed();
  document.documentElement.dataset.theme = preferences.theme === 'system' ? colorQuery.matches ? 'dark' : 'light' : preferences.theme;
@@ -107,8 +121,9 @@ function applyPreferences() {
  if (state) { render(); changeView(view); }
  if ($('vault-dialog').open) updateDialog();
  privateWordingView.refresh();
+ notifyLanguageListeners();
 }
-colorQuery.addEventListener('change', applyPreferences);
+colorQuery.addEventListener('change', applyThemeOnly);
 function showError(error, inDialog = false) {
  const message = plainErrorMessage(error);
  const target = $(inDialog ? 'dialog-error' : 'main-error-text'); target.textContent = t(message,{message:true});
@@ -154,10 +169,12 @@ function renderAvailability() {
  $('lock-button').disabled = busy; $('mount-button').disabled = busy || !unlocked || state?.driver?.available === false; $('explorer-button').disabled = busy || !mounted;
  if($('force-lock-button')){ $('force-lock-button').hidden=!unlocked; $('force-lock-button').disabled=busy||!api?.forceLock; $('force-lock-button').textContent=t('Force lock'); }
  for (const id of ['import-button','empty-import-button','sync-button','split-apply','resplit-button']) $(id).disabled = busy || !unlocked;
- $('open-button').disabled = busy || !mounted || !file;
- $('export-button').disabled = busy || !mounted || !file;
- $('offline-button').disabled = busy || !unlocked || !file || file.offline;
- $('release-button').disabled = busy || !unlocked || !file?.offline;
+ const can = bulkAvailability(selectedFiles(),{busy,unlocked:Boolean(unlocked),mounted:Boolean(mounted)});
+ $('open-button').disabled = !can.open;
+ $('export-button').disabled = !can.export;
+ $('offline-button').disabled = !can.keepOffline;
+ $('release-button').disabled = !can.releaseOffline;
+ $('delete-button').disabled = !can.delete;
  $('startup-setting').disabled = busy || !state;
  $('auto-unlock-setting').disabled = busy || !unlocked;
  $('forget-credential').disabled = busy || !state;
@@ -180,7 +197,7 @@ function renderAvailability() {
 function currentFiles(){return pagedFiles??state?.files??[];}
 function render() {
  if (!state) return;
- if(state.locked) {historySelection?.clear();filePageRequest++;pagedFiles=null;filePageRevision=null;selected=null;fileDetails?.selectEntry(null);for(const kind of ['history','recycle']) {archiveRequests[kind]++;archiveRenders[kind]++;archiveRows[kind]=[];$(kind+'-list').replaceChildren();setArchiveMessage(kind,'Unlock a drive to view its history and recycle bin.');}recycledSelection.clear();}
+ if(state.locked) {historySelection?.clear();filePageRequest++;pagedFiles=null;filePageRevision=null;selected=null;fileSelection.clear();fileDetails?.selectEntry(null);for(const kind of ['history','recycle']) {archiveRequests[kind]++;archiveRenders[kind]++;archiveRows[kind]=[];$(kind+'-list').replaceChildren();setArchiveMessage(kind,'Unlock a drive to view its history and recycle bin.');}recycledSelection.clear();}
  const status = mountState(); setText('vault-badge',status); $('vault-badge').dataset.state = state.mounted ? 'mounted' : 'locked';
  $('locked-state').hidden = !state.locked; $('drive-content').hidden = state.locked; $('lock-button').hidden = state.locked;
  $('driver-notice').hidden = state.driver?.checking || state.driver?.available !== false;
@@ -219,33 +236,47 @@ async function renderFiles() {
  const key=JSON.stringify([filePageRevision,view,query,fileSearch?.regex,fileSearch?.flags,preferences.language,files.map(f=>[f.id,f.path,f.size,f.offline,f.modified])]);
  if(key===renderedFilesKey){updateSelectedFileRows();return;}
  renderedFilesKey=key;
- const candidates=files.filter(file=>view!=='offline'||file.offline);const rows=fileSearch?await fileSearch.filter(candidates.map(file=>({id:file.id,text:String(file.path)}))):candidates.filter(file=>String(file.path).toLocaleLowerCase().includes(query)).map(file=>({id:file.id}));
- if(rows===null||key!==renderedFilesKey)return;const visible=new Set(rows.map(row=>row.id));const filtered=candidates.filter(file=>visible.has(file.id));
- if (!filtered.some(file => file.id === selected)) selected = null;
+ const candidates=files.filter(file=>view!=='offline'||file.offline);const searched=fileSearch?await fileSearch.filter(candidates.map(file=>({id:file.id,text:String(file.path)})),{reportOutcome:true}):null;
+ const searchFailed=searched!==null&&(searched.outcome==='failed'||searched.outcome==='unavailable');
+ const rows=fileSearch?(searched.outcome==='superseded'?null:searched.rows):candidates.filter(file=>String(file.path).toLocaleLowerCase().includes(query)).map(file=>({id:file.id}));
+ if(rows===null||key!==renderedFilesKey)return;
+ if(searchFailed)renderedFilesKey='';const visible=new Set(rows.map(row=>row.id));const filtered=candidates.filter(file=>visible.has(file.id));
+ const selectedBefore = selected; fileSelection.prune(filtered.map(file => file.id)); selected = fileSelection.primary; if (selectedBefore && !selected) fileDetails?.selectEntry(null);
  const fragment = document.createDocumentFragment();
  for (const file of filtered) {
-  const row = document.createElement('tr'); row.dataset.fileId=file.id;row.classList.toggle('selected',file.id === selected);
+  const row = document.createElement('tr'); row.dataset.fileId=file.id;row.classList.toggle('selected',fileSelection.has(file.id));row.setAttribute('aria-selected',String(fileSelection.has(file.id)));
   const cell = () => { const td = document.createElement('td'); row.append(td); return td; };
-  const select = control('input',{type:'radio'}); select.type = 'radio'; select.className = 'file-selection'; select.name = 'selected-file'; select.checked = file.id === selected; select.setAttribute('aria-label',`${t('Select')} ${file.path}`);
-  select.addEventListener('change',() => selectFile(file)); cell().append(select);
+  const select = control('input',{type:'checkbox'}); select.type = 'checkbox'; select.className = 'file-selection'; select.checked = fileSelection.has(file.id); select.setAttribute('aria-label',`${t('Select')} ${file.path}`);
+  select.addEventListener('click',event => { if (event.shiftKey) { event.preventDefault(); fileSelection.range(visibleFileIds(),file.id,{additive:event.ctrlKey||event.metaKey}); syncSelection(); } });
+  select.addEventListener('change',() => { fileSelection.toggle(file.id,select.checked); syncSelection(); }); cell().append(select);
   const name = document.createElement('div'); name.className = 'file-name'; const filename = document.createElement('span'); filename.textContent = file.path; name.append(icon('file'),filename); const nameCell = cell(); nameCell.append(name); nameCell.title = file.path;
   const availability = cell(); availability.className = 'availability'; const av = document.createElement('span'); av.className = 'availability-content'; const label = document.createElement('span'); label.textContent = t(file.offline ? 'Available offline' : 'Encrypted storage only'); av.append(icon(file.offline ? 'offline' : 'shield'),label); availability.append(av);
   const sizeCell = cell(); sizeCell.className = 'numeric'; sizeCell.textContent = formatBytes(file.size); sizeCell.title = `${file.partCount ?? '?'} encrypted parts · ${formatBytes(file.partSizeBytes || state.partSizeBytes)} maximum`;
   const dateCell = cell(); dateCell.className = 'modified'; dateCell.textContent = formatDate(file.modified);
-  row.addEventListener('click',event => { if (event.target === select) return; selectFile(file); });
+  row.addEventListener('click',event => { if (event.target === select || event.composedPath().includes(select)) return; if (event.shiftKey) fileSelection.range(visibleFileIds(),file.id,{additive:event.ctrlKey||event.metaKey}); else if (event.ctrlKey||event.metaKey) fileSelection.toggle(file.id); else fileSelection.only(file.id); syncSelection(); });
   row.addEventListener('dblclick',() => { if (!busy && state.mounted) openSelected(); });
   select.addEventListener('keydown',event => { if (event.key === 'Enter') { event.preventDefault(); openSelected(); } });
   fragment.append(row);
  }
  $('file-list').replaceChildren(fragment); $('file-count').textContent = `(${filtered.length})`;
- $('selection-label').textContent = selected ? files.find(file => file.id === selected)?.path || '' : t('Select a file');
+ updateSelectedFileRows();
  $('empty-files').hidden = filtered.length > 0; $('empty-import-button').hidden = Boolean(query) || view === 'offline';
- setText('empty-title',query ? 'No matching files' : view === 'offline' ? 'No offline files yet' : 'Room for your first file');
- setText('empty-description',query ? 'Try a different search.' : view === 'offline' ? 'Select a file in My drive and choose Keep offline.' : 'Add files in Explorer or import them here.');
+ setText('empty-title',searchFailed ? 'The search could not finish' : query ? 'No matching files' : view === 'offline' ? 'No offline files yet' : 'Room for your first file');
+ setText('empty-description',searchFailed ? 'The file list is not filtered. Simplify the expression or switch off regular expressions, then search again.' : query ? 'Try a different search.' : view === 'offline' ? 'Select a file in My drive and choose Keep offline.' : 'Add files in Explorer or import them here.');
 }
-function updateSelectedFileRows(){for(const row of $('file-list').rows){const active=row.dataset.fileId===selected;row.classList.toggle('selected',active);const input=row.querySelector('md-radio,md-checkbox');if(input)input.checked=active;}const file=currentFiles().find(file=>file.id===selected);$('selection-label').textContent=file?.path||t('Select a file');}
-function selectFile(file){selected=file.id;updateSelectedFileRows();renderAvailability();fileDetails?.selectEntry(file);}
-async function loadFilePage(append=false){if(!api?.listFiles||state?.locked)return;const revision=state.filesRevision??state.revision??'initial';if(!append&&filePageRevision===revision)return;const request=++filePageRequest;filePageRevision=revision;if(!append){pagedFiles=[];selected=null;fileDetails?.selectEntry(null);renderedFilesKey='';renderFiles();}try{const page=await api.listFiles({cursor:append?fileNextCursor:null,limit:100,revision:revision==='initial'?undefined:revision});if(request!==filePageRequest||state?.locked)return;const items=Array.isArray(page)?page:page.items||page.files||[];pagedFiles=append?[...(pagedFiles||[]),...items]:items;fileNextCursor=page.nextCursor??null;const more=$('load-more-files');if(more)more.hidden=!fileNextCursor;renderedFilesKey='';renderFiles();}catch(error){if(request===filePageRequest)showError(error);}}
+function visibleFileIds(){return [...$('file-list').rows].map(row=>row.dataset.fileId);}
+function selectedFiles(){const byId=new Map(currentFiles().map(file=>[file.id,file]));return fileSelection.list(visibleFileIds()).map(id=>byId.get(id)).filter(Boolean);}
+function updateSelectedFileRows(){
+ const ids=visibleFileIds();
+ for(const row of $('file-list').rows){const active=fileSelection.has(row.dataset.fileId);row.classList.toggle('selected',active);row.setAttribute('aria-selected',String(active));const input=row.querySelector('.file-selection');if(input&&input.checked!==active)input.checked=active;}
+ const all=$('select-all-files');if(all){const coverage=fileSelection.coverage(ids);all.checked=coverage==='all';all.indeterminate=coverage==='some';all.setAttribute('aria-label',t('Select all visible files'));}
+ const chosen=selectedFiles();
+ $('selection-label').textContent=chosen.length>1?t('{count} files selected',{message:true,values:{count:chosen.length}}):chosen.length===1?chosen[0].path:t('Select a file');
+}
+/** Applies the selection model to the rows, the action buttons and the details panel. */
+function syncSelection(){selected=fileSelection.primary;updateSelectedFileRows();renderAvailability();fileDetails?.selectEntry(currentFiles().find(file=>file.id===selected)||null);}
+function selectFile(file){fileSelection.only(file.id);syncSelection();}
+async function loadFilePage(append=false){if(!api?.listFiles||state?.locked)return;const revision=state.filesRevision??state.revision??'initial';if(!append&&filePageRevision===revision)return;const request=++filePageRequest;filePageRevision=revision;if(!append){pagedFiles=[];selected=null;fileSelection.clear();fileDetails?.selectEntry(null);renderedFilesKey='';renderFiles();}try{const page=await api.listFiles({cursor:append?fileNextCursor:null,limit:100,revision:revision==='initial'?undefined:revision});if(request!==filePageRequest||state?.locked)return;const items=Array.isArray(page)?page:page.items||page.files||[];pagedFiles=append?[...(pagedFiles||[]),...items]:items;fileNextCursor=page.nextCursor??null;const more=$('load-more-files');if(more)more.hidden=!fileNextCursor;renderedFilesKey='';renderFiles();}catch(error){if(request===filePageRequest)showError(error);}}
 function changeView(next) {
  try{navigationTiming=rendererTiming.begin('navigation',next);}catch{navigationTiming=null;}
  foundation?.closeContextMenu('navigation',{restoreFocus:false});
@@ -420,14 +451,29 @@ listen('explorer-button','click',() => run('Working…',() => api.openExplorer()
 listen('import-button','click',importFiles); listen('empty-import-button','click',importFiles); listen('open-button','click',openSelected);
 listen('file-search','input',() => { renderFiles(); renderAvailability(); });
 listen('export-button','click',async () => {
- const file = currentFiles().find(file => file.id === selected); if (!file) return;
- if (!await confirmAction('Export a decrypted copy?','The destination will contain an ordinary readable file. Choose a location you trust.','Continue')) return;
- const destination = await api.chooseExport(file.path.split(/[\\/]/).at(-1));
- if (destination) await run('Exporting copy…',() => api.exportFile({id:file.id,destination}),'Export queued. Cancel unfinished work from Operations.');
+ const files = selectedFiles(); if (!files.length) return;
+ const many = files.length > 1;
+ if (!await confirmAction(many ? 'Export decrypted copies?' : 'Export a decrypted copy?', many ? 'The destination folder will contain ordinary readable files. Choose a location you trust.' : 'The destination will contain an ordinary readable file. Choose a location you trust.','Continue')) return;
+ if (!many) {
+  const file = files[0];
+  const destination = await api.chooseExport(file.path.split(/[\\/]/).at(-1));
+  if (destination) await run('Exporting copy…',() => api.exportFile({id:file.id,destination}),'Export queued. Cancel unfinished work from Operations.');
+  return;
+ }
+ const folder = await api.chooseExportFolder(); if (!folder) return;
+ const base = folder.replace(/[\\/]+$/,'');
+ await run('Exporting copy…',() => runForEach(files,file => api.exportFile({id:file.id,destination:base + '\\' + file.path.split(/[\\/]/).at(-1)})),'Export queued. Cancel unfinished work from Operations.');
 });
-listen('offline-button','click',() => run('Keeping encrypted parts offline…',() => api.keepOffline(selected),'Offline copy retained.'));
+listen('offline-button','click',() => { const files = selectedFiles().filter(file => !file.offline); if (!files.length) return; return run('Keeping encrypted parts offline…',() => runForEach(files,file => api.keepOffline(file.id)),'Offline copy retained.'); });
 listen('release-button','click',async () => {
- const file = currentFiles().find(file => file.id === selected); if (!file) return;
+ const chosen = selectedFiles().filter(file => file.offline);
+ if (chosen.length > 1) {
+  if (!await confirmAction('Remove these offline copies?','Release unneeded encrypted cache for the selected files. The encrypted storage copies remain. You may need your storage connection to open them again.','Remove copies')) return;
+  const bulk = await run('Removing offline copy…',() => runForEach(chosen,file => api.releaseOffline(file.id)));
+  if (bulk?.ok) toast('Offline pins removed. Protected data is retained.');
+  return;
+ }
+ const file = chosen[0]; if (!file) return;
  if (!await confirmAction('Remove this offline copy?','Release unneeded encrypted cache for this file. The encrypted storage copy remains. You may need your storage connection to open it again.','Remove copy')) return;
  const outcome = await run('Removing offline copy…',() => api.releaseOffline(file.id));
  if (!outcome?.ok) return;
@@ -438,6 +484,27 @@ listen('release-button','click',async () => {
   toast('Offline pin removed. Released {size} of encrypted cache. Protected data is retained.', {size:formatBytes(release.bytesFreed)});
  } else {
   toast('Offline pin removed. No encrypted cache was released. Cache needed for safe or offline access stays encrypted.');
+ }
+});
+listen('delete-button','click',async () => {
+ const files = selectedFiles(); if (!files.length) return;
+ const shown = files.slice(0,5).map(file => file.path).join(', ');
+ const affected = `${files.length} ${t(files.length === 1 ? 'file' : 'files')}: ${shown}${files.length > 5 ? ', +' + (files.length - 5) : ''}`;
+ const confirmation = await requestSuperConfirmation(document.body,{action:'Delete selected files',affected,translate:t,confirmationOnly:true});
+ if (!confirmation.confirmed) return;
+ await run('Deleting files…',() => runForEach(files,file => api.deleteFile(file.id)),'Files moved to the Recycle Bin.');
+});
+listen('select-all-files','change',event => { if (event.target.checked) fileSelection.selectAll(visibleFileIds()); else fileSelection.clear(); syncSelection(); });
+$('file-list').addEventListener('keydown',event => {
+ const row = event.target.closest?.('tr'); if (!row) return;
+ const ids = visibleFileIds(), id = row.dataset.fileId;
+ if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') { event.preventDefault(); fileSelection.selectAll(ids); syncSelection(); return; }
+ if (event.key === ' ' && event.shiftKey) { event.preventDefault(); fileSelection.range(ids,id,{additive:event.ctrlKey||event.metaKey}); syncSelection(); return; }
+ if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+  const next = ids[ids.indexOf(id) + (event.key === 'ArrowDown' ? 1 : -1)]; if (!next) return;
+  event.preventDefault();
+  if (event.shiftKey) { fileSelection.range(ids,next,{additive:true}); syncSelection(); }
+  $('file-list').querySelector(`tr[data-file-id="${CSS.escape(next)}"] .file-selection`)?.focus();
  }
 });
 listen('sync-button','click',() => run('Syncing encrypted files…',() => api.sync(),'Encrypted parts updated.'));
@@ -661,12 +728,12 @@ function setupEnhancedWorkspace() {
   mountFeature('converter','Converter','轉換工具',()=>import('./features/converter/index.js'),(module,root)=>module.mountConverter(root,{translate:t,getLanguage:()=>preferences.language,services:{getLanguage:()=>preferences.language,converter:Object.fromEntries(['catalog','inspect','enqueue','list','control'].map(action=>[action,payload=>featureRequest('converter',action,payload)])),pickSources:()=>featureRequest('converter','pickSources'),pickDestination:payload=>featureRequest('converter','pickDestination',payload),pickDestinationDirectory:()=>featureRequest('converter','pickDestinationDirectory'),confirmOverwrite:()=>confirmAction('Replace output file?','The selected output file will be replaced. Source files remain unchanged.','Replace')}})),
   mountFeature('ollama','Local models','本機模型',()=>import('./features/ollama/index.js'),(module,root)=>module.mountOllama(root,{translate:t,getLanguage:()=>preferences.language,confirm:confirmFeature,services:{getLanguage:()=>preferences.language,ollama:{configureRuntime:payload=>featureRequest('ollama','configureRuntime',payload),request:(action,payload)=>featureRequest('ollama',action,payload),subscribe:callback=>api.onFeatureEvent?.('ollama',callback)}}})),
   mountFeature('access','Local access','本機存取',()=>import('./features/access/index.js'),async(module,root)=>{const access=module.mountAccess(root,{credentialStore,accessHost:accessBridge.accessHost,onDisplayNameRestore:accessBridge.restoreDisplayName,getLanguage:()=>preferences.language,translate:(source,options)=>t(source,options),schoolMode:()=>effectiveLocalSettings.school.enabled,onAuthenticatedChange:()=>{if(!featureMounts.get('access')?.authenticated){confirmationLifetime.cancel();settingsPrivateHistory.lock();}queueMicrotask(applyPreferences);},notify:featureNotify,dataPath:await featureRequest('access','dataFolder'),openDataFolder:()=>featureRequest('access','openDataFolder')});const keys=await featureRequest('access','credentialList',{prefix:'element-lock:'});await access.load((Array.isArray(keys)?keys:keys.keys||[]).map(key=>key.replace(/^element-lock:/,'')));access.bind(document.body);return access;}),
-  mountFeature('personalization','Personalization','個人化',()=>import('./features/personalization/index.js'),async(module,root)=>{await displayNameReady;return module.mountPersonalization(root,{recordDisplayName:accessBridge.recordDisplayName,store:localSettings,storage:localStorage,surfaceRoot:document.documentElement,isScreenReaderActive:()=>screenReaderActive!==false,onNarrationError:()=>narrationEvents.unavailable(),onLogoChange:value=>foundation.setLogo(value),isAllowed:target=>featureMounts.get('access')?.isAllowed?.(target)===true,onError:error=>featureNotify({title:t('Feature unavailable'),message:error?.message||String(error),level:'warning'}),attachSearch:attachEnhancedSearch,notify:featureNotify,onLock:target=>{const access=featureMounts.get('access');if(!access){featureNotify({title:t('Feature unavailable'),message:t('Local access is still loading. Open Settings, then Local access, and retry the lock action.'),level:'warning'});return;}foundation.model.openTab({id:'access',label:'Local access'});foundation.shell.activate('access');access.openLockWizard(ensureLockId(target),target);},historyCredentialStore,historyManager:settingsPrivateHistory,guidanceHelpBase:'../../docs/features/interface/settings-guidance.md',openGuidanceHelp:async descriptor=>{const catalog=await featureRequest('documentation','catalog');const row=resolveGuidanceArticle(catalog,descriptor,{language:preferences.language,restricted:effectiveLocalSettings.school.enabled});const reader=featureMounts.get('documentation');if(!row||!reader)throw Error('Guidance documentation is unavailable.');foundation.model.openTab({id:'documentation',label:'Documentation'});foundation.shell.activate('documentation');if(!reader.open(row.id,descriptor.concept))throw Error('Guidance documentation is unavailable.');},registerCommands:value=>foundation.registerCommands(value),confirmDestructive:confirmSettingsDestructive,resetSettings:async()=>{const signal=confirmationLifetime.signal,validate=()=>confirmationLifetime.validate(signal);validate();const result=await requestSuperConfirmation(document.body,{action:t('Reset website or application preferences'),affected:t('All local appearance, language, attention and schedule preferences'),translate:t,signal,confirmationOnly:true,validateConfirmation:validate});if(result.confirmed){accessBridge.resetPreferences({defaults:LOCAL_DEFAULTS,validate});}},normalizeImage:payload=>featureRequest('personalization','normalizeImage',payload),bundledFontBaseURL:new URL('./fonts/',import.meta.url).href,listFonts:()=>featureRequest('personalization','listFonts'),fontMetadata:payload=>featureRequest('personalization','fontMetadata',payload),cancelFontMetadata:payload=>featureRequest('personalization','cancelFontMetadata',payload),subscribeFontMetadata:callback=>api.onFeatureEvent?.('personalization',callback),verifySharedCredential:settingsIntegrity.verifySharedCredential,setSharedCredential:settingsIntegrity.setSharedCredential,fetchScheduleSource:(source,options)=>featureRequest('personalization','fetchScheduleSource',{source,id:options.id}),setScheduleCredential:(rule,token)=>featureRequest('personalization','setScheduleCredential',{id:rule.id,source:rule.source,token}),clearScheduleCredential:rule=>featureRequest('personalization','clearScheduleCredential',{id:rule.id,source:rule.source}),vocabulary:{isAuthenticated:()=>false,replace:value=>value},sharedSettings:{read:async()=>settingsIntegrity.fromHost(await featureRequest('personalization','sharedRead')),write:settingsIntegrity.writeSchool,subscribe:callback=>api.onFeatureEvent?.('personalization',event=>{if(event.type==='sharedSettings')callback(settingsIntegrity.fromHost(event.value));})},onChange:value=>{const visualChanged=JSON.stringify(effectiveLocalSettings)!==JSON.stringify(value);effectiveLocalSettings=value;const startup=startupState();if(startup.quiet||startup.school?.enabled)startupPresentation.dismiss();let changed=false;for(const key of ['language','theme','emoji','funnyEnglish','funnyCantonese'])if(value[key]!==undefined&&preferences[key]!==value[key]){preferences[key]=value[key];changed=true;}if(changed)savePreferences();if(visualChanged)applyPreferences();}});}),
+  mountFeature('personalization','Personalization','個人化',()=>import('./features/personalization/index.js'),async(module,root)=>{await displayNameReady;return module.mountPersonalization(root,{recordDisplayName:accessBridge.recordDisplayName,store:localSettings,storage:localStorage,surfaceRoot:document.documentElement,isScreenReaderActive:()=>screenReaderActive!==false,onNarrationError:()=>narrationEvents.unavailable(),onLogoChange:value=>foundation.setLogo(value),isAllowed:target=>featureMounts.get('access')?.isAllowed?.(target)===true,onError:error=>featureNotify({title:t('Feature unavailable'),message:error?.message||String(error),level:'warning'}),attachSearch:attachEnhancedSearch,notify:featureNotify,onLock:target=>{const access=featureMounts.get('access');if(!access){featureNotify({title:t('Feature unavailable'),message:t('Local access is still loading. Open Settings, then Local access, and retry the lock action.'),level:'warning'});return;}foundation.model.openTab({id:'access',label:'Local access'});foundation.shell.activate('access');access.openLockWizard(ensureLockId(target),target);},historyCredentialStore,historyManager:settingsPrivateHistory,guidanceHelpBase:'../../docs/features/interface/settings-guidance.md',openGuidanceHelp:async descriptor=>{const catalog=await featureRequest('documentation','catalog');const row=resolveGuidanceArticle(catalog,descriptor,{language:preferences.language,restricted:effectiveLocalSettings.school.enabled});const reader=featureMounts.get('documentation');if(!row||!reader)throw Error('Guidance documentation is unavailable.');foundation.model.openTab({id:'documentation',label:'Documentation'});foundation.shell.activate('documentation');if(!reader.open(row.id,descriptor.concept))throw Error('Guidance documentation is unavailable.');},registerCommands:value=>foundation.registerCommands(value),confirmDestructive:confirmSettingsDestructive,resetSettings:async()=>{const signal=confirmationLifetime.signal,validate=()=>confirmationLifetime.validate(signal);validate();const result=await requestSuperConfirmation(document.body,{action:t('Reset website or application preferences'),affected:t('All local appearance, language, attention and schedule preferences'),translate:t,signal,confirmationOnly:true,validateConfirmation:validate});if(result.confirmed){accessBridge.resetPreferences({defaults:LOCAL_DEFAULTS,validate});}},normalizeImage:payload=>featureRequest('personalization','normalizeImage',payload),bundledFontBaseURL:new URL('./fonts/',import.meta.url).href,listFonts:()=>featureRequest('personalization','listFonts'),fontMetadata:payload=>featureRequest('personalization','fontMetadata',payload),cancelFontMetadata:payload=>featureRequest('personalization','cancelFontMetadata',payload),subscribeFontMetadata:callback=>api.onFeatureEvent?.('personalization',callback),verifySharedCredential:settingsIntegrity.verifySharedCredential,setSharedCredential:settingsIntegrity.setSharedCredential,fetchScheduleSource:(source,options)=>featureRequest('personalization','fetchScheduleSource',{source,id:options.id}),setScheduleCredential:(rule,token)=>featureRequest('personalization','setScheduleCredential',{id:rule.id,source:rule.source,token}),clearScheduleCredential:rule=>featureRequest('personalization','clearScheduleCredential',{id:rule.id,source:rule.source}),vocabulary:{isAuthenticated:()=>false,replace:value=>value},sharedSettings:{read:async()=>settingsIntegrity.fromHost(await featureRequest('personalization','sharedRead')),write:settingsIntegrity.writeSchool,subscribe:callback=>api.onFeatureEvent?.('personalization',event=>{if(event.type==='sharedSettings')callback(settingsIntegrity.fromHost(event.value));})},onChange:value=>{const scope=preferenceChangeScope(effectiveLocalSettings,value);effectiveLocalSettings=value;const startup=startupState();if(startup.quiet||startup.school?.enabled)startupPresentation.dismiss();let changed=false;for(const key of ['language','theme','emoji','funnyEnglish','funnyCantonese'])if(value[key]!==undefined&&preferences[key]!==value[key]){preferences[key]=value[key];changed=true;}if(changed)savePreferences();if(scope==='full')applyPreferences();else if(scope==='appearance')applyThemeOnly();}});}),
   mountFeature('documentation','Documentation','說明文件',()=>import('./features/documentation/index.js'),async(module,root)=>module.mountDocumentation(root,{translate:t,catalog:await featureRequest('documentation','catalog'),onExport:exportText})),
   mountFeature('changelog','Changelog','更新記錄',()=>import('./features/documentation/changelog.js'),async(module,root)=>module.mountChangelog(root,{translate:t,language:preferences.language,entries:await featureRequest('documentation','changelog'),onExport:exportText})),
- mountFeature('server-manager','Server preparation','伺服器準備',()=>import('./features/server-manager/index.js'),(module,root)=>module.mountServerPreparation(root,{request:(action,payload)=>featureRequest('server-manager',action,payload),subscribe:callback=>api.onFeatureEvent('server-manager',callback),subscribeLanguage:callback=>localSettings.subscribe(callback),getLanguage:()=>preferences.language,registerCommands:value=>foundation.registerCommands(value),guidanceHelpBase:'../../docs/features/server-manager/preparation.md',openGuidanceHelp:async descriptor=>{const catalog=await featureRequest('documentation','catalog');const row=resolveGuidanceArticle(catalog,descriptor,{language:preferences.language,restricted:effectiveLocalSettings.school.enabled});const reader=featureMounts.get('documentation');if(!row||!reader)throw Error('Guidance documentation is unavailable.');foundation.model.openTab({id:'documentation',label:'Documentation'});foundation.shell.activate('documentation');if(!reader.open(row.id,descriptor.concept))throw Error('Guidance documentation is unavailable.');}})),
+ mountFeature('server-manager','Server preparation','伺服器準備',()=>import('./features/server-manager/index.js'),(module,root)=>module.mountServerPreparation(root,{request:(action,payload)=>featureRequest('server-manager',action,payload),subscribe:callback=>api.onFeatureEvent('server-manager',callback),subscribeLanguage,getLanguage:()=>preferences.language,registerCommands:value=>foundation.registerCommands(value),guidanceHelpBase:'../../docs/features/server-manager/preparation.md',openGuidanceHelp:async descriptor=>{const catalog=await featureRequest('documentation','catalog');const row=resolveGuidanceArticle(catalog,descriptor,{language:preferences.language,restricted:effectiveLocalSettings.school.enabled});const reader=featureMounts.get('documentation');if(!row||!reader)throw Error('Guidance documentation is unavailable.');foundation.model.openTab({id:'documentation',label:'Documentation'});foundation.shell.activate('documentation');if(!reader.open(row.id,descriptor.concept))throw Error('Guidance documentation is unavailable.');}})),
   mountFeature('storage','Storage maintenance','儲存維護',()=>import('./features/storage-maintenance/index.js'),(module,root)=>module.mountStorageMaintenance(root,{translate:t,language:preferences.language,services:{storageDiagnostics:()=>api.storageDiagnostics(),startPacking:payload=>api.startPacking(payload),operations:()=>api.operations(),cancelOperation:id=>api.cancelOperation(id)}})),
-  mountFeature('browser-pairing','Pair a browser','配對瀏覽器',()=>import('./features/browser-pairing/index.js'),(module,root)=>module.mountBrowserPairing(root,{translate:t,subscribeLanguage:callback=>localSettings.subscribe(callback),request:action=>featureRequest('browser-pairing',action,{})})),
+  mountFeature('browser-pairing','Pair a browser','配對瀏覽器',()=>import('./features/browser-pairing/index.js'),(module,root)=>module.mountBrowserPairing(root,{translate:t,subscribeLanguage,request:action=>featureRequest('browser-pairing',action,{})})),
   mountFeature('status','Status','狀態',()=>import('./features/status/index.js'),(module,root)=>module.mountStatus(root,{translate:t,getStatus:()=>featureRequest('status','status')}))
  ];
  Promise.allSettled(mounts).then(()=>{foundation.shell.activate(view);refreshPaletteInventory();rendererTiming.finish(rendererTiming.begin('startup-settled'),'settled');startupReady=true;attemptStartup();});

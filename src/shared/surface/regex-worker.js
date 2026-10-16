@@ -21,3 +21,5 @@ self.onmessage = ({ data }) => {
     self.postMessage({ matches, replacement: input.replace(regex,String(replacement ?? '')),cases:results,elapsedMs:Math.round((performance.now()-started)*100)/100,truncated:matches.length===100 });
   } catch (error) { self.postMessage({ error: error.message }); }
 };
+// Announce readiness so the owner can start its match deadline only after start-up.
+self.postMessage({ ready: true });

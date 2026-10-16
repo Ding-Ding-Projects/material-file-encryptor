@@ -58,7 +58,7 @@ export const ollamaCantonese = Object.freeze({"Search entries":"搜尋項目","L
   'Start verified local runtime':'啟動已驗證本機執行環境','Start the verified local runtime?':'啟動已驗證本機執行環境？','Starts the verified Ollama executable with a loopback-only address and cloud features disabled. No model will be downloaded.':'使用只限本機地址啟動已驗證 Ollama，停用雲端功能，唔會下載任何模型。','Locate installed runtime':'尋找已安裝執行環境',
   'Native profile recipe':'原生設定範本','Ollama version check':'Ollama 版本檢查','Installed model list':'已安裝模型清單','Model metadata inspection':'模型資料檢查','Register profile with native pickers':'透過原生選擇器登記設定',
   'Global completeness unknown':'整體完整性未知',
-  'Regex searches run in a disposable worker with a 150 ms deadline, a 128-character pattern limit, and a 4 MiB text limit.':'正規表示式搜尋喺獨立即棄工作程序運行，限時 150 毫秒、模式最多 128 個字元、文字最多 4 MiB。',
+  'Regex searches run in a disposable worker with a 1000 ms deadline, a 128-character pattern limit, and a 4 MiB text limit.':'正規表示式搜尋喺獨立即棄工作程序運行，限時 1000 毫秒、模式最多 128 個字元、文字最多 4 MiB。',
   'Searching in an isolated worker.':'正在獨立工作程序搜尋。','The regular expression is invalid.':'正規表示式無效。','Search exceeds the supported expression or text limits.':'搜尋超過模式或文字上限。','Search worker could not run.':'搜尋工作程序無法運行。','Search worker could not start.':'搜尋工作程序無法啟動。','Regular expression exceeded the search deadline. Simplify the pattern.':'正規表示式超過搜尋限時，請簡化模式。',
   'Copy destination':'複製目的標籤','Copy installed model':'複製已安裝模型','Model copy created.':'已建立模型副本。','Delete installed model':'刪除已安裝模型','Delete installed model?':'刪除已安裝模型？','Installed model removed.':'已移除本機模型。','Generate a single response':'產生單次回應',
   'Local models':'本機模型','Local model sections':'本機模型分類','Model Store':'模型目錄','Pull cart':'下載清單','Local chat':'本機對話','Profiles':'設定組合','Help':'說明',

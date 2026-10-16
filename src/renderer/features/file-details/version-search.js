@@ -1,10 +1,14 @@
-export const VERSION_SEARCH_LIMITS = Object.freeze({ pattern: 256, rows: 10000, rowText: 32767, totalText: 4 * 1024 * 1024, timeout: 150 });
+import { createWarmWorkerRunner, MATCH_BUDGET_MS } from '../../../shared/surface/warm-worker.js';
 
-export function createVersionSearch({ createWorker = () => new Worker(new URL('./version-search-worker.js', import.meta.url), { type: 'module' }), timeout = VERSION_SEARCH_LIMITS.timeout } = {}) {
- let pending;
- function cancel() { pending?.(null); }
+// `timeout` is the budget for the match work alone; worker start-up is measured separately.
+export const VERSION_SEARCH_LIMITS = Object.freeze({ pattern: 256, rows: 10000, rowText: 32767, totalText: 4 * 1024 * 1024, timeout: MATCH_BUDGET_MS });
+
+export function createVersionSearch({ createWorker = () => new Worker(new URL('./version-search-worker.js', import.meta.url), { type: 'module' }), timeout = VERSION_SEARCH_LIMITS.timeout, startTimeout } = {}) {
+ const runner = createWarmWorkerRunner({ createWorker, matchBudget: timeout, ...(startTimeout ? { startBudget: startTimeout } : {}) });
+ function cancel() { runner.cancel(); }
  return {
   cancel,
+  dispose() { runner.dispose(); },
   async filter(rows, pattern) {
    cancel();
    if (!pattern) return rows;
@@ -17,29 +21,17 @@ export function createVersionSearch({ createWorker = () => new Worker(new URL('.
     if (text.length > VERSION_SEARCH_LIMITS.rowText || total > VERSION_SEARCH_LIMITS.totalText) throw new Error('Version search text exceeds the supported limit. Narrow the date range.');
     return { index, text };
    });
-   return new Promise((resolve, reject) => {
-    let worker, timer, finished = false;
-    const finish = (ids, error) => {
-     if (finished) return;
-     finished = true; clearTimeout(timer); worker?.terminate();
-     if (pending === abort) pending = undefined;
-     if (error) reject(new Error(error));
-     else resolve(ids === null ? null : ids.map(index => rows[index]));
-    };
-    const abort = () => finish(null);
-    pending = abort;
-    try {
-     worker = createWorker();
-     worker.onmessage = ({ data }) => {
-      if (data.error) { finish(null, data.error); return; }
-      if (!Array.isArray(data.indices) || data.indices.some(index => !Number.isInteger(index) || index < 0 || index >= rows.length)) { finish(null, 'Invalid search response.'); return; }
-      finish(data.indices);
-     };
-     worker.onerror = () => finish(null, 'Search could not be completed.');
-     timer = setTimeout(() => finish(null, 'Regular expression took too long. Use a simpler expression.'), timeout);
-     worker.postMessage({ pattern, rows: input });
-    } catch (error) { finish(null, error instanceof Error ? error.message : 'Search could not be completed.'); }
-   });
+   let data;
+   try { data = await runner.run({ pattern, rows: input }); }
+   catch (error) {
+    if (error?.code === 'superseded') return null;
+    if (error?.code === 'match-timeout') throw new Error('Regular expression took too long. Use a simpler expression.');
+    if (error?.code === 'worker-error') throw new Error('Search could not be completed.');
+    throw new Error(error instanceof Error ? error.message : 'Search could not be completed.');
+   }
+   if (data?.error) throw new Error(data.error);
+   if (!Array.isArray(data?.indices) || data.indices.some(index => !Number.isInteger(index) || index < 0 || index >= rows.length)) throw new Error('Invalid search response.');
+   return data.indices.map(index => rows[index]);
   }
  };
 }

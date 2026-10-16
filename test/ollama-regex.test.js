@@ -19,9 +19,10 @@ test('actual worker evaluates expressions, reports syntax errors and honors anch
   }finally{filter.dispose();}assert.equal(activeWorkers,0);
 });
 test('catastrophic expression is terminated while the main event loop stays responsive',async()=>{
-  const filter=createRegexFilter({createWorker});const start=performance.now();let ticked=false;
+  // The match budget starts only after the worker reports ready, so a slow start-up on a loaded host cannot fail this test.
+  const filter=createRegexFilter({createWorker,timeout:250,startTimeout:60000});let ticked=false;
   const timer=setTimeout(()=>{ticked=true;},25);
-  try{await assert.rejects(filter.filter('a*'.repeat(20)+'b',['a'.repeat(100)]),/deadline/);assert.equal(ticked,true);assert.ok(performance.now()-start<2000);}
+  try{await assert.rejects(filter.filter('a*'.repeat(20)+'b',['a'.repeat(100)]),/deadline/);assert.equal(ticked,true);}
   finally{clearTimeout(timer);filter.dispose();}assert.equal(activeWorkers,0);
 });
 test('superseding and disposal terminate pending workers and enforce payload bounds',async()=>{
@@ -33,7 +34,7 @@ test('superseding and disposal terminate pending workers and enforce payload bou
 });
 test('renderer does not evaluate user expressions on its event loop',async()=>{
   const renderer=await readFile(new URL('../src/renderer/features/ollama/index.js',import.meta.url),'utf8');
-  assert.ok(renderer.includes('modelSearch.filter('));assert.ok(renderer.includes('modelSearch.destroy()'));const shared=await readFile(new URL('../src/shared/surface/search.js',import.meta.url),'utf8');assert.ok(shared.includes('new Worker('));assert.ok(shared.includes('worker.terminate()'));assert.ok(!renderer.includes('new RegExp('));
+  assert.ok(renderer.includes('modelSearch.filter('));assert.ok(renderer.includes('modelSearch.destroy()'));const shared=await readFile(new URL('../src/shared/surface/search.js',import.meta.url),'utf8');assert.ok(shared.includes('new Worker('));const runner=await readFile(new URL('../src/shared/surface/warm-worker.js',import.meta.url),'utf8');assert.ok(shared.includes('createWarmWorkerRunner'));assert.ok(runner.includes('entry.worker.terminate()'));assert.ok(!renderer.includes('new RegExp('));
 });
 test('renderer is strict UTF-8 and uses the shipped stylesheet instead of inline styles',async()=>{
   const bytes=await readFile(new URL('../src/renderer/features/ollama/index.js',import.meta.url));

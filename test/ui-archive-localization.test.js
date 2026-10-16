@@ -34,7 +34,7 @@ function fixture() {
   displayPartSize:()=>({value:10,unit:'MB'}),renderFiles(){},renderAvailability(){},changeView(){},
   translateWorkspace:createTranslator(()=>preferences,{dictionary:cantonese}),
   vocabularyPersisted:true,foundation:null,fileSearch:null,featureMounts:new Map(),
-  renderedFilesKey:'',privateWordingView:{refresh(){}},currentFiles:()=>[],renderOperations(){}});
+  renderedFilesKey:'',notifyLanguageListeners(){},privateWordingView:{refresh(){}},currentFiles:()=>[],renderOperations(){}});
  vm.runInContext(section('function t(source,options)', 'const privateWordingView') +
   section('function applyPreferences()', "colorQuery.addEventListener") +
   section('async function restoreHistoryVersion(', 'async function restoreRecycledSelection(') +
