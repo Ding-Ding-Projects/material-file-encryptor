@@ -7,7 +7,7 @@ const source=await fs.readFile(new URL('../browser-extension/options.js',import.
 const line=start=>{const found=source.split(/\r?\n/).find(row=>row.startsWith(start));assert.ok(found,start);return found;};
 const nodes=()=>{const values=new Map();return id=>{if(!values.has(id))values.set(id,{value:'',textContent:'',replaceChildren(){this.textContent='';},focus(){},addEventListener(_event,fn){this.click=fn;}});return values.get(id);};};
 test('production delete confirmation removes an open note from the reader immediately',()=>{
- const $=nodes();let records=[{id:'note',title:'Saved',body:'Private body'}];const context={$: $,selectedNotes:new Set(['note']),openedNoteId:'note',storage:{},readNotes:()=>records,deleteNotes:()=>{records=[];return [{id:'note',outcome:'deleted'}];},confirmAction:(_title,_detail,run)=>run(),renderNotes(){},label(){}};
+ const $=nodes();let records=[{id:'note',title:'Saved',body:'Private body'}];const context={$: $,selectedNotes:new Set(['note']),openedNoteId:'note',storage:{},readNotes:()=>records,deleteNotes:()=>{records=[];return [{id:'note',outcome:'deleted'}];},confirmDestructive:(_id,run)=>run(),renderNotes(){},label(){}};
  $('note-reader-body').textContent='Private body';vm.createContext(context);vm.runInContext(line('function renderNoteReader()')+'\n'+line("$('notes-delete').addEventListener"),context);$('notes-delete').click();assert.equal($('note-reader').hidden,true);assert.equal($('note-reader-body').textContent,'');assert.equal(context.openedNoteId,null);
 });
 test('production restored review draft over the limit returns to editing without losing text',()=>{

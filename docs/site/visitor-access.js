@@ -62,7 +62,7 @@ export function mountVisitorAccess(container,{storage=globalThis.localStorage,fo
     reset.addEventListener('click',async()=>{
       if(reset.disabled)return;reset.disabled=true;let resetPerformed=false,accessDestroyed=false,resetError=null;
       const confirm=confirmDestructive||((options)=>requestSuperConfirmation(root,options));
-      try{await confirm({action:'Reset visitor records',affected:translate('Local profile, authenticator secrets, locks, and private history in this browser'),translate,signal:abort.signal,run:async({signal}={})=>{
+      try{await confirm({destructiveId:'site.reset-visitor-records',getLanguage:()=>language,action:'Reset visitor records',affected:translate('Local profile, authenticator secrets, locks, and private history in this browser'),translate,signal:abort.signal,run:async({signal}={})=>{
         if(signal?.aborted)return;endAuthentication();rebuilding=true;access?.destroy();access=null;accessDestroyed=true;rebuilding=false;
         try{await records.resetOwned({confirmed:true});const keys=[];for(let i=0;i<storage.length;i++){const key=storage.key(i);if(key?.startsWith(HISTORY_PREFIX))keys.push(key);}keys.forEach(key=>storage.removeItem(key));}catch(error){resetError=error;throw error;}
         resetPerformed=true;

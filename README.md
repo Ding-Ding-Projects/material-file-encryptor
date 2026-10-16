@@ -35,7 +35,7 @@ Protected browser mediation has focused source and compiled synthetic pipe verif
 | Work offline | Pin authenticated encrypted content in the local cache. Pending publication remains queued when the backing folder is unavailable. [Transfers and safe lifecycle](docs/features/storage/transfer-lifecycle.md) |
 | Recover changes or deletions | Browse retained versions and restore recoverable Recycle Bin entries. Retention does not promise reclaimed storage. [History and Recycle Bin](docs/features/storage/history-and-recycle-bin.md) · [File activity](docs/features/storage/file-history-activity.md) |
 | Transfer encrypted objects | Use a backing folder or configured encrypted Git transport. Local durability and provider upload are distinct. [Encrypted transport](docs/features/storage/git-transport.md) |
-| Customize the workspace | Language, appearance, typography, motion and attention controls retain their documented limits. Specialized editors and contextual guidance remain incomplete. [Settings](docs/features/interface/settings-completeness.md) · [Appearance](docs/features/interface/appearance-editor.md) · [Guidance](docs/features/interface/settings-guidance.md) |
+| Customize the workspace | Language, appearance, typography, motion and attention controls retain their documented limits. Specialized editors and contextual guidance remain incomplete. [Settings](docs/features/interface/settings-completeness.md) · [Appearance](docs/features/interface/appearance-editor.md) · [Guidance](docs/features/interface/settings-guidance.md) · [Destructive actions](docs/features/interface/destructive-actions.md) |
 | Propose a browser download | Pair explicitly, propose a public HTTPS link, then choose a native destination and confirm Start in the desktop. Pairing does not start a transfer or authenticate a browser profile. [Browser download handoff](docs/features/workflows/browser-download-handoff.md) · [Extension workspace](docs/features/workflows/browser-extension-workspace.md) |
 | Inspect local tools | Conversion, local models and server preparation require their own supported providers. Their documentation does not certify complete running workflows. [Converter](docs/features/converter/README.md) · [Local models](docs/features/ollama/README.md) · [Server preparation](docs/features/server-manager/README.md) |
 
@@ -524,22 +524,22 @@ The verification diagram is a path, not a claim that every step passed. Releases
 
 ## Project size and human-time estimate
 
-**Estimate, not a measurement:** writing this project by hand would plausibly take one person about **79 to 158 person-months** (1,580 to 3,160 working days). Nobody built it that way; this gives a sense of scale and is not a claim about effort, quality or value.
+**Estimate, not a measurement:** writing this project by hand would plausibly take one person about **87.8 to 175.6 person-months** (1,756 to 3,512 working days). Nobody built it that way; this gives a sense of scale and is not a claim about effort, quality or value.
 
 | Hand-written code | Files | Non-blank lines | Multiplier | Weighted lines |
 |---|---:|---:|---:|---:|
-| Application source (JavaScript) | 338 | 26,638 | 1 | 26,638 |
+| Application source (JavaScript) | 353 | 30,650 | 1 | 30,650 |
 | Native engine and drive adapter (C#) | 51 | 7,533 | 1.5 | 11,300 |
-| Styles and markup (CSS, HTML) | 23 | 1,028 | 1 | 1,028 |
-| Tests | 394 | 27,339 | 1 | 27,339 |
-| Build, release and tooling scripts | 128 | 12,704 | 1 | 12,704 |
-| **Total** | | **75,242** | | **79,009** |
+| Styles and markup (CSS, HTML) | 23 | 1,060 | 1 | 1,060 |
+| Tests | 411 | 31,240 | 1 | 31,240 |
+| Build, release and tooling scripts | 134 | 13,547 | 1 | 13,547 |
+| **Total** | | **84,030** | | **87,797** |
 
-**Arithmetic:** 79,009 weighted lines ÷ 50 lines per day = 1,580 days, and 79,009 ÷ 25 = 3,160 days; at 20 working days per month that is 79 to 158 person-months.
+**Arithmetic:** 87,797 weighted lines ÷ 50 lines per day = 1,756 days, and 87,797 ÷ 25 = 3,512 days; at 20 working days per month that is 87.8 to 175.6 person-months.
 
 **Assumptions:** 25 (conservative) to 50 (optimistic) non-blank lines per 8-hour day of finished, reviewed, debugged code, a common industry rule of thumb rather than a measurement of this team. The native engine counts at 1.5 times because encrypted storage and a filesystem adapter are harder than their size suggests. Part of the application source is written as long lines, so line counts understate it. Design, research and review time beyond the test code are not included.
 
-**Left out, exactly as the line count leaves them out:** Markdown prose (counted separately, not estimated) (247 files); images, JSON data and catalogues, and other non-code files (229 files); design reference prototypes (51 files); vendored, bundled or build-output trees (16 files); lockfiles (1 files). Markdown prose (12,729 non-blank lines in 247 files) is not estimated.
+**Left out, exactly as the line count leaves them out:** Markdown prose (counted separately, not estimated) (259 files); images, JSON data and catalogues, and other non-code files (229 files); design reference prototypes (51 files); vendored, bundled or build-output trees (16 files); lockfiles (1 files). Markdown prose (13,224 non-blank lines in 259 files) is not estimated.
 
 Reproduce it with `node scripts/human-time-estimate.mjs` (prints the same table from `git ls-files`) and refresh this block with `node scripts/human-time-estimate.mjs --write`. The block may lag the tree by up to 10 percent before `--check` and the test fail.
 

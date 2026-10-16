@@ -56,6 +56,11 @@ export function mountServerTargets(host, services = {}) {
     node.addEventListener('click', () => { if (node.disabled || !available()) return; void attempt(onClick); });
     parent.append(node); return node;
   }
+  /** Every destructive action asks the host for the two-key super confirmation first. Without a host it refuses. */
+  async function confirmed(id, affected) {
+    if (typeof services.confirmDestructive !== 'function') return false;
+    return (await services.confirmDestructive(id, affected)) === true;
+  }
   async function attempt(work) {
     if (busy) return;
     busy = true; message = '';
@@ -162,8 +167,8 @@ export function mountServerTargets(host, services = {}) {
     if (server.state === 'preparing') button(actions, 'Cancel', () => request('cancelServer', {serverId: server.serverId}), {kind: 'text'});
     if (!server.licenseAccepted && ['prepared', 'stopped'].includes(server.state)) button(actions, 'Accept server license', async () => { await request('acceptServerLicense', {serverId: server.serverId}); await reloadServers(); });
     button(actions, 'Start', async () => { await request('startServer', {serverId: server.serverId}); await reloadServers(); }, {kind: 'primary', disabled: !server.licenseAccepted || !['prepared', 'stopped', 'failed'].includes(server.state)});
-    button(actions, 'Stop', async () => { await request('stopServer', {serverId: server.serverId}); await reloadServers(); }, {disabled: !live && server.state !== 'failed'});
-    button(actions, 'Restart', async () => { await request('restartServer', {serverId: server.serverId}); await reloadServers(); }, {disabled: server.state !== 'running'});
+    button(actions, 'Stop', async () => { if (!await confirmed('desktop.server-stop', server.name)) return; await request('stopServer', {serverId: server.serverId}); await reloadServers(); }, {disabled: !live && server.state !== 'failed'});
+    button(actions, 'Restart', async () => { if (!await confirmed('desktop.server-restart', server.name)) return; await request('restartServer', {serverId: server.serverId}); await reloadServers(); }, {disabled: server.state !== 'running'});
     button(actions, 'Refresh state', async () => { await request('serverStatus', {serverId: server.serverId}); await reloadServers(); }, {kind: 'text', disabled: server.state === 'preparing'});
     card.append(actions);
     if (server.state === 'preparing') { const bar = control('progress', {}, [], doc); bar.setAttribute('indeterminate', ''); bar.setAttribute('aria-label', server.name + ' ' + t('preparing')); card.append(bar); }
@@ -206,6 +211,7 @@ export function mountServerTargets(host, services = {}) {
       button(row, 'Apply', async () => {
         const raw = ctx.drafts[descriptor.key] ?? ctx.settings.values[descriptor.key] ?? '';
         const value = descriptor.type === 'boolean' ? String(raw) === 'true' : descriptor.type === 'integer' ? Number.parseInt(String(raw), 10) : String(raw);
+        if (!await confirmed('desktop.server-change-setting', server.name + ': ' + descriptor.key)) return;
         const result = await request('changeServerSetting', {serverId: server.serverId, key: descriptor.key, value});
         delete ctx.drafts[descriptor.key]; ctx.settings = await request('serverSettings', {serverId: server.serverId});
         message = t(result.applied === 'after-restart' ? 'Applies after a restart.' : 'Applies on the next start.');
@@ -219,11 +225,11 @@ export function mountServerTargets(host, services = {}) {
     const search = el('div', '', 'server-form-grid');
     field(search, 'Search Modrinth', ctx.query, value => { ctx.query = value; }, {maxLength: 64});
     button(search, 'Search', async () => { ctx.results = (await request('searchExtensions', {serverId: server.serverId, query: ctx.query})).results; }, {});
-    button(search, 'Install from a file', async () => { await request('installExtension', {serverId: server.serverId, source: 'file'}); await reloadServers(); message = t('Installed. Start the server to load it.'); }, {disabled: live});
+    button(search, 'Install from a file', async () => { if (!await confirmed('desktop.server-install-plugin', server.name)) return; await request('installExtension', {serverId: server.serverId, source: 'file'}); await reloadServers(); message = t('Installed. Start the server to load it.'); }, {disabled: live});
     panel.append(search);
     for (const hit of ctx.results ?? []) {
       const row = el('div', '', 'server-plugin-row'); row.append(el('p', hit.title + ' · ' + hit.summary));
-      button(row, 'Install', async () => { await request('installExtension', {serverId: server.serverId, source: 'modrinth', project: hit.project}); await reloadServers(); message = t('Installed. Start the server to load it.'); }, {disabled: live, kind: 'text'});
+      button(row, 'Install', async () => { if (!await confirmed('desktop.server-install-plugin', server.name + ': ' + hit.title)) return; await request('installExtension', {serverId: server.serverId, source: 'modrinth', project: hit.project}); await reloadServers(); message = t('Installed. Start the server to load it.'); }, {disabled: live, kind: 'text'});
       panel.append(row);
     }
     panel.append(el('h4', t('Installed')));

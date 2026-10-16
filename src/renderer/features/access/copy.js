@@ -99,6 +99,8 @@ export const ACCESS_COPY = Object.freeze({
  'First confirmation key':'第一條確認匙',
  'Second confirmation key':'第二條確認匙',
  'Confirmation progress':'確認進度',
+ 'Emergency exit':'緊急離開',
+ 'Press Escape or choose Emergency exit to leave without changes.':'按 Escape 或者揀「緊急離開」，就可以不作任何更改離開。',
  'Operate both confirmation keys and move the slider fully right.':'請啟用兩條確認匙，再將滑桿移到最右邊。',
 
  'Access workflows':'存取工作流程',

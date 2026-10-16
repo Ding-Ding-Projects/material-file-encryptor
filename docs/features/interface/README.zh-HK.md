@@ -55,6 +55,7 @@
 - [工作區框架、共用控制項、通知朗讀及啟動展示](gui-redesign.zh-HK.md)
 - [本機工具工作區](local-tools-workspaces.zh-HK.md)
 - [儲存空間維護](storage-maintenance.zh-HK.md)
+- [破壞性操作同雙鑰匙超級確認](destructive-actions.zh-HK.md)
 - [已驗證啟動照片主機](startup-photo-host.zh-HK.md)
 
 - [受保護瀏覽器中介](protected-browser-mediation.zh-HK.md)

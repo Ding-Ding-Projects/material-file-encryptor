@@ -2,6 +2,7 @@ import {styleExtensionMessage,installShadowReducedMotion} from './vendor/languag
 import {readPreferences,applyPreferences,acquireStorage} from './preferences.js';
 import {applyAccent} from './accent.js';
 import {readLogo} from './local-records.js';
+import {superConfirm} from './super-confirm.js';
 import './vendor/material.js';
 if(typeof installShadowReducedMotion==='function')installShadowReducedMotion(document);
 import './vendor/search.js';
@@ -18,7 +19,7 @@ async function request(type){if(busy)return;const own=++requestId;busy=true;stat
 for(const button of document.querySelectorAll('[data-language]'))button.addEventListener('click',()=>{language=button.dataset.language;preferenceState=applyPreferences(acquireStorage(),readPreferences(acquireStorage()).value,{language}).state;for(const item of document.querySelectorAll('[data-language]'))item.setAttribute('aria-pressed',String(item===button));$('search').setAttribute('label',localize(['Find instructions','搜尋指引']));$('search').setLanguage(language);render();void filterInstructions();});
 async function filterInstructions(){const items=[...document.querySelectorAll('[data-search-item]')],rows=await $('search').filter(items.map(item=>({id:item.id,text:item.textContent})));if(rows===null)return;const visible=new Set(rows.map(row=>row.id));for(const item of items)item.hidden=!visible.has(item.id);}
 $('search').addEventListener('search-change',()=>void filterInstructions());
-$('pair').addEventListener('click',()=>request('pair'));$('disconnect').addEventListener('click',()=>request('disconnect'));
+$('pair').addEventListener('click',()=>request('pair'));$('disconnect').addEventListener('click',async()=>{if(await superConfirm(document,'extension.popup-disconnect',{language}))await request('disconnect');});
 void request('status');
 // While the popup is open, ask the worker every few seconds whether the desktop still honors the pairing, so a lock or an exit shows promptly.
 async function verifyPairing(){

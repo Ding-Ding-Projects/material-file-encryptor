@@ -83,9 +83,9 @@ const read = path => fs.readFileSync(new URL(path, import.meta.url), 'utf8').rep
 test('delete is destructive and requires the two-key super confirmation before any call', () => {
   const app = read('../src/renderer/app.js');
   const handler = /listen\('delete-button','click',async \(\) => \{([\s\S]*?)\n\}\);/.exec(app)[1];
-  assert.ok(handler.indexOf('requestSuperConfirmation(') >= 0);
-  assert.ok(handler.indexOf('requestSuperConfirmation(') < handler.indexOf('api.deleteFile'));
-  assert.match(handler, /if \(!confirmation\.confirmed\) return;/);
+  assert.ok(handler.indexOf("superConfirm('desktop.delete-files'") >= 0);
+  assert.ok(handler.indexOf("superConfirm('desktop.delete-files'") < handler.indexOf('api.deleteFile'));
+  assert.match(handler, /if \(!await superConfirm\('desktop\.delete-files',affected\)\) return;/);
   assert.equal((app.match(/api\.deleteFile\(/g) || []).length, 1);
 });
 

@@ -27,6 +27,8 @@ const ENROLLMENT_NAMES = {
 export function mountOperations(root, deps) {
   const doc = deps.document || root.ownerDocument;
   let enrollment = 'not-enrolled', enrolling = false, notice = null;
+  /** Discarding a saved operation asks the host for the two-key super confirmation first. Without a host it never runs. */
+  const ask = (id, run) => { if (typeof deps.confirm === 'function') deps.confirm(id, run); };
   const el = (tag, className) => { const node = doc.createElement(tag); if (className) node.className = className; return node; };
   const heading = pair => { const node = el('h3'); deps.label(node, pair); return node; };
   const text = (tag, pair, className) => { const node = el(tag, className); deps.label(node, pair); return node; };
@@ -68,14 +70,14 @@ export function mountOperations(root, deps) {
       deps.label(discard, ['Discard', '捨棄']);
       resume.disabled = !plan.ok;
       resume.addEventListener('click', () => void onResume(op));
-      discard.addEventListener('click', () => { discardOperation(deps.storage, op.id); notice = ['Discarded. Nothing was sent or changed.', '已捨棄，冇傳送或更改任何嘢。']; refresh(); });
+      discard.addEventListener('click', () => ask('extension.discard-operation', () => { discardOperation(deps.storage, op.id); notice = ['Discarded. Nothing was sent or changed.', '已捨棄，冇傳送或更改任何嘢。']; refresh(); }));
       article.append(resume, discard);
       section.append(article);
     }
     if (pending.length > 1) {
       const all = el('md-text-button');
       deps.label(all, ['Discard all', '全部捨棄']);
-      all.addEventListener('click', () => { discardAll(deps.storage); notice = ['Discarded. Nothing was sent or changed.', '已捨棄，冇傳送或更改任何嘢。']; refresh(); });
+      all.addEventListener('click', () => ask('extension.discard-all-operations', () => { discardAll(deps.storage); notice = ['Discarded. Nothing was sent or changed.', '已捨棄，冇傳送或更改任何嘢。']; refresh(); }));
       section.append(all);
     }
     return section;

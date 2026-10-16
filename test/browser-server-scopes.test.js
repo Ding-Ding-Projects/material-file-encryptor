@@ -341,13 +341,13 @@ class Node {
 const dom = () => { const doc = {createElement: tag => new Node(tag, doc)}; return {doc, root: doc.createElement('div')}; };
 const tick = () => new Promise(resolve => setImmediate(resolve));
 function mounted(replies, extra = {}) {
-  const {root} = dom(), sent = [];
-  const view = mountBrowserServers(root, {send: async message => { sent.push(message); const reply = replies.shift(); if (reply instanceof Error) throw reply; return typeof reply === 'function' ? reply(message) : reply; }, getLanguage: () => extra.language ?? 'en', acquire: extra.acquire, release: extra.release, isExternallyBusy: extra.isExternallyBusy});
+  const {root} = dom(), sent = [], confirmed = [];
+  const view = mountBrowserServers(root, {send: async message => { sent.push(message); const reply = replies.shift(); if (reply instanceof Error) throw reply; return typeof reply === 'function' ? reply(message) : reply; }, getLanguage: () => extra.language ?? 'en', acquire: extra.acquire, release: extra.release, isExternallyBusy: extra.isExternallyBusy, confirm: 'confirm' in extra ? extra.confirm : (id, run) => { confirmed.push(id); run(); }});
   const find = (tag, text) => root.all().find(n => n.tag === tag && n.textContent === text);
   const button = text => root.all().find(n => n.tag.startsWith('md-') && n.textContent === text);
   const chip = label => root.all().find(n => n.tag === 'md-filter-chip' && n.label === label);
   const rows = () => root.all().filter(n => n.className === 'server-row');
-  return {root, view, sent, find, button, chip, rows};
+  return {root, view, sent, find, button, chip, rows, confirmed};
 }
 const serversReply = (extra = {}) => ({schemaVersion: 1, ...listing(extra)});
 const catalogReply = (extra = {}) => ({schemaVersion: 1, ...catalogue(extra)});

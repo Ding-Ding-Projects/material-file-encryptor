@@ -16,7 +16,7 @@ Each installed model is listed with its size, and the ones the server reports as
 
 Pull takes a model tag and shows a progress bar from the completed and total byte counts the server reports, or an indeterminate bar while the server has not given a total. Cancel stops the download at once. The server may keep the parts it already has, so a later pull can continue. Only one pull runs at a time.
 
-Delete asks first. A dialog names the exact tag, and Cancel is the default action, marked to receive focus when the dialog opens. Nothing is deleted until Delete model is chosen in that dialog, and the list is read again afterwards.
+Delete asks first. The two-key super confirmation names the exact tag: operate both keys, move the slider fully right and choose Execute. `Emergency exit` or `Escape` leaves the model alone and returns focus to the Delete button. Nothing is deleted until both keys are on and the slider is complete, and the list is read again afterwards.
 
 ## Chat
 

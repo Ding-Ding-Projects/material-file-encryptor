@@ -1,5 +1,5 @@
 // Narrow native-mediated conversion workspace. No source bytes or paths are read here.
-export function mountBrowserConverter(root,{send,getLanguage=()=> 'en',acquire=()=>true,release=()=>{},isExternallyBusy=()=>false,disconnect=()=>{}}){
+export function mountBrowserConverter(root,{send,getLanguage=()=> 'en',acquire=()=>true,release=()=>{},isExternallyBusy=()=>false,disconnect=()=>{},confirm=null}){
  const doc=root.ownerDocument;let sendRequest=send,connected=false,busy=false,generation=0,formats=[],selection=null,chosen=null,cursor=null,nextCursor=null,rows=[],message=null,stage=0;
  const text=pair=>getLanguage()==='yue'?pair[1]:getLanguage()==='bilingual'?pair.join(' · '):pair[0];
  const node=(tag,pair)=>{const n=doc.createElement(tag);if(pair)n.textContent=text(pair);return n;};
@@ -41,6 +41,6 @@ export function mountBrowserConverter(root,{send,getLanguage=()=> 'en',acquire=(
  start.addEventListener('click',async()=>{if(!selection||!chosen)return;const result=await request('converter-enqueue',{selection:selection.selection,adapterId:chosen.id});if(result?.outcome==='accepted'){selection=null;chosen=null;rows=[result.job];cursor=null;nextCursor=null;stage=3;message=['Accepted by the desktop. Refresh to read actual progress.','桌面已接受，請重新讀取實際進度。'];render();refresh.focus?.();}});
  async function refreshJobs(){const result=await request('converter-list',{cursor});if(result?.rows){rows=result.rows;nextCursor=result.nextCursor;render();}}
  refresh.addEventListener('click',()=>{cursor=null;void refreshJobs();});previous.addEventListener('click',()=>{cursor=null;void refreshJobs();});next.addEventListener('click',()=>{cursor=nextCursor;void refreshJobs();});
- cancel.addEventListener('click',()=>{generation++;busy=false;release();disconnect();connected=false;selection=null;chosen=null;rows=[];cursor=null;nextCursor=null;message=['Disconnected. Check the desktop for accepted jobs; this did not cancel them.','已中斷連線，請喺桌面檢查已接受工作，呢個動作冇取消佢哋。'];render();});
+ cancel.addEventListener('click',()=>{if(typeof confirm!=='function')return;confirm('extension.converter-disconnect',()=>{generation++;busy=false;release();disconnect();connected=false;selection=null;chosen=null;rows=[];cursor=null;nextCursor=null;message=['Disconnected. Check the desktop for accepted jobs; this did not cancel them.','已中斷連線，請喺桌面檢查已接受工作，呢個動作冇取消佢哋。'];render();});});
  render();return {setSend(next){if(typeof next==='function')sendRequest=next;},setConnection(value){if(connected!==value){connected=value;if(!value){generation++;busy=false;selection=null;chosen=null;rows=[];formats=[];}render();}},refreshLabels:render};
 }
