@@ -101,15 +101,15 @@ const KEYS = ['primary', 'onPrimary', 'primaryContainer', 'onPrimaryContainer'];
  */
 export function applyAccentRoles(root, seed, defaultSeed) {
   const style = root?.style;
-  if (!style?.setProperty || !root.removeAttribute) return null;
+  if (!style?.setProperty) return null;
   const light = String(seed).toLowerCase() === String(defaultSeed).toLowerCase() ? null : accentRoles(seed, false);
   const dark = light ? accentRoles(seed, true) : null;
-  for (const mode of ['light', 'dark']) for (const name of NAMES) style.removeProperty(`--local-ux-accent-${mode}-${name}`);
-  if (!light || !dark) { root.removeAttribute('data-local-accent'); return null; }
+  for (const mode of ['light', 'dark']) for (const name of NAMES) style.removeProperty?.(`--local-ux-accent-${mode}-${name}`);
+  if (!light || !dark) { root.removeAttribute?.('data-local-accent'); return null; }
   KEYS.forEach((key, index) => {
     style.setProperty(`--local-ux-accent-light-${NAMES[index]}`, light[key]);
     style.setProperty(`--local-ux-accent-dark-${NAMES[index]}`, dark[key]);
   });
-  root.setAttribute('data-local-accent', '');
+  root.setAttribute?.('data-local-accent', '');
   return {light, dark};
 }

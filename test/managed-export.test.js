@@ -12,7 +12,7 @@ function fixture(){
  const calls=[];
  const context=vm.createContext({validateRequest,path,quitPending:false,shuttingDown:false,updateInstallLease:false,
   state:{files:[{id:'file-1',path:'folder/document.txt'}],storageDir:'C:\\vault',cacheDir:'C:\\cache'},
-  selectedExports:new Set(['C:\\output\\document.txt']),window:{},
+  selectedExports:new Set(['C:\\output\\document.txt']),selectedExportFolders:new Set(),uniqueExportName:async(folder,name)=>path.join(folder,name),window:{},
   mountedPath:()=> 'M:\\',safeDestination:async value=>value,
   dialog:{showSaveDialog:async()=>({canceled:false,filePath:'C:\\output\\document.txt'})},
   helper:{request:async(method,params)=>{calls.push({method,params});return method==='getFile'?{id:'file-1',path:'folder/document.txt'}:{operationId:'owned-operation'};}}

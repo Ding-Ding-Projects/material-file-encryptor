@@ -1,4 +1,5 @@
 import {CONTROL_SELECTOR} from '../src/shared/surface/controls.js';
+import {bulkAvailability} from '../src/renderer/file-selection.js';
 import {DRIVE_NAME_MAX_LENGTH,normalizeDriveName} from '../src/shared/drive-name.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -17,7 +18,7 @@ function fixture() {
   return elements.get(id);
  };
  $('drive-name').value = 'Material Files';
- const context = vm.createContext({CONTROL_SELECTOR,normalizeDriveName,DRIVE_NAME_MAX_LENGTH,DRIVE_NAME_ERROR:'Invalid drive name',setText(id,text) { $(id).textContent = text; },historySelection:null,$, document: {querySelectorAll: () => []}, t: value => value, api: {}, pagedFiles: null, selected: null, busy: false, dialogMode: 'upgrade', recycledSelection: new Set(), state: {locked: false, mounted: true, storageFormat: 1, driveLetter: 'M:', availableDriveLetters: ['N:'], driver: {checking: false}}});
+ const context = vm.createContext({CONTROL_SELECTOR,bulkAvailability,selectedFiles:()=>[],normalizeDriveName,DRIVE_NAME_MAX_LENGTH,DRIVE_NAME_ERROR:'Invalid drive name',setText(id,text) { $(id).textContent = text; },historySelection:null,$, document: {querySelectorAll: () => []}, t: value => value, api: {}, pagedFiles: null, selected: null, busy: false, dialogMode: 'upgrade', recycledSelection: new Set(), state: {locked: false, mounted: true, storageFormat: 1, driveLetter: 'M:', availableDriveLetters: ['N:'], driver: {checking: false}}});
  vm.runInContext(normalize + '\n' + render, context);
  return {context, check(letter, enabled, valid = enabled) {
   $('drive-letter').value = letter;
