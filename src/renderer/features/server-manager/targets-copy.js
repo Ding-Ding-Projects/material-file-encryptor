@@ -40,6 +40,8 @@ export const TARGETS_COPY = Object.freeze({
   'The server process exited with code {code}.': '伺服器進程以代碼 {code} 結束。', 'The server process was ended by signal {signal}.': '伺服器進程被訊號 {signal} 終止。',
   'The server process ended on its own.': '伺服器進程自己停咗。',
   'Needs Java {required}': '需要 Java {required}', 'Exited with code {code}': '代碼 {code} 結束', 'Ended by {signal}': '被 {signal} 終止',
+  'The server process ended unexpectedly (exit code {code}).': '伺服器進程意外終止（結束代碼 {code}）。', 'The server process was ended by another program (exit code {code}).': '伺服器進程被其他程式終止（結束代碼 {code}）。',
+  'Ended unexpectedly': '意外終止', 'Ended by another program': '被其他程式終止', 'Exit code: {code}': '結束代碼：{code}',
   'Ended on its own': '自己停咗', 'Could not run': '行唔到', 'See the reason below': '原因見下面',
   'Java required': '所需 Java', 'Last log lines': '最後幾行日誌',
 });

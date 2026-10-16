@@ -18,11 +18,14 @@ function qrElement(code,label){
  * held only in this view's memory, cleared on hide, expiry and destroy, and
  * never written to storage, a log or a notification.
  */
-export function mountBrowserPairing(host,{translate=value=>value,request,now=Date.now,setInterval:interval=globalThis.setInterval,clearInterval:stop=globalThis.clearInterval}={}){
+export function mountBrowserPairing(host,{translate=value=>value,request,now=Date.now,setInterval:interval=globalThis.setInterval,clearInterval:stop=globalThis.clearInterval,subscribeLanguage=null}={}){
   host.replaceChildren();
   const title=document.createElement('h2');title.textContent=translate('Pair a browser');
   const help=document.createElement('p');help.textContent=translate('Show a one-time code here, then type it or scan it in the browser extension. You still approve the pairing on this desktop.');
+  // The status line is stored as a source phrase (plus an optional detail) so it can be translated again when the language changes.
   const status=document.createElement('p');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+  let statusSource='',statusDetail=null,validSeconds=null,qrCode=null;
+  const setStatus=(source='',detail=null)=>{statusSource=source;statusDetail=detail;status.textContent=source?(detail===null?translate(source):`${translate(source)}: ${translate(detail)}`):'';};
   const display=document.createElement('div');display.className='browser-pairing-display';display.hidden=true;
   const text=document.createElement('p');text.className='browser-pairing-code';
   const remaining=document.createElement('p');
@@ -33,28 +36,40 @@ export function mountBrowserPairing(host,{translate=value=>value,request,now=Dat
   const hide=control('button',{type:'button'});hide.textContent=translate('Hide pairing code');hide.hidden=true;
   actions.append(show,hide);host.append(title,help,status,display,actions);
   let expires=0,timer=null,generation=0,disposed=false;
-  function clearDisplay(){if(timer!==null){stop(timer);timer=null;}expires=0;text.textContent='';text.removeAttribute('aria-label');qr.replaceChildren();remaining.textContent='';display.hidden=true;hide.hidden=true;}
+  function clearDisplay(){if(timer!==null){stop(timer);timer=null;}expires=0;validSeconds=null;qrCode=null;text.textContent='';text.removeAttribute('aria-label');qr.replaceChildren();remaining.textContent='';display.hidden=true;hide.hidden=true;}
+  const renderRemaining=()=>{if(validSeconds!==null)remaining.textContent=`${translate('Valid for')} ${validSeconds} ${translate('seconds')}`;};
   function tick(){
     const seconds=Math.ceil((expires-now())/1000);
-    if(seconds<=0){clearDisplay();status.textContent=translate('The code expired. Show a new one.');return;}
-    remaining.textContent=`${translate('Valid for')} ${seconds} ${translate('seconds')}`;
+    if(seconds<=0){clearDisplay();setStatus('The code expired. Show a new one.');return;}
+    validSeconds=seconds;renderRemaining();
   }
+  /** Re-applies every visible label in the currently selected interface language. The code itself is never touched. */
+  function relabel(){
+    if(disposed)return;
+    title.textContent=translate('Pair a browser');
+    help.textContent=translate('Show a one-time code here, then type it or scan it in the browser extension. You still approve the pairing on this desktop.');
+    show.textContent=translate('Show pairing code');hide.textContent=translate('Hide pairing code');
+    setStatus(statusSource,statusDetail);renderRemaining();
+    if(qrCode!==null&&!display.hidden)qr.replaceChildren(qrElement(qrCode,translate('Browser pairing QR code')));
+  }
+  const unsubscribe=typeof subscribeLanguage==='function'?subscribeLanguage(relabel):null;
   show.addEventListener('click',async()=>{
-    const own=++generation;show.disabled=true;clearDisplay();status.textContent='';
+    const own=++generation;show.disabled=true;clearDisplay();setStatus('');
     try{
       const issued=await request('issue');
       if(disposed||own!==generation){void request('clear').catch(()=>{});return;}
       if(!issued||typeof issued.code!=='string'||!Number.isSafeInteger(issued.expiresAt))throw new Error('Invalid pairing code response.');
       expires=issued.expiresAt;text.textContent=grouped(issued.code);text.setAttribute('aria-label',issued.code.split('').join(' '));
-      qr.replaceChildren(qrElement(issued.code,translate('Browser pairing QR code')));
-      display.hidden=false;hide.hidden=false;status.textContent=translate('Enter this code in the extension, or scan it. Approve the request when this desktop asks.');
+      qrCode=issued.code;qr.replaceChildren(qrElement(issued.code,translate('Browser pairing QR code')));
+      display.hidden=false;hide.hidden=false;setStatus('Enter this code in the extension, or scan it. Approve the request when this desktop asks.');
       tick();timer=interval(tick,1000);
-    }catch(error){clearDisplay();if(!disposed&&own===generation)status.textContent=`${translate('Pairing code unavailable')}: ${translate(String(error?.message||'Unavailable'))}`;}
+    }catch(error){clearDisplay();if(!disposed&&own===generation)setStatus('Pairing code unavailable',String(error?.message||'Unavailable'));}
     finally{if(!disposed&&own===generation)show.disabled=false;}
   });
-  hide.addEventListener('click',()=>{generation++;clearDisplay();status.textContent=translate('Pairing code hidden and cleared.');show.disabled=false;void request('clear').catch(()=>{});});
+  hide.addEventListener('click',()=>{generation++;clearDisplay();setStatus('Pairing code hidden and cleared.');show.disabled=false;void request('clear').catch(()=>{});});
   return{
     get visible(){return !display.hidden;},
-    destroy(){disposed=true;generation++;const wasShown=!display.hidden;clearDisplay();host.replaceChildren();if(wasShown)void request('clear').catch(()=>{});},
+    relabel,
+    destroy(){disposed=true;if(typeof unsubscribe==='function')unsubscribe();generation++;const wasShown=!display.hidden;clearDisplay();host.replaceChildren();if(wasShown)void request('clear').catch(()=>{});},
   };
 }

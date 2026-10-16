@@ -5,7 +5,7 @@ import './group-manager.js';
 import {homeEntries,homeGlyph,HOME_ID,HOME_LABEL,HOME_DESCRIPTION} from './home.js';
 export class WorkspaceShell extends SurfaceElement {
   connectedCallback(){this.render();}
-  configure({model,language,labels,onActivate,onContext}){Object.assign(this,{model,language,labels,onActivate,onContext});this.render();}
+  configure({model,language,labels,onActivate,onContext,onQuit}){Object.assign(this,{model,language,labels,onActivate,onContext,onQuit});this.render();}
   render(){
     const offset=this.tabsHost?.scrollLeft||0;
     this.style(`.bar{display:flex;align-items:center;gap:2px;min-width:0}.tabs{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}md-tabs{min-width:max-content}md-primary-tab{max-width:240px} .tab-name{display:block;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}md-text-button{flex:none;min-width:40px}md-icon-button{flex:none}md-icon-button[hidden]{display:none}.tabs[data-empty]{min-height:48px}`);
@@ -56,7 +56,8 @@ export class WorkspaceShell extends SurfaceElement {
       {label:text('Restore closed tab','還原已關閉分頁'),disabled:!state.closedTabs.length,run:()=>{const id=this.model.restoreTab();if(id)this.activate(id);}},
       {label:text('Manage groups','管理群組'),run:()=>this.manager.open()},
       {label:text('Close selected tabs','關閉所選分頁'),disabled:!this.selected.size,run:()=>{this.model.closeTabs([...this.selected]);this.selected.clear();this.onActivate?.(this.model.getState().activeTabId);this.render();}},
-      ...state.groups.map(group=>({label:text(`${group.collapsed?'Expand':'Collapse'} group: ${group.label}`,`${group.collapsed?'展開':'收合'}群組：${group.label}`),run:()=>{this.model.collapseGroup(group.id,!group.collapsed);this.renderTabs();}}))
+      ...state.groups.map(group=>({label:text(`${group.collapsed?'Expand':'Collapse'} group: ${group.label}`,`${group.collapsed?'展開':'收合'}群組：${group.label}`),run:()=>{this.model.collapseGroup(group.id,!group.collapsed);this.renderTabs();}})),
+      ...(typeof this.onQuit==='function'?[{label:text('Quit Material File Encryptor','結束 Material File Encryptor'),description:text('Close the application completely instead of hiding it in the tray.','完全結束程式，而唔係收埋入系統匣。'),shortcut:'Ctrl+Q',run:()=>this.onQuit()}]:[])
   ];}
   renderTabs(){
     if(!this.model||!this.tabsHost)return;

@@ -203,3 +203,36 @@ test('Home and the mini home honour reduced motion in the renderer styles', asyn
   assert.match(css, /\.home-view:not\(\[hidden\]\)\{animation:md-fade-through-in var\(--md-sys-motion-duration-medium2\)/);
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{\.home-view:not\(\[hidden\]\)\{animation:none\}\}/);
 });
+
+test('the new-tab menu offers an explicit Quit action in both languages when the shell is given one', () => {
+  const {shell} = shellFixture();
+  shell.openNewTab();
+  assert.ok(!shell.opened.items.some(item => item.label.en === 'Quit Material File Encryptor'), 'no Quit without an owner callback');
+  let quits = 0;
+  shell.onQuit = () => { quits++; };
+  shell.openNewTab();
+  const quit = shell.opened.items.find(item => item.label.en === 'Quit Material File Encryptor');
+  assert.ok(quit, 'the mini home lists Quit');
+  assert.match(quit.label.yue, /結束/);
+  assert.equal(quit.shortcut, 'Ctrl+Q');
+  assert.ok(quit.description.en && quit.description.yue);
+  quit.run();
+  assert.equal(quits, 1);
+});
+
+test('Quit is reachable from the Help and Settings menus, the command palette and Ctrl+Q, and the stylesheet wraps the Availability cell', async () => {
+  const navigation = await fs.readFile('src/renderer/features/shell/navigation.js', 'utf8');
+  assert.match(navigation, /\(id==='help'\|\|id==='settings'\)&&typeof this\.onQuit==='function'/);
+  assert.match(navigation, /rail\.configure\(\{labels,language,onActivate:activate,onQuit\}\)/);
+  const app = await fs.readFile('src/renderer/app.js', 'utf8');
+  assert.match(app, /id:'application:quit',label:\{en:'Quit application',yue:'結束程式'\},shortcut:'Control\+q',run:\(\)=>quitApplication\(\)/);
+  assert.match(app, /onQuit:\(\)=>quitApplication\(\)/);
+  assert.match(app, /function quitApplication\(\) \{ return api\.quit \? api\.quit\(\) : api\.windowControl\('close'\); \}/);
+  const shellSource = await fs.readFile('src/renderer/features/shell/index.js', 'utf8');
+  assert.match(shellSource, /shell\.configure\(\{[^}]*onQuit\}\)/);
+  const main = await fs.readFile('src/main/main.js', 'utf8');
+  assert.match(main, /label:'Quit',click:\(\)=>void quit\(\)/, 'the tray menu keeps Quit');
+  assert.match(main, /hideWindow: \(\) => \{ window\.hide\(\); void trayNotice\.maybeShow\(\); \}/);
+  const css = await fs.readFile('src/renderer/modern.css', 'utf8');
+  assert.match(css, /#file-list>tr>td\.availability\{white-space:normal;overflow:visible;text-overflow:clip/);
+});
