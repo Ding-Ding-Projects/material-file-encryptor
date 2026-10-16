@@ -22,8 +22,8 @@ const rel = file => file.replaceAll('\\', '/');
 export const DESKTOP_GROUPS = [
   ['Home and navigation', [['home-light-en', 'Home'], ['home-dark-en', 'Home, dark'], ['home-light-yue', 'Home, Cantonese'], ['home-light-bilingual', 'Home, bilingual'],
     ['newtab-popover-light-en', 'New tab popover'], ['newtab-popover-dark-en', 'New tab popover, dark'], ['newtab-popover-light-bilingual', 'New tab popover, bilingual']]],
-  ['Drive, offline and dialogs', [['drive-locked-light-en', 'Drive, locked'], ['drive-locked-light-bilingual', 'Drive, locked, bilingual'], ['drive-unlocked-files-light-en', 'Drive, unlocked with files'],
-    ['drive-unlocked-files-dark-en', 'Drive, unlocked, dark'], ['offline-light-en', 'Available offline'], ['offline-light-yue', 'Available offline, Cantonese'],
+  ['Drive, offline and dialogs', [['drive-locked-light-en', 'Drive, locked'], ['drive-locked-light-bilingual', 'Drive, locked, bilingual'], ['drive-unlocked-files-light-en', 'Drive, unlocked, top of the page'], ['drive-unlocked-files-list-light-en', 'Drive, file list'], ['drive-unlocked-files-list-dark-en', 'Drive, file list, dark'],
+    ['drive-file-selected-light-en', 'Drive, one file selected'], ['drive-unlocked-files-list-light-bilingual', 'Drive, file list, bilingual (the Availability text is cut off at the cell edge, a known issue being fixed)'], ['offline-light-en', 'Available offline'], ['offline-light-yue', 'Available offline, Cantonese'],
     ['create-drive-dialog-light-en', 'Create a drive dialog'], ['create-drive-dialog-dark-en', 'Create a drive dialog, dark'], ['create-drive-dialog-light-yue', 'Create a drive dialog, Cantonese'],
     ['unlock-drive-dialog-light-en', 'Unlock a drive dialog'], ['unlock-drive-dialog-light-bilingual', 'Unlock a drive dialog, bilingual'],
     ['lock-holder-message-light-en', 'Lock message when a program still has files open'], ['force-lock-confirm-light-en', 'Force Lock confirmation'], ['force-lock-confirm-dark-en', 'Force Lock confirmation, dark']]],
@@ -42,6 +42,12 @@ export const DESKTOP_GROUPS = [
     ['settings-local-access-light-en', 'Local access, Local profile'], ['settings-local-access-tab2-light-en', 'Local access, Element locks'], ['settings-local-access-tab3-light-en', 'Local access, Authenticator'],
     ['settings-local-access-tab4-light-en', 'Local access, Support Tickets'], ['settings-local-access-tab5-light-en', 'Local access, Access history'], ['settings-local-access-light-bilingual', 'Local access, Access history, bilingual'],
     ['update-page-light-en', 'Updates'], ['update-page-dark-en', 'Updates, dark']]],
+  ['Pair a browser', [['pair-a-browser-light-en', 'Pair a browser'], ['pair-a-browser-dark-en', 'Pair a browser, dark']]],
+  ['Server cards and server lifecycle', [['server-card-running-light-en', 'Server card, running'], ['server-card-running-dark-en', 'Server card, running, dark'],
+    ['server-card-failed-light-en', 'Server card, failed, with the reason chip'], ['server-card-failed-dark-en', 'Server card, failed, with the reason chip, dark'],
+    ['server-java25-needed-dark-bilingual', 'Server card needing Java 25 after the Java check, dark, bilingual'], ['server-java-check-refusal-dark-bilingual', 'Java-check refusal message, dark, bilingual'],
+    ['server-running-card-dark-bilingual', 'Server running, dark, bilingual'], ['server-running-logs-dark-bilingual', 'Server logs ending with the Done line, dark, bilingual'],
+    ['close-dialog-server-running-dark-bilingual', 'Close dialog while a server runs: keep in the tray, stop and quit, or cancel']]],
   ['Help', [['help-how-it-works-light-en', 'Help, How it works'], ['help-how-it-works-dark-en', 'Help, How it works, dark'], ['help-how-it-works-light-yue', 'Help, How it works, Cantonese'],
     ['help-documentation-light-en', 'Help, Documentation'], ['help-changelog-light-en', 'Help, Changelog']]],
 ];
@@ -88,7 +94,7 @@ export const SITE_GROUP = ['Documentation site', [['home-1280x900-light-en', 'Ho
   ['wiki-1280x900-light-en', 'Wiki'], ['gallery-1280x900-light-en', 'Capture gallery'], ['article-local-models-360x800-light-en', 'Browser extension local models article at 360 pixels']]];
 
 const WORKFLOW = name => /^(history|recycle-bin)-/.test(name) ? 'history-recovery'
-  : /^(drive-|offline-|create-drive|unlock-drive|lock-holder|force-lock)/.test(name) ? 'drive-access'
+  : /^(drive-|offline-|create-drive|unlock-drive|lock-holder|force-lock|pair-a-browser)/.test(name) ? 'drive-access'
   : /^(settings|update-page|help)-/.test(name) ? 'preferences-help' : 'workspace-tools';
 
 const HOME_FIGURES = ['drive-unlocked-files-light-en', 'home-light-en', 'history-light-en', 'recycle-bin-light-en', 'tools-local-models-light-en', 'tools-server-targets-panel-light-en', 'settings-local-access-light-en', 'help-how-it-works-dark-en'];
@@ -118,10 +124,10 @@ async function walk(directory) {
 }
 
 /** Lists every image in the earlier refresh folders, then removes those folders. */
-async function withdrawEarlier(currentFolder) {
+async function withdrawEarlier(currentFolders) {
   const base = path.resolve(CAPTURES), withdrawn = [];
   for (const entry of await fs.readdir(base, {withFileTypes: true})) {
-    if (!entry.isDirectory() || !/^refresh-[a-f0-9]+$/.test(entry.name) || path.join(base, entry.name) === path.resolve(currentFolder)) continue;
+    if (!entry.isDirectory() || !/^refresh-[a-f0-9]+$/.test(entry.name) || currentFolders.some(current => path.join(base, entry.name) === path.resolve(current))) continue;
     const folder = path.join(base, entry.name);
     for (const file of (await walk(folder)).filter(item => item.endsWith('.png'))) {
       const info = await pngInfo(file);
@@ -148,7 +154,7 @@ function readmeSection({manifest, byKind, desktopCount}) {
   const lines = ['### Current captures', '',
     `Every image below is a genuine capture of a real build; none is a mock, design preview or edited image. Each group is collapsed: choose its heading to open it. Capture times are unavailable because no validated timestamp was recorded, and earlier captures were withdrawn when these replaced them. They remain unchanged in Git history and are listed with their hashes in [the gallery review](docs/site/gallery-review.json).`, '',
     '#### Desktop application', '',
-    `${desktopCount} captures of the installed desktop application, version ${first.appVersion}, built from source \`${first.sourceCommit.slice(0, 7)}\`. Each was taken by window handle on a task-owned hidden desktop at 150 percent display scale (a 1280 by 800 window, saved at 1920 by 1200 pixels) with an isolated profile and a throwaway vault that holds test files only and uses neutral folder names. The capture host reported no frame showing a private path. The run captured ${desktop.count} frames in all, covering 52 screens in light and dark themes and in English, Cantonese and bilingual modes; these are the ones published. A tabbed screen's own frame shows the tab named in its caption, and a few dark and bilingual frames show the last tab visited. Home is the first group. The [capture manifest](docs/images/captures/${path.basename(manifest.folder)}/desktop-capture-manifest.json) records every frame's hash.`, ''];
+    `${desktopCount} captures of the installed desktop application, version ${first.appVersion}, built from source \`${first.sourceCommit.slice(0, 7)}\`. Each was taken by window handle on a task-owned hidden desktop at 150 percent display scale (a 1280 by 800 window, saved at 1920 by 1200 pixels) with an isolated profile and a throwaway vault that holds test files only and uses neutral folder names. The capture host reported no frame showing a private path. The run captured ${desktop.count} frames in all, covering 52 screens in light and dark themes and in English, Cantonese and bilingual modes; these are the ones published. A tabbed screen's own frame shows the tab named in its caption, and a few dark and bilingual frames show the last tab visited. Home is the first group. The drive, Pair a browser and server frames were retaken from a later installed release, listed with its own manifest below. The [capture manifest](docs/images/captures/${path.basename(manifest.folder)}/desktop-capture-manifest.json) records every frame's hash.`, ''];
   for (const [title, items] of DESKTOP_GROUPS) lines.push('<details>', `<summary>${title} (${items.length})</summary>`, '', ...tableRows(items, byKind.desktopEntries), '</details>', '');
   lines.push('#### Browser extension', '',
     `Headless Microsoft Edge with the staged extension from source \`${extension.sourceCommit.slice(0, 7)}\`, loaded unpacked into a disposable profile. No desktop was paired, so connection states read as unavailable; the Models captures use a fake local model server and the Status captures read the live published releases.`, '');
@@ -156,17 +162,24 @@ function readmeSection({manifest, byKind, desktopCount}) {
   lines.push('#### Documentation site', '',
     `Captures of the documentation site staged from source \`${site.sourceCommit.slice(0, 7)}\` and served from loopback in a disposable headless Microsoft Edge profile, light theme, English. They show public pages only, not native-product or installed acceptance. The workspace page was not captured because its article list renders unstyled.`, '',
     '<details>', `<summary>${SITE_GROUP[0]} (${SITE_GROUP[1].length})</summary>`, '', ...tableRows(SITE_GROUP[1], byKind.siteEntries), '</details>', '',
-    `The refresh folder holds a [manifest](docs/images/captures/${path.basename(manifest.folder)}/manifest.json) with each image's hash, size, viewport and source commit. \`node scripts/refresh-screenshots.mjs capture\` and \`node scripts/refresh-screenshots.mjs desktop\` regenerate it, and \`node scripts/apply-screenshot-refresh.mjs\` rewrites every reference. The earlier original captures, including the history-guidance and packaged Windows images, were removed from the current tree and remain in Git history; their records stay in the [preview inventory](docs/images/captures/preview/inventory.json), [preview verification summary](docs/images/captures/preview/verification-summary.json), [Linux capture provenance](docs/images/captures/provenance.json) and [Windows capture provenance](docs/images/captures/windows/provenance.json). The diagrams here explain behavior; they are not screenshots or runtime evidence.`, '');
+    `The refresh folder holds a [manifest](docs/images/captures/${path.basename(manifest.folder)}/manifest.json) with each image's hash, size, viewport and source commit${manifest.laterFolders ? `; the later installed round has its own [manifest](docs/images/captures/${manifest.laterFolders[0]}/manifest.json)` : ''}. \`node scripts/refresh-screenshots.mjs capture\` and \`node scripts/refresh-screenshots.mjs desktop\` regenerate it, and \`node scripts/apply-screenshot-refresh.mjs\` rewrites every reference. The earlier original captures, including the history-guidance and packaged Windows images, were removed from the current tree and remain in Git history; their records stay in the [preview inventory](docs/images/captures/preview/inventory.json), [preview verification summary](docs/images/captures/preview/verification-summary.json), [Linux capture provenance](docs/images/captures/provenance.json) and [Windows capture provenance](docs/images/captures/windows/provenance.json). The diagrams here explain behavior; they are not screenshots or runtime evidence.`, '');
   return lines.join('\n');
 }
 
-export async function applyRefresh({folder}) {
+export async function applyRefresh({folder, extraFolders = []}) {
   const manifest = JSON.parse(await fs.readFile(path.join(folder, 'manifest.json'), 'utf8'));
   manifest.folder = folder;
+  manifest.laterFolders = extraFolders.map(item => path.basename(item));
+  if (!manifest.laterFolders.length) delete manifest.laterFolders;
   const rowsOf = kind => manifest.captures.filter(row => row.kind === kind);
-  const desktopRows = rowsOf('desktop'), extensionRows = rowsOf('extension'), siteRows = rowsOf('site');
+  const extraManifests = [];
+  for (const extra of extraFolders) { const m = JSON.parse(await fs.readFile(path.join(extra, 'manifest.json'), 'utf8')); extraManifests.push({folder: extra, manifest: m}); }
+  const baseDesktop = rowsOf('desktop').map(row => ({...row, _folder: folder, _desktopSource: manifest.desktopSource}));
+  const laterDesktop = extraManifests.flatMap(({folder: f, manifest: m}) => m.captures.filter(row => row.kind === 'desktop').map(row => ({...row, _folder: f, _desktopSource: m.desktopSource})));
+  const desktopRows = [...baseDesktop, ...laterDesktop], extensionRows = rowsOf('extension'), siteRows = rowsOf('site');
   if (!desktopRows.length || !manifest.desktopSource) throw new Error('The folder holds no imported desktop captures.');
-  const entriesFor = async (rows, kind) => new Map(await Promise.all(rows.map(async row => [row.name, await describe(folder, row)])));
+  if (new Set(desktopRows.map(row => row.name)).size !== desktopRows.length) throw new Error('Two folders publish a desktop capture of the same name.');
+  const entriesFor = async rows => new Map(await Promise.all(rows.map(async row => [row.name, await describe(row._folder || folder, row)])));
   const desktopEntries = await entriesFor(desktopRows), extensionEntries = await entriesFor(extensionRows), siteEntries = await entriesFor(siteRows);
   const covered = (groups, rows, label) => {
     const named = new Set(groups.flatMap(([, items]) => items.map(item => item[0])));
@@ -176,7 +189,8 @@ export async function applyRefresh({folder}) {
   covered(DESKTOP_GROUPS, desktopRows, 'Desktop'); covered(EXTENSION_GROUPS, extensionRows, 'Extension'); covered([SITE_GROUP], siteRows, 'Site');
   const captionOf = new Map(DESKTOP_GROUPS.flatMap(([, items]) => items));
 
-  const withdrawn = await withdrawEarlier(folder);
+  const withdrawn = await withdrawEarlier([folder, ...extraFolders]);
+  for (const source of [manifest, ...extraManifests.map(item => item.manifest)]) for (const item of source.withdrawn || []) withdrawn.push({path: item.path, sha256: item.sha256, reason: item.reason});
 
   // public-images.mjs
   const entries = [...desktopRows, ...extensionRows, ...siteRows].map(row => (row.kind === 'desktop' ? desktopEntries : row.kind === 'extension' ? extensionEntries : siteEntries).get(row.name));
@@ -189,10 +203,10 @@ export async function applyRefresh({folder}) {
   await fs.writeFile(imagesFile, imagesText.slice(0, start) + entries.map(line).join(eol) + eol + imagesText.slice(end));
 
   // publication.mjs: the intended capture source and the Markdown details block.
-  const intended = desktopRows[0].sourceCommit;
+  const intended = baseDesktop[0].sourceCommit, additional = [...new Set(laterDesktop.map(row => row.sourceCommit))].filter(commit => commit !== intended);
   let publication = await fs.readFile('docs/site/publication.mjs', 'utf8');
   publication = publication.replace(/INTENDED_CAPTURE_UI_SOURCE = '[a-f0-9]{40}'/, `INTENDED_CAPTURE_UI_SOURCE = '${intended}'`)
-    .replace(/ADDITIONAL_CAPTURE_UI_SOURCES = Object\.freeze\(\[[^\]]*\]\)/, 'ADDITIONAL_CAPTURE_UI_SOURCES = Object.freeze([])');
+    .replace(/ADDITIONAL_CAPTURE_UI_SOURCES = Object\.freeze\(\[[^\]]*\]\)/, `ADDITIONAL_CAPTURE_UI_SOURCES = Object.freeze([${additional.map(commit => `'${commit}'`).join(', ')}])`);
   await fs.writeFile('docs/site/publication.mjs', publication);
   const {projectGalleryRecord} = await import(pathToFileURL(path.resolve('docs/site/publication.mjs')).href + '?' + Date.now());
 
@@ -200,16 +214,16 @@ export async function applyRefresh({folder}) {
   const records = desktopRows.map(row => {
     const entry = desktopEntries.get(row.name), caption = captionOf.get(row.name);
     return {id: 'desktop-' + row.name, path: entry.route, sourceCommit: row.sourceCommit, sha256: row.sha256, width: entry.width, height: entry.height, state: row.name, theme: row.theme, scale: row.scale, capturedAt: null, timeZone: null,
-      method: `Installed desktop application v${row.appVersion} captured by window handle on a hidden desktop at 150 percent display scale with an isolated profile.`,
-      scope: `${caption}. Throwaway vault with neutral folder names and test files only. Capture time unavailable.`, viewportWidth: 1280, viewportHeight: 800,
-      promotionReceiptSha256: manifest.desktopSource.manifestSha256, approval: 'approved', privacy: 'public-safe', inspectionStatus: 'inspected'};
+      method: row.numbered ? `Installed desktop application v${row.appVersion} captured on a hidden desktop with an isolated profile; the display scale of this numbered frame was not recorded.` : `Installed desktop application v${row.appVersion} captured by window handle on a hidden desktop at 150 percent display scale with an isolated profile.`,
+      scope: `${caption}. ${row.numbered ? 'Neutral folder names; the saved image is ' + entry.width + ' by ' + entry.height + ' pixels and has no manifest entry. ' : 'Throwaway vault with neutral folder names and test files only. '}Capture time unavailable.`, ...(row.numbered ? {} : {viewportWidth: 1280, viewportHeight: 800}),
+      promotionReceiptSha256: row._desktopSource.manifestSha256, approval: 'approved', privacy: 'public-safe', inspectionStatus: 'inspected'};
   });
   await fs.writeFile('docs/site/gallery-additions.json', JSON.stringify({version: 1, records,
     pending: 'New runtime captures are not accepted by this catalogue. They require reviewed original pixels, public-safe provenance, source and image hashes, dimensions, capture method, and explicit approval before addition.'}, null, 2) + '\n');
   const review = JSON.parse(await fs.readFile('docs/site/gallery-review.json', 'utf8'));
   const withheld = new Map(review.withheld.map(item => [item.path, item]));
   for (const oldPath of review.approvedOriginals) if (!withheld.has(oldPath) && review.reviewedBindings[oldPath]) withheld.set(oldPath, {path: oldPath, sha256: review.reviewedBindings[oldPath].sha256, reason: WITHDRAWN_REASON});
-  for (const item of withdrawn) if (!withheld.has(item.path)) withheld.set(item.path, {path: item.path, sha256: item.sha256, reason: WITHDRAWN_REASON});
+  for (const item of withdrawn) if (!withheld.has(item.path)) withheld.set(item.path, {path: item.path, sha256: item.sha256, reason: item.reason || WITHDRAWN_REASON});
   review.withheld = [...withheld.values()].filter(item => !records.some(record => record.path === item.path));
   review.approvedOriginals = records.map(record => record.path);
   review.reviewedBindings = {};
@@ -236,8 +250,8 @@ export async function applyRefresh({folder}) {
     const row = desktopRows.find(item => item.name === name), entry = desktopEntries.get(name), caption = captionOf.get(name);
     return `<figure data-gallery-role="current"><a href="${entry.route}" aria-label="Open the ${caption.toLowerCase()} capture at full size"><img src="${entry.route}" alt="Installed desktop application: ${caption}" width="${entry.width}" height="${entry.height}" loading="lazy"></a><figcaption><strong>${caption}</strong><span>Installed desktop application v${row.appVersion} · source <code>${row.sourceCommit.slice(0, 7)}</code></span></figcaption></figure>`;
   });
-  const first = desktopRows[0];
-  const section = `<section class="section container" id="screenshots" aria-labelledby="screenshots-heading"><div class="section-heading"><p class="eyebrow">Inside the application</p><div><h2 id="screenshots-heading">Interface captures.</h2><p>These captures show the installed desktop application, version ${first.appVersion}, built from source <code>${first.sourceCommit.slice(0, 7)}</code>. Each was taken by window handle on a hidden desktop at 150 percent display scale with a throwaway vault holding test files only. The <a href="gallery.html">capture gallery</a> lists all ${records.length} with their provenance. Installer and native-operation verification are separate.</p></div></div><div class="capture-gallery">${figures.join('')}</div><p class="development-note">Earlier packaged Windows interface and native-drive checks (source <code>c74b3a68</code>, 34 native checks and the packaged desktop workflow passed; installer verification stopped at <code>INSTALL_REGISTRATION_MISSING</code>) are recorded in <a href="gallery-inventory.json">the capture inventory</a>. Their original images were replaced by these captures and remain in Git history.</p></section>`;
+  const first = desktopRows[0], later = desktopRows.find(row => row._folder !== folder);
+  const section = `<section class="section container" id="screenshots" aria-labelledby="screenshots-heading"><div class="section-heading"><p class="eyebrow">Inside the application</p><div><h2 id="screenshots-heading">Interface captures.</h2><p>These captures show the installed desktop application, version ${first.appVersion}, built from source <code>${first.sourceCommit.slice(0, 7)}</code>. Each was taken by window handle on a hidden desktop at 150 percent display scale with a throwaway vault holding test files only. The <a href="gallery.html">capture gallery</a> lists all ${records.length} with their provenance. Installer and native-operation verification are separate.${later ? ` The drive, Pair a browser and server frames come from version ${later.appVersion} (source <code>${later.sourceCommit.slice(0, 7)}</code>).` : ''}</p></div></div><div class="capture-gallery">${figures.join('')}</div><p class="development-note">Earlier packaged Windows interface and native-drive checks (source <code>c74b3a68</code>, 34 native checks and the packaged desktop workflow passed; installer verification stopped at <code>INSTALL_REGISTRATION_MISSING</code>) are recorded in <a href="gallery-inventory.json">the capture inventory</a>. Their original images were replaced by these captures and remain in Git history.</p></section>`;
   let home = await fs.readFile('docs/site/index.html', 'utf8');
   const homeStart = home.indexOf('<section class="section container" id="screenshots"'), homeEnd = home.indexOf('</section>', homeStart) + '</section>'.length;
   if (homeStart < 0 || homeEnd < homeStart) throw new Error('The home page capture section was not found.');
@@ -258,5 +272,6 @@ export async function applyRefresh({folder}) {
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   const options = flags(process.argv.slice(2));
   const folder = path.resolve(options.folder || 'docs/images/captures/refresh-b4cbf0e');
-  console.log(JSON.stringify(await applyRefresh({folder})));
+  const extraFolders = options['extra-folder'] ? String(options['extra-folder']).split(',').map(item => path.resolve(item)) : [];
+  console.log(JSON.stringify(await applyRefresh({folder, extraFolders})));
 }

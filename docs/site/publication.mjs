@@ -106,7 +106,7 @@ export async function buildDocumentation(root,output,home) {
 // the documentation checkout's moving HEAD.
 export const INTENDED_CAPTURE_UI_SOURCE = '9394b351469d26c795c5ee48d8ebf1c2ddbe6618';
 // A capture refreshed from a later installed release is admitted by listing its exact source here; every other source is refused.
-export const ADDITIONAL_CAPTURE_UI_SOURCES = Object.freeze([]);
+export const ADDITIONAL_CAPTURE_UI_SOURCES = Object.freeze(['6ef15e86efc8ed4644e10d74131f7e562e7906f6']);
 function canonicalPresentationAttributes(tag){
  const match=tag.match(/^<([a-z][a-z0-9-]*)([\s\S]*?)\/?\s*>$/);if(!match)throw Error('Noncanonical capture presentation tag');
  const attributes={};let rest=match[2];

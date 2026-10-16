@@ -93,42 +93,6 @@
     },
     {
       "kind": "desktop",
-      "name": "drive-unlocked-files-dark-en",
-      "file": "desktop/drive-unlocked-files-dark-en.png",
-      "sha256": "e1f3c32073a1f4445ef63bcb96e084a4e4101f17436811456151f96bd8e9baed",
-      "bytes": 142117,
-      "width": 1920,
-      "height": 1200,
-      "screen": "drive-unlocked-files",
-      "order": "04",
-      "theme": "dark",
-      "language": "en",
-      "scale": 1.5,
-      "sourceCommit": "9394b351469d26c795c5ee48d8ebf1c2ddbe6618",
-      "appVersion": "1.702.1",
-      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
-      "originalFile": "04-drive-unlocked-files__dark__en.png"
-    },
-    {
-      "kind": "desktop",
-      "name": "drive-unlocked-files-light-en",
-      "file": "desktop/drive-unlocked-files-light-en.png",
-      "sha256": "14623ddd4bbb467cabfd5aaca843bfae56dc41492d0aebd452e8546a4416d5ce",
-      "bytes": 142273,
-      "width": 1920,
-      "height": 1200,
-      "screen": "drive-unlocked-files",
-      "order": "04",
-      "theme": "light",
-      "language": "en",
-      "scale": 1.5,
-      "sourceCommit": "9394b351469d26c795c5ee48d8ebf1c2ddbe6618",
-      "appVersion": "1.702.1",
-      "window": "1280x800 at 150% display scale (PNG is physical pixels)",
-      "originalFile": "04-drive-unlocked-files__light__en.png"
-    },
-    {
-      "kind": "desktop",
       "name": "force-lock-confirm-dark-en",
       "file": "desktop/force-lock-confirm-dark-en.png",
       "sha256": "b27049c25b3f2b9867215f5c70e0dd7d6d301aa77f82cfa205e43171881dbe1f",
@@ -2238,5 +2202,17 @@
     "manifestSha256": "5b7861d5f649cd9891f5f297b5c685f8782621ab661bdd05493ba5b738aaa113",
     "route": "cheap Lowlevel PrintWindow on a hidden desktop, installed v1.702.1, isolated profile with a neutral path",
     "count": 312
-  }
+  },
+  "withdrawn": [
+    {
+      "path": "images/captures/refresh-b4cbf0e/desktop/drive-unlocked-files-light-en.png",
+      "sha256": "14623ddd4bbb467cabfd5aaca843bfae56dc41492d0aebd452e8546a4416d5ce",
+      "reason": "Withdrawn: the selection column in this frame was clipped; replaced by a later capture. The original remains unchanged in Git history and is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-b4cbf0e/desktop/drive-unlocked-files-dark-en.png",
+      "sha256": "e1f3c32073a1f4445ef63bcb96e084a4e4101f17436811456151f96bd8e9baed",
+      "reason": "Withdrawn: the selection column in this frame was clipped; replaced by a later capture. The original remains unchanged in Git history and is not relabelled."
+    }
+  ]
 }

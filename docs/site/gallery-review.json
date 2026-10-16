@@ -6,8 +6,6 @@
     "images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-light-yue.png",
     "images/captures/refresh-b4cbf0e/desktop/drive-locked-light-bilingual.png",
     "images/captures/refresh-b4cbf0e/desktop/drive-locked-light-en.png",
-    "images/captures/refresh-b4cbf0e/desktop/drive-unlocked-files-dark-en.png",
-    "images/captures/refresh-b4cbf0e/desktop/drive-unlocked-files-light-en.png",
     "images/captures/refresh-b4cbf0e/desktop/force-lock-confirm-dark-en.png",
     "images/captures/refresh-b4cbf0e/desktop/force-lock-confirm-light-en.png",
     "images/captures/refresh-b4cbf0e/desktop/help-changelog-light-en.png",
@@ -72,7 +70,23 @@
     "images/captures/refresh-b4cbf0e/desktop/unlock-drive-dialog-light-bilingual.png",
     "images/captures/refresh-b4cbf0e/desktop/unlock-drive-dialog-light-en.png",
     "images/captures/refresh-b4cbf0e/desktop/update-page-dark-en.png",
-    "images/captures/refresh-b4cbf0e/desktop/update-page-light-en.png"
+    "images/captures/refresh-b4cbf0e/desktop/update-page-light-en.png",
+    "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-light-en.png",
+    "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-en.png",
+    "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-dark-en.png",
+    "images/captures/refresh-6ef15e8/desktop/drive-file-selected-light-en.png",
+    "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-bilingual.png",
+    "images/captures/refresh-6ef15e8/desktop/pair-a-browser-light-en.png",
+    "images/captures/refresh-6ef15e8/desktop/pair-a-browser-dark-en.png",
+    "images/captures/refresh-6ef15e8/desktop/server-card-running-light-en.png",
+    "images/captures/refresh-6ef15e8/desktop/server-card-running-dark-en.png",
+    "images/captures/refresh-6ef15e8/desktop/server-card-failed-light-en.png",
+    "images/captures/refresh-6ef15e8/desktop/server-card-failed-dark-en.png",
+    "images/captures/refresh-6ef15e8/desktop/server-java25-needed-dark-bilingual.png",
+    "images/captures/refresh-6ef15e8/desktop/server-java-check-refusal-dark-bilingual.png",
+    "images/captures/refresh-6ef15e8/desktop/server-running-card-dark-bilingual.png",
+    "images/captures/refresh-6ef15e8/desktop/server-running-logs-dark-bilingual.png",
+    "images/captures/refresh-6ef15e8/desktop/close-dialog-server-running-dark-bilingual.png"
   ],
   "withheld": [
     {
@@ -339,6 +353,16 @@
       "path": "images/captures/refresh-e96a0f0/site/library-1280x900-light-en.png",
       "sha256": "a4b10e365c5ed81e0f2883d0f098df66483dbbda1972a9e8fba3a969be7a3957",
       "reason": "Withdrawn: replaced by a refreshed capture of the same surface. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-b4cbf0e/desktop/drive-unlocked-files-dark-en.png",
+      "sha256": "e1f3c32073a1f4445ef63bcb96e084a4e4101f17436811456151f96bd8e9baed",
+      "reason": "Withdrawn: replaced by a refreshed capture of the same surface. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
+    },
+    {
+      "path": "images/captures/refresh-b4cbf0e/desktop/drive-unlocked-files-light-en.png",
+      "sha256": "14623ddd4bbb467cabfd5aaca843bfae56dc41492d0aebd452e8546a4416d5ce",
+      "reason": "Withdrawn: replaced by a refreshed capture of the same surface. The original was removed from the current tree and deployment and remains unchanged in Git history; it is not relabelled."
     }
   ],
   "historicalBoundary": "Removing an image from the current tree and deployment does not undo its historical publication. No history is rewritten.",
@@ -372,18 +396,6 @@
       "sha256": "4efddd9a6bf160ea3b452ff7b9a81993881efa26c233254fc233113bb838e8bd",
       "workflow": "drive-access",
       "metadataSha256": "cba84d3a9e4eabcc0000284b0abf00060a59e7a2a08e695339b9b6b0259e1ec2"
-    },
-    "images/captures/refresh-b4cbf0e/desktop/drive-unlocked-files-dark-en.png": {
-      "sourceCommit": "9394b351469d26c795c5ee48d8ebf1c2ddbe6618",
-      "sha256": "e1f3c32073a1f4445ef63bcb96e084a4e4101f17436811456151f96bd8e9baed",
-      "workflow": "drive-access",
-      "metadataSha256": "9807d4aacc133927f517cd524d46e72317a518061b1de6f52f008d24c2f6180f"
-    },
-    "images/captures/refresh-b4cbf0e/desktop/drive-unlocked-files-light-en.png": {
-      "sourceCommit": "9394b351469d26c795c5ee48d8ebf1c2ddbe6618",
-      "sha256": "14623ddd4bbb467cabfd5aaca843bfae56dc41492d0aebd452e8546a4416d5ce",
-      "workflow": "drive-access",
-      "metadataSha256": "98b87df6d238bc0ae424aaf820e062f26b74eeed120290f3c61790b83196c30f"
     },
     "images/captures/refresh-b4cbf0e/desktop/force-lock-confirm-dark-en.png": {
       "sourceCommit": "9394b351469d26c795c5ee48d8ebf1c2ddbe6618",
@@ -774,6 +786,102 @@
       "sha256": "cc5601ce2c2a88dbb6cfa044d19c244edd105a320296c6d5b398e0ecb91c5ba8",
       "workflow": "preferences-help",
       "metadataSha256": "aeb0eef13d1ad8148145a8c2540c1bf15d09eb3c87cda79578d035efef06fce2"
+    },
+    "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-light-en.png": {
+      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
+      "sha256": "eee19ed14e2983299eeed23dd64a34092ed2a4df5a6bf1dce04d4008b6684ff0",
+      "workflow": "drive-access",
+      "metadataSha256": "52e956d3c0483c4f1e3b2942cc30ea4541e4df88f7f584302666b2027a394127"
+    },
+    "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-en.png": {
+      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
+      "sha256": "be8a7965cd1ddbe8d72be9fc34436876655094cb6837f881b8154a91c98ae11a",
+      "workflow": "drive-access",
+      "metadataSha256": "7e6d130fb771b5fffb06be0a5dcb1779015a8bc7a1cbd28db97a77c1b6d0a023"
+    },
+    "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-dark-en.png": {
+      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
+      "sha256": "41b5b0b43ffa9225d0639a5c6f1d616ce2ead25b181b4ceb6b64ab463085fcab",
+      "workflow": "drive-access",
+      "metadataSha256": "79bdfcc4e438bde2cc6e8615abbb3f04fd42a18ce913224f1817bef1c52f18e1"
+    },
+    "images/captures/refresh-6ef15e8/desktop/drive-file-selected-light-en.png": {
+      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
+      "sha256": "968114ac02a7820790285ad7a19c20d1bae343956961d5877f743e6a2dfd6e07",
+      "workflow": "drive-access",
+      "metadataSha256": "740087631a72ee5569ce4431328b582bf19e7842069189adccc95d9a977d234c"
+    },
+    "images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-bilingual.png": {
+      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
+      "sha256": "59d6e682cae65d9c42fed678ba4a3ebae0c2c2b1a0b1aacb4ce9985255453f0a",
+      "workflow": "drive-access",
+      "metadataSha256": "e2e5c607981a77f486f5642fe4b21f02db52f424afc809d5ce15b2d4fec3b131"
+    },
+    "images/captures/refresh-6ef15e8/desktop/pair-a-browser-light-en.png": {
+      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
+      "sha256": "d1cdf1738c9b740f4bade3102bafb08bd87ef0b44d0c633aa15e82aab26277b2",
+      "workflow": "drive-access",
+      "metadataSha256": "7e33402e9992f8b36194167703cf16133994c3e82f2156633ae7c0d26e70be8d"
+    },
+    "images/captures/refresh-6ef15e8/desktop/pair-a-browser-dark-en.png": {
+      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
+      "sha256": "95dcfb0f79906bce9c6bd401e9a4bc2be967d1520dac31f592ad654b2aeef0ad",
+      "workflow": "drive-access",
+      "metadataSha256": "2588c01c6898d277aa765df9a3722d518fd06c805ccb5bd85d78319ce3456ac7"
+    },
+    "images/captures/refresh-6ef15e8/desktop/server-card-running-light-en.png": {
+      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
+      "sha256": "b7e4475bdbce3f49631523519d9e4aa9819a7e4e1b39aed5c9031cbb6c6d96b5",
+      "workflow": "workspace-tools",
+      "metadataSha256": "27c3f618d3304c8fb0ac350c89d35d0f0d887a8791b7835ca61b12686b627fe2"
+    },
+    "images/captures/refresh-6ef15e8/desktop/server-card-running-dark-en.png": {
+      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
+      "sha256": "033fa7a23b6854caafefaebcbe6d0ddaa4827f917aa78f491d5f268bccdc47a2",
+      "workflow": "workspace-tools",
+      "metadataSha256": "4b73f9692ac08f1fe7efd6b4cdae98a95449c59485fbd81dfcf93f1ab39afddb"
+    },
+    "images/captures/refresh-6ef15e8/desktop/server-card-failed-light-en.png": {
+      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
+      "sha256": "43efee0ddc7552651d2f6a724fb53b00cce528e86517816c7f47806f3778192f",
+      "workflow": "workspace-tools",
+      "metadataSha256": "bba0fd656c05445c803de16e57672397fc883e9135b283b32f0d20ebecdf0b4a"
+    },
+    "images/captures/refresh-6ef15e8/desktop/server-card-failed-dark-en.png": {
+      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
+      "sha256": "d551d5ad111e1cbbab2ace92dde2931ba302fff6de77047f24e197d7e8a350aa",
+      "workflow": "workspace-tools",
+      "metadataSha256": "b11c7ed297727eb46d270b0f9a9c13a1538367a05b502ac7c1af3b5226deeeec"
+    },
+    "images/captures/refresh-6ef15e8/desktop/server-java25-needed-dark-bilingual.png": {
+      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
+      "sha256": "b4f17c3344daa6649033ce1de5f1a64c9dfc905596959c39c4384f2d91d9aa29",
+      "workflow": "workspace-tools",
+      "metadataSha256": "c1d31bb0ddaf224370a2ce8f301702e2229726596d8c6985c51582bd7aecca68"
+    },
+    "images/captures/refresh-6ef15e8/desktop/server-java-check-refusal-dark-bilingual.png": {
+      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
+      "sha256": "f1d494c3028fe6d4d249f49401b7f06c297392e12869ba256e337149e5850550",
+      "workflow": "workspace-tools",
+      "metadataSha256": "868ceff84776f1da7790d88075d75f3a9750c51b6bd35f86bd4b77357c8b90a4"
+    },
+    "images/captures/refresh-6ef15e8/desktop/server-running-card-dark-bilingual.png": {
+      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
+      "sha256": "548e0e87a1c093717c7b8c22739605f1fd58dd642d945cb0473a199457e12590",
+      "workflow": "workspace-tools",
+      "metadataSha256": "b2b73da39313807388a88e6b46619aa0befde382f6a71943be87d16c97d4dbcb"
+    },
+    "images/captures/refresh-6ef15e8/desktop/server-running-logs-dark-bilingual.png": {
+      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
+      "sha256": "71143f4bb8795f9b3dc74a8fdf212a69402e3e7ba350d79e289ef3afed535fa4",
+      "workflow": "workspace-tools",
+      "metadataSha256": "90667c59d7f0571917494a03d6aedfdd66fc9243d705065837e66493aff3d577"
+    },
+    "images/captures/refresh-6ef15e8/desktop/close-dialog-server-running-dark-bilingual.png": {
+      "sourceCommit": "6ef15e86efc8ed4644e10d74131f7e562e7906f6",
+      "sha256": "008856cd318c63917b67f4c14f20eb1f6bb26d19b34a4e81b96c65255e3e24b9",
+      "workflow": "workspace-tools",
+      "metadataSha256": "a222fd8f22d7f2719d668e2434c527174c0baa4fc7011b49a9885d37fc31e5af"
     }
   },
   "workflows": [

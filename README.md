@@ -138,7 +138,7 @@ Every image below is a genuine capture of a real build; none is a mock, design p
 
 #### Desktop application
 
-72 captures of the installed desktop application, version 1.702.1, built from source `9394b35`. Each was taken by window handle on a task-owned hidden desktop at 150 percent display scale (a 1280 by 800 window, saved at 1920 by 1200 pixels) with an isolated profile and a throwaway vault that holds test files only and uses neutral folder names. The capture host reported no frame showing a private path. The run captured 312 frames in all, covering 52 screens in light and dark themes and in English, Cantonese and bilingual modes; these are the ones published. A tabbed screen's own frame shows the tab named in its caption, and a few dark and bilingual frames show the last tab visited. Home is the first group. The [capture manifest](docs/images/captures/refresh-b4cbf0e/desktop-capture-manifest.json) records every frame's hash.
+86 captures of the installed desktop application, version 1.702.1, built from source `9394b35`. Each was taken by window handle on a task-owned hidden desktop at 150 percent display scale (a 1280 by 800 window, saved at 1920 by 1200 pixels) with an isolated profile and a throwaway vault that holds test files only and uses neutral folder names. The capture host reported no frame showing a private path. The run captured 312 frames in all, covering 52 screens in light and dark themes and in English, Cantonese and bilingual modes; these are the ones published. A tabbed screen's own frame shows the tab named in its caption, and a few dark and bilingual frames show the last tab visited. Home is the first group. The drive, Pair a browser and server frames were retaken from a later installed release, listed with its own manifest below. The [capture manifest](docs/images/captures/refresh-b4cbf0e/desktop-capture-manifest.json) records every frame's hash.
 
 <details>
 <summary>Home and navigation (7)</summary>
@@ -158,15 +158,19 @@ Every image below is a genuine capture of a real build; none is a mock, design p
 </details>
 
 <details>
-<summary>Drive, offline and dialogs (14)</summary>
+<summary>Drive, offline and dialogs (17)</summary>
 
-| Drive, locked | Drive, locked, bilingual | Drive, unlocked with files |
+| Drive, locked | Drive, locked, bilingual | Drive, unlocked, top of the page |
 |---|---|---|
-| ![Drive, locked](docs/images/captures/refresh-b4cbf0e/desktop/drive-locked-light-en.png) | ![Drive, locked, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/drive-locked-light-bilingual.png) | ![Drive, unlocked with files](docs/images/captures/refresh-b4cbf0e/desktop/drive-unlocked-files-light-en.png) |
+| ![Drive, locked](docs/images/captures/refresh-b4cbf0e/desktop/drive-locked-light-en.png) | ![Drive, locked, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/drive-locked-light-bilingual.png) | ![Drive, unlocked, top of the page](docs/images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-light-en.png) |
 
-| Drive, unlocked, dark | Available offline | Available offline, Cantonese |
+| Drive, file list | Drive, file list, dark | Drive, one file selected |
 |---|---|---|
-| ![Drive, unlocked, dark](docs/images/captures/refresh-b4cbf0e/desktop/drive-unlocked-files-dark-en.png) | ![Available offline](docs/images/captures/refresh-b4cbf0e/desktop/offline-light-en.png) | ![Available offline, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/offline-light-yue.png) |
+| ![Drive, file list](docs/images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-en.png) | ![Drive, file list, dark](docs/images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-dark-en.png) | ![Drive, one file selected](docs/images/captures/refresh-6ef15e8/desktop/drive-file-selected-light-en.png) |
+
+| Drive, file list, bilingual (the Availability text is cut off at the cell edge, a known issue being fixed) | Available offline | Available offline, Cantonese |
+|---|---|---|
+| ![Drive, file list, bilingual (the Availability text is cut off at the cell edge, a known issue being fixed)](docs/images/captures/refresh-6ef15e8/desktop/drive-unlocked-files-list-light-bilingual.png) | ![Available offline](docs/images/captures/refresh-b4cbf0e/desktop/offline-light-en.png) | ![Available offline, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/offline-light-yue.png) |
 
 | Create a drive dialog | Create a drive dialog, dark | Create a drive dialog, Cantonese |
 |---|---|---|
@@ -280,6 +284,32 @@ Every image below is a genuine capture of a real build; none is a mock, design p
 </details>
 
 <details>
+<summary>Pair a browser (2)</summary>
+
+| Pair a browser | Pair a browser, dark |
+|---|---|
+| ![Pair a browser](docs/images/captures/refresh-6ef15e8/desktop/pair-a-browser-light-en.png) | ![Pair a browser, dark](docs/images/captures/refresh-6ef15e8/desktop/pair-a-browser-dark-en.png) |
+
+</details>
+
+<details>
+<summary>Server cards and server lifecycle (9)</summary>
+
+| Server card, running | Server card, running, dark | Server card, failed, with the reason chip |
+|---|---|---|
+| ![Server card, running](docs/images/captures/refresh-6ef15e8/desktop/server-card-running-light-en.png) | ![Server card, running, dark](docs/images/captures/refresh-6ef15e8/desktop/server-card-running-dark-en.png) | ![Server card, failed, with the reason chip](docs/images/captures/refresh-6ef15e8/desktop/server-card-failed-light-en.png) |
+
+| Server card, failed, with the reason chip, dark | Server card needing Java 25 after the Java check, dark, bilingual | Java-check refusal message, dark, bilingual |
+|---|---|---|
+| ![Server card, failed, with the reason chip, dark](docs/images/captures/refresh-6ef15e8/desktop/server-card-failed-dark-en.png) | ![Server card needing Java 25 after the Java check, dark, bilingual](docs/images/captures/refresh-6ef15e8/desktop/server-java25-needed-dark-bilingual.png) | ![Java-check refusal message, dark, bilingual](docs/images/captures/refresh-6ef15e8/desktop/server-java-check-refusal-dark-bilingual.png) |
+
+| Server running, dark, bilingual | Server logs ending with the Done line, dark, bilingual | Close dialog while a server runs: keep in the tray, stop and quit, or cancel |
+|---|---|---|
+| ![Server running, dark, bilingual](docs/images/captures/refresh-6ef15e8/desktop/server-running-card-dark-bilingual.png) | ![Server logs ending with the Done line, dark, bilingual](docs/images/captures/refresh-6ef15e8/desktop/server-running-logs-dark-bilingual.png) | ![Close dialog while a server runs: keep in the tray, stop and quit, or cancel](docs/images/captures/refresh-6ef15e8/desktop/close-dialog-server-running-dark-bilingual.png) |
+
+</details>
+
+<details>
 <summary>Help (5)</summary>
 
 | Help, How it works | Help, How it works, dark | Help, How it works, Cantonese |
@@ -382,7 +412,7 @@ Captures of the documentation site staged from source `425240e` and served from 
 
 </details>
 
-The refresh folder holds a [manifest](docs/images/captures/refresh-b4cbf0e/manifest.json) with each image's hash, size, viewport and source commit. `node scripts/refresh-screenshots.mjs capture` and `node scripts/refresh-screenshots.mjs desktop` regenerate it, and `node scripts/apply-screenshot-refresh.mjs` rewrites every reference. The earlier original captures, including the history-guidance and packaged Windows images, were removed from the current tree and remain in Git history; their records stay in the [preview inventory](docs/images/captures/preview/inventory.json), [preview verification summary](docs/images/captures/preview/verification-summary.json), [Linux capture provenance](docs/images/captures/provenance.json) and [Windows capture provenance](docs/images/captures/windows/provenance.json). The diagrams here explain behavior; they are not screenshots or runtime evidence.
+The refresh folder holds a [manifest](docs/images/captures/refresh-b4cbf0e/manifest.json) with each image's hash, size, viewport and source commit; the later installed round has its own [manifest](docs/images/captures/refresh-6ef15e8/manifest.json). `node scripts/refresh-screenshots.mjs capture` and `node scripts/refresh-screenshots.mjs desktop` regenerate it, and `node scripts/apply-screenshot-refresh.mjs` rewrites every reference. The earlier original captures, including the history-guidance and packaged Windows images, were removed from the current tree and remain in Git history; their records stay in the [preview inventory](docs/images/captures/preview/inventory.json), [preview verification summary](docs/images/captures/preview/verification-summary.json), [Linux capture provenance](docs/images/captures/provenance.json) and [Windows capture provenance](docs/images/captures/windows/provenance.json). The diagrams here explain behavior; they are not screenshots or runtime evidence.
 
 ## Build, package and verify
 

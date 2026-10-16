@@ -289,6 +289,72 @@ export async function importDesktop({manifestPath, directory}) {
   return manifest;
 }
 
+/** Frames taken from an update round: [manifest file, published name]. */
+export const UPDATE_SELECTION = [
+  ['04-drive-unlocked-files__light__en.png', 'drive-unlocked-files-light-en'], ['04-drive-unlocked-files-list__light__en.png', 'drive-unlocked-files-list-light-en'],
+  ['04-drive-unlocked-files-list__dark__en.png', 'drive-unlocked-files-list-dark-en'], ['04-drive-file-selected__light__en.png', 'drive-file-selected-light-en'],
+  ['04-drive-unlocked-files-list__light__bilingual.png', 'drive-unlocked-files-list-light-bilingual'],
+  ['24-pair-a-browser__light__en.png', 'pair-a-browser-light-en'], ['24-pair-a-browser__dark__en.png', 'pair-a-browser-dark-en'],
+  ['13-tools-server-card-running__light__en.png', 'server-card-running-light-en'], ['13-tools-server-card-running__dark__en.png', 'server-card-running-dark-en'],
+  ['13-tools-server-card-failed__light__en.png', 'server-card-failed-light-en'], ['13-tools-server-card-failed__dark__en.png', 'server-card-failed-dark-en'],
+];
+/** Numbered frames that sit beside the manifest folder and have no manifest entry: [file, published name]. */
+export const UPDATE_NUMBERED = [
+  ['02-java21-needs-java25.png', 'server-java25-needed-dark-bilingual'], ['03-java21-refusal-message.png', 'server-java-check-refusal-dark-bilingual'],
+  ['05-running-card.png', 'server-running-card-dark-bilingual'], ['06-running-logs-ready-line.png', 'server-running-logs-dark-bilingual'],
+  ['07-close-dialog-server-running.png', 'close-dialog-server-running-dark-bilingual'],
+];
+/** Names in an earlier folder that an update round supersedes: they showed a clipped selection column. */
+export const SUPERSEDED_NAMES = ['drive-unlocked-files-light-en', 'drive-unlocked-files-dark-en'];
+
+/**
+ * Imports a later round into its own folder, bound to its own source commit, and withdraws the earlier frames it replaces.
+ * The earlier folder's manifest lists each withdrawn file with its hash so the gallery review can record it.
+ */
+export async function importUpdate({manifestPath, directory, supersedeFolder}) {
+  const source = JSON.parse(await fs.readFile(manifestPath, 'utf8'));
+  if (source.privateFrames) throw new Error('The desktop manifest reports private frames.');
+  const roundDirectory = path.dirname(path.resolve(manifestPath)), baseDirectory = path.join(roundDirectory, 'captures');
+  const manifest = {schemaVersion: 1, sourceCommit: git('rev-parse', 'HEAD'), captures: []};
+  await fs.mkdir(path.join(directory, 'desktop'), {recursive: true});
+  const save = async (bytes, name) => { const target = path.join(directory, 'desktop', name + '.png'); await fs.writeFile(target, bytes); return target; };
+  const assertPng = (bytes, file) => { if (bytes.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') throw new Error(`${file} is not a PNG.`); };
+  for (const [file, name] of UPDATE_SELECTION) {
+    const row = source.captures.find(item => item.file === file);
+    if (!row || row.privatePathVisible) throw new Error(`The update manifest has no usable capture ${file}.`);
+    const bytes = await fs.readFile(path.join(baseDirectory, file));
+    if (digest(bytes) !== row.sha256) throw new Error(`${file} differs from its manifest hash.`);
+    assertPng(bytes, file); await save(bytes, name);
+    manifest.captures.push({kind: 'desktop', name, file: `desktop/${name}.png`, sha256: row.sha256, bytes: bytes.length, ...pngSize(bytes), screen: row.screen, theme: row.theme, language: row.language, scale: 1.5,
+      sourceCommit: row.sourceCommit, appVersion: row.appVersion, window: row.appWindowDip, originalFile: row.file});
+  }
+  const sourceCommit = manifest.captures[0].sourceCommit, appVersion = manifest.captures[0].appVersion;
+  for (const [file, name] of UPDATE_NUMBERED) {
+    const bytes = await fs.readFile(path.join(roundDirectory, file));
+    assertPng(bytes, file); await save(bytes, name);
+    manifest.captures.push({kind: 'desktop', name, file: `desktop/${name}.png`, sha256: digest(bytes), bytes: bytes.length, ...pngSize(bytes), screen: name.replace(/-dark-bilingual$/, ''), theme: 'dark', language: 'bilingual', scale: 1,
+      sourceCommit, appVersion, window: 'not recorded for this numbered frame', originalFile: file, numbered: true});
+  }
+  const raw = (await fs.readFile(manifestPath, 'utf8')).replace(/\r\n/g, '\n');
+  await fs.writeFile(path.join(directory, 'desktop-capture-manifest.json'), raw);
+  const receipt = JSON.parse(await fs.readFile(path.join(roundDirectory, 'receipt.json'), 'utf8'));
+  manifest.desktopSource = {manifest: 'desktop-capture-manifest.json', manifestSha256: digest(Buffer.from(raw)), route: source.route, count: source.count,
+    release: receipt.release, numberedFramesNote: 'The five numbered server frames sit beside the manifest folder and have no manifest entry; their hashes are computed on import.'};
+  // Withdraw the earlier frames this round replaces.
+  const earlierFile = path.join(supersedeFolder, 'manifest.json'), earlier = JSON.parse(await fs.readFile(earlierFile, 'utf8'));
+  earlier.withdrawn = earlier.withdrawn || [];
+  for (const name of SUPERSEDED_NAMES) {
+    const index = earlier.captures.findIndex(row => row.kind === 'desktop' && row.name === name);
+    if (index < 0) continue;
+    const [row] = earlier.captures.splice(index, 1);
+    earlier.withdrawn.push({path: `images/captures/${path.basename(supersedeFolder)}/${row.file}`, sha256: row.sha256, reason: 'Withdrawn: the selection column in this frame was clipped; replaced by a later capture. The original remains unchanged in Git history and is not relabelled.'});
+    await fs.rm(path.join(supersedeFolder, row.file), {force: true});
+  }
+  await writeManifest(earlierFile, earlier);
+  await writeManifest(path.join(directory, 'manifest.json'), manifest);
+  return manifest;
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   const [command, ...rest] = process.argv.slice(2);
   const options = flags(rest);
@@ -306,6 +372,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     await writeManifest(manifestFile, {...previous, schemaVersion: 1, sourceCommit, captures: [...kept, ...record].sort((a, b) => a.kind.localeCompare(b.kind) || a.name.localeCompare(b.name))});
     console.log(`${record.length} captures written under ${directory}`);
     for (const row of record) console.log(`- ${row.file} ${row.width}x${row.height} ${row.sha256.slice(0, 12)}${row.errors?.length ? ' ERRORS: ' + row.errors.join(' | ') : ''}`);
+  } else if (command === 'desktop-update') {
+    if (!options['desktop-manifest'] || !options.supersede) throw new Error('--desktop-manifest <path> and --supersede <folder> are required.');
+    const manifest = await importUpdate({manifestPath: options['desktop-manifest'], directory, supersedeFolder: path.resolve(options.supersede)});
+    console.log(`${manifest.captures.length} desktop captures imported into ${directory}/desktop`);
   } else if (command === 'desktop') {
     if (!options['desktop-manifest']) throw new Error('--desktop-manifest <path> is required.');
     const manifest = await importDesktop({manifestPath: options['desktop-manifest'], directory});
