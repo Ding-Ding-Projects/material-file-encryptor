@@ -177,6 +177,22 @@ Material Design 3 applies to the desktop, documentation website, extension and n
 
 Every image below is a genuine capture of a real build; none is a mock, design preview or edited image. Each group is collapsed: choose its heading to open it. Capture times are unavailable because no validated timestamp was recorded, and earlier captures were withdrawn when these replaced them. They remain unchanged in Git history and are listed with their hashes in [the gallery review](docs/site/gallery-review.json).
 
+#### Release 1.772.1: setup guide and confirmation
+
+Seven captures of the extracted full release package for version 1.772.1, built from source `c6edc1f`. This was a release package run, not an installed copy. Each frame was taken by window handle on a task-owned hidden desktop with an isolated profile and a throwaway vault holding neutral test files. Two visual defects visible in these frames, a loose search icon under each select in the setup guide and an information icon above the application name, are fixed in source after this release and are not yet in a published build. Machine-readable details are in [the capture manifest](docs/images/captures/reproof-1.772.1/manifest.json) and [the proof record](docs/evidence/installed-proof-1.772.1.json). Captures these replaced are listed in [the archive](design/superseded-captures.md).
+
+| Setup guide, Requirements | Setup guide, Finish, dark | Drive, file list, dark |
+|---|---|---|
+| ![Setup guide, Requirements step with Back, Skip this step, Next and Skip setup](docs/images/captures/reproof-1.772.1/desktop/setup-guide-requirements-light-en.png) | ![Setup guide, Finish step with the saved summary, dark](docs/images/captures/reproof-1.772.1/desktop/setup-guide-finish-dark-en.png) | ![Drive, file list with an information icon beside each control, dark](docs/images/captures/reproof-1.772.1/desktop/drive-file-list-dark-en.png) |
+
+| Drive, two files selected, dark | Delete confirmation with two keys and a slider, dark | Force Lock confirmation, dark |
+|---|---|---|
+| ![Drive, two files selected for a bulk action, dark](docs/images/captures/reproof-1.772.1/desktop/drive-bulk-selection-dark-en.png) | ![Confirm destructive action for deleting three selected files, dark](docs/images/captures/reproof-1.772.1/desktop/confirm-bulk-delete-dark-en.png) | ![Confirm destructive action for Force Lock, dark](docs/images/captures/reproof-1.772.1/desktop/confirm-force-lock-dark-en.png) |
+
+| Personal wording applied, full-window announcement, dark |
+|---|
+| ![Personal wording applied from a dropped file, with the full-window announcement and a saved notice, dark](docs/images/captures/reproof-1.772.1/desktop/wording-applied-celebration-dark-en.png) |
+
 #### Desktop application
 
 92 captures of the installed desktop application, version 1.702.1, built from source `9394b35`. Each was taken by window handle on a task-owned hidden desktop at 150 percent display scale (a 1280 by 800 window, saved at 1920 by 1200 pixels) with an isolated profile and a throwaway vault that holds test files only and uses neutral folder names. The capture host reported no frame showing a private path. The run captured 312 frames in all, covering 52 screens in light and dark themes and in English, Cantonese and bilingual modes; these are the ones published. A tabbed screen's own frame shows the tab named in its caption, and a few dark and bilingual frames show the last tab visited. Home is the first group. The drive, Pair a browser and server frames were retaken from a later installed release, listed with its own manifest below. The [capture manifest](docs/images/captures/refresh-b4cbf0e/desktop-capture-manifest.json) records every frame's hash.
@@ -207,7 +223,7 @@ Every image below is a genuine capture of a real build; none is a mock, design p
 
 | Drive, file list | Drive, file list, dark | Drive, one file selected |
 |---|---|---|
-| ![Drive, file list](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-light-en.png) | ![Drive, file list, dark](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-dark-en.png) | ![Drive, one file selected](docs/images/captures/refresh-a3593fc/desktop/drive-file-selected-light-en.png) |
+| ![Drive, file list](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-light-en.png) | ![Drive, file list, dark](docs/images/captures/reproof-1.772.1/desktop/drive-file-list-dark-en.png) | ![Drive, one file selected](docs/images/captures/refresh-a3593fc/desktop/drive-file-selected-light-en.png) |
 
 | Drive, file list, bilingual, Availability text wrapping beside its icon | Drive, file list, dark, bilingual | Available offline |
 |---|---|---|
@@ -223,7 +239,7 @@ Every image below is a genuine capture of a real build; none is a mock, design p
 
 | Lock message when a program still has files open | Force Lock confirmation | Force Lock confirmation, dark |
 |---|---|---|
-| ![Lock message when a program still has files open](docs/images/captures/refresh-b4cbf0e/desktop/lock-holder-message-light-en.png) | ![Force Lock confirmation](docs/images/captures/refresh-b4cbf0e/desktop/force-lock-confirm-light-en.png) | ![Force Lock confirmation, dark](docs/images/captures/refresh-b4cbf0e/desktop/force-lock-confirm-dark-en.png) |
+| ![Lock message when a program still has files open](docs/images/captures/refresh-b4cbf0e/desktop/lock-holder-message-light-en.png) | ![Force Lock confirmation](docs/images/captures/refresh-b4cbf0e/desktop/force-lock-confirm-light-en.png) | ![Force Lock confirmation, dark](docs/images/captures/reproof-1.772.1/desktop/confirm-force-lock-dark-en.png) |
 
 </details>
 

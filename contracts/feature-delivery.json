@@ -1218,8 +1218,10 @@
       "persistence": [
         "src/renderer/features/onboarding/model.js"
       ],
-      "evidence": [],
-      "reason": "A first-run and setup guide performs real setup actions through the existing preference, driver, drive dialog and pairing paths, with progress, Back and Next, skipping, saved progress, keyboard movement and three language modes. Source checks use fakes for those services and a headless browser run of the real renderer opened it on first launch. A built-app run, a real driver install or drive creation, and a visual capture of the flow are not recorded.",
+      "evidence": [
+        "docs/evidence/installed-proof-1.772.1.json"
+      ],
+      "reason": "A first-run and setup guide performs real setup actions through the existing preference, driver, drive dialog and pairing paths, with progress, Back and Next, skipping, saved progress, keyboard movement and three language modes. Source checks use fakes for those services and a headless browser run of the real renderer opened it on first launch. A built-app run, a real driver install or drive creation, and a visual capture of the flow are not recorded. Release package run of 1.772.1 (not an installed copy) drove the six-step setup guide with Back, Next, skip, save and close, restart resume, Cantonese and English, light and dark. Status stays unverified: the Look step showed a loose search icon under each select, now fixed in source and not yet in a published build, and no installed-copy or fresh-environment run was made.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1331,8 +1333,10 @@
         "test/surface-workbench.test.js",
         "test/surface-lifecycle.test.js"
       ],
-      "evidence": [],
-      "reason": "Worker-bounded search and the shared expression workbench are integrated. Exhaustive coverage of every picker, menu and search surface remains unverified.",
+      "evidence": [
+        "docs/evidence/installed-proof-1.772.1.json"
+      ],
+      "reason": "Worker-bounded search and the shared expression workbench are integrated. Exhaustive coverage of every picker, menu and search surface remains unverified. Release package run of 1.772.1 (not an installed copy) opened the regex builder from the command palette and several search fields. Status stays unverified: pattern evaluation and every search field were not driven.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1389,8 +1393,10 @@
         "test/surface-lifecycle.test.js",
         "test/surface-workbench.test.js"
       ],
-      "evidence": [],
-      "reason": "Command discovery and activation are integrated. Complete feature/settings coverage and target focus/scroll behavior remain unverified.",
+      "evidence": [
+        "docs/evidence/installed-proof-1.772.1.json"
+      ],
+      "reason": "Command discovery and activation are integrated. Complete feature/settings coverage and target focus/scroll behavior remain unverified. Release package run of 1.772.1 (not an installed copy) opened the command palette from the top bar and its regex builder. Status stays unverified: command execution and every language tuple were not driven.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1684,8 +1690,10 @@
         "test/helpers/info-icon-sources.js",
         "test/helpers/info-icon-dom.js"
       ],
-      "evidence": [],
-      "reason": "Every control in the desktop shell markup has an authored explanation, guided steps and an isolated sample, mounted before its control and covered by a markup-scanning coverage test and a guard test. A headless browser run of the real renderer against a stubbed bridge mounted every icon. Controls that feature modules create after start-up, built-app interaction and visual evidence remain unverified.",
+      "evidence": [
+        "docs/evidence/installed-proof-1.772.1.json"
+      ],
+      "reason": "Every control in the desktop shell markup has an authored explanation, guided steps and an isolated sample, mounted before its control and covered by a markup-scanning coverage test and a guard test. A headless browser run of the real renderer against a stubbed bridge mounted every icon. Controls that feature modules create after start-up, built-app interaction and visual evidence remain unverified. Release package run of 1.772.1 (not an installed copy) showed an information icon beside shell controls, opened a panel with a real pointer click and with Enter, closed it with Escape and returned focus. Status stays unverified: the navigation icon above the application name and the detached select search icons were found and are fixed in source only.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1850,8 +1858,10 @@
         "test/workflow-confirm.test.js",
         "test/workflow-model.test.js"
       ],
-      "evidence": [],
-      "reason": "Two independent switches, a full-range slider, final confirmation, cancellation and origin-focus restoration are implemented. Complete destructive-entry-point wiring and runtime proof remain pending.",
+      "evidence": [
+        "docs/evidence/installed-proof-1.772.1.json"
+      ],
+      "reason": "Two independent switches, a full-range slider, final confirmation, cancellation and origin-focus restoration are implemented. Complete destructive-entry-point wiring and runtime proof remain pending. Release package run of 1.772.1 (not an installed copy) drove the two-key confirmation on bulk delete, bulk offline release, Force Lock, Empty Recycle Bin and personal-wording reset: Confirm stayed disabled until both keys and the slider were set, and Escape or Emergency exit closed the dialog. Status stays unverified: the run was one language and theme tuple and not every destructive entry point was driven.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1912,8 +1922,10 @@
         "test/local-access-management-ui.test.js",
         "test/local-access-integration.test.js"
       ],
-      "evidence": [],
-      "reason": "Protected access host, challenge validation, queued-request snapshots and revision-bound grants exist. Thin host/renderer composition wiring remains pending beyond this baseline; real protected-target and factor workflows are not accepted.",
+      "evidence": [
+        "docs/evidence/installed-proof-1.772.1.json"
+      ],
+      "reason": "Protected access host, challenge validation, queued-request snapshots and revision-bound grants exist. Thin host/renderer composition wiring remains pending beyond this baseline; real protected-target and factor workflows are not accepted. Release package run of 1.772.1 (not an installed copy) reached the Lock an element dialog from the context menu. Status stays unverified: creating a lock was not reachable because local profile setup reported that local mutation history is unavailable, and the dialog showed a clipped Create lock button at that window size.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -2413,8 +2425,10 @@
         "test/notification-display.test.js",
         "test/documentation-platform.test.js"
       ],
-      "evidence": [],
-      "reason": "Selected-record, notification, access and export actions exist. Exhaustive collection coverage remains unverified; thin access composition wiring is pending beyond this baseline.",
+      "evidence": [
+        "docs/evidence/installed-proof-1.772.1.json"
+      ],
+      "reason": "Selected-record, notification, access and export actions exist. Exhaustive collection coverage remains unverified; thin access composition wiring is pending beyond this baseline. Release package run of 1.772.1 (not an installed copy) used select-all, a two-file selection, bulk offline release, bulk delete to the Recycle Bin and restore. Status stays unverified: only one language and theme tuple was driven.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -12247,8 +12261,10 @@
       "tests": [
         "test/wording-drop.test.js"
       ],
-      "evidence": [],
-      "reason": "A wording file dropped anywhere on the window is validated with the same schema and bounds as the Settings upload, applied at once and followed by a non-blocking celebration, and the Settings upload remains the fallback. Source tests use fakes for the window, timers and storage. Built-app drop, refusal of an invalid drop, reduced motion, screen reader announcement and restart persistence are not yet proven on an installed build.",
+      "evidence": [
+        "docs/evidence/installed-proof-1.772.1.json"
+      ],
+      "reason": "A wording file dropped anywhere on the window is validated with the same schema and bounds as the Settings upload, applied at once and followed by a non-blocking celebration, and the Settings upload remains the fallback. Source tests use fakes for the window, timers and storage. Built-app drop, refusal of an invalid drop, reduced motion, screen reader announcement and restart persistence are not yet proven on an installed build. Release package run of 1.772.1 (not an installed copy) applied a neutral test wording file dropped on the window, showed the full-window announcement and the reduced-motion static notice, refused an invalid file without changes, applied it through the Settings upload and restored original wording on reset. Status stays unverified: the announcement duration was not re-measured and no installed-copy run was made.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -18650,7 +18666,8 @@
     "docs/features/interface/personal-vocabulary.zh-HK.md": "5ff38608bf39d0747b46c761a2caaf1f475853df",
     "test/wording-drop.test.js": "5ff38608bf39d0747b46c761a2caaf1f475853df",
     "browser-extension/wording-drop.js": "5ff38608bf39d0747b46c761a2caaf1f475853df",
-    "browser-extension/popup-wording.js": "5ff38608bf39d0747b46c761a2caaf1f475853df"
+    "browser-extension/popup-wording.js": "5ff38608bf39d0747b46c761a2caaf1f475853df",
+    "docs/evidence/installed-proof-1.772.1.json": "c6edc1f6489264fdf00f190046dea68a3eece4fd"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",

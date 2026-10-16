@@ -1,0 +1,231 @@
+{
+  "schema": "release-package-proof-v1",
+  "label": "release package run (extracted full package), not an installed copy",
+  "release": {
+    "tag": "v1.772.1",
+    "version": "1.772.1",
+    "sourceCommit": "c6edc1f6489264fdf00f190046dea68a3eece4fd",
+    "fullPackage": "MaterialFileEncryptor-1.772.1-full.nupkg",
+    "fullPackageBytes": 431816642,
+    "fullPackageSha1": "8b6297993d66eafaf744b638d6c54c6888aa403c",
+    "fullPackageSha256": "a7fc6e434110f6ef8cac993c37921b4ab002fdbf89f739035cb602d4d7dca7dd",
+    "releasesFileSha1Matched": true,
+    "mainExecutable": "lib/net45/MaterialFileEncryptor.exe",
+    "mainExecutableBytes": 246302720,
+    "mainExecutableSha256": "40904fa1622279a21f5263e719212c8bd0657924d76776e8866780c558af0752",
+    "buildProvenanceSourceCommit": "c6edc1f6489264fdf00f190046dea68a3eece4fd"
+  },
+  "route": {
+    "launch": "Extracted package executable started on a task-owned hidden desktop through the cheap Lowlevel route with loopback-only remote debugging bound to 127.0.0.1 on one task-chosen port and an isolated profile directory.",
+    "interaction": "Real background pointer clicks by window handle for controls; DOM value assignment for text fields and the slider; Chrome DevTools Protocol key events for Escape, Tab and Enter; a DataTransfer drop simulated through the debugging port.",
+    "isolation": "A small loopback service accepted evaluation only while exactly one page target existed on the port, otherwise it refused.",
+    "secrets": "Throwaway vault and profile passwords were generated in memory by that service and assigned through DOM values; they were never printed or stored. The wording file was a small neutral made-up test file; no real private file was used.",
+    "flags": "No media auto-accept or screen-capture browser flags were used.",
+    "continuation": "The first lane stopped on a network error part way through; its console transcripts were lost, its captures survived. Results below that rest only on those captures say so."
+  },
+  "results": [
+    {
+      "id": 1,
+      "item": "Two-key confirmation on destructive actions",
+      "result": "passed",
+      "detail": "Bulk delete, bulk offline release, Force Lock (including the native Force Lock dialog afterwards), Empty Recycle Bin and personal-wording reset each opened the Confirm destructive action dialog with Confirm disabled. A gating matrix re-run in this continuation on Empty Recycle Bin recorded: opened (Confirm disabled), first key only (disabled), second key only (disabled), both keys with the slider at 0 (disabled), slider set with no keys (slider stayed at 0, disabled), Escape closed the dialog, a reopened dialog came back reset, both keys plus slider enabled Confirm, and Emergency exit closed the dialog. Actions ran only after both keys and the slider in the earlier steps (bulk delete removed the three files, Force Lock locked the drive).",
+      "caveat": "The cancel outcome for bulk delete, offline release, Force Lock and reset rests on the surviving captures of the earlier lane (state after cancel was visible in later frames); the gating matrix itself was re-recorded for one dialog only.",
+      "captures": [
+        {
+          "file": "docs/images/captures/reproof-1.772.1/desktop/confirm-bulk-delete-dark-en.png",
+          "sha256": "179d11fdbfbfe25522dcde95b050565abbeaaf05c2468268f40320c186f6eab8"
+        },
+        {
+          "file": "docs/images/captures/reproof-1.772.1/desktop/confirm-force-lock-dark-en.png",
+          "sha256": "f54968c9d9e6d8b4f83dc8c629d7bb5f85ad36feb21f4e3cb0ed622b43592c01"
+        }
+      ],
+      "uncatalogued": [
+        "21b-release-confirm",
+        "21c-release-confirm-ready",
+        "21d-after-release",
+        "22b-after-bulk-delete",
+        "24a-empty-recycle-confirm",
+        "24b-after-empty",
+        "25b-after-force-lock",
+        "25c-force-lock-native-dialog",
+        "25d-after-force-lock",
+        "35a-reset-wording-confirm",
+        "35b-after-reset",
+        "70a-gate-ready"
+      ]
+    },
+    {
+      "id": 2,
+      "item": "Multi-select: select-all, bulk delete to the Recycle Bin, restore",
+      "result": "passed",
+      "detail": "Select-all marked every row and the header showed a partial state for two rows; three selected files moved to the Recycle Bin through the confirmation; Select all visible then Restore selected returned them to the drive and the Recycle Bin listed no entries afterwards.",
+      "captures": [
+        {
+          "file": "docs/images/captures/reproof-1.772.1/desktop/drive-bulk-selection-dark-en.png",
+          "sha256": "269aff2e0646e19b5d9c393c52f5a969a50756a4c8b69a287f5fc9b6ac69ba87"
+        }
+      ],
+      "uncatalogued": [
+        "20b-select-all",
+        "23a-recycle-three",
+        "23b-recycle-all-selected",
+        "23c-after-restore"
+      ]
+    },
+    {
+      "id": 3,
+      "item": "Drop-to-apply personal wording",
+      "result": "passed",
+      "detail": "A neutral test file dropped through a simulated DataTransfer applied its wording at once, showed the drop overlay and a full-window announcement with the headline given by the file, and under reduced motion showed a static notice. An invalid file was refused with a message and changed nothing. The Settings upload still applied wording after a replace confirmation, and the reset confirmation restored the original wording.",
+      "caveat": "The announcement duration of about 3 seconds was not re-measured in this continuation; frames show the announcement present, not its timing.",
+      "captures": [
+        {
+          "file": "docs/images/captures/reproof-1.772.1/desktop/wording-applied-celebration-dark-en.png",
+          "sha256": "faac9501a2bc326ea86906adc291fa529c6e838614280a916f7f5ecb388b2ad5"
+        }
+      ],
+      "uncatalogued": [
+        "30b-wording-applied",
+        "30c-wording-drop-overlay",
+        "31a-wording-celebration-reduced-motion",
+        "32a-invalid-drop-refused",
+        "33a-settings-menu",
+        "33b-settings-view",
+        "34a-settings-upload-replace-confirm",
+        "34b-settings-upload-celebration",
+        "35a-reset-wording-confirm",
+        "35b-after-reset"
+      ]
+    },
+    {
+      "id": 4,
+      "item": "Information icons beside controls, panels, keyboard",
+      "result": "passed",
+      "detail": "Information icons sit beside shell, toolbar, file action and settings controls. A real pointer click opened the Main navigation panel. With keyboard events: Enter on the icon opened the panel and moved focus into its heading, Escape closed it and returned focus to the icon, and Tab moved on to the next control.",
+      "captures": [
+        {
+          "file": "docs/images/captures/reproof-1.772.1/desktop/drive-file-list-dark-en.png",
+          "sha256": "446b8b3852b27149bc01431e7a37233ec027466f95a2978324c6fa339628f06c"
+        }
+      ],
+      "uncatalogued": [
+        "60b-fixed-nav-info-open"
+      ]
+    },
+    {
+      "id": 5,
+      "item": "Spot checks",
+      "result": "partial",
+      "detail": "Language: the setup guide ran in English and Cantonese, light and dark; bilingual was not re-driven. Accent: changing the Accent color field moved the primary colour from #acd0a9 to #ab8bee across the shell. Regex builder: opened from the command palette and search fields. Command palette: opened from the top bar. Element lock: the Lock an element dialog was reached from the context menu, but creating a lock was not reachable (see findings).",
+      "captures": [
+        {
+          "file": "docs/images/captures/reproof-1.772.1/desktop/setup-guide-requirements-light-en.png",
+          "sha256": "b3a51d4927091c873ff2f9110949fc824e85465dcdab486d39d2438a13aa475d"
+        },
+        {
+          "file": "docs/images/captures/reproof-1.772.1/desktop/setup-guide-finish-dark-en.png",
+          "sha256": "e6644dcbfae7f19593dd5149ca100e50291e8f4c6632ac91ba5fafa5a31c39de"
+        }
+      ],
+      "uncatalogued": [
+        "05h-guide-look-dark-yue",
+        "05i-guide-look-dark-en",
+        "50a-command-palette",
+        "50b-regex-builder",
+        "51b-appearance",
+        "51c-accent-changed",
+        "72c-lock-element-dialog"
+      ]
+    },
+    {
+      "id": 6,
+      "item": "Two visual defects in the setup guide Look step capture",
+      "result": "fixed in source, not in the release",
+      "detail": "Cause 1: connectSelectSearch inserted the choice search button as a loose sibling after every select. Its only layout rule was scoped to dialog bodies, so in a grid container (the setup guide panel and the personalization fields) the button took its own grid row and floated below the select. Cause 2: the Main navigation information icon was mounted as a flex sibling before the navigation rail, so it took its own row above the application name. Fix: the helper wraps the pair in one grid item only when the parent is a grid, with stylesheet rules in modern.css; the navigation icon is positioned in the rail header and the brand reserves room. Test: test/detached-helper-icons.test.js failed before the change (2 of 3) and passes after. Live check: the same rules were applied to the running release page through a constructed stylesheet and the four visible search buttons moved into their select row and the navigation icon moved beside the name. That preview is not a build capture and is not used as README evidence; the published release still shows both defects."
+    }
+  ],
+  "findings": [
+    "Local profile setup reported \"Local mutation history is unavailable\" in this route, so the profile, the element lock creation and its dependants were not reachable. Cause not investigated.",
+    "The Lock an element dialog at the 1792x1139 window clipped its Create lock button at the bottom edge and a tab label from the page behind overlapped the dialog. Not fixed in this lane.",
+    "The red error banner for an invalid wording file stayed on every view until dismissed, including after a successful reset.",
+    "The Notifications panel kept an entry from the earlier relaunch (\"Application is closing\"), which is expected for that relaunch."
+  ],
+  "boundaries": {
+    "protectedProcessSet": "Process 4416, its children, C:\\MFE-Demo and drive M: were not touched. The process set (4416 and children 2740, 8152, 21640, 1996, 18612) was read before and after with identical ids and creation times.",
+    "teardown": "The processes started by this lane were ended by exact process id (the app, its children and conhost, and the loopback evaluation service). The throwaway vault contents under C:\\rpv were deleted and the isolated profile was removed. The empty C:\\rpv folder remains because removal of that top-level path is blocked by the tool policy.",
+    "notInstalled": "Setup.exe was not run and the installed application was not updated. Nothing here proves the installer, update, uninstall or a fresh-environment install."
+  },
+  "readmeCaptures": [
+    {
+      "file": "docs/images/captures/reproof-1.772.1/desktop/setup-guide-requirements-light-en.png",
+      "sha256": "b3a51d4927091c873ff2f9110949fc824e85465dcdab486d39d2438a13aa475d",
+      "bytes": 105565,
+      "width": 1792,
+      "height": 1139,
+      "screen": "setup-guide-requirements",
+      "theme": "light",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.772.1/desktop/setup-guide-finish-dark-en.png",
+      "sha256": "e6644dcbfae7f19593dd5149ca100e50291e8f4c6632ac91ba5fafa5a31c39de",
+      "bytes": 106893,
+      "width": 1792,
+      "height": 1139,
+      "screen": "setup-guide-finish",
+      "theme": "dark",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.772.1/desktop/drive-file-list-dark-en.png",
+      "sha256": "446b8b3852b27149bc01431e7a37233ec027466f95a2978324c6fa339628f06c",
+      "bytes": 116315,
+      "width": 1792,
+      "height": 1139,
+      "screen": "drive-file-list",
+      "theme": "dark",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.772.1/desktop/drive-bulk-selection-dark-en.png",
+      "sha256": "269aff2e0646e19b5d9c393c52f5a969a50756a4c8b69a287f5fc9b6ac69ba87",
+      "bytes": 108634,
+      "width": 1792,
+      "height": 1139,
+      "screen": "drive-bulk-selection",
+      "theme": "dark",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.772.1/desktop/confirm-bulk-delete-dark-en.png",
+      "sha256": "179d11fdbfbfe25522dcde95b050565abbeaaf05c2468268f40320c186f6eab8",
+      "bytes": 122370,
+      "width": 1792,
+      "height": 1139,
+      "screen": "confirm-bulk-delete",
+      "theme": "dark",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.772.1/desktop/confirm-force-lock-dark-en.png",
+      "sha256": "f54968c9d9e6d8b4f83dc8c629d7bb5f85ad36feb21f4e3cb0ed622b43592c01",
+      "bytes": 122916,
+      "width": 1792,
+      "height": 1139,
+      "screen": "confirm-force-lock",
+      "theme": "dark",
+      "language": "en"
+    },
+    {
+      "file": "docs/images/captures/reproof-1.772.1/desktop/wording-applied-celebration-dark-en.png",
+      "sha256": "faac9501a2bc326ea86906adc291fa529c6e838614280a916f7f5ecb388b2ad5",
+      "bytes": 167726,
+      "width": 1792,
+      "height": 1139,
+      "screen": "wording-applied-celebration",
+      "theme": "dark",
+      "language": "en"
+    }
+  ]
+}
