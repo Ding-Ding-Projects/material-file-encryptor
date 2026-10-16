@@ -4,13 +4,15 @@ import {resolvePublicImage,stagePublicImages} from './public-images.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
+import {SITE_URL} from './social-metadata.mjs';
 const repository='https://github.com/Ding-Ding-Projects/material-file-encryptor';
 export const escapeHtml=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 const slug=value=>value.toLowerCase().replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-|-$/g,'');
 export const route=source=>`articles/${source.replace(/\.md$/i,'').replaceAll('/','--')}.html`;
-export function renderMarkdown(markdown,source,routeMap,prefix='../',images=new Map()) {
- const headings=new Map();let diagramOrdinal=0;
+// With documentTitle the first heading becomes the page h1 and later levels never skip a step; otherwise headings shift down one level under a page-owned h1.
+export function renderMarkdown(markdown,source,routeMap,prefix='../',images=new Map(),{documentTitle=false}={}) {
+ const headings=new Map();let diagramOrdinal=0,previousLevel=0;
  const inline=text=>{
   const tokens=[];
   const save=html=>`\u0000${tokens.push(html)-1}\u0000`;
@@ -40,7 +42,7 @@ export function renderMarkdown(markdown,source,routeMap,prefix='../',images=new 
   const summary=/^<summary>([^<>]+)<\/summary>$/.exec(line.trim());
   if(summary){flush();output+=`<summary>${escapeHtml(summary[1])}</summary>`;continue;}
   const heading=/^(#{1,6})\s+(.+)$/.exec(line);
-  if(heading){flush();const base=slug(heading[2]),count=headings.get(base)||0;headings.set(base,count+1);const id=base+(count?'-'+count:'');const level=Math.min(6,heading[1].length+1);output+=`<h${level} id="${id}">${inline(heading[2])}<a class="heading-link" href="#${id}" aria-label="Link to this section">#</a></h${level}>`;continue;}
+  if(heading){flush();const base=slug(heading[2]),count=headings.get(base)||0;headings.set(base,count+1);const id=base+(count?'-'+count:'');const raw=heading[1].length;const level=documentTitle?(previousLevel?Math.min(previousLevel+1,Math.max(2,raw),6):1):Math.min(6,raw+1);previousLevel=level;output+=`<h${level} id="${id}">${inline(heading[2])}<a class="heading-link" href="#${id}" aria-label="Link to this section">#</a></h${level}>`;continue;}
   if(line.includes('|')&&/^\s*\|?\s*:?-{3,}/.test(lines[i+1]||'')) {
    flush();const cells=row=>row.trim().replace(/^\||\|$/g,'').split('|').map(cell=>cell.trim());
    output+='<div class="table-scroll" tabindex="0" role="region" aria-label="Documentation table"><table><thead><tr>'+cells(line).map(cell=>`<th>${inline(cell)}</th>`).join('')+'</tr></thead><tbody>';i++;
@@ -54,7 +56,7 @@ export function renderMarkdown(markdown,source,routeMap,prefix='../',images=new 
  }
  flush();return output;
 }
-export function pageShell(home,title,body,{depth=0,search=true}={}) {
+export function pageShell(home,title,body,{depth=0,search=true,head=''}={}) {
  if(!Number.isInteger(depth)||depth<0||depth>8)throw Error('Unsupported publication route depth');
  const prefix=depth?'../'.repeat(depth):'./';
  const header=home.match(/<header\b[^>]*class="[^"]*\bsite-header\b[^"]*"[^>]*>[\s\S]*?<\/header>/)?.[0];
@@ -65,7 +67,7 @@ export function pageShell(home,title,body,{depth=0,search=true}={}) {
  const linkedNavigation=navigation.replace(/href="(library|wiki|gallery|workspace)\.html"/g,(_,name)=>`href="${prefix}${name}.html"`);
  const split=linkedNavigation.indexOf('<footer');
  const searchBox=`<div class="search-wrap publication-search" ${search?'':'hidden'}><label for="doc-search">Find in this page</label><div class="search-field"><input id="doc-search" type="search" maxlength="160" autocomplete="off"><button id="search-clear" type="button" aria-label="Clear documentation search" hidden>×</button></div><p id="search-status" class="small" role="status"></p></div>`;
- return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>${escapeHtml(title)} · Material File Encryptor</title><meta name="description" content="Complete product documentation and source-bound capture records."><link rel="icon" href="${prefix}favicon.svg"><link rel="stylesheet" href="${prefix}fonts/fonts.css"><link rel="stylesheet" href="${prefix}site.css"><script type="module" src="${prefix}site.js"></script></head><body><a class="skip-link" href="#main">Skip to content</a>${linkedNavigation.slice(0,split)}<main id="main" class="container publication"><nav class="publication-nav" aria-label="Documentation navigation"><a href="${prefix}index.html">Home</a><a href="${prefix}library.html">Documentation library</a><a href="${prefix}wiki.html">Wiki</a><a href="${prefix}gallery.html">Capture gallery</a></nav>${searchBox}${body}<p id="no-results" class="no-results" hidden>No entries match this search.</p></main>${linkedNavigation.slice(split)}${dialog}</body></html>`;
+ return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>${escapeHtml(title)} · Material File Encryptor</title><meta name="description" content="Complete product documentation and source-bound capture records.">${head}<link rel="icon" href="${prefix}favicon.svg"><link rel="stylesheet" href="${prefix}fonts/fonts.css"><link rel="stylesheet" href="${prefix}site.css"><script type="module" src="${prefix}site.js"></script></head><body><a class="skip-link" href="#main">Skip to content</a>${linkedNavigation.slice(0,split)}<main id="main" class="container publication"><nav class="publication-nav" aria-label="Documentation navigation"><a href="${prefix}index.html">Home</a><a href="${prefix}library.html">Documentation library</a><a href="${prefix}wiki.html">Wiki</a><a href="${prefix}gallery.html">Capture gallery</a></nav>${searchBox}${body}<p id="no-results" class="no-results" hidden>No entries match this search.</p></main>${linkedNavigation.slice(split)}${dialog}</body></html>`;
 }
 async function markdownFiles(directory) {
  const result=[];for(const entry of await fs.readdir(directory,{withFileTypes:true})){
@@ -91,12 +93,25 @@ export async function buildDocumentation(root,output,home) {
  for(const file of wikiFiles)routes.set('docs/site/wiki/'+file,route('wiki/'+file));
  const articles=[];
  for(const [source,url]of routes){if(publicProofs.some(proof=>proof.source===source))continue;const markdown=await fs.readFile(path.join(root,source),'utf8');articles.push({source,url,markdown,title:/^#\s+(.+)$/m.exec(markdown)?.[1]||path.basename(source,'.md'),sha256:digest(markdown),category:source.startsWith('docs/features/')?source.split('/')[2]:'reference'});}
+ const MOVED=/^(?:This article has moved to \[|本文已移至 \[)/;
+ for(const article of articles){
+  const intro=article.markdown.replace(/^#[^\n]*\n/,'').trim().split(/\r?\n\r?\n/)[0]||'';
+  const target=MOVED.test(intro)?/\]\(([^)\s#]+)\)/.exec(intro)?.[1]:null;
+  const destination=target&&routes.get(path.posix.normalize(path.posix.join(path.posix.dirname(article.source),target)));
+  if(destination){article.moved=destination;article.category='moved';}
+ }
  await fs.mkdir(path.join(output,'articles'),{recursive:true});await fs.mkdir(path.join(output,'categories'),{recursive:true});
  const links=(list,prefix='')=>`<ul class="article-links">${list.map(a=>`<li><a href="${prefix}${a.url}">${escapeHtml(a.title)}</a></li>`).join('')}</ul>`;
- for(const article of articles){const related=articles.filter(a=>a!==article&&a.category===article.category);const body=`<article class="guide documentation-article" id="article" data-search="${escapeHtml(article.title)}"><p class="eyebrow">Complete source article</p>${renderMarkdown(article.markdown,article.source,routes,'../',images)}<p class="small source-reference">Source: <a href="${article.source.startsWith('docs/site/wiki/')?catalog.wiki.source+'/'+path.basename(article.source,'.md'):repository+'/blob/main/'+article.source}">${escapeHtml(article.source.startsWith('docs/site/wiki/')?'Wiki '+path.basename(article.source,'.md'):article.source)}</a> · SHA-256 <code>${article.sha256}</code></p><nav aria-label="Suggested articles"><h2>Suggested articles</h2>${links(related.length?related:articles.filter(a=>a!==article).slice(0,3),'../')}<a href="../library.html">All documentation categories</a></nav></article>`;await fs.writeFile(path.join(output,article.url),pageShell(home,article.title,body,{depth:1}));}
+ for(const article of articles){if(article.moved)continue;const related=articles.filter(a=>a!==article&&a.category===article.category);const body=`<article class="guide documentation-article" id="article" data-search="${escapeHtml(article.title)}"><p class="eyebrow">Complete source article</p>${renderMarkdown(article.markdown,article.source,routes,'../',images,{documentTitle:true})}<p class="small source-reference">Source: <a href="${article.source.startsWith('docs/site/wiki/')?catalog.wiki.source+'/'+path.basename(article.source,'.md'):repository+'/blob/main/'+article.source}">${escapeHtml(article.source.startsWith('docs/site/wiki/')?'Wiki '+path.basename(article.source,'.md'):article.source)}</a> · SHA-256 <code>${article.sha256}</code></p><nav aria-label="Suggested articles"><h2>Suggested articles</h2>${links(related.length?related:articles.filter(a=>a!==article).slice(0,3),'../')}<a href="../library.html">All documentation categories</a></nav></article>`;await fs.writeFile(path.join(output,article.url),pageShell(home,article.title,body,{depth:1}));}
+ for(const article of articles.filter(a=>a.moved)){
+  const target=article.moved.replace(/^articles\//,'');
+  const body=`<article class="guide documentation-article" id="article" data-search="${escapeHtml(article.title)}"><p class="eyebrow">Moved article</p>${renderMarkdown(article.markdown,article.source,routes,'../',images,{documentTitle:true})}<p>This page redirects to <a href="${target}">its new location</a>.</p><p><a href="../library.html">All documentation categories</a></p></article>`;
+  const head=`<meta http-equiv="refresh" content="0; url=${target}"><link rel="canonical" href="${SITE_URL}${article.moved}">`;
+  await fs.writeFile(path.join(output,article.url),pageShell(home,article.title,body,{depth:1,head}));
+ }
  let categories='';
  for(const category of catalog.categories){const list=articles.filter(a=>a.category===category);if(!list.length)throw new Error('Empty documentation category');const name=category[0].toUpperCase()+category.slice(1);categories+=`<section class="guide category-index" id="category-${category}" data-search="${category}"><h2><a href="categories/${category}.html">${name}</a></h2>${links(list)}</section>`;await fs.writeFile(path.join(output,'categories',category+'.html'),pageShell(home,name+' documentation',`<section class="guide category-index" id="category-${category}"><h1>${name} documentation</h1>${links(list,'../')}</section>`,{depth:1}));}
- await fs.writeFile(path.join(output,'library.html'),pageShell(home,'Documentation library',`<h1>Documentation library</h1><p>Complete articles are available here without leaving this website. Commands and source articles retain their original language. This website documents the separate Windows application; it cannot open a vault.</p>${categories}<section class="guide" id="references"><h2>Project reference and wiki</h2>${links(articles.filter(a=>a.category==='reference'||a.source==='docs/features/README.md'))}</section>`));
+ await fs.writeFile(path.join(output,'library.html'),pageShell(home,'Documentation library',`<h1>Documentation library</h1><p>Complete articles are available here without leaving this website. Commands and source articles retain their original language. This website documents the separate Windows application; it cannot open a vault.</p>${categories}<section class="guide" id="references"><h2>Project reference and wiki</h2>${links(articles.filter(a=>a.category==='reference'||a.source==='docs/features/README.md'||a.source==='docs/features/README.zh-HK.md'))}</section><section class="guide" id="moved"><h2>Moved articles</h2><p>Older addresses that now redirect to the current article.</p>${links(articles.filter(a=>a.moved))}</section>`));
  const wiki=articles.filter(a=>a.source.startsWith('docs/site/wiki/'));
  await fs.writeFile(path.join(output,'wiki.html'),pageShell(home,'Wiki',`<h1>Wiki</h1><p>The complete ${wiki.length}-page Markdown snapshot from wiki revision <code>${catalog.wiki.sourceCommit}</code> is included below. Earlier access was unavailable; the subsequent Git CLI read succeeded.</p>${wiki.map(a=>{const sectionId='wiki-'+path.basename(a.source,'.md');return `<section class="guide documentation-article" id="${sectionId}"><h2>${escapeHtml(a.title)}</h2>${renderMarkdown(a.markdown,a.source,routes,'',images).replace(/id="([^"]+)"/g,(_,id)=>`id="${sectionId}-${id}"`).replace(/href="#([^"]+)"/g,(_,id)=>`href="#${sectionId}-${id}"`)}<a href="${a.url}">Open this wiki article</a></section>`;}).join('')}`));
  await fs.writeFile(path.join(output,'documentation-inventory.json'),JSON.stringify({version:1,articles:articles.map(({markdown,...a})=>a),wiki:catalog.wiki,categories:catalog.categories},null,2));

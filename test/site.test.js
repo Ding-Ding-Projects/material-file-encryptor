@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { parseVocabulary, replaceVocabulary, filterGuides } from '../docs/site/preferences.js';
-import {previewRelease,verifiedDownload,renderReleaseDownload} from '../docs/site/release.js';
+import {currentRelease,verifiedDownload,renderReleaseDownload} from '../docs/site/release.js';
 
 const valid = replacements => JSON.stringify({ version: 1, replacements });
 test('site vocabulary accepts the desktop contract and treats replacement markup as plain text', () => {
@@ -51,8 +51,8 @@ test('all same-page links resolve, asset links fit repository Pages, and release
 
 // Complete proof below is a unit fixture, never a claim about the real release.
 function completeReleaseFixture() {
-  const record=structuredClone(previewRelease);
-  for(const kind of ['download','packaged','installed','uninstall'])record.verification[kind]={status:'verified',sourceCommit:record.sourceCommit,installerSha256:record.installer.sha256,receiptSha256:'d'.repeat(64),verifiedAt:'2026-10-09T20:00:00Z'};
+  const record=structuredClone(currentRelease);
+  for(const kind of ['download','packaged','installed','uninstall'])record.verification[kind]={status:'verified',sourceCommit:record.sourceCommit,installerSha256:record.installer.sha256,receiptSha256:'d'.repeat(64),verifiedAt:'2026-10-16T20:00:00Z'};
   record.verification.download.bytes=record.installer.bytes;return record;
 }
 function downloadDocumentFixture() {
@@ -60,38 +60,46 @@ function downloadDocumentFixture() {
   const button=createElement('button');button.disabled=true;button.id='preview-download';nodes.set('#preview-download',button);nodes.set('#download-help',{});nodes.set('#download-state',{});
   return {querySelector:selector=>nodes.get(selector),createElement};
 }
-test('download remains inert for missing, draft, mismatched or incomplete release proof',()=>{
+test('download remains inert for missing, draft, prerelease, mismatched or malformed release records',()=>{
   const complete=completeReleaseFixture();assert.equal(verifiedDownload(complete).url,complete.installer.url);
-  const pending=structuredClone(complete);pending.verification.installed.status='pending';
-  const invalid=[null,{},pending];
-  for(const kind of ['download','packaged','installed','uninstall']) {
-    const record=structuredClone(complete);record.verification[kind].status='pending';invalid.push(record);
-    const wrongSource=structuredClone(complete);wrongSource.verification[kind].sourceCommit='a'.repeat(40);invalid.push(wrongSource);
-    const wrongHash=structuredClone(complete);wrongHash.verification[kind].installerSha256='b'.repeat(64);invalid.push(wrongHash);
-    const noReceipt=structuredClone(complete);delete noReceipt.verification[kind].receiptSha256;invalid.push(noReceipt);
-  }
-  for(const patch of [{draft:true},{targetCommit:'c'.repeat(40)},{publishedAt:'invalid'},{releaseUrl:'https://example.com/release'}])invalid.push({...complete,...patch});
+  const invalid=[null,{}];
+  for(const patch of [{draft:true},{prerelease:true},{targetCommit:'c'.repeat(40)},{publishedAt:'invalid'},{releaseUrl:'https://example.com/release'}])invalid.push({...structuredClone(complete),...patch});
   invalid.push({...complete,installer:{...complete.installer,url:'https://example.com/installer.exe'}});
   invalid.push({...complete,installer:{...complete.installer,sha256:'bad'}});
-  const wrongBytes=structuredClone(complete);wrongBytes.verification.download.bytes++;invalid.push(wrongBytes);
-  const stale=structuredClone(complete);stale.verification.installed.verifiedAt='2026-10-08T00:00:00Z';invalid.push(stale);
   for(const record of invalid) {
     assert.equal(verifiedDownload(record),null);
     const document=downloadDocumentFixture();assert.equal(renderReleaseDownload(document,record),false);
     assert.equal(document.querySelector('#preview-download').tagName,'BUTTON');assert.equal(document.querySelector('#preview-download').disabled,true);assert.equal(document.querySelector('#preview-download').href,undefined);
   }
   const document=downloadDocumentFixture();assert.equal(renderReleaseDownload(document,complete),true);assert.equal(document.querySelector('#preview-download').href,complete.installer.url);
-  assert.equal(renderReleaseDownload(document,pending),false);assert.equal(document.querySelector('#preview-download').disabled,true);assert.equal(document.querySelector('#preview-download').href,undefined);
+  assert.match(document.querySelector('#download-state').textContent,/^Verified/);
+});
+test('incomplete behaviour proof is never labelled verified, though a published normal release stays downloadable',()=>{
+  const complete=completeReleaseFixture();const unverified=[];
+  for(const kind of ['download','packaged','installed','uninstall']) {
+    const pendingKind=structuredClone(complete);pendingKind.verification[kind].status='pending';unverified.push(pendingKind);
+    const wrongSource=structuredClone(complete);wrongSource.verification[kind].sourceCommit='a'.repeat(40);unverified.push(wrongSource);
+    const wrongHash=structuredClone(complete);wrongHash.verification[kind].installerSha256='b'.repeat(64);unverified.push(wrongHash);
+    const noReceipt=structuredClone(complete);delete noReceipt.verification[kind].receiptSha256;unverified.push(noReceipt);
+  }
+  const wrongBytes=structuredClone(complete);wrongBytes.verification.download.bytes++;unverified.push(wrongBytes);
+  const stale=structuredClone(complete);stale.verification.installed.verifiedAt='2026-10-08T00:00:00Z';unverified.push(stale);
+  for(const record of unverified) {
+    assert.equal(verifiedDownload(record),null);
+    const document=downloadDocumentFixture();assert.equal(renderReleaseDownload(document,record),true);
+    assert.equal(document.querySelector('#preview-download').tagName,'A');assert.equal(document.querySelector('#preview-download').href,record.installer.url);
+    assert.doesNotMatch(document.querySelector('#download-state').textContent,/^Verified/);assert.match(document.querySelector('#download-state').textContent,/verification pending/);
+  }
 });
 test('preview download copy has complete language mappings',async()=>{
   const {cantonese,localized}=await import('../docs/site/locales.js');
-  for(const text of ['Published preview · verification pending','Verified Windows preview','Download verified preview for Windows','Direct download stays disabled until the downloaded installer, installed application and uninstall checks pass.','The downloaded installer, packaged application, installation and removal passed source-bound local checks.','View published preview','Read source-bound verification','Historical Windows interface captures','History','Recycle Bin','Explicit descendant selection','Dark appearance','Historical packaged Windows interface · source']) {
+  for(const text of ['Published release · verification pending','Release unavailable · verification pending','Download Setup.exe for Windows','Direct download stays disabled until a published normal release with a checksummed installer is available.','Unsigned installer. Its size and SHA-256 checksum come from the published release. Installation and removal checks are not yet recorded for it, so keep independent backups.','Verified Windows preview','Download verified preview for Windows','Direct download stays disabled until the downloaded installer, installed application and uninstall checks pass.','The downloaded installer, packaged application, installation and removal passed source-bound local checks.','View published release','Read source-bound verification','Historical Windows interface captures','History','Recycle Bin','Explicit descendant selection','Dark appearance','Historical packaged Windows interface · source']) {
     assert.ok(cantonese[text],text);assert.equal(localized(text,'en'),text);assert.equal(localized(text,'yue'),cantonese[text]);assert.equal(localized(text,'bilingual'),`${text} / ${cantonese[text]}`);
   }
   const html=await readFile(new URL('../docs/site/index.html',import.meta.url),'utf8');
   for(const name of ['history','recycle-bin','help-how-it-works','home','drive-unlocked-files','tools-local-models'])assert.match(html,new RegExp(`images/captures/refresh-[a-f0-9]+/desktop/${name}-`));
   assert.ok(html.includes('Installer and native-operation verification are separate'));
-  assert.ok(html.includes(previewRelease.releaseUrl));assert.ok(html.includes(previewRelease.sourceCommit));
+  assert.ok(html.includes(currentRelease.releaseUrl));assert.ok(html.includes(currentRelease.sourceCommit));
 });
 
 test('message preferences accept only supported locales, booleans, and 1–5 integer levels', async () => {

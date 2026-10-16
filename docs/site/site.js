@@ -3,9 +3,9 @@ import {preparePublicDocumentControls,confirmSiteDestructive} from './site-found
 import { parseVocabulary, replaceVocabulary, filterGuides, updateGalleryGroups } from './preferences.js';
 import { emptyVocabulary, serializeVocabulary } from './personal-vocabulary.js';
 import { cantonese, localized, loadMessagePreferences, effectiveMessagePair } from './locales.js';
-import { previewRelease, renderReleaseDownload } from './release.js';
+import { loadReleaseRecord, renderReleaseDownload } from './release.js';
 
-renderReleaseDownload(document, previewRelease);
+renderReleaseDownload(document, loadReleaseRecord(document));
 preparePublicDocumentControls(document);
 
 let siteStorage;try{siteStorage=window.localStorage;}catch{siteStorage={getItem:()=>null,setItem:()=>{throw Error('Browser storage unavailable');},removeItem:()=>{throw Error('Browser storage unavailable');}};}
