@@ -12079,7 +12079,7 @@
       "persistence": [
         "browser-extension/preferences.js"
       ],
-      "reason": "Options and popup switch language and stack bilingual lines; complete copy and accessible-name coverage has not been accepted. No independent installed interaction or visual acceptance is claimed.",
+      "reason": "Built-extension interaction was observed in headless Edge 155 (see docs/evidence/extension-row-proofs-4c1ef40.json): all three modes switch, persist and restore after reload in options and popup. Remaining gap: in Cantonese mode the workspace search field label and placeholder stay English, so complete copy and accessible-name coverage is not proven; no installed-build proof.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -12633,7 +12633,7 @@
       ],
       "evidence": [],
       "persistence": [],
-      "reason": "A local product name replaces the original name in the workspace heading, page title, version line, tab list name and popup; markup and line breaks are rejected. Headless browser captures show the applied name; installed-build identity and independent acceptance are not claimed.",
+      "reason": "Built-extension proof exists: on the staged package (build identity fb51928d71119e837ce0f303cf25da67033e280ac87b11c134aed76e4f481e8e, source 4c1ef401bd429ed4b35f64c85dc66f6ff8d0a7b2) driven in headless Edge 155 with real input, the saved name appears in the heading, page title, version line, home tab list name and popup, angle brackets and line breaks are refused, it survives a reload and clearing restores the built-in name; see docs/evidence/extension-row-proofs-4c1ef40.json. Remaining gap: the row stays unverified only because validateFeatureDelivery still requires every applicable extension row to keep evidenceVerdict current-runtime-unverified and a status of unverified while behaviorVerdict is present, so no extension row can be marked implemented without changing that validator rule. It is also not an installed-build proof.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13136,7 +13136,7 @@
       ],
       "evidence": [],
       "persistence": [],
-      "reason": "Presets, a typed hexadecimal value and an opacity slider choose the accent; contrast is reported and Apply is offered only at 4.5:1 or better. Headless browser captures show the applied accent and the contrast feedback; installed-build identity and independent acceptance are not claimed.",
+      "reason": "Built-extension interaction was observed in headless Edge 155 (see docs/evidence/extension-row-proofs-4c1ef40.json): hex entry, contrast feedback, Apply, reset and refusal of invalid text work. Remaining gap: a sweep of colours and opacities never produced a below 4.5:1 result because the palette adjusts text colour, so the Apply-only-at-4.5:1 claim has no observable negative case; no installed-build proof.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -13306,7 +13306,7 @@
       ],
       "evidence": [],
       "persistence": [],
-      "reason": "The changelog Filters button collapses filter and export controls without clearing them and reads Filters (active) while a hidden filter applies. A headless browser capture shows the collapsed state; installed-build identity and independent acceptance are not claimed.",
+      "reason": "Built-extension proof exists: on the staged package (build identity fb51928d71119e837ce0f303cf25da67033e280ac87b11c134aed76e4f481e8e, source 4c1ef401bd429ed4b35f64c85dc66f6ff8d0a7b2) driven in headless Edge 155 with real input, collapse keeps the filter text and the result set, hides the export controls, reads Filters (active), and expand restores everything; see docs/evidence/extension-row-proofs-4c1ef40.json and its changelog captures. Remaining gap: the row stays unverified only because validateFeatureDelivery still requires every applicable extension row to keep evidenceVerdict current-runtime-unverified and a status of unverified while behaviorVerdict is present, so no extension row can be marked implemented without changing that validator rule. It is also not an installed-build proof.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
@@ -14764,7 +14764,7 @@
       ],
       "evidence": [],
       "persistence": [],
-      "reason": "The options Changelog tab shows the release changelog bundled at staging, filters it locally and shows Cantonese summaries in Cantonese and bilingual modes. Headless browser captures of the staged extension show it in light English and dark Cantonese; installed-build identity and independent acceptance are not claimed.",
+      "reason": "Built-extension interaction was observed in headless Edge 155 (see docs/evidence/extension-row-proofs-4c1ef40.json): the bundled changelog renders and the filter narrows it. Remaining gap: the persistence statement that the selected tab persists is not true across a reload, which opens on Home, and Cantonese summaries were not exercised; no installed-build proof.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "applicability": {
