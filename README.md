@@ -197,6 +197,18 @@ Fifteen captures of the extracted full release package for version 1.779.1, buil
 |---|---|
 | ![Lock an element dialog with the Create lock button visible at the default window size](docs/images/captures/reproof-1.779.1/desktop/lock-element-dialog-light-en.png) | ![Settings, Appearance and language, dark, with compact information icons](docs/images/captures/reproof-1.779.1/desktop/settings-appearance-dark-en.png) |
 
+#### Release 1.782.1: drive frames
+
+Six captures of the extracted full release package for version 1.782.1, built from source `4a49919`. This was a release package run, not an installed copy. Each frame was taken by window handle on a task-owned hidden desktop with an isolated profile and a throwaway vault holding neutral test files. They replace the older drive frames, which were taken before the compact information icons existed. Machine-readable details are in [the capture manifest](docs/images/captures/reproof-1.782.1/manifest.json) and [the proof record](docs/evidence/installed-proof-1.782.1.json).
+
+| Drive, locked | Drive, locked, bilingual | Drive, file list |
+|---|---|---|
+| ![Drive, locked, with an information icon beside Create a drive and Unlock existing drive](docs/images/captures/reproof-1.782.1/desktop/drive-locked-light-en.png) | ![Drive, locked, bilingual](docs/images/captures/reproof-1.782.1/desktop/drive-locked-light-bilingual.png) | ![Drive, file list with a compact information icon beside each file action](docs/images/captures/reproof-1.782.1/desktop/drive-files-light-en.png) |
+
+| Drive, one file selected | Drive, file list, bilingual | Drive, file list, dark, bilingual |
+|---|---|---|
+| ![Drive, one file selected, with Open, Export copy, Keep offline and Delete enabled](docs/images/captures/reproof-1.782.1/desktop/drive-file-selected-light-en.png) | ![Drive, file list, bilingual, Availability text wrapping beside its icon](docs/images/captures/reproof-1.782.1/desktop/drive-files-light-bilingual.png) | ![Drive, file list, dark, bilingual](docs/images/captures/reproof-1.782.1/desktop/drive-files-dark-bilingual.png) |
+
 #### Desktop application
 
 92 captures of the installed desktop application, version 1.702.1, built from source `9394b35`. Each was taken by window handle on a task-owned hidden desktop at 150 percent display scale (a 1280 by 800 window, saved at 1920 by 1200 pixels) with an isolated profile and a throwaway vault that holds test files only and uses neutral folder names. The capture host reported no frame showing a private path. The run captured 312 frames in all, covering 52 screens in light and dark themes and in English, Cantonese and bilingual modes; these are the ones published. A tabbed screen's own frame shows the tab named in its caption, and a few dark and bilingual frames show the last tab visited. Home is the first group. The drive, Pair a browser and server frames were retaken from a later installed release, listed with its own manifest below. The [capture manifest](docs/images/captures/refresh-b4cbf0e/desktop-capture-manifest.json) records every frame's hash.
@@ -223,15 +235,15 @@ Fifteen captures of the extracted full release package for version 1.779.1, buil
 
 | Drive, locked | Drive, locked, bilingual | Drive, unlocked, top of the page |
 |---|---|---|
-| ![Drive, locked](docs/images/captures/refresh-b4cbf0e/desktop/drive-locked-light-en.png) | ![Drive, locked, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/drive-locked-light-bilingual.png) | ![Drive, unlocked, top of the page](docs/images/captures/reproof-1.779.1/desktop/drive-toolbar-light-en.png) |
+| ![Drive, locked](docs/images/captures/reproof-1.782.1/desktop/drive-locked-light-en.png) | ![Drive, locked, bilingual](docs/images/captures/reproof-1.782.1/desktop/drive-locked-light-bilingual.png) | ![Drive, unlocked, top of the page](docs/images/captures/reproof-1.779.1/desktop/drive-toolbar-light-en.png) |
 
 | Drive, file list | Drive, file list, dark | Drive, one file selected |
 |---|---|---|
-| ![Drive, file list](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-light-en.png) | ![Drive, file list, dark](docs/images/captures/reproof-1.779.1/desktop/drive-toolbar-dark-en.png) | ![Drive, one file selected](docs/images/captures/refresh-a3593fc/desktop/drive-file-selected-light-en.png) |
+| ![Drive, file list](docs/images/captures/reproof-1.782.1/desktop/drive-files-light-en.png) | ![Drive, file list, dark](docs/images/captures/reproof-1.779.1/desktop/drive-toolbar-dark-en.png) | ![Drive, one file selected](docs/images/captures/reproof-1.782.1/desktop/drive-file-selected-light-en.png) |
 
 | Drive, file list, bilingual, Availability text wrapping beside its icon | Drive, file list, dark, bilingual | Available offline |
 |---|---|---|
-| ![Drive, file list, bilingual, Availability text wrapping beside its icon](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-light-bilingual.png) | ![Drive, file list, dark, bilingual](docs/images/captures/refresh-a3593fc/desktop/drive-unlocked-files-list-dark-bilingual.png) | ![Available offline](docs/images/captures/refresh-b4cbf0e/desktop/offline-light-en.png) |
+| ![Drive, file list, bilingual, Availability text wrapping beside its icon](docs/images/captures/reproof-1.782.1/desktop/drive-files-light-bilingual.png) | ![Drive, file list, dark, bilingual](docs/images/captures/reproof-1.782.1/desktop/drive-files-dark-bilingual.png) | ![Available offline](docs/images/captures/refresh-b4cbf0e/desktop/offline-light-en.png) |
 
 | Available offline, Cantonese | Create a drive dialog | Create a drive dialog, dark |
 |---|---|---|
