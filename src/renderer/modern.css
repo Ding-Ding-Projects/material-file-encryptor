@@ -89,6 +89,11 @@ mfe-control-guidance[data-info-icon]{display:inline-flex;vertical-align:middle;p
 mfe-control-guidance[data-info-icon][data-open]{display:block;flex:1 1 100%;inline-size:100%}
 [data-info-icon-pair]{display:inline-flex;flex-wrap:wrap;align-items:center;gap:8px;max-inline-size:100%;min-inline-size:0}
 [data-info-icon-pair]:has(>mfe-control-guidance[data-open]){flex:1 1 100%}
+/* A page header keeps its heading at full width while an explanation is open: the header wraps and the actions row, which holds the open
+   explanation, drops below the heading instead of competing with it for the same line. */
+.page-header:has(mfe-control-guidance[data-open]){flex-wrap:wrap}
+.page-header:has(mfe-control-guidance[data-open])>:first-child{flex:0 0 auto;max-inline-size:100%}
+.page-header:has(mfe-control-guidance[data-open])>.header-actions{flex:1 1 100%;min-inline-size:0}
 /* An icon follows its control: when the control is hidden, its icon is hidden with it. */
 mfe-control-guidance[data-info-icon]:has(+[hidden]){display:none}
 [data-info-icon-pair]:has(>[hidden]:not(mfe-control-guidance)){display:none}

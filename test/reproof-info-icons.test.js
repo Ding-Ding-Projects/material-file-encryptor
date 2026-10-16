@@ -47,3 +47,13 @@ test('the setup guide look step names the chosen option instead of its stored va
   assert.match(onboarding, /LOOK_CHOICE_LABELS = Object\.freeze\(\{en: 'English', yue: 'Cantonese', bilingual: 'English and Cantonese'/);
   assert.match(onboarding, /id === 'look' && Object\.hasOwn\(LOOK_CHOICE_LABELS, value\.detail\) \? t\(LOOK_CHOICE_LABELS\[value\.detail\]\)/);
 });
+
+test('an open explanation in a page header never squeezes the page heading', () => {
+  const wrap = rule(modern, '.page-header:has(mfe-control-guidance[data-open])');
+  assert.match(wrap, /flex-wrap:wrap/);
+  const heading = rule(modern, '.page-header:has(mfe-control-guidance[data-open])>:first-child');
+  assert.match(heading, /flex:0 0 auto/);
+  const actions = rule(modern, '.page-header:has(mfe-control-guidance[data-open])>.header-actions');
+  assert.match(actions, /flex:1 1 100%/);
+  assert.match(actions, /min-inline-size:0/);
+});
