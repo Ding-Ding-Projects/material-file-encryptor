@@ -12,6 +12,15 @@ function animateOnce(doc, node, frames) {
   try { node.animate(frames, {duration: 200, easing: 'cubic-bezier(0.2, 0, 0, 1)'}); } catch { /* animation is decoration only */ }
 }
 
+/** Registered copy follows the translator when the caller gives no explicit language: the known key comes back plain, doubled or translated. */
+const inferLanguage = t => {
+  try {
+    const probe = String(t('Emergency exit'));
+    if (probe === 'Emergency exit') return 'en';
+    return probe.includes('Emergency exit') ? 'bilingual' : 'yue';
+  } catch { return 'en'; }
+};
+
 /** Operation mode invokes run only after confirmation. Approval mode resolves at
  * the final confirmation and never claims that the caller operation completed.
  *
@@ -21,12 +30,12 @@ function animateOnce(doc, node, frames) {
  *   getLanguage    returns 'en', 'yue' or 'bilingual' for registered copy.
  *   anchor         a control. The confirmation then opens beside it instead of as a modal dialog.
  */
-export function requestSuperConfirmation(host,{action,affected,run,translate=t=>t,signal,confirmationOnly=false,validateConfirmation,destructiveId,getLanguage=()=>'en',anchor}={}){
+export function requestSuperConfirmation(host,{action,affected,run,translate=t=>t,signal,confirmationOnly=false,validateConfirmation,destructiveId,getLanguage,anchor}={}){
  const registered=destructiveId===undefined?null:destructiveAction(destructiveId);
  if(destructiveId!==undefined&&!registered)return Promise.reject(new Error(`Unregistered destructive action: ${destructiveId}`));
  if(signal?.aborted)return Promise.resolve({confirmed:false});
  const doc=host.ownerDocument,t=translate,origin=doc.activeElement;
- const language=getLanguage();
+ const language=typeof getLanguage==='function'?getLanguage():inferLanguage(t);
  const actionText=registered?localizedPair(registered.title,language):t(action);
  const consequence=registered?localizedPair(registered.affected,language):'';
  const affectedText=affected&&consequence&&affected!==consequence?`${affected}. ${consequence}`:(affected||consequence);

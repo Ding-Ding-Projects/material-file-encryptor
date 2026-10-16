@@ -1,5 +1,11 @@
 import {mountVisitorPersonalization,VISITOR_PREFIX} from './visitor-personalization.js';
 import {mountVisitorAccess} from './visitor-access.js';
+import {confirmDestructiveAction} from '../../src/shared/surface/workflow-confirm.js';
+
+/** Two-key super confirmation for a registered destructive action on the public pages. Resolves true only after both keys and the full slider. */
+export function confirmSiteDestructive(id,{affected,language=()=>'en'}={}){
+  return confirmDestructiveAction(document.body,id,{affected,getLanguage:language});
+}
 import {cantonese,localized} from './locales.js';
 import {mountSurfaceFoundation} from '../../src/renderer/features/shell/index.js';
 import {element, text, localized as localizedLabel} from '../../src/shared/surface/registry.js';

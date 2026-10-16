@@ -48,8 +48,9 @@ function scene(options, services = {}) {
   const doc = createAccessDocument(), host = doc.createElement('div');
   doc.body.append(host);
   const fake = backend(options);
-  const module = mountServerTargets(host, {request: fake.request, getLanguage: () => 'en', ...services});
-  return {doc, host, fake, module, ...tools(host)};
+  const confirmations = [];
+  const module = mountServerTargets(host, {request: fake.request, getLanguage: () => 'en', confirmDestructive: async (id, affected) => { confirmations.push({id, affected}); return true; }, ...services});
+  return {doc, host, fake, module, confirmations, ...tools(host)};
 }
 const nativeTags = host => host.querySelectorAll('*').filter(node => ['INPUT', 'BUTTON', 'SELECT', 'TEXTAREA'].includes(node.tagName)).map(node => node.tagName);
 
@@ -176,6 +177,33 @@ test('logs, typed settings and plugin installation drive the matching actions', 
   s.button('Install from a file').click(); await flush();
   assert.deepEqual(s.fake.calls.filter(call => call.action === 'installExtension').at(-1).payload, {serverId: ID, source: 'file'}, 'the renderer never supplies a path; the main process opens the file chooser');
   assert.deepEqual(nativeTags(s.host), []);
+});
+
+test('stop, restart, settings and plugin installs name their registered action and stop when the confirmation is refused or missing', async () => {
+  for (const services of [{confirmDestructive: async () => false}, {confirmDestructive: undefined}]) {
+    const s = scene({}, services);
+    s.fake.state.servers = [s.fake.view({licenseAccepted: true, state: 'running'})];
+    await flush(); s.module.refresh(); await flush();
+    s.button('Stop').click(); await flush();
+    s.button('Restart').click(); await flush();
+    assert.ok(!s.fake.calls.some(call => ['stopServer', 'restartServer'].includes(call.action)), 'a refused or missing confirmation never reaches the server');
+    s.fake.state.servers = [s.fake.view({licenseAccepted: true, state: 'stopped'})];
+    s.module.refresh(); await flush();
+    s.tab('Settings').click(); await flush();
+    await type(s.field('max-players'), '40');
+    s.buttons('Apply')[1].click(); await flush();
+    s.tab('Plugins and mods').click(); await flush();
+    s.button('Install from a file').click(); await flush();
+    assert.ok(!s.fake.calls.some(call => ['changeServerSetting', 'installExtension'].includes(call.action)), 'settings and plugin changes need the confirmation too');
+    s.module.destroy();
+  }
+  const s = scene();
+  s.fake.state.servers = [s.fake.view({licenseAccepted: true, state: 'running'})];
+  await flush(); s.module.refresh(); await flush();
+  s.button('Restart').click(); await flush();
+  s.button('Stop').click(); await flush();
+  assert.deepEqual(s.confirmations.map(item => item.id), ['desktop.server-restart', 'desktop.server-stop']);
+  s.module.destroy();
 });
 
 test('plugins are disabled while the server is live and absent for vanilla', async () => {

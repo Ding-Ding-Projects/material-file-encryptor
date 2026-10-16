@@ -1,5 +1,5 @@
 import { mountSiteFoundation } from './site-foundation.js';
-import {preparePublicDocumentControls} from './site-foundation.js';
+import {preparePublicDocumentControls,confirmSiteDestructive} from './site-foundation.js';
 import { parseVocabulary, replaceVocabulary, filterGuides, updateGalleryGroups } from './preferences.js';
 import { emptyVocabulary, serializeVocabulary } from './personal-vocabulary.js';
 import { cantonese, localized, loadMessagePreferences, effectiveMessagePair } from './locales.js';
@@ -268,7 +268,7 @@ vocabularyFile.addEventListener('change', async () => {
     await replacePrivateVocabulary(source);if(version===uploadVersion)renderCopy();
   } catch (error) { if (version !== uploadVersion) return; vocabularyState = { kind: 'error', message: error.message }; updateMessages(); }
 });
-document.querySelector('#vocabulary-reset').addEventListener('click', () => { uploadVersion++; vocabularyFile.value = ''; clearPrivateVocabulary(); });
+document.querySelector('#vocabulary-reset').addEventListener('click', async () => { if (!await confirmSiteDestructive('site.clear-vocabulary', { language: activeLanguage })) return; uploadVersion++; vocabularyFile.value = ''; clearPrivateVocabulary(); });
 const foundation = mountSiteFoundation({document, storage:siteStorage, getPreferences:()=>preferences, onPreferences:()=>dialog.showModal(), onSearch:control=>{enhancedSearch=control;}, onSchool:enabled=>{schoolEnabled=enabled;if(enabled){wordingGeneration++;privateWordingAvailable=false;vocabulary=emptyVocabulary();}renderCopy();},onAuthentication:setAuthenticatedLocalSession,onCanonicalSettings:value=>{siteDisplayName=value.displayName;preferences={...preferences,language:value.language,funnyEnglish:value.funnyEnglish,funnyCantonese:value.funnyCantonese,emoji:value.emoji};schoolEnabled=value.school.enabled;languageSelect.value=value.language;emojiToggle.checked=value.emoji;successTone.value=value.funnyEnglish;searchTone.value=value.funnyCantonese;renderCopy();if(!schoolEnabled&&privateCacheAccess?.authenticated&&!privateWordingAvailable)setAuthenticatedLocalSession(true,privateCacheAccess);}});
 for(const [id,key] of [['english-tone-reset','funnyEnglish'],['cantonese-tone-reset','funnyCantonese']]) document.getElementById(id)?.addEventListener('click',()=>{preferences[key]=5;(key==='funnyEnglish'?successTone:searchTone).value=5;savePreferences();updateMessages();});
 renderCopy(); revealHash();

@@ -9,7 +9,7 @@ export function createSettingsResetWorkflow({store,host,requestConfirmation,tran
    if(!requestConfirmation)throw Error('The settings reset confirmation adapter is unavailable.');
    invalidate();const signal=controller.signal;
    const validate=()=>{if(!active||signal.aborted||!isAuthenticated())throw Error('The settings reset was cancelled. Unlock the profile and try again.');};
-   validate();pending.add(signal);let approval;try{approval=await requestConfirmation(host,{action:translate('Reset local preferences'),affected:translate('Language, appearance, attention and local schedule preferences'),translate,signal,confirmationOnly:true,validateConfirmation:validate});}finally{pending.delete(signal);}
+   validate();pending.add(signal);let approval;try{approval=await requestConfirmation(host,{destructiveId:'desktop.reset-settings',action:translate('Reset local preferences'),affected:translate('Language, appearance, attention and local schedule preferences'),translate,signal,confirmationOnly:true,validateConfirmation:validate});}finally{pending.delete(signal);}
    if(!approval?.confirmed)return {confirmed:false};validate();
    const result=store.reset();return {confirmed:true,result};
   },
