@@ -1,3 +1,25 @@
+## Installed icon repair verification, 2026-10-17 UTC
+
+The product logo repair is implemented at source `ca91b0209c3aa0bf0f378f62a60cefc778ef869a`. The existing folder-and-lock mark now supplies nine ICO sizes (16, 20, 24, 32, 40, 48, 64, 128 and 256), executable and root-launcher resources, shared native windows, tray, Setup and updater packaging. The immutable icon URL was retrieved and matched to the committed ICO.
+
+Exact `build.bat /s` and `build-installer.bat /s` both exited 0 on this source. Package CRC, final Setup embedded-file checks and all 909 extracted payload files passed. Reassembly reads the branded updater from the exact package, preserves the payload bytes, and moves primary icon frames to unused resource IDs while restoring pristine auxiliary groups 107 and 108. A real vendor/rcedit negative regression failed before repair and passed afterward. The installer remains unsigned.
+
+The local packaged 0.2.0 shell launched on an isolated hidden desktop. All three WM_GETICON variants and both class icon handles matched the expected decoded product pixels. The genuine 1180 by 850 English/light initial setup capture is retained in the reviewed gallery. This is local packaged-shell evidence, not an installed-copy, tray/taskbar rendering, complete setup workflow or fresh-machine acceptance claim. The owned process exited gracefully and its hidden desktop closed. Console observation covers only the capture interval.
+
+[Release v1.821.1](https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.821.1) is a normal release from this exact source. Its four downloads, immutable tag, provenance, package contents and final icon resources are independently verified before installation. See issue #14 and Discussion #15 for the exact delivery and current-installation handoff.
+
+The user confirmed that the independent update from 1.607.1 to 1.810.1 was intentional. Version 1.810.1 remains running. No installer has been executed by this task, and active work has not been closed. The remaining action is to save work and quit the application including its tray, then apply the verified release through the supported installer and inspect installed version, launcher, updater, shortcuts and runtime. Rendered Explorer, taskbar and tray acceptance and a disposable fresh-install run remain unverified.
+
+Preservation review found 88 remote heads: 82 earlier scoped branches are exact-tip ancestors of main; main, the active task branch, three evidence-bearing branches and one divergent branch are retained pending the final archive-backed pass. Keep `fix/renderer-runtime-identity-20261014` at `cc874090956d4ffc16f81389bc07511bf136be61`. The foundation, inventory and mediation checkouts contain unique ignored evidence and must remain. No stashes exist. Final cleanup must recheck activity, source-tip ancestry and complete archive readback before each deletion. Branch-deletion workflow events now skip release production.
+
+Unrelated open issues #1 and #3 and the broader required-feature/runtime backlog remain outside this icon repair. Existing historical evidence below retains its original source and limitations.
+
+### 繁體廣東話
+
+圖示修正已寫入上述來源，沿用資料夾加鎖頭標誌，涵蓋九個尺寸、主程式、啟動器、視窗、安裝程式同更新器。兩個正式建置入口退出碼都係 0，封裝 CRC、嵌入檔案及 909 個解壓檔案核對通過。原生視窗圖示像素符合預期，真實擷取已保留；呢份證據只屬本機封裝程式，唔會冒充已安裝版本、工作列或通知區驗收。
+
+使用者確認 1.810.1 更新係有意進行，現有程式仍然開住。今次未執行安裝器，亦冇強制關閉工作。下一步係儲存並完全退出程式，再安裝已核對版本及驗證捷徑。三個含獨有證據嘅工作目錄同未合併分支會保留；其餘清理先核實備份、活動狀態同祖先關係。
+
 # Native packing acceptance and current limits, 2026-10-11 UTC
 
 Product main `f6990e24e8e17958079e0a7a5cd0f09a3338a0c4` contains independently verified native source `e06df2a14643932f5f23289ae4eea2d8e45b3676`. Exact `build.bat /s` exited 0 and 43/43 core checks passed. The packaged native helper and WinFsp synthetic mounted lifecycle passed for 167,895,616 logical bytes, 64 KiB and 1 MiB writes, two writable descriptors, a retained mapped writer, three current parts and authenticated reopen. Detach settled in 26.8498 ms after the workload and 11.471 ms after reopen, each on its first attempt under the unchanged 60,000 ms deadline. Helper and mapped writer exited normally without forced termination; the synthetic drive was absent and owned fixtures removed.

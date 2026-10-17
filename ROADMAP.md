@@ -1,10 +1,13 @@
-## Installed product icon repair, 2026-10-16
+## Installed product icon repair, 2026-10-17
 
 - [x] Reproduce the default framework icon in installed executables and shortcut references.
 - [x] Generate reproducible multi-resolution product icons and wire desktop windows and tray.
-- [ ] Verify final Squirrel Setup and embedded updater branding after reassembly.
-- [ ] Build and verify the exact repaired package and update the installed application.
-- [ ] Record genuine installed evidence, publish verified delivery and finish scoped preservation and cleanup.
+- [x] Verify final Squirrel Setup and embedded updater branding, auxiliary resource preservation and unchanged payload bytes after reassembly.
+- [x] Run both exact build entrypoints successfully at ca91b020 and verify all 909 extracted package files.
+- [x] Verify the local packaged window's native icon handles and preserve a genuine source-bound initial-state capture.
+- [ ] Apply the accepted release to the current installation after the user saves work and quits 1.810.1, then verify installed version, launcher and shortcuts.
+- [ ] Inspect rendered installed taskbar/tray/Explorer icons and complete a disposable fresh-install acceptance run.
+- [ ] Complete final archive-backed branch retirement; retain divergent history and three checkouts holding unique ignored evidence.
 
 ## Release package re-proof fixes, 2026-10-16
 

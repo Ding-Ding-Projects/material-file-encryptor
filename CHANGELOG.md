@@ -1,3 +1,12 @@
+# Installed product icons, 2026-10-17
+
+- Reuse the folder-and-lock product mark in nine native icon sizes, executable and launcher resources, windows, tray, Setup and updater packaging.
+- Verify the package-contained branded updater and preserve its bytes during Squirrel reassembly. Keep pristine auxiliary Setup icon groups and the embedded payload unchanged.
+- Preserve a genuine source-bound local packaged-shell capture and exact native icon checks. Installed update and rendered shell-icon acceptance remain pending while the existing application is in use.
+- Skip release production on branch-deletion events so archive-backed retirement does not trigger unrelated builds.
+
+圖示唔再借用框架嘅樣貌：主程式、視窗、安裝器同更新器用返產品標誌，封裝重組亦保留原有資源及內容。真實本機擷取同原生圖示核對已記錄；現有程式仍開住，安裝更新驗收照實保留未完成。
+
 # Release package re-proof fixes, 2026-10-16
 
 - The Lock an element panel (and the unlock panel) now enters the browser top layer, so the reveal animation transform and the scrolling content region of the Local access view can no longer crop it at the default window size. Cancel and Create lock sit in a sticky action row and the panel body scrolls inside its own bounds.

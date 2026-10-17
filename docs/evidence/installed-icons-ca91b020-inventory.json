@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "records": [
+    {
+      "id": "installed-icons-ca91b020-setup-guide-light-en",
+      "active": true,
+      "path": "docs/images/captures/installed-icons-ca91b020/setup-guide-light-en.png",
+      "sourceCommit": "ca91b0209c3aa0bf0f378f62a60cefc778ef869a",
+      "artifactSha256": "85539be7ca6039c0058848954aaa5e068be8445be04d9fd7cc63e50fb5ee8673",
+      "captureSha256": "3a97e39dfb65665314d54393281fd54622b657643faee984cc2540bc72cf938d",
+      "screen": "setup-guide",
+      "state": "welcome-light-en",
+      "theme": "light",
+      "viewportWidth": 1180,
+      "viewportHeight": 850,
+      "scale": 1,
+      "interactionProofId": "initial-setup-ready-and-state-observed",
+      "interactionReceiptSha256": "a21d41e95678ce770f5bcaf55feebfdb230abeb59a85a3d4d6ec8d9c2b0243a2",
+      "inspectionStatus": "inspected",
+      "capturedAt": "2026-10-17T03:45:42.410Z",
+      "timeZone": "UTC",
+      "width": 1180,
+      "height": 850,
+      "scope": "Local packaged shell initial state only. Native window icon handles have separate producer evidence. No installed copy, rendered tray/taskbar, full workflow or startup-history proof."
+    }
+  ]
+}

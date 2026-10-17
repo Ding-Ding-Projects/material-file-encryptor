@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "ca91b0209c3aa0bf0f378f62a60cefc778ef869a",
+  "tag": "v1.821.1",
+  "releaseUrl": "https://github.com/Ding-Ding-Projects/material-file-encryptor/releases/tag/v1.821.1",
+  "verifiedAtUtc": "2026-10-17T03:51:03.4324797Z",
+  "releaseAssetCount": 4,
+  "releaseExtractedFiles": 910,
+  "localExtractedFiles": 909,
+  "setupSha256": "ea4ca98773d4c149dcca49d098f2046ffeda440661902d1a322edf795b6b4e4e",
+  "hostedDigestsVerified": true,
+  "allPackageCrcVerified": true,
+  "exactSetupPayloadVerified": true,
+  "asarBindingVerified": true,
+  "allNinePrimaryIconFramesVerified": true,
+  "auxiliaryGroupsPreserved": [
+    107,
+    108
+  ],
+  "unsignedTargets": 5,
+  "installedUpdateVerified": false,
+  "runtimeScope": "Separately verified local packaged 0.2.0 shell native icon handles and initial state; hosted installer was not executed.",
+  "remaining": [
+    "Save current work and quit the active installed application before applying the accepted update.",
+    "Verify installed version, root launcher, updater and shortcuts.",
+    "Verify rendered Explorer, taskbar and tray icons and disposable fresh-install behavior."
+  ]
+}

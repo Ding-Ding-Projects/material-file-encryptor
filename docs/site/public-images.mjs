@@ -4,6 +4,7 @@ import {createHash} from 'node:crypto';
 
 // These reviewed originals are the entire allowlist. Never enumerate capture directories.
 export const publicImages=Object.freeze([
+ {"source":"docs/images/captures/installed-icons-ca91b020/setup-guide-light-en.png","route":"images/captures/installed-icons-ca91b020/setup-guide-light-en.png","sha256":"3a97e39dfb65665314d54393281fd54622b657643faee984cc2540bc72cf938d","bytes":58514,"width":1180,"height":850},
  {source:'docs/images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-dark-en.png',route:'images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-dark-en.png',sha256:'894aee92fd9b195d69956ff2a6705498116a47286fca5ead3af5c9ac3c74dbea',bytes:121527,width:1920,height:1200},
  {source:'docs/images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-light-en.png',route:'images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-light-en.png',sha256:'66c36fb0f9cbbd1446128ea7c0d36fdc55e00152363df65bb937ce2786066d75',bytes:122397,width:1920,height:1200},
  {source:'docs/images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-light-yue.png',route:'images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-light-yue.png',sha256:'6fb3e641a27975c2d733b620a90c40ed36519e63125cd8db7c7b96b4de038dbd',bytes:164387,width:1920,height:1200},

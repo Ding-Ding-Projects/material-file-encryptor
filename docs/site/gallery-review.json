@@ -107,7 +107,8 @@
     "images/captures/reproof-1.782.1/desktop/drive-files-light-bilingual.png",
     "images/captures/reproof-1.782.1/desktop/drive-files-light-en.png",
     "images/captures/reproof-1.782.1/desktop/drive-locked-light-bilingual.png",
-    "images/captures/reproof-1.782.1/desktop/drive-locked-light-en.png"
+    "images/captures/reproof-1.782.1/desktop/drive-locked-light-en.png",
+    "images/captures/installed-icons-ca91b020/setup-guide-light-en.png"
   ],
   "withheld": [
     {
@@ -1104,6 +1105,12 @@
       "sha256": "1c379fddf309cd93bbcdd7cf06beb7163adfa6dcbf0844857f32a0ff9ef05025",
       "workflow": "drive-access",
       "metadataSha256": "fd775b45c6b450ebb6d71fb98df00f245cbd921efd920729e0606dfa92e81e6e"
+    },
+    "images/captures/installed-icons-ca91b020/setup-guide-light-en.png": {
+      "sourceCommit": "ca91b0209c3aa0bf0f378f62a60cefc778ef869a",
+      "sha256": "3a97e39dfb65665314d54393281fd54622b657643faee984cc2540bc72cf938d",
+      "workflow": "preferences-help",
+      "metadataSha256": "335cbce468d56436447e845bbb4e66a508b4750062d8c393123703fd29e91ae2"
     }
   },
   "workflows": [

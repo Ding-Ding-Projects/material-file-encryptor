@@ -2233,6 +2233,28 @@
       "approval": "approved",
       "privacy": "public-safe",
       "inspectionStatus": "inspected"
+    },
+    {
+      "id": "installed-icons-ca91b020-setup-guide-light-en",
+      "path": "images/captures/installed-icons-ca91b020/setup-guide-light-en.png",
+      "sourceCommit": "ca91b0209c3aa0bf0f378f62a60cefc778ef869a",
+      "sha256": "3a97e39dfb65665314d54393281fd54622b657643faee984cc2540bc72cf938d",
+      "width": 1180,
+      "height": 850,
+      "state": "welcome-light-en",
+      "theme": "light",
+      "scale": 1,
+      "capturedAt": "2026-10-17T03:45:42.410Z",
+      "timeZone": "UTC",
+      "method": "Local packaged Windows application 0.2.0, CDP renderer capture on an isolated hidden desktop with a dedicated profile.",
+      "scope": "Initial setup welcome screen in English and light theme. Native window icon handles were checked separately. This image does not prove an installed copy, rendered tray or taskbar icons, setup completion, or full workflows. Console observation covers only the capture interval, not startup history.",
+      "viewportWidth": 1180,
+      "viewportHeight": 850,
+      "artifactSha256": "85539be7ca6039c0058848954aaa5e068be8445be04d9fd7cc63e50fb5ee8673",
+      "promotionReceiptSha256": "cb5e7e4205ffd62d6a88b8d60d253030bfdcc13f64cf2bab4c9e7d7d57eea9a1",
+      "approval": "approved",
+      "privacy": "public-safe",
+      "inspectionStatus": "inspected"
     }
   ],
   "pending": "New runtime captures are not accepted by this catalogue. They require reviewed original pixels, public-safe provenance, source and image hashes, dimensions, capture method, and explicit approval before addition."

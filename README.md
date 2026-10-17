@@ -10,6 +10,10 @@
 
 **Desktop icon resources:** [installed icon packaging](docs/features/desktop/installed-icons.md) documents the folder-and-lock mark, executable and shortcut resources, installer branding, and the distinction between source checks and installed verification.
 
+![Local packaged 0.2.0 setup guide in English and light theme](docs/images/captures/installed-icons-ca91b020/setup-guide-light-en.png)
+
+Local packaged 0.2.0 at source `ca91b0209c3aa0bf0f378f62a60cefc778ef869a`, captured on 2026-10-17 at 03:45:42.410 UTC. This is the initial setup welcome screen at 1180 × 850, English, light theme, renderer scale 1. Native window icon handles were checked separately; this image does not establish an installed copy, rendered tray or taskbar icons, setup completion, or full workflows. [Capture inventory](docs/evidence/installed-icons-ca91b020-inventory.json). Earlier captures retain their original provenance.
+
 **Contents:** [Choose a workflow](#choose-a-workflow) · [Architecture](#architecture) · [What happens to a file](#what-happens-to-a-file) · [Current captures](#current-captures) · [Build, package and verify](#build-package-and-verify) · [Security](#security-and-recovery-boundaries) · [Size and human-time estimate](#project-size-and-human-time-estimate) · [Documentation and contributing](#documentation-and-contributing). Long reference sections are collapsed: choose a summary line to open it.
 
 > **Historical verified baseline:** `411ce5d55b96958799d996713374b7b683552234` records verified PDF packaging and documentation catalogue caching, plus the updater controller and future release-index repair. This is a fixed evidence reference, not the latest main revision. The exact root builds and bounded component results are recorded below. Complete required features, current Material Design 3 acceptance, installed startup, automatic updating and restart continuity remain unfinished. A successful build or release does not certify those outcomes.
