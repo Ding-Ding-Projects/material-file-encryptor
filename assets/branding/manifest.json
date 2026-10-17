@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "source": "browser-extension/icons/icon.svg",
+  "sourceSha256": "1446f35963e082360608e2fad4dbf276d37913f63dc4e43f4a6519b05a841964",
+  "renderer": "@resvg/resvg-js@2.6.2",
+  "sizes": [
+    16,
+    20,
+    24,
+    32,
+    40,
+    48,
+    64,
+    128,
+    256
+  ],
+  "files": {
+    "app.ico": "d9af7566f35dca99205c461ec848e4bed3688f551badb8dccbd6a41e91960398",
+    "app.png": "dba56b0d0717f91b407c459e93903cc6822d2a53a0c825b5b1116c96be96bdcc"
+  }
+}
