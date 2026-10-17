@@ -1,3 +1,11 @@
+## Installed product icon repair, 2026-10-16
+
+- [x] Reproduce the default framework icon in installed executables and shortcut references.
+- [x] Generate reproducible multi-resolution product icons and wire desktop windows and tray.
+- [ ] Verify final Squirrel Setup and embedded updater branding after reassembly.
+- [ ] Build and verify the exact repaired package and update the installed application.
+- [ ] Record genuine installed evidence, publish verified delivery and finish scoped preservation and cleanup.
+
 ## Release package re-proof fixes, 2026-10-16
 
 - [x] Lock an element panel stays inside the window and keeps its action row visible (source overlay in the packaged runtime, hidden desktop).

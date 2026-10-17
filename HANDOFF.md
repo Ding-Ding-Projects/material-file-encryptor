@@ -1588,3 +1588,11 @@ Recover actual WinFsp readiness; resume genuine captures of every current displa
 Shared instruction synchronization remains blocked by6unrelated dirty files and0ahead/2behind state; no shared-instruction source was changed or pushed. Status Hub ingest credential is absent. Project discovery lacks read:project. Preserve unrelated installations, settings, worktrees and all negative evidence. No archive/deletion pass is ready because task work and image replacement remain incomplete.
 
 Public milestone: https://github.com/Ding-Ding-Projects/material-file-encryptor/issues/1#issuecomment-6173671909
+
+## Installed icon repair, 2026-10-16
+
+Source through 8846e1942143e160040cf17cb06b710bf88fe3ae replaces the framework default installed branding with the existing folder-and-lock mark. Nine ICO sizes and the PNG are reproducible; executable, shared desktop windows, tray, Setup and updater paths use the product assets. Squirrel reassembly verifies the branded updater against the exact package entry, stages it independently and retains all existing embedded-payload hash checks.
+
+Implementation checks passed 23 focused tests, with six further reassembly checks. Independent runtime review passed 12 focused tests and found no actionable regression. Packaging review caught and verified the source repair for the final Setup/updater reassembly path. Full build, downloaded package, installed update and rendered evidence remain pending. The installed baseline changed independently from 1.607.1 to 1.810.1 during preparation; both observed versions used generic icons.
+
+Tracking: issue #14 and Discussion #15. Existing broader acceptance work is not certified by this icon repair. Retain unmerged fix/renderer-runtime-identity-20261014 at cc874090956d4ffc16f81389bc07511bf136be61. Repository-wide cleanup requires a verified archive and fresh ancestry/inactivity checks.

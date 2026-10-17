@@ -137,3 +137,9 @@ Source integration is in progress. This entry does not identify a released build
 - Added helper-only native status measurements with binary hashes and no current-source, throughput, mounted-drive or GUI claim.
 
 Current packaged runtime, full localization/visual coverage, native mounted workflows, downloaded installation, live status authentication and documentation deployment remain subject to separate verification. Historical release and capture claims are retained under their original source records.
+
+## Installed product branding repair
+
+The desktop package now supplies the existing folder-and-lock mark for executable and shortcut resources, windows, tray, Setup and the embedded updater. Final Squirrel reassembly preserves the branded updater while retaining package and embedded-byte verification. Source checks are complete; installed delivery is tracked in issue #14.
+
+桌面封裝沿用現有資料夾加鎖標誌，涵蓋執行檔、捷徑、視窗、系統匣、Setup 同更新器。Squirrel 最後重組步驟會保留已驗證標誌，原有封裝同內嵌位元組檢查維持不變。安裝交付證據記錄於 issue #14。

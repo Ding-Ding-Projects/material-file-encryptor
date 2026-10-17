@@ -1,48 +1,13 @@
-````markdown
-# Continuation handoff, 2026-10-16
+# Installed icon repair continuation
 
-## Objective
+Objective: repair installed product icons, update the installed copy, verify remote main and release delivery, then perform the requested preservation/integration and archive-backed cleanup.
 
-Continue until every required feature is implemented and every interface element follows Material Design 3 with transitions and motion. Inventory rows stay "unverified" until each has real proof from an installed build. Source checks and extracted-package runs are recorded as what they are.
+Baseline main was 2caa5e404f0df75139e4476fa37097e80ba0172c. Implementation commits a15eac0a7dffc3e32763153b2ad2670999b8355e, a9d706f3212a9238f98f00d866346ae5d131d059 and 8846e1942143e160040cf17cb06b710bf88fe3ae are preserved on origin/codex/installed-logo-repair and fast-forwarded into local main. They cover reproducible icon assets, runtime/packaging wiring and final Squirrel Setup/updater preservation.
 
-## Current main
+Focused checks: 23 implementation tests, 12 independent runtime-review tests, six reassembly tests. These overlap and are not an aggregate unique-test count. Root build, installer production, downloaded package validation and installed appearance remain pending.
 
-`main` is at `45df6c4` (read back with `git ls-remote`). The latest published release is v1.782.1 (source `4a49919`), and it is a normal release.
+The existing installed application independently changed from 1.607.1 to 1.810.1 during preparation and is running. Do not overwrite it until the current state and active work are accounted for. No installer has been run by this task yet.
 
-Since the last handoff, main gained:
-- The two-key confirmation on every destructive action (62 registered, audit 0 findings).
-- Information icons, now compact, and the desktop setup guide.
-- Inventory coverage of 109 required features per surface.
-- Four older branches integrated. The stale presentation-image map was skipped because its source images no longer exist.
-- Fixes found by the release-package proofs:
-  - detached select search icons and a misplaced navigation information icon;
-  - a clipped element-lock dialog;
-  - a persistent wording error banner;
-  - the element-lock failure on long profile paths (Git `core.longpaths`);
-  - a heading squeezed by an open information panel;
-  - one Cantonese name for My drive.
-- Proof receipts for 1.772.1, 1.779.1 and 1.782.1 in `docs/evidence/`. Each is labelled as an extracted release package run, not an installed copy.
-- Refreshed README captures and site gallery data.
+Next: run exact build.bat /s and build-installer.bat /s against the recorded candidate, inspect final native icon resources, verify the normal release and update the installed copy safely. Retain genuine evidence and distinguish fresh-install and rendered shell-tray gaps. Track issue #14 and Discussion #15.
 
-Gate at `45df6c4`: 1645 passed, 0 failed. Material motion audit: 0 findings. Inventory validator: 0 problems.
-
-## Open work, in order
-
-1. Session-end automatic lock on a real restart. The owner restarts the computer. Afterwards:
-   - check that the drive auto-locked;
-   - unlock it with the saved test password;
-   - compare the file hashes with the recorded before state;
-   - delete the test vault and the password file.
-2. The squeezed-heading fix is in source only (after v1.782.1). Confirm it on the next release.
-3. Deferred to the next owner: the local container target, which needs Docker Desktop.
-4. Installed-build proof for the rows that are still unverified. Every row in `contracts/feature-delivery.json` that is "unverified" names its remaining gap.
-
-## Constraints
-
-- Push only `main`. A second branch at the same commit starts a duplicate release run; cancel it if one starts.
-- Extracted package runs register a per-user startup entry. Remove only the entry the run added.
-- Never kill processes by image name.
-- Never weaken Windows sign-in or change system security settings.
-- The owner performs every restart.
-- Keep published text in ordinary professional English.
-````
+Cleanup inventory: four pre-existing linked checkouts are clean and their tips are ancestors of baseline main. Of 87 initial remote heads, 85 non-main heads are ancestors, and fix/renderer-runtime-identity-20261014 at cc874090956d4ffc16f81389bc07511bf136be61 is divergent and retained. Archive all working trees and Git administrative state before deleting only inactive, authorized, fully preserved and ancestor-proven candidates. Keep unrelated unfinished acceptance work out of this icon task.
