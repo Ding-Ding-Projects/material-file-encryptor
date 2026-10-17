@@ -7,4 +7,6 @@
 - [預先保留正常退出驗證所需的程序控制代碼](owned-exit-handles.zh-HK.md)：確切程序身份保留、原有確認、有界私人診斷及獨佔嘗試收據。
 - [渲染器解譯器命令驗證](renderer-interpreter-admission.zh-HK.md)：完整支援轉向器命令格式，同時鎖定執行檔、參數同父子程序證據。
 
+- [已安裝桌面圖示](installed-icons.zh-HK.md)：可重建透明 ICO、固定 Squirrel 網址、封裝執行路徑及安裝後驗證界線。
+
 呢個類別冇 HTTP API，唔適用 Postman collection。

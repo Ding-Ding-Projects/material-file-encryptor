@@ -10,6 +10,7 @@ export const sizes = [16,20,24,32,40,48,64,128,256];
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const source = 'browser-extension/icons/icon.svg';
 const destination = 'assets/branding';
+const sourceBytes = base => Buffer.from(fs.readFileSync(path.join(base,source),'utf8').replace(/\r\n/g,'\n'));
 
 // Decode RGBA PNG scanlines, including all five PNG row filters. This checks
 // actual alpha pixels rather than trusting the filename or PNG header alone.
@@ -57,7 +58,7 @@ export function inspectIco(bytes) {
 export function checkIcons(base=root) {
   const manifest=JSON.parse(fs.readFileSync(path.join(base,destination,'manifest.json')));
   if(manifest.schemaVersion!==1||manifest.source!==source||manifest.renderer!=='@resvg/resvg-js@2.6.2'||JSON.stringify(manifest.sizes)!==JSON.stringify(sizes))throw Error('ICON_MANIFEST');
-  if(digest(fs.readFileSync(path.join(base,source)))!==manifest.sourceSha256)throw Error('ICON_SOURCE_CHANGED');
+  if(digest(sourceBytes(base))!==manifest.sourceSha256)throw Error('ICON_SOURCE_CHANGED');
   for(const name of ['app.ico','app.png'])if(digest(fs.readFileSync(path.join(base,destination,name)))!==manifest.files[name])throw Error('ICON_ASSET_CHANGED');
   inspectIco(fs.readFileSync(path.join(base,destination,'app.ico')));
   inspectPng(fs.readFileSync(path.join(base,destination,'app.png')),256);
@@ -68,7 +69,7 @@ async function generate(toolRoot) {
   if(!toolRoot)throw Error('Supply the directory containing a pinned @resvg/resvg-js@2.6.2 installation.');
   const require=createRequire(path.resolve(toolRoot,'package.json'));
   if(require('@resvg/resvg-js/package.json').version!=='2.6.2')throw Error('ICON_RENDERER_VERSION');
-  const {Resvg}=require('@resvg/resvg-js'), svg=fs.readFileSync(path.join(root,source));
+  const {Resvg}=require('@resvg/resvg-js'), svg=sourceBytes(root);
   const frames=sizes.map(size=>Buffer.from(new Resvg(svg,{fitTo:{mode:'width',value:size},font:{loadSystemFonts:false}}).render().asPng()));
   const directory=Buffer.alloc(6+16*sizes.length);directory.writeUInt16LE(1,2);directory.writeUInt16LE(sizes.length,4);
   let offset=directory.length;

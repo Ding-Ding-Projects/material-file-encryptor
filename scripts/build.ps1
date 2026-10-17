@@ -10,6 +10,7 @@ if (!(Test-Path Env:PRIVATE_INSTRUCTIONS_SOURCE)) {
   if ($LASTEXITCODE -eq 0 -and ![string]::IsNullOrWhiteSpace($instructionSource)) { $env:PRIVATE_INSTRUCTIONS_SOURCE = $instructionSource }
 }
 Invoke-Checked { node scripts/check-vocabulary.mjs }
+Invoke-Checked { node scripts/desktop-icons.mjs check }
 function Publish-BrowserHost {
   Invoke-Checked { dotnet publish native/MaterialFileEncryptor.BrowserHost -c Release -r win-x64 --self-contained true -o out/browser-host }
   Invoke-Checked { node scripts/write-browser-host-config.mjs out/browser-host }

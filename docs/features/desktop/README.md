@@ -8,4 +8,6 @@
 
 - [Renderer interpreter command admission](renderer-interpreter-admission.md): exact supported redirector command forms with pinned image, argument and ancestry evidence.
 
+- [Installed desktop icons](installed-icons.md): reproducible transparent ICO assets, immutable Squirrel metadata, packaged runtime paths and installed verification boundaries.
+
 This category has no HTTP API; a Postman collection is not applicable.

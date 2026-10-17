@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "source": "browser-extension/icons/icon.svg",
-  "sourceSha256": "1446f35963e082360608e2fad4dbf276d37913f63dc4e43f4a6519b05a841964",
+  "sourceSha256": "3a0d1074c0ec74bf3cf161ef7c1ec1c98aac6b4d17b42283c2f87627809e4352",
   "renderer": "@resvg/resvg-js@2.6.2",
   "sizes": [
     16,

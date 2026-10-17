@@ -4,7 +4,7 @@ import {createBrowserConfirmPrompt} from './browser-confirm-prompt.js';
 import {readRuntimeAccessibility} from './startup-photo-service.js';
 import { selectVerificationRestartContext } from './verification-restart-context.js';
 import { readFileSync } from 'node:fs';
-import { app, autoUpdater, BrowserWindow, dialog, ipcMain, Menu, nativeImage, powerMonitor, safeStorage, shell, Tray } from 'electron'
+import { app, autoUpdater, BrowserWindow, dialog, ipcMain, Menu, powerMonitor, safeStorage, shell, Tray } from 'electron'
 import { createMaterialDialogs, materialDialogPaths } from './material-dialog.js'
 import { describePending, shutdownPrompt } from './shutdown-pending.js';
 import { createTrayNotice } from './tray-notice.js';
@@ -28,12 +28,16 @@ import { DEFAULT_DRIVE_NAME, normalizeDriveName } from '../shared/drive-name.js'
 import { createPairingCodes } from './browser-pairing-code.js';
 import { createSessionEnd } from './session-end.js';
 
+import { desktopIconPath, brandedBrowserWindow } from './desktop-icons.js';
+
 const directory = path.dirname(fileURLToPath(import.meta.url));
+const desktopIcon = desktopIconPath({packaged: app.isPackaged, resourcesPath: process.resourcesPath, applicationRoot: path.resolve(directory, '../..')});
+const DesktopBrowserWindow = brandedBrowserWindow(BrowserWindow, desktopIcon);
 const rendererPath = path.resolve(directory, '../renderer/index.html');
 // Message boxes render as Material dialogs in main-owned windows; file pickers stay native.
-const materialDialogs = createMaterialDialogs({ BrowserWindow, ipcMain, nativeDialog: dialog, ...materialDialogPaths(directory), getTheme: async parent => { const source = parent ?? window; if (!source || source.isDestroyed()) return null; return source.webContents.executeJavaScript('document.documentElement.dataset.theme || ""', true); }, getLanguage: async parent => { const source = parent ?? window; if (!source || source.isDestroyed()) return null; return source.webContents.executeJavaScript('document.documentElement.getAttribute("data-control-language") || ""', true); }, onError: error => console.error('Material dialog fell back to the native dialog:', error?.message) });
+const materialDialogs = createMaterialDialogs({ BrowserWindow: DesktopBrowserWindow, ipcMain, nativeDialog: dialog, ...materialDialogPaths(directory), getTheme: async parent => { const source = parent ?? window; if (!source || source.isDestroyed()) return null; return source.webContents.executeJavaScript('document.documentElement.dataset.theme || ""', true); }, getLanguage: async parent => { const source = parent ?? window; if (!source || source.isDestroyed()) return null; return source.webContents.executeJavaScript('document.documentElement.getAttribute("data-control-language") || ""', true); }, onError: error => console.error('Material dialog fell back to the native dialog:', error?.message) });
 const uiDialog = Object.freeze({ showMessageBox: (...args) => materialDialogs.showMessageBox(...args), showOpenDialog: (...args) => dialog.showOpenDialog(...args), showSaveDialog: (...args) => dialog.showSaveDialog(...args), showErrorBox: (...args) => dialog.showErrorBox(...args) });
-const nativeProfileDialog=createProfileAuthenticationDialog({BrowserWindow,ipcMain,directory,getWindow:()=>window,getLanguage:async()=>window&&!window.isDestroyed()?window.webContents.executeJavaScript('document.documentElement.getAttribute("data-control-language")',true):'en',getTheme:async()=>window&&!window.isDestroyed()?window.webContents.executeJavaScript('document.documentElement.dataset.theme',true):'system'});
+const nativeProfileDialog=createProfileAuthenticationDialog({BrowserWindow:DesktopBrowserWindow,ipcMain,directory,getWindow:()=>window,getLanguage:async()=>window&&!window.isDestroyed()?window.webContents.executeJavaScript('document.documentElement.getAttribute("data-control-language")',true):'en',getTheme:async()=>window&&!window.isDestroyed()?window.webContents.executeJavaScript('document.documentElement.dataset.theme',true):'system'});
 const browserConfirm=createBrowserConfirmPrompt({showMessageBox:(...args)=>materialDialogs.showMessageBox(...args),getWindow:()=>window,getLanguage:async()=>window&&!window.isDestroyed()?window.webContents.executeJavaScript('document.documentElement.getAttribute("data-control-language")',true):'en'});
 const rendererURL = pathToFileURL(rendererPath).href;
 const testMode = !app.isPackaged && process.argv.includes('--desktop-check');
@@ -414,7 +418,7 @@ else {
     updates=createUpdateService({app,autoUpdater,dialog:uiDialog,isActiveWork:hasActiveWork,acquireInstallLease:acquireUpdateLease,prepareRestart:prepareUpdateRestart,getLanguage:()=>updateLanguage});
     updates.on('status',()=>{void updateStatus().then(snapshot=>window?.webContents.send('feature:event','updates',{snapshot})).catch(()=>{});});
     localAdapter=createLocalAdapter({isAuthenticated:()=>!state.locked&&state.lockVerified!==false,authorizePair:async({origin})=>(await uiDialog.showMessageBox(window,{type:'question',buttons:['Reject','Pair browser'],defaultId:0,cancelId:0,title:'Pair browser tools',message:'Allow this browser to use local tools?',detail:origin+' will be able to operate approved workflows until the drive locks or the session expires.'})).response===1,dispatch:request});
-    window = new BrowserWindow({ width: 1180, height: 850, minWidth: 880, minHeight: 650, frame: false, show: false, backgroundColor: '#f7f9f8', webPreferences: { preload: path.join(directory, 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false, webSecurity: true } });
+    window = new DesktopBrowserWindow({ width: 1180, height: 850, minWidth: 880, minHeight: 650, frame: false, show: false, backgroundColor: '#f7f9f8', webPreferences: { preload: path.join(directory, 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false, webSecurity: true } });
     window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
     window.webContents.on('will-navigate', (event, url) => { if(url!==rendererURL)event.preventDefault(); });
     window.webContents.on('will-attach-webview', event => event.preventDefault());
@@ -472,8 +476,7 @@ else {
     window.on('session-end', () => { void sessionEnd.end(); });
     powerMonitor.on('suspend', () => { void sessionEnd.suspend(); });
     powerMonitor.on('shutdown', () => { void sessionEnd.end(); });
-    const icon = nativeImage.createFromDataURL('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAIElEQVQ4T2NkqLj/n4ECwESJ5lEDRg0YNWDUgFEDBg0AAEZ7JPE/MhwBAAAAAElFTkSuQmCC');
-    tray = new Tray(icon); updateTray(); tray.on('double-click', showWindow);
+    tray = new Tray(desktopIcon); updateTray(); tray.on('double-click', showWindow);
     await window.loadFile(rendererPath);
     if (!process.argv.includes('--startup') || testMode) showWindow();
     if (process.platform === 'win32') {
