@@ -42,6 +42,7 @@ try {
 } finally { $process.Dispose() }
 $setup = Join-Path $output 'Setup.exe'
 if (!(Test-Path -LiteralPath $setup)) { throw 'SQUIRREL_SETUP_MISSING' }
+& "$PSScriptRoot/repair-squirrel-setup-icons.ps1" -Setup $setup -VendorSetup (Join-Path $VendorDirectory 'Setup.exe') -Icon $icon | Out-Null
 ConvertTo-CompatibleSquirrelReleaseIndex -Index (Join-Path $output 'RELEASES') -Package $corrected
 & "$PSScriptRoot/squirrel-setup-check.ps1" -Setup $setup -Package $corrected -Updater $squirrel -SetupIcon $icon -ReleaseIndex (Join-Path $output 'RELEASES') -ReceiptPath (Join-Path $stage 'setup-inspection.json')
 Move-Item -LiteralPath $setup -Destination (Join-Path $output 'MaterialFileEncryptor-Setup.exe') -Force

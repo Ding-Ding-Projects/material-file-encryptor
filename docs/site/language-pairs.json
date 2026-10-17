@@ -145,8 +145,8 @@
     {
       "source": "docs/features/desktop/installed-icons.md",
       "translation": "docs/features/desktop/installed-icons.zh-HK.md",
-      "sourceSha256": "3115433223c1f1d3d4630deed6f0b1707bb47d7a6c7f7cdbe1e6cbedaf244c72",
-      "translationSha256": "ab9dfa97538700cebf6b5ffcfb18300c9dd9cd8fdebcedfa588d929b918ea6fb"
+      "sourceSha256": "fde7a625d7e48e83909be72c5fa8a1e8b23f7dd326ec29041b36b462fad69e11",
+      "translationSha256": "d2f877e4c6799d0044db988fa3271924cccc576b5f3ad9828a3fe80dabd0a504"
     },
     {
       "source": "docs/features/desktop/owned-exit-handles.md",
