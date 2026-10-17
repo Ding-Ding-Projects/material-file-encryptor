@@ -70,7 +70,7 @@ public sealed partial class VaultEngine
                 var savedVersions=new List<StoredVersion>(engine.pendingVersions);
                 var savedHidden=new HashSet<string>(engine.pendingBinHidden);
                 var savedDue=new Dictionary<string,DateTimeOffset>(engine.versionDue);
-                engine.entries.Add(path,entry);engine.MarkDue(entry);
+                engine.AddEntry(path,entry);engine.MarkDue(entry);
                 try { engine.FlushLocal(); }
                 catch
                 {

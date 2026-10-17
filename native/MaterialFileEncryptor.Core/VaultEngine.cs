@@ -49,7 +49,7 @@ public sealed partial class VaultEngine : IDisposable
             var journal = ReadMetadata<Journal>(journalPath, "journal", "");
             checkpointSequence=journal.LogSequence;checkpointDigest=journal.LogDigest;
             ValidateEntries(journal.Entries); ValidateEntries(journal.Baseline); ValidateStoredPartSize(journal.PartSize);
-            entries = new(journal.Entries, StringComparer.OrdinalIgnoreCase); baseline = new(journal.Baseline,StringComparer.OrdinalIgnoreCase);
+            AdoptEntries(new(journal.Entries, StringComparer.OrdinalIgnoreCase)); baseline = new(journal.Baseline,StringComparer.OrdinalIgnoreCase);
             pending = journal.Pending; known = journal.Known; heads = journal.Heads; pinned = journal.Pinned; partSize = journal.PartSize; packingQueue=journal.PackingQueue; packingPaused=journal.PackingPaused; foreach(var cap in packingQueue.Values)ValidatePartSize(cap); versionDue=journal.VersionDue; pendingVersions=journal.PendingVersions; hiddenBin=journal.HiddenBin;
         }
         ReplayJournal(checkpointSequence,checkpointDigest);
@@ -166,6 +166,25 @@ public sealed partial class VaultEngine : IDisposable
         }
     }
     private Entry Find(string path) => entries.TryGetValue(path,out var entry) ? entry : throw new FileNotFoundException("Vault entry was not found.",path);
+    private static string StoredPathOf(Entry entry) => entry.StoredPath ?? throw new InvalidOperationException("Namespace entry has no stored path.");
+    private void AddEntry(string path,Entry entry)
+    {
+        entries.Add(path,entry);
+        entry.StoredPath=path;
+    }
+    private void SetEntry(string path,Entry entry)
+    {
+        // Updating an existing dictionary value retains its original key spelling.
+        // The input can have older casing after a concurrent rename or restore.
+        string storedPath=entries.TryGetValue(path,out var current)?StoredPathOf(current):path;
+        entries[path]=entry;
+        entry.StoredPath=storedPath;
+    }
+    private void AdoptEntries(Dictionary<string,Entry> collection)
+    {
+        foreach(var pair in collection)pair.Value.StoredPath=pair.Key;
+        entries=collection;
+    }
     private Entry FindId(string id) => id==config.VaultId ? new Entry { Id=config.VaultId,Version=config.VaultId,Directory=true,Attributes=16,Created=DateTimeOffset.UnixEpoch,Modified=DateTimeOffset.UnixEpoch } : entries.Values.FirstOrDefault(e=>e.Id == id) ?? (orphans.TryGetValue(id,out var entry) ? entry : throw new FileNotFoundException("Vault handle was not found."));
     private static string Name(string path) => path[(path.LastIndexOf('/')+1)..];
     private bool IsPinned(string path,Entry entry)
@@ -184,8 +203,7 @@ public sealed partial class VaultEngine : IDisposable
             if(!entries.TryGetValue(path,out var entry)) return null;
             // Lookups ignore case, but metadata must retain the stored spelling.
             // WinFsp uses it as the normalized name for opens and exact queries.
-            string storedPath=entry.StoredPath??=entries.First(pair=>ReferenceEquals(pair.Value,entry)).Key;
-            return Info(storedPath,entry);
+            return Info(StoredPathOf(entry),entry);
         }
     }
     public VaultEntryInfo GetInfoById(string id) { lock(gate) { Check(); var pair=entries.FirstOrDefault(p=>p.Value.Id==id); return Info(pair.Key ?? "",FindId(id)); } }
@@ -196,7 +214,7 @@ public sealed partial class VaultEngine : IDisposable
     private void EnsureParent(string path) { var parent=VaultPath.Parent(path); if(parent!="" && !Find(parent).Directory) throw new DirectoryNotFoundException("Parent is not a directory."); }
     private void CreateEntry(string path,bool directory)
     {
-        lock(gate) { Check(); path=VaultPath.Normalize(path); if(path=="" || entries.ContainsKey(path)) throw new IOException("Entry already exists."); EnsureParent(path); entries.Add(path,new Entry { Directory=directory,ChunkSize=ChunkBytes(partSize),PartSize=partSize,Attributes=directory?16u:32u }); revision++; journalMutations.Add(new JournalMutation { Kind="create",Path=path,Metadata=MetadataOnly(entries[path]) }); }
+        lock(gate) { Check(); path=VaultPath.Normalize(path); if(path=="" || entries.ContainsKey(path)) throw new IOException("Entry already exists."); EnsureParent(path); AddEntry(path,new Entry { Directory=directory,ChunkSize=ChunkBytes(partSize),PartSize=partSize,Attributes=directory?16u:32u }); revision++; journalMutations.Add(new JournalMutation { Kind="create",Path=path,Metadata=MetadataOnly(entries[path]) }); }
     }
     public void CreateFile(string path) => CreateEntry(path,false);
     public void CreateDirectory(string path) => CreateEntry(path,true);
@@ -430,9 +448,9 @@ public sealed partial class VaultEngine : IDisposable
         {
             Check(); oldPath=VaultPath.Normalize(oldPath); newPath=VaultPath.Normalize(newPath); if(oldPath=="" || newPath=="")throw new IOException("Cannot rename root."); var value=Find(oldPath); EnsureParent(newPath);
             if(value.Directory && newPath.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase))throw new IOException("Cannot move a directory into itself.");
-            if(oldPath.Equals(newPath,StringComparison.OrdinalIgnoreCase)) { var changes=entries.Where(p=>p.Key.Equals(oldPath,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); foreach(var item in changes)entries.Remove(item.Key); foreach(var item in changes){item.Value.StoredPath=null;entries[newPath+item.Key[oldPath.Length..]]=item.Value;} revision++; journalMutations.Add(new JournalMutation { Kind="rename",Path=oldPath,Destination=newPath,Id=value.Id }); return; }
+            if(oldPath.Equals(newPath,StringComparison.OrdinalIgnoreCase)) { var changes=entries.Where(p=>p.Key.Equals(oldPath,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); foreach(var item in changes)entries.Remove(item.Key); foreach(var item in changes)SetEntry(newPath+item.Key[oldPath.Length..],item.Value); revision++; journalMutations.Add(new JournalMutation { Kind="rename",Path=oldPath,Destination=newPath,Id=value.Id }); return; }
             if(entries.TryGetValue(newPath,out var existing)) { if(!replace || existing.Directory!=value.Directory || existing.Directory && entries.Keys.Any(p=>p.StartsWith(newPath+"/",StringComparison.OrdinalIgnoreCase)))throw new IOException("Destination already exists or cannot be replaced."); Remove(newPath); }
-            var moved=entries.Where(p=>p.Key.Equals(oldPath,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); foreach(var item in moved)entries.Remove(item.Key); foreach(var item in moved){item.Value.StoredPath=null;entries[newPath+item.Key[oldPath.Length..]]=item.Value;} revision++; journalMutations.Add(new JournalMutation { Kind="rename",Path=oldPath,Destination=newPath,Id=value.Id });
+            var moved=entries.Where(p=>p.Key.Equals(oldPath,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); foreach(var item in moved)entries.Remove(item.Key); foreach(var item in moved)SetEntry(newPath+item.Key[oldPath.Length..],item.Value); revision++; journalMutations.Add(new JournalMutation { Kind="rename",Path=oldPath,Destination=newPath,Id=value.Id });
         }
     }
     private sealed class OpenLease(VaultEngine engine,string id) : IDisposable { private bool closed; public void Dispose() { lock(engine.gate) { if(closed)return; closed=true; if(engine.open.TryGetValue(id,out var count)) { if(count==1) {engine.open.Remove(id);if(engine.orphans.Remove(id)&&!engine.entries.Values.Any(entry=>entry.Id==id))engine.versionDue.Remove(id);}else engine.open[id]=count-1; } } } }
@@ -634,7 +652,7 @@ public sealed partial class VaultEngine : IDisposable
                 bool repairedIdentity=false;
                 foreach(var entry in rebuilt.Values)
                     if(orphans.ContainsKey(entry.Id)) { entry.Id=Guid.NewGuid().ToString("N");Touch(entry);repairedIdentity=true; }
-                entries=rebuilt; foreach(var queued in packingQueue.Keys.Where(id=>!entries.Values.Any(e=>e.Id==id)).ToArray())packingQueue.Remove(queued); known=applied; heads=new(applied); foreach(var c in commits.Values.Where(c=>applied.Contains(c.Id)))heads.ExceptWith(c.Parents);
+                AdoptEntries(rebuilt); foreach(var queued in packingQueue.Keys.Where(id=>!entries.Values.Any(e=>e.Id==id)).ToArray())packingQueue.Remove(queued); known=applied; heads=new(applied); foreach(var c in commits.Values.Where(c=>applied.Contains(c.Id)))heads.ExceptWith(c.Parents);
                 if(repairedIdentity)FlushLocal();
             }
 

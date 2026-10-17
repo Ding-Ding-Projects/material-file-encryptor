@@ -93,7 +93,7 @@ public sealed partial class VaultEngine
         if(mutation.Kind=="create")
         {
             var path=VaultPath.Normalize(mutation.Path);if(path==""||mutation.Metadata==null||entries.ContainsKey(path))throw new InvalidDataException("Invalid local create mutation.");
-            entries[path]=mutation.Metadata;return;
+            AddEntry(path,mutation.Metadata);return;
         }
         if(mutation.Kind=="delete")
         {
@@ -106,7 +106,7 @@ public sealed partial class VaultEngine
             if(path==""||destination==""||!entries.TryGetValue(path,out var target)||target.Id!=mutation.Id)throw new InvalidDataException("Invalid local rename mutation.");
             var moved=entries.Where(p=>p.Key.Equals(path,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(path+"/",StringComparison.OrdinalIgnoreCase)).ToArray();
             foreach(var item in moved)entries.Remove(item.Key);
-            foreach(var item in moved) { var next=destination+item.Key[path.Length..];if(entries.ContainsKey(next))throw new InvalidDataException("Local rename destination is occupied.");item.Value.StoredPath=null;entries.Add(next,item.Value); }return;
+            foreach(var item in moved) { var next=destination+item.Key[path.Length..];if(entries.ContainsKey(next))throw new InvalidDataException("Local rename destination is occupied.");AddEntry(next,item.Value); }return;
         }
         if(mutation.Kind!="update"||mutation.Metadata==null)throw new InvalidDataException("Unknown local journal mutation.");
         var entry=entries.Values.FirstOrDefault(e=>e.Id==mutation.Id)??throw new InvalidDataException("Local update entry is absent.");
@@ -114,7 +114,7 @@ public sealed partial class VaultEngine
         replacement.Records=entry.Records;replacement.Overlays=entry.Overlays;
         if(mutation.TruncateOverlayAt is long limit)foreach(var index in replacement.Overlays.Keys.Where(i=>i>=limit).ToArray())replacement.Overlays.Remove(index);
         var records=mutation.Overlay?replacement.Overlays:replacement.Records;foreach(var pair in mutation.Records)records[pair.Key]=pair.Value;
-        var pathKey=entries.First(p=>ReferenceEquals(p.Value,entry)).Key;entries[pathKey]=replacement;
+        SetEntry(StoredPathOf(entry),replacement);
         if(mutation.Due is DateTimeOffset due&&due!=default)versionDue[entry.Id]=due;
         if(mutation.PackingCap is long cap && cap!=0){ValidatePartSize(cap);packingQueue[entry.Id]=cap;}
     }

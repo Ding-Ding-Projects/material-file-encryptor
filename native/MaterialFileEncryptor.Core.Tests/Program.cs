@@ -6,6 +6,7 @@ if (args.Length > 0 && args[0] == "--native-child-trace") { await NativeChildTra
 if (args.Length == 2 && args[0] == "--native-trace-child") { await NativeChildTraceTests.ChildAsync(args[1]); return 0; }
 
 var cases = new (string,Action)[] {
+    ("filename path index survives cold lookup and namespace mutations",FilenamePathIndexTests.Run),
     ("history batches preserve immutable publication and cancellation",HistoryBatchTests.Run),
     ("packing writer admissions, snapshots and namespace races",PackingTests.Races),
     ("packing cancellation and checkpoint durability",PackingTests.Durability),

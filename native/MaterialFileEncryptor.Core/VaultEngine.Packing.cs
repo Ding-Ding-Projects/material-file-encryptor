@@ -188,9 +188,9 @@ public sealed partial class VaultEngine
                 AppendJournal();
                 var savedVersions=pendingVersions.ToList();var savedDue=new Dictionary<string,DateTimeOffset>(versionDue);
                 CaptureVersion(path,current,false);
-                replacement.Version=Guid.NewGuid().ToString("N");entries[path]=replacement;packingQueue.Remove(id);revision++;
+                replacement.Version=Guid.NewGuid().ToString("N");SetEntry(path,replacement);packingQueue.Remove(id);revision++;
                 try{PackingTestPoint?.Invoke("before-adoption");SaveJournal();}
-                catch{entries[path]=current;packingQueue[id]=cap;pendingVersions=savedVersions;versionDue=savedDue;throw;}
+                catch{SetEntry(path,current);packingQueue[id]=cap;pendingVersions=savedVersions;versionDue=savedDue;throw;}
                 PackingTestPoint?.Invoke("adopted");
                 return true;
             }
