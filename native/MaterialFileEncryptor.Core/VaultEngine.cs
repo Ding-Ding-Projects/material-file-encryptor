@@ -177,7 +177,16 @@ public sealed partial class VaultEngine : IDisposable
     private VaultEntryInfo Info(string path,Entry entry) => new(path,Name(path),entry.Directory,entry.Length,entry.Created,entry.Modified,IsPinned(path,entry),entry.Version,entry.Id,entry.Attributes,entry.PartSize,AllRecords(entry).Select(r=>r.Part).Distinct().Count());
     public VaultEntryInfo? GetInfo(string path)
     {
-        lock(gate) { Check(); path=VaultPath.Normalize(path); if(path=="") return Info("",FindId(config.VaultId)); return entries.TryGetValue(path,out var e)?Info(path,e):null; }
+        lock(gate)
+        {
+            Check(); path=VaultPath.Normalize(path);
+            if(path=="") return Info("",FindId(config.VaultId));
+            if(!entries.TryGetValue(path,out var entry)) return null;
+            // Lookups ignore case, but metadata must retain the stored spelling.
+            // WinFsp uses it as the normalized name for opens and exact queries.
+            string storedPath=entry.StoredPath??=entries.First(pair=>ReferenceEquals(pair.Value,entry)).Key;
+            return Info(storedPath,entry);
+        }
     }
     public VaultEntryInfo GetInfoById(string id) { lock(gate) { Check(); var pair=entries.FirstOrDefault(p=>p.Value.Id==id); return Info(pair.Key ?? "",FindId(id)); } }
     public IReadOnlyList<VaultEntryInfo> Enumerate(string path)
@@ -421,9 +430,9 @@ public sealed partial class VaultEngine : IDisposable
         {
             Check(); oldPath=VaultPath.Normalize(oldPath); newPath=VaultPath.Normalize(newPath); if(oldPath=="" || newPath=="")throw new IOException("Cannot rename root."); var value=Find(oldPath); EnsureParent(newPath);
             if(value.Directory && newPath.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase))throw new IOException("Cannot move a directory into itself.");
-            if(oldPath.Equals(newPath,StringComparison.OrdinalIgnoreCase)) { var changes=entries.Where(p=>p.Key.Equals(oldPath,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); foreach(var item in changes)entries.Remove(item.Key); foreach(var item in changes)entries[newPath+item.Key[oldPath.Length..]]=item.Value; revision++; journalMutations.Add(new JournalMutation { Kind="rename",Path=oldPath,Destination=newPath,Id=value.Id }); return; }
+            if(oldPath.Equals(newPath,StringComparison.OrdinalIgnoreCase)) { var changes=entries.Where(p=>p.Key.Equals(oldPath,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); foreach(var item in changes)entries.Remove(item.Key); foreach(var item in changes){item.Value.StoredPath=null;entries[newPath+item.Key[oldPath.Length..]]=item.Value;} revision++; journalMutations.Add(new JournalMutation { Kind="rename",Path=oldPath,Destination=newPath,Id=value.Id }); return; }
             if(entries.TryGetValue(newPath,out var existing)) { if(!replace || existing.Directory!=value.Directory || existing.Directory && entries.Keys.Any(p=>p.StartsWith(newPath+"/",StringComparison.OrdinalIgnoreCase)))throw new IOException("Destination already exists or cannot be replaced."); Remove(newPath); }
-            var moved=entries.Where(p=>p.Key.Equals(oldPath,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); foreach(var item in moved)entries.Remove(item.Key); foreach(var item in moved)entries[newPath+item.Key[oldPath.Length..]]=item.Value; revision++; journalMutations.Add(new JournalMutation { Kind="rename",Path=oldPath,Destination=newPath,Id=value.Id });
+            var moved=entries.Where(p=>p.Key.Equals(oldPath,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(oldPath+"/",StringComparison.OrdinalIgnoreCase)).ToArray(); foreach(var item in moved)entries.Remove(item.Key); foreach(var item in moved){item.Value.StoredPath=null;entries[newPath+item.Key[oldPath.Length..]]=item.Value;} revision++; journalMutations.Add(new JournalMutation { Kind="rename",Path=oldPath,Destination=newPath,Id=value.Id });
         }
     }
     private sealed class OpenLease(VaultEngine engine,string id) : IDisposable { private bool closed; public void Dispose() { lock(engine.gate) { if(closed)return; closed=true; if(engine.open.TryGetValue(id,out var count)) { if(count==1) {engine.open.Remove(id);if(engine.orphans.Remove(id)&&!engine.entries.Values.Any(entry=>entry.Id==id))engine.versionDue.Remove(id);}else engine.open[id]=count-1; } } } }

@@ -22,6 +22,8 @@ public sealed record VaultEntryInfo(string Path, string Name, bool IsDirectory, 
 public sealed record VaultSyncStatus(int PendingCommits, int PendingIncomingCommits, bool IsSourceAvailable, string? LastError);
 internal sealed class Entry
 {
+    [System.Text.Json.Serialization.JsonIgnore]
+    internal string? StoredPath { get; set; }
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string Version { get; set; } = Guid.NewGuid().ToString("N");
     public bool Directory { get; set; }

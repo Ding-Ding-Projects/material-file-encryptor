@@ -106,7 +106,7 @@ public sealed partial class VaultEngine
             if(path==""||destination==""||!entries.TryGetValue(path,out var target)||target.Id!=mutation.Id)throw new InvalidDataException("Invalid local rename mutation.");
             var moved=entries.Where(p=>p.Key.Equals(path,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(path+"/",StringComparison.OrdinalIgnoreCase)).ToArray();
             foreach(var item in moved)entries.Remove(item.Key);
-            foreach(var item in moved) { var next=destination+item.Key[path.Length..];if(entries.ContainsKey(next))throw new InvalidDataException("Local rename destination is occupied.");entries.Add(next,item.Value); }return;
+            foreach(var item in moved) { var next=destination+item.Key[path.Length..];if(entries.ContainsKey(next))throw new InvalidDataException("Local rename destination is occupied.");item.Value.StoredPath=null;entries.Add(next,item.Value); }return;
         }
         if(mutation.Kind!="update"||mutation.Metadata==null)throw new InvalidDataException("Unknown local journal mutation.");
         var entry=entries.Values.FirstOrDefault(e=>e.Id==mutation.Id)??throw new InvalidDataException("Local update entry is absent.");
