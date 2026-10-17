@@ -20,6 +20,8 @@ node scripts/desktop-icons.mjs check
 
 Forge 將 ICO 嵌入 `MaterialFileEncryptor.exe`；Squirrel 嘅 `setupIcon` 使用同一檔案，供安裝及更新執行檔使用。`iconUrl` 指向已包含 ICO 嘅固定完整來源提交 SHA。更換圖案時，先提交並發佈素材，再更新網址；產生安裝程式前必須確認網址回傳完全相同嘅位元組。
 
+最終壓縮修復亦會傳入 `--setupIcon`。重新組裝前，先以 SHA-256 同長度確認 maker 已加圖示嘅 `Squirrel.exe` 同完整套件內嘅項目完全一致，再將同一更新器複製到隔離供應工具目錄。最終安裝程式檢查仍要求內嵌更新器逐位元組符合呢份檔案，原有套件、更新索引同解壓檢查全部保留，原始工具目錄亦保持不變。
+
 Forge 將素材複製到 ASAR 以外嘅 `resources/branding`。已封裝版本從 `process.resourcesPath` 解析路徑；開發版本從主模組所在程式根目錄解析，唔依賴啟動目錄。Windows 視窗及通知區用 ICO，其他平台用 PNG。共用建構包裝函式回傳真正原生視窗，並為主視窗、Material 對話框同身分驗證視窗設定圖示，唔改視窗擁有權、權限或生命週期。
 
 原有 Squirrel 安裝及更新流程繼續透過 `Update.exe --createShortcut` 重建捷徑，唔清除系統圖示快取、改寫無關捷徑、搬移用戶資料或更換程式身份。用戶已釘選嘅捷徑可能要等 Windows 更新快取先顯示新圖案。

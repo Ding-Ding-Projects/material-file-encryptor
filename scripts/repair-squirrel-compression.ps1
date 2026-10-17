@@ -1,7 +1,9 @@
-param([Parameter(Mandatory)][string]$ArtifactDirectory, [Parameter(Mandatory)][string]$VendorDirectory)
+param([Parameter(Mandatory)][string]$ArtifactDirectory, [Parameter(Mandatory)][string]$VendorDirectory,
+  [Parameter(Mandatory)][string]$BrandedUpdater)
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/squirrel-file-hash.ps1"
 . "$PSScriptRoot/squirrel-release-index.ps1"
+. "$PSScriptRoot/squirrel-branding.ps1"
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 Add-Type -AssemblyName System.IO.Compression
 $output = [IO.Path]::GetFullPath($ArtifactDirectory)
@@ -21,8 +23,11 @@ $bytes = (Get-Item -LiteralPath $corrected).Length
 [IO.File]::WriteAllText((Join-Path $output 'RELEASES'), "$sha1 $($packages[0].Name) $bytes`n", [Text.UTF8Encoding]::new($false))
 # Releasify accepts existing full packages without rewriting them, and assembles
 # Setup from the indexed full package through the genuine Squirrel bootstrapper.
-$squirrel = Join-Path $VendorDirectory 'Squirrel.exe'
-$arguments = '--releasify "' + $corrected + '" --releaseDir "' + $output + '" --no-msi --no-delta'
+$icon = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../assets/branding/app.ico'))
+& node (Join-Path $PSScriptRoot 'desktop-icons.mjs') check
+if ($LASTEXITCODE -ne 0) { throw 'SQUIRREL_BRANDING_INVALID' }
+$squirrel = Copy-SquirrelBrandedVendor -Package $corrected -Updater $BrandedUpdater -VendorDirectory $VendorDirectory -Destination (Join-Path $stage 'vendor')
+$arguments = '--releasify "' + $corrected + '" --releaseDir "' + $output + '" --setupIcon "' + $icon + '" --no-msi --no-delta'
 $process = Start-Process -FilePath $squirrel -ArgumentList $arguments -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $stage 'releasify.log') -RedirectStandardError (Join-Path $stage 'releasify-error.log')
 try {
  $null = $process.Handle

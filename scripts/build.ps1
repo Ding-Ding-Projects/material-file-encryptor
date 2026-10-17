@@ -104,7 +104,7 @@ if ($Installer) {
   $env:MFE_SQUIRREL_VENDOR_DIRECTORY = $vendorStage
   try { Invoke-Checked { npm.cmd run make -- --platform=win32 --arch=x64 --from-package } }
   finally { Remove-Item Env:MFE_SQUIRREL_VENDOR_DIRECTORY -ErrorAction SilentlyContinue }
-  & "$PSScriptRoot\repair-squirrel-compression.ps1" -ArtifactDirectory 'out/make/squirrel.windows/x64' -VendorDirectory $vendorStage
+  & "$PSScriptRoot\repair-squirrel-compression.ps1" -ArtifactDirectory 'out/make/squirrel.windows/x64' -VendorDirectory $vendorStage -BrandedUpdater 'out/material-file-encryptor-win32-x64/Squirrel.exe'
   & "$PSScriptRoot\package-integrity.ps1"
   foreach ($fullPackage in Get-ChildItem 'out/make/squirrel.windows/x64' -Filter '*-full.nupkg' -File) {
     & "$PSScriptRoot\squirrel-payload-check.ps1" -Package $fullPackage.FullName -Updater (Join-Path $vendorStage 'Squirrel.exe') -ExpectedVersion ((Get-Content package.json -Raw | ConvertFrom-Json).version) -ExpectedSource ((& git rev-parse HEAD).Trim()) -ReceiptPath 'out/evidence/squirrel-extraction.json'
