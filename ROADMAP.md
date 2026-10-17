@@ -5,7 +5,8 @@
 - [x] Verify final Squirrel Setup and embedded updater branding, auxiliary resource preservation and unchanged payload bytes after reassembly.
 - [x] Run both exact build entrypoints successfully at ca91b020 and verify all 909 extracted package files.
 - [x] Verify the local packaged window's native icon handles and preserve a genuine source-bound initial-state capture.
-- [ ] Apply the accepted release to the current installation after the user saves work and quits 1.810.1, then verify installed version, launcher and shortcuts.
+- [x] Verify accepted 1.823.1 in the ordinary user installation: 910 payload files, four opened physical paths and existing-Explorer Desktop/Start menu shortcut targets. Installer exit 0 recovered separately; original continuous observer remains failed.
+- [ ] Resolve release-source versus verifier-checkout binding before promoting the ordinary-installed capture; separate recovery is recorded, original observers remain failed.
 - [ ] Inspect rendered installed taskbar/tray/Explorer icons and complete a disposable fresh-install acceptance run.
 - [ ] Complete final archive-backed branch retirement; retain divergent history and three checkouts holding unique ignored evidence.
 

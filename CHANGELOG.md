@@ -1,3 +1,11 @@
+# Ordinary installed icon verification, 2026-10-17
+
+- Verify release 1.823.1 in the ordinary user installation, including 910 payload files, opened physical paths and Desktop/Start menu shortcut targets queried through the existing Explorer desktop.
+- Record successful installer exit separately from its failed continuous observer. Preserve the runtime identity-handshake failure and independent absence recovery without claiming continuous observation passed.
+- Keep rendered taskbar/tray, complete workflows, fresh-machine installation and capture promotion explicitly pending.
+
+1.823.1 嘅一般使用者安裝已核實，910 個檔案同實際路徑吻合，現有 Explorer 亦確認捷徑指向。原本連續觀察器失敗照實保留，成功退出及獨立復原證據分開記錄；未驗證項目唔會提前打勾。
+
 # Installed product icons, 2026-10-17
 
 - Reuse the folder-and-lock product mark in nine native icon sizes, executable and launcher resources, windows, tray, Setup and updater packaging.
