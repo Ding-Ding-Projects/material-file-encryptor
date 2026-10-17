@@ -44,10 +44,12 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
   // Upgrade newly defined elements before accessing their component internals.
   customElements.upgrade(toolbar);
   const showView=id=>{closeContextMenu('navigation',{restoreFocus:false});frame?.setActive(id);if(id===HOME_ID)renderHome();for(const [key,view]of views){view.root.hidden=key!==id;}onActivate(id);if(id===HOME_ID)homeGrid.focusFirst?.();};
+  // Guidance lifetimes change commands without replacing the surrounding UI.
+  const refreshCommands=()=>palette.setCommands([{id:'view:home',label:HOME_LABEL,run:()=>shell.openHome()},{id:'tab:new',label:text('New tab','新分頁'),shortcut:'Control+t',run:()=>shell.openNewTab()},...tabs.map(tab=>({id:`view:${tab.id}`,label:labels.get(tab.id),run:()=>{model.openTab({id:tab.id,label:localized(labels.get(tab.id),'en')});shell.activate(tab.id);}})),...hostCommands]);
   const configure=()=>{
     shell.configure({model,language:activeLanguage,labels,onActivate:showView,onContext:openContextMenu,onQuit});
     build.language=activeLanguage;build.value=provenance;
-    palette.language=activeLanguage;palette.render();renderHome();palette.setCommands([{id:'view:home',label:HOME_LABEL,run:()=>shell.openHome()},{id:'tab:new',label:text('New tab','新分頁'),shortcut:'Control+t',run:()=>shell.openNewTab()},...tabs.map(tab=>({id:`view:${tab.id}`,label:labels.get(tab.id),run:()=>{model.openTab({id:tab.id,label:localized(labels.get(tab.id),'en')});shell.activate(tab.id);}})),...hostCommands]);
+    palette.language=activeLanguage;palette.render();renderHome();refreshCommands();
     notifications.configure({model,language:activeLanguage,onExport,renderText,onAction:onNotificationAction,onAudio:enabled=>audio.enable(enabled)});
     const sheet=new CSSStyleSheet();sheet.replaceSync(':host{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}');toolbar.shadowRoot.adoptedStyleSheets=[sheet];
     toolbar.shadowRoot.replaceChildren(element('md-outlined-button',{text:localized(text('Commands · Ctrl+Shift+F','指令 · Ctrl+Shift+F'),activeLanguage),onclick:()=>palette.open()}),element('md-outlined-button',{text:localized(text('Notifications','通知'),activeLanguage),onclick:()=>{notifications.hidden=!notifications.hidden;}}));
@@ -70,7 +72,7 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
     setLogo(value){frame?.setLogo(value);},
     setOfflineCount(value){frame?.setOfflineCount(value);},
     setProvenance(value){provenance=value;build.value=value;},
-    registerCommands(value){return registerOwnedCommands({get:()=>hostCommands,set:value=>{hostCommands=value;},refresh:configure},value);},
+    registerCommands(value){return registerOwnedCommands({get:()=>hostCommands,set:value=>{hostCommands=value;},refresh:refreshCommands},value);},
     registerViews(value){const active=model.getState().activeTabId;for(const view of value){if(!view.id||!(view.root instanceof HTMLElement))throw new TypeError('A view id and root are required');views.set(view.id,view);if(view.layout!==false)registerPanel(view.id,view.root);if(!tabs.some(t=>t.id===view.id))tabs.push(view);labels.set(view.id,view.label);model.registerCanonicalTab(view.id,localized(view.label,'en'));if(shouldOpenRegisteredView(model.getState(),view.id))model.openTab({id:view.id,label:localized(view.label,'en')});}model.activateTab(active);configure();frame?.refreshNavigation();showView(model.getState().activeTabId);},
     destroy(){frame?.destroy();getContextOverlay(host.ownerDocument).destroy();audio.destroy();for(const panel of panels.values())panel.destroy();panels.clear();clearTimeout(messageTimer);document.removeEventListener('keydown',keydown);for(const node of[homeRoot,shell,build,toolbar,notifications,live,palette,context])node.remove();}
   };

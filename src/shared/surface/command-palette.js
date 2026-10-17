@@ -5,8 +5,14 @@ import {openContextMenu,closeContextMenu} from './overlay.js';
 export class CommandPalette extends SurfaceElement {
   constructor(){super();this.commands=[];this.full=false;}
   connectedCallback(){this.render();}
-  disconnectedCallback(){this.resultGeneration=(this.resultGeneration||0)+1;}
-  setCommands(commands){this.commands=commands;this.renderResults();}
+  disconnectedCallback(){this.commandRefresh=null;this.resultGeneration=(this.resultGeneration||0)+1;}
+  setCommands(commands){
+    this.commands=commands;this.resultGeneration=(this.resultGeneration||0)+1;
+    if(this.commandRefresh)return;
+    const refresh=this.commandRefresh={};
+    // A single editor render may add and remove hundreds of guidance commands.
+    queueMicrotask(()=>{if(this.commandRefresh!==refresh)return;this.commandRefresh=null;if(this.isConnected!==false)this.renderResults();});
+  }
   open(){this.returnFocus=document.activeElement;this.dialog.show();queueMicrotask(()=>this.search.input.focus());}
   close(){closeContextMenu('palette-close',{restoreFocus:false});this.dialog.close();this.returnFocus?.focus();}
   render(){this.resultGeneration=(this.resultGeneration||0)+1;this.style(`md-dialog{width:min(760px,calc(100vw - 32px));max-height:90vh;--md-dialog-container-color:var(--md-sys-color-surface-container,#f0f1f7)}md-dialog.full{width:calc(100vw - 24px);height:calc(100vh - 24px)}.result{padding:8px 0;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--md-sys-color-outline-variant,#ccc)}.label{flex:1;min-width:0;overflow-wrap:anywhere}.list{overflow:auto;max-height:55vh}.head{display:flex;justify-content:space-between}`);
