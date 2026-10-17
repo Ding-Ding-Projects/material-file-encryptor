@@ -143,6 +143,12 @@
       "translationSha256": "f0954e10ac243de68fd2a710082848e67ce16df7b7bd32106585da620dfbe557"
     },
     {
+      "source": "docs/features/desktop/installed-icons.md",
+      "translation": "docs/features/desktop/installed-icons.zh-HK.md",
+      "sourceSha256": "2a0da127de62ad895dc8e5fe53d3d31a403c2e74bb4f52643a8acfe839b96f97",
+      "translationSha256": "6ef81710268080558bf26a3dc1cac4c6f387ed5cc962d2add93b38aaac113915"
+    },
+    {
       "source": "docs/features/desktop/owned-exit-handles.md",
       "translation": "docs/features/desktop/owned-exit-handles.zh-HK.md",
       "sourceSha256": "76df92c952b8963d21275f8f46ed17db4826feca019e8760c0c687a4b947c11e",
@@ -157,8 +163,8 @@
     {
       "source": "docs/features/desktop/README.md",
       "translation": "docs/features/desktop/README.zh-HK.md",
-      "sourceSha256": "9b3dc13a477abb5a95a5bcdfe156671755143152d3e26ba4728dc8d689cd0e53",
-      "translationSha256": "1f5daabc13657de51879e103d924f3b0f2a93cb54f824c9654bd7630cf19a54b"
+      "sourceSha256": "0a738e6c7e073c38cc3737ce0af9a123c22837e5bbfde278dac8c4fa4be54b69",
+      "translationSha256": "fc66c6a23d8a48fe7262f345bf53c8380eb4d60ddeeb786b02d17e4287189d77"
     },
     {
       "source": "docs/features/desktop/renderer-interpreter-admission.md",
