@@ -1,3 +1,17 @@
+## Ordinary installed icon verification, 2026-10-17 UTC
+
+Version 1.823.1 is verified in the ordinary user installation from release source `14d6e07636a1f1d62e6dd345273a0c6866664562`. All 910 payload files matched; four opened-file handles resolved to ordinary installation paths. Independent queries through the existing Explorer desktop confirmed the installation folder and Desktop/Start menu shortcut targets. The installer operation returned 0. Its original continuous observer failed, so operation exit and recorded-process absence were recovered separately and remain separate verdicts.
+
+The installed English/light initial setup screen and five native window icon handles were observed with an isolated verification profile. Both ordinary-shell shortcut icon images were separately inspected and show the green folder-lock mark with the shortcut arrow; this is extracted shell-icon evidence, not a rendered Explorer/taskbar/tray screenshot. The runtime observer failed its Python-wrapper identity handshake; separate recovery found every recorded identity absent and the hidden desktop unavailable, while replacement processes were left untouched. Console observation covers only the capture interval, not startup history. Rendered taskbar/tray icons, full workflows and a disposable fresh-machine installation remain unverified. Independent recovery is now recorded separately. Canonical capture promotion remains pending because release source 14d6e07636a1f1d62e6dd345273a0c6866664562 differs from verifier checkout edf13cba77968c81a3c7eca392fdc1f740126868. The genuine capture remains private and unpromoted; no tool-context image is presented as ordinary-installed proof.
+
+Verifier checkout: `edf13cba77968c81a3c7eca392fdc1f740126868`, distinct from the release source above. The detailed original receipts remain preserved privately. Earlier entries below are historical snapshots and retain their original dates and verdicts.
+
+### 繁體廣東話
+
+1.823.1 已核實裝喺一般使用者安裝位置，910 個載荷檔案完全吻合，四個已開啟檔案控制代碼確認實際路徑。現有 Explorer 桌面獨立查詢亦確認安裝資料夾，以及桌面同開始功能表捷徑指向。安裝操作退出碼係 0，但原本連續觀察器失敗，退出結果同程序身分消失由獨立復原紀錄確認，唔會將原本失敗改寫成通過。
+
+已觀察英文淺色初始設定畫面同五個原生視窗圖示控制代碼。執行期觀察器喺 Python 包裝程序身分核對失敗；獨立復原確認原有程序身分同隱藏桌面已不存在，重用編號嘅無關程序冇被干預。工作列、通知區完整呈現、完整工作流程同全新環境安裝仍未驗證。最終獨立復原已記錄；來源 14d6e076 同驗證工作目錄 edf13cba 唔同，標準圖片提升仍待來源綁定解決，真實圖片繼續私人保留。
+
 ## Installed icon repair verification, 2026-10-17 UTC
 
 The product logo repair is implemented at source `ca91b0209c3aa0bf0f378f62a60cefc778ef869a`. The existing folder-and-lock mark now supplies nine ICO sizes (16, 20, 24, 32, 40, 48, 64, 128 and 256), executable and root-launcher resources, shared native windows, tray, Setup and updater packaging. The immutable icon URL was retrieved and matched to the committed ICO.
@@ -1618,3 +1632,7 @@ Source through 8846e1942143e160040cf17cb06b710bf88fe3ae replaces the framework d
 Implementation checks passed 23 focused tests, with six further reassembly checks. Independent runtime review passed 12 focused tests and found no actionable regression. Packaging review caught and verified the source repair for the final Setup/updater reassembly path. Full build, downloaded package, installed update and rendered evidence remain pending. The installed baseline changed independently from 1.607.1 to 1.810.1 during preparation; both observed versions used generic icons.
 
 Tracking: issue #14 and Discussion #15. Existing broader acceptance work is not certified by this icon repair. Retain unmerged fix/renderer-runtime-identity-20261014 at cc874090956d4ffc16f81389bc07511bf136be61. Repository-wide cleanup requires a verified archive and fresh ancestry/inactivity checks.
+
+Closeout limitation: automatic approval rejected the attempted wiki update with the generic reason "blocked by policy"; that write was not retried. The existing wiki snapshot remains historical. The final source documentation records the verified installation independently.
+
+Retain the three evidence-bearing foundation, inventory and mediation checkouts, divergent fix/renderer-runtime-identity-20261014, and the previously rejected residual runtime junction. No stashes exist. The active icon task branch remains retained until all completed text is pushed and a fresh archive plus ancestry proof permits retirement.
