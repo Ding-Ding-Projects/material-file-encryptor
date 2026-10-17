@@ -43,6 +43,6 @@ try {
 $setup = Join-Path $output 'Setup.exe'
 if (!(Test-Path -LiteralPath $setup)) { throw 'SQUIRREL_SETUP_MISSING' }
 ConvertTo-CompatibleSquirrelReleaseIndex -Index (Join-Path $output 'RELEASES') -Package $corrected
-& "$PSScriptRoot/squirrel-setup-check.ps1" -Setup $setup -Package $corrected -Updater $squirrel -ReleaseIndex (Join-Path $output 'RELEASES') -ReceiptPath (Join-Path $stage 'setup-inspection.json')
+& "$PSScriptRoot/squirrel-setup-check.ps1" -Setup $setup -Package $corrected -Updater $squirrel -SetupIcon $icon -ReleaseIndex (Join-Path $output 'RELEASES') -ReceiptPath (Join-Path $stage 'setup-inspection.json')
 Move-Item -LiteralPath $setup -Destination (Join-Path $output 'MaterialFileEncryptor-Setup.exe') -Force
 Write-Host 'Reassembled genuine Squirrel Setup from the explicitly Deflated full package; original outputs retained.'

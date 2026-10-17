@@ -9,7 +9,7 @@ test('reassembly uses package-contained branding after maker temporary files are
   const verify=source=>{
     assert.match(source,/--setupIcon/);
     assert.match(source,/\$squirrel = Copy-SquirrelBrandedVendor -Package \$corrected -Icon \$icon/);
-    assert.match(source,/-Setup \$setup -Package \$corrected -Updater \$squirrel -ReleaseIndex/);
+    assert.match(source,/-Setup \$setup -Package \$corrected -Updater \$squirrel -SetupIcon \$icon -ReleaseIndex/);
     assert.doesNotMatch(source,/BrandedUpdater/);
   };
   const original=execFileSync('git',['show','d0b355419f38ddb16b968c799b24f29378bd5f16:scripts/repair-squirrel-compression.ps1'],{encoding:'utf8'});

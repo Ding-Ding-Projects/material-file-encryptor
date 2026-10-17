@@ -1,5 +1,5 @@
 param([Parameter(Mandatory)][string]$Setup, [Parameter(Mandatory)][string]$Package,
-  [Parameter(Mandatory)][string]$Updater, [string]$Background, [string]$ReceiptPath, [string]$ReleaseIndex)
+  [Parameter(Mandatory)][string]$Updater, [string]$Background, [string]$SetupIcon, [string]$ReceiptPath, [string]$ReleaseIndex)
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/squirrel-file-hash.ps1"
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -96,6 +96,7 @@ try {
   $packageName = [IO.Path]::GetFileName($Package)
   $expectedNames = @($packageName,'RELEASES','Update.exe')
   if ($Background) { $expectedNames += 'background.gif' }
+  if ($SetupIcon) { $expectedNames += 'setupIcon.ico' }
   $entries = @{}
   foreach ($entry in $zip.Entries) {
     if ($entry.FullName -cnotin $expectedNames -or $entries.ContainsKey($entry.FullName)) { throw 'SETUP_UNEXPECTED_OR_DUPLICATE_ENTRY' }
@@ -107,6 +108,7 @@ try {
   $updaterHash = (Get-SquirrelFileHash -LiteralPath $Updater -Algorithm SHA256).Hash.ToLowerInvariant()
   if ($entries['Update.exe'].Length -ne (Get-Item -LiteralPath $Updater).Length -or (Get-EntryDigest $entries['Update.exe'] 'SHA256') -ne $updaterHash) { throw 'SETUP_EMBEDDED_UPDATER_MISMATCH' }
   if ($Background -and ($entries['background.gif'].Length -ne (Get-Item -LiteralPath $Background).Length -or (Get-EntryDigest $entries['background.gif'] 'SHA256') -ne (Get-SquirrelFileHash -LiteralPath $Background).Hash.ToLowerInvariant())) { throw 'SETUP_EMBEDDED_BACKGROUND_MISMATCH' }
+  if ($SetupIcon -and ($entries['setupIcon.ico'].Length -ne (Get-Item -LiteralPath $SetupIcon).Length -or (Get-EntryDigest $entries['setupIcon.ico'] 'SHA256') -ne (Get-SquirrelFileHash -LiteralPath $SetupIcon).Hash.ToLowerInvariant())) { throw 'SETUP_EMBEDDED_ICON_MISMATCH' }
   if ($entries['RELEASES'].Length -gt 4096) { throw 'SETUP_RELEASES_TOO_LARGE' }
   $textReader = [IO.StreamReader]::new($entries['RELEASES'].Open())
   try { $release = $textReader.ReadToEnd().Trim() } finally { $textReader.Dispose() }

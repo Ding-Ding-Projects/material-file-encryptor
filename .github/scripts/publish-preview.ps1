@@ -1,6 +1,7 @@
 ﻿param([switch]$PrepareOnly)
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/../../scripts/squirrel-file-hash.ps1"
+. "$PSScriptRoot/../../scripts/squirrel-branding.ps1"
 function Assert([bool]$condition, [string]$message) { if (!$condition) { throw $message } }
 function Digest([string]$path, [string]$algorithm='SHA256') { (Get-SquirrelFileHash -LiteralPath $path -Algorithm $algorithm).Hash.ToLowerInvariant() }
 function Gh([string[]]$Arguments) { [Management.Automation.ApplicationInfo]$nativeGh = Get-Command gh.exe -CommandType Application -ErrorAction Stop | Select-Object -First 1; $result = & $nativeGh.Source @Arguments; if ($LASTEXITCODE -ne 0) { throw 'GITHUB_CLI_OPERATION_FAILED' }; return $result }
@@ -25,7 +26,12 @@ Assert (@($packages | Where-Object Name -Like '*-full.nupkg').Count -eq 1) 'EXPE
 Assert (@($packages | Where-Object Name -CEQ "MaterialFileEncryptor-$packageVersion-full.nupkg").Count -eq 1) 'RELEASE_PACKAGE_NAME_MISMATCH'
 $fullPackage=@($packages | Where-Object Name -Like '*-full.nupkg')[0]
 & scripts/squirrel-payload-check.ps1 -Package $fullPackage.FullName -Updater 'node_modules/electron-winstaller/vendor/Squirrel.exe' -ExpectedVersion $packageVersion -ExpectedSource $source
-& scripts/squirrel-setup-check.ps1 -Setup $setup -Package $fullPackage.FullName -Updater 'node_modules/electron-winstaller/vendor/Squirrel.exe'
+& node scripts/desktop-icons.mjs check
+Assert ($LASTEXITCODE -eq 0) 'SQUIRREL_BRANDING_INVALID'
+$setupIcon=[IO.Path]::GetFullPath('assets/branding/app.ico')
+$verificationVendor=Join-Path ([IO.Path]::GetTempPath()) ('mfe-publish-vendor-'+[Guid]::NewGuid().ToString('N'))
+$brandedUpdater=Copy-SquirrelBrandedVendor -Package $fullPackage.FullName -Icon $setupIcon -VendorDirectory 'node_modules/electron-winstaller/vendor' -Destination $verificationVendor
+& scripts/squirrel-setup-check.ps1 -Setup $setup -Package $fullPackage.FullName -Updater $brandedUpdater -SetupIcon $setupIcon -ReleaseIndex $releases
 $indexed=@{}
 foreach ($line in Get-Content $releases) {
  if (!$line.Trim()) { continue }
