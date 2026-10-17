@@ -16,6 +16,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   select-runner:
+    if: github.event.deleted != true
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
