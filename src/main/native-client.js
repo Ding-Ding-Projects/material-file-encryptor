@@ -100,7 +100,7 @@ export class NativeClient extends EventEmitter {
       if (!message || typeof message !== 'object' || Array.isArray(message)) { failed(invalidResponse()); return; }
       if (Object.hasOwn(message, 'event')) {
         if (message.event !== 'status' || !Object.hasOwn(message, 'data') && !Object.hasOwn(message, 'status')) { failed(invalidResponse()); return; }
-        this.emit('status', message.data ?? message.status); return;
+        this.emit('status', message.data ?? message.status, message.sessionId ?? 'main'); return;
       }
       const hasResult = Object.hasOwn(message, 'result'), hasError = Object.hasOwn(message, 'error');
       const errorMessage = typeof message.error === 'string' ? message.error : message.error?.message;

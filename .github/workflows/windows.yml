@@ -65,6 +65,12 @@ jobs:
       - name: Build application
         shell: cmd
         run: build.bat /s
+      - name: Verify isolated vault sessions
+        shell: powershell
+        run: |
+          . ./scripts/bootstrap.ps1
+          dotnet run --project native/MaterialFileEncryptor.Controller.Tests -c Release -- --multi-vault
+          if ($LASTEXITCODE -ne 0) { throw 'Multi-vault controller verification failed.' }
       - name: Package genuine unsigned Squirrel installer
         shell: cmd
         run: build-installer.bat /s

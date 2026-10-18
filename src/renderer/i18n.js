@@ -1,4 +1,13 @@
 export const cantonese = {
+"Automatic unlock is available only for the first vault. Reopen additional vaults after restarting the app.":"只有第一個保險庫可以自動解鎖。重新啟動程式後，請再次開啟其他保險庫。",
+"Vault sessions":"保險庫工作階段",
+"Selected vault":"已選保險庫",
+"Vault":"保險庫",
+"Add vault":"加入保險庫",
+"Remove locked vault":"移除已鎖定保險庫",
+"Recovery required":"需要復原",
+"Switching vaults keeps other drives mounted. Removing a locked vault only removes it from this list.":"切換保險庫時，其他磁碟會保持掛載。移除已鎖定保險庫只會將佢移出呢個清單。",
+
 "Clear field":"清除欄位",
 "Text field":"文字欄位",
 "Saving a version…":"儲存緊版本…",

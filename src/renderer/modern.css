@@ -97,3 +97,10 @@ mfe-control-guidance[data-info-icon][data-open]{display:block;flex:1 1 100%;inli
 /* An icon follows its control: when the control is hidden, its icon is hidden with it. */
 mfe-control-guidance[data-info-icon]:has(+[hidden]){display:none}
 [data-info-icon-pair]:has(>[hidden]:not(mfe-control-guidance)){display:none}
+
+/* The session selector stays outside tab panels, including the locked welcome. */
+.vault-session-bar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:12px 0; }
+.vault-session-picker { display:flex; flex-direction:column; gap:4px; min-width:0; flex:1 1 260px; }
+.vault-session-picker md-outlined-select { width:100%; min-width:0; }
+.vault-session-bar > .field-help { flex-basis:100%; margin:0; }
+@media (max-width:600px) { .vault-session-picker { flex-basis:100%; } }

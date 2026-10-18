@@ -61,7 +61,7 @@ test('main process wires the definitive event to a lock and the query event only
   assert.match(main,/window\.on\('session-end',\(\)=>\{void sessionEnd\.end\(\);\}\)|window\.on\('session-end', \(\) => \{ void sessionEnd\.end\(\); \}\)/);
   assert.match(main,/window\.on\('query-session-end', \(\) => \{ void sessionEnd\.suspend\(\); \}\)/);
   assert.match(main,/powerMonitor\.on\('suspend', \(\) => \{ void sessionEnd\.suspend\(\); \}\)/);
-  assert.match(main,/helper\.request\('forceLock', options\)/);
+  assert.match(main,/vaultSessions\.each\('forceLock', options\)/);
 });
 test('every ordinary-lock busy message in the native host has real Cantonese',async()=>{
   const source=await fs.readFile(new URL('../native/MaterialFileEncryptor.Host/DriveBusyException.cs',import.meta.url),'utf8');

@@ -1,3 +1,10 @@
+# Multiple vault sessions, 2026-10-18
+
+- Add an always-visible vault selector, independent native controllers, and separate drive letters, cache/key lifetimes, file/history selections, and transfers.
+- Reject overlapping folders, duplicate letters and duplicate private repositories before opening. Preserve uncertain ownership, reject stale session requests, and revoke browser pairing on selection changes.
+- Lock one drive or all drives. Quit, updates and Windows session shutdown inspect every vault. Additional vaults reopen explicitly after application restart.
+- Add focused desktop and native session regression tests. Actual simultaneous WinFsp mounts and installed UI validation remain unverified until performed on Windows.
+
 # Ordinary installed icon verification, 2026-10-17
 
 - Verify release 1.823.1 in the ordinary user installation, including 910 payload files, opened physical paths and Desktop/Start menu shortcut targets queried through the existing Explorer desktop.

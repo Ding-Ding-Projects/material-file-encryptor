@@ -1,4 +1,7 @@
 export {};
+interface DriveState { sessionId: string; sessions: VaultSessionSummary[]; [key:string]: unknown }
+interface VaultSessionSummary { sessionId:string; locked:boolean; mounted:boolean; driveLetter?:string; driveName?:string; storageDir?:string; cacheDir?:string; recoveryRequired?:boolean; operation?:string|null }
+
 
 type FeatureName = 'converter'|'ollama'|'documentation'|'status'|'personalization'|'access'|'workflow'|'surprise';
 interface FileEntry {id:string;entryId?:string;path:string;size:number;offline:boolean;modified:string;partCount?:number;partSizeBytes?:number}
@@ -7,10 +10,13 @@ interface Operation {id?:string;operationId:string;kind?:'import'|'export'|'pack
 interface VersionEntry {id:string;entryId:string;path:string;timestampUtc:string;length:number;label?:string;isAvailable:boolean}
 interface ActivityPage {items:Array<{id:string;entryId?:string;action:string;path?:string;timestampUtc:string;detail?:string}>;nextCursor:string|null}
 interface DriveBridge {
+  addSession(): Promise<DriveState>;
+  selectSession(sessionId: string): Promise<DriveState>;
+  removeSession(sessionId: string): Promise<DriveState>;
   storageDiagnostics(): Promise<StorageDiagnostics>;
   startPacking(options?: {path?: string; partSizeBytes?: number}): Promise<{operationId: string}>;
- status():Promise<Record<string,unknown>&{packing?:{pendingFiles:number;running:boolean;paused:boolean;activeWriters:number;lastError:string|null;targetPartSizeBytes:number};files?:FileEntry[];filesRevision?:string|number;operations?:Operation[];build?:{version?:string;builtAt?:string}}>;
- onStatus(callback:(state:Record<string,unknown>)=>void):()=>void;
+ status():Promise<DriveState&{packing?:{pendingFiles:number;running:boolean;paused:boolean;activeWriters:number;lastError:string|null;targetPartSizeBytes:number};files?:FileEntry[];filesRevision?:string|number;operations?:Operation[];build?:{version?:string;builtAt?:string}}>;
+ onStatus(callback:(state:DriveState)=>void):()=>void;
  featureRequest<T=unknown>(feature:FeatureName,action:string,payload?:Record<string,unknown>):Promise<T>;
  onFeatureEvent(feature:FeatureName,callback:(event:Record<string,unknown>)=>void):()=>void;
  exportText(payload:{name:string;mime:string;content:string}):Promise<unknown>;

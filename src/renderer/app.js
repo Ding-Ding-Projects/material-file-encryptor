@@ -29,6 +29,7 @@ import {requestSuperConfirmation,confirmDestructiveAction} from '../shared/surfa
 import { createPrivateWordingView } from '../shared/surface/private-wording-view.js';
 import { operationNotification } from './operation-notifications.js';
 import { installWordingDrop, createCelebration } from './wording-drop.js';
+import {vaultSessionChoices,vaultSessionAvailability} from './vault-sessions.js';
 import { onPageDiscard } from './page-lifecycle.js';
 import {createRendererTiming,observeTaskPresentation} from './performance-timing.js';
 const rendererTiming=createRendererTiming(),timingLifetime=new AbortController();
@@ -43,6 +44,7 @@ let vocabularyPersisted = true;
 let vocabularyUploadVersion = 0;
 const fileSelection = createFileSelection();
 let state = null, selected = null, view = 'drive', busy = false, dialogMode = 'create', snackbarTimer;
+let vaultConfirmationLifetime=new AbortController();
 let archiveRows = {history:[],recycle:[]}, archiveRequests={history:0,recycle:0};
 const archiveRenders={history:0,recycle:0};
 const recycledSelection=new Set(); let historySearch, recycleSearch, historySelection;let historyRetentionDraft=false,historyRetentionRevision=0;
@@ -161,7 +163,50 @@ function operation(label) {
  $('operation').hidden = !label;
  if (label) $('operation-text').textContent = t(label,{message:true});
 }
-async function refresh() { state = await api.status(); render();statusReady=true;if(!statusTimingRecorded){statusTimingRecorded=true;rendererTiming.finish(rendererTiming.begin('status-rendered'),'settled');}if(state.locked&&view==='drive')void observeViewReady('drive');attemptStartup(); }
+function resetVaultPresentation() {
+ vaultConfirmationLifetime.abort();vaultConfirmationLifetime=new AbortController();
+ // Invalidate requests before clearing their presentation, including same-revision vaults.
+ filePageRequest++; filePageRevision=null; fileNextCursor=null; pagedFiles=null; renderedFilesKey='';
+ selected=null; fileSelection.clear(); fileDetails?.selectEntry(null,{resetFilters:true}); historySelection?.clear(); recycledSelection.clear();
+ $('file-list').replaceChildren(); $('file-search').value='';
+ for(const search of [fileSearch,historySearch?.input,recycleSearch?.input])if(search){search.query='';search.regex=false;search.flags='iu';search.render();}
+ for(const kind of ['history','recycle']) { archiveRequests[kind]++;archiveRenders[kind]++;archiveRows[kind]=[];$(kind+'-list').replaceChildren();$('view-'+kind).setAttribute('aria-busy','false');setArchiveMessage(kind,''); }
+ historyRetentionDraft=false;historyRetentionRevision++;
+ $('history-retention').value='forever';$('history-days').value='';$('history-days').hidden=true;
+ for(const dialog of document.querySelectorAll('mfe-dialog[open],md-dialog[open],dialog[open]'))dialog.close('cancel');
+ closeDrivePicker();$('vault-form').reset();
+ for(const id of ['password-input','confirm-password','key-path','storage-input','cache-input','remote-repository'])$(id).value='';
+ $('password-input').type='password';$('show-password').setAttribute('aria-pressed','false');setText('show-password','Show');
+ $('drive-name').value=DEFAULT_DRIVE_NAME;$('drive-letter').value='';$('transport-mode').value='folder';$('private-git-fields').hidden=true;
+ driveLetterEdited=false;activeDriveLetter='';operationNotifications.clear();clearMainError();
+ foundation?.closeContextMenu('vault-switch',{restoreFocus:false});
+}
+function acceptVaultState(next) {
+ const changed=state && state.sessionId!==next.sessionId;
+ if(changed)resetVaultPresentation();
+ state=next;render();
+ if(changed&&['history','recycle'].includes(view))void loadArchive(view);
+}
+function renderVaultSessions() {
+ const picker=$('vault-session'),choices=vaultSessionChoices(state,t),signature=JSON.stringify(choices);
+ if(picker.dataset.choices!==signature){picker.replaceChildren(...choices.map(choice=>control('option',{value:choice.id},[choice.label])));picker.dataset.choices=signature;}
+ picker.value=state?.sessionId||'';picker.setAttribute('aria-label',t('Selected vault'));
+ document.querySelector('.vault-session-bar').setAttribute('aria-label',t('Vault sessions'));
+ const can=vaultSessionAvailability(state,busy);
+ picker.disabled=!can.switch||!api?.selectSession;
+ $('add-vault-session').disabled=!can.add||!api?.addSession;
+ $('remove-vault-session').disabled=!can.remove||!api?.removeSession;
+}
+async function changeVaultSession(action,id) {
+ if(busy||fileDetails?.busy)return;
+ const can=vaultSessionAvailability(state,busy);
+ if(!can[action])return renderVaultSessions();
+ // Do not switch the target of a visible confirmation or credential form.
+ if(document.querySelector('mfe-dialog[open],md-dialog[open],dialog[open],[data-super-confirmation]'))return renderVaultSessions();
+ const result=await run('Working…',()=>action==='add'?api.addSession():action==='remove'?api.removeSession(id):api.selectSession(id));
+ if(result?.ok&&action==='add'){foundation?.shell.activate('drive');changeView('drive');$('unlock-button').focus();}
+}
+async function refresh() { acceptVaultState(await api.status());statusReady=true;if(!statusTimingRecorded){statusTimingRecorded=true;rendererTiming.finish(rendererTiming.begin('status-rendered'),'settled');}if(state.locked&&view==='drive')void observeViewReady('drive');attemptStartup(); }
 async function run(label, task, success, inDialog = false) {
  if (busy) return;
  busy = true; $('main-error').hidden = true; $('dialog-error').hidden = true; operation(label); renderAvailability();
@@ -176,6 +221,7 @@ function mountState() {
  return state.locked ? 'Locked' : state.mounted ? 'Mounted' : 'Unlocked · not mounted';
 }
 function renderAvailability() {
+ renderVaultSessions();
  historySelection?.refresh();
  $('upgrade-vault').hidden = state?.locked !== false || state?.storageFormat !== 1; $('upgrade-vault').disabled=busy;
  const unlocked = state && !state.locked, mounted = unlocked && state.mounted;
@@ -191,8 +237,8 @@ function renderAvailability() {
  $('release-button').disabled = !can.releaseOffline;
  $('delete-button').disabled = !can.delete;
  $('startup-setting').disabled = busy || !state;
- $('auto-unlock-setting').disabled = busy || !unlocked;
- $('forget-credential').disabled = busy || !state;
+ $('auto-unlock-setting').disabled = busy || !unlocked || Boolean(state?.sessionId && state.sessionId!=='main');
+ $('forget-credential').disabled = busy || !state || Boolean(state?.sessionId && state.sessionId!=='main');
  for(const el of document.querySelectorAll('[data-archive-restore]')) el.disabled=busy||!unlocked||el.dataset.available!=='true';
  for (const el of $('vault-form').querySelectorAll(CONTROL_SELECTOR)) el.disabled = busy;
  const letter = normalizedDriveLetter($('drive-letter').value);
@@ -229,7 +275,7 @@ function render() {
  $('mounted-path').textContent = state.mounted && letter ? `${letter}:\\` : t('Not mounted');
  foundation?.setOfflineCount(state.offlineCount??currentFiles().filter(file => file.offline).length);
  $('startup-setting').checked = state.startup ?? state.preferences?.startup ?? true;
- $('auto-unlock-setting').checked = state.autoUnlock ?? state.preferences?.autoUnlock ?? false;
+ $('auto-unlock-setting').checked = state.sessionId && state.sessionId!=='main' ? false : state.autoUnlock ?? state.preferences?.autoUnlock ?? false;
  $('performance-mode-setting').value = state.preferences?.performanceMode || state.performanceMode || 'responsive';
  if (!['split-value','split-unit'].includes(document.activeElement?.id)) {
   const size = displayPartSize(state.partSizeBytes || 80 * 1024 ** 2); $('split-value').value = size.value; $('split-unit').value = size.unit;
@@ -248,7 +294,7 @@ function formatDate(date) { const d = new Date(date); return Number.isNaN(d.getT
 function formatBytes(bytes) { if (!Number.isFinite(bytes)) return ''; if (bytes < 1024) return `${bytes} B`; for (const [unit, size] of [['GB',1024**3],['MB',1024**2],['KB',1024]]) if (bytes >= size) return `${new Intl.NumberFormat('en',{maximumFractionDigits:1}).format(bytes/size)} ${unit}`; }
 async function renderFiles() {
  const files = currentFiles(), query = $('file-search').value.toLocaleLowerCase();
- const key=JSON.stringify([filePageRevision,view,query,fileSearch?.regex,fileSearch?.flags,preferences.language,files.map(f=>[f.id,f.path,f.size,f.offline,f.modified])]);
+ const key=JSON.stringify([state?.sessionId,filePageRevision,view,query,fileSearch?.regex,fileSearch?.flags,preferences.language,files.map(f=>[f.id,f.path,f.size,f.offline,f.modified])]);
  if(key===renderedFilesKey){updateSelectedFileRows();return;}
  renderedFilesKey=key;
  const candidates=files.filter(file=>view!=='offline'||file.offline);const searched=fileSearch?await fileSearch.filter(candidates.map(file=>({id:file.id,text:String(file.path)})),{reportOutcome:true}):null;
@@ -407,12 +453,15 @@ async function confirmAction(title, description, action) {
  });
 }
 /** Two-key confirmation for a registered destructive action; resolves true only after both keys and the full slider. */
-const superConfirm=(id,affected,anchor)=>confirmDestructiveAction(document.body,id,{affected,translate:t,getLanguage:()=>preferences.language,anchor});
+const superConfirm=(id,affected,anchor)=>confirmDestructiveAction(document.body,id,{affected,translate:t,getLanguage:()=>preferences.language,anchor,signal:vaultConfirmationLifetime.signal});
 async function importFiles() { const paths = await api.chooseFiles(); if (paths?.length) await run('Importing files…',() => api.startImport?api.startImport(paths):api.importFiles(paths),api.startImport?'Import queued.':'Files imported.'); }
 async function openSelected() { if (selected && state.mounted) await run('Working…',() => api.open(selected)); }
 function listen(id, event, callback) { $(id).addEventListener(event,async (...args) => { try { await callback(...args); } catch (error) { showError(error,$('vault-dialog').open); } }); }
 for (const nav of document.querySelectorAll('[data-view]')) nav.addEventListener('click',() => changeView(nav.dataset.view));
 for (const button of document.querySelectorAll('[data-window]')) button.addEventListener('click',() => api?.windowControl(button.dataset.window));
+listen('vault-session','change',event=>changeVaultSession('switch',event.target.value));
+listen('add-vault-session','click',()=>changeVaultSession('add'));
+listen('remove-vault-session','click',()=>changeVaultSession('remove',state?.sessionId));
 listen('dismiss-error','click',() => { $('main-error').hidden = true; });
 listen('create-button','click',() => openVaultDialog('create')); listen('unlock-button','click',() => openVaultDialog('unlock'));
 listen('dialog-close','click',closeVaultDialog); listen('dialog-cancel','click',closeVaultDialog);
@@ -575,7 +624,7 @@ setupEnhancedWorkspace();
 applyPreferences(); renderAvailability();
 if (!api) { setText('vault-badge','Not mounted'); showError('The desktop bridge is unavailable. Open this interface through Material File Encryptor.'); }
 else {
- const unsubscribe = api.onStatus(next => { state = next; render(); const startup=startupState();if(startup.busy||startup.error)startupPresentation.dismiss(); featureMounts.get('storage')?.refresh?.(); }); onPageDiscard(window,() => unsubscribe?.());
+ const unsubscribe = api.onStatus(next => { acceptVaultState(next); const startup=startupState();if(startup.busy||startup.error)startupPresentation.dismiss(); featureMounts.get('storage')?.refresh?.(); }); onPageDiscard(window,() => unsubscribe?.());
  refresh().catch(error => showError(error));
 }
 

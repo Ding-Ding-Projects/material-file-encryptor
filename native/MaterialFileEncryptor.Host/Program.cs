@@ -25,13 +25,13 @@ internal static class Program
     {
         if (args.Contains("--self-test", StringComparer.Ordinal)) return await WindowsSelfTest.RunAsync();
         int exitCode = 0;
-        var controller = new VaultController();
+        var sessions = new VaultSessionBroker();
         var servers = new ServerLeaseBroker();
         if (args.Contains("--driver-check", StringComparer.Ordinal))
         {
-            var driver = JsonSerializer.SerializeToElement(controller.Status()).GetProperty("driver");
+            var driver = JsonSerializer.SerializeToElement(sessions.MainStatus()).GetProperty("driver");
             Send(new { driver });
-            controller.Dispose();
+            sessions.Dispose();
             return driver.GetProperty("available").GetBoolean() ? 0 : 1;
         }
         using var cancellation = new CancellationTokenSource();
@@ -41,8 +41,7 @@ internal static class Program
         int managedRootIndex = Array.IndexOf(args, "--managed-data-root");
         if (managedRootIndex >= 0 && managedRootIndex + 1 < args.Length)
             managedRuntime = new OllamaRuntimeBroker(args[managedRootIndex + 1], startupAdmitted: true);
-        controller.Status();
-        object previousSummary=controller.StatusSummary();
+        var previousSummaries = new Dictionary<string, object>();
         Task background = Task.Run(async () =>
         {
             using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
@@ -50,15 +49,19 @@ internal static class Program
             {
                 while (await timer.WaitForNextTickAsync(cancellation.Token))
                 {
-                    try { controller.TickIfUnlocked();controller.Status(); } catch { }
-                    object summary=controller.StatusSummary();
-                    if(!ReferenceEquals(summary,previousSummary))
-                    {previousSummary=summary;Send(new { @event = "status", status = summary });}
+                    sessions.Tick();
+                    foreach (var (sessionId, summary) in sessions.Summaries())
+                    {
+                        if (!previousSummaries.TryGetValue(sessionId, out var previous) || !ReferenceEquals(summary, previous))
+                        { previousSummaries[sessionId] = summary; Send(new { @event = "status", sessionId, status = summary }); }
+                    }
+                    var alive = sessions.Summaries().Select(item => item.SessionId).ToHashSet();
+                    foreach (string removed in previousSummaries.Keys.Where(id => !alive.Contains(id)).ToArray()) previousSummaries.Remove(removed);
                 }
             }
             catch (OperationCanceledException) { }
         });
-        Send(new { @event = "status", status = previousSummary });
+        foreach (var (sessionId, summary) in sessions.Summaries()) Send(new { @event = "status", sessionId, status = summary });
         var requests = new List<Task>();
         try
         {
@@ -85,7 +88,7 @@ internal static class Program
                         ? servers.DispatchAsync(method.Substring(7), ownedParameters)
                         : method.StartsWith("managedOllama.", StringComparison.Ordinal)
                             ? DispatchManagedAsync(managedRuntime, method, ownedParameters)
-                            : controller.DispatchAsync(method, ownedParameters);
+                            : sessions.DispatchAsync(method, ownedParameters);
                     requests.RemoveAll(task => task.IsCompleted);
                     requests.Add(pending.ContinueWith(task =>
                     {
@@ -121,13 +124,13 @@ internal static class Program
             var shutdownClock = System.Diagnostics.Stopwatch.StartNew();
             while (true)
             {
-                try { controller.Dispose(); break; }
+                try { sessions.Dispose(); break; }
                 catch (InvalidOperationException)
                 {
                     if (shutdownClock.Elapsed > TimeSpan.FromSeconds(30))
                     {
                         Console.Error.WriteLine("Encrypted drive handles stayed open after the application exited; forcing the lock.");
-                        try { controller.Execute("forceLock", JsonSerializer.SerializeToElement(new { timeoutMs = 10000 })); } catch { }
+                        await sessions.ForceLockAllAsync();
                     }
                     else Console.Error.WriteLine("Waiting for encrypted drive handles to close before shutdown.");
                     await Task.Delay(1000);

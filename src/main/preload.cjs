@@ -1,11 +1,15 @@
 const { contextBridge, ipcRenderer } = require('electron');
-const invoke = (method, params = {}) => ipcRenderer.invoke('vault:request', method, params);
+let selectedSessionId = 'main';
+const acceptState = state => { if (typeof state?.sessionId === 'string') selectedSessionId = state.sessionId; return state; };
+const invoke = (method, params = {}) => ipcRenderer.invoke('vault:request', method, params, selectedSessionId);
+const sessionRequest = (method, params) => invoke(method, params).then(acceptState);
 const api = {
   verificationQuit: () => ipcRenderer.invoke('vault:verification-quit'),
   buildMetadata: () => invoke('buildMetadata'), browserPairing: () => invoke('browserPairing'),
   featureRequest: (feature, action, payload = {}) => ipcRenderer.invoke('feature:request', feature, action, payload),
   onFeatureEvent: (feature, callback) => { if(typeof callback!=='function') throw new TypeError('A callback is required.'); const listener=(_event, source, data)=>{if(source===feature)callback(data);};ipcRenderer.on('feature:event',listener);return()=>ipcRenderer.removeListener('feature:event',listener); },
-  status: () => invoke('getState'), mount: (options = {}) => invoke('mount', options), unmount: () => invoke('unmount'),
+  status: () => sessionRequest('getState'),
+  addSession: () => sessionRequest('addSession'), selectSession: sessionId => sessionRequest('selectSession', { sessionId }), removeSession: sessionId => sessionRequest('removeSession', { sessionId }), mount: (options = {}) => invoke('mount', options), unmount: () => invoke('unmount'),
   upgrade: options => invoke('upgradeVault', options),
   create: options => invoke('createVault', options), unlock: options => invoke('unlockVault', options), lock: () => invoke('lockVault'),
   chooseFolder: (kind = 'storage') => invoke('selectFolder', { kind }), chooseFiles: () => invoke('chooseFiles'),
@@ -33,7 +37,7 @@ const api = {
   installDriver: () => invoke('installDriver'), importVocabulary: () => invoke('importVocabulary'),
   onStatus: callback => {
     if (typeof callback !== 'function') throw new TypeError('A callback is required.');
-    const listener = (_event, state) => callback(state);
+    const listener = (_event, state) => callback(acceptState(state));
     ipcRenderer.on('vault:state', listener);
     return () => ipcRenderer.removeListener('vault:state', listener);
   },

@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using MaterialFileEncryptor.Core;
 
-static class Regression
+static partial class Regression
 {
     static readonly Type ControllerType = Assembly.Load("MaterialFileEncryptor.Host").GetType("MaterialFileEncryptor.Host.VaultController", true)!;
     static void Assert(bool value, string message) { if (!value) throw new Exception(message); }
@@ -303,7 +303,7 @@ static class Regression
         Assert(DriveName("a\u0001b")==null && DriveName("a\nb")==null,"Control character was accepted");
         Console.WriteLine("PASS drive name defaults, trims, and rejects empty, long, control, and forbidden values");
     }
-    public static async Task Main() { DriveNames(); Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); await PartialHistoryRetry(); await OfflineUnlock(); await HistorySubprocessCallback(); await FilesystemHydrationCallback(); await RestoreBackgroundHistory(); }
+    public static async Task Main(string[] args) { await MultiVaultSessions(); if (args.Contains("--multi-vault", StringComparer.Ordinal)) return; DriveNames(); Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); await PartialHistoryRetry(); await OfflineUnlock(); await HistorySubprocessCallback(); await FilesystemHydrationCallback(); await RestoreBackgroundHistory(); }
     sealed class ImmediateTransport : IVaultTransport
     {
         public Task InitializeAsync(CancellationToken ct=default)=>Task.CompletedTask;

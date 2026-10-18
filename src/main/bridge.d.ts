@@ -1,6 +1,8 @@
 export interface VaultVersionInfo { descendantIds?: string[]; id: string; entryId: string; path: string; timestampUtc: string; length: number; isDirectory: boolean; deleted: boolean; isAvailable: boolean }
 export interface DriveFile { id: string; path: string; size: number; modified: string; partCount: number; partSizeBytes: number; offline: boolean }
+export interface VaultSessionSummary { sessionId:string; locked:boolean; mounted:boolean; driveLetter?:string; driveName?:string; storageDir?:string; cacheDir?:string; recoveryRequired?:boolean; operation?:string|null }
 export interface DriveState {
+  sessionId: string; sessions: VaultSessionSummary[];
   storageFormat?: 1 | 2;
   packing?: {pendingFiles:number;running:boolean;paused:boolean;activeWriters:number;lastError:string|null;targetPartSizeBytes:number};
   locked: boolean; mounted: boolean; driveLetter?: string; driveName?: string; storageDir?: string; cacheDir: string;
@@ -14,6 +16,9 @@ export interface DriveState {
 }
 export type VaultOptions = { storageDir: string; cacheDir: string; driveLetter: string; driveName?: string; transport?: 'folder' | 'privateGit'; remoteRepository?: string; autoUnlock?: boolean } & ({ password: string; keyFilePath?: never } | { password?: never; keyFilePath: string });
 export interface DriveBridge {
+  addSession(): Promise<DriveState>;
+  selectSession(sessionId: string): Promise<DriveState>;
+  removeSession(sessionId: string): Promise<DriveState>;
   featureRequest<T=unknown>(feature:'workflow',action:string,payload?:Record<string,unknown>):Promise<T>;
   storageDiagnostics(): Promise<StorageDiagnostics>;
   startPacking(options?: {path?: string; partSizeBytes?: number}): Promise<{operationId: string}>;
