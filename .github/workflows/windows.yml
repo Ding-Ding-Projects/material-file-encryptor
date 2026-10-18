@@ -75,8 +75,9 @@ jobs:
         shell: powershell
         run: |
           . ./scripts/bootstrap.ps1
-          node --test test/vault-session-settings.test.js test/vault-sessions.test.js test/vault-image-context.test.js test/vault-image-snapshot.test.js test/vault-image-docker.test.js test/vault-image-service.test.js test/vault-image-panel.test.js
+          node --test test/release-test-gates.test.js test/vault-session-settings.test.js test/vault-sessions.test.js test/vault-image-context.test.js test/vault-image-snapshot.test.js test/vault-image-docker.test.js test/vault-image-service.test.js test/vault-image-panel.test.js
           if ($LASTEXITCODE -ne 0) { throw 'Encrypted image offline verification failed.' }
+          'MFE_VERIFIED_CI_TEST_GATES=isolated-vault-sessions,encrypted-image-offline' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Package genuine unsigned Squirrel installer
         shell: cmd
         run: build-installer.bat /s

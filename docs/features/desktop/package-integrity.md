@@ -41,7 +41,7 @@ Preview notes link the verified public dim-sum catalog release image. The produc
 
 ## Automatic release publication
 
-Every authorized branch push and manual dispatch builds, packages and publishes one unique normal non-draft release. There is no pull-request trigger, main-only job restriction or dispatch-only publication condition. CI runs no tests, lint or runtime checks; an installer can therefore ship before local quality verification finishes. Notes describe runtime verification as pending.
+Every authorized branch push and manual dispatch builds, packages and publishes one unique normal non-draft release. There is no pull-request trigger, main-only job restriction or dispatch-only publication condition. CI gates publication on isolated native vault-session tests and offline encrypted-image workflow tests with mocked Docker and network operations. Provenance records these completed gates. GUI interactions, installation, updater behavior, real simultaneous mounts and Docker Hub uploads are not verified by these CI gates; installed runtime verification remains pending an independent local receipt.
 
 Manual dispatch may optionally constrain the checkout to an exact source SHA:
 
