@@ -2,27 +2,108 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 const desktopSource = fs.readFileSync(new URL('../scripts/desktop-check.mjs', import.meta.url), 'utf8');
 const desktopReadback = desktopSource.split('    const readStartup = ')[1].split(';')[0];
 const source = fs.readFileSync(new URL('../src/main/main.js', import.meta.url), 'utf8');
 const helperStart = source.indexOf('function startupReadbackOptions(');
-const body = source.slice(helperStart >= 0 ? helperStart : source.indexOf('function createVerificationStartup('), source.indexOf('\nlet verificationStartup;'));
+const body = source.slice(helperStart, source.indexOf('\nconst configPath'));
 const create = vm.runInNewContext(body + '\ncreateVerificationStartup;');
-test('verification startup mutates only its unique entry and restores absence', () => {
-  const entries = new Map([['UserEntry', { name: 'UserEntry', enabled: true }]]);
+function startupFixture({ verificationMode = false, packaged = true, platform = 'win32', adapter = false } = {}) {
   const calls = [];
-  const app = { getLoginItemSettings(options) { assert.equal(options.path, '"fixture.exe"'); assert.deepEqual([...options.args], ['--startup']); return { launchItems: [...entries.values()] }; }, setLoginItemSettings(options) { calls.push(options); if (options.openAtLogin) entries.set(options.name, { name: options.name, enabled: options.enabled }); else entries.delete(options.name); } };
-  const seam = create(app, 'fixture.exe', 'UniqueVerification');
-  assert.equal(seam.read().enabled, false); seam.set(true); assert.equal(seam.read().enabled, true); seam.set(false); assert.equal(seam.read().enabled, false);
-  assert.equal(seam.restore().restored, true); assert.equal(entries.get('UserEntry').enabled, true); assert.equal(calls.every(call => call.name === 'UniqueVerification'), true);
+  let enabled = true;
+  const app = {
+    isPackaged: packaged,
+    getLoginItemSettings(options) { calls.push({ operation: 'read', options }); return { openAtLogin: enabled }; },
+    setLoginItemSettings(options) { calls.push({ operation: 'write', options }); enabled = options.openAtLogin; },
+  };
+  const api = vm.runInNewContext(body + `
+    if (${adapter}) verificationStartup = createVerificationStartup();
+    ({ applyStartup, startupRegistration, restore: () => verificationStartup?.restore() });`, {
+    app, verificationMode, process: { platform, execPath: 'C:\\Program Files\\Fixture\\fixture.exe' },
+  });
+  return { ...api, calls };
+}
+test('verification startup proof reports suppression without touching login items', () => {
+  const seam = create();
+  assert.equal(seam.read().enabled, false);
+  assert.equal(seam.read().verificationOnly, true);
+  assert.equal(seam.read().mutationSuppressed, true);
+  assert.equal(seam.read().reason, 'VERIFICATION_STARTUP_DISABLED');
+  assert.equal(seam.restore().restored, true);
+  assert.equal(seam.restore().enabled, false);
+  assert.equal(seam.restore().mutationSuppressed, true);
+  assert.equal(seam.set, undefined, 'The verification adapter has no mutation operation.');
 });
-test('verification startup refuses an existing entry before mutation', () => {
-  let mutated = false;
-  assert.throws(() => create({ getLoginItemSettings: () => ({ launchItems: [{ name: 'Collision', enabled: false }] }), setLoginItemSettings: () => { mutated = true; } }, 'fixture.exe', 'Collision'), /already exists/);
-  assert.equal(mutated, false);
+test('packaged isolated startup, preference requests and repeated shutdown never access login items', () => {
+  for (const adapter of [false, true]) {
+    const fixture = startupFixture({ verificationMode: true, adapter });
+    // Initialization and preference requests share this production entrypoint.
+    for (const enabled of [true, false, true, false]) {
+      fixture.applyStartup(enabled);
+      const state = fixture.startupRegistration();
+      assert.equal(state.enabled, false);
+      assert.equal(state.mutationSuppressed, true);
+      assert.equal(state.verificationOnly, true);
+    }
+    if (adapter) {
+      for (let index = 0; index < 3; index++) {
+        assert.equal(fixture.restore().restored, true);
+        assert.equal(fixture.restore().mutationSuppressed, true);
+      }
+    }
+    assert.deepEqual(fixture.calls, [], 'Even a disabled startup request must not call the native setter.');
+  }
 });
-test('verification startup round-trips space paths using native Windows command-line parsing', { skip: process.platform !== 'win32' }, () => {
+test('production packaged Windows startup setter and readback retain their exact behavior', () => {
+  const fixture = startupFixture();
+  for (const enabled of [false, true]) {
+    fixture.applyStartup(enabled);
+    assert.equal(fixture.startupRegistration().enabled, enabled);
+  }
+  assert.deepEqual(JSON.parse(JSON.stringify(fixture.calls)), [false, true].flatMap(enabled => [
+    { operation: 'write', options: { openAtLogin: enabled, path: 'C:\\Program Files\\Fixture\\fixture.exe', args: ['--startup'] } },
+    { operation: 'read', options: { path: '"C:\\Program Files\\Fixture\\fixture.exe"', args: ['--startup'] } },
+  ]));
+});
+test('nonpackaged and non-Windows startup never write a login item', () => {
+  for (const options of [{ packaged: false }, { platform: 'linux' }, { platform: 'darwin' }]) {
+    const fixture = startupFixture(options);
+    fixture.applyStartup(true); fixture.applyStartup(false);
+    assert.deepEqual(fixture.calls, []);
+  }
+});
+test('verification suppression requires the existing validated isolated-profile flags or restart context', () => {
+  const selection = source.slice(source.indexOf('const verificationProfile = '), helperStart);
+  const select = ({ argv = [], restartContext = null, testMode = false } = {}) => {
+    const paths = [];
+    const verificationMode = vm.runInNewContext(selection + '\nverificationMode;', {
+      app: { setPath: (...args) => paths.push(args) }, process: { argv }, path: path.win32, restartContext, testMode,
+    });
+    return { verificationMode, paths };
+  };
+  const profile = 'C:\\OwnedVerification\\profile';
+  assert.deepEqual(select(), { verificationMode: false, paths: [] });
+  assert.equal(select({ argv: ['--desktop-check'] }).verificationMode, false);
+  assert.equal(select({ argv: ['--desktop-check', '--user-data-dir=' + profile] }).verificationMode, false);
+  assert.throws(() => select({ argv: ['--verification-profile=' + profile] }), /explicit absolute profile/);
+  assert.throws(() => select({ argv: ['--desktop-check', '--verification-profile=relative-profile'] }), /explicit absolute profile/);
+  assert.deepEqual(select({ argv: ['--desktop-check', '--verification-profile=' + profile] }), {
+    verificationMode: true, paths: [['userData', profile]],
+  });
+  assert.deepEqual(select({ restartContext: { profile } }), {
+    verificationMode: true, paths: [['userData', profile]],
+  });
+});
+test('actual startup, settings and shutdown routes keep the centralized isolation boundary', () => {
+  assert.equal((source.match(/app\.setLoginItemSettings\(/g) || []).length, 1);
+  assert.equal((source.match(/applyStartup\(preferences\.startup\)/g) || []).length, 2);
+  assert.match(source, /if \(verificationMode && process\.platform === 'win32'\) verificationStartup = createVerificationStartup\(\);/);
+  assert.match(source, /preflight:async\(\)=>\{verificationStartup\?\.restore\(\);\}/);
+  assert.match(source, /const proof = verificationStartup\.restore\(\);/);
+});
+test('production startup readback round-trips space paths using native Windows command-line parsing', { skip: process.platform !== 'win32' }, () => {
   const paths = ['C:\\Program Files\\Startup Fixture\\fixture.exe', 'C:\\StartupFixture\\fixture.exe', 'C:\\Users\\Two Words\\StartupFixture\\fixture.exe'];
   const inputs = paths.flatMap(executable => [executable, '"' + executable + '"', '"' + executable + '" --startup']);
   const inputJson = JSON.stringify(inputs);
@@ -48,36 +129,19 @@ $results | ConvertTo-Json -Compress
     const command = '"' + executable + '" --startup';
     assert.equal(programs.get('"' + executable + '"'), programs.get(command));
     assert.equal(queryOptions('"' + executable + '"').path, '"' + executable + '"', 'Existing quotes must not be duplicated.');
-    const entries = new Map([['UserEntry', { name: 'UserEntry', enabled: true, command }]]);
-    const calls = [];
     const app = {
       getLoginItemSettings(options) {
         assert.deepEqual([...options.args], ['--startup']);
         assert.ok(programs.has(options.path), 'The query must use a natively parsed case.');
-        const launchItems = [...entries.values()].filter(item => programs.get(item.command) === programs.get(options.path));
-        return { launchItems, openAtLogin: launchItems.some(item => item.name === 'UniqueVerification' && item.enabled) };
+        return { openAtLogin: programs.get(command) === programs.get(options.path) };
       },
-      setLoginItemSettings(options) {
-        assert.equal(options.path, executable, 'Setter path remains unchanged.');
-        assert.deepEqual([...options.args], ['--startup']);
-        assert.equal(options.name, 'UniqueVerification');
-        calls.push(options);
-        if (options.openAtLogin) entries.set(options.name, { name: options.name, enabled: options.enabled, command }); else entries.delete(options.name);
-      },
+      setLoginItemSettings() { assert.fail('Readback must not write login items.'); },
     };
-    const seam = create(app, executable, 'UniqueVerification');
-    const helperBody = source.slice(source.indexOf('function startupReadbackOptions('), source.indexOf('function createVerificationStartup('));
-    const ordinaryBody = source.slice(source.indexOf('function startupRegistration('), source.indexOf('\nconst configPath'));
-    const readOrdinary = vm.runInNewContext(helperBody + ordinaryBody + '\nstartupRegistration;', { app, process: { platform: 'win32', execPath: executable }, verificationStartup: undefined });
-    assert.equal(seam.read().enabled, false);
-    seam.set(true); assert.equal(seam.read().enabled, true, 'Enabled native entry must be found for this executable.');
-    assert.equal(readOrdinary().enabled, true, 'Ordinary readback must normalize the same native lookup.');
+    const readOrdinary = vm.runInNewContext(body + '\nstartupRegistration;', {
+      app, process: { platform: 'win32', execPath: executable }, verificationMode: false,
+    });
+    assert.equal(readOrdinary().enabled, true, 'Ordinary readback must normalize the native lookup.');
     const readDesktop = vm.runInNewContext(desktopReadback, { process: { execPath: executable }, evaluateApplication: callback => callback({ app }) });
     assert.equal(readDesktop(), true, 'Direct desktop readback must find the same native entry.');
-    seam.set(false); assert.equal(seam.read().enabled, false);
-    assert.equal(readOrdinary().enabled, false);
-    assert.equal(seam.restore().restored, true);
-    assert.equal(entries.get('UserEntry').enabled, true);
-    assert.equal(calls.length, 3);
   }
 });

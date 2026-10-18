@@ -65,29 +65,19 @@ function startupReadbackOptions(executable) {
   const bare = executable.startsWith('"') && executable.endsWith('"') ? executable.slice(1, -1) : executable;
   return { path: '"' + bare + '"', args: ['--startup'] };
 }
-function createVerificationStartup(loginApp, executable, name) {
-  const options = { path: executable, args: ['--startup'] };
-  const find = () => (loginApp.getLoginItemSettings(startupReadbackOptions(executable)).launchItems || []).find(item => item.name === name);
-  if (find()) throw new Error('Verification startup registration already exists.');
-  let restored = false;
-  return {
-    read: () => ({ name, verificationOnly: true, enabled: Boolean(find()?.enabled), originalEnabled: false, restored }),
-    set: enabled => { loginApp.setLoginItemSettings({ ...options, name, openAtLogin: enabled, enabled }); restored = false; },
-    restore: () => {
-      loginApp.setLoginItemSettings({ ...options, name, openAtLogin: false });
-      if (find()) throw new Error('Verification startup registration could not be restored.');
-      restored = true;
-      return { name, verificationOnly: true, enabled: false, originalEnabled: false, restored };
-    },
-  };
+function createVerificationStartup() {
+  // Isolated verification never registers a login item, including on shutdown.
+  // This reports suppression, not a successful native startup-toggle check.
+  const read = () => ({ verificationOnly: true, enabled: false, originalEnabled: false, restored: true, mutationSuppressed: true, reason: 'VERIFICATION_STARTUP_DISABLED' });
+  return { read, restore: read };
 }
 let verificationStartup;
 function applyStartup(enabled) {
-  if (verificationStartup) verificationStartup.set(enabled);
-  else if (app.isPackaged && process.platform === 'win32') app.setLoginItemSettings({ openAtLogin: enabled, path: process.execPath, args: ['--startup'] });
+  if (verificationMode) return;
+  if (app.isPackaged && process.platform === 'win32') app.setLoginItemSettings({ openAtLogin: enabled, path: process.execPath, args: ['--startup'] });
 }
 function startupRegistration() {
-  if (verificationStartup) return verificationStartup.read();
+  if (verificationMode) return (verificationStartup || createVerificationStartup()).read();
   if (process.platform !== 'win32') return { enabled: false, verificationOnly: false, restored: false };
   const settings = app.getLoginItemSettings(startupReadbackOptions(process.execPath));
   return { enabled: settings.openAtLogin, verificationOnly: false, restored: false };
@@ -446,7 +436,7 @@ else {
     interruptedSession=await fs.access(sessionMarkerPath()).then(()=>true,()=>false);
     await fs.mkdir(app.getPath('userData'),{recursive:true});
     await fs.writeFile(sessionMarkerPath(),JSON.stringify({schemaVersion:1,startedAt:new Date().toISOString()}),{mode:0o600});
-    if (verificationMode && process.platform === 'win32') verificationStartup = createVerificationStartup(app, process.execPath, 'MaterialFileEncryptorVerification-' + randomBytes(16).toString('hex'));
+    if (verificationMode && process.platform === 'win32') verificationStartup = createVerificationStartup();
     try {
       const saved = JSON.parse(await fs.readFile(configPath(), 'utf8'));
       for (const key of ['startup', 'autoUnlock']) if (typeof saved[key] === 'boolean') preferences[key] = saved[key];
