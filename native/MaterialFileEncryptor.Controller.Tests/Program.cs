@@ -303,7 +303,7 @@ static partial class Regression
         Assert(DriveName("a\u0001b")==null && DriveName("a\nb")==null,"Control character was accepted");
         Console.WriteLine("PASS drive name defaults, trims, and rejects empty, long, control, and forbidden values");
     }
-    public static async Task Main(string[] args) { await MultiVaultSessions(); if (args.Contains("--multi-vault", StringComparer.Ordinal)) return; DriveNames(); Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); await PartialHistoryRetry(); await OfflineUnlock(); await HistorySubprocessCallback(); await FilesystemHydrationCallback(); await RestoreBackgroundHistory(); }
+    public static async Task Main(string[] args) { if (args.Contains("--multi-mount", StringComparer.Ordinal)) { await MultiVaultMountedSessions(); return; } await MultiVaultSessions(); if (args.Contains("--multi-vault", StringComparer.Ordinal)) return; DriveNames(); Import(10*1024*1024,10*1024*1024+127); Import(90000000,1024*1024+127); await NetworkLifetime(); await PartialHistoryRetry(); await OfflineUnlock(); await HistorySubprocessCallback(); await FilesystemHydrationCallback(); await RestoreBackgroundHistory(); }
     sealed class ImmediateTransport : IVaultTransport
     {
         public Task InitializeAsync(CancellationToken ct=default)=>Task.CompletedTask;
