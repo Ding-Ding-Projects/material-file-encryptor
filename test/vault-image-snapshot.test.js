@@ -266,15 +266,18 @@ test('cancellation is honored before enumeration and during copying with safe cl
 
 test('cleanup does not delete a replacement directory that the snapshot does not own', async t => {
   const f = await fixture(t); let replaced;
-  patchOpen(t, async (handle, filename, flags) => {
-    if (typeof flags === 'number' && (flags & constants.O_WRONLY) && !replaced) {
-      const snapshotDirectory = path.dirname(path.dirname(path.dirname(filename)));
-      assert.equal(path.dirname(snapshotDirectory), f.workRoot);
-      replaced = snapshotDirectory;
-      await fs.rename(snapshotDirectory, snapshotDirectory + '-moved'); await fs.mkdir(snapshotDirectory);
-      await fs.writeFile(path.join(snapshotDirectory, 'unrelated-sentinel'), 'KEEP SYNTHETIC DATA');
-      t.mock.method(handle, 'write', async () => { throw Error('synthetic interrupted copy'); });
+  const mkdir = fs.mkdir.bind(fs);
+  // Replace the owned root before opening any output handle. Windows correctly
+  // refuses renaming a directory with an open child; that is not the cleanup
+  // identity boundary this test needs to exercise.
+  t.mock.method(fs, 'mkdir', async (filename, ...args) => {
+    if (path.basename(filename) === 'vault' && path.dirname(path.dirname(filename)) === f.workRoot && !replaced) {
+      replaced = path.dirname(filename);
+      await fs.rename(replaced, replaced + '-moved'); await mkdir(replaced);
+      await fs.writeFile(path.join(replaced, 'unrelated-sentinel'), 'KEEP SYNTHETIC DATA');
+      throw Error('synthetic interrupted copy');
     }
+    return mkdir(filename, ...args);
   });
   await assert.rejects(f.prepare(), /synthetic interrupted copy/);
   assert.equal(await fs.readFile(path.join(replaced, 'unrelated-sentinel'), 'utf8'), 'KEEP SYNTHETIC DATA');

@@ -15,7 +15,12 @@ const DOCKER_ERROR = 'Docker could not complete the requested action. Check Dock
 const HUB_ERROR = 'Docker Hub could not verify the existing private repository. Sign in with Docker Desktop and check repository permissions.';
 const BUILD_ERROR = 'The local image build outcome could not be verified. Docker may retain a local image. Prepare a fresh image before uploading.';
 const RECEIPT_ERROR = 'The upload outcome could not be verified. Do not retry blindly; inspect Docker Hub.';
-const localAbsolute = filename => typeof filename === 'string' && path.isAbsolute(filename) && (process.platform !== 'win32' || /^[A-Za-z]:\\/.test(filename));
+export function localDockerPath(filename, platform = process.platform) {
+  if (typeof filename !== 'string') return false;
+  if (platform === 'win32') return /^[A-Za-z]:[\\/]/.test(filename) && path.win32.isAbsolute(filename);
+  return path.isAbsolute(filename);
+}
+const localAbsolute = localDockerPath;
 const samePath = (left, right) => process.platform === 'win32' ? left.toLowerCase() === right.toLowerCase() : left === right;
 
 function checkCancellation(signal) {

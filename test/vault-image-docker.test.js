@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { Writable } from 'node:stream';
-import { createDockerImageTransport, imageTarget, runDockerCommand } from '../src/main/vault-image-docker.js';
+import { createDockerImageTransport, imageTarget, runDockerCommand, localDockerPath } from '../src/main/vault-image-docker.js';
 
 // All executables, credentials, responses and command results in this suite are synthetic.
 // Never substitute the production run/fetch defaults: these tests are entirely offline.
@@ -20,7 +20,7 @@ const DOCKERFILE = 'FROM scratch\nCOPY vault/ /vault/\nCOPY manifest.json /manif
 const json = (value, init) => new Response(JSON.stringify(value), init);
 
 async function fixture(t, options = {}) {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'vault-docker-test-'));
+  const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'vault-docker-test-')));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const bin = path.join(root, 'Docker', 'Docker', 'resources', 'bin');
   const configDirectory = path.join(root, 'config'); const directory = path.join(root, 'context');
@@ -57,6 +57,11 @@ async function fixture(t, options = {}) {
     const fallback = () => url.endsWith('/v2/auth/token') ? json({ access_token: TOKEN }) : json(state.metadata);
     return options.fetcher ? options.fetcher(event, state, fallback) : fallback();
   };
+  const fixtureExecutable = path.join(bin, 'docker.exe');
+  assert.equal(localDockerPath(fixtureExecutable), true, 'Synthetic executable must be an absolute local path.');
+  assert.equal((await fs.lstat(fixtureExecutable)).isFile(), true);
+  const canonicalExecutable = await fs.realpath(fixtureExecutable);
+  assert.equal(canonicalExecutable.toLowerCase(), path.resolve(fixtureExecutable).toLowerCase(), 'Synthetic executable must not be an alias.');
   const transport = createDockerImageTransport({ platform: options.platform ?? 'win32', programFiles: root, configDirectory, run, fetcher, buildContext });
   const expected = { imageId: ID, context: state.context, host: state.host };
   return { transport, snapshot, directory, configDirectory, root, bin, state, events, expected };
@@ -420,4 +425,9 @@ test('runner propagates cancellation to stdin without executing when already can
   await new Promise(resolve => setImmediate(resolve)); controller.abort(SECRET); release();
   await assert.rejects(running, error => !error.message.includes(SECRET));
   assert.equal(fake.seen.options.signal.aborted, true); assert.equal(fake.seen.killed, 1);
+});
+
+test('Windows local executable admission accepts both normal separators but no remote or device paths', () => {
+  for (const filename of ['C:\\Program Files\\Docker\\docker.exe', 'C:/Program Files/Docker/docker.exe']) assert.equal(localDockerPath(filename, 'win32'), true);
+  for (const filename of ['C:docker.exe', '\\docker.exe', '//server/share/docker.exe', '\\\\?\\C:\\docker.exe', 'docker.exe']) assert.equal(localDockerPath(filename, 'win32'), false);
 });
