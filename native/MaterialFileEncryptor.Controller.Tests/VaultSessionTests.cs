@@ -92,7 +92,16 @@ static partial class Regression
             await Refused("unlock", new { sessionId = third, storageDir = Path.Combine(root, "remote", "source"), cacheDir = Path.Combine(root, "remote", "cache"), transport = "privateGit", remoteRepository = "FIXTURE/PRIVATE.git", password = "fixture", driveLetter = "O:" }, "Same private repository was admitted in another session");
             repositories.Clear();
             if (OperatingSystem.IsWindows())
-                await Refused("unlock", new { sessionId = third, storageDir = @"M:\nested", cacheDir = Path.Combine(root, "nested", "cache"), password = "fixture", driveLetter = "O:" }, "Storage inside an encrypted drive was admitted");
+            {
+                // Exercise only the pure admission guard. Never send a physical
+                // drive path to the filesystem-opening fixture helper.
+                try
+                {
+                    brokerType.GetMethod("RejectMountedRoot", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(broker, new object[] { @"M:\nested" });
+                    throw new Exception("Storage inside an encrypted drive was admitted");
+                }
+                catch (TargetInvocationException error) when (error.InnerException is ArgumentException) { }
+            }
             await Refused("removeSession", new { sessionId = second }, "An unlocked session was removed");
             await Refused("unlock", new { sessionId = third, storageDir = Path.Combine(root, "first", "source", "nested"), cacheDir = Path.Combine(root, "third", "cache"), password = "fixture", driveLetter = "O:" }, "Nested storage collision was accepted");
             await Refused("unlock", new { sessionId = third, storageDir = Path.Combine(root, "third", "source"), cacheDir = Path.Combine(root, "second", "source"), password = "fixture", driveLetter = "O:" }, "Cross storage/cache collision was accepted");
@@ -118,6 +127,7 @@ static partial class Regression
         }
         finally
         {
+            await (Task)brokerType.GetMethod("ForceLockAllAsync")!.Invoke(broker, null)!;
             ((IDisposable)broker).Dispose();
             foreach (string path in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)) File.SetAttributes(path, FileAttributes.Normal);
             Directory.Delete(root, true);
