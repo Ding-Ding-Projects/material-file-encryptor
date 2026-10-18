@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Reflection;
 using System.Text.Json;
+using System.Security.Cryptography;
+using System.Text;
 
 static partial class Regression
 {
@@ -11,9 +13,19 @@ static partial class Regression
         object broker = Activator.CreateInstance(brokerType)!;
         string root = Path.Combine(Path.GetTempPath(), "mfe-sessions-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
+        var fixtureHistory = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         Task<object?> Send(string method, object parameters)
         {
-            try { return (Task<object?>)brokerType.GetMethod("DispatchAsync")!.Invoke(broker, new object[] { method, JsonSerializer.SerializeToElement(parameters) })!; }
+            var payload = JsonSerializer.SerializeToElement(parameters);
+            if ((method is "create" or "unlock") && payload.TryGetProperty("storageDir", out var storage) && !payload.TryGetProperty("transport", out _))
+            {
+                string source = Path.GetFullPath(storage.GetString()!);
+                Assert(source.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase), "Fixture escaped its temporary root");
+                string identity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source.ToUpperInvariant() + "|folder|"))).ToLowerInvariant();
+                string history = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MaterialFileEncryptor-Data", "History", identity);
+                if (!Directory.Exists(history)) fixtureHistory.Add(history);
+            }
+            try { return (Task<object?>)brokerType.GetMethod("DispatchAsync")!.Invoke(broker, new object[] { method, payload })!; }
             catch (TargetInvocationException error) { return Task.FromException<object?>(error.InnerException!); }
         }
         async Task Refused(string method, object parameters, string reason)
@@ -109,6 +121,11 @@ static partial class Regression
             ((IDisposable)broker).Dispose();
             foreach (string path in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)) File.SetAttributes(path, FileAttributes.Normal);
             Directory.Delete(root, true);
+            foreach (string history in fixtureHistory.Where(Directory.Exists))
+            {
+                foreach (string file in Directory.EnumerateFiles(history, "*", SearchOption.AllDirectories)) File.SetAttributes(file, FileAttributes.Normal);
+                Directory.Delete(history, true);
+            }
         }
     }
 }
