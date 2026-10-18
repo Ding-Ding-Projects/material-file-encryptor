@@ -98,7 +98,7 @@ test('verification suppression requires the existing validated isolated-profile 
 });
 test('actual startup, settings and shutdown routes keep the centralized isolation boundary', () => {
   assert.equal((source.match(/app\.setLoginItemSettings\(/g) || []).length, 1);
-  assert.equal((source.match(/applyStartup\(preferences\.startup\)/g) || []).length, 2);
+  assert.equal((source.match(/applyStartup\(vaultSessions\.rows\.get\('main'\)\.preferences\.startup\)/g) || []).length, 2);
   assert.match(source, /if \(verificationMode && process\.platform === 'win32'\) verificationStartup = createVerificationStartup\(\);/);
   assert.match(source, /preflight:async\(\)=>\{verificationStartup\?\.restore\(\);\}/);
   assert.match(source, /const proof = verificationStartup\.restore\(\);/);
@@ -144,4 +144,21 @@ $results | ConvertTo-Json -Compress
     const readDesktop = vm.runInNewContext(desktopReadback, { process: { execPath: executable }, evaluateApplication: callback => callback({ app }) });
     assert.equal(readDesktop(), true, 'Direct desktop readback must find the same native entry.');
   }
+});
+
+test('saving secondary preferences cannot overwrite the global startup setting', async () => {
+  const body = source.match(/async function savePreferences\(\) \{([\s\S]*?)\n\}/)[1];
+  const primary = { startup: false }, selected = { startup: true, cacheDir: 'C:\\Fixture\\Cache' };
+  const writes = [];
+  const run = vm.runInNewContext(`(async () => { ${body} })`, {
+    state: { locked: true }, preferences: selected,
+    vaultSessions: { remember() {}, rows: new Map([['main', { preferences: primary }]]), savedSessions: () => [] },
+    fs: { mkdir: async () => {}, writeFile: async (_path, content) => writes.push(content) },
+    app: { getPath: () => 'fixture' }, configPath: () => 'fixture/preferences.json',
+    sessionSettings: { save: async () => {} },
+  });
+  await run();
+  assert.equal(primary.startup, false);
+  assert.equal(JSON.parse(writes[0]).startup, false);
+  assert.match(source, /if \(params\.startup !== undefined\) vaultSessions\.rows\.get\('main'\)\.preferences\.startup = params\.startup;/);
 });

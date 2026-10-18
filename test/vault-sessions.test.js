@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import { VaultSessions } from '../src/main/vault-sessions.js';
 import { validateRequest } from '../src/main/validation.js';
 const locked = () => ({ locked: true, mounted: false, operations: [], availableDriveLetters: ['N:'] });
+const location = value => `C:\\VaultTest\\${value}`;
 function fixture() {
   const calls = [];
-  const sessions = new VaultSessions({ initialState: locked(), initialPreferences: { cacheDir: 'primary', storageDir: 'original', startup: true, autoUnlock: true }, cacheRoot: id => `cache/${id}` });
+  const sessions = new VaultSessions({ initialState: locked(), initialPreferences: { cacheDir: 'primary', storageDir: 'original', startup: true, autoUnlock: true }, cacheRoot: id => location(id) });
   sessions.client = { request: async (method, params) => {
     calls.push({ method, params });
     if (method === 'createSession') return { sessionId: 'second', status: locked() };
@@ -19,7 +20,7 @@ test('new vault has independent defaults and routes every operation to its ident
   const { sessions, calls } = fixture();
   await sessions.add(sessions.selected.preferences);
   assert.equal(sessions.selectedId, 'second');
-  assert.equal(sessions.selected.preferences.cacheDir, 'cache/second');
+  assert.equal(sessions.selected.preferences.cacheDir, location('second'));
   assert.equal(sessions.selected.preferences.storageDir, undefined);
   assert.equal(sessions.selected.preferences.autoUnlock, false);
   assert.equal(sessions.selected.preferences.driveLetter, 'N:');
@@ -87,4 +88,87 @@ test('session bridge admits only bounded native identities', () => {
     assert.throws(() => validateRequest('selectSession', { sessionId: value }));
   assert.deepEqual(validateRequest('selectSession', { sessionId: 'main' }), { sessionId: 'main' });
   assert.throws(() => validateRequest('addSession', { sessionId: 'invented' }));
+});
+test('saved secondary sessions restore locked with the original cache and no access to vault paths', async () => {
+  const { sessions, calls } = fixture();
+  const primary = sessions.selected;
+  sessions.cacheRoot = () => { throw Error('Restoring must not generate another cache location.'); };
+  sessions.setSavedSessions([{ storageDir: location('saved-source'), cacheDir: location('old-native-id'), driveName: 'Archive', driveLetter: 'Q:', transport: 'privateGit', remoteRepository: 'owner/archive', autoUnlock: true, password: 'never-kept', keyFilePath: 'never-kept' }]);
+  await sessions.restore(primary.preferences);
+  assert.equal(sessions.selectedId, 'main');
+  assert.equal(sessions.selected, primary);
+  assert.deepEqual(calls, [{ method: 'createSession', params: undefined }]);
+  const row = sessions.rows.get('second');
+  assert.equal(row.state.locked, true);
+  assert.equal(row.state.mounted, false);
+  assert.equal(row.preferences.cacheDir, location('old-native-id'));
+  assert.equal(row.preferences.storageDir, location('saved-source'));
+  assert.equal(row.preferences.autoUnlock, false);
+  assert.equal(row.preferences.transport, 'privateGit');
+  assert.equal(row.preferences.remoteRepository, 'owner/archive');
+  assert.equal(row.preferences.password, undefined);
+  assert.equal(row.preferences.keyFilePath, undefined);
+  sessions.accept('second', { ...locked(), driveLetter: 'M:', driveName: 'Material Files', storageDir: null, cacheDir: null });
+  const summary = sessions.inventory().find(row => row.sessionId === 'second');
+  assert.equal(summary.storageDir, location('saved-source'));
+  assert.equal(summary.cacheDir, location('old-native-id'));
+  assert.equal(summary.driveName, 'Archive');
+  assert.equal(summary.driveLetter, 'Q:');
+  sessions.select('second');
+  assert.equal(sessions.selected.preferences.cacheDir, location('old-native-id'));
+});
+test('partial restoration preserves failed descriptors across subsequent saves and session removal', async () => {
+  const { sessions } = fixture();
+  const first = { storageDir: location('first-source'), cacheDir: location('first-cache') };
+  const second = { storageDir: location('second-source'), cacheDir: location('second-cache') };
+  sessions.setSavedSessions([first, second]);
+  let attempt = 0;
+  sessions.client.request = async method => {
+    if (method === 'createSession') {
+      if (++attempt === 1) throw Error('helper unavailable');
+      return { sessionId: 'restored', status: locked() };
+    }
+    return {};
+  };
+  await assert.rejects(sessions.restore({}), /1 secondary.*preserved/);
+  assert.equal(sessions.selectedId, 'main');
+  assert.deepEqual(new Set(sessions.savedSessions().map(row => row.cacheDir)), new Set([location('first-cache'), location('second-cache')]));
+  await sessions.remove('restored');
+  assert.deepEqual(sessions.savedSessions(), [{ autoUnlock: false, ...first }]);
+});
+test('staged descriptors survive missing native support and new defaults cannot inherit credentials', async () => {
+  const { sessions } = fixture();
+  sessions.setSavedSessions([{ cacheDir: location('preserved-cache') }]);
+  sessions.client = null;
+  await assert.rejects(sessions.restore({}), /preserved/);
+  assert.deepEqual(sessions.savedSessions(), [{ autoUnlock: false, cacheDir: location('preserved-cache') }]);
+  assert.throws(() => sessions.setSavedSessions([]), /already/);
+  const next = fixture().sessions;
+  await next.add({ password: 'secret', keyFilePath: 'secret', keys: ['secret'], credentials: 'secret' });
+  assert.ok(!JSON.stringify(next.savedSessions()).includes('secret'));
+});
+test('invalid saved settings are rejected before allocating any native session', async () => {
+  const { sessions, calls } = fixture();
+  assert.throws(() => sessions.setSavedSessions([{ storageDir: 'lost-cache' }]));
+  await assert.rejects(sessions.add({}, { storageDir: 'lost-cache' }));
+  assert.deepEqual(calls, []);
+  assert.equal(sessions.selectedId, 'main');
+});
+test('restoration refuses an unlocked or mounted native response without discarding recovery locations', async () => {
+  for (const status of [{ ...locked(), locked: false }, { ...locked(), mounted: true }]) {
+    const { sessions } = fixture();
+    sessions.setSavedSessions([{ cacheDir: location('preserved-cache') }]);
+    sessions.client.request = async () => ({ sessionId: 'invalid-state', status });
+    await assert.rejects(sessions.restore({}), /preserved/);
+    assert.equal(sessions.rows.size, 1);
+    assert.equal(sessions.selectedId, 'main');
+    assert.deepEqual(sessions.savedSessions(), [{ autoUnlock: false, cacheDir: location('preserved-cache') }]);
+  }
+});
+test('pending recovery descriptors count toward the secondary session limit', async () => {
+  const { sessions, calls } = fixture();
+  sessions.setSavedSessions(Array.from({ length: 23 }, (_, index) => ({ cacheDir: location(`saved-${index}`) })));
+  await assert.rejects(sessions.add({}), /awaiting recovery/);
+  assert.deepEqual(calls, []);
+  assert.equal(sessions.savedSessions().length, 23);
 });

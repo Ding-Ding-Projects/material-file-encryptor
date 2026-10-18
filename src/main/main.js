@@ -16,6 +16,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { exportDialogOptions, chosenExportPath } from './export-dialog.js';
 import { NativeClient } from './native-client.js';
 import { VaultSessions } from './vault-sessions.js';
+import { createVaultSessionSettings } from './vault-session-settings.js';
+import { createVaultImageService } from './vault-image-service.js';
+import { createVaultImageRequests, VAULT_IMAGE_METHODS } from './vault-image-requests.js';
 import { validateRequest, validateFeatureRequest, validateWorkflowAdmission, trustedFrame } from './validation.js';
 import { parseVocabulary, MAX_VOCABULARY_BYTES } from '../shared/personal-vocabulary.js';
 import { createFeatureServices } from './feature-services.js';
@@ -99,9 +102,29 @@ const buildMetadata = { version: app.getVersion(), builtAt: null };
 let preferences = { startup: true, autoUnlock: false, driveLetter: 'M:', driveName: DEFAULT_DRIVE_NAME, transport: 'folder', historyRetentionDays: null, performanceMode: 'responsive' };
 let state = { locked: true, mounted: false, files: [], availableDriveLetters: [], sync: { running: false, lastSync: null, error: null }, driver: { available: false, checking: true, error: 'Checking WinFsp availability.' } };
 const vaultSessions = new VaultSessions({ initialState: state, initialPreferences: preferences, cacheRoot: id => path.join(app.getPath('userData'), 'VaultCaches', id) });
+const sessionSettings = createVaultSessionSettings({ filePath: () => path.join(app.getPath('userData'), 'vault-sessions.json') });
+let sessionSettingsError = null;
+const vaultImages = createVaultImageService({ workRoot: path.join(app.getPath('userData'), 'VaultImages'), nativeRequest: (method, params, sessionId) => vaultSessions.request(method, params, sessionId) });
+const imageRequest = createVaultImageRequests({ service: vaultImages, confirm: options => uiDialog.showMessageBox(window, options), available: () => Boolean(helper) && !verificationMode && !testMode, exiting: () => quitPending || shuttingDown || updateInstallLease });
 const inside = (parent, child) => { const rel = path.relative(parent, child); return rel === '' || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel)); };
 const nativeState = value => ({ ...value, driver: { ...value.driver, checking: false } });
-const snapshot = () => ({ ...state, sessionId: vaultSessions.selectedId, sessions: vaultSessions.inventory(), operation, build: buildMetadata, browserDownloadHandoff:browserHandoff?.status()||{available:false,configured:false,reason:'NOT_INITIALIZED',installation:'not-performed'},startupRegistration: cachedStartupRegistration, defaults: { cacheDir: preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache'), driveLetter: preferences.driveLetter, driveName: preferences.driveName }, preferences: { ...preferences }, cacheDir: state.cacheDir || preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache') });
+const snapshot = () => ({
+  ...state,
+  sessionId: vaultSessions.selectedId,
+  sessions: vaultSessions.inventory(),
+  storageDir: state.storageDir || preferences.storageDir,
+  cacheDir: state.cacheDir || preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache'),
+  driveLetter: state.locked ? preferences.driveLetter : state.driveLetter,
+  driveName: state.locked ? preferences.driveName : state.driveName,
+  transport: state.locked ? { ...state.transport, mode: preferences.transport, remoteRepository: preferences.remoteRepository } : state.transport,
+  sync: { ...state.sync, error: sessionSettingsError || state.sync?.error },
+  operation,
+  build: buildMetadata,
+  browserDownloadHandoff: browserHandoff?.status() || { available: false, configured: false, reason: 'NOT_INITIALIZED', installation: 'not-performed' },
+  startupRegistration: cachedStartupRegistration,
+  defaults: { cacheDir: preferences.cacheDir || path.join(app.getPath('userData'), 'EncryptedCache'), driveLetter: preferences.driveLetter, driveName: preferences.driveName },
+  preferences: { ...preferences, startup: vaultSessions.rows.get('main').preferences.startup },
+});
 function publish() { vaultSessions.remember(state, preferences); if(state.locked||state.lockVerified===false)browserHandoff?.revoke('lock');updateTray(); if (window && !window.isDestroyed()) window.webContents.send('vault:state', snapshot()); }
 async function closeBrowserHandoff(){const receipt=await browserHandoff?.close();if(receipt&&receipt.verified!==true)throw new Error('Native browser handoff exit is unverified. Resolve pending pairing approval and retry Quit.');return receipt;}
 async function handleStartupFailure(){
@@ -123,9 +146,9 @@ async function savePreferences() {
   // Credentials never enter preferences. Additional sessions are deliberately
   // reopened explicitly after restart, rather than silently mounting more drives.
   const primary = vaultSessions.rows.get('main').preferences;
-  primary.startup = preferences.startup;
   await fs.mkdir(app.getPath('userData'), { recursive: true });
   await fs.writeFile(configPath(), JSON.stringify(primary), { mode: 0o600 });
+  await sessionSettings.save(vaultSessions.savedSessions());
 }
 async function backend(method, params = {}) {
   if (!helper) throw new Error('The mounted drive is available on Windows.');
@@ -202,10 +225,12 @@ async function request(method, params, context, expectedSessionId) {
       localAdapter?.revoke(); pairingCodes.clear();
       if (method === 'addSession') await vaultSessions.add(preferences);
       else if (method === 'selectSession') vaultSessions.select(params.sessionId);
-      else await vaultSessions.remove(params.sessionId);
+      else { await vaultImages.discard(params.sessionId); await vaultSessions.remove(params.sessionId); }
       ({ state, preferences } = vaultSessions.selected);
       selectedImports.clear(); selectedExports.clear(); selectedExportFolders.clear();
-      publish(); return snapshot();
+      try { if (method !== 'selectSession') await savePreferences(); }
+      finally { publish(); }
+      return snapshot();
     });
   }
   return vaultSessions.run(() => dispatchRequest(method, params, context), expectedSessionId);
@@ -214,6 +239,7 @@ async function dispatchRequest(method, params, context) {
   params = validateRequest(method, params);
   if (method === 'featureRequest') return featureRequest(params.feature,params.action,params.payload,context);
   if (updateInstallLease && !['getState','buildMetadata','operations','windowControl'].includes(method)) throw new Error('The application is preparing an update. Wait for it to finish.');
+  if (VAULT_IMAGE_METHODS.has(method)) return imageRequest(method, params, vaultSessions.selectedId);
   if (method === 'getState') return snapshot();
   if (method === 'buildMetadata') return buildMetadata;
   if (method === 'browserPairing') { if(state.locked||state.lockVerified===false)throw Error('Unlock the drive before pairing the browser.');await localAdapter.start();return{address:localAdapter.address,...localAdapter.pairingCode()}; }
@@ -274,8 +300,9 @@ async function dispatchRequest(method, params, context) {
       await backend(params.autoUnlock ? 'setAutoUnlock' : 'forgetSavedCredential', params.autoUnlock ? { enabled: true } : { storageDir: preferences.storageDir, cacheDir: preferences.cacheDir });
     }
     if (params.historyRetentionDays !== undefined && !state.locked) await backend('setHistoryRetention', { days: params.historyRetentionDays });
+    if (params.startup !== undefined) vaultSessions.rows.get('main').preferences.startup = params.startup;
     Object.assign(preferences, params); await savePreferences();
-    applyStartup(preferences.startup);
+    applyStartup(vaultSessions.rows.get('main').preferences.startup);
     cachedStartupRegistration = startupRegistration();
     publish(); return snapshot();
   }
@@ -291,10 +318,12 @@ async function dispatchRequest(method, params, context) {
   if (method === 'createVault' || method === 'unlockVault' || method === 'upgradeVault') {
     if (params.autoUnlock && vaultSessions.selectedId !== 'main') throw new Error('Automatic startup unlock is available only for the primary vault.');
     return perform(method === 'upgradeVault' ? 'upgrading' : 'mounting', async () => {
+      await vaultImages.discard(vaultSessions.selectedId);
       if (params.keyFilePath) await safeDestination(params.keyFilePath, [params.storageDir, params.cacheDir]);
       await backend(method === 'upgradeVault' ? 'copyUpgrade' : method === 'createVault' ? 'create' : 'unlock', params);
       preferences = { ...preferences, storageDir: params.storageDir, cacheDir: params.cacheDir, driveLetter: params.driveLetter, driveName: params.driveName ?? preferences.driveName ?? DEFAULT_DRIVE_NAME, autoUnlock: Boolean(params.autoUnlock), transport: params.transport || 'folder', remoteRepository: params.remoteRepository };
       await savePreferences();
+      await backend('setPerformanceMode', { mode: preferences.performanceMode || 'responsive' });
       await backend('setHistoryRetention', { days: preferences.historyRetentionDays });
       const response = await backend('mount', { driveLetter: params.driveLetter, driveName: preferences.driveName });
       return { ...response, preferences: { ...preferences } };
@@ -332,7 +361,7 @@ async function lockAllVaults() {
 async function hasActiveWork() {
   if (restartPreparation.started) return false;
   const active=await vaultSessions.operations();
-  return Boolean(operation || browserHandoff?.pending || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
+  return Boolean(operation || vaultImages.pending || browserHandoff?.pending || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
 }
 async function updateStatus() {
   const snapshot=updates?.status()||{state:'unavailable',reason:'NOT_INITIALIZED'};
@@ -376,7 +405,7 @@ async function acquireUpdateLease() {
 const restartPreparation=createRestartPreparation({
   verify:async()=>{if(!updateInstallLease||!vaultSessions.safelyLocked||await hasActiveWork())throw new Error('The application is not ready to restart safely.');},
   preflight:async()=>{verificationStartup?.restore();},
-  closeServices:async()=>{await closeBrowserHandoff();await localAdapter?.close();await features?.close();},
+  closeServices:async()=>{await closeBrowserHandoff();await localAdapter?.close();await features?.close();await vaultImages.close();},
   clearMarker:()=>fs.rm(sessionMarkerPath(),{force:true}),
   disposeHelper:async()=>{helper?.dispose();},
   prepared:()=>{shuttingDown=true;}
@@ -424,7 +453,7 @@ async function quit(ownRequest = false) {
     features.beginExit();
     if (helper) await perform('unmounting', lockAllVaults);
     if (!vaultSessions.safelyLocked) throw new Error('All vaults must confirm that they are locked.');
-    await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features?.close(); verificationStartup?.restore();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit());
+    await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features?.close();await vaultImages.close(); verificationStartup?.restore();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit());
   } catch (error) { showWindow(); await uiDialog.showMessageBox(window, { type: 'error', title: 'Application is still running', message: error.message }); }
   finally {quitPending=false;if(!shuttingDown)features.endExit();}
 }
@@ -446,7 +475,9 @@ else {
       if (['responsive', 'throughput'].includes(saved.performanceMode)) preferences.performanceMode = saved.performanceMode;
       if (saved.historyRetentionDays === null || (Number.isInteger(saved.historyRetentionDays) && saved.historyRetentionDays >= 1 && saved.historyRetentionDays <= 36500)) preferences.historyRetentionDays = saved.historyRetentionDays;
     } catch { /* First launch or invalid settings uses defaults. */ }
-    applyStartup(preferences.startup);
+    try { vaultSessions.setSavedSessions(await sessionSettings.load()); }
+    catch { sessionSettingsError = 'Saved vault session settings could not be read safely. The original file was preserved. Keep the original encrypted cache folders and repair the settings before saving session changes.'; }
+    applyStartup(vaultSessions.rows.get('main').preferences.startup);
     cachedStartupRegistration=startupRegistration();
     try { Object.assign(buildMetadata, JSON.parse(await fs.readFile(path.resolve(directory,'../shared/build-metadata.json'),'utf8'))); } catch { /* Development builds have no invented build date. */ }
     features=createFeatureServices({isPackaged:app.isPackaged,nativeProfilePrompt:context=>nativeProfileDialog.authenticate(context),cancelNativeProfilePrompt:()=>nativeProfileDialog.cancelAll(),nativeRequest:(method,params)=>{if(verificationMode||testMode||!helper)throw Error('Protected native server supervision is unavailable.');if(typeof method==='string'&&method.startsWith('managedOllama.')&&!['managedOllama.start','managedOllama.status','managedOllama.stop','managedOllama.close'].includes(method))throw new Error('The native runtime ownership service is unavailable.');return helper.request(method,params);},accessibilityState:()=>readRuntimeAccessibility(app),dataDirectory:app.getPath('userData'),applicationRoot:path.resolve(directory,'../..'),sandboxDirectory:app.isPackaged?path.join(process.resourcesPath,'converter'):path.resolve('out/converter'),safeStorage,dialog:uiDialog,getWindow:()=>window,getMainFrame:()=>window?.webContents.mainFrame,openPath,openExternal:url=>shell.openExternal(url),onConverterDiagnostic:record=>console.warn('Converter initialization:',JSON.stringify(record)),emit:(feature,data)=>{if(feature==='workflow')browserHandoff?.observeDownload(data);window?.webContents.send('feature:event',feature,data);}});
@@ -478,7 +509,7 @@ else {
       if (helper) await perform('unmounting', lockAllVaults);
       const proof = verificationStartup.restore();
       if (!vaultSessions.safelyLocked) throw new Error('All vaults must confirm that they are locked.');
-      await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features.close();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose();
+      await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features.close();await vaultImages.close();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose();
       setTimeout(() => app.quit(), 250);
       return proof;
     });
@@ -531,6 +562,8 @@ else {
         }
       });
       nativeClient.on('exit', () => { vaultSessions.failAll(); state = vaultSessions.selected.state; publish(); });
+      try { await vaultSessions.run(() => vaultSessions.restore(preferences)); }
+      catch { sessionSettingsError = 'Some saved vault sessions could not be restored. Their encrypted storage and cache choices were retained; restart to retry. No secondary vault was automatically unlocked.'; }
       try { await vaultSessions.run(async () => { await backend('statusSummary'); await backend('setPerformanceMode', { mode: preferences.performanceMode }); if(interruptedSession){state.recoveryRequired=true;state.sync.error='An interrupted session was detected. Recovery starts locked; unlock explicitly to review encrypted records.';publish();} if (!interruptedSession && preferences.autoUnlock && preferences.storageDir) { await backend('autoUnlock', { storageDir: preferences.storageDir, cacheDir: preferences.cacheDir, driveLetter: preferences.driveLetter, transport: preferences.transport, remoteRepository: preferences.remoteRepository }); await backend('setHistoryRetention', { days: preferences.historyRetentionDays }); await backend('mount', { driveLetter: preferences.driveLetter }); } }); } catch (error) { state.driver.checking = false; state.sync.error = error.message; publish(); }
     } else { state.driver.checking = false; state.driver.error = 'Windows and WinFsp are required to mount a drive.'; publish(); }
     await handleExplorerCopy(process.argv);

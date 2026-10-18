@@ -71,6 +71,12 @@ jobs:
           . ./scripts/bootstrap.ps1
           dotnet run --project native/MaterialFileEncryptor.Controller.Tests -c Release -- --multi-vault
           if ($LASTEXITCODE -ne 0) { throw 'Multi-vault controller verification failed.' }
+      - name: Verify encrypted image workflow offline
+        shell: powershell
+        run: |
+          . ./scripts/bootstrap.ps1
+          node --test test/vault-session-settings.test.js test/vault-sessions.test.js test/vault-image-context.test.js test/vault-image-snapshot.test.js test/vault-image-docker.test.js test/vault-image-service.test.js test/vault-image-panel.test.js
+          if ($LASTEXITCODE -ne 0) { throw 'Encrypted image offline verification failed.' }
       - name: Package genuine unsigned Squirrel installer
         shell: cmd
         run: build-installer.bat /s

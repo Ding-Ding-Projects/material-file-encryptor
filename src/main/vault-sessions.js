@@ -1,3 +1,5 @@
+import { MAX_SECONDARY_VAULTS, sanitizeSecondaryVaultPreferences, sanitizeSecondaryVaultSessions } from './vault-session-settings.js';
+
 /** Desktop session inventory. Native controllers remain the authority for mount ownership. */
 export class VaultSessions {
   constructor({ initialState, initialPreferences, cacheRoot }) {
@@ -7,6 +9,8 @@ export class VaultSessions {
     this.client = null;
     this.foreground = 0;
     this.switching = false;
+    this.savedSettingsLoaded = false;
+    this.pendingSettings = [];
   }
   get selected() { return this.rows.get(this.selectedId); }
   remember(state, preferences) { Object.assign(this.selected, { state, preferences }); }
@@ -16,10 +20,11 @@ export class VaultSessions {
     return sessionId === this.selectedId;
   }
   inventory() {
-    return [...this.rows].map(([sessionId, { state }]) => ({
+    return [...this.rows].map(([sessionId, { state, preferences }]) => ({
       sessionId, locked: state.locked, mounted: state.mounted,
-      driveLetter: state.driveLetter, driveName: state.driveName,
-      storageDir: state.storageDir, cacheDir: state.cacheDir,
+      driveLetter: state.locked ? preferences.driveLetter || state.driveLetter : state.driveLetter,
+      driveName: state.locked ? preferences.driveName || state.driveName : state.driveName,
+      storageDir: state.storageDir || preferences.storageDir, cacheDir: state.cacheDir || preferences.cacheDir,
       recoveryRequired: state.recoveryRequired || state.lockVerified === false,
       operation: state.operation ?? null,
       activeTransfers: (state.operations || []).filter(activeOperation).length,
@@ -42,17 +47,43 @@ export class VaultSessions {
     const global = method.startsWith('server.') || method.startsWith('managedOllama.');
     return this.client.request(method, global ? params : { ...params, sessionId });
   }
-  async add(defaults) {
+  setSavedSessions(sessions) {
+    if (this.savedSettingsLoaded) throw new Error('Saved vault sessions have already been staged.');
+    this.pendingSettings = sanitizeSecondaryVaultSessions(sessions);
+    this.savedSettingsLoaded = true;
+  }
+  savedSessions() {
+    return sanitizeSecondaryVaultSessions([
+      ...[...this.rows].filter(([id]) => id !== 'main').map(([, row]) => row.preferences),
+      ...this.pendingSettings,
+    ]);
+  }
+  async restore(defaults) {
+    const failures = [];
+    for (const settings of [...this.pendingSettings]) {
+      try {
+        await this.add(defaults, settings, { select: false });
+        this.pendingSettings.splice(this.pendingSettings.indexOf(settings), 1);
+      } catch (error) { failures.push(error); }
+    }
+    if (failures.length) throw new AggregateError(failures, `${failures.length} secondary vault session(s) could not be restored. Their saved storage and cache locations were preserved. Restart to retry; no vault was unlocked.`);
+  }
+  async add(defaults, savedPreferences = null, { select = true } = {}) {
+    if (!this.client) throw new Error('The mounted drive is available on Windows.');
+    if (!savedPreferences && this.rows.size - 1 + this.pendingSettings.length >= MAX_SECONDARY_VAULTS)
+      throw new Error('Close an unused vault session before adding another. Saved sessions awaiting recovery also count toward this limit.');
+    const restored = savedPreferences && sanitizeSecondaryVaultPreferences(savedPreferences);
     const result = await this.client.request('createSession');
-    if (!result || typeof result.sessionId !== 'string' || this.rows.has(result.sessionId))
+    if (!result || typeof result.sessionId !== 'string' || !/^[A-Za-z0-9-]{1,64}$/.test(result.sessionId) || this.rows.has(result.sessionId) || result.status?.locked !== true || result.status.mounted !== false)
       throw new Error('The native session identity is invalid.');
     const sessionId = result.sessionId;
-    this.rows.set(sessionId, { state: result.status, preferences: {
+    this.rows.set(sessionId, { state: result.status, preferences: sanitizeSecondaryVaultPreferences({
       ...defaults, autoUnlock: false, storageDir: undefined, remoteRepository: undefined,
-      cacheDir: this.cacheRoot(sessionId), transport: 'folder',
+      cacheDir: restored ? restored.cacheDir : this.cacheRoot(sessionId), transport: 'folder',
       driveLetter: result.status.availableDriveLetters?.[0] || 'M:',
-    } });
-    this.selectedId = sessionId;
+      ...restored,
+    }) });
+    if (select) this.selectedId = sessionId;
   }
   select(sessionId) {
     if (!this.rows.has(sessionId)) throw new Error('The vault session no longer exists.');

@@ -102,10 +102,20 @@ static partial class Regression
                 }
                 catch (TargetInvocationException error) when (error.InnerException is ArgumentException) { }
             }
+            await Refused("beginSnapshot", new { sessionId = second }, "Unlocked storage was admitted for image snapshot");
             await Refused("removeSession", new { sessionId = second }, "An unlocked session was removed");
             await Refused("unlock", new { sessionId = third, storageDir = Path.Combine(root, "first", "source", "nested"), cacheDir = Path.Combine(root, "third", "cache"), password = "fixture", driveLetter = "O:" }, "Nested storage collision was accepted");
             await Refused("unlock", new { sessionId = third, storageDir = Path.Combine(root, "third", "source"), cacheDir = Path.Combine(root, "second", "source"), password = "fixture", driveLetter = "O:" }, "Cross storage/cache collision was accepted");
             await Send("lock", new { sessionId = second });
+            var lease = JsonSerializer.SerializeToElement(await Send("beginSnapshot", new { sessionId = second }));
+            Assert(lease.GetProperty("storageOnly").GetBoolean(), "Image snapshot included pending cache state");
+            Assert(lease.GetProperty("storageDir").GetString() == Path.Combine(root, "second", "source"), "Snapshot source crossed sessions");
+            await Refused("unlock", Open(second, "second", "N:"), "Snapshot lease allowed same-session reopening");
+            await Refused("unlock", Open(third, "second", "O:"), "Snapshot lease allowed another session to write its source");
+            await Refused("removeSession", new { sessionId = second }, "Snapshot lease allowed session removal");
+            await Refused("releaseSnapshot", new { sessionId = second, leaseId = "wrong" }, "Wrong snapshot lease was released");
+            Assert(JsonSerializer.SerializeToElement(await Send("status", new { sessionId = second })).GetProperty("locked").GetBoolean(), "Snapshot status unavailable");
+            await Send("releaseSnapshot", new { sessionId = second, leaseId = lease.GetProperty("leaseId").GetString() });
             Assert(!JsonSerializer.SerializeToElement(await Send("status", new { })).GetProperty("locked").GetBoolean(), "Locking one session changed the default vault");
             // A late transport completion still owns its roots after the key has
             // been destroyed. It cannot overlap a second controller's unlock.

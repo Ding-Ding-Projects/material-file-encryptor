@@ -4,7 +4,7 @@ namespace MaterialFileEncryptor.Host;
 
 // A controller, key, command queue and filesystem belong to exactly one session.
 // Reservations precede asynchronous admission and survive ambiguous failures.
-internal sealed class VaultSessionBroker : IDisposable
+internal sealed partial class VaultSessionBroker : IDisposable
 {
     private sealed class Session(string id)
     {
@@ -16,6 +16,7 @@ internal sealed class VaultSessionBroker : IDisposable
         public string DriveLetter = "M:";
         public int Pending;
         public bool Transition, Preparing;
+        public string? SnapshotId;
     }
     private readonly object gate = new();
     private readonly Dictionary<string, Session> sessions = new(StringComparer.Ordinal);
@@ -41,7 +42,7 @@ internal sealed class VaultSessionBroker : IDisposable
     private Session Find(string id) => sessions.TryGetValue(id, out var session) ? session : throw new InvalidOperationException("The selected vault session no longer exists.");
     private void Reconcile(Session session)
     {
-        if (session.Pending == 0 && session.Controller.IsSessionReleased())
+        if (session.Pending == 0 && session.SnapshotId is null && session.Controller.IsSessionReleased())
         { session.Roots.Clear(); session.Letters.Clear(); session.Repositories.Clear(); }
     }
     public Task<object?> DispatchAsync(string method, JsonElement args)
@@ -60,6 +61,10 @@ internal sealed class VaultSessionBroker : IDisposable
                 return Task.FromResult<object?>(Info(added));
             }
             var session = Find(sessionId);
+            if (method == "beginSnapshot") return BeginSnapshot(session);
+            if (method == "releaseSnapshot") return Task.FromResult<object?>(ReleaseSnapshot(session, args));
+            if (session.SnapshotId is not null && method is not ("status" or "statusSummary" or "operations"))
+                throw new InvalidOperationException("An encrypted image snapshot is being prepared. Wait for it to finish.");
             if (method == "removeSession")
             {
                 if (session.Id == "main") throw new InvalidOperationException("The default vault session cannot be removed.");

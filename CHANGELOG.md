@@ -1,9 +1,15 @@
+# Encrypted folder image workflow, 2026-10-18
+
+- Add reviewed, locked encrypted-storage snapshots, fixed data-only Docker images, and a separate explicit upload action restricted to existing private Docker Hub repositories.
+- Reject unexpected storage content and linked paths; isolate per-vault previews, preserve native encryption, and never upload or retry automatically. Document prerequisites, pending-cache exclusions, and extraction without overwriting a vault.
+- Synthetic/mocked tests do not constitute a real Docker Hub upload or restore; those remain unverified.
+
 # Multiple vault sessions, 2026-10-18
 
 - Add an always-visible vault selector, independent native controllers, and separate drive letters, cache/key lifetimes, file/history selections, and transfers.
 - Reject overlapping folders, duplicate letters and duplicate private repositories before opening. Preserve uncertain ownership, reject stale session requests, and revoke browser pairing on selection changes.
-- Lock one drive or all drives. Quit, updates and Windows session shutdown inspect every vault. Additional vaults reopen explicitly after application restart.
-- Add focused desktop and native session regression tests. Actual simultaneous WinFsp mounts and installed UI validation remain unverified until performed on Windows.
+- Lock one drive or all drives. Quit, updates and Windows session shutdown inspect every vault. Additional vaults return locked with their original storage/cache choices and require explicit unlock after application restart.
+- Add focused desktop and native session regression tests. Two simultaneous real WinFsp mounts, busy-lock isolation, independent locks and fixture cleanup passed on Windows at 5b70939d. Installed UI and power-session validation remain separate.
 
 # Ordinary installed icon verification, 2026-10-17
 
