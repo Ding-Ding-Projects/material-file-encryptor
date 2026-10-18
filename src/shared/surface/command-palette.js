@@ -5,18 +5,61 @@ import {openContextMenu,closeContextMenu} from './overlay.js';
 export class CommandPalette extends SurfaceElement {
   constructor(){super();this.commands=[];this.full=false;}
   connectedCallback(){this.render();}
-  disconnectedCallback(){this.commandRefresh=null;this.resultGeneration=(this.resultGeneration||0)+1;}
-  setCommands(commands){
-    this.commands=commands;this.resultGeneration=(this.resultGeneration||0)+1;
-    if(this.commandRefresh)return;
-    const refresh=this.commandRefresh={};
-    // A single editor render may add and remove hundreds of guidance commands.
-    queueMicrotask(()=>{if(this.commandRefresh!==refresh)return;this.commandRefresh=null;if(this.isConnected!==false)this.renderResults();});
+  disconnectedCallback(){this.commandRefresh=null;this.cancelPendingResults();}
+  cancelPendingResults() {
+    this.closing = true;
+    this.openGeneration = (this.openGeneration || 0) + 1;
+    this.resultGeneration = (this.resultGeneration || 0) + 1;
   }
-  open(){this.returnFocus=document.activeElement;this.dialog.show();queueMicrotask(()=>this.search.input.focus());}
-  close(){closeContextMenu('palette-close',{restoreFocus:false});this.dialog.close();this.returnFocus?.focus();}
+  setCommands(commands) {
+    this.commands = commands;
+    this.resultGeneration = (this.resultGeneration || 0) + 1;
+    if (this.commandRefresh) return;
+    const refresh = this.commandRefresh = {};
+    // Keep command availability synchronous, but never build hidden controls.
+    // Opening the appearance editor registers hundreds of guidance commands.
+    queueMicrotask(() => {
+      if (this.commandRefresh !== refresh) return;
+      this.commandRefresh = null;
+      if (this.isConnected !== false && this.dialog?.open) this.renderResults();
+    });
+  }
+  async open() {
+    this.closing = false;
+    this.returnFocus = document.activeElement;
+    const generation = this.openGeneration = (this.openGeneration || 0) + 1;
+    const dialog = this.dialog;
+    this.commandRefresh = null;
+    this.openingDialog = dialog;
+    try {
+      await dialog.show();
+    } finally {
+      if (generation === this.openGeneration) this.openingDialog = null;
+    }
+    if (generation !== this.openGeneration || dialog !== this.dialog || !dialog.open || this.closing) return;
+    // The command list may have changed while the palette was closed.
+    this.renderResults();
+    this.search.input.focus();
+  }
+  close() {
+    this.cancelPendingResults();
+    closeContextMenu('palette-close', {restoreFocus: false});
+    this.dialog.close();
+    this.returnFocus?.focus();
+  }
   render(){this.resultGeneration=(this.resultGeneration||0)+1;this.style(`md-dialog{width:min(760px,calc(100vw - 32px));max-height:90vh;--md-dialog-container-color:var(--md-sys-color-surface-container,#f0f1f7)}md-dialog.full{width:calc(100vw - 24px);height:calc(100vh - 24px)}.result{padding:8px 0;display:flex;gap:12px;align-items:center;border-bottom:1px solid var(--md-sys-color-outline-variant,#ccc)}.label{flex:1;min-width:0;overflow-wrap:anywhere}.list{overflow:auto;max-height:55vh}.head{display:flex;justify-content:space-between}`);
     this.dialog=element('md-dialog',{'aria-label':this.t('Command palette','指令面板')});
+    const dialog = this.dialog;
+    dialog.addEventListener('open', () => {
+      if (this.dialog === dialog) this.closing = false;
+    });
+    dialog.addEventListener('close', () => {
+      if (this.dialog === dialog) this.cancelPendingResults();
+    });
+    // Language restoration can open the dialog without calling open().
+    dialog.addEventListener('opened', () => {
+      if (this.dialog === dialog && this.openingDialog !== dialog) this.renderResults();
+    });
     this.search=element('mfe-search',{label:this.t('Search commands and settings','搜尋指令及設定'),scope:'command-palette'});this.search.language=this.language;
     this.results=element('div',{class:'list','aria-live':'polite'});
     const size=element('md-text-button',{text:this.t('Change size','更改大小'),onclick:()=>{this.full=!this.full;this.dialog.classList.toggle('full',this.full);try{this.storage?.setItem('mfe.palette.size',this.full?'full':'card');}catch{}}});
@@ -25,7 +68,20 @@ export class CommandPalette extends SurfaceElement {
     this.shadowRoot.append(this.dialog);this.search.addEventListener('search-change',()=>this.renderResults());
     this.dialog.addEventListener('keydown',event=>{if(!['ArrowDown','ArrowUp'].includes(event.key))return;const controls=[...this.results.querySelectorAll('md-text-button,md-switch,md-slider,md-outlined-text-field')].filter(c=>!c.disabled);if(!controls.length)return;const active=event.composedPath().find(node=>controls.includes(node));const index=controls.indexOf(active);controls[(index+(event.key==='ArrowDown'?1:controls.length-1))%controls.length].focus();event.preventDefault();});this.renderResults();
   }
-  async renderResults(){if(!this.results||!this.search)return;const generation=this.resultGeneration=(this.resultGeneration||0)+1;const commands=[...this.commands],results=this.results,search=this.search;const rows=await search.filter(commands.map(command=>({id:command.id,text:commandSearchText(command,this.language)})));if(!rows||generation!==this.resultGeneration||results!==this.results||search!==this.search)return;this.results.replaceChildren();for(const row of rows){const command=commands.find(item=>item.id===row.id);if(!command)continue;const title=localized(command.label,this.language);const label=element('span',{class:'label'},[element('strong',{text:title}),element('span',{text:localized(command.description,this.language)})]);let control;
+  async renderResults() {
+    if (this.closing || !this.dialog?.open || !this.results || !this.search) return;
+    const generation = this.resultGeneration = (this.resultGeneration || 0) + 1;
+    const commands = [...this.commands];
+    const results = this.results;
+    const search = this.search;
+    const rows = await search.filter(commands.map(command => ({
+      id: command.id,
+      text: commandSearchText(command, this.language)
+    })));
+    // Closing or replacing a surface invalidates output already being filtered.
+    if (!rows || this.closing || !this.dialog?.open || generation !== this.resultGeneration ||
+        results !== this.results || search !== this.search) return;
+    this.results.replaceChildren();for(const row of rows){const command=commands.find(item=>item.id===row.id);if(!command)continue;const title=localized(command.label,this.language);const label=element('span',{class:'label'},[element('strong',{text:title}),element('span',{text:localized(command.description,this.language)})]);let control;
       if(command.control?.type==='switch'){control=element('md-switch',{'aria-label':title,selected:!!command.control.get(),onchange:()=>this.change(command,control.selected)});}
       else if(command.control?.type==='checkbox'){control=element('md-checkbox',{'aria-label':title,checked:!!command.control.get(),onchange:()=>this.change(command,control.checked)});}
       else if(command.control?.type==='range'){control=element('md-slider',{'aria-label':row.text,min:command.control.min??0,max:command.control.max??100,value:command.control.get(),onchange:()=>this.change(command,control.value)});}
