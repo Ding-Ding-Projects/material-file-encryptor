@@ -105,13 +105,18 @@ internal static class RegistryFixture
         {output.Write(Enumerable.Range(0,32).Select(index=>(byte)index).ToArray());output.Flush(true);}
         var aOptions=Options(root,"deviceA");var bOptions=Options(root,"deviceB");
         using(var seed=VaultEngine.Create(aOptions,credential))
-        {seed.CreateFile("shared.txt");seed.WriteRange("shared.txt",0,"BASE"u8);await seed.FlushAsync();}
+        {
+            if(scenario=="directory-rename") {seed.CreateDirectory("shared");seed.CreateFile("shared/child.txt");seed.WriteRange("shared/child.txt",0,"BASE"u8);}
+            else {seed.CreateFile("shared.txt");seed.WriteRange("shared.txt",0,"BASE"u8);}
+            await seed.FlushAsync();
+        }
         CopyEncrypted(aOptions.StorageRoot,bOptions.StorageRoot);
         using(var a=VaultEngine.Open(aOptions,credential))
         using(var b=VaultEngine.Open(bOptions,credential))
         {
-            if(scenario=="file-rename") {a.Rename("shared.txt","name-from-device-a.txt");b.Rename("shared.txt","name-from-device-b.txt");}
-            else
+            if(scenario=="directory-rename") {a.Rename("shared","directory-from-device-a");b.Rename("shared","directory-from-device-b");}
+            else if(scenario=="file-rename") {a.Rename("shared.txt","name-from-device-a.txt");b.Rename("shared.txt","name-from-device-b.txt");}
+            else if(scenario!="empty")
             {
                 if(scenario=="delete-edit")a.Delete("shared.txt");else a.WriteRange("shared.txt",0,"AAAA"u8);
                 b.WriteRange("shared.txt",0,"BBBB"u8);
@@ -134,10 +139,36 @@ internal static class RegistryFixture
         using var fileCredential=VaultCredentials.KeyFile(File.ReadAllBytes(keyFilePath));
         using var reopened=VaultEngine.Open(new VaultOptions{StorageRoot=selected.StorageRoot,CacheRoot=cacheDir,PartSizeBytes=1024*1024},fileCredential);
         await reopened.SyncAsync();
-        string kind=scenario switch{"file-edit"=>"file-edit","file-rename"=>"rename","delete-edit"=>"delete-versus-edit",_=>"resolution-divergence"};
+        string kind=scenario switch{"file-edit"=>"file-edit","file-rename" or "directory-rename"=>"rename","delete-edit"=>"delete-versus-edit",_=>"resolution-divergence"};
         var conflicts=reopened.ListConflicts(1000).Items;
-        if(conflicts.Count!=1||conflicts[0].Kind!=kind||conflicts[0].SupportedChoices.Count==0)throw new InvalidDataException("Prepared review did not match its requested scenario.");
+        bool expected=scenario=="empty"?conflicts.Count==0:
+            scenario=="directory-rename"?conflicts.Count>0&&conflicts.Any(item=>item.UnsupportedReason is not null&&(item.Current?.IsDirectory==true||item.Preserved?.IsDirectory==true)):
+            conflicts.Count==1&&conflicts[0].Kind==kind&&conflicts[0].SupportedChoices.Count>0;
+        if(!expected)throw new InvalidDataException("Prepared review did not match its requested scenario.");
         Console.WriteLine(JsonSerializer.Serialize(new{prepared=true,fixtureRoot=root,scenario,device,storageDir=selected.StorageRoot,cacheDir,keyFilePath,vaultId=reopened.VaultId,expectedConflicts=conflicts}));
+    }
+    private static async Task ReviewOperation(string root,string device,bool advance,VaultCredentials credential)
+    {
+        var selected=Options(root,device);
+        string cacheDir=Path.Combine(root,"observer-"+Guid.NewGuid().ToString("N"));CheckPhysical(selected.StorageRoot);CheckPhysical(cacheDir);
+        using var engine=VaultEngine.Open(new VaultOptions{StorageRoot=selected.StorageRoot,CacheRoot=cacheDir,DeviceId="registry-review-observer",PartSizeBytes=1024*1024},credential);
+        await engine.SyncAsync();
+        if(advance)
+        {
+            var current=engine.ListConflicts(1000).Items.FirstOrDefault(item=>item.Kind=="file-edit"&&item.Current is {IsDirectory:false,IsLive:true})?.Current
+                ??throw new InvalidOperationException("A live ordinary-file conflict is required.");
+            engine.SetLength(current.Path,0);engine.WriteRange(current.Path,0,"CHANGED-AFTER-REVIEW"u8);await engine.FlushAsync();
+        }
+        var entries=new List<object>();
+        foreach(var entry in engine.Enumerate("").OrderBy(item=>item.Path,StringComparer.Ordinal))
+        {
+            if(entry.Length>4096)throw new InvalidDataException("Review observation accepts only bounded synthetic entries.");
+            byte[] bytes=entry.IsDirectory?[]:new byte[checked((int)entry.Length)];
+            if(!entry.IsDirectory&&engine.ReadRange(entry.Path,0,bytes)!=bytes.Length)throw new IOException("Review read was incomplete.");
+            entries.Add(new{path=entry.Path,entryId=entry.EntryId,versionId=entry.VersionId,isDirectory=entry.IsDirectory,length=entry.Length,content=entry.IsDirectory?null:Encoding.UTF8.GetString(bytes),sha256=Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant()});
+        }
+        var histories=engine.ListVersions().Where(item=>!item.IsDirectory&&item.IsAvailable).Select(item=>new{id=item.Id,text=engine.PreviewVersion(item.Id).Text}).ToArray();
+        Console.WriteLine(JsonSerializer.Serialize(new{verified=true,advanced=advance,fixtureRoot=root,storageDir=selected.StorageRoot,device,vaultId=engine.VaultId,entries,histories,conflicts=engine.ListConflicts(1000).Items}));
     }
     internal static async Task<int> RunAsync(string[] args)
     {
@@ -152,14 +183,15 @@ internal static class RegistryFixture
     {
         if(args.Length is <3 or >4)throw new ArgumentException("Use action, absolute fixture root, deviceA or deviceB, and optional case.");
         string action=args[0],device=args[2],scenario=args.Length==4?args[3]:"concurrent-edit";
-        if(action is not ("init" or "edit" or "sync" or "snapshot" or "inspect" or "prepare-review"))throw new ArgumentException("Unknown fixture action.");
+        if(action is not ("init" or "edit" or "sync" or "snapshot" or "inspect" or "prepare-review" or "inspect-review" or "advance-review"))throw new ArgumentException("Unknown fixture action.");
         if(device is not ("deviceA" or "deviceB"))throw new ArgumentException("Unknown fixture device.");
-        if(action=="prepare-review")
-        {if(scenario is not ("file-edit" or "file-rename" or "delete-edit" or "resolution-divergence"))throw new ArgumentException("Unknown review fixture case.");}
+        if(action is "prepare-review" or "inspect-review" or "advance-review")
+        {if(scenario is not ("file-edit" or "file-rename" or "delete-edit" or "resolution-divergence" or "empty" or "directory-rename"))throw new ArgumentException("Unknown review fixture case.");}
         else if(scenario is not ("concurrent-edit" or "delete-vs-edit"))throw new ArgumentException("Unknown fixture case.");
         string root=ValidateRoot(args[1],action is "init" or "prepare-review");
         using var credential=Credential();
         if(action=="prepare-review"){await PrepareReview(root,device,scenario,credential);return 0;}
+        if(action is "inspect-review" or "advance-review"){await ReviewOperation(root,device,action=="advance-review",credential);return 0;}
         if(action=="init")
         {
             Directory.CreateDirectory(root);File.WriteAllText(Path.Combine(root,Sentinel),Marker+root+"\n");

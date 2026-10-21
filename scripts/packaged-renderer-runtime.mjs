@@ -62,7 +62,7 @@ export async function openPackagedRendererTarget(expected,{evidenceRoot,runtime=
   await fs.writeFile(path.join(evidenceRoot,'packaged-runtime-launch-failure.json'),JSON.stringify(receipt,null,2),{flag:'wx'});
   throw error;
  }
- Object.assign(receipt,{launched:true,connectionOwned:opened.connectionOwned,backend:opened.backend,runRoot:opened.runRoot,statePath:opened.statePath,windowObservation:opened.windowObservation});
+ Object.assign(receipt,{launched:true,connectionOwned:opened.connectionOwned,backend:opened.backend,runRoot:opened.runRoot,statePath:opened.statePath,windowObservation:opened.windowObservation,registryTestEndpoint:opened.registryTestEndpoint??null});
  const destination=evidenceRoot||path.join(opened.runRoot,'evidence');
  await fs.mkdir(destination,{recursive:true});
  const receiptPath=path.join(destination,'packaged-runtime-binding.json');

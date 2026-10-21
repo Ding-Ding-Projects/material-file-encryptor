@@ -1666,3 +1666,13 @@ Publication exception transport now supports a reviewed bounded external gzip/ba
 Privacy-only release v1.840.1 is normal and bound to main06345cbe. Downloaded Setup, full package and RELEASES bytes/hash match provenance. The existing installation is running1.823.1; no update was applied or forced. Product runtime acceptance remains separate.
 
 User-requested preservation closeout began at a verified18% account allowance. Combined source2bda0c58 is not built or accepted. Existing historical gallery delivery verified76/76 exact image hashes; current storage/conflict captures remain absent. Source gallery backlink is added, public readback pending. Retain unfinished source and the WSL fixture.
+
+## Storage implementation completion, 2026-10-21 UTC
+
+The implementation-first pass resumes from candidate `3faa457f5c5ba6fcafaab3392c31ec863f4d385b`. That earlier candidate passed 57 focused JavaScript cases and two real encrypted-core/WSL convergence cases; the exact root build exited zero. Those results do not verify the new changes.
+
+Current source adds serialized registry state/configuration, startup background registration reconciliation, original calendar occurrence retention during retries, exact operation ownership, durable partial-restore locations and explicit deferred replay for locked synchronization. The renderer/provider lane completes visible progress and real native fixture composition. Two independent source-review findings were repaired before testing: selection of an active secondary vault for cancellation, and validation of an existing task's enabled five-minute trigger.
+
+New fixture machinery creates empty and unsupported directory-conflict vaults, performs independent native readback and a competing post-review edit, and controls bounded real loopback traffic. It neither substitutes renderer services nor injects operation outcomes. Packaged launch explicitly binds the isolated loopback endpoint.
+
+No tests or builds have run on this new implementation pass yet. Native dialog driving, complete packaged/mounted acceptance, installed scheduling, exact private production destination, release delivery and installed update remain separate pending requirements. Preserve all existing task branches and evidence. The earlier automatic approval rejection affecting public delivery remains recorded; do not evade it through a different route.

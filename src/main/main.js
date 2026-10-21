@@ -243,7 +243,7 @@ async function request(method, params, context, expectedSessionId) {
     if (expectedSessionId !== undefined && expectedSessionId !== vaultSessions.selectedId)
       throw new Error('The selected vault changed. Review it and try again.');
     return vaultSessions.change(async () => {
-      if (!helper || quitPending || shuttingDown || updateInstallLease || operation || browserHandoff?.pending || await features?.pending())
+      if (!helper || quitPending || shuttingDown || updateInstallLease || operation || (method !== 'selectSession' && registrySync.pending) || browserHandoff?.pending || await features?.pending())
         throw new Error('Finish the current action before changing vault sessions.');
       vaultSessions.remember(state, preferences);
       await browserHandoff?.revoke('vault-selection');
@@ -493,7 +493,7 @@ async function quit(ownRequest = false) {
       if(answer.response===0)return;
       features.beginExit();
       if(answer.response===2)await Promise.all(active.filter(item=>['queued','running','cancelling'].includes(item.state)).map(item=>vaultSessions.request('cancelOperation',{operationId:item.operationId},item.sessionId)));
-      if(answer.response===2){await features.cancelAll();if(registrySync.pending)await registrySync.cancel(vaultSessions.selectedId);}
+      if(answer.response===2){await features.cancelAll();if(registrySync.pending)await registrySync.cancel(registrySync.activeSessionId);}
       while(operation || registrySync.pending || await features.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state))) { await new Promise(resolve=>setTimeout(resolve,200));active=await vaultSessions.operations(); }
     }
     features.beginExit();
@@ -613,6 +613,9 @@ else {
       try { await vaultSessions.run(async () => { await backend('statusSummary'); await backend('setPerformanceMode', { mode: preferences.performanceMode }); if(interruptedSession){state.recoveryRequired=true;state.sync.error='An interrupted session was detected. Recovery starts locked; unlock explicitly to review encrypted records.';publish();} if (!process.argv.includes('--registry-sync') && !interruptedSession && preferences.autoUnlock && preferences.storageDir) { await backend('autoUnlock', { storageDir: preferences.storageDir, cacheDir: preferences.cacheDir, driveLetter: preferences.driveLetter, transport: preferences.transport, remoteRepository: preferences.remoteRepository }); await backend('setHistoryRetention', { days: preferences.historyRetentionDays }); await backend('mount', { driveLetter: preferences.driveLetter }); } }); } catch (error) { state.driver.checking = false; state.sync.error = error.message; publish(); }
     } else { state.driver.checking = false; state.driver.error = 'Windows and WinFsp are required to mount a drive.'; publish(); }
     if (!verificationMode && !testMode) {
+      try { await registrySync.initialize(); }
+      catch { sessionSettingsError = 'Registry schedule settings could not be read safely. The original configuration was retained for recovery.'; publish(); }
+      if (!process.argv.includes('--registry-sync')) void runRegistryDue().catch(() => {});
       registryTimer = setInterval(() => { void runRegistryDue().catch(() => {}); }, 30000); registryTimer.unref();
       if (process.argv.includes('--registry-sync')) {
         try { await runRegistryDue(); } finally { if (!registrySync.pending && vaultSessions.safelyLocked) await quit(); }

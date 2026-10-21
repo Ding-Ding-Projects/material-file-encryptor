@@ -16,6 +16,8 @@ Scheduling is disabled until explicitly enabled. Choose an interval from 5 minut
 
 The installed application can register an optional per-user Windows task that checks due work every five minutes while the user is signed in. The task uses the exact installed executable with `--registry-sync`, least privilege and an interactive logon token. It does not store a login password, wake the computer or sign in. Normal background startup does not automatically unlock or mount a vault. Active application instances receive the due-work request without bringing their window forward.
 
+Startup reconciles an enabled background schedule with its owned task and checks due work promptly. An owned task must retain its enabled five-minute trigger as well as the expected executable and principal. Calendar retries retain the original scheduled occurrence. A background operation on another vault keeps that vault as its owner; select the named vault to review progress or cancel that operation.
+
 Task replacement or removal requires the recorded task identity, executable, principal and arguments to match. A modified or ownership-uncertain task is preserved. Unavailable registration remains an explicit incomplete result, with manual synchronization still available. Native installed task execution requires separate runtime verification.
 
 ## Restore on another computer
@@ -23,6 +25,8 @@ Task replacement or removal requires the recorded task identity, executable, pri
 A local vault is not required to configure a destination, list snapshots or restore. Select an immutable digest and choose a parent folder through the native folder chooser. The application creates a new uniquely named destination, verifies the encrypted inventory and publishes its configuration last. Existing vaults remain selected and unchanged. The result shows the exact restored location; choose that folder in the normal unlock workflow. Unlock still authenticates the vault key and encrypted metadata.
 
 Restoration is a ciphertext copy, not an automatic unlock or in-place rollback. If an interrupted restoration leaves an incomplete destination, retain it for inspection and retry into another fresh destination. Never replace a usable vault merely to retry.
+
+The application retains the exact restore destination and whether copying completed across restarts. A partial copy is labelled incomplete. Storage progress reports completed encrypted files and bytes; upload preparation counts describe prepared data, not confirmation that every network byte has arrived. Synchronizing locked storage reports deferred native replay and requires a later explicit unlock to review merged file changes.
 
 ## Cancellation and failure recovery
 

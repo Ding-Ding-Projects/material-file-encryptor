@@ -9,6 +9,7 @@ import {promisify} from 'node:util';
 import {fileURLToPath} from 'node:url';
 import {observeRendererLaunch} from './renderer-launch-observer.mjs';
 import {resolveNativeExecutable} from './renderer-native-path.mjs';
+import {registryVerificationDestination} from '../src/main/registry-verification.js';
 
 export function command(executable,args,input,env,onOutcome,{timeoutMs}={}) {
  return new Promise((resolve,reject)=>{
@@ -231,6 +232,13 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
    if(!packagedTarget||!Number.isInteger(runtime.mainInspectorPort)||runtime.mainInspectorPort<1024||runtime.mainInspectorPort>65535||runtime.mainInspectorPort===port)throw Error('A distinct packaged-only loopback main inspector port is required');
    launchArguments.push(`--inspect=127.0.0.1:${runtime.mainInspectorPort}`);
   }
+  let registryTestEndpoint=null;
+  if(runtime.registryTestEndpoint!==undefined){
+   if(!packagedTarget||typeof runtime.registryTestEndpoint!=='string')throw Error('Registry verification requires an owned packaged target');
+   const destination=registryVerificationDestination({argv:[`--registry-test-endpoint=${runtime.registryTestEndpoint}`],verificationMode:true,profile:path.join(runRoot,'profile')});
+   registryTestEndpoint=destination.endpoint;
+   launchArguments.push(`--registry-test-endpoint=${registryTestEndpoint}`);
+  }
   launchAttempted=true;
   await lifecycleCommand([adapter,'launch','--state',state],{executable,arguments:launchArguments,runRoot,outputRoot:path.join(runRoot,'output'),cdp:{port,expectedUrl}});
   // Headless shell has no HWND. Its PID/creation-time/executable receipt and
@@ -259,6 +267,6 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
   const page=browser.contexts()[0].pages()[0];
   if(!page||browser.contexts()[0].pages().length!==1)throw new Error('Renderer fixture page inventory changed.');
   if(packagedTarget)await packagedTarget.revalidate();
-  return {page,close,runRoot,statePath:state,windowObservation,connectionOwned,backend:env.MFE_RENDERER_PROCESS_BACKEND};
+  return {page,close,runRoot,statePath:state,windowObservation,connectionOwned,registryTestEndpoint,backend:env.MFE_RENDERER_PROCESS_BACKEND};
  } catch(error){try {await close();}catch(closureError){throw new AggregateError([error,closureError],'Renderer fixture failed and closure also failed.');}throw error;}
 }
