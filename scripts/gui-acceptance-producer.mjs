@@ -18,6 +18,7 @@ import {createMountedFoundationFixtures,createKeyboardFoundationFixtures} from '
 import {createModernProbeEvidence} from './modern-ui-check.mjs';
 import {makeLaunch,modernNativeObservation,createPlanRecorder,helperFailure} from './local-headless-desktop-check.mjs';
 import {createNativePlanExecutor} from './gui-acceptance-native-plan.mjs';
+import {createModelReadinessObserver} from './gui-acceptance-readiness.mjs';
 
 const scriptRoot=fileURLToPath(new URL('./',import.meta.url));
 export async function packagedVerifierHash(root=scriptRoot){
@@ -109,5 +110,6 @@ export async function acquirePackagedBaseline({opened,inventory,buildReceiptPath
  const createProbeEvidence=({outputRoot})=>createModernProbeEvidence({binding:build,outputRoot,helperPath:cdp,observe,validate:file=>runEvidenceJson(process.execPath,[path.join(skillRoot,'diagnose-built-ui-layout','scripts','validate-layout-probe.mjs'),'--input',file],undefined,env)});
  await fs.mkdir(outputRoot,{recursive:true});
  await fs.writeFile(path.join(outputRoot,'producer-binding.json'),JSON.stringify({binding,build,request,scope:mode==='full'?'full-packaged-acquisition':'diagnostic-subset',packageBinding:opened.receiptPath,physicalDpiVerified:false},null,2),{flag:'wx'});
- return acquireMatrix({inventory,binding,launch,receipt,outputRoot,executePlan,createProbeEvidence,adapters,tuples,mode,report});
+ const beforeSetup=createModelReadinessObserver({opened});
+ return acquireMatrix({inventory,binding,launch,receipt,outputRoot,executePlan,createProbeEvidence,beforeSetup,adapters,tuples,mode,report});
 }

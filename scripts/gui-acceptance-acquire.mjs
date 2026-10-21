@@ -124,7 +124,7 @@ export function makeAcquisitionPlan({launch,receipt,tuple,state,outputRoot}){
 // Each state adapter prepares only an explicitly owned native fixture, observes
 // the mounted production state, and exercises its individually named actions.
 // Missing adapters stop before acquisition instead of producing misleading PNGs.
-export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot,executePlan,createProbeEvidence,adapters,tuples,mode='full',resume=new Map(),report=()=>{}}){
+export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot,executePlan,createProbeEvidence,beforeSetup,adapters,tuples,mode='full',resume=new Map(),report=()=>{}}){
  const request=validateAcquisitionRequest({inventory,tuples,mode});
  inventory=structuredClone(inventory);tuples=structuredClone(tuples);
  validateBinding(binding,inventory);assert.ok(path.isAbsolute(outputRoot));
@@ -141,17 +141,24 @@ export async function acquireMatrix({inventory,binding,launch,receipt,outputRoot
   const directory=await fs.mkdtemp(path.join(tupleDirectory,'attempt-'));
   const record={schemaVersion:1,tuple,binding,scope:mode==='full'?'full-packaged-acquisition':'diagnostic-subset',status:'started',physicalDpiVerified:false};
   const save=()=>fs.writeFile(path.join(directory,'acquisition.json'),JSON.stringify(record,null,2));await save();report({key,status:'started'});
+  const ready=async(phase,prepared)=>{
+   if(!beforeSetup)return;
+   record.readiness??={};
+   try{const observed=await beforeSetup({tuple,binding,prepared,phase});record.readiness[phase]=observed;assert.equal(observed?.settled,true,'Initial readiness remains unverified');await save();}
+   catch(error){record.readiness[phase]=error.readinessEvidence||{settled:false,observed:false};await save();throw error;}
+  };
   try{
    assert.equal(typeof createProbeEvidence,'function','A per-attempt native probe factory is required');
    const probeEvidence=await createProbeEvidence({outputRoot:directory,tuple,binding});
    assert.equal(typeof probeEvidence?.observe,'function');assert.equal(typeof probeEvidence?.persist,'function');
    const prepared=await adapter.prepare({tuple,binding,executePlan});assert.equal(prepared?.ownedSyntheticFixture,true);assert.equal(prepared?.sourceCommit,binding.sourceCommit);record.fixture=prepared;
+   await ready('initial',prepared);
    const setup=makeAcquisitionPlan({launch,receipt,tuple,state,outputRoot:directory});await executePlan(setup);await adapter.enter?.({tuple,binding,executePlan,prepared});
    record.state=validateStateObservation(await adapter.assertState({tuple,binding,executePlan,prepared}),state);
    record.actions=[];for(const id of state.actions){const action=await adapter.actions[id]({tuple,binding,executePlan,prepared});assert.equal(action?.id,id);assert.equal(action?.activated,true);assert.equal(action?.observablePassed,true);assert.ok(action.evidence&&typeof action.evidence==='object','Action evidence is required');const actionName='action-'+record.actions.length+'.json',bytes=Buffer.from(JSON.stringify({...action,schemaVersion:1,tuple,binding},null,2));await fs.writeFile(path.join(directory,actionName),bytes,{flag:'wx'});record.actions.push({...action,evidencePath:path.relative(outputRoot,path.join(directory,actionName)),evidenceSha256:sha256(bytes)});await save();}
    // Actions can change the surface. Restore through the adapter and then
    // navigate normally before taking the state-specific capture.
-   const restored=await adapter.prepare({tuple,binding,executePlan});assert.equal(restored?.ownedSyntheticFixture,true);assert.equal(restored?.sourceCommit,binding.sourceCommit);await executePlan(setup);await adapter.enter?.({tuple,binding,executePlan,prepared:restored});record.captureState=validateStateObservation(await adapter.assertState({tuple,binding,executePlan,prepared:restored}),state);
+   const restored=await adapter.prepare({tuple,binding,executePlan});assert.equal(restored?.ownedSyntheticFixture,true);assert.equal(restored?.sourceCommit,binding.sourceCommit);await ready('restored',restored);await executePlan(setup);await adapter.enter?.({tuple,binding,executePlan,prepared:restored});record.captureState=validateStateObservation(await adapter.assertState({tuple,binding,executePlan,prepared:restored}),state);
    const layoutSelector=state.layoutSelector||state.selector;
    const capturePlan=withCdpConnectionProof({...setup,observeRuntime:true,steps:[poll('state-motion-settled',`(${settledComposedMotion.toString()})(${q(layoutSelector)},${resolveLayoutTargets.toString()})`),{id:'state-surface-audit',op:'evaluate',expression:`(${inspectSurface.toString()})(document)`},{id:'state-measure',op:'evaluate',expression:state.layoutSelector?composedLayoutExpression(layoutSelector):layoutExpression(layoutSelector)},{id:'state-capture',op:'capture',path:path.join(directory,'capture.png'),overwrite:false}]},'capture');
    const before=await probeEvidence.observe();const captured=await executePlan(capturePlan);record.raw=captured;await save();
