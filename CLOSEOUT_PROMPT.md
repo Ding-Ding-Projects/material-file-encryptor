@@ -4,7 +4,7 @@
 
 Finish encrypted registry backup, synchronization, schedules, restore and multi-device conflict workflows. The implementation-first pass is complete. Keep verification and delivery separate from source completion.
 
-The packaged candidate is `ea52b0efcaebc1ed3256d239e6174736adaae11d`. Its exact root `build.bat /s` succeeded with a clean, unchanged source tree. `out/evidence/storage-build-ea52b0ef.json` binds executable, archive, native host and test assembly hashes. Later verifier changes do not change that package's source identity.
+The current packaged candidate is `0bd72643f7da2616f1b06cab64d921ea4c12b519`. Its exact root `build.bat /s` succeeded with a clean, unchanged source tree. `out/evidence/storage-build-0bd72643.json` binds executable, archive, native host, native managed assemblies and test assembly hashes. Later verifier changes do not change that package's source identity. The earlier `ea52b0ef` package remains historical evidence for the reproduced failure.
 
 Task history is preserved in the existing private recovery repository. Public `main` remains at the separate publication repair `06345cbe29f3df8a2740670dbf00023d54ec4cd5`. Do not push original task history publicly. Incorporate only reviewed current deltas into the clean delivery lineage after the publication boundary is resolved.
 
@@ -16,7 +16,7 @@ The verification provider uses real encrypted native fixtures, actual packaged c
 
 ## Verification and current work
 
-The package source passed 22 live WSL/service checks with zero skips. Earlier source-bound native verification passed 11 conflict cases and six fixture scenarios. These overlap other focused runs and must not be added into one inflated count.
+The earlier `ea52b0ef` package source passed 22 live WSL/service checks with zero skips. Earlier source-bound native verification passed 11 conflict cases and six fixture scenarios. These overlap other focused runs and must not be added into one inflated count. Current repaired-candidate verification is recorded below.
 
 Packaged runtime opened and unlocked a real synthetic fixture and saved its registry destination. GUI sync, restore, conflict actions and screenshot acceptance remain pending. Earlier failed acquisitions and exact owned lifecycle recovery evidence remain retained.
 
@@ -28,13 +28,13 @@ Two older native snapshot tests remain unverified: one assumes a descendant list
 
 A real temporary mounted vault successfully published and verified its first backup while an ordinary external process made 287 mounted-file writes with zero write errors. The second synchronization rejected existing activity objects with different ciphertext. Comparison found 49 differing activity objects and no part, transaction or header differences. Source inspection found `SynchronizeActivity()` re-encrypting absent copies, while snapshot staging prefers cached activity bytes. Thus equal authenticated activity values can have incompatible ciphertext identities.
 
-The writer and native process exited, and the owned drive detached. No user vault or existing installation was used. The reviewed repair now publishes the exact authenticated ciphertext buffer without replacing existing objects, and stages historical equal-content activity from its existing source representation. Five focused regression scenarios cover both copy directions, historical representations, conflicting/tampered input, replacement after inventory and no-replace publication. Compilation and runtime verification remain pending. Build the preserved candidate through the exact root entrypoint, execute the regression against old and repaired core assemblies, then repeat mounted synchronization and restored-byte verification before GUI acceptance.
+The reviewed repair is built and verified at `0bd72643f7da2616f1b06cab64d921ea4c12b519`. The exact root build passed with unchanged clean source. The same test assembly failed its exact-byte assertion with the original Core and passed its activity group, including five new scenarios, with the repaired Core. A fresh mounted run completed two verified publications during 59 successful external writes, source-less restore, unlock/remount and exact comparison of 274,432 bytes. Both mounts and processes closed successfully. Two independent-device cases and one encrypted-snapshot group also passed. Sanitized evidence: `docs/evidence/registry-native-0bd72643.json`.
 
 The previous synthetic publication retains its historical incompatible ciphertext and remains untouched. Use a fresh owned synthetic registry destination for the repaired round trip. This repair does not claim to reconcile previously published incompatible ciphertext or weaken the collision check.
 
 ## Remaining acceptance and boundaries
 
-Continue packaged workflows, restored-byte comparisons, conflict choices, cancellation, localization/layout evidence and safe lifecycle verification. Keep package and verifier source identities separate. Retain incomplete rows, original receipts, profiles and task branches.
+Continue packaged workflows, conflict choices, cancellation, localization/layout evidence and safe lifecycle verification. Two attempts with the repaired package reached actual fixture preparation/configuration; the second also passed acquisition setup and ready-state assertion. Native ownership re-observation interrupted before sync activation with an executable-identity query failure. Both attempts restored and closed safely. Reviewed diagnostic instrumentation now retains the immediate Win32 query result and independent held-handle state/creation identity for the actual `prove-cdp` failure path; two focused checks pass. Other checked lifecycle consumers still return their existing generic failure. No retry classification or acceptance changed. Preserve the verifier before the one remaining unchanged-condition attempt; never skip a descendant or accept partial proof. Keep package and verifier source identities separate. Retain incomplete rows, original receipts, profiles and task branches.
 
 The exact private production registry `namespace/repository` is still required before a synthetic production round trip. Do not guess a destination or upload real user content. The private self-hosted Actions runner request remains canceled. Preserve existing installations and active work. Read-only inspection found no matching installed registry scheduled task; installed schedule execution remains unverified.
 

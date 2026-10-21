@@ -7,6 +7,7 @@ import re
 import subprocess
 import sys
 import time
+import traceback
 
 helper = Path(os.environ['MFE_LOWLEVEL_CLIENT'])
 cli = Path(os.environ['MFE_LOWLEVEL_CLI'])
@@ -129,6 +130,12 @@ def target_proof(**kwargs):
     try:
         return snapshot_module.prove_renderer_target(native_backend, **kwargs)
     except snapshot_module.DescendantMembershipChanged as error:
+        print(json.dumps({'ok': False, 'client_ok': False, 'code': error.code, 'error': str(error), 'evidence': error.evidence}))
+        raise SystemExit(1)
+    except snapshot_module.ProcessImageIdentityUnavailable as error:
+        # The structured result preserves the exact failure; stderr retains the
+        # private original traceback. Diagnostics do not authorize a retry.
+        traceback.print_exc(file=sys.stderr)
         print(json.dumps({'ok': False, 'client_ok': False, 'code': error.code, 'error': str(error), 'evidence': error.evidence}))
         raise SystemExit(1)
 

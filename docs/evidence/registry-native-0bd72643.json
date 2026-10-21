@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "0bd72643f7da2616f1b06cab64d921ea4c12b519",
+  "scope": "Synthetic local registry and native mounted verification; not production Docker Hub, GUI acceptance or installed scheduling.",
+  "startedAtUtc": "2026-10-21T20:43:42.083Z",
+  "finishedAtUtc": "2026-10-21T20:44:57.381Z",
+  "build": {
+    "command": "build.bat /s",
+    "exitCode": 0,
+    "sourceCommitAtCompletion": "0bd72643f7da2616f1b06cab64d921ea4c12b519",
+    "sourceDirtyAtStart": false,
+    "sourceDirtyAtCompletion": false,
+    "executableSha256": "1c2967dae3c3b28983c466f9e73689201cd065489a160943ba2a09c840dd0a12",
+    "archiveSha256": "c24dbd34a70183d80ed71156a633d946d141d23873fff474d265d9aba1568a7f",
+    "nativeHostSha256": "686d73c01fda0a5625f343cd6c08f8c438eeacec6e562f8d7c73f2b6619c11b1",
+    "nativeHostAssemblySha256": "8341e3f464bca74a6fef38af5a724920c47273f01c1869e6d894d985db378dc1",
+    "nativeCoreAssemblySha256": "492cc499104266dad5ce08aaca554affd2cc7c6e8bb86b29f45631c801660637",
+    "testAssemblySha256": "7827229c1a43c0f07a38afc7b3e4b1c7bb0191c442c2ea1843fb00d722d749ac"
+  },
+  "regression": {
+    "sameTestAssembly": true,
+    "runs": [
+      {
+        "name": "original-core-negative",
+        "exitCode": 1,
+        "testAssemblySha256": "7827229c1a43c0f07a38afc7b3e4b1c7bb0191c442c2ea1843fb00d722d749ac",
+        "coreAssemblySha256": "817da373415dd33542a29634a8448581442de612a597b56e76b6512e1539fbb4"
+      },
+      {
+        "name": "repaired-core-positive",
+        "exitCode": 0,
+        "testAssemblySha256": "7827229c1a43c0f07a38afc7b3e4b1c7bb0191c442c2ea1843fb00d722d749ac",
+        "coreAssemblySha256": "492cc499104266dad5ce08aaca554affd2cc7c6e8bb86b29f45631c801660637"
+      }
+    ],
+    "addedScenarios": 5,
+    "groupCount": 1
+  },
+  "mounted": {
+    "snapshotSourceModes": [
+      "mounted-staged"
+    ],
+    "firstPublicationVerified": true,
+    "writerWasRunning": true,
+    "externalWrites": 59,
+    "externalWriteErrors": 0,
+    "secondPublicationVerified": true,
+    "sourceLessRestore": true,
+    "restoredBytes": 274432,
+    "restoredSha256": "fbff51df69aaa89e05f0e6e3cdfe9e7e9db7e38a15361dbd0d4f4d15d55a3d66",
+    "restoredMatches": true
+  },
+  "teardown": {
+    "helperExited": true,
+    "driveAbsent": true,
+    "writerExited": true,
+    "protocolOutcomeUnknown": false,
+    "fixturesRetained": true
+  },
+  "independentDeviceCases": {
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "cases": [
+      "concurrent-edit",
+      "delete-vs-edit"
+    ]
+  },
+  "encryptedSnapshotGroup": {
+    "passed": 1,
+    "failed": 0
+  },
+  "installedScheduling": {
+    "taskPresent": false,
+    "runtimeVerified": false
+  },
+  "originalReceiptHashes": {
+    "runtime": "cefdeaf4d2e5610d7c3bba1edda38be5be4af8b344a2c54ff363ff874b70b7ab",
+    "causal": "abf48fa782e96e422472ec65cd0fa9d9e14538f5fd7de10275fc84f755bc456d"
+  },
+  "guiAccepted": false,
+  "productionVerified": false
+}

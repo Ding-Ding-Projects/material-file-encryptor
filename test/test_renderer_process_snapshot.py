@@ -12,6 +12,11 @@ import hashlib
 import argparse
 import socket
 import threading
+import ast
+import contextlib
+import io
+import traceback
+from unittest.mock import patch
 from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,6 +34,40 @@ lifecycle = load('snapshot_lifecycle', Path.home() / '.agents/skills/run-lowleve
 native = load('native_snapshot', ROOT / 'scripts/renderer-process-snapshot.py')
 identity = {'pid': 77, 'parentPid': 1, 'creationDate': '2026-10-09T12:00:00.1234567Z', 'executablePath': 'C:/owned/app.exe'}
 child = {**identity, 'pid': 78, 'parentPid': 77, 'creationDate': '2026-10-09T12:00:00.1234568Z'}
+
+
+def actual_image_failure(wait_result=0, later_creation=True):
+    """Exercise Native.observe itself with controlled kernel return values."""
+    last = {'value': 0}
+    class Kernel:
+        waits = 0
+        times = 0
+        def WaitForSingleObject(self, handle, timeout):
+            self.waits += 1
+            last['value'] = 6
+            return 258 if self.waits == 1 else wait_result
+        def GetProcessTimes(self, handle, created, *_):
+            self.times += 1
+            if self.times > 1 and not later_creation: return 0
+            created._obj.dwHighDateTime = 0x01DC0000
+            created._obj.dwLowDateTime = 1234567
+            return 1
+        def QueryFullProcessImageNameW(self, handle, flags, buffer, length):
+            last['value'] = 87
+            return 0
+        def GetProcessId(self, handle):
+            last['value'] = 999  # Must not replace the earlier image error.
+            return 78
+        def GetExitCodeProcess(self, handle, code):
+            code._obj.value = 0 if wait_result == 0 else 259
+            return 1
+    api = native.Native.__new__(native.Native); api.k = Kernel()
+    with patch.object(native.ctypes, 'get_last_error', side_effect=lambda: last['value'], create=True), patch.object(native.ctypes, 'set_last_error', side_effect=lambda value: last.update(value=value), create=True):
+        try:
+            api.observe(123, 78, 77)
+        except native.ProcessImageIdentityUnavailable as error:
+            return error
+    raise AssertionError('Missing executable identity became a successful observation')
 
 
 class Fake:
@@ -71,6 +110,45 @@ class Fake:
 
 
 class SnapshotTests(unittest.TestCase):
+    def test_image_failure_retains_immediate_error_and_held_handle_state_without_success(self):
+        for wait_result, expected in ((0, 'exited'), (258, 'running'), (0xFFFFFFFF, 'unknown')):
+            error = actual_image_failure(wait_result)
+            self.assertIsInstance(error, native.SnapshotError)
+            self.assertEqual(str(error), 'Process executable identity is unavailable.')
+            evidence = error.evidence
+            self.assertEqual(evidence['stage'], 'QueryFullProcessImageNameW')
+            self.assertEqual(evidence['selectedPid'], 78)
+            self.assertEqual(evidence['claimedParentPid'], 77)
+            self.assertEqual(evidence['heldPid'], 78)
+            self.assertEqual(evidence['win32Error'], 87)
+            self.assertFalse(evidence['querySucceeded'])
+            self.assertEqual(evidence['heldState'], expected)
+            self.assertEqual(evidence['waitResult'], wait_result)
+            self.assertEqual(evidence['creationDateBefore'], evidence['creationDateAfter'])
+            self.assertTrue(evidence['creationIdentityStable'])
+            self.assertLess(len(json.dumps(evidence)), 2048)
+        partial = actual_image_failure(later_creation=False).evidence
+        self.assertIsNone(partial['creationDateAfter'])
+        self.assertIsNone(partial['creationIdentityStable'])
+
+    def test_actual_helper_target_proof_retains_structured_failure_and_private_traceback(self):
+        source = (ROOT / 'scripts/test-renderer-browser-cli.py').read_text()
+        function = next(node for node in ast.parse(source).body if isinstance(node, ast.FunctionDef) and node.name == 'target_proof')
+        error = actual_image_failure()
+        def reject(*_, **__): raise error
+        scope = {'snapshot_module': native, 'native_backend': object(), 'json': json, 'sys': sys, 'traceback': traceback}
+        exec(compile(ast.Module(body=[function], type_ignores=[]), 'actual-helper-target-proof', 'exec'), scope)
+        output, diagnostics = io.StringIO(), io.StringIO()
+        with patch.object(native, 'prove_renderer_target', side_effect=reject), contextlib.redirect_stdout(output), contextlib.redirect_stderr(diagnostics):
+            with self.assertRaises(SystemExit) as stopped: scope['target_proof']()
+        self.assertEqual(stopped.exception.code, 1)
+        result = json.loads(output.getvalue())
+        self.assertFalse(result['ok']); self.assertFalse(result['client_ok'])
+        self.assertEqual(result['code'], 'NATIVE_PROCESS_IMAGE_UNAVAILABLE')
+        self.assertEqual(result['evidence'], error.evidence)
+        self.assertIn('Process executable identity is unavailable.', diagnostics.getvalue())
+        self.assertIn('Traceback', diagnostics.getvalue())
+
     def test_membership_retry_requires_all_endpoint_and_identity_bookends(self):
         state = {'process': identity, 'cdp': {'port': 49150, 'expectedUrl': 'http://127.0.0.1:49151/'}}
         for mode in ('membership', 'shared-identity', 'target', 'owner', 'root'):

@@ -41,6 +41,13 @@ class ENTRY(ctypes.Structure):
                 ('pcPriClassBase', W.LONG), ('dwFlags', W.DWORD), ('szExeFile', W.WCHAR * 260)]
 
 
+class ProcessImageIdentityUnavailable(SnapshotError):
+    code = 'NATIVE_PROCESS_IMAGE_UNAVAILABLE'
+    def __init__(self, evidence):
+        super().__init__('Process executable identity is unavailable.')
+        self.evidence = evidence
+
+
 class Native:
     def __init__(self):
         if os.name != 'nt':
@@ -131,8 +138,39 @@ class Native:
         if not self.k.GetProcessTimes(handle, ctypes.byref(created), ctypes.byref(exited), ctypes.byref(kernel), ctypes.byref(user)):
             raise SnapshotError('Process creation time is unavailable.')
         path, length = ctypes.create_unicode_buffer(32768), W.DWORD(32768)
-        if not self.k.QueryFullProcessImageNameW(handle, 0, path, ctypes.byref(length)) or not path.value:
-            raise SnapshotError('Process executable identity is unavailable.')
+        ctypes.set_last_error(0)
+        image_available = self.k.QueryFullProcessImageNameW(handle, 0, path, ctypes.byref(length))
+        image_error = ctypes.get_last_error()  # Retain before any other native call.
+        if not image_available or not path.value:
+            before_creation = creation_date((created.dwHighDateTime << 32) | created.dwLowDateTime)
+            diagnostic = {'version': 1, 'stage': 'QueryFullProcessImageNameW', 'selectedPid': int(pid),
+                'claimedParentPid': int(parent), 'querySucceeded': bool(image_available),
+                'win32Error': int(image_error), 'creationDateBefore': before_creation,
+                'creationDateAfter': None, 'creationIdentityStable': None,
+                'heldPid': None, 'heldState': 'unknown', 'waitResult': None,
+                'livenessWin32Error': None, 'exitCode': None}
+            # These are observations on the still-held handle, never permission
+            # to accept the missing image or omit this selected process.
+            try:
+                held_pid = self.k.GetProcessId(handle)
+                if held_pid: diagnostic['heldPid'] = int(held_pid)
+                ctypes.set_last_error(0)
+                wait = self.k.WaitForSingleObject(handle, 0)
+                wait_error = ctypes.get_last_error()
+                diagnostic['waitResult'] = int(wait)
+                diagnostic['heldState'] = 'exited' if wait == 0 else 'running' if wait == 258 else 'unknown'
+                if wait not in (0, 258): diagnostic['livenessWin32Error'] = int(wait_error)
+                code = W.DWORD()
+                if self.k.GetExitCodeProcess(handle, ctypes.byref(code)): diagnostic['exitCode'] = int(code.value)
+                later, ended, later_kernel, later_user = (W.FILETIME() for _ in range(4))
+                if self.k.GetProcessTimes(handle, ctypes.byref(later), ctypes.byref(ended), ctypes.byref(later_kernel), ctypes.byref(later_user)):
+                    later_creation = creation_date((later.dwHighDateTime << 32) | later.dwLowDateTime)
+                    diagnostic['creationDateAfter'] = later_creation
+                    diagnostic['creationIdentityStable'] = later_creation == before_creation
+            except (OSError, ValueError, AttributeError):
+                # Keep the original image failure even when diagnostics are partial.
+                pass
+            raise ProcessImageIdentityUnavailable(diagnostic)
         if self.exited(handle) and not allow_exited:
             raise SnapshotError('Process exited during identity observation.')
         return {'pid': pid, 'parentPid': parent, 'creationDate': creation_date((created.dwHighDateTime << 32) | created.dwLowDateTime), 'executablePath': path.value}

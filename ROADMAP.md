@@ -871,4 +871,4 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 - [ ] Verify version-bound file-conflict review and main-owned localized confirmation in the packaged product; 25 focused bridge/security/session checks pass, built evidence remains pending.
 
 - [ ] Verify all 33 registry/conflict states across 48 declared tuples each; 1,584 new runtime rows remain unverified despite completed declaration and source checks.
-- [ ] Repair re-encrypted activity copies exposed by the real mounted snapshot round trip, rebuild and verify second sync plus restored bytes without weakening immutable-object checks.
+- [x] Repair re-encrypted activity copies, prove the same regression fails with the original Core and passes with the repaired Core, then verify two mounted publications and 274,432 restored bytes without weakening immutable-object checks. Evidence: `docs/evidence/registry-native-0bd72643.json`.
