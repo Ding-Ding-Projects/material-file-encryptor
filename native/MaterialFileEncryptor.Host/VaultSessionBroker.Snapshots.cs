@@ -10,12 +10,12 @@ internal sealed partial class VaultSessionBroker
             throw new InvalidOperationException("Lock the vault and wait for synchronization to stop before preparing an image.");
         if(session.Controller.HasOpenSnapshotSource)
         {
-            ++session.Pending;session.Transition=true;session.Preparing=true;
+            ++session.Pending;session.Transition=true;session.Preparing=true;session.SnapshotPreparing=true;
             return AcquireStagedSnapshotAsync(session);
         }
         if(!session.Controller.IsSessionReleased())throw new InvalidOperationException("The vault is still releasing native work.");
         string source = session.Controller.SnapshotSource();
-        ++session.Pending; session.Transition = true; session.Preparing = true;
+        ++session.Pending; session.Transition = true; session.Preparing = true; session.SnapshotPreparing = true;
         return AcquireSnapshotAsync(session, source);
     }
     private async Task<object?> AcquireStagedSnapshotAsync(Session session)
@@ -36,7 +36,7 @@ internal sealed partial class VaultSessionBroker
         finally
         {
             try { staged?.Dispose(); }
-            finally { lock(gate){--session.Pending;session.Transition=false;session.Preparing=false;Reconcile(session);} }
+            finally { lock(gate){--session.Pending;session.Transition=false;session.Preparing=false;session.SnapshotPreparing=false;Reconcile(session);} }
         }
     }
     private async Task<object?> AcquireSnapshotAsync(Session session, string source)
@@ -59,7 +59,7 @@ internal sealed partial class VaultSessionBroker
         }
         finally
         {
-            lock (gate) { --session.Pending; session.Transition = false; session.Preparing = false; Reconcile(session); }
+            lock (gate) { --session.Pending; session.Transition = false; session.Preparing = false; session.SnapshotPreparing = false; Reconcile(session); }
         }
     }
     private object ReleaseSnapshot(Session session, JsonElement args)

@@ -16,6 +16,7 @@ internal sealed partial class VaultSessionBroker : IDisposable
         public string DriveLetter = "M:";
         public int Pending;
         public bool Transition, Preparing;
+        public bool SnapshotPreparing;
         public string? SnapshotId;
         public MaterialFileEncryptor.Core.VaultEngine.EncryptedSnapshot? StagedSnapshot;
     }
@@ -64,7 +65,7 @@ internal sealed partial class VaultSessionBroker : IDisposable
             var session = Find(sessionId);
             if (method == "beginSnapshot") return BeginSnapshot(session);
             if (method == "releaseSnapshot") return Task.FromResult<object?>(ReleaseSnapshot(session, args));
-            if ((session.Preparing || session.SnapshotId is not null && session.StagedSnapshot is null) && method is not ("status" or "statusSummary" or "operations"))
+            if ((session.SnapshotPreparing || session.SnapshotId is not null && session.StagedSnapshot is null) && method is not ("status" or "statusSummary" or "operations"))
                 throw new InvalidOperationException("An encrypted image snapshot is being prepared. Wait for it to finish.");
             if (method == "removeSession")
             {
