@@ -1646,3 +1646,9 @@ Focused source/component tests and real local WSL registry round trips have pass
 Publication review found inherited catalogue identity and binary-recognition blockers. Current authored identities have a bounded neutral migration, preserved historical/technical literals have individually reviewed external exceptions, and no task source was transmitted publicly while that check remained incomplete. Original recovery refs are retained in a separate private operational repository with Actions disabled. No history was rewritten and no cleanup deletion occurred.
 
 Continue with the integrated candidate, genuine runtime evidence, independent concurrency checks and the complete outgoing publication scan. Production destination selection, downloaded release bytes and matching installed update remain separate acceptance items. See docs/features/storage/registry-sync.md and its Cantonese twin.
+
+## Registry conflict bridge integration, 2026-10-21
+
+Publication repair is on remote main at 06345cbe29f3df8a2740670dbf00023d54ec4cd5. Its publication-language check passed; required main protection is strict and administrator-enforced with the verified Actions check identity. Documentation deployment succeeded and the public homepage returned HTTP 200. The release build remains independently pending.
+
+The local storage candidate integrates that repair at a60a3c40. Selected-session conflict forwarding adds strict version/tombstone validation, main-owned localized confirmation, cancellation without mutation and post-confirmation admission checks. Focused conflict, existing desktop-security and vault-session checks passed 25/25. Native conflict and interface contributions still require reviewed clean-history integration, the exact root build and real mounted/packaged verification. The private runner request is canceled. Production registry acceptance remains pending a user-selected private destination; do not infer it from loopback tests.

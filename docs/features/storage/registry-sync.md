@@ -37,3 +37,9 @@ Focused tests exercise the actual local OCI registry protocol, independent publi
 Packaged GUI interaction, mounted-drive behavior, installed task execution, production Docker Hub behavior, release downloads and installed updates each require their own source-bound evidence. Source checks or WSL protocol success do not imply those results. Current evidence and remaining work are recorded in the project handoff.
 
 This category exposes no product HTTP API. A Postman collection is not applicable.
+
+## Version-bound conflict review
+
+The desktop bridge exposes `listRegistryConflicts` and `resolveRegistryConflict` only through the selected vault session. Paging is bounded; conflict identifiers and version identifiers use fixed hexadecimal forms. Resolution freezes the reviewed identifiers, opens a main-owned localized confirmation with Cancel selected, and checks session, shutdown and registry admission again before the native request. Native replay must compare the exact versions atomically. A changed review requires refresh and reselection.
+
+Deletion intent is a separate transaction identifier, with a null preserved live version. It is never represented as an existing file. Historical divergence recovery must return two distinct actual paths; missing or malformed results stay unverified. Confirmation cancellation sends no native mutation. Current source checks do not establish packaged or mounted acceptance.

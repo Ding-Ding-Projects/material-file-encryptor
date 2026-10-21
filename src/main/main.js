@@ -22,6 +22,7 @@ import { createRegistrySyncService } from './registry-sync-service.js';
 import { createRegistryBackground } from './registry-background.js';
 import { createDockerImageTransport } from './vault-image-docker.js';
 import { registryVerificationDestination } from './registry-verification.js';
+import { createRegistryConflictRequests, REGISTRY_CONFLICT_METHODS } from './registry-conflict-requests.js';
 import { createVaultImageRequests, VAULT_IMAGE_METHODS } from './vault-image-requests.js';
 import { validateRequest, validateFeatureRequest, validateWorkflowAdmission, trustedFrame } from './validation.js';
 import { parseVocabulary, MAX_VOCABULARY_BYTES } from '../shared/personal-vocabulary.js';
@@ -121,6 +122,13 @@ const registrySync = createRegistrySyncService({ root: registryRoot,
   chooseRestore: async () => { const result = await uiDialog.showOpenDialog(window, { title: 'Choose a parent folder for a new restored vault · 選擇還原磁碟嘅上層資料夾', properties: ['openDirectory', 'createDirectory'] }); if (result.canceled) return null; return safeDestination(result.filePaths[0], [...vaultSessions.rows.values()].flatMap(row => [row.state.storageDir, row.preferences.storageDir, row.state.cacheDir, row.preferences.cacheDir])); },
   backgroundRegistration: createRegistryBackground({ root: registryRoot, executable: process.execPath, packaged: app.isPackaged && !verificationMode && Boolean(fixedManifestDirectory(process.execPath)) }) });
 const REGISTRY_METHODS = new Set(['registryStorageStatus', 'configureRegistryStorage', 'syncRegistryStorage', 'listRegistrySnapshots', 'restoreRegistrySnapshot', 'cancelRegistryStorage']);
+const conflictRequest = createRegistryConflictRequests({
+  nativeRequest: (method, params, id) => vaultSessions.request(method, params, id),
+  confirm: options => uiDialog.showMessageBox(window, options),
+  available: () => Boolean(helper) && state.locked === false && state.lockVerified !== false,
+  exiting: () => quitPending || shuttingDown || updateInstallLease,
+  busy: () => registrySync.pending, selectedSession: () => vaultSessions.selectedId, language: () => preferences.language,
+});
 let registryTimer;
 async function runRegistryDue() { if (helper && (!verificationMode || registryTestDestination) && !testMode && !shuttingDown && !quitPending && !updateInstallLease) await registrySync.tick(); }
 const inside = (parent, child) => { const rel = path.relative(parent, child); return rel === '' || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel)); };
@@ -256,6 +264,15 @@ async function dispatchRequest(method, params, context) {
   params = validateRequest(method, params);
   if (method === 'featureRequest') return featureRequest(params.feature,params.action,params.payload,context);
   if (updateInstallLease && !['getState','buildMetadata','operations','windowControl'].includes(method)) throw new Error('The application is preparing an update. Wait for it to finish.');
+  if (REGISTRY_CONFLICT_METHODS.has(method)) {
+    const id = vaultSessions.selectedId;
+    if (method === 'listRegistryConflicts') return conflictRequest(method, params, id);
+    return perform(method, async () => {
+      const result = await conflictRequest(method, params, id);
+      if (result?.resolved === true) { state = nativeState(await vaultSessions.request('statusSummary', {}, id)); publish(); }
+      return result;
+    });
+  }
   if (REGISTRY_METHODS.has(method)) {
     if (!helper || (verificationMode || testMode) && !registryTestDestination) throw Error('Registry synchronization requires the native vault helper.');
     const id = vaultSessions.selectedId;

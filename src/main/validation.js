@@ -1,4 +1,5 @@
 import { validateRegistrySchedule } from './registry-schedule.js';
+import { REGISTRY_CONFLICT_METHODS, validateRegistryConflictRequest } from './registry-conflict-requests.js';
 import {ACCESS_HOST_ACTIONS,validateAccessHostRequest} from './access-host.js';
 import {normalizeDriveName} from '../shared/drive-name.js';
 
@@ -85,6 +86,7 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
 }
 export function validateRequest(method, value = {}) {
   if (!object(value)) throw new Error('Invalid request.');
+  if (REGISTRY_CONFLICT_METHODS.has(method)) return validateRegistryConflictRequest(method, value);
   if (method === 'configureRegistryStorage') {
     if (Object.keys(value).length !== 2 || typeof value.repository !== 'string' || !/^[a-z0-9][a-z0-9_-]{1,38}\/[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$/.test(value.repository) || value.repository.length > 220) throw Error('Invalid registry destination.');
     return { repository: value.repository, schedule: validateRegistrySchedule(value.schedule) };

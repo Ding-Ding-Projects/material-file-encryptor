@@ -7,6 +7,7 @@ const api = {
   registryStorageStatus: () => invoke('registryStorageStatus'), configureRegistryStorage: configuration => invoke('configureRegistryStorage', configuration),
   syncRegistryStorage: () => invoke('syncRegistryStorage'), listRegistrySnapshots: () => invoke('listRegistrySnapshots'),
   restoreRegistrySnapshot: selection => invoke('restoreRegistrySnapshot', selection), cancelRegistryStorage: () => invoke('cancelRegistryStorage'),
+  listRegistryConflicts: (options = {}) => invoke('listRegistryConflicts', options), resolveRegistryConflict: selection => invoke('resolveRegistryConflict', selection),
   verificationQuit: () => ipcRenderer.invoke('vault:verification-quit'),
   buildMetadata: () => invoke('buildMetadata'), browserPairing: () => invoke('browserPairing'),
   featureRequest: (feature, action, payload = {}) => ipcRenderer.invoke('feature:request', feature, action, payload),

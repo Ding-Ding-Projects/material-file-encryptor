@@ -856,7 +856,7 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 ## Current screenshot replacement continuation
 
 - [ ] Reconcile the24-row replacement map with the2incoming Status images, for26 current displayed originals.
-- [ ] Install the verified bundled WinFsp prerequisite through native consent and independently verify readiness; not started.
+- [ ] Independently verify existing WinFsp readiness through the bundled helper and a real mount; its launcher service was observed running on 2026-10-21, which does not establish mounted acceptance.
 - [ ] Capture and inspect genuine replacements for every current reference; zero replacements completed in this pass.
 - [ ] Integrate preserved native authorization88fe663 and presentation validationcc87409 only after their remaining source/runtime acceptance requirements.
 
@@ -866,3 +866,5 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 - [ ] Verify configurable schedules and the signed-in per-user installed background task.
 - [ ] Complete isolated WSL registry acceptance before a separate production private-repository round trip.
 - [ ] Complete source-bound GUI evidence, release/download/installed verification, publication checks and archive-backed task cleanup.
+
+- [ ] Verify version-bound file-conflict review and main-owned localized confirmation in the packaged product; 25 focused bridge/security/session checks pass, built evidence remains pending.
