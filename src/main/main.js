@@ -21,6 +21,7 @@ import { createVaultImageService } from './vault-image-service.js';
 import { createRegistrySyncService } from './registry-sync-service.js';
 import { createRegistryBackground } from './registry-background.js';
 import { createDockerImageTransport } from './vault-image-docker.js';
+import { registryVerificationDestination } from './registry-verification.js';
 import { createVaultImageRequests, VAULT_IMAGE_METHODS } from './vault-image-requests.js';
 import { validateRequest, validateFeatureRequest, validateWorkflowAdmission, trustedFrame } from './validation.js';
 import { parseVocabulary, MAX_VOCABULARY_BYTES } from '../shared/personal-vocabulary.js';
@@ -65,6 +66,7 @@ if (verificationProfile) {
   app.setPath('userData', verificationProfile);
 } else if (testMode) app.setPath('userData', path.resolve('out/desktop-profile'));
 const verificationMode = Boolean(restartContext || verificationProfile && process.argv.includes('--desktop-check'));
+const registryTestDestination = registryVerificationDestination({ argv: process.argv, verificationMode, profile: verificationProfile });
 function startupReadbackOptions(executable) {
   // The pinned Windows runtime parses the lookup path as a command line.
   // Quote only the getter input so spaces remain part of the executable path.
@@ -112,14 +114,15 @@ const imageRequest = createVaultImageRequests({ service: vaultImages, confirm: o
 const registryRoot = path.join(app.getPath('userData'), 'RegistrySync');
 const registryDocker = createDockerImageTransport();
 const registrySync = createRegistrySyncService({ root: registryRoot,
+  testDestination: registryTestDestination,
   contexts: id => id === undefined ? [...vaultSessions.rows] : (() => { const row = vaultSessions.rows.get(id); return row && { storageDir: row.state.storageDir || row.preferences.storageDir, transport: row.preferences.transport || 'folder' }; })(),
   nativeRequest: (method, params, id) => vaultSessions.request(method, params, id),
   authorize: (repository, signal) => registryDocker.registryAuthorization(repository, signal),
   chooseRestore: async () => { const result = await uiDialog.showOpenDialog(window, { title: 'Choose a parent folder for a new restored vault · 選擇還原磁碟嘅上層資料夾', properties: ['openDirectory', 'createDirectory'] }); if (result.canceled) return null; return safeDestination(result.filePaths[0], [...vaultSessions.rows.values()].flatMap(row => [row.state.storageDir, row.preferences.storageDir, row.state.cacheDir, row.preferences.cacheDir])); },
-  backgroundRegistration: createRegistryBackground({ root: registryRoot, executable: process.execPath, packaged: app.isPackaged }) });
+  backgroundRegistration: createRegistryBackground({ root: registryRoot, executable: process.execPath, packaged: app.isPackaged && !verificationMode && Boolean(fixedManifestDirectory(process.execPath)) }) });
 const REGISTRY_METHODS = new Set(['registryStorageStatus', 'configureRegistryStorage', 'syncRegistryStorage', 'listRegistrySnapshots', 'restoreRegistrySnapshot', 'cancelRegistryStorage']);
 let registryTimer;
-async function runRegistryDue() { if (helper && !verificationMode && !testMode && !shuttingDown && !quitPending && !updateInstallLease) await registrySync.tick(); }
+async function runRegistryDue() { if (helper && (!verificationMode || registryTestDestination) && !testMode && !shuttingDown && !quitPending && !updateInstallLease) await registrySync.tick(); }
 const inside = (parent, child) => { const rel = path.relative(parent, child); return rel === '' || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel)); };
 const nativeState = value => ({ ...value, driver: { ...value.driver, checking: false } });
 const snapshot = () => ({
@@ -254,7 +257,7 @@ async function dispatchRequest(method, params, context) {
   if (method === 'featureRequest') return featureRequest(params.feature,params.action,params.payload,context);
   if (updateInstallLease && !['getState','buildMetadata','operations','windowControl'].includes(method)) throw new Error('The application is preparing an update. Wait for it to finish.');
   if (REGISTRY_METHODS.has(method)) {
-    if (!helper || verificationMode || testMode) throw Error('Registry synchronization requires the native vault helper.');
+    if (!helper || (verificationMode || testMode) && !registryTestDestination) throw Error('Registry synchronization requires the native vault helper.');
     const id = vaultSessions.selectedId;
     if (method === 'registryStorageStatus') return registrySync.status(id);
     if (method === 'cancelRegistryStorage') return registrySync.cancel(id);

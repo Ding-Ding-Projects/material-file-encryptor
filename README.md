@@ -639,3 +639,5 @@ The browser workspace includes full note reading and an external-editor workflow
 瀏覽器工作區加入完整筆記閱讀，同經原生檔案選擇、已簽署編輯器選擇及桌面確認嘅外部編輯流程。行為同驗證邊界見[瀏覽器工作流程](docs/features/browser/README.zh-HK.md)。目前安裝後擴充功能、原生對話框同畫面驗收仍然待做，舊畫面證據保留原本來源身份。
 
 </details>
+
+**Encrypted registry storage:** [backup, restore and configurable synchronization](docs/features/storage/registry-sync.md) describes immutable revisions, multi-computer conflicts, mounted snapshots and signed-in background schedules. Implementation and local verification are in progress; production and installed acceptance remain separate.

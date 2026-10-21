@@ -1636,3 +1636,13 @@ Tracking: issue #14 and Discussion #15. Existing broader acceptance work is not 
 Closeout limitation: automatic approval rejected the attempted wiki update with the generic reason "blocked by policy"; that write was not retried. The existing wiki snapshot remains historical. The final source documentation records the verified installation independently.
 
 Retain the three evidence-bearing foundation, inventory and mediation checkouts, divergent fix/renderer-runtime-identity-20261014, and the previously rejected residual runtime junction. No stashes exist. The active icon task branch remains retained until all completed text is pushed and a fresh archive plus ancestry proof permits retirement.
+
+## Encrypted registry synchronization implementation, 2026-10-21
+
+The active delivery branch contains immutable OCI registry transport, ciphertext inventory verification, append-only reconciliation through the existing native conflict model, consistent open-session encrypted snapshots and cancellation-safe native leases. A new storage panel provides destination configuration, interval/calendar schedules, cancellation, digest selection and fresh-folder restoration, including before the first local vault exists. Background execution uses an opt-in signed-in Windows task; normal background startup does not unlock or mount the vault.
+
+Focused source/component tests and real local WSL registry round trips have passed at their recorded sources. A root build at 02a19eedbbc1548d87b8996d31bf27de77b75ac4 exited zero with package privacy 6265 entries, zero rejected. Later verification-capability and documentation changes require a new candidate build. These results do not prove actual installed scheduling, production registry access, mounted GUI workflows or the final packaged candidate.
+
+Publication review found inherited catalogue identity and binary-recognition blockers. Current authored identities have a bounded neutral migration, preserved historical/technical literals have individually reviewed external exceptions, and no task source was transmitted publicly while that check remained incomplete. Original recovery refs are retained in a separate private operational repository with Actions disabled. No history was rewritten and no cleanup deletion occurred.
+
+Continue with the integrated candidate, genuine runtime evidence, independent concurrency checks and the complete outgoing publication scan. Production destination selection, downloaded release bytes and matching installed update remain separate acceptance items. See docs/features/storage/registry-sync.md and its Cantonese twin.

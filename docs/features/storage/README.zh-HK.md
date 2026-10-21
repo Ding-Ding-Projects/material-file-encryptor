@@ -16,3 +16,6 @@
 目前來源支援格式 3，並保留格式 1 同格式 2 讀取。來源協定測試同歷史執行證據，唔可以代替目前套件或者安裝驗收。
 
 本分類冇公開 HTTP API，唔適用 Postman collection。
+
+- [加密儲存庫備份、還原及同步](registry-sync.zh-HK.md)
+- [Encrypted registry backup, restore and synchronization](registry-sync.md)

@@ -859,3 +859,10 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 - [ ] Install the verified bundled WinFsp prerequisite through native consent and independently verify readiness; not started.
 - [ ] Capture and inspect genuine replacements for every current reference; zero replacements completed in this pass.
 - [ ] Integrate preserved native authorization88fe663 and presentation validationcc87409 only after their remaining source/runtime acceptance requirements.
+
+## Encrypted registry synchronization, 2026-10-21
+
+- [ ] Verify immutable backup, first-vault restore, mounted snapshots and independent-device conflict preservation in the integrated candidate. Source and focused synthetic checks exist; complete runtime acceptance remains pending.
+- [ ] Verify configurable schedules and the signed-in per-user installed background task.
+- [ ] Complete isolated WSL registry acceptance before a separate production private-repository round trip.
+- [ ] Complete source-bound GUI evidence, release/download/installed verification, publication checks and archive-backed task cleanup.
