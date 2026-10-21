@@ -63,7 +63,7 @@ internal sealed partial class VaultSessionBroker : IDisposable
                 return Task.FromResult<object?>(Info(added));
             }
             var session = Find(sessionId);
-            if (method == "beginSnapshot") return BeginSnapshot(session);
+            if (method == "beginSnapshot") return BeginSnapshot(session, args);
             if (method == "releaseSnapshot") return Task.FromResult<object?>(ReleaseSnapshot(session, args));
             if ((session.SnapshotPreparing || session.SnapshotId is not null && session.StagedSnapshot is null) && method is not ("status" or "statusSummary" or "operations"))
                 throw new InvalidOperationException("An encrypted image snapshot is being prepared. Wait for it to finish.");

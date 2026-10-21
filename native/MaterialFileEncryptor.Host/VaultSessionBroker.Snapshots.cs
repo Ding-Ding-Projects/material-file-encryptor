@@ -4,17 +4,19 @@ namespace MaterialFileEncryptor.Host;
 
 internal sealed partial class VaultSessionBroker
 {
-    private Task<object?> BeginSnapshot(Session session)
+    private Task<object?> BeginSnapshot(Session session, JsonElement args)
     {
         if (session.Pending != 0 || session.SnapshotId is not null)
             throw new InvalidOperationException("Lock the vault and wait for synchronization to stop before preparing an image.");
+        string? suppliedSource=String(args,"storageDir");
+        session.Controller.ValidateSnapshotSource(suppliedSource);
         if(session.Controller.HasOpenSnapshotSource)
         {
             ++session.Pending;session.Transition=true;session.Preparing=true;session.SnapshotPreparing=true;
             return AcquireStagedSnapshotAsync(session);
         }
         if(!session.Controller.IsSessionReleased())throw new InvalidOperationException("The vault is still releasing native work.");
-        string source = session.Controller.SnapshotSource();
+        string source = session.Controller.SnapshotSource(suppliedSource);
         ++session.Pending; session.Transition = true; session.Preparing = true; session.SnapshotPreparing = true;
         return AcquireSnapshotAsync(session, source);
     }
@@ -54,7 +56,7 @@ internal sealed partial class VaultSessionBroker
                 if (!session.Controller.IsSessionReleased()) throw new InvalidOperationException("The vault is still releasing native work.");
                 session.Roots.Add(root);
                 session.SnapshotId = Guid.NewGuid().ToString("N");
-                return new { leaseId = session.SnapshotId, storageDir = source, storageOnly = true, sourceMode = "locked-folder" };
+                return new { leaseId = session.SnapshotId, storageDir = root, storageOnly = true, sourceMode = "locked-folder" };
             }
         }
         finally

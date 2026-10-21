@@ -66,6 +66,15 @@ static partial class Regression
             string second = JsonSerializer.SerializeToElement(await Send("createSession", new { })).GetProperty("sessionId").GetString()!;
             string third = JsonSerializer.SerializeToElement(await Send("createSession", new { })).GetProperty("sessionId").GetString()!;
             Assert(second != third && second != "main", "Session IDs are not unique");
+            await Refused("beginSnapshot",new {sessionId="main"},"Fresh session admitted a snapshot without a source");
+            string scheduledSource=Path.Combine(root,"scheduled","source");
+            using(var scheduled=Create(Path.Combine(root,"scheduled"),1024)){}
+            var scheduledLease=JsonSerializer.SerializeToElement(await Send("beginSnapshot",new {storageDir=scheduledSource}));
+            Assert(scheduledLease.GetProperty("storageOnly").GetBoolean() && scheduledLease.GetProperty("sourceMode").GetString()=="locked-folder","Fresh locked snapshot did not retain folder-only semantics");
+            Assert(scheduledLease.GetProperty("storageDir").GetString()==Canonical(scheduledSource),"Fresh locked snapshot returned an unchecked source");
+            await Refused("unlock",Open(second,"scheduled","N:"),"Scheduled source lease allowed another session to write its folder");
+            await Send("releaseSnapshot",new {leaseId=scheduledLease.GetProperty("leaseId").GetString()});
+            Assert(File.Exists(Path.Combine(scheduledSource,"vault.json")),"Locked source lease deleted its source");
             var mainController = Controller("main");
             var commandWorker = (SemaphoreSlim)ControllerType.GetField("commandWorker", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(mainController)!;
             await commandWorker.WaitAsync();
@@ -102,7 +111,8 @@ static partial class Regression
                 }
                 catch (TargetInvocationException error) when (error.InnerException is ArgumentException) { }
             }
-            var openLease=JsonSerializer.SerializeToElement(await Send("beginSnapshot",new {sessionId=second}));
+            await Refused("beginSnapshot",new {sessionId=second,storageDir=scheduledSource},"Open session accepted another source");
+            var openLease=JsonSerializer.SerializeToElement(await Send("beginSnapshot",new {sessionId=second,storageDir=Path.Combine(root,"second","source")}));
             Assert(!openLease.GetProperty("storageOnly").GetBoolean() && openLease.GetProperty("sourceMode").GetString()=="unlocked-staged","Unlocked snapshot did not stage ciphertext");
             string stagedRoot=openLease.GetProperty("storageDir").GetString()!;
             Assert(File.Exists(Path.Combine(stagedRoot,"vault.json")),"Staged snapshot omitted configuration");
@@ -112,6 +122,7 @@ static partial class Regression
             await Refused("unlock", new { sessionId = third, storageDir = Path.Combine(root, "first", "source", "nested"), cacheDir = Path.Combine(root, "third", "cache"), password = "fixture", driveLetter = "O:" }, "Nested storage collision was accepted");
             await Refused("unlock", new { sessionId = third, storageDir = Path.Combine(root, "third", "source"), cacheDir = Path.Combine(root, "second", "source"), password = "fixture", driveLetter = "O:" }, "Cross storage/cache collision was accepted");
             await Send("lock", new { sessionId = second });
+            await Refused("beginSnapshot",new {sessionId=second,storageDir=scheduledSource},"Remembered locked session accepted another source");
             var lease = JsonSerializer.SerializeToElement(await Send("beginSnapshot", new { sessionId = second }));
             Assert(lease.GetProperty("storageOnly").GetBoolean(), "Image snapshot included pending cache state");
             Assert(lease.GetProperty("storageDir").GetString() == Path.Combine(root, "second", "source"), "Snapshot source crossed sessions");

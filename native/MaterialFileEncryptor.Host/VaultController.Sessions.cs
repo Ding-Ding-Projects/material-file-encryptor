@@ -11,15 +11,27 @@ internal sealed partial class VaultController
         try { return (await captured.StageEncryptedSnapshotAsync().ConfigureAwait(false),mode); }
         finally { lock(gate)--activePreparedOperations; }
     }
-    internal string SnapshotSource()
+    internal void ValidateSnapshotSource(string? suppliedSource)
+    {
+        lock(gate)
+        {
+            if(suppliedSource is null)return;
+            if(string.IsNullOrWhiteSpace(suppliedSource))throw new ArgumentException("Select encrypted storage.");
+            string supplied=Path.TrimEndingDirectorySeparator(Path.GetFullPath(suppliedSource));
+            if(storageDir is not null && !supplied.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(storageDir)),OperatingSystem.IsWindows()?StringComparison.OrdinalIgnoreCase:StringComparison.Ordinal))
+                throw new InvalidOperationException("The selected source does not match this vault session.");
+        }
+    }
+    internal string SnapshotSource(string? suppliedSource = null)
     {
         lock (gate)
         {
-            if (vault is not null || host is not null || storageDir is null)
+            ValidateSnapshotSource(suppliedSource);
+            if (vault is not null || host is not null || storageDir is null && suppliedSource is null)
                 throw new InvalidOperationException("Open and safely lock a vault before preparing its encrypted folder image.");
             if (transportMode != "folder")
                 throw new InvalidOperationException("Image export requires complete folder storage. Private repository storage may be sparse.");
-            return storageDir;
+            return storageDir ?? Path.GetFullPath(suppliedSource!);
         }
     }
     // Never use cached UI status to release ownership: it may describe the state
