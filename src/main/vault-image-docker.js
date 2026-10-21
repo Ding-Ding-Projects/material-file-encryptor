@@ -193,6 +193,28 @@ export function createDockerImageTransport({ platform = process.platform, progra
     return command(executable, [...context.args, 'image', 'inspect', '--format', '{{.Id}}', target.reference], {}, signal);
   }
   return {
+    async registryAuthorization(repository, signal) {
+      const target = imageTarget(`${repository}:authorization`);
+      await privateRepository(target, signal);
+      const credentials = await credential(signal);
+      let response;
+      try {
+        const authorization = 'Basic ' + Buffer.from(`${credentials.identifier}:${credentials.secret}`).toString('base64');
+        const url = new URL('https://auth.docker.io/token');
+        url.searchParams.set('service', 'registry.docker.io');
+        url.searchParams.set('scope', `repository:${repository}:pull,push`);
+        response = await fetcher(url, { redirect: 'error', cache: 'no-store', signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20000)]) : AbortSignal.timeout(20000), headers: { Authorization: authorization } });
+        if (!response.ok) throw Error();
+        const reader = response.body.getReader(); let bytes = 0; const chunks = [];
+        try { for (;;) { const item = await reader.read(); if (item.done) break; bytes += item.value.byteLength; if (bytes > 65536) throw Error(); chunks.push(item.value); } }
+        finally { await reader.cancel().catch(() => {}); }
+        const parsed = JSON.parse(Buffer.concat(chunks));
+        const token = parsed.token || parsed.access_token;
+        if (typeof token !== 'string' || !token || token.length > 16384 || /[\s\x00-\x1f\x7f]/.test(token)) throw Error();
+        return { Authorization: `Bearer ${token}` };
+      } catch { throw Error(HUB_ERROR); }
+      finally { credentials.secret = ''; await response?.body?.cancel().catch(() => {}); }
+    },
     async build(target, snapshot, signal) {
       target = checkedTarget(target);
       const context = await localContext(signal);

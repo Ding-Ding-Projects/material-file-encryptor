@@ -18,6 +18,9 @@ import { NativeClient } from './native-client.js';
 import { VaultSessions } from './vault-sessions.js';
 import { createVaultSessionSettings } from './vault-session-settings.js';
 import { createVaultImageService } from './vault-image-service.js';
+import { createRegistrySyncService } from './registry-sync-service.js';
+import { createRegistryBackground } from './registry-background.js';
+import { createDockerImageTransport } from './vault-image-docker.js';
 import { createVaultImageRequests, VAULT_IMAGE_METHODS } from './vault-image-requests.js';
 import { validateRequest, validateFeatureRequest, validateWorkflowAdmission, trustedFrame } from './validation.js';
 import { parseVocabulary, MAX_VOCABULARY_BYTES } from '../shared/personal-vocabulary.js';
@@ -106,6 +109,17 @@ const sessionSettings = createVaultSessionSettings({ filePath: () => path.join(a
 let sessionSettingsError = null;
 const vaultImages = createVaultImageService({ workRoot: path.join(app.getPath('userData'), 'VaultImages'), nativeRequest: (method, params, sessionId) => vaultSessions.request(method, params, sessionId) });
 const imageRequest = createVaultImageRequests({ service: vaultImages, confirm: options => uiDialog.showMessageBox(window, options), available: () => Boolean(helper) && !verificationMode && !testMode, exiting: () => quitPending || shuttingDown || updateInstallLease });
+const registryRoot = path.join(app.getPath('userData'), 'RegistrySync');
+const registryDocker = createDockerImageTransport();
+const registrySync = createRegistrySyncService({ root: registryRoot,
+  contexts: id => id === undefined ? [...vaultSessions.rows] : (() => { const row = vaultSessions.rows.get(id); return row && { storageDir: row.state.storageDir || row.preferences.storageDir, transport: row.preferences.transport || 'folder' }; })(),
+  nativeRequest: (method, params, id) => vaultSessions.request(method, params, id),
+  authorize: (repository, signal) => registryDocker.registryAuthorization(repository, signal),
+  chooseRestore: async () => { const result = await uiDialog.showOpenDialog(window, { title: 'Choose a parent folder for a new restored vault · 選擇還原磁碟嘅上層資料夾', properties: ['openDirectory', 'createDirectory'] }); if (result.canceled) return null; return safeDestination(result.filePaths[0], [...vaultSessions.rows.values()].flatMap(row => [row.state.storageDir, row.preferences.storageDir, row.state.cacheDir, row.preferences.cacheDir])); },
+  backgroundRegistration: createRegistryBackground({ root: registryRoot, executable: process.execPath, packaged: app.isPackaged }) });
+const REGISTRY_METHODS = new Set(['registryStorageStatus', 'configureRegistryStorage', 'syncRegistryStorage', 'listRegistrySnapshots', 'restoreRegistrySnapshot', 'cancelRegistryStorage']);
+let registryTimer;
+async function runRegistryDue() { if (helper && !verificationMode && !testMode && !shuttingDown && !quitPending && !updateInstallLease) await registrySync.tick(); }
 const inside = (parent, child) => { const rel = path.relative(parent, child); return rel === '' || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel)); };
 const nativeState = value => ({ ...value, driver: { ...value.driver, checking: false } });
 const snapshot = () => ({
@@ -239,6 +253,18 @@ async function dispatchRequest(method, params, context) {
   params = validateRequest(method, params);
   if (method === 'featureRequest') return featureRequest(params.feature,params.action,params.payload,context);
   if (updateInstallLease && !['getState','buildMetadata','operations','windowControl'].includes(method)) throw new Error('The application is preparing an update. Wait for it to finish.');
+  if (REGISTRY_METHODS.has(method)) {
+    if (!helper || verificationMode || testMode) throw Error('Registry synchronization requires the native vault helper.');
+    const id = vaultSessions.selectedId;
+    if (method === 'registryStorageStatus') return registrySync.status(id);
+    if (method === 'cancelRegistryStorage') return registrySync.cancel(id);
+    if (quitPending || shuttingDown || updateInstallLease) throw Error('The application is preparing to close.');
+    if (method === 'configureRegistryStorage') return registrySync.configure(id, params);
+    if (method === 'syncRegistryStorage') return registrySync.sync(id);
+    if (method === 'listRegistrySnapshots') return registrySync.list(id);
+    if (method === 'restoreRegistrySnapshot') return registrySync.restore(id, params.digest);
+  }
+  if (registrySync.pending && ['createVault', 'unlockVault', 'upgradeVault', 'lockVault', 'forceLock', 'unmount', 'mount', 'setPreferences'].includes(method)) throw Error('Wait for registry synchronization before changing the vault session.');
   if (VAULT_IMAGE_METHODS.has(method)) return imageRequest(method, params, vaultSessions.selectedId);
   if (method === 'getState') return snapshot();
   if (method === 'buildMetadata') return buildMetadata;
@@ -361,7 +387,7 @@ async function lockAllVaults() {
 async function hasActiveWork() {
   if (restartPreparation.started) return false;
   const active=await vaultSessions.operations();
-  return Boolean(operation || vaultImages.pending || browserHandoff?.pending || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
+  return Boolean(operation || registrySync.pending || vaultImages.pending || browserHandoff?.pending || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
 }
 async function updateStatus() {
   const snapshot=updates?.status()||{state:'unavailable',reason:'NOT_INITIALIZED'};
@@ -405,7 +431,7 @@ async function acquireUpdateLease() {
 const restartPreparation=createRestartPreparation({
   verify:async()=>{if(!updateInstallLease||!vaultSessions.safelyLocked||await hasActiveWork())throw new Error('The application is not ready to restart safely.');},
   preflight:async()=>{verificationStartup?.restore();},
-  closeServices:async()=>{await closeBrowserHandoff();await localAdapter?.close();await features?.close();await vaultImages.close();},
+  closeServices:async()=>{await closeBrowserHandoff();await localAdapter?.close();await features?.close();registrySync.close();await vaultImages.close();},
   clearMarker:()=>fs.rm(sessionMarkerPath(),{force:true}),
   disposeHelper:async()=>{helper?.dispose();},
   prepared:()=>{shuttingDown=true;}
@@ -439,7 +465,7 @@ async function quit(ownRequest = false) {
   quitPending=true;await browserHandoff?.revoke('exit');
   try {
     let active=await vaultSessions.operations();
-    if (operation || await features.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state))) {
+    if (operation || registrySync.pending || await features.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state))) {
       const transfers=(operation?1:0)+active.filter(item=>['queued','running','cancelling'].includes(item.state)).length;
       showWindow();
       const prompt=shutdownPrompt(describePending(await features.pendingDetail(),transfers));
@@ -447,20 +473,20 @@ async function quit(ownRequest = false) {
       if(answer.response===0)return;
       features.beginExit();
       if(answer.response===2)await Promise.all(active.filter(item=>['queued','running','cancelling'].includes(item.state)).map(item=>vaultSessions.request('cancelOperation',{operationId:item.operationId},item.sessionId)));
-      if(answer.response===2)await features.cancelAll();
-      while(operation || await features.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state))) { await new Promise(resolve=>setTimeout(resolve,200));active=await vaultSessions.operations(); }
+      if(answer.response===2){await features.cancelAll();if(registrySync.pending)await registrySync.cancel(vaultSessions.selectedId);}
+      while(operation || registrySync.pending || await features.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state))) { await new Promise(resolve=>setTimeout(resolve,200));active=await vaultSessions.operations(); }
     }
     features.beginExit();
     if (helper) await perform('unmounting', lockAllVaults);
     if (!vaultSessions.safelyLocked) throw new Error('All vaults must confirm that they are locked.');
-    await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features?.close();await vaultImages.close(); verificationStartup?.restore();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit());
+    await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features?.close();registrySync.close();await vaultImages.close(); verificationStartup?.restore();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit());
   } catch (error) { showWindow(); await uiDialog.showMessageBox(window, { type: 'error', title: 'Application is still running', message: error.message }); }
   finally {quitPending=false;if(!shuttingDown)features.endExit();}
 }
 // Squirrel lifecycle arguments were already handled, with a bounded exit, by the first import.
 if (squirrelHandled || !app.requestSingleInstanceLock()) app.quit();
 else {
-  app.on('second-instance', (_event,args) => {if(window){showWindow();void vaultSessions.run(() => handleExplorerCopy(args)).catch(() => showWindow());}});
+  app.on('second-instance', (_event,args) => {if(args.includes('--registry-sync')){void runRegistryDue().catch(()=>{});return;}if(window){showWindow();void vaultSessions.run(() => handleExplorerCopy(args)).catch(() => showWindow());}});
   app.whenReady().then(async () => {
     interruptedSession=await fs.access(sessionMarkerPath()).then(()=>true,()=>false);
     await fs.mkdir(app.getPath('userData'),{recursive:true});
@@ -505,11 +531,11 @@ else {
     ipcMain.handle('vault:verification-quit', async event => {
       if (!verificationMode || !verificationStartup || !trustedFrame(event, window, rendererURL)) throw new Error('Verification quit is unavailable.');
       const active=await vaultSessions.operations();
-      if (operation || await features.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state))) throw new Error('Wait for the current work to finish.');
+      if (operation || registrySync.pending || await features.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state))) throw new Error('Wait for the current work to finish.');
       if (helper) await perform('unmounting', lockAllVaults);
       const proof = verificationStartup.restore();
       if (!vaultSessions.safelyLocked) throw new Error('All vaults must confirm that they are locked.');
-      await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features.close();await vaultImages.close();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose();
+      await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features.close();registrySync.close();await vaultImages.close();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose();
       setTimeout(() => app.quit(), 250);
       return proof;
     });
@@ -545,7 +571,7 @@ else {
     powerMonitor.on('shutdown', () => { void sessionEnd.end(); });
     tray = new Tray(desktopIcon); updateTray(); tray.on('double-click', showWindow);
     await window.loadFile(rendererPath);
-    if (!process.argv.includes('--startup') || testMode) showWindow();
+    if ((!process.argv.includes('--startup') && !process.argv.includes('--registry-sync')) || testMode) showWindow();
     if (process.platform === 'win32') {
       const executable = app.isPackaged ? path.join(process.resourcesPath, 'native/MaterialFileEncryptor.Host.exe') : path.resolve('out/native/MaterialFileEncryptor.Host.exe');
       const nativeClient = new NativeClient(executable,{managedDataRoot:app.getPath('userData')});
@@ -564,8 +590,14 @@ else {
       nativeClient.on('exit', () => { vaultSessions.failAll(); state = vaultSessions.selected.state; publish(); });
       try { await vaultSessions.run(() => vaultSessions.restore(preferences)); }
       catch { sessionSettingsError = 'Some saved vault sessions could not be restored. Their encrypted storage and cache choices were retained; restart to retry. No secondary vault was automatically unlocked.'; }
-      try { await vaultSessions.run(async () => { await backend('statusSummary'); await backend('setPerformanceMode', { mode: preferences.performanceMode }); if(interruptedSession){state.recoveryRequired=true;state.sync.error='An interrupted session was detected. Recovery starts locked; unlock explicitly to review encrypted records.';publish();} if (!interruptedSession && preferences.autoUnlock && preferences.storageDir) { await backend('autoUnlock', { storageDir: preferences.storageDir, cacheDir: preferences.cacheDir, driveLetter: preferences.driveLetter, transport: preferences.transport, remoteRepository: preferences.remoteRepository }); await backend('setHistoryRetention', { days: preferences.historyRetentionDays }); await backend('mount', { driveLetter: preferences.driveLetter }); } }); } catch (error) { state.driver.checking = false; state.sync.error = error.message; publish(); }
+      try { await vaultSessions.run(async () => { await backend('statusSummary'); await backend('setPerformanceMode', { mode: preferences.performanceMode }); if(interruptedSession){state.recoveryRequired=true;state.sync.error='An interrupted session was detected. Recovery starts locked; unlock explicitly to review encrypted records.';publish();} if (!process.argv.includes('--registry-sync') && !interruptedSession && preferences.autoUnlock && preferences.storageDir) { await backend('autoUnlock', { storageDir: preferences.storageDir, cacheDir: preferences.cacheDir, driveLetter: preferences.driveLetter, transport: preferences.transport, remoteRepository: preferences.remoteRepository }); await backend('setHistoryRetention', { days: preferences.historyRetentionDays }); await backend('mount', { driveLetter: preferences.driveLetter }); } }); } catch (error) { state.driver.checking = false; state.sync.error = error.message; publish(); }
     } else { state.driver.checking = false; state.driver.error = 'Windows and WinFsp are required to mount a drive.'; publish(); }
+    if (!verificationMode && !testMode) {
+      registryTimer = setInterval(() => { void runRegistryDue().catch(() => {}); }, 30000); registryTimer.unref();
+      if (process.argv.includes('--registry-sync')) {
+        try { await runRegistryDue(); } finally { if (!registrySync.pending && vaultSessions.safelyLocked) await quit(); }
+      }
+    }
     await handleExplorerCopy(process.argv);
   }).catch(handleStartupFailure);
   app.on('before-quit', event => {
