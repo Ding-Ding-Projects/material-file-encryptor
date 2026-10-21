@@ -3,6 +3,12 @@
   "workflow": ".github/workflows/windows.yml",
   "freshEnvironmentVerification": "unverified until an actual hosted cache-miss receipt is retained",
   "jobs": {
+    "publication-language": {
+      "tools": ["Git", "Node.js", "bash"],
+      "versions": "Reusable publication-language.yml uses ubuntu-24.04 and pinned Node.js 24.19.0; scanner source is an owner-reviewed immutable policy revision.",
+      "bootstrapMarkers": ["uses: ./.github/workflows/publication-language.yml"],
+      "route": "Delegates the privacy scan to the reusable workflow. Candidate objects are data only; no package installation, candidate execution, tests or lint."
+    },
     "select-runner": {
       "tools": [
         "Node.js"

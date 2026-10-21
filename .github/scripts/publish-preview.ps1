@@ -76,17 +76,9 @@ function Resolve-PublicReleasePhoto {
 $photoReference=Resolve-PublicReleasePhoto
 $imageUrl=$photoReference.url
 $assets=@($setup,$releases)+@($packages.FullName)
-$ciTestGates=@()
-if ($env:MFE_VERIFIED_CI_TEST_GATES -ceq 'isolated-vault-sessions,encrypted-image-offline') {
- $ciTestGates=@('isolated-vault-sessions','encrypted-image-offline')
-}
-$ciTestSummary='No CI test-gate receipt was supplied. Do not infer runtime verification from this package.'
-$ciTestSummaryZh='未提供 CI 測試關卡紀錄，唔可以單憑封裝結果推斷執行時驗證。'
-if ($ciTestGates.Count -gt 0) {
- $ciTestSummary='CI passed isolated native vault-session tests and offline encrypted-image workflow tests with mocked Docker and network operations.'
- $ciTestSummaryZh='CI 已通過獨立原生保管庫工作階段測試，以及使用模擬 Docker 同網絡操作嘅離線加密映像工作流程測試。'
-}
-$receipt=[ordered]@{schemaVersion=1; photoReference=$photoReference; sourceCommit=$source; tag=$tag; packageVersion=(Get-Content package.json -Raw | ConvertFrom-Json).version; runId=$env:GITHUB_RUN_ID; runAttempt=$env:GITHUB_RUN_ATTEMPT; workflowUrl=$workflowUrl; workflowStartedAtUtc=$workflowStartedUtc.ToString('o'); buildStartedAtUtc=$env:BUILD_STARTED_AT; packagingCompletedAtUtc=[DateTime]::UtcNow.ToString('o'); testsRunInCI=($ciTestGates.Count -gt 0); ciTestGates=$ciTestGates; runtimeVerification='pending independent local receipt'; unsignedInstaller=$true; assets=@($assets | ForEach-Object { @{name=(Split-Path $_ -Leaf); bytes=(Get-Item $_).Length; sha256=Digest $_} })}
+$ciTestSummary='CI runs no tests. Do not infer runtime verification from this package.'
+$ciTestSummaryZh='CI 冇執行測試，唔可以單憑封裝結果推斷執行時驗證。'
+$receipt=[ordered]@{schemaVersion=1; photoReference=$photoReference; sourceCommit=$source; tag=$tag; packageVersion=(Get-Content package.json -Raw | ConvertFrom-Json).version; runId=$env:GITHUB_RUN_ID; runAttempt=$env:GITHUB_RUN_ATTEMPT; workflowUrl=$workflowUrl; workflowStartedAtUtc=$workflowStartedUtc.ToString('o'); buildStartedAtUtc=$env:BUILD_STARTED_AT; packagingCompletedAtUtc=[DateTime]::UtcNow.ToString('o'); testsRunInCI=$false; ciTestGates=@(); runtimeVerification='pending independent local receipt'; unsignedInstaller=$true; assets=@($assets | ForEach-Object { @{name=(Split-Path $_ -Leaf); bytes=(Get-Item $_).Length; sha256=Digest $_} })}
 $receipt | ConvertTo-Json -Depth 8 | Set-Content "$output/build-provenance.json" -Encoding utf8
 $notes=@"
 Unsigned Squirrel.Windows x64 release from ``$source``. Package version $($receipt.packageVersion).

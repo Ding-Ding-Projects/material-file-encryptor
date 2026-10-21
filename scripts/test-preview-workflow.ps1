@@ -5,7 +5,7 @@ $checks = 0
 function Check([bool]$Value, [string]$Name) { if (!$Value) { throw $Name }; $script:checks++; Write-Host "PASS $Name" }
 function PublicationEnabled([string]$Text) {
  $Text=($Text -split '(?m)^  promote:',2)[0]
- return $Text -match '(?m)^  push:\r?\n    branches: \[\x27\*\*\x27\]\s*$' -and $Text -match '(?m)^  workflow_dispatch:' -and $Text -notmatch '(?m)^\s+(tags|tags-ignore|branches-ignore|paths|paths-ignore):' -and $Text -notmatch 'pull_request|github\.ref\s*==' -and $Text -match '(?s)- name: Prepare and publish unique release\s+shell: powershell\s+run:'
+ return $Text -match '(?m)^  push:\r?\n    branches: \[\x27\*\*\x27\]\s*$' -and $Text -match '(?m)^  workflow_dispatch:' -and $Text -notmatch '(?m)^\s+(tags|tags-ignore|branches-ignore|paths|paths-ignore):' -and $Text -notmatch 'pull_request|github\.ref\s*==' -and $Text -match '(?s)- name: Prepare and publish unique release\s+shell: powershell\s+(?:env:\s+GH_TOKEN:[^\r\n]+\s+)?run:'
 }
 Check (PublicationEnabled $workflow) 'every branch push and dispatch publish while tags cannot trigger delivery'
 Check (!(PublicationEnabled ($workflow.Replace("    branches: ['**']", '')))) 'unrestricted tag-admitting push is rejected'
@@ -62,13 +62,14 @@ Check (!(NormalRelease ($publisher.Replace('Assert (!$published.isDraft -and !$p
 
 function WorkflowJobsCovered([string]$Text, $Inventory) {
  $actual=@([regex]::Matches(($Text -split '(?m)^jobs:',2)[1], '(?m)^  ([a-z][a-z0-9_-]*):\s*$') | ForEach-Object { $_.Groups[1].Value })
- $required=@('select-runner','windows','promote')
+ $required=@('publication-language','select-runner','windows','promote')
  $toolsByJob=@{
+  'publication-language'=@('Git','Node.js','bash')
   'select-runner'=@('Node.js')
   windows=@('Windows PowerShell 5.1','cmd.exe','Git','GitHub CLI','Node.js','npm','pinned .NET SDK','7-Zip','NuGet','WinFsp packaging files')
   promote=@('Windows PowerShell >=5.1','Git','GitHub CLI','Node.js')
  }
- $markersByJob=@{'select-runner'=@('actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020','run: node scripts/select-runner.mjs');windows=@('run: build.bat /s','run: build-installer.bat /s','. ./scripts/bootstrap.ps1');promote=@('. ./.github/scripts/bootstrap-promotion.ps1')}
+ $markersByJob=@{'publication-language'=@('uses: ./.github/workflows/publication-language.yml');'select-runner'=@('actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020','run: node scripts/select-runner.mjs');windows=@('run: build.bat /s','run: build-installer.bat /s','. ./scripts/bootstrap.ps1');promote=@('. ./.github/scripts/bootstrap-promotion.ps1')}
  if ((($actual | Sort-Object) -join ',') -ne (($required | Sort-Object) -join ',')) { return $false }
  if ((($Inventory.jobs.PSObject.Properties.Name | Sort-Object) -join ',') -ne (($required | Sort-Object) -join ',')) { return $false }
  foreach ($job in $required) {

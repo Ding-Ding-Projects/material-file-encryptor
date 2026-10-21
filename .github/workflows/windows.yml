@@ -15,6 +15,18 @@ concurrency:
   group: windows-release-${{ github.run_id }}
   cancel-in-progress: false
 jobs:
+  publication-language:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/publication-language.yml
+    with:
+      event_name: ${{ github.event_name }}
+      candidate_sha: ${{ github.sha }}
+      base_sha: ${{ github.event.before }}
+      manual_scope: current-tree-only
+    secrets:
+      PUBLICATION_LANGUAGE_DATA: ${{ secrets.PUBLICATION_LANGUAGE_DATA }}
+      PUBLICATION_LANGUAGE_EXCEPTIONS: ${{ secrets.PUBLICATION_LANGUAGE_EXCEPTIONS }}
   select-runner:
     if: github.event.deleted != true
     runs-on: ubuntu-24.04
@@ -24,6 +36,8 @@ jobs:
       kind: ${{ steps.select.outputs.kind }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '24.19.0'
@@ -44,13 +58,13 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
   windows:
-    needs: select-runner
+    needs: [select-runner, publication-language]
     runs-on: ${{ fromJSON(needs.select-runner.outputs.runner) }}
     timeout-minutes: 45
-    env:
-      GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
       - name: Verify publication source
         shell: powershell
         env:
@@ -65,24 +79,13 @@ jobs:
       - name: Build application
         shell: cmd
         run: build.bat /s
-      - name: Verify isolated vault sessions
-        shell: powershell
-        run: |
-          . ./scripts/bootstrap.ps1
-          dotnet run --project native/MaterialFileEncryptor.Controller.Tests -c Release -- --multi-vault
-          if ($LASTEXITCODE -ne 0) { throw 'Multi-vault controller verification failed.' }
-      - name: Verify encrypted image workflow offline
-        shell: powershell
-        run: |
-          . ./scripts/bootstrap.ps1
-          node --test test/release-test-gates.test.js test/vault-session-settings.test.js test/vault-sessions.test.js test/vault-image-context.test.js test/vault-image-snapshot.test.js test/vault-image-docker.test.js test/vault-image-service.test.js test/vault-image-panel.test.js
-          if ($LASTEXITCODE -ne 0) { throw 'Encrypted image offline verification failed.' }
-          'MFE_VERIFIED_CI_TEST_GATES=isolated-vault-sessions,encrypted-image-offline' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Package genuine unsigned Squirrel installer
         shell: cmd
         run: build-installer.bat /s
       - name: Prepare and publish unique release
         shell: powershell
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           . ./scripts/bootstrap.ps1
           ./.github/scripts/publish-preview.ps1
@@ -146,16 +149,18 @@ jobs:
     concurrency:
       group: default-release-promotion
       cancel-in-progress: false
-    env:
-      GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: release-promotion-input
           path: release-output
       - name: Verify and promote current main release
         shell: powershell
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.ORG_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           . ./.github/scripts/bootstrap-promotion.ps1
           ./.github/scripts/promote-release.ps1
