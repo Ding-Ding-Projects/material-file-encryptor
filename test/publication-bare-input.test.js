@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { exceptionCarrierTransport } from '../scripts/publication-exceptions.mjs';
 
 test('trusted CI scanner handles bare objects and never executes candidate scripts', t => {
   const temporaryParent = fs.realpathSync(os.tmpdir());
@@ -31,7 +32,7 @@ test('trusted CI scanner handles bare objects and never executes candidate scrip
   const contaminated = makeCommit('restrictedmarker\n', base);
   const policy = JSON.stringify({ schemaVersion: 1, dictionary: { terms: [{ alias: 'restrictedmarker', plural: 'restrictedmarkers', proseOnly: true, forms: ['restrictedmarker', 'restrictedmarkers'] }] }, publicSafePhrases: [] });
   const runner = fileURLToPath(new URL('../scripts/run-publication-language-ci.mjs', import.meta.url));
-  const scan = (tip, selectedBase = base) => spawnSync(process.execPath, [runner, '--root', repository, '--tip', tip, '--base', selectedBase, '--mode', 'history'], { input: policy, encoding: 'utf8', windowsHide: true, maxBuffer: 1024 * 1024 });
+  const scan = (tip, selectedBase = base, exceptions) => spawnSync(process.execPath, [runner, '--root', repository, '--tip', tip, '--base', selectedBase, '--mode', 'history', ...(exceptions ? ['--exceptions-file', exceptions] : [])], { input: policy, encoding: 'utf8', windowsHide: true, maxBuffer: 1024 * 1024 });
   const positive = scan(clean);
   assert.equal(positive.status, 0, positive.stderr);
   assert.equal(JSON.parse(positive.stdout).historyProof, true);
@@ -41,5 +42,14 @@ test('trusted CI scanner handles bare objects and never executes candidate scrip
   const unknownBase = scan(clean, '0'.repeat(40));
   assert.equal(unknownBase.status, 2);
   assert.equal(JSON.parse(unknownBase.stdout).historyProof, false);
+  const external = path.join(root, 'reviewed-exceptions.json');
+  const empty = { schemaVersion: 1, entries: [] };
+  const transport = exceptionCarrierTransport({ schemaVersion: 2, default: empty, revisions: [{ revision: clean, exceptions: empty }] });
+  fs.writeFileSync(external, transport, { mode: 0o600 });
+  assert.equal(scan(clean, base, external).status, 0);
+  assert.equal(scan(contaminated, base, external).status, 1, 'Compression must not disable candidate scanning');
+  const malformed = JSON.parse(transport); malformed.payload += '=';
+  fs.writeFileSync(external, JSON.stringify(malformed), { mode: 0o600 });
+  assert.equal(scan(clean, base, external).status, 2, 'Malformed transport must fail closed');
   assert.equal(fs.existsSync(sentinel), false);
 });
