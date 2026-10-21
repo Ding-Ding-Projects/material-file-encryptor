@@ -566,7 +566,7 @@
       "completionClaim": false
     },
     {
-      "id": "cheap-jor-matrix",
+      "id": "layout-clipping-matrix",
       "classification": "delivery-evidence",
       "surface": "extension acceptance inventory",
       "decision": "Required delivery evidence owned by this extension surface, not an end-user command. Exact source/build/identity-bound runtime proof, inspected captures and negative completeness checks remain pending.",
@@ -596,7 +596,7 @@
       "completionClaim": false
     },
     {
-      "id": "deen-wah-site",
+      "id": "mobile-site",
       "classification": "repository-delivery",
       "surface": "documentation + public delivery",
       "decision": "Repository/publication obligations remain active and must include the extension. Do not place marketing in the popup. Bundle relevant documentation/fonts and verify public content separately.",

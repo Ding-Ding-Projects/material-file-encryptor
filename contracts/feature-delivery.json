@@ -3383,7 +3383,7 @@
       }
     },
     {
-      "id": "cheap-jor-matrix",
+      "id": "layout-clipping-matrix",
       "surface": "desktop",
       "status": "unverified",
       "implementation": [
@@ -3416,7 +3416,7 @@
         "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
         "source": "Declared canonical catalogue applicability, reviewed for this product.",
         "scopeReference": {
-          "entry": "cheap-jor-matrix",
+          "entry": "layout-clipping-matrix",
           "declaredScope": "User-facing product surface"
         }
       },
@@ -3546,7 +3546,7 @@
       }
     },
     {
-      "id": "deen-wah-site",
+      "id": "mobile-site",
       "surface": "desktop",
       "status": "unverified",
       "implementation": [
@@ -3584,7 +3584,7 @@
         "reason": "The canonical scope names the companion documentation website. This desktop product supports that obligation through its companion website, not a duplicate landing screen.",
         "source": "Declared canonical catalogue applicability, reviewed for this product.",
         "scopeReference": {
-          "entry": "deen-wah-site",
+          "entry": "mobile-site",
           "declaredScope": "Named product surface with companion support"
         }
       },
@@ -9338,7 +9338,7 @@
       }
     },
     {
-      "id": "cheap-jor-matrix",
+      "id": "layout-clipping-matrix",
       "surface": "site",
       "status": "unverified",
       "implementation": [
@@ -9372,7 +9372,7 @@
         "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
         "source": "Declared canonical catalogue applicability, reviewed for this product.",
         "scopeReference": {
-          "entry": "cheap-jor-matrix",
+          "entry": "layout-clipping-matrix",
           "declaredScope": "User-facing product surface"
         }
       },
@@ -9512,7 +9512,7 @@
       }
     },
     {
-      "id": "deen-wah-site",
+      "id": "mobile-site",
       "surface": "site",
       "status": "unverified",
       "implementation": [
@@ -9551,7 +9551,7 @@
         "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
         "source": "Declared canonical catalogue applicability, reviewed for this product.",
         "scopeReference": {
-          "entry": "deen-wah-site",
+          "entry": "mobile-site",
           "declaredScope": "User-facing product surface"
         }
       },
@@ -15773,7 +15773,7 @@
       }
     },
     {
-      "id": "cheap-jor-matrix",
+      "id": "layout-clipping-matrix",
       "surface": "extension",
       "status": "unverified",
       "implementation": [
@@ -15803,7 +15803,7 @@
         "reason": "Missing extension capability does not justify an exemption.",
         "source": "Canonical feature catalogue scope independently assessed for extension.",
         "scopeReference": {
-          "entry": "cheap-jor-matrix",
+          "entry": "layout-clipping-matrix",
           "declaredScope": "User-facing product surface"
         }
       },
@@ -15946,7 +15946,7 @@
       }
     },
     {
-      "id": "deen-wah-site",
+      "id": "mobile-site",
       "surface": "extension",
       "status": "unverified",
       "implementation": [
@@ -15980,7 +15980,7 @@
         "reason": "Missing extension capability does not justify an exemption.",
         "source": "Canonical feature catalogue scope independently assessed for extension.",
         "scopeReference": {
-          "entry": "deen-wah-site",
+          "entry": "mobile-site",
           "declaredScope": "Named product surface with companion support"
         }
       },
