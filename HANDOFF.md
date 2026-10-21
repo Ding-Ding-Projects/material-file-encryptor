@@ -1691,3 +1691,8 @@ The live WSL composition exposed a progress counter that read a full file array 
 ### Packaged acquisition navigation repair
 
 The corrected ea52b0ef package built successfully with clean source and retained hashes. Three bounded startup attempts were retained: the first two stopped at process-identity proofs and were recovered with exact process absence and credential retirement; the third launched and closed normally after a recorded 20-second startup settle. It stopped before storage actions because registry state routes were not composed into the acquisition map. The missing verifier route composition is now repaired, and its hand-written inventory regression failed before repair then passed. Nine focused acquisition checks passed. Reuse of the unchanged ea52b0ef package must retain its target source separately from the new verifier source and hashes; no workflow or screenshot success is claimed yet.
+
+
+### Actual registry preparation and poll-envelope repair
+
+With startup settling and canonical native tool paths, the packaged runtime created/unlocked an owned synthetic vault and saved its destination. Its state predicate matched, but the verifier incorrectly compared the poll envelope to a bare boolean. The verifier now requires matched:true and value:true from the actual envelope. Fixture restoration retries only the exact temporary session-busy response after real idle observation, and cannot remove the original session. Ten focused verifier checks passed. The prior run closed with verified resource absence; no sync or screenshot acceptance was claimed. Product target remains ea52b0ef with a separately versioned verifier.

@@ -65,3 +65,11 @@ test('real native fixture output requires owned paths, expected kind and explici
  assert.throws(()=>validateRegistryFixtureResult({...value,expectedConflicts:[{...value.expectedConflicts[0],recoveryDirectory:undefined}]},{root,scenario:value.scenario}));
  assert.throws(()=>validateRegistryFixtureResult({...value,expectedConflicts:[]},{root,scenario:value.scenario}));
 });
+
+test('state acceptance consumes the actual poll envelope and rejects a mismatched predicate',async()=>{
+ const fixtures=provider(),sourceCommit='a'.repeat(40),proof={ownedSyntheticFixture:true,sourceCommit,productionUi:true,rendererInjection:false,route:'supported-native-service',evidence:{readback:true},verified:true};fixtures.observeNative=async()=>proof;
+ const adapter=createRegistryAdapters({launch,receipt:'C:/owned/lifecycle.json',inventory:inventory(),fixtures:{registry:fixtures}})['registry-ready'];
+ const context=value=>({binding:{sourceCommit},executePlan:async()=>({ok:true,results:[{id:'registry-exact-state',ok:true,value}]})});
+ assert.equal((await adapter.assertState(context({attempts:1,matched:true,value:true}))).passed,true);
+ for(const value of [true,{attempts:1,matched:false,value:true},{attempts:1,matched:true,value:false}])await assert.rejects(adapter.assertState(context(value)),assert.AssertionError);
+});

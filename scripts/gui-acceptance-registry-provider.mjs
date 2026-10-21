@@ -64,6 +64,21 @@ export function createRegistryFixtures({opened, nativeFixtureOptions, proxy, dia
     const host=document.querySelector('mfe-storage-maintenance');
     return ['mfe-registry-storage-panel','mfe-registry-conflicts-panel'].every(tag => {const p=host?.shadowRoot?.querySelector(tag); return p && !p.current()?.pending;});
   }, undefined, {timeout:30000});
+  async function changeOwnedSession(method,id) {
+    assert.ok(['selectSession','removeSession'].includes(method));
+    assert.ok([active?.sessionId,active?.extraSessionId,active?.originalSessionId].includes(id));
+    assert.ok(method!=='removeSession'||id!==active?.originalSessionId,'Original session is not a cleanup target');
+    const deadline=Date.now()+10000;
+    for(;;) {
+      const before=await page.evaluate(()=>window.drive.status());
+      if(before.operation){if(Date.now()>=deadline)throw Error('Owned session operation did not settle');await new Promise(resolve=>setTimeout(resolve,100));continue;}
+      try{return await page.evaluate(({method,id})=>window.drive[method](id),{method,id});}
+      catch(error){
+        if(!String(error.message).endsWith('Wait for the current action before switching vaults.')||Date.now()>=deadline)throw error;
+        await new Promise(resolve=>setTimeout(resolve,100));
+      }
+    }
+  }
   async function identity(context) {
     assert.equal(context.binding.sourceCommit, target.sourceCommit);
     assert.equal(page.url(), target.expectedUrl);
@@ -152,17 +167,17 @@ export function createRegistryFixtures({opened, nativeFixtureOptions, proxy, dia
     if(active.extraSessionId) {
       assert.equal(context.binding.sourceCommit,target.sourceCommit);assert.equal(page.url(),target.expectedUrl);
       const extra=await page.evaluate(()=>window.drive.status());assert.equal(extra.sessionId,active.extraSessionId);assert.equal(extra.locked,true);assert.ok(!extra.storageDir);
-      await page.evaluate(id=>window.drive.removeSession(id),active.extraSessionId);active.extraSessionId=null;
-      await page.evaluate(id=>window.drive.selectSession(id),active.sessionId);
+      await changeOwnedSession('removeSession',active.extraSessionId);active.extraSessionId=null;
+      await changeOwnedSession('selectSession',active.sessionId);
     }
     await identity(context); if(proxy) proxy.setMode('pass');
     const status=await page.evaluate(()=>window.drive.registryStorageStatus());
     if(registryBusy(status)) await page.evaluate(()=>window.drive.cancelRegistryStorage());
     await settle(context);
     const locked=await page.evaluate(()=>window.drive.lock()); assert.equal(locked.locked,true);assert.equal(locked.mounted,false);
-    const removed=await page.evaluate(id=>window.drive.removeSession(id),active.sessionId);
+    const removed=await changeOwnedSession('removeSession',active.sessionId);
     assert.ok(!removed.sessions.some(row=>row.sessionId===active.sessionId));
-    const selected=await page.evaluate(id=>window.drive.selectSession(id),active.originalSessionId); assert.equal(selected.sessionId,active.originalSessionId);
+    const selected=await changeOwnedSession('selectSession',active.originalSessionId); assert.equal(selected.sessionId,active.originalSessionId);
     const retained=active.fixtureRoot; active=null;
     return proof({restored:true,operationsSettled:true,evidence:{originalSessionId:selected.sessionId,ownedFixtureRetained:retained}});
   }
@@ -208,8 +223,8 @@ export function createRegistryFixtures({opened, nativeFixtureOptions, proxy, dia
     return proof({...active,prepared:true,evidence:{nativeFixture:fixture,selectedSessionId:active.sessionId,transport:proxy?.observe()||null}});
   }
   async function switchSession(context) {
-    await identity(context);const selected=await page.evaluate(id=>window.drive.selectSession(id),active.originalSessionId);assert.equal(selected.sessionId,active.originalSessionId);
-    const returned=await page.evaluate(id=>window.drive.selectSession(id),active.sessionId);assert.equal(returned.sessionId,active.sessionId);
+    await identity(context);const selected=await changeOwnedSession('selectSession',active.originalSessionId);assert.equal(selected.sessionId,active.originalSessionId);
+    const returned=await changeOwnedSession('selectSession',active.sessionId);assert.equal(returned.sessionId,active.sessionId);
     await waitIdle();return proof({completed:true,evidence:{visited: selected.sessionId,returned:returned.sessionId}});
   }
   return {assertCapabilities,prepare,observeNative,restore,settle,unlock,switchSession,
