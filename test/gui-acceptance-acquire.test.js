@@ -4,12 +4,40 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
-import {stateRoutes,acquisitionCapabilities,makeAcquisitionPlan,acquireMatrix,acquireDiagnosticSubset,validateAcquisitionRequest,composeAdapters,settledComposedMotion,validateStateObservation} from '../scripts/gui-acceptance-acquire.mjs';
+import {stateRoutes,acquisitionCapabilities,makeAcquisitionPlan,modelReadinessSettled,modelReadinessSteps,acquireMatrix,acquireDiagnosticSubset,validateAcquisitionRequest,composeAdapters,settledComposedMotion,validateStateObservation} from '../scripts/gui-acceptance-acquire.mjs';
 import {bindingFor,matrixFor,tupleKey,sha256} from '../scripts/gui-acceptance.mjs';
 import {chooseVerificationDriveLetter} from '../scripts/preview-runtime-fixture.mjs';
 import {ownedFixturePreparation} from '../scripts/gui-acceptance-baseline.mjs';
 const inventory=JSON.parse(await fs.readFile(new URL('../contracts/gui-states.json',import.meta.url)));
 const launch={cdp:{port:19222,expectedUrl:'file:///synthetic/resources/index.html'}};
+const settledModel={schemaVersion:1,state:'settled',initialization:'settled',inspection:'settled',pendingRequests:0,pendingOperations:0};
+
+test('model setup readiness rejects early zero, active work and failed settlement',()=>{
+ assert.equal(modelReadinessSettled(settledModel),true);
+ for(const patch of [{state:'not-started',initialization:'not-started',inspection:'not-started'},{state:'pending',inspection:'not-started'},{pendingRequests:1},{pendingOperations:1}])assert.equal(modelReadinessSettled({...settledModel,...patch}),false);
+ for(const patch of [{state:'failed'},{inspection:'failed'},{initialization:'failed'},{pendingRequests:null}])assert.throws(()=>modelReadinessSettled({...settledModel,...patch}));
+ assert.throws(()=>modelReadinessSettled(undefined));
+});
+
+test('setup observes actual status settlement with one read in flight and no extra ready-state read',async()=>{
+ const steps=modelReadinessSteps('synthetic');let reads=0,release;
+ const context={window:{drive:{status:()=>{reads++;return new Promise(resolve=>{release=resolve;});}}},structuredClone};
+ const run=index=>vm.runInNewContext(steps[index].expression,context);
+ assert.equal(run(0),true);assert.equal(run(1),false);assert.equal(run(1),false);assert.equal(reads,1);
+ release({modelStartupReadiness:{...settledModel,state:'pending',inspection:'not-started'}});await Promise.resolve();assert.equal(run(1),false);assert.equal(reads,2);
+ release({modelStartupReadiness:settledModel});await Promise.resolve();assert.equal(run(1),true);assert.equal(reads,2);assert.deepEqual(run(2),settledModel);
+});
+
+test('unchanged preference controls emit no change events and setup ends with real readiness',()=>{
+ const tuple=matrixFor(inventory)[0],state=inventory.states[0],plan=makeAcquisitionPlan({launch,receipt:path.resolve('receipt.json'),tuple,state,outputRoot:path.resolve('captures')});
+ const nodes={'#theme-setting':{value:tuple.theme,disabled:false},'#language-setting':{value:tuple.language,disabled:false}};let events=0;
+ for(const node of Object.values(nodes))node.dispatchEvent=()=>events++;
+ const context={document:{querySelector:selector=>nodes[selector]},Event:class{constructor(type){this.type=type;}}};
+ const settings=plan.steps.filter(step=>step.id.endsWith('-theme')||step.id.endsWith('-language'));
+ for(const step of settings)assert.equal(vm.runInNewContext(step.expression,context),true);assert.equal(events,0);
+ nodes['#theme-setting'].value='different';vm.runInNewContext(settings[0].expression,context);assert.equal(events,1);assert.equal(nodes['#theme-setting'].value,tuple.theme);
+ assert.ok(plan.steps.some(step=>step.id.endsWith('-tuple')));assert.match(plan.steps.at(-1).id,/-model-readiness-result$/);
+});
 test('restored capture state requires the exact observable and retained evidence',()=>{
  const state=inventory.states[0];assert.throws(()=>validateStateObservation({passed:true,observable:'different state',evidence:{observed:true}},state));
  assert.throws(()=>validateStateObservation({passed:true,observable:state.observable,evidence:{}},state));

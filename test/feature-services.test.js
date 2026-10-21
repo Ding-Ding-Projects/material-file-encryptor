@@ -7,6 +7,31 @@ import { createCredentialStore, createFeatureServices, readConverterManifest } f
 import { validateFeatureRequest, validateRequest } from '../src/main/validation.js';
 const safeStorage={isEncryptionAvailable:()=>true,encryptString:text=>Buffer.from(text),decryptString:value=>value.toString()};
 async function fixture(t){const directory=await fs.mkdtemp(path.join(os.tmpdir(),'feature-services-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));return directory;}
+
+test('model readiness status reads do not initialize a model service or probe the host',async t=>{
+ const directory=await fixture(t),services=createFeatureServices({dataDirectory:directory,applicationRoot:directory,safeStorage,getMainFrame:()=>null,dialog:{},getWindow:()=>null,openPath:async()=>{}});
+ try{
+  const expected={schemaVersion:1,state:'not-started',initialization:'not-started',inspection:'not-started',pendingRequests:0,pendingOperations:0};
+  for(let index=0;index<10;index++)assert.deepEqual(services.modelStartupReadiness(),expected);
+  await assert.rejects(fs.access(path.join(directory,'local-models')),error=>error.code==='ENOENT');
+  const request=services.request('ollama','catalog');
+  const loading=services.modelStartupReadiness();assert.equal(loading.state,'pending');assert.equal(loading.initialization,'pending');assert.equal(loading.pendingRequests,1);
+  await request;
+  const initialized=services.modelStartupReadiness();assert.equal(initialized.initialization,'settled');assert.equal(initialized.inspection,'not-started');assert.equal(initialized.pendingRequests,0);assert.equal(initialized.state,'pending');
+  assert.deepEqual(services.modelStartupReadiness(),initialized);
+ }finally{await services.close();}
+});
+
+test('model readiness preserves an actual initialization failure without retrying on status reads',async t=>{
+ const directory=await fixture(t);await fs.writeFile(path.join(directory,'local-models'),'synthetic obstacle',{flag:'wx'});
+ const services=createFeatureServices({dataDirectory:directory,applicationRoot:directory,safeStorage,getMainFrame:()=>null,dialog:{},getWindow:()=>null,openPath:async()=>{}});
+ try{
+  await assert.rejects(services.request('ollama','catalog'));
+  const value=services.modelStartupReadiness();assert.equal(value.state,'failed');assert.equal(value.initialization,'failed');assert.equal(value.pendingRequests,0);
+  for(let index=0;index<3;index++)assert.deepEqual(services.modelStartupReadiness(),value);
+  assert.equal(await fs.readFile(path.join(directory,'local-models'),'utf8'),'synthetic obstacle');
+ }finally{await services.close();}
+});
 test('personalization image dispatch reaches the existing image validator',async t=>{
  const directory=await fixture(t),services=createFeatureServices({dataDirectory:directory,applicationRoot:directory,safeStorage,getMainFrame:()=>null,dialog:{},getWindow:()=>null,openPath:async()=>{}});
  try{await assert.rejects(services.request('personalization','normalizeImage',{dataUrl:'not an image'}),/Choose a static PNG no larger than 4 MiB\./);}

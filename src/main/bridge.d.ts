@@ -2,6 +2,7 @@ export interface VaultVersionInfo { descendantIds?: string[]; id: string; entryI
 export interface DriveFile { id: string; path: string; size: number; modified: string; partCount: number; partSizeBytes: number; offline: boolean }
 export interface VaultSessionSummary { sessionId:string; locked:boolean; mounted:boolean; driveLetter?:string; driveName?:string; storageDir?:string; cacheDir?:string; recoveryRequired?:boolean; operation?:string|null }
 export interface DriveState {
+  modelStartupReadiness?: {schemaVersion:1;state:'not-started'|'pending'|'settled'|'failed';initialization:'not-started'|'pending'|'settled'|'failed';inspection:'not-started'|'pending'|'settled'|'failed';pendingRequests:number|null;pendingOperations:number|null};
   sessionId: string; sessions: VaultSessionSummary[];
   storageFormat?: 1 | 2;
   packing?: {pendingFiles:number;running:boolean;paused:boolean;activeWriters:number;lastError:string|null;targetPartSizeBytes:number};

@@ -27,6 +27,7 @@ import { createVaultImageRequests, VAULT_IMAGE_METHODS } from './vault-image-req
 import { validateRequest, validateFeatureRequest, validateWorkflowAdmission, trustedFrame } from './validation.js';
 import { parseVocabulary, MAX_VOCABULARY_BYTES } from '../shared/personal-vocabulary.js';
 import { createFeatureServices } from './feature-services.js';
+import {MODEL_STARTUP_NOT_STARTED} from './model-startup-readiness.js';
 import { createLocalAdapter } from './local-adapter.js';
 import { explorerCopyPath } from './explorer-command.js';
 import { createUpdateService } from './update-service.js';
@@ -144,6 +145,7 @@ const snapshot = () => ({
   transport: state.locked ? { ...state.transport, mode: preferences.transport, remoteRepository: preferences.remoteRepository } : state.transport,
   sync: { ...state.sync, error: sessionSettingsError || state.sync?.error },
   operation,
+  modelStartupReadiness:features?.modelStartupReadiness()||{...MODEL_STARTUP_NOT_STARTED},
   build: buildMetadata,
   browserDownloadHandoff: browserHandoff?.status() || { available: false, configured: false, reason: 'NOT_INITIALIZED', installation: 'not-performed' },
   startupRegistration: cachedStartupRegistration,

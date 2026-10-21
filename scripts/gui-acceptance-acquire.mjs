@@ -92,16 +92,32 @@ export function validateStateObservation(observed,state){
  assert.ok(observed.evidence&&typeof observed.evidence==='object'&&Object.keys(observed.evidence).length>0,'State observation evidence is required');return observed;
 }
 
+export function modelReadinessSettled(value){
+ if(!value||value.schemaVersion!==1||!['not-started','pending','settled','failed'].includes(value.state))throw Error('Model startup readiness is unavailable.');
+ if(value.state==='failed'||value.initialization==='failed'||value.inspection==='failed')throw Error('Model startup inspection did not settle successfully.');
+ for(const name of ['initialization','inspection'])if(!['not-started','pending','settled'].includes(value[name]))throw Error('Model startup readiness is invalid.');
+ for(const name of ['pendingRequests','pendingOperations'])if(!Number.isSafeInteger(value[name])||value[name]<0||value[name]>65535)throw Error('Model startup readiness count is invalid.');
+ return value.state==='settled'&&value.initialization==='settled'&&value.inspection==='settled'&&value.pendingRequests===0&&value.pendingOperations===0;
+}
+export function modelReadinessSteps(id){
+ return [
+  {id:id+'-model-readiness-begin',op:'evaluate',expression:'window.__mfeModelStartupObservation={inFlight:false,value:null,failed:false};true'},
+  poll(id+'-model-readiness-settled',`(()=>{const observation=window.__mfeModelStartupObservation;if(observation.failed)throw Error('Model startup readiness read failed.');if(observation.value&&(${modelReadinessSettled.toString()})(observation.value))return true;if(!observation.inFlight){observation.inFlight=true;window.drive.status().then(state=>{observation.value=state.modelStartupReadiness;observation.failed=!observation.value;observation.inFlight=false;},()=>{observation.failed=true;observation.inFlight=false;});}return false;})()`),
+  {id:id+'-model-readiness-result',op:'evaluate',expression:'structuredClone(window.__mfeModelStartupObservation.value)'},
+ ];
+}
+
 export function makeAcquisitionPlan({launch,receipt,tuple,state,outputRoot}){
  assert.equal(tuple.state,state.id);assert.ok(path.isAbsolute(outputRoot));assert.ok(path.isAbsolute(receipt));assert.ok(launch.cdp.expectedUrl.startsWith('file:'));
  assert.ok(Number.isInteger(launch.cdp.port)&&launch.cdp.port>=1024&&launch.cdp.port<=65535);
  const route=stateRoutes[state.id];assert.ok(route,'Missing state navigation');
  const id=tupleKey(tuple).replaceAll('/','-'),steps=[{id:id+'-emulate',op:'emulate',width:tuple.width,height:tuple.height,scale:tuple.scale,mobile:false,touch:false}];
  navigate(steps,'settings',id+'-settings');
- for(const [field,value]of [['theme',tuple.theme],['language',tuple.language]])steps.push({id:id+'-'+field,op:'evaluate',expression:`(()=>{const node=document.querySelector(${q('#'+field+'-setting')});if(!node||node.disabled)throw Error('Setting unavailable');node.value=${q(value)};node.dispatchEvent(new Event('change',{bubbles:true}));return true;})()`});
+ for(const [field,value]of [['theme',tuple.theme],['language',tuple.language]])steps.push({id:id+'-'+field,op:'evaluate',expression:`(()=>{const node=document.querySelector(${q('#'+field+'-setting')});if(!node||node.disabled)throw Error('Setting unavailable');if(node.value!==${q(value)}){node.value=${q(value)};node.dispatchEvent(new Event('change',{bubbles:true}));}return true;})()`});
  steps.push(poll(id+'-tuple',`innerWidth===${tuple.width}&&innerHeight===${tuple.height}&&Math.abs(devicePixelRatio-${tuple.scale})<0.01&&document.documentElement.dataset.theme===${q(tuple.theme)}&&document.querySelector('#language-setting').value===${q(tuple.language)}`));
  navigate(steps,route.view,id+'-state');if(route.tab)steps.push(activate(id+'-tab',route.tab));
  if(route.dialog){steps.push(activate(id+'-create','#create-button'),poll(id+'-dialog',"document.querySelector('#vault-dialog').open"));if(route.dialog==='keyFile')steps.push(activate(id+'-key-mode','.credential-selector md-radio[value="keyFile"]'));if(route.dialog==='privateGit')steps.push({id:id+'-transport',op:'evaluate',expression:"(()=>{const node=document.querySelector('#transport-mode');node.value='privateGit';node.dispatchEvent(new Event('change',{bubbles:true}));return true;})()"});}
+ steps.push(...modelReadinessSteps(id));
  return withCdpConnectionProof({version:1,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:90000,steps},'control');
 }
 
