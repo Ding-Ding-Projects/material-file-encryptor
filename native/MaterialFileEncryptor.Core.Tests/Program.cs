@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using MaterialFileEncryptor.Core;
 
+if (args.Length > 0 && args[0] == "--registry-fixture") return await RegistryFixture.RunAsync(args[1..]);
 if (args.Length > 0 && args[0] == "--native-child-trace") { await NativeChildTraceTests.RunAsync(args); return 0; }
 if (args.Length == 2 && args[0] == "--native-trace-child") { await NativeChildTraceTests.ChildAsync(args[1]); return 0; }
 
