@@ -75,13 +75,22 @@ jobs:
         shell: bash
         env:
           SOURCE_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
           [[ "$SOURCE_REPOSITORY" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || exit 2
           git init --bare "$GITHUB_WORKSPACE/candidate.git"
           revisions=("$CANDIDATE_SHA")
+          if [[ "$EVENT_NAME" == pull_request_target ]]; then
+            [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]] || { echo 'Pull request identity is unavailable.'; exit 2; }
+            revisions=("refs/pull/$PR_NUMBER/head:refs/publication/candidate")
+          fi
           if [[ "$EVENT_NAME" != workflow_dispatch ]]; then revisions+=("$BASE_SHA"); fi
           git -c core.hooksPath=/dev/null -C "$GITHUB_WORKSPACE/candidate.git" fetch --no-tags --no-recurse-submodules "https://github.com/$SOURCE_REPOSITORY.git" "${revisions[@]}"
+          if [[ "$EVENT_NAME" == pull_request_target ]]; then
+            fetched=$(git -C "$GITHUB_WORKSPACE/candidate.git" rev-parse --verify 'refs/publication/candidate^{commit}')
+            [[ "$fetched" == "$CANDIDATE_SHA" ]] || { echo 'Pull request head changed before acquisition.'; exit 2; }
+          fi
       - name: Scan with pinned code and protected runtime policy
         shell: bash
         env:
