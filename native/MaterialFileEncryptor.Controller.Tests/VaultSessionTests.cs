@@ -102,7 +102,12 @@ static partial class Regression
                 }
                 catch (TargetInvocationException error) when (error.InnerException is ArgumentException) { }
             }
-            await Refused("beginSnapshot", new { sessionId = second }, "Unlocked storage was admitted for image snapshot");
+            var openLease=JsonSerializer.SerializeToElement(await Send("beginSnapshot",new {sessionId=second}));
+            Assert(!openLease.GetProperty("storageOnly").GetBoolean() && openLease.GetProperty("sourceMode").GetString()=="unlocked-staged","Unlocked snapshot did not stage ciphertext");
+            string stagedRoot=openLease.GetProperty("storageDir").GetString()!;
+            Assert(File.Exists(Path.Combine(stagedRoot,"vault.json")),"Staged snapshot omitted configuration");
+            await Send("releaseSnapshot",new {sessionId=second,leaseId=openLease.GetProperty("leaseId").GetString()});
+            Assert(!Directory.Exists(stagedRoot),"Released staged snapshot remained on disk");
             await Refused("removeSession", new { sessionId = second }, "An unlocked session was removed");
             await Refused("unlock", new { sessionId = third, storageDir = Path.Combine(root, "first", "source", "nested"), cacheDir = Path.Combine(root, "third", "cache"), password = "fixture", driveLetter = "O:" }, "Nested storage collision was accepted");
             await Refused("unlock", new { sessionId = third, storageDir = Path.Combine(root, "third", "source"), cacheDir = Path.Combine(root, "second", "source"), password = "fixture", driveLetter = "O:" }, "Cross storage/cache collision was accepted");

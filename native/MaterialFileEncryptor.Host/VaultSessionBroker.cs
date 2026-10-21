@@ -17,6 +17,7 @@ internal sealed partial class VaultSessionBroker : IDisposable
         public int Pending;
         public bool Transition, Preparing;
         public string? SnapshotId;
+        public MaterialFileEncryptor.Core.VaultEngine.EncryptedSnapshot? StagedSnapshot;
     }
     private readonly object gate = new();
     private readonly Dictionary<string, Session> sessions = new(StringComparer.Ordinal);
@@ -63,12 +64,12 @@ internal sealed partial class VaultSessionBroker : IDisposable
             var session = Find(sessionId);
             if (method == "beginSnapshot") return BeginSnapshot(session);
             if (method == "releaseSnapshot") return Task.FromResult<object?>(ReleaseSnapshot(session, args));
-            if (session.SnapshotId is not null && method is not ("status" or "statusSummary" or "operations"))
+            if ((session.Preparing || session.SnapshotId is not null && session.StagedSnapshot is null) && method is not ("status" or "statusSummary" or "operations"))
                 throw new InvalidOperationException("An encrypted image snapshot is being prepared. Wait for it to finish.");
             if (method == "removeSession")
             {
                 if (session.Id == "main") throw new InvalidOperationException("The default vault session cannot be removed.");
-                if (session.Pending != 0 || !session.Controller.IsSessionReleased()) throw new InvalidOperationException("Lock the vault and wait for its work to finish before removing this session.");
+                if (session.Pending != 0 || session.SnapshotId is not null || !session.Controller.IsSessionReleased()) throw new InvalidOperationException("Lock the vault and wait for its work to finish before removing this session.");
                 session.Controller.Dispose(); sessions.Remove(session.Id);
                 return Task.FromResult<object?>(new { sessionId = session.Id, removed = true });
             }
@@ -190,6 +191,8 @@ internal sealed partial class VaultSessionBroker : IDisposable
         Exception? failure = null;
         foreach (var session in snapshot)
         {
+            try { session.StagedSnapshot?.Dispose(); session.StagedSnapshot=null;session.SnapshotId=null; }
+            catch(Exception error) { busy=true;failure??=error; }
             try { session.Controller.Dispose(); }
             catch (Exception error) { busy = true; failure ??= error; }
             lock (gate) if (session.Pending != 0 || !session.Controller.IsSessionReleased()) busy = true;
