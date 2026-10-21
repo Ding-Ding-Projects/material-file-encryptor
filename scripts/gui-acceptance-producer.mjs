@@ -16,7 +16,7 @@ import {createToolsAdapters} from './gui-acceptance-tools.mjs';
 import {createRegistryAdapters} from './gui-acceptance-registry.mjs';
 import {createMountedFoundationFixtures,createKeyboardFoundationFixtures} from './gui-acceptance-native-files.mjs';
 import {createModernProbeEvidence} from './modern-ui-check.mjs';
-import {makeLaunch,modernNativeObservation,createPlanRecorder} from './local-headless-desktop-check.mjs';
+import {makeLaunch,modernNativeObservation,createPlanRecorder,helperFailure} from './local-headless-desktop-check.mjs';
 import {withCdpConnectionProof} from './cdp-connection-plan.mjs';
 
 const scriptRoot=fileURLToPath(new URL('./',import.meta.url));
@@ -69,7 +69,7 @@ export function runEvidenceJson(executable,args,input,env=process.env){
   const timer=setTimeout(()=>{child.kill();reject(Error('Evidence helper exceeded its bounded wait'));},120000);
   child.stdout.on('data',data=>{stdout+=data;if(stdout.length>8*1024*1024){child.kill();reject(Error('Evidence helper output exceeded bound'));}});
   child.stderr.on('data',data=>{stderr=(stderr+data).slice(-65536);});child.on('error',error=>{clearTimeout(timer);reject(error);});
-  child.on('close',code=>{clearTimeout(timer);try{const result=JSON.parse(stdout);assert.equal(code,0,stderr||'Evidence helper exited unsuccessfully');assert.equal(result.ok??result.valid,true);resolve(result);}catch(error){reject(error);}});
+  child.on('close',code=>{clearTimeout(timer);try{const result=JSON.parse(stdout);if(code!==0||(result?.ok??result?.valid)!==true){const error=helperFailure(result,input);error.helperDetails={...error.helperDetails,processExitCode:code};throw error;}resolve(result);}catch(error){reject(error);}});
   child.stdin.on('error',error=>{clearTimeout(timer);reject(error);});child.stdin.end(input===undefined?'':JSON.stringify(input));
  });
 }

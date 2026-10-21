@@ -4,13 +4,14 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import {sha256} from '../scripts/gui-acceptance.mjs';
-import {readPackagedBuildBinding,createPackagedAdapters,createPackagedAccessFixture,acquirePackagedBaseline,acquirePackagedDiagnosticSubset} from '../scripts/gui-acceptance-producer.mjs';
+import {readPackagedBuildBinding,createPackagedAdapters,createPackagedAccessFixture,acquirePackagedBaseline,acquirePackagedDiagnosticSubset,runEvidenceJson} from '../scripts/gui-acceptance-producer.mjs';
+import {createPlanRecorder} from '../scripts/local-headless-desktop-check.mjs';
 
-test('all 89 inventoried states compose once with every exact action and no fixture side effects',async()=>{
+test('all 122 inventoried states compose once with every exact action and no fixture side effects',async()=>{
  const inventory=JSON.parse(await fs.readFile(new URL('../contracts/gui-states.json',import.meta.url)));
  let mutations=0;
  const adapters=createPackagedAdapters({inventory,launch:{cdp:{port:54321,expectedUrl:'file:///owned/app.asar/src/renderer/index.html'}},receipt:path.resolve('owned-receipt.json'),prepareOwnedFixture:async()=>{mutations++;},fixtures:{}});
- assert.equal(mutations,0);assert.equal(Object.keys(adapters).length,89);assert.deepEqual(Object.keys(adapters).sort(),inventory.states.map(state=>state.id).sort());
+ assert.equal(mutations,0);assert.equal(Object.keys(adapters).length,122);assert.deepEqual(Object.keys(adapters).sort(),inventory.states.map(state=>state.id).sort());
  for(const state of inventory.states)assert.deepEqual(Object.keys(adapters[state.id].actions).sort(),[...state.actions].sort(),state.id);
 });
 
@@ -49,7 +50,7 @@ test('packaged producer rejects an implicit or partial full request before readi
  assert.equal(touched,0);
 });
 
-test('default producer audit names all 89 states and 66 unavailable providers without runtime work',async()=>{
+test('default producer audit includes registry states as unavailable until real providers are supplied',async()=>{
  const {acquisitionCapabilities}=await import('../scripts/gui-acceptance-acquire.mjs');
  const {createMountedFoundationFixtures,createKeyboardFoundationFixtures}=await import('../scripts/gui-acceptance-native-files.mjs');
  const inventory=JSON.parse(await fs.readFile(new URL('../contracts/gui-states.json',import.meta.url)));let touched=0;
@@ -58,8 +59,20 @@ test('default producer audit names all 89 states and 66 unavailable providers wi
  const adapters=createPackagedAdapters({inventory,launch:{cdp:{port:54321,expectedUrl:'file:///owned/app.asar/src/renderer/index.html'}},receipt:opened.statePath,prepareOwnedFixture:()=>{touched++;throw Error('No fixture mutation');},fixtures});
  const audit=acquisitionCapabilities(inventory,adapters,{inspectProviders:true});
  const declared='drive-locked drive-populated drive-selected drive-overflow drive-search offline-populated tools-default settings-default help-default create-password create-private-repository ollama-help p-language p-schedules-draft p-attention access-removal access-profile-locked access-profile-unlocked access-authenticator-registration access-qr-hidden access-confirmation p-schedule-narrator p-schedule-attention'.split(' ');
- assert.deepEqual(audit.filter(row=>row.provider==='declared').map(row=>row.state),declared);assert.equal(audit.filter(row=>row.provider==='unavailable').length,66);assert.equal(touched,0);
+ assert.deepEqual(audit.filter(row=>row.provider==='declared').map(row=>row.state),declared);assert.equal(audit.filter(row=>row.provider==='unavailable').length,66+33);assert.equal(touched,0);
  for(const row of audit.filter(row=>row.provider==='unavailable'))assert.match(row.reason,/^CAPABILITY_UNAVAILABLE:/);
  delete fixtures.foundation['drive-overflow']['open-context'];const missing=acquisitionCapabilities(inventory,adapters,{inspectProviders:true}).find(row=>row.state==='drive-overflow');assert.equal(missing.provider,'unavailable');assert.match(missing.reason,/open-context/);assert.equal(touched,0);
  const doc=await fs.readFile('scripts/gui-acquisition-providers.md','utf8');for(const row of audit)assert.ok(doc.includes('| '+String.fromCharCode(96)+row.state+String.fromCharCode(96)+' |'),'Missing documented state '+row.state);
+});
+
+test('failed helper output retains its bounded structured cause and exit code in the plan receipt',async()=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'mfe-helper-failure-'));
+ const payload={ok:false,code:'SYNTHETIC_POLL_FAILURE',error:'ready: predicate remained false',results:[{id:'ready',op:'poll',value:{matched:false,value:false,attempts:2}}]};
+ const plan={steps:[{id:'ready',op:'poll'}]};
+ const record=createPlanRecorder(root,input=>runEvidenceJson(process.execPath,['-e',`process.stdout.write(${JSON.stringify(JSON.stringify(payload))});process.exitCode=1;`],input));
+ try{
+  await assert.rejects(record(plan),error=>error.helperCode===payload.code&&error.helperStep.id==='ready'&&error.helperDetails.processExitCode===1);
+  const stored=JSON.parse((await fs.readFile(path.join(root,'step-receipts.jsonl'),'utf8')).trim());
+  assert.deepEqual(stored.result,payload);assert.equal(stored.failure.processExitCode,1);assert.deepEqual(stored.failure.step,{id:'ready',op:'poll'});
+ }finally{await fs.rm(root,{recursive:true,force:true});}
 });

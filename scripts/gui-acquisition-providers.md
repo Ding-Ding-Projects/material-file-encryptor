@@ -1,6 +1,6 @@
 # Acquisition provider inventory
 
-This is a source-level audit of the default packaged producer, not runtime acceptance. All 89 states have navigation and adapter declarations. The callback preflight distinguishes a declared route from an unavailable producer before any state preparation or UI plan. A declared route still requires live ownership, supported services, successful interaction, restoration, pixel inspection and source-bound evidence. Accepted matrix remains 0/4,272.
+This is a source-level audit of the default packaged producer, not runtime acceptance. All 122 states have navigation and adapter declarations. The callback preflight distinguishes a declared route from an unavailable producer before any state preparation or UI plan. A declared route still requires live ownership, supported services, successful interaction, restoration, pixel inspection and source-bound evidence. Accepted matrix remains 0/5,856.
 
 | State | Navigation destination | Default provider declaration | Exact remaining admission |
 | --- | --- | --- | --- |
@@ -108,10 +108,51 @@ The two corrected import-order regressions and existing acquisition/producer che
 
 ## Owned offline-file acquisition
 
-The current source declaration inventory is 23 routes and 66 unavailable providers. The earlier 22/67 results above remain historical evidence. Only `offline-populated` changed declaration; accepted tuples remain 0/4,272.
+At that checkpoint, the source declaration inventory was 23 routes and 66 unavailable providers. The earlier 22/67 results above remain historical evidence. Only `offline-populated` changed declaration; accepted tuples remain 0/4,272.
 
 The mounted provider exclusively creates Acceptance A/B in the existing fresh owned non-reserved drive fixture, verifies original bytes and exact native identities, then calls the actual `keepOffline` API for each ID. It reads back the full two-row native inventory after every call and accepts only the requested offline-flag delta. The existing foundation actions select and release through normal controls. Re-preparation can restore a released owned pin before capture.
 
 Restoration releases only still-pinned owned IDs through `releaseOffline`, verifies both original bytes and native flags, then invokes the existing owned file restoration. Pre-existing pins, unknown flags, duplicate or changed IDs, foreign files, pagination, changed bytes, locked/busy/foreign ownership and uncertain pin or release completion preserve the files instead of claiming restoration. Shared populated/context restoration cannot remove files while offline ownership remains active. Synthetic version history and encrypted cache retention remain governed by the product; no cache purge or byte-for-byte vault rollback is claimed. These bounded observations do not provide an atomic concurrency transaction.
 
 Focused fixtures execute the actual provider callbacks over task-owned synthetic service data and retain separate positive and negative verdicts. They do not prove native runtime, mounted behavior, displayed rows, layout or pixel parity. Real frozen-package acquisition, UI release, restored mounted readback and hidden capture remain required.
+
+
+## Registry workflow providers
+
+The 33 storage/conflict states extend the full inventory to 122 states. The default producer therefore has 99 unavailable providers (66 existing plus 33 registry states); declaration is not runtime acceptance. Use createRegistryFixtures through acquirePackagedRegistry with an exact isolated package endpoint, native build receipt and inspected native-dialog driver. The current reproducible route explicitly cannot acquire registry-unavailable, registry-cancelling, conflicts-loading or conflicts-error. Keep those rows incomplete. Use a fresh isolated profile for each 48-tuple state batch so retained synthetic configuration does not exhaust the destination bound.
+
+| State | Producer | Default admission |
+|---|---|---|
+| `registry-unavailable` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `registry-unconfigured` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `registry-ready` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `registry-draft` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `registry-invalid` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `registry-running` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `registry-cancelling` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `registry-error` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `registry-empty` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `registry-revisions` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `registry-restoring` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `registry-session-changed` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-unavailable` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-loading` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-empty` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-list` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-file-review` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-choice-review` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-resolving` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-stale` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-unsupported` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-error` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-resolved` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-session-changed` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-rename-review` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-deletion-review` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-divergence-review` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-recovery-paths` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-file-keep-current` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-file-use-preserved` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-rename-keep-current` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-rename-keep-both` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |
+| `conflicts-deletion-apply` | `createRegistryFixtures` | Default unavailable until a source-bound native fixture and required transport/dialog drivers are supplied. |

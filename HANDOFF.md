@@ -1696,3 +1696,8 @@ The corrected ea52b0ef package built successfully with clean source and retained
 ### Actual registry preparation and poll-envelope repair
 
 With startup settling and canonical native tool paths, the packaged runtime created/unlocked an owned synthetic vault and saved its destination. Its state predicate matched, but the verifier incorrectly compared the poll envelope to a bare boolean. The verifier now requires matched:true and value:true from the actual envelope. Fixture restoration retries only the exact temporary session-busy response after real idle observation, and cannot remove the original session. Ten focused verifier checks passed. The prior run closed with verified resource absence; no sync or screenshot acceptance was claimed. Product target remains ea52b0ef with a separately versioned verifier.
+
+
+### Structured acquisition diagnostics
+
+The next package run again completed real fixture preparation/configuration and successful fixture restoration, but acquisition setup returned a nonzero helper result. The wrapper discarded its structured cause before recording it. The verifier now retains the bounded helper payload, exact matched step and process exit code in the private run receipt. Seven producer checks pass, including a real failing-child-process regression. Current declaration counts are 122 states and 99 default unavailable providers; historical counts remain separately labelled. Product package ea52b0ef is unchanged and all prior GUI processes are absent.
