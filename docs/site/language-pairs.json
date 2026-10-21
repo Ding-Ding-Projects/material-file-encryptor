@@ -625,8 +625,8 @@
     {
       "source": "docs/features/storage/registry-sync.md",
       "translation": "docs/features/storage/registry-sync.zh-HK.md",
-      "sourceSha256": "eeceac282ceae26c80abf5c391f1ff7fb8a196fb47cf6c733eb12b3946d102f5",
-      "translationSha256": "b1568361447914a4ce5408ab1f44cceda623a5a5ec750ff039ead6c8d437547c"
+      "sourceSha256": "fbcad778e104f30b058507f74e5d6bbd63d687e8928181244a35a7a7374ab0d7",
+      "translationSha256": "1d5520509780d94e85df04931f60d5e0d18ca1682619796f739de0a4776978aa"
     },
     {
       "source": "docs/features/surface-foundation/coverage.md",

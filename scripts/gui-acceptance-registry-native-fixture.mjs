@@ -8,7 +8,7 @@ import {createHash,randomUUID} from 'node:crypto';
 import {spawn} from 'node:child_process';
 import {conflictPage} from '../src/renderer/features/storage-maintenance/registry-conflicts-model.js';
 
-const cases=new Map([['file-edit','file-edit'],['file-rename','rename'],['delete-edit','delete-versus-edit'],['resolution-divergence','resolution-divergence']]);
+const cases=new Map([['empty',null],['directory-rename','rename'],['file-edit','file-edit'],['file-rename','rename'],['delete-edit','delete-versus-edit'],['resolution-divergence','resolution-divergence']]);
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 async function realFile(file,expected){assert.ok(path.isAbsolute(file));assert.equal(await fs.realpath(file),path.resolve(file));assert.equal((await fs.lstat(file)).isSymbolicLink(),false);assert.match(expected,/^[a-f0-9]{64}$/);assert.equal(hash(await fs.readFile(file)),expected);}
 export async function invokeRegistryFixture(executable,args,{timeoutMs=60000}={}){
@@ -24,7 +24,9 @@ export async function invokeRegistryFixture(executable,args,{timeoutMs=60000}={}
 export function validateRegistryFixtureResult(value,{root,scenario}){
  assert.ok(cases.has(scenario));assert.equal(value?.prepared,true);assert.equal(value.fixtureRoot,root);assert.equal(value.scenario,scenario);assert.equal(value.device,'deviceA');assert.match(value.vaultId,/^[a-f0-9]{32,64}$/i);
  for(const key of ['storageDir','cacheDir','keyFilePath']){assert.equal(typeof value[key],'string');assert.ok(path.isAbsolute(value[key]));const relative=path.relative(root,value[key]);assert.ok(relative&&!relative.startsWith('..')&&!path.isAbsolute(relative),'Fixture path escapes owned root');}
- const page=conflictPage({items:value.expectedConflicts,nextCursor:null});assert.equal(page.items.length,1);assert.equal(page.items[0].kind,cases.get(scenario));assert.ok(page.items[0].supportedChoices.length);
+ const page=conflictPage({items:value.expectedConflicts,nextCursor:null});
+ if(scenario==='directory-rename')assert.ok(page.items.some(row=>row.unsupportedReason&&(row.current?.isDirectory||row.preserved?.isDirectory)));
+ else {assert.equal(page.items.length,scenario==='empty'?0:1);if(scenario!=='empty'){assert.equal(page.items[0].kind,cases.get(scenario));assert.ok(page.items[0].supportedChoices.length);}}
  if(scenario==='resolution-divergence')assert.equal(page.items[0].recoveryDirectory,'');
  return {...value,expectedConflicts:page.items};
 }
@@ -39,4 +41,17 @@ export async function prepareRegistryReviewFixture({dotnet,dotnetSha256,assembly
  const receipt={version:1,sourceCommit,assemblySha256,buildReceiptSha256,fixtureRoot:root,scenario,vaultId:result.vaultId,storageDir:result.storageDir,cacheDir:result.cacheDir,keyFilePath:result.keyFilePath,expectedConflicts:result.expectedConflicts,route:'supported-native-service',ownedSyntheticFixture:true,prepared:true,guiLaunched:false,runtimeAcceptance:false};
  await fs.writeFile(path.join(root,'review-receipt.json'),JSON.stringify(receipt,null,2),{flag:'wx',mode:0o600});
  return receipt;
+}
+
+// Reopens the owned native fixture through the same source-bound executable.
+// The competing edit uses its separate native cache, never renderer state.
+export async function inspectRegistryReviewFixture(fixture,{dotnet,dotnetSha256,assembly,assemblySha256,sourceCommit,advance=false,run=invokeRegistryFixture}) {
+ assert.equal(fixture.sourceCommit,sourceCommit);assert.equal(fixture.assemblySha256,assemblySha256);
+ await realFile(dotnet,dotnetSha256);await realFile(assembly,assemblySha256);
+ assert.equal(await fs.realpath(fixture.fixtureRoot),fixture.fixtureRoot);
+ assert.equal(await fs.readFile(path.join(fixture.fixtureRoot,'.registry-fixture-owner'),'utf8'),'MaterialFileEncryptor synthetic registry fixture v1\n'+fixture.fixtureRoot+'\n');
+ const result=await run(dotnet,[assembly,'--registry-fixture',advance?'advance-review':'inspect-review',fixture.fixtureRoot,'deviceA',fixture.scenario]);
+ assert.equal(result.verified,true);assert.equal(result.advanced,advance);assert.equal(result.fixtureRoot,fixture.fixtureRoot);assert.equal(result.storageDir,fixture.storageDir);assert.equal(result.vaultId,fixture.vaultId);
+ assert.ok(Array.isArray(result.entries)&&Array.isArray(result.histories)&&Array.isArray(result.conflicts));
+ return result;
 }

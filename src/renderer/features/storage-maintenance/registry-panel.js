@@ -8,7 +8,7 @@ const transfer = kind => ['syncing', 'restoring'].includes(kind);
 export class RegistryStoragePanel extends SurfaceElement {
   constructor() {
     super();
-    this.services = {}; this.sessions = new Map(); this.getVaultState = () => null; this.translateText = value => value; this.disposed = false;
+    this.services = {}; this.sessions = new Map(); this.getVaultState = () => null; this.translateText = value => value; this.disposed = false; this.pollTimer = null; this.polling = false;
     this.style('section{border-top:1px solid var(--md-sys-color-outline-variant);padding-top:16px;margin-top:24px}h2,h3,p,dt,dd{overflow-wrap:anywhere}.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px}.field{display:grid;gap:8px;min-width:0}md-outlined-select{width:100%;min-width:0;max-width:100%}.toggle{display:flex;align-items:center;gap:8px;min-height:44px}.toggle span{overflow-wrap:anywhere}.actions,.days{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}fieldset{min-width:0;border:1px solid var(--md-sys-color-outline-variant);border-radius:12px}.metrics{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:8px 16px}.metrics dt,.metrics dd{margin:0}.error{color:var(--md-sys-color-error)}');
     this.copyNodes = {}; this.fields = {}; this.labels = {}; this.options = {}; this.buttons = {};
     const copy = (key, tag = 'p', props = {}) => this.copyNodes[key] = element(tag, props);
@@ -36,6 +36,12 @@ export class RegistryStoragePanel extends SurfaceElement {
     this.fields.intervalMinutes.min = '5'; this.fields.intervalMinutes.max = '10080'; this.fields.intervalMinutes.step = '1';
     this.statusText = element('p', { role: 'status', 'aria-live': 'polite' }); this.error = element('p', { class: 'error', role: 'alert' });
     this.progress = element('md-linear-progress', { indeterminate: true });
+    this.progressText = element('p', { role:'status', 'aria-live':'polite' });
+    this.recoveryText = element('p', { style:'user-select:text;white-space:pre-wrap;overflow-wrap:anywhere' });
+    this.deferredText = element('p');
+    this.ownerText = element('p', {role:'status', 'aria-live':'polite'});
+    this.ownerButton = element('md-outlined-button');
+    this.ownerButton.addEventListener('click', () => { if(!this.ownerButton.disabled) void this.selectOperationOwner(); });
     this.metrics = {}; const metrics = element('dl', { class: 'metrics' });
     for (const key of ['savedRepository', 'nextDue', 'lastResult']) { const label = element('dt'), value = element('dd'); this.metrics[key] = { label, value }; metrics.append(label, value); }
     this.revision = element('select'); this.revision.addEventListener('change', () => { const current = this.current(); if (current && !current.pending) { current.selected = this.revision.value; this.render(); } });
@@ -47,7 +53,7 @@ export class RegistryStoragePanel extends SurfaceElement {
       copy('title', 'h2', { id: 'registry-title' }), copy('destination', 'h3'), field('repository'), copy('destinationNote'), copy('snapshotNote'), copy('sourceRequired'),
       copy('schedule', 'h3'), field('enabled', 'checkbox'), field('mode', 'text', ['interval', 'calendar']), this.interval, this.calendar,
       element('div', { class: 'fields' }, [field('missed', 'text', ['run-once', 'skip']), field('retryMinutes', 'number')]), field('background', 'checkbox'), copy('backgroundNote'),
-      element('div', { class: 'actions' }, [button('save')]), copy('operation', 'h3'), this.statusText, this.error, this.progress, metrics,
+      element('div', { class: 'actions' }, [button('save')]), copy('operation', 'h3'), this.statusText, this.error, this.ownerText, this.ownerButton, this.progress, this.progressText, this.recoveryText, this.deferredText, metrics,
       element('div', { class: 'actions' }, ['sync', 'refresh', 'cancel'].map(button)), copy('revisions', 'h3'), copy('restoreNote'), this.revisionMessage, this.revision, this.revisionDetails,
       element('div', { class: 'actions' }, ['list', 'restore'].map(button)), this.restoreResult,
     ]));
@@ -67,7 +73,36 @@ export class RegistryStoragePanel extends SurfaceElement {
     const key = state?.sessionId ? JSON.stringify([state.sessionId, registrySource(state)]) : null, changed = key !== this.key;
     this.key = key; this.vaultState = state;
     if (key && !this.sessions.has(key)) this.sessions.set(key, entry());
-    this.render(); if (changed && this.available()) void this.refresh();
+    this.render(); if (changed && this.available()) void this.refresh(); this.schedulePoll();
+  }
+  schedulePoll() {
+    if (this.pollTimer !== null || this.polling || this.disposed || !this.available()) return;
+    this.pollTimer = setTimeout(() => { this.pollTimer = null; void this.pollStatus(); }, 1500);
+  }
+  async pollStatus() {
+    if (this.disposed || !this.available()) return;
+    const current=this.current(), generation=current?.generation;
+    if (!current) return;
+    this.polling=true;
+    try {
+      // Polling is observational and never replaces an unsaved draft or a local
+      // operation result. One in-flight read bounds background work.
+      const id=this.vaultState.sessionId,source=registrySource(this.vaultState);
+      const status=await this.services.registryStorageStatus();
+      if(!this.isCurrent(current)||current.generation!==generation)return;
+      if(!status||status.sessionId!==id||status.source!==source||typeof status.configured!=='boolean'||typeof status.state!=='string')throw Error('invalidStatus');
+      if(status.configured)registryConfiguration(registryDraft(status.configuration));
+      const ownerChanged=current.status?.activeOperation?.sessionId!==status.activeOperation?.sessionId;
+      current.status=status;
+      // Scheduled work has no local perform() completion. A matching idle
+      // readback settles its cancellation, but an unresolved native lease does not.
+      if(!current.pending&&!registryBusy(status)&&status.activeOperation?.sessionId!==id)current.cancelling=false;
+      if(current.error==='statusUnavailable')current.error='';
+      if(!current.edited&&!current.pending)current.draft=registryDraft(status.configuration);
+      // Do not rerender editable controls and move the caret during typing.
+      if(!current.edited||current.pending||registryBusy(status)||ownerChanged)this.render();
+    } catch { if(this.isCurrent(current)&&current.generation===generation&&!current.pending){current.error='statusUnavailable';this.render();} }
+    finally {this.polling=false;this.schedulePoll();}
   }
   synchronize() { this.setVaultState(this.getVaultState()); return this.current(); }
   isCurrent(current) { return !this.disposed && current === this.current(); }
@@ -151,9 +186,25 @@ export class RegistryStoragePanel extends SurfaceElement {
     catch { if (!this.disposed && generation === current.generation) { current.error = 'error'; current.cancelling = false; } }
     if (this.isCurrent(current)) this.render();
   }
+  async selectOperationOwner() {
+    const current=this.synchronize(), owner=current?.status?.activeOperation?.sessionId;
+    if(!current||this.ownerButton.disabled||typeof owner!=='string'||!owner||owner===this.vaultState?.sessionId)return;
+    this.ownerButton.disabled=true;
+    try {
+      // Select through the existing session API. Cancellation remains an action
+      // of the newly selected session, never a renderer-supplied target ID.
+      await this.services.selectSession(owner);
+      if(!this.disposed)this.setVaultState(this.getVaultState());
+    } catch {if(this.isCurrent(current)){current.error='ownerUnavailable';this.render();}}
+  }
   render() {
     const current = this.current(), draft = current?.draft || registryDraft(), status = current?.status;
-    const available = this.available(), pending = Boolean(current?.pending), busy = registryBusy(status), active = busy || transfer(current?.pending), editable = available && !pending && !busy;
+    const available = this.available(), pending = Boolean(current?.pending), busy = registryBusy(status), active = busy || transfer(current?.pending);
+    const otherOwner=typeof status?.activeOperation?.sessionId==='string'&&status.activeOperation.sessionId!==this.vaultState?.sessionId;
+    const editable = available && !pending && !busy && !otherOwner;
+    this.ownerText.hidden=this.ownerButton.hidden=!otherOwner;
+    this.ownerText.textContent=otherOwner?`${this.t('otherOwner')} ${status.activeOperation.sessionId}`:'';
+    this.ownerButton.textContent=this.t('selectOwner');this.ownerButton.disabled=!otherOwner||pending||typeof this.services.selectSession!=='function';
     for (const [key, node] of Object.entries(this.copyNodes)) node.textContent = this.t(key);
     for (const [key, node] of Object.entries(this.fields)) {
       this.labels[key].textContent = this.t(key); node.label = this.t(key); node.setAttribute('aria-label', this.t(key)); node.disabled = !editable;
@@ -165,9 +216,17 @@ export class RegistryStoragePanel extends SurfaceElement {
     this.daysLegend.textContent = this.t('days');
     this.days.forEach((node, day) => { node.checked = draft.days.includes(day); node.disabled = !editable; node.setAttribute('aria-label', this.t(`day${day}`)); this.dayLabels[day].textContent = this.t(`day${day}`); });
     this.calendar.hidden = draft.mode !== 'calendar'; this.interval.hidden = draft.mode !== 'interval';
-    const actions = { save: editable, sync: editable && status?.configured && this.canSyncSource(), refresh: available && !pending, cancel: available && active && !current?.cancelling, list: editable && status?.configured, restore: editable && status?.configured && current?.snapshots?.some(row => row.digest === current.selected) };
+    const actions = { save: editable, sync: editable && status?.configured && this.canSyncSource(), refresh: available && !pending, cancel: available && active && !otherOwner && !current?.cancelling, list: editable && status?.configured, restore: editable && status?.configured && current?.snapshots?.some(row => row.digest === current.selected) };
     for (const [key, node] of Object.entries(this.buttons)) { node.textContent = this.t(key); node.disabled = !actions[key]; }
     this.buttons.cancel.hidden = !active; this.progress.hidden = !active; this.progress.setAttribute('aria-label', this.t('operation'));
+    const progress=status?.progress;
+    const hasProgress=progress&&['downloading','preparing-upload','downloading-restore'].includes(progress.phase)&&Number.isSafeInteger(progress.completedFiles)&&progress.completedFiles>=0&&Number.isSafeInteger(progress.completedBytes)&&progress.completedBytes>=0;
+    this.progressText.hidden=!hasProgress;
+    this.progressText.textContent=hasProgress?`${this.t(progress.phase)}: ${progress.completedFiles}${Number.isSafeInteger(progress.totalFiles)&&progress.totalFiles>=progress.completedFiles?` / ${progress.totalFiles}`:''} ${this.t('progressFiles')} · ${progress.completedBytes} ${this.t('progressBytes')}`:'';
+    const recovery=status?.restoreRecovery;
+    this.recoveryText.hidden=!(recovery&&typeof recovery.destination==='string'&&recovery.destination.length>0&&recovery.destination.length<=32767);
+    this.recoveryText.textContent=this.recoveryText.hidden?'':`${this.t(recovery.complete===true?'recoveryComplete':'recoveryIncomplete')}\n${recovery.destination}`;
+    this.deferredText.hidden=status?.lastResult?.replayDeferred!==true;this.deferredText.textContent=this.t('replayDeferred');
     const message = !available ? 'unavailable' : current?.cancelling ? 'cancelling' : current?.pending || current?.message || (!status ? 'unverified' : !status.configured ? 'unconfigured' : status.state === 'incomplete' ? 'unverified' : busy ? 'syncing' : 'idle');
     this.statusText.textContent = this.t(message) + (busy ? ` (${String(status.state).slice(0,80)})` : '');
     this.error.textContent = current?.error ? this.t(current.error) : status?.lastError ? this.t('error') : ''; this.error.hidden = !this.error.textContent;
@@ -183,6 +242,6 @@ export class RegistryStoragePanel extends SurfaceElement {
     for (const [key, row] of Object.entries(this.rows)) { row.label.textContent = this.t(key); const value = key === 'digest' ? selected?.digest : selected?.snapshot[key]; row.value.textContent = Array.isArray(value) ? value.join('\n') || this.t('none') : String(value ?? ''); }
   }
   setLanguage(language) { this.language = language; this.render(); }
-  destroy() { this.disposed = true; for (const current of this.sessions.values()) current.generation++; this.sessions.clear(); this.remove(); }
+  destroy() { this.disposed = true; if(this.pollTimer!==null)clearTimeout(this.pollTimer);this.pollTimer=null;for (const current of this.sessions.values()) current.generation++; this.sessions.clear(); this.remove(); }
 }
 register('mfe-registry-storage-panel', RegistryStoragePanel);

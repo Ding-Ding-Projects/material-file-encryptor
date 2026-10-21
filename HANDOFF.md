@@ -1676,3 +1676,8 @@ Current source adds serialized registry state/configuration, startup background 
 New fixture machinery creates empty and unsupported directory-conflict vaults, performs independent native readback and a competing post-review edit, and controls bounded real loopback traffic. It neither substitutes renderer services nor injects operation outcomes. Packaged launch explicitly binds the isolated loopback endpoint.
 
 No tests or builds have run on this new implementation pass yet. Native dialog driving, complete packaged/mounted acceptance, installed scheduling, exact private production destination, release delivery and installed update remain separate pending requirements. Preserve all existing task branches and evidence. The earlier automatic approval rejection affecting public delivery remains recorded; do not evade it through a different route.
+
+
+### Combined interface checkpoint
+
+The interface and real provider/dialog source are incorporated, preserving earlier first-vault restore admission. Forty focused cases passed across two runs; one live-registry case was skipped because that invocation did not enable its endpoint. Python dialog source parsed. The current native build and actual packaged/modal/mounted workflows are still pending. Four provider states explicitly stop as unavailable for the present reproducible route: registry-unavailable, registry-cancelling, conflicts-loading and conflicts-error. No absent row is accepted as runtime evidence.

@@ -105,3 +105,19 @@ test('real registry service publication, unchanged-skip and fresh-folder restora
   assert.deepEqual(await fs.readFile(path.join(restored.destination, 'vault.json')), await fs.readFile(path.join(f.source, 'vault.json')));
   assert.ok(f.requests.some(r => r.method === 'releaseSnapshot'));
 });
+
+test('startup reconciles saved background registration and preserves explicit registration errors',async t=>{
+  const enabled=[];const f=await fixture(t,{backgroundRegistration:async value=>enabled.push(value)});
+  await f.service.configure('main',configuration({...DEFAULT_REGISTRY_SCHEDULE,enabled:true,background:true}));
+  const restarted=createRegistrySyncService(f.options);await restarted.initialize();assert.deepEqual(enabled,[true,true]);
+  const unavailable=createRegistrySyncService({...f.options,backgroundRegistration:async()=>{throw Error('unavailable');}});await unavailable.initialize();
+  assert.match((await unavailable.status('main')).lastError,/registration is incomplete/);
+});
+
+test('calendar retry consumes the original repeated local occurrence',async t=>{
+  let clock=Date.parse('2026-11-01T05:00:00Z'),calls=0;
+  const f=await fixture(t,{now:()=>clock,storageFactory:()=>({list:async()=>{if(++calls===1)throw Error('offline');return[];},publish:async()=>({verified:true,digest:'sha256:'+'a'.repeat(64)})})});
+  await f.service.configure('main',configuration({...DEFAULT_REGISTRY_SCHEDULE,enabled:true,mode:'calendar',days:[0],times:['01:30'],timeZone:'America/Toronto',retryMinutes:10}));
+  clock=Date.parse('2026-11-01T05:30:00Z');await f.service.tick();assert.equal((await f.service.status('main')).nextDue,Date.parse('2026-11-01T05:40:00Z'));
+  clock=Date.parse('2026-11-01T05:40:00Z');await f.service.tick();assert.equal((await f.service.status('main')).nextDue,Date.parse('2026-11-08T06:30:00Z'));
+});

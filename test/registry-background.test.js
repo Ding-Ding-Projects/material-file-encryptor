@@ -19,14 +19,25 @@ async function fixture(t, { xml, marker } = {}) {
     if (args.includes('/Delete')) { stored = null; return { stdout: '' }; }
     throw Error('Unexpected command');
   };
-  return { root, commands, register: createRegistryBackground({ root, executable, platform: 'win32', packaged: true, run }), executable };
+  return { root, commands, readXml:()=>stored, replaceXml:value=>{stored=value;}, register: createRegistryBackground({ root, executable, platform: 'win32', packaged: true, run }), executable };
 }
 test('registration is signed-in, least privilege, no wake and exact executable', async t => {
   const f = await fixture(t); await f.register(true);
-  const xml = (await fs.readFile(path.join(f.root, 'registry-task.xml'))).toString('utf16le');
+  const xml = f.readXml();
   for (const expected of ['<LogonType>InteractiveToken</LogonType>', `<UserId>${principal}</UserId>`, '<RunLevel>LeastPrivilege</RunLevel>', '<WakeToRun>false</WakeToRun>', '<Arguments>--registry-sync</Arguments>']) assert.ok(xml.includes(expected));
   assert.equal(f.commands.some(command => command.args.includes('/RP')), false);
+  assert.equal(f.commands.find(command=>command.args.includes('/Create')).args.includes('/F'),false);
+  await assert.rejects(fs.stat(path.join(f.root,'registry-task.xml')), {code:'ENOENT'});
   await f.register(false); assert.ok(f.commands.some(command => command.args.includes('/Delete')));
+});
+
+test('owned missing or disabled schedule triggers are repaired while intact tasks are reused',async t=>{
+  const f=await fixture(t);await f.register(true);const valid=f.readXml();
+  const creates=()=>f.commands.filter(command=>command.args.includes('/Create')).length;
+  await f.register(true);assert.equal(creates(),1);
+  for(const altered of [valid.replace('<Enabled>true</Enabled>','<Enabled>false</Enabled>'),valid.replace(/<Triggers>[\s\S]*?<\/Triggers>/,'<Triggers/>'),valid.replace('PT5M','PT15M')]){
+    const before=creates();f.replaceXml(altered);await f.register(true);assert.equal(creates(),before+1);assert.equal(f.readXml(),valid);
+  }
 });
 test('an existing repointed task is preserved even when its arguments match', async t => {
   const executable = 'C:\\Program Files\\MaterialFileEncryptor\\MaterialFileEncryptor.exe';

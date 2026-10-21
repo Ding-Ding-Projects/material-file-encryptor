@@ -13,6 +13,7 @@ import {createAccessFixtures} from './gui-acceptance-access-fixtures.mjs';
 import {createRecordsAdapters} from './gui-acceptance-records.mjs';
 import {createPersonalizationAdapters} from './gui-acceptance-personalization.mjs';
 import {createToolsAdapters} from './gui-acceptance-tools.mjs';
+import {createRegistryAdapters} from './gui-acceptance-registry.mjs';
 import {createMountedFoundationFixtures,createKeyboardFoundationFixtures} from './gui-acceptance-native-files.mjs';
 import {createModernProbeEvidence} from './modern-ui-check.mjs';
 import {makeLaunch,modernNativeObservation,createPlanRecorder} from './local-headless-desktop-check.mjs';
@@ -38,7 +39,7 @@ export function createPackagedAccessFixture({opened,fixtures={}}){
 }
 
 export function createPackagedAdapters(context){
- return composeAdapters(context.inventory,baselineAdapters(context),createFoundationAdapters(context),createAccessAdapters(context),createRecordsAdapters(context),createPersonalizationAdapters(context),createToolsAdapters(context));
+ return composeAdapters(context.inventory,baselineAdapters(context),createFoundationAdapters(context),createAccessAdapters(context),createRecordsAdapters(context),createPersonalizationAdapters(context),createToolsAdapters(context),createRegistryAdapters(context));
 }
 export async function readPackagedBuildBinding(target,buildReceiptPath){
  const originalPath=path.resolve(buildReceiptPath),originalBytes=await fs.readFile(originalPath),original=JSON.parse(originalBytes);

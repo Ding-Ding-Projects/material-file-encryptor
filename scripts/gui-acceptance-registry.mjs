@@ -71,7 +71,7 @@ export function createRegistryAdapters({launch,receipt,inventory,fixtures={}}){
    return{id,activated:true,observablePassed:true,activation:transferActions.has(id)||conflictActions.has(id)?'production-control-and-native-readback':'production-control',evidence:{activation,observation}};
   }
   return[state.id,{
-   preflight(){for(const name of ['prepare','observeNative','restore'])requireCapability(name);for(const id of state.actions){if(extraCapabilities[id])requireCapability(extraCapabilities[id]);if(['run-sync','cancel-sync','wait-transfer'].includes(id))requireCapability('settle');}return{declared:true,executed:false};},
+   preflight(){for(const name of ['prepare','observeNative','restore'])requireCapability(name);provider.assertCapabilities?.(state.id);for(const id of state.actions){if(extraCapabilities[id])requireCapability(extraCapabilities[id]);if(['run-sync','cancel-sync','wait-transfer'].includes(id))requireCapability('settle');}return{declared:true,executed:false};},
    async prepare(context){this.preflight();fixture=await invoke('prepare',context);assert.equal(fixture.prepared,true);return fixture;},
    async enter(context){
     // Native producers establish the actual state through supported APIs and

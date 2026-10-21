@@ -23,6 +23,7 @@ const digest = `sha256:${'a'.repeat(64)}`;
 const vault = (sessionId = 'main', source = `C:\\${sessionId}`) => ({ sessionId, storageDir: source, transport: { mode: 'folder' }, locked: false, mounted: true });
 const configuration = () => ({ repository: 'owner/vault', schedule: { ...DEFAULT_SCHEDULE } });
 const snapshot = () => ({ digest, tag: 'snapshot-device-123', snapshot: { vaultId: 'b'.repeat(32), deviceId: 'device-one', parents: [], fileCount: 3 } });
+const panels=new Set();test.afterEach(()=>{for(const panel of panels)panel.destroy();panels.clear();});
 async function fixture(overrides = {}) {
   let selected = vault(); const calls = [], configs = new Map([['main', configuration()]]);
   const services = {
@@ -34,7 +35,7 @@ async function fixture(overrides = {}) {
     cancelRegistryStorage: async () => { calls.push(['cancel', selected.sessionId]); return { cancelling: true }; },
     ...overrides,
   };
-  const panel = new RegistryStoragePanel(); panel.configure({ services, getVaultState: () => selected }); await tick();
+  const panel = new RegistryStoragePanel();panels.add(panel); panel.configure({ services, getVaultState: () => selected }); await tick();
   return { panel, calls, configs, setState(value) { selected = value; panel.setVaultState(value); } };
 }
 function edit(panel, field, value) { panel.fields[field].value = value; panel.edit(field); }
@@ -161,4 +162,21 @@ test('repository normalization and native lease recovery retain bounded action a
   panel.services.registryStorageStatus = async () => ({ sessionId: 'main', source: 'C:\\main', configured: true, configuration: configuration(), state: 'native-release-unverified' });
   await panel.refresh(); assert.equal(panel.buttons.cancel.disabled, false); assert.equal(panel.buttons.sync.disabled, true);
   assert.match(panel.statusText.textContent, /native-release-unverified/);
+});
+
+test('scheduled cancellation clears only after matching settled status and can cancel a later operation',async()=>{
+  let state='uploading',activeOperation={sessionId:'main',state};
+  const {panel}=await fixture({registryStorageStatus:async()=>({sessionId:'main',source:vault().storageDir,configured:true,configuration:configuration(),state,activeOperation})});
+  await panel.cancel();assert.equal(panel.current().cancelling,true);
+  state='native-release-unverified';await panel.pollStatus();assert.equal(panel.current().cancelling,true);
+  state='cancelled';activeOperation=null;await panel.pollStatus();assert.equal(panel.current().cancelling,false);assert.doesNotMatch(panel.statusText.textContent,/Cancellation requested/);
+  state='uploading';activeOperation={sessionId:'main',state};await panel.pollStatus();assert.equal(panel.buttons.cancel.disabled,false);
+});
+
+test('another background owner is selected through the existing session route without remapping cancel',async()=>{
+  let selected='main';const calls=[];
+  const f=await fixture({registryStorageStatus:async()=>({sessionId:selected,source:vault(selected).storageDir,configured:true,configuration:configuration(),state:selected==='main'?'idle':'uploading',activeOperation:{sessionId:'secondary',state:'uploading'}}),selectSession:async id=>{calls.push(['select',id]);selected=id;f.setState(vault(id));},cancelRegistryStorage:async()=>{calls.push(['cancel',selected]);return{cancelling:true};}});
+  assert.equal(f.panel.ownerButton.hidden,false);assert.equal(f.panel.buttons.sync.disabled,true);
+  await f.panel.selectOperationOwner();await tick();assert.equal(f.panel.buttons.cancel.disabled,false);await f.panel.cancel();
+  assert.deepEqual(calls,[['select','secondary'],['cancel','secondary']]);
 });
