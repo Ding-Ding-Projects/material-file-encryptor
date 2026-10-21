@@ -1686,3 +1686,8 @@ The interface and real provider/dialog source are incorporated, preserving earli
 ### Live registry correction
 
 The live WSL composition exposed a progress counter that read a full file array from catalogue summaries. It now uses the declared fileCount. The initial run had three incomplete synchronization cases; after repair all 22 cases passed with zero skips, including two real encrypted-core convergence cases and fresh-folder restore. Eleven native conflict cases and six native fixture preparation/readback scenarios passed separately. The 9895c0b5 root build exited zero with unchanged clean source; the JavaScript correction requires a new source-bound package before GUI acceptance.
+
+
+### Packaged acquisition navigation repair
+
+The corrected ea52b0ef package built successfully with clean source and retained hashes. Three bounded startup attempts were retained: the first two stopped at process-identity proofs and were recovered with exact process absence and credential retirement; the third launched and closed normally after a recorded 20-second startup settle. It stopped before storage actions because registry state routes were not composed into the acquisition map. The missing verifier route composition is now repaired, and its hand-written inventory regression failed before repair then passed. Nine focused acquisition checks passed. Reuse of the unchanged ea52b0ef package must retain its target source separately from the new verifier source and hashes; no workflow or screenshot success is claimed yet.

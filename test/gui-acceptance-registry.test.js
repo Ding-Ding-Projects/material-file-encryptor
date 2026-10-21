@@ -6,6 +6,7 @@ import vm from 'node:vm';
 import {REGISTRY_VERIFICATION_STATES,registryContractRows,registryMatrix,REGISTRY_STATE_ROUTES} from '../scripts/gui-acceptance-registry-states.mjs';
 import {createRegistryAdapters,registryObservableExpression,registryControlStep,registryClickStep} from '../scripts/gui-acceptance-registry.mjs';
 import {validateRegistryFixtureResult} from '../scripts/gui-acceptance-registry-native-fixture.mjs';
+import {stateRoutes} from '../scripts/gui-acceptance-acquire.mjs';
 
 const originalRegistry=['unavailable','unconfigured','ready','draft','invalid','running','cancelling','error','empty','revisions','restoring','session-changed'];
 const originalConflicts=['unavailable','loading','empty','list','file-review','choice-review','resolving','stale','unsupported','error','resolved','session-changed'];
@@ -13,6 +14,10 @@ const additions=['rename-review','deletion-review','divergence-review','recovery
 const launch={cdp:{port:19341,expectedUrl:'file:///C:/owned/resources/app.asar/src/renderer/index.html'}};
 const inventory=()=>({states:registryContractRows()});
 const provider=()=>Object.fromEntries(['prepare','observeNative','restore','settle','pickRestore','confirmResolution','switchSession','unlock'].map(name=>[name,async()=>{}]));
+
+test('every declared registry workflow reaches the real acquisition navigation map',()=>{
+ for(const state of [...originalRegistry.map(name=>'registry-'+name),...originalConflicts.map(name=>'conflicts-'+name),...additions.map(name=>'conflicts-'+name)])assert.deepEqual(stateRoutes[state],{view:'storage'},state);
+});
 
 test('explicit registry inventory retains every original state and each independent conflict choice',()=>{
  const expected=[...originalRegistry.map(id=>'registry-'+id),...originalConflicts.map(id=>'conflicts-'+id),...additions.map(id=>'conflicts-'+id)];

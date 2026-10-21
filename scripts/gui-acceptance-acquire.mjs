@@ -9,6 +9,7 @@ import {layoutExpression,assertMeasurement} from './modern-ui-check.mjs';
 import {matrixFor,tupleKey,validateBinding,sha256,admitRow,verifyFiles} from './gui-acceptance.mjs';
 import {inspectSurface} from './gui-acceptance-components.mjs';
 import {resolveLayoutTargets,composedLayoutExpression} from './gui-acceptance-layout.mjs';
+import {REGISTRY_STATE_ROUTES} from './gui-acceptance-registry-states.mjs';
 
 // Parse independently of the shared JSON module cache. Neither caller imports nor
 // assertion diagnostics can mutate this private authority, including nested rows.
@@ -49,6 +50,7 @@ function navigate(steps,view,id){
 }
 
 export const stateRoutes=Object.freeze({
+ ...REGISTRY_STATE_ROUTES,
  ...Object.fromEntries(['locked','unlocked','waiting'].map(name=>['access-history-'+name,{view:'access',tab:'#access-tab-history'}])),
  ...Object.fromEntries(['bulk-all','bulk-invert','bulk-range','export-selected','export-filtered','export-format'].map(name=>['p-history-'+name,{view:'personalization',tab:'#view-personalization md-primary-tab[id$="-tab-history"]'}])),
  ...Object.fromEntries(['preset','crop','safe-area','background','reopened-recipe','title-preview'].map(name=>['p-logo-'+name,{view:'personalization',tab:'#view-personalization md-primary-tab[id$="-tab-appearance"]'}])),
