@@ -16,7 +16,7 @@ async function fixture(t, extra = {}) {
     Salt: Buffer.alloc(32).toString('base64'), WrappedKey: record().toString('base64'), KeyCheck: record().toString('base64') };
   await fs.writeFile(path.join(source, 'vault.json'), JSON.stringify(configuration));
   const requests = [], options = { root: work, contexts: id => id === undefined ? [['main', {}]] : ({ storageDir: source, transport: 'folder' }),
-    nativeRequest: async (method, params, id) => { requests.push({ method, params, id }); return method === 'beginSnapshot' ? { leaseId: 'lease', storageDir: source } : {}; },
+    nativeRequest: async (method, params, id) => { requests.push({ method, params, id }); return method === 'beginSnapshot' ? { leaseId: 'lease', storageDir: source } : method === 'releaseSnapshot' ? { released: true } : {}; },
     chooseRestore: async () => root, testDestination: { endpoint: 'http://127.0.0.1:15221', testOnly: true }, ...extra };
   return { root, source, work, options, requests, service: createRegistrySyncService(options) };
 }
@@ -33,6 +33,13 @@ test('renderer validation excludes endpoint, paths, credentials and invalid sche
     assert.throws(() => validateRequest('configureRegistryStorage', { ...configuration(), ...patch }));
   assert.throws(() => validateRequest('restoreRegistrySnapshot', { digest: '../object' }));
   assert.deepEqual(validateRequest('restoreRegistrySnapshot', { digest: 'sha256:' + 'a'.repeat(64) }), { digest: 'sha256:' + 'a'.repeat(64) });
+});
+test('a fresh computer can configure and list restore storage before selecting its first vault', async t => {
+  const f = await fixture(t, { contexts: id => id === undefined ? [['main', {}]] : { transport: 'folder' }, storageFactory: () => ({ list: async () => [] }) });
+  assert.equal((await f.service.configure('main', configuration())).source, '');
+  assert.deepEqual(await f.service.list('main'), []);
+  await assert.rejects(f.service.sync('main'), /folder-backed/);
+  await assert.rejects(f.service.configure('main', configuration({ ...DEFAULT_REGISTRY_SCHEDULE, enabled: true })), /Restore or select/);
 });
 test('background registration failure remains explicit after saved configuration', async t => {
   const f = await fixture(t, { backgroundRegistration: async () => { throw Error('synthetic unavailable'); } });

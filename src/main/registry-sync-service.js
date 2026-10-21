@@ -53,10 +53,11 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     } catch (error) { if (error.code !== 'ENOENT') throw Error(ERROR); }
     loaded = true;
   }
-  function context(id) {
+  function context(id, requireSource = true) {
     const value = contexts(id);
-    if (!value?.storageDir || value.transport !== 'folder') throw Error('Select a folder-backed vault first.');
-    return { ...value, key: hash(Buffer.from(path.resolve(value.storageDir).toLowerCase())) };
+    if (!value || requireSource && (!value.storageDir || value.transport !== 'folder')) throw Error('Select a folder-backed vault first.');
+    const source = value.storageDir || '';
+    return { ...value, storageDir: source, key: hash(Buffer.from(source ? path.resolve(source).toLowerCase() : `unbound:${id}`)) };
   }
   function save() {
     saving = saving.catch(() => {}).then(async () => {
@@ -72,12 +73,12 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
   }
   function storage(row) { return storageFactory({ destination: testDestination ? { ...testDestination, repository: row.repository } : { repository: row.repository }, authorize }); }
   async function status(id) {
-    await load(); const current = context(id), row = rows[current.key];
+    await load(); const current = context(id, false), row = rows[current.key];
     return structuredClone({ sessionId: id, source: current.storageDir, configured: Boolean(row), configuration: row ? { repository: row.repository, schedule: row.schedule } : null,
       state: row?.state || 'unconfigured', nextDue: row?.nextDue || null, lastResult: row?.lastResult || null, lastError: row?.lastError || null });
   }
-  async function exclusive(id, action) {
-    await load(); const current = context(id), row = rows[current.key]; if (!row) throw Error('Save a registry destination first.');
+  async function exclusive(id, action, requireSource = true) {
+    await load(); const current = context(id, requireSource), row = rows[current.key]; if (!row) throw Error('Save a registry destination first.');
     if (active) throw Error('Wait for the current registry operation.');
     const controller = new AbortController(); active = { id, controller, key: current.key, leases: new Set(), settled: false };
     const timer = setTimeout(() => controller.abort(), 3600000); timer.unref();
@@ -100,7 +101,8 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     active.leases.add(lease.leaseId); return lease;
   }
   async function release(id, lease) {
-    await nativeRequest('releaseSnapshot', { leaseId: lease.leaseId }, id);
+    const result = await nativeRequest('releaseSnapshot', { leaseId: lease.leaseId }, id);
+    if (result?.released !== true) throw Error('Native snapshot release was not confirmed.');
     active.leases.delete(lease.leaseId);
   }
   async function stageRevision(client, digest, signal) {
@@ -134,8 +136,9 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     status,
     async configure(id, configuration) {
       await load(); if (active) throw Error('Wait for registry synchronization.');
-      const current = context(id); registryDestination({ repository: configuration.repository });
+      const current = context(id, false); registryDestination({ repository: configuration.repository });
       const schedule = validateRegistrySchedule(configuration.schedule);
+      if (schedule.enabled && (!current.storageDir || current.transport !== 'folder')) throw Error('Restore or select a folder-backed vault before enabling its schedule.');
       const previous = rows[current.key];
       rows[current.key] = { deviceId: previous?.deviceId || randomUUID().replaceAll('-', ''), repository: configuration.repository, schedule,
         state: 'idle', nextDue: nextRegistryRun(schedule, now()), lastResult: previous?.repository === configuration.repository ? previous.lastResult : null, lastError: null };
@@ -188,21 +191,22 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
         } finally { if (snapshot) await fs.rm(snapshot.directory, { recursive: true }); }
       });
     },
-    list(id) { return exclusive(id, async (_current, row, signal) => { row.state = 'discovering'; const value = await storage(row).list(signal); row.state = 'idle'; return value; }); },
+    list(id) { return exclusive(id, async (_current, row, signal) => { row.state = 'discovering'; const value = await storage(row).list(signal); row.state = 'idle'; return value; }, false); },
     restore(id, digest) {
       return exclusive(id, async (_current, row, signal) => {
         if (!/^sha256:[a-f0-9]{64}$/.test(digest)) throw Error('Invalid snapshot digest.');
         const selected = await chooseRestore(); if (!selected) { row.state = 'idle'; return { cancelled: true }; }
         await physical(selected); row.state = 'restoring';
         const staged = await stageRevision(storage(row), digest, signal);
+        const restoredVaultId = staged.revision.snapshot.vaultId;
         const destination = path.join(selected, `restored-vault-${randomUUID().slice(0, 8)}`);
         try {
           await fs.mkdir(destination, { mode: 0o700 }); const owned = identity(await fs.lstat(destination));
           const files = [...staged.revision.snapshot.files].sort((a, b) => Number(a.path === 'vault.json') - Number(b.path === 'vault.json'));
           for (const entry of files) { signal.throwIfAborted(); if (identity(await fs.lstat(destination)) !== owned) throw Error(ERROR); await createFile(destination, entry.path, await fs.readFile(path.join(staged.staging, entry.path))); }
-          row.state = 'idle'; return { restored: true, requiresUnlock: true, destination };
+          row.state = 'idle'; return { restored: true, requiresUnlock: true, destination, vaultId: restoredVaultId };
         } finally { await fs.rm(staged.staging, { recursive: true }); }
-      });
+      }, false);
     },
     async cancel(id) {
       if (active && active.id !== id) throw Error('This operation belongs to another vault.');
