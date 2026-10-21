@@ -48,7 +48,7 @@ export function createRegistryConflictRequests({ nativeRequest, confirm, availab
     admit(sessionId);
     const result = await nativeRequest('resolveConflict', params, sessionId);
     if (result?.resolved !== true || result.conflictId !== params.conflictId || result.choice !== params.choice) throw Error('Conflict resolution is unverified. Refresh the conflict list before retrying.');
-    if (Object.hasOwn(result, 'restoredPaths') && (!Array.isArray(result.restoredPaths) || result.restoredPaths.length !== 2 || new Set(result.restoredPaths).size !== 2 || result.restoredPaths.some(value => typeof value !== 'string' || !value || value.length > 4096 || /[\u0000-\u001f\u007f]/.test(value)))) throw Error('Conflict recovery paths are unverified. Refresh the conflict list before retrying.');
+    if (result.restoredPaths != null && (!Array.isArray(result.restoredPaths) || result.restoredPaths.length !== 2 || new Set(result.restoredPaths).size !== 2 || result.restoredPaths.some(value => typeof value !== 'string' || !value || value.length > 4096 || /[\u0000-\u001f\u007f]/.test(value)))) throw Error('Conflict recovery paths are unverified. Refresh the conflict list before retrying.');
     return result;
   };
 }

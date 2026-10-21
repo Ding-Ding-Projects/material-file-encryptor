@@ -21,3 +21,15 @@ Continue Material File Encryptor encrypted registry backup/restore, configurable
 - Preserve unfinished work incrementally. Integrate completed verified work, verify remote refs and perform only archive-backed task-owned cleanup after all preservation and ancestry requirements pass.
 
 No completed storage delivery, production upload, full UI matrix, accepted installer/update or overall goal completion is claimed.
+
+## Current owned integration state
+
+Native conflict, real encrypted fixture, interface and verification-adapter source have been applied locally. Eleven native core cases were reported passed on the reviewed native source. The combined JavaScript group passed74/74; the later inventory/adapter/conflict group passed38/38 and publication consumer group4/4, with overlapping groups kept separate. The new GUI inventory has33 states/1,584 pending rows, with no runtime receipts yet. Core fixture compilation is already part of the exact root build; record its actual assembly and SDK hashes afterward for the UI provider.
+
+The null ordinary native recovery-path reply is now accepted after a failing-then-passing regression. Complete compressed exception transport is independently reviewed, with the public decoder copied exactly; deploy its trusted candidate pin and complete carrier through protected standard input before the next public branch. Preserve all exact old61-entry intermediate revisions and current65-entry source bindings.
+
+Privacy release v1.840.1 has completed packaging/promotion. Its normal-release flags, source tag and downloaded Setup/full package/RELEASES hashes were verified. The existing1.823.1 installation is active; applying an update safely is still pending. Preserve its user work.
+
+The existing wiki publication test expects an older continuation title than its unchanged baseline snapshot; keep this explicitly unresolved until the required current wiki update is integrated. Three initial GUI inventory count failures were corrected for the newly added states and the focused inventory suite now passes.
+
+The selected GUI worker encountered model capacity after its preparation source was successfully committed; no different model was substituted. Resume that same selected route for actual built verification when available, preserving its committed adapters and truthful capability limits.

@@ -75,6 +75,9 @@ internal sealed class Commit
     public List<string> Parents { get; set; } = [];
     public List<Change> Changes { get; set; } = [];
     public Dictionary<string,Entry> Directories { get; set; } = [];
+    public List<ConflictResolution> ConflictResolutions { get; set; } = [];
+    public List<DeletionResolution> DeletionResolutions { get; set; } = [];
+    public List<ConflictRecovery> ConflictRecoveries { get; set; } = [];
 }
 internal sealed class Journal
 {

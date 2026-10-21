@@ -81,3 +81,8 @@ test('unconfirmed native effects and malformed recovery paths remain unverified'
   const f = fixture({ nativeRequest: async (_method, params) => ({ conflictId: params.conflictId, choice: params.choice, resolved: true, restoredPaths: ['one', 'two'] }) });
   assert.deepEqual((await f.invoke('resolveRegistryConflict', review(), 'vault-a')).restoredPaths, ['one', 'two']);
 });
+
+test('ordinary native resolutions accept an explicitly null recovery-path field', async () => {
+  const f = fixture({ nativeRequest: async (_method, params) => ({ conflictId: params.conflictId, choice: params.choice, resolved: true, restoredPaths: null }) });
+  assert.equal((await f.invoke('resolveRegistryConflict', review(), 'vault-a')).resolved, true);
+});

@@ -457,7 +457,7 @@ public sealed partial class VaultEngine : IDisposable
     public IDisposable AcquireOpen(string path) { lock(gate) { Check(); return AcquireOpenById(Find(VaultPath.Normalize(path)).Id); } }
     public IDisposable AcquireOpenById(string id) { lock(gate) { Check(); FindId(id); open[id]=open.GetValueOrDefault(id)+1; return new OpenLease(this,id); } }
     public void SetPartSize(long bytes) { lock(gate) { Check(); ValidatePartSize(bytes); partSize=bytes; SaveJournal(); } }
-    private void FlushLocal()
+    private void FlushLocal(IReadOnlyList<ConflictResolution>? resolutions=null,IReadOnlyList<DeletionResolution>? deletionResolutions=null,IReadOnlyList<ConflictRecovery>? recoveries=null)
     {
         var changes=new List<Change>();
         var oldNames=baseline.Keys.ToDictionary(p=>p,p=>p,StringComparer.OrdinalIgnoreCase);
@@ -469,9 +469,12 @@ public sealed partial class VaultEngine : IDisposable
             var newPath=newNames.GetValueOrDefault(path);
             if(old?.Version!=current?.Version || oldPath!=newPath) changes.Add(new Change { Path=newPath??oldPath!,ExpectedVersion=old?.Version,Value=current==null?null:Clone(current) });
         }
-        if(changes.Count>0 || pendingVersions.Count>0 || pendingBinHidden.Count>0)
+        if(changes.Count>0 || pendingVersions.Count>0 || pendingBinHidden.Count>0 || resolutions?.Count>0 || deletionResolutions?.Count>0 || recoveries?.Count>0)
         {
-            var commit=new Commit { Versions=[..pendingVersions],BinHiddenIds=[..pendingBinHidden],Device=device,Parents=heads.Order(StringComparer.Ordinal).ToList(),Changes=changes };
+            var commit=new Commit { Versions=[..pendingVersions],BinHiddenIds=[..pendingBinHidden],ConflictResolutions=resolutions?.ToList()??[],Device=device,Parents=heads.Order(StringComparer.Ordinal).ToList(),Changes=changes };
+            commit.DeletionResolutions=deletionResolutions?.ToList()??[];
+            commit.ConflictRecoveries=recoveries?.ToList()??[];
+            if((resolutions?.Count>0||deletionResolutions?.Count>0) && ConflictCommitIdFactory is not null)commit.Id=ValidateId(ConflictCommitIdFactory());
             foreach(var change in changes.Where(c=>c.Value!=null))for(var parent=VaultPath.Parent(change.Path);parent!="";parent=VaultPath.Parent(parent))if(entries.TryGetValue(parent,out var directory))commit.Directories[parent]=Clone(directory);
             WriteMetadata(ObjectPath(cache,"commits",commit.Id),commit,"commit",commit.Id);
             pendingVersions.Clear(); pendingBinHidden.Clear(); pending.Add(commit.Id); known.Add(commit.Id); heads=[commit.Id]; baseline=CloneEntries(entries); HistoryChanged?.Invoke();
@@ -558,6 +561,9 @@ public sealed partial class VaultEngine : IDisposable
     }
     private bool VerifyComplete(Commit commit,bool authenticateContent=true)
     {
+        foreach(var resolution in commit.ConflictResolutions)ValidateResolution(resolution);
+        foreach(var resolution in commit.DeletionResolutions)ValidateDeletionResolution(resolution);
+        foreach(var recovery in commit.ConflictRecoveries)ValidateRecovery(recovery);
         foreach(var version in commit.Versions){ValidateId(version.Id);if(version.Path!=VaultPath.Normalize(version.Path))throw new InvalidDataException("Invalid version path.");}foreach(var id in commit.BinHiddenIds)ValidateId(id);
         ValidateEntries(commit.Directories);
         if(commit.Directories.Values.Any(e=>!e.Directory))throw new InvalidDataException("Invalid ancestor directory metadata.");
@@ -572,7 +578,7 @@ public sealed partial class VaultEngine : IDisposable
     {
         var parent=VaultPath.Parent(path); var name=Name(path); var suffix=" (conflict "+id[..8]+")"; if(name.Length+suffix.Length+12>255)name=name[..(255-suffix.Length-12)]; var candidate=(parent==""?"":parent+"/")+name+suffix; var counter=0; while(current.ContainsKey(candidate))candidate=(parent==""?"":parent+"/")+name+suffix+"-"+(++counter); return candidate;
     }
-    private static void Apply(Commit commit,Dictionary<string,Entry> current)
+    private static void Apply(Commit commit,Dictionary<string,Entry> current,List<ReplayConflict>? conflicts=null)
     {
         // Remove destinations before adding moved entries; a namespace commit is one transaction.
         foreach(var change in commit.Changes.OrderBy(c=>c.Value==null?0:1))
@@ -581,9 +587,24 @@ public sealed partial class VaultEngine : IDisposable
             if(existing?.Version==change.Value?.Version && current.Keys.Contains(path,StringComparer.Ordinal))continue;
             if(existing?.Version==change.ExpectedVersion || existing==null)
             {
-                if(change.Value==null)current.Remove(path);else { current.Remove(path); var value=Clone(change.Value); if(current.Values.Any(e=>e.Id==value.Id))value.Id=ConflictId(value.Id,commit.Id,path); current[path]=value; }
+                if(change.Value==null)current.Remove(path);else {
+                    current.Remove(path); var value=Clone(change.Value);
+                    var sameIdentity=current.Values.FirstOrDefault(e=>e.Id==value.Id);
+                    if(sameIdentity!=null) {
+                        value.Id=ConflictId(value.Id,commit.Id,path);
+                        conflicts?.Add(NewReplayConflict(commit,change,sameIdentity,value,"rename"));
+                    }
+                    else if(existing==null && change.ExpectedVersion!=null)
+                        conflicts?.Add(NewReplayConflict(commit,change,null,value,"delete-versus-edit"));
+                    current[path]=value;
+                }
             }
-            else if(change.Value!=null) { var value=Clone(change.Value); value.Id=ConflictId(value.Id,commit.Id,path); current[ConflictPath(path,commit.Id,current)]=value; }
+            else if(change.Value!=null) {
+                var value=Clone(change.Value); value.Id=ConflictId(value.Id,commit.Id,path);
+                conflicts?.Add(NewReplayConflict(commit,change,existing,value,existing!.Directory||value.Directory?"directory":"file-edit"));
+                current[ConflictPath(path,commit.Id,current)]=value;
+            }
+            else conflicts?.Add(NewReplayConflict(commit,change,existing,null,"delete-versus-edit"));
         }
     }
     private static string ConflictId(string original,string commit,string path) => Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(original+"/"+commit+"/"+path))).ToLowerInvariant()[..32];

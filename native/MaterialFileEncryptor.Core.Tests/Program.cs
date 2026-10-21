@@ -7,6 +7,17 @@ if (args.Length > 0 && args[0] == "--native-child-trace") { await NativeChildTra
 if (args.Length == 2 && args[0] == "--native-trace-child") { await NativeChildTraceTests.ChildAsync(args[1]); return 0; }
 
 var cases = new (string,Action)[] {
+    ("conflict review choices preserve history and survive reopen",ConflictReviewTests.Choices),
+    ("conflict review rejects stale versions and renamed review paths",ConflictReviewTests.Stale),
+    ("conflict review opposite offline choices converge without content loss",ConflictReviewTests.Concurrent),
+    ("conflict review acknowledgements require observed causal ancestry and exact pair",ConflictReviewTests.UnobservedAcknowledgement),
+    ("conflict review deletion choices preserve edited history and intent",ConflictReviewTests.Unsupported),
+    ("conflict review deletion rejects stale and unseen concurrent changes",ConflictReviewTests.DeletionStale),
+    ("conflict review opposite deletion choices remain actionable in both orders",ConflictReviewTests.DeletionConcurrent),
+    ("conflict review file rename choices retain identity and both histories",ConflictReviewTests.RenameChoices),
+    ("conflict review rename rollback preserves names handles and third-party destinations",ConflictReviewTests.RenameRollback),
+    ("conflict review bounded pages do not skip or duplicate independent pairs",ConflictReviewTests.Paging),
+    ("conflict review recovery survives renamed deleted and occupied historical parents",ConflictReviewTests.RecoveryParents),
     ("encrypted snapshot stages a frozen pending history outside namespace lock",EncryptedSnapshotTests.Run),
     ("filename path index survives cold lookup and namespace mutations",FilenamePathIndexTests.Run),
     ("history batches preserve immutable publication and cancellation",HistoryBatchTests.Run),

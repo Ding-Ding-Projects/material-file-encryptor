@@ -216,6 +216,8 @@ internal sealed partial class VaultController : IDisposable
                     int? retention = args.ValueKind == JsonValueKind.Object && args.TryGetProperty("retentionDays", out var days) && days.ValueKind != JsonValueKind.Null ? days.GetInt32() : historyRetentionDays;
                     return Engine.ListVersions(OptionalString(args, "entryId"), retention).Select(VersionInfo).ToArray();
                 case "listDeleted": return Engine.ListDeleted().Select(VersionInfo).ToArray();
+                case "listConflicts": return Engine.ListConflicts(checked((int)(OptionalLong(args, "limit") ?? 100)), OptionalString(args, "cursor"));
+                case "resolveConflict": return Engine.ResolveConflict(RequiredString(args, "conflictId"), RequiredString(args, "choice"), RequiredString(args, "currentVersion"), OptionalString(args, "preservedVersion"), OptionalString(args, "deletionCommitId"));
                 case "listActivity": return ActivityPage(Engine.ListActivity(new VaultActivityQuery(
                     EntryId: OptionalString(args,"entryId"), Action: OptionalString(args,"action"),
                     FromUtc: (OptionalString(args,"fromUtc") ?? OptionalString(args,"from")) is string from ? DateTimeOffset.Parse(from, System.Globalization.CultureInfo.InvariantCulture) : null,

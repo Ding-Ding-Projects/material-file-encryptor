@@ -457,8 +457,8 @@
     {
       "source": "docs/features/platform/instruction-currency.md",
       "translation": "docs/features/platform/instruction-currency.zh-HK.md",
-      "sourceSha256": "963b839f4d5c1e418a57d9415afecbb8e90c4a3fb91984184c6ae981a38aa28c",
-      "translationSha256": "cdb029b581e2f844490574626a35d63da6b9c07f1a44cd6e38d12d272fa952d5"
+      "sourceSha256": "463b44490b1f249fe5edb2b7b6a059fc4d34ce29b82b29d5d7bdb266c5b79c0f",
+      "translationSha256": "6ca0567b3cdde52a97908e23162d7231ad2ab08efe647d65aaf62be029db1a88"
     },
     {
       "source": "docs/features/platform/packaged-documentation-cache.md",
@@ -613,14 +613,20 @@
     {
       "source": "docs/features/storage/README.md",
       "translation": "docs/features/storage/README.zh-HK.md",
-      "sourceSha256": "e2cde5fce20e098424c7c3b3c7134ed15e3706e06ba94cf9976701db055dedb3",
-      "translationSha256": "810bc15bdfbf43ae5cb8244c84a3c874df5d7f80a92eda4bc6d1299d10c454fa"
+      "sourceSha256": "f787b24d4706691e2e9d19354338a9387f8b06cbea9edac18fed57dcaac5da64",
+      "translationSha256": "7067411abf9c4ac1c317be88885eeb69539b81e728dcc6552e5093e00b7f7ed9"
     },
     {
       "source": "docs/features/storage/transfer-lifecycle.md",
       "translation": "docs/features/storage/transfer-lifecycle.zh-HK.md",
       "sourceSha256": "9cb211ea77b0c6365bd655776d083924f5d1224cf5046449619fdda1ba9d7f6a",
       "translationSha256": "089e13b74a9e121a291b4f8efa388e31a03bbcc64b0bf9217345c68670106a05"
+    },
+    {
+      "source": "docs/features/storage/registry-sync.md",
+      "translation": "docs/features/storage/registry-sync.zh-HK.md",
+      "sourceSha256": "eeceac282ceae26c80abf5c391f1ff7fb8a196fb47cf6c733eb12b3946d102f5",
+      "translationSha256": "b1568361447914a4ce5408ab1f44cceda623a5a5ec750ff039ead6c8d437547c"
     },
     {
       "source": "docs/features/surface-foundation/coverage.md",

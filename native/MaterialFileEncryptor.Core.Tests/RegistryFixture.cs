@@ -75,6 +75,70 @@ internal static class RegistryFixture
             File.Copy(file.Source,target,false);
         }
     }
+    private static void ExchangeEncrypted(string source,string destination)
+    {
+        CheckPhysical(source);CheckPhysical(destination);
+        foreach(string directory in Directory.GetDirectories(source))
+        {
+            CheckPhysical(directory);
+            if(Path.GetFileName(directory) is not ("commits" or "parts" or "activity")||Directory.GetDirectories(directory).Length!=0)
+                throw new InvalidDataException("Fixture exchange contains an unexpected directory.");
+        }
+        foreach(string file in Directory.GetFiles(source,"*",SearchOption.AllDirectories))
+        {
+            CheckPhysical(file);string relative=Path.GetRelativePath(source,file).Replace('\\','/');
+            if(!EncryptedPath.IsMatch(relative))throw new InvalidDataException("Fixture exchange contains an unexpected file.");
+            string target=Path.Combine(destination,relative);CheckPhysical(target);Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+            if(File.Exists(target))
+            {
+                using var existing=File.OpenRead(target);using var incoming=File.OpenRead(file);
+                if(!SHA256.HashData(existing).SequenceEqual(SHA256.HashData(incoming)))throw new InvalidDataException("Immutable fixture objects disagree.");
+            }
+            else File.Copy(file,target,false);
+        }
+    }
+    private static async Task PrepareReview(string root,string device,string scenario,VaultCredentials credential)
+    {
+        Directory.CreateDirectory(root);File.WriteAllText(Path.Combine(root,Sentinel),Marker+root+"\n");
+        string keyFilePath=Path.Combine(root,"synthetic-fixture-key.bin");CheckPhysical(keyFilePath);
+        using(var output=new FileStream(keyFilePath,FileMode.CreateNew,FileAccess.Write,FileShare.None))
+        {output.Write(Enumerable.Range(0,32).Select(index=>(byte)index).ToArray());output.Flush(true);}
+        var aOptions=Options(root,"deviceA");var bOptions=Options(root,"deviceB");
+        using(var seed=VaultEngine.Create(aOptions,credential))
+        {seed.CreateFile("shared.txt");seed.WriteRange("shared.txt",0,"BASE"u8);await seed.FlushAsync();}
+        CopyEncrypted(aOptions.StorageRoot,bOptions.StorageRoot);
+        using(var a=VaultEngine.Open(aOptions,credential))
+        using(var b=VaultEngine.Open(bOptions,credential))
+        {
+            if(scenario=="file-rename") {a.Rename("shared.txt","name-from-device-a.txt");b.Rename("shared.txt","name-from-device-b.txt");}
+            else
+            {
+                if(scenario=="delete-edit")a.Delete("shared.txt");else a.WriteRange("shared.txt",0,"AAAA"u8);
+                b.WriteRange("shared.txt",0,"BBBB"u8);
+            }
+            await a.FlushAsync();await b.FlushAsync();
+            ExchangeEncrypted(aOptions.StorageRoot,bOptions.StorageRoot);ExchangeEncrypted(bOptions.StorageRoot,aOptions.StorageRoot);
+            await a.SyncAsync();await b.SyncAsync();
+            if(scenario=="resolution-divergence")
+            {
+                var first=a.ListConflicts().Items.Single(item=>item.Kind=="file-edit");var second=b.ListConflicts().Items.Single(item=>item.Kind=="file-edit");
+                a.ResolveConflict(first.ConflictId,"keep-current",first.Current!.VersionId,first.Preserved!.VersionId);
+                b.ResolveConflict(second.ConflictId,"use-preserved",second.Current!.VersionId,second.Preserved!.VersionId);
+                await a.FlushAsync();await b.FlushAsync();
+                ExchangeEncrypted(aOptions.StorageRoot,bOptions.StorageRoot);ExchangeEncrypted(bOptions.StorageRoot,aOptions.StorageRoot);
+                await a.SyncAsync();await b.SyncAsync();
+            }
+        }
+        var selected=Options(root,device);
+        string cacheDir=Path.Combine(root,"gui-cache-"+device);CheckPhysical(cacheDir);
+        using var fileCredential=VaultCredentials.KeyFile(File.ReadAllBytes(keyFilePath));
+        using var reopened=VaultEngine.Open(new VaultOptions{StorageRoot=selected.StorageRoot,CacheRoot=cacheDir,PartSizeBytes=1024*1024},fileCredential);
+        await reopened.SyncAsync();
+        string kind=scenario switch{"file-edit"=>"file-edit","file-rename"=>"rename","delete-edit"=>"delete-versus-edit",_=>"resolution-divergence"};
+        var conflicts=reopened.ListConflicts(1000).Items;
+        if(conflicts.Count!=1||conflicts[0].Kind!=kind||conflicts[0].SupportedChoices.Count==0)throw new InvalidDataException("Prepared review did not match its requested scenario.");
+        Console.WriteLine(JsonSerializer.Serialize(new{prepared=true,fixtureRoot=root,scenario,device,storageDir=selected.StorageRoot,cacheDir,keyFilePath,vaultId=reopened.VaultId,expectedConflicts=conflicts}));
+    }
     internal static async Task<int> RunAsync(string[] args)
     {
         try { return await ExecuteAsync(args); }
@@ -88,11 +152,14 @@ internal static class RegistryFixture
     {
         if(args.Length is <3 or >4)throw new ArgumentException("Use action, absolute fixture root, deviceA or deviceB, and optional case.");
         string action=args[0],device=args[2],scenario=args.Length==4?args[3]:"concurrent-edit";
-        if(action is not ("init" or "edit" or "sync" or "snapshot" or "inspect"))throw new ArgumentException("Unknown fixture action.");
+        if(action is not ("init" or "edit" or "sync" or "snapshot" or "inspect" or "prepare-review"))throw new ArgumentException("Unknown fixture action.");
         if(device is not ("deviceA" or "deviceB"))throw new ArgumentException("Unknown fixture device.");
-        if(scenario is not ("concurrent-edit" or "delete-vs-edit"))throw new ArgumentException("Unknown fixture case.");
-        string root=ValidateRoot(args[1],action=="init");
+        if(action=="prepare-review")
+        {if(scenario is not ("file-edit" or "file-rename" or "delete-edit" or "resolution-divergence"))throw new ArgumentException("Unknown review fixture case.");}
+        else if(scenario is not ("concurrent-edit" or "delete-vs-edit"))throw new ArgumentException("Unknown fixture case.");
+        string root=ValidateRoot(args[1],action is "init" or "prepare-review");
         using var credential=Credential();
+        if(action=="prepare-review"){await PrepareReview(root,device,scenario,credential);return 0;}
         if(action=="init")
         {
             Directory.CreateDirectory(root);File.WriteAllText(Path.Combine(root,Sentinel),Marker+root+"\n");
@@ -134,6 +201,6 @@ internal static class RegistryFixture
             if(read!=bytes.Length)throw new IOException("Fixture inspection read was incomplete.");
             entries.Add(new {path=entry.Path,entryId=entry.EntryId,length=entry.Length,content=Encoding.UTF8.GetString(bytes),sha256=Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant()});
         }
-        Console.WriteLine(JsonSerializer.Serialize(new {device,vaultId=engine.VaultId,entries}));return 0;
+        Console.WriteLine(JsonSerializer.Serialize(new {device,vaultId=engine.VaultId,entries,conflicts=engine.ListConflicts(1000).Items}));return 0;
     }
 }

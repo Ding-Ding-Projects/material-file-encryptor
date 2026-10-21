@@ -1075,6 +1075,378 @@
         "reason": "Implemented retained logo recipe and effective title preview within the agreed appearance family",
         "sourceCommit": "5061f746febf05e8945a9ee543e31b964b1849f9"
       }
+    },
+    {
+      "id": "registry-unavailable",
+      "owner": "registry",
+      "selector": "mfe-registry-storage-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-storage-panel",
+      "fixture": "A genuinely unavailable production capability, never a removed bridge",
+      "observable": "Registry capability explanation visible and transfer controls disabled",
+      "actions": [
+        "add-vault"
+      ]
+    },
+    {
+      "id": "registry-unconfigured",
+      "owner": "registry",
+      "selector": "mfe-registry-storage-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-storage-panel",
+      "fixture": "Fresh isolated vault session with no saved registry destination",
+      "observable": "No saved destination and save remains available",
+      "actions": [
+        "configure-calendar"
+      ]
+    },
+    {
+      "id": "registry-ready",
+      "owner": "registry",
+      "selector": "mfe-registry-storage-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-storage-panel",
+      "fixture": "Owned configured folder-backed vault and approved loopback registry",
+      "observable": "Saved destination ready for manual encrypted sync",
+      "actions": [
+        "run-sync"
+      ]
+    },
+    {
+      "id": "registry-draft",
+      "owner": "registry",
+      "selector": "mfe-registry-storage-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-storage-panel",
+      "fixture": "Owned configured vault with a changed unsaved destination",
+      "observable": "Edited destination differs from saved destination",
+      "actions": [
+        "refresh-draft"
+      ]
+    },
+    {
+      "id": "registry-invalid",
+      "owner": "registry",
+      "selector": "mfe-registry-storage-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-storage-panel",
+      "fixture": "Invalid destination entered through the production field and Save",
+      "observable": "Validation alert visible and destination focused",
+      "actions": [
+        "correct-destination"
+      ]
+    },
+    {
+      "id": "registry-running",
+      "owner": "registry",
+      "selector": "mfe-registry-storage-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-storage-panel",
+      "fixture": "Real in-flight encrypted transfer held by an owned loopback provider",
+      "observable": "Live transfer pending with progress and cancellation",
+      "actions": [
+        "cancel-sync"
+      ]
+    },
+    {
+      "id": "registry-cancelling",
+      "owner": "registry",
+      "selector": "mfe-registry-storage-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-storage-panel",
+      "fixture": "Real cancellation requested while owned transfer settles",
+      "observable": "Cancellation pending without an undo claim",
+      "actions": [
+        "wait-transfer"
+      ]
+    },
+    {
+      "id": "registry-error",
+      "owner": "registry",
+      "selector": "mfe-registry-storage-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-storage-panel",
+      "fixture": "Real owned provider refusal or failure, no response injection",
+      "observable": "Localized registry error and recovery action visible",
+      "actions": [
+        "refresh-status"
+      ]
+    },
+    {
+      "id": "registry-empty",
+      "owner": "registry",
+      "selector": "mfe-registry-storage-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-storage-panel",
+      "fixture": "Owned empty registry destination read successfully",
+      "observable": "Verified empty revision list distinguished from unloaded",
+      "actions": [
+        "refresh-revisions"
+      ]
+    },
+    {
+      "id": "registry-revisions",
+      "owner": "registry",
+      "selector": "mfe-registry-storage-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-storage-panel",
+      "fixture": "Owned encrypted snapshot published through the real native service",
+      "observable": "Immutable revisions listed without automatic restore",
+      "actions": [
+        "select-revision",
+        "restore-revision"
+      ]
+    },
+    {
+      "id": "registry-restoring",
+      "owner": "registry",
+      "selector": "mfe-registry-storage-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-storage-panel",
+      "fixture": "Real restore started through the native folder picker",
+      "observable": "Restore pending without switching the selected vault",
+      "actions": [
+        "complete-restore-picker"
+      ]
+    },
+    {
+      "id": "registry-session-changed",
+      "owner": "registry",
+      "selector": "mfe-registry-storage-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-storage-panel",
+      "fixture": "Two owned isolated vault sessions with a recorded prior session",
+      "observable": "Selected session matches native state and old draft is absent",
+      "actions": [
+        "switch-owned-session"
+      ]
+    },
+    {
+      "id": "conflicts-unavailable",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Genuinely locked owned vault or unavailable native conflict capability",
+      "observable": "Conflict capability explanation and disabled review controls",
+      "actions": [
+        "unlock-owned-vault"
+      ]
+    },
+    {
+      "id": "conflicts-loading",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Real native conflict read in progress",
+      "observable": "Conflict loading state visible without fabricated rows",
+      "actions": [
+        "cancel-review"
+      ]
+    },
+    {
+      "id": "conflicts-empty",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Owned native vault with zero unresolved conflicts",
+      "observable": "Verified empty unresolved list",
+      "actions": [
+        "refresh-conflicts"
+      ]
+    },
+    {
+      "id": "conflicts-list",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Owned native vault with unresolved records",
+      "observable": "Loaded unresolved count and actual records visible",
+      "actions": [
+        "select-conflict"
+      ]
+    },
+    {
+      "id": "conflicts-file-review",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Real ordinary-file edit conflict with both exact versions",
+      "observable": "Current and preserved file versions visible with no default choice",
+      "actions": [
+        "choose-keep-both"
+      ]
+    },
+    {
+      "id": "conflicts-choice-review",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Supported real file conflict after explicit radio selection",
+      "observable": "Selected consequence and separate Apply enabled",
+      "actions": [
+        "apply-conflict"
+      ]
+    },
+    {
+      "id": "conflicts-resolving",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Real native resolution or main-owned confirmation in progress",
+      "observable": "Resolution settling and Cancel review disabled",
+      "actions": [
+        "settle-resolution"
+      ]
+    },
+    {
+      "id": "conflicts-stale",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Competing supported native edit after the reviewed versions were selected",
+      "observable": "Stale result refreshed and resolution choice cleared",
+      "actions": [
+        "refresh-conflicts"
+      ]
+    },
+    {
+      "id": "conflicts-unsupported",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Real native directory or unsupported conflict kind",
+      "observable": "Unsupported record retained without an Apply action",
+      "actions": [
+        "cancel-review"
+      ]
+    },
+    {
+      "id": "conflicts-error",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Real native read failure or unverified resolution outcome",
+      "observable": "Error or unverified outcome remains visible",
+      "actions": [
+        "refresh-conflicts"
+      ]
+    },
+    {
+      "id": "conflicts-resolved",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Actual matching durable native result followed by successful list readback",
+      "observable": "Native acknowledgement displayed after fresh conflict list",
+      "actions": [
+        "refresh-conflicts"
+      ]
+    },
+    {
+      "id": "conflicts-session-changed",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Two owned sessions switched while a native conflict request settles",
+      "observable": "Current session has no actionable selection from the old session",
+      "actions": [
+        "switch-owned-session"
+      ]
+    },
+    {
+      "id": "conflicts-rename-review",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Real native rename conflict with two live ordinary files",
+      "observable": "Rename-specific paths, versions and consequences available",
+      "actions": [
+        "choose-preserved",
+        "apply-conflict"
+      ]
+    },
+    {
+      "id": "conflicts-deletion-review",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Real native delete-versus-edit record with separate deletion intent",
+      "observable": "Deletion identity shown without a fabricated live preserved file",
+      "actions": [
+        "choose-keep-change",
+        "apply-conflict"
+      ]
+    },
+    {
+      "id": "conflicts-divergence-review",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Real opposite offline resolutions with verified frozen histories",
+      "observable": "Historical sides and advertised vault-root recovery visible",
+      "actions": [
+        "choose-keep-both",
+        "apply-conflict"
+      ]
+    },
+    {
+      "id": "conflicts-recovery-paths",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Actual divergence materialization result with two distinct native paths",
+      "observable": "Two actual recovery paths shown as selectable local text",
+      "actions": [
+        "refresh-conflicts"
+      ]
+    },
+    {
+      "id": "conflicts-file-keep-current",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Fresh owned file-edit conflict reserved for keep-current",
+      "observable": "File-edit review ready for explicit keep-current",
+      "actions": [
+        "choose-keep-current",
+        "apply-conflict"
+      ]
+    },
+    {
+      "id": "conflicts-file-use-preserved",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Fresh owned file-edit conflict reserved for use-preserved",
+      "observable": "File-edit review ready for explicit use-preserved",
+      "actions": [
+        "choose-preserved",
+        "apply-conflict"
+      ]
+    },
+    {
+      "id": "conflicts-rename-keep-current",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Fresh owned rename conflict reserved for keep-current",
+      "observable": "Rename review ready for explicit keep-current",
+      "actions": [
+        "choose-keep-current",
+        "apply-conflict"
+      ]
+    },
+    {
+      "id": "conflicts-rename-keep-both",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Fresh owned rename conflict reserved for keep-both",
+      "observable": "Rename review ready for explicit keep-both",
+      "actions": [
+        "choose-keep-both",
+        "apply-conflict"
+      ]
+    },
+    {
+      "id": "conflicts-deletion-apply",
+      "owner": "registry",
+      "selector": "mfe-registry-conflicts-panel",
+      "layoutSelector": "mfe-storage-maintenance >>> mfe-registry-conflicts-panel",
+      "fixture": "Fresh owned delete-versus-edit conflict reserved for applying deletion",
+      "observable": "Exact file deletion intent ready for explicit apply-deletion",
+      "actions": [
+        "choose-apply-deletion",
+        "apply-conflict"
+      ]
     }
   ]
 }

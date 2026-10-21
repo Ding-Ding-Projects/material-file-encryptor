@@ -868,3 +868,5 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 - [ ] Complete source-bound GUI evidence, release/download/installed verification, publication checks and archive-backed task cleanup.
 
 - [ ] Verify version-bound file-conflict review and main-owned localized confirmation in the packaged product; 25 focused bridge/security/session checks pass, built evidence remains pending.
+
+- [ ] Verify all 33 registry/conflict states across 48 declared tuples each; 1,584 new runtime rows remain unverified despite completed declaration and source checks.
