@@ -6,6 +6,7 @@ internal static class ActivityTests
 {
     public static void Run()
     {
+        ActivityCiphertextTests.Run();
         var root = Path.Combine(Path.GetTempPath(), "mfe-activity-" + Guid.NewGuid().ToString("N"));
         var options = new VaultOptions { StorageRoot = Path.Combine(root, "source"), CacheRoot = Path.Combine(root, "cache") };
         using var credentials = VaultCredentials.KeyFile(RandomNumberGenerator.GetBytes(32));

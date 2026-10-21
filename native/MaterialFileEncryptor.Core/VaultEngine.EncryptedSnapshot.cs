@@ -15,6 +15,7 @@ public sealed partial class VaultEngine
         string identity = Guid.NewGuid().ToString("N");
         var metadata = new Dictionary<string, string>(StringComparer.Ordinal);
         byte[] configuration;
+        VaultActivity[] activities;
         string[] parts;
         lock (gate)
         {
@@ -33,13 +34,9 @@ public sealed partial class VaultEngine
                 metadata.Add("commits/" + id + ".mfe", path);
             }
             configuration = VaultCrypto.Serialize(config);
-            foreach (var relative in GetEncryptedActivitySnapshotPaths())
-            {
-                var path = Path.Combine(cache, relative);
-                if (!File.Exists(path)) path = Path.Combine(source, relative);
-                VaultCrypto.ValidatePhysicalPath(path);
-                metadata.Add(relative, path);
-            }
+            // Validate both representations and freeze logical identities under the
+            // namespace lock. Ciphertext is read one bounded object at a time below.
+            activities = ReadAllActivityObjects();
             parts = referenced.Order(StringComparer.Ordinal).ToArray();
             encryptedSnapshotParts.Add(identity, referenced);
         }
@@ -58,6 +55,18 @@ public sealed partial class VaultEngine
             }
             else File.SetUnixFileMode(root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             VaultCrypto.AtomicWrite(Path.Combine(root,"vault.json"),configuration);
+            foreach (var item in activities)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                // Older versions re-encrypted activity when copying between roots.
+                // Keep an existing authenticated source representation stable so an
+                // exported snapshot can merge back without replacing immutable data.
+                string inputPath = ObjectPath(source, "activity", item.Id);
+                if (!File.Exists(inputPath)) inputPath = ObjectPath(cache, "activity", item.Id);
+                var authenticated = ReadAuthenticatedActivity(inputPath, item.Id);
+                if (authenticated.Item != item) throw new InvalidDataException("Conflicting activity object.");
+                PublishActivityCiphertext(ObjectPath(root, "activity", item.Id), item, authenticated.Ciphertext);
+            }
             foreach (var item in metadata)
             {
                 cancellationToken.ThrowIfCancellationRequested();

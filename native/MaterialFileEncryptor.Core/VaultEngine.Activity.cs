@@ -130,24 +130,57 @@ public sealed partial class VaultEngine
             foreach (var file in Directory.EnumerateFiles(Path.Combine(from, "activity"), "*.mfe"))
             {
                 var id = ValidateId(Path.GetFileNameWithoutExtension(file));
-                var item = ReadActivity(file, id);
+                var authenticated = ReadAuthenticatedActivity(file, id);
+                var item = authenticated.Item;
                 var destination = ObjectPath(to, "activity", id);
                 if (File.Exists(destination))
                 {
                     if (ReadActivity(destination, id) != item) throw new InvalidDataException("Conflicting activity object.");
                 }
-                else WriteMetadata(destination, item, "activity", id);
+                else PublishActivityCiphertext(destination, item, authenticated.Ciphertext);
             }
         }
     }
 
-    private VaultActivity ReadActivity(string file, string id)
+    private VaultActivity ReadActivity(string file, string id) => ReadAuthenticatedActivity(file, id).Item;
+
+    private (VaultActivity Item, byte[] Ciphertext) ReadAuthenticatedActivity(string file, string id)
     {
-        var item = ReadMetadata<VaultActivity>(file, "activity", id);
-        if (item.Id != id || !ActivityActions.Contains(item.Action) || item.Detail?.Length > 512 || item.Detail?.Any(char.IsControl) == true) throw new InvalidDataException("Invalid activity object.");
-        ValidateId(item.EntryId); if (item.VersionId != null) ValidateId(item.VersionId);
-        if (item.Path != null && item.Path != VaultPath.Normalize(item.Path)) throw new InvalidDataException("Invalid activity path.");
-        return item;
+        // Authenticate the captured bytes once. Callers publish this exact buffer,
+        // never reopen the path after checking a potentially replaced file.
+        var ciphertext = VaultCrypto.ReadBounded(file, VaultCrypto.MaxMetadata + VaultCrypto.Overhead);
+        var plain = VaultCrypto.Unseal(ciphertext, key, Domain("activity", id), VaultCrypto.MaxMetadata);
+        try
+        {
+            var item = VaultCrypto.Deserialize<VaultActivity>(plain);
+            if (item.Id != id || !ActivityActions.Contains(item.Action) || item.Detail?.Length > 512 || item.Detail?.Any(char.IsControl) == true) throw new InvalidDataException("Invalid activity object.");
+            ValidateId(item.EntryId); if (item.VersionId != null) ValidateId(item.VersionId);
+            if (item.Path != null && item.Path != VaultPath.Normalize(item.Path)) throw new InvalidDataException("Invalid activity path.");
+            return (item, ciphertext);
+        }
+        finally { System.Security.Cryptography.CryptographicOperations.ZeroMemory(plain); }
+    }
+
+    private void PublishActivityCiphertext(string destination, VaultActivity item, byte[] ciphertext)
+    {
+        VaultCrypto.ValidatePhysicalPath(destination);
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        VaultCrypto.ValidatePhysicalPath(destination);
+        string temporary = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough))
+            { output.Write(ciphertext); output.Flush(true); }
+            VaultCrypto.ValidatePhysicalPath(destination);
+            // The destination may appear after the caller's existence check.
+            // Atomic no-replace publication never overwrites that object's bytes.
+            try { File.Move(temporary, destination); }
+            catch (IOException) when (File.Exists(destination))
+            {
+                if (ReadActivity(destination, item.Id) != item) throw new InvalidDataException("Conflicting activity object.");
+            }
+        }
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }
 
     public VaultActivityPage ListActivity(VaultActivityQuery? query = null)
